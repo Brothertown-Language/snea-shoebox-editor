@@ -1,0 +1,15 @@
+[project]
+name = "snea-shoebox-editor"
+version = "0.1.0"
+description = "SNEA Shoebox Editor infrastructure and development environment"
+readme = "snea-editor.md"
+requires-python = ">=3.11"
+dependencies = [
+    "cloudflare>=3.0.0",
+    "PyGithub>=2.1.1",
+    "pynacl>=1.5.0",
+    "solara>=1.26.0",
+]
+
+[tool.uv]
+managed = true
