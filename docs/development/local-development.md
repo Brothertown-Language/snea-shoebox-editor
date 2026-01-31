@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- Licensed under CC BY-SA 4.0 -->
 # Local Development Guide
 
 This document provides instructions for running the SNEA Shoebox Editor locally for development and testing purposes. We prioritize using **Docker** to keep your workstation environment clean and consistent.

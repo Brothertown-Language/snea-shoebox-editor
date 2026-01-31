@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- Licensed under CC BY-SA 4.0 -->
 # Contributing to SNEA Online Shoebox Editor
 
 Thank you for your interest in contributing to the SNEA Online Shoebox Editor. We welcome contributions from the community to help preserve and manage Southern New England Algonquian (SNEA) linguistic records.
@@ -42,7 +43,7 @@ uv run python -m unittest discover tests
 
 1. Create a new branch for your feature or bugfix.
 2. Ensure your code follows the existing style and conventions.
-3. Update documentation if your changes introduce new features or change existing behavior.
+3. Update documentation if your changes introduce new features or change existing behavior. Note that all documentation contributions are licensed under CC BY-SA 4.0.
 4. Submit a Pull Request to the `main` branch.
 5. All PRs will be reviewed by the maintainers.
 

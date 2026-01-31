@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- Licensed under CC BY-SA 4.0 -->
 # MDF Tag Reference Guide
 
 This document provides a human-readable reference for the Multi-Dictionary Formatter (MDF) tags used in the Brothertown

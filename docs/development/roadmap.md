@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- Licensed under CC BY-SA 4.0 -->
 ## Overview
 
 This document outlines the implementation plan for the **SNEA Shoebox Editor**, a 100% Python-based web application for

@@ -56,7 +56,7 @@ date: 2026-01-30
 - **Languages:** SNEA focus (Natick, Mohegan-Pequot, Narragansett, etc.).
 
 ### 7. Copyright & Attribution
-- **Default License:** MIT (refer to `LICENSE`).
+- **Default License:** MIT for code (refer to `LICENSE`); Creative Commons Share Alike (CC BY-SA 4.0) for all documentation (user or AI generated).
 - **Header:** Required for all source (`.py`), infra, and `.md` files (except data files).
   - Python: `# Copyright (c) 2026 Brothertown Language`
   - Markdown: `<!-- Copyright (c) 2026 Brothertown Language -->`

@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- Licensed under CC BY-SA 4.0 -->
 # SNEA Online Shoebox Editor
 
 Concurrent, version-controlled editing of Southern New England Algonquian (SNEA) linguistic records in MDF format.
@@ -100,7 +101,8 @@ Comprehensive documentation is available in the `docs/` directory:
 
 ## License
 
-This project is licensed under the [LICENSE](LICENSE) file in the root directory.
+- **Code**: This project's source code is licensed under the [MIT License](LICENSE).
+- **Documentation**: All documentation (including AI-generated content) is licensed under [Creative Commons Attribution-ShareAlike 4.0 International (CC BY-SA 4.0)](https://creativecommons.org/licenses/by-sa/4.0/).
 
 ---
 *Note: This project is in active development.*
