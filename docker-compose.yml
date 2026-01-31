@@ -1,0 +1,23 @@
+services:
+  web:
+    build: .
+    ports:
+      - "8765:8765"
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+    command: solara run src/frontend/app.py --host 0.0.0.0 --port 8765
+
+  backend:
+    image: node:20-slim
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8787:8787"
+    environment:
+      - NODE_ENV=development
+    command: >
+      sh -c "npm install -g wrangler &&
+             wrangler dev --local --persist --ip 0.0.0.0"

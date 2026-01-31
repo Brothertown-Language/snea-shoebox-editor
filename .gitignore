@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+.venv/
+venv/
+ENV/
+env/
+
+# uv
+.uv/
+
+# PyCharm / JetBrains
+.idea/
+*.iws
+out/
+
+# AI Guidelines Management
+# Ensure SPR documentation and guidelines are kept, 
+# but temporary or machine-generated files are ignored.
+.junie/tmp/
+.junie/*.bak
+.junie/cache/
+
+# Cloudflare / Wrangler
+.wrangler/
+wrangler.toml.bak
+
+# OS specific
+.DS_Store
+Thumbs.db

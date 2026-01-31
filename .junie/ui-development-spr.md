@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Brothertown Language -->
 # SPR for SNEA Editor UI Development (Solara)
 
 ## ROLE

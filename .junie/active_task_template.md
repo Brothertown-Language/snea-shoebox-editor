@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Brothertown Language -->
 # Active Task Tracking
 
 Current focus area as of [DATE]:

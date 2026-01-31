@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Brothertown Language -->
 # SPR: Algonquian Grammar for SNEA Shoebox Editor
 
 ## Core Concepts

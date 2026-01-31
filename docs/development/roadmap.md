@@ -1,3 +1,4 @@
+<!-- Copyright (c) 2026 Brothertown Language -->
 ## Overview
 
 This document outlines the implementation plan for the **SNEA Shoebox Editor**, a 100% Python-based web application for
@@ -9,6 +10,8 @@ concurrent editing of linguistic records from across Southern New England Algonq
 
 To ensure a "Zero-Touch" developer experience, the setup follows a strict sequential order. Complete each phase before
 moving to the next.
+
+**Note: If you are contributing to an existing repository via pull requests or have direct access, and the infrastructure is already configured, you can skip to Step 1 of Phase 3 (Initialize Environment) for local development.**
 
 ### Phase 1: Preparation (Manual One-Time Setup)
 
@@ -28,21 +31,24 @@ Before initializing the project, you must manually obtain the necessary "Master 
    `Brothertown-Language` organization.
 2. **Local Setup**: Clone the repo to your workstation.
 
-### Phase 3: Automated Infrastructure Setup
+### 3. Automated Infrastructure & Schema Setup
 
-Use the provided `bootstrap_env.py` script (located in `tech-docs/snea-online-concurrent-shoebox-editor/`) to automate
-the heavy lifting. **Note: This script will automatically detect your primary Cloudflare Account ID and set up the D1
-database.**
+Use the provided `bootstrap_env.py` script to automate the heavy lifting. **Note: This script will automatically detect your primary Cloudflare Account ID and set up the D1 database.**
 
 1. **Initialize Environment**:
-   Use `uv` to create a virtual environment and install dependencies. From the project root:
+   It is recommended to use Docker for local development. See the **[Local Development Guide](docs/development/local-development.md)**. Note that Cloudflare D1 type access (simulated locally) is required for local work.
+   Alternatively, use `uv` to create a virtual environment and install dependencies. From the project root:
    ```bash
-   cd tech-docs/snea-online-concurrent-shoebox-editor/
    uv venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
    uv pip install -e .
+   # Note: activation (source .venv/bin/activate) is optional when using `uv run`
    ```
-2. **Set Environment Variables**:
+2. **Schema Management**:
+   The application automatically handles its own database schema. Upon first run and during subsequent updates, the app will:
+   - Create any missing tables.
+   - Update existing tables using `ALTER` statements as appropriate.
+   Manual execution of `schema.sql` via Wrangler is NOT required.
+3. **Set Environment Variables**:
    These variables are used by the bootstrap script to configure your infrastructure. You can either export them
    temporarily in your terminal or create a `.env` file in this directory (though the script currently expects
    them in the environment).
@@ -57,7 +63,7 @@ database.**
 3. **Run the Bootstrap Script**:
    Make sure you are in the `tech-docs/snea-online-concurrent-shoebox-editor/` directory:
    ```bash
-   python3 bootstrap_env.py
+   uv run python bootstrap_env.py
    ```
    **What this does automatically**:
     - Creates the `snea-shoebox` D1 database on Cloudflare.
@@ -103,6 +109,7 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
 
 - **Workflow**: `.github/workflows/deploy.yml` handles the build.
 - **WASM Compilation**: Solara/Pyodide compiles Python UI code into WebAssembly.
+- **Clean Workstation**: Local development uses Docker to avoid polluting the host environment with `npm`, `wrangler`, or specific Python versions.
 - **Zero-Workstation-Install**: All deployment tools run strictly in the GitHub runner.
 
 ### 2. Python Frontend (Solara)

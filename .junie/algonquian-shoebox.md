@@ -4,6 +4,7 @@ contributor: AI
 status: complete
 date: 2026-01-26
 ---
+<!-- Copyright (c) 2026 Brothertown Language -->
 
 # Guidelines for Encoding Algonquian Polysynthetic Lexicon Entries in Shoebox/Toolbox
 
