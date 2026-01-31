@@ -2,10 +2,11 @@
 # Active Task Tracking
 
 Current focus area as of 2026-01-31:
-- **Task:** Ignore tmp/ directory
-- **Description:** Ensure all contents of the `tmp/` directory are ignored by Git.
+- **Task:** Implement hidden time tracking
+- **Description:** Add `.junie/time_tracking.md` to track developer time estimates.
 - **Status:** COMPLETE
 - **Completed Requirements:**
-    - Added `tmp/` to `.gitignore`.
+    - Created `.junie/time_tracking.md` with initial entry.
+    - Updated time tracking for current session.
 - **In Progress:**
     - None

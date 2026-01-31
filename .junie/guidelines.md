@@ -47,7 +47,7 @@ date: 2026-01-30
 - **SPR Protocol:** All `.md` files in `.junie/` must be SPR-compressed.
   - **SPR (Sparse Priming Representation):** Distilled list of succinct statements, associations, and concepts to activate LLM latent space (per `.junie/spr-unpack.md` / `.junie/spr-pack.md`).
 - **Workflow:** Decompress -> Edit -> Max Recompress.
-- **VCS:** Group changes; mandatory `tmp/commit.msg`.
+- **VCS:** Group changes; mandatory `tmp/commit.msg`. Do not use Conventional Commits prefixes (e.g., `feat:`, `fix:`, `docs:`).
 - **Active Task:** Update `documentation/ACTIVE_TASK.md` (or equivalent) every session.
 
 ### 6. Linguistic Preferences
