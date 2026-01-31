@@ -26,17 +26,17 @@ Thank you for your interest in contributing to the SNEA Online Shoebox Editor. W
 - Backend runs on Cloudflare Workers (Python).
 - Data must strictly follow MDF (Multi-Dictionary Form) standards.
 - We use `ruff` for code linting and formatting. It is recommended to install the `ruff` plugin in your IDE (e.g., PyCharm, VS Code).
-- Code is automatically formatted on commit via `pre-commit`. To set this up locally, run:
+- Code is automatically formatted on commit via `pre-commit`. To set this up, run:
   ```bash
-  uv run pre-commit install
+  docker-compose exec web pre-commit install
   ```
 
 ## Testing
 
-Before submitting a Pull Request, ensure all tests pass:
+Before submitting a Pull Request, ensure all tests pass. Tests should be run within the Docker environment:
 
 ```bash
-uv run python -m unittest discover tests
+docker-compose exec web python -m unittest discover tests
 ```
 
 ## Pull Request Process

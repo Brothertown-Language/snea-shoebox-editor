@@ -23,10 +23,9 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 ## Requirements
 
-- **Docker**: Required for the recommended containerized development.
-- **Python**: >= 3.11 (Optional, for direct local execution/testing).
-- **uv**: Latest version recommended (Optional, for direct local execution/testing).
-- **Cloudflare Account**: With Workers and D1 access.
+- **Docker**: Required for local development.
+- **Docker Compose**: Required to run the full stack locally.
+- **Cloudflare Account**: With Workers and D1 access for production deployment.
 - **GitHub Account**: For authentication (OAuth) and deployment.
 
 ## Setup
@@ -43,21 +42,8 @@ Obtain the following "Master Keys":
 ### 2. Initialization
 Refer to the **[Local Development Guide](docs/development/local-development.md)** for detailed instructions on setting up your local environment using Docker. Note that Cloudflare D1 type access (simulated locally via Wrangler) is required for all development work.
 
-**Recommended (Docker):**
 ```bash
 docker-compose up --build
-```
-
-**Optional (Manual):**
-```bash
-# Clone the repository
-git clone <repo-url>
-cd snea-shoebox-editor
-
-# Create virtual environment and install dependencies
-uv venv
-uv pip install -e .
-# Optional: source .venv/bin/activate
 ```
 
 ### 3. Infrastructure Bootstrapping
@@ -87,7 +73,7 @@ This script automates:
 ## Scripts
 
 - `bootstrap_env.py`: Automates Cloudflare and GitHub infrastructure setup.
-- `uv run python -m unittest discover tests`: Runs the test suite.
+- `docker-compose exec web python -m unittest discover tests`: Runs the test suite within the Docker environment.
 
 ## Documentation
 

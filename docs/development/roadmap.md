@@ -37,13 +37,7 @@ Before initializing the project, you must manually obtain the necessary "Master 
 Use the provided `bootstrap_env.py` script to automate the heavy lifting. **Note: This script will automatically detect your primary Cloudflare Account ID and set up the D1 database.**
 
 1. **Initialize Environment**:
-   It is recommended to use Docker for local development. See the **[Local Development Guide](docs/development/local-development.md)**. Note that Cloudflare D1 type access (simulated locally) is required for local work.
-   Alternatively, use `uv` to create a virtual environment and install dependencies. From the project root:
-   ```bash
-   uv venv
-   uv pip install -e .
-   # Note: activation (source .venv/bin/activate) is optional when using `uv run`
-   ```
+   It is required to use Docker for local development. See the **[Local Development Guide](docs/development/local-development.md)**. Note that Cloudflare D1 type access (simulated locally) is required for local work.
 2. **Schema Management**:
    The application automatically handles its own database schema. Upon first run and during subsequent updates, the app will:
    - Create any missing tables.
@@ -62,9 +56,9 @@ Use the provided `bootstrap_env.py` script to automate the heavy lifting. **Note
    *Note: Once the bootstrap script runs successfully, these keys are stored securely in GitHub Secrets, and you
    will not need them locally for deployment.*
 3. **Run the Bootstrap Script**:
-   Make sure you are in the `tech-docs/snea-online-concurrent-shoebox-editor/` directory:
+   Make sure you are in the `tech-docs/snea-online-concurrent-shoebox-editor/` directory and run the bootstrap script from within the Docker environment:
    ```bash
-   uv run python bootstrap_env.py
+   docker-compose exec web python bootstrap_env.py
    ```
    **What this does automatically**:
     - Creates the `snea-shoebox` D1 database on Cloudflare.
@@ -101,6 +95,21 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
       Repository Secrets.
 3. **Required Scopes**:
     - Ensure the OAuth flow requests the `read:org` scope to verify team membership.
+
+### Phase 5b: Local Development Auth Config (Manual)
+
+To support authentication during local development, a separate GitHub OAuth application should be configured to point to your local environment.
+
+1.  **Register Local GitHub OAuth App**:
+    - **Application Name**: `SNEA Shoebox Editor (Local)`
+    - **Homepage URL**: `http://localhost:8765`
+    - **Authorization callback URL**: `http://localhost:8787/auth/callback`
+2.  **Local Environment Configuration**:
+    - Create a `.env` file in the project root (not committed to VCS).
+    - Add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from the local OAuth app.
+3.  **CORS & Team Validation**:
+    - The backend (`src/backend/worker.py`) must be configured to allow CORS requests from `http://localhost:8765` during local development.
+    - Team membership validation against the `proto-SNEA` team remains active in local development, requiring an internet connection.
 
 ---
 
@@ -184,4 +193,9 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
     - Note: Approved records remain editable by both **Editors and Admins** for future enhancements (cross-references, notes).
 2. **Admin Audit Portal**: Restricted view (Admins only) of the `edit_history`.
     - **Full Snapshot History**: Every edit stores the full MDF record snapshot to facilitate easier human review, external exports, and reliable rollback.
+
+### Phase 8: Developer Experience
+1. **Dedicated Dev UI**: A built-in UI component (Dev Info) for inspecting system internals without using CLI tools.
+    - **Table Schema Inspector**: View SQL schemas for all D1 tables.
+    - **Environment Reporting**: Report Python versions and platforms for both Frontend (Solara/Pyodide) and Backend (Worker).
 

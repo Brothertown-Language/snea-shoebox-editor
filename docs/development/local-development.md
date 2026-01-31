@@ -6,15 +6,28 @@ This document provides instructions for running the SNEA Shoebox Editor locally 
 
 ## Prerequisites
 
-- **Docker**: Required for the recommended containerized development.
-- **Python**: >= 3.11 (Optional, for direct local execution/testing).
-- **uv**: Latest version (Optional, for direct local execution/testing).
+- **Docker**: Required for containerized development.
+- **Docker Compose**: Required to run the full stack.
 
-## Running with Docker (Recommended)
+## Running with Docker
 
 Using Docker ensures that dependencies like `npm`, `wrangler`, and specific Python versions do not pollute your host system.
 
-### 1. Build and Run using Docker Compose
+### 1. GitHub OAuth for Local Development
+
+To enable authentication locally, you must create a separate GitHub OAuth application:
+
+1.  Go to GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**.
+2.  **Application Name**: `SNEA Shoebox Editor (Local)`
+3.  **Homepage URL**: `http://localhost:8765`
+4.  **Authorization callback URL**: `http://localhost:8787/auth/callback`
+5.  Create a `.env` file in the project root:
+    ```env
+    GITHUB_CLIENT_ID=your_local_client_id
+    GITHUB_CLIENT_SECRET=your_local_client_secret
+    ```
+
+### 2. Build and Run using Docker Compose
 
 A `docker-compose.yml` file is provided to start both the frontend (Solara) and the backend (Wrangler/D1).
 
@@ -25,7 +38,15 @@ docker-compose up --build
 - **Frontend (Solara)**: Exposed on `http://localhost:8765`.
 - **Backend (Wrangler/D1)**: Exposed on `http://localhost:8787`.
 
-### 2. Managing the Local Database
+### 3. Authentication Flow & CORS
+
+When developing locally:
+- The frontend (`:8765`) will redirect to GitHub.
+- GitHub will redirect to the backend's callback (`:8787`).
+- The backend must handle CORS to allow the frontend to communicate with it across different ports.
+- You must be a member of the `proto-SNEA` team in the `Brothertown-Language` organization to log in, even locally.
+
+### 4. Managing the Local Database
 
 The backend container runs Wrangler with `--local --persist`, meaning your local D1 simulation data is stored in the `.wrangler` directory in the project root.
 
@@ -35,25 +56,9 @@ The application automatically handles schema creation and updates on startup. Ma
 docker-compose exec backend wrangler d1 execute snea-shoebox --local --command="SELECT name FROM sqlite_master WHERE type='table';"
 ```
 
-## Manual Local Environment Setup (Optional)
-
-If you prefer to run tests or code directly on your workstation, you can set up a local Python environment.
-
-1. **Initialize the environment**:
-   ```bash
-   uv venv
-   uv pip install -e .
-   # Note: activation (source .venv/bin/activate) is optional when using `uv run`
-   ```
-
-2. **Run Tests**:
-   ```bash
-   uv run python -m unittest discover tests
-   ```
-
 ## Local Database (Cloudflare D1)
 
-The SNEA Shoebox Editor requires Cloudflare D1 (or its local simulation via Wrangler) for all development. Direct use of local SQLite files without the D1 simulation layer is discouraged to ensure parity with the production environment.
+The SNEA Shoebox Editor requires Cloudflare D1 (or its local simulation via Wrangler) for all development.
 
 ### D1 Simulation in Docker
 
@@ -72,10 +77,3 @@ By using the D1 simulation via Wrangler, we ensure that:
 - The authentication and binding logic matches the production Worker environment.
 - The "Zero-Touch" deployment remains consistent between local and production.
 
-## Frontend Development (Solara)
-
-While `docker-compose` is recommended, you can run the Solara frontend with hot-reloading locally if you have the environment set up:
-
-```bash
-uv run solara run src/frontend/app.py
-```
