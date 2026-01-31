@@ -132,9 +132,13 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
     - Backend retrieves user token via OAuth exchange.
     - Backend verifies team membership via `GET /orgs/Brothertown-Language/teams/proto-snea/memberships/{username}`.
     - Access is granted only if the state is `active`.
-- **Optimistic Locking**: The editor uses optimistic locking to prevent overlapping edits.
-- **No Inactivity Timeouts**: Record locks are handled per session without automated expiration, relying on user action
-  and version validation.
+- **Optimistic Locking**: The editor uses optimistic locking to prevent overlapping edits. When a user attempts to save a record, the application verifies that the `current_version` in the database matches the version the user began editing. If they differ, the save is rejected, and the user is prompted to resolve the conflict via a comparison dialog.
+- **Conflict Resolution Workflow**:
+    - When a version mismatch is detected, a dialog must display both the **Live Record** (currently in the database) and the **Edited Record** (user's local changes) side-by-side.
+    - Users must be presented with two primary options:
+        - **Reload**: Discard local changes and load the latest live version.
+        - **Overwrite**: Force save the local changes, incrementing the version and overwriting the live record.
+- **No Explicit Locking**: Records are never "locked" for editing. Multiple users can open the same record simultaneously; the first one to save successfully increments the version, causing subsequent saves from other users (on the older version) to trigger the conflict resolution workflow.
 
 ### 5. Data Persistence & Edit History
 
@@ -147,4 +151,25 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
 ### 6. Administration & Permissions
 
 - **Permissions Management**: A dedicated, separate editor must be provided for the `permissions` table to manage GitHub Org/Team mappings and source-specific roles.
+- **Embeddings Management**: A dedicated management interface for the `embeddings` table to monitor, refresh, and validate AI-generated vectors.
+    - **Automatic Recalculation**: Logic to automatically trigger vector recalculation when a `record_version` mismatch is detected during a search operation.
+
+---
+
+## Feature Roadmap (Upcoming)
+
+### Phase 6: Search & Discovery
+1. **Unified Search Widget**: A single search interface supporting both FTS (Keyword) and Semantic (Vector) searching.
+    - Support for "Hybrid Search" using a **combined weighted score** to rank results.
+    - Embedding Model: `@cf/baai/bge-m3` for superior multilingual and sparse retrieval support (ideal for Algonquian-English code-switching).
+2. **Source Filtering**: UI components to filter records by origin source (e.g., Natick, Mohegan).
+3. **Embeddings Maintenance**:
+    - **Stale Vector Handling**: When a search operation detects a `record_version` mismatch, the system will trigger a vector recalculation.
+    - **Recalculation Strategy**: Recalculation will be attempted **inline** for single-record updates to ensure search accuracy, with a fallback to background processing if batch updates are detected.
+
+### Phase 7: Quality Control & Audit
+1. **Review Workflow**: Implementation of the 'approved' status to flag records as **vetted or updated**.
+    - Note: Approved records remain editable by both **Editors and Admins** for future enhancements (cross-references, notes).
+2. **Admin Audit Portal**: Restricted view (Admins only) of the `edit_history`.
+    - **Full Snapshot History**: Every edit stores the full MDF record snapshot to facilitate easier human review, external exports, and reliable rollback.
 

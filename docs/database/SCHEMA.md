@@ -58,11 +58,13 @@ CREATE TABLE embeddings (
     source_tag TEXT NOT NULL,             -- MDF tag embedded (e.g., 'lx', 'ge', 'va')
     original_text TEXT NOT NULL,          -- The raw text from the MDF tag
     embedded_text TEXT NOT NULL,          -- The final string sent to the AI (e.g. with context)
-    model_name TEXT NOT NULL,             -- AI model used (e.g., @cf/baai/bge-small-en-v1.5)
+    model_name TEXT NOT NULL,             -- AI model used (e.g., @cf/baai/bge-m3)
     record_version INTEGER NOT NULL,      -- Version of the record when this was generated
     created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
 );
+
+-- Note: @cf/baai/bge-m3 requires 1024 dimensions in Cloudflare Vectorize.
 
 CREATE INDEX idx_embeddings_vector_id ON embeddings(vector_id);
 CREATE INDEX idx_embeddings_record_id ON embeddings(record_id);
