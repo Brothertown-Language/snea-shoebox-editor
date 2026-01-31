@@ -144,5 +144,7 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
     - **OAuth User Email**: The identity of the editor.
     - **Previous Data**: State of the record before the edit.
     - **Current Data**: State of the record after the edit.
-- **Main Table Integrity**: The current record in the main table must always be the last entry in the edit history table for that record ID.
+### 6. Administration & Permissions
+
+- **Permissions Management**: A dedicated, separate editor must be provided for the `permissions` table to manage GitHub Org/Team mappings and source-specific roles.
 
