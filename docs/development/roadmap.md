@@ -117,6 +117,12 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
 
 - **Responsive UI**: Mobile and Desktop support using grid-based layouts.
 - **Strictly Python**: No JavaScript required for UI logic.
+- **Hybrid Record Editor**:
+    - **Display Mode**: Colorized and enhanced rendering of MDF records for linguistic readability.
+    - **Edit Mode**: Switches to a plain text area containing raw MDF data for direct editing.
+    - **Transition**: Validation occurs after editing to provide visual feedback (colorization), but does not block saving.
+- **Advisory Validation**: Linguistic validation (e.g., hierarchy checks) is purely advisory. It highlights potential issues for linguists but **must not** interfere with or prevent the saving of records.
+- **Read-Only Metadata**: Record metadata (last editor, timestamp, version) is visible but read-only to users.
 
 ### 3. Python Backend (Cloudflare Workers)
 
@@ -138,6 +144,7 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
     - Users must be presented with two primary options:
         - **Reload**: Discard local changes and load the latest live version.
         - **Overwrite**: Force save the local changes, incrementing the version and overwriting the live record.
+- **Per-Record History Drawer**: A toggleable UI component for the active record that displays its specific `edit_history`, allowing users to see previous snapshots and audit changes.
 - **No Explicit Locking**: Records are never "locked" for editing. Multiple users can open the same record simultaneously; the first one to save successfully increments the version, causing subsequent saves from other users (on the older version) to trigger the conflict resolution workflow.
 
 ### 5. Data Persistence & Edit History
@@ -160,10 +167,15 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
 
 ### Phase 6: Search & Discovery
 1. **Unified Search Widget**: A single search interface supporting both FTS (Keyword) and Semantic (Vector) searching.
+    - **Expanded Scope**: Search matches against Lexeme variants, Notes (`\nt`), and all example sentences (across all languages), in addition to `\lx` and `\ge` tags.
     - Support for "Hybrid Search" using a **combined weighted score** to rank results.
     - Embedding Model: `@cf/baai/bge-m3` for superior multilingual and sparse retrieval support (ideal for Algonquian-English code-switching).
 2. **Source Filtering**: UI components to filter records by origin source (e.g., Natick, Mohegan).
-3. **Embeddings Maintenance**:
+3. **Manual Record Creation**:
+    - Capability to manually add new records to any existing source.
+    - **Conflict Detection**: When adding to an existing source, a semantic and keyword search is automatically performed to highlight potential conflicts or duplicate entries.
+    - Support for creating records with entirely new sources not previously seen in the system.
+4. **Embeddings Maintenance**:
     - **Stale Vector Handling**: When a search operation detects a `record_version` mismatch, the system will trigger a vector recalculation.
     - **Recalculation Strategy**: Recalculation will be attempted **inline** for single-record updates to ensure search accuracy, with a fallback to background processing if batch updates are detected.
 
