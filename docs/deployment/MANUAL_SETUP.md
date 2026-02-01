@@ -26,11 +26,15 @@ This guide provides the one-time manual steps required to connect this repositor
 8.  *Note: If you already created a Worker manually without Git integration, go to its **Settings** -> **Builds** -> **Connect** to link the repository.*
 
 ### B. Bindings and Secrets
-1.  Go to **Settings** -> **Variables**.
-2.  **D1 Database Bindings**: Click **Add Binding**.
+1.  **API Token Permissions**: Ensure the Cloudflare API Token used for deployment has the following permissions:
+    - `Account` -> `Cloudflare Pages` -> `Edit`
+    - `Account` -> `Workers Scripts` -> `Edit`
+    - `Account` -> `D1` -> `Edit`
+2.  Go to **Settings** -> **Variables**.
+3.  **D1 Database Bindings**: Click **Add Binding**.
     - **Variable Name**: `DB`
     - **D1 Database**: Select `snea-shoebox` (created by the bootstrap script).
-3.  **Secrets**: Click **Add Secret** for each of these:
+4.  **Secrets**: Click **Add Secret** for each of these:
     - `JWT_SECRET`: (Any long random string)
     - `SNEA_GITHUB_CLIENT_ID`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_ID` in your `.env`)
     - `SNEA_GITHUB_CLIENT_SECRET`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_SECRET` in your `.env`)

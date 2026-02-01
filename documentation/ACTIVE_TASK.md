@@ -33,6 +33,7 @@ Summary:
 - Reverted `pages_build_output_dir = "."` in `wrangler.toml` as it conflicts with the `main` key used for the Python Worker.
 - Added tips to `docs/deployment/MANUAL_SETUP.md` about the scrollable repository selection box in the Cloudflare dashboard to improve UX discovery.
 - Updated `docs/deployment/MANUAL_SETUP.md` to use 'Settings' -> 'Domains & Routes' for Worker custom domains, matching the current Cloudflare UI.
+- Updated `docs/deployment/MANUAL_SETUP.md` to specify the mandatory Cloudflare API Token permissions (`Cloudflare Pages`, `Workers Scripts`, `D1`) to resolve authentication error 10000.
 
 Next Steps:
 - DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.
