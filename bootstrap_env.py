@@ -191,7 +191,6 @@ database_id = "{db_id}"
 
     print("\nwrangler.toml: Generated - VERIFIED")
     print("\nSetup Complete! 'wrangler.toml' generated and secrets uploaded.")
-    print("NOTE: Run 'uv run python bootstrap_domains.py' to configure custom domains.")
 
 
 if __name__ == "__main__":
