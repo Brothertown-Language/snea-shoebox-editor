@@ -16,6 +16,7 @@ dependencies = [
     "pytest-playwright>=0.4.0",
     "pytest-timeout>=2.2.0",
     "watchgod>=0.8.2",
+    "tqdm>=4.66.0",
 ]
 
 [dependency-groups]
