@@ -22,14 +22,14 @@ Before initializing the project, you must manually obtain the necessary "Master 
     - Go to the [**Cloudflare Dashboard > API Tokens**](https://dash.cloudflare.com/profile/api-tokens).
     - Click **Create Token** and use the **Get started** button next to **Create Custom Token**.
     - *Note: A User API Token is recommended because it supports the mix of Account and Zone permissions required by Wrangler.*
-    - Create a token with: `Account` | `Workers Scripts` | `Edit`, `Account` | `Workers KV Storage` | `Edit`, `Account` | `Workers R2 Storage` | `Edit`, `Account` | `D1` | `Edit` (if available), `Account` | `Cloudflare Pages` | `Edit`, `Account` | `Account Settings` | `Read`, and `Zone` | `Workers Routes` | `Edit`.
-    - *Note: D1 permissions are implicitly included in Workers permissions. "Account-level" tokens often fail for Wrangler deployments.*
+    - Create a token with: `Account` | `D1` | `Edit`, `Account` | `Workers Scripts` | `Edit`, `Account` | `Cloudflare Pages` | `Edit`, `Account` | `Account Settings` | `Read`, `Zone` | `Workers Routes` | `Edit`, and `Zone` | `DNS` | `Read`.
+    - *Note: `Workers KV Storage` and `Workers R2 Storage` are NOT required.*
     - **Final Summary Verification**:
         Your token summary should look like this:
         > **snea-editor API token summary**
         > This API token will affect the below accounts and zones, along with their respective permissions:
-        > * **All accounts** - `Workers Scripts: Edit`, `Workers KV Storage: Edit`, `Workers R2 Storage: Edit`, `Cloudflare Pages: Edit`, `Account Settings: Read`
-        > * **All zones** - `Workers Routes: Edit`
+        > * **All accounts** - `Cloudflare Pages: Edit`, `Workers Scripts: Edit`, `Account Settings: Read`, `D1: Edit`
+        > * **All zones** - `Workers Routes: Edit`, `DNS: Read`
 2. **Generate GitHub Personal Access Token (PAT)**:
     - Go to [**Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**](https://github.com/settings/tokens).
     - Generate a token with the `repo` scope.
@@ -69,7 +69,7 @@ Use the provided `bootstrap_env.py` script to automate the heavy lifting. **Note
    ```bash
    uv venv && source .venv/bin/activate
    uv pip install -e .
-   python bootstrap_env.py
+   uv run python bootstrap_env.py
    ```
 
    **IMPORTANT**: This step is only for the initial setup of Cloudflare D1 and GitHub Secrets. **Skip this for local development.**

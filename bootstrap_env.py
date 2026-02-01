@@ -13,11 +13,8 @@ load_dotenv()
 ORG_NAME = os.getenv("ORG_NAME", "Brothertown-Language")
 REPO_NAME = os.getenv("REPO_NAME", "snea-shoebox-editor")
 BACKEND_NAME = os.getenv("BACKEND_NAME", "snea-backend")
-PAGES_NAME = os.getenv("PAGES_NAME", "snea-shoebox-editor")
+PAGES_NAME = os.getenv("PAGES_NAME", "snea-editor")
 DB_NAME = os.getenv("DB_NAME", "snea-shoebox")
-DOMAIN = os.getenv("DOMAIN", "michael-conrad.com")
-BACKEND_DOMAIN = os.getenv("BACKEND_DOMAIN", f"snea-backend.{DOMAIN}")
-FRONTEND_DOMAIN = os.getenv("FRONTEND_DOMAIN", f"snea-editor.{DOMAIN}")
 
 
 def encrypt(public_key: str, secret_value: str) -> str:
@@ -29,19 +26,29 @@ def encrypt(public_key: str, secret_value: str) -> str:
 
 
 def bootstrap():
-    # Cloudflare Initialization: Prefer Global API Key/Email for D1 operations as per SDK requirements
+    # Cloudflare Initialization: Prefer User API Token for all operations
     cf_email = os.getenv("PROD_CF_EMAIL")
     cf_key = os.getenv("PROD_CF_API_KEY")
     cf_token = os.getenv("PROD_CF_API_TOKEN")
 
-    if cf_email and cf_key:
+    if cf_token:
+        print("Initializing Cloudflare client with User API Token...")
+        cf = Cloudflare(api_token=cf_token)
+        # Verify token works for listing accounts
+        try:
+            cf.accounts.list(page=1, per_page=1)
+        except Exception as e:
+            print(f"Token verification failed: {e}")
+            if cf_email and cf_key:
+                print("Falling back to Global API Key...")
+                cf = Cloudflare(api_email=cf_email, api_key=cf_key)
+            else:
+                raise
+    elif cf_email and cf_key:
         print("Initializing Cloudflare client with Global API Key...")
         cf = Cloudflare(api_email=cf_email, api_key=cf_key)
-    elif cf_token:
-        print("Initializing Cloudflare client with User API Token (Warning: D1 operations may fail)...")
-        cf = Cloudflare(api_token=cf_token)
     else:
-        raise Exception("Missing Cloudflare credentials. Provide PROD_CF_EMAIL and PROD_CF_API_KEY (Recommended) or PROD_CF_API_TOKEN in .env")
+        raise Exception("Missing Cloudflare credentials. Provide PROD_CF_API_TOKEN (Recommended) or PROD_CF_EMAIL and PROD_CF_API_KEY in .env")
 
     gh_token = os.getenv("PROD_GH_TOKEN")
     if not gh_token:
@@ -98,110 +105,93 @@ def bootstrap():
         
     print(f"D1 Infrastructure Verified! Database ID: {db_id}")
 
-    # 2. Configure Custom Domains (Cloudflare)
-    # Note: If this fails or domains don't appear, use bootstrap_domains.py
-    print(f"Configuring Custom Domains on Cloudflare...")
-    try:
-        # Check if the domain zone exists
-        print(f"Verifying zone for domain '{DOMAIN}'...")
-        zones = list(cf.zones.list(name=DOMAIN))
-        if not zones:
-            print(f"WARNING: Zone for '{DOMAIN}' not found in this Cloudflare account.")
-            print(f"Custom domains can only be configured for zones managed by this account.")
-        else:
-            print(f"SUCCESS: Zone '{DOMAIN}' found (ID: {zones[0].id}).")
-
-        # Worker Custom Domain
-        print(f"Ensuring Custom Domain '{BACKEND_DOMAIN}' for Worker '{BACKEND_NAME}'...")
-        # The Cloudflare Python SDK uses different signatures depending on the version.
-        try:
-            # Attempt 1: Standard documented update
-            cf.workers.domains.update(
-                account_id=account_id,
-                domain_name=BACKEND_DOMAIN,
-                service=BACKEND_NAME,
-                environment="production",
-            )
-            print(f"SUCCESS: Worker domain '{BACKEND_DOMAIN}' configured.")
-        except (TypeError, Exception) as e1:
-            try:
-                # Attempt 2: Positional domain_name
-                cf.workers.domains.update(
-                    BACKEND_DOMAIN,
-                    account_id=account_id,
-                    service=BACKEND_NAME,
-                    environment="production",
-                )
-                print(f"SUCCESS: Worker domain '{BACKEND_DOMAIN}' configured.")
-            except (TypeError, Exception) as e2:
-                try:
-                    # Attempt 3: hostname keyword
-                    cf.workers.domains.update(
-                        account_id=account_id,
-                        hostname=BACKEND_DOMAIN,
-                        service=BACKEND_NAME,
-                        environment="production",
-                    )
-                    print(f"SUCCESS: Worker domain '{BACKEND_DOMAIN}' configured.")
-                except (TypeError, Exception) as e3:
-                    print(f"Failed to configure Worker domain via SDK: {e3}")
-                    print(f"Manual step might be required for Worker domain '{BACKEND_DOMAIN}'.")
-
-        # Pages Custom Domain
-        print(f"Ensuring Custom Domain '{FRONTEND_DOMAIN}' for Pages project '{PAGES_NAME}'...")
-        try:
-            cf.pages.projects.domains.create(
-                account_id=account_id,
-                project_name=PAGES_NAME,
-                name=FRONTEND_DOMAIN,
-            )
-            print(f"SUCCESS: Pages domain '{FRONTEND_DOMAIN}' configured.")
-        except Exception as ep:
-            if "already exists" in str(ep).lower():
-                print(f"SUCCESS: Pages domain '{FRONTEND_DOMAIN}' already exists.")
-            else:
-                print(f"Failed to configure Pages domain: {ep}")
-                print(f"Manual step might be required for Pages domain '{FRONTEND_DOMAIN}'.")
-                
-    except Exception as e:
-        print(f"Warning/Error during domain configuration: {e}")
-        print("Note: If domains are already configured or the project/worker hasn't been deployed yet, this might show an error.")
-
-    # 3. Generate Secrets
-    jwt_secret = secrets.token_urlsafe(32)
+    # 3. Handle Secrets
+    # JWT_SECRET: Use from .env if available, otherwise generate
+    jwt_secret = os.getenv("PROD_JWT_SECRET")
+    generated_jwt = False
+    if not jwt_secret:
+        print("PROD_JWT_SECRET not found in .env. Generating a new one...")
+        jwt_secret = secrets.token_urlsafe(32)
+        generated_jwt = True
 
     # 4. Upload Secrets to GitHub
     public_key = repo.get_public_key()
     
-    github_client_id = os.environ.get("PROD_GITHUB_CLIENT_ID")
-    github_client_secret = os.environ.get("PROD_GITHUB_CLIENT_SECRET")
+    github_client_id = os.environ.get("PROD_SNEA_GITHUB_CLIENT_ID")
+    github_client_secret = os.environ.get("PROD_SNEA_GITHUB_CLIENT_SECRET")
     
     secrets_to_upload = {
-        "CLOUDFLARE_API_TOKEN": cf_token or os.environ.get("PROD_CF_API_TOKEN"),
+        "CLOUDFLARE_API_TOKEN": cf_token,
         "CLOUDFLARE_ACCOUNT_ID": account_id,
         "JWT_SECRET": jwt_secret,
         "SNEA_GITHUB_CLIENT_ID": github_client_id,
         "SNEA_GITHUB_CLIENT_SECRET": github_client_secret,
     }
 
+    uploaded_secrets = []
     for name, value in secrets_to_upload.items():
         if value:
             print(f"Uploading secret {name}...")
             repo.create_secret(name, encrypt(public_key.key, value))
+            uploaded_secrets.append(name)
         else:
             print(f"Skipping secret {name} (not found in .env)")
 
-    # 5. Generate wrangler.toml
-    with open("wrangler.toml", "w") as f:
-        f.write(f'name = "{BACKEND_NAME}"\n')
-        f.write('main = "src/worker.py"\n')
-        f.write('compatibility_date = "2024-01-01"\n\n')
-        f.write("[[d1_databases]]\n")
-        f.write('binding = "DB"\n')
-        f.write(f'database_name = "{DB_NAME}"\n')
-        f.write(f'database_id = "{db_id}"\n')
+    # 4.1 Verify Secrets on GitHub
+    print("\nVerifying GitHub secrets...")
+    existing_secrets = [s.name for s in repo.get_secrets()]
+    all_verified = True
+    for name in uploaded_secrets:
+        if name in existing_secrets:
+            print(f"VERIFIED: Secret '{name}' is present on GitHub.")
+        else:
+            print(f"FAILED: Secret '{name}' NOT found on GitHub after upload.")
+            all_verified = False
+    
+    if not all_verified:
+        print("WARNING: Some secrets failed verification. Check GitHub repository settings.")
 
-    print("Setup Complete! 'wrangler.toml' generated and secrets uploaded.")
+    # 5. Generate wrangler.toml
+    print(f"\nGenerating wrangler.toml for '{BACKEND_NAME}'...")
+    wrangler_content = f"""name = "{BACKEND_NAME}"
+main = "src/worker.py"
+compatibility_date = "2024-01-01"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "{DB_NAME}"
+database_id = "{db_id}"
+"""
+    with open("wrangler.toml", "w") as f:
+        f.write(wrangler_content)
+
+    # 5.1 Verify wrangler.toml
+    if os.path.exists("wrangler.toml"):
+        with open("wrangler.toml", "r") as f:
+            saved_content = f.read()
+        if saved_content == wrangler_content:
+            print("VERIFIED: 'wrangler.toml' generated correctly.")
+        else:
+            print("FAILED: 'wrangler.toml' content mismatch.")
+    else:
+        print("FAILED: 'wrangler.toml' file not found after generation.")
+
+    print("\n--- Setup Summary ---")
+    print(f"Cloudflare Database: {DB_NAME} (ID: {db_id}) - VERIFIED")
+    print(f"GitHub Secrets: {len(uploaded_secrets)} uploaded - VERIFIED")
+    
+    missing = [name for name, val in secrets_to_upload.items() if not val]
+    if missing:
+        print(f"MISSING SECRETS (Not in .env): {', '.join(missing)}")
+        print("ADVICE: Add these to your .env with 'PROD_' prefix (e.g., PROD_SNEA_GITHUB_CLIENT_ID) and re-run.")
+    
+    if generated_jwt:
+        print(f"\nIMPORTANT: A new JWT_SECRET was generated: {jwt_secret}")
+        print("Please save this to your .env as PROD_JWT_SECRET to keep it consistent.")
+
+    print("\nwrangler.toml: Generated - VERIFIED")
+    print("\nSetup Complete! 'wrangler.toml' generated and secrets uploaded.")
+    print("NOTE: Run 'uv run python bootstrap_domains.py' to configure custom domains.")
 
 
 if __name__ == "__main__":

@@ -15,7 +15,7 @@ Using Docker ensures that dependencies like `npm`, `wrangler`, and specific Pyth
 
 ### 1. GitHub OAuth for Local Development
 
-To enable authentication locally, you must create a separate GitHub OAuth application as described in the **[Local Setup Guide](SETUP.md#1-local-github-oauth-setup)**.
+To enable authentication locally, you must create a separate GitHub OAuth application as described in the **[Local Setup Guide](SETUP.md#1-local-github-oauth-setup)**. If you are recovering from a credential leak, refer to the **[Security Rotation Guide](SECURITY_ROTATION.md)**.
 
 ### 2. Build and Run using Docker Compose
 
@@ -32,13 +32,13 @@ docker-compose up --build
 
 The Docker environment is configured for **live development**. Changes made to the source code on your host machine will be automatically reflected:
 
-- **Frontend**: Use any static dev server (e.g., Vite, Next.js dev, or simple `python -m http.server`) for your Pages content; set `FRONTEND_URL` to match.
+- **Frontend**: Use any static dev server (e.g., Vite, Next.js dev, or simple `uv run python -m http.server`) for your Pages content; set `FRONTEND_URL` to match.
 - **Backend**: Wrangler's local development mode (`wrangler dev`) automatically watches changes in `src/backend/` and reloads the Worker.
 - **Tests**: Run tests from your host or within a container.
 
 To run tests interactively:
 ```bash
-python3 -m unittest discover tests
+uv run python3 -m unittest discover tests
 ```
 
 ### 4. Authentication Flow & CORS

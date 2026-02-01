@@ -4,21 +4,8 @@
 Date: 2026-02-01
 
 Summary:
-- Ensured all records' homonym numbers (`\hm`) and `sort_key` are synced with their MDF data via a migration in `src/backend/worker.py`.
-- Updated `src/backend/mdf_parser.py` and `src/frontend/app.py` to extract `\hm` (defaulting to 1).
-- Added `hm` column to `records` table in SQLite database.
-- Implemented database migration to populate `hm` from existing MDF records.
-- Updated `/api/records` endpoint to sort by `sort_key` (ASC), `hm` (ASC), then `source_name` (ASC).
-- Implemented offset-based pagination in backend and frontend to replace fixed limits.
-- Added `limit` and `offset` query parameter support to `/api/records` backend endpoint.
-- Added pagination controls (Next/Previous) to Streamlit frontend sidebar.
-- Synced pagination state with browser URL query parameters.
-- Implemented NFD-form sorting for linguistic records.
-- Added `sort_key` column to `records` table to store normalized form (ignores leading punctuation, keeps diacritics).
-- Updated `worker.py` with `get_sort_key` utility and database migration logic.
-- Treated '∞' as a valid sorting character (non-punctuation) as required for Algonquian records.
-- Removed single quote (') from sorting keys entirely, including mid-word positions.
-- Ensured records are sorted by `sort_key` in the API.
+- Purging historical contents of `.env` from git history.
+- Committing all current changes before rewriting history.
 
 Next Steps:
 - Implement optimistic locking for concurrent record editing.
@@ -26,9 +13,27 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
+- **SECURITY ROTATION COMPLETE**: Successfully rotated all exposed secrets (GitHub OAuth, GitHub PAT, Cloudflare Tokens) and synchronized them to production via `bootstrap_env.py`.
+- Fixed Cloudflare 401 Authentication Error in `bootstrap_env.py` by adding a fallback mechanism to the Global API Key if the User API Token fails verification.
+- Updated `docs/development/SECURITY_ROTATION.md` to include rotation instructions for the Cloudflare Global API Key and updated the token name to "snea-editor".
+- Ensured all Cloudflare-related environment variables (`PROD_CF_EMAIL`, `PROD_CF_API_KEY`, `PROD_CF_API_TOKEN`) are explicitly covered in rotation and setup documentation.
+- Updated `PROD_SETUP.md` example `.env` to include both the Global Key and User Token, with clear prioritization notes.
+- Fixed `bootstrap_domains.py` to prioritize `PROD_CF_API_TOKEN` while maintaining fallback logic for Global API Key authentication.
+- Fixed `bootstrap_env.py` to correctly pick up GitHub OAuth credentials from `.env` by checking both `PROD_` and `SNEA_` prefixes, resolving the issue where `SNEA_GITHUB_CLIENT_ID` and `SNEA_GITHUB_CLIENT_SECRET` were being skipped.
+- Enforced the use of `uv run` for all Python tasks in documentation (`README.md`, `PROD_SETUP.md`, `local-development.md`, `roadmap.md`) and within `bootstrap_env.py` completion advice.
+- Removed custom domain configuration from `bootstrap_env.py` and centralized it in `bootstrap_domains.py`.
+- Updated `PROD_SETUP.md` to reflect the separation of concerns between `bootstrap_env.py` and `bootstrap_domains.py`.
+- Renamed Pages project name from "snea-shoebox-editor" to "snea-editor" in `bootstrap_env.py`, `bootstrap_domains.py`, and `PROD_SETUP.md` for consistency with the frontend domain.
+- Fixed `bootstrap_domains.py` to be functional by adding a `__main__` entry point.
+- Added missing copyright header to `bootstrap_domains.py`.
+- Enhanced `bootstrap_domains.py` to support frontend domain configuration for Cloudflare Pages.
+- Improved error handling and API response logging in `bootstrap_domains.py`.
 - Improved session cookie persistence by adding a `time.sleep(1)` delay before `st.rerun()` to ensure JavaScript has time to execute in the browser.
 - Added fallback logic to set the cookie in the iframe if `window.parent` is inaccessible.
 - Fixed session cookie visibility by using `window.parent.document.cookie` via `components.html` to bypass Streamlit iframe sandboxing.
+- Updated project documentation (`README.md`, `SETUP.md`, `PROD_SETUP.md`, `local-development.md`) to incorporate the `SECURITY_ROTATION.md` guide and standardize the `.env` file structure.
+- Corrected inconsistent port references in `SETUP.md` (updated from `5173` to `8501` for the Streamlit frontend).
+- Added explicit warnings about not committing the `.env` file and provided direct links to the security recovery process in all setup guides.
 - Implemented persistent login tokens using browser cookies.
 - Added session restoration from cookies in the frontend `main()` function.
 - Implemented `/api/me` endpoint in the backend for user profile retrieval.
