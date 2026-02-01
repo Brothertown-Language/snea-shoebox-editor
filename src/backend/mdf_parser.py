@@ -20,15 +20,23 @@ def parse_mdf(content):
         record = {
             'mdf_data': mdf_data,
             'lx': '',
+            'hm': 1,
             'ps': '',
             'ge': ''
         }
         
-        # Extract metadata fields (\lx, \ps, \ge) for UI/indexing only
+        # Extract metadata fields (\lx, \ps, \ge, \hm) for UI/indexing only
         # The mdf_data itself remains the source of truth
         lx_match = re.search(r'^\\lx\s+(.+)$', mdf_data, re.MULTILINE)
         if lx_match:
             record['lx'] = lx_match.group(1).strip()
+            
+        hm_match = re.search(r'^\\hm\s+(\d+)$', mdf_data, re.MULTILINE)
+        if hm_match:
+            try:
+                record['hm'] = int(hm_match.group(1).strip())
+            except ValueError:
+                record['hm'] = 1
             
         ps_match = re.search(r'^\\ps\s+(.+)$', mdf_data, re.MULTILINE)
         if ps_match:
