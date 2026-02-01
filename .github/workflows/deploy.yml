@@ -27,7 +27,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-          wranglerVersion: '3.x'
+          wranglerVersion: '3'
           secrets: |
             JWT_SECRET
             SNEA_GITHUB_CLIENT_ID

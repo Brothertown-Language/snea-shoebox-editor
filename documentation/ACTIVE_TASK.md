@@ -4,6 +4,7 @@
 Date: 2026-02-01
 
 Summary:
+- Updated `wranglerVersion` to '3' in `.github/workflows/deploy.yml` to resolve "Invalid Version: 3.x" error during secret upload.
 - Reverted `wrangler` version to 3.x in `.github/workflows/deploy.yml` for stability, following user approval to downgrade.
 - Reverted Pages project name to "snea-shoebox-editor" in `.github/workflows/deploy.yml` to match the existing Cloudflare project and fix the 404 deployment error.
 - Verified that while the custom domain is "snea-editor", the underlying Pages project name must remain "snea-shoebox-editor" for successful API routing.
@@ -14,6 +15,7 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
+- Fixed "Invalid Version: 3.x" error by updating `wranglerVersion` to '3' in `.github/workflows/deploy.yml`.
 - Reverted `wrangler` to version 3.x in GitHub Actions deployment to resolve "Invalid Version: 4" error.
 - Updated `wrangler` to version 4.61.1 in GitHub Actions deployment to satisfy validation requirements while using version 4. (REVERTED)
 - Investigated `wrangler` version 4 deployment failure; identified that `wranglerVersion: '4'` in `wrangler-action` caused validation errors during secret upload.
