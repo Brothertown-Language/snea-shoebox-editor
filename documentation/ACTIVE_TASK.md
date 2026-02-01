@@ -37,6 +37,10 @@ Summary:
 - Restored mandatory `npx wrangler pages deploy` commands for the frontend in `MANUAL_SETUP.md` as requested by the user, using the `--project-name snea-editor --no-config` flags.
 - Added a troubleshooting note regarding "Authentication error [code: 10000]" and its link to API Token permissions in Section 1.B.
 - Clarified what "API Token" refers to in `docs/deployment/MANUAL_SETUP.md` (Cloudflare User API Token), including creation steps and storage in GitHub Secrets.
+- Simplified `docs/deployment/MANUAL_SETUP.md` by assuming usage of `bootstrap_env.py`, removing redundant manual steps for GitHub Secrets and `wrangler.toml`.
+- Added a "Prerequisites" section to `MANUAL_SETUP.md` for creating the Cloudflare API Token, including a "clean slate" tip for confusing tokens.
+- Refined dashboard navigation ("at the top") and permission lists in `MANUAL_SETUP.md` to perfectly match the Cloudflare UI and user feedback.
+- Removed pedantic language and non-standard numbering from the deployment guides.
 
 Next Steps:
 - DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.

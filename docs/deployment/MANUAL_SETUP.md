@@ -5,7 +5,29 @@ This guide provides the one-time manual steps required to connect this repositor
 
 > **Note**: Cloudflare is transitioning from separate "Workers" and "Pages" products into a unified "Workers" platform. This guide reflects the modern unified flow.
 
-## 1. BACKEND SETUP (Cloudflare Worker + D1)
+## 1. PREREQUISITES: The Cloudflare API Token
+
+Before starting the setup, you must have a Cloudflare API Token. This token is what allows GitHub to talk to Cloudflare.
+
+**Tip**: If you have existing tokens and are unsure which is which, **delete them both** and create one fresh token following the steps below. This ensures you start with the correct permissions.
+
+1.  **Create the Token**:
+    -   Go to the [Cloudflare Dashboard > My Profile > API Tokens](https://dash.cloudflare.com/profile/api-tokens).
+    -   Click **Create Token**.
+    -   Find **Create Custom Token** (at the top) and click **Get started**.
+2.  **Set Permissions**: Name the token `snea-deploy-token` and add these **3 specific permissions**:
+    -   `Account` | `Cloudflare Pages` | `Edit`
+    -   `Account` | `Workers Scripts` | `Edit`
+    -   `Account` | `D1` | `Edit`
+3.  **Save the Token**:
+    -   Click **Continue to summary** -> **Create Token**.
+    -   **COPY THE TOKEN IMMEDIATELY.** It will never be shown again.
+    -   Paste this token into your `.env` file as `PROD_CF_API_TOKEN`.
+    -   *(If you run `bootstrap_env.py`, it will automatically upload this token to GitHub as a secret named `CLOUDFLARE_API_TOKEN`.)*
+
+---
+
+## 2. BACKEND SETUP (Cloudflare Worker + D1)
 
 ### A. Create and Connect the Worker
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create**.
@@ -25,29 +47,25 @@ This guide provides the one-time manual steps required to connect this repositor
 7.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` (which sets the name to `snea-backend`) from GitHub.
 8.  *Note: If you already created a Worker manually without Git integration, go to its **Settings** -> **Builds** -> **Connect** to link the repository.*
 
-### B. Bindings, Secrets, and API Tokens
+### B. Bindings and Secrets (Automated)
 
-1.  **What is the API Token?**: To allow the automated deployment from GitHub to work, Cloudflare needs a **User API Token**. If you used the `bootstrap_env.py` script, this is the token you created then. If not, you must create one.
-    - **Where to get it**: [Cloudflare Dashboard > My Profile > API Tokens](https://dash.cloudflare.com/profile/api-tokens).
-    - **How to create**: Click **Create Token** -> **Create Custom Token** -> Name it `snea-editor-token`.
-2.  **API Token Permissions**: Ensure this token has the following specific permissions (otherwise you will get "Authentication error [code: 10000]"):
-    - `Account` -> `Cloudflare Pages` -> `Edit`
-    - `Account` -> `Workers Scripts` -> `Edit`
-    - `Account` -> `D1` -> `Edit`
-3.  **Where to put it**: This token should be saved in your GitHub Repository Secrets (on GitHub.com) as `CLOUDFLARE_API_TOKEN`. Cloudflare's build system will use it automatically.
-4.  **Database and Secrets**: In the Cloudflare Dashboard for your Worker (`snea-backend`):
-    - Go to **Settings** -> **Variables**.
-    - **D1 Database Bindings**: Click **Add Binding**.
-        - **Variable Name**: `DB`
-        - **D1 Database**: Select `snea-shoebox` (created by the bootstrap script).
-    - **Secrets**: Click **Add Secret** for each of these:
-        - `JWT_SECRET`: (Any long random string)
-        - `SNEA_GITHUB_CLIENT_ID`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_ID` in your `.env`)
-        - `SNEA_GITHUB_CLIENT_SECRET`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_SECRET` in your `.env`)
+If you have already run `python3 bootstrap_env.py` (which uses the token from Step 1), the following are handled for you:
+-   **API Token**: `CLOUDFLARE_API_TOKEN` is uploaded to GitHub Secrets.
+-   **Secrets**: `JWT_SECRET`, `SNEA_GITHUB_CLIENT_ID`, and `SNEA_GITHUB_CLIENT_SECRET` are uploaded to GitHub Secrets.
+-   **Wrangler Config**: `wrangler.toml` is generated with your `database_id`.
+
+Next, perform this manual step in the Cloudflare Dashboard for the `snea-backend` worker:
+
+1.  **D1 Database Binding**:
+    -   Go to the `snea-backend` Worker -> **Settings** -> **Variables**.
+    -   Click **Add Binding**.
+    -   **Variable Name**: `DB`
+    -   **D1 Database**: Select `snea-shoebox`.
+    -   Click **Save and Deploy**.
 
 ---
 
-## 2. FRONTEND SETUP (Cloudflare Workers Assets / Pages)
+## 3. FRONTEND SETUP (Cloudflare Workers Assets / Pages)
 
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create**.
 2.  Select **Create application** -> **Import a repository** (or click **Get started** next to **Import a repository**).
@@ -65,12 +83,11 @@ This guide provides the one-time manual steps required to connect this repositor
     - **Build Command**: (Leave EMPTY)
     - **Build output directory**: `.` (The current directory)
 7.  Click **Save and Deploy**. Cloudflare will now treat this as a Workers Assets (Pages) project.
-    - *Note: If you encounter "Authentication error [code: 10000]", double-check that your API Token has the permissions specified in Section 1.B.*
 8.  **Environment Variables**: After deployment, go to the project's **Settings** -> **Variables** and add:
     - `BACKEND_URL`: `https://snea-backend.brothertownlanguage.org`
 
 ---
 
-## 3. CUSTOM DOMAINS
+## 4. CUSTOM DOMAINS
 1.  **Backend**: Worker -> **Settings** -> **Domains & Routes** -> **Add Custom Domain** -> Add `snea-backend.brothertownlanguage.org`.
 2.  **Frontend**: Project -> **Settings** -> **Custom domains** -> **Add Custom Domain** -> Add `snea-editor.brothertownlanguage.org`.
