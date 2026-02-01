@@ -4,8 +4,8 @@
 This guide provides step-by-step instructions for manually setting up the SNEA Online Shoebox Editor on Cloudflare. We are using one Git repository to serve two distinct subdomains.
 
 ## Architecture
-- **Frontend**: `snea-editor.brothertownlanguage.org` (Cloudflare Pages)
-- **Backend**: `snea-backend.brothertownlanguage.org` (Cloudflare Workers, Project name: `snea-editor`)
+- **Frontend**: `snea-editor.brothertownlanguage.org` (Cloudflare Pages, uses GitHub connection)
+- **Backend**: `snea-backend.brothertownlanguage.org` (Cloudflare Workers, Project name: `snea-editor`, deployed via `wrangler`)
 
 ---
 
