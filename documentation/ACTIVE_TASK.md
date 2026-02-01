@@ -4,9 +4,9 @@
 Date: 2026-02-01
 
 Summary:
-- Fixing GitHub deployment error by enabling `python_workers` compatibility flag.
-- Updating `wrangler.toml` with correct `main` path and compatibility flags.
-- Simplifying `.github/workflows/deploy.yml` by delegating configuration to `wrangler.toml`.
+- Updated `wrangler` to version 4 in `.github/workflows/deploy.yml` as requested by Cloudflare deployment logs.
+- Reverted Pages project name to "snea-shoebox-editor" in `.github/workflows/deploy.yml` to match the existing Cloudflare project and fix the 404 deployment error.
+- Verified that while the custom domain is "snea-editor", the underlying Pages project name must remain "snea-shoebox-editor" for successful API routing.
 
 Next Steps:
 - Implement optimistic locking for concurrent record editing.
@@ -14,6 +14,7 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
+- Updated Wrangler to version 4 in GitHub Actions deployment.
 - Fixed GitHub deployment error: enabled `python_workers` compatibility flag in `wrangler.toml`.
 - Corrected `main` entry point in `wrangler.toml` to `src/backend/worker.py`.
 - Simplified `deploy-backend` job in `.github/workflows/deploy.yml` to use `wrangler.toml` configuration.
