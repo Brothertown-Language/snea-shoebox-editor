@@ -5,7 +5,7 @@ This guide provides step-by-step instructions for manually setting up the SNEA O
 
 ## Architecture
 - **Frontend**: `snea-editor.brothertownlanguage.org` (Cloudflare Pages)
-- **Backend**: `snea-backend.brothertownlanguage.org` (Cloudflare Workers)
+- **Backend**: `snea-backend.brothertownlanguage.org` (Cloudflare Workers, Project name: `snea-editor`)
 
 ---
 
@@ -64,7 +64,7 @@ We recommend using the `wrangler` CLI for the first deployment to ensure binding
     npx wrangler deploy
     ```
 3.  **Custom Domain**:
-    - Navigate to **Workers & Pages** -> **Overview** -> `snea-backend`.
+    - Navigate to **Workers & Pages** -> **Overview** -> `snea-editor` (the Worker).
     - Go to **Triggers** -> **Custom Domains**.
     - Click **Add Custom Domain** and enter `snea-backend.brothertownlanguage.org`.
 4.  **Add Secrets**:
