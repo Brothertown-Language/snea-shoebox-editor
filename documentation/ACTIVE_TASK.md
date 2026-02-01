@@ -5,6 +5,7 @@ Date: 2026-02-01
 
 Summary:
 - Removed `wranglerVersion` from `.github/workflows/deploy.yml` to use the action-bundled Wrangler for v3 and avoid semver validation during secret upload.
+- Migrated Worker deploy to `cloudflare/wrangler-action@v4` to resolve v3 secrets upload API path error (7003) while still using the bundled Wrangler.
 - Updated `wranglerVersion` to '3' in `.github/workflows/deploy.yml` to resolve "Invalid Version: 3.x" error during secret upload.
 - Reverted `wrangler` version to 3.x in `.github/workflows/deploy.yml` for stability, following user approval to downgrade.
 - Reverted Pages project name to "snea-shoebox-editor" in `.github/workflows/deploy.yml` to match the existing Cloudflare project and fix the 404 deployment error.
@@ -17,6 +18,7 @@ Next Steps:
 
 Completed Tasks:
 - Switched to action-bundled Wrangler by removing `wranglerVersion` from Worker deploy job in `.github/workflows/deploy.yml`.
+- Updated Worker deploy step to `cloudflare/wrangler-action@v4` (bundled Wrangler) after v3 failed uploading secrets with CF API 7003.
 - Fixed "Invalid Version: 3.x" error by updating `wranglerVersion` to '3' in `.github/workflows/deploy.yml`.
 - Reverted `wrangler` to version 3.x in GitHub Actions deployment to resolve "Invalid Version: 4" error.
 - Updated `wrangler` to version 4.61.1 in GitHub Actions deployment to satisfy validation requirements while using version 4. (REVERTED)
