@@ -29,7 +29,8 @@ Summary:
 - Updated `docs/deployment/MANUAL_SETUP.md` to reflect Cloudflare's modern "Import a repository" flow for both Workers and Pages, removing all references to the obsolete "Pages" tab in the unified dashboard.
 - Explicitly detailed the "Set up your application" fields in `MANUAL_SETUP.md`, specifying mandatory `wrangler` commands for deployment.
 - Added mandatory `--project-name snea-editor` to frontend deploy commands in `MANUAL_SETUP.md` to fix "Must specify a project name" error.
-- Added `pages_build_output_dir = "."` to `wrangler.toml` to suppress Wrangler warnings and satisfy Pages requirements.
+- Added `--no-config` to frontend deploy commands in `MANUAL_SETUP.md` to prevent conflict with the Worker-specific `wrangler.toml`.
+- Reverted `pages_build_output_dir = "."` in `wrangler.toml` as it conflicts with the `main` key used for the Python Worker.
 - Added tips to `docs/deployment/MANUAL_SETUP.md` about the scrollable repository selection box in the Cloudflare dashboard to improve UX discovery.
 
 Next Steps:

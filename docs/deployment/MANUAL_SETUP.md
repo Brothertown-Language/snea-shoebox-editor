@@ -46,8 +46,8 @@ This guide provides the one-time manual steps required to connect this repositor
 4.  **Project Name**: `snea-editor`.
 5.  **Set up your application**:
     - **Build command**: (Leave EMPTY)
-    - **Deploy command**: `npx wrangler pages deploy . --project-name snea-editor`
-    - **Non-production branch deploy command**: `npx wrangler pages deploy . --project-name snea-editor`
+    - **Deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
+    - **Non-production branch deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
     - **Path**: `/`
 6.  **Build Settings**:
     - **Production Branch**: `main`
