@@ -7,7 +7,7 @@ This guide provides the one-time manual steps required to connect this repositor
 
 ### A. Create and Connect the Worker
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Worker**.
-2.  Leave the default name (e.g., `snea-shoebox-editor`) and click **Deploy**.
+2.  Change the name to **`snea-backend`** (or leave the default and it will be updated by GitHub) and click **Deploy**.
 3.  On the "Success" page, click **Edit Code** or **Go to Dashboard**.
 4.  Navigate to the **Settings** tab of your new worker.
 5.  Click **Build** (or **Source Control**) in the sidebar and click **Connect to Git**.
@@ -16,7 +16,7 @@ This guide provides the one-time manual steps required to connect this repositor
     - **Production Branch**: `main`
     - **Build Command**: (Leave EMPTY)
     - **Root Directory**: (Leave EMPTY)
-8.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` from GitHub.
+8.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` (which sets the name to `snea-backend`) from GitHub.
 
 ### B. Bindings and Secrets
 1.  Go to **Settings** -> **Variables**.
@@ -34,7 +34,7 @@ This guide provides the one-time manual steps required to connect this repositor
 
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Pages** -> **Connect to Git**.
 2.  Select the `snea-shoebox-editor` repository.
-3.  **Project Name**: `snea-frontend` (or similar).
+3.  **Project Name**: `snea-editor`.
 4.  **Build Settings**:
     - **Framework Preset**: `None`
     - **Build Command**: (Leave EMPTY)
