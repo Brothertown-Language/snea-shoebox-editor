@@ -4,12 +4,12 @@
 Date: 2026-02-01
 
 Summary:
-- Unified frontend and backend configuration into a single `wrangler.toml` to resolve Cloudflare Pages' lack of support for custom config paths.
-- Added `pages_build_output_dir = "."` to `wrangler.toml` to satisfy Pages requirements.
-- Added and marked `compatibility_flags = ["python_workers"]` as MANDATORY in `wrangler.toml` to ensure Python support.
-- Deleted the redundant `wrangler.pages.toml`.
-- Updated `docs/deployment/MANUAL_SETUP.md` to use the simplified `npx wrangler pages deploy .` command, strictly enforcing `wrangler pages deploy` for the frontend as requested.
-- Identified that `npx wrangler pages deploy` was previously conflicting with the backend `wrangler.toml` when misconfigured; unified `wrangler.toml` now correctly supports both flows.
+- Resolved Cloudflare Pages deployment error: "Configuration file cannot contain both 'main' and 'pages_build_output_dir'".
+- Restored separate configuration files: `wrangler.toml` for the backend Worker and `wrangler.pages.toml` for the frontend Pages project.
+- Ensured `compatibility_flags = ["python_workers"]` is present and marked as MANDATORY in `wrangler.toml`.
+- Updated `docs/deployment/MANUAL_SETUP.md` to use explicit `--config` flags for both `wrangler deploy` and `wrangler pages deploy` to prevent configuration crosstalk.
+- Verified that no Node.js/NPM dependencies are introduced, maintaining the 100% Python stack.
+- Unified frontend and backend configuration into a single `wrangler.toml` to resolve Cloudflare Pages' lack of support for custom config paths. (REVERTED due to Cloudflare validation constraints)
 - Analyzed CI logs for run 21566990798; identified Cloudflare API error 7003 due to invalid/inaccessible IDs during backend deployment.
 - Implemented `scripts/verify_cf_ids.py` to pre-validate Cloudflare Account ID and D1 Database ID using the Cloudflare API before deployment.
 - Updated `.github/workflows/deploy.yml` to include the verification step, ensuring the workflow fails early with a clear error message if IDs are incorrect.
