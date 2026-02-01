@@ -188,8 +188,8 @@ Current focus area as of 2026-01-31:
 - **Status:** COMPLETE
 - **Completed Requirements:**
     - Enabled volume mapping for `web` (frontend) and `tester` services in `docker-compose.yml`.
-    - Added `watchgod` dependency to `docker/Dockerfile` to enable Solara's `--auto-restart`.
-    - Updated `web` service command to use `--auto-restart` flag.
+    - Added `watchdog` dependency to `docker/Dockerfile` to enable Streamlit's live reloading.
+    - Updated `web` service command to use Streamlit.
     - Verified `backend` service already supports live reloading via `wrangler dev`.
     - Updated `docs/development/local-development.md` with instructions for interactive live development.
 - **Task:** UI Implementation
@@ -200,10 +200,10 @@ Current focus area as of 2026-01-31:
     - Started Docker containers.
     - Generated `wrangler.toml` with `python_workers` support.
 - **In Progress:**
-    - Full UI implementation using Solara.
-    - Fixed `solara.lab` components usage (`Tabs`, `Tab`, `use_task`).
+    - Full UI implementation using Streamlit.
     - Implemented `RecordList` component and backend `/api/records` endpoint.
     - Fixed `AttributeError: 'str' object has no attribute 'get'` in `RecordList` by adding type checking and error handling for backend responses. Strengthened by adding multi-layer validation (both at fetch time and render time).
+    - Transitioned project guidelines and development SPR from Solara to Streamlit.
 - **Task:** Robust Backend & Seeding
 - **Description:** Ensure backend is operational and seeding handles large datasets resiliently.
 - **Status:** COMPLETE
