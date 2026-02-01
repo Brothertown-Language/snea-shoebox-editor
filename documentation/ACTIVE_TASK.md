@@ -13,6 +13,7 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
+- Force-pushed rewritten history to GitHub.
 - Purged historical contents of `.env` from git history using `git-filter-repo`.
 - Committed all pending changes before history rewrite.
 - Installed `git-filter-repo` to ensure a reliable and fast history purge.
