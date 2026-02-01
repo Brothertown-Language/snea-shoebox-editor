@@ -3,20 +3,21 @@
 
 This guide provides the one-time manual steps required to connect this repository to Cloudflare. Once set up, Cloudflare will automatically pull and deploy your changes from GitHub. No local installation of Node.js/NPM is required.
 
-## 1. BACKEND SETUP (Cloudflare Workers + D1)
+> **Note**: Cloudflare is transitioning from separate "Workers" and "Pages" products into a unified "Workers" platform. This guide reflects the modern unified flow.
+
+## 1. BACKEND SETUP (Cloudflare Worker + D1)
 
 ### A. Create and Connect the Worker
-1.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Worker**.
-2.  Change the name to **`snea-backend`** (or leave the default and it will be updated by GitHub) and click **Deploy**.
-3.  On the "Success" page, click **Edit Code** or **Go to Dashboard**.
-4.  Navigate to the **Settings** tab of your new worker.
-5.  Click **Build** (or **Source Control**) in the sidebar and click **Connect to Git**.
-6.  Select the `snea-shoebox-editor` repository.
-7.  **Build Settings**:
+1.  Navigate to **Workers & Pages** -> **Overview** -> **Create**.
+2.  Select **Create application** -> **Import a repository** (or click **Get started** next to **Import a repository**).
+3.  Connect your GitHub account if not already connected and select the `snea-shoebox-editor` repository.
+4.  **Project Name**: `snea-backend` (or leave the default and it will be updated by GitHub).
+5.  **Build Settings**:
     - **Production Branch**: `main`
     - **Build Command**: (Leave EMPTY)
     - **Root Directory**: (Leave EMPTY)
-8.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` (which sets the name to `snea-backend`) from GitHub.
+6.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` (which sets the name to `snea-backend`) from GitHub.
+7.  *Note: If you already created a Worker manually without Git integration, go to its **Settings** -> **Builds** -> **Connect** to link the repository.*
 
 ### B. Bindings and Secrets
 1.  Go to **Settings** -> **Variables**.
@@ -30,16 +31,17 @@ This guide provides the one-time manual steps required to connect this repositor
 
 ---
 
-## 2. FRONTEND SETUP (Cloudflare Pages)
+## 2. FRONTEND SETUP (Cloudflare Workers Assets / Pages)
 
-1.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Pages** -> **Connect to Git**.
-2.  Select the `snea-shoebox-editor` repository.
-3.  **Project Name**: `snea-editor`.
-4.  **Build Settings**:
+1.  Navigate to **Workers & Pages** -> **Overview** -> **Create**.
+2.  Click **Create application** (if visible) or select the **Pages** tab (Cloudflare is merging these; both currently lead to the same repository connection flow for static assets).
+3.  Click **Connect to Git** and select the `snea-shoebox-editor` repository.
+4.  **Project Name**: `snea-editor`.
+5.  **Build Settings**:
     - **Framework Preset**: `None`
     - **Build Command**: (Leave EMPTY)
     - **Build output directory**: `/`
-5.  **Environment Variables**: Go to **Settings** -> **Variables** and add:
+6.  **Environment Variables**: Go to **Settings** -> **Variables** and add:
     - `BACKEND_URL`: `https://snea-backend.brothertownlanguage.org`
 
 ---
@@ -47,4 +49,4 @@ This guide provides the one-time manual steps required to connect this repositor
 ## 3. CUSTOM DOMAINS
 
 1.  **Backend**: Worker -> **Triggers** -> **Custom Domains** -> Add `snea-backend.brothertownlanguage.org`.
-2.  **Frontend**: Pages -> **Custom domains** -> Add `snea-editor.brothertownlanguage.org`.
+2.  **Frontend**: Project -> **Custom domains** -> Add `snea-editor.brothertownlanguage.org`.
