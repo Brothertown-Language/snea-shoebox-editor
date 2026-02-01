@@ -15,12 +15,11 @@ This guide provides step-by-step instructions for manually setting up the SNEA O
 2.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Pages** -> **Connect to Git**.
 3.  Select the `snea-shoebox-editor` repository and click **Begin setup**.
 4.  **Configure Build Settings**:
-    *   **Project Name**: `snea-editor`
+    *   **Project Name**: `snea-editor` (You can change this from the default `snea-shoebox-editor` here).
     *   **Production Branch**: `main`
-    *   **Framework Preset**: Select **None** (this is usually at the very top of the dropdown list).
-    *   **Build Command**: Leave this **Empty** (Streamlit is a runtime, not a static build).
-    *   **Build output directory**: `/` (Set to the root or any folder; Pages will host the static assets, but Streamlit is served separately via your local/server runner).
-    *   *Note*: For a Python/Streamlit app, Cloudflare Pages is typically used to host the front-end code/assets, but the actual Streamlit execution happens elsewhere. If you are using Cloudflare to *run* the app, you may need a different service (like Workers or a VPS).
+    *   **Framework Preset**: Select **None**.
+    *   **Build Command**: Leave this **Empty**.
+    *   **Build output directory**: `/`
 5.  **Environment Variables**:
     - Navigate to **Settings** -> **Environment variables** for the project.
     - Add `BACKEND_URL`: `https://snea-backend.brothertownlanguage.org`
