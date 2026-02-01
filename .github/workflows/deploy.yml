@@ -22,11 +22,12 @@ jobs:
         run: uv python install
 
       - name: Deploy Worker
-        uses: cloudflare/wrangler-action@v4
+        uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+          wranglerVersion: '4.61.1'
           secrets: |
             JWT_SECRET
             SNEA_GITHUB_CLIENT_ID
