@@ -61,6 +61,5 @@ This guide provides the one-time manual steps required to connect this repositor
 ---
 
 ## 3. CUSTOM DOMAINS
-
-1.  **Backend**: Worker -> **Triggers** -> **Custom Domains** -> Add `snea-backend.brothertownlanguage.org`.
-2.  **Frontend**: Project -> **Custom domains** -> Add `snea-editor.brothertownlanguage.org`.
+1.  **Backend**: Worker -> **Settings** -> **Domains & Routes** -> **Add Custom Domain** -> Add `snea-backend.brothertownlanguage.org`.
+2.  **Frontend**: Project -> **Settings** -> **Custom domains** -> **Add Custom Domain** -> Add `snea-editor.brothertownlanguage.org`.

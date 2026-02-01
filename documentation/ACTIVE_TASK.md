@@ -32,6 +32,7 @@ Summary:
 - Added `--no-config` to frontend deploy commands in `MANUAL_SETUP.md` to prevent conflict with the Worker-specific `wrangler.toml`.
 - Reverted `pages_build_output_dir = "."` in `wrangler.toml` as it conflicts with the `main` key used for the Python Worker.
 - Added tips to `docs/deployment/MANUAL_SETUP.md` about the scrollable repository selection box in the Cloudflare dashboard to improve UX discovery.
+- Updated `docs/deployment/MANUAL_SETUP.md` to use 'Settings' -> 'Domains & Routes' for Worker custom domains, matching the current Cloudflare UI.
 
 Next Steps:
 - DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.
