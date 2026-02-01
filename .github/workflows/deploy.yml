@@ -26,7 +26,7 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy src/backend/worker.py --name snea-backend --compatibility-date=2024-01-01
+          command: deploy
           secrets: |
             JWT_SECRET
             SNEA_GITHUB_CLIENT_ID

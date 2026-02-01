@@ -4,8 +4,9 @@
 Date: 2026-02-01
 
 Summary:
-- Purging historical contents of `.env` from git history.
-- Committing all current changes before rewriting history.
+- Fixing GitHub deployment error by enabling `python_workers` compatibility flag.
+- Updating `wrangler.toml` with correct `main` path and compatibility flags.
+- Simplifying `.github/workflows/deploy.yml` by delegating configuration to `wrangler.toml`.
 
 Next Steps:
 - Implement optimistic locking for concurrent record editing.
@@ -13,8 +14,10 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
-- Force-pushed rewritten history to GitHub.
-- Purged historical contents of `.env` from git history using `git-filter-repo`.
+- Fixed GitHub deployment error: enabled `python_workers` compatibility flag in `wrangler.toml`.
+- Corrected `main` entry point in `wrangler.toml` to `src/backend/worker.py`.
+- Simplified `deploy-backend` job in `.github/workflows/deploy.yml` to use `wrangler.toml` configuration.
+- Purge historical contents of `.env` from git history.
 - Committed all pending changes before history rewrite.
 - Installed `git-filter-repo` to ensure a reliable and fast history purge.
 - **SECURITY ROTATION COMPLETE**: Successfully rotated all exposed secrets (GitHub OAuth, GitHub PAT, Cloudflare Tokens) and synchronized them to production via `bootstrap_env.py`.
