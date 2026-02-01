@@ -26,7 +26,11 @@ Summary:
 - Reverted Pages project name to "snea-shoebox-editor" in `.github/workflows/deploy.yml` to match the existing Cloudflare project and fix the 404 deployment error.
 - Verified that while the custom domain is "snea-editor", the underlying Pages project name must remain "snea-shoebox-editor" for successful API routing.
 
-- Updated `docs/deployment/MANUAL_SETUP.md` to reflect Cloudflare's modern "Import a repository" flow for Backend Workers, simplifying the connection to GitHub. Incorporated reference information from `docs/deployment/cloudflare-workers.md`.
+- Updated `docs/deployment/MANUAL_SETUP.md` to reflect Cloudflare's modern "Import a repository" flow for both Workers and Pages, removing all references to the obsolete "Pages" tab in the unified dashboard.
+- Explicitly detailed the "Set up your application" fields in `MANUAL_SETUP.md`, specifying mandatory `wrangler` commands for deployment.
+- Added mandatory `--project-name snea-editor` to frontend deploy commands in `MANUAL_SETUP.md` to fix "Must specify a project name" error.
+- Added `pages_build_output_dir = "."` to `wrangler.toml` to suppress Wrangler warnings and satisfy Pages requirements.
+- Added tips to `docs/deployment/MANUAL_SETUP.md` about the scrollable repository selection box in the Cloudflare dashboard to improve UX discovery.
 
 Next Steps:
 - DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.
