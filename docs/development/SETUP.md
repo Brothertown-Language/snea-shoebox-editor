@@ -14,8 +14,8 @@ To enable authentication during local development, you must register a local Git
 *   **Registration**: [GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**](https://github.com/settings/applications/new).
 *   **Application Name**: `SNEA Shoebox Editor (Local)`
 *   **Application Description**: `Local development environment for the SNEA Online Shoebox Editor.`
-*   **Homepage URL**: your local frontend dev URL (e.g., `http://localhost:5173`)
-*   **Authorization callback URL**: same as Homepage (e.g., `http://localhost:5173`)
+*   **Homepage URL**: your local frontend dev URL (e.g., `http://localhost:8501`)
+*   **Authorization callback URL**: same as Homepage (e.g., `http://localhost:8501`)
 *   **Configuration**: Add the `Client ID` and `Client Secret` to your local `.env` file (see Step 2). The Worker reads `SNEA_GITHUB_CLIENT_ID`/`SNEA_GITHUB_CLIENT_SECRET` (with fallbacks to `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`).
 
 ## 2. Local Environment Initialization
@@ -28,13 +28,14 @@ We prioritize using **Docker** to keep your workstation environment clean and co
     cd snea-shoebox-editor
     ```
 2.  **Create `.env` File**:
-    In the project root, create a `.env` file with your local OAuth credentials (from Step 1) and set your frontend dev URL:
+    In the project root, create a `.env` file with your local OAuth credentials (from Step 1) and set your frontend dev URL. **Crucial:** Never commit this file to the repository. If you accidentally committed it, see the **[Security Rotation Guide](SECURITY_ROTATION.md)**.
     ```env
-    # OAuth (local dev)
+    # GitHub OAuth (Local Development)
     SNEA_GITHUB_CLIENT_ID=your_local_client_id
     SNEA_GITHUB_CLIENT_SECRET=your_local_client_secret
-    # Frontend dev server URL used as redirect_uri
-    FRONTEND_URL=http://localhost:5173
+
+    # Frontend dev server URL (e.g., Streamlit default)
+    FRONTEND_URL=http://localhost:8501
     ```
 3.  **Build and Run**:
     ```bash
@@ -43,7 +44,7 @@ We prioritize using **Docker** to keep your workstation environment clean and co
     *Note: Environment variables are loaded from the `.env` file automatically by the application.*
 
     **PRO TIP**: You do **NOT** need to run `bootstrap_env.py` for local development. The local database is a Wrangler D1 simulation.
-    *   **Frontend (Pages dev server or static)**: e.g., `http://localhost:5173`
+    *   **Frontend (Pages dev server or static)**: e.g., `http://localhost:8501`
     *   **Backend (Worker + local D1)**: `http://localhost:8787`
 
 ## 3. Usage & Development

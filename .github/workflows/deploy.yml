@@ -1,0 +1,53 @@
+# Copyright (c) 2026 Brothertown Language
+name: Deploy to Cloudflare
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy-backend:
+    name: Deploy Backend (Worker)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python
+        run: uv python install
+
+      - name: Deploy Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy src/backend/worker.py --name snea-backend --compatibility-date=2024-01-01
+          secrets: |
+            JWT_SECRET
+            SNEA_GITHUB_CLIENT_ID
+            SNEA_GITHUB_CLIENT_SECRET
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SNEA_GITHUB_CLIENT_ID: ${{ secrets.SNEA_GITHUB_CLIENT_ID }}
+          SNEA_GITHUB_CLIENT_SECRET: ${{ secrets.SNEA_GITHUB_CLIENT_SECRET }}
+
+  deploy-frontend:
+    name: Deploy Frontend (Pages)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Deploy Pages
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: snea-editor
+          directory: src/frontend
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}

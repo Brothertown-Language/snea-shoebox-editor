@@ -50,14 +50,14 @@ If you are already a contributor and just need to run the app locally:
 | `SNEA_GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | Wrangler secret / Pages Project Var |
 | `SNEA_FRONTEND_URL` | Public Pages URL used as `redirect_uri` | Pages Project Var |
 
-Note: For local development you may also set non-`SNEA_` fallbacks (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `FRONTEND_URL`) via a `.env` file. In production, use Wrangler secrets and Pages Project Variables; do not commit secrets.
+Note: For local development you may also set non-`SNEA_` fallbacks (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `FRONTEND_URL`) via a `.env` file. In production, use Wrangler secrets and Pages Project Variables; do not commit secrets. If your `.env` file was accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
 
 ## Scripts
 
 - `bootstrap_env.py`: **Production Only.** Automates Cloudflare and GitHub infrastructure setup (D1 database, Secrets). Run locally with `uv`.
 - `bootstrap_domains.py`: **Production Only.** Specifically initializes custom domains on Cloudflare for both the Worker (Backend) and Pages (Frontend).
 - `docker-compose up --build`: Starts the local Worker (backend) and optional dev tooling.
-- `python3 -m unittest discover tests`: Runs the test suite.
+- `uv run python3 -m unittest discover tests`: Runs the test suite.
 
 ## Documentation
 
@@ -68,6 +68,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[Roadmap](docs/development/roadmap.md)**: Detailed deployment phases and development roadmap.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 - **[Local Development](docs/development/local-development.md)**: Guide for running the Worker with local D1 and an example Pages frontend.
+- **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.
 - **[MDF Guidelines](docs/mdf/)**: References for the Multi-Dictionary Form.
 
 ## License

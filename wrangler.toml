@@ -1,18 +1,8 @@
 name = "snea-backend"
-main = "src/backend/worker.py"
-compatibility_date = "2024-05-02"
-compatibility_flags = ["python_workers"]
+main = "src/worker.py"
+compatibility_date = "2024-01-01"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "snea-shoebox"
 database_id = "1d51d911-7942-40c6-bf3a-09951d20534e"
-
-[vars]
-GITHUB_CLIENT_ID = "Ov23lioCUeuhd94j3DLR"
-GITHUB_CLIENT_SECRET = "61bc1b633a04204f96ed7925757ea08052fb3665"
-OAUTH_STATE_SECRET = "change-me-local"
-JWT_SECRET = "change-me-local"
-SESSION_SECRET = "change-me-local"
-FRONTEND_URL = "http://localhost:8501"
-AI_DEBUG = "1"
