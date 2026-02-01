@@ -25,19 +25,25 @@ This guide provides the one-time manual steps required to connect this repositor
 7.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` (which sets the name to `snea-backend`) from GitHub.
 8.  *Note: If you already created a Worker manually without Git integration, go to its **Settings** -> **Builds** -> **Connect** to link the repository.*
 
-### B. Bindings and Secrets
-1.  **API Token Permissions**: Ensure the Cloudflare API Token used for deployment has the following permissions:
+### B. Bindings, Secrets, and API Tokens
+
+1.  **What is the API Token?**: To allow the automated deployment from GitHub to work, Cloudflare needs a **User API Token**. If you used the `bootstrap_env.py` script, this is the token you created then. If not, you must create one.
+    - **Where to get it**: [Cloudflare Dashboard > My Profile > API Tokens](https://dash.cloudflare.com/profile/api-tokens).
+    - **How to create**: Click **Create Token** -> **Create Custom Token** -> Name it `snea-editor-token`.
+2.  **API Token Permissions**: Ensure this token has the following specific permissions (otherwise you will get "Authentication error [code: 10000]"):
     - `Account` -> `Cloudflare Pages` -> `Edit`
     - `Account` -> `Workers Scripts` -> `Edit`
     - `Account` -> `D1` -> `Edit`
-2.  Go to **Settings** -> **Variables**.
-3.  **D1 Database Bindings**: Click **Add Binding**.
-    - **Variable Name**: `DB`
-    - **D1 Database**: Select `snea-shoebox` (created by the bootstrap script).
-4.  **Secrets**: Click **Add Secret** for each of these:
-    - `JWT_SECRET`: (Any long random string)
-    - `SNEA_GITHUB_CLIENT_ID`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_ID` in your `.env`)
-    - `SNEA_GITHUB_CLIENT_SECRET`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_SECRET` in your `.env`)
+3.  **Where to put it**: This token should be saved in your GitHub Repository Secrets (on GitHub.com) as `CLOUDFLARE_API_TOKEN`. Cloudflare's build system will use it automatically.
+4.  **Database and Secrets**: In the Cloudflare Dashboard for your Worker (`snea-backend`):
+    - Go to **Settings** -> **Variables**.
+    - **D1 Database Bindings**: Click **Add Binding**.
+        - **Variable Name**: `DB`
+        - **D1 Database**: Select `snea-shoebox` (created by the bootstrap script).
+    - **Secrets**: Click **Add Secret** for each of these:
+        - `JWT_SECRET`: (Any long random string)
+        - `SNEA_GITHUB_CLIENT_ID`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_ID` in your `.env`)
+        - `SNEA_GITHUB_CLIENT_SECRET`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_SECRET` in your `.env`)
 
 ---
 
