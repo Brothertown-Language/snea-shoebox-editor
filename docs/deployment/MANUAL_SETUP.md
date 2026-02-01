@@ -7,10 +7,10 @@ This guide provides the one-time manual steps required to connect this repositor
 
 ### A. Create and Connect the Worker
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Worker**.
-2.  **Name**: `snea-editor`.
-3.  Click **Deploy** (this creates a dummy worker that we will link to GitHub).
-4.  Go to the **Settings** tab of the new `snea-editor` worker.
-5.  Click **Build** (or **Source Control**) and click **Connect to Git**.
+2.  Leave the default name (e.g., `snea-shoebox-editor`) and click **Deploy**.
+3.  On the "Success" page, click **Edit Code** or **Go to Dashboard**.
+4.  Navigate to the **Settings** tab of your new worker.
+5.  Click **Build** (or **Source Control**) in the sidebar and click **Connect to Git**.
 6.  Select the `snea-shoebox-editor` repository.
 7.  **Build Settings**:
     - **Production Branch**: `main`
