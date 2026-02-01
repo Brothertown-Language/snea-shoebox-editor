@@ -27,8 +27,9 @@ Summary:
 - Verified that while the custom domain is "snea-editor", the underlying Pages project name must remain "snea-shoebox-editor" for successful API routing.
 
 Next Steps:
-- RESOLVE Cloudflare API 7003 errors: Verify if the `CLOUDFLARE_ACCOUNT_ID` or `CLOUDFLARE_API_TOKEN` permissions are correct in GitHub Secrets.
-- RESOLVE Python Worker deployment issue: Experimental Python workers with `requirements.txt` cannot be deployed via Wrangler yet.
+- DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.
+- FOLLOW `docs/deployment/MANUAL_SETUP.md` for manual Cloudflare Pages and Worker configuration.
+- RESOLVE Python Worker deployment issue: Manual deployment via Wrangler CLI is now the preferred path.
 - Update AI Guidelines to reflect private repo status. (Completed)
 - If Worker shows Wrangler/secrets issues, prefer bundled Wrangler or pin compatible version; adjust secrets syntax if needed.
 - If Pages shows path/build issues, correct `directory` and/or add build/output settings.
