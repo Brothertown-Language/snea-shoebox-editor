@@ -25,8 +25,8 @@ This guide provides the one-time manual steps required to connect this repositor
     - **D1 Database**: Select `snea-shoebox` (created by the bootstrap script).
 3.  **Secrets**: Click **Add Secret** for each of these:
     - `JWT_SECRET`: (Any long random string)
-    - `SNEA_GITHUB_CLIENT_ID`: (From your GitHub OAuth App)
-    - `SNEA_GITHUB_CLIENT_SECRET`: (From your GitHub OAuth App)
+    - `SNEA_GITHUB_CLIENT_ID`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_ID` in your `.env`)
+    - `SNEA_GITHUB_CLIENT_SECRET`: (Use the value from `PROD_SNEA_GITHUB_CLIENT_SECRET` in your `.env`)
 
 ---
 
