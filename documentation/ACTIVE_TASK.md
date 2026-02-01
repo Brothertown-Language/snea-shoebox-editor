@@ -4,6 +4,7 @@
 Date: 2026-02-01
 
 Summary:
+- Added `tqdm` to default Python dependencies in `pyproject.toml` so progress bars are available by default.
 - Removed `wranglerVersion` from `.github/workflows/deploy.yml` to use the action-bundled Wrangler for v3 and avoid semver validation during secret upload.
 - Migrated Worker deploy to `cloudflare/wrangler-action@v4` to resolve v3 secrets upload API path error (7003) while still using the bundled Wrangler.
 - Pinned `wranglerVersion: '4.61.1'` while staying on `wrangler-action@v3` to use the modern CLI and fix secret upload routing.
@@ -18,6 +19,7 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
+- Updated Python environment to include `tqdm` by default for CI log download progress.
 - Switched to action-bundled Wrangler by removing `wranglerVersion` from Worker deploy job in `.github/workflows/deploy.yml`.
 - Updated Worker deploy step to `cloudflare/wrangler-action@v4` (bundled Wrangler) after v3 failed uploading secrets with CF API 7003.
 - Pinned Wrangler CLI to `4.61.1` using `wrangler-action@v3` to restore compatibility with Cloudflare’s current secrets API.
