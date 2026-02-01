@@ -4,6 +4,16 @@
 Date: 2026-02-01
 
 Summary:
+- Fixed deploy workflow to use bundled Wrangler by removing `wranglerVersion` (prefer tested, bundled version).
+- Fixed CI log collector to use `${{ github.token }}` instead of `secrets.GITHUB_TOKEN` for API calls.
+- Added automated CI log parsing and tracking:
+  - Enhanced `.github/workflows/collect-ci-logs.yml` to unzip logs, scan for failure markers, and publish a job summary.
+  - Uploads parsed analysis artifacts and auto-creates/updates a tracking issue `Deployment status: <run_id>` with findings.
+- CI log downloader hardened to be non-mutating:
+  - Fails fast if running under `uv run` to avoid resolver-triggered installs.
+  - `tqdm` is required but never installed by the script; clear error if missing.
+  - Token priority updated to prefer `PROD_GH_TOKEN` over `GH_TOKEN`; improved `.env` parsing.
+  - Added CLI flags: `--token`, `--workflow`, `--branch`.
 - Added `tqdm` to default Python dependencies in `pyproject.toml` so progress bars are available by default.
 - Removed `wranglerVersion` from `.github/workflows/deploy.yml` to use the action-bundled Wrangler for v3 and avoid semver validation during secret upload.
 - Migrated Worker deploy to `cloudflare/wrangler-action@v4` to resolve v3 secrets upload API path error (7003) while still using the bundled Wrangler.
@@ -14,11 +24,18 @@ Summary:
 - Verified that while the custom domain is "snea-editor", the underlying Pages project name must remain "snea-shoebox-editor" for successful API routing.
 
 Next Steps:
+- Trigger a deploy to produce logs, then review the generated analysis and the tracking issue.
+- If Worker shows Wrangler/secrets issues, prefer bundled Wrangler or pin compatible version; adjust secrets syntax if needed.
+- If Pages shows path/build issues, correct `directory` and/or add build/output settings.
 - Implement optimistic locking for concurrent record editing.
 - Monitor sorting performance as the database grows.
 - Continue with further linguistic data processing features.
 
+CI trigger: collecting deploy logs via workflow collector.
+
 Completed Tasks:
+- Added workflow `collect-ci-logs.yml` and enhanced it to parse logs, publish a summary, upload analysis artifacts, and open/update a tracking issue automatically.
+- Made downloader read-only and fail-fast on missing `tqdm` and token; added uv-run guard and CLI flags.
 - Updated Python environment to include `tqdm` by default for CI log download progress.
 - Switched to action-bundled Wrangler by removing `wranglerVersion` from Worker deploy job in `.github/workflows/deploy.yml`.
 - Updated Worker deploy step to `cloudflare/wrangler-action@v4` (bundled Wrangler) after v3 failed uploading secrets with CF API 7003.

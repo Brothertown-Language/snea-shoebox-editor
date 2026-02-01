@@ -19,6 +19,7 @@ jobs:
       contents: read
       id-token: write
       packages: read
+      issues: write
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -40,7 +41,7 @@ jobs:
           fi
           echo "Fetching latest run ID on main for 'Deploy to Cloudflare'"
           runs_json=$(curl -fsSL \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
             -H "Accept: application/vnd.github+json" \
             "https://api.github.com/repos/${{ github.repository }}/actions/runs?branch=main&per_page=25")
           run_id=$(printf '%s' "$runs_json" | jq -r '.workflow_runs[] | select(.name=="Deploy to Cloudflare") | .id' | head -n1)
@@ -66,7 +67,7 @@ jobs:
           url="https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}/logs"
           echo "Downloading $url"
           curl -fsSL \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
             -H "Accept: application/vnd.github+json" \
             "$url" -o "tmp/ci-logs/run-${RUN_ID}-logs.zip"
 
@@ -78,7 +79,7 @@ jobs:
           url="https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}"
           echo "GET $url"
           curl -fsSL \
-            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Authorization: Bearer ${{ github.token }}" \
             -H "Accept: application/vnd.github+json" \
             "$url" -o "tmp/ci-logs/run-${RUN_ID}-summary.json"
           # Produce a brief text summary
@@ -90,6 +91,124 @@ jobs:
             "URL: " + (.html_url // "")
           ] | join("\n") + "\n"' "tmp/ci-logs/run-${RUN_ID}-summary.json" \
             > "tmp/ci-logs/run-${RUN_ID}-summary.txt"
+
+      - name: Parse logs and build analysis
+        id: analyze
+        env:
+          RUN_ID: ${{ steps.pick.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          cd tmp/ci-logs
+          unzip -o "run-${RUN_ID}-logs.zip" -d logs >/dev/null
+
+          # Find key job logs (Worker, Pages) and scan for failure markers
+          mkdir -p analysis
+          touch analysis/analysis.md analysis/analysis.json
+
+          # Aggregate findings
+          worker_issue="none"
+          pages_issue="none"
+          summary_lines=()
+
+          scan_file() {
+            local f="$1"; local jobname="$2"
+            if [ ! -f "$f" ]; then
+              return 0
+            fi
+            # Grep common error markers and keep context
+            if grep -inE "(✘|ERROR|Error:|Failed|##\[error\]|npm error|wrangler|7003|403|404|Invalid Version|deployment failed)" "$f" >/dev/null; then
+              echo "---- ${jobname} failures (${f}) ----" >> analysis/analysis.md
+              # show last 200 lines for quick context
+              tail -n 200 "$f" >> analysis/analysis.md || true
+              echo "" >> analysis/analysis.md
+              # record short line for JSON
+              msg=$(grep -inE "(✘|ERROR|Error:|Failed|##\[error\]|wrangler|deployment failed)" "$f" | head -n 3 | sed 's/"/\"/g')
+              printf '{"job":"%s","file":"%s","highlights":"%s"}' \
+                "$jobname" "$f" "$msg" >> analysis/analysis.json
+              echo >> analysis/analysis.json
+              if echo "$jobname" | grep -iq worker; then worker_issue="detected"; fi
+              if echo "$jobname" | grep -iq pages; then pages_issue="detected"; fi
+              summary_lines+=("${jobname}: failure markers detected")
+            else
+              summary_lines+=("${jobname}: no failure markers detected")
+            fi
+          }
+
+          # Try to locate job logs by common prefixes inside the zip (folders are job names)
+          # Create a list of candidate files
+          mapfile -t files < <(find logs -type f -maxdepth 2 -name '*.txt' -o -name '*.log' | sort)
+          for f in "${files[@]}"; do
+            base=$(basename "$f")
+            # infer job name from path
+            job="$(echo "$f" | sed -E 's#^logs/([^/]+)/.*#\1#' | tr '_' ' ')"
+            scan_file "$f" "$job"
+          done
+
+          printf "%s\n" "${summary_lines[@]}" > analysis/summary.txt
+          # Write a compact top-level summary for GITHUB_STEP_SUMMARY
+          echo "## CI Deploy Log Analysis" >> "$GITHUB_STEP_SUMMARY"
+          echo "Run ID: ${RUN_ID}" >> "$GITHUB_STEP_SUMMARY"
+          echo >> "$GITHUB_STEP_SUMMARY"
+          echo "### Job findings" >> "$GITHUB_STEP_SUMMARY"
+          sed -e 's/^/- /' analysis/summary.txt >> "$GITHUB_STEP_SUMMARY" || true
+
+          # Expose flags
+          echo "worker_issue=$worker_issue" >> "$GITHUB_OUTPUT"
+          echo "pages_issue=$pages_issue" >> "$GITHUB_OUTPUT"
+
+      - name: Upload parsed analysis artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs-analysis-${{ steps.pick.outputs.run_id }}
+          path: |
+            tmp/ci-logs/analysis/
+            tmp/ci-logs/run-${{ steps.pick.outputs.run_id }}-summary.txt
+            tmp/ci-logs/run-${{ steps.pick.outputs.run_id }}-summary.json
+          if-no-files-found: error
+
+      - name: Create or update tracking issue with summary
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const runId = `${{ steps.pick.outputs.run_id }}`;
+            const summaryPath = `tmp/ci-logs/run-${runId}-summary.txt`;
+            const analysisPath = `tmp/ci-logs/analysis/analysis.md`;
+            const summary = fs.existsSync(summaryPath) ? fs.readFileSync(summaryPath, 'utf8') : '';
+            const analysis = fs.existsSync(analysisPath) ? fs.readFileSync(analysisPath, 'utf8') : '';
+            const title = `Deployment status: ${runId}`;
+            const body = [
+              'Automated deployment analysis for run ' + runId,
+              '',
+              'Summary:',
+              '````\n' + summary + '\n````',
+              '',
+              analysis ? ('Key findings:\n\n' + analysis) : 'No failure markers detected.'
+            ].join('\n');
+
+            // Search for an existing open issue with this title
+            const { data: issues } = await github.rest.search.issuesAndPullRequests({
+              q: `repo:${context.repo.owner}/${context.repo.repo} is:issue in:title "${title}" state:open`
+            });
+            if (issues.items && issues.items.length > 0) {
+              const issue = issues.items[0];
+              await github.rest.issues.update({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: issue.number,
+                body
+              });
+            } else {
+              await github.rest.issues.create({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                title,
+                body,
+                labels: ['ci', 'deploy']
+              });
+            }
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
