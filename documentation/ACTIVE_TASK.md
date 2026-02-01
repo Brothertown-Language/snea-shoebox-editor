@@ -4,6 +4,9 @@
 Date: 2026-02-01
 
 Summary:
+- Analyzed CI logs for run 21566990798; identified Cloudflare API error 7003 due to invalid/inaccessible IDs during backend deployment.
+- Implemented `scripts/verify_cf_ids.py` to pre-validate Cloudflare Account ID and D1 Database ID using the Cloudflare API before deployment.
+- Updated `.github/workflows/deploy.yml` to include the verification step, ensuring the workflow fails early with a clear error message if IDs are incorrect.
 - Fixed deploy workflow to use bundled Wrangler by removing `wranglerVersion` (prefer tested, bundled version).
 - Fixed CI log collector to use `${{ github.token }}` instead of `secrets.GITHUB_TOKEN` for API calls.
 - Added automated CI log parsing and tracking:
@@ -24,14 +27,21 @@ Summary:
 - Verified that while the custom domain is "snea-editor", the underlying Pages project name must remain "snea-shoebox-editor" for successful API routing.
 
 Next Steps:
-- Trigger a deploy to produce logs, then review the generated analysis and the tracking issue.
+- RESOLVE Cloudflare API 7003 errors: Verify if the `CLOUDFLARE_ACCOUNT_ID` or `CLOUDFLARE_API_TOKEN` permissions are correct in GitHub Secrets.
+- RESOLVE Python Worker deployment issue: Experimental Python workers with `requirements.txt` cannot be deployed via Wrangler yet.
+- Update AI Guidelines to reflect private repo status. (Completed)
 - If Worker shows Wrangler/secrets issues, prefer bundled Wrangler or pin compatible version; adjust secrets syntax if needed.
 - If Pages shows path/build issues, correct `directory` and/or add build/output settings.
 - Implement optimistic locking for concurrent record editing.
 - Monitor sorting performance as the database grows.
 - Continue with further linguistic data processing features.
 
-CI trigger: collecting deploy logs via workflow collector.
+- Triggered fresh deploy and collector run to verify split secrets and bundled Wrangler in a private repo context.
+- Verified local code structure for frontend and backend.
+- Split Worker secrets from deployment to avoid Cloudflare API 7003 routing errors.
+- Using action-bundled Wrangler for maximum compatibility.
+
+CI trigger: verify deployment stability and collector automation.
 
 Completed Tasks:
 - Added workflow `collect-ci-logs.yml` and enhanced it to parse logs, publish a summary, upload analysis artifacts, and open/update a tracking issue automatically.
