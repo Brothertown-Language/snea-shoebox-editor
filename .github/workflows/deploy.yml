@@ -27,6 +27,7 @@ jobs:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
+          wranglerVersion: '4'
           secrets: |
             JWT_SECRET
             SNEA_GITHUB_CLIENT_ID
@@ -46,8 +47,8 @@ jobs:
       - name: Deploy Pages
         uses: cloudflare/pages-action@v1
         with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          projectName: snea-editor
-          directory: src/frontend
-          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+            apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+            accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+            projectName: snea-shoebox-editor
+            directory: src/frontend
+            gitHubToken: ${{ secrets.GITHUB_TOKEN }}
