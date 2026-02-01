@@ -9,5 +9,7 @@ Summary:
 - Updated documentation and integrated bootstrap tools.
 
 Next Steps:
+- Tagged current state as `v0.1.1-dev`.
+- Pushed changes to `main`.
 - Continue with planned OAuth implementation and further linguistic data processing features.
 - Monitor stability of the Streamlit frontend in the collaborative environment.
