@@ -81,21 +81,6 @@ Use the `bootstrap_env.py` script to automate Cloudflare and GitHub infrastructu
     uv run python bootstrap_env.py
     ```
 
-    *Note: If custom domains do not appear in your Cloudflare dashboard after running `bootstrap_env.py`, you must run the specialized domain initialization script. **Note: This requires the Worker and Pages project to be deployed first (see Section 3).***
-
-    ```bash
-    uv run python bootstrap_domains.py
-    ```
-
-    **What `bootstrap_env.py` does automatically**:
-    *   Creates the `snea-shoebox` D1 database on Cloudflare.
-    *   Generates a secure `JWT_SECRET`.
-    *   Uploads all secrets to your GitHub Repo Secrets for CI/CD.
-        *   **Note on Secret Names**: GitHub forbids repository secrets starting with `GITHUB_`. Consequently, OAuth credentials are saved as `SNEA_GITHUB_CLIENT_ID` and `SNEA_GITHUB_CLIENT_SECRET`. The backend code is configured to use these prefixed variables in production to ensure they don't overlap with local development settings.
-    *   Generates a `wrangler.toml` file.
-
-    **What `bootstrap_domains.py` does**:
-    *   Configures Custom Domains for Cloudflare Pages and Workers via REST API.
 
 3.  **Manual Finalization / Automated Domain Setup**
 
@@ -107,14 +92,6 @@ After running the bootstrap script, the infrastructure is ready, but the code ne
     *   Select the **Deploy** workflow (usually `Deploy to Cloudflare`).
     *   Click **Run workflow** (if `workflow_dispatch` is enabled) or push a small change to the `main` branch to trigger it.
 
-2.  **Run Domain Bootstrap (Optional but Recommended)**:
-    Once the first deployment is successful, you can run the domain script to automate custom domain linking:
-    ```bash
-    uv run python bootstrap_domains.py
-    ```
-
-3.  **Verify Custom Domains (Manual Check)**:
-    If you didn't run the script or want to double-check:
     *   **Cloudflare Pages (Frontend)**:
         1.  Navigate to **Workers & Pages** > **Overview** > `snea-editor`.
         2.  Go to the **Custom domains** tab and ensure `snea-editor.michael-conrad.com` is active.

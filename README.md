@@ -55,7 +55,6 @@ Note: For local development you may also set non-`SNEA_` fallbacks (`GITHUB_CLIE
 ## Scripts
 
 - `bootstrap_env.py`: **Production Only.** Automates Cloudflare and GitHub infrastructure setup (D1 database, Secrets). Run locally with `uv`.
-- `bootstrap_domains.py`: **Production Only.** Specifically initializes custom domains on Cloudflare for both the Worker (Backend) and Pages (Frontend).
 - `docker-compose up --build`: Starts the local Worker (backend) and optional dev tooling.
 - `uv run python3 -m unittest discover tests`: Runs the test suite.
 
