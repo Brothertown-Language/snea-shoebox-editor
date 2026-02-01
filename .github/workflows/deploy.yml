@@ -21,20 +21,40 @@ jobs:
       - name: Set up Python
         run: uv python install
 
-      - name: Deploy Worker
+      - name: Deploy Worker (initial, without secrets)
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy
-          secrets: |
-            JWT_SECRET
-            SNEA_GITHUB_CLIENT_ID
-            SNEA_GITHUB_CLIENT_SECRET
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET }}
-          SNEA_GITHUB_CLIENT_ID: ${{ secrets.SNEA_GITHUB_CLIENT_ID }}
-          SNEA_GITHUB_CLIENT_SECRET: ${{ secrets.SNEA_GITHUB_CLIENT_SECRET }}
+
+      - name: Put secret JWT_SECRET
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: secret put JWT_SECRET --text ${{ secrets.JWT_SECRET }}
+
+      - name: Put secret SNEA_GITHUB_CLIENT_ID
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: secret put SNEA_GITHUB_CLIENT_ID --text ${{ secrets.SNEA_GITHUB_CLIENT_ID }}
+
+      - name: Put secret SNEA_GITHUB_CLIENT_SECRET
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: secret put SNEA_GITHUB_CLIENT_SECRET --text ${{ secrets.SNEA_GITHUB_CLIENT_SECRET }}
+
+      - name: Deploy Worker (final)
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
 
   deploy-frontend:
     name: Deploy Frontend (Pages)
