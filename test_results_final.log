@@ -1,0 +1,10 @@
+ Container docker-backend-1  Running
+ Container docker-web-1  Running
+============================= test session starts ==============================
+platform linux -- Python 3.12.3, pytest-9.0.2, pluggy-1.6.0
+rootdir: /app
+configfile: pyproject.toml
+plugins: base-url-2.1.0, anyio-4.12.1, playwright-0.7.2
+collected 1 item
+
+tests/frontend/test_ui.py 

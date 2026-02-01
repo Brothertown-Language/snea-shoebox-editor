@@ -1,0 +1,68 @@
+services:
+  web:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    hostname: web
+    ports:
+      - "8501:8501"
+    volumes:
+      - ..:/app
+      - web_venv:/app/.venv
+    environment:
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      - SNEA_GITHUB_CLIENT_ID=${SNEA_GITHUB_CLIENT_ID}
+      - SNEA_GITHUB_CLIENT_SECRET=${SNEA_GITHUB_CLIENT_SECRET}
+    command: ["uv", "run", "--no-sync", "--active", "python3", "-m", "streamlit", "run", "src/frontend/app.py", "--server.address", "0.0.0.0", "--server.port", "8501"]
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8501/_stcore/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    image: node:20
+    hostname: backend
+    volumes:
+      - ..:/app
+    working_dir: /app
+    ports:
+      - "8787:8787"
+    environment:
+      - SNEA_GITHUB_CLIENT_ID=${SNEA_GITHUB_CLIENT_ID}
+      - SNEA_GITHUB_CLIENT_SECRET=${SNEA_GITHUB_CLIENT_SECRET}
+    user: root
+    command: >
+      sh -c "apt-get update && apt-get install -y ca-certificates && update-ca-certificates &&
+      npm install -g wrangler &&
+      su node -c \"wrangler dev --local --persist-to .wrangler --ip 0.0.0.0 --config /app/wrangler.toml\""
+    healthcheck:
+      # Hitting root (/) returns 404 from wrangler dev, which keeps the
+      # container unhealthy. Probe a known OK endpoint instead.
+      test: ["CMD-SHELL", "curl -fsS http://localhost:8787/api/oauth/login >/dev/null || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  tester:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.test
+    volumes:
+      - ..:/app
+      - tester_venv:/app/.venv
+    environment:
+      - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    depends_on:
+      web:
+        condition: service_healthy
+      backend:
+        condition: service_healthy
+
+networks:
+  default:
+    name: snea-default
+
+volumes:
+  web_venv:
+  tester_venv:

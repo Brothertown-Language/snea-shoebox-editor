@@ -15,14 +15,13 @@ Thank you for your interest in contributing to the SNEA Online Shoebox Editor. W
 
 1. **Fork the repository** on GitHub.
 2. **Clone your fork** locally.
-3. **Follow the Local Development Guide** in [docs/development/local-development.md](docs/development/local-development.md) for setting up your local environment using Docker. **Cloudflare D1 access (local simulation) is mandatory for development.**
-4. **Follow the Setup instructions** in the [README.md](README.md) if you need to deploy or bootstrap infrastructure.
-    - **Note**: You only need to perform the "Initialization" (Docker-based setup) step. The "Infrastructure Bootstrapping" step is not required if you are contributing to an existing repository where infrastructure is already set up.
+3. **Follow the Dedicated Initial Setup Guide** in [docs/development/SETUP.md](docs/development/SETUP.md) for a complete setup, or the **Local Development Guide** in [docs/development/local-development.md](docs/development/local-development.md) if you only need to run the app locally.
+4. **Note**: If the infrastructure is already set up, you only need to perform the "Local Environment Initialization" steps.
 
 ## Development Workflow
 
 - We use `uv` for dependency management.
-- Frontend is built with [Solara](https://solara.dev/).
+- Frontend is built with [Streamlit](https://streamlit.io/).
 - Backend runs on Cloudflare Workers (Python).
 - Data must strictly follow MDF (Multi-Dictionary Form) standards.
 - We use `ruff` for code linting and formatting. It is recommended to install the `ruff` plugin in your IDE (e.g., PyCharm, VS Code).
