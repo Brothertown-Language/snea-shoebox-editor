@@ -1,4 +1,5 @@
-docs: update custom domain instructions for Cloudflare
+Docs: document Cloudflare Build settings token creation behavior
 
-- Updated `docs/deployment/MANUAL_SETUP.md` to use 'Settings' -> 'Domains & Routes' for Worker custom domains, matching the current Cloudflare UI.
-- Updated `documentation/ACTIVE_TASK.md` with session progress.
+- Updated MANUAL_SETUP.md and SECURITY_ROTATION.md to reflect that the "Add a token" button in Cloudflare's Build settings UI may automatically create project-specific tokens (e.g., snea-backend-build, snea-frontend-build) with the correct permissions.
+- This behavior is an acceptable alternative to manual token creation in the API Tokens profile settings.
+- Clarified that these tokens can be used for both snea-backend and snea-editor projects.

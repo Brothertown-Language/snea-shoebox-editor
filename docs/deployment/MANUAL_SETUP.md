@@ -40,6 +40,8 @@ Before starting the setup, you must have a Cloudflare API Token. This token is w
     - **Deploy command**: `npx wrangler deploy`
     - **Non-production branch deploy command**: `npx wrangler versions upload`
     - **Path**: `/`
+    - **Build Settings** (Advanced): Select your API token in the **API Token** dropdown. If it does not appear, click **Add a token** to link it.
+        - *Note: Creating a token via the "Add a token" button in this UI may automatically set the required permissions without asking for them (e.g., `snea-backend-build`). This is an acceptable alternative to creating one manually.*
 6.  **Build Settings**:
     - **Production Branch**: `main`
     - **Build Command**: (Leave EMPTY)
@@ -77,6 +79,8 @@ Next, perform this manual step in the Cloudflare Dashboard for the `snea-backend
     - **Deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
     - **Non-production branch deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
     - **Path**: `/`
+    - **Build Settings** (Advanced): Select your API token in the **API Token** dropdown. If it does not appear, click **Add a token** to link it.
+        - *Note: Creating a token via the "Add a token" button in this UI may automatically set the required permissions without asking for them (e.g., `snea-frontend-build`). This is an acceptable alternative to creating one manually.*
 6.  **Build Settings**:
     - **Production Branch**: `main`
     - **Framework Preset**: `None`

@@ -49,6 +49,7 @@ Follow these links to revoke the old (leaked) keys and generate new ones.
     1.  Find your token (e.g., "snea-editor") in the list.
     2.  Click the three dots `...` -> **Roll**.
     3.  **Note**: Clicking "Roll" invalidates the old token and displays a **new token value** immediately. This is the value you need.
+    4.  **Important:** If after rolling, the token does not appear in the "Worker Builds" dropdown (Phase 3), you must **delete the old token** and create a fresh one with the same name and permissions.
 *   **Permissions Required:** 
     Ensure the token has the following permissions (Custom Token):
     *   `Account` | `D1` | `Edit`
@@ -98,6 +99,24 @@ PROD_GH_TOKEN=PASTE_NEW_GITHUB_PAT_HERE
 
 ### Phase 3: Sync to Production (The "Finalize" Phase)
 
+#### 1. Update Cloudflare Worker Build Settings (MANUAL)
+**Crucial:** Rolling the token in Phase 1 invalidates it for existing Cloudflare "Worker Builds" (the Git integration). You MUST manually update the token in the Cloudflare Dashboard for **each** project (`snea-backend` and `snea-editor`).
+
+1.  Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
+2.  For **snea-backend**:
+    -   Navigate to **Workers & Pages** -> `snea-backend` -> **Settings** -> **Builds**.
+    -   Under **Build Configuration**, find the **API Token** dropdown.
+    -   Select the **new** token.
+    -   **Troubleshooting**: If the new token is NOT in the dropdown, select **Add a token** (or "Manage tokens") and ensure the token created in Phase 1 is selected. If it still doesn't show, you may need to create a brand new token as described in Phase 1.
+    -   *Note: Using the "Add a token" button may automatically create a project-specific token (e.g., `snea-backend-build`) with the correct permissions.*
+    -   Click **Save**.
+3.  For **snea-editor**:
+    -   Navigate to **Workers & Pages** -> `snea-editor` -> **Settings** -> **Builds**.
+    -   Repeat the same selection of the new token (or "Add a token" to create something like `snea-frontend-build`).
+    -   Click **Save**.
+4.  **Retry Build**: Go to the **Deployments** tab and click **Retry build** on the failed deployment.
+
+#### 2. Run the Bootstrap Script
 Instead of manually typing secrets into GitHub's web interface, use the built-in bootstrap script to securely upload everything.
 
 1.  **Open your terminal** in the project root.
