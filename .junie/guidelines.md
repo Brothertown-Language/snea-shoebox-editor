@@ -11,7 +11,7 @@ date: 2026-01-30
 ### 1. Project Identity & Goals
 - **Target:** Southern New England Algonquian (SNEA) language records.
 - **Platform:** SNEA Online Concurrent Shoebox Editor.
-- **Tech Stack:** 100% Python; Solara (Frontend); Pyodide/WASM; Cloudflare Workers (Backend); D1 (Database).
+- **Tech Stack:** 100% Python; Streamlit (Frontend); Cloudflare Workers (Backend); D1 (Database).
 - **Goal:** Collaborative, version-controlled editing of linguistic data in MDF format.
 - **Ethics:** Nation Sovereignty; AI-marked contributions; Inclusive English. Use "Nation" instead of "Tribal."
 
@@ -23,7 +23,7 @@ date: 2026-01-30
 ### 3. Technical Standards (Editor Specific)
 - **Deployment:** "Zero-Touch" via GitHub Actions + Wrangler.
 - **Architecture:** 
-  - Frontend: Solara components, reactive state management.
+  - Frontend: Streamlit multipage app, session state management.
   - Backend: Python Workers using D1 bindings.
   - Concurrency: Optimistic locking; version tracking per record.
 - **Data:** Strict MDF parity. Validation at entry point. Hierarchy: \lx -> \ps -> \ge.

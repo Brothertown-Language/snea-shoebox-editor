@@ -2,7 +2,16 @@
 import streamlit as st
 import httpx
 import os
+import re
 from dotenv import load_dotenv
+
+# Set page config for compact wide layout
+st.set_page_config(
+    page_title="SNEA Shoebox Editor",
+    page_icon="📚",
+    layout="wide",
+    initial_sidebar_state="expanded"
+)
 
 # Load environment variables for local development
 load_dotenv()
@@ -46,7 +55,6 @@ def get_backend_url(client_side=False):
 BACKEND_URL = get_backend_url(client_side=False)
 # Browser-side redirects should use get_backend_url(client_side=True)
 
-st.set_page_config(page_title="SNEA Shoebox Editor", page_icon="📚")
 
 def login_page():
     st.title("SNEA Online Shoebox Editor")
@@ -155,6 +163,29 @@ def handle_callback():
             except Exception as e:
                 st.error(f"Error during login: {e}")
 
+def parse_mdf(mdf_text):
+    """Simple MDF parser to extract lx, ps, ge."""
+    lx = ""
+    ps = ""
+    ge = ""
+    
+    # Extract \lx
+    lx_match = re.search(r'^\\lx\s+(.*)$', mdf_text, re.MULTILINE)
+    if lx_match:
+        lx = lx_match.group(1).strip()
+        
+    # Extract \ps
+    ps_match = re.search(r'^\\ps\s+(.*)$', mdf_text, re.MULTILINE)
+    if ps_match:
+        ps = ps_match.group(1).strip()
+        
+    # Extract \ge
+    ge_match = re.search(r'^\\ge\s+(.*)$', mdf_text, re.MULTILINE)
+    if ge_match:
+        ge = ge_match.group(1).strip()
+        
+    return lx, ps, ge
+
 def main_app():
     user = st.session_state.get("user")
     token = st.session_state.get("token")
@@ -166,15 +197,34 @@ def main_app():
             st.rerun()
         return
 
-    st.sidebar.write(f"Logged in as: {user.get('name', user.get('login', 'Unknown'))}")
-    if st.sidebar.button("Logout"):
-        if "user" in st.session_state:
-            del st.session_state.user
-        if "token" in st.session_state:
-            del st.session_state.token
-        st.rerun()
+    # Compact header
+    col1, col2 = st.columns([8, 2])
+    with col1:
+        st.write(f"Logged in as: **{user.get('name', user.get('login', 'Unknown'))}**")
+    with col2:
+        if st.button("Logout", use_container_width=True):
+            if "user" in st.session_state:
+                del st.session_state.user
+            if "token" in st.session_state:
+                del st.session_state.token
+            st.rerun()
+
+    # Move navigation and additional info to sidebar
+    with st.sidebar:
+        st.title("SNEA Editor")
+        st.info("Record Selection & Tools")
         
-    st.title("SNEA Shoebox Editor")
+        # We could move the record selection here too, but for now let's just make sure 
+        # the sidebar exists so the 'unhide' button is visible in Streamlit.
+        st.write("Logged in as:")
+        st.write(f"**{user.get('name', user.get('login', 'Unknown'))}**")
+        
+        if st.button("Log out", key="sidebar_logout"):
+            if "user" in st.session_state:
+                del st.session_state.user
+            if "token" in st.session_state:
+                del st.session_state.token
+            st.rerun()
 
     # Fetch records
     headers = {"Authorization": f"Bearer {token}"} if token else {}
@@ -198,43 +248,53 @@ def main_app():
         st.info("No records found.")
         return
 
-    # Record selection
+    # Record selection in a compact row
     record_options = {f"{r['lx']} ({r['ps'] or 'no ps'})": r for r in records if isinstance(r, dict)}
-    selected_label = st.selectbox("Select a record to edit", options=list(record_options.keys()))
+    
+    col_sel, col_btn = st.columns([8, 2])
+    with col_sel:
+        selected_label = st.selectbox("Select Record", options=list(record_options.keys()), label_visibility="collapsed")
     
     if selected_label:
         selected_record = record_options[selected_label]
         
-        st.subheader(f"Editing: {selected_record['lx']}")
-        
-        with st.form("edit_record"):
-            lx = st.text_input("Lexeme (\lx)", value=selected_record.get("lx", ""))
-            ps = st.text_input("Part of Speech (\ps)", value=selected_record.get("ps", ""))
-            ge = st.text_input("English Gloss (\ge)", value=selected_record.get("ge", ""))
-            mdf_data = st.text_area("Full MDF Data", value=selected_record.get("mdf_data", ""), height=200)
+        # Raw MDF Editor
+        with st.form("edit_record", clear_on_submit=False):
+            mdf_data = st.text_area(
+                "MDF Record", 
+                value=selected_record.get("mdf_data", ""), 
+                height=400,
+                label_visibility="collapsed"
+            )
             
-            submitted = st.form_submit_button("Save Changes")
+            submitted = st.form_submit_button("Save Record", use_container_width=True)
             if submitted:
-                update_payload = {
-                    "lx": lx,
-                    "ps": ps,
-                    "ge": ge,
-                    "mdf_data": mdf_data
-                }
-                try:
-                    update_res = httpx.post(
-                        f"{BACKEND_URL}/api/records/{selected_record['id']}",
-                        json=update_payload,
-                        headers=headers,
-                        timeout=10.0
-                    )
-                    if update_res.status_code == 200:
-                        st.success("Record updated successfully!")
-                        st.rerun()
-                    else:
-                        st.error(f"Failed to update record: {update_res.text}")
-                except Exception as e:
-                    st.error(f"Error updating record: {e}")
+                # Parse lx, ps, ge from raw text
+                lx, ps, ge = parse_mdf(mdf_data)
+                
+                if not lx:
+                    st.error("Missing \\lx tag in record.")
+                else:
+                    update_payload = {
+                        "lx": lx,
+                        "ps": ps,
+                        "ge": ge,
+                        "mdf_data": mdf_data
+                    }
+                    try:
+                        update_res = httpx.post(
+                            f"{BACKEND_URL}/api/records/{selected_record['id']}",
+                            json=update_payload,
+                            headers=headers,
+                            timeout=10.0
+                        )
+                        if update_res.status_code == 200:
+                            st.success("Record updated!")
+                            st.rerun()
+                        else:
+                            st.error(f"Failed to update: {update_res.text}")
+                    except Exception as e:
+                        st.error(f"Error updating: {e}")
 
 def main():
     # If "user" is in session state but is None, remove it
