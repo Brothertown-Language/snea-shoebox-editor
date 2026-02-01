@@ -1,0 +1,1 @@
+Use bundled wrangler in wrangler-action v3; remove wranglerVersion to avoid semver validation during secrets upload. If it still fails, migrate to v4 (bundled) and fix Pages job accordingly.
