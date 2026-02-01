@@ -8,7 +8,14 @@ dependencies = [
     "cloudflare>=3.0.0",
     "PyGithub>=2.1.1",
     "pynacl>=1.5.0",
-    "solara>=1.26.0",
+    "python-dotenv>=1.0.0",
+    "streamlit>=1.31.0",
+    "httpx>=0.25.0",
+    "pytest>=7.0.0",
+    "playwright>=1.40.0",
+    "pytest-playwright>=0.4.0",
+    "pytest-timeout>=2.2.0",
+    "watchgod>=0.8.2",
 ]
 
 [dependency-groups]

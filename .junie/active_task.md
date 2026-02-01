@@ -2,6 +2,168 @@
 # Active Task Tracking
 
 Current focus area as of 2026-01-31:
+- **Task:** Single Source of Truth for Bootstrap Script
+- **Description:** Removed Option B (Docker Execution) from documentation to establish local execution via `uv` as the single source of truth for running the `bootstrap_env.py` script.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Removed Docker execution instructions from `PROD_SETUP.md`.
+    - Removed Docker execution instructions from `roadmap.md`.
+    - Updated `README.md` to reflect local-only execution.
+- **Task:** Verify D1 Database Existence in Bootstrap
+- **Description:** Enhanced `bootstrap_env.py` with explicit pre-check and post-check verification steps to confirm the Cloudflare D1 database's existence or successful creation.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    *   Added a "Pre-check" step to list existing databases and verify if the target `DB_NAME` already exists.
+    *   Added a "Post-check" step to verify the database object and its ID immediately after a creation attempt.
+    *   Improved logging to clearly indicate successful verification (e.g., `SUCCESS: Database ... already exists`).
+    *   Verified the logic by running the script and confirming it correctly detects the existing database.
+- **Task:** Fix Bootstrap Script Errors
+- **Description:** Resolved multiple issues in `bootstrap_env.py` including repository name mismatch, deprecation warnings, non-subscriptable pagination objects, Cloudflare SDK 4.x attribute changes, and D1 authentication limitations.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `REPO_NAME` to use `snea-shoebox-editor` as the default, matching the actual repository.
+    - Modified configuration constants to use environment variables with defaults for better flexibility.
+    - Updated `Github` client initialization to use `auth=Auth.Token(...)`, resolving the `DeprecationWarning`.
+    - Wrapped `cf.accounts.list()` in `list()` to handle the non-subscriptable pagination object returned by the Cloudflare SDK.
+    - Added support for **Global API Key** and **Email** in `bootstrap_env.py` to resolve D1 authentication issues with the Python SDK (which does not support User API Tokens for D1).
+    - Updated attribute access for D1 objects to support both `uuid` (SDK 4.x) and `id` (SDK 3.x).
+    - Implemented a check to skip D1 database creation if it already exists.
+    - Updated `PROD_SETUP.md` and `roadmap.md` with Global API Key requirements for bootstrapping.
+- **Task:** Flexible Execution for Bootstrap Script
+- **Description:** Updated documentation to offer local execution (via `uv`) as the primary method for `bootstrap_env.py`, while retaining Docker as an alternative. This clarifies that it is an infrastructure setup tool, not a component that *must* run in the app's Docker environment.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `PROD_SETUP.md` with local (recommended) and Docker execution options.
+    - Updated `roadmap.md` with dual execution instructions.
+    - Updated `README.md` to reflect script flexibility.
+- **Task:** Clarify Production vs Local Scripts
+- **Description:** Explicitly labeled `bootstrap_env.py` as a PRODUCTION-only tool in all documentation to prevent developers from running it during local setup.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `PROD_SETUP.md` with explicit production warnings.
+    - Updated `SETUP.md` with a "PRO TIP" clarifying local development doesn't need the script.
+    - Updated `roadmap.md` to flag Phase 3 as production-only and corrected the path reference.
+    - Updated `README.md` to distinguish between production bootstrap and local run commands.
+- **Task:** Separate Local vs Production Documentation
+- **Description:** Restructured documentation to clearly separate local development setup from production infrastructure bootstrapping to reduce confusion.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Created `docs/development/PROD_SETUP.md` for infrastructure and production tasks.
+    - Updated `docs/development/SETUP.md` to focus exclusively on local development.
+    - Updated `README.md` and `local-development.md` with new links.
+- **Task:** Prefer `.env` over `export`
+- **Description:** Updated documentation and tools to favor `.env` files for environment variable management, removing confusing `export` instructions.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/PROD_SETUP.md` and `docs/development/roadmap.md` to use `.env` file instructions.
+    - Updated `docs/development/SETUP.md` to clarify automatic loading of `.env`.
+    - Updated `bootstrap_env.py` to use `python-dotenv` for explicit loading.
+    - Added `python-dotenv` to `pyproject.toml`.
+- **Task:** Update `.env` with GitHub PAT
+- **Description:** Populated the `.env` file with the newly created GitHub Personal Access Token (PAT) as provided by the user.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `.env` with `GH_TOKEN`.
+- **Task:** GitHub OAuth Instructions (Dev & Production)
+- **Description:** Updated documentation to include distinct instructions for both development and production GitHub OAuth applications, including registration details and secret management.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Expanded `docs/development/SETUP.md` with Section 2 (GitHub OAuth Setup) covering both Dev and Production.
+    - Simplified `docs/development/local-development.md` to link to the central setup guide.
+    - Updated Production finalize section in `SETUP.md` to reference the new OAuth steps.
+- **Task:** Single Source of Truth for GitHub PAT
+- **Description:** Removed Option B (Classic Tokens) from the setup guide to establish Fine-grained Tokens as the single source of truth for GitHub PAT configuration.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Removed "Option B: Tokens (classic)" from `docs/development/SETUP.md`.
+    - Simplified GitHub PAT section to only include Fine-grained token instructions.
+- **Task:** Detailed GitHub PAT Permissions
+- **Description:** Clarified GitHub Personal Access Token (PAT) settings, recommending Fine-grained tokens limited to the `snea-shoebox-editor` repository with specific permissions (Secrets, Contents, Metadata).
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` with Fine-grained token vs Classic token options.
+    - Specified repository access restriction.
+    - Listed mandatory permissions (Secrets: Read/Write).
+- **Task:** Recommend GitHub PAT Expiration
+- **Description:** Updated documentation to recommend a 30-day or 90-day expiration for GitHub Personal Access Tokens (PAT) instead of "No expiration" for better security.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` with PAT expiration guidelines.
+- **Task:** Update `.env` with Cloudflare API Token
+- **Description:** Populated the `.env` file with the newly created Cloudflare User API Token as provided by the user.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `.env` with `CF_API_TOKEN`.
+- **Task:** Verify Cloudflare API Token Summary
+- **Description:** Added the exact "Summary" text provided by the user to the documentation to allow users to verify their token configuration against the Cloudflare UI's final confirmation screen.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` with the specific "API token summary" block.
+    - Updated `docs/development/roadmap.md` with the specific "API token summary" block.
+- **Task:** Restore Direct Link to Cloudflare User API Tokens
+- **Description:** Re-inserted the direct link to the Cloudflare User API Token profile page as requested by the user, while retaining the updated minimal permission set.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` with the direct link: `https://dash.cloudflare.com/profile/api-tokens`.
+    - Updated `docs/development/roadmap.md` with the direct link: `https://dash.cloudflare.com/profile/api-tokens`.
+- **Task:** Update Cloudflare API Token to User Token with Minimal Wrangler Permissions
+- **Description:** Updated documentation to recommend User API Tokens over Account API Tokens, as Wrangler requires a mix of Account and Zone permissions. Corrected the permission set to include KV, R2, Pages, and Routes, while removing the non-existent explicit D1 permission.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` with User API Token navigation and revised permission list.
+    - Updated `docs/development/roadmap.md` with User API Token navigation and revised permission list.
+- **Task:** Resolve Cloudflare API Token Permission Label Mismatch
+- **Description:** Updated docs to use the exact "Group | Type | Permission" format used in the Cloudflare "Create Custom Token" dropdown to resolve user confusion.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` to use the `Account | [Service] | Edit/Read` format.
+    - Updated `docs/development/roadmap.md` to use the `Account | [Service] | Edit/Read` format.
+- **Task:** Resolve Cloudflare API Token Label Confusion
+- **Description:** Updated docs to use the exact "Account API Tokens" label, removing references to non-existent menu items based on user feedback.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` to use "Account API Tokens" and remove incorrect label variations.
+    - Updated `docs/development/roadmap.md` to use "Account API Tokens" and remove incorrect label variations.
+- **Task:** Clarify Cloudflare API Token Sub-menu
+- **Description:** Updated docs to specify that "API Tokens" is a sub-menu under the collapsing "Manage Account" section.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` to specify clicking the "API Tokens" sub-menu.
+    - Updated `docs/development/roadmap.md` to specify clicking the "API Tokens" sub-menu.
+- **Task:** Fix Cloudflare Account API Token Link
+- **Description:** Clarified navigation for Cloudflare Account API Tokens. Users reported difficulty finding "Manage Account".
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` to specify that "Manage Account" is on the left sidebar after selecting an account.
+    - Updated `docs/development/roadmap.md` to match the clarified instructions.
+- **Task:** Fix Cloudflare Account API Token Link (Broken/404)
+- **Description:** Replaced the non-functional hotlink with a landing page link and clearer navigation instructions for Account-level tokens.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Replaced `https://dash.cloudflare.com/profile/api-tokens?search=Account+API+Tokens` with `https://dash.cloudflare.com/` and explicit navigation steps (Account -> Manage Account -> API Tokens).
+- **Task:** Fix 404 Error in Documentation
+- **Description:** Fixed broken Cloudflare API token links that used a placeholder `/:account` and verified internal relative links.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Replaced `https://dash.cloudflare.com/?to=/:account/settings/api-tokens` with a more robust link `https://dash.cloudflare.com/profile/api-tokens?search=Account+API+Tokens`.
+    - Corrected relative internal link in `roadmap.md` to point to `local-development.md` instead of `docs/development/local-development.md`.
+- **Task:** Fix Non-Clickable Links in Docs
+- **Description:** Restored clickable Markdown links for Cloudflare and GitHub setup instructions while maintaining accurate navigation.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Restored `[]()` Markdown syntax for external links in `docs/development/SETUP.md`.
+    - Restored `[]()` Markdown syntax for external links in `docs/development/roadmap.md`.
+- **Task:** Update Cloudflare API Token Docs
+- **Description:** Updated links and instructions to point to Cloudflare Account API tokens instead of user profile tokens.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/SETUP.md` with correct account token navigation.
+    - Updated `docs/development/roadmap.md` with correct account token navigation.
+- **Task:** NFD Record Sorting Roadmap Update
+- **Description:** Added requirement for NFD-normalized, diacritic-preserving sorting (ignoring leading punctuation) to the roadmap.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Updated `docs/development/roadmap.md` to include NFD sorting requirement for linguistic records.
 - **Task:** Enforce Docker for Local Development
 - **Description:** Remove multiple-choice confusion by making Docker the exclusive method for local development in all documentation.
 - **Status:** COMPLETE
@@ -11,8 +173,56 @@ Current focus area as of 2026-01-31:
     - Updated `CONTRIBUTING.md` to use `docker-compose exec` for testing and pre-commit.
     - Updated `docs/development/roadmap.md` to remove manual setup alternatives.
     - Updated `docs/mdf/mdf-tag-reference.md` to use Docker for scripts.
+- **Task:** UI Testing Infrastructure
+- **Description:** Added Playwright to Docker environment for automated UI testing.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Moved Playwright to a dedicated `tester` service (Ubuntu 24.04).
+    - Enforced unprivileged `snea` user for all application and test operations.
+    - Used `uv` virtual environments in both `web` and `tester` containers.
+    - Configured `tester` with host-matching TZ and English UTF-8 Locale.
+    - Implemented discrete `RUN` steps in Dockerfiles for security and auditability.
+    - Created robust UI test with retry logic and specific content verification.
+- **Task:** Interactive Live Development in Docker
+- **Description:** Enabled volume mapping and auto-restarting for frontend and backend containers to support live coding without manual restarts.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Enabled volume mapping for `web` (frontend) and `tester` services in `docker-compose.yml`.
+    - Added `watchgod` dependency to `docker/Dockerfile` to enable Solara's `--auto-restart`.
+    - Updated `web` service command to use `--auto-restart` flag.
+    - Verified `backend` service already supports live reloading via `wrangler dev`.
+    - Updated `docs/development/local-development.md` with instructions for interactive live development.
+- **Task:** UI Implementation
+- **Description:** Actively developing the UI for the SNEA Shoebox Editor.
+- **Status:** IN_PROGRESS
+- **Completed Requirements:**
+    - Created `ui-implementation` branch.
+    - Started Docker containers.
+    - Generated `wrangler.toml` with `python_workers` support.
 - **In Progress:**
-    - None
+    - Full UI implementation using Solara.
+    - Fixed `solara.lab` components usage (`Tabs`, `Tab`, `use_task`).
+    - Implemented `RecordList` component and backend `/api/records` endpoint.
+    - Fixed `AttributeError: 'str' object has no attribute 'get'` in `RecordList` by adding type checking and error handling for backend responses. Strengthened by adding multi-layer validation (both at fetch time and render time).
+- **Task:** Robust Backend & Seeding
+- **Description:** Ensure backend is operational and seeding handles large datasets resiliently.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Fixed `Response.new()` header serialization issues in local Workers runtime.
+    - Fixed `JsProxy` object iteration and serialization errors.
+    - Implemented `seeding_progress` table for resume-capable seeding.
+    - Optimized seeding with batching and request-context chunking.
+    - Verified full seed of Natick dictionary (4,504 records).
+    - Integrated seeding status into `Dev Info` UI.
+- **Task:** Seed Data Integration
+- **Description:** Move and use `natick-processed.txt` as seed data for the database.
+- **Status:** COMPLETE
+- **Completed Requirements:**
+    - Moved `tmp/natick-processed.txt` to `src/backend/seed_data/natick.txt`.
+    - Implemented `src/backend/mdf_parser.py` to parse MDF records while preserving raw data.
+    - Implemented one-time database initialization and seeding in `src/backend/worker.py`.
+    - Integrated seeding logic to only run if the database is empty.
+    - Optimized seeding with `db.batch()` to handle large datasets.
 - **Task:** Dedicated Dev UI
 - **Description:** Implement a built-in UI for inspecting system internals (schemas, versions) without CLI.
 - **Status:** COMPLETE

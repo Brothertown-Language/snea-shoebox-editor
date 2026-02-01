@@ -8,16 +8,21 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
 
 ## Component Stack
 
-- **Frontend**: [Solara](https://solara.dev/) (Reactive Python UI).
-  - Compiled to WebAssembly (WASM) via Pyodide.
+- **Frontend**: [Streamlit](https://streamlit.io/) (Reactive Python UI). [IN PROGRESS]
+  - Built with Python and Streamlit.
   - State management is reactive, ensuring a modern web experience without JavaScript.
-- **Backend**: [Cloudflare Workers](https://workers.cloudflare.com/) (Python runtime).
+  - Implemented: `RecordList` view, `DevInfo` dashboard.
+  - Pending: Edit mode, MDF validation, NFD sorting.
+- **Backend**: [Cloudflare Workers](https://workers.cloudflare.com/) (Python runtime). [IN PROGRESS]
   - Handles API requests, authentication, and database interactions.
-  - Implements optimistic locking for concurrent editing.
-- **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/).
+  - Implements optimistic locking for concurrent editing. (Pending)
+  - Implemented: Basic REST API, Automatic D1 Schema initialization, Large-scale MDF Seeding logic.
+- **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/). [IN PROGRESS]
   - SQL database at the edge.
   - Stores linguistic records and edit history.
-- **Authentication**: GitHub OAuth.
+  - Implemented tables: `sources`, `records`, `seeding_progress`.
+  - Pending tables: `users`, `edit_history`, `permissions`, `embeddings`.
+- **Authentication**: GitHub OAuth. [PENDING]
   - Access is restricted to specific GitHub organizations/teams (e.g., `Brothertown-Language`).
 
 ## Data Model & Schema Management

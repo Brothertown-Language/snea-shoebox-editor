@@ -1,0 +1,84 @@
+# Copyright (c) 2026 Brothertown Language
+FROM ubuntu:24.04
+
+# --- ROOT SETUP PHASE ---
+# Only system packages and user configuration here.
+ENV DEBIAN_FRONTEND=noninteractive
+
+# 1. Update and install base system utilities
+RUN apt-get update
+RUN apt-get install -y --no-install-recommends curl
+RUN apt-get install -y --no-install-recommends ca-certificates
+RUN apt-get install -y --no-install-recommends locales
+RUN apt-get install -y --no-install-recommends tzdata
+RUN apt-get install -y --no-install-recommends sudo
+
+# 2. Install Ubuntu Desktop Minimal EARLY (as requested)
+# This handles X and Media dependencies robustly.
+RUN apt-get install -y --no-install-recommends ubuntu-desktop-minimal
+
+# 3. Install Python environment basics
+RUN apt-get install -y --no-install-recommends python3
+RUN apt-get install -y --no-install-recommends python3-pip
+RUN apt-get install -y --no-install-recommends python3-venv
+
+# 4. Additional specific libraries for Playwright if not covered by desktop-minimal
+RUN apt-get install -y --no-install-recommends libnss3
+RUN apt-get install -y --no-install-recommends libgbm1
+RUN apt-get install -y --no-install-recommends libasound2t64
+
+# Cleanup apt cache
+RUN rm -rf /var/lib/apt/lists/*
+
+# Locale Configuration
+RUN locale-gen en_US.UTF-8
+ENV LANG=en_US.UTF-8
+ENV LANGUAGE=en_US:en
+ENV LC_ALL=en_US.UTF-8
+
+# Create a non-privileged user
+RUN groupadd -r snea
+RUN useradd -r -g snea -d /home/snea -m -s /bin/bash snea
+
+# Allow snea to run certain commands without password if absolutely necessary
+RUN echo "snea ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/snea
+
+# Ensure snea can read timezone/localtime
+RUN chmod 644 /etc/timezone || true
+RUN chmod 644 /etc/localtime || true
+
+# Pre-allocate directories and set ownership for the unprivileged user
+RUN mkdir -p /app
+RUN chown snea:snea /app
+RUN mkdir -p /ms-playwright
+RUN chown snea:snea /ms-playwright
+
+# --- UNPRIVILEGED USER PHASE ---
+# We switch to snea BEFORE installing uv and remain as snea
+USER snea
+WORKDIR /app
+ENV HOME=/home/snea
+ENV PATH="/home/snea/.local/bin:${PATH}"
+ENV PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+
+# Install uv (As snea)
+ADD --chown=snea:snea https://astral.sh/uv/install.sh /home/snea/install.sh
+RUN chmod +x /home/snea/install.sh
+RUN /home/snea/install.sh
+RUN rm /home/snea/install.sh
+
+COPY --chown=snea:snea pyproject.toml .
+COPY --chown=snea:snea uv.lock* .
+
+# Use uv sync to install everything including dev dependencies into project .venv
+RUN uv sync --all-groups
+
+# Playwright Browser Installation (As snea)
+RUN uv run playwright install chromium
+
+# Copy App Code (As snea)
+COPY --chown=snea:snea . /app
+
+# Final command runs as snea using uv run targeting active env
+# We use --no-sync because the project is already synced during build.
+CMD ["uv", "run", "--no-sync", "--active", "pytest", "-q", "tests/frontend/test_ui.py"]

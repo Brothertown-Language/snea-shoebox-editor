@@ -3,7 +3,7 @@
 ## Overview
 
 This document outlines the implementation plan for the **SNEA Shoebox Editor**, a 100% Python-based web application for
-concurrent editing of linguistic records from across Southern New England Algonquian (SNEA) languages.
+collaborative, version-controlled editing of linguistic records from across Southern New England Algonquian (SNEA) languages.
 
 ---
 
@@ -19,11 +19,19 @@ moving to the next.
 Before initializing the project, you must manually obtain the necessary "Master Keys" from Cloudflare and GitHub. **Note: GitHub OAuth credentials will be generated in Phase 5.**
 
 1. **Generate Cloudflare API Token**:
-    - Go to [Cloudflare Profile > API Tokens](https://dash.cloudflare.com/profile/api-tokens).
-    - Use the **Edit Cloudflare Workers** template.
-    - Ensure it has `Account.Workers Scripts: Edit`, `Account.D1: Edit`, and `User.Account: Read`.
+    - Go to the [**Cloudflare Dashboard > API Tokens**](https://dash.cloudflare.com/profile/api-tokens).
+    - Click **Create Token** and use the **Get started** button next to **Create Custom Token**.
+    - *Note: A User API Token is recommended because it supports the mix of Account and Zone permissions required by Wrangler.*
+    - Create a token with: `Account` | `Workers Scripts` | `Edit`, `Account` | `Workers KV Storage` | `Edit`, `Account` | `Workers R2 Storage` | `Edit`, `Account` | `D1` | `Edit` (if available), `Account` | `Cloudflare Pages` | `Edit`, `Account` | `Account Settings` | `Read`, and `Zone` | `Workers Routes` | `Edit`.
+    - *Note: D1 permissions are implicitly included in Workers permissions. "Account-level" tokens often fail for Wrangler deployments.*
+    - **Final Summary Verification**:
+        Your token summary should look like this:
+        > **snea-editor API token summary**
+        > This API token will affect the below accounts and zones, along with their respective permissions:
+        > * **All accounts** - `Workers Scripts: Edit`, `Workers KV Storage: Edit`, `Workers R2 Storage: Edit`, `Cloudflare Pages: Edit`, `Account Settings: Read`
+        > * **All zones** - `Workers Routes: Edit`
 2. **Generate GitHub Personal Access Token (PAT)**:
-    - Go to **Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**.
+    - Go to [**Settings** > **Developer settings** > **Personal access tokens** > **Tokens (classic)**](https://github.com/settings/tokens).
     - Generate a token with the `repo` scope.
 
 ### Phase 2: Repository Initialization
@@ -32,45 +40,44 @@ Before initializing the project, you must manually obtain the necessary "Master 
    `Brothertown-Language` organization.
 2. **Local Setup**: Clone the repo to your workstation.
 
-### 3. Automated Infrastructure & Schema Setup
+### Phase 3: Automated Infrastructure & Schema Setup [IN PROGRESS]
 
 Use the provided `bootstrap_env.py` script to automate the heavy lifting. **Note: This script will automatically detect your primary Cloudflare Account ID and set up the D1 database.**
 
-1. **Initialize Environment**:
-   It is required to use Docker for local development. See the **[Local Development Guide](docs/development/local-development.md)**. Note that Cloudflare D1 type access (simulated locally) is required for local work.
-2. **Schema Management**:
+1. **Initialize Environment [COMPLETED]**:
+   It is required to use Docker for local development. See the **[Local Development Guide](local-development.md)**. Note that Cloudflare D1 type access (simulated locally) is required for local work.
+2. **Schema Management [IN PROGRESS]**:
    The application automatically handles its own database schema. Upon first run and during subsequent updates, the app will:
-   - Create any missing tables.
-   - Update existing tables using `ALTER` statements as appropriate.
+   - Create any missing tables. (Implemented: `sources`, `records`, `seeding_progress`)
+   - Update existing tables using `ALTER` statements as appropriate. (Pending)
    Manual execution of `schema.sql` via Wrangler is NOT required.
-3. **Set Environment Variables**:
-   These variables are used by the bootstrap script to configure your infrastructure. You can either export them
-   temporarily in your terminal or create a `.env` file in this directory (though the script currently expects
-   them in the environment).
+3. **Set Environment Variables [COMPLETED]**:
+   These variables are used by the bootstrap script to configure your infrastructure. Create a `.env` file in the project root:
 
-   ```bash
-   export CF_API_TOKEN="your_cloudflare_token"
-   export GH_TOKEN="your_github_pat"
+   ```env
+   CF_EMAIL="your_cloudflare_email"
+   CF_API_KEY="your_global_api_key"
+   CF_API_TOKEN="your_cloudflare_user_token"
+   GH_TOKEN="your_github_pat"
    ```
 
    *Note: Once the bootstrap script runs successfully, these keys are stored securely in GitHub Secrets, and you
    will not need them locally for deployment.*
-3. **Run the Bootstrap Script**:
-   Make sure you are in the `tech-docs/snea-online-concurrent-shoebox-editor/` directory and run the bootstrap script from within the Docker environment:
+3. **Run the Bootstrap Script (Production Only)**:
+   This script automates the one-time setup of your production infrastructure. You must run it locally (requires Python and `uv`).
+
    ```bash
-   docker-compose exec web python bootstrap_env.py
+   uv venv && source .venv/bin/activate
+   uv pip install -e .
+   python bootstrap_env.py
    ```
-   **What this does automatically**:
-    - Creates the `snea-shoebox` D1 database on Cloudflare.
-    - Generates a secure `JWT_SECRET`.
-    - Encrypts and uploads `CLOUDFLARE_API_TOKEN`, `CLOUDFLARE_ACCOUNT_ID`, and `JWT_SECRET` to your GitHub Repo
-      Secrets.
-    - Generates a ready-to-use `wrangler.toml` file.
+
+   **IMPORTANT**: This step is only for the initial setup of Cloudflare D1 and GitHub Secrets. **Skip this for local development.**
 
 ### Phase 4: Custom Domain Setup (Manual)
 
-Since the app will use `michael-conrad.com`, you must link the Cloudflare Pages and Workers to the subdomains. **Note:
-Cloudflare will automatically handle the DNS CNAME records once you add these domains in the dashboard.**
+Since the app will use `snea-editor.michael-conrad.com` as the primary domain, you must link the Cloudflare Pages (apex) and Workers (subdomain) accordingly. **Note:
+Cloudflare will automatically handle the DNS records once you add these domains in the dashboard.**
 
 1. **Pages Custom Domain**:
     - Go to **Workers & Pages** > **snea-editor** (your Pages project) > **Custom domains**.
@@ -78,7 +85,7 @@ Cloudflare will automatically handle the DNS CNAME records once you add these do
     - Cloudflare will prompt you to "Activate" or "Setup" the DNS; click through to let it create the record.
 2. **Worker Custom Domain**:
     - Go to **Workers & Pages** > **snea-backend** (your Worker) > **Triggers** > **Custom Domains**.
-    - Add `snea-api.michael-conrad.com`.
+    - Add `snea-backend.michael-conrad.com`.
     - Cloudflare will automatically generate the DNS record for this subdomain.
 
 ### Phase 5: GitHub OAuth Setup (Manual)
@@ -86,10 +93,10 @@ Cloudflare will automatically handle the DNS CNAME records once you add these do
 Authentication is handled via GitHub OAuth to ensure secure access and contributor tracking. **Access is restricted to members of the `proto-SNEA` team in the `Brothertown-Language` organization.**
 
 1. **Register GitHub OAuth App**:
-    - Go to GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**.
+    - Go to [GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor`
     - **Homepage URL**: `https://snea-editor.michael-conrad.com`
-    - **Authorization callback URL**: `https://snea-api.michael-conrad.com/auth/callback`
+    - **Authorization callback URL**: `https://snea-editor.michael-conrad.com`
 2. **Update Repo Secrets**:
     - Manually add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` (from the OAuth App you just created) to your GitHub
       Repository Secrets.
@@ -101,14 +108,15 @@ Authentication is handled via GitHub OAuth to ensure secure access and contribut
 To support authentication during local development, a separate GitHub OAuth application should be configured to point to your local environment.
 
 1.  **Register Local GitHub OAuth App**:
+    - Go to [GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor (Local)`
-    - **Homepage URL**: `http://localhost:8765`
-    - **Authorization callback URL**: `http://localhost:8787/auth/callback`
+    - **Homepage URL**: `http://localhost:8501`
+    - **Authorization callback URL**: `http://localhost:8501`
 2.  **Local Environment Configuration**:
     - Create a `.env` file in the project root (not committed to VCS).
     - Add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from the local OAuth app.
 3.  **CORS & Team Validation**:
-    - The backend (`src/backend/worker.py`) must be configured to allow CORS requests from `http://localhost:8765` during local development.
+    - The backend (`src/backend/worker.py`) must be configured to allow CORS requests from `http://localhost:8501` during local development.
     - Team membership validation against the `proto-SNEA` team remains active in local development, requiring an internet connection.
 
 ---
@@ -118,27 +126,28 @@ To support authentication during local development, a separate GitHub OAuth appl
 ### 1. Automated Deployment (GitHub Actions)
 
 - **Workflow**: `.github/workflows/deploy.yml` handles the build.
-- **WASM Compilation**: Solara/Pyodide compiles Python UI code into WebAssembly.
+- **Streamlit**: Uses Streamlit for the reactive UI.
 - **Clean Workstation**: Local development uses Docker to avoid polluting the host environment with `npm`, `wrangler`, or specific Python versions.
 - **Zero-Workstation-Install**: All deployment tools run strictly in the GitHub runner.
 
-### 2. Python Frontend (Solara)
+### 2. Python Frontend (Streamlit) [IN PROGRESS]
 
-- **Responsive UI**: Mobile and Desktop support using grid-based layouts.
-- **Strictly Python**: No JavaScript required for UI logic.
-- **Hybrid Record Editor**:
+- **Responsive UI [IN PROGRESS]**: Basic mobile and desktop support using grid-based layouts (Implemented: `RecordList`).
+- **Strictly Python [COMPLETED]**: No JavaScript required for UI logic.
+- **Hybrid Record Editor [PENDING]**:
     - **Display Mode**: Colorized and enhanced rendering of MDF records for linguistic readability.
     - **Edit Mode**: Switches to a plain text area containing raw MDF data for direct editing.
     - **Transition**: Validation occurs after editing to provide visual feedback (colorization), but does not block saving.
-- **Advisory Validation**: Linguistic validation (e.g., hierarchy checks) is purely advisory. It highlights potential issues for linguists but **must not** interfere with or prevent the saving of records.
-- **Read-Only Metadata**: Record metadata (last editor, timestamp, version) is visible but read-only to users.
+- **Advisory Validation [PENDING]**: Linguistic validation (e.g., hierarchy checks) is purely advisory. It highlights potential issues for linguists but **must not** interfere with or prevent the saving of records.
+- **NFD Sorting [PENDING]**: Records must be sorted by their extracted headword (\lx). Sorting must use NFD normalization (preserving diacritics), and leading punctuation must be ignored. (Current: Basic ASC sorting in DB).
+- **Read-Only Metadata [PENDING]**: Record metadata (last editor, timestamp, version) is visible but read-only to users.
 
-### 3. Python Backend (Cloudflare Workers)
+### 3. Python Backend (Cloudflare Workers) [IN PROGRESS]
 
-- **Data Layer**: D1 database using Python bindings.
-- **Source Code**: Implementation resides in `src/worker.py`.
-- **Manual Seeding**: The app starts with an empty database. Administrators can trigger seed ingestion from multiple
-  private source files (Natick, SNEALEX, Mohegan Dictionary, etc.) via dedicated endpoints.
+- **Data Layer [IN PROGRESS]**: D1 database using Python bindings (Implemented: `sources`, `records`, `seeding_progress`).
+- **Source Code [COMPLETED]**: Implementation resides in `src/backend/worker.py`.
+- **Manual Seeding [IN PROGRESS]**: The app starts with an empty database. Administrators can trigger seed ingestion from multiple
+  private source files (Natick, SNEALEX, Mohegan Dictionary, etc.) via dedicated endpoints. (Implemented: Auto-seeding for `Natick/Trumbull`).
 
 ### 4. Concurrency & Authentication Management
 
@@ -197,5 +206,5 @@ To support authentication during local development, a separate GitHub OAuth appl
 ### Phase 8: Developer Experience
 1. **Dedicated Dev UI**: A built-in UI component (Dev Info) for inspecting system internals without using CLI tools.
     - **Table Schema Inspector**: View SQL schemas for all D1 tables.
-    - **Environment Reporting**: Report Python versions and platforms for both Frontend (Solara/Pyodide) and Backend (Worker).
+    - **Environment Reporting**: Report Python versions and platforms for both Frontend (Streamlit) and Backend (Worker).
 
