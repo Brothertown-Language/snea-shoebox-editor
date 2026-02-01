@@ -50,15 +50,15 @@ This guide provides the one-time manual steps required to connect this repositor
 4.  **Project Name**: `snea-editor`.
 5.  **Set up your application**:
     - **Build command**: (Leave EMPTY)
-    - **Deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
-    - **Non-production branch deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
+    - **Deploy command**: (Leave EMPTY)
+    - **Non-production branch deploy command**: (Leave EMPTY)
     - **Path**: `/`
 6.  **Build Settings**:
     - **Production Branch**: `main`
     - **Framework Preset**: `None`
     - **Build Command**: (Leave EMPTY)
-    - **Build output directory**: `/` (or leave as default if it detects static assets)
-7.  Click **Save and Deploy**. Cloudflare will now treat this as a Workers Assets (Pages) project.
+    - **Build output directory**: `.` (The current directory)
+7.  Click **Save and Deploy**. Cloudflare will now treat this as a Workers Assets (Pages) project and automatically deploy it using its internal system.
 8.  **Environment Variables**: After deployment, go to the project's **Settings** -> **Variables** and add:
     - `BACKEND_URL`: `https://snea-backend.brothertownlanguage.org`
 
