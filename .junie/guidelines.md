@@ -10,6 +10,7 @@ date: 2026-01-30
 
 ### 1. Project Identity & Goals
 - **Target:** Southern New England Algonquian (SNEA) language records.
+- **Privacy:** Private repository; restricted access.
 - **Platform:** SNEA Online Concurrent Shoebox Editor.
 - **Tech Stack:** 100% Python; Streamlit (Frontend); Cloudflare Workers (Backend); D1 (Database).
 - **Goal:** Collaborative, version-controlled editing of linguistic data in MDF format.

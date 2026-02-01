@@ -21,6 +21,12 @@ jobs:
       - name: Set up Python
         run: uv python install
 
+      - name: Verify Cloudflare IDs
+        run: uv run scripts/verify_cf_ids.py
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
       - name: Deploy Worker (initial, without secrets)
         uses: cloudflare/wrangler-action@v3
         with:
