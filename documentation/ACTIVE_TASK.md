@@ -13,6 +13,9 @@ Next Steps:
 - Continue with further linguistic data processing features.
 
 Completed Tasks:
+- Purged historical contents of `.env` from git history using `git-filter-repo`.
+- Committed all pending changes before history rewrite.
+- Installed `git-filter-repo` to ensure a reliable and fast history purge.
 - **SECURITY ROTATION COMPLETE**: Successfully rotated all exposed secrets (GitHub OAuth, GitHub PAT, Cloudflare Tokens) and synchronized them to production via `bootstrap_env.py`.
 - Fixed Cloudflare 401 Authentication Error in `bootstrap_env.py` by adding a fallback mechanism to the Global API Key if the User API Token fails verification.
 - Updated `docs/development/SECURITY_ROTATION.md` to include rotation instructions for the Cloudflare Global API Key and updated the token name to "snea-editor".
