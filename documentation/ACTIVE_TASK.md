@@ -8,8 +8,8 @@ Summary:
 - Added `pages_build_output_dir = "."` to `wrangler.toml` to satisfy Pages requirements.
 - Added and marked `compatibility_flags = ["python_workers"]` as MANDATORY in `wrangler.toml` to ensure Python support.
 - Deleted the redundant `wrangler.pages.toml`.
-- Updated `docs/deployment/MANUAL_SETUP.md` to use the simplified `npx wrangler pages deploy .` command.
-- Identified that `npx wrangler pages deploy` was conflicting with the backend `wrangler.toml`, causing deployment warnings and potentially contributing to authentication errors.
+- Updated `docs/deployment/MANUAL_SETUP.md` to use the simplified `npx wrangler pages deploy .` command, strictly enforcing `wrangler pages deploy` for the frontend as requested.
+- Identified that `npx wrangler pages deploy` was previously conflicting with the backend `wrangler.toml` when misconfigured; unified `wrangler.toml` now correctly supports both flows.
 - Analyzed CI logs for run 21566990798; identified Cloudflare API error 7003 due to invalid/inaccessible IDs during backend deployment.
 - Implemented `scripts/verify_cf_ids.py` to pre-validate Cloudflare Account ID and D1 Database ID using the Cloudflare API before deployment.
 - Updated `.github/workflows/deploy.yml` to include the verification step, ensuring the workflow fails early with a clear error message if IDs are incorrect.
