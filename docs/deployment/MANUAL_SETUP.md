@@ -5,15 +5,7 @@ This guide provides the one-time manual steps required to connect this repositor
 
 ## 1. BACKEND SETUP (Cloudflare Workers + D1)
 
-### A. Create the D1 Database
-1.  Log in to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
-2.  Navigate to **Workers & Pages** -> **D1**.
-3.  Click **Create database** -> **Dashboard**.
-4.  **Database Name**: `snea-shoebox`.
-5.  Click **Create**.
-6.  **Important**: Copy the **Database ID** (UUID) from the overview page.
-
-### B. Create and Connect the Worker
+### A. Create and Connect the Worker
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Worker**.
 2.  **Name**: `snea-editor`.
 3.  Click **Deploy** (this creates a dummy worker that we will link to GitHub).
@@ -26,11 +18,11 @@ This guide provides the one-time manual steps required to connect this repositor
     - **Root Directory**: (Leave EMPTY)
 8.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` from GitHub.
 
-### C. Bindings and Secrets
+### B. Bindings and Secrets
 1.  Go to **Settings** -> **Variables**.
 2.  **D1 Database Bindings**: Click **Add Binding**.
     - **Variable Name**: `DB`
-    - **D1 Database**: Select `snea-shoebox`.
+    - **D1 Database**: Select `snea-shoebox` (created by the bootstrap script).
 3.  **Secrets**: Click **Add Secret** for each of these:
     - `JWT_SECRET`: (Any long random string)
     - `SNEA_GITHUB_CLIENT_ID`: (From your GitHub OAuth App)
