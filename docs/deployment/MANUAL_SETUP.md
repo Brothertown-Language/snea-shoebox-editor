@@ -29,6 +29,15 @@ This guide provides step-by-step instructions for manually setting up the SNEA O
     - Enter `snea-editor.brothertownlanguage.org`.
     - Follow the prompts to update DNS (Cloudflare usually handles this automatically if your domain is managed there).
 
+### Post-Setup: Updating Build Settings
+If you have already created the Pages project and need to change these settings:
+1.  Navigate to **Workers & Pages** -> **Overview** -> `snea-editor`.
+2.  Go to the **Settings** tab -> **Build & deployments**.
+3.  Click **Edit configurations** in the **Configure methods and settings** section.
+4.  Update the **Build command** (Empty) and **Build output directory** (`/`).
+5.  Click **Save**.
+6.  *Note*: You may need to trigger a new deployment (via the **Deployments** tab) for the changes to take effect.
+
 ---
 
 ## 2. Cloudflare D1 (Database) Setup
