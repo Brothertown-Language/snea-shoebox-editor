@@ -1,0 +1,99 @@
+name: Collect CI Logs
+
+on:
+  workflow_run:
+    workflows: ["Deploy to Cloudflare"]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Workflow run ID to collect logs for (optional; defaults to latest on main)"
+        required: false
+
+jobs:
+  collect:
+    name: Collect and Upload Logs
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      id-token: write
+      packages: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Determine target run
+        id: pick
+        env:
+          R_ID: ${{ github.event.inputs.run_id }}
+        run: |
+          set -euo pipefail
+          if [ -n "${R_ID:-}" ]; then
+            echo "run_id=$R_ID" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # If triggered by workflow_run, use that ID; else fetch latest on main
+          if [ "${{ github.event_name }}" = "workflow_run" ]; then
+            echo "run_id=${{ github.event.workflow_run.id }}" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "Fetching latest run ID on main for 'Deploy to Cloudflare'"
+          runs_json=$(curl -fsSL \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/actions/runs?branch=main&per_page=25")
+          run_id=$(printf '%s' "$runs_json" | jq -r '.workflow_runs[] | select(.name=="Deploy to Cloudflare") | .id' | head -n1)
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            # fallback: first run
+            run_id=$(printf '%s' "$runs_json" | jq -r '.workflow_runs[0].id')
+          fi
+          if [ -z "$run_id" ] || [ "$run_id" = "null" ]; then
+            echo "No suitable workflow runs found" >&2
+            exit 1
+          fi
+          echo "run_id=$run_id" >> "$GITHUB_OUTPUT"
+
+      - name: Create output directory
+        run: |
+          mkdir -p tmp/ci-logs
+
+      - name: Download logs zip
+        env:
+          RUN_ID: ${{ steps.pick.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          url="https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}/logs"
+          echo "Downloading $url"
+          curl -fsSL \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "$url" -o "tmp/ci-logs/run-${RUN_ID}-logs.zip"
+
+      - name: Download run summary JSON
+        env:
+          RUN_ID: ${{ steps.pick.outputs.run_id }}
+        run: |
+          set -euo pipefail
+          url="https://api.github.com/repos/${{ github.repository }}/actions/runs/${RUN_ID}"
+          echo "GET $url"
+          curl -fsSL \
+            -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+            -H "Accept: application/vnd.github+json" \
+            "$url" -o "tmp/ci-logs/run-${RUN_ID}-summary.json"
+          # Produce a brief text summary
+          jq -r '[
+            "Workflow: " + (.name // ""),
+            "Run: #" + ((.run_number|tostring) // "") + " (id " + ((.id|tostring) // "") + ")",
+            "Branch: " + (.head_branch // "") + "  Event: " + (.event // ""),
+            "Status: " + (.status // "") + "  Conclusion: " + (.conclusion // ""),
+            "URL: " + (.html_url // "")
+          ] | join("\n") + "\n"' "tmp/ci-logs/run-${RUN_ID}-summary.json" \
+            > "tmp/ci-logs/run-${RUN_ID}-summary.txt"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ci-logs-${{ steps.pick.outputs.run_id }}
+          path: tmp/ci-logs/
+          if-no-files-found: error
