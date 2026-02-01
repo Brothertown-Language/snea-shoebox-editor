@@ -151,30 +151,37 @@ def bootstrap():
     if not all_verified:
         print("WARNING: Some secrets failed verification. Check GitHub repository settings.")
 
-    # 5. Generate wrangler.toml
-    print(f"\nGenerating wrangler.toml for '{BACKEND_NAME}'...")
+    # 5. Generate wrangler.backend.toml
+    print(f"\nGenerating wrangler.backend.toml for '{BACKEND_NAME}'...")
     wrangler_content = f"""name = "{BACKEND_NAME}"
-main = "src/worker.py"
+main = "src/backend/worker.py"
 compatibility_date = "2024-01-01"
+compatibility_flags = ["python_workers"] # MANDATORY: Required for Python Workers
+
+[vars]
+BACKEND_URL = "https://snea-backend.brothertownlanguage.org"
+
+[build]
+command = "uv pip install -e . && uv sync --all-groups"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "{DB_NAME}"
 database_id = "{db_id}"
 """
-    with open("wrangler.toml", "w") as f:
+    with open("wrangler.backend.toml", "w") as f:
         f.write(wrangler_content)
 
-    # 5.1 Verify wrangler.toml
-    if os.path.exists("wrangler.toml"):
-        with open("wrangler.toml", "r") as f:
+    # 5.1 Verify wrangler.backend.toml
+    if os.path.exists("wrangler.backend.toml"):
+        with open("wrangler.backend.toml", "r") as f:
             saved_content = f.read()
         if saved_content == wrangler_content:
-            print("VERIFIED: 'wrangler.toml' generated correctly.")
+            print("VERIFIED: 'wrangler.backend.toml' generated correctly.")
         else:
-            print("FAILED: 'wrangler.toml' content mismatch.")
+            print("FAILED: 'wrangler.backend.toml' content mismatch.")
     else:
-        print("FAILED: 'wrangler.toml' file not found after generation.")
+        print("FAILED: 'wrangler.backend.toml' file not found after generation.")
 
     print("\n--- Setup Summary ---")
     print(f"Cloudflare Database: {DB_NAME} (ID: {db_id}) - VERIFIED")
@@ -189,8 +196,8 @@ database_id = "{db_id}"
         print(f"\nIMPORTANT: A new JWT_SECRET was generated: {jwt_secret}")
         print("Please save this to your .env as PROD_JWT_SECRET to keep it consistent.")
 
-    print("\nwrangler.toml: Generated - VERIFIED")
-    print("\nSetup Complete! 'wrangler.toml' generated and secrets uploaded.")
+    print("\nwrangler.backend.toml: Generated - VERIFIED")
+    print("\nSetup Complete! 'wrangler.backend.toml' generated and secrets uploaded.")
 
 
 if __name__ == "__main__":
