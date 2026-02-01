@@ -5,6 +5,11 @@ from js import Response, JSON, fetch, AbortSignal
 import json
 import sys
 import time
+import hashlib
+import hmac
+import base64
+import unicodedata
+import re
 # ------------------------------------------------------------
 # Requests Shim (for environments without requests)
 # ------------------------------------------------------------
@@ -93,6 +98,27 @@ def _b64url_decode(s: str) -> bytes:
 def _hmac_sha256(key: str, msg: str) -> str:
     return _b64url(hmac.new(key.encode("utf-8"), msg.encode("utf-8"), hashlib.sha256).digest())
 
+def get_sort_key(text):
+    if not text:
+        return ""
+    # Remove ' entirely
+    text = text.replace("'", "")
+    # Normalize to NFD (Decomposed)
+    normalized = unicodedata.normalize('NFD', text)
+    
+    # Strip leading punctuation/symbols.
+    # We strip anything that is not a word character or a combining mark.
+    # \w in Python 3 with re.UNICODE (default) matches Unicode word characters.
+    # Treat ∞ (U+221E) as a character for sorting.
+    match = re.search(r'[\w∞]', normalized)
+    if match:
+        res = normalized[match.start():].lower()
+        # Also remove trailing punctuation from the key for cleaner sorting
+        res = re.sub(r'[^\w∞]+$', '', res)
+        return res
+    
+    return normalized.lower()
+
 # Global flag to ensure initialization happens once per worker instance
 _initialized = False
 # Counter to allow seeding to continue on subsequent requests if needed
@@ -120,6 +146,8 @@ async def initialize_db(db):
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 source_id INTEGER NOT NULL,
                 lx TEXT NOT NULL,
+                sort_key TEXT,
+                hm INTEGER DEFAULT 1,
                 ps TEXT,
                 ge TEXT,
                 mdf_data TEXT NOT NULL,
@@ -134,6 +162,60 @@ async def initialize_db(db):
                 FOREIGN KEY (source_id) REFERENCES sources(id)
             )
         """).run()
+
+        # Handle schema migration for sort_key if it doesn't exist
+        try:
+            await db.prepare("ALTER TABLE records ADD COLUMN sort_key TEXT").run()
+        except Exception:
+            # Column likely already exists
+            pass
+
+        # Handle schema migration for hm if it doesn't exist
+        try:
+            await db.prepare("ALTER TABLE records ADD COLUMN hm INTEGER DEFAULT 1").run()
+        except Exception:
+            # Column likely already exists
+            pass
+
+        # Migration: populate sort_key and hm for records that don't have it
+        # Migration 2026-02-01: re-populate sort_key and hm for records
+        try:
+            # We want to ensure hm and sort_key are synced with the current mdf_data and lx
+            # For performance, we could check if they actually need updating, but a one-time sync is safer
+            records_to_fix = await db.prepare("SELECT id, lx, mdf_data, hm, sort_key FROM records").all()
+            if records_to_fix.results:
+                statements = []
+                for r in records_to_fix.results:
+                    rd = dict(r.to_py())
+                    lx = rd['lx']
+                    mdf_data = rd['mdf_data']
+                    current_hm = rd.get('hm')
+                    current_sort_key = rd.get('sort_key')
+                    
+                    # Extract expected hm from mdf_data
+                    expected_hm = 1
+                    hm_match = re.search(r'^\\hm\s+(\d+)$', mdf_data, re.MULTILINE)
+                    if hm_match:
+                        try:
+                            expected_hm = int(hm_match.group(1).strip())
+                        except ValueError:
+                            expected_hm = 1
+                    
+                    expected_sort_key = get_sort_key(lx)
+                    
+                    # Only update if there's a mismatch
+                    if expected_hm != current_hm or expected_sort_key != current_sort_key:
+                        statements.append(
+                            db.prepare("UPDATE records SET sort_key = ?, hm = ? WHERE id = ?").bind(
+                                expected_sort_key, expected_hm, rd['id']
+                            )
+                        )
+                if statements:
+                    # Execute in batches if many
+                    for i in range(0, len(statements), 50):
+                        await db.batch(statements[i:i+50])
+        except Exception as e:
+            print(f"Error migrating records: {e}")
 
         await db.prepare("""
             CREATE TABLE IF NOT EXISTS seeding_progress (
@@ -254,8 +336,8 @@ async def initialize_db(db):
                 for record in batch:
                     statements.append(
                         db.prepare(
-                            "INSERT INTO records (source_id, lx, ps, ge, mdf_data, status) VALUES (?, ?, ?, ?, ?, ?)"
-                        ).bind(source_id, record['lx'], record['ps'], record['ge'], record['mdf_data'], 'draft')
+                            "INSERT INTO records (source_id, lx, sort_key, hm, ps, ge, mdf_data, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)"
+                        ).bind(source_id, record['lx'], get_sort_key(record['lx']), record['hm'], record['ps'], record['ge'], record['mdf_data'], 'draft')
                     )
                 if statements:
                     await db.batch(statements)
@@ -281,7 +363,9 @@ async def initialize_db(db):
 
 async def on_fetch(request, env, ctx):
     url = request.url
-    path = "/" + "/".join(url.split("/")[3:])
+    # Path is everything after the origin, before the query string
+    path_full = "/" + "/".join(url.split("/")[3:])
+    path = path_full.split("?", 1)[0]
     
     # Frontend origin must be explicitly configured. Avoid host heuristics.
     # Allowed vars: SNEA_FRONTEND_URL (prod) or FRONTEND_URL (local). Final fallback: http://localhost:8501
@@ -603,7 +687,7 @@ async def on_fetch(request, env, ctx):
             out_headers = dict(headers)
             out_headers["Set-Cookie"] = (
                 f"session={signed_session}; "
-                "HttpOnly; Secure; SameSite=Lax; Path=/"
+                "HttpOnly; Secure; SameSite=Lax; Path=/; Max-Age=2592000"
             )
             
             success_payload = {
@@ -639,6 +723,17 @@ async def on_fetch(request, env, ctx):
         # Attach session to context for downstream handlers if needed
         # (Since we are in a single function, we'll just use the 'session' variable)
     
+    # Protected route: already verified session if we are here
+    if path == "/api/me" and request.method == "GET":
+        try:
+            user_id = session.get("uid")
+            user = await db.prepare("SELECT id, email, username, name FROM users WHERE id = ?").bind(user_id).first()
+            if not user:
+                return Response.new(json.dumps({"error": "User not found"}), headers=JSON.parse(json.dumps(headers)), status=404)
+            return Response.new(json.dumps(dict(user.to_py())), headers=JSON.parse(json.dumps(headers)))
+        except Exception as e:
+            return Response.new(json.dumps({"error": str(e)}), headers=JSON.parse(json.dumps(headers)), status=500)
+
     if path == "/api/records/count":
         try:
             res = await db.prepare("SELECT count(*) as count FROM records").first()
@@ -656,15 +751,34 @@ async def on_fetch(request, env, ctx):
 
     if path == "/api/records":
         try:
+            # Pagination parameters
+            limit = 50
+            offset = 0
+            
+            # Extract from query string if available
+            try:
+                # Basic URL parsing for query params
+                if "?" in url:
+                    query_str = url.split("?", 1)[1]
+                    for pair in query_str.split("&"):
+                        if "=" in pair:
+                            k, v = pair.split("=", 1)
+                            if k == "limit":
+                                limit = min(int(v), 100)
+                            elif k == "offset":
+                                offset = max(int(v), 0)
+            except Exception:
+                pass
+
             # Join with sources to get source name
             records = await db.prepare("""
                 SELECT r.*, s.name as source_name 
                 FROM records r 
                 LEFT JOIN sources s ON r.source_id = s.id 
                 WHERE r.is_deleted = 0 
-                ORDER BY r.lx ASC 
-                LIMIT 100
-            """).all()
+                ORDER BY r.sort_key ASC, r.hm ASC, source_name ASC 
+                LIMIT ? OFFSET ?
+            """).bind(limit, offset).all()
             # Convert results to list of dicts for JSON serialization
             data = [dict(r.to_py()) for r in records.results]
         except Exception as e:
@@ -686,13 +800,22 @@ async def on_fetch(request, env, ctx):
             
             if not lx:
                 return Response.new(json.dumps({"error": "lx is required"}), headers=JSON.parse(json.dumps(headers)), status=400)
+
+            # Extract hm from mdf_data
+            hm = 1
+            hm_match = re.search(r'^\\hm\s+(\d+)$', mdf_data, re.MULTILINE)
+            if hm_match:
+                try:
+                    hm = int(hm_match.group(1).strip())
+                except ValueError:
+                    hm = 1
             
             # Update record
             await db.prepare("""
                 UPDATE records 
-                SET lx = ?, ps = ?, ge = ?, mdf_data = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?, current_version = current_version + 1
+                SET lx = ?, sort_key = ?, hm = ?, ps = ?, ge = ?, mdf_data = ?, updated_at = CURRENT_TIMESTAMP, updated_by = ?, current_version = current_version + 1
                 WHERE id = ?
-            """).bind(lx, ps, ge, mdf_data, session.get("u"), record_id).run()
+            """).bind(lx, get_sort_key(lx), hm, ps, ge, mdf_data, session.get("u"), record_id).run()
             
             return Response.new(json.dumps({"success": True}), headers=JSON.parse(json.dumps(headers)))
         except Exception as e:
@@ -721,26 +844,6 @@ async def on_fetch(request, env, ctx):
 
     if path == "/api/health":
         return Response.new(json.dumps({"ok": True}), headers=JSON.parse(json.dumps(headers)))
-
-    if path == "/api/me":
-        cookie_header = req_headers.get("cookie", "")
-        token = None
-        for part in cookie_header.split(";"):
-            if part.strip().startswith("session="):
-                token = part.strip().split("=", 1)[1]
-
-        if not token:
-            return Response.new(json.dumps({"error": "Unauthorized"}), headers=JSON.parse(json.dumps(headers)), status=401)
-
-        session_secret = getattr(env, "SESSION_SECRET", getattr(env, "JWT_SECRET", "change-me"))
-        session = verify_session(token, session_secret)
-        if not session:
-            return Response.new(json.dumps({"error": "Invalid session"}), headers=JSON.parse(json.dumps(headers)), status=401)
-
-        return Response.new(json.dumps({
-            "user_id": session.get("uid"),
-            "login": session.get("u")
-        }), headers=JSON.parse(json.dumps(headers)))
 
     # Default 404 JSON to avoid JSON parsing errors on clients hitting wrong path
     return Response.new(json.dumps({"error": "Not found", "path": path}), headers=JSON.parse(json.dumps(headers)), status=404)
