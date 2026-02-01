@@ -14,10 +14,10 @@ This guide provides step-by-step instructions for manually setting up the SNEA O
 1.  **Log in** to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
 2.  Navigate to **Workers & Pages** -> **Overview** -> **Create** -> **Pages** -> **Connect to Git**.
 3.  Select the `snea-shoebox-editor` repository and click **Begin setup**.
-4.  **Configure Build Settings**:
-    *   **Project Name**: `snea-editor` (You can change this from the default `snea-shoebox-editor` here).
+4.  **Configure Build Settings** (This is the section right below "Project Details"):
+    *   **Project Name**: `snea-editor`
     *   **Production Branch**: `main`
-    *   **Framework Preset**: Select **None**.
+    *   **Framework Preset**: Select **None** (found in the "Build settings" section).
     *   **Build Command**: Leave this **Empty**.
     *   **Build output directory**: `/`
 5.  **Environment Variables**:
@@ -31,10 +31,11 @@ This guide provides step-by-step instructions for manually setting up the SNEA O
 ### Post-Setup: Updating Build Settings
 If you have already created the Pages project and need to change these settings:
 1.  Navigate to **Workers & Pages** -> **Overview** -> `snea-editor`.
-2.  Go to the **Settings** tab -> **Build & deployments**.
-3.  Click **Edit configurations** in the **Configure methods and settings** section.
-4.  Update the **Build command** (Empty) and **Build output directory** (`/`).
-5.  Click **Save**.
+2.  Go to the **Settings** tab.
+3.  Click **Builds & deployments** (this is usually a link in the horizontal sub-menu under the "Settings" tab, or a section on the main Settings page).
+4.  Look for the **Build settings** section and click **Edit configurations**.
+5.  Update the **Build command** (Empty) and **Build output directory** (`/`).
+6.  Click **Save**.
 6.  *Note*: You may need to trigger a new deployment (via the **Deployments** tab) for the changes to take effect.
 
 ---
