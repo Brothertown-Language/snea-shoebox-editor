@@ -4,6 +4,9 @@
 Date: 2026-02-01
 
 Summary:
+- Identified that `npx wrangler pages deploy` was conflicting with the backend `wrangler.toml`, causing deployment warnings and potentially contributing to authentication errors.
+- Created `wrangler.pages.toml` specifically for the frontend (`snea-editor`) to provide a clean configuration for Cloudflare Pages.
+- Updated `docs/deployment/MANUAL_SETUP.md` to use the new `--config wrangler.pages.toml` flag, replacing the `--project-name` and `--no-config` overrides.
 - Analyzed CI logs for run 21566990798; identified Cloudflare API error 7003 due to invalid/inaccessible IDs during backend deployment.
 - Implemented `scripts/verify_cf_ids.py` to pre-validate Cloudflare Account ID and D1 Database ID using the Cloudflare API before deployment.
 - Updated `.github/workflows/deploy.yml` to include the verification step, ensuring the workflow fails early with a clear error message if IDs are incorrect.
@@ -43,6 +46,9 @@ Summary:
 - Removed pedantic language and non-standard numbering from the deployment guides.
 
 Next Steps:
+- RESOLVE Cloudflare Authentication error [code: 10000] during frontend deployment. (Addressed by wrangler.pages.toml and build command updates)
+- USE `wrangler.pages.toml` for the frontend to avoid configuration conflicts with the backend Worker. ✓
+- Synchronize build commands in wrangler.toml and wrangler.pages.toml with Cloudflare dashboard. ✓
 - DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.
 - FOLLOW `docs/deployment/MANUAL_SETUP.md` for manual Cloudflare Pages and Worker configuration.
 - RESOLVE Python Worker deployment issue: Manual deployment via Wrangler CLI is now the preferred path.

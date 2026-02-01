@@ -36,7 +36,7 @@ Before starting the setup, you must have a Cloudflare API Token. This token is w
     - *Tip: The repository list is a scrollable box that may not show a scrollbar until you scroll it; if you don't see the repo, try scrolling the box.*
 4.  **Project Name**: `snea-backend` (or leave the default and it will be updated by GitHub).
 5.  **Set up your application**:
-    - **Build command**: (Leave EMPTY)
+    - **Build command**: `uv pip install -e . && uv sync --all-groups`
     - **Deploy command**: `npx wrangler deploy`
     - **Non-production branch deploy command**: `npx wrangler versions upload`
     - **Path**: `/`
@@ -44,7 +44,7 @@ Before starting the setup, you must have a Cloudflare API Token. This token is w
         - *Note: Creating a token via the "Add a token" button in this UI may automatically set the required permissions without asking for them (e.g., `snea-backend-build`). This is an acceptable alternative to creating one manually.*
 6.  **Build Settings**:
     - **Production Branch**: `main`
-    - **Build Command**: (Leave EMPTY)
+    - **Build Command**: `uv pip install -e . && uv sync --all-groups`
     - **Root Directory**: (Leave EMPTY)
 7.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` (which sets the name to `snea-backend`) from GitHub.
 8.  *Note: If you already created a Worker manually without Git integration, go to its **Settings** -> **Builds** -> **Connect** to link the repository.*
@@ -75,16 +75,16 @@ Next, perform this manual step in the Cloudflare Dashboard for the `snea-backend
     - *Tip: The repository list is a scrollable box that may not show a scrollbar until you scroll it; if you don't see the repo, try scrolling the box.*
 4.  **Project Name**: `snea-editor`.
 5.  **Set up your application**:
-    - **Build command**: (Leave EMPTY)
-    - **Deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
-    - **Non-production branch deploy command**: `npx wrangler pages deploy . --project-name snea-editor --no-config`
+    - **Build command**: `uv pip install -e . && uv sync --all-groups`
+    - **Deploy command**: `npx wrangler pages deploy . --config wrangler.pages.toml`
+    - **Non-production branch deploy command**: `npx wrangler pages deploy . --config wrangler.pages.toml`
     - **Path**: `/`
     - **Build Settings** (Advanced): Select your API token in the **API Token** dropdown. If it does not appear, click **Add a token** to link it.
         - *Note: Creating a token via the "Add a token" button in this UI may automatically set the required permissions without asking for them (e.g., `snea-frontend-build`). This is an acceptable alternative to creating one manually.*
 6.  **Build Settings**:
     - **Production Branch**: `main`
     - **Framework Preset**: `None`
-    - **Build Command**: (Leave EMPTY)
+    - **Build Command**: `uv pip install -e . && uv sync --all-groups`
     - **Build output directory**: `.` (The current directory)
 7.  Click **Save and Deploy**. Cloudflare will now treat this as a Workers Assets (Pages) project.
 8.  **Environment Variables**: After deployment, go to the project's **Settings** -> **Variables** and add:

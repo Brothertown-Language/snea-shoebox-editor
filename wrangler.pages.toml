@@ -1,0 +1,10 @@
+# Copyright (c) 2026 Brothertown Language
+name = "snea-editor"
+pages_build_output_dir = "."
+compatibility_date = "2024-01-01"
+
+[vars]
+BACKEND_URL = "https://snea-backend.brothertownlanguage.org"
+
+[build]
+command = "uv pip install -e . && uv sync --all-groups"

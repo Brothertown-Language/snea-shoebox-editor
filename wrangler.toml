@@ -2,6 +2,9 @@ name = "snea-backend"
 main = "src/worker.py"
 compatibility_date = "2024-01-01"
 
+[build]
+command = "uv pip install -e . && uv sync --all-groups"
+
 [[d1_databases]]
 binding = "DB"
 database_name = "snea-shoebox"
