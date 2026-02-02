@@ -1,64 +1,17 @@
 services:
-  embeddings:
-    image: ghcr.io/huggingface/text-embeddings-inference:1.5-cuda
-    hostname: embeddings
+  streamlit:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile
+    hostname: streamlit
     ports:
-      - "8080:80"
-    volumes:
-      - embedding_models:/data
-    environment:
-      - MODEL_ID=BAAI/bge-m3
-      - MAX_BATCH_TOKENS=16384
-      - MAX_CLIENT_BATCH_SIZE=32
-    deploy:
-      resources:
-        reservations:
-          devices:
-            - driver: nvidia
-              count: 1
-              capabilities: [gpu]
-    healthcheck:
-      test: ["CMD-SHELL", "curl -f http://localhost:80/health || exit 1"]
-      interval: 10s
-      timeout: 5s
-      retries: 30
-      start_period: 120s
-    command: --model-id BAAI/bge-m3 --port 80
-
-  backend:
-    image: node:20
-    hostname: backend
+      - "8501:8501"
     volumes:
       - ..:/app
-    working_dir: /app
-    ports:
-      - "8787:8787"
     environment:
-      - SNEA_GITHUB_CLIENT_ID=${SNEA_GITHUB_CLIENT_ID}
-      - SNEA_GITHUB_CLIENT_SECRET=${SNEA_GITHUB_CLIENT_SECRET}
-      - USE_LOCAL_EMBEDDINGS=${USE_LOCAL_EMBEDDINGS:-false}
-      - EMBEDDING_SERVICE_URL=http://embeddings:80
-    user: root
-    command: >
-      sh -c "apt-get update && apt-get install -y ca-certificates python3 python3-pip python3-venv curl && 
-      update-ca-certificates &&
-      curl -LsSf https://astral.sh/uv/install.sh | sh &&
-      export PATH=\"/root/.local/bin:\$PATH\" &&
-      uv sync --all-groups &&
-      npm install -g wrangler &&
-      mkdir -p dist &&
-      uv run python3 scripts/bundle_stlite.py &&
-      (while true; do uv run python3 scripts/bundle_stlite.py; sleep 10; done) &
-      npx wrangler dev --local --persist-to .wrangler --ip 0.0.0.0 --config /app/wrangler.toml --compatibility-flags python_workers"
-    healthcheck:
-      test: ["CMD-SHELL", "curl -fsS http://localhost:8787/api/oauth/login >/dev/null || exit 1"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-    depends_on:
-      embeddings:
-        condition: service_healthy
-        required: false
+      - GITHUB_CLIENT_ID=${GITHUB_CLIENT_ID}
+      - GITHUB_CLIENT_SECRET=${GITHUB_CLIENT_SECRET}
+    command: uv run streamlit run src/frontend/app.py
 
   tester:
     build:
@@ -71,14 +24,13 @@ services:
     environment:
       - PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
     depends_on:
-      backend:
-        condition: service_healthy
+      streamlit:
+        condition: service_started
 
 networks:
   default:
     name: snea-default
 
 volumes:
-  embedding_models:
   tester_venv:
   playwright_browsers:

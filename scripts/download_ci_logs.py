@@ -6,7 +6,7 @@ import requests
 import zipfile
 import io
 
-def download_latest_logs(repo="Brothertown-Language/snea-shoebox-editor", workflow_name="Deploy to Cloudflare", branch="main"):
+def download_latest_logs(repo="Brothertown-Language/snea-shoebox-editor", workflow_name="Test Suite", branch="main"):
     token = os.getenv("PROD_GH_TOKEN")
     if not token:
         print("ERROR: PROD_GH_TOKEN not set.")

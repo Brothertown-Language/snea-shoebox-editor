@@ -21,8 +21,7 @@ Thank you for your interest in contributing to the SNEA Online Shoebox Editor. W
 ## Development Workflow
 
 - We use `uv` for dependency management.
-- Frontend is built with [Streamlit](https://streamlit.io/).
-- Backend runs on Cloudflare Workers (Python).
+- Frontend and Backend are built with [Streamlit](https://streamlit.io/).
 - Data must strictly follow MDF (Multi-Dictionary Form) standards.
 - We use `ruff` for code linting and formatting. It is recommended to install the `ruff` plugin in your IDE (e.g., PyCharm, VS Code).
 - Code is automatically formatted on commit via `pre-commit`. To set this up, run:

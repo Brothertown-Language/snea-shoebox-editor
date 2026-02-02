@@ -4,28 +4,23 @@
 
 ## Overview
 
-The SNEA Online Shoebox Editor is a collaborative, version-controlled platform for editing linguistic data in Multi-Dictionary Form (MDF). It is built using a 100% Python stack and deployed on Cloudflare's edge infrastructure.
+The SNEA Online Shoebox Editor is a collaborative, version-controlled platform for editing linguistic data in Multi-Dictionary Form (MDF). It is built using a 100% Python stack and deployed on Streamlit Community Cloud.
 
 ## Component Stack
 
-- **Unified Worker**: [Cloudflare Workers](https://workers.cloudflare.com/) (Python runtime). [IN PROGRESS]
-  - A single Worker serves both the frontend (stlite static assets) and backend API.
-  - Handles API requests, authentication, database interactions, and static asset serving.
+- **Streamlit Application**: [Streamlit](https://streamlit.io/) (Hosted on Streamlit Community Cloud).
+  - A unified Python application serves both the frontend and backend logic.
+  - Handles UI rendering, authentication, and database interactions.
   - Implements optimistic locking for concurrent editing. (Pending)
-  - Implemented: Basic REST API, Automatic D1 Schema initialization, Large-scale MDF Seeding logic.
-- **Frontend**: [stlite](https://github.com/whitphx/stlite) (Streamlit compiled to WebAssembly). [IN PROGRESS]
-  - Built with Python and runs entirely in the browser via Pyodide.
-  - Bundled into `dist/index.html` and served as a static asset by the Worker.
-  - State management is reactive, ensuring a modern web experience without a Python server.
-  - Implemented: `RecordList` view, `DevInfo` dashboard.
-  - Pending: Edit mode, MDF validation, NFD sorting.
-- **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/). [IN PROGRESS]
-  - SQL database at the edge.
+  - Implemented: Basic record viewing, automatic schema initialization.
+- **Database**: [Supabase](https://supabase.com/) (PostgreSQL).
+  - Persistent PostgreSQL database.
   - Stores linguistic records and edit history.
-  - Implemented tables: `sources`, `records`, `seeding_progress`.
+  - Implemented tables: `sources`, `records`.
   - Pending tables: `users`, `edit_history`, `permissions`, `embeddings`.
-- **Authentication**: GitHub OAuth. [PENDING]
-  - Access is restricted to specific GitHub organizations/teams (e.g., `Brothertown-Language`).
+- **Authentication**: GitHub OAuth.
+  - Integrated via `streamlit-oauth`.
+  - Access can be restricted to specific GitHub organizations/teams.
 
 ## Data Model & Schema Management
 
@@ -37,9 +32,8 @@ The primary data format is MDF (Multi-Dictionary Form).
 
 ## Deployment Pipeline
 
-- **CI/CD**: Cloudflare git integration automatically pulls and builds on push to main branch.
-- **"Zero-Touch"**: The environment is designed so that deployment requires no local configuration beyond initial bootstrapping.
-- **Secrets**: Managed via Cloudflare environment variables, populated by the `bootstrap_env.py` script.
+- **Continuous Deployment**: Streamlit Community Cloud automatically pulls and builds on push to the main branch.
+- **Secrets Management**: Managed via `.streamlit/secrets.toml` locally and the Streamlit Cloud "Secrets" UI in production.
 
 ## Directory Structure
 

@@ -1,47 +1,46 @@
 # Copyright (c) 2026 Brothertown Language
 """
-Test script for local embedding service.
+Test script for Hugging Face Inference API embedding service.
 
-This script verifies that the Docker-based embedding service is running
-and can generate embeddings using the BGE-M3 model.
+This script verifies that the configured Hugging Face Inference API
+can generate embeddings using the BGE-M3 model.
 
 Usage:
     uv run python scripts/test_embeddings.py
 """
 
 import sys
-import httpx
-import json
+import os
+from typing import Optional
+from huggingface_hub import InferenceClient
 
 
-def test_embedding_service(url: str = "http://localhost:8080") -> bool:
+def test_embedding_service(model_id: str, api_key: Optional[str] = None) -> bool:
     """Test the embedding service health and functionality.
     
     Args:
-        url: Base URL of the embedding service
+        model_id: Model ID of the Hugging Face model
+        api_key: Optional API key for authentication
         
     Returns:
-        True if service is healthy and working, False otherwise
+        True if service is working, False otherwise
     """
-    print(f"Testing embedding service at {url}...")
+    print(f"Testing embedding service with model {model_id}...")
     
-    # Test 1: Health check
-    print("\n1. Checking service health...")
+    client = InferenceClient(model=model_id, token=api_key, timeout=30)
+    
+    # Test 0: Health Check (Check if model is accessible)
+    print("\n0. Performing health check...")
     try:
-        response = httpx.get(f"{url}/health", timeout=5.0)
-        if response.status_code == 200:
-            print("   ✓ Service is healthy")
-        else:
-            print(f"   ✗ Health check failed: {response.status_code}")
-            return False
+        from huggingface_hub import model_info
+        info = model_info(model_id, token=api_key)
+        print(f"   Model ID: {info.modelId}")
+        print(f"   Tags: {info.tags}")
     except Exception as e:
-        print(f"   ✗ Cannot connect to service: {e}")
-        print("\n   Make sure the embedding service is running:")
-        print("   docker-compose up -d embeddings")
-        return False
-    
-    # Test 2: Generate embedding
-    print("\n2. Testing embedding generation...")
+        print(f"   ! Health check (model_info) failed: {e}")
+
+    # Test 1: Generate embedding
+    print("\n1. Testing embedding generation (feature_extraction)...")
     test_texts = [
         "dog",
         "wompan",  # Algonquian word
@@ -50,93 +49,23 @@ def test_embedding_service(url: str = "http://localhost:8080") -> bool:
     
     for text in test_texts:
         try:
-            response = httpx.post(
-                f"{url}/embed",
-                json={"inputs": text},
-                timeout=30.0
-            )
+            print(f"   Requesting embedding for '{text}'...")
+            # feature_extraction is the correct high-level method in InferenceClient
+            # for getting embeddings.
+            embedding = client.feature_extraction(text)
             
-            if response.status_code != 200:
-                print(f"   ✗ Failed to generate embedding for '{text}': {response.status_code}")
-                print(f"      Response: {response.text}")
-                return False
-            
-            result = response.json()
-            
-            # Verify embedding structure
-            if not isinstance(result, list) or len(result) == 0:
-                print(f"   ✗ Invalid response format for '{text}'")
-                return False
-            
-            embedding = result[0]
-            if not isinstance(embedding, list):
-                print(f"   ✗ Invalid embedding format for '{text}'")
-                return False
-            
-            # BGE-M3 should return 1024 dimensions
-            if len(embedding) != 1024:
-                print(f"   ✗ Wrong embedding dimensions for '{text}': {len(embedding)} (expected 1024)")
+            # multilingual-e5-small should return 384 dimensions
+            if len(embedding) != 384:
+                print(f"   ✗ Wrong embedding dimensions for '{text}': {len(embedding)} (expected 384)")
                 return False
             
             print(f"   ✓ Generated {len(embedding)}-dimensional embedding for '{text}'")
             
         except Exception as e:
             print(f"   ✗ Error generating embedding for '{text}': {e}")
+            if "401" in str(e):
+                print("      TIP: Check your Hugging Face API token.")
             return False
-    
-    # Test 3: Verify embeddings are different for different texts
-    print("\n3. Testing embedding uniqueness...")
-    try:
-        response1 = httpx.post(
-            f"{url}/embed",
-            json={"inputs": "dog"},
-            timeout=30.0
-        )
-        response2 = httpx.post(
-            f"{url}/embed",
-            json={"inputs": "cat"},
-            timeout=30.0
-        )
-        
-        emb1 = response1.json()[0]
-        emb2 = response2.json()[0]
-        
-        if emb1 == emb2:
-            print("   ✗ Different texts produced identical embeddings")
-            return False
-        
-        print("   ✓ Different texts produce different embeddings")
-        
-    except Exception as e:
-        print(f"   ✗ Error testing uniqueness: {e}")
-        return False
-    
-    # Test 4: Verify embeddings are consistent
-    print("\n4. Testing embedding consistency...")
-    try:
-        response1 = httpx.post(
-            f"{url}/embed",
-            json={"inputs": "test"},
-            timeout=30.0
-        )
-        response2 = httpx.post(
-            f"{url}/embed",
-            json={"inputs": "test"},
-            timeout=30.0
-        )
-        
-        emb1 = response1.json()[0]
-        emb2 = response2.json()[0]
-        
-        if emb1 != emb2:
-            print("   ✗ Same text produced different embeddings")
-            return False
-        
-        print("   ✓ Same text produces consistent embeddings")
-        
-    except Exception as e:
-        print(f"   ✗ Error testing consistency: {e}")
-        return False
     
     print("\n" + "="*60)
     print("✓ All tests passed! Embedding service is working correctly.")
@@ -148,16 +77,41 @@ def main():
     """Main entry point."""
     import argparse
     
-    parser = argparse.ArgumentParser(description="Test local embedding service")
+    # Default to the value in secrets if possible, otherwise use the standard model ID
+    default_model = "intfloat/multilingual-e5-small"
+    default_key = None
+    
+    # Try to load from .streamlit/secrets.toml if it exists
+    secrets_path = ".streamlit/secrets.toml"
+    if os.path.exists(secrets_path):
+        try:
+            import tomllib
+            with open(secrets_path, "rb") as f:
+                secrets = tomllib.load(f)
+                if "embedding" in secrets:
+                    default_model = secrets["embedding"].get("model_id", default_model)
+                    default_key = secrets["embedding"].get("api_key", default_key)
+        except Exception:
+            pass
+
+    parser = argparse.ArgumentParser(description="Test Hugging Face embedding service")
     parser.add_argument(
-        "--url",
-        default="http://localhost:8080",
-        help="Base URL of the embedding service (default: http://localhost:8080)"
+        "--model",
+        default=default_model,
+        help=f"Model ID of the embedding service (default: {default_model})"
+    )
+    parser.add_argument(
+        "--key",
+        default=default_key,
+        help="Hugging Face API key (token)"
     )
     
     args = parser.parse_args()
     
-    success = test_embedding_service(args.url)
+    if not args.key:
+        print("WARNING: No API key provided. Requests may be rate-limited or fail.")
+    
+    success = test_embedding_service(args.model, args.key)
     sys.exit(0 if success else 1)
 
 

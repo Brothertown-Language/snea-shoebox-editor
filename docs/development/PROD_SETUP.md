@@ -1,135 +1,15 @@
-<!-- Copyright (c) 2026 Brothertown Language -->
-<!-- Licensed under CC BY-SA 4.0 -->
 # Infrastructure & Production Setup Guide
 
-This guide is for **Administrators** and **Infrastructure Leads** who need to bootstrap the Cloudflare and GitHub infrastructure for the SNEA Online Shoebox Editor.
+This guide provides instructions for setting up the production environment for the SNEA Shoebox Editor.
 
-**If you are a Developer just looking to run the app locally, please follow the [Local Setup Guide](SETUP.md) instead.**
+## Production Hosting
 
-## 1. Master Keys Preparation
+The application is hosted on **Streamlit Community Cloud**.
 
-Before initializing the infrastructure, you must obtain the necessary "Master Keys". These keys are used once by the bootstrap script and then stored securely in GitHub Secrets.
+## Production Database
 
-1.  **Generate Cloudflare API Token**:
-    Cloudflare uses a scoped token for automated deployments and infrastructure management.
+The database is hosted on **Supabase (PostgreSQL)**.
 
-    *   **User API Token setup**:
-        *   Go to the [**Cloudflare Dashboard > API Tokens**](https://dash.cloudflare.com/profile/api-tokens).
-        *   Click **Create Token** and use the **Get started** button next to **Create Custom Token**.
-        *   Create a token with the following permissions:
-            *   `Account` | `D1` | `Edit`
-            *   `Account` | `Workers Scripts` | `Edit`
-            *   `Account` | `Cloudflare Pages` | `Edit`
-            *   `Account` | `Account Settings` | `Read` (REQUIRED)
-            *   `Zone` | `Workers Routes` | `Edit`
-            *   `Zone` | `DNS` | `Read`
-        *   **Note**: `Workers KV Storage` and `Workers R2 Storage` are NOT required.
-        *   **Verification**: Your token summary should confirm access to "All accounts" for the listed Workers/Pages/D1 permissions and "All zones" for DNS/Workers Routes.
+## Production Authentication
 
-2.  **Generate GitHub Personal Access Token (PAT)**:
-
-    *   Go to [**Settings** > **Developer settings** > **Personal access tokens** > **Fine-grained tokens**](https://github.com/settings/tokens?type=beta).
-    *   **Resource owner**: Select **Brothertown-Language** (Crucial: Select the Organization, not your personal account).
-    *   **Repository access**: Select **Only select repositories** and pick `Brothertown-Language/snea-shoebox-editor`.
-    *   **Permissions**:
-        *   `Repository permissions` > `Contents`: **Read and write**.
-        *   `Repository permissions` > `Secrets`: **Read and write** (REQUIRED for `bootstrap_env.py`).
-        *   `Repository permissions` > `Metadata`: **Read-only**.
-    *   **Expiration**: Set to **30 days**.
-
-3.  **Register GitHub OAuth Application**:
-    Register the production GitHub OAuth Application for the live site.
-
-    *   **Registration**: [GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**](https://github.com/settings/applications/new).
-    *   **Application Name**: `SNEA Shoebox Editor`
-    *   **Homepage URL**: `https://snea-editor.michael-conrad.com`
-    *   **Application Description**: `Collaborative, version-controlled editing of Southern New England Algonquian (SNEA) linguistic records in MDF format.`
-    *   **Authorization callback URL**: `https://snea-editor.michael-conrad.com`
-    *   **Enable Device Flow**: **Off** (uncheck)
-    *   **Store Credentials**: Save the `Client ID` and `Client Secret` for the next step.
-
-## 2. Infrastructure Bootstrapping (Automated Production Only)
-
-Use the `bootstrap_env.py` script to automate Cloudflare and GitHub infrastructure setup for the **Production** environment.
-
-> **IMPORTANT**: This script is **ONLY** for production infrastructure. Do NOT run this for local development. Local development uses a built-in simulation and does not require Cloudflare tokens.
-
-1.  **Configure Environment Variables**:
-    Create or update your `.env` file in the project root with all the keys collected in Section 1 using the `PROD_` prefix. **Important:** Ensure these match the structure in **[SECURITY_ROTATION.md](SECURITY_ROTATION.md)** if you are rotating keys.
-
-    ```env
-    # GitHub OAuth (Production Credentials)
-    PROD_SNEA_GITHUB_CLIENT_ID="your_production_client_id"
-    PROD_SNEA_GITHUB_CLIENT_SECRET="your_production_client_secret"
-
-    # Production Bootstrap (Administrators Only)
-    PROD_CF_EMAIL="your_cloudflare_email"
-    PROD_CF_API_KEY="your_cloudflare_global_api_key"
-    PROD_CF_API_TOKEN="your_cloudflare_user_token"
-    PROD_GH_TOKEN="your_github_pat"
-    ```
-
-    *Note: We use the `PROD_` prefix to avoid any conflict with your local development environment variables.*
-
-2.  **Run Bootstrap Script**:
-    You must run this locally (requires Python and `uv` installed).
-
-    ```bash
-    # Install dependencies and run
-    uv venv && source .venv/bin/activate
-    uv pip install -e .
-    uv run python bootstrap_env.py
-    ```
-
-
-3.  **Manual Finalization / Automated Domain Setup**
-
-After running the bootstrap script, the infrastructure is ready, but the code needs to be deployed before custom domains can be finalized.
-
-1.  **Trigger Initial Deployment**:
-    *   The bootstrap script created the infrastructure, but the code needs to be deployed via Cloudflare git integration.
-    *   Push a change to the `main` branch to trigger automatic deployment.
-
-    *   **Cloudflare Worker (Unified)**:
-        1.  Navigate to **Workers & Pages** > **Overview** > `snea-editor`.
-        2.  Go to the **Settings** tab > **Domains & Routes** and ensure `snea-editor.michael-conrad.com` is active.
-        3.  *Troubleshooting*: If it says "Not configured", click **Add Custom Domain** and enter `snea-editor.michael-conrad.com`.
-
-    **Note on Propagation**: It may take a few minutes for the domain to show as "Active" (Green) while Cloudflare issues SSL certificates.
-
-4.  **Database Migration (First Run Only)**:
-    *   If your deployment workflow doesn't automatically run migrations, you may need to seed the database:
-        ```bash
-        npx wrangler d1 execute snea-shoebox --remote --file=./src/backend/schema.sql
-        ```
-
-5.  **Verification**:
-    *   Visit `https://snea-editor.michael-conrad.com`.
-    *   Attempt to log in via GitHub.
-    *   Verify that you can see the initial record set (e.g., Natick records).
-
-### Appendix: Production Environment Variables
-
-In the Cloudflare Workers environment (Production), the following variables are managed via Wrangler secrets:
-
-| Secret Name | Description |
-|-------------|-------------|
-| `CLOUDFLARE_API_TOKEN` | Token for deployment (used by Cloudflare git integration). |
-| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID. |
-| `JWT_SECRET` | Secret for signing session tokens. |
-| `SNEA_GITHUB_CLIENT_ID` | Production GitHub OAuth Client ID (prefixed to avoid GitHub's restricted naming). |
-| `SNEA_GITHUB_CLIENT_SECRET` | Production GitHub OAuth Client Secret. |
-
-The backend code prefers `SNEA_*` variables in production and falls back to non-prefixed names in local/dev.
-
-#### Set Worker Secrets via Wrangler
-
-Run these commands from the project root to set secrets in the Cloudflare Worker:
-
-```bash
-npx wrangler secret put JWT_SECRET
-npx wrangler secret put SNEA_GITHUB_CLIENT_ID
-npx wrangler secret put SNEA_GITHUB_CLIENT_SECRET
-```
-
-Note: Since the unified Worker serves both frontend and backend, no separate frontend environment variables are needed.
+Authentication is handled via **GitHub OAuth** integrated into the Streamlit application.

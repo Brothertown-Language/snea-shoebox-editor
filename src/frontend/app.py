@@ -25,10 +25,7 @@ if load_dotenv:
     load_dotenv()
 
 # Configuration
-# For local development, we use GITHUB_CLIENT_ID. 
-# Production (Cloudflare Pages) would use SNEA_GITHUB_CLIENT_ID if configured there,
-# but Streamlit here is primarily for local dev or simple hosting.
-GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
+GITHUB_CLIENT_ID = st.secrets.get("github_oauth", {}).get("client_id")
 
 
 def set_query_params(**params: Optional[Any]) -> None:
@@ -46,37 +43,106 @@ def get_query_params() -> Dict[str, Any]:
 
 
 def login_page() -> None:
-    """Renders the login page with GitHub OAuth button."""
+    """Renders the login page with GitHub OAuth button and system information."""
     st.title("SNEA Online Shoebox Editor")
-    st.write("Welcome to the SNEA Online Shoebox Editor. Please log in to continue.")
+    st.write("Welcome to the SNEA Online Shoebox Editor - A collaborative platform for editing Southern New England Algonquian language records.")
     
-    if st.button("Log in with GitHub"):
-        # In Stlite, we can't easily do a meta-refresh redirect from a button click 
-        # inside the iframe easily without window.location.href.
-        # But we can try the same markdown trick or use a link.
+    # System Information Section
+    st.subheader("System Information")
+    
+    try:
+        with st.spinner("Loading system information..."):
+            health_response = httpx.get("/api/health", timeout=5.0)
+            
+            if health_response.status_code == 200:
+                health_data = health_response.json()
+                
+                col1, col2 = st.columns(2)
+                
+                with col1:
+                    st.markdown("**Backend Status**")
+                    st.write(f"Status: {health_data.get('status', 'unknown')}")
+                    st.write(f"Python Version: {health_data.get('python_version', 'unknown')}")
+                    st.write(f"Database: {health_data.get('database', 'unknown')}")
+                
+                with col2:
+                    st.markdown("**Software Details**")
+                    st.write(f"Runtime: Streamlit")
+                    st.write(f"Format: MDF (Multi-Dictionary Formatter)")
+            else:
+                st.warning("Could not retrieve system information from backend.")
+    except Exception as e:
+        st.warning(f"Could not connect to backend: {e}")
+    
+    st.divider()
+    
+    # Login Section
+    st.subheader("Authentication")
+    st.write("Please log in with your GitHub account to access the editor.")
+    
+    if st.button("Log in with GitHub", type="primary", use_container_width=True):
+        st.markdown(
+            """
+            <script>
+                console.log("[OAuth] Login button clicked, requesting authorization URL...");
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
         try:
-            with st.spinner(f"Connecting to backend..."):
+            with st.spinner("Connecting to authentication service..."):
                 response = httpx.get("/api/oauth/login", timeout=5.0)
+            
+            st.markdown(
+                f"""
+                <script>
+                    console.log("[OAuth] Authorization URL response status:", {response.status_code});
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
             
             if response.status_code == 200:
                 data = response.json()
                 auth_url = data.get("authorize_url") or data.get("url")
                 
                 if auth_url:
-                    # In Stlite, we are already in the browser. 
-                    # We need to escape the sandboxed iframe if we are in one,
-                    # but Stlite mountable usually handles this.
                     st.markdown(f'''
                         <script>
+                            console.log("[OAuth] Redirecting to GitHub authorization:", "{auth_url[:50]}...");
                             window.parent.location.href = "{auth_url}";
                         </script>
                         <a href="{auth_url}" target="_parent">Click here to login with GitHub</a> (Redirecting...)
                     ''', unsafe_allow_html=True)
                 else:
+                    st.markdown(
+                        """
+                        <script>
+                            console.error("[OAuth] No authorization URL in response");
+                        </script>
+                        """,
+                        unsafe_allow_html=True
+                    )
                     st.error("Failed to get authorization URL from backend.")
             else:
+                st.markdown(
+                    f"""
+                    <script>
+                        console.error("[OAuth] Backend error:", {response.status_code});
+                    </script>
+                    """,
+                    unsafe_allow_html=True
+                )
                 st.error(f"Backend error: {response.status_code}")
         except Exception as e:
+            st.markdown(
+                f"""
+                <script>
+                    console.error("[OAuth] Exception during login:", "{str(e)}");
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
             st.error(f"An unexpected error occurred: {e}")
 
 
@@ -122,16 +188,20 @@ def _exchange_oauth_token(code: str, state: str) -> Optional[httpx.Response]:
 
 
 def _store_session(user: Dict[str, Any], token: str) -> None:
-    """Stores user session in session state and browser cookie."""
+    """Stores user session in session state and browser localStorage."""
     st.session_state.user = user
     st.session_state.token = token
     
-    # Set cookie for persistence (30 days)
+    # Store in localStorage for persistence across browser restarts
+    # Browser storage for session restoration
+    user_json = json.dumps(user)
     st.markdown(
         f"""
         <div style="display:none">
             <script>
-                document.cookie = "session={token}; Max-Age={30*24*60*60}; path=/; SameSite=Lax";
+                localStorage.setItem("snea_session_token", "{token}");
+                localStorage.setItem("snea_session_user", '{user_json}');
+                console.log("Session stored in localStorage");
             </script>
         </div>
         """,
@@ -165,12 +235,50 @@ def handle_callback() -> None:
     if not code or not state:
         return
     
+    # Log OAuth callback start
+    st.markdown(
+        """
+        <script>
+            console.log("[OAuth] Callback handler started");
+            console.log("[OAuth] Code present:", window.location.search.includes("code"));
+            console.log("[OAuth] State present:", window.location.search.includes("state"));
+        </script>
+        """,
+        unsafe_allow_html=True
+    )
+    
     _clear_oauth_params()
     
     with st.spinner("Logging in..."):
+        st.markdown(
+            """
+            <script>
+                console.log("[OAuth] Exchanging code for token...");
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
+        
         response = _exchange_oauth_token(code, state)
         if not response:
+            st.markdown(
+                """
+                <script>
+                    console.error("[OAuth] Token exchange failed - no response");
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
             return
+        
+        st.markdown(
+            f"""
+            <script>
+                console.log("[OAuth] Token exchange response status:", {response.status_code});
+            </script>
+            """,
+            unsafe_allow_html=True
+        )
         
         if response.status_code == 200:
             data = response.json()
@@ -178,14 +286,38 @@ def handle_callback() -> None:
             token = data.get("token")
             
             if user and token:
+                st.markdown(
+                    f"""
+                    <script>
+                        console.log("[OAuth] Login successful for user:", "{user.get('login', 'unknown')}");
+                    </script>
+                    """,
+                    unsafe_allow_html=True
+                )
                 _store_session(user, token)
                 st.success("Logged in successfully! Redirecting...")
                 time.sleep(1)
                 st.rerun()
             else:
+                st.markdown(
+                    """
+                    <script>
+                        console.error("[OAuth] Backend returned success but no user data");
+                    </script>
+                    """,
+                    unsafe_allow_html=True
+                )
                 st.error("Login failed: Backend returned success but no user data.")
                 st.json(data)
         else:
+            st.markdown(
+                f"""
+                <script>
+                    console.error("[OAuth] Login failed with status:", {response.status_code});
+                </script>
+                """,
+                unsafe_allow_html=True
+            )
             _display_login_error(response)
 
 def parse_mdf(mdf_text: str) -> Tuple[str, int, str, str]:
@@ -250,7 +382,9 @@ def _render_sidebar(user: Dict[str, Any], current_page: int, page_size: int,
                 """
                 <div style="display:none">
                     <script>
-                        document.cookie = "session=; Max-Age=0; path=/; SameSite=Lax";
+                        localStorage.removeItem("snea_session_token");
+                        localStorage.removeItem("snea_session_user");
+                        console.log("Session cleared from localStorage");
                     </script>
                 </div>
                 """,
@@ -447,28 +581,52 @@ def main_app() -> None:
 
 def main() -> None:
     """Main entry point for the application."""
-    # Attempt to restore session from cookie if not already in session_state
+    # Attempt to restore session from localStorage if not already in session_state
     if "user" not in st.session_state:
-        try:
-            # In Stlite, we can access cookies directly via browser APIs if needed,
-            # but Streamlit's context.cookies is the standard way.
-            cookies = getattr(st, "context", None) and getattr(st.context, "cookies", None)
-            
-            if cookies and "session" in cookies:
-                token = cookies["session"]
+        # Use a component to read from localStorage and pass to Python
+        # Bridge JS and Python
+        session_check_html = """
+        <div id="session-loader" style="display:none"></div>
+        <script>
+            (function() {
+                const token = localStorage.getItem("snea_session_token");
+                const userJson = localStorage.getItem("snea_session_user");
+                
+                if (token && userJson) {
+                    console.log("Found session in localStorage, attempting restore");
+                    // Store in a temporary location that Python can check
+                    window.parent.postMessage({
+                        type: "snea_session_restore",
+                        token: token,
+                        user: userJson
+                    }, "*");
+                } else {
+                    console.log("No session found in localStorage");
+                }
+            })();
+        </script>
+        """
+        components.html(session_check_html, height=0)
+        
+        # Try to get session from query params if passed by the JS bridge
+        # This is a fallback mechanism
+        query_params = get_query_params()
+        if "session_token" in query_params and "session_user" in query_params:
+            try:
+                token = query_params["session_token"]
+                user_json = query_params["session_user"]
+                user = json.loads(user_json)
+                
                 # Verify token with backend
-                try:
-                    # Relative path works in Stlite httpx
-                    headers = {"Authorization": f"Bearer {token}"}
-                    # Fetch user info from /api/me
-                    user_res = httpx.get("/api/me", headers=headers, timeout=5.0)
-                    if user_res.status_code == 200:
-                        st.session_state.user = user_res.json()
-                        st.session_state.token = token
-                except Exception:
-                    pass
-        except Exception:
-            pass
+                headers = {"Authorization": f"Bearer {token}"}
+                user_res = httpx.get("/api/me", headers=headers, timeout=5.0)
+                if user_res.status_code == 200:
+                    st.session_state.user = user_res.json()
+                    st.session_state.token = token
+                    # Clean up query params
+                    set_query_params(session_token=None, session_user=None)
+            except Exception:
+                pass
 
     # If "user" is in session state but is None, remove it
     if "user" in st.session_state and st.session_state.user is None:

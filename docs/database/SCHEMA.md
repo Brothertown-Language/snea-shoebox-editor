@@ -3,7 +3,7 @@
 
 # SNEA Shoebox Editor - Database Schema
 
-This document defines the database schema for the SNEA Online Shoebox Editor. The schema is designed for **Cloudflare D1 (SQLite)** and is compatible with local development environments.
+This document defines the database schema for the SNEA Online Shoebox Editor. The schema is designed for **PostgreSQL (Supabase)** and is compatible with local development environments.
 
 ## 1. Primary Data Tables
 
@@ -52,49 +52,30 @@ Supports AI-based semantic search by storing vectors for various parts of a reco
 
 ```sql
 CREATE TABLE embeddings (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     record_id INTEGER NOT NULL,           -- Link to parent record
-    vector_id TEXT NOT NULL,              -- UUID used in Cloudflare Vectorize
+    embedding VECTOR(384),               -- pgvector type (multilingual-e5-small)
     source_tag TEXT NOT NULL,             -- MDF tag embedded (e.g., 'lx', 'ge', 'va')
     original_text TEXT NOT NULL,          -- The raw text from the MDF tag
     embedded_text TEXT NOT NULL,          -- The final string sent to the AI (e.g. with context)
-    model_name TEXT NOT NULL,             -- AI model used (e.g., @cf/baai/bge-m3)
+    model_name TEXT NOT NULL,             -- AI model used
     record_version INTEGER NOT NULL,      -- Version of the record when this was generated
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
 );
 
--- Note: @cf/baai/bge-m3 requires 1024 dimensions in Cloudflare Vectorize.
+-- Note: Use pgvector extension on Supabase.
 
-CREATE INDEX idx_embeddings_vector_id ON embeddings(vector_id);
 CREATE INDEX idx_embeddings_record_id ON embeddings(record_id);
 CREATE INDEX idx_embeddings_stale ON embeddings(record_id, record_version);
 ```
 
-### `records_fts` (Virtual Table) [STATUS: APPROVED]
-High-performance keyword search using SQLite FTS5.
+### `records_fts` [STATUS: APPROVED]
+High-performance keyword search using PostgreSQL Full-Text Search (FTS).
 
 ```sql
--- Virtual table for lightning-fast keyword search
-CREATE VIRTUAL TABLE records_fts USING fts5(
-    lx, ps, ge, mdf_data,
-    content='records',      -- Link to the actual data
-    content_rowid='id'      -- Link to the record id
-);
-
--- Triggers to keep the search index in sync automatically
-CREATE TRIGGER records_ai AFTER INSERT ON records BEGIN
-  INSERT INTO records_fts(rowid, lx, ps, ge, mdf_data) VALUES (new.id, new.lx, new.ps, new.ge, new.mdf_data);
-END;
-
-CREATE TRIGGER records_ad AFTER DELETE ON records BEGIN
-  INSERT INTO records_fts(records_fts, rowid, lx, ps, ge, mdf_data) VALUES('delete', old.id, old.lx, old.ps, old.ge, old.mdf_data);
-END;
-
-CREATE TRIGGER records_au AFTER UPDATE ON records BEGIN
-  INSERT INTO records_fts(records_fts, rowid, lx, ps, ge, mdf_data) VALUES('delete', old.id, old.lx, old.ps, old.ge, old.mdf_data);
-  INSERT INTO records_fts(rowid, lx, ps, ge, mdf_data) VALUES (new.id, new.lx, new.ps, new.ge, new.mdf_data);
-END;
+-- PostgreSQL uses GIN indexes for fast full-text search
+CREATE INDEX idx_records_fts ON records USING GIN (to_tsvector('english', lx || ' ' || ge || ' ' || mdf_data));
 ```
 
 ---

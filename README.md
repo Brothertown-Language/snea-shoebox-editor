@@ -6,7 +6,7 @@ Collaborative, version-controlled editing of Southern New England Algonquian (SN
 
 ## Overview
 
-The **SNEA Online Shoebox Editor** is a collaborative platform for managing linguistic data. It leverages a 100% Python stack to provide a robust, "Zero-Touch" deployment environment for editing records in Multi-Dictionary Form (MDF).
+The **SNEA Online Shoebox Editor** is a collaborative platform for managing linguistic data. It leverages a 100% Python stack to provide a robust environment for editing records in Multi-Dictionary Form (MDF).
 
 ### Goals & Ethics
 - **Nation Sovereignty**: Developed with respect for SNEA Nation sovereignty.
@@ -15,58 +15,64 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 ## Tech Stack
 
-- **Unified Worker**: Cloudflare Workers (Python/WASM runtime) serves both frontend and backend.
-- **Frontend**: stlite (Streamlit compiled to WebAssembly) runs in the browser, served as static assets by the Worker.
-- **Backend**: Python API endpoints in the same Worker handle authentication, database operations, and business logic.
-- **Database**: Cloudflare D1 (SQL database) bound to the Worker.
+- **Frontend/Backend**: Streamlit (Hosted on Streamlit Community Cloud).
+- **Database**: Supabase (PostgreSQL).
+- **Authentication**: GitHub OAuth via `streamlit-oauth`.
 - **Package Manager**: uv.
-- **Deployment**: Cloudflare git integration (automatic build and deploy on push to main).
+- **Deployment**: Automatic build and deploy on push to main (via Streamlit Community Cloud).
 
 ## Requirements
 
-- **Docker**: Required for local development.
-- **Docker Compose**: Required to run the full stack locally.
-- **Cloudflare Account**: With Workers and D1 access for production deployment.
+- **Python 3.10+**: Recommended for local development.
+- **uv**: For dependency management.
+- **Supabase Account**: For hosting the PostgreSQL database.
 - **GitHub Account**: For authentication (OAuth) and deployment.
 
 ## Setup
 
-Refer to the **[Local Setup Guide](docs/development/SETUP.md)** for setting up your local development environment. For infrastructure bootstrapping, see the **[Production Setup Guide](docs/development/PROD_SETUP.md)**.
+Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed setup instructions.
 
 ### Quick Start (Local Development)
 
-If you are already a contributor and just need to run the app locally:
+1.  **Install dependencies**:
+    ```bash
+    uv venv
+    source .venv/bin/activate
+    uv pip install -e .
+    ```
+2.  **Configure secrets**: Create `.streamlit/secrets.toml` with your Supabase and GitHub OAuth credentials.
+3.  **Run the app**:
+    ```bash
+    uv run streamlit run src/frontend/app.py
+    ```
 
-1.  Refer to the **[Local Development Guide](docs/development/local-development.md)**.
-2.  Start the backend (Worker + local D1) and optional example frontend per guide.
+## Environment Secrets
 
-## Environment Variables
+Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Cloud "Secrets" UI in production.
 
-| Variable | Description | Source |
-|----------|-------------|--------|
-| `CF_API_TOKEN` | Cloudflare Account API Token (Custom Token) | Manual |
-| `GH_TOKEN` | GitHub Personal Access Token | Manual |
-| `JWT_SECRET` | Secret for JWT signing | Wrangler secret |
-| `SNEA_GITHUB_CLIENT_ID` | GitHub OAuth Client ID | Wrangler secret |
-| `SNEA_GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | Wrangler secret |
+| Secret | Description |
+|--------|-------------|
+| `connections.postgresql.url` | Supabase PostgreSQL connection URI |
+| `github_oauth.client_id` | GitHub OAuth Client ID |
+| `github_oauth.client_secret` | GitHub OAuth Client Secret |
+| `github_oauth.redirect_uri` | App callback URL |
+| `github_oauth.cookie_secret` | Secret for cookie encryption |
+| `embedding.model_id` | Hugging Face Model ID (e.g., `BAAI/bge-m3`) |
+| `embedding.api_key` | Hugging Face API Key (Token) |
 
-Note: For local development you may also set non-`SNEA_` fallbacks (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`) via a `.env` file. In production, use Wrangler secrets; do not commit secrets. If your `.env` file was accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
+Note: Do not commit secrets to the repository. If secrets were accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
 
 ## Scripts
 
-- `bootstrap_env.py`: **Production Only.** Automates Cloudflare and GitHub infrastructure setup (D1 database, Secrets). Run locally with `uv`.
-- `docker-compose up --build`: Starts the local Worker (backend) and optional dev tooling.
-- `uv run python3 -m unittest discover tests`: Runs the test suite.
+- `uv run streamlit run src/frontend/app.py`: Starts the local development server.
+- `uv run python -m unittest discover tests`: Runs the test suite.
 
 ## Documentation
 
 Comprehensive documentation is available in the `docs/` directory:
 
-- **[Setup Guide](docs/development/SETUP.md)**: Consolidated initial setup instructions.
-- **[Architecture](docs/ARCHITECTURE.md)**: Technical overview and stack details.
-- **[Roadmap](docs/development/roadmap.md)**: Detailed deployment phases and development roadmap.
+- **[Roadmap & Setup](docs/development/roadmap.md)**: Deployment phases and detailed setup guide.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
-- **[Local Development](docs/development/local-development.md)**: Guide for running the Worker with local D1 and an example Pages frontend.
 - **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.
 - **[MDF Guidelines](docs/mdf/)**: References for the Multi-Dictionary Form.
 

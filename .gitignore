@@ -57,6 +57,7 @@ tmp/
 # Secrets and sensitive files
 .env
 .env.*
+.streamlit/secrets.toml
 *.key
 *.pem
 *.p12

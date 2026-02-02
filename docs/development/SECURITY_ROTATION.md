@@ -1,14 +1,8 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 
-# SNEA Editor Security Rotation Guide [COMPLETE - DO NOT EDIT]
+# SNEA Editor Security Rotation Guide
 
-> **STATUS: COMPLETE** - This document is a historical record of the security rotation performed on 2026-02-01. The infrastructure has been secured, keys rotated, and synchronization completed. This file should no longer be edited.
-
-This guide covers the process of rotating the specific secrets that were exposed when the `.env` file was accidentally committed to the repository. Use these instructions to revoke the compromised keys and restore security.
-
-> **Note:** For more detailed information on initial key setup, refer to the [Infrastructure & Production Setup Guide](PROD_SETUP.md).
-
----
+This guide covers the process of rotating secrets if they are accidentally exposed. Use these instructions to revoke compromised keys and restore security.
 
 ### Phase 1: Generate New Keys (The "Rotate" Phase)
 
@@ -17,123 +11,17 @@ Follow these links to revoke the old (leaked) keys and generate new ones.
 #### 1. GitHub OAuth Client Secret
 *Used for user authentication.*
 
-*   **Direct Link:** [https://github.com/organizations/Brothertown-Language/settings/applications](https://github.com/organizations/Brothertown-Language/settings/applications)
-*   **Alternative:** If 404, go to [Personal Developer Settings](https://github.com/settings/developers), then use the sidebar dropdown to select "Brothertown-Language".
+*   **Direct Link:** [https://github.com/settings/developers](https://github.com/settings/developers)
 *   **Action:** Click your App name -> **Client secrets** -> **Generate a new client secret**.
-*   **Update `.env`**: Replace the values for `SNEA_GITHUB_CLIENT_SECRET` and `PROD_SNEA_GITHUB_CLIENT_SECRET`.
+*   **Update Secrets**: Update your local `.streamlit/secrets.toml` and the Streamlit Cloud "Secrets" UI.
 
-#### 2. GitHub Personal Access Token (PAT)
-*Used by the bootstrap script to manage your repo.*
+#### 2. Supabase Database Password
+*Used to connect to your PostgreSQL database.*
 
-*   **Direct Link:** [https://github.com/settings/tokens?type=beta](https://github.com/settings/tokens?type=beta)
-*   **Action:** 
-    1.  Delete the old token (e.g., `github_pat_11ABH...`).
-    2.  Click **Generate new token** -> **Fine-grained token**.
-*   **Setup:**
-    *   **Token name**: e.g., `SNEA Rotation [Date]`
-    *   **Resource owner**: Select **Brothertown-Language** (Crucial: Do not use your personal account).
-*   **Permissions:** 
-    *   **Repository access**: Select **Only select repositories** and pick `Brothertown-Language/snea-shoebox-editor`.
-    *   **Repository permissions**:
-        *   `Contents`: **Read and write**
-        *   `Secrets`: **Read and write**
-        *   `Metadata`: **Read-only**
-*   **Update `.env`**: Replace the value for `PROD_GH_TOKEN`.
+*   **Action:** Go to your Supabase project -> **Project Settings** -> **Database** -> **Database Password** -> **Reset Password**.
+*   **Update Secrets**: Update the `url` in your `.streamlit/secrets.toml` and Streamlit Cloud "Secrets" UI.
 
-#### 3. Cloudflare User API Token
-*Used to manage your database and backend (CI/CD).*
+### Phase 2: Sync to Production
 
-*   **Direct Link:** [https://dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)
-
-*   **Action:** 
-    1.  Find your token (e.g., "snea-editor") in the list.
-    2.  Click the three dots `...` -> **Roll**.
-    3.  **Note**: Clicking "Roll" invalidates the old token and displays a **new token value** immediately. This is the value you need.
-    4.  **Important:** If after rolling, the token does not appear in the "Worker Builds" dropdown (Phase 3), you must **delete the old token** and create a fresh one with the same name and permissions.
-*   **Permissions Required:** 
-    Ensure the token has the following permissions (Custom Token):
-    *   `Account` | `D1` | `Edit`
-    *   `Account` | `Workers Scripts` | `Edit`
-    *   `Account` | `Account Settings` | `Read` (Required to find Account ID)
-    *   `Account` | `Cloudflare Pages` | `Edit`
-    *   `Zone` | `Workers Routes` | `Edit` (If managing custom domains)
-    *   `Zone` | `DNS` | `Read` (If managing custom domains)
-    
-    *Note: `Workers KV Storage` and `Workers R2 Storage` are NOT required.*
-*   **Update `.env`**: Replace the value for `PROD_CF_API_TOKEN`.
-*   **Recommendation**: Use the API Token instead of the Global API Key for all bootstrap operations. The bootstrap script has been updated to prioritize the token if available.
-
-#### 4. Cloudflare Global API Key
-*This is a master key. If it was present in your `.env` when it was committed, it MUST be rotated.*
-
-*   **Direct Link:** [https://dash.cloudflare.com/profile/api-tokens](https://dash.cloudflare.com/profile/api-tokens)
-*   **Action:** Find the **Global API Key** section and click **Change** to rotate it.
-*   **Update `.env`**: Replace the value for `PROD_CF_API_KEY`.
-
----
-
-### Phase 2: Verify Local Environment (The "Replace" Phase)
-
-Confirm your local `.env` file in the project root contains the new values. Update **both** sets if the keys were compromised.
-
-**Important:** The `PROD_` prefixed variables are used by the bootstrap script to update the production environment. The `SNEA_` (non-prefixed) variables are for your local development.
-
-**Your `.env` should look like this after editing:**
-```env
-# GitHub OAuth (Local Development)
-SNEA_GITHUB_CLIENT_ID=Ov23lioCUeuhd94j3DLR
-SNEA_GITHUB_CLIENT_SECRET=PASTE_NEW_OAUTH_SECRET_HERE
-
-# GitHub OAuth (Production Credentials)
-PROD_SNEA_GITHUB_CLIENT_ID=Ov23liQCsQIKRZ3kqqyB
-PROD_SNEA_GITHUB_CLIENT_SECRET=PASTE_NEW_OAUTH_SECRET_HERE
-
-# Production Bootstrap (Infrastructure Management)
-PROD_CF_EMAIL=Muksihs@gmail.com
-PROD_CF_API_KEY=PASTE_NEW_CLOUDFLARE_GLOBAL_KEY_HERE
-PROD_CF_API_TOKEN=PASTE_NEW_CLOUDFLARE_TOKEN_HERE
-PROD_GH_TOKEN=PASTE_NEW_GITHUB_PAT_HERE
-```
-
----
-
-### Phase 3: Sync to Production (The "Finalize" Phase)
-
-#### 1. Update Cloudflare Worker Build Settings (MANUAL)
-**Crucial:** Rolling the token in Phase 1 invalidates it for existing Cloudflare "Worker Builds" (the Git integration). You MUST manually update the token in the Cloudflare Dashboard for **each** project (`snea-backend` and `snea-editor`).
-
-1.  Go to the [Cloudflare Dashboard](https://dash.cloudflare.com/).
-2.  For **snea-backend**:
-    -   Navigate to **Workers & Pages** -> `snea-backend` -> **Settings** -> **Builds**.
-    -   Under **Build Configuration**, find the **API Token** dropdown.
-    -   Select the **new** token.
-    -   **Troubleshooting**: If the new token is NOT in the dropdown, select **Add a token** (or "Manage tokens") and ensure the token created in Phase 1 is selected. If it still doesn't show, you may need to create a brand new token as described in Phase 1.
-    -   *Note: Using the "Add a token" button may automatically create a project-specific token (e.g., `snea-backend-build`) with the correct permissions.*
-    -   Click **Save**.
-3.  For **snea-editor**:
-    -   Navigate to **Workers & Pages** -> `snea-editor` -> **Settings** -> **Builds**.
-    -   Repeat the same selection of the new token (or "Add a token" to create something like `snea-frontend-build`).
-    -   Click **Save**.
-4.  **Retry Build**: Go to the **Deployments** tab and click **Retry build** on the failed deployment.
-
-#### 2. Run the Bootstrap Script
-Instead of manually typing secrets into GitHub's web interface, use the built-in bootstrap script to securely upload everything.
-
-1.  **Open your terminal** in the project root.
-2.  **Run the bootstrap script:**
-    ```bash
-    uv run python3 bootstrap_env.py
-    ```
-    *   **What this does:** This script reads your new `.env`, connects to GitHub using your new `PROD_GH_TOKEN`, and automatically updates the **encrypted secrets** in your GitHub repository settings.
-
-3.  **Verify on GitHub:**
-    *   Go to: [https://github.com/Brothertown-Language/snea-shoebox-editor/settings/secrets/actions](https://github.com/Brothertown-Language/snea-shoebox-editor/settings/secrets/actions)
-    *   You should see that the "Last updated" timestamp for your secrets is now "just now".
-
----
-
-### ✅ Success Check
-Once finished:
-- **Revoked:** The old keys are now invalid (even though they are in the git history).
-- **Secure:** Your local `.env` is updated and ignored by Git.
-- **Synchronized:** The production environment has the new keys.
+1.  **Local Sync**: Update `.streamlit/secrets.toml` (which is ignored by git).
+2.  **Cloud Sync**: Paste the new secrets into the Streamlit Community Cloud "Secrets" management interface.

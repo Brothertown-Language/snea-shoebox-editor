@@ -30,12 +30,11 @@ date: 2026-02-01
 - Dev must be able to access, edit, or remove mounted volumes at will
 - Example: `docker run --user $(id -u):$(id -g) -v $(pwd)/tmp:/tmp ...`
 
-### Frontend Architecture: stlite ONLY (browser-based WebAssembly)
-- **Production:** stlite (Streamlit compiled to WebAssembly, runs in browser)
-- **Local Dev:** MUST use stlite (same as production) - open dist/index.html in browser
-- **Deployment:** `uv run python scripts/bundle_stlite.py` creates dist/index.html
-- **Hosting:** Cloudflare Workers serves both API and static frontend from single worker
-- **NO regular Streamlit server** - local dev must match production environment
+### Frontend Architecture: Streamlit (Community Cloud)
+- **Production:** Streamlit Community Cloud (connected to private GitHub repo)
+- **Local Dev:** Regular Streamlit server (`uv run streamlit run src/frontend/app.py`)
+- **Hosting:** Streamlit Community Cloud for frontend, Supabase for PostgreSQL database
+- **Secrets:** Use `.streamlit/secrets.toml` locally and "Secrets" UI in Streamlit Cloud
 
 ## Project Overview
 
@@ -48,11 +47,12 @@ date: 2026-02-01
 
 ### Technology Stack
 - **Language:** 100% Python
-- **Frontend:** Streamlit (via stlite for browser deployment)
-- **Backend:** Cloudflare Python Workers
-- **Database:** Cloudflare D1 (SQLite)
+- **Frontend:** Streamlit
+- **Backend:** Streamlit (Server-side execution)
+- **Database:** Supabase (PostgreSQL)
+- **Authentication:** GitHub OAuth (via `streamlit-oauth`)
 - **Package Manager:** uv (NOT pip, NOT poetry)
-- **Deployment:** Cloudflare git integration (zero-touch, no GitHub Actions)
+- **Deployment:** Streamlit Community Cloud (Auto-deploy on git push)
 
 ## Development Environment
 
@@ -66,42 +66,29 @@ uv pip install -e .
 # Run tests
 uv run python -m unittest discover tests
 
-# Build and run frontend locally (stlite)
-uv run python scripts/bundle_stlite.py
-# Then open dist/index.html in your browser
-
-# Deploy (production)
-# Push to main branch triggers Cloudflare git integration deployment
+# Run frontend locally
+uv run streamlit run src/frontend/app.py
 ```
 
-### Bootstrapping (first-time only)
-- Script: `uv run python bootstrap_env.py`
-- Requires: CF_API_TOKEN, GH_TOKEN environment variables
-- Not needed for existing clones or PR contributors
+### Secrets Management
+- **Local:** `.streamlit/secrets.toml` (ignored by git)
+- **Cloud:** Streamlit Cloud "Secrets" management interface
+- **Database:** Use `st.connection("postgresql", type="sql")` for Supabase connection
 
 ## Architecture Details
 
-### Unified Worker (Cloudflare Worker)
-- **Single Worker serves both frontend and backend**
-- Entry point: src/backend/worker.py
-- Runtime: Cloudflare Python Workers
-- Database: D1 binding (name: "DB")
-- Assets: Serves dist/ directory (stlite frontend bundle)
-- Concurrency: Optimistic locking with version tracking
-
-### Frontend (stlite)
-- Entry point: src/frontend/app.py
-- Deployment: Bundled into dist/index.html via scripts/bundle_stlite.py, served by Worker
-- Runtime: WebAssembly (Pyodide) in browser
-- State: Streamlit session state
-- API calls: httpx to same Worker's API endpoints
+### Application Structure
+- **Frontend/Backend:** Unified Streamlit application in `src/frontend/app.py`
+- **Database:** Supabase PostgreSQL instance
+- **Authentication:** GitHub OAuth integration for authorized users
 
 ### Data Layer
-- Format: MDF (Multi-Dictionary Formatter)
-- Hierarchy: \lx (lexeme) -> \ps (part of speech) -> \ge (gloss)
-- Validation: Advisory visual feedback on MDF compliance; linguists decide whether to enforce
-- Parser: src/backend/mdf_parser.py
-- Validator: src/shared/mdf_validator.py
+- **Format:** MDF (Multi-Dictionary Formatter)
+- **Storage:** PostgreSQL (Supabase)
+- **Hierarchy:** \lx (lexeme) -> \ps (part of speech) -> \ge (gloss)
+- **Validation:** Advisory visual feedback on MDF compliance; linguists decide whether to enforce
+- **Parser:** src/shared/mdf_parser.py
+- **Validator:** src/shared/mdf_validator.py
 
 ## Testing Standards
 
@@ -205,8 +192,8 @@ Detailed security and code quality guidelines are maintained in separate files f
   - Sanitize user input before logging
   - Generic error messages for users, detailed logs for developers
 - **[security-configuration.md](.junie/security-configuration.md)** - Configuration management
-  - wrangler.toml, pyproject.toml, .env file handling
-  - Cloudflare secrets management and rotation
+  - pyproject.toml, .streamlit/secrets.toml handling
+  - Supabase connection strings and secrets rotation
   - Environment-specific configuration
 
 ### Code Quality Guidelines
@@ -220,14 +207,14 @@ Detailed security and code quality guidelines are maintained in separate files f
 
 ### Production Deployment
 - Trigger: Push to main branch
-- Process: Cloudflare automatically pulls and builds from git
-- Frontend: Deployed to Cloudflare Pages (via Workers)
-- Backend: Deployed as Cloudflare Worker
-- Configuration: wrangler.toml
-- Note: GitHub Actions NOT used for deployment - Cloudflare handles build/deploy directly
+- Process: Streamlit Community Cloud automatically pulls and builds from git
+- Frontend: Hosted on Streamlit Cloud
+- Backend: Streamlit server-side execution
+- Configuration: Streamlit Cloud "Secrets" UI
+- Note: Database hosted on Supabase (PostgreSQL)
 
 ### Configuration Files
-- wrangler.toml: Main worker config (unified frontend + backend)
+- `.streamlit/secrets.toml`: Local development secrets
 - pyproject.toml: Python package and dependency config
 
 ## AI Role and Behavior
