@@ -4,10 +4,11 @@
 Date: 2026-02-02
 
 Summary:
-- Unified embedding path: Exclusively using Hugging Face Inference API for production and local development.
-- Removed optional local embedding container to ensure environment parity and simplicity.
-- Documented production embedding execution model.
-- Updated multiple documentation files to reflect the "no-charge-ever" embedding service.
+- Finalized migration from Cloudflare/stlite to Streamlit Community Cloud + Supabase.
+- Unified embedding logic using Hugging Face Inference API.
+- Cleaned up legacy scripts, configuration, and documentation.
+- Updated project guidelines and setup instructions.
+- Prepared for commit and push.
 
 Next Steps:
 - Port SQLite logic to PostgreSQL (Supabase).
@@ -30,3 +31,4 @@ Completed Tasks:
 - Updated `pyproject.toml` to reflect new dependencies and remove `cloudflare`.
 - Updated `docker/docker-compose.yml` to reflect Streamlit-based stack.
 - ADDED embedding regeneration lifecycle documentation to `docs/development/EMBEDDINGS.md`.
+- COMMITTED and PUSHED migration and cleanup changes.
