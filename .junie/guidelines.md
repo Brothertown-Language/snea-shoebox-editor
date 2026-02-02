@@ -122,8 +122,9 @@ uv run streamlit run src/frontend/app.py
 - Format: Plain descriptive text
 - **DO NOT** use Conventional Commits prefixes (feat:, fix:, docs:, etc.)
 - Group related changes into single commit
-- **ALWAYS** remove tmp/commit.msg before creating it from scratch
-- **ALWAYS** remove tmp/commit.msg after committing
+- **RECOMMENDED WORKFLOW:** Create commit message in `tmp/commit.msg.tmp` and then move it to `tmp/commit.msg` before each commit. This avoids worrying about deleting it beforehand or afterwards.
+- If not using the recommended workflow, **ALWAYS** remove `tmp/commit.msg` if it exists before creating it from scratch.
+- **ALWAYS** remove `tmp/commit.msg` after committing if it wasn't moved from `.tmp`.
 
 ### Active Task Tracking
 - File: documentation/ACTIVE_TASK.md
