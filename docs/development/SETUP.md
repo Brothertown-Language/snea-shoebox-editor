@@ -14,8 +14,8 @@ To enable authentication during local development, you must register a local Git
 *   **Registration**: [GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**](https://github.com/settings/applications/new).
 *   **Application Name**: `SNEA Shoebox Editor (Local)`
 *   **Application Description**: `Local development environment for the SNEA Online Shoebox Editor.`
-*   **Homepage URL**: your local frontend dev URL (e.g., `http://localhost:8501`)
-*   **Authorization callback URL**: same as Homepage (e.g., `http://localhost:8501`)
+*   **Homepage URL**: your local backend URL (e.g., `http://localhost:8787`)
+*   **Authorization callback URL**: same as Homepage (e.g., `http://localhost:8787`)
 *   **Configuration**: Add the `Client ID` and `Client Secret` to your local `.env` file (see Step 2). The Worker reads `SNEA_GITHUB_CLIENT_ID`/`SNEA_GITHUB_CLIENT_SECRET` (with fallbacks to `GITHUB_CLIENT_ID`/`GITHUB_CLIENT_SECRET`).
 
 ## 2. Local Environment Initialization
@@ -34,8 +34,8 @@ We prioritize using **Docker** to keep your workstation environment clean and co
     SNEA_GITHUB_CLIENT_ID=your_local_client_id
     SNEA_GITHUB_CLIENT_SECRET=your_local_client_secret
 
-    # Frontend dev server URL (e.g., Streamlit default)
-    FRONTEND_URL=http://localhost:8501
+    # Backend URL (serves both API and stlite frontend)
+    BACKEND_URL=http://localhost:8787
     ```
 3.  **Build and Run**:
     ```bash
@@ -44,8 +44,8 @@ We prioritize using **Docker** to keep your workstation environment clean and co
     *Note: Environment variables are loaded from the `.env` file automatically by the application.*
 
     **PRO TIP**: You do **NOT** need to run `bootstrap_env.py` for local development. The local database is a Wrangler D1 simulation.
-    *   **Frontend (Pages dev server or static)**: e.g., `http://localhost:8501`
-    *   **Backend (Worker + local D1)**: `http://localhost:8787`
+    *   **Unified Worker (API + stlite frontend)**: `http://localhost:8787`
+    *   **Frontend**: Build with `uv run python scripts/bundle_stlite.py`, then access via worker at `http://localhost:8787`
 
 ## 3. Usage & Development
 
@@ -61,34 +61,37 @@ For more detailed information, refer to:
 
 ## Quick plan to resolve “Login failed: Token exchange failed (non-2xx)”
 
-This summarizes the minimal actions needed for local dev (Streamlit on :8501):
+This summarizes the minimal actions needed for local dev (unified worker with stlite):
 
 1) Environment
    - In project `.env` make sure you have:
      - `GITHUB_CLIENT_ID=...`
      - `GITHUB_CLIENT_SECRET=...`
-     - `FRONTEND_URL=http://localhost:8501`
+     - `BACKEND_URL=http://localhost:8787`
      - `JWT_SECRET=dev-secret`
 
-2) Compose env propagation
+2) Build stlite frontend
+   - Run `uv run python scripts/bundle_stlite.py` to create `dist/index.html`
+   - The worker serves this static bundle along with the API
+
+3) Compose env propagation
    - The backend service uses `env_file: ../.env` so wrangler dev receives these values inside the container. After editing `.env`, restart containers:
      - `docker compose -f docker/docker-compose.yml restart backend`
-     - `docker compose -f docker/docker-compose.yml restart web`
 
-3) One callback method
-   - Only `POST /api/oauth/callback` is supported (GET returns 405). The frontend should always POST `{code, state}`.
+4) One callback method
+   - Only `POST /api/oauth/callback` is supported (GET returns 405). The stlite frontend POSTs `{code, state}`.
 
-4) Redirect URI parity
-   - `GET /api/oauth/login` returns `authorize_url` and `redirect_uri`. The latter must be `http://localhost:8501` locally and must match what GitHub has configured for the OAuth app. The backend also sends this same value in the token exchange.
+5) Redirect URI parity
+   - `GET /api/oauth/login` returns `authorize_url` and `redirect_uri`. The latter must be `http://localhost:8787` locally and must match what GitHub has configured for the OAuth app. The backend also sends this same value in the token exchange.
 
-5) Verify quickly
+6) Verify quickly
    - `curl -sS -H 'User-Agent: snea-dev/1.0' http://localhost:8787/api/oauth/login`
-     - Check `redirect_uri` is `http://localhost:8501`.
+     - Check `redirect_uri` is `http://localhost:8787`.
    - Complete the browser login flow. On success, backend returns `{ token, user }`.
    - On failure, backend will surface GitHub’s upstream `status` and `body` to help diagnose.
 
-6) If you still see 404 HTML from GitHub
-   - Re-check that the GitHub OAuth app Authorization callback URL is exactly `http://localhost:8501`.
+7) If you still see 404 HTML from GitHub
+   - Re-check that the GitHub OAuth app Authorization callback URL is exactly `http://localhost:8787`.
    - Ensure the backend is sending `client_id`, `client_secret`, `code`, and `redirect_uri` (done by worker). Restart containers after any env change.
 
 ## Local OAuth checklist (GitHub)
@@ -96,32 +99,35 @@ This summarizes the minimal actions needed for local dev (Streamlit on :8501):
 Use this checklist to prevent/resolve the “Token exchange failed (non-2xx)” and GitHub HTML 404 responses during login.
 
 1) Ports and URLs
-   - Frontend runs at: `http://localhost:8501` (Streamlit default in this repo)
-   - Set `FRONTEND_URL=http://localhost:8501` in your `.env` (already present in this project)
+   - Unified worker (API + stlite frontend) runs at: `http://localhost:8787`
+   - Set `BACKEND_URL=http://localhost:8787` in your `.env`
    - In your GitHub OAuth App (Settings → Developer settings → OAuth Apps):
-     - Homepage URL: `http://localhost:8501`
-     - Authorization callback URL: `http://localhost:8501`
+     - Homepage URL: `http://localhost:8787`
+     - Authorization callback URL: `http://localhost:8787`
 
-2) Environment → docker-compose
-   - We pass `.env` into both containers via `env_file: ../.env`.
+2) Build stlite frontend
+   - Run `uv run python scripts/bundle_stlite.py` to create `dist/index.html`
+   - The worker serves this static bundle at the root path
+
+3) Environment → docker-compose
+   - We pass `.env` into the container via `env_file: ../.env`.
    - Ensure these are defined in `.env`:
      - `GITHUB_CLIENT_ID=...`
      - `GITHUB_CLIENT_SECRET=...`
-     - `FRONTEND_URL=http://localhost:8501`
+     - `BACKEND_URL=http://localhost:8787`
      - `JWT_SECRET=some-dev-secret`
-   - After changes: restart containers
+   - After changes: restart container
      - `docker compose -f docker/docker-compose.yml restart backend`
-     - `docker compose -f docker/docker-compose.yml restart web`
 
-3) Flow and endpoints (single callback verb)
+4) Flow and endpoints (single callback verb)
    - Backend issues `authorize_url` from `GET /api/oauth/login`.
-   - Frontend exchanges the returned `code`+`state` by POSTing JSON to a single endpoint:
+   - stlite frontend exchanges the returned `code`+`state` by POSTing JSON to a single endpoint:
      - `POST /api/oauth/callback` with body `{ "code": "...", "state": "..." }`
    - `GET /api/oauth/callback` is disabled (returns 405) to avoid confusion.
 
-4) Token exchange details (backend)
+5) Token exchange details (backend)
    - Backend sends `application/x-www-form-urlencoded` to `https://github.com/login/oauth/access_token` with `Accept: application/json`.
-   - The POST includes: `client_id`, `client_secret`, `code`, and `redirect_uri=http://localhost:8501` (plus `code_verifier` if PKCE is enabled).
+   - The POST includes: `client_id`, `client_secret`, `code`, and `redirect_uri=http://localhost:8787` (plus `code_verifier` if PKCE is enabled).
    - If GitHub returns non‑2xx, backend responds 502 and includes the upstream `status` and `body` to aid debugging.
 
 5) Quick validation

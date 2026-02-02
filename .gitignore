@@ -54,5 +54,15 @@ Thumbs.db
 # Project temporary files
 tmp/
 
-# Secrets
+# Secrets and sensitive files
 .env
+.env.*
+*.key
+*.pem
+*.p12
+*.pfx
+*credentials*
+*secrets*
+*token*
+!docs/**/*token*
+!**/plan_*token*

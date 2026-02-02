@@ -4,8 +4,13 @@ import httpx
 import os
 import re
 import json
+import time
+from typing import Optional, Dict, Any, Tuple, List
 import streamlit.components.v1 as components
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    load_dotenv = None
 
 # Set page config for compact wide layout
 st.set_page_config(
@@ -16,7 +21,8 @@ st.set_page_config(
 )
 
 # Load environment variables for local development
-load_dotenv()
+if load_dotenv:
+    load_dotenv()
 
 # Configuration
 # For local development, we use GITHUB_CLIENT_ID. 
@@ -24,41 +30,8 @@ load_dotenv()
 # but Streamlit here is primarily for local dev or simple hosting.
 GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID")
 
-# BACKEND_URL priority: env var > inferred from current host (if on michael-conrad.com) > localhost
-# Note: Streamlit performs 'httpx' calls from the SERVER, but browser-redirects from the CLIENT.
-# For Docker, the server needs http://backend:8787 while the client needs http://localhost:8787.
-# We will use BACKEND_URL for server-side calls and a dynamic logic for client-side.
 
-def get_backend_url(client_side=False):
-    # 1. Check environment variable first (highest priority, allows manual override)
-    env_backend = os.getenv("BACKEND_URL")
-    if env_backend:
-        return env_backend.rstrip('/')
-
-    # 2. Try to infer from environment
-    is_local = os.getenv("STREAMLIT_SERVER_PORT") is not None or os.getenv("PROD") != "true"
-    
-    if is_local:
-        # If we are inside Docker, the server calls 'backend:8787'
-        # but the browser (client_side) must call 'localhost:8787'
-        if client_side:
-            return "http://localhost:8787"
-        
-        # Heuristic for being inside Docker
-        if os.path.exists("/.dockerenv") or os.getenv("HOSTNAME") == "web":
-            return "http://backend:8787"
-        
-        return "http://localhost:8787"
-        
-    # 3. Default production URL for Brothertown SNEA project
-    return "https://snea-backend.michael-conrad.com"
-
-# Server-side calls use this
-BACKEND_URL = get_backend_url(client_side=False)
-# Browser-side redirects should use get_backend_url(client_side=True)
-
-
-def set_query_params(**params):
+def set_query_params(**params: Optional[Any]) -> None:
     """Updates the URL query parameters."""
     for k, v in params.items():
         if v is None:
@@ -67,146 +40,155 @@ def set_query_params(**params):
         else:
             st.query_params[k] = str(v)
 
-def get_query_params():
+def get_query_params() -> Dict[str, Any]:
     """Returns the current query parameters."""
     return st.query_params
 
 
-def login_page():
-    # Title and welcome message
+def login_page() -> None:
+    """Renders the login page with GitHub OAuth button."""
     st.title("SNEA Online Shoebox Editor")
     st.write("Welcome to the SNEA Online Shoebox Editor. Please log in to continue.")
     
-    # GitHub login button
     if st.button("Log in with GitHub"):
-        # Server-side check
+        # In Stlite, we can't easily do a meta-refresh redirect from a button click 
+        # inside the iframe easily without window.location.href.
+        # But we can try the same markdown trick or use a link.
         try:
             with st.spinner(f"Connecting to backend..."):
-                # We use the internal BACKEND_URL (e.g., http://backend:8787)
-                response = httpx.get(f"{BACKEND_URL}/api/oauth/login", timeout=5.0)
+                response = httpx.get("/api/oauth/login", timeout=5.0)
             
             if response.status_code == 200:
                 data = response.json()
                 auth_url = data.get("authorize_url") or data.get("url")
                 
-                # If we are in Docker, the backend gave us an authorize_url.
-                # It contains a redirect_uri.
-                # If backend used heuristic correctly, it's http://localhost:8501
-                
                 if auth_url:
-                    st.markdown(f'<meta http-equiv="refresh" content="0; url={auth_url}">', unsafe_allow_html=True)
-                    st.write(f"Redirecting to GitHub... If not redirected, [click here]({auth_url})")
+                    # In Stlite, we are already in the browser. 
+                    # We need to escape the sandboxed iframe if we are in one,
+                    # but Stlite mountable usually handles this.
+                    st.markdown(f'''
+                        <script>
+                            window.parent.location.href = "{auth_url}";
+                        </script>
+                        <a href="{auth_url}" target="_parent">Click here to login with GitHub</a> (Redirecting...)
+                    ''', unsafe_allow_html=True)
                 else:
                     st.error("Failed to get authorization URL from backend.")
             else:
                 st.error(f"Backend error: {response.status_code}")
-                with st.expander("Debug Info"):
-                    st.write(f"URL: {BACKEND_URL}/api/oauth/login")
-                    st.text(f"Response: {response.text}")
-        except httpx.ConnectError:
-            st.error(f"Could not connect to backend at **{BACKEND_URL}**.")
-            st.info("This usually means the backend server is not running or the URL is incorrect.")
-            with st.expander("Troubleshooting"):
-                st.write(f"Current BACKEND_URL (Server-side): `{BACKEND_URL}`")
-                st.write(f"Inferred Backend URL (Client-side): `{get_backend_url(client_side=True)}`")
-                st.write("1. If running locally with Docker, ensure both `web` and `backend` containers are healthy.")
-                st.write("2. If in production, check if the backend worker is deployed and the custom domain is active.")
-                st.write("3. You can override the backend URL by setting the `BACKEND_URL` environment variable.")
         except Exception as e:
             st.error(f"An unexpected error occurred: {e}")
-            with st.expander("Technical Details"):
-                st.exception(e)
 
-def handle_callback():
+
+def _extract_oauth_params() -> Tuple[Optional[str], Optional[str]]:
+    """Extracts and normalizes OAuth code and state from query parameters."""
     query_params = st.query_params
-    if "code" in query_params:
-        # Coerce possible list/tuple values to simple strings
-        code_val = query_params.get("code")
-        state_val = query_params.get("state")
-        
-        # In newer streamlit versions, get() returns a string or list
-        if isinstance(code_val, list):
-            code_val = code_val[0]
-        if isinstance(state_val, list):
-            state_val = state_val[0]
+    if "code" not in query_params:
+        return None, None
+    
+    code_val = query_params.get("code")
+    state_val = query_params.get("state")
+    
+    # In newer streamlit versions, get() returns a string or list
+    if isinstance(code_val, list):
+        code_val = code_val[0]
+    if isinstance(state_val, list):
+        state_val = state_val[0]
+    
+    return code_val, state_val
 
-        code = code_val
-        state = state_val
-        # Clear query params so we don't keep trying to log in with the same code
-        # In newer Streamlit versions, st.query_params.clear() might be better
-        # but let's just remove 'code' to be safe and precise
-        if "code" in st.query_params or "state" in st.query_params:
-            new_params = {k: v for k, v in st.query_params.items() if k not in ("code", "state")}
-            st.query_params.clear()
-            for k, v in new_params.items():
-                st.query_params[k] = v
-        
-        with st.spinner("Logging in..."):
-            try:
-                response = httpx.post(
-                    f"{BACKEND_URL}/api/oauth/callback",
-                    json={"code": code, "state": state},
-                    timeout=30.0 # Token exchange can be slow
-                )
-                if response.status_code == 200:
-                    data = response.json()
-                    user = data.get("user")
-                    token = data.get("token")
-                    if user:
-                        st.session_state.user = user
-                        st.session_state.token = token
-                        # Set cookie for persistence (30 days)
-                        # We use a combined approach: try to set it, and don't rerun immediately 
-                        # to give the component time to render.
-                        components.html(
-                            f"""
-                            <script>
-                                console.log("Attempting to set session cookie...");
-                                try {{
-                                    window.parent.document.cookie = "session={token}; Max-Age={30*24*60*60}; path=/; SameSite=Lax";
-                                    console.log("Successfully set session cookie in window.parent");
-                                }} catch (e) {{
-                                    console.error("Failed to set cookie in window.parent:", e);
-                                    document.cookie = "session={token}; Max-Age={30*24*60*60}; path=/; SameSite=Lax";
-                                    console.log("Set session cookie in iframe instead");
-                                }}
-                                // Inform Streamlit that we are done
-                                window.parent.postMessage({{"type": "streamlit:set_cookie_done"}}, "*");
-                            </script>
-                            """,
-                            height=0
-                        )
-                        st.success("Logged in successfully! Redirecting...")
-                        # A brief pause to allow the JS to run
-                        import time
-                        time.sleep(1)
-                        st.rerun()
-                        # Auto-rerun after a small delay might be tricky in Streamlit 
-                        # so we'll just wait for the user to click or the next heartbeat
-                    else:
-                        st.error(f"Login failed: Backend returned success but no user data.")
-                        st.json(data)
-                else:
-                    try:
-                        error_data = response.json()
-                        st.error(f"Login failed: {error_data.get('error', response.text)}")
-                        
-                        # Show all extra fields for debugging
-                        extra_fields = {k: v for k, v in error_data.items() if k not in ["error", "traceback"]}
-                        if extra_fields:
-                            with st.expander("Error Details"):
-                                st.json(extra_fields)
-                                
-                        if "traceback" in error_data:
-                            with st.expander("Backend Traceback"):
-                                st.code(error_data["traceback"])
-                    except Exception as json_err:
-                        st.error(f"Login failed: {response.status_code}")
-                        st.text(f"Raw Response: {response.text}")
-            except Exception as e:
-                st.error(f"Error during login: {e}")
 
-def parse_mdf(mdf_text):
+def _clear_oauth_params() -> None:
+    """Removes OAuth code and state from query parameters."""
+    if "code" in st.query_params or "state" in st.query_params:
+        new_params = {k: v for k, v in st.query_params.items() if k not in ("code", "state")}
+        st.query_params.clear()
+        for k, v in new_params.items():
+            st.query_params[k] = v
+
+
+def _exchange_oauth_token(code: str, state: str) -> Optional[httpx.Response]:
+    """Exchanges OAuth code for access token via backend."""
+    try:
+        response = httpx.post(
+            "/api/oauth/callback",
+            json={"code": code, "state": state},
+            timeout=30.0
+        )
+        return response
+    except Exception as e:
+        st.error(f"Error during login: {e}")
+        return None
+
+
+def _store_session(user: Dict[str, Any], token: str) -> None:
+    """Stores user session in session state and browser cookie."""
+    st.session_state.user = user
+    st.session_state.token = token
+    
+    # Set cookie for persistence (30 days)
+    st.markdown(
+        f"""
+        <div style="display:none">
+            <script>
+                document.cookie = "session={token}; Max-Age={30*24*60*60}; path=/; SameSite=Lax";
+            </script>
+        </div>
+        """,
+        unsafe_allow_html=True
+    )
+
+
+def _display_login_error(response: httpx.Response) -> None:
+    """Displays login error with details and traceback if available."""
+    try:
+        error_data = response.json()
+        st.error(f"Login failed: {error_data.get('error', response.text)}")
+        
+        # Show all extra fields for debugging
+        extra_fields = {k: v for k, v in error_data.items() if k not in ["error", "traceback"]}
+        if extra_fields:
+            with st.expander("Error Details"):
+                st.json(extra_fields)
+                
+        if "traceback" in error_data:
+            with st.expander("Backend Traceback"):
+                st.code(error_data["traceback"])
+    except Exception:
+        st.error(f"Login failed: {response.status_code}")
+        st.text(f"Raw Response: {response.text}")
+
+
+def handle_callback() -> None:
+    """Handles OAuth callback by exchanging code for token and storing session."""
+    code, state = _extract_oauth_params()
+    if not code or not state:
+        return
+    
+    _clear_oauth_params()
+    
+    with st.spinner("Logging in..."):
+        response = _exchange_oauth_token(code, state)
+        if not response:
+            return
+        
+        if response.status_code == 200:
+            data = response.json()
+            user = data.get("user")
+            token = data.get("token")
+            
+            if user and token:
+                _store_session(user, token)
+                st.success("Logged in successfully! Redirecting...")
+                time.sleep(1)
+                st.rerun()
+            else:
+                st.error("Login failed: Backend returned success but no user data.")
+                st.json(data)
+        else:
+            _display_login_error(response)
+
+def parse_mdf(mdf_text: str) -> Tuple[str, int, str, str]:
     """Simple MDF parser to extract lx, hm, ps, ge."""
     lx = ""
     hm = 1
@@ -238,19 +220,10 @@ def parse_mdf(mdf_text):
         
     return lx, hm, ps, ge
 
-def main_app():
-    user = st.session_state.get("user")
-    token = st.session_state.get("token")
-    if not user:
-        st.error("User session not found. Please log in again.")
-        if st.button("Go to Login"):
-            if "user" in st.session_state:
-                del st.session_state.user
-            st.rerun()
-        return
 
-    # Move navigation and additional info to sidebar
-    query_params = get_query_params()
+def _render_sidebar(user: Dict[str, Any], current_page: int, page_size: int, 
+                    total_count: int, records_count: int, offset: int) -> None:
+    """Renders sidebar with navigation, user info, logout, and pagination controls."""
     with st.sidebar:
         st.title("SNEA Editor")
         st.info("Record Selection & Tools")
@@ -273,61 +246,20 @@ def main_app():
                 del st.session_state.user
             if "token" in st.session_state:
                 del st.session_state.token
-            components.html(
+            st.markdown(
                 """
-                <script>
-                    try {
-                        window.parent.document.cookie = "session=; Max-Age=0; path=/; SameSite=Lax";
-                    } catch (e) {
+                <div style="display:none">
+                    <script>
                         document.cookie = "session=; Max-Age=0; path=/; SameSite=Lax";
-                    }
-                </script>
+                    </script>
+                </div>
                 """,
-                height=0
+                unsafe_allow_html=True
             )
-            # A brief pause to allow the JS to run
-            import time
             time.sleep(0.5)
             st.rerun()
 
-    # Pagination state
-    page_size = 50
-    current_page = int(query_params.get("page", 0))
-    offset = current_page * page_size
-
-    # Fetch total record count
-    headers = {"Authorization": f"Bearer {token}"} if token else {}
-    total_count = 0
-    try:
-        count_res = httpx.get(f"{BACKEND_URL}/api/records/count", headers=headers, timeout=5.0)
-        if count_res.status_code == 200:
-            total_count = count_res.json().get("count", 0)
-    except Exception:
-        pass
-
-    # Fetch records for current page
-    try:
-        response = httpx.get(f"{BACKEND_URL}/api/records?limit={page_size}&offset={offset}", headers=headers, timeout=10.0)
-        if response.status_code == 200:
-            records = response.json()
-        elif response.status_code == 401:
-            st.error("Session expired. Please log in again.")
-            del st.session_state.user
-            st.rerun()
-            return
-        else:
-            st.error(f"Failed to fetch records: {response.status_code}")
-            records = []
-    except Exception as e:
-        st.error(f"Error fetching records: {e}")
-        records = []
-
-    if not records and current_page == 0:
-        st.info("No records found.")
-        return
-
-    # Pagination controls in sidebar
-    with st.sidebar:
+        # Pagination controls
         st.divider()
         st.write(f"Page {current_page + 1}")
         col_prev, col_next = st.columns(2)
@@ -335,50 +267,108 @@ def main_app():
             set_query_params(page=current_page - 1)
             st.rerun()
         
-        has_more = len(records) == page_size and (offset + page_size) < total_count
+        has_more = records_count == page_size and (offset + page_size) < total_count
         if col_next.button("Next ➡️", disabled=not has_more, use_container_width=True):
             set_query_params(page=current_page + 1)
             st.rerun()
         
         if total_count > 0:
-            st.caption(f"Showing {offset + 1} - {offset + len(records)} of {total_count} records")
+            st.caption(f"Showing {offset + 1} - {offset + records_count} of {total_count} records")
 
-    # View routing
-    view = query_params.get("view", "edit")
 
-    if view == "list":
-        st.subheader("Records List")
-        for r in records:
-            col_lx, col_ps, col_ge, col_act = st.columns([2, 1, 4, 1])
-            col_lx.write(r.get("lx"))
-            col_ps.write(r.get("ps"))
-            col_ge.write(r.get("ge"))
-            if col_act.button("Edit", key=f"edit_{r['id']}"):
-                set_query_params(id=r["id"], view="edit")
-                st.rerun()
+def _fetch_total_count(headers: Dict[str, str]) -> int:
+    """Fetches total record count from backend."""
+    try:
+        count_res = httpx.get("/api/records/count", headers=headers, timeout=5.0)
+        if count_res.status_code == 200:
+            return count_res.json().get("count", 0)
+    except Exception:
+        pass
+    return 0
+
+
+def _fetch_records(headers: Dict[str, str], limit: int, offset: int) -> List[Dict[str, Any]]:
+    """Fetches paginated records from backend."""
+    try:
+        response = httpx.get(f"/api/records?limit={limit}&offset={offset}", headers=headers, timeout=10.0)
+        if response.status_code == 200:
+            return response.json()
+        elif response.status_code == 401:
+            st.error("Session expired. Please log in again.")
+            del st.session_state.user
+            st.rerun()
+        else:
+            st.error(f"Failed to fetch records: {response.status_code}")
+    except Exception as e:
+        st.error(f"Error fetching records: {e}")
+    return []
+
+
+def _render_records_list(records: List[Dict[str, Any]]) -> None:
+    """Renders list view of records with edit buttons."""
+    st.subheader("Records List")
+    for r in records:
+        col_lx, col_ps, col_ge, col_act = st.columns([2, 1, 4, 1])
+        col_lx.write(r.get("lx"))
+        col_ps.write(r.get("ps"))
+        col_ge.write(r.get("ge"))
+        if col_act.button("Edit", key=f"edit_{r['id']}"):
+            set_query_params(id=r["id"], view="edit")
+            st.rerun()
+
+
+def _find_default_record_index(records: List[Dict[str, Any]], selected_record_id: Optional[str]) -> int:
+    """Finds the index of the selected record in the list."""
+    if not selected_record_id:
+        return 0
+    
+    try:
+        target_id = int(selected_record_id)
+        for i, r in enumerate(records):
+            if isinstance(r, dict) and r.get("id") == target_id:
+                return i
+    except (ValueError, TypeError):
+        pass
+    return 0
+
+
+def _update_record(record_id: int, mdf_data: str, headers: Dict[str, str]) -> None:
+    """Updates a record via backend API."""
+    lx, hm, ps, ge = parse_mdf(mdf_data)
+    
+    if not lx:
+        st.error("Missing \\lx tag in record.")
         return
-    elif view == "login":
-        # If user is somehow in main_app with view=login, redirect to list
-        set_query_params(view="list")
-        st.rerun()
+    
+    update_payload = {
+        "lx": lx,
+        "ps": ps,
+        "ge": ge,
+        "mdf_data": mdf_data
+    }
+    
+    try:
+        update_res = httpx.post(
+            f"/api/records/{record_id}",
+            json=update_payload,
+            headers=headers,
+            timeout=10.0
+        )
+        if update_res.status_code == 200:
+            st.success("Record updated!")
+            st.rerun()
+        else:
+            st.error(f"Failed to update: {update_res.text}")
+    except Exception as e:
+        st.error(f"Error updating: {e}")
 
-    # Record selection in a compact row
+
+def _render_record_editor(records: List[Dict[str, Any]], query_params: Dict[str, Any], 
+                          headers: Dict[str, str]) -> None:
+    """Renders record editor with selector and edit form."""
     record_options = {f"{r['lx']} ({r['ps'] or 'no ps'})": r for r in records if isinstance(r, dict)}
-    
-    # Routing: check if record_id is in query params
     selected_record_id = query_params.get("id")
-    
-    # Find record by ID from hash params if available
-    default_index = 0
-    if selected_record_id:
-        try:
-            target_id = int(selected_record_id)
-            for i, (label, record) in enumerate(record_options.items()):
-                if record.get("id") == target_id:
-                    default_index = i
-                    break
-        except (ValueError, TypeError):
-            pass
+    default_index = _find_default_record_index(records, selected_record_id)
 
     col_sel, col_btn = st.columns([8, 2])
     with col_sel:
@@ -390,82 +380,91 @@ def main_app():
             key="record_selector"
         )
     
-    if selected_label:
-        selected_record = record_options[selected_label]
+    if not selected_label:
+        return
+    
+    selected_record = record_options[selected_label]
+    
+    # Sync URL with selected record
+    current_id = str(selected_record.get("id"))
+    if current_id != query_params.get("id") or query_params.get("view") != "edit":
+        set_query_params(id=current_id, view="edit")
+
+    # Raw MDF Editor
+    with st.form("edit_record", clear_on_submit=False):
+        mdf_data = st.text_area(
+            "MDF Record", 
+            value=selected_record.get("mdf_data", ""), 
+            height=400,
+            label_visibility="collapsed"
+        )
         
-        # Sync URL with selected record (non-triggering)
-        current_id = str(selected_record.get("id"))
-        if current_id != query_params.get("id") or query_params.get("view") != "edit":
-            set_query_params(id=current_id, view="edit")
+        submitted = st.form_submit_button("Save Record", use_container_width=True)
+        if submitted:
+            _update_record(selected_record['id'], mdf_data, headers)
 
-        # Raw MDF Editor
-        with st.form("edit_record", clear_on_submit=False):
-            mdf_data = st.text_area(
-                "MDF Record", 
-                value=selected_record.get("mdf_data", ""), 
-                height=400,
-                label_visibility="collapsed"
-            )
-            
-            submitted = st.form_submit_button("Save Record", use_container_width=True)
-            if submitted:
-                # Parse lx, ps, ge from raw text
-                lx, hm, ps, ge = parse_mdf(mdf_data)
-                
-                if not lx:
-                    st.error("Missing \\lx tag in record.")
-                else:
-                    update_payload = {
-                        "lx": lx,
-                        "ps": ps,
-                        "ge": ge,
-                        "mdf_data": mdf_data
-                    }
-                    try:
-                        update_res = httpx.post(
-                            f"{BACKEND_URL}/api/records/{selected_record['id']}",
-                            json=update_payload,
-                            headers=headers,
-                            timeout=10.0
-                        )
-                        if update_res.status_code == 200:
-                            st.success("Record updated!")
-                            st.rerun()
-                        else:
-                            st.error(f"Failed to update: {update_res.text}")
-                    except Exception as e:
-                        st.error(f"Error updating: {e}")
 
-def main():
+def main_app() -> None:
+    """Main application interface for authenticated users."""
+    user = st.session_state.get("user")
+    token = st.session_state.get("token")
+    
+    if not user:
+        st.error("User session not found. Please log in again.")
+        if st.button("Go to Login"):
+            if "user" in st.session_state:
+                del st.session_state.user
+            st.rerun()
+        return
+
+    query_params = get_query_params()
+    page_size = 50
+    current_page = int(query_params.get("page", 0))
+    offset = current_page * page_size
+    headers = {"Authorization": f"Bearer {token}"} if token else {}
+
+    # Fetch data
+    total_count = _fetch_total_count(headers)
+    records = _fetch_records(headers, page_size, offset)
+
+    if not records and current_page == 0:
+        st.info("No records found.")
+        return
+
+    # Render sidebar
+    _render_sidebar(user, current_page, page_size, total_count, len(records), offset)
+
+    # View routing
+    view = query_params.get("view", "edit")
+
+    if view == "list":
+        _render_records_list(records)
+    elif view == "login":
+        set_query_params(view="list")
+        st.rerun()
+    else:
+        _render_record_editor(records, query_params, headers)
+
+def main() -> None:
+    """Main entry point for the application."""
     # Attempt to restore session from cookie if not already in session_state
     if "user" not in st.session_state:
-        # Streamlit 1.30+ supports st.context.cookies
         try:
+            # In Stlite, we can access cookies directly via browser APIs if needed,
+            # but Streamlit's context.cookies is the standard way.
             cookies = getattr(st, "context", None) and getattr(st.context, "cookies", None)
-            if not cookies:
-                # Fallback for some environments or older versions
-                try:
-                    from streamlit.web.server.websocket_headers import _get_websocket_headers
-                    headers = _get_websocket_headers()
-                    if headers and "Cookie" in headers:
-                        cookie_str = headers["Cookie"]
-                        cookies = {c.split("=")[0].strip(): c.split("=")[1].strip() for c in cookie_str.split(";") if "=" in c}
-                except Exception:
-                    pass
-
+            
             if cookies and "session" in cookies:
                 token = cookies["session"]
                 # Verify token with backend
                 try:
-                    # Use the internal BACKEND_URL for server-side verification
+                    # Relative path works in Stlite httpx
                     headers = {"Authorization": f"Bearer {token}"}
                     # Fetch user info from /api/me
-                    user_res = httpx.get(f"{BACKEND_URL}/api/me", headers=headers, timeout=5.0)
+                    user_res = httpx.get("/api/me", headers=headers, timeout=5.0)
                     if user_res.status_code == 200:
                         st.session_state.user = user_res.json()
                         st.session_state.token = token
-                        # No st.rerun() here to avoid potential loops, 
-                        # but we have set the state so main_app will be called
                 except Exception:
                     pass
         except Exception:

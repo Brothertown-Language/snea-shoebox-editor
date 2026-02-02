@@ -73,12 +73,6 @@ COPY --chown=snea:snea uv.lock* .
 # Use uv sync to install everything including dev dependencies into project .venv
 RUN uv sync --all-groups
 
-# Playwright Browser Installation (As snea)
-RUN uv run playwright install chromium
-
-# Copy App Code (As snea)
-COPY --chown=snea:snea . /app
-
 # Final command runs as snea using uv run targeting active env
 # We use --no-sync because the project is already synced during build.
-CMD ["uv", "run", "--no-sync", "--active", "pytest", "-q", "tests/frontend/test_ui.py"]
+CMD ["uv", "run", "--no-sync", "--active", "python3", "-m", "unittest", "discover", "tests"]

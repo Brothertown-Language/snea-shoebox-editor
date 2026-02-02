@@ -10,24 +10,29 @@ import hmac
 import base64
 import unicodedata
 import re
+from typing import Optional, Dict, Any, List
 # ------------------------------------------------------------
 # Requests Shim (for environments without requests)
 # ------------------------------------------------------------
 
 class ResponseShim:
-    def __init__(self, status_code, data, text=None):
-        self.status_code = status_code
-        self._data = data
-        self.text = text or __import__('json').dumps(data)
-    def json(self):
+    def __init__(self, status_code: int, data: Any, text: Optional[str] = None) -> None:
+        self.status_code: int = status_code
+        self._data: Any = data
+        self.text: str = text or __import__('json').dumps(data)
+    
+    def json(self) -> Any:
         return self._data
-    def raise_for_status(self):
+    
+    def raise_for_status(self) -> None:
         if not (200 <= self.status_code < 300):
             raise Exception(f"HTTP Error {self.status_code}: {self.text}")
 
 class RequestsShim:
-    async def post(self, url, json=None, headers=None, data=None):
-        fetch_options = {"method": "POST"}
+    async def post(self, url: str, json: Optional[Dict[str, Any]] = None, 
+                   headers: Optional[Dict[str, str]] = None, 
+                   data: Optional[str] = None) -> ResponseShim:
+        fetch_options: Dict[str, Any] = {"method": "POST"}
         if headers:
             fetch_options["headers"] = headers
         if json is not None:
@@ -39,20 +44,20 @@ class RequestsShim:
             fetch_options["body"] = data
             
         res = await fetch(url, JSON.parse(__import__('json').dumps(fetch_options)))
-        status = res.status
-        text = await res.text()
+        status: int = res.status
+        text: str = await res.text()
         try:
             return ResponseShim(status, __import__('json').loads(text), text)
         except:
             return ResponseShim(status, {}, text)
 
-    async def get(self, url, headers=None):
-        fetch_options = {"method": "GET"}
+    async def get(self, url: str, headers: Optional[Dict[str, str]] = None) -> ResponseShim:
+        fetch_options: Dict[str, Any] = {"method": "GET"}
         if headers:
             fetch_options["headers"] = headers
         res = await fetch(url, JSON.parse(__import__('json').dumps(fetch_options)))
-        status = res.status
-        text = await res.text()
+        status: int = res.status
+        text: str = await res.text()
         try:
             return ResponseShim(status, __import__('json').loads(text), text)
         except:
@@ -76,7 +81,7 @@ def sign_session(data: dict, secret: str) -> str:
     sig = hmac.new(secret.encode(), payload, hashlib.sha256).digest()
     return base64.urlsafe_b64encode(payload + b"." + sig).decode()
 
-def verify_session(token: str, secret: str):
+def verify_session(token: str, secret: str) -> Optional[Dict[str, Any]]:
     try:
         raw = base64.urlsafe_b64decode(token.encode())
         payload, sig = raw.rsplit(b".", 1)
@@ -98,7 +103,7 @@ def _b64url_decode(s: str) -> bytes:
 def _hmac_sha256(key: str, msg: str) -> str:
     return _b64url(hmac.new(key.encode("utf-8"), msg.encode("utf-8"), hashlib.sha256).digest())
 
-def get_sort_key(text):
+def get_sort_key(text: Optional[str]) -> str:
     if not text:
         return ""
     # Remove ' entirely
@@ -124,7 +129,7 @@ _initialized = False
 # Counter to allow seeding to continue on subsequent requests if needed
 _seeding_complete = False
 
-async def initialize_db(db):
+async def initialize_db(db: Any) -> None:
     global _initialized, _seeding_complete
     if _initialized and _seeding_complete:
         return
@@ -363,10 +368,27 @@ async def initialize_db(db):
 
 async def on_fetch(request, env, ctx):
     url = request.url
-    # Path is everything after the origin, before the query string
     path_full = "/" + "/".join(url.split("/")[3:])
     path = path_full.split("?", 1)[0]
     
+    # print(f"DEBUG PATH: {path}")
+
+    # Static Assets Fallback
+    # In unified architecture, we check if it is NOT an API call first.
+    if not path.startswith("/api/"):
+        try:
+            return await env.ASSETS.fetch(request)
+        except Exception as e:
+            # Fallback for local development if ASSETS is missing or fails
+            if path == "/" or path == "/index.html":
+                try:
+                    with open("dist/index.html", "r") as f:
+                        content = f.read()
+                    return Response.new(content, headers={"Content-Type": "text/html"})
+                except:
+                    pass
+            return Response.new(f"Internal Server Error: {str(e)}", status=500)
+
     # Frontend origin must be explicitly configured. Avoid host heuristics.
     # Allowed vars: SNEA_FRONTEND_URL (prod) or FRONTEND_URL (local). Final fallback: http://localhost:8501
     # Priority: Env var -> Heuristic for local dev
@@ -845,5 +867,9 @@ async def on_fetch(request, env, ctx):
     if path == "/api/health":
         return Response.new(json.dumps({"ok": True}), headers=JSON.parse(json.dumps(headers)))
 
-    # Default 404 JSON to avoid JSON parsing errors on clients hitting wrong path
+    # Default to serving static assets for non-API routes
+    if not path.startswith("/api/"):
+        return Response.new("Resource not found", status=404)
+
+    # print(f"API Request: {request.method} {path}")
     return Response.new(json.dumps({"error": "Not found", "path": path}), headers=JSON.parse(json.dumps(headers)), status=404)

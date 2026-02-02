@@ -110,74 +110,81 @@ To support authentication during local development, a separate GitHub OAuth appl
 1.  **Register Local GitHub OAuth App**:
     - Go to [GitHub **Settings** > **Developer settings** > **OAuth Apps** > **New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor (Local)`
-    - **Homepage URL**: `http://localhost:8501`
-    - **Authorization callback URL**: `http://localhost:8501`
+    - **Homepage URL**: `http://localhost:8787`
+    - **Authorization callback URL**: `http://localhost:8787`
 2.  **Local Environment Configuration**:
     - Create a `.env` file in the project root (not committed to VCS).
     - Add `GITHUB_CLIENT_ID` and `GITHUB_CLIENT_SECRET` from the local OAuth app.
-3.  **CORS & Team Validation**:
-    - The backend (`src/backend/worker.py`) must be configured to allow CORS requests from `http://localhost:8501` during local development.
+    - Build stlite frontend: `uv run python scripts/bundle_stlite.py`
+3.  **Unified Worker Architecture**:
+    - The worker (`src/backend/worker.py`) serves both API and stlite frontend from `http://localhost:8787`.
     - Team membership validation against the `proto-SNEA` team remains active in local development, requiring an internet connection.
 
 ---
 
 ## Architecture Details
 
-### 1. Automated Deployment (GitHub Actions)
+### 1. Automated Deployment (Cloudflare Git Integration)
 
-- **Workflow**: `.github/workflows/deploy.yml` handles the build.
-- **Streamlit**: Uses Streamlit for the reactive UI.
+- **Process**: Cloudflare automatically pulls and builds from git on push to main branch.
+- **stlite**: Uses stlite (Streamlit compiled to WebAssembly) for browser-based reactive UI.
 - **Clean Workstation**: Local development uses Docker to avoid polluting the host environment with `npm`, `wrangler`, or specific Python versions.
-- **Zero-Workstation-Install**: All deployment tools run strictly in the GitHub runner.
+- **Zero-Config Deployment**: Cloudflare handles build and deployment directly without GitHub Actions.
 
-### 2. Python Frontend (Streamlit) [IN PROGRESS]
+### 2. Python Frontend (stlite) [MINIMAL IMPLEMENTATION]
 
-- **Responsive UI [IN PROGRESS]**: Basic mobile and desktop support using grid-based layouts (Implemented: `RecordList`).
+- **Responsive UI [PENDING]**: Basic mobile and desktop support using grid-based layouts (Current: Fixed layout with sidebar).
 - **Strictly Python [COMPLETED]**: No JavaScript required for UI logic.
-- **Hybrid Record Editor [PENDING]**:
-    - **Display Mode**: Colorized and enhanced rendering of MDF records for linguistic readability.
-    - **Edit Mode**: Switches to a plain text area containing raw MDF data for direct editing.
-    - **Transition**: Validation occurs after editing to provide visual feedback (colorization), but does not block saving.
+- **Basic Record Editor [PARTIAL]**:
+    - **Display Mode [PENDING]**: Colorized and enhanced rendering of MDF records for linguistic readability.
+    - **Edit Mode [COMPLETED]**: Plain text area containing raw MDF data for direct editing.
+    - **Transition [PENDING]**: Validation occurs after editing to provide visual feedback (colorization), but does not block saving.
 - **Advisory Validation [PENDING]**: Linguistic validation (e.g., hierarchy checks) is purely advisory. It highlights potential issues for linguists but **must not** interfere with or prevent the saving of records.
-- **NFD Sorting [PENDING]**: Records must be sorted by their extracted headword (\lx). Sorting must use NFD normalization (preserving diacritics), and leading punctuation must be ignored. (Current: Basic ASC sorting in DB).
-- **Read-Only Metadata [PENDING]**: Record metadata (last editor, timestamp, version) is visible but read-only to users.
+- **NFD Sorting [COMPLETED]**: Records are sorted by their extracted headword (\lx) using NFD normalization with leading punctuation ignored via `sort_key` column.
+- **Read-Only Metadata [PENDING]**: Record metadata (last editor, timestamp, version) is visible but read-only to users (Current: Metadata tracked in DB but not displayed in UI).
 
-### 3. Python Backend (Cloudflare Workers) [IN PROGRESS]
+### 3. Python Backend (Cloudflare Workers) [PARTIAL IMPLEMENTATION]
 
-- **Data Layer [IN PROGRESS]**: D1 database using Python bindings (Implemented: `sources`, `records`, `seeding_progress`).
+- **Data Layer [PARTIAL]**: D1 database using Python bindings (Implemented: `sources`, `records`, `seeding_progress`, `users`, `permissions`; Missing: `edit_history`, `embeddings`).
 - **Source Code [COMPLETED]**: Implementation resides in `src/backend/worker.py`.
-- **Manual Seeding [IN PROGRESS]**: The app starts with an empty database. Administrators can trigger seed ingestion from multiple
-  private source files (Natick, SNEALEX, Mohegan Dictionary, etc.) via dedicated endpoints. (Implemented: Auto-seeding for `Natick/Trumbull`).
+- **OAuth Authentication [COMPLETED]**: GitHub OAuth login and callback endpoints with session management.
+- **Basic CRUD [PARTIAL]**: 
+    - **GET /api/records [COMPLETED]**: Paginated record listing with NFD sorting.
+    - **GET /api/records/count [COMPLETED]**: Total record count.
+    - **POST /api/records/:id [PARTIAL]**: Basic update without conflict detection or edit history tracking.
+    - **GET /api/me [COMPLETED]**: User profile endpoint.
+- **Auto-Seeding [COMPLETED]**: Automatic seeding from `Natick/Trumbull` source file on first initialization.
 
-### 4. Concurrency & Authentication Management
+### 4. Concurrency & Authentication Management [PARTIAL IMPLEMENTATION]
 
-- **GitHub OAuth Authentication**: Access is strictly limited to authenticated GitHub users **who are active members of the `proto-SNEA` team within the `Brothertown-Language` organization.**
-- **Auth Logic**:
+- **GitHub OAuth Authentication [COMPLETED]**: Access is strictly limited to authenticated GitHub users.
+    - **Team Membership Verification [PENDING]**: Backend does NOT currently verify `proto-SNEA` team membership within the `Brothertown-Language` organization. All authenticated GitHub users can access the application.
+- **Auth Logic [COMPLETED]**:
     - Backend retrieves user token via OAuth exchange.
-    - Backend verifies team membership via `GET /orgs/Brothertown-Language/teams/proto-snea/memberships/{username}`.
-    - Access is granted only if the state is `active`.
-- **Optimistic Locking**: The editor uses optimistic locking to prevent overlapping edits. When a user attempts to save a record, the application verifies that the `current_version` in the database matches the version the user began editing. If they differ, the save is rejected, and the user is prompted to resolve the conflict via a comparison dialog.
-- **Conflict Resolution Workflow**:
-    - When a version mismatch is detected, a dialog must display both the **Live Record** (currently in the database) and the **Edited Record** (user's local changes) side-by-side.
-    - Users must be presented with two primary options:
-        - **Reload**: Discard local changes and load the latest live version.
-        - **Overwrite**: Force save the local changes, incrementing the version and overwriting the live record.
-- **Per-Record History Drawer**: A toggleable UI component for the active record that displays its specific `edit_history`, allowing users to see previous snapshots and audit changes.
-- **No Explicit Locking**: Records are never "locked" for editing. Multiple users can open the same record simultaneously; the first one to save successfully increments the version, causing subsequent saves from other users (on the older version) to trigger the conflict resolution workflow.
+    - Backend creates session tokens with HMAC signing.
+    - Session persistence via HTTP-only cookies.
+- **Optimistic Locking [PENDING]**: The editor does NOT currently implement optimistic locking. The `current_version` field exists in the database and is incremented on save, but no version checking occurs before updates.
+- **Conflict Resolution Workflow [PENDING]**:
+    - Version mismatch detection not implemented.
+    - Conflict resolution UI not implemented.
+    - No side-by-side comparison dialog.
+- **Per-Record History Drawer [PENDING]**: No UI component for viewing edit history (edit_history table does not exist).
+- **No Explicit Locking [COMPLETED]**: Records are never "locked" for editing. Multiple users can open the same record simultaneously.
 
-### 5. Data Persistence & Edit History
+### 5. Data Persistence & Edit History [NOT IMPLEMENTED]
 
-- **Edit History Table**: All changes to records must be tracked in a dedicated edit history table.
-- **Audit Metadata**: Each history entry must include:
-    - **Modified Timestamp**: Exact time of the change.
-    - **OAuth User Email**: The identity of the editor.
-    - **Previous Data**: State of the record before the edit.
-    - **Current Data**: State of the record after the edit.
-### 6. Administration & Permissions
+- **Edit History Table [PENDING]**: The `edit_history` table does not exist. Changes to records are NOT tracked.
+- **Audit Metadata [PENDING]**: No history entries are created. The following are not tracked:
+    - **Modified Timestamp**: Only `updated_at` in records table (overwritten on each save).
+    - **OAuth User Email**: Only `updated_by` in records table (overwritten on each save).
+    - **Previous Data**: Not tracked.
+    - **Current Data**: Not tracked separately from main record.
 
-- **Permissions Management**: A dedicated, separate editor must be provided for the `permissions` table to manage GitHub Org/Team mappings and source-specific roles.
-- **Embeddings Management**: A dedicated management interface for the `embeddings` table to monitor, refresh, and validate AI-generated vectors.
-    - **Automatic Recalculation**: Logic to automatically trigger vector recalculation when a `record_version` mismatch is detected during a search operation.
+### 6. Administration & Permissions [NOT IMPLEMENTED]
+
+- **Permissions Management [PENDING]**: No UI exists for managing the `permissions` table. The table exists in the database but is not used by the application.
+- **Embeddings Management [PENDING]**: The `embeddings` table does not exist. No AI-generated vectors or search functionality implemented.
+    - **Automatic Recalculation [PENDING]**: No vector recalculation logic exists.
 
 ---
 
@@ -206,5 +213,5 @@ To support authentication during local development, a separate GitHub OAuth appl
 ### Phase 8: Developer Experience
 1. **Dedicated Dev UI**: A built-in UI component (Dev Info) for inspecting system internals without using CLI tools.
     - **Table Schema Inspector**: View SQL schemas for all D1 tables.
-    - **Environment Reporting**: Report Python versions and platforms for both Frontend (Streamlit) and Backend (Worker).
+    - **Environment Reporting**: Report Python versions and platforms for both Frontend (stlite/Pyodide) and Backend (Worker).
 

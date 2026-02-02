@@ -19,20 +19,19 @@ To enable authentication locally, you must create a separate GitHub OAuth applic
 
 ### 2. Build and Run using Docker Compose
 
-A `docker-compose.yml` file is provided to start the backend (Wrangler/D1). Use your preferred static dev server for the frontend separately.
+A `docker-compose.yml` file is provided to start the unified app (Wrangler/D1 + Stlite Bundler).
 
 ```bash
 docker-compose up --build
 ```
 
-- **Frontend (Pages dev server)**: For example `http://localhost:5173`. Note: Inside the Docker network, the frontend may need to call the backend via `http://backend:8787` during local compose.
-- **Backend (Wrangler/D1)**: Exposed on `http://localhost:8787`.
+- **Unified App**: Exposed on `http://localhost:8787`. Both the frontend and backend are served from this single port.
 
 ### 3. Interactive Live Development
 
-The Docker environment is configured for **live development**. Changes made to the source code on your host machine will be automatically reflected:
+The Docker environment is configured for **Pure Unified Dev Mode (Strict Parity)**:
 
-- **Frontend**: Use any static dev server (e.g., Vite, Next.js dev, or simple `uv run python -m http.server`) for your Pages content; set `FRONTEND_URL` to match.
+- **Frontend**: The container automatically watches `src/frontend/app.py`. When you save changes, it re-bundles the Stlite frontend into `dist/`. Simply refresh your browser at `http://localhost:8787` to see changes.
 - **Backend**: Wrangler's local development mode (`wrangler dev`) automatically watches changes in `src/backend/` and reloads the Worker.
 - **Tests**: Run tests from your host or within a container.
 
@@ -41,12 +40,12 @@ To run tests interactively:
 uv run python3 -m unittest discover tests
 ```
 
-### 4. Authentication Flow & CORS
+### 4. Authentication Flow
 
-When developing locally:
-- The frontend (e.g., `:5173`) will redirect to GitHub.
-- GitHub will redirect to the frontend (`FRONTEND_URL`).
-- The backend must handle CORS to allow the frontend to communicate with it across different ports.
+When developing locally with the unified architecture:
+- Both the frontend and backend live on `http://localhost:8787`.
+- **GitHub OAuth Callback**: Your GitHub OAuth Application **Authorization callback URL** must be set to `http://localhost:8787`.
+- The backend handles the OAuth exchange and session management.
 - You must be a member of the `proto-SNEA` team in the `Brothertown-Language` organization to log in, even locally.
 
 ### 5. Managing the Local Database
@@ -102,27 +101,26 @@ Steps:
    - Compose passes the .env into the `backend` service via `env_file: ../.env`. This ensures wrangler dev receives GitHub OAuth vars inside the container.
    - After editing .env, restart containers:
      - `docker compose -f docker/docker-compose.yml restart backend`
-     - `docker compose -f docker/docker-compose.yml restart web`
 
 3) Backend behavior
    - GET /api/oauth/login returns JSON:
-     - authorize_url: https://github.com/login/oauth/authorize?...&redirect_uri=http://localhost:8501
+     - authorize_url: https://github.com/login/oauth/authorize?...&redirect_uri=http://localhost:8787
      - state: signed state
-     - redirect_uri: http://localhost:8501 (echoed)
+     - redirect_uri: http://localhost:8787 (echoed)
      - pkce: false (or true if OAUTH_USE_PKCE=1)
    - POST /api/oauth/callback accepts { code, state } only. GET is 405.
    - Token exchange uses application/x-www-form-urlencoded with client_id, client_secret, code, and redirect_uri. If PKCE enabled, includes code_verifier.
    - On non-2xx from GitHub, backend returns 502 JSON including upstream status and body to aid debugging.
 
 4) Frontend behavior
-   - Streamlit GETs /api/oauth/login, then redirects to authorize_url.
-   - After redirect back to http://localhost:8501 with ?code&state, Streamlit POSTs these to /api/oauth/callback.
+   - Stlite (served at :8787) GETs /api/oauth/login, then redirects to authorize_url.
+   - After redirect back to http://localhost:8787 with ?code&state, Stlite POSTs these to /api/oauth/callback.
    - On 200, store token/user in session; on error, display backend JSON (which includes upstream details when applicable).
 
 5) Troubleshooting
    - If GitHub returns 404/HTML on token exchange, most likely client_id/secret or redirect_uri mismatch. Confirm:
-     - GitHub OAuth App → Authorization callback URL points to http://localhost:8501 (for local dev).
-     - /api/oauth/login shows redirect_uri=http://localhost:8501
+     - GitHub OAuth App → Authorization callback URL points to http://localhost:8787 (for local dev).
+     - /api/oauth/login shows redirect_uri=http://localhost:8787
      - .env values are non-empty inside backend container (wrangler dev). Restart containers after changes.
    - If backend says "Invalid state": ensure the frontend POSTs the same `state` GitHub sent to the frontend URL.
 

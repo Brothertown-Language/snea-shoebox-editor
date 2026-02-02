@@ -1,13 +1,37 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 # Cloudflare Manual Setup Guide (Permanent)
 
-This guide provides the one-time manual steps required to connect this repository to Cloudflare. Once set up, Cloudflare will automatically pull and deploy your changes from GitHub. No local installation of Node.js/NPM is required.
+This guide provides the one-time manual steps required to connect this repository to Cloudflare. The SNEA Editor runs as a **Unified Worker instance** that hosts both the Python backend and the **Stlite** (Streamlit in Wasm) frontend.
 
-> **Note**: Cloudflare is transitioning from separate "Workers" and "Pages" products into a unified "Workers" platform. This guide reflects the modern unified flow.
+### Cleanup: Before You Start
+To avoid conflicts, please **delete the following** from your Cloudflare Dashboard:
+1.  **Workers & Pages** -> **snea-backend** (The old backend Worker).
+2.  **Workers & Pages** -> **snea-editor** (If it exists as a Pages project; we will recreate it as a Worker).
 
 ## 1. PREREQUISITES: The Cloudflare API Token
 
 Before starting the setup, you must have a Cloudflare API Token. This token is what allows GitHub to talk to Cloudflare.
+
+### GitHub OAuth Setup (Mandatory)
+You must create two separate GitHub OAuth Applications **within the Organization**:
+
+1.  **Navigate to Organization Settings**:
+    -   Go to [GitHub](https://github.com/) and navigate to the **Brothertown-Language** organization page.
+    -   Click **Settings** (top tab).
+    -   In the left sidebar, scroll down to **Developer settings** -> **OAuth Apps**.
+    -   Click **New Org OAuth App**.
+
+2.  **Production App**:
+    -   **Application Name**: `SNEA Editor (Prod)`
+    -   **Homepage URL**: `https://snea-editor.michael-conrad.com`
+    -   **Authorization callback URL**: `https://snea-editor.michael-conrad.com`
+    -   **Secret**: Save to `.env` as `PROD_SNEA_GITHUB_CLIENT_SECRET` (and Client ID as `PROD_SNEA_GITHUB_CLIENT_ID`).
+
+2.  **Local Development App**:
+    -   **Application Name**: `SNEA Editor (Local)`
+    -   **Homepage URL**: `http://localhost:8787`
+    -   **Authorization callback URL**: `http://localhost:8787`
+    -   **Secret**: Save to `.env` as `SNEA_GITHUB_CLIENT_SECRET` (and Client ID as `SNEA_GITHUB_CLIENT_ID`).
 
 **Tip**: If you have existing tokens and are unsure which is which, **delete them both** and create one fresh token following the steps below. This ensures you start with the correct permissions.
 
@@ -16,7 +40,7 @@ Before starting the setup, you must have a Cloudflare API Token. This token is w
     -   Click **Create Token**.
     -   Find **Create Custom Token** (at the top) and click **Get started**.
 2.  **Set Permissions**: Name the token `snea-deploy-token` and add these **3 specific permissions**:
-    -   `Account` | `Cloudflare Pages` | `Edit`
+    -   `Account` | `Cloudflare Pages` | `Edit` (Still required for some legacy bindings or if using Pages Assets)
     -   `Account` | `Workers Scripts` | `Edit`
     -   `Account` | `D1` | `Edit`
 3.  **Save the Token**:
@@ -27,71 +51,44 @@ Before starting the setup, you must have a Cloudflare API Token. This token is w
 
 ---
 
-## 2. BACKEND SETUP (Cloudflare Worker + D1)
+## 2. APP SETUP (Cloudflare Worker + Static Assets)
+
+The SNEA Editor runs as a single Worker. The backend is a Python Worker, and the frontend is a Streamlit app running in the browser via Stlite, served as a static asset by the same Worker.
 
 ### A. Create and Connect the Worker
 1.  Navigate to **Workers & Pages** -> **Overview** -> **Create**.
-2.  Select **Create application** -> **Import a repository** (or click **Get started** next to **Import a repository**).
-3.  Connect your GitHub account if not already connected and select the `snea-shoebox-editor` repository.
-    - *Tip: The repository list is a scrollable box that may not show a scrollbar until you scroll it; if you don't see the repo, try scrolling the box.*
-4.  **Project Name**: `snea-backend` (or leave the default and it will be updated by GitHub).
+2.  Select **Create application** -> **Import a repository**.
+3.  Connect your GitHub account and select the `snea-shoebox-editor` repository.
+4.  **Project Name**: `snea-editor`.
 5.  **Set up your application**:
-    - **Build command**: `pip install uv && uv pip install -e . && uv sync --all-groups`
-    - **Deploy command**: `npx wrangler deploy --config wrangler.backend.toml`
-    - **Non-production branch deploy command**: `npx wrangler versions upload --config wrangler.backend.toml`
+    - **Build command**: `sh scripts/cloudflare_build.sh`
+    - **Deploy command**: `npx wrangler deploy`
+    - **Non-production branch deploy command**: `npx wrangler versions upload`
     - **Path**: `/`
-    - **Build Settings** (Advanced): Select your API token in the **API Token** dropdown. If it does not appear, click **Add a token** to link it.
-        - *Note: Creating a token via the "Add a token" button in this UI may automatically set the required permissions without asking for them (e.g., `snea-backend-build`). This is an acceptable alternative to creating one manually.*
+    - **Build Settings** (Advanced): Select your API token in the **API Token** dropdown.
 6.  **Build Settings**:
     - **Production Branch**: `main`
-    - **Build Command**: `pip install uv && uv pip install -e . && uv sync --all-groups`
+    - **Build Command**: `sh scripts/cloudflare_build.sh`
     - **Root Directory**: (Leave EMPTY)
-7.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.backend.toml` (which sets the name to `snea-backend`) from GitHub.
-8.  *Note: If you already created a Worker manually without Git integration, go to its **Settings** -> **Builds** -> **Connect** to link the repository.*
+7.  Click **Save and Deploy**. Cloudflare will now pull the code and `wrangler.toml` from GitHub.
 
 ### B. Bindings and Secrets (Automated)
 
-If you have already run `python3 bootstrap_env.py` (which uses the token from Step 1), the following are handled for you:
+If you have already run `python3 bootstrap_env.py`, the following are handled for you:
 -   **API Token**: `CLOUDFLARE_API_TOKEN` is uploaded to GitHub Secrets.
 -   **Secrets**: `JWT_SECRET`, `SNEA_GITHUB_CLIENT_ID`, and `SNEA_GITHUB_CLIENT_SECRET` are uploaded to GitHub Secrets.
--   **Wrangler Config**: `wrangler.backend.toml` is generated with your `database_id`.
+-   **Wrangler Config**: `wrangler.toml` is generated with your `database_id`.
 
-Next, perform this manual step in the Cloudflare Dashboard for the `snea-backend` worker:
+Next, perform this manual step in the Cloudflare Dashboard for the `snea-editor` worker:
 
 1.  **D1 Database Binding**:
-    -   Go to the `snea-backend` Worker -> **Settings** -> **Variables**.
-    -   Click **Add Binding**.
+    -   Go to the `snea-editor` Worker -> **Settings** -> **Bindings**.
+    -   Click **Add Binding** -> **D1 Database**.
     -   **Variable Name**: `DB`
     -   **D1 Database**: Select `snea-shoebox`.
     -   Click **Save and Deploy**.
 
 ---
 
-## 3. FRONTEND SETUP (Cloudflare Workers Assets / Pages)
-
-1.  Navigate to **Workers & Pages** -> **Overview** -> **Create**.
-2.  Select **Create application** -> **Import a repository** (or click **Get started** next to **Import a repository**).
-3.  Connect your GitHub account and select the `snea-shoebox-editor` repository.
-    - *Tip: The repository list is a scrollable box that may not show a scrollbar until you scroll it; if you don't see the repo, try scrolling the box.*
-4.  **Project Name**: `snea-editor`.
-5.  **Set up your application**:
-    - **Build command**: `pip install uv && uv pip install -e . && uv sync --all-groups`
-    - **Deploy command**: `npx wrangler pages deploy . --project-name snea-editor`
-    - **Non-production branch deploy command**: `npx wrangler pages deploy . --project-name snea-editor`
-    - **Path**: `/`
-    - **Build Settings** (Advanced): Select your API token in the **API Token** dropdown. If it does not appear, click **Add a token** to link it.
-        - *Note: Creating a token via the "Add a token" button in this UI may automatically set the required permissions without asking for them (e.g., `snea-frontend-build`). This is an acceptable alternative to creating one manually.*
-6.  **Build Settings**:
-    - **Production Branch**: `main`
-    - **Framework Preset**: `None`
-    - **Build Command**: `pip install uv && uv pip install -e . && uv sync --all-groups`
-    - **Build output directory**: `.` (The current directory)
-7.  Click **Save and Deploy**. Cloudflare will now treat this as a Workers Assets (Pages) project.
-8.  **Environment Variables**: After deployment, go to the project's **Settings** -> **Variables** and add:
-    - `BACKEND_URL`: `https://snea-backend.brothertownlanguage.org`
-
----
-
-## 4. CUSTOM DOMAINS
-1.  **Backend**: Worker -> **Settings** -> **Domains & Routes** -> **Add Custom Domain** -> Add `snea-backend.brothertownlanguage.org`.
-2.  **Frontend**: Project -> **Settings** -> **Custom domains** -> **Add Custom Domain** -> Add `snea-editor.brothertownlanguage.org`.
+## 3. CUSTOM DOMAINS
+1.  **Domain**: Worker -> **Settings** -> **Domains & Routes** -> **Add Custom Domain** -> Add `snea-editor.michael-conrad.com`.

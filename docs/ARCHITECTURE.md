@@ -8,9 +8,9 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
 
 ## Component Stack
 
-- **Frontend**: [Streamlit](https://streamlit.io/) (Reactive Python UI). [IN PROGRESS]
-  - Built with Python and Streamlit.
-  - State management is reactive, ensuring a modern web experience without JavaScript.
+- **Frontend**: [stlite](https://github.com/whitphx/stlite) (Streamlit compiled to WebAssembly). [IN PROGRESS]
+  - Built with Python and runs entirely in the browser via Pyodide.
+  - State management is reactive, ensuring a modern web experience without a Python server.
   - Implemented: `RecordList` view, `DevInfo` dashboard.
   - Pending: Edit mode, MDF validation, NFD sorting.
 - **Backend**: [Cloudflare Workers](https://workers.cloudflare.com/) (Python runtime). [IN PROGRESS]
@@ -29,15 +29,15 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
 
 The primary data format is MDF (Multi-Dictionary Form).
 - **Hierarchy**: \lx (Lexeme) -> \ps (Part of Speech) -> \ge (Gloss English).
-- **Validation**: Strict parity with MDF standards is enforced at the entry point.
+- **Validation**: Advisory visual feedback on MDF compliance; linguists decide whether to enforce.
 - **History**: Every change is tracked in an `edit_history` table for full auditability and version control.
 - **Automated Schema**: The application is responsible for its own database schema. On startup, the app automatically creates missing tables and applies necessary `ALTER` statements to existing tables. No manual SQL execution is required for schema maintenance.
 
 ## Deployment Pipeline
 
-- **CI/CD**: GitHub Actions + Wrangler.
+- **CI/CD**: Cloudflare git integration automatically pulls and builds on push to main branch.
 - **"Zero-Touch"**: The environment is designed so that deployment requires no local configuration beyond initial bootstrapping.
-- **Secrets**: Managed via GitHub Actions secrets, populated by the `bootstrap_env.py` script.
+- **Secrets**: Managed via Cloudflare environment variables, populated by the `bootstrap_env.py` script.
 
 ## Directory Structure
 
