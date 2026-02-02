@@ -87,21 +87,15 @@ Use the `bootstrap_env.py` script to automate Cloudflare and GitHub infrastructu
 After running the bootstrap script, the infrastructure is ready, but the code needs to be deployed before custom domains can be finalized.
 
 1.  **Trigger Initial Deployment**:
-    *   The bootstrap script created the infrastructure, but the code needs to be deployed via GitHub Actions.
-    *   Go to your GitHub repository > **Actions**.
-    *   Select the **Deploy** workflow (usually `Deploy to Cloudflare`).
-    *   Click **Run workflow** (if `workflow_dispatch` is enabled) or push a small change to the `main` branch to trigger it.
+    *   The bootstrap script created the infrastructure, but the code needs to be deployed via Cloudflare git integration.
+    *   Push a change to the `main` branch to trigger automatic deployment.
 
-    *   **Cloudflare Pages (Frontend)**:
+    *   **Cloudflare Worker (Unified)**:
         1.  Navigate to **Workers & Pages** > **Overview** > `snea-editor`.
-        2.  Go to the **Custom domains** tab and ensure `snea-editor.michael-conrad.com` is active.
-        3.  *Troubleshooting*: If it says "Not configured", click **Set up a custom domain** and enter `snea-editor.michael-conrad.com`.
-    *   **Cloudflare Workers (Backend)**:
-        1.  Navigate to **Workers & Pages** > **Overview** > `snea-backend`.
-        2.  Go to the **Settings** tab > **Triggers** and ensure `snea-backend.michael-conrad.com` is listed in the **Custom Domains** section.
-        3.  *Troubleshooting*: If missing, click **Add Custom Domain** and enter `snea-backend.michael-conrad.com`.
+        2.  Go to the **Settings** tab > **Domains & Routes** and ensure `snea-editor.michael-conrad.com` is active.
+        3.  *Troubleshooting*: If it says "Not configured", click **Add Custom Domain** and enter `snea-editor.michael-conrad.com`.
 
-    **Note on Propagation**: It may take a few minutes for the domains to show as "Active" (Green) while Cloudflare issues SSL certificates.
+    **Note on Propagation**: It may take a few minutes for the domain to show as "Active" (Green) while Cloudflare issues SSL certificates.
 
 4.  **Database Migration (First Run Only)**:
     *   If your deployment workflow doesn't automatically run migrations, you may need to seed the database:
@@ -116,15 +110,15 @@ After running the bootstrap script, the infrastructure is ready, but the code ne
 
 ### Appendix: Production Environment Variables
 
-In the Cloudflare Workers environment (Production), the following variables are injected via GitHub Actions:
+In the Cloudflare Workers environment (Production), the following variables are managed via Wrangler secrets:
 
-| Secret Name | Worker Environment Variable | Description |
-|-------------|----------------------------|-------------|
-| `CLOUDFLARE_API_TOKEN` | *Used by CI/CD only* | Token for deployment. |
-| `CLOUDFLARE_ACCOUNT_ID` | `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID. |
-| `JWT_SECRET` | `JWT_SECRET` | Secret for signing session tokens. |
-| `SNEA_GITHUB_CLIENT_ID` | `SNEA_GITHUB_CLIENT_ID` | Production GitHub OAuth Client ID (prefixed to avoid GitHub's restricted naming). |
-| `SNEA_GITHUB_CLIENT_SECRET` | `SNEA_GITHUB_CLIENT_SECRET` | Production GitHub OAuth Client Secret. |
+| Secret Name | Description |
+|-------------|-------------|
+| `CLOUDFLARE_API_TOKEN` | Token for deployment (used by Cloudflare git integration). |
+| `CLOUDFLARE_ACCOUNT_ID` | Cloudflare Account ID. |
+| `JWT_SECRET` | Secret for signing session tokens. |
+| `SNEA_GITHUB_CLIENT_ID` | Production GitHub OAuth Client ID (prefixed to avoid GitHub's restricted naming). |
+| `SNEA_GITHUB_CLIENT_SECRET` | Production GitHub OAuth Client Secret. |
 
 The backend code prefers `SNEA_*` variables in production and falls back to non-prefixed names in local/dev.
 
@@ -138,16 +132,4 @@ npx wrangler secret put SNEA_GITHUB_CLIENT_ID
 npx wrangler secret put SNEA_GITHUB_CLIENT_SECRET
 ```
 
-If your frontend origin is fixed and you want to enforce it on the Worker side too, set:
-
-```bash
-npx wrangler secret put SNEA_FRONTEND_URL
-```
-
-#### Configure Pages Project Variables
-
-In Cloudflare Pages project settings:
-- Add `BACKEND_URL` pointing to your Worker URL (e.g., `https://snea-backend.michael-conrad.com`).
-- Optionally mirror `SNEA_FRONTEND_URL` for documentation and CI usage (Pages URL).
-
-These are not required by the Worker, but your frontend code (or example) may read `BACKEND_URL` to know where to call the API.
+Note: Since the unified Worker serves both frontend and backend, no separate frontend environment variables are needed.

@@ -8,15 +8,17 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
 
 ## Component Stack
 
+- **Unified Worker**: [Cloudflare Workers](https://workers.cloudflare.com/) (Python runtime). [IN PROGRESS]
+  - A single Worker serves both the frontend (stlite static assets) and backend API.
+  - Handles API requests, authentication, database interactions, and static asset serving.
+  - Implements optimistic locking for concurrent editing. (Pending)
+  - Implemented: Basic REST API, Automatic D1 Schema initialization, Large-scale MDF Seeding logic.
 - **Frontend**: [stlite](https://github.com/whitphx/stlite) (Streamlit compiled to WebAssembly). [IN PROGRESS]
   - Built with Python and runs entirely in the browser via Pyodide.
+  - Bundled into `dist/index.html` and served as a static asset by the Worker.
   - State management is reactive, ensuring a modern web experience without a Python server.
   - Implemented: `RecordList` view, `DevInfo` dashboard.
   - Pending: Edit mode, MDF validation, NFD sorting.
-- **Backend**: [Cloudflare Workers](https://workers.cloudflare.com/) (Python runtime). [IN PROGRESS]
-  - Handles API requests, authentication, and database interactions.
-  - Implements optimistic locking for concurrent editing. (Pending)
-  - Implemented: Basic REST API, Automatic D1 Schema initialization, Large-scale MDF Seeding logic.
 - **Database**: [Cloudflare D1](https://developers.cloudflare.com/d1/). [IN PROGRESS]
   - SQL database at the edge.
   - Stores linguistic records and edit history.

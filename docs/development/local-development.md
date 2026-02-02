@@ -79,6 +79,100 @@ By using the D1 simulation via Wrangler, we ensure that:
 - The authentication and binding logic matches the production Worker environment.
 - The "Zero-Touch" deployment remains consistent between local and production.
 
+---
+
+## Local Embedding Service (Docker-based)
+
+**This is the source of truth for local development.** The SNEA Shoebox Editor uses embeddings for semantic search. For local development, we run the same BGE-M3 model used in production via Docker with GPU acceleration.
+
+### Prerequisites
+
+- **NVIDIA GPU**: Minimum 8GB VRAM (16GB+ recommended)
+- **NVIDIA Container Toolkit**: Required for GPU access in Docker
+- **Docker Compose**: Already required for the project
+
+### Check GPU Availability
+
+Before starting the embedding service, verify your system has the required GPU support:
+
+```bash
+bash scripts/check_gpu.sh
+```
+
+This script checks for:
+1. NVIDIA GPU and drivers
+2. Docker installation
+3. NVIDIA Container Toolkit
+4. Docker Compose
+
+If any component is missing, the script provides installation instructions.
+
+### Starting the Embedding Service
+
+The embedding service is defined in `docker-compose.yml` and starts automatically with the full stack:
+
+```bash
+# Start all services including embeddings
+docker-compose up --build
+
+# Or start only the embedding service
+docker-compose up -d embeddings
+```
+
+**First Run Notes:**
+- The container downloads the BGE-M3 model (~2GB) on first start
+- Initial startup takes 2-5 minutes for model loading
+- Requires ~5GB disk space for model and cache
+- Model uses ~4GB VRAM when loaded
+
+### Testing the Embedding Service
+
+Verify the service is working correctly:
+
+```bash
+# Wait for service to be ready
+curl --retry 10 --retry-delay 5 http://localhost:8080/health
+
+# Run comprehensive tests
+uv run python scripts/test_embeddings.py
+```
+
+The test script verifies:
+- Service health and availability
+- Embedding generation with various texts (including Algonquian words)
+- Correct dimensionality (1024 dimensions for BGE-M3)
+- Consistency and uniqueness of embeddings
+
+### Configuration
+
+The embedding service is configured via environment variables in `.env`:
+
+```env
+# Enable local embeddings
+USE_LOCAL_EMBEDDINGS=true
+
+# Embedding service URL (Docker internal network)
+EMBEDDING_SERVICE_URL=http://embeddings:80
+```
+
+See `.env.example` for a complete configuration template.
+
+### Architecture
+
+- **Model**: `BAAI/bge-m3` (same as Cloudflare `@cf/baai/bge-m3`)
+- **Dimensions**: 1024 (matches production)
+- **Container**: Hugging Face Text Embeddings Inference (TEI) with CUDA support
+- **API**: REST API at `http://localhost:8080` (host) or `http://embeddings:80` (Docker network)
+
+### Fallback Options
+
+If GPU is unavailable:
+1. **Unit Tests**: Use mock embeddings (fast, deterministic, no GPU required)
+2. **Integration Tests**: Deploy a dev worker to Cloudflare and use remote embeddings
+
+See **[EMBEDDINGS.md](EMBEDDINGS.md)** for detailed configuration and alternative approaches.
+
+---
 
 ## Plan to resolve GitHub OAuth: Token exchange failed (non-2xx)
 

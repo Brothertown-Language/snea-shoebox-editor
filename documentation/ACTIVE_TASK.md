@@ -5,11 +5,10 @@ Date: 2026-02-01
 
 Summary:
 - Resolved Cloudflare Pages deployment error: "Configuration file cannot contain both 'main' and 'pages_build_output_dir'".
-- Restored separate configuration files: `wrangler.backend.toml` for the backend Worker and `wrangler.toml` for the frontend Pages project.
-- Ensured `compatibility_flags = ["python_workers"]` is present and marked as MANDATORY in `wrangler.backend.toml`.
-- Updated `docs/deployment/MANUAL_SETUP.md` to use explicit `--config` for the backend and default `wrangler.toml` for the frontend to satisfy Cloudflare Pages' constraints.
+- Unified frontend and backend into a single Worker architecture using `wrangler.toml`.
+- Ensured `compatibility_flags = ["python_workers"]` is present and marked as MANDATORY in `wrangler.toml`.
+- Updated deployment documentation to reflect the unified Worker architecture.
 - Verified that no Node.js/NPM dependencies are introduced, maintaining the 100% Python stack.
-- Unified frontend and backend configuration into a single `wrangler.toml` to resolve Cloudflare Pages' lack of support for custom config paths. (REVERTED due to Cloudflare validation constraints)
 - Analyzed CI logs for run 21566990798; identified Cloudflare API error 7003 due to invalid/inaccessible IDs during backend deployment.
 - Implemented `scripts/verify_cf_ids.py` to pre-validate Cloudflare Account ID and D1 Database ID using the Cloudflare API before deployment.
 - Updated `.github/workflows/deploy.yml` to include the verification step, ensuring the workflow fails early with a clear error message if IDs are incorrect.
@@ -49,25 +48,16 @@ Summary:
 - Removed pedantic language and non-standard numbering from the deployment guides.
 
 Next Steps:
-- RESOLVE Cloudflare Pages configuration error: "Pages does not support custom paths for the Wrangler configuration file".
-    - Swapped file names: `wrangler.toml` is now used for the frontend (Pages).
-    - `wrangler.backend.toml` is now used for the backend Worker.
-- Updated `bootstrap_env.py` and `MANUAL_SETUP.md` to reflect new config file names.
-- Restored mandatory `--project-name snea-editor` to frontend deploy commands in `MANUAL_SETUP.md` to ensure Cloudflare Pages correctly identifies the target project.
-- Synchronize build commands in wrangler.backend.toml and wrangler.toml with Cloudflare dashboard. ✓
 - DEPRECATE automated subdomain scripts (`bootstrap_domains.py`, `bootstrap_env.py`) in favor of manual setup.
-- FOLLOW `docs/deployment/MANUAL_SETUP.md` for manual Cloudflare Pages and Worker configuration.
-- RESOLVE Python Worker deployment issue: Manual deployment via Wrangler CLI is now the preferred path.
+- FOLLOW `docs/deployment/MANUAL_SETUP.md` for manual Cloudflare Worker configuration.
 - Update AI Guidelines to reflect private repo status. (Completed)
 - If Worker shows Wrangler/secrets issues, prefer bundled Wrangler or pin compatible version; adjust secrets syntax if needed.
-- If Pages shows path/build issues, correct `directory` and/or add build/output settings.
 - Implement optimistic locking for concurrent record editing.
 - Monitor sorting performance as the database grows.
 - Continue with further linguistic data processing features.
 
-- Triggered fresh deploy and collector run to verify split secrets and bundled Wrangler in a private repo context.
-- Verified local code structure for frontend and backend.
-- Split Worker secrets from deployment to avoid Cloudflare API 7003 routing errors.
+- Triggered fresh deploy and collector run to verify bundled Wrangler in a private repo context.
+- Verified local code structure for unified Worker architecture.
 - Using action-bundled Wrangler for maximum compatibility.
 
 CI trigger: verify deployment stability and collector automation.

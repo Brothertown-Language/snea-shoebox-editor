@@ -71,7 +71,7 @@ uv run python scripts/bundle_stlite.py
 # Then open dist/index.html in your browser
 
 # Deploy (production)
-# Push to main branch triggers GitHub Actions deployment
+# Push to main branch triggers Cloudflare git integration deployment
 ```
 
 ### Bootstrapping (first-time only)
@@ -81,19 +81,20 @@ uv run python scripts/bundle_stlite.py
 
 ## Architecture Details
 
-### Frontend (stlite)
-- Entry point: src/frontend/app.py
-- Deployment: Bundled into dist/index.html via scripts/bundle_stlite.py
-- Runtime: WebAssembly (Pyodide) in browser
-- State: Streamlit session state
-- API calls: httpx to backend worker
-
-### Backend (Cloudflare Worker)
+### Unified Worker (Cloudflare Worker)
+- **Single Worker serves both frontend and backend**
 - Entry point: src/backend/worker.py
 - Runtime: Cloudflare Python Workers
 - Database: D1 binding (name: "DB")
-- Assets: Serves dist/ directory (frontend)
+- Assets: Serves dist/ directory (stlite frontend bundle)
 - Concurrency: Optimistic locking with version tracking
+
+### Frontend (stlite)
+- Entry point: src/frontend/app.py
+- Deployment: Bundled into dist/index.html via scripts/bundle_stlite.py, served by Worker
+- Runtime: WebAssembly (Pyodide) in browser
+- State: Streamlit session state
+- API calls: httpx to same Worker's API endpoints
 
 ### Data Layer
 - Format: MDF (Multi-Dictionary Formatter)
@@ -227,7 +228,6 @@ Detailed security and code quality guidelines are maintained in separate files f
 
 ### Configuration Files
 - wrangler.toml: Main worker config (unified frontend + backend)
-- wrangler.backend.toml: Legacy backend-only config (if exists)
 - pyproject.toml: Python package and dependency config
 
 ## AI Role and Behavior

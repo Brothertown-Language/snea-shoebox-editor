@@ -15,11 +15,12 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 ## Tech Stack
 
-- **Frontend**: Cloudflare Pages (static site or SPA). Any JS framework (or vanilla JS) can be used; example OAuth flow provided.
-- **Backend**: Cloudflare Workers (Python/WASM runtime).
+- **Unified Worker**: Cloudflare Workers (Python/WASM runtime) serves both frontend and backend.
+- **Frontend**: stlite (Streamlit compiled to WebAssembly) runs in the browser, served as static assets by the Worker.
+- **Backend**: Python API endpoints in the same Worker handle authentication, database operations, and business logic.
 - **Database**: Cloudflare D1 (SQL database) bound to the Worker.
 - **Package Manager**: uv.
-- **Deployment**: GitHub Actions + Wrangler.
+- **Deployment**: Cloudflare git integration (automatic build and deploy on push to main).
 
 ## Requirements
 
@@ -45,12 +46,11 @@ If you are already a contributor and just need to run the app locally:
 |----------|-------------|--------|
 | `CF_API_TOKEN` | Cloudflare Account API Token (Custom Token) | Manual |
 | `GH_TOKEN` | GitHub Personal Access Token | Manual |
-| `JWT_SECRET` | Secret for JWT signing | Wrangler secret (`JWT_SECRET`) |
-| `SNEA_GITHUB_CLIENT_ID` | GitHub OAuth Client ID | Wrangler secret / Pages Project Var |
-| `SNEA_GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | Wrangler secret / Pages Project Var |
-| `SNEA_FRONTEND_URL` | Public Pages URL used as `redirect_uri` | Pages Project Var |
+| `JWT_SECRET` | Secret for JWT signing | Wrangler secret |
+| `SNEA_GITHUB_CLIENT_ID` | GitHub OAuth Client ID | Wrangler secret |
+| `SNEA_GITHUB_CLIENT_SECRET` | GitHub OAuth Client Secret | Wrangler secret |
 
-Note: For local development you may also set non-`SNEA_` fallbacks (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`, `FRONTEND_URL`) via a `.env` file. In production, use Wrangler secrets and Pages Project Variables; do not commit secrets. If your `.env` file was accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
+Note: For local development you may also set non-`SNEA_` fallbacks (`GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET`) via a `.env` file. In production, use Wrangler secrets; do not commit secrets. If your `.env` file was accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
 
 ## Scripts
 

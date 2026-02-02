@@ -76,17 +76,13 @@ Use the provided `bootstrap_env.py` script to automate the heavy lifting. **Note
 
 ### Phase 4: Custom Domain Setup (Manual)
 
-Since the app will use `snea-editor.michael-conrad.com` as the primary domain, you must link the Cloudflare Pages (apex) and Workers (subdomain) accordingly. **Note:
-Cloudflare will automatically handle the DNS records once you add these domains in the dashboard.**
+Since the app will use `snea-editor.michael-conrad.com` as the primary domain, you must link the custom domain to the unified Worker. **Note:
+Cloudflare will automatically handle the DNS records once you add the domain in the dashboard.**
 
-1. **Pages Custom Domain**:
-    - Go to **Workers & Pages** > **snea-editor** (your Pages project) > **Custom domains**.
-    - Add `snea-editor.michael-conrad.com`.
-    - Cloudflare will prompt you to "Activate" or "Setup" the DNS; click through to let it create the record.
-2. **Worker Custom Domain**:
-    - Go to **Workers & Pages** > **snea-backend** (your Worker) > **Triggers** > **Custom Domains**.
-    - Add `snea-backend.michael-conrad.com`.
-    - Cloudflare will automatically generate the DNS record for this subdomain.
+1. **Worker Custom Domain**:
+    - Go to **Workers & Pages** > **snea-editor** (your unified Worker) > **Settings** > **Domains & Routes**.
+    - Add `snea-editor.michael-conrad.com` as a custom domain.
+    - Cloudflare will automatically generate the DNS record and issue an SSL certificate.
 
 ### Phase 5: GitHub OAuth Setup (Manual)
 
@@ -191,10 +187,35 @@ To support authentication during local development, a separate GitHub OAuth appl
 ## Feature Roadmap (Upcoming)
 
 ### Phase 6: Search & Discovery
+
+**Note**: For detailed information on embedding service configuration, local development, and testing strategies, see **[EMBEDDINGS.md](EMBEDDINGS.md)**.
+
+#### Configuration Requirements
+
+Before implementing search features, configure the embedding service:
+
+1. **Production Setup**:
+    - Add Workers AI binding to `wrangler.toml`: `[ai]` with `binding = "AI"`
+    - Create Vectorize index: `wrangler vectorize create snea-embeddings --dimensions=1024 --metric=cosine`
+    - Add Vectorize binding to `wrangler.toml`: `[[vectorize]]` with `binding = "VECTORIZE"` and `index_name = "snea-embeddings"`
+
+2. **Local Development** (Docker-based, source of truth):
+    - **Primary**: Docker-based BGE-M3 embedding service with GPU acceleration (see EMBEDDINGS.md Option 1)
+      - Uses the same `BAAI/bge-m3` model as Cloudflare production
+      - Requires NVIDIA GPU with Container Toolkit
+      - Configured in `docker-compose.yml` as `embeddings` service
+      - Check GPU availability: `bash scripts/check_gpu.sh`
+      - Test service: `uv run python scripts/test_embeddings.py`
+    - **Unit Tests**: Mock embeddings for fast, deterministic tests (see EMBEDDINGS.md Option 2)
+    - **Fallback**: Remote dev worker if GPU unavailable (see EMBEDDINGS.md Option 3)
+
+#### Features
+
 1. **Unified Search Widget**: A single search interface supporting both FTS (Keyword) and Semantic (Vector) searching.
     - **Expanded Scope**: Search matches against Lexeme variants, Notes (`\nt`), and all example sentences (across all languages), in addition to `\lx` and `\ge` tags.
     - Support for "Hybrid Search" using a **combined weighted score** to rank results.
     - Embedding Model: `@cf/baai/bge-m3` for superior multilingual and sparse retrieval support (ideal for Algonquian-English code-switching).
+    - **1024 dimensions**: High-quality vector representations with cosine similarity metric.
 2. **Source Filtering**: UI components to filter records by origin source (e.g., Natick, Mohegan).
 3. **Manual Record Creation**:
     - Capability to manually add new records to any existing source.
@@ -203,6 +224,7 @@ To support authentication during local development, a separate GitHub OAuth appl
 4. **Embeddings Maintenance**:
     - **Stale Vector Handling**: When a search operation detects a `record_version` mismatch, the system will trigger a vector recalculation.
     - **Recalculation Strategy**: Recalculation will be attempted **inline** for single-record updates to ensure search accuracy, with a fallback to background processing if batch updates are detected.
+    - **Embedded Tags**: Generate embeddings for `\lx`, `\ge`, `\va`, `\nt`, and `\xv` tags with contextual information.
 
 ### Phase 7: Quality Control & Audit
 1. **Review Workflow**: Implementation of the 'approved' status to flag records as **vetted or updated**.
