@@ -27,6 +27,22 @@ services:
       streamlit:
         condition: service_started
 
+  evaluator:
+    build:
+      context: ..
+      dockerfile: docker/Dockerfile.eval
+      args:
+        USER_ID: "${USER_ID}"
+        GROUP_ID: "${GROUP_ID}"
+        USER_NAME: "${USER_NAME}"
+    volumes:
+      - ../docker.data:/app/outputs
+      - ../docker.app:/app/docker.app
+      - ../docker.cache:/home/${USER_NAME}/.cache
+    environment:
+      - TZ=EST5EDT
+    user: "${USER_ID}:${GROUP_ID}"
+
 networks:
   default:
     name: snea-default
@@ -34,3 +50,4 @@ networks:
 volumes:
   tester_venv:
   playwright_browsers:
+  eval_data:

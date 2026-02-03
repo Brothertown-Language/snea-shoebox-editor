@@ -1,9 +1,21 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- Licensed under CC BY-SA 4.0 -->
 
-# Embedding Service Configuration
+# [FUTURE FEATURE] Embedding Service Configuration
 
-This document describes the embedding service configuration for semantic search in the SNEA Shoebox Editor.
+### [DEFERRED / FUTURE FEATURE]
+Semantic search and Hugging Face integration are **NOT currently implemented** in the production application. This feature is deferred indefinitely due to budget constraints regarding dedicated inference hosting and API costs.
+
+### [STATIC CROSS-LINKING GOAL]
+The long-term goal for embeddings in the SNEA Shoebox Editor is to provide **static cross-linked semantic relationships** for linguist use (browsing and researching relationships between lemmas and glosses). 
+
+Importantly, this approach:
+- **Does NOT require live embedding** on the live site.
+- **Does NOT require keeping the database up-to-date for live vector searching**.
+
+Instead, embeddings will be used to generate static discovery aids that can be referenced by the editor without real-time AI inference.
+
+The documentation below remains for future research and implementation reference for when those static relationships are being built.
 
 ## Overview
 
@@ -12,7 +24,7 @@ The SNEA Shoebox Editor is designed to support semantic search using **pgvector*
 - **Vector Database**: pgvector extension.
 - **Model Selection**:
     - **Best free-tier model (Default)**: `intfloat/multilingual-e5-small`. Selected for strong multilingual performance, support for low-resource languages, and compatibility with the Hugging Face free-tier serverless Inference API. (384 dimensions)
-    - **Best overall model (if local GPU)**: `intfloat/multilingual-e5-base`. (768 dimensions)
+    - **Best overall model (if local GPU)**: `intfloat/multilingual-e5-large`. (1024 dimensions)
     - **Best research-grade model**: `google/mt5-base` (mean-pooled encoder embeddings). (768 dimensions)
 - **Dimensions**: 384 dimensions (for the default e5-small model).
 
@@ -65,7 +77,7 @@ To maintain a "no-charge-ever" stack and ensure perfect parity between environme
 
 ```toml
 [embedding]
-model_id = "BAAI/bge-m3"
+model_id = "intfloat/multilingual-e5-small"
 api_key = "hf_your_token_here"
 ```
 
@@ -90,3 +102,10 @@ async def generate_embedding(text: str) -> list[float]:
 ## Environment Parity
 
 Both local development and production MUST use the same Hugging Face model via the official library. This ensures that vector matches are consistent across all environments without the need for local model hosting.
+
+### Models to Avoid for Algic Languages
+
+The following models perform poorly on polysynthetic, low-resource languages and should not be used:
+- **BGE-M3**: English/Chinese-centric; tokenizer destroys Algic morphology.
+- **All-MiniLM-L6-v2**: English-only; fails on unseen morphology.
+- **BERT-base-uncased variants**: WordPiece tokenizer catastrophically fragments Algic forms.

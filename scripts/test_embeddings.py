@@ -3,7 +3,7 @@
 Test script for Hugging Face Inference API embedding service.
 
 This script verifies that the configured Hugging Face Inference API
-can generate embeddings using the BGE-M3 model.
+can generate embeddings using the multilingual-e5-small model.
 
 Usage:
     uv run python scripts/test_embeddings.py

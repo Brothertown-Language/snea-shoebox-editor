@@ -7,6 +7,10 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
 - **Python 3.10+**: Ensure you have a compatible Python version installed.
 - **uv**: Dependency management. Install with `curl -LsSf https://astral.sh/uv/install.sh | sh`.
 - **Supabase Account**: You'll need a PostgreSQL database. You can use a free Supabase project or a local PostgreSQL instance.
+- **Docker & Docker Compose**: For running the containerized environment.
+    - **Note**: Ensure BuildKit is enabled to avoid deprecation warnings.
+    - **Installation**: If missing, install the buildx plugin: `sudo apt-get update && sudo apt-get install docker-buildx`.
+    - **Configuration**: Run `export DOCKER_BUILDKIT=1` and `export COMPOSE_DOCKER_CLI_BUILD=1` in your shell, or add them to your `~/.bashrc`.
 
 ## Setup
 
@@ -32,9 +36,10 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
     redirect_uri = "http://localhost:8501"
     cookie_secret = "a-random-secret-string"
 
-    [embedding]
-    model_id = "BAAI/bge-m3"
-    api_key = "hf_your_token_here"
+    # [FUTURE FEATURE]
+    # [embedding]
+    # model_id = "BAAI/bge-m3"
+    # api_key = "hf_your_token_here"
     ```
     *Note: Register a separate GitHub OAuth App for local development with `http://localhost:8501` as the callback URL.*
 
@@ -69,8 +74,8 @@ uv run python -m unittest discover tests
 - **Database**: PostgreSQL (Supabase).
 - **Authentication**: GitHub OAuth (`streamlit-oauth`).
 - **Data Layer**: MDF (Multi-Dictionary Formatter).
-- **Embeddings**: Hugging Face Inference API (exclusive).
+- **Embeddings**: (Future Feature) Hugging Face Inference API.
 
-## Vector Search
+## Vector Search (Future Feature - Deferred)
 
-The project uses semantic search via PostgreSQL and `pgvector` on Supabase. Both local development and production use the Hugging Face Inference API for embedding generation exclusively. The developer Docker environment (`docker-compose.yml`) does not include a local embedding container to ensure perfect parity with production. Ensure your PostgreSQL instance has the `vector` extension enabled.
+The project plans to use semantic search via PostgreSQL and `pgvector` on Supabase. This feature is **currently deferred** and not implemented in the production application due to budget constraints. If implemented in the future, both local development and production will use the Hugging Face Inference API for embedding generation exclusively. The developer Docker environment (`docker-compose.yml`) does not include a local embedding container to ensure perfect parity with production. Ensure your PostgreSQL instance has the `vector` extension enabled.

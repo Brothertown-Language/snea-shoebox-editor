@@ -40,9 +40,10 @@ Before initializing the project, you must set up the hosting and database platfo
       redirect_uri = "https://[your-app-name].streamlit.app"
       cookie_secret = "a-random-secret-string"
 
-      [embedding]
-      model_id = "BAAI/bge-m3"
-      api_key = "hf_your_token_here"
+      # [FUTURE FEATURE]
+      # [embedding]
+      # model_id = "BAAI/bge-m3"
+      # api_key = "hf_your_token_here"
       ```
 
 ### Phase 2: Local Development Setup
@@ -60,9 +61,10 @@ Before initializing the project, you must set up the hosting and database platfo
       redirect_uri = "http://localhost:8501"
       cookie_secret = "a-random-secret-string"
 
-      [embedding]
-      model_id = "BAAI/bge-m3"
-      api_key = "hf_your_token_here"
+      # [FUTURE FEATURE]
+      # [embedding]
+      # model_id = "BAAI/bge-m3"
+      # api_key = "hf_your_token_here"
       ```
     - Note: You should create a separate GitHub OAuth App for local development with `http://localhost:8501` as the callback URL.
 2.  **Install Dependencies**:
@@ -114,8 +116,9 @@ Before initializing the project, you must set up the hosting and database platfo
 - Securely store session state.
 
 ### Phase 5: Search & Discovery
-- Implement full-text search (FTS) using PostgreSQL's native capabilities.
-- Explore pgvector on Supabase for semantic search.
+- Implement full-text search (FTS) using PostgreSQL's native capabilities. [ACTIVE]
+- **[DEFERRED]** Explore pgvector on Supabase for semantic search (Hugging Face integration).
+    - *Note: This feature is currently not implemented nor planned for immediate development due to budget constraints regarding dedicated inference hosting.*
 
 ### Phase 6: Quality Control & Audit
 - Implementation of the 'approved' status to flag records as vetted.

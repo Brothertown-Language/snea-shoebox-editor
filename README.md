@@ -57,8 +57,10 @@ Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Clou
 | `github_oauth.client_secret` | GitHub OAuth Client Secret |
 | `github_oauth.redirect_uri` | App callback URL |
 | `github_oauth.cookie_secret` | Secret for cookie encryption |
-| `embedding.model_id` | Hugging Face Model ID (e.g., `BAAI/bge-m3`) |
-| `embedding.api_key` | Hugging Face API Key (Token) |
+| `embedding.model_id` | (Future Feature - Deferred) Hugging Face Model ID |
+| `embedding.api_key` | (Future Feature - Deferred) Hugging Face API Key |
+
+Note: Semantic searching is a future feature and is not currently implemented nor planned for immediate implementation due to budget constraints regarding dedicated inference hosting.
 
 Note: Do not commit secrets to the repository. If secrets were accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
 
