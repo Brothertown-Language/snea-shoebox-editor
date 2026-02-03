@@ -105,22 +105,22 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ## Feature Roadmap (Upcoming)
 
-### Phase 3: Migration to PostgreSQL [CURRENT]
+### Phase 3: Migration to PostgreSQL [PENDING]
 - Port existing SQLite/D1 logic to SQLAlchemy/PostgreSQL.
 - Implement schema initialization in Supabase.
 - Migrate existing Natick/Trumbull data to the new database.
 
-### Phase 4: GitHub OAuth Integration
+### Phase 4: GitHub OAuth Integration [PENDING]
 - Implement the login flow using `streamlit-oauth`.
 - Verify user membership in authorized teams/orgs.
 - Securely store session state.
 
-### Phase 5: Search & Discovery
-- Implement full-text search (FTS) using PostgreSQL's native capabilities. [ACTIVE]
+### Phase 5: Search & Discovery [PENDING]
+- Implement full-text search (FTS) using PostgreSQL's native capabilities.
 - **[DEFERRED]** Explore pgvector on Supabase for semantic search (Hugging Face integration).
     - *Note: This feature is currently not implemented nor planned for immediate development due to budget constraints regarding dedicated inference hosting.*
 
-### Phase 6: Quality Control & Audit
+### Phase 6: Quality Control & Audit [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.
 - Admin portal for user management and audit logs.
 

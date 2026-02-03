@@ -7,10 +7,22 @@ import json
 import time
 from typing import Optional, Dict, Any, Tuple, List
 import streamlit.components.v1 as components
+
+# Add parent directory to sys.path to import from backend
+import sys
+from pathlib import Path
+sys.path.append(str(Path(__file__).parent.parent))
+
+from src.backend.database import get_session, Record, Source, init_db, User
+from src.backend.mdf_parser import parse_mdf
+from sqlalchemy import func
+
 try:
     from dotenv import load_dotenv
+    if os.path.exists(".env"):
+        load_dotenv()
 except ImportError:
-    load_dotenv = None
+    pass
 
 # Set page config for compact wide layout
 st.set_page_config(
@@ -26,6 +38,8 @@ if load_dotenv:
 
 # Configuration
 GITHUB_CLIENT_ID = st.secrets.get("github_oauth", {}).get("client_id")
+GITHUB_CLIENT_SECRET = st.secrets.get("github_oauth", {}).get("client_secret")
+GITHUB_REDIRECT_URI = st.secrets.get("github_oauth", {}).get("redirect_uri")
 
 
 def set_query_params(**params: Optional[Any]) -> None:
@@ -43,36 +57,9 @@ def get_query_params() -> Dict[str, Any]:
 
 
 def login_page() -> None:
-    """Renders the login page with GitHub OAuth button and system information."""
+    """Renders the login page with GitHub OAuth button."""
     st.title("SNEA Online Shoebox Editor")
     st.write("Welcome to the SNEA Online Shoebox Editor - A collaborative platform for editing Southern New England Algonquian language records.")
-    
-    # System Information Section
-    st.subheader("System Information")
-    
-    try:
-        with st.spinner("Loading system information..."):
-            health_response = httpx.get("/api/health", timeout=5.0)
-            
-            if health_response.status_code == 200:
-                health_data = health_response.json()
-                
-                col1, col2 = st.columns(2)
-                
-                with col1:
-                    st.markdown("**Backend Status**")
-                    st.write(f"Status: {health_data.get('status', 'unknown')}")
-                    st.write(f"Python Version: {health_data.get('python_version', 'unknown')}")
-                    st.write(f"Database: {health_data.get('database', 'unknown')}")
-                
-                with col2:
-                    st.markdown("**Software Details**")
-                    st.write(f"Runtime: Streamlit")
-                    st.write(f"Format: MDF (Multi-Dictionary Formatter)")
-            else:
-                st.warning("Could not retrieve system information from backend.")
-    except Exception as e:
-        st.warning(f"Could not connect to backend: {e}")
     
     st.divider()
     
@@ -80,70 +67,18 @@ def login_page() -> None:
     st.subheader("Authentication")
     st.write("Please log in with your GitHub account to access the editor.")
     
-    if st.button("Log in with GitHub", type="primary", use_container_width=True):
-        st.markdown(
-            """
-            <script>
-                console.log("[OAuth] Login button clicked, requesting authorization URL...");
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
-        try:
-            with st.spinner("Connecting to authentication service..."):
-                response = httpx.get("/api/oauth/login", timeout=5.0)
-            
-            st.markdown(
-                f"""
-                <script>
-                    console.log("[OAuth] Authorization URL response status:", {response.status_code});
-                </script>
-                """,
-                unsafe_allow_html=True
-            )
-            
-            if response.status_code == 200:
-                data = response.json()
-                auth_url = data.get("authorize_url") or data.get("url")
-                
-                if auth_url:
-                    st.markdown(f'''
-                        <script>
-                            console.log("[OAuth] Redirecting to GitHub authorization:", "{auth_url[:50]}...");
-                            window.parent.location.href = "{auth_url}";
-                        </script>
-                        <a href="{auth_url}" target="_parent">Click here to login with GitHub</a> (Redirecting...)
-                    ''', unsafe_allow_html=True)
-                else:
-                    st.markdown(
-                        """
-                        <script>
-                            console.error("[OAuth] No authorization URL in response");
-                        </script>
-                        """,
-                        unsafe_allow_html=True
-                    )
-                    st.error("Failed to get authorization URL from backend.")
-            else:
-                st.markdown(
-                    f"""
-                    <script>
-                        console.error("[OAuth] Backend error:", {response.status_code});
-                    </script>
-                    """,
-                    unsafe_allow_html=True
-                )
-                st.error(f"Backend error: {response.status_code}")
-        except Exception as e:
-            st.markdown(
-                f"""
-                <script>
-                    console.error("[OAuth] Exception during login:", "{str(e)}");
-                </script>
-                """,
-                unsafe_allow_html=True
-            )
-            st.error(f"An unexpected error occurred: {e}")
+    if not GITHUB_CLIENT_ID:
+        st.error("GitHub OAuth Client ID not configured. Please check Streamlit secrets.")
+        return
+
+    # Construct GitHub OAuth URL
+    state = str(int(time.time()))
+    scope = "read:user user:email read:org"
+    auth_url = f"https://github.com/login/oauth/authorize?client_id={GITHUB_CLIENT_ID}&redirect_uri={GITHUB_REDIRECT_URI}&scope={scope}&state={state}"
+    
+    st.link_button("Log in with GitHub", auth_url, type="primary", use_container_width=True)
+    
+    st.info("Note: Access is restricted to authorized members of the Brothertown Language project.")
 
 
 def _extract_oauth_params() -> Tuple[Optional[str], Optional[str]]:
@@ -173,40 +108,77 @@ def _clear_oauth_params() -> None:
             st.query_params[k] = v
 
 
-def _exchange_oauth_token(code: str, state: str) -> Optional[httpx.Response]:
-    """Exchanges OAuth code for access token via backend."""
+def _exchange_oauth_token(code: str, state: str) -> Optional[str]:
+    """Exchanges OAuth code for access token."""
     try:
         response = httpx.post(
-            "/api/oauth/callback",
-            json={"code": code, "state": state},
-            timeout=30.0
+            "https://github.com/login/oauth/access_token",
+            headers={"Accept": "application/json"},
+            data={
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "code": code,
+                "redirect_uri": GITHUB_REDIRECT_URI
+            },
+            timeout=10.0
         )
-        return response
+        if response.status_code == 200:
+            return response.json().get("access_token")
+        else:
+            st.error(f"Failed to exchange token: {response.text}")
     except Exception as e:
-        st.error(f"Error during login: {e}")
-        return None
+        st.error(f"Error during token exchange: {e}")
+    return None
+
+
+def _get_github_user(token: str) -> Optional[Dict[str, Any]]:
+    """Fetches user details from GitHub API."""
+    try:
+        response = httpx.get(
+            "https://api.github.com/user",
+            headers={"Authorization": f"token {token}", "Accept": "application/json"},
+            timeout=10.0
+        )
+        if response.status_code == 200:
+            return response.json()
+    except Exception as e:
+        st.error(f"Error fetching user: {e}")
+    return None
 
 
 def _store_session(user: Dict[str, Any], token: str) -> None:
-    """Stores user session in session state and browser localStorage."""
+    """Stores user session in session_state and optionally localStorage."""
     st.session_state.user = user
     st.session_state.token = token
     
-    # Store in localStorage for persistence across browser restarts
-    # Browser storage for session restoration
-    user_json = json.dumps(user)
-    st.markdown(
-        f"""
-        <div style="display:none">
-            <script>
-                localStorage.setItem("snea_session_token", "{token}");
-                localStorage.setItem("snea_session_user", '{user_json}');
-                console.log("Session stored in localStorage");
-            </script>
-        </div>
-        """,
-        unsafe_allow_html=True
-    )
+    # Save user to database
+    session = get_session()
+    try:
+        db_user = session.query(User).filter(User.github_id == user.get("id")).first()
+        if not db_user:
+            db_user = User(
+                email=user.get("email") or f"{user.get('login')}@users.noreply.github.com",
+                github_id=user.get("id"),
+                username=user.get("login"),
+                name=user.get("name")
+            )
+            session.add(db_user)
+        
+        db_user.last_login = func.now()
+        session.commit()
+    except Exception as e:
+        st.warning(f"Failed to sync user to database: {e}")
+    finally:
+        session.close()
+
+    # Bridge to localStorage
+    user_json = json.dumps(user).replace('"', '\\"')
+    st.markdown(f"""
+        <script>
+            localStorage.setItem("snea_session_token", "{token}");
+            localStorage.setItem("snea_session_user", JSON.stringify({json.dumps(user)}));
+        </script>
+    """, unsafe_allow_html=True)
 
 
 def _display_login_error(response: httpx.Response) -> None:
@@ -235,90 +207,24 @@ def handle_callback() -> None:
     if not code or not state:
         return
     
-    # Log OAuth callback start
-    st.markdown(
-        """
-        <script>
-            console.log("[OAuth] Callback handler started");
-            console.log("[OAuth] Code present:", window.location.search.includes("code"));
-            console.log("[OAuth] State present:", window.location.search.includes("state"));
-        </script>
-        """,
-        unsafe_allow_html=True
-    )
-    
     _clear_oauth_params()
     
     with st.spinner("Logging in..."):
-        st.markdown(
-            """
-            <script>
-                console.log("[OAuth] Exchanging code for token...");
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        response = _exchange_oauth_token(code, state)
-        if not response:
-            st.markdown(
-                """
-                <script>
-                    console.error("[OAuth] Token exchange failed - no response");
-                </script>
-                """,
-                unsafe_allow_html=True
-            )
+        token = _exchange_oauth_token(code, state)
+        if not token:
+            st.error("Login failed: Could not exchange OAuth code for access token.")
             return
         
-        st.markdown(
-            f"""
-            <script>
-                console.log("[OAuth] Token exchange response status:", {response.status_code});
-            </script>
-            """,
-            unsafe_allow_html=True
-        )
-        
-        if response.status_code == 200:
-            data = response.json()
-            user = data.get("user")
-            token = data.get("token")
-            
-            if user and token:
-                st.markdown(
-                    f"""
-                    <script>
-                        console.log("[OAuth] Login successful for user:", "{user.get('login', 'unknown')}");
-                    </script>
-                    """,
-                    unsafe_allow_html=True
-                )
-                _store_session(user, token)
-                st.success("Logged in successfully! Redirecting...")
-                time.sleep(1)
-                st.rerun()
-            else:
-                st.markdown(
-                    """
-                    <script>
-                        console.error("[OAuth] Backend returned success but no user data");
-                    </script>
-                    """,
-                    unsafe_allow_html=True
-                )
-                st.error("Login failed: Backend returned success but no user data.")
-                st.json(data)
+        user = _get_github_user(token)
+        if user:
+            # Check organization membership (Optional, but recommended)
+            # For now, we'll just store the session
+            _store_session(user, token)
+            st.success(f"Logged in as {user.get('login')}! Redirecting...")
+            time.sleep(0.5)
+            st.rerun()
         else:
-            st.markdown(
-                f"""
-                <script>
-                    console.error("[OAuth] Login failed with status:", {response.status_code});
-                </script>
-                """,
-                unsafe_allow_html=True
-            )
-            _display_login_error(response)
+            st.error("Login failed: Could not fetch user details from GitHub.")
 
 def parse_mdf(mdf_text: str) -> Tuple[str, int, str, str]:
     """Simple MDF parser to extract lx, hm, ps, ge."""
@@ -351,6 +257,40 @@ def parse_mdf(mdf_text: str) -> Tuple[str, int, str, str]:
         ge = ge_match.group(1).strip()
         
     return lx, hm, ps, ge
+
+
+def _handle_file_upload(source_id: int):
+    """Handles MDF file upload and record creation."""
+    uploaded_file = st.file_uploader("Upload MDF File", type=["txt", "mdf"])
+    if uploaded_file is not None:
+        content = uploaded_file.getvalue().decode("utf-8")
+        records = parse_mdf(content)
+        if not records:
+            st.warning("No records found in the uploaded file.")
+            return
+
+        session = get_session()
+        try:
+            count = 0
+            for r in records:
+                db_record = Record(
+                    source_id=source_id,
+                    lx=r['lx'],
+                    ps=r['ps'],
+                    ge=r['ge'],
+                    mdf_data=r['mdf_data'],
+                    status='draft'
+                )
+                session.add(db_record)
+                count += 1
+            session.commit()
+            st.success(f"Successfully uploaded {count} records!")
+            st.rerun()
+        except Exception as e:
+            session.rollback()
+            st.error(f"Error uploading: {e}")
+        finally:
+            session.close()
 
 
 def _render_sidebar(user: Dict[str, Any], current_page: int, page_size: int, 
@@ -411,31 +351,40 @@ def _render_sidebar(user: Dict[str, Any], current_page: int, page_size: int,
 
 
 def _fetch_total_count(headers: Dict[str, str]) -> int:
-    """Fetches total record count from backend."""
+    """Fetches total record count from database."""
+    session = get_session()
     try:
-        count_res = httpx.get("/api/records/count", headers=headers, timeout=5.0)
-        if count_res.status_code == 200:
-            return count_res.json().get("count", 0)
-    except Exception:
-        pass
-    return 0
+        count = session.query(func.count(Record.id)).filter(Record.is_deleted == False).scalar()
+        return count or 0
+    except Exception as e:
+        st.error(f"Error fetching count: {e}")
+        return 0
+    finally:
+        session.close()
 
 
 def _fetch_records(headers: Dict[str, str], limit: int, offset: int) -> List[Dict[str, Any]]:
-    """Fetches paginated records from backend."""
+    """Fetches paginated records from database."""
+    session = get_session()
     try:
-        response = httpx.get(f"/api/records?limit={limit}&offset={offset}", headers=headers, timeout=10.0)
-        if response.status_code == 200:
-            return response.json()
-        elif response.status_code == 401:
-            st.error("Session expired. Please log in again.")
-            del st.session_state.user
-            st.rerun()
-        else:
-            st.error(f"Failed to fetch records: {response.status_code}")
+        records = session.query(Record).filter(Record.is_deleted == False)\
+            .order_by(Record.lx)\
+            .offset(offset).limit(limit).all()
+        
+        return [
+            {
+                "id": r.id,
+                "lx": r.lx,
+                "ps": r.ps,
+                "ge": r.ge,
+                "mdf_data": r.mdf_data
+            } for r in records
+        ]
     except Exception as e:
         st.error(f"Error fetching records: {e}")
-    return []
+        return []
+    finally:
+        session.close()
 
 
 def _render_records_list(records: List[Dict[str, Any]]) -> None:
@@ -467,34 +416,36 @@ def _find_default_record_index(records: List[Dict[str, Any]], selected_record_id
 
 
 def _update_record(record_id: int, mdf_data: str, headers: Dict[str, str]) -> None:
-    """Updates a record via backend API."""
+    """Updates a record in the database."""
     lx, hm, ps, ge = parse_mdf(mdf_data)
     
     if not lx:
         st.error("Missing \\lx tag in record.")
         return
     
-    update_payload = {
-        "lx": lx,
-        "ps": ps,
-        "ge": ge,
-        "mdf_data": mdf_data
-    }
-    
+    session = get_session()
     try:
-        update_res = httpx.post(
-            f"/api/records/{record_id}",
-            json=update_payload,
-            headers=headers,
-            timeout=10.0
-        )
-        if update_res.status_code == 200:
-            st.success("Record updated!")
-            st.rerun()
-        else:
-            st.error(f"Failed to update: {update_res.text}")
+        record = session.query(Record).filter(Record.id == record_id).first()
+        if not record:
+            st.error("Record not found.")
+            return
+
+        # Update fields
+        record.lx = lx
+        record.ps = ps
+        record.ge = ge
+        record.mdf_data = mdf_data
+        record.updated_by = st.session_state.user.get("login") if "user" in st.session_state else "anonymous"
+        record.current_version += 1
+        
+        session.commit()
+        st.success("Record updated!")
+        st.rerun()
     except Exception as e:
+        session.rollback()
         st.error(f"Error updating: {e}")
+    finally:
+        session.close()
 
 
 def _render_record_editor(records: List[Dict[str, Any]], query_params: Dict[str, Any], 
@@ -561,12 +512,37 @@ def main_app() -> None:
     total_count = _fetch_total_count(headers)
     records = _fetch_records(headers, page_size, offset)
 
+    # Render sidebar
+    _render_sidebar(user, current_page, page_size, total_count, len(records), offset)
+
+    # Admin: File Upload Tool
+    if st.sidebar.checkbox("Show Upload Tool"):
+        st.sidebar.markdown("---")
+        st.sidebar.subheader("Import Records")
+        
+        # Get list of sources
+        session = get_session()
+        sources = session.query(Source).all()
+        session.close()
+        
+        if not sources:
+            st.sidebar.warning("No sources defined in database.")
+            if st.sidebar.button("Create Default Source"):
+                session = get_session()
+                default_source = Source(name="Natick/Trumbull", description="Trumbull's Natick Dictionary")
+                session.add(default_source)
+                session.commit()
+                session.close()
+                st.rerun()
+        else:
+            source_options = {s.name: s.id for s in sources}
+            selected_source_name = st.sidebar.selectbox("Target Source", options=list(source_options.keys()))
+            source_id = source_options[selected_source_name]
+            _handle_file_upload(source_id)
+
     if not records and current_page == 0:
         st.info("No records found.")
         return
-
-    # Render sidebar
-    _render_sidebar(user, current_page, page_size, total_count, len(records), offset)
 
     # View routing
     view = query_params.get("view", "edit")
@@ -654,4 +630,9 @@ def main() -> None:
         main_app()
 
 if __name__ == "__main__":
+    try:
+        init_db()
+    except Exception as e:
+        # Fallback for local dev if DATABASE_URL is missing
+        pass
     main()
