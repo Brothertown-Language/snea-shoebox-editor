@@ -70,3 +70,9 @@ tmp/
 
 # Data files
 src/backend/seed_data/natick.txt
+
+# Docker runtime data
+docker.data/
+docker.cache/
+docker.reports/
+docker.app/
