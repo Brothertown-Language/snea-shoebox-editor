@@ -12,11 +12,11 @@ Defines the different collections of records (e.g., Natick/Trumbull, Modern Mohe
 
 ```sql
 CREATE TABLE sources (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     name TEXT UNIQUE NOT NULL,            -- e.g., 'Natick/Trumbull', 'Modern Mohegan'
     description TEXT,                     -- Details about the original source
     citation_format TEXT,                 -- Optional: Standard citation format for this source
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -25,7 +25,7 @@ The source of truth for all linguistic entries in MDF format.
 
 ```sql
 CREATE TABLE records (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     source_id INTEGER NOT NULL,           -- Link to the origin source (Natick, Mohegan, etc.)
     lx TEXT NOT NULL,                     -- Lexeme (\lx): Main headword
     ps TEXT,                              -- Part of Speech (\ps)
@@ -34,10 +34,10 @@ CREATE TABLE records (
     status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', or 'approved'
     source_page TEXT,                     -- Page or section number in the main source
     current_version INTEGER NOT NULL DEFAULT 1, -- For optimistic locking and versioning
-    is_deleted INTEGER NOT NULL DEFAULT 0, -- Soft delete flag (0=active, 1=deleted)
-    updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE, -- Soft delete flag
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     updated_by TEXT,                      -- Identifier (email/ID) of last editor
-    reviewed_at DATETIME,                 -- When the record was marked 'approved'
+    reviewed_at TIMESTAMP WITH TIME ZONE,                 -- When the record was marked 'approved'
     reviewed_by TEXT,                     -- Identifier of the reviewer
     FOREIGN KEY (source_id) REFERENCES sources(id)
 );
@@ -47,8 +47,9 @@ CREATE INDEX idx_records_source_status ON records(source_id, status);
 CREATE INDEX idx_records_deleted ON records(is_deleted);
 ```
 
-### `embeddings` [STATUS: APPROVED]
-Supports AI-based semantic search by storing vectors for various parts of a record.
+### `embeddings` [STATUS: DEFERRED / FUTURE FEATURE]
+Supports AI-based semantic search by storing vectors for various parts of a record. 
+*Note: This table is part of a future feature and is not currently used in the production application.*
 
 ```sql
 CREATE TABLE embeddings (
@@ -87,14 +88,14 @@ Tracks every change made to a record for audit trails and rollback capability.
 
 ```sql
 CREATE TABLE edit_history (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     record_id INTEGER NOT NULL,           -- Link to parent record
     version INTEGER NOT NULL,             -- Version number resulting from this edit
     prev_data TEXT,                       -- MDF snapshot BEFORE the change
     current_data TEXT NOT NULL,           -- MDF snapshot AFTER the change
     user_id TEXT NOT NULL,                -- Identifier of the editor
     change_summary TEXT,                  -- Optional human-readable summary of changes
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
 );
 
@@ -110,13 +111,13 @@ Stores user identity metadata from GitHub OAuth.
 
 ```sql
 CREATE TABLE users (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     email TEXT UNIQUE NOT NULL,
     github_id INTEGER UNIQUE NOT NULL,
     username TEXT UNIQUE NOT NULL,        -- GitHub handle
     name TEXT,                            -- Display name
-    last_login DATETIME,
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    last_login TIMESTAMP WITH TIME ZONE,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -125,12 +126,12 @@ Tracks general user actions for security and usage analytics (distinct from MDF 
 
 ```sql
 CREATE TABLE user_activity_log (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     user_id INTEGER NOT NULL,
     action TEXT NOT NULL,         -- e.g., 'login', 'logout', 'view_record', 'delete_record'
     details TEXT,                 -- JSON or string with extra info
     ip_address TEXT,              -- Optional, for audit
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
 );
 
@@ -142,12 +143,12 @@ Maps GitHub Organizations and Teams to application roles and sources.
 
 ```sql
 CREATE TABLE permissions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    id SERIAL PRIMARY KEY,
     source_id INTEGER,                   -- Link to specific source (NULL = all sources)
     github_org TEXT NOT NULL,             -- GitHub Organization name
     github_team TEXT,                    -- GitHub Team slug (NULL = all org members)
     role TEXT NOT NULL DEFAULT 'viewer',  -- 'admin', 'editor', 'viewer'
-    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
 );
 

@@ -67,3 +67,6 @@ tmp/
 *token*
 !docs/**/*token*
 !**/plan_*token*
+
+# Data files
+src/backend/seed_data/natick.txt
