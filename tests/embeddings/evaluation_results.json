@@ -1,0 +1,9 @@
+[
+  {
+    "model_id": "intfloat/multilingual-e5-small",
+    "scores": {
+      "lg_alignment": 0.5,
+      "tokenization": 8.0,
+      "finetuning": 8.0,
+      "variant_clustering": 7.0,
+      "negative_control": 

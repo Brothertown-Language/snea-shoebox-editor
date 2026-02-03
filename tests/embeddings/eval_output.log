@@ -1,0 +1,95 @@
+Downloading pandas (11.8MiB)
+Downloading pygments (1.2MiB)
+Downloading psycopg2-binary (4.0MiB)
+Downloading sqlalchemy (3.2MiB)
+Downloading numpy (15.6MiB)
+Downloading virtualenv (5.7MiB)
+Downloading pillow (6.7MiB)
+Downloading pydeck (6.6MiB)
+Downloading streamlit (8.7MiB)
+Downloading pyarrow (45.4MiB)
+Downloading ruff (10.7MiB)
+Downloading cryptography (4.2MiB)
+Downloading pynacl (1.3MiB)
+ Downloaded pynacl
+ Downloaded pygments
+ Downloaded psycopg2-binary
+ Downloaded sqlalchemy
+ Downloaded cryptography
+ Downloaded virtualenv
+ Downloaded pydeck
+ Downloaded pillow
+ Downloaded ruff
+ Downloaded streamlit
+ Downloaded numpy
+ Downloaded pandas
+ Downloaded pyarrow
+Uninstalled 2 packages in 107ms
+Installed 56 packages in 112ms
+2026-02-03 00:06:13,330 - INFO - 
+====================
+Evaluating: Qwen/Qwen3-Embedding-8B
+====================
+2026-02-03 00:06:18,417 - INFO - HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-Embedding-8B/resolve/main/config.json "HTTP/1.1 307 Temporary Redirect"
+2026-02-03 00:06:18,426 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/config.json "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,437 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/config.json "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,482 - INFO - HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-Embedding-8B/resolve/main/tokenizer_config.json "HTTP/1.1 307 Temporary Redirect"
+2026-02-03 00:06:18,490 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,500 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/tokenizer_config.json "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,540 - INFO - HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-Embedding-8B/tree/main/additional_chat_templates?recursive=false&expand=false "HTTP/1.1 404 Not Found"
+2026-02-03 00:06:18,577 - INFO - HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-Embedding-8B/tree/main?recursive=true&expand=false "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,621 - INFO - HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-Embedding-8B/resolve/main/vocab.json "HTTP/1.1 307 Temporary Redirect"
+2026-02-03 00:06:18,631 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/vocab.json "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,641 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/vocab.json "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,741 - INFO - HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-Embedding-8B/resolve/main/merges.txt "HTTP/1.1 307 Temporary Redirect"
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-02-03 00:06:18,742 - WARNING - Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-02-03 00:06:18,751 - INFO - HTTP Request: HEAD https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/merges.txt "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,763 - INFO - HTTP Request: GET https://huggingface.co/api/resolve-cache/models/Qwen/Qwen3-Embedding-8B/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af/merges.txt "HTTP/1.1 200 OK"
+2026-02-03 00:06:18,809 - INFO - HTTP Request: HEAD https://huggingface.co/Qwen/Qwen3-Embedding-8B/resolve/main/tokenizer.json "HTTP/1.1 302 Found"
+2026-02-03 00:06:18,854 - INFO - HTTP Request: GET https://huggingface.co/api/models/Qwen/Qwen3-Embedding-8B/xet-read-token/1d8ad4ca9b3dd8059ad90a75d4983776a23d44af "HTTP/1.1 200 OK"
+Cancellation requested; stopping current tasks.
+Traceback (most recent call last):
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 588, in xet_get
+    download_files(
+KeyboardInterrupt
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/app/tests/embeddings/evaluate_models.py", line 195, in <module>
+    main()
+  File "/app/tests/embeddings/evaluate_models.py", line 150, in main
+    res = evaluate_model(model_id, test_data)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/app/tests/embeddings/evaluate_models.py", line 38, in evaluate_model
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/transformers/models/auto/tokenization_auto.py", line 702, in from_pretrained
+    return tokenizer_class.from_pretrained(pretrained_model_name_or_path, *inputs, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/transformers/tokenization_utils_base.py", line 1720, in from_pretrained
+    resolved_vocab_files[file_id] = cached_file(
+                                    ^^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/transformers/utils/hub.py", line 276, in cached_file
+    file = cached_files(path_or_repo_id=path_or_repo_id, filenames=[filename], **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/transformers/utils/hub.py", line 419, in cached_files
+    hf_hub_download(
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py", line 89, in _inner_fn
+    return fn(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1024, in hf_hub_download
+    return _hf_hub_download_to_cache_dir(
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1240, in _hf_hub_download_to_cache_dir
+    _download_to_tmp_and_move(
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 1864, in _download_to_tmp_and_move
+    xet_get(
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/huggingface_hub/file_download.py", line 583, in xet_get
+    with progress_cm as progress:
+         ^^^^^^^^^^^
+  File "/home/muksihs/.venv_eval/lib/python3.12/site-packages/tqdm/std.py", line 1138, in __exit__
+    def __exit__(self, exc_type, exc_value, traceback):
+
+KeyboardInterrupt
