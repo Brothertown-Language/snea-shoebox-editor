@@ -14,6 +14,7 @@ Next Steps:
 - [PENDING] Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
 - Re-implement Database integration in the new Streamlit app (Aiven secrets added).
 - Re-implement GitHub OAuth flow.
+- Committed and pushed infrastructure and roadmap updates to main.
 
 Critical Reminder:
 - Do not mark things as done until the User says they are done. AI is not driving this project.
