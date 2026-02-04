@@ -29,3 +29,4 @@ Completed Tasks:
 - ADDED Environment information display to `src/frontend/app.py`.
 - DEPLOYED app to `https://snea-edit.streamlit.app/`.
 - REMOVED defunct deployment exclusion mechanism (Streamlit Cloud does not support exclusions).
+- ADDED DNS resolution and socket reachability checks for PostgreSQL to the landing page.

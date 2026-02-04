@@ -48,7 +48,11 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ### Phase 2: Local Development Setup [PENDING]
 
-1.  **Initialize Environment**:
+1.  **Connectivity Checks**:
+    - The application now includes built-in DNS and socket reachability checks for the database. 
+    - Verify these on the system status page BEFORE troubleshooting SQL connection issues.
+
+2.  **Initialize Environment**:
     - Clone the repository.
     - Create a `.streamlit/secrets.toml` file (ignored by git) and paste the same secrets used in Streamlit Cloud, but with local redirect URIs:
       ```toml
