@@ -7,15 +7,20 @@ This guide provides instructions for setting up the production environment for t
 The application is hosted on **Streamlit Community Cloud**.
 
 ### Organization Repository Access
-Since this repository is part of a GitHub Organization, you must grant Streamlit access to the organization's repositories:
+Since this repository is part of a GitHub Organization, access must be granted at the Organization level:
 
+#### Option A: If you are an Organization Owner
+1.  Go to your **Organization Settings** (click your profile picture -> **Your organizations** -> click the gear icon next to your Org).
+2.  In the left sidebar, go to **Third-party access** -> **GitHub Apps**.
+3.  If **Streamlit** is listed, click **Configure** and ensure it has access to the correct repository.
+4.  If it is NOT listed, follow the **Personal Settings** flow below to "Request" access.
+
+#### Option B: Via Personal Settings (Requesting access)
 1.  **Direct Link**: Go to [**GitHub Settings > Applications > Authorized GitHub Apps**](https://github.com/settings/applications).
-    - *Alternatively*: Click your profile picture -> **Settings** -> **Applications** (in the left sidebar) -> **Authorized GitHub Apps**.
-2.  Find **Streamlit** in the list and click **Configure**.
-3.  Scroll down to the **Organization access** section.
-4.  Find your organization (e.g., `Brothertown-Language`) and click **Grant**.
-    - If you are not an owner, click **Request**; an admin must then approve it in the organization settings.
-5.  Once granted, the repository will be available in the "Create app" list on [Streamlit Community Cloud](https://share.streamlit.app/).
+2.  Find **Streamlit** and click **Configure**.
+3.  Scroll to **Organization access**.
+4.  Find the organization and click **Grant** (or **Request**). 
+    - If you click **Request**, an owner must approve it in the "Third-party access" section mentioned above.
 
 ### Deployment Settings
 - **Main file path**: `src/frontend/app.py`
