@@ -7,6 +7,11 @@ import glob
 import platform
 import fnmatch
 
+try:
+    import tomllib
+except ImportError:
+    import tomli as tomllib
+
 def check_supabase_connection():
     """Checks the Supabase connection and returns status and details."""
     try:
@@ -45,43 +50,45 @@ def get_env_info():
 
 def verify_deployment_exclusions():
     """
-    Verifies that files and directories listed in .streamlitignore 
-    are not present in the current environment.
+    Verifies that files and directories listed in .streamlit/config.toml
+    under [server] exclude_pattern are not present in the current environment.
     
     Returns a list of (pattern, exists, type) tuples.
     """
     results = []
-    ignore_file = ".streamlitignore"
+    config_file = ".streamlit/config.toml"
     
-    if not os.path.exists(ignore_file):
+    if not os.path.exists(config_file):
         return results
 
     try:
-        with open(ignore_file, "r") as f:
-            lines = f.readlines()
+        with open(config_file, "rb") as f:
+            config = tomllib.load(f)
             
-        for line in lines:
-            line = line.strip()
-            # Skip comments and empty lines
-            if not line or line.startswith("#"):
-                continue
+        exclude_pattern = config.get("server", {}).get("exclude_pattern", "")
+        if not exclude_pattern:
+            return results
             
-            # Remove trailing slash for existence check if it's a directory pattern
-            clean_pattern = line.rstrip('/')
+        # Patterns are comma-separated
+        patterns = [p.strip() for p in exclude_pattern.split(",")]
             
-            # Use glob to handle patterns if they contain wildcards
+        for pattern in patterns:
+            # Remove trailing slash and recursive glob marker for existence check
+            clean_pattern = pattern.rstrip('/').replace('/**', '')
+            
+            # Use glob to handle patterns
             matches = glob.glob(clean_pattern)
             
             if matches:
                 for match in matches:
                     item_type = "Dir" if os.path.isdir(match) else "File"
-                    results.append((line, True, item_type))
+                    results.append((pattern, True, item_type))
             else:
                 # If no matches, it's successfully ignored (absent)
-                results.append((line, False, "Unknown"))
+                results.append((pattern, False, "Unknown"))
                 
     except Exception as e:
-        st.error(f"Error reading .streamlitignore: {e}")
+        st.error(f"Error reading .streamlit/config.toml: {e}")
         
     return results
 
@@ -127,7 +134,7 @@ def main():
     is_cloud = is_streamlit_cloud()
     
     if not exclusion_results:
-        st.warning("No `.streamlitignore` file found or it is empty.")
+        st.warning("No deployment exclusion patterns found in `.streamlit/config.toml`.")
     else:
         found_any = any(exists for _, exists, _ in exclusion_results)
         
@@ -135,7 +142,7 @@ def main():
             if is_cloud:
                 st.error("❌ Warning: Some development files are present in this PRODUCTION environment.")
                 icon = "❌"
-                status_msg = "These files should be excluded from production."
+                status_msg = "These files should be excluded from production via `server.exclude_pattern`."
             else:
                 st.info("ℹ️ Development files are present (Normal for local development).")
                 icon = "📁"
@@ -151,7 +158,7 @@ def main():
                 st.divider()
                 st.write(status_msg)
         else:
-            st.success("✅ All files in `.streamlitignore` are successfully excluded.")
+            st.success("✅ All files in `server.exclude_pattern` are successfully excluded.")
 
     st.divider()
     st.info("The application is being prepared for further development.")

@@ -27,16 +27,22 @@ Since this repository is part of a GitHub Organization, access must be granted a
 - **App URL**: `https://snea-edit.streamlit.app` (If this is taken, use `snea-editor.streamlit.app` and update secrets/OAuth settings accordingly).
 
 ### Managing Excluded Files
-The project contains development-only files (tests, documentation, docker configs) that are not needed in the production app. We manage this using a `.streamlitignore` file in the root directory.
+The project contains development-only files (tests, documentation, docker configs) that are not needed in the production app. We manage this using the official Streamlit `server.exclude_pattern` configuration in `.streamlit/config.toml`.
 
-Streamlit Community Cloud typically uses `.gitignore` to determine which files to ignore. For finer control over deployment-only exclusions, ensure `.streamlitignore` is kept up to date with directories or files that should not be uploaded to the cloud environment.
+Streamlit Community Cloud uses this pattern to determine which files to ignore during the build and deployment process. Ensure this file is kept up to date with any new development-only artifacts.
+
+Example `.streamlit/config.toml`:
+```toml
+[server]
+exclude_pattern = "docs/**, tests/**, .junie/**, ..."
+```
 
 ### Verification of Exclusions
-The application includes a built-in verification mechanism to ensure that development-only files listed in `.streamlitignore` are indeed absent from the production environment. 
+The application includes a built-in verification mechanism to ensure that development-only files listed in `server.exclude_pattern` are indeed absent from the production environment. 
 - In the **System Status** page of the app, look for the **Deployment Integrity (Exclusion Check)** section.
-- On Streamlit Community Cloud, this section should ideally show a success message (✅ All files in `.streamlitignore` are successfully excluded).
+- On Streamlit Community Cloud, this section should ideally show a success message (✅ All files in `server.exclude_pattern` are successfully excluded).
 - During local development, it will show an info message (ℹ️ Development files are present) because these files are necessary for your local workflow.
-- **Note**: Essential files like `pyproject.toml` and `uv.lock` are NOT included in the exclusion check as they are required for deployment.
+- **Note**: Essential files like `pyproject.toml` and `uv.lock` must NOT be included in the exclusion check as they are required for deployment.
 
 ### Troubleshooting: "Subdomain Taken" Error
 If your deployment failed and you now see "Subdomain taken" when trying to re-create it:

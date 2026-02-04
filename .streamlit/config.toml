@@ -1,0 +1,4 @@
+[server]
+# Patterns to exclude from Streamlit Cloud deployment
+# Note: Streamlit uses standard glob syntax. ** matches directories recursively.
+exclude_pattern = "docs/**, documentation/**, tests/**, scripts/**, CONTRIBUTING.md, LICENSE, .junie/**, .idea/**, .ruff_cache/**, .pre-commit-config.yaml, docker/**, docker.app/**, docker.cache/**, docker.data/**, docker.reports/**, .dockerignore, node_modules/**, __pycache__/**, .venv/**, .temp_venv/**, .pytest_cache/**, test_results.log, test_results_final.log, tmp/**, .env, .env.example"
