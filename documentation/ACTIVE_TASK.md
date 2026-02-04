@@ -4,6 +4,7 @@
 Date: 2026-02-03
 
 - Updated AI guidelines with a new critical rule: "DO NOT USE SHELL REDIRECTS - THEY ARE DANGEROUS".
+- Reorganized AI guidelines into a modular set of uncompressed files in `.junie/`.
 - Reset the Streamlit application to start from scratch.
 - Cleared `src/frontend/app.py` and replaced it with a minimal "Hello World" structure.
 - All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
