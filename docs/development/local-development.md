@@ -6,7 +6,7 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
 
 - **Python 3.10+**: Ensure you have a compatible Python version installed.
 - **uv**: Dependency management. Install with `curl -LsSf https://astral.sh/uv/install.sh | sh`.
-- **Supabase Account**: You'll need a PostgreSQL database. You can use a free Supabase project or a local PostgreSQL instance.
+- **Aiven Account**: You'll need a PostgreSQL database. You can use a free Aiven project or a local PostgreSQL instance.
 - **Docker & Docker Compose**: For running the containerized environment.
     - **Note**: Ensure BuildKit is enabled to avoid deprecation warnings.
     - **Installation**: If missing, install the buildx plugin: `sudo apt-get update && sudo apt-get install docker-buildx`.
@@ -28,7 +28,7 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
 3.  **Configure local secrets**: Create `.streamlit/secrets.toml` in the project root:
     ```toml
     [connections.postgresql]
-    url = "postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-ID].supabase.co:5432/postgres"
+    url = "postgresql://avnadmin:[YOUR-PASSWORD]@[YOUR-SERVICE-NAME]-[YOUR-PROJECT-NAME].aivencloud.com:[YOUR-PORT]/defaultdb?sslmode=require"
 
     [github_oauth]
     client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
@@ -55,10 +55,10 @@ The app should now be accessible at `http://localhost:8501`.
 
 ## Database Management
 
-Since we are using Supabase (PostgreSQL), the application is responsible for initializing its own schema. 
+Since we are using Aiven (PostgreSQL), the application is responsible for initializing its own schema. 
 
 - On startup, the app checks if the required tables exist and creates them if necessary.
-- You can inspect the database directly via the Supabase dashboard.
+- You can inspect the database directly via the Aiven console.
 
 ## Running Tests
 
@@ -71,11 +71,11 @@ uv run python -m unittest discover tests
 ## Architecture Details
 
 - **Frontend/Backend**: Streamlit Community Cloud (standard Python server execution).
-- **Database**: PostgreSQL (Supabase).
+- **Database**: PostgreSQL (Aiven).
 - **Authentication**: GitHub OAuth (`streamlit-oauth`).
 - **Data Layer**: MDF (Multi-Dictionary Formatter).
 - **Embeddings**: (Future Feature) Hugging Face Inference API.
 
 ## Vector Search (Future Feature - Deferred)
 
-The project plans to use semantic search via PostgreSQL and `pgvector` on Supabase. This feature is **currently deferred** and not implemented in the production application due to budget constraints. If implemented in the future, both local development and production will use the Hugging Face Inference API for embedding generation exclusively. The developer Docker environment (`docker-compose.yml`) does not include a local embedding container to ensure perfect parity with production. Ensure your PostgreSQL instance has the `vector` extension enabled.
+The project plans to use semantic search via PostgreSQL and `pgvector` on Aiven. This feature is **currently deferred** and not implemented in the production application due to budget constraints. If implemented in the future, both local development and production will use the Hugging Face Inference API for embedding generation exclusively. The developer Docker environment (`docker-compose.yml`) does not include a local embedding container to ensure perfect parity with production. Ensure your PostgreSQL instance has the `vector` extension enabled.

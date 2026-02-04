@@ -33,9 +33,9 @@ If your deployment failed and you now see "Subdomain taken" when trying to re-cr
     - Click the three dots (⋮) -> **Settings** -> **Configuration** to fix the **Main file path** to `src/frontend/app.py`.
     - Alternatively, delete the failed app and wait 5 minutes before trying to use the same subdomain again.
 
-## 2. Supabase (Database)
+## 2. Aiven (Database)
 
-The database is hosted on **Supabase (PostgreSQL)**.
+The database is hosted on **Aiven (PostgreSQL)**. Refer to the [Roadmap](roadmap.md) for detailed setup instructions.
 
 ## 3. GitHub OAuth (Authentication)
 

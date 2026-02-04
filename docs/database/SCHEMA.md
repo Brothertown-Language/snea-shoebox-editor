@@ -3,7 +3,7 @@
 
 # SNEA Shoebox Editor - Database Schema
 
-This document defines the database schema for the SNEA Online Shoebox Editor. The schema is designed for **PostgreSQL (Supabase)** and is compatible with local development environments.
+This document defines the database schema for the SNEA Online Shoebox Editor. The schema is designed for **PostgreSQL (Aiven)** and is compatible with local development environments.
 
 ## 1. Primary Data Tables
 
@@ -65,7 +65,7 @@ CREATE TABLE embeddings (
     FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
 );
 
--- Note: Use pgvector extension on Supabase.
+-- Note: Use pgvector extension on Aiven.
 
 CREATE INDEX idx_embeddings_record_id ON embeddings(record_id);
 CREATE INDEX idx_embeddings_stale ON embeddings(record_id, record_version);

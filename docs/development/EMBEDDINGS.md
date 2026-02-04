@@ -19,7 +19,7 @@ The documentation below remains for future research and implementation reference
 
 ## Overview
 
-The SNEA Shoebox Editor is designed to support semantic search using **pgvector** on **Supabase (PostgreSQL)**.
+The SNEA Shoebox Editor is designed to support semantic search using **pgvector** on **Aiven (PostgreSQL)**.
 
 - **Vector Database**: pgvector extension.
 - **Model Selection**:

@@ -13,7 +13,7 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
   - Handles UI rendering, authentication, and database interactions.
   - Implements optimistic locking for concurrent editing. (Pending)
   - Implemented: Basic record viewing, automatic schema initialization.
-- **Database**: [Supabase](https://supabase.com/) (PostgreSQL).
+- **Database**: [Aiven](https://aiven.io/) (PostgreSQL).
   - Persistent PostgreSQL database.
   - Stores linguistic records and edit history.
   - Implemented tables: `sources`, `records`.

@@ -9,16 +9,17 @@ collaborative, version-controlled editing of linguistic records from across Sout
 
 ## Setup & Deployment Flow
 
-To ensure a reliable and free deployment, the project uses **Streamlit Community Cloud** paired with **Supabase**.
+To ensure a reliable and free deployment, the project uses **Streamlit Community Cloud** paired with **Aiven**.
 
 ### Phase 1: Infrastructure Setup [PENDING]
 
 Before initializing the project, you must set up the hosting and database platforms.
 
-1.  **Supabase Setup (Database)**:
-    - Create a free account at [Supabase](https://supabase.com/).
-    - Create a new project.
-    - Go to **Project Settings > Database** to find your connection string (URI). It should look like `postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-ID].supabase.co:5432/postgres`.
+1.  **Aiven Setup (Database)**:
+    - Create a free account at [Aiven](https://aiven.io/).
+    - Create a new PostgreSQL service.
+    - Select a free plan (available in various regions including AWS US-East-1). Note that the PostgreSQL 17 free tier (EOL: 8 November 2029) includes 1 CPU, 1 GB RAM, 1 GB storage, and is limited to 20 maximum connections. Maintenance is scheduled for Wednesdays after 06:10:45 UTC.
+    - Once the service is running, find your **Connection URI** in the Aiven console.
     - Save this connection string for the next step.
 2.  **GitHub OAuth Setup**:
     - Go to your GitHub [**Developer settings > OAuth Apps > New OAuth App**](https://github.com/settings/applications/new).
@@ -32,7 +33,7 @@ Before initializing the project, you must set up the hosting and database platfo
     - In the app settings, go to **Secrets** and paste the following (replacing with your actual values):
       ```toml
       [connections.postgresql]
-      url = "postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-ID].supabase.co:5432/postgres"
+      url = "postgresql://avnadmin:[YOUR-PASSWORD]@[YOUR-SERVICE-NAME]-[YOUR-PROJECT-NAME].aivencloud.com:[YOUR-PORT]/defaultdb?sslmode=require"
 
       [github_oauth]
       client_id = "YOUR_GITHUB_CLIENT_ID"
@@ -49,7 +50,8 @@ Before initializing the project, you must set up the hosting and database platfo
 ### Phase 2: Local Development Setup [PENDING]
 
 1.  **Connectivity Checks**:
-    - The application now includes built-in DNS and socket reachability checks for the database. 
+    - The application now includes built-in DNS and socket reachability checks for the database, including both IPv4 and IPv6 support.
+    - Note: IPv6 connectivity might fail on local networks that do not fully support IPv6 or have specific firewall rules, while still working in the Streamlit Cloud environment.
     - Verify these on the system status page BEFORE troubleshooting SQL connection issues.
 
 2.  **Initialize Environment**:
@@ -57,7 +59,7 @@ Before initializing the project, you must set up the hosting and database platfo
     - Create a `.streamlit/secrets.toml` file (ignored by git) and paste the same secrets used in Streamlit Cloud, but with local redirect URIs:
       ```toml
       [connections.postgresql]
-      url = "postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-ID].supabase.co:5432/postgres"
+      url = "postgresql://avnadmin:[YOUR-PASSWORD]@[YOUR-SERVICE-NAME]-[YOUR-PROJECT-NAME].aivencloud.com:[YOUR-PORT]/defaultdb?sslmode=require"
 
       [github_oauth]
       client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
@@ -93,9 +95,9 @@ Before initializing the project, you must set up the hosting and database platfo
 - **UI**: Standard Streamlit components for a responsive, reactive interface.
 - **Authentication**: `streamlit-oauth` for GitHub OAuth flow.
 
-### 2. Database (Supabase / PostgreSQL)
+### 2. Database (Aiven / PostgreSQL)
 
-- **Platform**: Supabase (PostgreSQL).
+- **Platform**: Aiven (PostgreSQL).
 - **Connection**: `st.connection("postgresql", type="sql")`.
 - **Persistence**: Data survives app reboots and is shared across all users.
 
@@ -111,7 +113,7 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ### Phase 3: Migration to PostgreSQL [PENDING]
 - Port existing SQLite/D1 logic to SQLAlchemy/PostgreSQL.
-- Implement schema initialization in Supabase.
+- Implement schema initialization in Aiven.
 - Migrate existing Natick/Trumbull data to the new database.
 
 ### Phase 4: GitHub OAuth Integration [IN PROGRESS]
@@ -121,7 +123,7 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ### Phase 5: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
-- **[DEFERRED]** Explore pgvector on Supabase for semantic search (Hugging Face integration).
+- **[DEFERRED]** Explore pgvector on Aiven for semantic search (Hugging Face integration).
     - *Note: This feature is currently not implemented nor planned for immediate development due to budget constraints regarding dedicated inference hosting.*
 
 ### Phase 6: Quality Control & Audit [PENDING]

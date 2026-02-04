@@ -15,10 +15,10 @@ Follow these links to revoke the old (leaked) keys and generate new ones.
 *   **Action:** Click your App name -> **Client secrets** -> **Generate a new client secret**.
 *   **Update Secrets**: Update your local `.streamlit/secrets.toml` and the Streamlit Cloud "Secrets" UI.
 
-#### 2. Supabase Database Password
+#### 2. Aiven Database Password
 *Used to connect to your PostgreSQL database.*
 
-*   **Action:** Go to your Supabase project -> **Project Settings** -> **Database** -> **Database Password** -> **Reset Password**.
+*   **Action:** Go to your Aiven console -> Select your PostgreSQL service -> **Change password**.
 *   **Update Secrets**: Update the `url` in your `.streamlit/secrets.toml` and Streamlit Cloud "Secrets" UI.
 
 ### Phase 2: Sync to Production

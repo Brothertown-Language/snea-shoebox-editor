@@ -16,7 +16,7 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 ## Tech Stack
 
 - **Frontend/Backend**: Streamlit (Hosted on Streamlit Community Cloud).
-- **Database**: Supabase (PostgreSQL).
+- **Database**: Aiven (PostgreSQL).
 - **Authentication**: GitHub OAuth via `streamlit-oauth`.
 - **Package Manager**: uv.
 - **Deployment**: Automatic build and deploy on push to main (via Streamlit Community Cloud).
@@ -25,7 +25,7 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 - **Python 3.10+**: Recommended for local development.
 - **uv**: For dependency management.
-- **Supabase Account**: For hosting the PostgreSQL database.
+- **Aiven Account**: For hosting the PostgreSQL database.
 - **GitHub Account**: For authentication (OAuth) and deployment.
 
 ## Setup
@@ -40,7 +40,7 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
     source .venv/bin/activate
     uv pip install -e .
     ```
-2.  **Configure secrets**: Create `.streamlit/secrets.toml` with your Supabase and GitHub OAuth credentials.
+2.  **Configure secrets**: Create `.streamlit/secrets.toml` with your Aiven and GitHub OAuth credentials.
 3.  **Run the app**:
     ```bash
     uv run streamlit run src/frontend/app.py
@@ -52,7 +52,7 @@ Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Clou
 
 | Secret | Description |
 |--------|-------------|
-| `connections.postgresql.url` | Supabase PostgreSQL connection URI |
+| `connections.postgresql.url` | Aiven PostgreSQL connection URI |
 | `github_oauth.client_id` | GitHub OAuth Client ID |
 | `github_oauth.client_secret` | GitHub OAuth Client Secret |
 | `github_oauth.redirect_uri` | App callback URL |
@@ -74,6 +74,7 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[Roadmap & Setup](docs/development/roadmap.md)**: Deployment phases and detailed setup guide.
+- **[Database Comparison](docs/database/DB_COMPARISON.md)**: Why Aiven was chosen over Supabase and Neon.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 - **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.
 - **[MDF Guidelines](docs/mdf/)**: References for the Multi-Dictionary Form.
