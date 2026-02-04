@@ -32,10 +32,11 @@ The project contains development-only files (tests, documentation, docker config
 Streamlit Community Cloud typically uses `.gitignore` to determine which files to ignore. For finer control over deployment-only exclusions, ensure `.streamlitignore` is kept up to date with directories or files that should not be uploaded to the cloud environment.
 
 ### Verification of Exclusions
-The application includes a built-in verification mechanism to ensure that files listed in `.streamlitignore` are indeed absent from the production environment. 
+The application includes a built-in verification mechanism to ensure that development-only files listed in `.streamlitignore` are indeed absent from the production environment. 
 - In the **System Status** page of the app, look for the **Deployment Integrity (Exclusion Check)** section.
 - On Streamlit Community Cloud, this section should ideally show a success message (✅ All files in `.streamlitignore` are successfully excluded).
-- During local development, it will likely show a warning because development files are present on your local machine.
+- During local development, it will show an info message (ℹ️ Development files are present) because these files are necessary for your local workflow.
+- **Note**: Essential files like `pyproject.toml` and `uv.lock` are NOT included in the exclusion check as they are required for deployment.
 
 ### Troubleshooting: "Subdomain Taken" Error
 If your deployment failed and you now see "Subdomain taken" when trying to re-create it:

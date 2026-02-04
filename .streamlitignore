@@ -29,8 +29,6 @@ __pycache__/
 .venv/
 .temp_venv/
 .pytest_cache/
-uv.lock
-pyproject.toml
 test_results.log
 test_results_final.log
 

@@ -18,6 +18,15 @@ def check_supabase_connection():
     except Exception as e:
         return False, str(e)
 
+def is_streamlit_cloud():
+    """Detects if the app is running on Streamlit Community Cloud."""
+    # Streamlit Cloud sets certain environment variables
+    # Check for common ones
+    return (
+        os.environ.get("STREAMLIT_RUNTIME_EXECUTABLE") == "streamlit" 
+        and os.environ.get("HOME") == "/home/appuser"
+    ) or os.path.exists("/app/snea-shoebox-editor")
+
 def get_env_info():
     """Gathers information about the execution environment."""
     info = {
@@ -115,6 +124,7 @@ def main():
     st.write("Verifying that development-only files are excluded from the deployment.")
     
     exclusion_results = verify_deployment_exclusions()
+    is_cloud = is_streamlit_cloud()
     
     if not exclusion_results:
         st.warning("No `.streamlitignore` file found or it is empty.")
@@ -122,16 +132,24 @@ def main():
         found_any = any(exists for _, exists, _ in exclusion_results)
         
         if found_any:
-            st.warning("⚠️ Some ignored files/directories are present in this environment.")
+            if is_cloud:
+                st.error("❌ Warning: Some development files are present in this PRODUCTION environment.")
+                icon = "❌"
+                status_msg = "These files should be excluded from production."
+            else:
+                st.info("ℹ️ Development files are present (Normal for local development).")
+                icon = "📁"
+                status_msg = "Note: These files are expected to be present during local development."
+
             # Show details in an expander
             with st.expander("Show Detailed Exclusion Report"):
                 # Filter only those that exist
                 existing_items = [r for r in exclusion_results if r[1]]
                 for pattern, exists, item_type in existing_items:
-                    st.write(f"❌ `{pattern}` ({item_type}) is **PRESENT**")
+                    st.write(f"{icon} `{pattern}` ({item_type}) is **PRESENT**")
                 
                 st.divider()
-                st.write("Note: These files are expected to be present during local development.")
+                st.write(status_msg)
         else:
             st.success("✅ All files in `.streamlitignore` are successfully excluded.")
 
