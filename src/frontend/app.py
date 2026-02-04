@@ -16,15 +16,6 @@ def check_supabase_connection():
     except Exception as e:
         return False, str(e)
 
-def is_streamlit_cloud():
-    """Detects if the app is running on Streamlit Community Cloud."""
-    # Streamlit Cloud sets certain environment variables
-    # Check for common ones
-    return (
-        os.environ.get("STREAMLIT_RUNTIME_EXECUTABLE") == "streamlit" 
-        and os.environ.get("HOME") == "/home/appuser"
-    ) or os.path.exists("/app/snea-shoebox-editor")
-
 def get_env_info():
     """Gathers information about the execution environment."""
     info = {
