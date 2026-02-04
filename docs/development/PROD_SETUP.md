@@ -24,7 +24,7 @@ Since this repository is part of a GitHub Organization, access must be granted a
 
 ### Deployment Settings
 - **Main file path**: `src/frontend/app.py`
-- **App URL**: `https://snea-edit.streamlit.app` (If this is taken, use `snea-editor.streamlit.app` and update secrets/OAuth settings accordingly).
+- **App URL**: `https://snea-edit.streamlit.app`
 
 ### Managing Excluded Files
 The project contains development-only files (tests, documentation, docker configs) that are not needed in the production app. We manage this using the official Streamlit `server.exclude_pattern` configuration in `.streamlit/config.toml`.

@@ -11,7 +11,7 @@ collaborative, version-controlled editing of linguistic records from across Sout
 
 To ensure a reliable and free deployment, the project uses **Streamlit Community Cloud** paired with **Supabase**.
 
-### Phase 1: Infrastructure Setup
+### Phase 1: Infrastructure Setup [DONE]
 
 Before initializing the project, you must set up the hosting and database platforms.
 
@@ -46,7 +46,7 @@ Before initializing the project, you must set up the hosting and database platfo
       # api_key = "hf_your_token_here"
       ```
 
-### Phase 2: Local Development Setup
+### Phase 2: Local Development Setup [DONE]
 
 1.  **Initialize Environment**:
     - Clone the repository.
@@ -110,7 +110,7 @@ Before initializing the project, you must set up the hosting and database platfo
 - Implement schema initialization in Supabase.
 - Migrate existing Natick/Trumbull data to the new database.
 
-### Phase 4: GitHub OAuth Integration [PENDING]
+### Phase 4: GitHub OAuth Integration [IN PROGRESS]
 - Implement the login flow using `streamlit-oauth`.
 - Verify user membership in authorized teams/orgs.
 - Securely store session state.

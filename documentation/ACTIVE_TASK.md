@@ -10,8 +10,8 @@ Date: 2026-02-03
 - All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
 
 Next Steps:
-- Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path.
-- Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
+- [DONE] Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path.
+- [DONE] Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
 - Re-implement Database integration in the new Streamlit app (Supabase secrets added).
 - Re-implement GitHub OAuth flow.
 
@@ -24,3 +24,5 @@ Completed Tasks:
 - DOCUMENTED Organization access settings for Streamlit Cloud in `docs/development/PROD_SETUP.md`.
 - ADDED Supabase health check to `src/frontend/app.py`.
 - ADDED Environment information display to `src/frontend/app.py`.
+- DEPLOYED app to `https://snea-edit.streamlit.app/`.
+- VERIFIED deployment exclusions mechanism and migrated to official `config.toml`.
