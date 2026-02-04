@@ -17,6 +17,12 @@ All `.py` (Python) and `.md` (Markdown) files must include the appropriate copyr
 
 ## Code Style
 Consistency with the existing codebase is mandatory.
+
+### Python Execution Patterns
+- **Streamlit Multipage Navigation:** **ALWAYS** use file paths (e.g., `"pages/index.py"`) when defining `st.Page` objects in `st.navigation`. This ensures that `st.switch_page("pages/index.py")` works correctly across all pages.
+- **Standalone Page Execution:** **ALWAYS** include an `if __name__ == "__main__":` block at the end of every Streamlit page file (in `src/frontend/pages/`). This block must call the main function of that page to ensure it executes correctly when navigated to via `st.switch_page` or the sidebar.
+- **Lazy Initialization:** **ALWAYS** move `import streamlit as st` and other page-specific imports inside the primary entry-point function of each page. This ensures that Streamlit is only initialized when the page is actually executed, which is a best practice for performance and avoiding global state issues in multipage apps.
+
 - **Mirror Patterns:** Follow the existing patterns and idioms in the codebase exactly.
 - **Formatting:** Match the indentation, naming conventions, and import order used in the file or module you are working on.
 - **Comments:** Match the frequency and language of existing comments. Do not add excessive comments if the surrounding code is sparsely commented, unless explicitly requested.

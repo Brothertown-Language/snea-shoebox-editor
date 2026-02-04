@@ -1,13 +1,15 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 # Active Task (Session)
 
-Date: 2026-02-03
+Date: 2026-02-04
 
-- Updated AI guidelines with a new critical rule: "DO NOT USE SHELL REDIRECTS - THEY ARE DANGEROUS".
-- Reorganized AI guidelines into a modular set of uncompressed files in `.junie/`.
-- Reset the Streamlit application to start from scratch.
-- Cleared `src/frontend/app.py` and replaced it with a minimal "Hello World" structure.
-- All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
+- [DONE] Created `scripts/start_streamlit.sh` for persistent background execution.
+- [DONE] Updated AI guidelines to mandate persistent background execution that survives session exit.
+- [DONE] Fixed multipage navigation error by using file paths in `st.Page` and adding `if __name__ == "__main__":` blocks to page files.
+- [DONE] Updated `src/frontend/app.py` with docstrings explaining the navigation pattern.
+- [DONE] Updated AI guidelines (`.junie/`) with Streamlit multipage navigation standards.
+- [DONE] Committed all changes.
+- [DONE] Restarted Streamlit using the persistent start script.
 
 - [DONE] Refactored project to a monolithic structure (moved src/frontend/app.py to src/frontend/app.py, etc).
 - [DONE] Removed Playwright and UI tests.

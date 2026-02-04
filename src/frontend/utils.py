@@ -1,4 +1,11 @@
 # Copyright (c) 2026 Brothertown Language
+"""
+AI Coding Defaults:
+- Strict Typing: Mandatory for all function signatures and variable declarations.
+- Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
+- Single Responsibility: Each function/method must have one clear purpose.
+- Standalone Execution: Page files must include a main execution block.
+"""
 import streamlit as st
 import socket
 import os
@@ -9,14 +16,22 @@ from urllib.parse import urlparse
 from sqlalchemy import text
 
 def get_db_host_port():
-    """Extracts host and port from Streamlit secrets or environment."""
+    """Extracts host and port from Streamlit secrets or environment.
+    If it's a Unix socket, host will be the path and port will be 0.
+    """
     try:
         from src.database import get_db_url
         url = get_db_url()
         
         if url:
             parsed = urlparse(url)
-            # For Unix socket paths in pgserver, hostname might be empty
+            # Handle pgserver/Unix socket style: postgresql://...@/postgres?host=/path/to/socket
+            import urllib.parse
+            query = urllib.parse.parse_qs(parsed.query)
+            if 'host' in query:
+                return query['host'][0], 0
+            
+            # For regular TCP: hostname might be empty for localhost in some URIs
             return parsed.hostname or "localhost", parsed.port or 5432
     except Exception:
         pass
@@ -49,9 +64,38 @@ def verify_dns(host):
         return False, "DNS Resolution Failed for both IPv4 and IPv6", [], []
 
 def verify_reachability(host, port):
-    """Verifies socket reachability for the given host and port (prefers IPv4, checks IPv6)."""
-    if not host or not port:
-        return False, "No host or port provided", False, False
+    """Verifies socket reachability for the given host and port.
+    Handles both TCP (host + port) and Unix sockets (path + port=0).
+    """
+    if not host:
+        return False, "No host provided", False, False
+
+    # Handle Unix Socket
+    if port == 0 or host.startswith('/'):
+        try:
+            # Check if host is the direct path to the socket
+            socket_path = host
+            if os.path.isdir(host):
+                # If it's a directory (pgserver style), look for the socket inside
+                # Common pattern is .s.PGSQL.5432
+                for item in os.listdir(host):
+                    if item.startswith(".s.PGSQL.") and not item.endswith(".lock"):
+                        socket_path = os.path.join(host, item)
+                        break
+            
+            if os.path.exists(socket_path):
+                # Try to connect to see if it's actually a listening socket
+                with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+                    s.settimeout(5)
+                    s.connect(socket_path)
+                    return True, f"Unix Socket Reachable: {os.path.basename(socket_path)}", True, False
+            else:
+                return False, f"Unix Socket Path Not Found: {socket_path}", False, False
+        except Exception as e:
+            return False, f"Unix Socket Connection Failed: {e}", False, False
+
+    if not port:
+        return False, "No port provided for TCP connection", False, False
 
     ipv4_ok = False
     ipv6_ok = False

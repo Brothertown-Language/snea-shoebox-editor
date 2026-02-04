@@ -20,14 +20,27 @@ uv pip install -e .
 ```
 
 ### Running the Application
+**MANDATORY RULE:** **ALWAYS** start the Streamlit application using the provided start script (`./scripts/start_streamlit.sh`). This script uses `nohup` and background execution to ensure the application continues running after the terminal or Junie session exits. There are **NO EXCEPTIONS** to this rule.
+
 ```bash
-# Run the application locally
-uv run streamlit run src/frontend/app.py
+# Run the application locally in the background and ensure it persists
+./scripts/start_streamlit.sh
 ```
+
+### Multipage Navigation and `st.switch_page`
+When programmatically switching pages in the Streamlit application:
+- **Rule:** **ALWAYS** use the file path relative to the main script (e.g., `st.switch_page("pages/view_record.py")`).
+- **Rule:** Ensure the target page is registered in `st.navigation` in `src/frontend/app.py` using its file path.
+- **Query Parameters:** Use `st.query_params` to pass state between pages when navigating. Example:
+  ```python
+  st.query_params["id"] = 42
+  st.switch_page("pages/view_record.py")
+  ```
 
 ## Testing Standards
 
 ### Execution
+- **MANDATORY RULE:** **ALWAYS** start Streamlit using `./scripts/start_streamlit.sh`. This ensures it runs in the background with `nohup` and survives session exit. There are **NO EXCEPTIONS** or shortcuts.
 - **Rule:** NEVER use compound bash commands (e.g., `&&`, `;`, `|`). Execute each command individually.
 - **Run all tests:** `uv run python -m unittest discover tests`
 - **Rule:** NEVER simulate test execution mentally. **ALWAYS** run the actual tests in the terminal.

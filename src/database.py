@@ -1,4 +1,11 @@
 # Copyright (c) 2026 Brothertown Language
+"""
+AI Coding Defaults:
+- Strict Typing: Mandatory for all function signatures and variable declarations.
+- Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
+- Single Responsibility: Each function/method must have one clear purpose.
+- Standalone Execution: Page files must include a main execution block.
+"""
 from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey, Index, text
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
 from sqlalchemy.sql import func
@@ -13,7 +20,8 @@ _pg_server = None
 
 def _get_local_db_path():
     """Get the path to the local database directory."""
-    return Path(__file__).parent.parent.parent / "tmp" / "local_db"
+    project_root = Path(__file__).parent.parent
+    return project_root / "tmp" / "local_db"
 
 def _stop_local_db():
     """Stop the local database if it was auto-started."""
@@ -50,6 +58,18 @@ def _auto_start_pgserver():
         
         _pg_server = pgserver.get_server(str(db_path))
         uri = _pg_server.get_uri()
+        
+        # Ensure pgvector extension is enabled automatically for local dev
+        try:
+            from sqlalchemy import create_engine, text
+            engine = create_engine(uri)
+            with engine.connect() as conn:
+                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                conn.commit()
+        except Exception as e:
+            # We don't want to block startup if this fails, but it should be logged
+            if not is_production():
+                st.warning(f"Could not automatically enable pgvector: {e}")
         
         # Register cleanup on exit
         atexit.register(_stop_local_db)

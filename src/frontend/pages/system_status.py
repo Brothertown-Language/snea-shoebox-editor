@@ -1,13 +1,19 @@
 # Copyright (c) 2026 Brothertown Language
-import streamlit as st
-import os
-from src.frontend.utils import (
-    get_db_host_port, verify_dns, verify_reachability, 
-    check_db_connection, get_env_info, get_hardware_info, 
-    get_filesystem_info
-)
-
+"""
+AI Coding Defaults:
+- Strict Typing: Mandatory for all function signatures and variable declarations.
+- Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
+- Single Responsibility: Each function/method must have one clear purpose.
+- Standalone Execution: Page files must include a main execution block.
+"""
 def system_status():
+    import streamlit as st
+    import os
+    from src.frontend.utils import (
+        get_db_host_port, verify_dns, verify_reachability, 
+        check_db_connection, get_env_info, get_hardware_info, 
+        get_filesystem_info
+    )
     st.title("SNEA Shoebox Editor - System Status")
     st.write("Welcome to the SNEA Online Shoebox Editor. Below is the current system status.")
 
@@ -37,16 +43,19 @@ def system_status():
                     masked_host = f"`{db_host[:3]}...`"
 
         # 1. DNS Check
-        dns_ok, dns_msg, ips_v4, ips_v6 = verify_dns(db_host)
-        if dns_ok:
-            st.write(f"✅ DNS Resolution: {masked_host}")
-            if ips_v4:
-                st.info(f"IPv4: {len(ips_v4)} address(es) found [REDACTED]")
-            if ips_v6:
-                st.info(f"IPv6: {len(ips_v6)} address(es) found [REDACTED]")
+        is_unix_socket = (db_host and db_host.startswith('/')) or (not db_host and db_port == 0)
+        
+        if is_unix_socket:
+            st.write("✅ Database Connection: Unix Socket (Local)")
+            dns_ok = True # Skip DNS for Unix socket
         else:
-            if db_host and db_host.startswith('/') or (not db_host and db_port == 0):
-                st.write("✅ Database Connection: Unix Socket (Local)")
+            dns_ok, dns_msg, ips_v4, ips_v6 = verify_dns(db_host)
+            if dns_ok:
+                st.write(f"✅ DNS Resolution: {masked_host}")
+                if ips_v4:
+                    st.info(f"IPv4: {len(ips_v4)} address(es) found [REDACTED]")
+                if ips_v6:
+                    st.info(f"IPv6: {len(ips_v6)} address(es) found [REDACTED]")
             else:
                 st.error(f"❌ DNS Resolution: FAILED")
                 st.write(f"Details: DNS lookup failed for the configured host.")
@@ -54,22 +63,22 @@ def system_status():
         # 2. Reachability Check
         reach_ok, reach_msg, v4_ok, v6_ok = verify_reachability(db_host, db_port)
         if reach_ok:
-            st.write(f"✅ Socket Reachability: {masked_host}")
-            if v4_ok:
-                st.success("IPv4: CONNECTED")
+            if is_unix_socket:
+                st.write(f"✅ Socket Reachability: {reach_msg}")
             else:
-                st.warning("IPv4: FAILED")
-                
-            if v6_ok:
-                st.success("IPv6: CONNECTED")
-            else:
-                st.warning("IPv6: FAILED (Expected on many local networks)")
+                st.write(f"✅ Socket Reachability: {masked_host}")
+                if v4_ok:
+                    st.success("IPv4: CONNECTED")
+                else:
+                    st.warning("IPv4: FAILED")
+                    
+                if v6_ok:
+                    st.success("IPv6: CONNECTED")
+                else:
+                    st.warning("IPv6: FAILED (Expected on many local networks)")
         else:
-            if not dns_ok and (db_host and db_host.startswith('/') or (not db_host and db_port == 0)):
-                pass # Already handled in DNS check as Unix Socket
-            else:
-                st.error(f"❌ Socket Reachability: FAILED")
-                st.write("Details: Unable to establish a socket connection.")
+            st.error(f"❌ Socket Reachability: FAILED")
+            st.write(f"Details: {reach_msg}")
 
         # 3. SQL Connection Check (Only if previous checks pass or as final step)
         st.divider()
@@ -126,4 +135,7 @@ def system_status():
                 cols[1].text(f"Free: {details['Free']}")
                 writable_str = "✅ Writable" if details["Writable"] else "❌ Read-only"
                 cols[1].text(f"Access: {writable_str}")
+
+if __name__ == "__main__":
+    system_status()
 

@@ -1,4 +1,11 @@
 # Copyright (c) 2026 Brothertown Language
+"""
+AI Coding Defaults:
+- Strict Typing: Mandatory for all function signatures and variable declarations.
+- Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
+- Single Responsibility: Each function/method must have one clear purpose.
+- Standalone Execution: Page files must include a main execution block.
+"""
 import streamlit as st
 import sys
 import os
@@ -31,14 +38,19 @@ def main():
         st.session_state.logged_in = False
 
     # Define pages
-    page_login = st.Page(pages.login, title="Login", icon="🔐", url_path="login")
-    page_status = st.Page(pages.system_status, title="System Status", icon="📊", url_path="status", default=True)
-    page_home = st.Page(pages.index, title="Home", icon="🏠", url_path="index")
-    page_record = st.Page(pages.view_record, title="Record View", icon="📝", url_path="record")
-    page_source = st.Page(pages.view_source, title="Source View", icon="📖", url_path="source")
+    # Note: We use lazy initialization in page files (importing streamlit inside the function)
+    # as the default approach to ensure they are only loaded when called.
+    page_login = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
+    page_status = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status", default=True)
+    page_home = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index")
+    page_record = st.Page("pages/view_record.py", title="Record View", icon="📝", url_path="record")
+    page_source = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
     
     # Access control logic
     if st.session_state.logged_in:
+        # Multipage navigation definition
+        # Note: We use file paths (e.g., "pages/index.py") for st.Page to ensure
+        # compatibility with st.switch_page() calls in subpages.
         pg = st.navigation({
             "Main": [page_home, page_record, page_source],
             "System": [page_status],

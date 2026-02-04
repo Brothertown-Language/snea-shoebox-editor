@@ -18,6 +18,17 @@ def start_db():
     # pgserver.get_server() automatically starts the server if it's not running
     conn_uri = pg.get_uri()
     
+    # Ensure pgvector extension is enabled
+    try:
+        from sqlalchemy import create_engine, text
+        engine = create_engine(conn_uri)
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.commit()
+            print("pgvector extension enabled.")
+    except Exception as e:
+        print(f"Warning: Could not automatically enable pgvector: {e}")
+    
     print(f"Database is running!")
     print(f"Connection URI: {conn_uri}")
     print("\nTo use this with the app, set the following environment variable:")
@@ -51,11 +62,16 @@ def status_db():
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Manage local PostgreSQL instance using pgserver.")
     parser.add_argument("action", choices=["start", "stop", "status"], help="Action to perform")
+    parser.add_argument("--daemon", action="store_true", help="Start the database and return immediately")
     
     args = parser.parse_args()
     
     if args.action == "start":
         start_db()
+        if args.daemon:
+            print("\nDatabase started in daemon mode.")
+            sys.exit(0)
+            
         print("\nPress Ctrl+C to exit this script. Note: pgserver may keep the DB running")
         print("in the background until 'stop' is called or the process is cleaned up.")
         try:
