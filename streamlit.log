@@ -1,0 +1,32 @@
+
+  You can now view your Streamlit app in your browser.
+
+  URL: http://0.0.0.0:8501
+
+2026-02-04 16:54:05.619 Uncaught app execution
+Traceback (most recent call last):
+  File "/home/muksihs/git/snea-shoebox-editor/.venv/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/exec_code.py", line 129, in exec_func_with_error_handling
+    result = func()
+             ^^^^^^
+  File "/home/muksihs/git/snea-shoebox-editor/.venv/lib/python3.12/site-packages/streamlit/runtime/scriptrunner/script_runner.py", line 672, in code_to_exec
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/git/snea-shoebox-editor/src/frontend/app.py", line 71, in <module>
+    main()
+  File "/home/muksihs/git/snea-shoebox-editor/src/frontend/app.py", line 63, in main
+    pg.run()
+  File "/home/muksihs/git/snea-shoebox-editor/.venv/lib/python3.12/site-packages/streamlit/navigation/page.py", line 310, in run
+    exec(code, module.__dict__)  # noqa: S102
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/git/snea-shoebox-editor/src/frontend/pages/login.py", line 34, in <module>
+    login()
+  File "/home/muksihs/git/snea-shoebox-editor/src/frontend/pages/login.py", line 17, in login
+    st.login()
+  File "/home/muksihs/git/snea-shoebox-editor/.venv/lib/python3.12/site-packages/streamlit/runtime/metrics_util.py", line 532, in wrapped_func
+    result = non_optional_func(*args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/muksihs/git/snea-shoebox-editor/.venv/lib/python3.12/site-packages/streamlit/user_info.py", line 307, in login
+    validate_auth_credentials(provider)
+  File "/home/muksihs/git/snea-shoebox-editor/.venv/lib/python3.12/site-packages/streamlit/auth_util.py", line 485, in validate_auth_credentials
+    raise StreamlitAuthError(
+streamlit.errors.StreamlitAuthError: Authentication credentials in `.streamlit/secrets.toml` for the default authentication provider are missing the following keys: ['server_metadata_url']. Please check your configuration.

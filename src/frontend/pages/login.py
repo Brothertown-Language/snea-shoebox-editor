@@ -11,15 +11,24 @@ def login():
     st.title("SNEA Shoebox Editor - Login")
     
     st.write("Please sign in to access the editor.")
-    
+
+    if not st.user.is_logged_in:
+        if st.button("Log in with GITHUB"):
+            st.login()
+        st.stop()
+
+    if st.button("Log out"):
+        st.logout()
+    st.markdown(f"Welcome! {st.user.name}")
+
     # Dummy login logic
-    if st.button("Login with GitHub", icon="👤", type="primary"):
-        st.session_state.logged_in = True
-        st.success("Logged in successfully (dummy)!")
-        st.rerun()
-    
-    st.divider()
-    st.info("Development Mode: Clicking 'Login with GitHub' will grant access without actual authentication.")
+    # if st.button("Login with GitHub", icon="👤", type="primary"):
+    #     st.session_state.logged_in = True
+    #     st.success("Logged in successfully (dummy)!")
+    #     st.rerun()
+    #
+    # st.divider()
+    # st.info("Development Mode: Clicking 'Login with GitHub' will grant access without actual authentication.")
 
 if __name__ == "__main__":
     login()
