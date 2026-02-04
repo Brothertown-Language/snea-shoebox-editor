@@ -139,13 +139,9 @@ class Permission(Base):
 
 def get_db_url():
     """Get database URL from Streamlit secrets or environment variables."""
-    # Check environment variable first (often used in dev)
-    env_url = os.getenv("DATABASE_URL")
-    if env_url:
-        return env_url
-
-    # If we are in local dev, prioritize auto-starting pgserver
+    # 1. If we are in local dev, prioritize auto-starting pgserver
     # to avoid accidentally using production secrets from .streamlit/secrets.toml
+    # or DATABASE_URL environment variable if it happens to be set to prod.
     if not _is_production():
         auto_url = _auto_start_pgserver()
         if auto_url:
@@ -153,6 +149,12 @@ def get_db_url():
             os.environ["DATABASE_URL"] = auto_url
             return auto_url
 
+    # 2. Check environment variable
+    env_url = os.getenv("DATABASE_URL")
+    if env_url:
+        return env_url
+
+    # 3. Check Streamlit secrets (Production fallback)
     try:
         if "connections" in st.secrets and "postgresql" in st.secrets["connections"]:
             url = st.secrets["connections"]["postgresql"]["url"]
