@@ -23,8 +23,8 @@ Before initializing the project, you must set up the hosting and database platfo
 2.  **GitHub OAuth Setup**:
     - Go to your GitHub [**Developer settings > OAuth Apps > New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor`
-    - **Homepage URL**: `https://[your-app-name].streamlit.app` (You'll get this from Streamlit Cloud).
-    - **Authorization callback URL**: `https://[your-app-name].streamlit.app`
+    - **Homepage URL**: `https://snea-edit.streamlit.app`
+    - **Authorization callback URL**: `https://snea-edit.streamlit.app`
     - Generate a **Client Secret** and save both the **Client ID** and **Client Secret**.
 3.  **Streamlit Community Cloud Setup**:
     - Sign in to [Streamlit Community Cloud](https://share.streamlit.app/) with your GitHub account.
@@ -37,7 +37,7 @@ Before initializing the project, you must set up the hosting and database platfo
       [github_oauth]
       client_id = "YOUR_GITHUB_CLIENT_ID"
       client_secret = "YOUR_GITHUB_CLIENT_SECRET"
-      redirect_uri = "https://[your-app-name].streamlit.app"
+      redirect_uri = "https://snea-edit.streamlit.app"
       cookie_secret = "a-random-secret-string"
 
       # [FUTURE FEATURE]

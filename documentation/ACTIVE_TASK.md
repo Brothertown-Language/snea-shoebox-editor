@@ -8,8 +8,10 @@ Date: 2026-02-03
 - All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
 
 Next Steps:
-- Commit and push the placeholder files to GitHub for Streamlit.io deployment.
+- Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path.
+- Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
 - Re-implement Database integration in the new Streamlit app (Supabase secrets added).
+- Re-implement GitHub OAuth flow.
 
 Completed Tasks:
 - RESET Streamlit application to a clean slate.
