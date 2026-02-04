@@ -1634,9 +1634,11 @@ dependencies = [
 
 [package.dev-dependencies]
 dev = [
-    { name = "pgserver" },
     { name = "pre-commit" },
     { name = "ruff" },
+]
+local = [
+    { name = "pgserver" },
 ]
 
 [package.metadata]
@@ -1658,10 +1660,10 @@ requires-dist = [
 
 [package.metadata.requires-dev]
 dev = [
-    { name = "pgserver", specifier = ">=0.1.4" },
     { name = "pre-commit", specifier = ">=3.5.0" },
     { name = "ruff", specifier = ">=0.1.0" },
 ]
+local = [{ name = "pgserver", specifier = ">=0.1.4" }]
 
 [[package]]
 name = "sniffio"
