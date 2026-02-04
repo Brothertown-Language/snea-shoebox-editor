@@ -28,6 +28,7 @@ uv run streamlit run src/frontend/app.py
 ## Testing Standards
 
 ### Execution
+- **Rule:** NEVER use compound bash commands (e.g., `&&`, `;`, `|`). Execute each command individually.
 - **Run all tests:** `uv run python -m unittest discover tests`
 - **Rule:** NEVER simulate test execution mentally. **ALWAYS** run the actual tests in the terminal.
 - **Rule:** Fix all compilation errors before attempting to run tests.
@@ -50,6 +51,7 @@ uv run streamlit run src/frontend/app.py
 ## Version Control
 
 ### Commit Messages
+- **Rule:** NEVER chain git commands (e.g., `git add && git commit`). Execute them as separate steps.
 - **Location:** All commit messages must be written to `tmp/commit.msg`.
 - **Format:** Use plain, descriptive text.
 - **Constraint:** **DO NOT** use Conventional Commits prefixes (e.g., `feat:`, `fix:`).

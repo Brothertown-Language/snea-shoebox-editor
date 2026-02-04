@@ -35,6 +35,13 @@ date: 2026-02-03
 - **NEVER** use shell redirects (`>`, `>>`) in terminal commands to create or append to files.
 - **REASON:** Shell redirects bypass tool-specific validations and can lead to data loss or corruption.
 
+### NEVER USE COMPOUND BASH COMMANDS
+- **NEVER** use `&&`, `;`, or `|` to chain multiple commands in a single bash tool call.
+- **ALWAYS** execute each command as a separate, discrete step.
+- **WRONG:** `git add . && git commit -m "msg" && git push`
+- **CORRECT:** Call `bash` for `git add`, then call `bash` for `git commit`, then call `bash` for `git push`.
+- **REASON:** Chained commands are harder to debug, bypass status checks between steps, and violate the principle of atomic operations.
+
 ### NEVER grep the `.git` folder
 - **ALWAYS** exclude the `.git` directory when using `grep` or similar search tools.
 - **CORRECT:** `grep -r --exclude-dir=.git "search_term" .`
