@@ -28,4 +28,4 @@ Completed Tasks:
 - ADDED Supabase health check to `src/frontend/app.py`.
 - ADDED Environment information display to `src/frontend/app.py`.
 - DEPLOYED app to `https://snea-edit.streamlit.app/`.
-- VERIFIED deployment exclusions mechanism and migrated to official `config.toml`.
+- REMOVED defunct deployment exclusion mechanism (Streamlit Cloud does not support exclusions).
