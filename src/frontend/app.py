@@ -5,6 +5,8 @@ import sys
 import os
 import platform
 import socket
+import shutil
+import psutil
 from urllib.parse import urlparse
 
 def get_db_host_port():
@@ -141,6 +143,47 @@ def get_env_info():
     
     return info
 
+def get_filesystem_info():
+    """Gathers information about the filesystem."""
+    paths_to_check = [".", "/tmp"]
+    fs_info = {}
+    
+    for path in paths_to_check:
+        abs_path = os.path.abspath(path)
+        try:
+            usage = shutil.disk_usage(abs_path)
+            fs_info[abs_path] = {
+                "Total": f"{usage.total / (1024**3):.2f} GB",
+                "Used": f"{usage.used / (1024**3):.2f} GB",
+                "Free": f"{usage.free / (1024**3):.2f} GB",
+                "Writable": os.access(abs_path, os.W_OK)
+            }
+        except Exception as e:
+            fs_info[abs_path] = {"Error": str(e)}
+            
+    return fs_info
+
+def get_hardware_info():
+    """Gathers information about the hardware."""
+    try:
+        cpu_count = psutil.cpu_count(logical=True)
+        cpu_freq = psutil.cpu_freq()
+        mem = psutil.virtual_memory()
+        
+        info = {
+            "CPU Count (Logical)": cpu_count,
+            "Memory Total": f"{mem.total / (1024**3):.2f} GB",
+            "Memory Available": f"{mem.available / (1024**3):.2f} GB",
+            "Memory Percent Used": f"{mem.percent}%"
+        }
+        
+        if cpu_freq:
+            info["CPU Frequency"] = f"{cpu_freq.current:.2f} MHz"
+            
+        return info
+    except Exception as e:
+        return {"Error": str(e)}
+
 
 def main():
     st.set_page_config(
@@ -214,6 +257,30 @@ def main():
         env_info = get_env_info()
         for key, value in env_info.items():
             st.text(f"{key}: {value}")
+
+        st.divider()
+        st.subheader("Hardware Inspection")
+        hw_info = get_hardware_info()
+        if "Error" in hw_info:
+            st.error(f"Error gathering hardware info: {hw_info['Error']}")
+        else:
+            for key, value in hw_info.items():
+                st.text(f"{key}: {value}")
+
+        st.divider()
+        st.subheader("Filesystem Inspection")
+        fs_info = get_filesystem_info()
+        for path, details in fs_info.items():
+            st.markdown(f"**Path: `{path}`**")
+            if "Error" in details:
+                st.error(f"Error: {details['Error']}")
+            else:
+                cols = st.columns(2)
+                cols[0].text(f"Total: {details['Total']}")
+                cols[0].text(f"Used: {details['Used']}")
+                cols[1].text(f"Free: {details['Free']}")
+                writable_str = "✅ Writable" if details["Writable"] else "❌ Read-only"
+                cols[1].text(f"Access: {writable_str}")
 
     st.divider()
     st.info("The application is being prepared for further development.")
