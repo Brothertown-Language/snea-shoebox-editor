@@ -222,6 +222,18 @@ def get_env_info():
 
     return info
 
+def get_masked_env_vars():
+    """Gathers environment variables and masks sensitive ones."""
+    sensitive_keywords = ["PASSWORD", "SECRET", "KEY", "TOKEN", "DATABASE_URL"]
+    env_vars = {}
+    for key, value in os.environ.items():
+        is_sensitive = any(kw in key.upper() for kw in sensitive_keywords)
+        if is_sensitive:
+            env_vars[key] = "********"
+        else:
+            env_vars[key] = value
+    return dict(sorted(env_vars.items()))
+
 def get_filesystem_info():
     """Gathers information about the filesystem."""
     paths_to_check = [".", "/tmp"]
@@ -360,6 +372,12 @@ def main():
                 cols[1].text(f"Free: {details['Free']}")
                 writable_str = "✅ Writable" if details["Writable"] else "❌ Read-only"
                 cols[1].text(f"Access: {writable_str}")
+
+    st.divider()
+    st.subheader("Environment Variables")
+    with st.expander("View Environment Variables"):
+        env_vars = get_masked_env_vars()
+        st.json(env_vars)
 
     st.divider()
     st.info("The application is being prepared for further development.")
