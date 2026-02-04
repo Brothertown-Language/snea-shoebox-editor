@@ -78,7 +78,7 @@ Before initializing the project, you must set up the hosting and database platfo
     - Note: You should create a separate GitHub OAuth App for local development with `http://localhost:8501` as the callback URL.
 2.  **Install Dependencies**:
     ```bash
-    uv sync
+    uv sync --extra local
     ```
 3.  **Run Locally**:
     ```bash

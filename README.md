@@ -36,7 +36,7 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
 
 1.  **Install dependencies**:
     ```bash
-    uv sync
+    uv sync --extra local
     ```
 2.  **Run the app**:
     ```bash

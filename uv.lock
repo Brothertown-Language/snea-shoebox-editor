@@ -1620,6 +1620,7 @@ dependencies = [
     { name = "httpx" },
     { name = "huggingface-hub" },
     { name = "numpy" },
+    { name = "psutil" },
     { name = "psycopg2-binary" },
     { name = "pygithub" },
     { name = "pynacl" },
@@ -1632,13 +1633,15 @@ dependencies = [
     { name = "tqdm" },
 ]
 
+[package.optional-dependencies]
+local = [
+    { name = "pgserver" },
+]
+
 [package.dev-dependencies]
 dev = [
     { name = "pre-commit" },
     { name = "ruff" },
-]
-local = [
-    { name = "pgserver" },
 ]
 
 [package.metadata]
@@ -1646,6 +1649,8 @@ requires-dist = [
     { name = "httpx", specifier = ">=0.25.0" },
     { name = "huggingface-hub", specifier = ">=0.20.0" },
     { name = "numpy", specifier = ">=1.24.0" },
+    { name = "pgserver", marker = "extra == 'local'", specifier = ">=0.1.4" },
+    { name = "psutil", specifier = ">=5.9.0" },
     { name = "psycopg2-binary", specifier = ">=2.9.9" },
     { name = "pygithub", specifier = ">=2.1.1" },
     { name = "pynacl", specifier = ">=1.5.0" },
@@ -1657,13 +1662,13 @@ requires-dist = [
     { name = "streamlit-oauth", specifier = ">=0.1.5" },
     { name = "tqdm", specifier = ">=4.66.0" },
 ]
+provides-extras = ["local"]
 
 [package.metadata.requires-dev]
 dev = [
     { name = "pre-commit", specifier = ">=3.5.0" },
     { name = "ruff", specifier = ">=0.1.0" },
 ]
-local = [{ name = "pgserver", specifier = ">=0.1.4" }]
 
 [[package]]
 name = "sniffio"

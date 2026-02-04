@@ -18,15 +18,18 @@ dependencies = [
     "huggingface-hub>=0.20.0",
     "numpy>=1.24.0",
     "scikit-learn>=1.3.0",
+    "psutil>=5.9.0",
+]
+
+[project.optional-dependencies]
+local = [
+    "pgserver>=0.1.4",
 ]
 
 [dependency-groups]
 dev = [
     "ruff>=0.1.0",
     "pre-commit>=3.5.0",
-]
-local = [
-    "pgserver>=0.1.4",
 ]
 
 [tool.ruff]
