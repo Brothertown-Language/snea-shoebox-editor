@@ -10,10 +10,13 @@ Date: 2026-02-03
 - All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
 
 Next Steps:
-- [DONE] Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path.
-- [DONE] Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
+- [PENDING] Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path.
+- [PENDING] Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
 - Re-implement Database integration in the new Streamlit app (Supabase secrets added).
 - Re-implement GitHub OAuth flow.
+
+Critical Reminder:
+- Do not mark things as done until the User says they are done. AI is not driving this project.
 
 Completed Tasks:
 - UPDATED AI guidelines with the rule against shell redirects.

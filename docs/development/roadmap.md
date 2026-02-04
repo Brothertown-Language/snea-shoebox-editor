@@ -11,7 +11,7 @@ collaborative, version-controlled editing of linguistic records from across Sout
 
 To ensure a reliable and free deployment, the project uses **Streamlit Community Cloud** paired with **Supabase**.
 
-### Phase 1: Infrastructure Setup [DONE]
+### Phase 1: Infrastructure Setup [PENDING]
 
 Before initializing the project, you must set up the hosting and database platforms.
 
@@ -46,7 +46,7 @@ Before initializing the project, you must set up the hosting and database platfo
       # api_key = "hf_your_token_here"
       ```
 
-### Phase 2: Local Development Setup [DONE]
+### Phase 2: Local Development Setup [PENDING]
 
 1.  **Initialize Environment**:
     - Clone the repository.
