@@ -2,7 +2,7 @@
 author: Human
 contributor: AI
 status: active
-date: 2026-02-01
+date: 2026-02-03
 ---
 <!-- Copyright (c) 2026 Brothertown Language -->
 
@@ -29,6 +29,11 @@ date: 2026-02-01
 - Use `setfacl` or similar to ensure dev (non-root) can access/edit/remove all files
 - Dev must be able to access, edit, or remove mounted volumes at will
 - Example: `docker run --user $(id -u):$(id -g) -v $(pwd)/tmp:/tmp ...`
+
+### DO NOT USE SHELL REDIRECTS - THEY ARE DANGEROUS
+- **ALWAYS** use the designated tools (like `create`, `search_replace`, `multi_edit`) to modify files.
+- **NEVER** use shell redirects (`>`, `>>`) in terminal commands to create or append to files.
+- **REASON:** Shell redirects bypass tool-specific validations and can lead to data loss or corruption.
 
 ### Frontend Architecture: Streamlit (Community Cloud)
 - **Production:** Streamlit Community Cloud (connected to private GitHub repo)

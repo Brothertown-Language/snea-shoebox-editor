@@ -3,6 +3,7 @@
 
 Date: 2026-02-03
 
+- Updated AI guidelines with a new critical rule: "DO NOT USE SHELL REDIRECTS - THEY ARE DANGEROUS".
 - Reset the Streamlit application to start from scratch.
 - Cleared `src/frontend/app.py` and replaced it with a minimal "Hello World" structure.
 - All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
@@ -14,6 +15,7 @@ Next Steps:
 - Re-implement GitHub OAuth flow.
 
 Completed Tasks:
+- UPDATED AI guidelines with the rule against shell redirects.
 - RESET Streamlit application to a clean slate.
 - UPDATED `docs/development/roadmap.md` to reflect all phases as [PENDING].
 - ADDED Supabase connection secrets to `.streamlit/secrets.toml`.
