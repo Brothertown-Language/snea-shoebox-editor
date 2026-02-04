@@ -13,6 +13,9 @@ date: 2026-02-01
 ### Version pinning
 **ALWAYS pin versions** in `pyproject.toml` for production dependencies.
 
+> [!IMPORTANT]
+> **Streamlit Community Cloud** ignores `pyproject.toml` in favor of `uv.lock` for environment resolution when using `uv`. Ensure `uv.lock` is always up-to-date and committed.
+
 Example:
 ```toml
 [project.dependencies]

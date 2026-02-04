@@ -18,9 +18,9 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
   - Stores linguistic records and edit history.
   - Implemented tables: `sources`, `records`.
   - Pending tables: `users`, `edit_history`, `permissions`, `embeddings`.
-- **Authentication**: GitHub OAuth.
-  - Integrated via `streamlit-oauth`.
-  - Access can be restricted to specific GitHub organizations/teams.
+- **Authentication**: Simple session-based login.
+  - Relying on Streamlit's `st.session_state` for the current session.
+  - (Planned) Integrated via GitHub OAuth.
 
 ## Data Model & Schema Management
 

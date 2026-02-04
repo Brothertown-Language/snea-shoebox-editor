@@ -1,386 +1,52 @@
 # Copyright (c) 2026 Brothertown Language
 import streamlit as st
-from sqlalchemy import text
 import sys
 import os
 
 # Add the project root to sys.path to ensure src imports work
-# This is especially important for Streamlit Cloud and local dev consistency
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
-import platform
-import socket
-import shutil
-import psutil
-from urllib.parse import urlparse
-
-def get_db_host_port():
-    """Extracts host and port from Streamlit secrets or environment."""
-    try:
-        from src.database import get_db_url
-        url = get_db_url()
-        
-        if url:
-            parsed = urlparse(url)
-            # For Unix socket paths in pgserver, hostname might be empty
-            return parsed.hostname or "localhost", parsed.port or 5432
-    except Exception:
-        pass
-    return None, None
-
-def verify_dns(host):
-    """Verifies DNS resolution for the given host (IPv4 and IPv6)."""
-    if not host:
-        return False, "No host provided", [], []
-    
-    ipv4_ips = []
-    ipv6_ips = []
-    
-    # Try IPv4
-    try:
-        _, _, ipv4_ips = socket.gethostbyname_ex(host)
-    except Exception:
-        pass
-        
-    # Try IPv6
-    try:
-        addr_info = socket.getaddrinfo(host, None, socket.AF_INET6)
-        ipv6_ips = list(set(info[4][0] for info in addr_info))
-    except Exception:
-        pass
-        
-    if ipv4_ips or ipv6_ips:
-        return True, "DNS Resolution Successful", ipv4_ips, ipv6_ips
-    else:
-        return False, "DNS Resolution Failed for both IPv4 and IPv6", [], []
-
-def verify_reachability(host, port):
-    """Verifies socket reachability for the given host and port (prefers IPv4, checks IPv6)."""
-    if not host or not port:
-        return False, "No host or port provided", False, False
-
-    ipv4_ok = False
-    ipv6_ok = False
-    
-    # Check IPv4
-    try:
-        # socket.create_connection uses the first address returned by getaddrinfo
-        # To specifically test IPv4, we filter
-        addr_v4 = socket.getaddrinfo(host, port, socket.AF_INET, socket.SOCK_STREAM)
-        if addr_v4:
-            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-                s.settimeout(5)
-                s.connect(addr_v4[0][4])
-                ipv4_ok = True
-    except Exception:
-        pass
-
-    # Check IPv6
-    try:
-        addr_v6 = socket.getaddrinfo(host, port, socket.AF_INET6, socket.SOCK_STREAM)
-        if addr_v6:
-            with socket.socket(socket.AF_INET6, socket.SOCK_STREAM) as s:
-                s.settimeout(5)
-                s.connect(addr_v6[0][4])
-                ipv6_ok = True
-    except Exception:
-        pass
-
-    if ipv4_ok or ipv6_ok:
-        msg = "Socket Connection Successful"
-        if ipv4_ok and ipv6_ok:
-            msg += " (Dual Stack)"
-        elif ipv4_ok:
-            msg += " (IPv4 Only)"
-        else:
-            msg += " (IPv6 Only)"
-        return True, msg, ipv4_ok, ipv6_ok
-    else:
-        return False, "Socket Connection Failed for both IPv4 and IPv6", False, False
-
-def check_db_connection():
-    """Checks the database connection and returns status and details."""
-    try:
-        from src.database import get_db_url
-        db_url = get_db_url()
-        if not db_url:
-            return False, "Database URL not found", {}
-            
-        # Streamlit handles the connection using secrets defined under [connections.postgresql]
-        # But if we auto-started, we might need to use the URL directly
-        capabilities = {}
-        if os.getenv("DATABASE_URL") == db_url:
-            from sqlalchemy import create_engine
-            engine = create_engine(db_url)
-            with engine.connect() as conn:
-                conn.execute(text("SELECT 1;"))
-                # Check for pgvector
-                res = conn.execute(text("SELECT count(*) FROM pg_extension WHERE extname = 'vector';")).scalar()
-                capabilities["pgvector"] = res > 0
-        else:
-            conn = st.connection("postgresql", type="sql")
-            with conn.session as s:
-                s.execute(text("SELECT 1;"))
-                # Check for pgvector
-                res = s.execute(text("SELECT count(*) FROM pg_extension WHERE extname = 'vector';")).scalar()
-                capabilities["pgvector"] = res > 0
-        return True, "Connection Successful", capabilities
-    except Exception as e:
-        return False, str(e), {}
-
-import subprocess
-import getpass
-
-def get_git_info():
-    """Fetches the latest git commit hash, message, and user info."""
-    git_info = {
-        "commit_hash": None,
-        "commit_msg": None,
-        "user_name": None,
-        "user_email": None,
-    }
-    try:
-        # Get hash
-        hash_res = subprocess.run(
-            ["git", "rev-parse", "HEAD"], 
-            capture_output=True, text=True, check=True
-        )
-        git_info["commit_hash"] = hash_res.stdout.strip()
-        
-        # Get message
-        msg_res = subprocess.run(
-            ["git", "log", "-1", "--pretty=format:%s"], 
-            capture_output=True, text=True, check=True
-        )
-        git_info["commit_msg"] = msg_res.stdout.strip()
-
-        # Get user name
-        name_res = subprocess.run(
-            ["git", "config", "user.name"],
-            capture_output=True, text=True
-        )
-        if name_res.returncode == 0:
-            git_info["user_name"] = name_res.stdout.strip()
-
-        # Get user email
-        email_res = subprocess.run(
-            ["git", "config", "user.email"],
-            capture_output=True, text=True
-        )
-        if email_res.returncode == 0:
-            git_info["user_email"] = email_res.stdout.strip()
-        
-        return git_info
-    except Exception as e:
-        git_info["error"] = str(e)
-        return git_info
-
-def get_env_info():
-    """Gathers information about the execution environment and user."""
-    from src.database import _is_production
-    
-    is_prod = _is_production()
-    
-    # User info
-    try:
-        os_user = getpass.getuser()
-    except Exception:
-        os_user = os.getenv("USER") or os.getenv("USERNAME") or "Unknown"
-
-    info = {
-        "Environment": "Production (Streamlit Cloud)" if is_prod else "Local Development",
-        "Python Version": sys.version.split()[0],
-        "Operating System": f"{platform.system()} {platform.release()}",
-        "OS User": os_user,
-        "Streamlit Version": st.__version__,
-        "Executable": sys.executable,
-    }
-    
-    # Debug info for environment detection
-    info["Streamlit Cloud Markers"] = f"ReliableAddr: {os.getenv('STREAMLIT_RUNTIME_RELIABLE_ADDRESS') is not None}, SharingEnv: {os.getenv('STREAMLIT_SHARING_ENVIRONMENT') is not None}, AppPath: {os.path.exists('/app/src/frontend/app.py')}"
-    
-    # Check for uv usage
-    # Streamlit Cloud with uv support usually sets certain markers or we can infer from the path
-    is_uv = "uv" in sys.executable or os.path.exists("uv.lock")
-    info["Using uv"] = "Yes" if is_uv else "No (Standard pip/venv)"
-    
-    git_data = get_git_info()
-    if git_data.get("commit_hash"):
-        info["Git Commit"] = git_data["commit_hash"][:7]
-        info["Git Message"] = git_data["commit_msg"]
-    
-    if git_data.get("user_name"):
-        info["Git User"] = git_data["user_name"]
-    if git_data.get("user_email"):
-        info["Git Email"] = git_data["user_email"]
-    
-    if "error" in git_data:
-        info["Git Error"] = git_data["error"]
-
-    return info
-
-def get_masked_env_vars():
-    """Gathers environment variables and masks sensitive ones."""
-    sensitive_keywords = ["PASSWORD", "SECRET", "KEY", "TOKEN", "DATABASE_URL"]
-    env_vars = {}
-    for key, value in os.environ.items():
-        is_sensitive = any(kw in key.upper() for kw in sensitive_keywords)
-        if is_sensitive:
-            env_vars[key] = "********"
-        else:
-            env_vars[key] = value
-    return dict(sorted(env_vars.items()))
-
-def get_filesystem_info():
-    """Gathers information about the filesystem."""
-    paths_to_check = [".", "/tmp"]
-    fs_info = {}
-    
-    for path in paths_to_check:
-        abs_path = os.path.abspath(path)
-        try:
-            usage = shutil.disk_usage(abs_path)
-            fs_info[abs_path] = {
-                "Total": f"{usage.total / (1024**3):.2f} GB",
-                "Used": f"{usage.used / (1024**3):.2f} GB",
-                "Free": f"{usage.free / (1024**3):.2f} GB",
-                "Writable": os.access(abs_path, os.W_OK)
-            }
-        except Exception as e:
-            fs_info[abs_path] = {"Error": str(e)}
-            
-    return fs_info
-
-def get_hardware_info():
-    """Gathers information about the hardware."""
-    try:
-        cpu_count = psutil.cpu_count(logical=True)
-        cpu_freq = psutil.cpu_freq()
-        mem = psutil.virtual_memory()
-        
-        info = {
-            "CPU Count (Logical)": cpu_count,
-            "Memory Total": f"{mem.total / (1024**3):.2f} GB",
-            "Memory Available": f"{mem.available / (1024**3):.2f} GB",
-            "Memory Percent Used": f"{mem.percent}%"
-        }
-        
-        if cpu_freq:
-            info["CPU Frequency"] = f"{cpu_freq.current:.2f} MHz"
-            
-        return info
-    except Exception as e:
-        return {"Error": str(e)}
-
+import src.frontend.pages as pages
 
 def main():
+    # Page configuration MUST be the first Streamlit command
     st.set_page_config(
         page_title="SNEA Shoebox Editor",
         page_icon="📚",
         layout="wide"
     )
-    st.title("SNEA Shoebox Editor - System Status")
+
+    # Initialize session state for authentication
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+
+    # Define pages
+    page_login = st.Page(pages.login, title="Login", icon="🔐", url_path="login")
+    page_status = st.Page(pages.system_status, title="System Status", icon="📊", url_path="status", default=True)
+    page_home = st.Page(pages.index, title="Home", icon="🏠", url_path="index")
+    page_record = st.Page(pages.view_record, title="Record View", icon="📝", url_path="record")
+    page_source = st.Page(pages.view_source, title="Source View", icon="📖", url_path="source")
     
-    st.write("Welcome to the SNEA Online Shoebox Editor. Below is the current system status.")
+    # Access control logic
+    if st.session_state.logged_in:
+        pg = st.navigation({
+            "Main": [page_home, page_record, page_source],
+            "System": [page_status],
+            "Account": [st.Page(logout, title="Logout", icon="🚪")]
+        })
+    else:
+        pg = st.navigation([page_login])
 
-    col1, col2 = st.columns(2)
+    # Run the selected page
+    pg.run()
 
-    with col1:
-        # Database Infrastructure Checklist
-        st.subheader("Database Connectivity Checklist")
-        
-        db_host, db_port = get_db_host_port()
-        
-        # 1. DNS Check
-        dns_ok, dns_msg, ips_v4, ips_v6 = verify_dns(db_host)
-        if dns_ok:
-            st.write(f"✅ DNS Resolution: `{db_host}`")
-            if ips_v4:
-                st.info(f"IPv4 Addresses: {', '.join(ips_v4)}")
-            if ips_v6:
-                st.info(f"IPv6 Addresses: {', '.join(ips_v6)}")
-        else:
-            st.error(f"❌ DNS Resolution: FAILED")
-            st.write(f"Details: `{dns_msg}`")
-
-        # 2. Reachability Check
-        reach_ok, reach_msg, v4_ok, v6_ok = verify_reachability(db_host, db_port)
-        if reach_ok:
-            st.write(f"✅ Socket Reachability: `{db_host}:{db_port}`")
-            if v4_ok:
-                st.success("IPv4: CONNECTED")
-            else:
-                st.warning("IPv4: FAILED")
-                
-            if v6_ok:
-                st.success("IPv6: CONNECTED")
-            else:
-                st.warning("IPv6: FAILED (Expected on many local networks)")
-        else:
-            st.error(f"❌ Socket Reachability: FAILED")
-            st.write(f"Details: `{reach_msg}`")
-
-        # 3. SQL Connection Check (Only if previous checks pass or as final step)
-        st.divider()
-        st.subheader("SQL Health Check")
-        is_valid, message, caps = check_db_connection()
-        
-        if is_valid:
-            st.success("✅ SQL Connection: VALID")
-            st.write("The database is reachable and responding to queries.")
-            
-            # Display Capabilities
-            if caps.get("pgvector"):
-                st.write("✅ **Capability: pgvector enabled**")
-            else:
-                st.warning("⚠️ **Capability: pgvector NOT enabled**")
-        else:
-            st.error("❌ SQL Connection: INVALID")
-            st.write(f"Error Details: `{message}`")
-            st.info("Check your Streamlit Cloud Secrets and Database status.")
-
-    with col2:
-        # Environment Info Section
-        st.subheader("Environment Information")
-        env_info = get_env_info()
-        for key, value in env_info.items():
-            st.text(f"{key}: {value}")
-
-        st.divider()
-        st.subheader("Hardware Inspection")
-        hw_info = get_hardware_info()
-        if "Error" in hw_info:
-            st.error(f"Error gathering hardware info: {hw_info['Error']}")
-        else:
-            for key, value in hw_info.items():
-                st.text(f"{key}: {value}")
-
-        st.divider()
-        st.subheader("Filesystem Inspection")
-        fs_info = get_filesystem_info()
-        for path, details in fs_info.items():
-            st.markdown(f"**Path: `{path}`**")
-            if "Error" in details:
-                st.error(f"Error: {details['Error']}")
-            else:
-                cols = st.columns(2)
-                cols[0].text(f"Total: {details['Total']}")
-                cols[0].text(f"Used: {details['Used']}")
-                cols[1].text(f"Free: {details['Free']}")
-                writable_str = "✅ Writable" if details["Writable"] else "❌ Read-only"
-                cols[1].text(f"Access: {writable_str}")
-
-    st.divider()
-    st.subheader("Environment Variables")
-    with st.expander("View Environment Variables"):
-        env_vars = get_masked_env_vars()
-        st.json(env_vars)
-
-    st.divider()
-    st.info("The application is being prepared for further development.")
+def logout():
+    st.session_state.logged_in = False
+    st.info("Logged out successfully!")
+    st.rerun()
 
 if __name__ == "__main__":
     main()

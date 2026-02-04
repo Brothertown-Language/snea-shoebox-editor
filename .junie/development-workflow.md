@@ -85,3 +85,4 @@ uv run streamlit run src/frontend/app.py
 - **Streamlit Cloud Warning:** You may see a warning: "More than one requirements file detected... Available options: uv-sync ..., poetry ...". 
   - **Status:** This is a **false positive** from Streamlit Cloud's heuristic detection. 
   - **Resolution:** Ignore the warning. As long as the logs state `Used: uv-sync with .../uv.lock`, the deployment is using the correct `uv` package manager.
+- **Dependency Resolution:** Streamlit Community Cloud ignores `pyproject.toml` in favor of `uv.lock` for environment resolution. Ensure `uv.lock` is committed.

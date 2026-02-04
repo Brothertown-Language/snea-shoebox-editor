@@ -54,10 +54,10 @@ Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Clou
 | Secret | Description |
 |--------|-------------|
 | `connections.postgresql.url` | Aiven PostgreSQL connection URI |
-| `github_oauth.client_id` | GitHub OAuth Client ID |
-| `github_oauth.client_secret` | GitHub OAuth Client Secret |
-| `github_oauth.redirect_uri` | App callback URL |
-| `github_oauth.cookie_secret` | Secret for cookie encryption |
+| `github.client_id` | GitHub OAuth Client ID |
+| `github.client_secret` | GitHub OAuth Client Secret |
+| `github.redirect_uri` | App callback URL |
+| `auth.jwt_secret` | Secret for JWT signing |
 | `embedding.model_id` | (Future Feature - Deferred) Hugging Face Model ID |
 | `embedding.api_key` | (Future Feature - Deferred) Hugging Face API Key |
 

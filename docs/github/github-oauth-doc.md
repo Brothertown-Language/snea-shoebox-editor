@@ -1,4 +1,7 @@
-# Authorizing OAuth apps
+# Authorizing OAuth apps (GitHub)
+
+> [!IMPORTANT]
+> This document describes the underlying GitHub OAuth2 mechanisms. For application-level implementation using Streamlit's native auth, see [Native Streamlit OAuth2 Reference](./native-oauth-reference.md).
 
 You can enable other users to authorize your OAuth app.
 
@@ -28,6 +31,18 @@ The web application flow to authorize users for your app is:
 1. Users are redirected to request their GitHub identity
 2. Users are redirected back to your site by GitHub
 3. Your app accesses the API with the user's access token
+
+### Application Registration URLs
+
+When registering your OAuth application on GitHub, use the following URLs:
+
+#### Local Development
+- **Homepage URL:** `http://localhost:8501`
+- **Authorization callback URL:** `http://localhost:8501/oauth2callback` (Required for native Streamlit `st.login`)
+
+#### Production (Streamlit Community Cloud)
+- **Homepage URL:** `https://snea-shoebox-editor.streamlit.app/`
+- **Authorization callback URL:** `https://snea-shoebox-editor.streamlit.app/oauth2callback`
 
 ### 1. Request a user's GitHub identity
 

@@ -1,0 +1,110 @@
+# Copyright (c) 2026 Brothertown Language
+import datetime
+import streamlit as st
+from src.database import get_session, User
+from sqlalchemy.orm import Session
+from typing import Optional, Dict, Any
+
+def login_user_simple(username: str):
+    """Login or create a user based on username and set the session."""
+    if not username:
+        st.error("Invalid username")
+        return None
+
+    db: Session = get_session()
+    try:
+        user = db.query(User).filter(User.username == username).first()
+        if not user:
+            # Create new user
+            user = User(
+                github_id=0, # Placeholder
+                email=f"{username}@example.com",
+                username=username,
+                name=username,
+                last_login=datetime.datetime.now(datetime.timezone.utc)
+            )
+            db.add(user)
+        else:
+            # Update last login
+            user.last_login = datetime.datetime.now(datetime.timezone.utc)
+        
+        db.commit()
+        db.refresh(user)
+        
+        # Set session state
+        st.session_state.user = {
+            "id": user.id,
+            "username": user.username,
+            "name": user.name,
+            "email": user.email
+        }
+        st.session_state.authenticated = True
+        
+        return user
+    except Exception as e:
+        db.rollback()
+        st.error(f"Database error during login: {e}")
+        return None
+    finally:
+        db.close()
+
+def login_user(github_user_data: Dict[str, Any]):
+    """Login or create a user based on GitHub data and set the session."""
+    github_id = github_user_data.get("id")
+    email = github_user_data.get("email")
+    username = github_user_data.get("login")
+    name = github_user_data.get("name")
+
+    if not github_id or not username:
+        st.error("Invalid GitHub user data")
+        return None
+
+    db: Session = get_session()
+    try:
+        user = db.query(User).filter(User.github_id == github_id).first()
+        if not user:
+            # Create new user
+            user = User(
+                github_id=github_id,
+                email=email or f"{username}@github.com",
+                username=username,
+                name=name,
+                last_login=datetime.datetime.now(datetime.timezone.utc)
+            )
+            db.add(user)
+        else:
+            # Update last login
+            user.last_login = datetime.datetime.now(datetime.timezone.utc)
+            if email:
+                user.email = email
+            if name:
+                user.name = name
+        
+        db.commit()
+        db.refresh(user)
+        
+        # Set session state
+        st.session_state.user = {
+            "id": user.id,
+            "username": user.username,
+            "name": user.name,
+            "email": user.email
+        }
+        st.session_state.authenticated = True
+        
+        return user
+    except Exception as e:
+        db.rollback()
+        st.error(f"Database error during login: {e}")
+        return None
+    finally:
+        db.close()
+
+def logout_user():
+    """Logout the current user."""
+    st.session_state.authenticated = False
+    st.session_state.user = None
+
+def check_auth():
+    """Check if the user is authenticated via session state."""
+    return st.session_state.get("authenticated", False)

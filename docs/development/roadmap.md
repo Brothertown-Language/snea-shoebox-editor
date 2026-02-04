@@ -25,27 +25,21 @@ Before initializing the project, you must set up the hosting and database platfo
 2.  **GitHub OAuth Setup**:
     - Go to your GitHub [**Developer settings > OAuth Apps > New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor`
-    - **Homepage URL**: `https://snea-edit.streamlit.app`
-    - **Authorization callback URL**: `https://snea-edit.streamlit.app`
+    - **Homepage URL**: `https://snea-shoebox-editor.streamlit.app/`
+    - **Authorization callback URL**: `https://snea-shoebox-editor.streamlit.app/`
     - Generate a **Client Secret** and save both the **Client ID** and **Client Secret**.
-3.  **Streamlit Community Cloud Setup**:
-    - Sign in to [Streamlit Community Cloud](https://share.streamlit.app/) with your GitHub account.
-    - Click **Create app** and select your private GitHub repository.
-    - In the app settings, go to **Secrets** and paste the following (replacing with your actual values):
+    - In the app settings, go to **Secrets** and paste the content of **`.streamlit/secrets.toml.production`**:
       ```toml
       [connections.postgresql]
-      url = "postgresql://avnadmin:[YOUR-PASSWORD]@[YOUR-SERVICE-NAME]-[YOUR-PROJECT-NAME].aivencloud.com:[YOUR-PORT]/defaultdb?sslmode=require"
+      url = "YOUR_DATABASE_URL"
 
-      [github_oauth]
-      client_id = "YOUR_GITHUB_CLIENT_ID"
-      client_secret = "YOUR_GITHUB_CLIENT_SECRET"
-      redirect_uri = "https://snea-edit.streamlit.app"
-      cookie_secret = "a-random-secret-string"
+      [github]
+      client_id = "YOUR_CLIENT_ID"
+      client_secret = "YOUR_CLIENT_SECRET"
+      redirect_uri = "https://snea-shoebox-editor.streamlit.app/"
 
-      # [FUTURE FEATURE]
-      # [embedding]
-      # model_id = "BAAI/bge-m3"
-      # api_key = "hf_your_token_here"
+      [auth]
+      jwt_secret = "YOUR_JWT_SECRET"
       ```
 
 ### Phase 2: Local Development Setup [COMPLETED]
@@ -64,11 +58,13 @@ Before initializing the project, you must set up the hosting and database platfo
       # For Aiven or existing local DB
       url = "YOUR_DB_CONNECTION_URI"
 
-      [github_oauth]
+      [github]
       client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
       client_secret = "YOUR_LOCAL_GITHUB_CLIENT_SECRET"
       redirect_uri = "http://localhost:8501"
-      cookie_secret = "a-random-secret-string"
+
+      [auth]
+      jwt_secret = "a-debug-jwt-secret"
 
       # [FUTURE FEATURE]
       # [embedding]
@@ -117,10 +113,10 @@ Before initializing the project, you must set up the hosting and database platfo
 - Implement schema initialization in Aiven.
 - Migrate existing Natick/Trumbull data to the new database.
 
-### Phase 4: GitHub OAuth Integration [IN PROGRESS]
-- Implement the login flow using `streamlit-oauth`.
-- Verify user membership in authorized teams/orgs.
-- Securely store session state.
+### Phase 4: GitHub OAuth Integration [COMPLETED]
+- Implement the login flow using a simplified session-based approach.
+- Securely store session state in Streamlit's `st.session_state`.
+- Protect all app routes with authentication.
 
 ### Phase 5: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
