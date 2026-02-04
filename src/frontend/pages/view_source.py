@@ -6,7 +6,7 @@ def view_source():
     if not source_id:
         st.error("No source ID provided")
         if st.button("Back to Home"):
-            st.switch_page("Home")
+            st.switch_page("index")
         return
 
     st.title(f"Source View: {source_id}")
@@ -16,4 +16,4 @@ def view_source():
     st.info(f"In a future update, this will pull source {source_id} from the database.")
     
     if st.button("Back to Home"):
-        st.switch_page("Home")
+        st.switch_page("index")

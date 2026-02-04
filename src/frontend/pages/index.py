@@ -8,7 +8,7 @@ def index():
     
     st.subheader("Navigation")
     if st.button("Go to System Status"):
-        st.switch_page("System Status")
+        st.switch_page("status")
         
     st.divider()
     st.subheader("Record Links (Examples)")
@@ -16,8 +16,8 @@ def index():
     with col1:
         if st.button("View Record 1"):
             st.query_params["id"] = 1
-            st.switch_page("Record View")
+            st.switch_page("record")
     with col2:
         if st.button("View Record 42"):
             st.query_params["id"] = 42
-            st.switch_page("Record View")
+            st.switch_page("record")

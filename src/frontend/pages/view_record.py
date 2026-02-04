@@ -6,7 +6,7 @@ def view_record():
     if not record_id:
         st.error("No record ID provided")
         if st.button("Back to Home"):
-            st.switch_page("Home")
+            st.switch_page("index")
         return
 
     st.title(f"Record View: {record_id}")
@@ -16,4 +16,4 @@ def view_record():
     st.info(f"In a future update, this will pull record {record_id} from the database.")
     
     if st.button("Back to Home"):
-        st.switch_page("Home")
+        st.switch_page("index")
