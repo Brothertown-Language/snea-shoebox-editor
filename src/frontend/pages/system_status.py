@@ -4,7 +4,7 @@ import os
 from src.frontend.utils import (
     get_db_host_port, verify_dns, verify_reachability, 
     check_db_connection, get_env_info, get_hardware_info, 
-    get_filesystem_info, get_masked_env_vars
+    get_filesystem_info
 )
 
 def system_status():
@@ -127,8 +127,3 @@ def system_status():
                 writable_str = "✅ Writable" if details["Writable"] else "❌ Read-only"
                 cols[1].text(f"Access: {writable_str}")
 
-    st.divider()
-    st.subheader("Environment Variables")
-    with st.expander("View Environment Variables"):
-        env_vars = get_masked_env_vars()
-        st.json(env_vars)
