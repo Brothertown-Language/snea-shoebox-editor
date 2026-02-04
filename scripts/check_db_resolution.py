@@ -5,12 +5,11 @@ import os
 # Add project root to sys.path
 sys.path.insert(0, os.getcwd())
 
-from src.database import get_db_url, _is_production
+from src.database import get_db_url, is_production
 
 def test_db_resolution():
-    # Simulate production
-    os.environ["USER"] = "appuser"
-    is_prod = _is_production()
+    # Detect environment
+    is_prod = is_production()
     url = get_db_url()
     
     print(f"Is Production: {is_prod}")

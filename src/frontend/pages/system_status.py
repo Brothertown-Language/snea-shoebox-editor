@@ -17,6 +17,11 @@ def system_status():
         # Database Infrastructure Checklist
         st.subheader("Database Connectivity Checklist")
         
+        from src.database import is_production
+        is_prod = is_production()
+        env_label = "Production" if is_prod else "Local Test"
+        st.write(f"Environment: **{env_label}**")
+        
         db_host, db_port = get_db_host_port()
         
         # Mask host for display
@@ -40,8 +45,11 @@ def system_status():
             if ips_v6:
                 st.info(f"IPv6: {len(ips_v6)} address(es) found [REDACTED]")
         else:
-            st.error(f"❌ DNS Resolution: FAILED")
-            st.write(f"Details: DNS lookup failed for the configured host.")
+            if db_host and db_host.startswith('/') or (not db_host and db_port == 0):
+                st.write("✅ Database Connection: Unix Socket (Local)")
+            else:
+                st.error(f"❌ DNS Resolution: FAILED")
+                st.write(f"Details: DNS lookup failed for the configured host.")
 
         # 2. Reachability Check
         reach_ok, reach_msg, v4_ok, v6_ok = verify_reachability(db_host, db_port)
@@ -57,8 +65,11 @@ def system_status():
             else:
                 st.warning("IPv6: FAILED (Expected on many local networks)")
         else:
-            st.error(f"❌ Socket Reachability: FAILED")
-            st.write("Details: Unable to establish a socket connection.")
+            if not dns_ok and (db_host and db_host.startswith('/') or (not db_host and db_port == 0)):
+                pass # Already handled in DNS check as Unix Socket
+            else:
+                st.error(f"❌ Socket Reachability: FAILED")
+                st.write("Details: Unable to establish a socket connection.")
 
         # 3. SQL Connection Check (Only if previous checks pass or as final step)
         st.divider()

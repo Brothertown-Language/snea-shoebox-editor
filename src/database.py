@@ -25,7 +25,7 @@ def _stop_local_db():
         except Exception:
             pass
 
-def _is_production():
+def is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
     # Streamlit Cloud always runs apps under the Linux user 'appuser'.
     # This is a widely used community workaround for production detection.
@@ -40,7 +40,7 @@ def _auto_start_pgserver():
     global _pg_server
     
     # Safety check: NEVER start pgserver in production
-    if _is_production():
+    if is_production():
         return None
 
     try:
@@ -60,7 +60,7 @@ def _auto_start_pgserver():
         return None
     except Exception as e:
         # Only warn if not in production and import succeeded but start failed
-        if not _is_production():
+        if not is_production():
             st.warning(f"Failed to auto-start local PostgreSQL: {e}")
         return None
 
@@ -142,7 +142,7 @@ def get_db_url():
     # 1. If we are in local dev, prioritize auto-starting pgserver
     # to avoid accidentally using production secrets from .streamlit/secrets.toml
     # or DATABASE_URL environment variable if it happens to be set to prod.
-    if not _is_production():
+    if not is_production():
         auto_url = _auto_start_pgserver()
         if auto_url:
             # Set environment variable so other parts of the app can use it

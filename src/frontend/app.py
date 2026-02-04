@@ -10,8 +10,15 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 import src.frontend.pages as pages
+from src.database import get_db_url
 
 def main():
+    # Trigger database URL resolution and potential pgserver auto-start early
+    try:
+        get_db_url()
+    except Exception:
+        pass
+
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(
         page_title="SNEA Shoebox Editor",
