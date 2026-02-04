@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Brothertown Language
 import unittest
 import os
-from src.backend.database import _is_production, _auto_start_pgserver
+from src.database import _is_production, _auto_start_pgserver
 
 class TestProductionSafety(unittest.TestCase):
     def test_production_detection(self):

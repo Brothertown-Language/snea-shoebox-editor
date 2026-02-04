@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
 import unittest
-from src.shared.mdf_validator import MDFValidator
+from src.mdf.validator import MDFValidator
 
 class TestMDFValidator(unittest.TestCase):
     def test_valid_record(self):

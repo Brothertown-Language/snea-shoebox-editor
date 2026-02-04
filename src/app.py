@@ -20,7 +20,7 @@ from urllib.parse import urlparse
 def get_db_host_port():
     """Extracts host and port from Streamlit secrets or environment."""
     try:
-        from src.backend.database import get_db_url
+        from src.database import get_db_url
         url = get_db_url()
         
         if url:
@@ -104,7 +104,7 @@ def verify_reachability(host, port):
 def check_db_connection():
     """Checks the database connection and returns status and details."""
     try:
-        from src.backend.database import get_db_url
+        from src.database import get_db_url
         db_url = get_db_url()
         if not db_url:
             return False, "Database URL not found", {}
@@ -133,7 +133,7 @@ def check_db_connection():
 
 def get_env_info():
     """Gathers information about the execution environment."""
-    from src.backend.database import _is_production
+    from src.database import _is_production
     
     is_prod = _is_production()
     info = {
