@@ -6,6 +6,7 @@ import os
 import streamlit as st
 from pathlib import Path
 import atexit
+import getpass
 
 # Global variable to hold the pgserver instance if auto-started
 _pg_server = None
@@ -26,21 +27,13 @@ def _stop_local_db():
 
 def _is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
-    # In local development, we expect to find .streamlit/secrets.toml or .env files.
-    # Streamlit Cloud uses its own "Secrets" UI, and we do not commit these files to GitHub.
-    root_dir = Path(__file__).parent.parent
-    local_markers = [
-        root_dir / ".streamlit" / "secrets.toml",
-        root_dir / ".env"
-    ]
-    
-    # If any local marker exists, we are NOT in production
-    for marker in local_markers:
-        if marker.exists():
-            return False
-            
-    # Default to production if no local markers are found
-    return True
+    # Streamlit Cloud always runs apps under the Linux user 'appuser'.
+    # This is a widely used community workaround for production detection.
+    try:
+        return getpass.getuser() == "appuser"
+    except Exception:
+        # Fallback to local if user cannot be determined
+        return False
 
 def _auto_start_pgserver():
     """Try to auto-start pgserver for local development."""
