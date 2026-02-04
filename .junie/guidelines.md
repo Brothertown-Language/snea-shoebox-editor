@@ -35,10 +35,21 @@ date: 2026-02-03
 - **NEVER** use shell redirects (`>`, `>>`) in terminal commands to create or append to files.
 - **REASON:** Shell redirects bypass tool-specific validations and can lead to data loss or corruption.
 
+### NEVER grep the `.git` folder
+- **ALWAYS** exclude the `.git` directory when using `grep` or similar search tools.
+- **CORRECT:** `grep -r --exclude-dir=.git "search_term" .`
+- **WRONG:** `grep -ri "search_term" .`
+- **REASON:** The `.git` folder contains binary files and metadata that produce erroneous search results.
+
+### GUIDELINE UPDATES
+- When told to remember to update the AI guidelines, **do nothing else**.
+- "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.
+- Focus exclusively on identifying the necessary updates and applying them to the `.junie/` documentation.
+
 ### Frontend Architecture: Streamlit (Community Cloud)
 - **Production:** Streamlit Community Cloud (connected to private GitHub repo)
 - **Local Dev:** Regular Streamlit server (`uv run streamlit run src/frontend/app.py`)
-- **Hosting:** Streamlit Community Cloud for frontend, Supabase for PostgreSQL database
+- **Hosting:** Streamlit Community Cloud for frontend, Aiven for PostgreSQL database
 - **Secrets:** Use `.streamlit/secrets.toml` locally and "Secrets" UI in Streamlit Cloud
 
 ---

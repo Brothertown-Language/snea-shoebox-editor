@@ -3,6 +3,9 @@
 
 # Database Provider Comparison
 
+> [!IMPORTANT]
+> **Aiven** is the chosen and currently active database provider for this project. This document remains for historical context and technical justification.
+
 This document provides a technical comparison between Supabase, Aiven, and Neon to justify the selection of Aiven for the SNEA Online Shoebox Editor.
 
 ## Comparison Matrix

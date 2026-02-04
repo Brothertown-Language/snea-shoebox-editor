@@ -34,6 +34,7 @@ uv run streamlit run src/frontend/app.py
 - **Rule:** Assume any test failures are caused by your recent changes.
 - **Rule:** After 3 failed attempts to fix a test, you **MUST** ask the user for guidance.
 - **Rule:** NEVER bypass or weaken failed tests by mocking/stubbing to hide issues, deleting/disabling tests, weakening assertions, or using skip flags.
+- **Rule (Searching):** **NEVER** search the `.git` folder. **ALWAYS** exclude the `.git` folder from all searching operations.
 
 ### Test Strategy by Change Type
 - **Bug Fix:** Write a reproduction test first, verify that it fails, and then implement the fix.
@@ -44,7 +45,7 @@ uv run streamlit run src/frontend/app.py
 ## Secrets Management
 - **Local Development:** Use `.streamlit/secrets.toml`. This file is ignored by git and must never be committed.
 - **Production (Cloud):** Use the Streamlit Community Cloud "Secrets" management interface.
-- **Database Connection:** Use `st.connection("postgresql", type="sql")` for connecting to the Supabase instance.
+- **Database Connection:** Use `st.connection("postgresql", type="sql")` for connecting to the Aiven instance.
 
 ## Version Control
 
@@ -70,7 +71,7 @@ uv run streamlit run src/frontend/app.py
 - **Infrastructure:**
     - **Frontend:** Hosted on Streamlit Community Cloud.
     - **Backend:** Server-side execution within Streamlit Cloud.
-    - **Database:** Hosted on Supabase (PostgreSQL).
+    - **Database:** Hosted on Aiven (PostgreSQL).
 - **Configuration:** Use the Streamlit Cloud "Secrets" UI for all production environment variables and secrets.
 
 ### Configuration Files

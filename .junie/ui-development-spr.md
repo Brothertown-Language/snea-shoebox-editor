@@ -26,7 +26,7 @@ uv run streamlit run src/frontend/app.py
       st.session_state.user = None
   ```
 
-### Database Connection (Supabase)
+### Database Connection (Aiven)
 - **Library:** `st.connection("postgresql", type="sql")`
 - **Secrets:** Configure in `.streamlit/secrets.toml` locally or "Secrets" UI in Cloud.
 - **Example:**

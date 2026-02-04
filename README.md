@@ -74,7 +74,7 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[Roadmap & Setup](docs/development/roadmap.md)**: Deployment phases and detailed setup guide.
-- **[Database Comparison](docs/database/DB_COMPARISON.md)**: Why Aiven was chosen over Supabase and Neon.
+- **[Database Comparison](docs/database/DB_COMPARISON.md)**: Why Aiven was chosen as the database provider.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 - **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.
 - **[MDF Guidelines](docs/mdf/)**: References for the Multi-Dictionary Form.
