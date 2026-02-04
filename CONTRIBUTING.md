@@ -26,15 +26,15 @@ Thank you for your interest in contributing to the SNEA Online Shoebox Editor. W
 - We use `ruff` for code linting and formatting. It is recommended to install the `ruff` plugin in your IDE (e.g., PyCharm, VS Code).
 - Code is automatically formatted on commit via `pre-commit`. To set this up, run:
   ```bash
-  docker-compose exec web pre-commit install
+  pre-commit install
   ```
 
 ## Testing
 
-Before submitting a Pull Request, ensure all tests pass. Tests should be run within the Docker environment:
+Before submitting a Pull Request, ensure all tests pass.
 
 ```bash
-docker-compose exec web python -m unittest discover tests
+uv run python -m unittest discover tests
 ```
 
 ## Pull Request Process

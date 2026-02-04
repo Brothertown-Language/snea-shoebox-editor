@@ -21,22 +21,19 @@ def test_app_loads():
 
     # We will create the browser/page only after prechecks
 
-    # We use the service name 'web' as defined in docker/docker-compose.yml
     # Allow overriding retries via env to help diagnose hangs in CI
     max_retries = int(os.environ.get("SNEA_UI_MAX_RETRIES", "3"))
-    host = "web"
+    host = "localhost"
     port = 8501
     url = f"http://{host}:{port}"
 
-    # Ensure the Docker DNS name resolves and port is reachable before navigation
-    print("START: test_app_loads -> DNS/port precheck")
+    # Ensure the app is reachable before navigation
+    print("START: test_app_loads -> localhost port precheck")
     try:
-        resolved = socket.gethostbyname(host)
-        print(f"Resolved {host} -> {resolved}")
         with socket.create_connection((host, port), timeout=2) as s:
             print(f"TCP connect to {host}:{port} OK")
     except Exception as e:
-        pytest.fail(f"Precheck failed: cannot resolve/connect to {host}:{port}: {e}")
+        pytest.fail(f"Precheck failed: cannot connect to {host}:{port}: {e}")
     
     # Launch browser only after prechecks, to avoid fixture hangs
     with sync_playwright() as p:

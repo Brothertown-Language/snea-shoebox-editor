@@ -31,3 +31,4 @@ Completed Tasks:
 - REMOVED defunct deployment exclusion mechanism (Streamlit Cloud does not support exclusions).
  - ADDED DNS resolution and socket reachability checks for PostgreSQL to the landing page.
  - TESTED local IPv6 connectivity and enhanced connectivity checks to support dual-stack (IPv4/IPv6) reporting.
+ - PURGED all Docker usage and Node.js artifacts from the project and updated documentation.

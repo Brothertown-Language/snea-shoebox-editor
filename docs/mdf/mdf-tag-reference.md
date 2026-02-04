@@ -6,7 +6,7 @@ This document provides a human-readable reference for the Multi-Dictionary Forma
 Language project. MDF is a standard for structuring lexical data in software like ShoeBox and ToolBox.
 
 **HTML Version:** An auto-generated HTML version of this guide is available at
-`documentation/mdf-tag-reference.html`. To update it, run `docker-compose exec web python scripts/shared/sync_mdf_docs.py`.
+`documentation/mdf-tag-reference.html`. To update it, run `uv run python scripts/shared/sync_mdf_docs.py`.
 
 **Source of Truth:** This guide is based on the original MDF documentation found at
 `documentation/MDFields19a_UTF8.txt`.
