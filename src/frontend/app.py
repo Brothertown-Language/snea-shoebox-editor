@@ -3,7 +3,9 @@ import streamlit as st
 from sqlalchemy import text
 import sys
 import os
+import glob
 import platform
+import fnmatch
 
 def check_supabase_connection():
     """Checks the Supabase connection and returns status and details."""
@@ -31,6 +33,48 @@ def get_env_info():
     info["Using uv"] = "Yes" if is_uv else "No (Standard pip/venv)"
     
     return info
+
+def verify_deployment_exclusions():
+    """
+    Verifies that files and directories listed in .streamlitignore 
+    are not present in the current environment.
+    
+    Returns a list of (pattern, exists, type) tuples.
+    """
+    results = []
+    ignore_file = ".streamlitignore"
+    
+    if not os.path.exists(ignore_file):
+        return results
+
+    try:
+        with open(ignore_file, "r") as f:
+            lines = f.readlines()
+            
+        for line in lines:
+            line = line.strip()
+            # Skip comments and empty lines
+            if not line or line.startswith("#"):
+                continue
+            
+            # Remove trailing slash for existence check if it's a directory pattern
+            clean_pattern = line.rstrip('/')
+            
+            # Use glob to handle patterns if they contain wildcards
+            matches = glob.glob(clean_pattern)
+            
+            if matches:
+                for match in matches:
+                    item_type = "Dir" if os.path.isdir(match) else "File"
+                    results.append((line, True, item_type))
+            else:
+                # If no matches, it's successfully ignored (absent)
+                results.append((line, False, "Unknown"))
+                
+    except Exception as e:
+        st.error(f"Error reading .streamlitignore: {e}")
+        
+    return results
 
 def main():
     st.set_page_config(
@@ -63,6 +107,33 @@ def main():
         env_info = get_env_info()
         for key, value in env_info.items():
             st.text(f"{key}: {value}")
+
+    st.divider()
+
+    # Deployment Integrity Section
+    st.subheader("Deployment Integrity (Exclusion Check)")
+    st.write("Verifying that development-only files are excluded from the deployment.")
+    
+    exclusion_results = verify_deployment_exclusions()
+    
+    if not exclusion_results:
+        st.warning("No `.streamlitignore` file found or it is empty.")
+    else:
+        found_any = any(exists for _, exists, _ in exclusion_results)
+        
+        if found_any:
+            st.warning("⚠️ Some ignored files/directories are present in this environment.")
+            # Show details in an expander
+            with st.expander("Show Detailed Exclusion Report"):
+                # Filter only those that exist
+                existing_items = [r for r in exclusion_results if r[1]]
+                for pattern, exists, item_type in existing_items:
+                    st.write(f"❌ `{pattern}` ({item_type}) is **PRESENT**")
+                
+                st.divider()
+                st.write("Note: These files are expected to be present during local development.")
+        else:
+            st.success("✅ All files in `.streamlitignore` are successfully excluded.")
 
     st.divider()
     st.info("The application is being prepared for further development.")

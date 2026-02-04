@@ -26,6 +26,17 @@ Since this repository is part of a GitHub Organization, access must be granted a
 - **Main file path**: `src/frontend/app.py`
 - **App URL**: `https://snea-edit.streamlit.app` (If this is taken, use `snea-editor.streamlit.app` and update secrets/OAuth settings accordingly).
 
+### Managing Excluded Files
+The project contains development-only files (tests, documentation, docker configs) that are not needed in the production app. We manage this using a `.streamlitignore` file in the root directory.
+
+Streamlit Community Cloud typically uses `.gitignore` to determine which files to ignore. For finer control over deployment-only exclusions, ensure `.streamlitignore` is kept up to date with directories or files that should not be uploaded to the cloud environment.
+
+### Verification of Exclusions
+The application includes a built-in verification mechanism to ensure that files listed in `.streamlitignore` are indeed absent from the production environment. 
+- In the **System Status** page of the app, look for the **Deployment Integrity (Exclusion Check)** section.
+- On Streamlit Community Cloud, this section should ideally show a success message (✅ All files in `.streamlitignore` are successfully excluded).
+- During local development, it will likely show a warning because development files are present on your local machine.
+
 ### Troubleshooting: "Subdomain Taken" Error
 If your deployment failed and you now see "Subdomain taken" when trying to re-create it:
 1.  **Check your Dashboard**: Go to [share.streamlit.app](https://share.streamlit.app). The failed app is likely already in your list.

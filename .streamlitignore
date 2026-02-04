@@ -1,0 +1,40 @@
+# .streamlitignore
+# This file specifies patterns that should be ignored when deploying to Streamlit Community Cloud.
+
+# Development and Documentation
+docs/
+documentation/
+tests/
+scripts/
+CONTRIBUTING.md
+LICENSE
+
+# AI and Tooling
+.junie/
+.idea/
+.ruff_cache/
+.pre-commit-config.yaml
+
+# Docker and Build Artifacts
+docker/
+docker.app/
+docker.cache/
+docker.data/
+docker.reports/
+.dockerignore
+node_modules/
+
+# Python and Environment
+__pycache__/
+.venv/
+.temp_venv/
+.pytest_cache/
+uv.lock
+pyproject.toml
+test_results.log
+test_results_final.log
+
+# Temporary files
+tmp/
+.env
+.env.example
