@@ -54,10 +54,10 @@ uv run streamlit run src/frontend/app.py
 - **Format:** Use plain, descriptive text.
 - **Constraint:** **DO NOT** use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
 - **Grouping:** Group all related changes into a single, cohesive commit.
-- **Workflow (Recommended):**
-    1. Create the commit message in `tmp/commit.msg.tmp`.
-    2. Move it to `tmp/commit.msg` just before committing.
-- **Cleanup:** **ALWAYS** remove `tmp/commit.msg` (or the `.tmp` version) after the commit is successful.
+- **Workflow (Requirement):**
+    1. Create the commit message using the `create` tool at `tmp/commit.msg`.
+    2. Execute the commit command using the terminal.
+- **Cleanup:** **ALWAYS** remove `tmp/commit.msg` after the commit is successful.
 
 ### Active Task Tracking
 - **File:** `documentation/ACTIVE_TASK.md`
