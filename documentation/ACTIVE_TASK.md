@@ -9,12 +9,12 @@ Date: 2026-02-03
 - Cleared `src/frontend/app.py` and replaced it with a minimal "Hello World" structure.
 - All feature phases (3-6) in `docs/development/roadmap.md` are marked as [PENDING].
 
+- [DONE] Refactored project to a monolithic structure (moved src/frontend/app.py to src/app.py, etc).
+- [DONE] Removed Playwright and UI tests.
+- [DONE] Committed and pushed all changes to the main branch.
+
 Next Steps:
-- [PENDING] Deploy the app to Streamlit Cloud using `src/app.py` as main file path.
-- [PENDING] Configure production secrets in Streamlit Cloud UI with `https://snea-edit.streamlit.app`.
-- Re-implement Database integration in the new Streamlit app (Aiven secrets added).
-- Re-implement GitHub OAuth flow.
-- Committed and pushed infrastructure and roadmap updates to main.
+- [PENDING] Deploy the app to Streamlit Cloud using `src/app.py` as main file path (Verify automatic deploy).
 
 Critical Reminder:
 - Do not mark things as done until the User says they are done. AI is not driving this project.
