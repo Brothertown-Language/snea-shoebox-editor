@@ -70,9 +70,9 @@ When programmatically switching pages in the Streamlit application:
 - **Rule:** NEVER chain git commands (e.g., `git add && git commit`). Execute them as separate steps.
 - **Rule (Safety):** **ALWAYS** run `git status` before `git commit` to verify exactly what is staged.
 - **Rule (Exclusion):** If you accidentally stage a secret, **ALWAYS** use `git reset <file>` to unstage it before proceeding.
+- **Rule (Prefixes):** **NEVER** use prefixes like `feat:`, `fix:`, `docs:`, or any other Conventional Commits style prefixes in commit messages.
 - **Location:** All commit messages must be written to `tmp/commit.msg`.
 - **Format:** Use plain, descriptive text.
-- **Constraint:** **DO NOT** use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
 - **Grouping:** Group all related changes into a single, cohesive commit.
 - **Workflow (Requirement):**
     1. Create the commit message using the `create` tool at `tmp/commit.msg`.

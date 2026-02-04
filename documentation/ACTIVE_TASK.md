@@ -42,5 +42,6 @@ Completed Tasks:
  - [DONE] Locked Python version to exactly 3.12.* in `pyproject.toml` and `uv.lock` to ensure Streamlit Cloud uses the correct major/minor release.
  - [DONE] Updated .python-version, pyproject.toml, and documentation to reflect the strict Python 3.12 requirement.
  - [DONE] Committed and pushed changes to main branch.
+ - [DONE] UPDATED AI guidelines to strictly forbid using prefixes (like `feat:`, `fix:`) in commit messages.
  - ADDED native Streamlit OAuth2 reference documentation to `docs/github/native-oauth-reference.md`.
  - UPDATED `docs/github/github-oauth-doc.md` to reflect native auth callback requirements and link to the new reference.

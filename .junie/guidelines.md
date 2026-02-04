@@ -30,6 +30,12 @@ date: 2026-02-03
 - Dev must be able to access, edit, or remove mounted volumes at will
 - Example: `docker run --user $(id -u):$(id -g) -v $(pwd)/tmp:/tmp ...`
 
+### DO NOT USE PREFIXES IN COMMIT MESSAGES
+- **NEVER** use prefixes like `feat:`, `fix:`, `docs:`, or any other Conventional Commits style prefixes in commit messages.
+- **ALWAYS** use plain, descriptive text for commit messages.
+- **CORRECT:** `git commit -m "Add new feature for record validation"`
+- **WRONG:** `git commit -m "feat: add record validation"`
+
 ### DO NOT USE SHELL REDIRECTS - THEY ARE DANGEROUS
 - **ALWAYS** use the designated tools (like `create`, `search_replace`, `multi_edit`) to modify files.
 - **NEVER** use shell redirects (`>`, `>>`) in terminal commands to create or append to files.
