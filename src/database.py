@@ -26,16 +26,21 @@ def _stop_local_db():
 
 def _is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
-    # Streamlit Cloud sets these environment variables
-    # STREAMLIT_RUNTIME is usually "cloud" or "s4t" on Streamlit Cloud and absent locally.
-    return (
-        os.getenv("STREAMLIT_RUNTIME") is not None or
-        os.getenv("STREAMLIT_CLOUD") is not None or
-        os.getenv("STREAMLIT_RUNTIME_RELIABLE_ADDRESS") is not None or 
-        os.getenv("STREAMLIT_SHARING_ENVIRONMENT") is not None or
-        (os.getenv("STREAMLIT_SERVER_PORT") == "8501" and os.path.exists("/home/adminuser")) or
-        os.path.exists("/app/src/frontend/app.py") # Common path in Streamlit Cloud
-    )
+    # In local development, we expect to find .streamlit/secrets.toml or .env files.
+    # Streamlit Cloud uses its own "Secrets" UI, and we do not commit these files to GitHub.
+    root_dir = Path(__file__).parent.parent
+    local_markers = [
+        root_dir / ".streamlit" / "secrets.toml",
+        root_dir / ".env"
+    ]
+    
+    # If any local marker exists, we are NOT in production
+    for marker in local_markers:
+        if marker.exists():
+            return False
+            
+    # Default to production if no local markers are found
+    return True
 
 def _auto_start_pgserver():
     """Try to auto-start pgserver for local development."""
