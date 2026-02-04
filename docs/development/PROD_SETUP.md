@@ -24,7 +24,14 @@ Since this repository is part of a GitHub Organization, access must be granted a
 
 ### Deployment Settings
 - **Main file path**: `src/frontend/app.py`
-- **App URL**: `https://snea-edit.streamlit.app`
+- **App URL**: `https://snea-edit.streamlit.app` (If this is taken, use `snea-editor.streamlit.app` and update secrets/OAuth settings accordingly).
+
+### Troubleshooting: "Subdomain Taken" Error
+If your deployment failed and you now see "Subdomain taken" when trying to re-create it:
+1.  **Check your Dashboard**: Go to [share.streamlit.app](https://share.streamlit.app). The failed app is likely already in your list.
+2.  **Fix or Delete**: 
+    - Click the three dots (⋮) -> **Settings** -> **Configuration** to fix the **Main file path** to `src/frontend/app.py`.
+    - Alternatively, delete the failed app and wait 5 minutes before trying to use the same subdomain again.
 
 ## 2. Supabase (Database)
 
