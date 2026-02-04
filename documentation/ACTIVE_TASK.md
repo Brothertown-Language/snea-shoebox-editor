@@ -22,3 +22,4 @@ Completed Tasks:
 - ADDED Supabase connection secrets to `.streamlit/secrets.toml`.
 - ADDED Hello World placeholder to `src/frontend/app.py` for deployment.
 - DOCUMENTED Organization access settings for Streamlit Cloud in `docs/development/PROD_SETUP.md`.
+- ADDED Supabase health check to `src/frontend/app.py`.
