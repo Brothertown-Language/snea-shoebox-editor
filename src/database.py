@@ -27,9 +27,11 @@ def _stop_local_db():
 def _is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
     # Streamlit Cloud sets these environment variables
+    # Check for both corrected spelling and common Streamlit Cloud markers
     return (
         os.getenv("STREAMLIT_RUNTIME_RELIABLE_ADDRESS") is not None or 
-        os.getenv("STREAMLIT_SHARING_ENVIROMENT") is not None
+        os.getenv("STREAMLIT_SHARING_ENVIRONMENT") is not None or
+        os.getenv("STREAMLIT_SERVER_PORT") == "8501" and os.path.exists("/home/adminuser")
     )
 
 def _auto_start_pgserver():
@@ -141,6 +143,15 @@ def get_db_url():
     if env_url:
         return env_url
 
+    # If we are in local dev, prioritize auto-starting pgserver
+    # to avoid accidentally using production secrets from .streamlit/secrets.toml
+    if not _is_production():
+        auto_url = _auto_start_pgserver()
+        if auto_url:
+            # Set environment variable so other parts of the app can use it
+            os.environ["DATABASE_URL"] = auto_url
+            return auto_url
+
     try:
         if "connections" in st.secrets and "postgresql" in st.secrets["connections"]:
             url = st.secrets["connections"]["postgresql"]["url"]
@@ -149,14 +160,6 @@ def get_db_url():
     except Exception:
         pass
     
-    # If we are in local dev and nothing is set, try to auto-start pgserver
-    if not _is_production():
-        auto_url = _auto_start_pgserver()
-        if auto_url:
-            # Set environment variable so other parts of the app can use it
-            os.environ["DATABASE_URL"] = auto_url
-            return auto_url
-
     return None
 
 def init_db():

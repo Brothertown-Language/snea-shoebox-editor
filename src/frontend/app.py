@@ -144,6 +144,9 @@ def get_env_info():
         "Executable": sys.executable,
     }
     
+    # Debug info for environment detection
+    info["Streamlit Cloud Markers"] = f"ReliableAddr: {os.getenv('STREAMLIT_RUNTIME_RELIABLE_ADDRESS') is not None}, SharingEnv: {os.getenv('STREAMLIT_SHARING_ENVIRONMENT') is not None}"
+    
     # Check for uv usage
     # Streamlit Cloud with uv support usually sets certain markers or we can infer from the path
     is_uv = "uv" in sys.executable or os.path.exists("uv.lock")
