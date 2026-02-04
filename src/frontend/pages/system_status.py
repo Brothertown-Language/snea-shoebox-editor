@@ -1,5 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
 import streamlit as st
+import os
 from src.frontend.utils import (
     get_db_host_port, verify_dns, verify_reachability, 
     check_db_connection, get_env_info, get_hardware_info, 
@@ -18,22 +19,34 @@ def system_status():
         
         db_host, db_port = get_db_host_port()
         
+        # Mask host for display
+        masked_host = "Database Host [REDACTED]"
+        if db_host:
+            if "localhost" in db_host or "127.0.0.1" in db_host:
+                masked_host = f"Local Host (`{db_host}`)"
+            else:
+                parts = db_host.split('.')
+                if len(parts) > 2:
+                    masked_host = f"`{parts[0][:3]}...{parts[-2]}.{parts[-1]}`"
+                else:
+                    masked_host = f"`{db_host[:3]}...`"
+
         # 1. DNS Check
         dns_ok, dns_msg, ips_v4, ips_v6 = verify_dns(db_host)
         if dns_ok:
-            st.write(f"✅ DNS Resolution: `{db_host}`")
+            st.write(f"✅ DNS Resolution: {masked_host}")
             if ips_v4:
-                st.info(f"IPv4 Addresses: {', '.join(ips_v4)}")
+                st.info(f"IPv4: {len(ips_v4)} address(es) found [REDACTED]")
             if ips_v6:
-                st.info(f"IPv6 Addresses: {', '.join(ips_v6)}")
+                st.info(f"IPv6: {len(ips_v6)} address(es) found [REDACTED]")
         else:
             st.error(f"❌ DNS Resolution: FAILED")
-            st.write(f"Details: `{dns_msg}`")
+            st.write(f"Details: DNS lookup failed for the configured host.")
 
         # 2. Reachability Check
         reach_ok, reach_msg, v4_ok, v6_ok = verify_reachability(db_host, db_port)
         if reach_ok:
-            st.write(f"✅ Socket Reachability: `{db_host}:{db_port}`")
+            st.write(f"✅ Socket Reachability: {masked_host}")
             if v4_ok:
                 st.success("IPv4: CONNECTED")
             else:
@@ -45,7 +58,7 @@ def system_status():
                 st.warning("IPv6: FAILED (Expected on many local networks)")
         else:
             st.error(f"❌ Socket Reachability: FAILED")
-            st.write(f"Details: `{reach_msg}`")
+            st.write("Details: Unable to establish a socket connection.")
 
         # 3. SQL Connection Check (Only if previous checks pass or as final step)
         st.divider()
@@ -63,7 +76,13 @@ def system_status():
                 st.warning("⚠️ **Capability: pgvector NOT enabled**")
         else:
             st.error("❌ SQL Connection: INVALID")
-            st.write(f"Error Details: `{message}`")
+            # Mask error message if it contains the DB URL
+            masked_error = str(message)
+            db_url = os.getenv("DATABASE_URL")
+            if db_url and db_url in masked_error:
+                masked_error = masked_error.replace(db_url, "[REDACTED_URL]")
+            
+            st.write(f"Error Details: `{masked_error}`")
             st.info("Check your Streamlit Cloud Secrets and Database status.")
 
     with col2:

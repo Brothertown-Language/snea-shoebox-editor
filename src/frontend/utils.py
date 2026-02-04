@@ -146,7 +146,10 @@ def get_env_info():
 def get_masked_env_vars():
     """Returns a dictionary of environment variables with sensitive values masked."""
     masked = {}
-    sensitive_keys = ["SECRET", "PASSWORD", "KEY", "TOKEN", "AUTH", "DATABASE_URL", "PGURL"]
+    sensitive_keys = [
+        "SECRET", "PASSWORD", "KEY", "TOKEN", "AUTH", 
+        "DATABASE_URL", "PGURL", "URI", "DSN", "CLIENT_SECRET"
+    ]
     for key, value in os.environ.items():
         if any(sk in key.upper() for sk in sensitive_keys):
             masked[key] = "********"
