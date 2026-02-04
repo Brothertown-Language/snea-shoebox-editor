@@ -44,6 +44,9 @@ uv run streamlit run src/frontend/app.py
 - **Documentation/Comments Only:** No tests are required.
 
 ## Secrets Management
+- **Rule (Zero Tolerance):** **NEVER** commit `.env`, `secrets.toml`, or any file containing credentials or sensitive keys.
+- **Rule (Verification):** **ALWAYS** run `git check-ignore <path>` if you are unsure if a file is ignored.
+- **Rule (Explicit Add):** **NEVER** use `git add` with explicit paths to files that are meant to be ignored (e.g., `git add .env`).
 - **Local Development:** Use `.streamlit/secrets.toml`. This file is ignored by git and must never be committed.
 - **Production (Cloud):** Use the Streamlit Community Cloud "Secrets" management interface.
 - **Database Connection:** Use `st.connection("postgresql", type="sql")` for connecting to the Aiven instance.
@@ -52,6 +55,8 @@ uv run streamlit run src/frontend/app.py
 
 ### Commit Messages
 - **Rule:** NEVER chain git commands (e.g., `git add && git commit`). Execute them as separate steps.
+- **Rule (Safety):** **ALWAYS** run `git status` before `git commit` to verify exactly what is staged.
+- **Rule (Exclusion):** If you accidentally stage a secret, **ALWAYS** use `git reset <file>` to unstage it before proceeding.
 - **Location:** All commit messages must be written to `tmp/commit.msg`.
 - **Format:** Use plain, descriptive text.
 - **Constraint:** **DO NOT** use Conventional Commits prefixes (e.g., `feat:`, `fix:`).

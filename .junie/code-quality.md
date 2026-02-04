@@ -18,6 +18,10 @@ Run through this checklist:
   - No API keys, tokens, passwords
   - No email addresses or PII
   - No internal URLs or system paths
+- [ ] **No sensitive files staged**
+  - Verified with `git status`
+  - No `.env`, `secrets.toml`, or `credentials` files
+  - Use `git check-ignore` if unsure
 - [ ] **All new functions have type annotations**
   - Parameters typed
   - Return values typed
@@ -43,14 +47,11 @@ Run through this checklist:
 # Check what will be committed
 git status
 
-# Review changes
-git diff --cached
-
-# Search for sensitive patterns
+# Review changes for secrets
 git diff --cached | grep -iE "token|key|secret|password|api_key"
 
-# Verify no sensitive files
-git status --short | grep -E "\.env|secrets|credentials"
+# Verify no ignored files are staged
+git status --short | grep -E "^[AM].*" | cut -c 4- | xargs -I {} git check-ignore -v {}
 ```
 
 ## Code quality standards
