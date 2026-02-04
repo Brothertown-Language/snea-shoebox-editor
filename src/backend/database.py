@@ -1,10 +1,66 @@
 # Copyright (c) 2026 Brothertown Language
-from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey, Index
+from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey, Index, text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
 from sqlalchemy.sql import func
 import os
 import streamlit as st
+from pathlib import Path
+import atexit
+
+# Global variable to hold the pgserver instance if auto-started
+_pg_server = None
+
+def _get_local_db_path():
+    """Get the path to the local database directory."""
+    return Path(__file__).parent.parent.parent / "tmp" / "local_db"
+
+def _stop_local_db():
+    """Stop the local database if it was auto-started."""
+    global _pg_server
+    if _pg_server:
+        try:
+            _pg_server.cleanup()
+            _pg_server = None
+        except Exception:
+            pass
+
+def _is_production():
+    """Detect if the application is running in the production environment (Streamlit Cloud)."""
+    # Streamlit Cloud sets these environment variables
+    return (
+        os.getenv("STREAMLIT_RUNTIME_RELIABLE_ADDRESS") is not None or 
+        os.getenv("STREAMLIT_SHARING_ENVIROMENT") is not None
+    )
+
+def _auto_start_pgserver():
+    """Try to auto-start pgserver for local development."""
+    global _pg_server
+    
+    # Safety check: NEVER start pgserver in production
+    if _is_production():
+        return None
+
+    try:
+        import pgserver
+        db_path = _get_local_db_path()
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        _pg_server = pgserver.get_server(str(db_path))
+        uri = _pg_server.get_uri()
+        
+        # Register cleanup on exit
+        atexit.register(_stop_local_db)
+        
+        return uri
+    except ImportError:
+        # pgserver not installed (likely production or not in dev group)
+        return None
+    except Exception as e:
+        # Only warn if not in production and import succeeded but start failed
+        if not _is_production():
+            st.warning(f"Failed to auto-start local PostgreSQL: {e}")
+        return None
 
 Base = declarative_base()
 
@@ -81,12 +137,28 @@ class Permission(Base):
 
 def get_db_url():
     """Get database URL from Streamlit secrets or environment variables."""
+    # Check environment variable first (often used in dev)
+    env_url = os.getenv("DATABASE_URL")
+    if env_url:
+        return env_url
+
     try:
         if "connections" in st.secrets and "postgresql" in st.secrets["connections"]:
-            return st.secrets["connections"]["postgresql"]["url"]
+            url = st.secrets["connections"]["postgresql"]["url"]
+            if url:
+                return url
     except Exception:
         pass
-    return os.getenv("DATABASE_URL")
+    
+    # If we are in local dev and nothing is set, try to auto-start pgserver
+    if not _is_production():
+        auto_url = _auto_start_pgserver()
+        if auto_url:
+            # Set environment variable so other parts of the app can use it
+            os.environ["DATABASE_URL"] = auto_url
+            return auto_url
+
+    return None
 
 def init_db():
     """Initialize the database schema."""
@@ -95,6 +167,13 @@ def init_db():
         raise ValueError("Database URL not found in secrets or environment.")
     
     engine = create_engine(db_url)
+    
+    # Ensure extensions are enabled
+    with engine.connect() as conn:
+        # Create vector extension for semantic search support
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        conn.commit()
+    
     Base.metadata.create_all(engine)
     return engine
 

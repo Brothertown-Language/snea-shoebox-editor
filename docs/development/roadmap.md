@@ -11,7 +11,7 @@ collaborative, version-controlled editing of linguistic records from across Sout
 
 To ensure a reliable and free deployment, the project uses **Streamlit Community Cloud** paired with **Aiven**.
 
-### Phase 1: Infrastructure Setup [PENDING]
+### Phase 1: Infrastructure Setup [COMPLETED]
 
 Before initializing the project, you must set up the hosting and database platforms.
 
@@ -21,6 +21,7 @@ Before initializing the project, you must set up the hosting and database platfo
     - Select a free plan (available in various regions including AWS US-East-1). Note that the PostgreSQL 17 free tier (EOL: 8 November 2029) includes 1 CPU, 1 GB RAM, 1 GB storage, and is limited to 20 maximum connections. Maintenance is scheduled for Wednesdays after 06:10:45 UTC.
     - Once the service is running, find your **Connection URI** in the Aiven console.
     - Save this connection string for the next step.
+    - **Capability Check**: The `vector` (pgvector) extension has been enabled in the production instance.
 2.  **GitHub OAuth Setup**:
     - Go to your GitHub [**Developer settings > OAuth Apps > New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor`
@@ -47,7 +48,7 @@ Before initializing the project, you must set up the hosting and database platfo
       # api_key = "hf_your_token_here"
       ```
 
-### Phase 2: Local Development Setup [PENDING]
+### Phase 2: Local Development Setup [COMPLETED]
 
 1.  **Connectivity Checks**:
     - The application now includes built-in DNS and socket reachability checks for the database, including both IPv4 and IPv6 support.
@@ -56,10 +57,12 @@ Before initializing the project, you must set up the hosting and database platfo
 
 2.  **Initialize Environment**:
     - Clone the repository.
-    - Create a `.streamlit/secrets.toml` file (ignored by git) and paste the same secrets used in Streamlit Cloud, but with local redirect URIs:
+    - **Local PostgreSQL**: The app will automatically start a local PostgreSQL instance using `pgserver` if no `DATABASE_URL` or secret is provided. Data is stored in `tmp/local_db`.
+    - (Optional) If you want to use a specific database, create a `.streamlit/secrets.toml` file (ignored by git):
       ```toml
       [connections.postgresql]
-      url = "postgresql://avnadmin:[YOUR-PASSWORD]@[YOUR-SERVICE-NAME]-[YOUR-PROJECT-NAME].aivencloud.com:[YOUR-PORT]/defaultdb?sslmode=require"
+      # For Aiven or existing local DB
+      url = "YOUR_DB_CONNECTION_URI"
 
       [github_oauth]
       client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
@@ -75,9 +78,7 @@ Before initializing the project, you must set up the hosting and database platfo
     - Note: You should create a separate GitHub OAuth App for local development with `http://localhost:8501` as the callback URL.
 2.  **Install Dependencies**:
     ```bash
-    uv venv
-    source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-    uv pip install -e .
+    uv sync
     ```
 3.  **Run Locally**:
     ```bash
@@ -123,8 +124,8 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ### Phase 5: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
-- **[DEFERRED]** Explore pgvector on Aiven for semantic search (Hugging Face integration).
-    - *Note: This feature is currently not implemented nor planned for immediate development due to budget constraints regarding dedicated inference hosting.*
+- **[IN PROGRESS]** Leverage `pgvector` on Aiven for semantic search (Hugging Face integration).
+    - *Note: Semantic search capability (pgvector) has been enabled in both local and production environments.*
 
 ### Phase 6: Quality Control & Audit [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.

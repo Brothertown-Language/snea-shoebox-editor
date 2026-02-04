@@ -36,15 +36,15 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
 
 1.  **Install dependencies**:
     ```bash
-    uv venv
-    source .venv/bin/activate
-    uv pip install -e .
+    uv sync
     ```
-2.  **Configure secrets**: Create `.streamlit/secrets.toml` with your Aiven and GitHub OAuth credentials.
-3.  **Run the app**:
+2.  **Run the app**:
     ```bash
     uv run streamlit run src/frontend/app.py
     ```
+    *Note: If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL instance using `pgserver` (data stored in `tmp/local_db`).*
+
+3.  **Configure secrets (Optional)**: Create `.streamlit/secrets.toml` with your GitHub OAuth credentials if you want to test authentication.
 
 ## Environment Secrets
 
@@ -60,7 +60,7 @@ Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Clou
 | `embedding.model_id` | (Future Feature - Deferred) Hugging Face Model ID |
 | `embedding.api_key` | (Future Feature - Deferred) Hugging Face API Key |
 
-Note: Semantic searching is a future feature and is not currently implemented nor planned for immediate implementation due to budget constraints regarding dedicated inference hosting.
+Note: Semantic searching is an upcoming feature. The database has been prepared with `pgvector` support in both production and local development environments.
 
 Note: Do not commit secrets to the repository. If secrets were accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
 

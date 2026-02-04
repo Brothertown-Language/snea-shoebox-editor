@@ -8,13 +8,18 @@ import socket
 from urllib.parse import urlparse
 
 def get_db_host_port():
-    """Extracts host and port from Streamlit secrets."""
+    """Extracts host and port from Streamlit secrets or environment."""
     try:
-        url = st.secrets["connections"]["postgresql"]["url"]
-        parsed = urlparse(url)
-        return parsed.hostname, parsed.port or 5432
+        from src.backend.database import get_db_url
+        url = get_db_url()
+        
+        if url:
+            parsed = urlparse(url)
+            # For Unix socket paths in pgserver, hostname might be empty
+            return parsed.hostname or "localhost", parsed.port or 5432
     except Exception:
-        return None, None
+        pass
+    return None, None
 
 def verify_dns(host):
     """Verifies DNS resolution for the given host (IPv4 and IPv6)."""
@@ -89,17 +94,40 @@ def verify_reachability(host, port):
 def check_db_connection():
     """Checks the database connection and returns status and details."""
     try:
+        from src.backend.database import get_db_url
+        db_url = get_db_url()
+        if not db_url:
+            return False, "Database URL not found", {}
+            
         # Streamlit handles the connection using secrets defined under [connections.postgresql]
-        conn = st.connection("postgresql", type="sql")
-        with conn.session as s:
-            s.execute(text("SELECT 1;"))
-        return True, "Connection Successful"
+        # But if we auto-started, we might need to use the URL directly
+        capabilities = {}
+        if os.getenv("DATABASE_URL") == db_url:
+            from sqlalchemy import create_engine
+            engine = create_engine(db_url)
+            with engine.connect() as conn:
+                conn.execute(text("SELECT 1;"))
+                # Check for pgvector
+                res = conn.execute(text("SELECT count(*) FROM pg_extension WHERE extname = 'vector';")).scalar()
+                capabilities["pgvector"] = res > 0
+        else:
+            conn = st.connection("postgresql", type="sql")
+            with conn.session as s:
+                s.execute(text("SELECT 1;"))
+                # Check for pgvector
+                res = s.execute(text("SELECT count(*) FROM pg_extension WHERE extname = 'vector';")).scalar()
+                capabilities["pgvector"] = res > 0
+        return True, "Connection Successful", capabilities
     except Exception as e:
-        return False, str(e)
+        return False, str(e), {}
 
 def get_env_info():
     """Gathers information about the execution environment."""
+    from src.backend.database import _is_production
+    
+    is_prod = _is_production()
     info = {
+        "Environment": "Production (Streamlit Cloud)" if is_prod else "Local Development",
         "Python Version": sys.version.split()[0],
         "Operating System": f"{platform.system()} {platform.release()}",
         "Streamlit Version": st.__version__,
@@ -164,11 +192,17 @@ def main():
         # 3. SQL Connection Check (Only if previous checks pass or as final step)
         st.divider()
         st.subheader("SQL Health Check")
-        is_valid, message = check_db_connection()
+        is_valid, message, caps = check_db_connection()
         
         if is_valid:
             st.success("✅ SQL Connection: VALID")
             st.write("The database is reachable and responding to queries.")
+            
+            # Display Capabilities
+            if caps.get("pgvector"):
+                st.write("✅ **Capability: pgvector enabled**")
+            else:
+                st.warning("⚠️ **Capability: pgvector NOT enabled**")
         else:
             st.error("❌ SQL Connection: INVALID")
             st.write(f"Error Details: `{message}`")
