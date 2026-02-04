@@ -35,4 +35,8 @@ Completed Tasks:
  - PURGED all Docker usage and Node.js artifacts from the project and updated documentation.
  - REMOVED Playwright from the project (deleted tests/ui/test_ui.py).
  - [DONE] Updated documentation to clarify that the `src/frontend` folder structure is a mandatory legacy artifact for Streamlit Cloud deployment.
+ - [DONE] Resolved Streamlit Cloud "More than one requirements file detected" false-positive warning by adding `.python-version` and updating documentation.
+ - [DONE] Aligned development Python version with production (set to 3.12 due to dependency constraints).
+ - [DONE] Locked Python version to exactly 3.12.* in `pyproject.toml` and `uv.lock` to ensure Streamlit Cloud uses the correct major/minor release.
+ - [DONE] Updated .python-version, pyproject.toml, and documentation to reflect the strict Python 3.12 requirement.
  - [DONE] Committed and pushed changes to main branch.

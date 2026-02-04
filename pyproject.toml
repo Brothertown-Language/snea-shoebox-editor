@@ -3,7 +3,7 @@ name = "snea-shoebox-editor"
 version = "0.1.0"
 description = "SNEA Shoebox Editor infrastructure and development environment"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = "==3.12.*"
 dependencies = [
     "PyGithub>=2.1.1",
     "pynacl>=1.5.0",
@@ -36,7 +36,7 @@ dev = [
 # Match PyCharm defaults (usually PEP 8)
 line-length = 120
 indent-width = 4
-target-version = "py311"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -57,4 +57,6 @@ skip-magic-trailing-comma = false
 line-ending = "auto"
 
 [tool.uv]
+# This project uses uv for dependency management.
+# Streamlit Cloud may warn about 'pyproject.toml' being a Poetry file; this is a false positive.
 managed = true

@@ -24,7 +24,7 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 ## Requirements
 
-- **Python 3.10+**: Recommended for local development.
+- **Python 3.12**: Required version for development and production.
 - **uv**: For dependency management.
 - **Aiven Account**: For hosting the PostgreSQL database.
 - **GitHub Account**: For authentication (OAuth) and deployment.

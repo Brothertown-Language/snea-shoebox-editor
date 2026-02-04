@@ -79,3 +79,9 @@ uv run streamlit run src/frontend/app.py
 ### Configuration Files
 - **`.streamlit/secrets.toml`:** Local development secrets (DO NOT COMMIT).
 - **`pyproject.toml`:** Main Python package and dependency configuration.
+- **`.python-version`:** Specifies the exact Python version (3.12) for both `uv` and Streamlit Cloud.
+
+### Known Deployment Issues
+- **Streamlit Cloud Warning:** You may see a warning: "More than one requirements file detected... Available options: uv-sync ..., poetry ...". 
+  - **Status:** This is a **false positive** from Streamlit Cloud's heuristic detection. 
+  - **Resolution:** Ignore the warning. As long as the logs state `Used: uv-sync with .../uv.lock`, the deployment is using the correct `uv` package manager.
