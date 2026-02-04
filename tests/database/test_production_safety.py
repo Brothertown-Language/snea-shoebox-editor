@@ -11,11 +11,11 @@ class TestProductionSafety(unittest.TestCase):
         self.assertTrue(_is_production())
         
         os.environ.pop("STREAMLIT_RUNTIME_RELIABLE_ADDRESS", None)
-        os.environ["STREAMLIT_SHARING_ENVIROMENT"] = "true"
+        os.environ["STREAMLIT_SHARING_ENVIRONMENT"] = "true"
         self.assertTrue(_is_production())
         
         # Mock local environment
-        os.environ.pop("STREAMLIT_SHARING_ENVIROMENT", None)
+        os.environ.pop("STREAMLIT_SHARING_ENVIRONMENT", None)
         self.assertFalse(_is_production())
 
     def test_pgserver_safety(self):

@@ -131,6 +131,29 @@ def check_db_connection():
     except Exception as e:
         return False, str(e), {}
 
+import subprocess
+
+def get_git_info():
+    """Fetches the latest git commit hash and message."""
+    try:
+        # Get hash
+        hash_res = subprocess.run(
+            ["git", "rev-parse", "HEAD"], 
+            capture_output=True, text=True, check=True
+        )
+        commit_hash = hash_res.stdout.strip()
+        
+        # Get message
+        msg_res = subprocess.run(
+            ["git", "log", "-1", "--pretty=format:%s"], 
+            capture_output=True, text=True, check=True
+        )
+        commit_msg = msg_res.stdout.strip()
+        
+        return commit_hash, commit_msg
+    except Exception as e:
+        return None, f"Error fetching git info: {str(e)}"
+
 def get_env_info():
     """Gathers information about the execution environment."""
     from src.database import _is_production
@@ -145,13 +168,20 @@ def get_env_info():
     }
     
     # Debug info for environment detection
-    info["Streamlit Cloud Markers"] = f"ReliableAddr: {os.getenv('STREAMLIT_RUNTIME_RELIABLE_ADDRESS') is not None}, SharingEnv: {os.getenv('STREAMLIT_SHARING_ENVIRONMENT') is not None}"
+    info["Streamlit Cloud Markers"] = f"ReliableAddr: {os.getenv('STREAMLIT_RUNTIME_RELIABLE_ADDRESS') is not None}, SharingEnv: {os.getenv('STREAMLIT_SHARING_ENVIRONMENT') is not None}, AppPath: {os.path.exists('/app/src/frontend/app.py')}"
     
     # Check for uv usage
     # Streamlit Cloud with uv support usually sets certain markers or we can infer from the path
     is_uv = "uv" in sys.executable or os.path.exists("uv.lock")
     info["Using uv"] = "Yes" if is_uv else "No (Standard pip/venv)"
     
+    commit_hash, commit_msg = get_git_info()
+    if commit_hash:
+        info["Git Commit"] = commit_hash[:7]
+        info["Git Message"] = commit_msg
+    else:
+        info["Git Info"] = commit_msg
+
     return info
 
 def get_filesystem_info():

@@ -31,7 +31,8 @@ def _is_production():
     return (
         os.getenv("STREAMLIT_RUNTIME_RELIABLE_ADDRESS") is not None or 
         os.getenv("STREAMLIT_SHARING_ENVIRONMENT") is not None or
-        os.getenv("STREAMLIT_SERVER_PORT") == "8501" and os.path.exists("/home/adminuser")
+        (os.getenv("STREAMLIT_SERVER_PORT") == "8501" and os.path.exists("/home/adminuser")) or
+        os.path.exists("/app/src/frontend/app.py") # Common path in Streamlit Cloud
     )
 
 def _auto_start_pgserver():
