@@ -42,7 +42,7 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
     ```bash
     uv run streamlit run src/frontend/app.py
     ```
-    *Note: If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL instance using `pgserver` (data stored in `tmp/local_db`).*
+    *Note: If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
 
 3.  **Configure secrets (Optional)**: Create `.streamlit/secrets.toml` with your GitHub OAuth credentials if you want to test authentication.
 

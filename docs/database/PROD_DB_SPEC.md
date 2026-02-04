@@ -21,7 +21,7 @@ Currently installed extensions:
 - `vector`: 0.8.1 (pgvector)
 
 ## Local Development Alignment (pgserver)
-- **Compatibility**: Local `pgserver` (using PostgreSQL 15/16/17 depending on wheel) is fully compatible.
+- **Compatibility**: The project targets PostgreSQL 16.2 features to ensure compatibility between local development (`pgserver` 16.2) and production (Aiven 17.7). Developers must avoid PostgreSQL 17-exclusive syntax or features.
 - **Extensions**: `pgvector` (vector) is now enabled in production. Local development environments using `pgserver` also support `pgvector` out of the box (as it is included in the wheels).
 - **Data Integrity**: The use of `en_US.UTF-8` collation in production is standard. For SNEA linguistic data, custom NFD sorting is handled at the application level (SQLAlchemy/Python), so standard collation is sufficient.
 

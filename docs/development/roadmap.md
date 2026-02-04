@@ -57,7 +57,7 @@ Before initializing the project, you must set up the hosting and database platfo
 
 2.  **Initialize Environment**:
     - Clone the repository.
-    - **Local PostgreSQL**: The app will automatically start a local PostgreSQL instance using `pgserver` if no `DATABASE_URL` or secret is provided. Data is stored in `tmp/local_db`.
+    - **Local PostgreSQL**: The app will automatically start a local PostgreSQL 16.2 instance using `pgserver` if no `DATABASE_URL` or secret is provided. Data is stored in `tmp/local_db`. All development must target PostgreSQL 16.2 compatibility.
     - (Optional) If you want to use a specific database, create a `.streamlit/secrets.toml` file (ignored by git):
       ```toml
       [connections.postgresql]

@@ -17,7 +17,7 @@ The SNEA Online Shoebox Editor is a collaborative platform designed for editing 
 ### Technology Stack
 - **Language:** 100% Python.
 - **Frontend/Backend:** Streamlit (Server-side execution).
-- **Database:** Supabase (PostgreSQL).
+- **Database:** Aiven (PostgreSQL 17.7). Local development uses `pgserver` (PostgreSQL 16.2). All code must be compatible with PostgreSQL 16.2.
 - **Authentication:** GitHub OAuth (via `streamlit-oauth`).
 - **Package Manager:** `uv` (Mandatory: Do not use `pip` or `poetry`).
 - **Deployment:** Streamlit Community Cloud (Auto-deploy on push to `main`).
@@ -26,12 +26,13 @@ The SNEA Online Shoebox Editor is a collaborative platform designed for editing 
 
 ### Application Structure
 - **Unified App:** The frontend and backend logic are integrated within the Streamlit application, primarily in `src/frontend/app.py`.
-- **Database:** A Supabase PostgreSQL instance serves as the persistent data store.
+- **Database:** An Aiven PostgreSQL instance serves as the persistent data store.
 - **Authentication:** GitHub OAuth is used to manage access for authorized users.
 
 ### Data Layer
 - **Standard:** Multi-Dictionary Formatter (MDF).
-- **Storage:** PostgreSQL (via Supabase).
+- **Storage:** PostgreSQL (Aiven in Prod, `pgserver` in Dev).
+- **Compatibility:** Strictly target PostgreSQL 16.2 features to ensure local/prod alignment.
 - **Core Hierarchy:** `\lx` (lexeme) -> `\ps` (part of speech) -> `\ge` (gloss).
 - **Validation:**
     - The system provides advisory visual feedback on MDF compliance.
