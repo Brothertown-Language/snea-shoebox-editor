@@ -82,7 +82,7 @@ Before initializing the project, you must set up the hosting and database platfo
     ```
 3.  **Run Locally**:
     ```bash
-    uv run streamlit run src/app.py
+    uv run streamlit run src/frontend/app.py
     ```
 
 ---

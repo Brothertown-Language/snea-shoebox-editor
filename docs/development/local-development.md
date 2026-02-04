@@ -66,6 +66,7 @@ uv run python -m unittest discover tests
 
 ## Architecture Details
 
+- **Folder Structure**: The `src/frontend/` directory is a legacy artifact. Although the app is now a unified Python application, this specific folder structure is required for Streamlit Community Cloud deployment and cannot be changed.
 - **Frontend/Backend**: Streamlit Community Cloud (standard Python server execution).
 - **Database**: PostgreSQL (Aiven).
 - **Authentication**: GitHub OAuth (`streamlit-oauth`).

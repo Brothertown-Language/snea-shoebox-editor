@@ -16,6 +16,7 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 ## Tech Stack
 
 - **Architecture**: Monolithic Streamlit application (Hosted on Streamlit Community Cloud).
+    - *Note: The `src/frontend/` folder is a mandatory legacy artifact required by Streamlit Cloud's entry point configuration and cannot be changed.*
 - **Database**: Aiven (PostgreSQL).
 - **Authentication**: GitHub OAuth via `streamlit-oauth`.
 - **Package Manager**: uv.
@@ -40,7 +41,7 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
     ```
 2.  **Run the app**:
     ```bash
-    uv run streamlit run src/app.py
+    uv run streamlit run src/frontend/app.py
     ```
     *Note: If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
 
@@ -66,7 +67,7 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 
 ## Scripts
 
-- `uv run streamlit run src/app.py`: Starts the local development server.
+- `uv run streamlit run src/frontend/app.py`: Starts the local development server.
 - `uv run python -m unittest discover tests`: Runs the test suite.
 
 ## Documentation

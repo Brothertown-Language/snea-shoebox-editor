@@ -25,7 +25,9 @@ The SNEA Online Shoebox Editor is a collaborative platform designed for editing 
 ## Architecture Details
 
 ### Application Structure
-- **Unified App:** The frontend and backend logic are integrated within the Streamlit application, primarily in `src/frontend/app.py`.
+- **Unified App:** The frontend and backend logic are integrated within the Streamlit application.
+- **Legacy Folder Structure:** The `src/frontend/` directory is a legacy artifact. While it might seem redundant in a monolithic structure, it is **mandatory** for Streamlit Community Cloud deployment, which expects the entry point (`app.py`) at this specific path and does not permit changing it.
+- **Main Entry Point:** `src/frontend/app.py`
 - **Database:** An Aiven PostgreSQL instance serves as the persistent data store.
 - **Authentication:** GitHub OAuth is used to manage access for authorized users.
 

@@ -22,7 +22,7 @@ uv pip install -e .
 ### Running the Application
 ```bash
 # Run the application locally
-uv run streamlit run src/app.py
+uv run streamlit run src/frontend/app.py
 ```
 
 ## Testing Standards

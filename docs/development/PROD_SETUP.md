@@ -23,7 +23,7 @@ Since this repository is part of a GitHub Organization, access must be granted a
     - If you click **Request**, an owner must approve it in the "Third-party access" section mentioned above.
 
 ### Deployment Settings
-- **Main file path**: `src/frontend/app.py`
+- **Main file path**: `src/frontend/app.py` (This folder structure is a mandatory legacy artifact for Streamlit Cloud and cannot be changed).
 - **App URL**: `https://snea-edit.streamlit.app`
 
 ### Troubleshooting: "Subdomain Taken" Error
