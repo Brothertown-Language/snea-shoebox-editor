@@ -27,8 +27,10 @@ def _stop_local_db():
 def _is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
     # Streamlit Cloud sets these environment variables
-    # Check for both corrected spelling and common Streamlit Cloud markers
+    # STREAMLIT_RUNTIME is usually "cloud" or "s4t" on Streamlit Cloud and absent locally.
     return (
+        os.getenv("STREAMLIT_RUNTIME") is not None or
+        os.getenv("STREAMLIT_CLOUD") is not None or
         os.getenv("STREAMLIT_RUNTIME_RELIABLE_ADDRESS") is not None or 
         os.getenv("STREAMLIT_SHARING_ENVIRONMENT") is not None or
         (os.getenv("STREAMLIT_SERVER_PORT") == "8501" and os.path.exists("/home/adminuser")) or

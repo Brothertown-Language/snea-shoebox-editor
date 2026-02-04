@@ -132,37 +132,69 @@ def check_db_connection():
         return False, str(e), {}
 
 import subprocess
+import getpass
 
 def get_git_info():
-    """Fetches the latest git commit hash and message."""
+    """Fetches the latest git commit hash, message, and user info."""
+    git_info = {
+        "commit_hash": None,
+        "commit_msg": None,
+        "user_name": None,
+        "user_email": None,
+    }
     try:
         # Get hash
         hash_res = subprocess.run(
             ["git", "rev-parse", "HEAD"], 
             capture_output=True, text=True, check=True
         )
-        commit_hash = hash_res.stdout.strip()
+        git_info["commit_hash"] = hash_res.stdout.strip()
         
         # Get message
         msg_res = subprocess.run(
             ["git", "log", "-1", "--pretty=format:%s"], 
             capture_output=True, text=True, check=True
         )
-        commit_msg = msg_res.stdout.strip()
+        git_info["commit_msg"] = msg_res.stdout.strip()
+
+        # Get user name
+        name_res = subprocess.run(
+            ["git", "config", "user.name"],
+            capture_output=True, text=True
+        )
+        if name_res.returncode == 0:
+            git_info["user_name"] = name_res.stdout.strip()
+
+        # Get user email
+        email_res = subprocess.run(
+            ["git", "config", "user.email"],
+            capture_output=True, text=True
+        )
+        if email_res.returncode == 0:
+            git_info["user_email"] = email_res.stdout.strip()
         
-        return commit_hash, commit_msg
+        return git_info
     except Exception as e:
-        return None, f"Error fetching git info: {str(e)}"
+        git_info["error"] = str(e)
+        return git_info
 
 def get_env_info():
-    """Gathers information about the execution environment."""
+    """Gathers information about the execution environment and user."""
     from src.database import _is_production
     
     is_prod = _is_production()
+    
+    # User info
+    try:
+        os_user = getpass.getuser()
+    except Exception:
+        os_user = os.getenv("USER") or os.getenv("USERNAME") or "Unknown"
+
     info = {
         "Environment": "Production (Streamlit Cloud)" if is_prod else "Local Development",
         "Python Version": sys.version.split()[0],
         "Operating System": f"{platform.system()} {platform.release()}",
+        "OS User": os_user,
         "Streamlit Version": st.__version__,
         "Executable": sys.executable,
     }
@@ -175,12 +207,18 @@ def get_env_info():
     is_uv = "uv" in sys.executable or os.path.exists("uv.lock")
     info["Using uv"] = "Yes" if is_uv else "No (Standard pip/venv)"
     
-    commit_hash, commit_msg = get_git_info()
-    if commit_hash:
-        info["Git Commit"] = commit_hash[:7]
-        info["Git Message"] = commit_msg
-    else:
-        info["Git Info"] = commit_msg
+    git_data = get_git_info()
+    if git_data.get("commit_hash"):
+        info["Git Commit"] = git_data["commit_hash"][:7]
+        info["Git Message"] = git_data["commit_msg"]
+    
+    if git_data.get("user_name"):
+        info["Git User"] = git_data["user_name"]
+    if git_data.get("user_email"):
+        info["Git Email"] = git_data["user_email"]
+    
+    if "error" in git_data:
+        info["Git Error"] = git_data["error"]
 
     return info
 
