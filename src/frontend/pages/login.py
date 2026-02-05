@@ -59,9 +59,7 @@ def login():
 
     if st.session_state.get("is_unauthorized"):
         show_unauthorized_dialog()
-        # If the dialog is closed, show_unauthorized_dialog returns and we hit st.rerun()
-        # to immediately redisplay it.
-        st.rerun()
+        st.stop()
 
     if st.session_state.get("logged_in") and "auth" in st.session_state:
         st.switch_page("pages/index.py")
