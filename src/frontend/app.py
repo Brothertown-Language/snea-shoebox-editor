@@ -51,6 +51,11 @@ def main():
     page_source = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
     page_user = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
     
+    if st.session_state.get("is_unauthorized"):
+        from src.frontend.pages.login import show_unauthorized_dialog
+        show_unauthorized_dialog()
+        st.stop()
+
     # Access control logic
     if st.session_state.logged_in:
         # Multipage navigation definition
