@@ -25,21 +25,27 @@ def get_service_status(config: Dict[str, str]) -> Optional[str]:
     
     try:
         response = requests.get(url, headers=headers, timeout=10)
+        if response.status_code == 404:
+            # Handle cases where project or service might not exist in this context
+            return None
         response.raise_for_status()
         data = response.json()
         return data.get("service", {}).get("state")
     except Exception as e:
-        st.error(f"Error checking Aiven service status: {e}")
+        # Don't show error if it's just a 404 which we handled above, 
+        # but raise_for_status might have been called if we didn't handle it.
+        if "404" not in str(e):
+            st.error(f"Error checking Aiven service status: {e}")
         return None
 
 def start_service(config: Dict[str, str]) -> bool:
     """Trigger the Aiven service to start (power on)."""
-    url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}/status"
+    url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}"
     headers = {"Authorization": f"aivenv1 {config['api_token']}"}
     data = {"powered": True}
     
     try:
-        response = requests.post(url, headers=headers, json=data, timeout=10)
+        response = requests.put(url, headers=headers, json=data, timeout=10)
         response.raise_for_status()
         return True
     except Exception as e:
