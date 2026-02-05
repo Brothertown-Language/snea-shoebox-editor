@@ -9,6 +9,7 @@ AI Coding Defaults:
 """
 def view_record():
     import streamlit as st
+    
     record_id = st.query_params.get("id")
     if not record_id:
         st.error("No record ID provided")

@@ -19,7 +19,7 @@ if project_root not in sys.path:
 
 import src.frontend.pages as pages
 from src.database import get_db_url
-from src.aiven_utils import ensure_db_alive
+from src.aiven_utils import ensure_db_alive, ensure_secrets_present
 
 def main():
     # Page configuration MUST be the first Streamlit command
@@ -29,8 +29,9 @@ def main():
         layout="wide"
     )
 
-    # Trigger database URL resolution and potential pgserver auto-start early
+    # Trigger secrets check and database readiness early
     try:
+        ensure_secrets_present()
         ensure_db_alive()
         get_db_url()
     except Exception:

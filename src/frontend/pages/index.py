@@ -9,6 +9,7 @@ AI Coding Defaults:
 """
 def index():
     import streamlit as st
+    
     st.title("SNEA Shoebox Editor")
     st.write("Welcome to the SNEA Online Shoebox Editor.")
     st.info("This is the main entry point.")

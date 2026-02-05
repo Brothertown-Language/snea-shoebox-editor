@@ -9,6 +9,7 @@ AI Coding Defaults:
 """
 def login():
     import streamlit as st
+    
     from streamlit_oauth import OAuth2Component
     import requests
 

@@ -100,6 +100,57 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
     if st.button("Close"):
         st.rerun()
 
+@st.dialog("Missing Secrets")
+def show_secrets_missing_dialog(missing_secrets: list[str]):
+    """Display a dialog listing missing mandatory secrets."""
+    st.error("The application cannot start because one or more mandatory secrets are missing.")
+    st.write("Please ensure the following secrets are configured in Streamlit Cloud or `.streamlit/secrets.toml`:")
+    for secret in missing_secrets:
+        st.markdown(f"- `{secret}`")
+    
+    st.info("After adding the secrets, please refresh the page.")
+    if st.button("I've added the secrets, refresh now"):
+        st.rerun()
+
+def ensure_secrets_present():
+    """Verify that all mandatory secrets are present. Blocks execution if any are missing."""
+    # Mandatory secrets for the application to function
+    # Note: 'connections.postgresql.url' is checked via src.database.get_db_url()
+    # but we can check the base keys here.
+    
+    mandatory_secrets = [
+        "aiven",
+        "github_oauth",
+        "connections"
+    ]
+    
+    missing = []
+    for secret in mandatory_secrets:
+        try:
+            if secret not in st.secrets:
+                missing.append(secret)
+            else:
+                # Basic structure check
+                if secret == "aiven":
+                    keys = ["project_name", "service_name", "api_token"]
+                    for k in keys:
+                        if k not in st.secrets["aiven"]:
+                            missing.append(f"aiven.{k}")
+                elif secret == "github_oauth":
+                    keys = ["client_id", "client_secret", "authorize_url", "token_url", "redirect_uri"]
+                    for k in keys:
+                        if k not in st.secrets["github_oauth"]:
+                            missing.append(f"github_oauth.{k}")
+                elif secret == "connections":
+                    if "postgresql" not in st.secrets["connections"] or "url" not in st.secrets["connections"]["postgresql"]:
+                        missing.append("connections.postgresql.url")
+        except Exception:
+            missing.append(secret)
+
+    if missing:
+        show_secrets_missing_dialog(missing)
+        st.stop()
+
 def ensure_db_alive():
     """Check if DB is alive, start it if not, and show dialog until ready."""
     from src.database import is_production

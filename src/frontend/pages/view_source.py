@@ -9,6 +9,7 @@ AI Coding Defaults:
 """
 def view_source():
     import streamlit as st
+    
     source_id = st.query_params.get("id")
     if not source_id:
         st.error("No source ID provided")

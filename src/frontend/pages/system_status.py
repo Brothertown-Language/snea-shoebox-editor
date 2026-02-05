@@ -25,10 +25,7 @@ def system_status():
         st.subheader("Database Connectivity Checklist")
         
         from src.database import is_production
-        from src.aiven_utils import get_aiven_config, get_service_status, ensure_db_alive
-        
-        # Ensure DB is alive when viewing status page too
-        ensure_db_alive()
+        from src.aiven_utils import get_aiven_config, get_service_status
         
         is_prod = is_production()
         env_label = "Production" if is_prod else "Local Test"
