@@ -67,6 +67,7 @@ tmp/
 *token*
 !docs/**/*token*
 !**/plan_*token*
+!.junie/security-secrets.md
 
 # Data files
 src/backend/seed_data/natick.txt

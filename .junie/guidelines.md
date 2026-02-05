@@ -54,6 +54,12 @@ date: 2026-02-03
 - **WRONG:** `grep -ri "search_term" .`
 - **REASON:** The `.git` folder contains binary files and metadata that produce erroneous search results.
 
+### NEVER COMMIT IGNORED FILES OR FOLDERS
+- **CRITICAL:** **NEVER** commit any file or folder that is listed in `.gitignore` or contains sensitive information.
+- **NEVER** commit the `.streamlit/` folder or any of its contents (e.g., `secrets.toml`, `config.toml`).
+- **REASON:** Committing secrets or local configuration leads to security breaches and environment contamination.
+- **ACTION:** Always run `git status` and `git check-ignore <path>` before adding files to ensure they are not supposed to be ignored.
+
 ### GUIDELINE UPDATES
 - When told to remember to update the AI guidelines, **do nothing else**.
 - "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.

@@ -59,6 +59,7 @@ When programmatically switching pages in the Streamlit application:
 
 ## Secrets Management
 - **Rule (Zero Tolerance):** **NEVER** commit `.env`, `secrets.toml`, or any file containing credentials or sensitive keys.
+- **Rule (Zero Tolerance):** **NEVER** commit the `.streamlit/` folder or any of its contents. This is a critical security violation.
 - **Rule (Verification):** **ALWAYS** run `git check-ignore <path>` if you are unsure if a file is ignored.
 - **Rule (Explicit Add):** **NEVER** use `git add` with explicit paths to files that are meant to be ignored (e.g., `git add .env`).
 - **Local Development:** Use `.streamlit/secrets.toml`. This file is ignored by git and must never be committed.
