@@ -1,24 +1,17 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="Streamlit" type="PythonConfigurationType" factoryName="Python">
-    <module name="snea-shoebox-editor" />
+  <configuration default="false" name="Streamlit" type="ShConfigurationType">
+    <option name="SCRIPT_TEXT" value="" />
+    <option name="INDEPENDENT_SCRIPT_PATH" value="true" />
+    <option name="SCRIPT_PATH" value="$PROJECT_DIR$/scripts/start_streamlit.sh" />
+    <option name="SCRIPT_OPTIONS" value="" />
+    <option name="INDEPENDENT_SCRIPT_WORKING_DIRECTORY" value="true" />
+    <option name="SCRIPT_WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+    <option name="INDEPENDENT_INTERPRETER_PATH" value="true" />
+    <option name="INTERPRETER_PATH" value="/bin/bash" />
     <option name="INTERPRETER_OPTIONS" value="" />
-    <option name="PARENT_ENVS" value="true" />
-    <envs>
-      <env name="PYTHONUNBUFFERED" value="1" />
-    </envs>
-    <option name="SDK_HOME" value="" />
-    <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
-    <option name="IS_MODULE_SDK" value="true" />
-    <option name="ADD_CONTENT_ROOTS" value="true" />
-    <option name="ADD_SOURCE_ROOTS" value="true" />
-    <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-    <option name="SCRIPT_NAME" value="streamlit" />
-    <option name="PARAMETERS" value="run src/frontend/app.py" />
-    <option name="SHOW_COMMAND_LINE" value="false" />
-    <option name="EMULATE_TERMINAL" value="false" />
-    <option name="MODULE_MODE" value="true" />
-    <option name="REDIRECT_INPUT" value="false" />
-    <option name="INPUT_FILE" value="" />
+    <option name="EXECUTE_IN_TERMINAL" value="true" />
+    <option name="EXECUTE_SCRIPT_FILE" value="true" />
+    <envs />
     <method v="2">
       <option name="RunConfigurationTask" enabled="true" run_configuration_name="Kill Streamlit" run_configuration_type="ShConfigurationType" />
     </method>
