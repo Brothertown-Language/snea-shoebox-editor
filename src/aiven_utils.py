@@ -18,25 +18,27 @@ def get_aiven_config() -> Optional[Dict[str, str]]:
         pass
     return None
 
-def get_service_status(config: Dict[str, str]) -> Optional[str]:
-    """Get the current state of the Aiven service."""
+def get_service_info(config: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    """Get the full information of the Aiven service."""
     url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}"
     headers = {"Authorization": f"aivenv1 {config['api_token']}"}
     
     try:
         response = requests.get(url, headers=headers, timeout=10)
         if response.status_code == 404:
-            # Handle cases where project or service might not exist in this context
             return None
         response.raise_for_status()
         data = response.json()
-        return data.get("service", {}).get("state")
+        return data.get("service")
     except Exception as e:
-        # Don't show error if it's just a 404 which we handled above, 
-        # but raise_for_status might have been called if we didn't handle it.
         if "404" not in str(e):
             st.error(f"Error checking Aiven service status: {e}")
         return None
+
+def get_service_status(config: Dict[str, str]) -> Optional[str]:
+    """Get the current state of the Aiven service."""
+    info = get_service_info(config)
+    return info.get("state") if info else None
 
 def start_service(config: Dict[str, str]) -> bool:
     """Trigger the Aiven service to start (power on)."""

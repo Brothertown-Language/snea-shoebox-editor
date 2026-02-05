@@ -25,7 +25,7 @@ def system_status():
         st.subheader("Database Connectivity Checklist")
         
         from src.database import is_production
-        from src.aiven_utils import get_aiven_config, get_service_status
+        from src.aiven_utils import get_aiven_config, get_service_status, get_service_info
         
         is_prod = is_production()
         env_label = "Production" if is_prod else "Local Test"
@@ -38,10 +38,38 @@ def system_status():
         if is_prod:
             config = get_aiven_config()
             if config:
-                aiven_status = get_service_status(config)
-                if aiven_status and aiven_status != "RUNNING":
-                    st.warning(f"⚠️ Aiven Service Status: **{aiven_status}**")
-                    st.info("The database is currently starting up or powering on. DNS and Socket checks may fail until it is fully RUNNING.")
+                info = get_service_info(config)
+                if info:
+                    aiven_status = info.get("state")
+                    
+                    with st.expander("Aiven Database Details", expanded=(aiven_status != "RUNNING")):
+                        st.write(f"Service: `{info.get('service_name')}`")
+                        st.write(f"State: **{aiven_status}**")
+                        st.write(f"Plan: `{info.get('plan')}`")
+                        st.write(f"Cloud: `{info.get('cloud_name')}`")
+                        
+                        pg_info = info.get("service_integrations", [])
+                        # Some info might be in 'metadata' or 'components' depending on service type
+                        # For Postgres:
+                        user_config = info.get("user_config", {})
+                        if user_config:
+                            version = user_config.get("pg_version")
+                            if version:
+                                st.write(f"PostgreSQL Version: `{version}`")
+                            
+                            backup_hour = user_config.get("backup_hour")
+                            if backup_hour is not None:
+                                st.write(f"Daily Backup Hour: `{backup_hour}:00 UTC`")
+                        
+                        # Show some stats if available
+                        metadata = info.get("metadata", {})
+                        if metadata:
+                            # Not all services have these in metadata, but some do
+                            pass
+                                
+                        if aiven_status and aiven_status != "RUNNING":
+                            st.warning(f"⚠️ Aiven Service Status: **{aiven_status}**")
+                            st.info("The database is currently starting up or powering on. DNS and Socket checks may fail until it is fully RUNNING.")
         
         # Mask host for display
         masked_host = "Database Host [REDACTED]"
