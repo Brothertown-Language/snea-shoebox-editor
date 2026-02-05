@@ -46,3 +46,7 @@ Completed Tasks:
  - [DONE] Reworded documentation to explicitly state that native Streamlit OAuth2 is incompatible with GitHub and mandated the use of `streamlit-oauth`.
  - [DONE] Updated callback URLs in `roadmap.md` and `github-oauth-doc.md` to point to the `streamlit-oauth` endpoint.
  - [DONE] Hardened warnings in `native-oauth-reference.md`, `github-oauth-doc.md`, and `PROD_SETUP.md` against using `st.login`.
+ - [DONE] Added PyCharm Run Configuration for Streamlit in `.idea/runConfigurations/Streamlit.xml`.
+ - [DONE] Enhanced PyCharm launcher to kill previous Streamlit sessions using `scripts/kill_streamlit.sh` and a `BEFORE_RUN_TASK`.
+ - [DONE] Verified that the launcher ensures `pgserver` is started for local dev (via `get_db_url()` in `src/frontend/app.py` calling `_auto_start_pgserver()` in `src/database.py`).
+ - [DONE] Created top-level `launchers/` folder and archived a copy of the PyCharm run configurations for version control.
