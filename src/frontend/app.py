@@ -19,20 +19,22 @@ if project_root not in sys.path:
 
 import src.frontend.pages as pages
 from src.database import get_db_url
+from src.aiven_utils import ensure_db_alive
 
 def main():
-    # Trigger database URL resolution and potential pgserver auto-start early
-    try:
-        get_db_url()
-    except Exception:
-        pass
-
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(
         page_title="SNEA Shoebox Editor",
         page_icon="📚",
         layout="wide"
     )
+
+    # Trigger database URL resolution and potential pgserver auto-start early
+    try:
+        ensure_db_alive()
+        get_db_url()
+    except Exception:
+        pass
 
     # Initialize session state for authentication
     if "logged_in" not in st.session_state:
