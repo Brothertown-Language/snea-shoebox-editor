@@ -9,7 +9,7 @@ AI Coding Defaults:
 """
 def login():
     import streamlit as st
-    from streamlit_oauth import OAuth2Component
+    from src.frontend.oauth_fix import OAuth2Component
     import requests
 
     # Retrieve OAuth configuration from secrets.toml
@@ -33,6 +33,7 @@ def login():
         if result:
             # Save token to session state
             st.session_state["auth"] = result
+            st.session_state.logged_in = True
             st.rerun()
     else:
         # Retrieve the access token
@@ -76,6 +77,7 @@ def login():
 
         if st.button("Log out"):
             del st.session_state["auth"]
+            st.session_state.logged_in = False
             st.rerun()
 
 if __name__ == "__main__":
