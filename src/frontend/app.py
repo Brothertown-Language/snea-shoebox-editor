@@ -54,7 +54,9 @@ def main():
     if st.session_state.get("is_unauthorized"):
         from src.frontend.pages.login import show_unauthorized_dialog
         show_unauthorized_dialog()
-        st.stop()
+        # If the dialog is closed, show_unauthorized_dialog returns and we hit st.rerun()
+        # to immediately redisplay it.
+        st.rerun()
 
     # Access control logic
     if st.session_state.logged_in:

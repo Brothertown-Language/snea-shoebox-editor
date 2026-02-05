@@ -9,18 +9,30 @@ AI Coding Defaults:
 """
 import streamlit as st
 
-@st.dialog("Access Restricted", clear_on_submit=False)
+@st.dialog("Access Restricted")
 def show_unauthorized_dialog() -> None:
     """Display a non-closable dialog for unauthorized users."""
+    # Hide the close button [x] using CSS
+    st.markdown(
+        """
+        <style>
+        button[aria-label="Close"] {
+            display: none;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True,
+    )
     st.error("Restricted Access")
     st.write(
         "This application is reserved for linguists and technicians "
         "collaborating on the Southern New England Algonquian reconstruction "
         "project for the purpose of future Brothertown Language reconstruction."
     )
+    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url", "https://mastodon.social/@michaelconrad")
     st.write(
-        "For technical assistance or access requests, please contact "
-        "Michael Conrad on Mastodon: [https://mastodon.social/@michaelconrad](https://mastodon.social/@michaelconrad)"
+        f"For technical assistance or access requests, please contact "
+        f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
     )
     
     if st.button("Reload App"):
@@ -47,7 +59,9 @@ def login():
 
     if st.session_state.get("is_unauthorized"):
         show_unauthorized_dialog()
-        st.stop()
+        # If the dialog is closed, show_unauthorized_dialog returns and we hit st.rerun()
+        # to immediately redisplay it.
+        st.rerun()
 
     if st.session_state.get("logged_in") and "auth" in st.session_state:
         st.switch_page("pages/index.py")
