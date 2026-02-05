@@ -26,14 +26,15 @@ def show_unauthorized_dialog() -> None:
     st.error("Restricted Access")
     st.write(
         "This application is reserved for linguists and technicians "
-        "collaborating on the Southern New England Algonquian reconstruction "
+        "collaborating on the proto-Southern New England Algonquian reconstruction "
         "project for the purpose of future Brothertown Language reconstruction."
     )
-    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url", "https://mastodon.social/@michaelconrad")
-    st.write(
-        f"For technical assistance or access requests, please contact "
-        f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
-    )
+    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
+    if mastodon_url:
+        st.write(
+            f"For technical assistance or access requests, please contact "
+            f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
+        )
     
     if st.button("Reload App"):
         # Clear session state and rerun
