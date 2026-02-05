@@ -67,14 +67,32 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
     
     for i in range(max_polls):
         current_status = get_service_status(config)
+        
+        # Also check DNS
+        dns_ok = True
         if current_status == "RUNNING":
+            from src.frontend.utils import verify_dns
+            from urllib.parse import urlparse
+            from src.database import get_db_url
+            url = get_db_url()
+            if url:
+                parsed = urlparse(url)
+                host = parsed.hostname
+                if host:
+                    dns_ok, _, _, _ = verify_dns(host)
+        
+        if current_status == "RUNNING" and dns_ok:
             status_placeholder.success("Database is now online!")
             progress_bar.progress(100)
             time.sleep(2) # Give user a moment to see success
             st.rerun() # This will dismiss the dialog and reload the page
             return
         
-        status_placeholder.info(f"Current Status: **{current_status or 'Unknown'}**\n\nChecking again in {poll_delay}s... (Attempt {i+1}/{max_polls})")
+        display_status = current_status
+        if current_status == "RUNNING" and not dns_ok:
+            display_status = "RUNNING (Waiting for DNS)"
+        
+        status_placeholder.info(f"Current Status: **{display_status or 'Unknown'}**\n\nChecking again in {poll_delay}s... (Attempt {i+1}/{max_polls})")
         progress_bar.progress((i + 1) / max_polls)
         time.sleep(poll_delay)
     
@@ -96,17 +114,29 @@ def ensure_db_alive():
 
     status = get_service_status(config)
     
+    # Try DNS resolution first as a quick check
+    if status == "RUNNING":
+        from src.frontend.utils import verify_dns
+        from urllib.parse import urlparse
+        from src.database import get_db_url
+        
+        url = get_db_url()
+        if url:
+            parsed = urlparse(url)
+            host = parsed.hostname
+            if host:
+                dns_ok, _, _, _ = verify_dns(host)
+                if not dns_ok:
+                    # DNS record not yet propagated or removed
+                    # We should wait
+                    status = "STARTING_DNS"
+
     if status == "RUNNING":
         return
     
-    if status in ["POWEROFF", "REBUILDING"]:
-        if "db_checked" in st.session_state:
-            # We already tried to start it in this session
-            if status != "RUNNING":
-                st.warning(f"Database is still in {status} state. Some features may not work.")
-            return
-
-        st.session_state.db_checked = True
-        show_startup_dialog(config, status)
+    if status in ["POWEROFF", "REBUILDING", "STARTING_DNS"]:
+        show_startup_dialog(config, "STARTING" if status == "STARTING_DNS" else status)
+        st.stop()
     else:
         st.warning(f"Database is in an unexpected state: {status}. It may not be available.")
+        st.stop()

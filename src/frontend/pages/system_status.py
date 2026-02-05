@@ -25,11 +25,26 @@ def system_status():
         st.subheader("Database Connectivity Checklist")
         
         from src.database import is_production
+        from src.aiven_utils import get_aiven_config, get_service_status, ensure_db_alive
+        
+        # Ensure DB is alive when viewing status page too
+        ensure_db_alive()
+        
         is_prod = is_production()
         env_label = "Production" if is_prod else "Local Test"
         st.write(f"Environment: **{env_label}**")
         
         db_host, db_port = get_db_host_port()
+
+        # Check Aiven Status if in production
+        aiven_status = None
+        if is_prod:
+            config = get_aiven_config()
+            if config:
+                aiven_status = get_service_status(config)
+                if aiven_status and aiven_status != "RUNNING":
+                    st.warning(f"⚠️ Aiven Service Status: **{aiven_status}**")
+                    st.info("The database is currently starting up or powering on. DNS and Socket checks may fail until it is fully RUNNING.")
         
         # Mask host for display
         masked_host = "Database Host [REDACTED]"
@@ -58,7 +73,10 @@ def system_status():
                 if ips_v6:
                     st.info(f"IPv6: {len(ips_v6)} address(es) found [REDACTED]")
             else:
-                st.error(f"❌ DNS Resolution: FAILED")
+                if aiven_status and aiven_status != "RUNNING":
+                    st.warning(f"⚠️ DNS Resolution: WAITING (Service is {aiven_status})")
+                else:
+                    st.error(f"❌ DNS Resolution: FAILED")
                 st.write(f"Details: DNS lookup failed for the configured host.")
 
         # 2. Reachability Check
@@ -78,7 +96,10 @@ def system_status():
                 else:
                     st.warning("IPv6: FAILED (Expected on many local networks)")
         else:
-            st.error(f"❌ Socket Reachability: FAILED")
+            if aiven_status and aiven_status != "RUNNING":
+                st.warning(f"⚠️ Socket Reachability: WAITING (Service is {aiven_status})")
+            else:
+                st.error(f"❌ Socket Reachability: FAILED")
             st.write(f"Details: {reach_msg}")
 
         # 3. SQL Connection Check (Only if previous checks pass or as final step)
