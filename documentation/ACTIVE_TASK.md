@@ -43,5 +43,6 @@ Completed Tasks:
  - [DONE] Updated .python-version, pyproject.toml, and documentation to reflect the strict Python 3.12 requirement.
  - [DONE] Committed and pushed changes to main branch.
  - [DONE] UPDATED AI guidelines to strictly forbid using prefixes (like `feat:`, `fix:`) in commit messages.
- - ADDED native Streamlit OAuth2 reference documentation to `docs/github/native-oauth-reference.md`.
- - UPDATED `docs/github/github-oauth-doc.md` to reflect native auth callback requirements and link to the new reference.
+ - [DONE] Reworded documentation to explicitly state that native Streamlit OAuth2 is incompatible with GitHub and mandated the use of `streamlit-oauth`.
+ - [DONE] Updated callback URLs in `roadmap.md` and `github-oauth-doc.md` to point to the `streamlit-oauth` endpoint.
+ - [DONE] Hardened warnings in `native-oauth-reference.md`, `github-oauth-doc.md`, and `PROD_SETUP.md` against using `st.login`.

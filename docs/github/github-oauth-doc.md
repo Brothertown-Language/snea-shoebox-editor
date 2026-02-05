@@ -1,7 +1,8 @@
 # Authorizing OAuth apps (GitHub)
 
 > [!IMPORTANT]
-> This document describes the underlying GitHub OAuth2 mechanisms. For application-level implementation using Streamlit's native auth, see [Native Streamlit OAuth2 Reference](./native-oauth-reference.md).
+> This document describes the underlying GitHub OAuth2 mechanisms. For application-level implementation, use the `streamlit-oauth` package as seen in `src/frontend/pages/login.py`.
+> **WARNING**: Native Streamlit `st.login` is INCOMPATIBLE with GitHub OAuth2 and MUST NOT be used.
 
 You can enable other users to authorize your OAuth app.
 
@@ -38,11 +39,11 @@ When registering your OAuth application on GitHub, use the following URLs:
 
 #### Local Development
 - **Homepage URL:** `http://localhost:8501`
-- **Authorization callback URL:** `http://localhost:8501/oauth2callback` (Required for native Streamlit `st.login`)
+- **Authorization callback URL:** `http://localhost:8501/component/streamlit_oauth.authorize_button`
 
 #### Production (Streamlit Community Cloud)
-- **Homepage URL:** `https://snea-shoebox-editor.streamlit.app/`
-- **Authorization callback URL:** `https://snea-shoebox-editor.streamlit.app/oauth2callback`
+- **Homepage URL:** `https://snea-edit.streamlit.app/`
+- **Authorization callback URL:** `https://snea-edit.streamlit.app/component/streamlit_oauth.authorize_button`
 
 ### 1. Request a user's GitHub identity
 

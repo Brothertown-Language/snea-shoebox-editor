@@ -9,20 +9,29 @@ AI Coding Defaults:
 """
 def login():
     import streamlit as st
-    from src.frontend.oauth_fix import OAuth2Component
+    from streamlit_oauth import OAuth2Component
     import requests
 
-    # Retrieve OAuth configuration from secrets.toml
-    # By default, OAuth2Component looks for a section named "oauth" in st.secrets if no config is passed
-    # Create OAuth2Component instance
+    # Initialize OAuth2Component
     oauth2 = OAuth2Component(
         st.secrets["github_oauth"]["client_id"],
         st.secrets["github_oauth"]["client_secret"],
         st.secrets["github_oauth"]["authorize_url"],
         st.secrets["github_oauth"]["token_url"],
         st.secrets["github_oauth"]["redirect_uri"],
-        None # scope is handled in the button
+        None
     )
+
+    if st.session_state.get("logged_in") and "auth" in st.session_state:
+        st.info("You are already logged in.")
+        if st.button("Go to Home"):
+            st.switch_page("pages/index.py")
+        
+        if st.button("Log out"):
+            del st.session_state["auth"]
+            st.session_state.logged_in = False
+            st.rerun()
+        return
 
     if "auth" not in st.session_state:
         result = oauth2.authorize_button(

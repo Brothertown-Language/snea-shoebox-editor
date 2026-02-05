@@ -39,4 +39,9 @@ The database is hosted on **Aiven (PostgreSQL)**. Refer to the [Roadmap](roadmap
 
 ## 3. GitHub OAuth (Authentication)
 
-Authentication is handled via **GitHub OAuth** integrated into the Streamlit application.
+Authentication is handled via **GitHub OAuth** using the `streamlit-oauth` package.
+**WARNING**: Native Streamlit `st.login` is INCOMPATIBLE with GitHub OAuth2 and MUST NOT be used.
+
+For configuration details, refer to:
+- [GitHub OAuth Documentation](../github/github-oauth-doc.md)
+- [Development Roadmap](roadmap.md)

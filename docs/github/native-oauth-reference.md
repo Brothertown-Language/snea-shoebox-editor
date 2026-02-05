@@ -1,7 +1,10 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
-# Native Streamlit OAuth2 Reference (GitHub)
+# [DEPRECATED] Native Streamlit OAuth2 Reference (GitHub)
+# DO NOT USE: INCOMPATIBLE WITH GITHUB
+# GitHub is primarily an OAuth2 provider and does not provide a standard OIDC discovery endpoint
+# for user login as required by st.login().
 
-This document provides a reference for implementing authentication using Streamlit's native `st.login()`, `st.user`, and `st.logout()` commands (available in Streamlit 1.40+). This is the recommended approach for the SNEA Shoebox Editor.
+This document provides a reference for why NOT to use Streamlit's native `st.login()`, `st.user`, and `st.logout()` commands.
 
 ## Core Commands
 
@@ -99,5 +102,6 @@ if st.sidebar.button("Log out"):
 
 ## Identity Provider Requirements
 When registering the OAuth application on GitHub:
-1.  **Homepage URL**: `http://localhost:8501` (Local) or `https://snea-shoebox-editor.streamlit.app/` (Prod).
-2.  **Authorization callback URL**: Must include `/oauth2callback` (e.g., `http://localhost:8501/oauth2callback`).
+1.  **Homepage URL**: `http://localhost:8501` (Local) or `https://snea-edit.streamlit.app/` (Prod).
+2.  **Authorization callback URL**: Must point to the `streamlit-oauth` endpoint (e.g., `http://localhost:8501/component/streamlit_oauth.authorize_button`).
+    - **NEVER** use `/oauth2callback` as it is for the incompatible native auth.

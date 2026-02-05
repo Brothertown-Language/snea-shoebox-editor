@@ -25,21 +25,21 @@ Before initializing the project, you must set up the hosting and database platfo
 2.  **GitHub OAuth Setup**:
     - Go to your GitHub [**Developer settings > OAuth Apps > New OAuth App**](https://github.com/settings/applications/new).
     - **Application Name**: `SNEA Shoebox Editor`
-    - **Homepage URL**: `https://snea-shoebox-editor.streamlit.app/`
-    - **Authorization callback URL**: `https://snea-shoebox-editor.streamlit.app/`
+    - **Homepage URL**: `https://snea-edit.streamlit.app/`
+    - **Authorization callback URL**: `https://snea-edit.streamlit.app/component/streamlit_oauth.authorize_button`
     - Generate a **Client Secret** and save both the **Client ID** and **Client Secret**.
     - In the app settings, go to **Secrets** and paste the content of **`.streamlit/secrets.toml.production`**:
       ```toml
       [connections.postgresql]
       url = "YOUR_DATABASE_URL"
 
-      [github]
+      [github_oauth]
       client_id = "YOUR_CLIENT_ID"
       client_secret = "YOUR_CLIENT_SECRET"
-      redirect_uri = "https://snea-shoebox-editor.streamlit.app/"
-
-      [auth]
-      jwt_secret = "YOUR_JWT_SECRET"
+      redirect_uri = "https://snea-edit.streamlit.app/component/streamlit_oauth.authorize_button"
+      authorize_url = "https://github.com/login/oauth/authorize"
+      token_url = "https://github.com/login/oauth/access_token"
+      user_info_url = "https://api.github.com/user"
       ```
 
 ### Phase 2: Local Development Setup [COMPLETED]
@@ -58,20 +58,20 @@ Before initializing the project, you must set up the hosting and database platfo
       # For Aiven or existing local DB
       url = "YOUR_DB_CONNECTION_URI"
 
-      [github]
+      [github_oauth]
       client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
       client_secret = "YOUR_LOCAL_GITHUB_CLIENT_SECRET"
-      redirect_uri = "http://localhost:8501"
-
-      [auth]
-      jwt_secret = "a-debug-jwt-secret"
+      redirect_uri = "http://localhost:8501/component/streamlit_oauth.authorize_button"
+      authorize_url = "https://github.com/login/oauth/authorize"
+      token_url = "https://github.com/login/oauth/access_token"
+      user_info_url = "https://api.github.com/user"
 
       # [FUTURE FEATURE]
       # [embedding]
       # model_id = "BAAI/bge-m3"
       # api_key = "hf_your_token_here"
       ```
-    - Note: You should create a separate GitHub OAuth App for local development with `http://localhost:8501` as the callback URL.
+    - Note: You should create a separate GitHub OAuth App for local development with `http://localhost:8501/component/streamlit_oauth.authorize_button` as the callback URL.
 2.  **Install Dependencies**:
     ```bash
     uv sync --extra local
