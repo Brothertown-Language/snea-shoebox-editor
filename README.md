@@ -41,9 +41,9 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
     ```
 2.  **Run the app**:
     ```bash
-    uv run streamlit run src/frontend/app.py
+    ./scripts/start_streamlit.sh
     ```
-    *Note: If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
+    *Note: Always use the start script or `nohup` for background execution. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
 
 3.  **Configure secrets (Optional)**: Create `.streamlit/secrets.toml` with your GitHub OAuth credentials if you want to test authentication.
 
@@ -67,7 +67,7 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 
 ## Scripts
 
-- `uv run streamlit run src/frontend/app.py`: Starts the local development server.
+- `./scripts/start_streamlit.sh`: Starts the local development server in the background using `nohup`.
 - `uv run python -m unittest discover tests`: Runs the test suite.
 
 ## Documentation

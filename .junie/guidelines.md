@@ -61,7 +61,7 @@ date: 2026-02-03
 
 ### Frontend Architecture: Streamlit (Community Cloud)
 - **Production:** Streamlit Community Cloud (connected to private GitHub repo)
-- **Local Dev:** Regular Streamlit server (`uv run streamlit run src/frontend/app.py`)
+- **Local Dev:** **MANDATORY** use of `nohup` for background execution (e.g., `./scripts/start_streamlit.sh`)
 - **Hosting:** Streamlit Community Cloud for frontend, Aiven for PostgreSQL database
 - **Secrets:** Use `.streamlit/secrets.toml` locally and "Secrets" UI in Streamlit Cloud
 

@@ -5,6 +5,7 @@ AI Coding Defaults:
 - Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
 - Single Responsibility: Each function/method must have one clear purpose.
 - Standalone Execution: Page files must include a main execution block.
+- Background Execution: MANDATORY use of nohup for all Streamlit runs (e.g. scripts/start_streamlit.sh).
 """
 def system_status():
     import streamlit as st

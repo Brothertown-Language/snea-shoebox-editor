@@ -18,6 +18,20 @@ All `.py` (Python) and `.md` (Markdown) files must include the appropriate copyr
 ## Code Style
 Consistency with the existing codebase is mandatory.
 
+### AI Coding Defaults (Python Header Template)
+All Python files must include this standard header (updated with the `nohup` requirement):
+```python
+# Copyright (c) 2026 Brothertown Language
+"""
+AI Coding Defaults:
+- Strict Typing: Mandatory for all function signatures and variable declarations.
+- Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
+- Single Responsibility: Each function/method must have one clear purpose.
+- Standalone Execution: Page files must include a main execution block.
+- Background Execution: MANDATORY use of nohup for all Streamlit runs (e.g. scripts/start_streamlit.sh).
+"""
+```
+
 ### Python Execution Patterns
 - **Streamlit Multipage Navigation:** **ALWAYS** use file paths (e.g., `"pages/index.py"`) when defining `st.Page` objects in `st.navigation`. This ensures that `st.switch_page("pages/index.py")` works correctly across all pages.
 - **Standalone Page Execution:** **ALWAYS** include an `if __name__ == "__main__":` block at the end of every Streamlit page file (in `src/frontend/pages/`). This block must call the main function of that page to ensure it executes correctly when navigated to via `st.switch_page` or the sidebar.
