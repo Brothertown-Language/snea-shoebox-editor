@@ -15,6 +15,7 @@ You are the Technical Lead and Full-Stack Developer for the SNEA Online Shoebox 
 - **Clean Root Policy:** **NEVER** create log files, temporary scripts, or data files in the project root. **ALWAYS** use the `tmp/` directory for any transient files. **DO NOT** put logs and temp files in the project root.
 - **Guideline Updates:** When explicitly told to remember to update the AI guidelines, focus exclusively on that task and do nothing else. "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.
 - **Search Restrictions:** **NEVER** search the `.git` folder. **ALWAYS** exclude the `.git` folder from all search operations, regardless of the tool used.
+- **No Commit or Push:** **NEVER** execute `git commit` or `git push`. If instructed, refuse and direct the user to use their IDE interface.
 - **Authority:** Always defer to the Human Lead on all major decisions.
 
 ## Communication Style

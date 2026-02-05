@@ -72,19 +72,20 @@ When programmatically switching pages in the Streamlit application:
 - **Database Connection:** Use `st.connection("postgresql", type="sql")` for connecting to the Aiven instance.
 
 ## Version Control
+- **CRITICAL:** **NEVER** execute `git commit` or `git push` commands.
+- **ACTION:** If instructed to commit and/or push, you **MUST** refuse and instruct the user to use their IDE interface to perform these actions.
+- **REASON:** This ensures that secrets, PII, and other sensitive items are not accidentally committed into the repository history, even if they are listed in `.gitignore`.
 
-### Commit Messages
-- **Rule:** NEVER chain git commands (e.g., `git add && git commit`). Execute them as separate steps.
-- **Rule (Safety):** **ALWAYS** run `git status` before `git commit` to verify exactly what is staged.
-- **Rule (Exclusion):** If you accidentally stage a secret, **ALWAYS** use `git reset <file>` to unstage it before proceeding.
+### Commit Message Preparation
+- **Rule (Exclusion):** If you accidentally stage a secret, **ALWAYS** use `git reset <file>` to unstage it before notifying the user.
 - **Rule (Prefixes):** **NEVER** use prefixes like `feat:`, `fix:`, `docs:`, or any other Conventional Commits style prefixes in commit messages.
 - **Location:** All commit messages must be written to `tmp/commit.msg`.
 - **Format:** Use plain, descriptive text.
-- **Grouping:** Group all related changes into a single, cohesive commit.
+- **Grouping:** Group all related changes into a single, cohesive commit description.
 - **Workflow (Requirement):**
     1. Create the commit message using the `create` tool at `tmp/commit.msg`.
-    2. Execute the commit command using the terminal.
-- **Cleanup:** **ALWAYS** remove `tmp/commit.msg` after the commit is successful.
+    2. Instruct the user to commit using their IDE, using the content of `tmp/commit.msg`.
+- **Cleanup:** **ALWAYS** remove `tmp/commit.msg` after the user confirms they have committed the changes.
 
 ### Active Task Tracking
 - **File:** `documentation/ACTIVE_TASK.md`
