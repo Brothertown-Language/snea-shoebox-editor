@@ -103,8 +103,6 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
         time.sleep(poll_delay)
     
     st.error("The production database is taking too long to start. Please try refreshing the page in a few minutes.")
-    if st.button("Close"):
-        st.rerun()
 
 @st.dialog("Missing Secrets")
 def show_secrets_missing_dialog(missing_secrets: list[str]):
