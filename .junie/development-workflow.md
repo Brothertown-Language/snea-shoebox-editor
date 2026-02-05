@@ -21,12 +21,17 @@ uv pip install -e .
 
 ### Running the Application
 **MANDATORY RULE:** **ALWAYS** start the Streamlit application using the provided start script (`./scripts/start_streamlit.sh`) or manually using `nohup`. This script uses `nohup` and background execution to ensure the application continues running after the terminal or Junie session exits. There are **NO EXCEPTIONS** to this rule. 
-**COMMAND:** `nohup uv run streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > streamlit.log 2>&1 &`
+**COMMAND:** `nohup uv run streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > tmp/streamlit.log 2>&1 &`
 
 ```bash
 # Run the application locally in the background and ensure it persists
 ./scripts/start_streamlit.sh
 ```
+
+## NO LOGS OR TEMP FILES IN PROJECT ROOT
+- **CRITICAL:** **NEVER** create log files, temporary scripts, or data files in the project root.
+- **MANDATORY:** Always use the `tmp/` directory for any transient files.
+- **REASON:** Keeping the project root clean is essential for maintainability and prevents accidental commits of junk files.
 
 ### Multipage Navigation and `st.switch_page`
 When programmatically switching pages in the Streamlit application:

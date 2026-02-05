@@ -60,6 +60,11 @@ date: 2026-02-03
 - **REASON:** Committing secrets or local configuration leads to security breaches and environment contamination.
 - **ACTION:** Always run `git status` and `git check-ignore <path>` before adding files to ensure they are not supposed to be ignored.
 
+### NO LOGS OR TEMP FILES IN PROJECT ROOT
+- **CRITICAL:** **NEVER** create log files, temporary scripts, or data files in the project root.
+- **MANDATORY:** Always use the `tmp/` directory for any transient files.
+- **REASON:** Keeping the project root clean is essential for maintainability and prevents accidental commits of junk files.
+
 ### GUIDELINE UPDATES
 - When told to remember to update the AI guidelines, **do nothing else**.
 - "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.
