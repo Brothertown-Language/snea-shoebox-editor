@@ -46,6 +46,7 @@ def main():
     page_home = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index")
     page_record = st.Page("pages/view_record.py", title="Record View", icon="📝", url_path="record")
     page_source = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
+    page_user = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
     
     # Access control logic
     if st.session_state.logged_in:
@@ -55,7 +56,7 @@ def main():
         pg = st.navigation({
             "Main": [page_home, page_record, page_source],
             "System": [page_status],
-            "Account": [st.Page(logout, title="Logout", icon="🚪")]
+            "Account": [page_user, st.Page(logout, title="Logout", icon="🚪")]
         })
     else:
         pg = st.navigation([page_login])
@@ -65,6 +66,14 @@ def main():
 
 def logout():
     st.session_state.logged_in = False
+    if "auth" in st.session_state:
+        del st.session_state["auth"]
+    if "user_info" in st.session_state:
+        del st.session_state["user_info"]
+    if "user_orgs" in st.session_state:
+        del st.session_state["user_orgs"]
+    if "user_teams" in st.session_state:
+        del st.session_state["user_teams"]
     st.info("Logged out successfully!")
     st.rerun()
 

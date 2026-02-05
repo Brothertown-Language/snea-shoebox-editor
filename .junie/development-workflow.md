@@ -87,9 +87,13 @@ When programmatically switching pages in the Streamlit application:
     2. Instruct the user to commit using their IDE, using the content of `tmp/commit.msg`.
 - **Cleanup:** **ALWAYS** remove `tmp/commit.msg` after the user confirms they have committed the changes.
 
-### Active Task Tracking
-- **File:** `documentation/ACTIVE_TASK.md`
-- **Requirement:** Update this file every session with the current status of your work.
+### Active Task and TODO Management
+- **Primary Task Tracker:** `documentation/ACTIVE_TASK.md`
+- **Requirement:** **ALWAYS** check `documentation/ACTIVE_TASK.md` at the start of every session to understand the current project state and next steps.
+- **Requirement:** Update `documentation/ACTIVE_TASK.md` at the end of every session (or during `update_status` calls) with accurate progress markers (`[DONE]`, `[PENDING]`, etc.).
+- **Task-Specific TODOs:** Complex or multi-step tasks may have dedicated files in `documentation/` (e.g., `documentation/TODO_PERSISTENT_LOGIN.md`).
+- **Requirement:** If a task-specific TODO file exists and is referenced in `ACTIVE_TASK.md` or the issue description, it MUST be treated as the authoritative source of truth for that specific task's implementation details.
+- **Maintenance:** Delete or archive task-specific TODO files once the task is fully completed and verified.
 
 ## Deployment
 

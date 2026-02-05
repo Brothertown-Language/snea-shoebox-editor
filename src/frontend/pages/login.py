@@ -23,14 +23,7 @@ def login():
     )
 
     if st.session_state.get("logged_in") and "auth" in st.session_state:
-        st.info("You are already logged in.")
-        if st.button("Go to Home"):
-            st.switch_page("pages/index.py")
-        
-        if st.button("Log out"):
-            del st.session_state["auth"]
-            st.session_state.logged_in = False
-            st.rerun()
+        st.switch_page("pages/index.py")
         return
 
     if "auth" not in st.session_state:
@@ -42,52 +35,39 @@ def login():
         if result:
             # Save token to session state
             st.session_state["auth"] = result
+            
+            # Fetch user info immediately after obtaining the token
+            token = result["token"]["access_token"]
+            headers = {
+                "Authorization": f"token {token}",
+                "Accept": "application/json"
+            }
+            base_url = st.secrets["github_oauth"]["user_info_url"]
+            
+            try:
+                # Fetch user profile
+                user_response = requests.get(base_url, headers=headers)
+                user_response.raise_for_status()
+                st.session_state["user_info"] = user_response.json()
+
+                # Fetch organizations
+                orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
+                orgs_response.raise_for_status()
+                st.session_state["user_orgs"] = orgs_response.json()
+
+                # Fetch teams
+                teams_response = requests.get(f"{base_url}/teams", headers=headers)
+                teams_response.raise_for_status()
+                st.session_state["user_teams"] = teams_response.json()
+            except Exception as e:
+                st.error(f"Failed to fetch user information from GitHub: {e}")
+            
             st.session_state.logged_in = True
             st.rerun()
     else:
-        # Retrieve the access token
-        token = st.session_state["auth"]["token"]["access_token"]
-
-        # 4. Fetch the user's Organizations and Teams using the token
-        headers = {
-            "Authorization": f"token {token}",
-            "Accept": "application/json"
-        }
-
-        base_url = st.secrets["github_oauth"]["user_info_url"]
-        orgs_url = f"{base_url}/orgs"
-        teams_url = f"{base_url}/teams"
-
-        orgs_response = requests.get(orgs_url, headers=headers)
-        orgs_data = orgs_response.json()
-
-        teams_response = requests.get(teams_url, headers=headers)
-        teams_data = teams_response.json()
-
-        # 5. Display the Results
+        # If already has auth but not redirected yet
         st.success("Successfully logged in!")
-
-        st.write("### Your Organizations (Groups)")
-        if isinstance(orgs_data, list) and orgs_data:
-            for org in orgs_data:
-                st.write(f"- {org.get('login')}")
-        else:
-            st.info("No organizations found (or access was not granted).")
-
-        st.write("### Your Teams")
-        if isinstance(teams_data, list) and teams_data:
-            for team in teams_data:
-                team_name = team.get('name')
-                org_info = team.get('organization')
-                org_name = org_info.get('login') if org_info else 'Unknown Org'
-                st.write(f"- {team_name} ({org_name})")
-        else:
-            st.info("No teams found (or access was not granted).")
-
-        if st.button("Log out"):
-            del st.session_state["auth"]
-            st.session_state.logged_in = False
-            st.rerun()
+        st.switch_page("pages/index.py")
 
 if __name__ == "__main__":
     login()
