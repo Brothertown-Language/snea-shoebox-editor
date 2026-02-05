@@ -38,6 +38,7 @@ def is_production():
     # Streamlit Cloud always runs apps under the Linux user 'appuser'.
     # This is a widely used community workaround for production detection.
     try:
+        import getpass
         return getpass.getuser() == "appuser"
     except Exception:
         # Fallback to local if user cannot be determined

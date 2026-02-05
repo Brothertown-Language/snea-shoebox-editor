@@ -120,6 +120,7 @@ def ensure_db_alive():
         from urllib.parse import urlparse
         from src.database import get_db_url
         
+        # In production, we expect DNS failures if service was recently started
         url = get_db_url()
         if url:
             parsed = urlparse(url)
@@ -131,6 +132,7 @@ def ensure_db_alive():
                     # We should wait
                     status = "STARTING_DNS"
 
+    # Always block if not RUNNING
     if status == "RUNNING":
         return
     
@@ -138,5 +140,6 @@ def ensure_db_alive():
         show_startup_dialog(config, "STARTING" if status == "STARTING_DNS" else status)
         st.stop()
     else:
-        st.warning(f"Database is in an unexpected state: {status}. It may not be available.")
+        # Unexpected state, but still block as it's not RUNNING
+        st.warning(f"Database is in an unexpected state: {status}. Access is blocked for safety.")
         st.stop()
