@@ -65,7 +65,7 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
         st.write("Start command sent. Waiting for database to become active...")
 
     # Polling
-    max_polls = 30 # 30 * 10s = 5 minutes
+    max_polls = 60 # 60 * 10s = 10 minutes
     poll_delay = 10
     
     status_placeholder = st.empty()
@@ -102,6 +102,10 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
         progress_bar.progress((i + 1) / max_polls)
         time.sleep(poll_delay)
     
+    # If we reached here, polling timed out
+    if current_status == "REBUILDING":
+        st.rerun()
+        
     st.error("The production database is taking too long to start. Please try refreshing the page in a few minutes.")
 
 @st.dialog("Missing Secrets")
