@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Brothertown Language
+"""
+DATABASE SOURCE OF TRUTH: docs/database/DATABASE_SPECIFICATION.md
+"""
 from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship
 from ..base import Base

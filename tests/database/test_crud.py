@@ -1,4 +1,7 @@
 # Copyright (c) 2026 Brothertown Language
+"""
+DATABASE SOURCE OF TRUTH: docs/database/DATABASE_SPECIFICATION.md
+"""
 import unittest
 import os
 import uuid

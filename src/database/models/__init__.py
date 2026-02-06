@@ -1,3 +1,4 @@
+# Copyright (c) 2026 Brothertown Language
 from .core import Source, Language, Record
 from .search import SearchEntry
 from .workflow import MatchupQueue, EditHistory

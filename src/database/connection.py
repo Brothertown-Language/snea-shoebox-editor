@@ -1,3 +1,7 @@
+# Copyright (c) 2026 Brothertown Language
+"""
+DATABASE SOURCE OF TRUTH: docs/database/DATABASE_SPECIFICATION.md
+"""
 import os
 import streamlit as st
 from pathlib import Path

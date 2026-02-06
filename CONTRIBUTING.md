@@ -18,12 +18,13 @@ Thank you for your interest in contributing to the SNEA Online Shoebox Editor. W
 3. **Follow the Dedicated Initial Setup Guide** in [docs/development/SETUP.md](docs/development/SETUP.md) for a complete setup, or the **Local Development Guide** in [docs/development/local-development.md](docs/development/local-development.md) if you only need to run the app locally.
 4. **Note**: If the infrastructure is already set up, you only need to perform the "Local Environment Initialization" steps.
 
-## Development Workflow
+## Code Standards
 
-- We use `uv` for dependency management.
-- Frontend and Backend are built with [Streamlit](https://streamlit.io/).
-- Data must strictly follow MDF (Multi-Dictionary Form) standards.
-- We use `ruff` for code linting and formatting. It is recommended to install the `ruff` plugin in your IDE (e.g., PyCharm, VS Code).
+- **Copyright Headers**: All `.py` (Python) and `.md` (Markdown) source files must include the mandatory copyright header:
+    - Python: `# Copyright (c) 2026 Brothertown Language`
+    - Markdown: `<!-- Copyright (c) 2026 Brothertown Language -->`
+- **MDF Data**: Data must strictly follow MDF (Multi-Dictionary Form) standards.
+- **Linting**: We use `ruff` for code linting and formatting. It is recommended to install the `ruff` plugin in your IDE (e.g., PyCharm, VS Code).
 - Code is automatically formatted on commit via `pre-commit`. To set this up, run:
   ```bash
   pre-commit install
