@@ -80,7 +80,7 @@ Before initializing the project, you must set up the hosting and database platfo
     ```bash
     uv run --extra local streamlit run src/frontend/app.py
     ```
-    - **MANDATORY RULE:** Always use the start script `./scripts/start_streamlit.sh` or `nohup uv run --extra local ...` for background execution. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).
+    - **MANDATORY RULE:** Always use the start script `./scripts/start_streamlit.sh` or `nohup uv run --extra local ...` for background execution. For local development and testing, **ALWAYS** include `--extra local` to ensure that `pgserver` and other local dependencies are available. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).
     - **PyCharm Launchers**: Pre-configured run configurations for PyCharm are available in the `launchers/` directory. Copy them to your `.idea/runConfigurations/` folder to use them. These launchers automatically handle process management (killing old sessions) and ensure `pgserver` is started.
 
 ---

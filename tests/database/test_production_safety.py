@@ -8,7 +8,7 @@ class TestProductionSafety(unittest.TestCase):
         """Test that is_production correctly identifies environment based on the system user."""
         from unittest.mock import patch
         
-        with patch('src.database.getpass.getuser') as mock_getuser:
+        with patch('src.database.connection.getpass.getuser') as mock_getuser:
             # If user is 'appuser', it IS production
             mock_getuser.return_value = "appuser"
             self.assertTrue(is_production())
@@ -26,7 +26,7 @@ class TestProductionSafety(unittest.TestCase):
         from unittest.mock import patch
         
         # Mock production environment (user is appuser)
-        with patch('src.database.getpass.getuser') as mock_getuser:
+        with patch('src.database.connection.getpass.getuser') as mock_getuser:
             mock_getuser.return_value = "appuser"
             
             # Even if pgserver is installable (which it might be in this test env),

@@ -110,6 +110,7 @@ Enables linguists to upload MDF files and manually match them against production
 | **`username`** | TEXT | GitHub Handle | Display name and secondary identifier. |
 | **`github_id`** | INTEGER | GitHub ID | Immutable numeric ID from GitHub. |
 | **`full_name`** | TEXT | Real Name | User's full name for attribution. |
+| **`is_active`** | BOOLEAN | Account Status | Flag to enable/disable user access. |
 | **`last_login`** | TIMESTAMP | Last Login | Audit trail for user activity. |
 | **`created_at`** | TIMESTAMP | Join Date | When the user first logged in. |
 | **`metadata`** | JSONB | Settings/Info | Flexible storage for future extension (pushed right). |
@@ -165,7 +166,7 @@ Enables linguists to upload MDF files and manually match them against production
 
 | Engine | Technology | Best For... |
 | :--- | :--- | :--- |
-| **Linguistic Tool** | `pg_trgm` (Trigram) | Exact substrings, prefixes, suffixes, fragments, and missing parts. |
+| **Linguistic Tool** | `ILIKE` / `LIKE` | Standard substring, prefix, and suffix matching with 100% environment parity. |
 | **Global Search** | PostgreSQL FTS | Natural language "Google-style" searches across glosses, examples, and notes. |
 
 ---
@@ -185,7 +186,14 @@ To protect the production database from "bad" uploads (e.g., uploading old or in
 - **Rollback Mechanism**: The system identifies all `edit_history` rows matching the specific `session_id` and restores the `prev_data` snapshots to the `records` table.
 - This allows an entire bad upload to be reverted without manually fixing each record.
 
-### Layer 3: Point-in-Time Recovery
+### Layer 3: Data Preservation & "Safety-First" Deletion
+- **Restrictive Deletion (RESTRICT)**: To prevent accidental data loss, the database uses restrictive foreign key constraints. 
+    - A **Record** cannot be deleted if it has associated **Edit History**.
+    - A **User** cannot be deleted if they have **Activity Logs** or **Edit History** attributed to them.
+- **Permanent Attribution**: By using `user_email` as a stable identifier across all audit tables, the system ensures that every update, upload, and administrative action remains identifiable even if a user's GitHub handle changes or if the user account is deactivated.
+- **Soft-Deletes (Optional/Future)**: While currently using hard-deletes (protected by restrictions), the system is designed to transition to `is_deleted` flags to preserve linguistic entries while hiding them from the UI.
+
+### Layer 4: Point-in-Time Recovery
 - For catastrophic events, the PostgreSQL database (Aiven) provides automated backups and point-in-time recovery.
 
 ---
@@ -205,4 +213,4 @@ To protect the production database from "bad" uploads (e.g., uploading old or in
 - **Why dedicated columns for `lx`, `ps`, `ge`?** While `mdf_data` is the source of truth, these columns allow for standard SQL filtering, sorting, and high-performance list views in Streamlit without parsing text on every request.
 - **Why avoid custom MDF tags?** Standard compliance ensures the exported data remains compatible with legacy tools like ShoeBox or ToolBox.
 - **Why `\nt Record:` over other tags?** The `\nt` tag is the standard "General Note" field. Prepending "Record: " provides a clear, human-readable indicator of the database identity that is unlikely to conflict with linguistic notes.
-- **Email as User Identifier**: In the `edit_history` and `users` tables, the email is used as the primary logical link to ensure audit trails remain intact even if a user changes their GitHub username.
+- **Email as User Identifier**: In the `edit_history`, `user_activity_log`, and `users` tables, the email is used as the primary logical link to ensure audit trails remain intact even if a user changes their GitHub username or if the record is removed from the `users` table.
