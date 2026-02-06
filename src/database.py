@@ -1,5 +1,10 @@
 # Copyright (c) 2026 Brothertown Language
 """
+CRITICAL MAINTENANCE RULES:
+1. Tables must NEVER be dropped and recreated in this file. 
+2. All schema updates must be non-destructive (use ALTER TABLE via migration logic).
+3. Always verify against DATABASE_SPECIFICATION.md before modifying any model.
+
 AI Coding Defaults:
 - Strict Typing: Mandatory for all function signatures and variable declarations.
 - Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
@@ -7,6 +12,7 @@ AI Coding Defaults:
 - Standalone Execution: Page files must include a main execution block.
 """
 from sqlalchemy import create_engine, Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey, Index, text
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import sessionmaker, relationship, declarative_base
 from sqlalchemy.sql import func
 import os
@@ -88,75 +94,174 @@ def _auto_start_pgserver():
 Base = declarative_base()
 
 class Source(Base):
+    """
+    Lookup table for high-level source collections (e.g., 'Natick/Trumbull').
+    Managed via reference data seeding and administrative UI.
+    """
     __tablename__ = 'sources'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String, unique=True, nullable=False)
+    name = Column(String, unique=True, nullable=False)  # Full name e.g., 'Natick/Trumbull'
+    short_name = Column(String)  # Abbreviation for UI display
     description = Column(Text)
-    citation_format = Column(Text)
+    citation_format = Column(Text)  # Rule for generating standard citations
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     
     records = relationship("Record", back_populates="source")
+    matchup_entries = relationship("MatchupQueue", back_populates="source")
+
+class Language(Base):
+    """
+    Lookup table for valid language codes and display names.
+    Ensures consistency across entries and provides dropdown data.
+    """
+    __tablename__ = 'languages'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    code = Column(String, unique=True, nullable=False)  # ISO or project code
+    name = Column(String, nullable=False)  # Display name
+    description = Column(Text)
+    
+    records = relationship("Record", back_populates="language")
 
 class Record(Base):
+    """
+    The source of truth for all linguistic entries.
+    Organized for human readability in SQL viewers, prioritizing linguistic fields.
+    Linked to raw MDF data via \nt Record: <id> sync logic.
+    """
     __tablename__ = 'records'
-    id = Column(Integer, primary_key=True, autoincrement=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)  # Matches \nt Record: <id>
+    lx = Column(String, nullable=False)  # Lexeme (\lx)
+    hm = Column(Integer, default=1)  # Homonym Number (\hm)
+    ps = Column(String)  # Part of Speech (\ps)
+    ge = Column(String)  # English Gloss (\ge)
+    language_id = Column(Integer, ForeignKey('languages.id'), nullable=False)
     source_id = Column(Integer, ForeignKey('sources.id'), nullable=False)
-    lx = Column(String, nullable=False)
-    ps = Column(String)
-    ge = Column(String)
-    mdf_data = Column(Text, nullable=False)
-    status = Column(String, nullable=False, default='draft')
-    source_page = Column(String)
+    source_page = Column(String)  # Specific citation detail (\so)
+    status = Column(String, nullable=False, default='draft')  # 'draft', 'edited', 'approved'
+    mdf_data = Column(Text, nullable=False)  # Raw MDF body
+    
+    # Audit & Workflow fields
     current_version = Column(Integer, nullable=False, default=1)
     is_deleted = Column(Boolean, nullable=False, default=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
-    updated_by = Column(String)
+    updated_by = Column(String)  # Identifier (email/ID) of last editor
     reviewed_at = Column(TIMESTAMP(timezone=True))
     reviewed_by = Column(String)
     
+    language = relationship("Language", back_populates="records")
     source = relationship("Source", back_populates="records")
     history = relationship("EditHistory", back_populates="record")
+    search_entries = relationship("SearchEntry", back_populates="record", cascade="all, delete-orphan")
+    matchup_suggestions = relationship("MatchupQueue", back_populates="suggested_record")
+
+class SearchEntry(Base):
+    """
+    Consolidated lookup table for instant search across all linguistic forms.
+    Indexed using GIN Trigram (pg_trgm) for fragment matching.
+    """
+    __tablename__ = 'search_entries'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(Integer, ForeignKey('records.id', ondelete='CASCADE'), nullable=False)
+    term = Column(String, nullable=False)  # The searchable form (\lx, \va, \se, etc.)
+    entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'se', 'cf', 've'
+    
+    record = relationship("Record", back_populates="search_entries")
+
+class MatchupQueue(Base):
+    """
+    Staging area for uploaded MDF data requiring manual matching.
+    Isolates sessions by user and source.
+    """
+    __tablename__ = 'matchup_queue'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_email = Column(String, ForeignKey('users.email'), nullable=False)
+    source_id = Column(Integer, ForeignKey('sources.id'), nullable=False)
+    suggested_record_id = Column(Integer, ForeignKey('records.id'))  # Potential match
+    status = Column(String, nullable=False, default='pending')  # 'pending', 'matched', 'ignored'
+    mdf_data = Column(Text, nullable=False)  # Raw uploaded entry
+    created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    
+    source = relationship("Source", back_populates="matchup_entries")
+    suggested_record = relationship("Record", back_populates="matchup_suggestions")
+    user = relationship("User", back_populates="matchup_entries")
 
 class EditHistory(Base):
+    """
+    Versioned audit trail for record changes.
+    Tracks snapshot-based history for rollback and accountability.
+    """
     __tablename__ = 'edit_history'
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey('records.id', ondelete='CASCADE'), nullable=False)
+    user_email = Column(String, ForeignKey('users.email'), nullable=False)
+    session_id = Column(String)  # Unique UUID per upload/edit batch
     version = Column(Integer, nullable=False)
-    prev_data = Column(Text)
-    current_data = Column(Text, nullable=False)
-    user_id = Column(String, nullable=False)
     change_summary = Column(Text)
+    prev_data = Column(Text)  # MDF snapshot before change
+    current_data = Column(Text, nullable=False)  # MDF snapshot after change
     timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now())
     
     record = relationship("Record", back_populates="history")
+    user = relationship("User", back_populates="edit_history")
 
 class User(Base):
+    """
+    User identity and metadata linked to GitHub authentication.
+    Uses email as the primary logical identifier for cross-session audit trails.
+    """
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    email = Column(String, unique=True, nullable=False)
+    email = Column(String, unique=True, nullable=False)  # Primary logic key
+    username = Column(String, unique=True, nullable=False)  # GitHub handle
     github_id = Column(Integer, unique=True, nullable=False)
-    username = Column(String, unique=True, nullable=False)
-    name = Column(String)
+    name = Column(String)  # Full name for attribution
     last_login = Column(TIMESTAMP(timezone=True))
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    metadata = Column(JSONB)  # Extended data/preferences
+    
+    edit_history = relationship("EditHistory", back_populates="user")
+    activity_logs = relationship("UserActivityLog", back_populates="user")
+    matchup_entries = relationship("MatchupQueue", back_populates="user")
 
 class UserActivityLog(Base):
+    """
+    General security and usage audit log.
+    Tracks logins, sync sessions, and critical administrative actions.
+    """
     __tablename__ = 'user_activity_log'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_id = Column(Integer, ForeignKey('users.id', ondelete='CASCADE'), nullable=False)
-    action = Column(String, nullable=False)
+    user_email = Column(String, ForeignKey('users.email', ondelete='CASCADE'), nullable=False)
+    session_id = Column(String)  # Unique UUID linking activity to a specific edit batch
+    action = Column(String, nullable=False)  # e.g., 'login', 'sync_start', 'batch_rollback'
     details = Column(Text)
     ip_address = Column(String)
     timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    
+    user = relationship("User", back_populates="activity_logs")
 
 class Permission(Base):
+    """
+    Access control mapping between GitHub Teams and application roles.
+    Defines who can view or edit specific sources.
+    """
     __tablename__ = 'permissions'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    source_id = Column(Integer, ForeignKey('sources.id', ondelete='CASCADE'))
+    source_id = Column(Integer, ForeignKey('sources.id', ondelete='CASCADE'))  # NULL = all
     github_org = Column(String, nullable=False)
-    github_team = Column(String)
-    role = Column(String, nullable=False, default='viewer')
+    github_team = Column(String)  # NULL = all org members
+    role = Column(String, nullable=False, default='viewer')  # 'admin', 'editor', 'viewer'
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+
+class SchemaVersion(Base):
+    """
+    Tracks the current version of the database schema.
+    Used to ensure non-destructive updates and manage migrations.
+    """
+    __tablename__ = 'schema_version'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    version = Column(Integer, nullable=False)
+    applied_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
+    description = Column(Text)
 
 def get_db_url():
     """Get database URL from Streamlit secrets or environment variables."""
@@ -198,8 +303,11 @@ def init_db():
     with engine.connect() as conn:
         # Create vector extension for semantic search support
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+        # Create pg_trgm extension for linguistic substring matching
+        conn.execute(text("CREATE EXTENSION IF NOT EXISTS pg_trgm;"))
         conn.commit()
     
+    # Base.metadata.create_all is non-destructive for existing tables
     Base.metadata.create_all(engine)
     return engine
 

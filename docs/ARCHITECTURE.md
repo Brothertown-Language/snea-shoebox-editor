@@ -14,10 +14,9 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
   - Implements optimistic locking for concurrent editing. (Pending)
   - Implemented: Basic record viewing, automatic schema initialization.
 - **Database**: [Aiven](https://aiven.io/) (PostgreSQL).
-  - Persistent PostgreSQL database.
-  - Stores linguistic records and edit history.
-  - Implemented tables: `sources`, `records`.
-  - Pending tables: `users`, `edit_history`, `permissions`, `embeddings`.
+  - Persistent PostgreSQL database using a dual-engine search strategy (FTS + Trigram).
+  - Stores linguistic records, search entries, audit trails, and staging queues.
+  - Implemented tables: `records`, `sources`, `languages`, `search_entries`, `matchup_queue`, `users`, `permissions`, `edit_history`, `user_activity_log`.
 - **Authentication**: Simple session-based login.
   - Relying on Streamlit's `st.session_state` for the current session.
   - (Planned) Integrated via GitHub OAuth.

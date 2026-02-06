@@ -5,6 +5,12 @@ def parse_mdf(content):
     """
     Parses MDF content where records are separated by double newlines.
     Returns a list of dictionaries representing records with full raw data.
+    
+    Linguistic fields (\lx, \hm, \ps, \ge) are extracted for database indexing
+    and list views, while mdf_data remains the source of truth.
+    
+    Includes logic for detecting and normalizing the \nt Record: <id> tag 
+    to maintain synchronization with the PostgreSQL database.
     """
     # Split by double newlines (or more)
     raw_records = re.split(r'\n\s*\n', content.strip())

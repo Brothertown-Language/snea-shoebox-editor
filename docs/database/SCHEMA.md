@@ -3,154 +3,178 @@
 
 # SNEA Shoebox Editor - Database Schema
 
-This document defines the database schema for the SNEA Online Shoebox Editor. The schema is designed for **PostgreSQL (Aiven)** and is compatible with local development environments.
+This document defines the database schema for the SNEA Online Shoebox Editor. The schema is based on the authoritative [DATABASE_SPECIFICATION.md](./DATABASE_SPECIFICATION.md) and is designed for **PostgreSQL (Aiven)**.
 
-## 1. Primary Data Tables
+---
 
-### `sources` [STATUS: APPROVED]
-Defines the different collections of records (e.g., Natick/Trumbull, Modern Mohegan Dictionary).
+## 1. Core Tables
 
-```sql
-CREATE TABLE sources (
-    id SERIAL PRIMARY KEY,
-    name TEXT UNIQUE NOT NULL,            -- e.g., 'Natick/Trumbull', 'Modern Mohegan'
-    description TEXT,                     -- Details about the original source
-    citation_format TEXT,                 -- Optional: Standard citation format for this source
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
-);
-```
-
-### `records` [STATUS: APPROVED]
+### `records`
 The source of truth for all linguistic entries in MDF format.
 
 ```sql
 CREATE TABLE records (
-    id SERIAL PRIMARY KEY,
-    source_id INTEGER NOT NULL,           -- Link to the origin source (Natick, Mohegan, etc.)
-    lx TEXT NOT NULL,                     -- Lexeme (\lx): Main headword
+    id SERIAL PRIMARY KEY,                -- Matches \nt Record: <id>
+    lx TEXT NOT NULL,                     -- Lexeme (\lx)
+    hm INTEGER DEFAULT 1,                 -- Homonym Number (\hm)
     ps TEXT,                              -- Part of Speech (\ps)
-    ge TEXT,                              -- English Gloss (\ge): Primary gloss for list views
-    mdf_data TEXT NOT NULL,               -- Full raw MDF record text (unbounded)
-    status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', or 'approved'
-    source_page TEXT,                     -- Page or section number in the main source
-    current_version INTEGER NOT NULL DEFAULT 1, -- For optimistic locking and versioning
-    is_deleted BOOLEAN NOT NULL DEFAULT FALSE, -- Soft delete flag
-    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    updated_by TEXT,                      -- Identifier (email/ID) of last editor
-    reviewed_at TIMESTAMP WITH TIME ZONE,                 -- When the record was marked 'approved'
-    reviewed_by TEXT,                     -- Identifier of the reviewer
+    ge TEXT,                              -- English Gloss (\ge)
+    language_id INTEGER NOT NULL,         -- FK to languages.id
+    source_id INTEGER NOT NULL,           -- FK to sources.id
+    source_page TEXT,                     -- Specific citation (\so)
+    status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', 'approved'
+    mdf_data TEXT NOT NULL,               -- Full raw MDF text
+    FOREIGN KEY (language_id) REFERENCES languages(id),
     FOREIGN KEY (source_id) REFERENCES sources(id)
 );
-
--- Index for filtering by source and status (FTS handles keyword search)
-CREATE INDEX idx_records_source_status ON records(source_id, status);
-CREATE INDEX idx_records_deleted ON records(is_deleted);
 ```
 
-### `embeddings` [STATUS: DEFERRED / FUTURE FEATURE]
-Supports AI-based semantic search by storing vectors for various parts of a record. 
-*Note: This table is part of a future feature and is not currently used in the production application.*
+### `search_entries`
+Consolidated lookup table for instant search across lexemes, variants, and subentries. Uses **GIN Trigram Indexing**.
 
 ```sql
-CREATE TABLE embeddings (
+CREATE TABLE search_entries (
     id SERIAL PRIMARY KEY,
     record_id INTEGER NOT NULL,           -- Link to parent record
-    embedding VECTOR(384),               -- pgvector type (multilingual-e5-small)
-    source_tag TEXT NOT NULL,             -- MDF tag embedded (e.g., 'lx', 'ge', 'va')
-    original_text TEXT NOT NULL,          -- The raw text from the MDF tag
-    embedded_text TEXT NOT NULL,          -- The final string sent to the AI (e.g. with context)
-    model_name TEXT NOT NULL,             -- AI model used
-    record_version INTEGER NOT NULL,      -- Version of the record when this was generated
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    term TEXT NOT NULL,                   -- Searchable string (\lx, \va, \se, etc.)
+    entry_type TEXT NOT NULL,             -- 'lx', 'va', 'se', 'cf', 've'
     FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
 );
 
--- Note: Use pgvector extension on Aiven.
-
-CREATE INDEX idx_embeddings_record_id ON embeddings(record_id);
-CREATE INDEX idx_embeddings_stale ON embeddings(record_id, record_version);
+-- Extension required: CREATE EXTENSION IF NOT EXISTS pg_trgm;
+CREATE INDEX idx_search_entries_term_trgm ON search_entries USING GIN (term gin_trgm_ops);
 ```
 
-### `records_fts` [STATUS: APPROVED]
-High-performance keyword search using PostgreSQL Full-Text Search (FTS).
+### `matchup_queue`
+Staging area for uploaded MDF files requiring manual lexeme-based matching.
 
 ```sql
--- PostgreSQL uses GIN indexes for fast full-text search
-CREATE INDEX idx_records_fts ON records USING GIN (to_tsvector('english', lx || ' ' || ge || ' ' || mdf_data));
+CREATE TABLE matchup_queue (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,             -- FK to users.email
+    source_id INTEGER NOT NULL,           -- Target collection
+    suggested_record_id INTEGER,          -- System potential match (FK to records.id)
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'matched', 'ignored'
+    lx TEXT,                              -- Uploaded Lexeme
+    mdf_data TEXT NOT NULL,               -- Raw uploaded entry
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_email) REFERENCES users(email),
+    FOREIGN KEY (source_id) REFERENCES sources(id),
+    FOREIGN KEY (suggested_record_id) REFERENCES records(id)
+);
 ```
 
 ---
 
-## 2. History & Audit Tables
+## 2. Lookup Tables (Reference Data)
 
-### `edit_history` [STATUS: APPROVED]
-Tracks every change made to a record for audit trails and rollback capability.
-
+### `languages`
 ```sql
-CREATE TABLE edit_history (
+CREATE TABLE languages (
     id SERIAL PRIMARY KEY,
-    record_id INTEGER NOT NULL,           -- Link to parent record
-    version INTEGER NOT NULL,             -- Version number resulting from this edit
-    prev_data TEXT,                       -- MDF snapshot BEFORE the change
-    current_data TEXT NOT NULL,           -- MDF snapshot AFTER the change
-    user_id TEXT NOT NULL,                -- Identifier of the editor
-    change_summary TEXT,                  -- Optional human-readable summary of changes
-    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
+    code TEXT UNIQUE NOT NULL,            -- e.g., 'wam', 'mohegan'
+    name TEXT NOT NULL,                   -- e.g., 'Wampanoag'
+    description TEXT
 );
+```
 
-CREATE INDEX idx_history_record_id ON edit_history(record_id);
+### `sources`
+```sql
+CREATE TABLE sources (
+    id SERIAL PRIMARY KEY,
+    name TEXT UNIQUE NOT NULL,            -- e.g., 'Natick/Trumbull'
+    short_name TEXT,
+    citation_format TEXT
+);
 ```
 
 ---
 
-## 3. User & Access Control
+## 3. Identity & Audit Tables
 
-### `users` [STATUS: APPROVED]
-Stores user identity metadata from GitHub OAuth.
-
+### `users`
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
-    email TEXT UNIQUE NOT NULL,
-    github_id INTEGER UNIQUE NOT NULL,
-    username TEXT UNIQUE NOT NULL,        -- GitHub handle
-    name TEXT,                            -- Display name
+    email TEXT UNIQUE NOT NULL,           -- Logical Primary Key
+    username TEXT UNIQUE NOT NULL,        -- GitHub Handle
+    github_id INTEGER UNIQUE NOT NULL,    -- GitHub Numeric ID
+    full_name TEXT,
     last_login TIMESTAMP WITH TIME ZONE,
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    metadata JSONB
 );
 ```
 
-### `user_activity_log` [STATUS: APPROVED]
-Tracks general user actions for security and usage analytics (distinct from MDF record edits).
-
+### `edit_history`
 ```sql
-CREATE TABLE user_activity_log (
+CREATE TABLE edit_history (
     id SERIAL PRIMARY KEY,
-    user_id INTEGER NOT NULL,
-    action TEXT NOT NULL,         -- e.g., 'login', 'logout', 'view_record', 'delete_record'
-    details TEXT,                 -- JSON or string with extra info
-    ip_address TEXT,              -- Optional, for audit
+    record_id INTEGER NOT NULL,
+    user_email TEXT NOT NULL,             -- FK to users.email
+    session_id TEXT,                      -- Unique UUID per batch
+    version INTEGER NOT NULL,
+    change_summary TEXT,
+    prev_data TEXT,
+    current_data TEXT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE,
+    FOREIGN KEY (user_email) REFERENCES users(email)
 );
-
-CREATE INDEX idx_user_activity_user_id ON user_activity_log(user_id);
 ```
 
-### `permissions` [STATUS: APPROVED]
-Maps GitHub Organizations and Teams to application roles and sources.
-
+### `permissions`
 ```sql
 CREATE TABLE permissions (
     id SERIAL PRIMARY KEY,
-    source_id INTEGER,                   -- Link to specific source (NULL = all sources)
-    github_org TEXT NOT NULL,             -- GitHub Organization name
-    github_team TEXT,                    -- GitHub Team slug (NULL = all org members)
+    source_id INTEGER,                   -- Link to source (NULL = all)
+    github_org TEXT NOT NULL,
+    github_team TEXT,
     role TEXT NOT NULL DEFAULT 'viewer',  -- 'admin', 'editor', 'viewer'
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
 );
-
-CREATE INDEX idx_permissions_org_team ON permissions(github_org, github_team);
 ```
+
+### `user_activity_log`
+```sql
+CREATE TABLE user_activity_log (
+    id SERIAL PRIMARY KEY,
+    user_email TEXT NOT NULL,             -- FK to users.email
+    session_id TEXT,                      -- Unique UUID per batch
+    action TEXT NOT NULL,                 -- e.g., 'login', 'sync_start', 'batch_rollback'
+    details TEXT,
+    ip_address TEXT,
+    timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
+);
+```
+
+### `schema_version`
+```sql
+CREATE TABLE schema_version (
+    id SERIAL PRIMARY KEY,
+    version INTEGER NOT NULL,             -- Applied schema version
+    applied_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    description TEXT                      -- Change summary
+);
+```
+
+---
+
+## 4. Search Strategy
+
+### Global Search (Full-Text Search)
+Searches across headwords, glosses, examples, and raw data with weighted priority.
+
+```sql
+CREATE INDEX idx_records_fts ON records USING GIN (
+    (
+        setweight(to_tsvector('english', coalesce(lx, '')), 'A') ||
+        setweight(to_tsvector('english', coalesce(ge, '')), 'B') ||
+        setweight(to_tsvector('english', coalesce(mdf_data, '')), 'D')
+    )
+);
+```
+
+### Linguistic Search (Trigram)
+Managed via the `search_entries` table for high-performance substring, prefix, and suffix matching.
