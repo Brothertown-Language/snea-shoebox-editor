@@ -68,7 +68,7 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 ## Scripts
 
 - `./scripts/start_streamlit.sh`: Starts the local development server in the background using `nohup`.
-- `uv run python -m unittest discover tests`: Runs the test suite.
+- `uv run --extra local python -m unittest discover tests`: Runs the test suite with local dependencies.
 
 ## Documentation
 

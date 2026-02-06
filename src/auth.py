@@ -20,11 +20,14 @@ def login_user_simple(username: str):
                 github_id=0, # Placeholder
                 email=f"{username}@example.com",
                 username=username,
-                name=username,
+                full_name=username,
                 last_login=datetime.datetime.now(datetime.timezone.utc)
             )
             db.add(user)
         else:
+            if not user.is_active:
+                st.error("Account is disabled. Please contact an administrator.")
+                return None
             # Update last login
             user.last_login = datetime.datetime.now(datetime.timezone.utc)
         
@@ -35,7 +38,7 @@ def login_user_simple(username: str):
         st.session_state.user = {
             "id": user.id,
             "username": user.username,
-            "name": user.name,
+            "full_name": user.full_name,
             "email": user.email
         }
         st.session_state.authenticated = True
@@ -68,17 +71,20 @@ def login_user(github_user_data: Dict[str, Any]):
                 github_id=github_id,
                 email=email or f"{username}@github.com",
                 username=username,
-                name=name,
+                full_name=name,
                 last_login=datetime.datetime.now(datetime.timezone.utc)
             )
             db.add(user)
         else:
+            if not user.is_active:
+                st.error("Account is disabled. Please contact an administrator.")
+                return None
             # Update last login
             user.last_login = datetime.datetime.now(datetime.timezone.utc)
             if email:
                 user.email = email
             if name:
-                user.name = name
+                user.full_name = name
         
         db.commit()
         db.refresh(user)
@@ -87,7 +93,7 @@ def login_user(github_user_data: Dict[str, Any]):
         st.session_state.user = {
             "id": user.id,
             "username": user.username,
-            "name": user.name,
+            "full_name": user.full_name,
             "email": user.email
         }
         st.session_state.authenticated = True

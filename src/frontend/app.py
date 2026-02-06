@@ -6,6 +6,7 @@ AI Coding Defaults:
 - Single Responsibility: Each function/method must have one clear purpose.
 - Standalone Execution: Page files must include a main execution block.
 - Background Execution: MANDATORY use of nohup for all Streamlit runs (e.g. scripts/start_streamlit.sh).
+- Local Development: MANDATORY use of "uv run --extra local" to ensure pgserver is available.
 """
 import streamlit as st
 import sys
