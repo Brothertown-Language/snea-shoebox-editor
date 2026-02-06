@@ -57,7 +57,12 @@ def sync_user_to_db(user_info: Dict[str, Any]) -> bool:
             user.username = username
             if name:
                 user.full_name = name
-            user.email = email
+            
+            # CRITICAL: Only update email if it doesn't look like a generated placeholder
+            # and we have a fresh one from GitHub.
+            if email and not email.endswith("@github.com"):
+                user.email = email
+            
             user.last_login = now
             action = "login"
 
@@ -94,7 +99,19 @@ def fetch_github_user_info(access_token: str) -> bool:
         # Fetch user profile
         user_response = requests.get(base_url, headers=headers)
         user_response.raise_for_status()
-        st.session_state["user_info"] = user_response.json()
+        user_info = user_response.json()
+        
+        # Always fetch emails from /user/emails to ensure we get the primary verified email
+        emails_response = requests.get(f"{base_url}/emails", headers=headers)
+        if emails_response.status_code == 200:
+            emails = emails_response.json()
+            # Find the primary email
+            for email_record in emails:
+                if email_record.get("primary"):
+                    user_info["email"] = email_record.get("email")
+                    break
+        
+        st.session_state["user_info"] = user_info
 
         # Fetch organizations
         orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
