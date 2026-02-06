@@ -115,8 +115,10 @@ Before initializing the project, you must set up the hosting and database platfo
 - Implement schema initialization in Aiven.
 - Migrate existing Natick/Trumbull data to the new database.
 
-### Phase 4: GitHub OAuth Integration [COMPLETED]
-- Implement the login flow using a simplified session-based approach.
+### Phase 4: GitHub OAuth & Navigation [COMPLETED]
+- Implement the login flow using `streamlit-oauth`.
+- Implement persistent session rehydration using browser cookies.
+- Implement deep link navigation support for authenticated users.
 - Securely store session state in Streamlit's `st.session_state`.
 - Protect all app routes with authentication.
 
@@ -128,4 +130,10 @@ Before initializing the project, you must set up the hosting and database platfo
 ### Phase 6: Quality Control & Audit [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.
 - Admin portal for user management and audit logs.
+
+---
+
+## Technical Documentation
+
+- [OAuth2 and Deep Link Setup Guide](oauth2-deeplink-setup.md)
 

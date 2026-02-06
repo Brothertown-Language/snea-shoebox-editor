@@ -17,7 +17,8 @@ Date: 2026-02-04
 
 Next Steps:
 - [DONE] Updated AI guidelines to keep TODOs up to date and mandate checking them at the start of sessions.
-- [PENDING] Implement Persistent OAuth Login (See `documentation/TODO_PERSISTENT_LOGIN.md`).
+- [DONE] Implement Persistent OAuth Login (See `documentation/TODO_PERSISTENT_LOGIN.md`).
+- [DONE] Implement Deep Link Navigation (captured in `src/frontend/app.py`).
 - [PENDING] Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path (Verify automatic deploy).
 
 Critical Reminder:

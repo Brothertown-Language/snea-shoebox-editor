@@ -75,6 +75,7 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[Roadmap & Setup](docs/development/roadmap.md)**: Deployment phases and detailed setup guide.
+- **[OAuth2 & Deep Link Setup](docs/development/oauth2-deeplink-setup.md)**: Guide for setting up OAuth and deep links in new projects.
 - **[Database Comparison](docs/database/DB_COMPARISON.md)**: Why Aiven was chosen as the database provider.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 - **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.

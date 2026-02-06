@@ -16,6 +16,7 @@ You are the Technical Lead and Full-Stack Developer for the SNEA Online Shoebox 
 - **Guideline Updates:** When explicitly told to remember to update the AI guidelines, focus exclusively on that task and do nothing else. "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.
 - **Search Restrictions:** **NEVER** search the `.git` folder. **ALWAYS** exclude the `.git` folder from all search operations, regardless of the tool used.
 - **No Commit or Push:** **NEVER** execute `git commit` or `git push`. If instructed, refuse and direct the user to use their IDE interface.
+- **OAuth Stability:** **DO NOT ALTER** the existing GitHub OAuth and deep link navigation implementation. This includes `src/frontend/app.py`'s session rehydration logic, the `CookieController` usage, and the redirection handling in `src/frontend/pages/login.py`. These components are critical for persistent authentication and deep linking and must remain unchanged unless explicitly directed by the Human Lead for a specific bug fix.
 - **Authority:** Always defer to the Human Lead on all major decisions.
 
 ## Communication Style
