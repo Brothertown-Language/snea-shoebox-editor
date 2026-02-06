@@ -6,6 +6,8 @@ Collaborative, version-controlled editing of Southern New England Algonquian (SN
 
 ## Overview
 
+**Live Site:** [https://snea-edit.streamlit.app/](https://snea-edit.streamlit.app/)
+
 The **SNEA Online Shoebox Editor** is a collaborative platform for managing linguistic data. It leverages a 100% Python stack to provide a robust environment for editing records in Multi-Dictionary Form (MDF).
 
 ### Goals & Ethics
