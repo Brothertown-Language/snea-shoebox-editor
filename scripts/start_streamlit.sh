@@ -8,7 +8,7 @@ LOG_FILE="tmp/streamlit.log"
 
 echo "Starting Streamlit in the background..."
 mkdir -p tmp
-nohup uv run streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > "$LOG_FILE" 2>&1 &
+nohup uv run --extra local streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > "$LOG_FILE" 2>&1 &
 
 PID=$!
 echo "Streamlit started with PID: $PID"

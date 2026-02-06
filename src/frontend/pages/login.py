@@ -54,8 +54,7 @@ def login():
         st.secrets["github_oauth"]["client_secret"],
         st.secrets["github_oauth"]["authorize_url"],
         st.secrets["github_oauth"]["token_url"],
-        st.secrets["github_oauth"]["redirect_uri"],
-        None
+        st.secrets["github_oauth"]["redirect_uri"]
     )
 
     if st.session_state.get("is_unauthorized"):
@@ -75,54 +74,59 @@ def login():
         if result:
             # Save token to session state
             st.session_state["auth"] = result
-            
-            # Fetch user info immediately after obtaining the token
-            token = result["token"]["access_token"]
-            headers = {
-                "Authorization": f"token {token}",
-                "Accept": "application/json"
-            }
-            base_url = st.secrets["github_oauth"]["user_info_url"]
-            
-            try:
-                # Fetch user profile
-                user_response = requests.get(base_url, headers=headers)
-                user_response.raise_for_status()
-                st.session_state["user_info"] = user_response.json()
-
-                # Fetch organizations
-                orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
-                orgs_response.raise_for_status()
-                st.session_state["user_orgs"] = orgs_response.json()
-
-                # Fetch teams
-                teams_response = requests.get(f"{base_url}/teams", headers=headers)
-                teams_response.raise_for_status()
-                user_teams = teams_response.json()
-                st.session_state["user_teams"] = user_teams
-
-                # Verify team membership
-                # Must be in Brothertown-Language / proto-SNEA
-                is_authorized = False
-                for team in user_teams:
-                    team_name = team.get("name")
-                    org_info = team.get("organization", {})
-                    org_login = org_info.get("login")
-                    
-                    if team_name == "proto-SNEA" and org_login == "Brothertown-Language":
-                        is_authorized = True
-                        break
-                
-                if not is_authorized:
-                    st.session_state["is_unauthorized"] = True
-                    st.rerun()
-
-            except Exception as e:
-                st.error(f"Failed to fetch user information from GitHub: {e}")
-            
             st.session_state.logged_in = True
             st.rerun()
-    else:
+    
+    # If we have auth (either just obtained or persisted via 'key')
+    # but user info is missing, fetch it.
+    if "auth" in st.session_state and "user_info" not in st.session_state:
+        # Fetch user info immediately after obtaining the token
+        token = st.session_state["auth"]["token"]["access_token"]
+        headers = {
+            "Authorization": f"token {token}",
+            "Accept": "application/json"
+        }
+        base_url = st.secrets["github_oauth"]["user_info_url"]
+        
+        try:
+            # Fetch user profile
+            user_response = requests.get(base_url, headers=headers)
+            user_response.raise_for_status()
+            st.session_state["user_info"] = user_response.json()
+
+            # Fetch organizations
+            orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
+            orgs_response.raise_for_status()
+            st.session_state["user_orgs"] = orgs_response.json()
+
+            # Fetch teams
+            teams_response = requests.get(f"{base_url}/teams", headers=headers)
+            teams_response.raise_for_status()
+            user_teams = teams_response.json()
+            st.session_state["user_teams"] = user_teams
+
+            # Verify team membership
+            # Must be in Brothertown-Language / proto-SNEA
+            is_authorized = False
+            for team in user_teams:
+                team_name = team.get("name")
+                org_info = team.get("organization", {})
+                org_login = org_info.get("login")
+                
+                if team_name == "proto-SNEA" and org_login == "Brothertown-Language":
+                    is_authorized = True
+                    break
+            
+            if not is_authorized:
+                st.session_state["is_unauthorized"] = True
+                st.rerun()
+
+        except Exception as e:
+            st.error(f"Failed to fetch user information from GitHub: {e}")
+        
+        st.session_state.logged_in = True
+        st.rerun()
+    elif "auth" in st.session_state:
         # If already has auth but not redirected yet
         st.success("Successfully logged in!")
         st.switch_page("pages/index.py")

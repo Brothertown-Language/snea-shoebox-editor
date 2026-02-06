@@ -21,7 +21,7 @@ uv pip install -e .
 
 ### Running the Application
 **MANDATORY RULE:** **ALWAYS** start the Streamlit application using the provided start script (`./scripts/start_streamlit.sh`) or manually using `nohup`. This script uses `nohup` and background execution to ensure the application continues running after the terminal or Junie session exits. There are **NO EXCEPTIONS** to this rule. 
-**COMMAND:** `nohup uv run streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > tmp/streamlit.log 2>&1 &`
+**COMMAND:** `nohup uv run --extra local streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > tmp/streamlit.log 2>&1 &`
 
 ```bash
 # Run the application locally in the background and ensure it persists
