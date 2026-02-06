@@ -5,7 +5,7 @@
 
 Morfessor is an unsupervised morphological segmentation tool designed to discover morpheme\-like units directly from raw text. Unlike BPE, WordPiece, or SentencePiece tokenizers\-\-which optimize for compression or frequency rather than linguistic structure\-\-Morfessor attempts to infer meaningful internal boundaries within words. This makes it uniquely suited for languages with rich or polysynthetic morphology, including Algic languages such as Natick and Trumbull.
 
-Because Morfessor does not require a pre\-existing morphological analyzer or annotated corpus, it can operate directly on the Natick dictionary data you already have. This allows you to generate morpheme\-like segments that preserve linguistic structure and improve downstream embedding quality.
+Because Morfessor does not require a pre\-existing morphological analyzer or annotated corpus, it can operate directly on the Natick dictionary data you already have. This allows you to generate morpheme\-like segments that preserve linguistic structure.
 
 \---
 
@@ -29,9 +29,9 @@ Algic languages form long, complex words composed of many morphemes. Standard to
 \### 2\. No morphological analyzer required
 Natick does not have a full morphological parser. Morfessor works directly from raw text, making it feasible to deploy immediately.
 
-\### 3\. Improves embedding model performance
-Embedding models\-\-especially e5, mT5, and Qwen\-\-perform better when fed morpheme\-like units rather than opaque character sequences or arbitrary BPE fragments. Morfessor segmentation\:  
-\- reduces noise in the embedding space  
+\### 3\. Improves model performance
+Many models perform better when fed morpheme\-like units rather than opaque character sequences or arbitrary BPE fragments. Morfessor segmentation\:  
+\- reduces noise in the representation space  
 \- improves variant clustering  
 \- strengthens lemma\-gloss alignment  
 \- stabilizes finetuning  
@@ -45,7 +45,7 @@ Morfessor outputs can be\:
 \- included in your LaTeX diagnostic reports  
 
 \### 5\. Supports future finetuning
-Finetuning embedding models on segmented Natick forms improves\:  
+Finetuning models on segmented Natick forms improves\:  
 \- semantic matching  
 \- gloss alignment  
 \- variant grouping  
@@ -64,8 +64,8 @@ Feeding raw Natick forms into Morfessor yields\:
 \- morpheme\-like segments  
 \- consistent boundaries across the lexicon  
 \- interpretable units for linguists  
-\- improved embeddings for Junie’s evaluation  
-\- better semantic lookup link generation  
+\- improved segments for Junie’s evaluation
+- better semantic cross-reference link generation  
 
 For example, a hypothetical Natick form might be segmented as\:
 
@@ -84,10 +84,10 @@ The difference is profound for semantic modeling.
 Morfessor is the best overall fit for your Natick\/Trumbull lexicon project because it\:  
 \- preserves morphological structure  
 \- requires no annotated data  
-\- improves embedding quality  
+\- improves segmentation quality
 \- enhances finetuning  
 \- integrates with your LaTeX\/TikZ reporting  
-\- supports semantic lookup link generation  
+- supports semantic cross-reference link generation  
 \- avoids the pitfalls of BPE\-style tokenizers  
 
 It gives you a linguistically meaningful segmentation layer without requiring a full morphological analyzer\-\-exactly what you need for Algic lexicon modeling.

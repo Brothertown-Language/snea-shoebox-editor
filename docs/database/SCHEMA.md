@@ -23,6 +23,7 @@ CREATE TABLE records (
     source_id INTEGER NOT NULL,           -- FK to sources.id
     source_page TEXT,                     -- Specific citation (\so)
     status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', 'approved'
+    embedding VECTOR(1536),               -- For cross-reference lookup
     mdf_data TEXT NOT NULL,               -- Full raw MDF text
     FOREIGN KEY (language_id) REFERENCES languages(id),
     FOREIGN KEY (source_id) REFERENCES sources(id)

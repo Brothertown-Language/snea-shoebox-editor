@@ -17,7 +17,7 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 ## Tech Stack
 
-- **Architecture**: Monolithic Streamlit application (Hosted on Streamlit Community Cloud).
+- **Architecture**: Unified Streamlit application (Hosted on Streamlit Community Cloud).
     - *Note: The `src/frontend/` folder is a mandatory legacy artifact required by Streamlit Cloud's entry point configuration and cannot be changed.*
 - **Database**: Aiven (PostgreSQL).
 - **Authentication**: GitHub OAuth via `streamlit-oauth`.
@@ -45,7 +45,7 @@ Refer to the **[Roadmap & Setup](docs/development/roadmap.md)** for detailed set
     ```bash
     ./scripts/start_streamlit.sh
     ```
-    *Note: Always use the start script or `nohup` for background execution. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
+    *Note: Always use the start script or `nohup` for background execution. For local development, **ALWAYS** include `--extra local` in your `uv` commands. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
 
 3.  **Configure secrets (Optional)**: Create `.streamlit/secrets.toml` with your GitHub OAuth credentials if you want to test authentication.
 
@@ -56,14 +56,9 @@ Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Clou
 | Secret | Description |
 |--------|-------------|
 | `connections.postgresql.url` | Aiven PostgreSQL connection URI |
-| `github.client_id` | GitHub OAuth Client ID |
-| `github.client_secret` | GitHub OAuth Client Secret |
-| `github.redirect_uri` | App callback URL |
-| `auth.jwt_secret` | Secret for JWT signing |
-| `embedding.model_id` | (Future Feature - Deferred) Hugging Face Model ID |
-| `embedding.api_key` | (Future Feature - Deferred) Hugging Face API Key |
-
-Note: Semantic searching is an upcoming feature. The database has been prepared with `pgvector` support in both production and local development environments.
+| `github_oauth.client_id` | GitHub OAuth Client ID |
+| `github_oauth.client_secret` | GitHub OAuth Client Secret |
+| `github_oauth.redirect_uri` | App callback URL |
 
 Note: Do not commit secrets to the repository. If secrets were accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
 
@@ -77,11 +72,12 @@ Note: Do not commit secrets to the repository. If secrets were accidentally comm
 Comprehensive documentation is available in the `docs/` directory:
 
 - **[Roadmap & Setup](docs/development/roadmap.md)**: Deployment phases and detailed setup guide.
+- **[Local Development Guide](docs/development/local-development.md)**: Detailed instructions for local setup and testing.
 - **[OAuth2 & Deep Link Setup](docs/development/oauth2-deeplink-setup.md)**: Guide for setting up OAuth and deep links in new projects.
 - **[Database Comparison](docs/database/DB_COMPARISON.md)**: Why Aiven was chosen as the database provider.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 - **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.
-- **[MDF Guidelines](docs/mdf/)**: References for the Multi-Dictionary Form.
+- **[MDF Guidelines](docs/mdf/mdf-tag-reference.md)**: References for the Multi-Dictionary Form.
 
 ## License
 

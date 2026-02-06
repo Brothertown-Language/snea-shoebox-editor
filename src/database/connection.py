@@ -115,12 +115,28 @@ def init_db():
     
     # Ensure extensions are enabled
     with engine.connect() as conn:
-        # Create vector extension for semantic search support
+        # Create vector extension for semantic cross-reference support
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         conn.commit()
     
     # Base.metadata.create_all is non-destructive for existing tables
     Base.metadata.create_all(engine)
+    
+    # Add embedding column if it doesn't exist (manual migration for now)
+    # Note: In a full production app, we would use Alembic.
+    with engine.connect() as conn:
+        try:
+            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS embedding vector(1536);"))
+            conn.commit()
+        except Exception as e:
+            # We log the error but don't stop the whole app from starting, 
+            # though the specific feature will be broken.
+            if not is_production():
+                st.error(f"Failed to add 'embedding' vector column: {e}")
+            else:
+                # In production, we should probably know about this
+                print(f"ERROR: Failed to add 'embedding' vector column: {e}")
+            
     return engine
 
 def get_session():

@@ -1,6 +1,7 @@
 from sqlalchemy import Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+from pgvector.sqlalchemy import Vector
 from ..base import Base
 
 class Source(Base):
@@ -48,6 +49,7 @@ class Record(Base):
     source_id = Column(Integer, ForeignKey('sources.id'), nullable=False)
     source_page = Column(String)  # Specific citation detail (\so)
     status = Column(String, nullable=False, default='draft')  # 'draft', 'edited', 'approved'
+    embedding = Column(Vector(1536))  # Semantic cross-reference
     mdf_data = Column(Text, nullable=False)  # Raw MDF body
     
     # Audit & Workflow fields

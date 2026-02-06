@@ -65,11 +65,6 @@ Before initializing the project, you must set up the hosting and database platfo
       authorize_url = "https://github.com/login/oauth/authorize"
       token_url = "https://github.com/login/oauth/access_token"
       user_info_url = "https://api.github.com/user"
-
-      # [FUTURE FEATURE]
-      # [embedding]
-      # model_id = "BAAI/bge-m3"
-      # api_key = "hf_your_token_here"
       ```
     - Note: You should create a separate GitHub OAuth App for local development with `http://localhost:8501/component/streamlit_oauth.authorize_button` as the callback URL.
 2.  **Install Dependencies**:
@@ -78,7 +73,7 @@ Before initializing the project, you must set up the hosting and database platfo
     ```
 3.  **Run Locally**:
     ```bash
-    uv run --extra local streamlit run src/frontend/app.py
+    ./scripts/start_streamlit.sh
     ```
     - **MANDATORY RULE:** Always use the start script `./scripts/start_streamlit.sh` or `nohup uv run --extra local ...` for background execution. For local development and testing, **ALWAYS** include `--extra local` to ensure that `pgserver` and other local dependencies are available. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).
     - **PyCharm Launchers**: Pre-configured run configurations for PyCharm are available in the `launchers/` directory. Copy them to your `.idea/runConfigurations/` folder to use them. These launchers automatically handle process management (killing old sessions) and ensure `pgserver` is started.
@@ -124,8 +119,8 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ### Phase 5: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
-- **[IN PROGRESS]** Leverage `pgvector` on Aiven for semantic search (Hugging Face integration).
-    - *Note: Semantic search capability (pgvector) has been enabled in both local and production environments.*
+- Leverage `pgvector` on Aiven for semantic cross-reference lookup.
+    - *Note: Vector capability (pgvector) has been enabled in both local and production environments for future use in linking semantically related records.*
 
 ### Phase 6: Quality Control & Audit [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.

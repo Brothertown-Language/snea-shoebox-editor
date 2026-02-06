@@ -4,7 +4,7 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
 
 ## Prerequisites
 
-- **Python 3.10+**: Ensure you have a compatible Python version installed.
+- **Python 3.12**: Required version for development and production.
 - **uv**: Dependency management. Install with `curl -LsSf https://astral.sh/uv/install.sh | sh`.
 - **Aiven Account**: You'll need a PostgreSQL database. You can use a free Aiven project or a local PostgreSQL instance.
 
@@ -15,11 +15,9 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
     git clone https://github.com/Brothertown-Language/snea-shoebox-editor.git
     cd snea-shoebox-editor
     ```
-2.  **Initialize environment**:
+2.  **Initialize Environment**:
     ```bash
-    uv venv
-    source .venv/bin/activate  # or .venv\Scripts\activate on Windows
-    uv pip install -e .
+    uv sync --extra local
     ```
 3.  **Configure local secrets**: Create `.streamlit/secrets.toml` in the project root:
     ```toml
@@ -29,39 +27,41 @@ This guide explains how to run the SNEA Shoebox Editor locally for development a
     [github_oauth]
     client_id = "YOUR_LOCAL_GITHUB_CLIENT_ID"
     client_secret = "YOUR_LOCAL_GITHUB_CLIENT_SECRET"
-    redirect_uri = "http://localhost:8501"
-    cookie_secret = "a-random-secret-string"
-
-    # [FUTURE FEATURE]
-    # [embedding]
-    # model_id = "BAAI/bge-m3"
-    # api_key = "hf_your_token_here"
+    redirect_uri = "http://localhost:8501/component/streamlit_oauth.authorize_button"
     ```
-    *Note: Register a separate GitHub OAuth App for local development with `http://localhost:8501` as the callback URL.*
+    *Note: Register a separate GitHub OAuth App for local development with `http://localhost:8501/component/streamlit_oauth.authorize_button` as the callback URL.*
 
 ## Running the App
 
-Start the Streamlit development server:
+Start the Streamlit development server using the provided script:
 
 ```bash
-uv run streamlit run src/frontend/app.py
+./scripts/start_streamlit.sh
 ```
+
+Alternatively, you can run it directly:
+
+```bash
+uv run --extra local streamlit run src/frontend/app.py
+```
+
+*Note: Always use the start script or `nohup` for background execution. For local development and testing, **ALWAYS** include `--extra local` to ensure that `pgserver` and other local dependencies are available. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*
 
 The app should now be accessible at `http://localhost:8501`.
 
 ## Database Management
 
-Since we are using Aiven (PostgreSQL), the application is responsible for initializing its own schema. 
+The app now automatically handles its own schema initialization. If you are using the local `pgserver` (default), the data is stored in `tmp/local_db`.
 
 - On startup, the app checks if the required tables exist and creates them if necessary.
-- You can inspect the database directly via the Aiven console.
+- You can inspect the database directly via the Aiven console if using a remote instance.
 
 ## Running Tests
 
-Run the test suite using `unittest`:
+Run the test suite with local dependencies:
 
 ```bash
-uv run python -m unittest discover tests
+uv run --extra local python -m unittest discover tests
 ```
 
 ## Architecture Details
@@ -69,10 +69,5 @@ uv run python -m unittest discover tests
 - **Folder Structure**: The `src/frontend/` directory is a legacy artifact. Although the app is now a unified Python application, this specific folder structure is required for Streamlit Community Cloud deployment and cannot be changed.
 - **Frontend/Backend**: Streamlit Community Cloud (standard Python server execution).
 - **Database**: PostgreSQL (Aiven).
-- **Authentication**: Simple session-based login.
+- **Authentication**: GitHub OAuth via `streamlit-oauth`.
 - **Data Layer**: MDF (Multi-Dictionary Formatter).
-- **Embeddings**: (Future Feature) Hugging Face Inference API.
-
-## Vector Search (Future Feature - Deferred)
-
-The project plans to use semantic search via PostgreSQL and `pgvector` on Aiven. This feature is **currently deferred** and not implemented in the production application due to budget constraints. If implemented in the future, both local development and production will use the Hugging Face Inference API for embedding generation exclusively. Ensure your PostgreSQL instance has the `vector` extension enabled.

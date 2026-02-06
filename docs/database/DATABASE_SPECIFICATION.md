@@ -51,6 +51,7 @@ The schema is organized for human readability in SQL viewers like **DBeaver**, p
 | **`source_id`** | INTEGER | FK to `sources.id` | Identifies the origin collection. |
 | **`source_page`** | TEXT | Source Citation | Specific page or section number. |
 | **`status`** | TEXT | Workflow State | 'draft', 'edited', 'approved'. |
+| **`embedding`** | VECTOR(1536) | Semantic Vector | Used for cross-reference lookup (not general search). |
 | **`mdf_data`** | TEXT | Raw MDF Body | The full, unparsed linguistic entry. |
 
 #### `search_entries` (Consolidated Lookup)
