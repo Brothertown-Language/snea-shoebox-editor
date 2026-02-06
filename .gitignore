@@ -51,6 +51,9 @@ wrangler.toml.bak
 .DS_Store
 Thumbs.db
 
+# Logs
+*.log
+
 # Project temporary files
 tmp/
 

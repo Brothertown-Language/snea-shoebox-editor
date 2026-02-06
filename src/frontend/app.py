@@ -30,6 +30,10 @@ def main():
         layout="wide"
     )
 
+    # Initialize session state for authentication
+    if "logged_in" not in st.session_state:
+        st.session_state.logged_in = False
+
     # 1. Initialize Cookie Controller
     from streamlit_cookies_controller import CookieController
     # Initializing and rendering the controller early
@@ -42,23 +46,18 @@ def main():
     if saved_token and "auth" not in st.session_state:
         st.session_state["auth"] = saved_token
         st.session_state.logged_in = True
-        st.rerun()  # Ensure state is consistent before page navigation
-
-    # Trigger secrets check and database readiness early
-    try:
-        ensure_secrets_present()
-        ensure_db_alive()
-        get_db_url()
-    except Exception:
-        pass
-
-    # Initialize session state for authentication
-    if "logged_in" not in st.session_state:
-        st.session_state.logged_in = False
+        
+        # Re-fetch user info if missing
+        if "user_info" not in st.session_state:
+            from src.frontend.auth_utils import fetch_github_user_info
+            access_token = saved_token.get("token", {}).get("access_token")
+            if access_token:
+                fetch_github_user_info(access_token)
+        # No rerun here; let it fall through to navigation with updated state
 
     # Define pages
     page_login = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
-    page_status = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status", default=True)
+    page_status = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status")
     page_home = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index")
     page_record = st.Page("pages/view_record.py", title="Record View", icon="📝", url_path="record")
     page_source = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
@@ -77,9 +76,59 @@ def main():
             "Account": [page_user, st.Page(logout, title="Logout", icon="🚪")]
         })
     else:
-        pg = st.navigation([page_login])
+        # Include all pages in navigation even when not logged in,
+        # so Streamlit doesn't fallback to the first page (/) and we can 
+        # capture the intended destination.
+        pg = st.navigation([page_login, page_home, page_record, page_source, page_status, page_user])
+        
+        # Hide the sidebar navigation links when not logged in
+        st.markdown(
+            """
+            <style>
+            [data-testid="stSidebarNav"] {
+                display: none;
+            }
+            </style>
+            """,
+            unsafe_allow_html=True,
+        )
 
     # Run the selected page
+    if not st.session_state.logged_in and pg != page_login:
+        # If we just landed on a deep link, save it and redirect to login
+        current_params = {k: v for k, v in st.query_params.items()}
+        
+        # Map page objects to their script paths
+        page_to_path = {
+            page_status: "pages/system_status.py",
+            page_home: "pages/index.py",
+            page_record: "pages/view_record.py",
+            page_source: "pages/view_source.py",
+            page_user: "pages/user_info.py",
+        }
+        
+        if pg in page_to_path:
+            current_params["next"] = page_to_path[pg]
+            # Store in session state for persistence across OAuth redirect
+            st.session_state["redirect_params"] = current_params
+            st.switch_page(page_login)
+    
+    # Global redirection handler after login/rehydration
+    if st.session_state.logged_in:
+        # Priority 1: Check session state for saved params (from deep links)
+        if "redirect_params" in st.session_state:
+            params = st.session_state.pop("redirect_params")
+            next_page = params.pop("next", "pages/index.py")
+            for k, v in params.items():
+                st.query_params[k] = v
+            st.switch_page(next_page)
+            
+        # Priority 2: Check query params (simple internal redirects)
+        elif "next" in st.query_params:
+            next_page = st.query_params["next"]
+            del st.query_params["next"]
+            st.switch_page(next_page)
+
     pg.run()
 
 
