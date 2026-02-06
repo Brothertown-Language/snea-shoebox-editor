@@ -21,6 +21,7 @@ uv pip install -e .
 
 ### Running the Application
 **MANDATORY RULE:** **ALWAYS** start the Streamlit application using the provided start script (`./scripts/start_streamlit.sh`) or manually using `nohup`. This script uses `nohup` and background execution to ensure the application continues running after the terminal or Junie session exits. There are **NO EXCEPTIONS** to this rule. 
+**LOCAL DEV REQUIREMENT:** For local development, **ALWAYS** use `uv run --extra local` to ensure that `pgserver` and other local dependencies are available.
 **COMMAND:** `nohup uv run --extra local streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > tmp/streamlit.log 2>&1 &`
 
 ```bash
@@ -47,8 +48,9 @@ When programmatically switching pages in the Streamlit application:
 
 ### Execution
 - **MANDATORY RULE:** **ALWAYS** start Streamlit using `./scripts/start_streamlit.sh`. This ensures it runs in the background with `nohup` and survives session exit. There are **NO EXCEPTIONS** or shortcuts.
+- **LOCAL DEV REQUIREMENT:** For local development and testing, **ALWAYS** use `uv run --extra local` to ensure that `pgserver` and other local dependencies are available.
 - **Rule:** NEVER use compound bash commands (e.g., `&&`, `;`, `|`). Execute each command individually.
-- **Run all tests:** `uv run python -m unittest discover tests`
+- **Run all tests:** `uv run --extra local python -m unittest discover tests`
 - **Rule:** NEVER simulate test execution mentally. **ALWAYS** run the actual tests in the terminal.
 - **Rule:** Fix all compilation errors before attempting to run tests.
 - **Rule:** Assume any test failures are caused by your recent changes.
