@@ -19,8 +19,18 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 import src.frontend.pages as pages
-from src.database import get_db_url
+from src.database import get_db_url, init_db
 from src.aiven_utils import ensure_db_alive, ensure_secrets_present
+
+
+@st.cache_resource
+def _initialize_database():
+    """Run database initialization once on app startup."""
+    try:
+        init_db()
+    except Exception as e:
+        st.error(f"Critical Error: Failed to initialize database: {e}")
+        st.stop()
 
 
 def main():
@@ -30,6 +40,9 @@ def main():
         page_icon="📚",
         layout="wide"
     )
+
+    # Initialize database on first load
+    _initialize_database()
 
     # Initialize session state for authentication
     if "logged_in" not in st.session_state:

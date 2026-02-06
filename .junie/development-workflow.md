@@ -46,6 +46,12 @@ When programmatically switching pages in the Streamlit application:
 
 ## Testing Standards
 
+### HTML Export/Preview (Rich Text Clipboard)
+- **Requirement:** When copying HTML versions of documentation or data to the clipboard for use in other applications (e.g., for rich text pasting), **ALWAYS** use `xclip` with the explicit `text/html` target.
+- **Rule:** Use `pandoc -s` to ensure a standalone HTML document with proper formatting (CSS, head, body).
+- **Command:** `pandoc -s -f markdown -t html <file> | xclip -selection clipboard -t text/html`
+- **Reason:** Specifying the MIME type ensures the clipboard content is recognized as formatted HTML rather than raw code, and `xclip` provides more reliable rich-text handling across Linux environments than `xsel`.
+
 ### Execution
 - **MANDATORY RULE:** **ALWAYS** start Streamlit using `./scripts/start_streamlit.sh`. This ensures it runs in the background with `nohup` and survives session exit. There are **NO EXCEPTIONS** or shortcuts.
 - **LOCAL DEV REQUIREMENT:** For local development and testing, **ALWAYS** use `uv run --extra local` to ensure that `pgserver` and other local dependencies are available.
