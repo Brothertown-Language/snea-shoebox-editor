@@ -21,6 +21,7 @@ import src.frontend.pages as pages
 from src.database import get_db_url
 from src.aiven_utils import ensure_db_alive, ensure_secrets_present
 
+
 def main():
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(
@@ -28,6 +29,20 @@ def main():
         page_icon="📚",
         layout="wide"
     )
+
+    # 1. Initialize Cookie Controller
+    from streamlit_cookies_controller import CookieController
+    # Initializing and rendering the controller early
+    controller = CookieController()
+    st.session_state["cookie_controller"] = controller
+
+    # 2. Rehydrate Session State
+    # We check if 'auth' is missing from session but present in cookies
+    saved_token = controller.get("gh_auth_token")
+    if saved_token and "auth" not in st.session_state:
+        st.session_state["auth"] = saved_token
+        st.session_state.logged_in = True
+        st.rerun()  # Ensure state is consistent before page navigation
 
     # Trigger secrets check and database readiness early
     try:
@@ -42,15 +57,13 @@ def main():
         st.session_state.logged_in = False
 
     # Define pages
-    # Note: We use lazy initialization in page files (importing streamlit inside the function)
-    # as the default approach to ensure they are only loaded when called.
     page_login = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
     page_status = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status", default=True)
     page_home = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index")
     page_record = st.Page("pages/view_record.py", title="Record View", icon="📝", url_path="record")
     page_source = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
     page_user = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
-    
+
     if st.session_state.get("is_unauthorized"):
         from src.frontend.pages.login import show_unauthorized_dialog
         show_unauthorized_dialog()
@@ -58,9 +71,6 @@ def main():
 
     # Access control logic
     if st.session_state.logged_in:
-        # Multipage navigation definition
-        # Note: We use file paths (e.g., "pages/index.py") for st.Page to ensure
-        # compatibility with st.switch_page() calls in subpages.
         pg = st.navigation({
             "Main": [page_home, page_record, page_source],
             "System": [page_status],
@@ -72,7 +82,19 @@ def main():
     # Run the selected page
     pg.run()
 
+
 def logout():
+    # Purge the cookie safely
+    if "cookie_controller" in st.session_state:
+        controller = st.session_state["cookie_controller"]
+        try:
+            # Check if cookie exists before removing to avoid KeyError
+            if controller.get("gh_auth_token") is not None:
+                controller.remove("gh_auth_token")
+        except Exception:
+            # Best effort removal
+            pass
+
     st.session_state.logged_in = False
     if "auth" in st.session_state:
         del st.session_state["auth"]
@@ -84,6 +106,7 @@ def logout():
         del st.session_state["user_teams"]
     st.info("Logged out successfully!")
     st.rerun()
+
 
 if __name__ == "__main__":
     main()

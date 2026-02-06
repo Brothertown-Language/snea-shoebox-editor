@@ -1,0 +1,9 @@
+[client]
+
+[browser]
+gatherUsageStats = false
+
+[server]
+runOnSave = true
+enableCORS = false
+enableXsrfProtection = false

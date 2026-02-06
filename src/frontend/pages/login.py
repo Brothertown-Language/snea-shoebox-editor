@@ -35,7 +35,7 @@ def show_unauthorized_dialog() -> None:
             f"For technical assistance or access requests, please contact "
             f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
         )
-    
+
     if st.button("Reload App"):
         # Clear session state and rerun
         for key in list(st.session_state.keys()):
@@ -44,9 +44,15 @@ def show_unauthorized_dialog() -> None:
 
 def login():
     import streamlit as st
-    
     from streamlit_oauth import OAuth2Component
     import requests
+
+    if "cookie_controller" not in st.session_state:
+        # Fallback in case app.py didn't set it (shouldn't happen with updated app.py)
+        from streamlit_cookies_controller import CookieController
+        st.session_state["cookie_controller"] = CookieController()
+
+    controller = st.session_state["cookie_controller"]
 
     # Initialize OAuth2Component
     oauth2 = OAuth2Component(
@@ -72,13 +78,18 @@ def login():
             scope="read:user user:email read:org",
         )
         if result:
-            # Save token to session state
             st.session_state["auth"] = result
             st.session_state.logged_in = True
+            
+            # PERSIST: Store the result in a browser cookie
+            controller.set("gh_auth_token", result)
+            
+            st.success("Login successful! Setting session...")
+            import time
+            time.sleep(1)  # Give the component a moment to set the cookie
             st.rerun()
-    
-    # If we have auth (either just obtained or persisted via 'key')
-    # but user info is missing, fetch it.
+
+    # If we have auth but user info is missing, fetch it.
     if "auth" in st.session_state and "user_info" not in st.session_state:
         # Fetch user info immediately after obtaining the token
         token = st.session_state["auth"]["token"]["access_token"]
@@ -87,7 +98,7 @@ def login():
             "Accept": "application/json"
         }
         base_url = st.secrets["github_oauth"]["user_info_url"]
-        
+
         try:
             # Fetch user profile
             user_response = requests.get(base_url, headers=headers)
@@ -112,23 +123,27 @@ def login():
                 team_name = team.get("name")
                 org_info = team.get("organization", {})
                 org_login = org_info.get("login")
-                
+
                 if team_name == "proto-SNEA" and org_login == "Brothertown-Language":
                     is_authorized = True
                     break
-            
+
             if not is_authorized:
                 st.session_state["is_unauthorized"] = True
+                # Clean up cookie safely
+                try:
+                    if controller.get("gh_auth_token") is not None:
+                        controller.remove("gh_auth_token")
+                except Exception:
+                    pass
                 st.rerun()
 
         except Exception as e:
             st.error(f"Failed to fetch user information from GitHub: {e}")
-        
+
         st.session_state.logged_in = True
         st.rerun()
     elif "auth" in st.session_state:
-        # If already has auth but not redirected yet
-        st.success("Successfully logged in!")
         st.switch_page("pages/index.py")
 
 if __name__ == "__main__":
