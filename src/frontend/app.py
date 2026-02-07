@@ -63,8 +63,9 @@ def main():
     
     # 3. Global Identity Synchronization
     # CRITICAL: This logic must remain in app.py to prevent race conditions.
-    # By fetching user info here, we ensure it's available regardless of which 
-    # page the user lands on first after OAuth or cookie rehydration.
+    # By fetching user info (including profile, orgs, and teams) here, we ensure 
+    # it's available regardless of which page the user lands on first after 
+    # OAuth or cookie rehydration.
     if "auth" in st.session_state:
         from src.frontend.auth_utils import fetch_github_user_info, is_identity_synchronized
         if not is_identity_synchronized():
@@ -142,7 +143,8 @@ def main():
             st.switch_page(page_login)
     
     # Global redirection handler after login/rehydration
-    # CRITICAL: Do not redirect to the home page until ALL identity data is fully loaded.
+    # CRITICAL: Do not redirect to the home page until ALL identity data (profile, 
+    # orgs, teams) is fully loaded and synchronized with the database.
     # This prevents the app from landing on the home page with missing profile or org/team data.
     from src.frontend.auth_utils import is_identity_synchronized
     if st.session_state.logged_in and is_identity_synchronized():

@@ -8,13 +8,14 @@ from typing import Optional, Dict, Any, List
 
 def is_identity_synchronized() -> bool:
     """
-    Check if all critical GitHub identity information is present in the session state.
+    Check if all critical GitHub identity information (profile, organizations, and teams) is present in the session state.
     """
     return all(key in st.session_state for key in ["user_info", "user_orgs", "user_teams"])
 
 def fetch_github_user_info(access_token: str) -> bool:
     """
-    Fetch user info, organizations, and teams from GitHub and store in session state.
+    Fetch user profile, organizations, teams, and primary email from GitHub and store in session state.
+    Performs mandatory team membership verification (Brothertown-Language/proto-SNEA).
     Returns True if successful and authorized, False otherwise.
     """
     print("DEBUG: Fetching GitHub user info...", flush=True)

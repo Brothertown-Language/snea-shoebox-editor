@@ -117,7 +117,7 @@ def login():
             time.sleep(1)  # Give the component a moment to set the cookie
             st.rerun()
 
-    # If we have auth, always ensure user info is fetched/refetched.
+    # If we have auth, ensure user identity (profile, teams, orgs) is fully synchronized.
     # CRITICAL: Logic now resides in app.py for global coverage and to prevent 
     # race conditions during redirection. We keep this check here as a 
     # secondary fallback to ensure a smooth transition during the login rerun.
