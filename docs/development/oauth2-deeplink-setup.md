@@ -81,6 +81,8 @@ The system relies on three main components:
 1.  **Deep Link Capture**: Intercepting the requested URL before redirecting to login.
 2.  **Cookie-based Persistence**: Storing the OAuth token in a browser cookie so users don't have to log in on every refresh.
 3.  **Post-Login Redirection**: Returning the user to their originally requested page after successful authentication.
+4.  **Identity Synchronization**: Ensuring user info, organizations, and teams are fully loaded and verified before allowing access to protected pages.
+5.  **Database Integration**: Automatically syncing the GitHub user profile to the local `users` table upon successful login.
 
 ### A. Main Entry Point (`app.py`)
 
@@ -103,7 +105,15 @@ def main():
         st.session_state["auth"] = saved_token
         st.session_state.logged_in = True
 
-    # 3. Define Pages
+    # 3. Identity Synchronization (Wait for all data before routing)
+    if "auth" in st.session_state:
+        from src.frontend.auth_utils import fetch_github_user_info, is_identity_synchronized
+        if not is_identity_synchronized():
+            access_token = st.session_state["auth"].get("token", {}).get("access_token")
+            if access_token:
+                fetch_github_user_info(access_token)
+
+    # 4. Define Pages
     page_login = st.Page("pages/login.py", title="Login", url_path="login")
     page_home = st.Page("pages/index.py", title="Home", url_path="index")
     # ... other pages
@@ -176,7 +186,20 @@ if __name__ == "__main__":
     login()
 ```
 
-## 5. Key Considerations
+## 5. User Authorization & Team Verification
+
+The application can be restricted to specific GitHub Organizations or Teams. In the SNEA Editor, users must be members of the `proto-SNEA` team within the `Brothertown-Language` organization.
+
+```python
+def verify_user_authorization(user_teams):
+    for team in user_teams:
+        if (team.get("name") == "proto-SNEA" and 
+            team.get("organization", {}).get("login") == "Brothertown-Language"):
+            return True
+    return False
+```
+
+## 6. Key Considerations
 
 1.  **Strict Redirect URIs**: GitHub requires the `redirect_uri` to match EXACTLY what is registered in the GitHub App settings.
 2.  **Cookie Security**: `streamlit-cookies-controller` manages browser cookies. Ensure your application handles sensitive tokens securely.

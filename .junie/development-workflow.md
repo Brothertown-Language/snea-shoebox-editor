@@ -108,6 +108,7 @@ When programmatically switching pages in the Streamlit application:
 - **Primary Task Tracker:** `documentation/ACTIVE_TASK.md`
 - **Requirement:** **ALWAYS** check `documentation/ACTIVE_TASK.md` at the start of every session to understand the current project state and next steps.
 - **Requirement:** Update `documentation/ACTIVE_TASK.md` at the end of every session (or during `update_status` calls) with accurate progress markers (`[DONE]`, `[PENDING]`, etc.).
+- **NO UNAUTHORIZED COMPLETIONS:** **NEVER** mark any task, roadmap item, or feature as "COMPLETED" or "DONE" in `ACTIVE_TASK.md`, `roadmap.md`, or any other file without explicit user instruction. This is **MANDATORY**.
 - **Task-Specific TODOs:** Complex or multi-step tasks may have dedicated files in `documentation/` (e.g., `documentation/TODO_PERSISTENT_LOGIN.md`).
 - **Requirement:** If a task-specific TODO file exists and is referenced in `ACTIVE_TASK.md` or the issue description, it MUST be treated as the authoritative source of truth for that specific task's implementation details.
 - **Maintenance:** Delete or archive task-specific TODO files once the task is fully completed and verified.

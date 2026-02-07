@@ -1,5 +1,11 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- Licensed under CC BY-SA 4.0 -->
+<!-- 
+CRITICAL MAINTENANCE RULES:
+1. This file must NEVER be altered except when expressly instructed to do so by the user.
+2. It is MANDATORY to never mark issues or roadmap items as complete in this document (e.g., changing [PENDING] to [COMPLETED]) unless specifically requested and approved by the user.
+3. If an edit appears necessary but has not been explicitly requested, the AI agent MUST stop and query the user with details.
+-->
 ## Overview
 
 This document outlines the implementation plan for the **SNEA Shoebox Editor**, a 100% Python-based web application for

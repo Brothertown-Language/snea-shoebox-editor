@@ -20,7 +20,8 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 - **Architecture**: Unified Streamlit application (Hosted on Streamlit Community Cloud).
     - *Note: The `src/frontend/` folder is a mandatory legacy artifact required by Streamlit Cloud's entry point configuration and cannot be changed.*
 - **Database**: Aiven (PostgreSQL).
-- **Authentication**: GitHub OAuth via `streamlit-oauth`.
+- **Authentication**: GitHub OAuth via `streamlit-oauth` (with Brothertown-Language team verification).
+- **Identity Management**: Automatic synchronization of user profiles, teams, and organizations.
 - **Package Manager**: uv.
 - **Deployment**: Automatic build and deploy on push to main (via Streamlit Community Cloud).
 
