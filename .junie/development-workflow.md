@@ -29,6 +29,14 @@ uv pip install -e .
 ./scripts/start_streamlit.sh
 ```
 
+## Project Root and Path Resolution
+- **Rule:** When writing scripts that need to find the project root (e.g., for background processes or logging), **ALWAYS** use `git rev-parse --show-toplevel`.
+- **MANDATORY Execution Order in Scripts:**
+    1. First, `cd` to the script's own directory using `cd "$(dirname "${BASH_SOURCE[0]}")"`.
+    2. Then, run `git rev-parse --show-toplevel` to determine the project root.
+    3. Finally, `cd` to the resolved project root before executing the main logic.
+- **Reason:** This ensures paths are consistently resolved regardless of where the script is invoked from, avoiding "file not found" errors for logs and temporary files.
+
 ## NO LOGS OR TEMP FILES IN PROJECT ROOT
 - **CRITICAL:** **NEVER** create log files, temporary scripts, or data files in the project root.
 - **MANDATORY:** Always use the `tmp/` directory for any transient files.
@@ -63,6 +71,7 @@ When programmatically switching pages in the Streamlit application:
 - **Rule:** After 3 failed attempts to fix a test, you **MUST** ask the user for guidance.
 - **Rule:** NEVER bypass or weaken failed tests by mocking/stubbing to hide issues, deleting/disabling tests, weakening assertions, or using skip flags.
 - **Rule (Searching):** **NEVER** search the `.git` folder. **ALWAYS** exclude the `.git` folder from all searching operations.
+- **Rule (Interactive Commands):** **NEVER** run interactive commands (e.g., `psql`, `python`, `top`). **ALWAYS** use non-interactive flags (e.g., `psql -c "QUERY" < /dev/null`) or execute specific scripts. The `< /dev/null` redirect is mandatory for `psql` to prevent terminal hangs.
 
 ### Test Strategy by Change Type
 - **Bug Fix:** Write a reproduction test first, verify that it fails, and then implement the fix.
