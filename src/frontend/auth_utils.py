@@ -4,94 +4,23 @@ Authentication utilities for GitHub OAuth.
 """
 import streamlit as st
 import requests
-import datetime
 from typing import Optional, Dict, Any, List
-from src.database import get_session, User, UserActivityLog
-from sqlalchemy.orm import Session
 
-def sync_user_to_db(user_info: Dict[str, Any]) -> bool:
+def is_identity_synchronized() -> bool:
     """
-    Upsert user information into the database and log the activity.
+    Check if all critical GitHub identity information is present in the session state.
     """
-    db: Session = get_session()
-    try:
-        github_id = user_info.get("id")
-        email = user_info.get("email")
-        username = user_info.get("login")
-        name = user_info.get("name")
-
-        if not github_id or not username:
-            st.error("Invalid GitHub user data for database sync")
-            return False
-
-        # Fallback for email if not provided by GitHub (can happen if user has private email)
-        if not email:
-            email = f"{username}@github.com"
-
-        user = db.query(User).filter(User.github_id == github_id).first()
-        
-        # Also check by email if github_id didn't match (handle legacy or cross-linked accounts)
-        if not user:
-            user = db.query(User).filter(User.email == email).first()
-
-        now = datetime.datetime.now(datetime.timezone.utc)
-
-        if not user:
-            # Create new user
-            user = User(
-                github_id=github_id,
-                email=email,
-                username=username,
-                full_name=name,
-                last_login=now
-            )
-            db.add(user)
-            action = "user_created"
-        else:
-            if not user.is_active:
-                st.error("Account is disabled. Please contact an administrator.")
-                return False
-            
-            # Update user info
-            user.github_id = github_id # Ensure github_id is set if we found by email
-            user.username = username
-            if name:
-                user.full_name = name
-            
-            # CRITICAL: Only update email if it doesn't look like a generated placeholder
-            # and we have a fresh one from GitHub.
-            if email and not email.endswith("@github.com"):
-                user.email = email
-            
-            user.last_login = now
-            action = "login"
-
-        # Log activity
-        log = UserActivityLog(
-            user_email=email,
-            action=action,
-            details=f"User logged in via GitHub (ID: {github_id})",
-            timestamp=now
-        )
-        db.add(log)
-        
-        db.commit()
-        return True
-    except Exception as e:
-        db.rollback()
-        st.error(f"Database error during user sync: {e}")
-        return False
-    finally:
-        db.close()
+    return all(key in st.session_state for key in ["user_info", "user_orgs", "user_teams"])
 
 def fetch_github_user_info(access_token: str) -> bool:
     """
     Fetch user info, organizations, and teams from GitHub and store in session state.
     Returns True if successful and authorized, False otherwise.
     """
+    print("DEBUG: Fetching GitHub user info...", flush=True)
     headers = {
         "Authorization": f"token {access_token}",
-        "Accept": "application/json"
+        "Accept": "application/vnd.github.v3+json"
     }
     base_url = st.secrets["github_oauth"]["user_info_url"]
 
@@ -100,18 +29,10 @@ def fetch_github_user_info(access_token: str) -> bool:
         user_response = requests.get(base_url, headers=headers)
         user_response.raise_for_status()
         user_info = user_response.json()
-        
-        # Always fetch emails from /user/emails to ensure we get the primary verified email
-        emails_response = requests.get(f"{base_url}/emails", headers=headers)
-        if emails_response.status_code == 200:
-            emails = emails_response.json()
-            # Find the primary email
-            for email_record in emails:
-                if email_record.get("primary"):
-                    user_info["email"] = email_record.get("email")
-                    break
-        
         st.session_state["user_info"] = user_info
+        
+        # Log to console
+        print(f"INFO: Fetched GitHub user info for: {user_info.get('login')}", flush=True)
 
         # Fetch organizations
         orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
@@ -123,6 +44,21 @@ def fetch_github_user_info(access_token: str) -> bool:
         teams_response.raise_for_status()
         user_teams = teams_response.json()
         st.session_state["user_teams"] = user_teams
+
+        # Fetch user emails to get the primary email
+        emails_response = requests.get(f"{base_url}/emails", headers=headers)
+        emails_response.raise_for_status()
+        emails = emails_response.json()
+        
+        primary_email = None
+        for email_record in emails:
+            if email_record.get("primary") and email_record.get("verified"):
+                primary_email = email_record.get("email")
+                break
+        
+        # Fallback to the email in user_info if no primary/verified found
+        if not primary_email:
+            primary_email = user_info.get("email")
 
         # Verify team membership
         # Must be in Brothertown-Language / proto-SNEA
@@ -137,15 +73,100 @@ def fetch_github_user_info(access_token: str) -> bool:
                 break
 
         if not is_authorized:
+            print(f"DEBUG: User not authorized. Teams: {[t.get('name') for t in user_teams]}", flush=True)
             st.session_state["is_unauthorized"] = True
             return False
 
-        # Sync user to database
-        if not sync_user_to_db(st.session_state["user_info"]):
-            return False
+        # If authorized, sync user to database
+        if primary_email:
+            sync_user_to_db(user_info, primary_email)
+            
+            # Log the login activity
+            print(f"DEBUG: User logged in: {primary_email}", flush=True)
+            log_user_activity(primary_email, "login", "User logged in via GitHub OAuth")
+        else:
+            st.warning("Could not determine user email. Audit trail might be limited.")
 
         return True
 
     except Exception as e:
         st.error(f"Failed to fetch user information from GitHub: {e}")
         return False
+
+def log_user_activity(email: str, action: str, details: Optional[str] = None) -> None:
+    """
+    Log a user activity to the database.
+    """
+    from src.database import get_session, UserActivityLog
+    
+    session = get_session()
+    try:
+        log = UserActivityLog(
+            user_email=email,
+            action=action,
+            details=details
+        )
+        session.add(log)
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        # We don't want to block the user if logging fails, but we should know
+        print(f"Failed to log user activity: {e}", flush=True)
+    finally:
+        session.close()
+
+def sync_user_to_db(user_info: Dict[str, Any], email: str) -> None:
+    """
+    Update or create the user record in the database.
+    """
+    from src.database import get_session, User
+    from sqlalchemy.sql import func
+    import datetime
+
+    github_id = user_info.get("id")
+    username = user_info.get("login")
+    full_name = user_info.get("name")
+
+    if not github_id or not username:
+        return
+
+    session = get_session()
+    try:
+        # Try to find user by github_id (primary lookup as per issue)
+        user = session.query(User).filter_by(github_id=github_id).first()
+        
+        if user:
+            # Update existing user
+            user.email = email
+            user.username = username
+            user.full_name = full_name
+            user.last_login = func.now()
+        else:
+            # Check if email is already used by another account (to avoid unique constraint violation)
+            existing_email_user = session.query(User).filter_by(email=email).first()
+            if existing_email_user:
+                # If email exists but different github_id, we might have an identity conflict.
+                # For now, we update the existing account's github_id if it's missing or handle as new.
+                # Given the requirement "update the user record using the github id number",
+                # if we don't find it by github_id, it's essentially a new user or a migration.
+                st.warning(f"Email {email} is already associated with another account. Please contact admin.")
+                return
+
+            # Create new user
+            user = User(
+                email=email,
+                username=username,
+                github_id=github_id,
+                full_name=full_name,
+                last_login=func.now()
+            )
+            session.add(user)
+        
+        session.commit()
+    except Exception as e:
+        session.rollback()
+        st.error(f"Failed to sync user to database: {e}")
+        # Log to stderr as well for visibility in logs
+        print(f"ERROR: sync_user_to_db failed: {e}", flush=True)
+    finally:
+        session.close()

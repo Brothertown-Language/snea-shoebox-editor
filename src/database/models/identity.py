@@ -1,6 +1,7 @@
-# Copyright (c) 2026 Brothertown Language
 """
-DATABASE SOURCE OF TRUTH: docs/database/DATABASE_SPECIFICATION.md
+AI Agent Instructions:
+- Source of truth for database schema: docs/database/DATABASE_SPECIFICATION.md
+- All SQLAlchemy models in this directory MUST reflect the schema defined in that document.
 """
 from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, Boolean
 from sqlalchemy.dialects.postgresql import JSONB

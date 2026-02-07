@@ -3,6 +3,7 @@ import datetime
 import streamlit as st
 from src.database import get_session, User
 from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
 from typing import Optional, Dict, Any
 
 def login_user_simple(username: str):
@@ -21,7 +22,7 @@ def login_user_simple(username: str):
                 email=f"{username}@example.com",
                 username=username,
                 full_name=username,
-                last_login=datetime.datetime.now(datetime.timezone.utc)
+                last_login=func.now()
             )
             db.add(user)
         else:
@@ -29,7 +30,7 @@ def login_user_simple(username: str):
                 st.error("Account is disabled. Please contact an administrator.")
                 return None
             # Update last login
-            user.last_login = datetime.datetime.now(datetime.timezone.utc)
+            user.last_login = func.now()
         
         db.commit()
         db.refresh(user)
@@ -72,7 +73,7 @@ def login_user(github_user_data: Dict[str, Any]):
                 email=email or f"{username}@github.com",
                 username=username,
                 full_name=name,
-                last_login=datetime.datetime.now(datetime.timezone.utc)
+                last_login=func.now()
             )
             db.add(user)
         else:
@@ -80,7 +81,7 @@ def login_user(github_user_data: Dict[str, Any]):
                 st.error("Account is disabled. Please contact an administrator.")
                 return None
             # Update last login
-            user.last_login = datetime.datetime.now(datetime.timezone.utc)
+            user.last_login = func.now()
             if email:
                 user.email = email
             if name:

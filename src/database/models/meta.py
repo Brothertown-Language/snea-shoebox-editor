@@ -1,7 +1,3 @@
-# Copyright (c) 2026 Brothertown Language
-"""
-DATABASE SOURCE OF TRUTH: docs/database/DATABASE_SPECIFICATION.md
-"""
 from sqlalchemy import Column, Integer, String, TIMESTAMP, Text
 from sqlalchemy.sql import func
 from ..base import Base

@@ -21,8 +21,6 @@ if project_root not in sys.path:
 import src.frontend.pages as pages
 from src.database import get_db_url, init_db
 from src.aiven_utils import ensure_db_alive, ensure_secrets_present
-
-
 @st.cache_resource
 def _initialize_database():
     """Run database initialization once on app startup."""
@@ -56,19 +54,31 @@ def main():
 
     # 2. Rehydrate Session State
     # We check if 'auth' is missing from session but present in cookies
-    saved_token = controller.get("gh_auth_token")
+    from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
+    saved_token = controller.get(GH_AUTH_TOKEN_COOKIE)
     if saved_token and "auth" not in st.session_state:
+        print("DEBUG: Rehydrating session from cookie", flush=True)
         st.session_state["auth"] = saved_token
         st.session_state.logged_in = True
-        
-        # Re-fetch user info if missing
-        if "user_info" not in st.session_state:
-            from src.frontend.auth_utils import fetch_github_user_info
-            access_token = saved_token.get("token", {}).get("access_token")
+    
+    # 3. Global Identity Synchronization
+    # CRITICAL: This logic must remain in app.py to prevent race conditions.
+    # By fetching user info here, we ensure it's available regardless of which 
+    # page the user lands on first after OAuth or cookie rehydration.
+    if "auth" in st.session_state:
+        from src.frontend.auth_utils import fetch_github_user_info, is_identity_synchronized
+        if not is_identity_synchronized():
+            access_token = st.session_state["auth"].get("token", {}).get("access_token")
             if access_token:
-                fetch_github_user_info(access_token)
-        # No rerun here; let it fall through to navigation with updated state
-
+                if not fetch_github_user_info(access_token):
+                    # Handle unauthorized or failed fetch
+                    if st.session_state.get("is_unauthorized"):
+                        # The dialog will be shown below
+                        pass
+                    else:
+                        # Generic error
+                        st.error("Failed to fetch user information.")
+    
     # Define pages
     page_login = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
     page_status = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status")
@@ -76,6 +86,7 @@ def main():
     page_record = st.Page("pages/view_record.py", title="Record View", icon="📝", url_path="record")
     page_source = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
     page_user = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
+    page_logout = st.Page("pages/logout.py", title="Logout", icon="🚪", url_path="logout")
 
     if st.session_state.get("is_unauthorized"):
         from src.frontend.pages.login import show_unauthorized_dialog
@@ -87,13 +98,13 @@ def main():
         pg = st.navigation({
             "Main": [page_home, page_record, page_source],
             "System": [page_status],
-            "Account": [page_user, st.Page(logout, title="Logout", icon="🚪")]
+            "Account": [page_user, page_logout]
         })
     else:
         # Include all pages in navigation even when not logged in,
         # so Streamlit doesn't fallback to the first page (/) and we can 
         # capture the intended destination.
-        pg = st.navigation([page_login, page_home, page_record, page_source, page_status, page_user])
+        pg = st.navigation([page_login, page_home, page_record, page_source, page_status, page_user, page_logout])
         
         # Hide the sidebar navigation links when not logged in
         st.markdown(
@@ -126,9 +137,15 @@ def main():
             # Store in session state for persistence across OAuth redirect
             st.session_state["redirect_params"] = current_params
             st.switch_page(page_login)
+        elif pg == page_logout:
+            # If they hit logout while not logged in, just go to login
+            st.switch_page(page_login)
     
     # Global redirection handler after login/rehydration
-    if st.session_state.logged_in:
+    # CRITICAL: Do not redirect to the home page until ALL identity data is fully loaded.
+    # This prevents the app from landing on the home page with missing profile or org/team data.
+    from src.frontend.auth_utils import is_identity_synchronized
+    if st.session_state.logged_in and is_identity_synchronized():
         # Priority 1: Check session state for saved params (from deep links)
         if "redirect_params" in st.session_state:
             params = st.session_state.pop("redirect_params")
@@ -141,34 +158,14 @@ def main():
         elif "next" in st.query_params:
             next_page = st.query_params["next"]
             del st.query_params["next"]
-            st.switch_page(next_page)
+            
+            # If next points to logout, ignore it to prevent immediate logout after login
+            if "logout.py" in next_page or "logout" in next_page:
+                st.switch_page("pages/index.py")
+            else:
+                st.switch_page(next_page)
 
     pg.run()
-
-
-def logout():
-    # Purge the cookie safely
-    if "cookie_controller" in st.session_state:
-        controller = st.session_state["cookie_controller"]
-        try:
-            # Check if cookie exists before removing to avoid KeyError
-            if controller.get("gh_auth_token") is not None:
-                controller.remove("gh_auth_token")
-        except Exception:
-            # Best effort removal
-            pass
-
-    st.session_state.logged_in = False
-    if "auth" in st.session_state:
-        del st.session_state["auth"]
-    if "user_info" in st.session_state:
-        del st.session_state["user_info"]
-    if "user_orgs" in st.session_state:
-        del st.session_state["user_orgs"]
-    if "user_teams" in st.session_state:
-        del st.session_state["user_teams"]
-    st.info("Logged out successfully!")
-    st.rerun()
 
 
 if __name__ == "__main__":

@@ -23,6 +23,21 @@ def user_info_page() -> None:
     user = st.session_state.get("user_info")
     
     if user:
+        # Debugging aid (always available for now while troubleshooting)
+        with st.expander("Session Debug Info"):
+            st.write("Logged In:", st.session_state.get("logged_in"))
+            st.write("User object keys:", list(user.keys()))
+            if st.button("Force Rerun"):
+                st.rerun()
+            if st.button("Clear Session & Logout"):
+                # Clear all session state
+                for key in list(st.session_state.keys()):
+                    del st.session_state[key]
+                
+                from src.frontend.ui_utils import reload_page_at_root
+                reload_page_at_root(delay_ms=100)
+                st.stop()
+
         col1, col2 = st.columns([1, 3])
         
         with col1:

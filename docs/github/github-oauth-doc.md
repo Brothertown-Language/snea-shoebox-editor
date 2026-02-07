@@ -332,6 +332,63 @@ https://github.com/settings/connections/applications/:client_id
 > \[!TIP]
 > To learn more about the resources that your OAuth app can access for a user, see [Discovering resources for a user](/en/rest/guides/discovering-resources-for-a-user).
 
+## Implementation Requirements for New Projects
+
+When setting up a new project from scratch using this OAuth flow, you must adhere to the following architectural requirements to ensure session stability and data consistency.
+
+### 1. The "Identity Triad" Requirement
+A user session is not considered fully "authorized" or "synchronized" until all three of the following identity components have been successfully fetched from the GitHub API and stored in the session state:
+- **User Profile:** Basic information (login, avatar_url, email).
+- **Organizations:** List of organizations the user belongs to.
+- **Teams:** List of teams the user belongs to (critical for fine-grained access control).
+
+### 2. Centralized Identity Synchronization
+To prevent race conditions and ensure identity data is available across all pages (including deep links), the fetching logic **MUST** be centralized in the main application entry point (e.g., `app.py`).
+
+Do not rely on individual pages to fetch their own identity context. Instead, use a global check that triggers a re-fetch whenever an authentication token is present but the identity data is incomplete.
+
+### 3. Use a Helper Function for State Validation
+Implement a discrete helper function to validate the synchronization state. This keeps the logic clean and easy to maintain.
+
+**Example Helper (`auth_utils.py`):**
+```python
+import streamlit as st
+
+def is_identity_synchronized() -> bool:
+    """
+    Check if all critical GitHub identity information is present in the session state.
+    """
+    # Define the keys required for a complete identity profile
+    required_keys = ["user_info", "user_orgs", "user_teams"]
+    return all(key in st.session_state for key in required_keys)
+```
+
+### 4. The "Redirection Gate" Logic
+Never redirect a user to the home page or internal pages immediately after receiving an OAuth token. You must implement a "gate" that holds the user on the login page (or a loading state) until `is_identity_synchronized()` returns `True`.
+
+**Example Global Sync (`app.py`):**
+```python
+# In your main app.py
+if "auth" in st.session_state:
+    from auth_utils import is_identity_synchronized, fetch_github_user_info
+    
+    if not is_identity_synchronized():
+        # A token exists, but the identity data is incomplete.
+        # Fetch everything as an atomic unit.
+        access_token = st.session_state["auth"].get("token", {}).get("access_token")
+        if access_token:
+            fetch_github_user_info(access_token)
+
+# Redirection Gate: Only allow home page access if identity is fully synced
+if st.session_state.get("logged_in") and is_identity_synchronized():
+    if "next" in st.query_params:
+        # Handle deep links
+        pass 
+```
+
+### 5. Robust Logout and Cleanup
+When logging out, ensure all identity-related keys are purged from both the session state and browser cookies to prevent stale data from leaking into the next session. Always trigger a full browser reload after cleanup.
+
 ## Troubleshooting
 
 * [Troubleshooting authorization request errors](/en/apps/oauth-apps/maintaining-oauth-apps/troubleshooting-authorization-request-errors)

@@ -4,11 +4,25 @@
 # Script to start Streamlit in a persistent background process
 # This ensures it continues running even after the Junie session exits.
 
+# Ensure we are in the project root using git
+cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1
+PROJECT_ROOT="$(git rev-parse --show-toplevel)"
+if [ -z "$PROJECT_ROOT" ]; then
+    echo "Error: Could not find project root via git."
+    exit 1
+fi
+cd "$PROJECT_ROOT" || exit 1
+
 LOG_FILE="tmp/streamlit.log"
+
+echo "Project root: $PROJECT_ROOT"
+echo "Stopping any existing Streamlit instances..."
+pkill -f "streamlit run src/frontend/app.py" || true
 
 echo "Starting Streamlit in the background..."
 mkdir -p tmp
-nohup uv run --extra local streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > "$LOG_FILE" 2>&1 &
+export PYTHONUNBUFFERED=1
+nohup uv run --extra local python -m streamlit run src/frontend/app.py --server.address 0.0.0.0 --server.port 8501 > "$LOG_FILE" 2>&1 &
 
 PID=$!
 echo "Streamlit started with PID: $PID"

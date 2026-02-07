@@ -1,6 +1,9 @@
-# Copyright (c) 2026 Brothertown Language
 """
-DATABASE SOURCE OF TRUTH: docs/database/DATABASE_SPECIFICATION.md
+Database connection and session management.
+
+AI Agent Instructions:
+- Source of truth for database schema: docs/database/DATABASE_SPECIFICATION.md
+- Ensure all queries and interactions align with the specified schema.
 """
 import os
 import streamlit as st

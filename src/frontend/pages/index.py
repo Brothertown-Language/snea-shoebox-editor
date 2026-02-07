@@ -11,6 +11,13 @@ AI Coding Defaults:
 def index():
     import streamlit as st
     
+    # Handle logout reload if coming from logout page
+    if st.session_state.get("trigger_logout_reload"):
+        del st.session_state["trigger_logout_reload"]
+        from src.frontend.ui_utils import reload_page_at_root
+        reload_page_at_root()
+        st.stop()
+
     st.title("SNEA Shoebox Editor")
     st.write("Welcome to the SNEA Online Shoebox Editor.")
     st.info("This is the main entry point.")

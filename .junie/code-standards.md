@@ -46,6 +46,14 @@ AI Coding Defaults:
 - **Conventions:** Follow the project's established conventions for casing (e.g., snake_case vs PascalCase) and separators.
 - **Sequential Files:** If files are numbered sequentially, maintain continuous numbering and preserve the exact numbering format.
 
+## Code Design and Maintainability
+Good code organization and the DRY (Don't Repeat Yourself) principle are critical for maintainability.
+
+### NO CODE DUPLICATION
+- **MANDATORY:** **NEVER** duplicate logic, especially complex or system-critical code (e.g., JavaScript injections, authentication logic, data transformations) across multiple files.
+- **Shared Utility Packages:** **ALWAYS** extract shared logic into a central, reusable utility package (e.g., `src/frontend/ui_utils.py`, `src/frontend/auth_utils.py`).
+- **Single Source of Truth:** Every piece of knowledge or logic must have a single, unambiguous representation within the system.
+
 ## Method Design and Organization
 Good code organization is critical for maintainability.
 - **Discrete Methods:** **ALWAYS** break code into discrete methods. Each method should perform one single, well-defined task.
