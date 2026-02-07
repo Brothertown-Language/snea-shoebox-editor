@@ -36,7 +36,7 @@ class UserActivityLog(Base):
     """
     __tablename__ = 'user_activity_log'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT'), nullable=False)
+    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
     session_id = Column(String)  # Unique UUID linking activity to a specific edit batch
     action = Column(String, nullable=False)  # e.g., 'login', 'sync_start', 'batch_rollback'
     details = Column(Text)

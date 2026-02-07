@@ -129,6 +129,38 @@ def init_db():
     # Base.metadata.create_all is non-destructive for existing tables
     Base.metadata.create_all(engine)
     
+    # Manual migration to add ON UPDATE CASCADE to user_email foreign keys
+    # This is necessary because GitHub email addresses can change.
+    with engine.connect() as conn:
+        try:
+            # 1. user_activity_log
+            conn.execute(text("ALTER TABLE user_activity_log DROP CONSTRAINT IF EXISTS user_activity_log_user_email_fkey;"))
+            conn.execute(text("ALTER TABLE user_activity_log ADD CONSTRAINT user_activity_log_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            
+            # 2. matchup_queue
+            conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_user_email_fkey;"))
+            conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            
+            # 3. edit_history
+            conn.execute(text("ALTER TABLE edit_history DROP CONSTRAINT IF EXISTS edit_history_user_email_fkey;"))
+            conn.execute(text("ALTER TABLE edit_history ADD CONSTRAINT edit_history_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            
+            # 4. records (updated_by)
+            conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_updated_by_fkey;"))
+            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+
+            # 5. records (reviewed_by)
+            conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_reviewed_by_fkey;"))
+            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+
+            conn.commit()
+        except Exception as e:
+            # Log but don't stop if migration fails (might already be fixed or different constraint names)
+            if not is_production():
+                st.warning(f"Could not automatically update foreign key constraints: {e}")
+            else:
+                print(f"ERROR: Failed to update foreign key constraints: {e}")
+
     # Add embedding column if it doesn't exist (manual migration for now)
     # Note: In a full production app, we would use Alembic.
     with engine.connect() as conn:

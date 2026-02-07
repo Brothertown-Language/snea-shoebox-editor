@@ -15,7 +15,7 @@ class MatchupQueue(Base):
     """
     __tablename__ = 'matchup_queue'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT'), nullable=False)
+    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
     source_id = Column(Integer, ForeignKey('sources.id'), nullable=False)
     suggested_record_id = Column(Integer, ForeignKey('records.id'))  # Potential match
     status = Column(String, nullable=False, default='pending')  # 'pending', 'matched', 'ignored'
@@ -35,7 +35,7 @@ class EditHistory(Base):
     __tablename__ = 'edit_history'
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
-    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT'), nullable=False)
+    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
     session_id = Column(String)  # Unique UUID per upload/edit batch
     version = Column(Integer, nullable=False)
     change_summary = Column(Text)

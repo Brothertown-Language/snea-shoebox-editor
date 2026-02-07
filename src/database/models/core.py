@@ -61,9 +61,9 @@ class Record(Base):
     current_version = Column(Integer, nullable=False, default=1)
     is_deleted = Column(Boolean, nullable=False, default=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
-    updated_by = Column(String)  # Identifier (email/ID) of last editor
+    updated_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))  # Identifier (email) of last editor
     reviewed_at = Column(TIMESTAMP(timezone=True))
-    reviewed_by = Column(String)
+    reviewed_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))
     
     language = relationship("Language", back_populates="records")
     source = relationship("Source", back_populates="records")
