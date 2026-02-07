@@ -71,7 +71,7 @@ When programmatically switching pages in the Streamlit application:
 - **Rule:** After 3 failed attempts to fix a test, you **MUST** ask the user for guidance.
 - **Rule:** NEVER bypass or weaken failed tests by mocking/stubbing to hide issues, deleting/disabling tests, weakening assertions, or using skip flags.
 - **Rule (Searching):** **NEVER** search the `.git` folder. **ALWAYS** exclude the `.git` folder from all searching operations.
-- **Rule (Interactive Commands):** **NEVER** run interactive commands (e.g., `psql`, `python`, `top`). **ALWAYS** use non-interactive flags (e.g., `psql -c "QUERY" < /dev/null`) or execute specific scripts. The `< /dev/null` redirect is mandatory for `psql` to prevent terminal hangs.
+- **Rule (Interactive Commands):** **NEVER** run interactive commands (e.g., `psql`, `python`, `top`). **ALWAYS** use non-interactive flags (e.g., `psql -c "QUERY" < /dev/null`) or execute specific scripts. The `< /dev/null` redirect is mandatory for `psql` and when using `python` with `help()` or similar interactive calls to prevent terminal hangs.
 
 ### Test Strategy by Change Type
 - **Bug Fix:** Write a reproduction test first, verify that it fails, and then implement the fix.
