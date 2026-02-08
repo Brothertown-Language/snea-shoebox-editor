@@ -25,15 +25,15 @@ Date: 2026-02-07
 - Implemented private Junie database separation for tests and destructive tasks (`tmp/junie_db`).
 - Added `scripts/clone_db.py` for cloning the local developer database to the Junie private database.
 - **Phase 5 Stage 1**: Implemented `IdentityService`, refactored `auth_utils.py`, `app.py`, `login.py`, and `user_info.py`. Verified with tests.
-- **Refactoring Plan Update**: Updated `tmp/refactoring_plan.md` to reflect Stage 1 completion and refined upcoming stages.
+- **Phase 5 Stage 2**: Implemented `SecurityManager`, refactored session rehydration and RBAC logic in `app.py`. Verified with tests.
+- **Refactoring Plan Update**: Updated `tmp/refactoring_plan.md` to reflect Stage 2 completion.
 - **Mandated Commit Script Method**: Updated AI guidelines to require the commit script method for all source code changes.
 - **Prohibition on Committing Temporary Files**: Updated `.junie/guidelines.md`, `.junie/operational-standards.md`, and `.junie/development-workflow.md` to explicitly forbid committing any files from the `tmp/` directory.
 - **Commit Script Timing Restriction**: Updated guidelines to explicitly prohibit creating commit scripts or messages without direct user instruction.
 
 ## Next Steps (Phase 5 Refactoring)
-1. **Implement Security Manager**: Create `src/services/security_manager.py` to handle session rehydration and route protection logic.
-2. **Granular Route Protection**: Update `app.py` (or the new Security Manager) to filter navigation items based on user roles and permissions.
-3. **Implement Navigation Service**: Move page definitions and navigation configuration out of `app.py`.
+1. **Implement Navigation Service**: Move page definitions and navigation configuration out of `app.py`.
+2. **Database Migration Management**: Clean up `src/database/connection.py` by extracting migration logic to a separate manager.
 
 ## Utility Scripts
 - **`scripts/dump_users.py`**: Dumps the `users` table and `user_activity_log` to the console and CSV files in the `tmp/` directory for human review.

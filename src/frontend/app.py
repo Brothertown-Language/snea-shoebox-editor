@@ -44,13 +44,8 @@ def main():
     st.session_state["cookie_controller"] = controller
 
     # 2. Rehydrate Session State
-    # We check if 'auth' is missing from session but present in cookies
-    from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
-    saved_token = controller.get(GH_AUTH_TOKEN_COOKIE)
-    if saved_token and "auth" not in st.session_state:
-        print("DEBUG: Rehydrating session from cookie", flush=True)
-        st.session_state["auth"] = saved_token
-        st.session_state.logged_in = True
+    from src.services.security_manager import SecurityManager
+    SecurityManager.rehydrate_session()
     
     # 3. Global Identity Synchronization
     # CRITICAL: This logic must remain in app.py to prevent race conditions.
@@ -138,6 +133,10 @@ def main():
     # This prevents the app from landing on the home page with missing profile or org/team data.
     from src.frontend.auth_utils import is_identity_synchronized
     if st.session_state.logged_in and is_identity_synchronized():
+        # Get user role for redirection and permission logic
+        user_email = st.session_state.get("user_info", {}).get("email")
+        st.session_state["user_role"] = SecurityManager.get_user_role(user_email)
+        
         # Priority 1: Check session state for saved params (from deep links)
         if "redirect_params" in st.session_state:
             params = st.session_state.pop("redirect_params")
