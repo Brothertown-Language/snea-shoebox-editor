@@ -8,6 +8,9 @@ from typing import Optional, Dict, Any, List
 from src.database import get_session, User
 from sqlalchemy.sql import func
 from src.services.audit_service import AuditService
+from src.logging_config import get_logger
+
+logger = get_logger("snea.identity")
 
 class IdentityService:
     """
@@ -28,7 +31,7 @@ class IdentityService:
         Performs mandatory team membership verification (Brothertown-Language/proto-SNEA).
         Returns True if successful and authorized, False otherwise.
         """
-        print("DEBUG: Fetching GitHub user info...", flush=True)
+        logger.debug("Fetching GitHub user info")
         headers = {
             "Authorization": f"token {access_token}",
             "Accept": "application/vnd.github.v3+json"
@@ -42,8 +45,7 @@ class IdentityService:
             user_info = user_response.json()
             st.session_state["user_info"] = user_info
             
-            # Log to console
-            print(f"INFO: Fetched GitHub user info for: {user_info.get('login')}", flush=True)
+            logger.info("Fetched GitHub user info for: %s", user_info.get('login'))
 
             # Fetch organizations
             orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
@@ -76,7 +78,7 @@ class IdentityService:
             user_role = SecurityManager.get_user_role(user_teams)
             
             if not user_role:
-                print(f"DEBUG: User not authorized. Teams: {[t.get('slug') or t.get('name') for t in user_teams]}", flush=True)
+                logger.debug("User not authorized. Teams: %s", [t.get('slug') or t.get('name') for t in user_teams])
                 st.session_state["is_unauthorized"] = True
                 return False
 
@@ -85,7 +87,7 @@ class IdentityService:
                 IdentityService.sync_user_to_db(user_info, primary_email)
                 
                 # Log the login activity
-                print(f"DEBUG: User logged in: {primary_email}", flush=True)
+                logger.debug("User logged in: %s", primary_email)
                 AuditService.log_activity(primary_email, "login", "User logged in via GitHub OAuth")
             else:
                 st.warning("Could not determine user email. Audit trail might be limited.")
@@ -140,7 +142,7 @@ class IdentityService:
         except Exception as e:
             session.rollback()
             st.error(f"Failed to sync user to database: {e}")
-            print(f"ERROR: sync_user_to_db failed: {e}", flush=True)
+            logger.error("sync_user_to_db failed: %s", e)
         finally:
             session.close()
 
@@ -163,5 +165,7 @@ class IdentityService:
         Used in app.py and login.py.
         """
         if not IdentityService.is_identity_synchronized():
+            logger.debug("Identity not yet synchronized, fetching from GitHub")
             return IdentityService.fetch_github_user_info(access_token)
+        logger.debug("Identity already synchronized, skipping fetch")
         return True

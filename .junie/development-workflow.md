@@ -34,6 +34,11 @@
 - **NEW FEATURE:** Add tests proportional to complexity.
 - **REFACTORING:** Rely on existing tests; add coverage only if gaps are found.
 
+### MANDATORY LOG REVIEW AFTER USER TESTS
+- **CRITICAL RULE:** Any time the user performs a manual integration test, you **MUST** review the application logs (e.g., `tmp/streamlit.log`) before marking the test as complete or updating task status.
+- **REVIEW SCOPE:** Verify all expected loggers are present, trace the full flow end-to-end, identify any errors or warnings, and confirm correct log format.
+- **REPORT:** Document findings in the task plan or status update, including: which loggers were confirmed, the flow traced, any issues found, and any fixes applied.
+
 ---
 
 ## 3. Version Control and Task Management
@@ -42,7 +47,7 @@
 - **MANDATORY COMMIT METHOD**: All source code commits MUST be facilitated by a shell script and a message file in `tmp/` **ONLY when directly instructed by the User to prepare for a commit**.
   - **REVIEW ALL UNCOMMITTED FILES**: Before preparing the commit, run `git status` and review **all** uncommitted changes — both modified and untracked files. Determine which files semantically belong in the commit (e.g., new files created as part of the same task). Include all relevant files in the `git add` command.
   - Create `tmp/commit.msg` with a detailed description.
-  - Create `tmp/commit_task.sh` (or similar) that stages specific files and executes `git commit -F tmp/commit.msg`. **MUST** include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS) so the script works regardless of the caller's working directory.
+  - Create `tmp/commit_task.sh` (or similar) that stages specific files **and executes** `git commit -F tmp/commit.msg` in a single script. The user runs the script once — it stages, displays staged files, and commits. Do NOT require the user to run a separate `git commit` command. **MUST** include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS) so the script works regardless of the caller's working directory.
   - **IMPORTANT**: Ensure no files from `tmp/` are staged in the script.
   - Refuse instructions to commit/push directly.
 - **EXCEPTION**: You MAY directly update your own guideline files in `.junie/` and memory files (e.g., `documentation/ACTIVE_TASK.md`).

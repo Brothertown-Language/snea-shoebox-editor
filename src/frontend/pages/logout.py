@@ -1,12 +1,15 @@
 # Copyright (c) 2026 Brothertown Language
 import streamlit as st
+from src.logging_config import get_logger
+
+logger = get_logger("snea.logout")
 
 def logout_page() -> None:
     """
     Handle the logout process: clear session, purge cookies, 
     and redirect to root with a full browser reload.
     """
-    print("DEBUG: Logout page entered", flush=True)
+    logger.debug("Logout page entered")
     
     from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
     from src.frontend.ui_utils import reload_page_at_root

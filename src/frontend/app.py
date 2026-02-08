@@ -2,6 +2,9 @@
 import streamlit as st
 import sys
 import os
+from src.logging_config import get_logger
+
+logger = get_logger("snea.app")
 
 # Add the project root to sys.path to ensure src imports work
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -23,6 +26,7 @@ def _initialize_database():
 
 
 def main():
+    logger.debug("App main() entry")
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(
         page_title="SNEA Shoebox Editor",
@@ -45,6 +49,7 @@ def main():
 
     # 2. Rehydrate Session State
     from src.services.security_manager import SecurityManager
+    logger.debug("Rehydrating session state from cookies")
     SecurityManager.rehydrate_session()
     
     # 3. Global Identity Synchronization
@@ -56,6 +61,7 @@ def main():
         from src.services.identity_service import IdentityService
         access_token = st.session_state["auth"].get("token", {}).get("access_token")
         if access_token:
+            logger.debug("Auth token present, syncing identity")
             if not IdentityService.sync_identity(access_token):
                 # Handle unauthorized or failed fetch
                 if st.session_state.get("is_unauthorized"):
@@ -75,6 +81,7 @@ def main():
 
     # Access control logic
     logged_in = st.session_state.logged_in
+    logger.debug("Building navigation tree (logged_in=%s)", logged_in)
     nav_tree = NavigationService.get_navigation_tree(logged_in)
     
     pg = st.navigation(nav_tree)
@@ -86,6 +93,7 @@ def main():
     NavigationService.handle_redirection(pg)
     
     # Run the selected page
+    logger.debug("Running page: %s", getattr(pg, 'title', pg))
     pg.run()
 
 

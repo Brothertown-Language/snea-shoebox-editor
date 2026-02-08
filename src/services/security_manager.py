@@ -3,6 +3,9 @@ import streamlit as st
 from typing import Optional, List, Dict, Any
 from src.database import get_session, Permission
 from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
+from src.logging_config import get_logger
+
+logger = get_logger("snea.security")
 
 class SecurityManager:
     """
@@ -21,7 +24,7 @@ class SecurityManager:
         saved_token = controller.get(GH_AUTH_TOKEN_COOKIE)
         
         if saved_token and "auth" not in st.session_state:
-            print("DEBUG: SecurityManager: Rehydrating session from cookie", flush=True)
+            logger.debug("Rehydrating session from saved cookie token")
             st.session_state["auth"] = saved_token
             st.session_state.logged_in = True
 
@@ -35,10 +38,12 @@ class SecurityManager:
         highest_role = None
         highest_weight = 0
 
+        logger.debug("Resolving role for %d team(s)", len(user_teams))
         session = get_session()
         try:
             # Fetch all permissions from DB
             permissions = session.query(Permission).all()
+            logger.debug("Loaded %d permission rule(s) from DB", len(permissions))
             
             for p in permissions:
                 # Check if user is in the required team and org
@@ -59,9 +64,10 @@ class SecurityManager:
                         highest_weight = weight
                         highest_role = p.role
             
+            logger.debug("Resolved role: %s", highest_role)
             return highest_role
         except Exception as e:
-            print(f"ERROR: SecurityManager.get_user_role: {e}", flush=True)
+            logger.error("get_user_role failed: %s", e)
             return None
         finally:
             session.close()
@@ -109,7 +115,7 @@ class SecurityManager:
             
             return user_max_weight >= required_weight
         except Exception as e:
-            print(f"ERROR: SecurityManager.check_permission: {e}", flush=True)
+            logger.error("check_permission failed: %s", e)
             return False
         finally:
             session.close()

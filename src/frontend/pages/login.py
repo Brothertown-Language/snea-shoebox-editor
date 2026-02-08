@@ -1,5 +1,8 @@
 # Copyright (c) 2026 Brothertown Language
 import streamlit as st
+from src.logging_config import get_logger
+
+logger = get_logger("snea.login")
 
 @st.dialog("Access Restricted")
 def show_unauthorized_dialog() -> None:
@@ -41,7 +44,7 @@ def login():
     from streamlit_oauth import OAuth2Component
     import requests
 
-    print("DEBUG: Login page loaded", flush=True)
+    logger.debug("Login page loaded")
 
     if "cookie_controller" not in st.session_state:
         # Fallback in case app.py didn't set it (shouldn't happen with updated app.py)
@@ -61,7 +64,7 @@ def login():
         )
     except Exception as e:
         st.error(f"Failed to initialize OAuth component: {e}")
-        print(f"ERROR: OAuth2Component initialization failed: {e}")
+        logger.error("OAuth2Component initialization failed: %s", e)
         st.stop()
 
     if st.session_state.get("is_unauthorized"):
@@ -91,10 +94,11 @@ def login():
             )
         except Exception as e:
             st.error(f"OAuth authorization failed: {e}")
-            print(f"ERROR: OAuth authorize_button failed: {e}")
+            logger.error("OAuth authorize_button failed: %s", e)
             st.stop()
             
         if result:
+            logger.debug("OAuth callback received, setting auth session")
             st.session_state["auth"] = result
             st.session_state.logged_in = True
             

@@ -1,6 +1,9 @@
 # Copyright (c) 2026 Brothertown Language
 import streamlit as st
 from typing import Dict, List, Union
+from src.logging_config import get_logger
+
+logger = get_logger("snea.navigation")
 
 # Central registry of pages
 # Paths are relative to src/frontend/
@@ -38,12 +41,14 @@ class NavigationService:
             A dictionary or list formatted for st.navigation.
         """
         if logged_in:
+            logger.debug("Returning authenticated navigation tree")
             return {
                 "Main": [cls.PAGE_HOME, cls.PAGE_RECORD, cls.PAGE_SOURCE],
                 "System": [cls.PAGE_STATUS],
                 "Account": [cls.PAGE_USER, cls.PAGE_LOGOUT]
             }
         else:
+            logger.debug("Returning unauthenticated navigation tree")
             # Include all pages in navigation even when not logged in,
             # so Streamlit doesn't fallback to the first page (/) and we can 
             # capture the destination.
@@ -84,6 +89,7 @@ class NavigationService:
         # 1. Handle Unauthenticated Access (Deep Linking)
         if not logged_in and pg != cls.PAGE_LOGIN:
             if pg == cls.PAGE_LOGOUT:
+                logger.debug("Unauthenticated user hit logout, redirecting to login")
                 st.switch_page(cls.PAGE_LOGIN)
             
             page_to_path = cls.get_page_to_path_map()
@@ -91,6 +97,7 @@ class NavigationService:
                 current_params = {k: v for k, v in st.query_params.items()}
                 current_params["next"] = page_to_path[pg]
                 st.session_state["redirect_params"] = current_params
+                logger.debug("Deep-link captured, redirecting to login with next=%s", page_to_path[pg])
                 st.switch_page(cls.PAGE_LOGIN)
 
         # 2. Global redirection handler after login/rehydration
@@ -107,6 +114,7 @@ class NavigationService:
             if "redirect_params" in st.session_state:
                 params = st.session_state.pop("redirect_params")
                 next_page = params.pop("next", "pages/index.py")
+                logger.debug("Post-login redirect to deep-link: %s", next_page)
                 for k, v in params.items():
                     st.query_params[k] = v
                 st.switch_page(next_page)
@@ -114,6 +122,7 @@ class NavigationService:
             # Priority 2: Check query params (simple internal redirects)
             elif "next" in st.query_params:
                 next_page = st.query_params["next"]
+                logger.debug("Post-login redirect via query param: %s", next_page)
                 del st.query_params["next"]
                 
                 # If next points to logout, ignore it to prevent immediate logout after login
