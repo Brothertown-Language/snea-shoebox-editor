@@ -104,6 +104,28 @@ def parse_mdf(content):
     return parsed_records
 
 
+def format_mdf_record(mdf_text: str) -> str:
+    """
+    Normalize formatting of an MDF record for storage:
+    - Remove all leading indentation from lines.
+    - Add one blank line before each \\se line (subentry).
+    - Add one blank line before the \\nt Record: line.
+    - Remove any other consecutive blank lines.
+    """
+    lines = mdf_text.split('\n')
+    result = []
+    for line in lines:
+        stripped = line.lstrip()
+        if not stripped:
+            continue
+        is_se = stripped.startswith('\\se ')
+        is_nt_rec = _is_nt_record_line(stripped)
+        if (is_se or is_nt_rec) and result and result[-1] != '':
+            result.append('')
+        result.append(stripped)
+    return '\n'.join(result)
+
+
 def normalize_nt_record(mdf_text: str, record_id: int) -> str:
     """
     Remove all existing \\nt Record: lines from mdf_text and append
