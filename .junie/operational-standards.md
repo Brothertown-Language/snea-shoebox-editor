@@ -9,6 +9,12 @@
 - **NO INTERACTIVE COMMANDS:** **NEVER** run commands that require user input (e.g., `psql` without flags, `top`, `vim`).
 - **NO .git SEARCH:** **ALWAYS** exclude the `.git` directory when searching (e.g., `grep --exclude-dir=.git`).
 - **CLEAN ROOT POLICY:** **NEVER** create log files, temporary scripts, or data files in the project root. All transient files MUST go to `tmp/`.
+- **JUNIE PRIVATE DB:** Junie tests and destructive tasks **MUST** use a private `pgserver` instance.
+    - Set `JUNIE_PRIVATE_DB=true` in the environment to activate.
+    - Path: `tmp/junie_db`.
+    - **NEVER** perform destructive tests or updates on the local developer DB (`tmp/local_db`).
+    - **CLONING:** To clone the dev DB to Junie's private DB, use:
+      `uv run python scripts/clone_db.py` (ensure the script exists and targets `tmp/junie_db`).
 
 ---
 

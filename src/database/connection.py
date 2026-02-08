@@ -14,6 +14,11 @@ _pg_server = None
 def _get_local_db_path():
     """Get the path to the local database directory."""
     project_root = Path(__file__).parent.parent.parent
+    
+    # Junie separation: Use a dedicated path if JUNIE_PRIVATE_DB is set
+    if os.getenv("JUNIE_PRIVATE_DB") == "true":
+        return project_root / "tmp" / "junie_db"
+        
     return project_root / "tmp" / "local_db"
 
 def _stop_local_db():

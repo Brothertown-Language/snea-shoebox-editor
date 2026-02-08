@@ -23,6 +23,8 @@
 
 ### EXECUTION AND VALIDATION
 - **MANDATORY:** **ALWAYS** run tests in the terminal. **NEVER** simulate results mentally.
+- **JUNIE PRIVATE DB:** **ALWAYS** set `JUNIE_PRIVATE_DB=true` when running tests or scripts that modify the database.
+  - *Correct:* `JUNIE_PRIVATE_DB=true uv run pytest`
 - **NO BYPASS:** **NEVER** weaken, mock, or disable failed tests to force a pass.
 - **3-STRIKE RULE:** After 3 failed fix attempts, you **MUST** stop and ask the user for guidance.
 - **CLEAN START:** Fix all compilation errors before running tests.

@@ -22,6 +22,8 @@ Date: 2026-02-07
     - `proto-SNEA-viewer` -> `viewer`
 - Updated `scripts/seed_permissions.py` and `scripts/clear_permissions.py` to support testing of the new default permissions.
 - Resolved the issue where the `permissions` table was not being populated on restart.
+- Implemented private Junie database separation for tests and destructive tasks (`tmp/junie_db`).
+- Added `scripts/clone_db.py` for cloning the local developer database to the Junie private database.
 
 ## Next Steps (Phase 5 Refactoring)
 1. **Implement Identity Service**: Create `src/services/identity_service.py` to handle user syncing and team/role resolution.
