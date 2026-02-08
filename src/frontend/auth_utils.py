@@ -6,6 +6,7 @@ import streamlit as st
 import requests
 from typing import Optional, Dict, Any, List
 from src.services.identity_service import IdentityService
+from src.services.audit_service import AuditService
 
 def is_identity_synchronized() -> bool:
     """
@@ -25,7 +26,7 @@ def log_user_activity(email: str, action: str, details: Optional[str] = None) ->
     """
     Log a user activity to the database.
     """
-    IdentityService.log_user_activity(email, action, details)
+    AuditService.log_activity(email, action, details)
 
 def sync_user_to_db(user_info: Dict[str, Any], email: str) -> None:
     """

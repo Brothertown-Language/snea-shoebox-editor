@@ -5,8 +5,9 @@ Identity Service for managing GitHub user identity and database synchronization.
 import streamlit as st
 import requests
 from typing import Optional, Dict, Any, List
-from src.database import get_session, User, UserActivityLog
+from src.database import get_session, User
 from sqlalchemy.sql import func
+from src.services.audit_service import AuditService
 
 class IdentityService:
     """
@@ -85,7 +86,7 @@ class IdentityService:
                 
                 # Log the login activity
                 print(f"DEBUG: User logged in: {primary_email}", flush=True)
-                IdentityService.log_user_activity(primary_email, "login", "User logged in via GitHub OAuth")
+                AuditService.log_activity(primary_email, "login", "User logged in via GitHub OAuth")
             else:
                 st.warning("Could not determine user email. Audit trail might be limited.")
 
@@ -140,26 +141,6 @@ class IdentityService:
             session.rollback()
             st.error(f"Failed to sync user to database: {e}")
             print(f"ERROR: sync_user_to_db failed: {e}", flush=True)
-        finally:
-            session.close()
-
-    @staticmethod
-    def log_user_activity(email: str, action: str, details: Optional[str] = None) -> None:
-        """
-        Log a user activity to the database.
-        """
-        session = get_session()
-        try:
-            log = UserActivityLog(
-                user_email=email,
-                action=action,
-                details=details
-            )
-            session.add(log)
-            session.commit()
-        except Exception as e:
-            session.rollback()
-            print(f"Failed to log user activity: {e}", flush=True)
         finally:
             session.close()
 

@@ -108,7 +108,7 @@ class TestIdentityService(unittest.TestCase):
         with patch("src.services.security_manager.SecurityManager.get_user_role") as mock_get_role:
             mock_get_role.return_value = "editor"
             with patch.object(IdentityService, "sync_user_to_db") as mock_sync:
-                with patch.object(IdentityService, "log_user_activity") as mock_log:
+                with patch("src.services.audit_service.AuditService.log_activity") as mock_log:
                     success = IdentityService.fetch_github_user_info("fake_token")
                     
                     self.assertTrue(success)
