@@ -27,8 +27,10 @@
 - **NEVER** assume permission to modify the codebase as a "side effect" of answering a question or providing information.
 
 ### GUIDELINE ADHERENCE
-- **MANDATORY:** At the start of every session and before any task, you **MUST** re-read all files in the `.junie/` directory.
+- **MANDATORY:** At the start of every session and before any task, you **MUST** re-read all files in the `.junie/` directory, especially `LONG_TERM_MEMORY.md` and `VIOLATION_LOG.md`.
 - **CRITICAL:** Explicitly state "Reviewing AI Guidelines" in your initial analysis of every session.
+- **MEMORY PERSISTENCE:** Update `LONG_TERM_MEMORY.md` with any key architectural decisions, user preferences, or cross-session context that is not yet recorded.
+- **VIOLATION LOGGING:** Any time the user identifies a guideline violation, you **MUST** record it in `VIOLATION_LOG.md` with a root cause analysis and a preventive measure.
 
 ---
 

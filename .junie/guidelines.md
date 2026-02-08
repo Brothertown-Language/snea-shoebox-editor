@@ -54,7 +54,8 @@ To maintain precision and avoid "vibe coding," these guidelines are divided into
 ---
 
 ## III. MANDATORY SESSION INITIALIZATION
-1. **RE-READ** all files in the `.junie/` directory.
+1. **RE-READ** all files in the `.junie/` directory, including the `LONG_TERM_MEMORY.md` and `VIOLATION_LOG.md`.
 2. **CHECK** `documentation/ACTIVE_TASK.md` for the current status.
 3. **ACKNOWLEDGE** compliance by stating "Reviewing AI Guidelines" in your first response.
 4. **VALIDATE** all external links and assumptions against the actual source code.
+5. **UPDATE** `LONG_TERM_MEMORY.md` and `VIOLATION_LOG.md` whenever a new cross-session decision is made or a violation is identified.
