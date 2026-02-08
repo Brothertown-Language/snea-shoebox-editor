@@ -26,6 +26,9 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Path Resolution**: Always use the 3-step `git rev-parse` boilerplate in shell scripts for IDE compatibility. NEVER use `cd "$(dirname "$0")/.."` — use `BASH_SOURCE[0]` instead of `$0`.
 - **Manual Testing Requirement**: The **Full Auth Flow** (OAuth -> Sync -> RBAC -> Navigation tree update) requires manual verification by the user end-to-end, as it cannot be fully automated in the current environment.
 
+## FUTURE FEATURE NOTES
+- **MDF Download Page — Pending Updates**: The MDF download page must also allow downloading pending updates (from `matchup_queue`) for manual editing, not just committed records. This enables linguists to export staged entries, edit them offline, and re-upload corrected MDF files.
+
 ## SESSION INITIALIZATION CHECKLIST
 - [ ] Re-read `.junie/VIOLATION_LOG.md`.
 - [ ] Re-read `.junie/LONG_TERM_MEMORY.md`.
