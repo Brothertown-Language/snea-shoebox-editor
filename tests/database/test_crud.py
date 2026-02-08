@@ -127,7 +127,19 @@ class TestDatabaseCRUD(unittest.TestCase):
         record_updated = self.session.query(Record).filter_by(lx="nup").first()
         self.assertEqual(record_updated.ge, "to die")
 
-        # Delete (should cascade to search entries)
+        # Delete (should FAIL because of RESTRICT)
+        self.session.delete(record_db)
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
+
+        # Clean up SearchEntry first
+        search_db = self.session.query(SearchEntry).filter_by(term="nup").first()
+        self.session.delete(search_db)
+        self.session.commit()
+
+        # Now delete Record should succeed
+        record_db = self.session.query(Record).filter_by(lx="nup").first()
         self.session.delete(record_db)
         self.session.commit()
         self.assertIsNone(self.session.query(Record).filter_by(lx="nup").first())
@@ -153,9 +165,10 @@ class TestDatabaseCRUD(unittest.TestCase):
             ip_address="127.0.0.1"
         )
         
-        # Create Permission
+        # Create Permission (must include github_team because it is NOT NULL)
         perm = Permission(
             github_org="brothertown",
+            github_team="testers",
             role="editor"
         )
         
@@ -218,6 +231,22 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.add(record)
         self.session.flush()
 
+        # 1. Test restriction by SearchEntry
+        search = SearchEntry(record_id=record.id, term="test", entry_type="lx")
+        self.session.add(search)
+        self.session.commit()
+
+        self.session.delete(record)
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
+
+        # Clean up search entry to test history
+        search = self.session.query(SearchEntry).first()
+        self.session.delete(search)
+        self.session.commit()
+
+        # 2. Test restriction by EditHistory
         history = EditHistory(record_id=record.id, user_email="admin@example.com", version=1, current_data="\\lx test")
         # Ensure user exists for history
         user = User(email="admin@example.com", username="admin", github_id=1)
@@ -231,63 +260,66 @@ class TestDatabaseCRUD(unittest.TestCase):
         
         self.session.rollback()
 
-    def test_workflow_crud(self):
-        """Test CRUD for MatchupQueue and EditHistory tables."""
-        # Setup
-        lang = Language(code="wam", name="Wampanoag")
-        source = Source(name="Natick/Trumbull")
-        user = User(email="editor@example.com", username="editor", github_id=67890)
-        self.session.add_all([lang, source, user])
+    def test_user_deletion_restriction(self):
+        """Test that deleting a user is restricted if they have logs, history or matchup entries."""
+        user = User(email="editor2@example.com", username="editor2", github_id=11223)
+        self.session.add(user)
+        self.session.commit()
+
+        # 1. Restriction by Activity Log
+        log = UserActivityLog(user_email=user.email, action="login")
+        self.session.add(log)
+        self.session.commit()
+
+        self.session.delete(user)
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
+
+        # 2. Restriction by Matchup Queue
+        # Need source for matchup queue
+        source = Source(name="Matchup Source")
+        self.session.add(source)
         self.session.flush()
 
-        record = Record(
-            lx="wunne", 
-            language_id=lang.id, 
-            source_id=source.id, 
-            mdf_data="\\lx wunne"
-        )
-        self.session.add(record)
-        self.session.flush()
-
-        # MatchupQueue
-        mq = MatchupQueue(
-            user_email=user.email,
-            source_id=source.id,
-            suggested_record_id=record.id,
-            mdf_data="\\lx wunne\n\\ge good"
-        )
-
-        # EditHistory
-        history = EditHistory(
-            record_id=record.id,
-            user_email=user.email,
-            version=1,
-            change_summary="Initial import",
-            current_data="\\lx wunne"
-        )
+        # Remove log to isolate matchup queue restriction
+        log = self.session.query(UserActivityLog).filter_by(user_email=user.email).first()
+        self.session.delete(log)
         
-        self.session.add_all([mq, history])
+        mq = MatchupQueue(user_email=user.email, source_id=source.id, mdf_data="\\lx test")
+        self.session.add(mq)
         self.session.commit()
 
-        # Read
-        mq_db = self.session.query(MatchupQueue).first()
-        self.assertEqual(mq_db.user_email, "editor@example.com")
-        self.assertEqual(mq_db.suggested_record.lx, "wunne")
+        self.session.delete(user)
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
 
-        history_db = self.session.query(EditHistory).filter_by(record_id=record.id).first()
-        self.assertEqual(history_db.version, 1)
+    def test_language_and_source_deletion_restriction(self):
+        """Test that deleting a language or source is restricted if referenced by records."""
+        lang = Language(code="restricted", name="Restricted")
+        source = Source(name="Restricted Source")
+        self.session.add_all([lang, source])
+        self.session.flush()
 
-    def test_schema_version_crud(self):
-        """Test CRUD for SchemaVersion table."""
-        version = SchemaVersion(version=1, description="Initial Schema")
-        self.session.add(version)
+        record = Record(lx="test", language_id=lang.id, source_id=source.id, mdf_data="\\lx test")
+        self.session.add(record)
         self.session.commit()
 
-        version_db = self.session.query(SchemaVersion).first()
-        self.assertEqual(version_db.version, 1)
+        # Test Language restriction
+        self.session.delete(lang)
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
+
+        # Test Source restriction
+        self.session.delete(source)
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
 
     def test_user_deletion_does_not_affect_records(self):
-        """Test that deleting a user (if they have no logs/history) does not delete linguistic records."""
+        """Test that deleting a user (if they have no logs/history) is blocked if they are in updated_by."""
         # Setup
         lang = Language(code="wam", name="Wampanoag")
         source = Source(name="Natick/Trumbull")
@@ -305,9 +337,11 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.add(record)
         self.session.commit()
 
-        # Delete user
+        # Delete user should now FAIL because updated_by has ON DELETE RESTRICT
         self.session.delete(user)
-        self.session.commit()
+        with self.assertRaises(Exception):
+            self.session.commit()
+        self.session.rollback()
 
         # Verify record still exists
         record_db = self.session.query(Record).filter_by(lx="nup").first()

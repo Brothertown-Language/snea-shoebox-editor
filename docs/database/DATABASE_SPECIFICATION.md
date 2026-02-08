@@ -196,8 +196,9 @@ To protect the production database from "bad" uploads (e.g., uploading old or in
 
 ### Layer 3: Data Preservation & "Safety-First" Deletion
 - **Restrictive Deletion (RESTRICT)**: To prevent accidental data loss, the database uses restrictive foreign key constraints. 
-    - A **Record** cannot be deleted if it has associated **Edit History**.
-    - A **User** cannot be deleted if they have **Activity Logs** or **Edit History** attributed to them.
+    - A **Record** cannot be deleted if it has associated **Edit History** or **Search Entries**.
+    - A **User** cannot be deleted if they have **Activity Logs**, **Edit History**, or **Matchup Queue** entries attributed to them.
+    - **Language** and **Source** records cannot be deleted if they are referenced by any **Record**.
 - **Permanent Attribution**: By using `user_email` as a stable identifier across all audit tables, the system ensures that every update, upload, and administrative action remains identifiable even if a user's GitHub handle changes or if the user account is deactivated.
 - **Soft-Deletes (Optional/Future)**: While currently using hard-deletes (protected by restrictions), the system is designed to transition to `is_deleted` flags to preserve linguistic entries while hiding them from the UI.
 

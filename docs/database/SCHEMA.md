@@ -25,8 +25,8 @@ CREATE TABLE records (
     status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', 'approved'
     embedding VECTOR(1536),               -- For cross-reference lookup
     mdf_data TEXT NOT NULL,               -- Full raw MDF text
-    FOREIGN KEY (language_id) REFERENCES languages(id),
-    FOREIGN KEY (source_id) REFERENCES sources(id)
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT,
+    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT
 );
 ```
 
@@ -39,7 +39,7 @@ CREATE TABLE search_entries (
     record_id INTEGER NOT NULL,           -- Link to parent record
     term TEXT NOT NULL,                   -- Searchable string (\lx, \va, \se, etc.)
     entry_type TEXT NOT NULL,             -- 'lx', 'va', 'se', 'cf', 've'
-    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE
+    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE RESTRICT
 );
 
 -- Extension required: CREATE EXTENSION IF NOT EXISTS pg_trgm;
@@ -59,9 +59,9 @@ CREATE TABLE matchup_queue (
     lx TEXT,                              -- Uploaded Lexeme
     mdf_data TEXT NOT NULL,               -- Raw uploaded entry
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_email) REFERENCES users(email),
-    FOREIGN KEY (source_id) REFERENCES sources(id),
-    FOREIGN KEY (suggested_record_id) REFERENCES records(id)
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE RESTRICT,
+    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT,
+    FOREIGN KEY (suggested_record_id) REFERENCES records(id) ON DELETE RESTRICT
 );
 ```
 
@@ -119,8 +119,8 @@ CREATE TABLE edit_history (
     prev_data TEXT,
     current_data TEXT NOT NULL,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE,
-    FOREIGN KEY (user_email) REFERENCES users(email)
+    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE RESTRICT,
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE RESTRICT
 );
 ```
 
@@ -132,7 +132,7 @@ CREATE TABLE permissions (
     github_org TEXT NOT NULL,
     github_team TEXT NOT NULL,           -- Mandatory: No NULL teams allowed
     role TEXT NOT NULL DEFAULT 'viewer',  -- 'admin', 'editor', 'viewer'
-    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
+    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT
 );
 ```
 
@@ -146,7 +146,7 @@ CREATE TABLE user_activity_log (
     details TEXT,
     ip_address TEXT,
     timestamp TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE CASCADE
+    FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE RESTRICT
 );
 ```
 
