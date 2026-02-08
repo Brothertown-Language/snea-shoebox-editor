@@ -1,0 +1,880 @@
+\lx kohunk
+\lg Mohegan-Pequot [mqm]
+\so Trumbull 40
+\ps NA
+\ge `a goose'
+\so Stiles
+\cf *hônck
+
+\lx anóme
+\lg Wampanoag [wam]
+\so Trumbull 11
+    \ps PreN, ?PreV, to initial |anôm-|, |enôm-|
+    \nt +
+\ge `(it is) within, it is inside of'
+\so Neh.6.10; Ps.122.2
+    \xv en anóme
+    \xe in the innermost parts of
+    \so Prov.26.22
+    = |en an∞mut|    Prov.18.8
+
+[Narr. "|Nókehick| `Parch'd meal' which is a readie very wholesome food, which they eate with a little water, hot or cold;..." |Pishquéhick.| `Vnparch'd meale.'    R.W.11; 15.
+Delaware [del] |lo-cat| `flour, meal' (cf. |lo ka hel la| `to let it drop', p.44); +|lohkhámun| NI `flour'    Zeisb.Voc.9; O'M.141b.
+    Western Abenaki [abe] |n∞khámen| `farine', |skam∞nin∞khamen| `farine, de blé d'Inde'     R.242/453a.
+    \nt +
+Miami-Illinois [mia] |N8kimini| `de la farine', |R∞kimini| vide |N∞kimini|.    Grv.355/212b, 515/294b.
+Miami |noohkimini| NI `flour'    B&C.94b.
+Shawnee [sjw] |lokhaana| `FLOUR', |lokhaanaapo| `flour soup'    D.-V.347.
+WAbn. |nokigan| NI `flour', pl.'bags of flour', |nokhiganal| pl., |nokhiganek| loc.    D.1.376.]
+
+\dv |neese| `two', with the formative (|-sin|) of verbs of lying down.
+
+\ps ?!|nanauukamukquau|
+\lg Wampanoag [wam]
+\so Trumbull 76
+    \nt +
+\ps AI, incorporated object, ?|-á-| final
+\ge `to keep house'
+\so derived form
+
+\se mamussuaen
+    \va -aénin
+    \ps N. agent.
+    \ge `an adulterer'
+    \so Is.57.3, +Lev.20.10
+
+\lx Kitan
+\lg *Wampanoag [*wam]
+\so Trumbull 37
+\cf Kautántowwit
+\cf Kehtanit
+
+\lx wauwaen
+\lg Wampanoag [wam]
+\so Trumbull 184
+\ps n. / NA
+\ge `one who witnesses or testifies, a witness'
+\so 1 Pet.5.1
+    |wauwaénin| Prov.14.5
+    (|wâwaënin| `a witness'    C.157)
+
+\lx Keihtannit
+\lg Wampanoag [wam]
+\so Trumbull 33
+\cf Kehtanit
+
+*|wuchechepúnnock| (Narr.) "a great bunch of hair bound up behind."    R.W.58
+
+\lx qushk-
+\lg Wampanoag [wam]
+\so Trumbull 142
+    \nt +
+\ps initial, intransitive
+\nt Remark: cf. allomorph |quehch-| with palatalization of final cluster
+\ge `back' (in sense of turning back, returning)
+\so following lemmas, etymology
+
+\se applesuhtug
+    \ps NI?
+    \ge `apple tree'
+    \so Song 2.3,8.5, Joel.1.12
+    \xv ... k∞waapununup ut agwe applesuhtug:...
+    \xe ...? I raised thee up under the apple tree:...
+    \so Song.8.5
+
+\lx aongkoue
+\lg Wampanoag [wam]
+\so Trumbull 13
+\cf ongkoue
+
+[Western Abenaki [abe] |nekérbar8kké.| `Je me dépêche à faire cela'    R.170/431a.]
+
+\lx nahtinau
+\va noht-
+\va -N-
+\lg Wampanoag [wam]
+\so Trumbull 75
+\ps v.t. inan. and an. / TA+O, applicative final
+\ge `he shows (it/him) to (him); he makes (it/him) appear to (him)'; +`to make sth known to sb'
+\so Esth.48 (infin.)
+    \xv Woi LORD Jehovah, ken∞che nahtin kummissugken∞onk kuttinneum, kah kumménuhkinnutcheg:...
+    \xe O Lord God, thou hast begun to shew thy servant thy greatness, and thy mighty hand:...
+    \so Deut.3.24
+    \ng 2->3+0 indicative
+    \nt +
+    \xv ..., kah kenahtinush wosketomp noh natinneahwhadt,...
+    \xe and I will show thee the man whom thou seekest.'    Judg.4.22 { T. tr. `you
+    \so .};
+    \xv ..., woh wunnohtinnóneau wunnechán∞oh.
+    \xe ...: that they should make them known to their children.'    Ps.78.5  { 3p->3
+    \so +0p objective }; (M) |wunnahtunnoneau|
+    \nt +
+    \xv Kah kenahtinugk∞ mashekishkag waabe quoshwéetósu,...
+    \xe And he shall shew you a large upper room furnished:
+    \so Lk.22.12
+    \ng 3->2p+0 indicative
+    \nt +
+    \xv ..., kah kinahtinush n∞namptamóonk nashpe nutanakausuongash,...
+    \xe ..., and I will show thee my faith by my works.
+    \so Jas.2.18
+    \ng 1->2+0 indicative
+    \nt +
+    \xv ..., teague kuhkinneas[u]onk kinnahtissimun, newaj yeush usséan.
+    \xe ..., What sign shewest thou unto us, seeing that thou doest these things?
+    \so Jn.2.18
+    \ng 2->1p+0 indicative
+    \nt +
+
+\lx natauwahtou
+\va natauwohtau
+\va natauohtau
+\lg Wampanoag [wam]
+\so Trumbull 79
+    \nt +
+\ps TI2
+\twn |natauwaheau|
+\ge `to visit sth' (in the typical AV uses)
+\ge `to view sth, spy out sth'
+\so Ex.20.5,32.24,34.7, Lev.18.25, Ps.65.9,80.14,89.32
+    \xv Kah ohke nishketeauun, kah nunnátauwahtoh ne ummatcheseonk, kah ohke menadtam neh noh wodohkinutcheh.
+    \xe And the land is defiled: therefore I do visit the iniquity thereof upon it, and the land itself vomiteth out her inhabitants.
+    \so Lev.18.25
+    \xv ... neh Joshua ann∞noncheh natauwohtinat Jericho.
+    \xe ..., which Joshua sent to spy out Jericho.
+    \so Josh.6.25
+    \xv Kenatauohtóh ohke, kah kutogquechittauun:...
+    \xe Thou visitest the earth, and waterest it:...
+    \so Ps.65.9; (M): |Kenattauohtoh|
+
+\lx umukquompäe
+\lg *Wampanoag [*wam]
+\so Trumbull 170
+\ps adv.
+\ge `valiantly'
+\so C.234
+\cf kenomp
+\cf mugquomp
+
+\se wunohteaongane
+    \ps PreN
+    \ge `of peace'
+    \so Rom.3.17; Phil.4.9
+    \xv Kah wunohteaongane may wanne wahteau∞og.
+    \xe And the way of peace have they not known:
+    \so Rom.3.17
+    \xv ...: kah wunnohteaongane GOD pish k∞wetómukou.
+    \xe ...: and the God of peace shall be with you.
+    \so Phil.4.9
+
+\xv Kah nepauz chequnikompau, kah nanepaushadt chequnappu, no pajeh missinninnuog ann∞tauwanshahettit wuhhogkauh ut ummatwom∞óut,...
+    \xe And the sun stood still, and the moon stayed, until the people had avenged themselves upon their enemies. ...'    Josh.10.13  { 3p->3
+    \so conjunct }
+    \xv Kain an∞tauwanshit nesausuk tahsheu ...
+    \xe If Cain shall be avenged sevenfold,...
+    \so Gen.4.24
+    \ng X->3 conjunct }; (E0&E1): |an∞tauwut| "If be avenged" { X->3 to |an∞tauau|
+
+\xv ..., kah matta woh nukkepuhteam yeu otan, ne wehquetumaean.
+    \xe ..., that I will not overthrow this city, for the which thou hast spoken.
+    \so Gen.19.21; (E0) "which thou hast requested for."
+    \ng 2->1+_0_ participle
+    \nt +
+    \xv ... kuppéantamoonk ne wehquetumauadt.
+    \xe ... thy petition that thou hast asked of him.
+    \so 1 Sam.1.17√
+    \ng 2->1+_0_ participle
+    \xv ut wame ne waj wehquetumunkquean
+    \xe in all that they call for unto thee.
+    \so 1 K.8.52√
+    \ng 3(p)->2+_0_ participle
+
+\xv Horsese-kossog
+    \xe horsehoofs
+    \so Judg.5.22
+\cf mukqs
+\cf uhquáe
+
+\lx wáussummuónat
+\lg Wampanoag [wam]
+\so Trumbull 184
+\ps v.t. an. / TA
+\ge `to worship'
+\so 1 Sam.1.3
+\cf wowussumónat
+
+[Cf. Abn. |k8ssigañn| `divination, fausses observations de futuro', etc.;    see Rasles under JONGLEUR, JONGLERIE., 298/470b,300/471b.]
+
+\lx namohs
+\lg Wampanoag [wam]
+\so Trumbull 75
+\ps n. / NA
+\ge `a fish'
+\so El.Gr.9, Mt.17.27; Ex.7.18,21
+    (|nâmâs|    C.)
+    pl. |-sog|
+    \xv ... onatuh namohsut ...
+    \xe ... as fishes ...
+    \so Gen.48.16
+    \ng locative
+    \nt +
+
+[Western Abenaki [abe] |8si`kkat| `décroit'.]
+
+\lx wowushp∞onk
+\lg Wampanoag [wam]
+\so Trumbull 199
+\ps n.
+\ge `effeminacy, "delicacy"'
+\so Deut.28.56
+\cf waashpu
+
+\lx n∞sau
+\lg Wampanoag [wam]
+\so Trumbull 93
+    \nt +
+\ps AI(+O)
+\nt Remark: On the |s|, see G.1980, 149.
+\ge `to give sb suck, become nurse unto, nurse sb'
+    \xv Howan woh ánont Abrahamoh, Sarah woh n∞soou mukkiesoh?
+    \xe Who would have said unto Abraham, that Sarah should have given children suck?'    Gen.21.7  { 3->3
+    \so indicative; (E0&1) |n∞sóou| }
+    \xv ..., kah mittumwussis neemunau mukkiésoh, kah wunn∞sáneuh.
+    \xe ... . And the woman took the child, and nursed it.
+    \so Ex.2.9
+    \xv Kah Naomi neemunáu mukgiesoh kah uponuh upp∞chenauóinat, & wunn∞sáinoh.
+    \xe And Naomi took the child, and laid it in her bosom, and became nurse unto it.
+    \so Ruth 4.16
+
+\xv ..., kah yeuyeu matta woh wuttamheóog ne ahchewesehettit.
+    \xe ...: and now nothing will be restrained from them, which they have imagined to do.
+    \so Gen.11.6
+    \ng 3p->_0_ participle
+
+\lx menadchu
+\lg Wampanoag [wam]
+\so Trumbull 55
+\ps n. / NI
+\ge `the left hand'
+    \xv ..., waapinuk wuttinnohkou, kah ummenadchu en kesukqut,...
+    \xe ..., when he held up his right hand and his left hand unto heaven,...
+    \so Dan.12.7√
+    \xv Weet∞ominnean onk woh nutapimun, pasuk kuttinnohkounit, onkatog kummenadcheanit ut kussohsum∞onganit.
+    \xe Grant unto us that we may sit, one on thy right hand, and the other on thy left hand, in thy glory.
+    \so Mk.10.37
+    \nt +
+    (|Menätche menitcheg.| `The left hand'    C.6/157)
+    \xv Nummatchu.
+    \xe Left handed
+    \so C.25/172
+    \ng !Cf. central Algonquian forms cited below.
+    \nt +
+
+[Cree |kéw-ayoo| `he returns'; |kwiskissoo| `he is turned over'.
+    Delaware [del] |kwáxkiiw| AI `to return'    O'M.113b.]
+    \nt +
+
+\nt MN: owâas noh pômompagit
+    \ng Suppositive |owâas noh pômompagit| `an animal which creeps or crawls'
+    pl. |neg pâmompakecheg|
+
+\xv ûnheau áma∞hkauónat
+    \xe he could not drive them out
+    \so Judg.1.19
+    \ng misplaced; see lemma |oneheau|, T+.107b.
+
+\lx meechumuhkoNau
+\va -ehk-
+\lg Wampanoag [wam]
+\so Trumbull 54
+    \nt +
+\ps TA, final |-uhk-| + applicative |-ôN-|
+\ge `to charge sb that...' i.e. "to command, enjoin, order sb to do sth" (comminari, mandare, praecipere); `to give sb charge' (|papaume| `concerning, over sb')
+\so Gen.26.11,28.1,49.29; Ruth 2.9; Ps.91.11(M), Mt.17.9; Mk.1.43; C.42/184
+    \xv Newutche pish mechumuhkonau wut-Angelsumoh papaume ken, woh kunnanawehhikqunaout ut wame kummayash.
+    \xe For he shall give his angels charge over thee, to keep thee in all thy ways.
+    \so Ps.91.11(M); (E): |ahtuhshau|
+    \xv Kah ummeechumuhkonuh matta ∞wahshonounneau.
+    \xe And charged them that they should not make him known:
+    \so Mt.12.16
+    \xv ..., pish wuttinnumauh wutangelsumoh ummeechumuhkonat papaume ken,...
+    \xe ... He shall give his angels charge concerning thee:...
+    \so Mt.4.6
+
+\se nadtauwompamau
+    \ps With an. obj. / TA
+    \ge `he looks for or at (him)'; +`to require sb', as TI verb
+    \xv ..., ut nunnutcheganit pish kuttit natauwompam,...
+    \xe ...; of my hand shalt thou require him:...
+    \so Gen.43.9
+    \ng 2->3 objective; cf. Vlg. "de manu mea require illum"
+
+\se |pahtissowontam| (M)
+    \nt +
+    \ps TI1a, |-ôt-| applicative
+    \twn |pahtissuwonau|
+    \nt Remark: |-ont-| here represents the nasal vowel, as G&B 581, item 20.
+    \ge `to wait for sth'
+    \so Ps.39.7,52.9(M)
+    \xv Kah yeuyeu Jehovah, teaguas nuppahtissoowontom?...
+    \xe And now, Lord, what wait I for?...
+    \so Ps.52.9(M)
+
+\et initial(?): *keΘ- `?' (e.g. "deter, prevent movement"?) Ho.1957, no.65, p.259b, G.1982, 5.102, p.37; final: H. p.249, B.1962 15.61, 286-287: *-piso `be tied' [B. item 15, 5, 87/442, 55, 104/461 *-piso AI `move without obstruction, glide', identified B.1962, 15.61 -- H. has *-peso.]
+
+|Kunnipish wutche nuttanumonteaonk,... `Make haste to help me,...'    Ps.(M).38.22  { 2 imperative }
+
+\lx pohsahteg
+\lg Wampanoag [wam]
+\so Trumbull 129
+\ps  N
+\ge `a (miry?) pit'
+\so Ps.40.2
+\cf passôhtham
+\cf pissagk
+
+\nt Remark: Conjunct forms moved to entry |kesukod|
+    \nt +
+
+\lx penomp
+\lg Wampanoag [wam]
+\so Trumbull 122
+\ps n. / NA
+\ge `a virgin'
+\so Gen.24.16; Is.7.4
+    pl. |-paog|    Esth.2.19
+\dv |penówe| `strange', in its secondary or privative sense, and |-omp|, n.gen. for `man', nescia viri (?).
+\cf keeegsquaw
+\cf quausses
+
+\lx papekq
+\lg Wampanoag [wam]
+\so Trumbull 118
+\ps n.
+\ge `a flea'
+\so 1 Sam.24.14; 26.20
+    (|poppek|    C.)
+\cf páhpohkumas
+
+\se wunnomwom∞
+    \ps II
+    \dv AI stem, with the normal default II final
+    \ge `to be true'
+    |..., kah n∞wahteómun ∞wauwaonk | wunnomwóm∞.| `...: and we know that his testimony is true.'    Jn.21.24; (M): |wunnomwaonkanu∞| i.e. denominal II
+    \xv ...: qut John wame ne ân∞wop papaume yeuoh wosketomp, wunnomwóm∞ash.
+    \xe ...: but all things that John spake of this man were true.
+    \so Jn.10.41; (M): |wunnomwaonkanupash| i.e. denominal II
+
+\xv ahque nogquenum∞k
+    \xe do not ye yield up (inan. obj.)
+    \so om.6.13
+
+\lx asuhkauau
+\va asúkkauau
+\lg Wampanoag [wam]
+\so Trumbull 17
+\ps v.t.an. / TA, stem in |-aw-|
+\ge `he goes after (him), pursues, follows'; +`to be, come after sb'
+\so Deut.1.36; Acts 16.17
+    \xv monaog wutasukauóuh
+    \xe a great multitude followed him
+    \so Mt.20.29
+    \nt +
+    pl. |-kauáog|
+    \xv ..., newutche matta mamusse nutasukunk∞og.
+    \xe ...; because they have not wholly followed me:
+    \so Num.32.11
+    \nt +
+    \xv Pasuk nutásukonk ánue missuken onk neen;...
+    \xe There cometh one mightier than I after me,...
+    \so Mk.1.7
+    \nt +
+
+[Narragansett [xnt] |sókenun|, |ánaquat| `rain'; |sókenitch| `when it rains'; |mishúnnan| `a great rain'    R.W.81,82.
+Western Abenaki [abe] |s8gherañn| `Il pleut, pluit' (probably from |soh-kenum| `to pour forth'; but cf. Sansk. s'îkára, pluvia tennis, from sic' and s'îk, irrigare, humectare; s'c'ut, effundere; s'c'yut, stillare, fluere); |kisrañn| `il a pleû'; |è`k8rañn| (|ahqunnon|, El.) `il cesse, &c.'.    R.400/508b√.
+Chip. |kimiwan|, |gimiwan| `it rains' (|siginan| `he pours it out, spills it'    Bar.).
+Cree |kímmewun| `it rains' (cf. Old Alg. |kimiouan|, Lah.); |séke-stum| `he spills it'; |sêeke-puthu| `it spills'; |séekoo-num| `he empties it'; |séekee-num| `he pours it'.
+Delaware [del] |sókelan| `it rains'; |k'schilan| `it rains hard'; +|sóokùlaan| `rain, be raining'; |sookalúndam| `sprinkle s.t. with water'; |sookalúndaweew| `sprinkle s.o. with water, spray s.o. with water'    Zeisb.; O'M.284a.
+    K. |-enaan| VI `rain'    V.150.
+    \nt +
+EAbn. |Soogoran| `Raine'    Rosier 1625.
+WAbn. |zogelôn| `it rains'; |awalôn| `fine rain, drizzle; |b(e)melôn| `it rains somewhere in the distance'; |gizelôn| `it is after the rain, it has finished raining', etc.    D.1.528;48;94;211.]
+
+\lx waeenomukqussu
+\lg Wampanoag [wam]
+\so Trumbull 180
+    \nt +
+\ps AI
+\twn |woweenodtumukquodt|
+\ge `to be famous'
+\so Ruth 4.11
+\dv |wa(w)eenom-| TA `to praise' + |-ukqussu| AI dispositional(?)
+
+\lx kuspinum
+\lg Wampanoag [wam]
+\so Trumbull 44
+\cf kishpinum
+
+|..., ishkont pohqunumóg taresash, kuppohquodchaubukinumumw∞
+wheatash k∞chu.| `..., ; lest while ye gather up the tares, ye root up also the wheat with them.'    Mt.13.29  { 2p->0 indicative }
+
+\lx jishontam
+\lg Wampanoag [wam]
+\so Trumbull 29
+\ps v.t. / TI1a
+\ge `he despises, rejects, hates (it)'
+    \xv nussekeneam kah nut-jishontam
+    \xe I hate and despise (it)
+    \so Amos 5.21
+\ge `I abhor'    Ps.119.163; Amos 6.8
+
+\xv Weekontamwah ukketeahogkôunnoh kittinnum,...
+    \xe Rejoyce the soul of thy servant:...'    Ps.86.4; (M): |Wekontamwah|  { 2->3(
+    \so ) imperative }
+    \xv Weekontamwâhinnean neâne kesukodtash onkkuppunnaneuog,...
+    \xe Make us glad according to the dayes wherein thou hast afflicted us:...
+    \so Ps.90.15; (M): |Wekontamwahhinnean|
+
+\lx nupp∞
+\lg Wampanoag [wam]
+\so Trumbull 98
+\ps adj. / AI { identical to |nuppunát| (infr.) }
+\ge `(he is) dead'
+\so Judg.4.22; 1 Sam.24.14
+    pl. an. |nupp∞og|    Ps.88.5,10
+
+\nt Follow up needed: :
+(1) more examples?;
+(2) transitivity cf. N.Am. young(ish) vernacular "I was like: `...'"; as in that construction, |-unn-| anticipates the oratio (usually [or always?] recta), and the IO of English is a supernumerary object (B.s "implied goal" pseudo-object);
+(3) contrast |wuttugquoh|/|wuttugqun|, Eccl.8.7/Lk.2.48 (i.e. TA abs. vs. TA+O obj.?)
+(4) variation due to levelling w.r.t. B.'s distributional statement e.g. Acts 11.7 |nuttuk| `saying unto me', Acts. 11.12 |nuttinuk| `bade me' (c.f. G&B 624)
+(5) Redistribute forms listed under |ussinát|, T.175b.
+(6) See s.v. |unnau|/|unnónat| for forms with absolute secondary object.
+(7) See also |hennau|.
+
+[Narragansett [xnt] |chékesu| `the northwest'    R.W.83; |Chekesuwànd| `the western god'    R.W.110.]
+
+[Narragansett [xnt] |penâyi| `crooked'; |pemisquâi| `crooked or winding'    R.W.56.]
+
+\lx woi
+\lg Wampanoag [wam]
+\so Trumbull 194
+\ps "adv. {Of wishing.}"
+\ge `{Oh that it were.}'
+\so El.Gr.21/268
+\ps interj.
+\ge `{Of Sorrow.}'
+\nt G&B.740
+\so El.Gr.22/269
+    \xv Onk n∞wau, Woi Manit Jehovah, uttoh woh nuttin wahteauun nuttahtouunnat.
+    \xe And he said, Lord GOD, whereby shall I know that I shall inherit it?
+    \so Gen.15.8
+    \ng vocative, no Hebrew form
+    \nt +
+    \xv ..., Woi onk woh Ishmael pomantam ut anaquabean.
+    \xe ..., O that Ishmael might liue before thee.
+    \so Gen.17.18
+    \ng desiderative, wish, Hebrew "lû"
+    \nt +
+    (|Quah, woi, unkquanu@mukquat.| `O, wo'    C.110/234)
+
+\lx m∞chekeheau
+\lg Wampanoag [wam]
+\so Trumbull 66
+    \nt +
+\ps TA, causative final
+\ge `to multiply sb'
+\so Gen.22.17; Deut.30.5
+    \xv ..., kah pish kutanue m∞chekehik onk nag k∞shik.
+    \xe ..., and multiply thee above thy fathers.
+    \so Deut.30.5
+    \ng 3->2 indicative
+
+\xv Kah penowot enneapeyógquean, kah kôdusseit kuppaumukkongk∞onganun Jehovah, quashqussausunitch wame ∞wosketomp∞moh,...
+    \xe And when a stranger shall sojourn with thee, and will keep the passover to the Lord, let all his males be circumcised,...
+    \so Ex.12.48
+    \ng 3->2 conjunct, TA function, form of stem unclear, !|-peyauau|, with dative |-aw-|, not represented clearly in the spelling?
+    \nt +
+    \xv Pish neyaneúngquodt wuttinnaumatuongan∞ noh kôhtohteaékit, kah noh penuwot aneapeyauunukquêog.
+    \xe One la shall be to him that is homeborn, and unto the stranger that sojourneth among you.
+    \so Ex.12.49
+    \ng _3_->2p participle, probably to a TA applicative in |-ôN-|
+    \nt +
+
+\lx aucùp
+\lg Narragansett [xnt]
+\so Trumbull 18
+\ge `a little cove, or creek'
+\so R.W.
+\cf kuppi
+
+\lx nanwetu
+\va nanwek-
+\lg Wampanoag [wam]
+\so Trumbull 78
+\ps v.adj. / AI
+\ge `(he is common-born,) a bastard'
+\so Deut.23.2; Zech.9.6
+    (`A bastard' |Nanwetüe|    C.12/162)
+
+\lx nunneukontunk
+\va nunnúk-
+\va nunneukontunk-
+\lg Wampanoag [wam]
+\so Trumbull 97
+    \nt Remark: probably !|innuneukontunk(an)|, deverbal noun with relative root initial.
+    \nt +
+\ps n. / NA
+\ge `an image or idol'
+\so 2 Chr.34.4,7; Mic.1.7
+    \xv ..., kah Rachel kumm∞to wuttinneukontunkoh ∞shoh.
+    \xe ...: and Rachel had stolen the images that were her father's.
+    \so Gen.31.19
+    \nt +
+    \xv MAtta pish kutayimômw∞ nunneukontunkanog, asuh matta pish keneepattauômw∞ ne teague unnunneukontunk, ne teague nunneukontunkone qussuk ut kuttohtuóut,...
+    \xe Ye shall make you no idols nor graven image, neither rear you up a standing image, neither shall ye set up any image of stone in your land,...
+    \so Lev.26.1
+    \nt +
+    \xv ..., kah unneukontunku(h) waussumócheg ...
+    \xe ..., and idolaters,...
+    \so Rev.22.15 (text clarified from E1)
+    \nt +
+    (|Ninnukôntonk| `An idol'    C.3/155√)
+
+\lx kacheu
+\lg Wampanoag [wam]
+\so Trumbull 30
+\ps v.i. / AI (?)
+\ge `he goes or comes out of'
+    \xv kacheog
+    \xe they went out of (the ship), went ashore
+    \so Lk.5.2
+
+\lx natinneahteau
+\va natinahteau
+\lg Wampanoag [wam]
+\so Trumbull 79
+\ps v.i. / AI, indefinite object final
+\ge `he seeks, makes search'
+    pl. |..., kah natinahteaog nishikquinne, qut matta wunnameuh.| `...; and they sought for three days, but found him not.'    2 K.2.17√
+
+\lx kinunnau
+\lg Wampanoag [wam]
+\so Trumbull 37
+\cf kenunnau
+
+[Narragansett [xnt] |Wâme, paúshe| `All-some.'; |Poquêsu.| `The halfe.' (of an.obj.)    R.W.34;105/r.113&167/r.175.
+Western Abenaki [abe] |p8`k8^ies| (inan.), |-ié| `[La moitié] en large'    R.343/488a.
+Delaware [del] |pachsiwi| (an.?) `half'; +|pasíi| `half'    Zeisb., +B&A.105; O'M.226a.
+    M.-P. |epahsi| PreV `half, halfway; in the middle; in two, in half'    LeS.18a.
+    \nt +?
+    WAbn. |babasi| PT `half'    D.1.58.]
+    \nt +
+
+\et No other close correspondence found; H.2426 *no∙nta `too soon', and H.2432-2434 *no∙nte∙ (with AI final appended) `lack, want' perhaps have extended forms of a semantically plausible source, though they do not match the Cree, Loup A, and Illinois forms. Note also Men. |no∙s-|, as |no∙sehsen| AI |no∙sehnεn| II `he, it gives out, falls short, is deficient; he runs short of something (as, of money)', |no∙se∙w| AI `he runs short, has not enough', ibid., and forms in |nu∙s-|, ib.166, perhaps indicating mutation and matching the Illinois forms (which certainly seem to belong with the Algonquin, to judge from the examples that Gravier gives).
+
+\se sokem∞
+    \ps II
+    \ge `it is poured out'
+    \so 1 K.13.5; +Gen.8.2
+    \xv Kah wonk Altar sokshau, kah pukquee sokem∞ wutch Altarut,...
+    \xe The altar also was rent, and the ashes poured out from the altar,...
+    \so 1 K.13.5
+    \ng 0 indicative
+    \nt +
+
+\lx yô
+\va yâ
+\va ya
+\lg Wampanoag [wam]
+\so Trumbull 215
+\ps adv.
+\ge `yonder, that way'
+\nt G&B.749, s.v. |ya| `yonder, yon'
+    \xv yeu nogque in kah yâ in
+    \xe hither and thither, to this side and to that
+    \xv ... kah togkodtam nippeash kah nish chippem∞ash yeu nogque in kah yâ in,...
+    \xe ..., and smote the waters, and they were divided hither and thither,...
+    \so 2 K.2.8; sim., ib.2.14
+    \nt +
+    \xv yô nuttónan
+    \xe we will go yonder
+    \so Gen.22.5
+    (|wonk hô kuppeyaunumun| `we will come again [hither (?)] to you'    Gen.22.5)
+    \xv ..., kah ya nuttit nogkushkauon.
+    \xe ..., while I meet the Lord yonder.
+    \so Num.23.15
+    \nt +
+    \xv monchish yeu wutch, yaaush
+    \xe go hence to yonder place' i.e. `go hence, go to yonder
+    \so (from |yâauonat|)    Mt.17.20
+
+\xv ...: kah noh woh neh sohwhe sagkompagunoncheh, kah noh woh pethuunont,...
+    \xe ..., and [a man] which may lead them out, and which may lead them in;..'    Num.27.17  { _3_->3
+    \so participle }
+
+\se menuhkohtau
+    \ps TI2, causative to initial? (relationship to |mehuhkehteau|?)
+    \ge `to settle sth'
+    \so Lk.21.14
+
+\se pissenumauau
+    \ps an. / TA
+    \xv pissenumáuaog wuttuhquabe
+    \xe they flay off their skin
+    \so Micah 3.3
+
+\se peantamwanuhshau
+    \ps TA
+    \ge `to pray for s.o.'
+    `Advocate form' (imperat.) |peantamwansh| `pray thou for (them)'    1 Sam.12.19
+    \xv -wanshinnean
+    \xe pray thou for us
+    \so Jer.37.3
+
+\et H.1871 *mesi XP `whole'
+
+\lx nomp-
+\hm 2
+\lg Wampanoag [wam]
+\so Trumbull 89
+    \nt +
+\ps initial
+\ge `(wear) about the neck'
+\so entries following; etymology
+
+[Chip. |assin|, pl. |-nig| (inan. )    Bar.; |ossín|, |assin|, pl. (an.) |-neen|    Sch.
+Cree |assínnee|; dimin. |assínnis|.
+Delaware [del] |achsun|    Zeisb.]
+
+\lx wuskishim
+\lg Wampanoag [wam]
+\so Trumbull 206
+\cf wuskoshim
+
+\lx yeuhoh
+\lg Wampanoag [wam]
+\so Trumbull 215
+    \nt +
+\nt Remark: rare; status and use obscure (perhaps some are printer's errors?)
+\ps demonstrative, animate
+\so Gen.22.17(E0); Ps.40.4(E&M); Mt.19.5,22.20; Acts 3.23; C.33/178
+    \xv Howan wunnaumonut yeuhoh.
+    \xe Whose son is that
+    \so C.33/178
+    \ng error, locative for obviative?
+
+[Narragansett [xnt] |mishitâshin| `there is a storm'.]
+
+\lx wadchue
+\lg Wampanoag [wam]
+\so Trumbull 180
+\ps adj.
+\ge `mountainous'
+    \xv en wadchue ohkeit
+    \xe to the hill country
+    \so Lk.1.39
+
+\nt MN: noh neesuk
+    \ng suppositive |noh neesuk| `he who, etc.'    Lev.20.13;
+    \xv ... pish kuppapaquanne paguanomw∞ nishnoh wosketomp, kah nishnoh mittamwossis noh neesuk wosketompuh.
+    \xe ..., Ye shall utterly destroy every male, and every woman that hath lain by man.'    Judg.21.11  { _3_->3
+    \so participle }
+    \xv ..., nagum okasoh Maryhoh kah Josehp quoshodhettit (asquam naneesinhettékup) ...
+    \xe ...: When as his mother Mary was espoused to Joseph, before they came together,...
+    \so Mt.1.18
+    \ng 3p reduplicated negative preterite conjunct
+    \nt +
+
+\lx mepit
+\va meepit
+\lg Wampanoag [wam]
+\so Trumbull 56
+\ps n. / NI
+\ge `a tooth'
+    pl. |-tash|    El.Gr.10
+    |-teash|    Cant.4.2
+    |neepit|, |keepit|, |weepit| `my, thy, his tooth'
+
+[Narragansett [xnt] |touwúttin| `the south wind'; |sowwánishen| `the southwest wind blows'. "This is the pleasingest, warmest wind in the climate, most desired by the Indians, making fair weather ordinarily; and therefore they have a tradition that to the southwest, which they call |sowwainiù|, the gods chiefly dwell; and hither the souls of all their great and good men and women go."    R.W.83.
+Quiripi [qyp] |perôu kon saúunáiôuk| `in another country to the southward'    Pier.28.]
+
+\dv |pohki| or |pohqui|, and |∞m| `he goes'.
+
+\lx nomunkquág
+\va nomungquag
+\lg Wampanoag [wam]
+\so Trumbull 90
+\ps n. / { presumably conjunct to the II verb |numwonkquáu| }
+\ge `a heap'
+\so Gen.31.46,51,52; Ruth.3.7
+    \nt Remark: Attestation and sublemma transferred to |numwonkquáu| II.
+    \nt +
+\dv |numwáe| `full of'.
+\cf numwonkquttauunát
+
+\xv ..., qut Geshuritsog kah Maachathitsog neg weetatteamoncheg Israelitsoh pajeh yeu kesukok.
+    \xe ...: but the Geshurites and the Maachathites dwell among the Israelites until this day.
+    \so Josh.13.13
+    \ng reason for participial form, _3p_->3, unclear
+    \xv Qut weetatteaumukqutche nag wussekeneauóuh,...
+    \xe But his citizens hated him,...'    Lk.19.14  { _3
+    \so _->3 }
+    \xv .., kukkuhk∞tomau wame Jewsog, weetatteamoncheg Gentils, ahquoanumon Moses,...
+    \xe ..., that thou teachest all the Jews which are among the Gentiles to forsake Moses,...'    Acts 21.21 { 3p->3(
+    \so ) }
+
+\se namehteau
+    \va nampt(e)au
+    \nt +
+    \ps with inan. obj. / TI2
+    \ge `he finds (it)'
+    \so Prov.18.22; 17.20
+    \xv Qut wuskuhwhunnan mat namehteóou toh woh ohtag wusseet,...
+    \xe But the dove found no rest for the sole of her foot,...
+    \so Gen.8.9
+    \ng 3->0 negative absolute
+    \nt +
+    \xv ..., kah na wunnampteauunneau tohkékonaûe wutahamonk.
+    \xe ..., and [they] found there a well of springing water.
+    \so Gen.26.19
+    \ng 3p->0 subordinative
+    \nt +
+    \xv ..., onk woh nunnamteoh kitteamonteanittúonk anaquabean.
+    \xe ..., that I may find grace in thy sight.
+    \so Gen.32.5
+    \ng 1->0 absolute? inflection in |-oh|
+    \nt +
+    \xv Kah naum matugque figs noadtut wunnépogk∞∞, peyau, onk woh wunnampteauun teaguas na ut, kah paaontog, matchaog namehteau webe wunnepaguash,...
+    \xe And seeing a fig tree afar off having leaves, he came, if haply he might find any thing thereon: and when he came to it, he found nothing but leaves;...
+    \so Mk.11.13
+    \ng 3->0 subordinative?, 3->0 negative absolute
+    \nt +
+    \xv ..., kah wame teanteaquassinish nish weekogkish, kah wanegugish kutamaehtunkqunash, kah nash pish matta wonk kenamptauouunash.
+    \xe ..., and all things which were dainty and goodly are departed from thee, and thou shalt find them no more at all.
+    \so Rev.18.14
+    \ng 2->0p negative objective
+    \nt +
+    (|Nunnâmeehteo, -ooup.| `I find, or did'    C.52/191)
+
+\lx -ont∞w-á-
+\lg Wampanoag [wam]
+\so Trumbull 110
+    \nt +
+\ps final, AI
+\ge "to speak a language" (more generally: "to make noise, sound with the voice, to make a sound"?)
+\nt Remark: The name of the language is given either as an initial or adverbially, cross-referenced in the initial. See also |unnont∞wau|, |-onk|, T+.173a.
+\so T.58a, s.v. |mishont∞wau|; Mk.7.35, 16.17; Acts 10.46,19.6
+    \xv Newutche wunn∞tauóuh íánant∞waoh, kah mishsheheaog GOD. ...
+    \xe For they heard them speake with tongues, and magnify God. ...'    Acts 10.46  { 3
+    \so indicative; initial |eiyáne|, T.25b }
+    \xv ...; n∞wau, woh kittinnont∞wam Greeke;
+    \xe ...? Who said, Canst thou speak Greek?
+    \so Acts 21.37
+    \ng 2 indicative; initial |unn-|, cataphoric to |Greeke|
+    \xv ... noh ∞wesuonk Hebrewont∞waonganit Abaddon, qut Greekont∞waonganit ussowesu Apollyon.
+    \xe ..., whose name in the Hebrew tongue is Abaddon, but in the Greek tongue hath his name Apollyon.
+    \so Rev.9.11
+    \ng lcoative, deverbal noun
+
+\lx Cháuquaquock
+\lg Narragansett [xnt]
+\so Trumbull 22
+\cf Chokquog
+
+\xv Noh woh anehheau nummissésinónuh, onatuh n noh nanwunn∞dsquaásit?
+    \xe Should he deal with our sister as with an harlot?
+    \so Gen.34.31
+    \nt +
+
+[Del. ach pus si, Zeisb.]
+
+\et c.f. G., item 22, 214b: *a∙nt- `move, change, afresh, anew', preverb *a∙nci, with examples below under |onch-| and |ont-|; A.34-36, 40-43; H.51-59, 63-66
+
+\lx ... kah uppunnompanóuh ut pummeneutunkanit, ut man∞tat.
+\va pen-
+\ve `..., and let him down by the wall in a basket.'    Acts 9.25 c.f. .
+\lg Wampanoag [wam]
+\so Trumbull 136
+
+\lx nompaiyeu∞
+\lg Wampanoag [wam]
+\so Trumbull 89
+    \nt +
+\ps AI, denominal predicative to |nompá-|
+\ge `to be male'
+\so Gen.6.19
+    \xv ...: pish nompaiyeu∞ kah squaiyeu∞.
+    \xe ...; they shall be male and female.
+    \so Gen.6.19
+    \ng 3 indicative
+
+\lx chishkham
+\lg Wampanoag [wam]
+\so Trumbull 25
+\cf jiskham
+
+\lx muss∞onk
+\va miss∞unk
+\lg Wampanoag [wam]
+\so Trumbull 72
+\ps n. / N
+\ge `a dry tree'
+\so Ezek.17.24; 20.47
+\cf askunkq
+\cf kishkunk
+\ge a green tree
+\so ():
+
+\lx wesattippog
+\lg *Wampanoag [*wam]
+\so Trumbull 191
+
+\lx ompwunnáonk
+\lg Wampanoag [wam]
+\so Trumbull 107
+\cf omwunnáonk
+
+\xv ... kah kuttinnummoush madtauánukeg missinninnuog,...
+    \xe ..., and I will make of thee a multitude of people;...
+    \so Gen.48.4
+    \ng _3p_ participle
+    \xv Kah mattaanukeg wonk moyeu peyaog ...
+    \xe And the multitude cometh together again,...
+    \so Mk.3.20
+    \ng _3p_ participle
+    \xv ..., matta weechayeumunk muttaanutcheh.
+    \xe ... in the absence of the multitude.'    Lk.22.6  { _3
+    \so _ participle }
+
+\lx tuppanumau
+\lg Wampanoag [wam]
+\so Trumbull 168
+    \nt +
+\ps TA, mental final |-ánum-|
+\twn |tuppantam|
+\ge `to care about, for sb, to regard sb'
+\so Deut.10.17,33.9; Mt.22.16; Lk.20.21; Jn.8.54,10.13,12.6
+    \xv Noh papaume an∞op ∞shoh kah okasoh, matta toh nuttintuppanum∞,...
+    \xe Who said unto his father and to his mother, I have not seen him;...
+    \so Deut.33.9
+    \xv kah matta toh kuttin tuppanumoh howan,...
+    \xe neither carest thou for any man:
+    \so Mt.22.16
+
+\nt MN: ne pukquag
+    \ng suppositive |ne pukquag| , |póquag|, or |pohquag| `that which is through, a hole'    Ex.28.32; 39.6,18,23
+    `the eye of a needle'    Mk.10.25
+\cf pohki
+\cf puhpúhki
+
+\se !|sokanumauau|
+    \nt +
+    \ps TA+O
+    \ge `to pour sb sth, sth on sb; to rain sth upon sb'
+    \so Gen.40.5,13; Ps.11.6; Mt.26.7; Mk.14.3; Rom.13.4(?)
+    \xv Matcheetowoh pish wussokanummaoh ahpehhanoh, n∞htau kah brimstone nashquttin:...
+    \xe Upon the wicked he shall rain snares, fire and brimstone, and +an horrible tempest:...', `+{Or, a burning tempest.}
+    \so Ps.11.6; (M): |wussokanummauoh|
+    \xv ..., kah pohquanau boxuh, kah wussokanumauon uppuhkukqut.
+    \xe ...; and she brake the box and poured it [the ointment] on his head.'    Mk.14.3  { 3->3
+    \so +0-pro }
