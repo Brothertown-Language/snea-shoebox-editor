@@ -61,16 +61,28 @@ def user_info_page() -> None:
         st.warning("No profile information available.")
 
     if "user_orgs" in st.session_state and st.session_state["user_orgs"]:
+        from src.services.identity_service import IdentityService
+        identity_data = IdentityService.get_user_teams_and_orgs()
+        
         st.divider()
         st.markdown("### Organizations")
-        for org in st.session_state["user_orgs"]:
-            st.write(f"- {org.get('login')}")
+        for org in identity_data["organizations"]:
+            st.write(f"- {org}")
 
     if "user_teams" in st.session_state and st.session_state["user_teams"]:
+        from src.services.identity_service import IdentityService
+        identity_data = IdentityService.get_user_teams_and_orgs()
+        
         st.divider()
         st.markdown("### Teams")
+        # Display team names from original session state but using identity_data as a sanity check
         for team in st.session_state["user_teams"]:
             st.write(f"- {team.get('name')} ({team.get('organization', {}).get('login')})")
+        
+        # Display team slugs from IdentityService (D.R.Y. demonstration)
+        with st.expander("Team Slugs (extracted via IdentityService)"):
+            for slug in identity_data["teams"]:
+                st.write(f"- {slug}")
 
     # Removed "Raw User Data" expander as per instructions
 

@@ -58,18 +58,17 @@ def main():
     # it's available regardless of which page the user lands on first after 
     # OAuth or cookie rehydration.
     if "auth" in st.session_state:
-        from src.frontend.auth_utils import fetch_github_user_info, is_identity_synchronized
-        if not is_identity_synchronized():
-            access_token = st.session_state["auth"].get("token", {}).get("access_token")
-            if access_token:
-                if not fetch_github_user_info(access_token):
-                    # Handle unauthorized or failed fetch
-                    if st.session_state.get("is_unauthorized"):
-                        # The dialog will be shown below
-                        pass
-                    else:
-                        # Generic error
-                        st.error("Failed to fetch user information.")
+        from src.services.identity_service import IdentityService
+        access_token = st.session_state["auth"].get("token", {}).get("access_token")
+        if access_token:
+            if not IdentityService.sync_identity(access_token):
+                # Handle unauthorized or failed fetch
+                if st.session_state.get("is_unauthorized"):
+                    # The dialog will be shown below
+                    pass
+                else:
+                    # Generic error
+                    st.error("Failed to fetch user information.")
     
     # Define pages
     page_login = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")

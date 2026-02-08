@@ -70,8 +70,8 @@ def login():
         st.stop()
 
     if st.session_state.get("logged_in") and "auth" in st.session_state:
-        from src.frontend.auth_utils import is_identity_synchronized
-        if is_identity_synchronized():
+        from src.services.identity_service import IdentityService
+        if IdentityService.is_identity_synchronized():
             # If there's a redirected page in query params, go there, otherwise home
             if "next" in st.query_params:
                 next_page = st.query_params.pop("next")
@@ -113,10 +113,10 @@ def login():
     # race conditions during redirection. We keep this check here as a 
     # secondary fallback to ensure a smooth transition during the login rerun.
     if "auth" in st.session_state:
-        from src.frontend.auth_utils import fetch_github_user_info, is_identity_synchronized
+        from src.services.identity_service import IdentityService
         from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
         
-        if is_identity_synchronized():
+        if IdentityService.is_identity_synchronized():
             st.session_state.logged_in = True
             # If there's a redirected page in query params, go there, otherwise home
             if "next" in st.query_params:
@@ -131,7 +131,7 @@ def login():
             # Fetch user info immediately after obtaining the token
             token = st.session_state["auth"]["token"]["access_token"]
             
-            if fetch_github_user_info(token):
+            if IdentityService.sync_identity(token):
                 st.session_state.logged_in = True
                 st.rerun()
             else:
