@@ -120,17 +120,21 @@ Before initializing the project, you must set up the hosting and database platfo
 - Implement the login flow using `streamlit-oauth`.
 - Securely store session state in Streamlit's `st.session_state`.
 
-### Phase 5: Navigation & Access Control [IN PROGRESS]
+### Phase 5: Navigation & Access Control [COMPLETED]
 - Implement persistent session rehydration using browser cookies. [COMPLETED]
 - Implement deep link navigation support for authenticated users. [COMPLETED]
-- **Route Protection**: Implement granular access controls based on user roles and source-specific permissions.
+- **Route Protection**: Implement granular access controls based on user roles and source-specific permissions. [COMPLETED]
     - **admin**: Automatic full access to all resources and administrative functions.
     - **editor**: Authorized to edit, update, and manage MDF records ONLY.
     - **viewer**: Read-only access to records. **MAY NEVER** edit or modify any data (HARD BLOCK).
-- **Refactor: Identity Service**: Move user synchronization and identity data fetching from `auth_utils.py` and `app.py` into a standalone `IdentityService` class.
-- **Refactor: Security Manager**: Decouple authentication middleware, session rehydration, and route protection logic from `app.py` into a dedicated `SecurityManager` class.
-- **Refactor: Authorization Decorators**: Implement Python decorators or context managers to enforce access control at the page or function level.
-- **Refactor: Navigation Service**: Centralize Streamlit page definitions and navigation logic into a dedicated service to simplify `app.py`.
+- **Refactor: Identity Service** (`src/services/identity_service.py`): Centralized user synchronization and identity data fetching. [COMPLETED]
+- **Refactor: Security Manager** (`src/services/security_manager.py`): Centralized authentication middleware, session rehydration, and route protection. [COMPLETED]
+- **Refactor: Navigation Service** (`src/services/navigation_service.py`): Centralized Streamlit page definitions and navigation logic. [COMPLETED]
+- **Refactor: Audit Service** (`src/services/audit_service.py`): Standardized activity logging via `UserActivityLog`. [COMPLETED]
+- **Refactor: Linguistic Service** (`src/services/linguistic_service.py`): Scaffolded data-access layer for `Record`, `Source`, and `Language` models (stubs only; full CRUD deferred). [COMPLETED]
+- **Refactor: Infrastructure Service** (`src/services/infrastructure_service.py`): Consolidated Aiven API, network diagnostics, and system inspection. [COMPLETED]
+- **Refactor: Database Migrations** (`src/database/migrations.py`): Centralized schema evolution, extension management, and data seeding via `MigrationManager`. [COMPLETED]
+- **Cleanup**: Removed deprecated `auth_utils.py`. Simplified `app.py` to orchestration-only (~100 lines). All HTML injections standardized via `ui_utils.py`. [COMPLETED]
 
 ### Phase 6: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.

@@ -132,23 +132,26 @@ uv run python scripts/<script_name>.py
 snea-shoebox-editor/
 ├── src/
 │   ├── frontend/          # Streamlit app entry point & pages
-│   │   ├── app.py         # Main application entry point
+│   │   ├── app.py         # Main application orchestrator
 │   │   ├── pages/         # Streamlit multi-page views
 │   │   ├── constants.py   # UI constants
-│   │   ├── ui_utils.py    # UI helper functions
-│   │   ├── auth_utils.py  # Authentication utilities
+│   │   ├── ui_utils.py    # UI helper functions & dialogs
 │   │   └── utils.py       # General frontend utilities
 │   ├── database/          # SQLAlchemy models & connection
-│   │   ├── connection.py  # DB connection management
+│   │   ├── connection.py  # DB engine creation & init
+│   │   ├── migrations.py  # Schema evolution & data seeding
 │   │   ├── base.py        # Declarative base
+│   │   ├── data/          # Seed data (permissions JSON, ISO 639)
 │   │   └── models/        # ORM models (core, identity, workflow, etc.)
 │   ├── mdf/               # MDF parser & validator
 │   ├── services/          # Business logic services
-│   │   ├── identity_service.py
-│   │   ├── navigation_service.py
-│   │   └── security_manager.py
-│   ├── auth.py            # OAuth integration
-│   └── aiven_utils.py     # Aiven-specific utilities
+│   │   ├── identity_service.py       # User sync & GitHub identity
+│   │   ├── security_manager.py       # RBAC, session rehydration
+│   │   ├── navigation_service.py     # Page registry & routing
+│   │   ├── audit_service.py          # Activity logging
+│   │   ├── infrastructure_service.py # Aiven API, network & system checks
+│   │   └── linguistic_service.py     # Record/Source CRUD (scaffold)
+│   └── auth.py            # OAuth integration
 ├── tests/                 # pytest test suite (mirrors src/ layout)
 ├── scripts/               # Utility & maintenance scripts
 ├── launchers/             # PyCharm run configurations

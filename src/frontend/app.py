@@ -10,8 +10,8 @@ if project_root not in sys.path:
     sys.path.insert(0, project_root)
 
 import src.frontend.pages as pages
-from src.database import get_db_url, init_db
-from src.frontend.ui_utils import ensure_db_alive, ensure_secrets_present, hide_sidebar_nav
+from src.database import init_db
+from src.frontend.ui_utils import hide_sidebar_nav
 @st.cache_resource
 def _initialize_database():
     """Run database initialization once on app startup."""
