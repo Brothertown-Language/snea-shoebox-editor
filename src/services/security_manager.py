@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
 import streamlit as st
-from typing import Optional, List
+from typing import Optional, List, Dict, Any
 from src.database import get_session, Permission
 from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
@@ -26,27 +26,18 @@ class SecurityManager:
             st.session_state.logged_in = True
 
     @staticmethod
-    def get_user_role(user_email: str) -> Optional[str]:
+    def get_user_role(user_teams: List[Dict[str, Any]]) -> Optional[str]:
         """
         Resolve the highest global role for a user based on their GitHub teams.
         """
-        if "user_teams" not in st.session_state:
-            return None
+        # Roles hierarchy: admin > editor > viewer
+        role_hierarchy = {'admin': 3, 'editor': 2, 'viewer': 1}
+        highest_role = None
+        highest_weight = 0
 
-        user_teams = st.session_state["user_teams"]
-        # user_teams is a list of dicts, each with 'slug' and 'organization' -> 'login'
-        
         session = get_session()
         try:
-            # Fetch all permissions for the organizations the user is in
-            # We want to find the highest role among all matching permissions
-            
-            # Roles hierarchy: admin > editor > viewer
-            role_hierarchy = {'admin': 3, 'editor': 2, 'viewer': 1}
-            highest_role = None
-            highest_weight = 0
-
-            # Get all permissions from DB
+            # Fetch all permissions from DB
             permissions = session.query(Permission).all()
             
             for p in permissions:
@@ -54,9 +45,11 @@ class SecurityManager:
                 match = False
                 for team in user_teams:
                     team_slug = team.get("slug")
+                    # Use team slug or name for matching (slug is more reliable)
+                    team_identifier = team_slug or team.get("name")
                     org_login = team.get("organization", {}).get("login")
                     
-                    if p.github_team == team_slug and p.github_org == org_login:
+                    if p.github_team == team_identifier and p.github_org == org_login:
                         match = True
                         break
                 

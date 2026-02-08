@@ -25,11 +25,14 @@ Date: 2026-02-07
 - Implemented private Junie database separation for tests and destructive tasks (`tmp/junie_db`).
 - Added `scripts/clone_db.py` for cloning the local developer database to the Junie private database.
 - **Phase 5 Stage 1**: Implemented `IdentityService`, refactored `auth_utils.py`, `app.py`, `login.py`, and `user_info.py`. Verified with tests.
-- **Phase 5 Stage 2**: Implemented `SecurityManager`, refactored session rehydration and RBAC logic in `app.py`. Verified with tests.
+- **Refactored Authorization Logic**: Removed hardcoded GitHub org/team checks from `IdentityService`. Authorization is now entirely driven by the `permissions` table in the database via `SecurityManager`.
+- **Security Manager API Update**: `SecurityManager.get_user_role` now accepts an explicit list of teams, facilitating early authorization during the OAuth flow.
+- **Verification**: Updated and verified `tests/test_security_manager.py` and `tests/services/test_identity_service.py`. All tests passing.
 - **Refactoring Plan Update**: Updated `tmp/refactoring_plan.md` to reflect Stage 2 completion.
 - **Mandated Commit Script Method**: Updated AI guidelines to require the commit script method for all source code changes.
 - **Prohibition on Committing Temporary Files**: Updated `.junie/guidelines.md`, `.junie/operational-standards.md`, and `.junie/development-workflow.md` to explicitly forbid committing any files from the `tmp/` directory.
 - **Commit Script Timing Restriction**: Updated guidelines to explicitly prohibit creating commit scripts or messages without direct user instruction.
+- **Guideline Adherence Correction**: Updated `tmp/commit_task.sh` to strictly follow mandatory path resolution rules (`git rev-parse`) for reliable execution within IDE environments.
 
 ## Next Steps (Phase 5 Refactoring)
 1. **Implement Navigation Service**: Move page definitions and navigation configuration out of `app.py`.

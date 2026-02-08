@@ -134,8 +134,8 @@ def main():
     from src.frontend.auth_utils import is_identity_synchronized
     if st.session_state.logged_in and is_identity_synchronized():
         # Get user role for redirection and permission logic
-        user_email = st.session_state.get("user_info", {}).get("email")
-        st.session_state["user_role"] = SecurityManager.get_user_role(user_email)
+        user_teams = st.session_state.get("user_teams", [])
+        st.session_state["user_role"] = SecurityManager.get_user_role(user_teams)
         
         # Priority 1: Check session state for saved params (from deep links)
         if "redirect_params" in st.session_state:

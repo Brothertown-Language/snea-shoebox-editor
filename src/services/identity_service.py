@@ -70,20 +70,12 @@ class IdentityService:
             if not primary_email:
                 primary_email = user_info.get("email")
 
-            # Verify team membership
-            # Must be in Brothertown-Language / proto-SNEA
-            is_authorized = False
-            for team in user_teams:
-                team_name = team.get("name")
-                org_info = team.get("organization", {})
-                org_login = org_info.get("login")
-
-                if team_name == "proto-SNEA" and org_login == "Brothertown-Language":
-                    is_authorized = True
-                    break
-
-            if not is_authorized:
-                print(f"DEBUG: User not authorized. Teams: {[t.get('name') for t in user_teams]}", flush=True)
+            # Verify authorization against the permissions table
+            from src.services.security_manager import SecurityManager
+            user_role = SecurityManager.get_user_role(user_teams)
+            
+            if not user_role:
+                print(f"DEBUG: User not authorized. Teams: {[t.get('slug') or t.get('name') for t in user_teams]}", flush=True)
                 st.session_state["is_unauthorized"] = True
                 return False
 

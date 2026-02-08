@@ -96,7 +96,7 @@ class TestIdentityService(unittest.TestCase):
         
         mock_teams = MagicMock()
         mock_teams.json.return_value = [{
-            "name": "proto-SNEA",
+            "slug": "proto-SNEA",
             "organization": {"login": "Brothertown-Language"}
         }]
         
@@ -105,16 +105,19 @@ class TestIdentityService(unittest.TestCase):
         
         mock_get.side_effect = [mock_user, mock_orgs, mock_teams, mock_emails]
         
-        with patch.object(IdentityService, "sync_user_to_db") as mock_sync:
-            with patch.object(IdentityService, "log_user_activity") as mock_log:
-                success = IdentityService.fetch_github_user_info("fake_token")
-                
-                self.assertTrue(success)
-                self.assertEqual(st.session_state["user_info"]["login"], "user")
-                self.assertEqual(len(st.session_state["user_orgs"]), 1)
-                self.assertEqual(len(st.session_state["user_teams"]), 1)
-                mock_sync.assert_called_once()
-                mock_log.assert_called_once()
+        with patch("src.services.security_manager.SecurityManager.get_user_role") as mock_get_role:
+            mock_get_role.return_value = "editor"
+            with patch.object(IdentityService, "sync_user_to_db") as mock_sync:
+                with patch.object(IdentityService, "log_user_activity") as mock_log:
+                    success = IdentityService.fetch_github_user_info("fake_token")
+                    
+                    self.assertTrue(success)
+                    self.assertEqual(st.session_state["user_info"]["login"], "user")
+                    self.assertEqual(len(st.session_state["user_orgs"]), 1)
+                    self.assertEqual(len(st.session_state["user_teams"]), 1)
+                    mock_sync.assert_called_once()
+                    mock_log.assert_called_once()
+                    mock_get_role.assert_called_once()
 
     @patch("requests.get")
     def test_fetch_github_user_info_unauthorized(self, mock_get):
@@ -126,14 +129,17 @@ class TestIdentityService(unittest.TestCase):
         mock_orgs.json.return_value = []
         
         mock_teams = MagicMock()
-        mock_teams.json.return_value = [{"name": "some-other-team", "organization": {"login": "other-org"}}]
+        mock_teams.json.return_value = [{"slug": "some-other-team", "organization": {"login": "other-org"}}]
         
         mock_emails = MagicMock()
         mock_emails.json.return_value = []
         
         mock_get.side_effect = [mock_user, mock_orgs, mock_teams, mock_emails]
         
-        success = IdentityService.fetch_github_user_info("fake_token")
-        
-        self.assertFalse(success)
-        self.assertTrue(st.session_state.get("is_unauthorized"))
+        with patch("src.services.security_manager.SecurityManager.get_user_role") as mock_get_role:
+            mock_get_role.return_value = None
+            success = IdentityService.fetch_github_user_info("fake_token")
+            
+            self.assertFalse(success)
+            self.assertTrue(st.session_state.get("is_unauthorized"))
+            mock_get_role.assert_called_once()

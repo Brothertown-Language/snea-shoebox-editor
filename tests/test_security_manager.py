@@ -35,7 +35,7 @@ def test_security_manager():
         st.session_state["user_info"] = {"email": "admin@example.com"}
         
         # 2. Test get_user_role
-        role = SecurityManager.get_user_role("admin@example.com")
+        role = SecurityManager.get_user_role(st.session_state["user_teams"])
         print(f"Role for admin user: {role}")
         assert role == "admin", f"Expected admin, got {role}"
         
@@ -52,7 +52,7 @@ def test_security_manager():
         st.session_state["user_teams"] = [
             {"slug": "proto-SNEA", "organization": {"login": "Brothertown-Language"}}
         ]
-        role = SecurityManager.get_user_role("editor@example.com")
+        role = SecurityManager.get_user_role(st.session_state["user_teams"])
         print(f"Role for editor user: {role}")
         assert role == "editor", f"Expected editor, got {role}"
         
