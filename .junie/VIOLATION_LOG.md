@@ -50,7 +50,7 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Root Cause**: Same persistent habit. Previous corrections insufficient to break the pattern.
 - **Correction**: Elevated to Recurring Violation #3. Added explicit self-check rule: "Does this command start with `cd`? STOP." Updated `operational-standards.md` with bold warning block and `LONG_TERM_MEMORY.md` with hard constraint.
 
-### 2026-02-08: Incorrect path resolution boilerplate in commit script
-- **Violation**: `tmp/commit_task.sh` used `cd "$(dirname "$0")/.."` instead of the mandatory 3-step boilerplate (`BASH_SOURCE[0]` → `git rev-parse --show-toplevel` → `cd "$REPO_ROOT"`).
-- **Root Cause**: Script was generated using a fragile shortcut pattern instead of following the mandatory standard in `.junie/development-workflow.md` Section 1 (PATH RESOLUTION IN SCRIPTS).
-- **Correction**: Replaced with the correct 3-step boilerplate matching `scripts/start_streamlit.sh` and `scripts/kill_streamlit.sh`.
+### 2026-02-08: Missing path resolution in commit script
+- **Violation**: `tmp/commit_task.sh` was generated with no `cd` to the project root at all, causing the script to fail when executed from any directory other than the project root (e.g., PyCharm's default working directory).
+- **Root Cause**: The mandatory 3-step path resolution boilerplate from `.junie/development-workflow.md` §1 (PATH RESOLUTION IN SCRIPTS) was not applied to commit scripts. The VCS COMPLIANCE section did not explicitly require it.
+- **Correction**: (1) Fixed `tmp/commit_task.sh` with the 3-step boilerplate. (2) Updated `.junie/development-workflow.md` §3 VCS COMPLIANCE to explicitly require the path resolution boilerplate in all commit scripts.

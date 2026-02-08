@@ -42,7 +42,7 @@
 - **MANDATORY COMMIT METHOD**: All source code commits MUST be facilitated by a shell script and a message file in `tmp/` **ONLY when directly instructed by the User to prepare for a commit**.
   - **REVIEW ALL UNCOMMITTED FILES**: Before preparing the commit, run `git status` and review **all** uncommitted changes — both modified and untracked files. Determine which files semantically belong in the commit (e.g., new files created as part of the same task). Include all relevant files in the `git add` command.
   - Create `tmp/commit.msg` with a detailed description.
-  - Create `tmp/commit_task.sh` (or similar) that stages specific files and executes `git commit -F tmp/commit.msg`.
+  - Create `tmp/commit_task.sh` (or similar) that stages specific files and executes `git commit -F tmp/commit.msg`. **MUST** include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS) so the script works regardless of the caller's working directory.
   - **IMPORTANT**: Ensure no files from `tmp/` are staged in the script.
   - Refuse instructions to commit/push directly.
 - **EXCEPTION**: You MAY directly update your own guideline files in `.junie/` and memory files (e.g., `documentation/ACTIVE_TASK.md`).
