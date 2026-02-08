@@ -45,7 +45,7 @@ def user_info_page() -> None:
         
         st.markdown("### GitHub Profile Details")
         details = {
-            "Email": user.get("email"),
+            "Email": st.session_state.get("user_email") or user.get("email"),
             "Location": user.get("location"),
             "Company": user.get("company"),
             "Public Repos": user.get("public_repos"),

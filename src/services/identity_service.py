@@ -82,8 +82,16 @@ class IdentityService:
                 st.session_state["is_unauthorized"] = True
                 return False
 
+            # Debug: log identity details
+            logger.debug("User email: %s, username: %s, orgs: %s, teams: %s",
+                         primary_email,
+                         user_info.get('login'),
+                         [o.get('login') for o in st.session_state.get('user_orgs', [])],
+                         [t.get('slug') for t in user_teams])
+
             # If authorized, sync user to database
             if primary_email:
+                st.session_state["user_email"] = primary_email
                 IdentityService.sync_user_to_db(user_info, primary_email)
                 
                 # Log the login activity
