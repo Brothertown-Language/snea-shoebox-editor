@@ -16,6 +16,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **COMMIT SCRIPT METHOD**: All source changes must be prepared as `tmp/commit_task.sh` scripts, never committed directly by the AI.
 
 ## KEY CROSS-SESSION DECISIONS
+- **Deep Inspection Mandate**: Memory-based verification is strictly prohibited. AI must always perform deep inspection of source files before confirming any status or re-evaluating state.
 - **Phase 5 Stage 3 Refactoring**: Decoupling navigation and redirection logic into `NavigationService`. (Current focus).
 - **Security Strategy**: Case-insensitive matching for GitHub identifiers is mandatory due to case mismatches between GitHub API and DB seeds.
 - **UI Standard**: Use `st.html()` for all HTML/CSS/JS injections. `unsafe_allow_html=True` is deprecated in this project.

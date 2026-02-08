@@ -34,6 +34,7 @@ To maintain precision and avoid "vibe coding," these guidelines are divided into
 
 ### 1. [AI Behavior and Communication](.junie/ai-behavior.md)
 - **Zero-Tolerance for "Vibe Coding"**: No assumptions, no "proactive cleanups," no unauthorized refactoring.
+- **Deep Inspection Mandatory**: NEVER rely on memory for verification. Always inspect the actual source code to confirm the current state.
 - **No Roadmap Driving**: You are the executor. Never implement future phases without explicit instruction.
 - **Communication Standards**: No apologies, no sycophancy, technical focus only.
 - **Stop and Ask**: If a task is ambiguous, you must halt and seek clarification.
