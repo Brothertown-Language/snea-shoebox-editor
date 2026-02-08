@@ -23,6 +23,12 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Root Cause**: Persistent habit of prefixing commands with `cd` to the project root, despite the shell already being at the project root.
 - **Preventive Measure**: Rules added to `guidelines.md` Section I.1 and `operational-standards.md`. **Self-check before every terminal command**: "Does this command start with `cd`? If yes, STOP and remove it. The shell is already at the project root."
 
+### 4. Commit Script Uses Echo Instead of Executing git commit
+- **Status**: ACTIVE RISK
+- **Description**: Generating commit scripts that print `echo` instructions telling the user to manually run `git commit -F tmp/commit.msg` instead of executing the commit command directly in the script.
+- **Root Cause**: Over-cautious "review first" pattern that contradicts §3 VCS COMPLIANCE, which requires the script to stage and commit in one execution.
+- **Preventive Measure**: Self-check before finalizing any commit script: "Does this script end with `echo` instructions instead of `git commit`? If yes, STOP — replace with the actual `git commit -F tmp/commit.msg` command. The user reviews by choosing to run the script."
+
 ## LOG ENTRIES
 
 ### 2026-02-07: Unauthorized completion marks in refactoring plan
@@ -49,6 +55,11 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Used `cd /home/muksihs/git/snea-shoebox-editor && git status --short` instead of `git status --short`.
 - **Root Cause**: Same persistent habit. Previous corrections insufficient to break the pattern.
 - **Correction**: Elevated to Recurring Violation #3. Added explicit self-check rule: "Does this command start with `cd`? STOP." Updated `operational-standards.md` with bold warning block and `LONG_TERM_MEMORY.md` with hard constraint.
+
+### 2026-02-08: Commit script uses echo instead of executing git commit (repeated)
+- **Violation**: `tmp/commit_task.sh` printed `echo "Review the staged changes above, then run: git commit -F tmp/commit.msg"` instead of executing `git commit -F tmp/commit.msg` directly. This violates §3 VCS COMPLIANCE which states the script must stage and commit in one run — the user should not need to run a separate `git commit` command.
+- **Root Cause**: Generating a "review first" pattern out of caution, despite the guideline explicitly requiring the commit to be part of the script. The user runs the script intentionally, so the review step is the user's decision to run it.
+- **Correction**: (1) Fixed `tmp/commit_task.sh` to execute `git commit -F tmp/commit.msg` directly. (2) Added as Recurring Violation #4. (3) Self-check rule: "Does the commit script end with `echo` instructions to run `git commit`? If yes, STOP — replace with the actual `git commit -F tmp/commit.msg` command."
 
 ### 2026-02-08: Missing path resolution in commit script
 - **Violation**: `tmp/commit_task.sh` was generated with no `cd` to the project root at all, causing the script to fail when executed from any directory other than the project root (e.g., PyCharm's default working directory).
