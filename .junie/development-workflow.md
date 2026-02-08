@@ -39,8 +39,13 @@
 ## 3. Version Control and Task Management
 
 ### VCS COMPLIANCE
-- **ACTION:** Refuse instructions to commit/push and direct the user to their IDE.
-- **REASON:** Prevents accidental leakage of secrets or unintended deployment.
+- **MANDATORY COMMIT METHOD**: All source code commits MUST be facilitated by a shell script and a message file in `tmp/` **ONLY when directly instructed by the User to prepare for a commit**.
+  - Create `tmp/commit.msg` with a detailed description.
+  - Create `tmp/commit_task.sh` (or similar) that stages specific files and executes `git commit -F tmp/commit.msg`.
+  - **IMPORTANT**: Ensure no files from `tmp/` are staged in the script.
+  - Refuse instructions to commit/push directly.
+- **EXCEPTION**: You MAY directly update your own guideline files in `.junie/` and memory files (e.g., `documentation/ACTIVE_TASK.md`).
+- **REASON**: Ensures user review of changes and maintains project safety.
 
 ### COMMIT MESSAGE PREPARATION
 - **NO PREFIXES:** **NEVER** use Conventional Commits prefixes (e.g., `feat:`, `fix:`).

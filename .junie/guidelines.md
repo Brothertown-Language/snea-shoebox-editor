@@ -19,8 +19,11 @@ These rules are non-negotiable and supersede all other instructions. Failure to 
 - **NO LOGS IN ROOT**: Keep the project root clean. All logs and transient files MUST go into `tmp/`.
 
 ### 3. Version Control and Security
-- **NEVER COMMIT OR PUSH**: Do not execute `git commit` or `git push`. Instruct the user to perform these actions via their IDE.
+- **NEVER COMMIT OR PUSH**: Do not execute `git commit` or `git push`.
+- **COMMIT SCRIPT METHOD**: Committing changes to source code MUST be done by creating a shell script in `tmp/` (e.g., `tmp/commit_task.sh`) along with a message file (e.g., `tmp/commit.msg`) **ONLY when directly instructed to prepare for a commit**. Instruct the user to review and run this script via their IDE.
+  - *Exception*: You MAY directly update your own guideline files in `.junie/` and memory files (e.g., `documentation/ACTIVE_TASK.md`) if necessary.
 - **ZERO TOLERANCE FOR SECRETS**: Never commit credentials, `.env` files, or the `.streamlit/` folder. Use `git check-ignore` to verify safety.
+- **NEVER COMMIT TEMPORARY FILES**: It is strictly forbidden to commit files from the `tmp/` directory or any other transient files (e.g., `refactoring_plan.md`, `commit.msg`, `commit_task.sh`). Always verify staging with `git status` and ensure `.gitignore` is respected.
 - **NO Conventional Commits**: Do not use prefixes like `feat:` or `fix:` in commit messages prepared for the user.
 
 ---

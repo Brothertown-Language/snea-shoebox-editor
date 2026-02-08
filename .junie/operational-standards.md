@@ -35,6 +35,7 @@
 ### SECURITY HARDENING
 - **HARDCODING PROHIBITED:** **NEVER** hardcode secrets in source code. Use environment variables or Streamlit secrets.
 - **MANDATORY CHECK:** Use `git check-ignore <path>` to verify if a file is excluded from VCS before creation.
+- **PROHIBITION ON COMMITTING `tmp/`**: **NEVER** include files from the `tmp/` directory in a git commit. The `tmp/` directory is strictly for transient logs, database instances, and coordination files that must never enter the repository history.
 
 ### DEPENDENCY SECURITY
 - **ALWAYS PIN VERSIONS:** Use exact versions in `pyproject.toml` for production.
