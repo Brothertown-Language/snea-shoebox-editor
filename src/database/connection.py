@@ -126,6 +126,9 @@ def init_db():
     # Seed default permissions if table is empty
     seed_default_permissions(engine)
     
+    # Seed ISO 639-3 data if table is empty
+    seed_iso_639_data(engine)
+    
     # Manual migration to add ON UPDATE CASCADE to user_email foreign keys
     # This is necessary because GitHub email addresses can change.
     with engine.connect() as conn:
@@ -219,6 +222,67 @@ def seed_default_permissions(engine):
     except Exception as e:
         session.rollback()
         raise e
+    finally:
+        session.close()
+
+def seed_iso_639_data(engine):
+    """Seed ISO 639-3 data from local project file if the table is empty."""
+    from .models.iso639 import ISO639_3
+    import csv
+    import io
+
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    try:
+        # Check count before
+        count_before = session.query(ISO639_3).count()
+        
+        if count_before == 0:
+            data_file = Path(__file__).parent / "data" / "iso-639-3.tab"
+            if not data_file.exists():
+                print(f"ERROR: ISO 639-3 data file not found at {data_file}")
+                return
+
+            if not is_production():
+                st.info(f"Seeding ISO 639-3 data from {data_file}...")
+                st.info(f"Records before seeding: {count_before}")
+            else:
+                print(f"INFO: Seeding ISO 639-3 data from {data_file}...")
+                print(f"INFO: Records before seeding: {count_before}")
+            
+            with open(data_file, encoding='utf-8') as f:
+                content = f.read()
+            
+            reader = csv.DictReader(io.StringIO(content), delimiter='\t')
+            
+            iso_entries = []
+            for row in reader:
+                entry = ISO639_3(
+                    id=row['Id'],
+                    part2b=row.get('Part2b') or None,
+                    part2t=row.get('Part2t') or None,
+                    part1=row.get('Part1') or None,
+                    scope=row['Scope'],
+                    language_type=row['Language_Type'],
+                    ref_name=row['Ref_Name'],
+                    comment=row.get('Comment') or None
+                )
+                iso_entries.append(entry)
+            
+            # Use bulk insert for performance
+            session.add_all(iso_entries)
+            session.commit()
+            
+            count_after = session.query(ISO639_3).count()
+            if not is_production():
+                st.info(f"Seeded {len(iso_entries)} ISO 639-3 language records.")
+                st.info(f"Records after seeding: {count_after}")
+            else:
+                print(f"INFO: Seeded {len(iso_entries)} ISO 639-3 language records.")
+                print(f"INFO: Records after seeding: {count_after}")
+    except Exception as e:
+        print(f"ERROR: Failed to seed ISO 639-3 data: {e}")
+        session.rollback()
     finally:
         session.close()
 

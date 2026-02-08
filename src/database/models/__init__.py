@@ -3,6 +3,7 @@ from .search import SearchEntry
 from .workflow import MatchupQueue, EditHistory
 from .identity import User, UserActivityLog, Permission
 from .meta import SchemaVersion
+from .iso639 import ISO639_3
 
 __all__ = [
     'Source',
@@ -14,5 +15,6 @@ __all__ = [
     'User',
     'UserActivityLog',
     'Permission',
-    'SchemaVersion'
+    'SchemaVersion',
+    'ISO639_3'
 ]
