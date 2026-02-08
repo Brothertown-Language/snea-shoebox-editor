@@ -13,12 +13,16 @@
 
 ### NO ROADMAP DRIVING
 - **EXECUTION ONLY:** **NEVER** implement future phases of the `roadmap.md` or future steps of an `ACTIVE_TASK.md` unless explicitly instructed.
+- **NO PROACTIVE NEXT STEPS:** **NEVER** proceed to the next numbered point in a multi-step plan (e.g., in `roadmap.md`, `ACTIVE_TASK.md`, or a user-provided plan) without an explicit "GO" or "PROCEED" for that specific step.
+- **ONE STEP AT A TIME:** You are restricted to executing only the **current** authorized step. Completion of one step does **NOT** grant authorization for the next.
 - **STATUS CONTROL:** **NEVER** mark a task or milestone as "COMPLETED" or "DONE" without explicit user instruction.
 - **ADVISORY ONLY:** Answering a question about a future phase is **NOT** permission to implement it.
 
 ### PERMISSION AND PLANNING
 - **MANDATORY:** You **MUST** provide a detailed plan via the `update_status` tool before executing any project changes.
+- **AUTHORIZATION REQUIRED:** Every action that modifies the codebase or project state MUST be preceded by a specific authorization for that action. 
 - **STOP AND ASK:** If a task is ambiguous, or if you are unsure if a change is "authorized," you **MUST** stop and ask.
+- **NO AUTONOMOUS EXECUTION:** You are a tool used by the programmer. You are NOT an autonomous agent making project decisions.
 - **NEVER** assume permission to modify the codebase as a "side effect" of answering a question or providing information.
 
 ### GUIDELINE ADHERENCE
