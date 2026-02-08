@@ -111,26 +111,32 @@ Before initializing the project, you must set up the hosting and database platfo
 
 ## Feature Roadmap (Upcoming)
 
-### Phase 3: Migration to PostgreSQL [PENDING]
+### Phase 3: Migration to PostgreSQL [COMPLETED]
 - Port existing SQLite/D1 logic to SQLAlchemy/PostgreSQL.
 - Implement schema initialization in Aiven.
 - Migrate existing Natick/Trumbull data to the new database.
 
-### Phase 4: GitHub OAuth & Navigation [COMPLETED]
+### Phase 4: GitHub OAuth [COMPLETED]
 - Implement the login flow using `streamlit-oauth`.
+- Securely store session state in Streamlit's `st.session_state`.
+
+### Phase 5: Navigation & Route Protection [PENDING]
 - Implement persistent session rehydration using browser cookies.
 - Implement deep link navigation support for authenticated users.
-- Securely store session state in Streamlit's `st.session_state`.
 - Protect all app routes with authentication.
+- **Refactor**: Decouple authentication middleware and identity synchronization from `app.py` into a dedicated security manager.
 
-### Phase 5: Search & Discovery [PENDING]
+### Phase 6: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
 - Leverage `pgvector` on Aiven for semantic cross-reference lookup.
     - *Note: Vector capability (pgvector) has been enabled in both local and production environments for future use in linking semantically related records.*
+- **D.R.Y. Service**: Centralize embedding generation and semantic search logic into a reusable `SearchService` to ensure consistency between bulk uploads and UI search.
 
-### Phase 6: Quality Control & Audit [PENDING]
+### Phase 7: Quality Control & Audit [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.
-- Admin portal for user management and audit logs.
+- **Audit Infrastructure**: Establish a backend service layer to encapsulate logging logic (`UserActivityLog`, `EditHistory`) for cross-module consistency.
+- **Identity & Access Service**: Move user synchronization and team-to-role mapping to a standalone database service layer (decoupled from Streamlit).
+- **Admin Dashboard**: Frontend UI for viewing audit logs and managing permissions.
 
 ---
 
