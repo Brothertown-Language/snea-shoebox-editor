@@ -6,6 +6,7 @@
 
 ### NO "VIBE CODING"
 - **NO ASSUMPTIONS:** **NEVER** write code based on "vibes" or incomplete understanding.
+- **NO ERROR HIDING:** **NEVER** swallow or hide exceptions unless explicitly required by the business logic. "Failing fast" is preferred over silent failure.
 - **SCOPE LOCK:** **NEVER** "clean up," "fix typos," or perform "proactive refactoring" outside the immediate scope.
 - **VERIFICATION:** **ALWAYS** verify assumptions by reading source code, existing documentation, and database schemas.
 - **JUSTIFICATION:** **ALWAYS** cite the specific guideline or user instruction that justifies every file modification.

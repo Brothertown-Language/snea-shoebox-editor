@@ -132,13 +132,20 @@ Enables linguists to upload MDF files and manually match them against production
 
 **`permissions`**
 
+Access control mapping between GitHub Teams and application roles.
+
 | Column | Type | Description | Justification |
 | :--- | :--- | :--- | :--- |
 | **`id`** | SERIAL | Primary Key | Standard identifier. |
 | **`source_id`** | INTEGER | FK to `sources.id` | Link to specific source (NULL = all). |
 | **`github_org`** | TEXT | GitHub Org | Organization required for access. |
-| **`github_team`** | TEXT | GitHub Team | Team within the org required for access. |
+| **`github_team`** | TEXT | GitHub Team | Team within the org required for access (Mandatory). |
 | **`role`** | TEXT | App Role | 'admin', 'editor', 'viewer'. |
+
+**Role Enforcement:**
+- **admin**: Automatic full access to all resources and administrative functions.
+- **editor**: Authorized to edit, update, and manage MDF records ONLY.
+- **viewer**: Read-only access to records. **MAY NEVER** edit or modify any data (HARD BLOCK).
 
 **`user_activity_log`**
 

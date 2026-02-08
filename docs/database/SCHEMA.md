@@ -130,7 +130,7 @@ CREATE TABLE permissions (
     id SERIAL PRIMARY KEY,
     source_id INTEGER,                   -- Link to source (NULL = all)
     github_org TEXT NOT NULL,
-    github_team TEXT,
+    github_team TEXT NOT NULL,           -- Mandatory: No NULL teams allowed
     role TEXT NOT NULL DEFAULT 'viewer',  -- 'admin', 'editor', 'viewer'
     FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE CASCADE
 );

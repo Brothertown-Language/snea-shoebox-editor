@@ -124,6 +124,9 @@ Before initializing the project, you must set up the hosting and database platfo
 - Implement persistent session rehydration using browser cookies. [COMPLETED]
 - Implement deep link navigation support for authenticated users. [COMPLETED]
 - **Route Protection**: Implement granular access controls based on user roles and source-specific permissions.
+    - **admin**: Automatic full access to all resources and administrative functions.
+    - **editor**: Authorized to edit, update, and manage MDF records ONLY.
+    - **viewer**: Read-only access to records. **MAY NEVER** edit or modify any data (HARD BLOCK).
 - **Refactor: Identity Service**: Move user synchronization and identity data fetching from `auth_utils.py` and `app.py` into a standalone `IdentityService` class.
 - **Refactor: Security Manager**: Decouple authentication middleware, session rehydration, and route protection logic from `app.py` into a dedicated `SecurityManager` class.
 - **Refactor: Authorization Decorators**: Implement Python decorators or context managers to enforce access control at the page or function level.

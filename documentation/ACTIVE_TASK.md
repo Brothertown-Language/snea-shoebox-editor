@@ -11,9 +11,17 @@ Date: 2026-02-07
 ## Accomplishments this Session
 - Reviewed roadmap and active tasks.
 - Confirmed working state of OAuth rehydration and deep linking.
-- Updated `docs/development/roadmap.md` with discrete refactoring steps for Phase 5.
+- Updated `docs/development/roadmap.md` with discrete refactoring steps for Phase 5 and strict role definitions.
 - Defined route protection strategy using `st.navigation` and role-based access control.
-- Updated `src/database/connection.py` to automatically seed default permissions (`proto-SNEA` roles) if the `permissions` table is empty.
+- Implemented automatic seeding of the corrected three default permissions (admin, editor, viewer) for the `Brothertown-Language` organization in `src/database/connection.py`.
+- Enforced mandatory GitHub teams for all permissions (no NULL teams allowed).
+- Added role enforcement documentation and comments to `Permission` model and project roadmap.
+- Verified that the `permissions` table is correctly populated on app restart when empty with the new mappings:
+    - `proto-SNEA-admin` -> `admin`
+    - `proto-SNEA` -> `editor`
+    - `proto-SNEA-viewer` -> `viewer`
+- Updated `scripts/seed_permissions.py` and `scripts/clear_permissions.py` to support testing of the new default permissions.
+- Resolved the issue where the `permissions` table was not being populated on restart.
 
 ## Next Steps (Phase 5 Refactoring)
 1. **Implement Identity Service**: Create `src/services/identity_service.py` to handle user syncing and team/role resolution.
