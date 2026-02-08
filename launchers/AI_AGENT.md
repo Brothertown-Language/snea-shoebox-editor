@@ -23,6 +23,12 @@ This project uses PyCharm Run Configurations to manage the development environme
 
 ## AI Agent Instructions
 
+### ANTI-"VIBE" CODING POLICY
+This is **NOT** a "VIBE" coding project. **"VIBE" coding is to be avoided with prejudice.**
+- **No Guesswork:** **NEVER** write code based on assumptions or "vibes".
+- **Verification:** **ALWAYS** verify assumptions by reading the source code and documentation.
+- **Human Review:** **ALL** code changes made by AI **MUST** be reviewed by the Human Lead.
+
 ### Synchronization Requirement
 Whenever you modify a launcher in one location, you **MUST** immediately apply the exact same changes to the corresponding file in the other location.
 
