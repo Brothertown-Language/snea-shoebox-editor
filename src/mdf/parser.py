@@ -1,58 +1,117 @@
 # Copyright (c) 2026 Brothertown Language
-import re
+
+
+def _extract_tag(line, tag):
+    """If line starts with \\tag (optionally indented), return the value after it, else None."""
+    stripped = line.lstrip()
+    prefix = '\\' + tag + ' '
+    if stripped.startswith(prefix):
+        return stripped[len(prefix):].strip()
+    return None
+
+
+def _is_nt_record_line(line):
+    """Return True if line is a \\nt Record: <digits> line."""
+    stripped = line.lstrip()
+    if not stripped.startswith('\\nt Record:'):
+        return False
+    value = stripped[len('\\nt Record:'):].strip()
+    return value.isdigit()
+
 
 def parse_mdf(content):
     """
-    Parses MDF content where records are separated by double newlines.
+    Parses MDF content where records are separated by blank lines.
     Returns a list of dictionaries representing records with full raw data.
-    
-    Linguistic fields (\lx, \hm, \ps, \ge) are extracted for database indexing
+
+    Linguistic fields (\\lx, \\hm, \\ps, \\ge) are extracted for database indexing
     and list views, while mdf_data remains the source of truth.
-    
-    Includes logic for detecting and normalizing the \nt Record: <id> tag 
+
+    Includes logic for detecting the \\nt Record: <id> tag
     to maintain synchronization with the PostgreSQL database.
     """
-    # Split by double newlines (or more)
-    raw_records = re.split(r'\n\s*\n', content.strip())
-    
+    blocks = content.strip().split('\n\n')
+
     parsed_records = []
-    for raw in raw_records:
-        if not raw.strip():
+    for block in blocks:
+        block = block.strip()
+        if not block:
             continue
-            
-        # The entire raw record is preserved exactly as is
-        mdf_data = raw.strip()
-        
+
+        mdf_data = block
+
         record = {
             'mdf_data': mdf_data,
             'lx': '',
             'hm': 1,
             'ps': '',
-            'ge': ''
+            'ge': '',
+            'record_id': None,
+            'va': [],
+            'se': [],
+            'cf': [],
+            've': []
         }
-        
-        # Extract metadata fields (\lx, \ps, \ge, \hm) for UI/indexing only
-        # The mdf_data itself remains the source of truth
-        lx_match = re.search(r'^\\lx\s+(.+)$', mdf_data, re.MULTILINE)
-        if lx_match:
-            record['lx'] = lx_match.group(1).strip()
-            
-        hm_match = re.search(r'^\\hm\s+(\d+)$', mdf_data, re.MULTILINE)
-        if hm_match:
-            try:
-                record['hm'] = int(hm_match.group(1).strip())
-            except ValueError:
-                record['hm'] = 1
-            
-        ps_match = re.search(r'^\\ps\s+(.+)$', mdf_data, re.MULTILINE)
-        if ps_match:
-            record['ps'] = ps_match.group(1).strip()
-            
-        ge_match = re.search(r'^\\ge\s+(.+)$', mdf_data, re.MULTILINE)
-        if ge_match:
-            record['ge'] = ge_match.group(1).strip()
-            
+
+        for line in mdf_data.split('\n'):
+            val = _extract_tag(line, 'lx')
+            if val is not None and not record['lx']:
+                record['lx'] = val
+                continue
+
+            val = _extract_tag(line, 'hm')
+            if val is not None and val.isdigit():
+                record['hm'] = int(val)
+                continue
+
+            val = _extract_tag(line, 'ps')
+            if val is not None and not record['ps']:
+                record['ps'] = val
+                continue
+
+            val = _extract_tag(line, 'ge')
+            if val is not None and not record['ge']:
+                record['ge'] = val
+                continue
+
+            val = _extract_tag(line, 'va')
+            if val is not None:
+                record['va'].append(val)
+                continue
+
+            val = _extract_tag(line, 'se')
+            if val is not None:
+                record['se'].append(val)
+                continue
+
+            val = _extract_tag(line, 'cf')
+            if val is not None:
+                record['cf'].append(val)
+                continue
+
+            val = _extract_tag(line, 've')
+            if val is not None:
+                record['ve'].append(val)
+                continue
+
+            if _is_nt_record_line(line):
+                value = line.lstrip()[len('\\nt Record:'):].strip()
+                record['record_id'] = int(value)
+
         if record['lx']:
             parsed_records.append(record)
-            
+
     return parsed_records
+
+
+def normalize_nt_record(mdf_text: str, record_id: int) -> str:
+    """
+    Remove all existing \\nt Record: lines from mdf_text and append
+    exactly one \\nt Record: <record_id> line at the end.
+    """
+    lines = mdf_text.split('\n')
+    filtered = [line for line in lines if not _is_nt_record_line(line)]
+    while filtered and not filtered[-1].strip():
+        filtered.pop()
+    filtered.append(f'\\nt Record: {record_id}')
+    return '\n'.join(filtered)
