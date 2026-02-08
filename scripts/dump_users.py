@@ -21,16 +21,26 @@ from src.database.connection import get_session
 from src.database.models.identity import User, UserActivityLog
 
 def dump_users(session, output_path):
-    """Dump all users to a CSV file."""
+    """Dump all users to a CSV file and print to console."""
     users = session.query(User).all()
     
     fieldnames = [
         'id', 'email', 'username', 'github_id', 'full_name', 
-        'is_active', 'last_login', 'created_at', 'extra_metadata'
+        'is_active', 'last_login', 'created_at'
     ]
     
+    # Print to console for human review
+    print("\n" + "="*80)
+    print(f"{'ID':<4} | {'Username':<15} | {'Email':<25} | {'Last Login':<20}")
+    print("-" * 80)
+    for user in users:
+        last_login = user.last_login.strftime("%Y-%m-%d %H:%M") if user.last_login else "Never"
+        print(f"{user.id:<4} | {user.username:<15} | {user.email:<25} | {last_login:<20}")
+    print("="*80 + "\n")
+
+    # Keep CSV dump for record keeping
     with open(output_path, mode='w', newline='', encoding='utf-8') as f:
-        writer = csv.DictWriter(f, fieldnames=fieldnames)
+        writer = csv.DictWriter(f, fieldnames=fieldnames + ['extra_metadata'])
         writer.writeheader()
         for user in users:
             writer.writerow({
