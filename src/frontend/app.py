@@ -11,7 +11,7 @@ if project_root not in sys.path:
 
 import src.frontend.pages as pages
 from src.database import get_db_url, init_db
-from src.aiven_utils import ensure_db_alive, ensure_secrets_present
+from src.frontend.ui_utils import ensure_db_alive, ensure_secrets_present
 @st.cache_resource
 def _initialize_database():
     """Run database initialization once on app startup."""

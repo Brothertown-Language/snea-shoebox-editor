@@ -2,11 +2,7 @@
 def system_status():
     import streamlit as st
     import os
-    from src.frontend.utils import (
-        get_db_host_port, verify_dns, verify_reachability, 
-        check_db_connection, get_env_info, get_hardware_info, 
-        get_filesystem_info
-    )
+    from src.services.infrastructure_service import InfrastructureService
     st.title("SNEA Shoebox Editor - System Status")
     st.write("Welcome to the SNEA Online Shoebox Editor. Below is the current system status.")
 
@@ -17,20 +13,19 @@ def system_status():
         st.subheader("Database Connectivity Checklist")
         
         from src.database import is_production
-        from src.aiven_utils import get_aiven_config, get_service_status, get_service_info
         
         is_prod = is_production()
         env_label = "Production" if is_prod else "Local Test"
         st.write(f"Environment: **{env_label}**")
         
-        db_host, db_port = get_db_host_port()
+        db_host, db_port = InfrastructureService.get_db_host_port()
 
         # Check Aiven Status if in production
         aiven_status = None
         if is_prod:
-            config = get_aiven_config()
+            config = InfrastructureService.get_aiven_config()
             if config:
-                info = get_service_info(config)
+                info = InfrastructureService.get_service_info(config)
                 if info:
                     aiven_status = info.get("state")
                     
@@ -82,7 +77,7 @@ def system_status():
             st.write("✅ Database Connection: Unix Socket (Local)")
             dns_ok = True # Skip DNS for Unix socket
         else:
-            dns_ok, dns_msg, ips_v4, ips_v6 = verify_dns(db_host)
+            dns_ok, dns_msg, ips_v4, ips_v6 = InfrastructureService.verify_dns(db_host)
             if dns_ok:
                 st.write(f"✅ DNS Resolution: {masked_host}")
                 if ips_v4:
@@ -97,7 +92,7 @@ def system_status():
                 st.write(f"Details: DNS lookup failed for the configured host.")
 
         # 2. Reachability Check
-        reach_ok, reach_msg, v4_ok, v6_ok = verify_reachability(db_host, db_port)
+        reach_ok, reach_msg, v4_ok, v6_ok = InfrastructureService.verify_reachability(db_host, db_port)
         if reach_ok:
             if is_unix_socket:
                 st.write(f"✅ Socket Reachability: {reach_msg}")
@@ -122,7 +117,7 @@ def system_status():
         # 3. SQL Connection Check (Only if previous checks pass or as final step)
         st.divider()
         st.subheader("SQL Health Check")
-        is_valid, message, caps = check_db_connection()
+        is_valid, message, caps = InfrastructureService.check_db_connection()
         
         if is_valid:
             st.success("✅ SQL Connection: VALID")
@@ -147,13 +142,13 @@ def system_status():
     with col2:
         # Environment Info Section
         st.subheader("Environment Information")
-        env_info = get_env_info()
+        env_info = InfrastructureService.get_env_info()
         for key, value in env_info.items():
             st.text(f"{key}: {value}")
 
         st.divider()
         st.subheader("Hardware Inspection")
-        hw_info = get_hardware_info()
+        hw_info = InfrastructureService.get_hardware_info()
         if "Error" in hw_info:
             st.error(f"Error gathering hardware info: {hw_info['Error']}")
         else:
@@ -162,7 +157,7 @@ def system_status():
 
         st.divider()
         st.subheader("Filesystem Inspection")
-        fs_info = get_filesystem_info()
+        fs_info = InfrastructureService.get_filesystem_info()
         for path, details in fs_info.items():
             st.markdown(f"**Path: `{path}`**")
             if "Error" in details:
