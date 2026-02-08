@@ -21,6 +21,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Security Strategy**: Case-insensitive matching for GitHub identifiers is mandatory due to case mismatches between GitHub API and DB seeds.
 - **UI Standard**: Use `st.html()` for all HTML/CSS/JS injections. `unsafe_allow_html=True` is deprecated in this project.
 - **Path Resolution**: Always use the 3-step `git rev-parse` boilerplate in shell scripts for IDE compatibility.
+- **Manual Testing Requirement**: The **Full Auth Flow** (OAuth -> Sync -> RBAC -> Navigation tree update) requires manual verification by the user end-to-end, as it cannot be fully automated in the current environment.
 
 ## SESSION INITIALIZATION CHECKLIST
 - [ ] Re-read `.junie/VIOLATION_LOG.md`.

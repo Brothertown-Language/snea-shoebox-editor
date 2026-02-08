@@ -39,6 +39,7 @@ Date: 2026-02-07
 - **Refactored HTML/CSS Injection**: Replaced `st.markdown(..., unsafe_allow_html=True)` with `st.html()` in `app.py` and `login.py`.
 - **Updated UI Guidelines**: Added mandatory rule to `.junie/ui-development-spr.md` to use `st.html()` for all HTML/CSS/JS content.
 - **Reinforced Path Resolution Guidelines**: Updated `.junie/development-workflow.md` to mandate the 3-step path resolution boilerplate for all shell scripts.
+- **Manual Testing Mandate**: Recorded requirement for manual testing of the Full Auth Flow in `tmp/refactoring_plan.md` and `.junie/LONG_TERM_MEMORY.md`.
 
 ## Next Steps (Phase 5 Refactoring)
 1. **Navigation Service**: Move page definitions and navigation configuration out of `app.py`. [IN PROGRESS]
