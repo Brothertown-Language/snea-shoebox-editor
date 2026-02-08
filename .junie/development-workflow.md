@@ -11,11 +11,11 @@
 - **LOCAL DEV:** **ALWAYS** use `uv run --extra local` to ensure `pgserver` availability.
 
 ### PATH RESOLUTION IN SCRIPTS
-- **ALWAYS** use `git rev-parse --show-toplevel` to find the project root.
-- **MANDATORY ORDER:**
-    1. `cd "$(dirname "${BASH_SOURCE[0]}")"`
-    2. Resolve root with `git rev-parse`.
-    3. `cd` to root before execution.
+- **MANDATORY:** **ALL** shell scripts created or modified MUST use the following 3-step boilerplate for path resolution to ensure reliability across all execution environments (terminal, IDE, background tasks).
+- **MANDATORY ORDER (NO EXCEPTIONS):**
+    1. `cd "$(dirname "${BASH_SOURCE[0]}")"`: Change to the script's directory.
+    2. `REPO_ROOT=$(git rev-parse --show-toplevel)`: Resolve the repository root.
+    3. `cd "$REPO_ROOT"`: Change to the repository root before any other operations.
 
 ---
 

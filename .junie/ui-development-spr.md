@@ -88,6 +88,11 @@ uv run streamlit run src/frontend/app.py
 
 ## Style Guidelines
 
+### Streamlit HTML/CSS/JS Guidelines
+- **PROHIBITION:** **NEVER** use `st.markdown(..., unsafe_allow_html=True)` for injecting HTML tags, `<style>` blocks, or `<script>` tags.
+- **MANDATORY:** **ALWAYS** use `st.html()` for injecting raw HTML, CSS, or JavaScript into the application.
+- **RATIONALE:** `st.html()` is the purpose-built, safer, and cleaner method for raw web content injection in Streamlit (available in versions >= 1.34.0).
+
 ### Code Style
 - **Minimal imports:** Only import what's needed.
 - **Clear naming:** `selected_record`, `update_payload`, `auth_headers`.

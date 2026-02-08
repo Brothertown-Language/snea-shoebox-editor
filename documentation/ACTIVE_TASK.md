@@ -33,6 +33,9 @@ Date: 2026-02-07
 - **Prohibition on Committing Temporary Files**: Updated `.junie/guidelines.md`, `.junie/operational-standards.md`, and `.junie/development-workflow.md` to explicitly forbid committing any files from the `tmp/` directory.
 - **Commit Script Timing Restriction**: Updated guidelines to explicitly prohibit creating commit scripts or messages without direct user instruction.
 - **Guideline Adherence Correction**: Updated `tmp/commit_task.sh` to strictly follow mandatory path resolution rules (`git rev-parse`) for reliable execution within IDE environments.
+- **Refactored HTML/CSS Injection**: Replaced `st.markdown(..., unsafe_allow_html=True)` with `st.html()` in `app.py` and `login.py`.
+- **Updated UI Guidelines**: Added mandatory rule to `.junie/ui-development-spr.md` to use `st.html()` for all HTML/CSS/JS content.
+- **Reinforced Path Resolution Guidelines**: Updated `.junie/development-workflow.md` to mandate the 3-step path resolution boilerplate for all shell scripts.
 
 ## Next Steps (Phase 5 Refactoring)
 1. **Implement Navigation Service**: Move page definitions and navigation configuration out of `app.py`.

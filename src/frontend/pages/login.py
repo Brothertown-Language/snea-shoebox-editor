@@ -5,15 +5,14 @@ import streamlit as st
 def show_unauthorized_dialog() -> None:
     """Display a non-closable dialog for unauthorized users."""
     # Hide the close button [x] using CSS
-    st.markdown(
+    st.html(
         """
         <style>
         button[aria-label="Close"] {
             display: none;
         }
         </style>
-        """,
-        unsafe_allow_html=True,
+        """
     )
     st.error("Restricted Access")
     st.write(

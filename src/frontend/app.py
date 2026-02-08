@@ -93,15 +93,14 @@ def main():
         pg = st.navigation([page_login, page_home, page_record, page_source, page_status, page_user, page_logout])
         
         # Hide the sidebar navigation links when not logged in
-        st.markdown(
+        st.html(
             """
             <style>
             [data-testid="stSidebarNav"] {
                 display: none;
             }
             </style>
-            """,
-            unsafe_allow_html=True,
+            """
         )
 
     # Run the selected page
