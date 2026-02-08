@@ -21,22 +21,5 @@ This project uses PyCharm Run Configurations to manage the development environme
 - **Purpose:** Identifies and terminates any running Streamlit processes associated with this project.
 - **Usage:** Primarily used as a "Before Launch" task for the Streamlit launcher.
 
-## AI Agent Instructions
-
-### ANTI-"VIBE" CODING POLICY
-This is **NOT** a "VIBE" coding project. **"VIBE" coding is to be avoided with prejudice.**
-- **No Guesswork:** **NEVER** write code based on assumptions or "vibes".
-- **Verification:** **ALWAYS** verify assumptions by reading the source code and documentation.
-- **Human Review:** **ALL** code changes made by AI **MUST** be reviewed by the Human Lead.
-
-### Synchronization Requirement
-Whenever you modify a launcher in one location, you **MUST** immediately apply the exact same changes to the corresponding file in the other location.
-
-- If you edit `launchers/X.xml`, you must edit `.idea/runConfigurations/X.xml`.
-- If you edit `.idea/runConfigurations/X.xml`, you must edit `launchers/X.xml`.
-
-### Background Execution
-All Streamlit-related launchers must support background execution. Do **NOT** revert the Streamlit launcher to a standard `PythonConfigurationType` unless explicitly instructed, as this blocks the IDE's execution state. Always use the shell script wrappers (`scripts/start_streamlit.sh`).
-
-### Commit Messages
-When updating launchers, provide clear descriptions of the changes in your commit message. Do **NOT** use prefixes like `feat:` or `fix:`.
+## AI Agent Guidelines
+All operational instructions for AI agents have been consolidated in the `.junie/` directory. AI agents **MUST** review the guidelines in `.junie/ai-behavior.md` and related files at the start of every session.

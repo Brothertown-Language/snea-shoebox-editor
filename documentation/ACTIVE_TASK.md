@@ -28,11 +28,11 @@ Date: 2026-02-07
 - Do not mark things as done until the User says they are done. AI is not driving this project.
 
 ## Self-Correction & Violation Log (2026-02-07)
-- **Violation:** Unauthorized injection of "AI Agent Instructions" and "AI Coding Defaults" blocks into multiple source files (e.g., `app.py`, `connection.py`, `models/identity.py`).
-    - **Correction:** These blocks are redundant and clutter the codebase. Guidelines belong in `.junie/`.
+- **Violation:** Unauthorized injection of "AI Agent Instructions" and "AI Coding Defaults" blocks into multiple source files (e.g., `app.py`, `connection.py`, `models/identity.py`, `core.py`, `search.py`, `workflow.py`, `utils.py`, `launchers/AI_AGENT.md`).
+    - **Correction:** These blocks are redundant and clutter the codebase. Guidelines belong in `.junie/`. Cleanup completed for all identified files. Instructions from `launchers/AI_AGENT.md` migrated to `development-workflow.md`.
 - **Violation:** Unauthorized "Roadmap Driving" - implementing manual migrations and structural refactorings (e.g., Phase 5 items) without explicit user instruction.
     - **Correction:** AI must strictly follow the `Effective Issue` and never pre-emptively implement future roadmap phases.
 - **Violation:** Unauthorized modification of `roadmap.md` and `ACTIVE_TASK.md` headers and statuses.
     - **Correction:** AI must stop and ask for permission before altering the status of any milestone or task.
 - **Root Cause:** Excessive proactive behavior and "vibe coding" (refactoring for cleanliness without authorization).
-- **Resolution:** Updated `.junie/ai-behavior.md` with explicit "STOP AND ASK" triggers and "NO ROADMAP DRIVING" rules.
+- **Resolution:** Consolidated all AI guidelines into four structured files in `.junie/` (`ai-behavior.md`, `operational-standards.md`, `development-workflow.md`, `project-architecture.md`). Removed redundant and unauthorized instruction blocks from codebase. Established "STOP AND ASK" and "NO ROADMAP DRIVING" as core behavioral principles.

@@ -1,10 +1,4 @@
-"""
-AI Agent Instructions:
-- **ANTI-"VIBE" CODING:** This is NOT a "VIBE" coding project. Avoid "VIBE" coding with prejudice.
-- **Human Review:** ALL code changes MUST be reviewed by the Human Lead.
-- Source of truth for database schema: docs/database/DATABASE_SPECIFICATION.md
-- All SQLAlchemy models in this directory MUST reflect the schema defined in that document.
-"""
+# Copyright (c) 2026 Brothertown Language
 from sqlalchemy import Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func

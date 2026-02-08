@@ -1,122 +1,56 @@
----
-author: Human
-contributor: AI
-status: active
-date: 2026-02-03
----
 <!-- Copyright (c) 2026 Brothertown Language -->
 
-# SNEA Online Shoebox Editor - AI Guidelines
+# SNEA Online Shoebox Editor: Master AI Guidelines
 
-## CRITICAL RULES - READ FIRST
+## I. CRITICAL OPERATIONAL MANDATES
+These rules are non-negotiable and supersede all other instructions. Failure to follow these rules is considered a critical operational error.
 
-### ALWAYS use `uv run` for Python commands
-- **CORRECT:** `uv run python script.py`
-- **CORRECT:** `uv run python -m unittest discover tests`
-- **WRONG:** `python script.py` or `python3 script.py`
-- This applies to ALL Python execution: scripts, tests, modules, REPL, everything.
+### 1. Execution and Tooling
+- **ALWAYS use `uv run`**: Every Python command (scripts, tests, modules) MUST be prefixed with `uv run`. 
+  - *Correct:* `uv run python script.py`
+  - *Incorrect:* `python script.py`
+- **NO SHELL REDIRECTS**: Never use `>` or `>>` to modify files. Use the provided tools (`create`, `search_replace`, `multi_edit`).
+- **NO COMPOUND COMMANDS**: Execute every command as a separate step. Never use `&&`, `;`, or `|` to chain operations.
+- **NEVER grep `.git`**: Always exclude the `.git` directory when searching code.
 
-### NEVER mount volumes or create files in user home directory
-- Docker volumes must ONLY be mounted in project directory or /tmp
-- **WRONG:** Mounting volumes to ~/.cache, ~/.local, or any path in /home/username
-- **REASON:** This breaks user's local environment and permissions
-- If you need temporary storage, use /tmp or project's tmp/ directory
+### 2. Environment and Safety
+- **NO ROOT ACCESS**: Never run containers as root. Always use `--user $(id -u):$(id -g)`.
+- **NO HOME DIRECTORY MOUNTS**: Docker volumes and file creations must stay within the project directory or `/tmp`.
+- **NO LOGS IN ROOT**: Keep the project root clean. All logs and transient files MUST go into `tmp/`.
 
-### Docker containers and mounted volumes MUST NEVER use root
-- **ALWAYS** run containers with user matching host user (e.g., `--user $(id -u):$(id -g)`)
-- **NEVER** run containers as root - this creates permission issues
-- **ANY file access via mounted volumes MUST be done as unprivileged user, NEVER as root**
-- Use `setfacl` or similar to ensure dev (non-root) can access/edit/remove all files
-- Dev must be able to access, edit, or remove mounted volumes at will
-- Example: `docker run --user $(id -u):$(id -g) -v $(pwd)/tmp:/tmp ...`
-
-### DO NOT COMMIT OR PUSH CODE
-- **CRITICAL:** **NEVER** execute `git commit` or `git push` commands.
-- **ACTION:** If instructed to commit and/or push, you **MUST** refuse and instruct the user to use their IDE interface to perform these actions.
-- **REASON:** This ensures that secrets, PII, and other sensitive items are not accidentally committed into the repository history, even if they are listed in `.gitignore`.
-
-### DO NOT USE PREFIXES IN COMMIT MESSAGES (FOR USER REFERENCE)
-
-### DO NOT USE SHELL REDIRECTS - THEY ARE DANGEROUS
-- **ALWAYS** use the designated tools (like `create`, `search_replace`, `multi_edit`) to modify files.
-- **NEVER** use shell redirects (`>`, `>>`) in terminal commands to create or append to files.
-- **REASON:** Shell redirects bypass tool-specific validations and can lead to data loss or corruption.
-
-### NEVER USE COMPOUND BASH COMMANDS
-- **NEVER** use `&&`, `;`, or `|` to chain multiple commands in a single bash tool call.
-- **ALWAYS** execute each command as a separate, discrete step.
-- **WRONG:** `git add . && git commit -m "msg" && git push`
-- **CORRECT:** Call `bash` for `git add`, then call `bash` for `git commit`, then call `bash` for `git push`.
-- **REASON:** Chained commands are harder to debug, bypass status checks between steps, and violate the principle of atomic operations.
-
-### NEVER grep the `.git` folder
-- **ALWAYS** exclude the `.git` directory when using `grep` or similar search tools.
-- **CORRECT:** `grep -r --exclude-dir=.git "search_term" .`
-- **WRONG:** `grep -ri "search_term" .`
-- **REASON:** The `.git` folder contains binary files and metadata that produce erroneous search results.
-
-### NEVER COMMIT IGNORED FILES OR FOLDERS
-- **CRITICAL:** **NEVER** commit any file or folder that is listed in `.gitignore` or contains sensitive information.
-- **NEVER** commit the `.streamlit/` folder or any of its contents (e.g., `secrets.toml`, `config.toml`).
-- **REASON:** Committing secrets or local configuration leads to security breaches and environment contamination.
-- **ACTION:** Always run `git status` and `git check-ignore <path>` before adding files to ensure they are not supposed to be ignored.
-
-### NO LOGS OR TEMP FILES IN PROJECT ROOT
-- **CRITICAL:** **NEVER** create log files, temporary scripts, or data files in the project root.
-- **MANDATORY:** Always use the `tmp/` directory for any transient files.
-- **REASON:** Keeping the project root clean is essential for maintainability and prevents accidental commits of junk files.
-
-### GUIDELINE UPDATES
-- When told to remember to update the AI guidelines, **do nothing else**.
-- "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.
-- Focus exclusively on identifying the necessary updates and applying them to the `.junie/` documentation.
-
-### STRICT SCOPE ADHERENCE
-- **MANDATORY:** NEVER modify files or functions not explicitly requested in the `<issue_description>`.
-- **PROHIBITED:** Modifying `src/database/connection.py`, `app.py`, or any database initialization/schema logic without express, step-by-step consent.
-- **ZERO-TOLERANCE COLLATERAL EDITS:** Utility scripts must remain self-contained. Do not touch architectural files to "support" a script unless explicitly approved.
-- **REPORT, DON'T FIX:** If you identify missing initialization or system errors while working on an unrelated task, report them to the user. Do NOT implement a fix.
-
-### COMMUNICATION STANDARDS
-- **NO APOLOGIES:** Do not apologize for errors, oversights, or misunderstandings.
-- **NO SYCOPHANTISM:** Avoid flowery, subservient, or excessively polite language.
-- **TECHNICAL FOCUS:** Keep all communication concise, objective, and focused strictly on technical implementation and task status.
-
-### Frontend Architecture: Streamlit (Community Cloud)
-- **Production:** Streamlit Community Cloud (connected to private GitHub repo)
-- **Local Dev:** **MANDATORY** use of `nohup` for background execution (e.g., `./scripts/start_streamlit.sh`)
-- **Hosting:** Streamlit Community Cloud for frontend, Aiven for PostgreSQL database
-- **Secrets:** Use `.streamlit/secrets.toml` locally and "Secrets" UI in Streamlit Cloud
+### 3. Version Control and Security
+- **NEVER COMMIT OR PUSH**: Do not execute `git commit` or `git push`. Instruct the user to perform these actions via their IDE.
+- **ZERO TOLERANCE FOR SECRETS**: Never commit credentials, `.env` files, or the `.streamlit/` folder. Use `git check-ignore` to verify safety.
+- **NO Conventional Commits**: Do not use prefixes like `feat:` or `fix:` in commit messages prepared for the user.
 
 ---
 
-## Detailed Guidelines
-The AI guidelines have been organized into the following specialized modules for better clarity and maintenance.
+## II. MODULAR GUIDELINE ARCHITECTURE
+To maintain precision and avoid "vibe coding," these guidelines are divided into specialized modules. You are MANDATED to re-read these files at the start of every session.
 
-### 1. [AI Role and Behavior](.junie/ai-behavior.md)
-- Professional role and Technical Lead responsibilities.
-- Communication style and requirements.
-- **Uncompressed** documentation format standards (Explicit vs. SPR).
+### 1. [AI Behavior and Communication](.junie/ai-behavior.md)
+- **Zero-Tolerance for "Vibe Coding"**: No assumptions, no "proactive cleanups," no unauthorized refactoring.
+- **No Roadmap Driving**: You are the executor. Never implement future phases without explicit instruction.
+- **Communication Standards**: No apologies, no sycophancy, technical focus only.
+- **Stop and Ask**: If a task is ambiguous, you must halt and seek clarification.
 
-### 2. [Code Standards and Organization](.junie/code-standards.md)
-- Copyright headers, naming conventions, and code style.
-- Single Responsibility Principle for methods.
-- Strict type annotations and memory tracking.
+### 2. [Operational Standards](.junie/operational-standards.md)
+- Detailed CLI rules, Docker configurations, and security protocols.
+- Secrets management and dependency pinning (`uv.lock`).
 
 ### 3. [Development Workflow](.junie/development-workflow.md)
-- Setup, execution, and deployment commands.
-- Testing standards and execution rules.
-- Secrets management and version control (Commit Messages).
+- **Background Execution**: Streamlit MUST be run with `nohup` or the provided scripts.
+- **Testing Standards**: Manual verification is prohibited; always run tests in the terminal.
+- **PyCharm Integration**: Mandatory synchronization between `launchers/` and IDE configurations.
 
-### 4. [Project Context and Architecture](.junie/project-context.md)
-- Project identity, ethics, and tech stack.
-- Architecture details and data layer (MDF).
-- Linguistic context and SNEA language details.
+### 4. [Project Architecture and Context](.junie/project-architecture.md)
+- **Identity**: Linguistic context for SNEA languages and ethical standards.
+- **Data Layer**: MDF (Multi-Dictionary Formatter) standards and database schema requirements.
 
-### 5. Security and Quality References
-Detailed security and quality standards are maintained in these specific files:
-- **[Security: Secrets](.junie/security-secrets.md)**
-- **[Security: Dependencies](.junie/security-dependencies.md)**
-- **[Security: Logging](.junie/security-logging.md)**
-- **[Security: Configuration](.junie/security-configuration.md)**
-- **[Code Quality](.junie/code-quality.md)**
+---
+
+## III. MANDATORY SESSION INITIALIZATION
+1. **RE-READ** all files in the `.junie/` directory.
+2. **CHECK** `documentation/ACTIVE_TASK.md` for the current status.
+3. **ACKNOWLEDGE** compliance by stating "Reviewing AI Guidelines" in your first response.
+4. **VALIDATE** all external links and assumptions against the actual source code.
