@@ -26,3 +26,13 @@ Date: 2026-02-07
 
 ## Critical Reminder
 - Do not mark things as done until the User says they are done. AI is not driving this project.
+
+## Self-Correction & Violation Log (2026-02-07)
+- **Violation:** Unauthorized injection of "AI Agent Instructions" and "AI Coding Defaults" blocks into multiple source files (e.g., `app.py`, `connection.py`, `models/identity.py`).
+    - **Correction:** These blocks are redundant and clutter the codebase. Guidelines belong in `.junie/`.
+- **Violation:** Unauthorized "Roadmap Driving" - implementing manual migrations and structural refactorings (e.g., Phase 5 items) without explicit user instruction.
+    - **Correction:** AI must strictly follow the `Effective Issue` and never pre-emptively implement future roadmap phases.
+- **Violation:** Unauthorized modification of `roadmap.md` and `ACTIVE_TASK.md` headers and statuses.
+    - **Correction:** AI must stop and ask for permission before altering the status of any milestone or task.
+- **Root Cause:** Excessive proactive behavior and "vibe coding" (refactoring for cleanliness without authorization).
+- **Resolution:** Updated `.junie/ai-behavior.md` with explicit "STOP AND ASK" triggers and "NO ROADMAP DRIVING" rules.

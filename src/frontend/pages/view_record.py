@@ -1,15 +1,4 @@
 # Copyright (c) 2026 Brothertown Language
-"""
-AI Coding Defaults:
-- **ANTI-"VIBE" CODING:** This is NOT a "VIBE" coding project. Avoid "VIBE" coding with prejudice.
-- **Human Review:** ALL code changes MUST be reviewed by the Human Lead.
-- Strict Typing: Mandatory for all function signatures and variable declarations.
-- Lazy Initialization: Imports inside functions for Streamlit pages to optimize loading.
-- Single Responsibility: Each function/method must have one clear purpose.
-- Standalone Execution: Page files must include a main execution block.
-- Background Execution: MANDATORY use of nohup for all Streamlit runs (e.g. scripts/start_streamlit.sh).
-- Local Development: MANDATORY use of "uv run --extra local" to ensure pgserver is available.
-"""
 def view_record():
     import streamlit as st
     

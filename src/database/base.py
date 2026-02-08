@@ -1,11 +1,4 @@
-"""
-Shared base for all database models to avoid circular imports.
-
-AI Agent Instructions:
-- **ANTI-"VIBE" CODING:** This is NOT a "VIBE" coding project. Avoid "VIBE" coding with prejudice.
-- **Human Review:** ALL code changes MUST be reviewed by the Human Lead.
-- Source of truth for database schema: docs/database/DATABASE_SPECIFICATION.md
-"""
+# Copyright (c) 2026 Brothertown Language
 from sqlalchemy.orm import declarative_base
 
 Base = declarative_base()
