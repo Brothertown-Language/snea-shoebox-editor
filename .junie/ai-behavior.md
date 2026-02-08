@@ -21,6 +21,7 @@
 ### PERMISSION AND PLANNING
 - **MANDATORY:** You **MUST** provide a detailed plan via the `update_status` tool before executing any project changes.
 - **AUTHORIZATION REQUIRED:** Every action that modifies the codebase or project state MUST be preceded by a specific authorization for that action. 
+- **NO PROACTIVE COMMITS:** **NEVER** prepare commit scripts (`tmp/commit_task.sh`) or commit messages (`tmp/commit.msg`) unless the user has explicitly instructed you to "prepare for a commit" or "create a commit script."
 - **STOP AND ASK:** If a task is ambiguous, or if you are unsure if a change is "authorized," you **MUST** stop and ask.
 - **NO AUTONOMOUS EXECUTION:** You are a tool used by the programmer. You are NOT an autonomous agent making project decisions.
 - **NEVER** assume permission to modify the codebase as a "side effect" of answering a question or providing information.
