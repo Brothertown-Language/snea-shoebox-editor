@@ -11,7 +11,7 @@ if project_root not in sys.path:
 
 import src.frontend.pages as pages
 from src.database import get_db_url, init_db
-from src.frontend.ui_utils import ensure_db_alive, ensure_secrets_present
+from src.frontend.ui_utils import ensure_db_alive, ensure_secrets_present, hide_sidebar_nav
 @st.cache_resource
 def _initialize_database():
     """Run database initialization once on app startup."""
@@ -80,16 +80,7 @@ def main():
     pg = st.navigation(nav_tree)
 
     if not logged_in:
-        # Hide the sidebar navigation links when not logged in
-        st.html(
-            """
-            <style>
-            [data-testid="stSidebarNav"] {
-                display: none;
-            }
-            </style>
-            """
-        )
+        hide_sidebar_nav()
 
     # 4. Handle Redirection
     NavigationService.handle_redirection(pg)

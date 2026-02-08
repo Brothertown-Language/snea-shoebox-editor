@@ -115,6 +115,22 @@ def ensure_db_alive():
         st.stop()
 
 
+# ── Sidebar Utilities ──────────────────────────────────────────────────
+
+
+def hide_sidebar_nav() -> None:
+    """Hide the default Streamlit sidebar navigation links."""
+    st.html(
+        """
+        <style>
+        [data-testid="stSidebarNav"] {
+            display: none;
+        }
+        </style>
+        """
+    )
+
+
 # ── Page Utilities ─────────────────────────────────────────────────────
 
 
