@@ -17,6 +17,12 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Root Cause**: Defaulting to standard environment variables instead of strictly adhering to SNEA mandates.
 - **Preventive Measure**: Updated `guidelines.md` to make `JUNIE_PRIVATE_DB=true` mandatory for ALL operations.
 
+### 3. Absolute Paths and Compound Commands in Terminal
+- **Status**: ACTIVE RISK (3 occurrences: 2026-02-08)
+- **Description**: Using `cd /home/muksihs/git/snea-shoebox-editor && <command>` instead of just `<command>`. Combines two violations: absolute paths and compound commands (`&&`).
+- **Root Cause**: Persistent habit of prefixing commands with `cd` to the project root, despite the shell already being at the project root.
+- **Preventive Measure**: Rules added to `guidelines.md` Section I.1 and `operational-standards.md`. **Self-check before every terminal command**: "Does this command start with `cd`? If yes, STOP and remove it. The shell is already at the project root."
+
 ## LOG ENTRIES
 
 ### 2026-02-07: Unauthorized completion marks in refactoring plan
@@ -38,3 +44,13 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Used `cd /home/muksihs/git/snea-shoebox-editor && cat README.md` instead of `cat README.md`.
 - **Root Cause**: Persistent habit despite prior correction. Rule was in `operational-standards.md` but not in the master `guidelines.md`.
 - **Correction**: Added **RELATIVE PATHS ONLY** rule directly to `guidelines.md` Section I.1 (Critical Operational Mandates) to ensure maximum visibility.
+
+### 2026-02-08: Third occurrence of absolute path + compound command violation
+- **Violation**: Used `cd /home/muksihs/git/snea-shoebox-editor && git status --short` instead of `git status --short`.
+- **Root Cause**: Same persistent habit. Previous corrections insufficient to break the pattern.
+- **Correction**: Elevated to Recurring Violation #3. Added explicit self-check rule: "Does this command start with `cd`? STOP." Updated `operational-standards.md` with bold warning block and `LONG_TERM_MEMORY.md` with hard constraint.
+
+### 2026-02-08: Incorrect path resolution boilerplate in commit script
+- **Violation**: `tmp/commit_task.sh` used `cd "$(dirname "$0")/.."` instead of the mandatory 3-step boilerplate (`BASH_SOURCE[0]` → `git rev-parse --show-toplevel` → `cd "$REPO_ROOT"`).
+- **Root Cause**: Script was generated using a fragile shortcut pattern instead of following the mandatory standard in `.junie/development-workflow.md` Section 1 (PATH RESOLUTION IN SCRIPTS).
+- **Correction**: Replaced with the correct 3-step boilerplate matching `scripts/start_streamlit.sh` and `scripts/kill_streamlit.sh`.
