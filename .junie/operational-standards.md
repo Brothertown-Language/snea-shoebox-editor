@@ -10,6 +10,7 @@
 - **MANDATORY psql FLAGS:** Always use `psql -c "QUERY" < /dev/null` or `psql -f script.sql < /dev/null` to prevent terminal hangs.
 - **NO INTERACTIVE COMMANDS:** **NEVER** run commands that require user input (e.g., `psql` without flags, `top`, `vim`).
 - **NO .git SEARCH:** **ALWAYS** exclude the `.git` directory when searching (e.g., `grep --exclude-dir=.git`).
+- **NO `sed -i` OR IN-PLACE SHELL EDITS:** **NEVER** use `sed -i`, `awk -i inplace`, `perl -i`, or any shell command that modifies files in-place. All file modifications MUST use the provided editing tools (`create`, `search_replace`, `multi_edit`). This extends the "NO SHELL REDIRECTS" mandate to cover all forms of shell-based file mutation.
 - **CLEAN ROOT POLICY:** **NEVER** create log files, temporary scripts, or data files in the project root. All transient files MUST go to `tmp/`.
 - **JUNIE PRIVATE DB:** Junie tests and destructive tasks **MUST** use a private `pgserver` instance.
     - Set `JUNIE_PRIVATE_DB=true` in the environment to activate.
@@ -47,6 +48,10 @@
 ---
 
 ## 4. Code Quality and Safety
+
+### DEPRECATED API AVOIDANCE
+- **Deprecated API warnings mean near-future breakage due to bitrot.** Avoid deprecated API usage where easily feasible. When a deprecated call is identified (e.g., via test warnings), replace it with the modern equivalent promptly.
+- **Exception:** Sometimes deprecated API usage is required (e.g., no modern replacement exists yet, or the replacement introduces unacceptable complexity). In such cases, document the reason with a code comment.
 
 ### PRE-COMMIT CHECKLIST
 - [ ] No secrets or PII in code or comments.

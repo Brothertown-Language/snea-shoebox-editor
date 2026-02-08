@@ -286,7 +286,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         log = self.session.query(UserActivityLog).filter_by(user_email=user.email).first()
         self.session.delete(log)
         
-        mq = MatchupQueue(user_email=user.email, source_id=source.id, mdf_data="\\lx test")
+        mq = MatchupQueue(user_email=user.email, source_id=source.id, batch_id="test-batch", mdf_data="\\lx test")
         self.session.add(mq)
         self.session.commit()
 

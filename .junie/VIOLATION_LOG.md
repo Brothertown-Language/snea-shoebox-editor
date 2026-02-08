@@ -70,3 +70,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: `tmp/commit_task.sh` was generated with no `cd` to the project root at all, causing the script to fail when executed from any directory other than the project root (e.g., PyCharm's default working directory).
 - **Root Cause**: The mandatory 3-step path resolution boilerplate from `.junie/development-workflow.md` §1 (PATH RESOLUTION IN SCRIPTS) was not applied to commit scripts. The VCS COMPLIANCE section did not explicitly require it.
 - **Correction**: (1) Fixed `tmp/commit_task.sh` with the 3-step boilerplate. (2) Updated `.junie/development-workflow.md` §3 VCS COMPLIANCE to explicitly require the path resolution boilerplate in all commit scripts.
+
+### 2026-02-08: Absolute path used in proposed sed command
+- **Violation**: Proposed `cd /home/muksihs/git/snea-shoebox-editor && sed -i 's/...' src/services/upload_service.py` — absolute path violation (Recurring Violation #3). Also, `sed -i` modifies files outside the designated editing tools.
+- **Root Cause**: Same persistent absolute path habit. Additionally, using `sed -i` to edit source files violates the "NO SHELL REDIRECTS" mandate — all file modifications must use the provided tools (`create`, `search_replace`, `multi_edit`).
+- **Correction**: (1) Logged violation. (2) Added `sed -i` / `sed` in-place editing to the forbidden operations list in `operational-standards.md`. (3) Will use `multi_edit` tool for the deprecated API fix.
