@@ -33,3 +33,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Used absolute paths (e.g., `/home/muksihs/git/snea-shoebox-editor/src/...`) in tool calls and terminal commands instead of project-relative paths.
 - **Root Cause**: Default behavior of using full filesystem paths rather than relative paths from the project root.
 - **Correction**: Added **MANDATORY RELATIVE PATHS** rule to `operational-standards.md` as the first technical execution rule. All tool calls, commands, file references, and output must use project-relative paths.
+
+### 2026-02-08: Absolute path with cd used in terminal command (repeat violation)
+- **Violation**: Used `cd /home/muksihs/git/snea-shoebox-editor && cat README.md` instead of `cat README.md`.
+- **Root Cause**: Persistent habit despite prior correction. Rule was in `operational-standards.md` but not in the master `guidelines.md`.
+- **Correction**: Added **RELATIVE PATHS ONLY** rule directly to `guidelines.md` Section I.1 (Critical Operational Mandates) to ensure maximum visibility.

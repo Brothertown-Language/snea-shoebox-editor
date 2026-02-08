@@ -12,6 +12,7 @@ These rules are non-negotiable and supersede all other instructions. Failure to 
 - **NO SHELL REDIRECTS**: Never use `>` or `>>` to modify files. Use the provided tools (`create`, `search_replace`, `multi_edit`).
 - **NO COMPOUND COMMANDS**: Execute every command as a separate step. Never use `&&`, `;`, or `|` to chain operations.
 - **NEVER grep `.git`**: Always exclude the `.git` directory when searching code.
+- **RELATIVE PATHS ONLY**: All terminal commands MUST use paths relative to the project root. NEVER use absolute paths (e.g., `/home/user/git/project/...`) or `cd /absolute/path && command`. The shell is always at the project root—use it directly (e.g., `cat README.md`, NOT `cd /home/muksihs/git/snea-shoebox-editor && cat README.md`). This applies to ALL commands without exception.
 
 ### 2. Environment and Safety
 - **NO ROOT ACCESS**: Never run containers as root. Always use `--user $(id -u):$(id -g)`.
