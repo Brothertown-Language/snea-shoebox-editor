@@ -71,6 +71,17 @@ date: 2026-02-03
 - "Remember" means ONLY updating the guidelines; it does NOT mean making code changes, edits, or deletions.
 - Focus exclusively on identifying the necessary updates and applying them to the `.junie/` documentation.
 
+### STRICT SCOPE ADHERENCE
+- **MANDATORY:** NEVER modify files or functions not explicitly requested in the `<issue_description>`.
+- **PROHIBITED:** Modifying `src/database/connection.py`, `app.py`, or any database initialization/schema logic without express, step-by-step consent.
+- **ZERO-TOLERANCE COLLATERAL EDITS:** Utility scripts must remain self-contained. Do not touch architectural files to "support" a script unless explicitly approved.
+- **REPORT, DON'T FIX:** If you identify missing initialization or system errors while working on an unrelated task, report them to the user. Do NOT implement a fix.
+
+### COMMUNICATION STANDARDS
+- **NO APOLOGIES:** Do not apologize for errors, oversights, or misunderstandings.
+- **NO SYCOPHANTISM:** Avoid flowery, subservient, or excessively polite language.
+- **TECHNICAL FOCUS:** Keep all communication concise, objective, and focused strictly on technical implementation and task status.
+
 ### Frontend Architecture: Streamlit (Community Cloud)
 - **Production:** Streamlit Community Cloud (connected to private GitHub repo)
 - **Local Dev:** **MANDATORY** use of `nohup` for background execution (e.g., `./scripts/start_streamlit.sh`)

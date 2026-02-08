@@ -120,11 +120,14 @@ Before initializing the project, you must set up the hosting and database platfo
 - Implement the login flow using `streamlit-oauth`.
 - Securely store session state in Streamlit's `st.session_state`.
 
-### Phase 5: Navigation & Route Protection [PENDING]
-- Implement persistent session rehydration using browser cookies.
-- Implement deep link navigation support for authenticated users.
-- Protect all app routes with authentication.
-- **Refactor**: Decouple authentication middleware and identity synchronization from `app.py` into a dedicated security manager.
+### Phase 5: Navigation & Access Control [IN PROGRESS]
+- Implement persistent session rehydration using browser cookies. [COMPLETED]
+- Implement deep link navigation support for authenticated users. [COMPLETED]
+- **Route Protection**: Implement granular access controls based on user roles and source-specific permissions.
+- **Refactor: Identity Service**: Move user synchronization and identity data fetching from `auth_utils.py` and `app.py` into a standalone `IdentityService` class.
+- **Refactor: Security Manager**: Decouple authentication middleware, session rehydration, and route protection logic from `app.py` into a dedicated `SecurityManager` class.
+- **Refactor: Authorization Decorators**: Implement Python decorators or context managers to enforce access control at the page or function level.
+- **Refactor: Navigation Service**: Centralize Streamlit page definitions and navigation logic into a dedicated service to simplify `app.py`.
 
 ### Phase 6: Search & Discovery [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
@@ -135,7 +138,6 @@ Before initializing the project, you must set up the hosting and database platfo
 ### Phase 7: Quality Control & Audit [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.
 - **Audit Infrastructure**: Establish a backend service layer to encapsulate logging logic (`UserActivityLog`, `EditHistory`) for cross-module consistency.
-- **Identity & Access Service**: Move user synchronization and team-to-role mapping to a standalone database service layer (decoupled from Streamlit).
 - **Admin Dashboard**: Frontend UI for viewing audit logs and managing permissions.
 
 ---

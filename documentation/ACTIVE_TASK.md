@@ -1,55 +1,28 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 # Active Task (Session)
 
-Date: 2026-02-04
+Date: 2026-02-07
 
-- [DONE] Created `scripts/start_streamlit.sh` for persistent background execution.
-- [DONE] Updated AI guidelines to mandate persistent background execution that survives session exit.
-- [DONE] Fixed multipage navigation error by using file paths in `st.Page` and adding `if __name__ == "__main__":` blocks to page files.
-- [DONE] Updated `src/frontend/app.py` with docstrings explaining the navigation pattern.
-- [DONE] Updated AI guidelines (`.junie/`) with Streamlit multipage navigation standards.
-- [DONE] Committed all changes.
-- [DONE] Restarted Streamlit using the persistent start script.
+## Status Overview
+- OAuth session rehydration: **WORKING**
+- Deep linking: **WORKING**
+- Phase 5 (Navigation & Access Control): **IN PROGRESS**
 
-- [DONE] Refactored project to a monolithic structure (moved src/frontend/app.py to src/frontend/app.py, etc).
-- [DONE] Removed Playwright and UI tests.
-- [DONE] Committed and pushed all changes to the main branch.
+## Accomplishments this Session
+- Reviewed roadmap and active tasks.
+- Confirmed working state of OAuth rehydration and deep linking.
+- Updated `docs/development/roadmap.md` with discrete refactoring steps for Phase 5.
+- Defined route protection strategy using `st.navigation` and role-based access control.
+- Updated `src/database/connection.py` to automatically seed default permissions (`proto-SNEA` roles) if the `permissions` table is empty.
 
-Next Steps:
-- [DONE] Updated AI guidelines to keep TODOs up to date and mandate checking them at the start of sessions.
-- [DONE] Implement Persistent OAuth Login (See `documentation/TODO_PERSISTENT_LOGIN.md`).
-- [DONE] Implement Deep Link Navigation (captured in `src/frontend/app.py`).
-- [PENDING] Deploy the app to Streamlit Cloud using `src/frontend/app.py` as main file path (Verify automatic deploy).
+## Next Steps (Phase 5 Refactoring)
+1. **Implement Identity Service**: Create `src/services/identity_service.py` to handle user syncing and team/role resolution.
+2. **Implement Security Manager**: Create `src/services/security_manager.py` to handle session rehydration and route protection logic.
+3. **Granular Route Protection**: Update `app.py` (or the new Security Manager) to filter navigation items based on user roles and permissions.
+4. **Implement Navigation Service**: Move page definitions and navigation configuration out of `app.py`.
 
-Critical Reminder:
+## Utility Scripts
+- **`scripts/dump_users.py`**: Dumps the `users` table and `user_activity_log` to the console and CSV files in the `tmp/` directory for human review.
+
+## Critical Reminder
 - Do not mark things as done until the User says they are done. AI is not driving this project.
-
-Completed Tasks:
-- UPDATED AI guidelines with the rule against shell redirects.
-- RESET Streamlit application to a clean slate.
-- UPDATED `docs/development/roadmap.md` to reflect all phases as [PENDING].
-- ADDED Aiven connection secrets to `.streamlit/secrets.toml`.
-- ADDED Hello World placeholder to `src/frontend/app.py` for deployment.
-- DOCUMENTED Organization access settings for Streamlit Cloud in `docs/development/PROD_SETUP.md`.
-- ADDED Aiven health check to `src/frontend/app.py`.
-- ADDED Environment information display to `src/frontend/app.py`.
-- DEPLOYED app to `https://snea-edit.streamlit.app/`.
-- REMOVED defunct deployment exclusion mechanism (Streamlit Cloud does not support exclusions).
- - ADDED DNS resolution and socket reachability checks for PostgreSQL to the landing page.
- - TESTED local IPv6 connectivity and enhanced connectivity checks to support dual-stack (IPv4/IPv6) reporting.
- - PURGED all Docker usage and Node.js artifacts from the project and updated documentation.
- - REMOVED Playwright from the project (deleted tests/ui/test_ui.py).
- - [DONE] Updated documentation to clarify that the `src/frontend` folder structure is a mandatory legacy artifact for Streamlit Cloud deployment.
- - [DONE] Resolved Streamlit Cloud "More than one requirements file detected" false-positive warning by adding `.python-version` and updating documentation.
- - [DONE] Aligned development Python version with production (set to 3.12 due to dependency constraints).
- - [DONE] Locked Python version to exactly 3.12.* in `pyproject.toml` and `uv.lock` to ensure Streamlit Cloud uses the correct major/minor release.
- - [DONE] Updated .python-version, pyproject.toml, and documentation to reflect the strict Python 3.12 requirement.
- - [DONE] Committed and pushed changes to main branch.
- - [DONE] UPDATED AI guidelines to strictly forbid using prefixes (like `feat:`, `fix:`) in commit messages.
- - [DONE] Reworded documentation to explicitly state that native Streamlit OAuth2 is incompatible with GitHub and mandated the use of `streamlit-oauth`.
- - [DONE] Updated callback URLs in `roadmap.md` and `github-oauth-doc.md` to point to the `streamlit-oauth` endpoint.
- - [DONE] Hardened warnings in `native-oauth-reference.md`, `github-oauth-doc.md`, and `PROD_SETUP.md` against using `st.login`.
- - [DONE] Added PyCharm Run Configuration for Streamlit in `.idea/runConfigurations/Streamlit.xml`.
- - [DONE] Enhanced PyCharm launcher to kill previous Streamlit sessions using `scripts/kill_streamlit.sh` and a `BEFORE_RUN_TASK`.
- - [DONE] Verified that the launcher ensures `pgserver` is started for local dev (via `get_db_url()` in `src/frontend/app.py` calling `_auto_start_pgserver()` in `src/database.py`).
- - [DONE] Created top-level `launchers/` folder and archived a copy of the PyCharm run configurations for version control.
