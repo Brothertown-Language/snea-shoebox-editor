@@ -35,8 +35,8 @@ def test_iso639_seeding():
 
             # Test idempotency
             print("Testing idempotency...")
-            from src.database.connection import seed_iso_639_data
-            seed_iso_639_data(engine)
+            from src.database.migrations import MigrationManager
+            MigrationManager(engine).seed_iso_639_data()
             count_after = session.query(ISO639_3).count()
             print(f"Total ISO 639-3 records after second seeding attempt: {count_after}")
             if count == count_after:

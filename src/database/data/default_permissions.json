@@ -1,0 +1,17 @@
+[
+  {
+    "github_org": "brothertown-language",
+    "github_team": "proto-snea-admin",
+    "role": "admin"
+  },
+  {
+    "github_org": "brothertown-language",
+    "github_team": "proto-snea",
+    "role": "editor"
+  },
+  {
+    "github_org": "brothertown-language",
+    "github_team": "proto-snea-viewer",
+    "role": "viewer"
+  }
+]
