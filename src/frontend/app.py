@@ -76,6 +76,7 @@ def main():
     # Access control logic
     logged_in = st.session_state.logged_in
     nav_tree = NavigationService.get_navigation_tree(logged_in)
+    
     pg = st.navigation(nav_tree)
 
     if not logged_in:
@@ -90,52 +91,10 @@ def main():
             """
         )
 
-    # Run the selected page
-    if not logged_in and pg != NavigationService.PAGE_LOGIN:
-        # If we just landed on a deep link, save it and redirect to login
-        current_params = {k: v for k, v in st.query_params.items()}
-        
-        # Map page objects to their script paths
-        page_to_path = NavigationService.get_page_to_path_map()
-        
-        if pg in page_to_path:
-            current_params["next"] = page_to_path[pg]
-            # Store in session state for persistence across OAuth redirect
-            st.session_state["redirect_params"] = current_params
-            st.switch_page(NavigationService.PAGE_LOGIN)
-        elif pg == NavigationService.PAGE_LOGOUT:
-            # If they hit logout while not logged in, just go to login
-            st.switch_page(NavigationService.PAGE_LOGIN)
+    # 4. Handle Redirection
+    NavigationService.handle_redirection(pg)
     
-    # Global redirection handler after login/rehydration
-    # CRITICAL: Do not redirect to the home page until ALL identity data (profile, 
-    # orgs, teams) is fully loaded and synchronized with the database.
-    # This prevents the app from landing on the home page with missing profile or org/team data.
-    from src.frontend.auth_utils import is_identity_synchronized
-    if st.session_state.logged_in and is_identity_synchronized():
-        # Get user role for redirection and permission logic
-        user_teams = st.session_state.get("user_teams", [])
-        st.session_state["user_role"] = SecurityManager.get_user_role(user_teams)
-        
-        # Priority 1: Check session state for saved params (from deep links)
-        if "redirect_params" in st.session_state:
-            params = st.session_state.pop("redirect_params")
-            next_page = params.pop("next", "pages/index.py")
-            for k, v in params.items():
-                st.query_params[k] = v
-            st.switch_page(next_page)
-            
-        # Priority 2: Check query params (simple internal redirects)
-        elif "next" in st.query_params:
-            next_page = st.query_params["next"]
-            del st.query_params["next"]
-            
-            # If next points to logout, ignore it to prevent immediate logout after login
-            if "logout.py" in next_page or "logout" in next_page:
-                st.switch_page("pages/index.py")
-            else:
-                st.switch_page(next_page)
-
+    # Run the selected page
     pg.run()
 
 

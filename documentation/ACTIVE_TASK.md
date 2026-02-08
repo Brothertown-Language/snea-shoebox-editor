@@ -25,10 +25,13 @@ Date: 2026-02-07
 - Implemented private Junie database separation for tests and destructive tasks (`tmp/junie_db`).
 - Added `scripts/clone_db.py` for cloning the local developer database to the Junie private database.
 - **Phase 5 Stage 1**: Implemented `IdentityService`, refactored `auth_utils.py`, `app.py`, `login.py`, and `user_info.py`. Verified with tests.
+- **Phase 5 Stage 2**: Implemented `SecurityManager`, refactored `app.py` for session rehydration and identity synchronization.
+- **Phase 5 Stage 3**: Implemented `NavigationService` enhancements (pending review), centralized page registry, and moved redirection logic from `app.py` and `login.py` to `NavigationService.handle_redirection()`.
 - **Refactored Authorization Logic**: Removed hardcoded GitHub org/team checks from `IdentityService`. Authorization is now entirely driven by the `permissions` table in the database via `SecurityManager`.
 - **Security Manager API Update**: `SecurityManager.get_user_role` now accepts an explicit list of teams, facilitating early authorization during the OAuth flow.
 - **Verification**: Updated and verified `tests/test_security_manager.py` and `tests/services/test_identity_service.py`. All tests passing.
-- **Refactoring Plan Update**: Updated `tmp/refactoring_plan.md` to reflect Stage 2 completion.
+- **Refactoring Plan Update**: Updated `tmp/refactoring_plan.md` (reverted Stage 3 completion mark per guidelines).
+- **Bug Fix (Streamlit API Error)**: Resolved `StreamlitAPIException: Multiple Pages specified with default=True` by refactoring `NavigationService` to use module-level constants and explicitly setting `PAGE_HOME` as the default.
 - **Mandated Commit Script Method**: Updated AI guidelines to require the commit script method for all source code changes.
 - **Prohibition on Committing Temporary Files**: Updated `.junie/guidelines.md`, `.junie/operational-standards.md`, and `.junie/development-workflow.md` to explicitly forbid committing any files from the `tmp/` directory.
 - **Commit Script Timing Restriction**: Updated guidelines to explicitly prohibit creating commit scripts or messages without direct user instruction.
@@ -38,7 +41,7 @@ Date: 2026-02-07
 - **Reinforced Path Resolution Guidelines**: Updated `.junie/development-workflow.md` to mandate the 3-step path resolution boilerplate for all shell scripts.
 
 ## Next Steps (Phase 5 Refactoring)
-1. **Navigation Service**: Move page definitions and navigation configuration out of `app.py`.
+1. **Navigation Service**: Move page definitions and navigation configuration out of `app.py`. [IN PROGRESS]
 2. **Database Migration Management**: Clean up `src/database/connection.py` by extracting migration logic to a separate manager.
 
 ## Utility Scripts

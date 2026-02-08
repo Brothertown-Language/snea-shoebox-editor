@@ -187,30 +187,38 @@ def init_db():
     return engine
 
 def seed_default_permissions(engine):
-    """Seed default permissions if the table is empty."""
+    """Seed default permissions and ensure they are lowercase."""
     from .models.identity import Permission
     Session = sessionmaker(bind=engine)
     session = Session()
     try:
-        # Check if table is empty
+        # 1. Update existing permissions to be lowercase for matching robustness
+        permissions = session.query(Permission).all()
+        for p in permissions:
+            if p.github_team != p.github_team.lower() or p.github_org != p.github_org.lower():
+                p.github_team = p.github_team.lower()
+                p.github_org = p.github_org.lower()
+        session.commit()
+
+        # 2. Seed defaults if table is empty
         if session.query(Permission).count() == 0:
             # Default permissions for Brothertown-Language
-            # Admin role for the proto-SNEA-admin team
+            # Admin role for the proto-snea-admin team
             admin_perm = Permission(
-                github_org="Brothertown-Language",
-                github_team="proto-SNEA-admin",
+                github_org="brothertown-language",
+                github_team="proto-snea-admin",
                 role="admin"
             )
-            # Editor role for the proto-SNEA team
+            # Editor role for the proto-snea team
             editor_perm = Permission(
-                github_org="Brothertown-Language",
-                github_team="proto-SNEA",
+                github_org="brothertown-language",
+                github_team="proto-snea",
                 role="editor"
             )
-            # Viewer role for the proto-SNEA-viewer team
+            # Viewer role for the proto-snea-viewer team
             viewer_perm = Permission(
-                github_org="Brothertown-Language",
-                github_team="proto-SNEA-viewer",
+                github_org="brothertown-language",
+                github_team="proto-snea-viewer",
                 role="viewer"
             )
             session.add_all([admin_perm, editor_perm, viewer_perm])

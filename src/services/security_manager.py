@@ -49,7 +49,7 @@ class SecurityManager:
                     team_identifier = team_slug or team.get("name")
                     org_login = team.get("organization", {}).get("login")
                     
-                    if p.github_team == team_identifier and p.github_org == org_login:
+                    if p.github_team.lower() == team_identifier.lower() and p.github_org.lower() == org_login.lower():
                         match = True
                         break
                 
@@ -96,7 +96,11 @@ class SecurityManager:
                 # Check team membership
                 match = False
                 for team in user_teams:
-                    if p.github_team == team.get("slug") and p.github_org == team.get("organization", {}).get("login"):
+                    team_slug = team.get("slug")
+                    team_identifier = team_slug or team.get("name")
+                    org_login = team.get("organization", {}).get("login")
+                    
+                    if p.github_team.lower() == team_identifier.lower() and p.github_org.lower() == org_login.lower():
                         match = True
                         break
                 

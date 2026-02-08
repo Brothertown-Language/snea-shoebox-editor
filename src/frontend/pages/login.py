@@ -70,16 +70,16 @@ def login():
 
     if st.session_state.get("logged_in") and "auth" in st.session_state:
         from src.services.identity_service import IdentityService
+        from src.services.navigation_service import NavigationService
+        
         if IdentityService.is_identity_synchronized():
-            # If there's a redirected page in query params, go there, otherwise home
-            if "next" in st.query_params:
-                next_page = st.query_params.pop("next")
-                if "logout" in next_page:
-                    st.switch_page("pages/index.py")
-                else:
-                    st.switch_page(next_page)
-            else:
-                st.switch_page("pages/index.py")
+            # Use NavigationService to handle any pending redirections
+            # We pass PAGE_LOGIN as the current page (though we are already there)
+            # handle_redirection will pick up redirect_params or query_params
+            NavigationService.handle_redirection(NavigationService.PAGE_LOGIN)
+            
+            # Default fallback if no redirect happened
+            st.switch_page(NavigationService.PAGE_HOME)
             return
 
     if "auth" not in st.session_state:
@@ -113,19 +113,16 @@ def login():
     # secondary fallback to ensure a smooth transition during the login rerun.
     if "auth" in st.session_state:
         from src.services.identity_service import IdentityService
+        from src.services.navigation_service import NavigationService
         from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
         
         if IdentityService.is_identity_synchronized():
             st.session_state.logged_in = True
-            # If there's a redirected page in query params, go there, otherwise home
-            if "next" in st.query_params:
-                next_page = st.query_params.pop("next")
-                if "logout" in next_page:
-                    st.switch_page("pages/index.py")
-                else:
-                    st.switch_page(next_page)
-            else:
-                st.switch_page("pages/index.py")
+            # Use NavigationService to handle any pending redirections
+            NavigationService.handle_redirection(NavigationService.PAGE_LOGIN)
+            
+            # Default fallback if no redirect happened
+            st.switch_page(NavigationService.PAGE_HOME)
         else:
             # Fetch user info immediately after obtaining the token
             token = st.session_state["auth"]["token"]["access_token"]

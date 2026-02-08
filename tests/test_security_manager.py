@@ -34,14 +34,17 @@ def test_security_manager():
         ]
         st.session_state["user_info"] = {"email": "admin@example.com"}
         
-        # 2. Test get_user_role
+        # 2. Test get_user_role (case-insensitive)
+        st.session_state["user_teams"] = [
+            {"slug": "PROTO-SNEA-ADMIN", "organization": {"login": "BROTHERTOWN-LANGUAGE"}}
+        ]
         role = SecurityManager.get_user_role(st.session_state["user_teams"])
-        print(f"Role for admin user: {role}")
+        print(f"Role for admin user (case-insensitive test): {role}")
         assert role == "admin", f"Expected admin, got {role}"
         
-        # 3. Test check_permission (global)
+        # 3. Test check_permission (global, case-insensitive)
         has_perm = SecurityManager.check_permission("admin@example.com", None, "admin")
-        print(f"Admin has admin perm: {has_perm}")
+        print(f"Admin has admin perm (case-insensitive test): {has_perm}")
         assert has_perm is True
         
         has_perm = SecurityManager.check_permission("admin@example.com", None, "editor")

@@ -17,6 +17,7 @@ These rules are non-negotiable and supersede all other instructions. Failure to 
 - **NO ROOT ACCESS**: Never run containers as root. Always use `--user $(id -u):$(id -g)`.
 - **NO HOME DIRECTORY MOUNTS**: Docker volumes and file creations must stay within the project directory or `/tmp`.
 - **NO LOGS IN ROOT**: Keep the project root clean. All logs and transient files MUST go into `tmp/`.
+- **MANDATORY PRIVATE DATABASE**: All operations (scripts, tests, database interactions) MUST use the private Junie database (`JUNIE_PRIVATE_DB=true`) unless specifically and clearly instructed otherwise by the user. NO EXCEPTIONS.
 
 ### 3. Version Control and Security
 - **NEVER COMMIT OR PUSH**: Do not execute `git commit` or `git push`.
