@@ -61,6 +61,11 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Root Cause**: Generating a "review first" pattern out of caution, despite the guideline explicitly requiring the commit to be part of the script. The user runs the script intentionally, so the review step is the user's decision to run it.
 - **Correction**: (1) Fixed `tmp/commit_task.sh` to execute `git commit -F tmp/commit.msg` directly. (2) Added as Recurring Violation #4. (3) Self-check rule: "Does the commit script end with `echo` instructions to run `git commit`? If yes, STOP — replace with the actual `git commit -F tmp/commit.msg` command."
 
+### 2026-02-08: Commit script uses echo instead of executing git commit (third occurrence)
+- **Violation**: `tmp/commit_task.sh` again printed `echo` instructions telling the user to run `git commit -F tmp/commit.msg` instead of executing it directly.
+- **Root Cause**: Same pattern as Recurring Violation #4 — generating "review first" echo output despite prior corrections.
+- **Correction**: Replaced echo lines with `git commit -F tmp/commit.msg` in the script.
+
 ### 2026-02-08: Missing path resolution in commit script
 - **Violation**: `tmp/commit_task.sh` was generated with no `cd` to the project root at all, causing the script to fail when executed from any directory other than the project root (e.g., PyCharm's default working directory).
 - **Root Cause**: The mandatory 3-step path resolution boilerplate from `.junie/development-workflow.md` §1 (PATH RESOLUTION IN SCRIPTS) was not applied to commit scripts. The VCS COMPLIANCE section did not explicitly require it.
