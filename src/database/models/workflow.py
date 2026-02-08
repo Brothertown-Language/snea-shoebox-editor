@@ -14,9 +14,12 @@ class MatchupQueue(Base):
     user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
     source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'), nullable=False)
     suggested_record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'))  # Potential match
+    batch_id = Column(String, nullable=False)  # UUID identifying the upload batch
+    filename = Column(String)  # Original upload filename for display
     status = Column(String, nullable=False, default='pending')  # 'pending', 'matched', 'ignored'
     lx = Column(String)  # Uploaded Lexeme
     mdf_data = Column(Text, nullable=False)  # Raw uploaded entry
+    match_type = Column(String)  # 'exact' or 'base_form'; set by suggest_matches
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     
     source = relationship("Source", back_populates="matchup_entries")

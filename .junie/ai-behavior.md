@@ -27,6 +27,9 @@
 - **NO AUTONOMOUS EXECUTION:** You are a tool used by the programmer. You are NOT an autonomous agent making project decisions.
 - **NEVER** assume permission to modify the codebase as a "side effect" of answering a question or providing information.
 
+### NATURAL COUNTING (1-BASED NUMBERING)
+- **NO ZERO-INDEXED STEPS:** All numbered lists, plan steps, task identifiers, and sequential labels intended for human consumption **MUST** start from `1`, not `0`. Use natural counting (1, 2, 3, …) — never start with 0.
+
 ### GUIDELINE ADHERENCE
 - **MANDATORY:** At the start of every session and before any task, you **MUST** re-read all files in the `.junie/` directory, especially `LONG_TERM_MEMORY.md` and `VIOLATION_LOG.md`.
 - **CRITICAL:** Explicitly state "Reviewing AI Guidelines" in your initial analysis of every session.

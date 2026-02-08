@@ -25,6 +25,7 @@ class MigrationManager:
     _MIGRATIONS = [
         (1, "_migrate_cascade_constraints", "Add ON UPDATE CASCADE / ON DELETE RESTRICT constraints"),
         (2, "_migrate_add_embedding_column", "Add embedding vector column to records"),
+        (3, "_migrate_add_matchup_queue_columns", "Add batch_id, filename, match_type to matchup_queue"),
     ]
 
     def __init__(self, engine):
@@ -138,6 +139,17 @@ class MigrationManager:
         """Migration 2: Add embedding column to records table."""
         with self._engine.connect() as conn:
             conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS embedding vector(1536);"))
+            conn.commit()
+
+    def _migrate_add_matchup_queue_columns(self):
+        """Migration 3: Add batch_id, filename, and match_type columns to matchup_queue."""
+        with self._engine.connect() as conn:
+            conn.execute(text("ALTER TABLE matchup_queue ADD COLUMN IF NOT EXISTS batch_id VARCHAR;"))
+            conn.execute(text("ALTER TABLE matchup_queue ADD COLUMN IF NOT EXISTS filename VARCHAR;"))
+            conn.execute(text("ALTER TABLE matchup_queue ADD COLUMN IF NOT EXISTS match_type VARCHAR;"))
+            # Backfill batch_id for any pre-existing rows so NOT NULL can be enforced
+            conn.execute(text("UPDATE matchup_queue SET batch_id = 'legacy' WHERE batch_id IS NULL;"))
+            conn.execute(text("ALTER TABLE matchup_queue ALTER COLUMN batch_id SET NOT NULL;"))
             conn.commit()
 
     # ── Data Seeding ──────────────────────────────────────────────────

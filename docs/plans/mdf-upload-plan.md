@@ -77,7 +77,7 @@ regressions.
 
 ## Phase B — Upload Service (backend)
 
-### B-0. Add `batch_id`, `filename`, and `match_type` columns to `matchup_queue`
+### B-1. Add `batch_id`, `filename`, and `match_type` columns to `matchup_queue` ✅
 Add the following columns to the `MatchupQueue` model in
 `src/database/models/workflow.py`:
 - `batch_id` (`String`, non-nullable) — UUID identifying the upload batch.
@@ -90,19 +90,19 @@ columns to existing tables.  All subsequent backend methods that query
 or mutate `matchup_queue` rows are scoped by `batch_id` (not just
 `user_email` + `source_id`).
 
-### B-1. Create `UploadService` scaffold
+### B-2. Create `UploadService` scaffold
 Create `src/services/upload_service.py` with a class `UploadService`
 containing stub methods for the operations listed in subsequent steps.
 
-### B-2. Implement `parse_upload(file_content: str) -> list[dict]`
+### B-3. Implement `parse_upload(file_content: str) -> list[dict]`
 This method calls `parse_mdf()` and returns the list of parsed entries.
 It should raise a clear `ValueError` if the file is empty or contains no
 valid entries.
 
-### B-2a. Implement `assign_homonym_numbers(entries: list[dict]) -> list[dict]`
+### B-3a. Implement `assign_homonym_numbers(entries: list[dict]) -> list[dict]`
 After parsing, detect homonyms **within the uploaded batch** by comparing
 `lx` values without diacritics (same `unicodedata.normalize('NFD')` +
-remove `Mn` category logic used in B-4).  For each group of entries that
+remove `Mn` category logic used in B-5).  For each group of entries that
 share the same diacritics-stripped base form:
 - If none of the entries in the group already have an `\hm` tag, assign
   sequential `\hm` values starting from `1` (e.g. three entries with
@@ -116,16 +116,16 @@ share the same diacritics-stripped base form:
 
 This step runs on the parsed list **before** staging so that `\hm` tags
 are present in the `matchup_queue` rows from the start, ensuring
-accurate matching in B-4.
+accurate matching in B-5.
 
-### B-3. Implement `stage_entries(user_email, source_id, entries, filename) -> str`
+### B-4. Implement `stage_entries(user_email, source_id, entries, filename) -> str`
 Generate a new `batch_id` (UUID).  Insert each parsed entry into the
 `matchup_queue` table with status `'pending'`, the generated `batch_id`,
 and the original `filename`.  Return the `batch_id` so the caller can
 reference this specific upload.  Each row stores the raw `mdf_data` and
 the extracted `lx`.
 
-### B-3a. Implement `list_pending_batches(user_email) -> list[dict]`
+### B-4a. Implement `list_pending_batches(user_email) -> list[dict]`
 Return a list of all distinct upload batches that still have rows in
 `matchup_queue` for this user.  Each dict contains:
 `{batch_id, source_id, source_name, filename, entry_count, uploaded_at}`.
@@ -134,7 +134,7 @@ Return a list of all distinct upload batches that still have rows in
 the upload was staged).  Ordered by `uploaded_at` descending (newest
 first).  This powers the batch selector in the UI (C-6a).
 
-### B-4. Implement `suggest_matches(batch_id) -> list[dict]`
+### B-5. Implement `suggest_matches(batch_id) -> list[dict]`
 For every `pending` row in `matchup_queue` belonging to this `batch_id`:
 
 **Matching is restricted to the same `source_id`** to prevent cross-source
@@ -174,7 +174,7 @@ review UI can flag approximate matches for the user.
 Return a summary list of
 `{queue_id, lx, suggested_record_id, suggested_lx, match_type, cross_source_matches, record_id_conflict, record_id_conflict_sources}`.
 
-### B-4b. Implement `auto_remove_exact_duplicates(batch_id) -> dict`
+### B-5b. Implement `auto_remove_exact_duplicates(batch_id) -> dict`
 After `suggest_matches` runs, automatically compare each matched
 uploaded entry against its suggested existing record **excluding the
 `\nt Record:` identifier line**.  If the remaining MDF content is
@@ -192,12 +192,12 @@ should display this summary to the user so they are aware of what was
 auto-removed (e.g. "12 exact duplicates removed: ahtâs, kees, mâhks,
 …").
 
-This step runs automatically after `suggest_matches` (B-4) and after
-`rematch_batch` (B-4a) so that duplicates are always pruned before the
+This step runs automatically after `suggest_matches` (B-5) and after
+`rematch_batch` (B-5a) so that duplicates are always pruned before the
 user sees the review table.
 
-### B-4c. Flag `\hm`-only mismatches as errors
-After `auto_remove_exact_duplicates` (B-4b) runs, scan the remaining
+### B-5c. Flag `\hm`-only mismatches as errors
+After `auto_remove_exact_duplicates` (B-5b) runs, scan the remaining
 matched entries in the batch.  For each entry that has a
 `suggested_record_id`, compare the uploaded MDF against the existing
 record's MDF **excluding both `\nt Record:` and `\hm` lines**.  If the
@@ -215,12 +215,12 @@ entries (e.g. "Data identical except \hm number — possible numbering
 error") so the user can decide whether to update the existing record,
 create a new homonym, or ignore the entry.
 
-This step runs automatically after `auto_remove_exact_duplicates` (B-4b)
-and after `rematch_batch` (B-4a).  Add `hm_mismatch` detection to the
-**B-10** test coverage list.
+This step runs automatically after `auto_remove_exact_duplicates` (B-5b)
+and after `rematch_batch` (B-5a).  Add `hm_mismatch` detection to the
+**B-11** test coverage list.
 
-### B-4d. Flag headword edit-distance mismatches on record-number matches
-After B-4c runs, scan remaining matched entries where the match was made
+### B-5d. Flag headword edit-distance mismatches on record-number matches
+After B-5c runs, scan remaining matched entries where the match was made
 via `\nt Record:` id (i.e. the uploaded entry's record number matched an
 existing record in the same source).  For each such entry, compute the
 edit distance (Levenshtein) between the uploaded `lx` and the existing
@@ -241,31 +241,31 @@ The review UI (D-1) should display a ⚠️ warning for flagged entries
 user can decide whether the uploaded entry is a correction, a different
 word, or an error.
 
-This step runs automatically after B-4c and after `rematch_batch`
-(B-4a).  Add `headword_distance` detection to the **B-10** test
+This step runs automatically after B-5c and after `rematch_batch`
+(B-5a).  Add `headword_distance` detection to the **B-11** test
 coverage list.
 
-### B-4a. Implement `rematch_batch(batch_id) -> list[dict]`
+### B-5a. Implement `rematch_batch(batch_id) -> list[dict]`
 Re-run match suggestions for an existing batch.  For every row in
 `matchup_queue` with this `batch_id` that has status `'pending'`
 (or optionally all non-committed statuses — reset them to `'pending'`
 first), clear `suggested_record_id` and `match_type`, then re-execute
-the same matching logic as `suggest_matches` (B-4).  This is used when
+the same matching logic as `suggest_matches` (B-5).  This is used when
 records have been edited in another session and the user wants updated
 match suggestions.  Return the same summary list as `suggest_matches`.
 
-### B-5. Implement `confirm_match(queue_id, record_id=None) -> None`
+### B-6. Implement `confirm_match(queue_id, record_id=None) -> None`
 Mark a single `matchup_queue` row as `'matched'`.  If `record_id` is
 provided, override the suggestion.  Validate that the target record exists.
 
-### B-5a. Implement `approve_all_new_source(batch_id) -> int`
+### B-6a. Implement `approve_all_new_source(batch_id) -> int`
 Bulk-approve shortcut for **new source** uploads (the source has zero
 existing records).  Mark every `'pending'` row in `matchup_queue` for
 this `batch_id` as `'create_new'` — there is nothing to compare against,
 so all entries will be committed as new records.  Return the count of
 rows updated.
 
-### B-5b. Implement `approve_all_by_record_match(batch_id) -> int`
+### B-6b. Implement `approve_all_by_record_match(batch_id) -> int`
 Bulk-approve shortcut for **existing source** uploads.  For every
 `'pending'` row in this `batch_id` that already has a
 `suggested_record_id` with `match_type = 'exact'` (i.e. matched by
@@ -273,14 +273,14 @@ Bulk-approve shortcut for **existing source** uploads.  For every
 Rows without a suggestion are left as `'pending'` for manual review.
 Return the count of rows auto-approved.
 
-### B-5c. Implement `approve_non_matches_as_new(batch_id) -> int`
+### B-6c. Implement `approve_non_matches_as_new(batch_id) -> int`
 Bulk-approve shortcut for **existing source** uploads.  For every
 `'pending'` row in this `batch_id` that has **no**
 `suggested_record_id` (no match found), mark it as `'create_new'` so
 it will be committed as a new record.  Rows that do have a suggestion
 are left untouched for manual review.  Return the count of rows marked.
 
-### B-5d. Implement `mark_as_homonym(queue_id) -> None`
+### B-6d. Implement `mark_as_homonym(queue_id) -> None`
 Mark a single `matchup_queue` row as `'create_homonym'`.  This is used
 when the uploaded entry shares the same `lx` as an existing record but
 is a distinct word (different meaning / part of speech).  At commit time
@@ -289,11 +289,11 @@ the entry will be inserted as a **new record** with the next available
 if `lx = "ēsh"` already exists with `\hm 1`, the new homonym record
 will be created with `\hm 2`.
 
-### B-6. Implement `ignore_entry(queue_id) -> None`
+### B-7. Implement `ignore_entry(queue_id) -> None`
 Mark a single `matchup_queue` row as `'ignored'` so it is skipped during
 commit.
 
-### B-6b. Implement `apply_single(queue_id, user_email, language_id, session_id) -> dict`
+### B-7b. Implement `apply_single(queue_id, user_email, language_id, session_id) -> dict`
 Apply a single `matchup_queue` row immediately, regardless of batch-level
 actions.  Inspect the row's current status to determine the operation:
 - `'matched'` → execute the same logic as `commit_matched` for this one row.
@@ -309,14 +309,14 @@ record id.  Return a dict with `{action, record_id, lx}` summarising what
 was done.  This method is only called after explicit user approval via the
 per-record "Apply Now" button (D-1c).
 
-### B-6a. Implement `discard_all(batch_id) -> int`
+### B-7a. Implement `discard_all(batch_id) -> int`
 Permanently delete all `matchup_queue` rows for this `batch_id`
 regardless of status (`'pending'`, `'matched'`, `'create_new'`,
 `'create_homonym'`, `'ignored'`).  No records or `edit_history` rows are
 written — the staged upload is simply discarded.  Return the count of
 deleted rows.
 
-### B-7. Implement `commit_matched(batch_id, user_email, session_id) -> int`
+### B-8. Implement `commit_matched(batch_id, user_email, session_id) -> int`
 **This method is only called after explicit user approval via
 "Apply Updates" or "Add & Apply All" (D-3).  No records or
 edit_history rows are written until the user triggers an apply action.**
@@ -340,7 +340,7 @@ For every `'matched'` row belonging to this `batch_id`:
    remaining work at a glance when processing in small batches.
 6. Return the count of committed records.
 
-### B-7a. Implement `commit_homonyms(batch_id, user_email, language_id, session_id) -> int`
+### B-8a. Implement `commit_homonyms(batch_id, user_email, language_id, session_id) -> int`
 **This method is only called after explicit user approval via
 "Apply Updates" or "Add & Apply All" (D-3).**
 
@@ -366,7 +366,7 @@ For every `'create_homonym'` row belonging to this `batch_id`:
    review table.
 7. Return the count of new homonym records.
 
-### B-8. Implement `commit_new(batch_id, user_email, language_id, session_id) -> int`
+### B-9. Implement `commit_new(batch_id, user_email, language_id, session_id) -> int`
 **This method is only called after explicit user approval via
 "Add New Records" or "Add & Apply All" (D-3).  No records or
 edit_history rows are written until the user triggers an add action.**
@@ -391,12 +391,12 @@ For every `'pending'` row (no match) that the user explicitly marks as
    review table.
 5. Return the count of new records.
 
-### B-9. Implement `populate_search_entries(record_ids: list[int]) -> int`
+### B-10. Implement `populate_search_entries(record_ids: list[int]) -> int`
 For each record id, delete existing `search_entries` rows and re-insert
 entries for `lx`, `va`, `se`, `cf`, `ve` extracted from the current
 `mdf_data`.  Return the total count of search entries created.
 
-### B-10. Write unit tests for `UploadService`
+### B-11. Write unit tests for `UploadService`
 Use `src/seed_data/natick_sample_100.txt` as the test fixture for all
 upload service tests.  Add tests covering:
 - `parse_upload` with valid and empty content.
@@ -466,7 +466,7 @@ This allows the user to switch between multiple in-progress uploads.
 
 ### C-6b. Implement "Re-Match" button
 Display a "Re-Match" button next to the batch selector.  On click, call
-`rematch_batch(batch_id)` (B-4a) to re-run match suggestions against
+`rematch_batch(batch_id)` (B-5a) to re-run match suggestions against
 the current state of the `records` table.  This is useful when records
 have been edited in another session (or by another user) since the
 original upload was staged.  The review table refreshes with updated
@@ -529,12 +529,12 @@ Above the review table, display contextual bulk-action buttons:
 
 - **New source** (source has no existing records): show an
   "Approve All as New Records" button that calls
-  `approve_all_new_source` (B-5a) and refreshes the table.
+  `approve_all_new_source` (B-6a) and refreshes the table.
 - **Existing source**: show two buttons:
   1. "Approve All Matched" — calls `approve_all_by_record_match`
-     (B-5b) to auto-approve entries that matched by record#.
+     (B-6b) to auto-approve entries that matched by record#.
   2. "Approve Non-Matches as New" — calls
-     `approve_non_matches_as_new` (B-5c) to mark unmatched entries
+     `approve_non_matches_as_new` (B-6c) to mark unmatched entries
      as new records.
 
 All buttons update `st.session_state` and refresh the review table so
@@ -545,7 +545,7 @@ For each entry in the review table, display an **"Apply Now"** button
 next to the status selector.  The button is **enabled** only when the
 entry has an actionable status (`match`, `create new`, or
 `new homonym`) and **disabled** when the status is `pending` or
-`ignore`.  On click, call `apply_single(queue_id, …)` (B-6b) to
+`ignore`.  On click, call `apply_single(queue_id, …)` (B-7b) to
 immediately commit that single record to the live `records` table and
 `edit_history`.  The row is then removed from the review table.  Display
 a brief inline confirmation (e.g. ✅ "Applied: ēsh → record #42").
@@ -574,7 +574,7 @@ apply/add actions is performed.**  All operations generate a
 3. **"Add & Apply All"** — calls `commit_matched`, `commit_homonyms`,
    and `commit_new` in sequence.  Applies all approved changes in one
    step.
-4. **"Discard All"** — calls `discard_all(batch_id)` (B-6a).
+4. **"Discard All"** — calls `discard_all(batch_id)` (B-7a).
    Permanently removes all `matchup_queue` rows for the selected
    batch without writing anything to the live tables or edit history.
    After discard, the batch selector refreshes and the discarded
