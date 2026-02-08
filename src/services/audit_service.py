@@ -4,6 +4,9 @@ Audit Service for standardizing user activity logging.
 """
 from typing import Optional
 from src.database import get_session, UserActivityLog
+from src.logging_config import get_logger
+
+logger = get_logger("snea.audit")
 
 
 class AuditService:
@@ -33,6 +36,6 @@ class AuditService:
             session.commit()
         except Exception as e:
             session.rollback()
-            print(f"Failed to log user activity: {e}", flush=True)
+            logger.error("Failed to log user activity: %s", e)
         finally:
             session.close()

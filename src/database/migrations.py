@@ -9,6 +9,9 @@ from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
 from .connection import is_production
+from src.logging_config import get_logger
+
+logger = get_logger("snea.migrations")
 
 
 class MigrationManager:
@@ -157,7 +160,7 @@ class MigrationManager:
             if session.query(Permission).count() == 0:
                 data_file = Path(__file__).parent / "data" / "default_permissions.json"
                 if not data_file.exists():
-                    print(f"ERROR: Default permissions data file not found at {data_file}")
+                    logger.error("Default permissions data file not found at %s", data_file)
                     return
 
                 with open(data_file, encoding='utf-8') as f:
@@ -176,7 +179,7 @@ class MigrationManager:
                 if not is_production():
                     st.info("Seeded default permissions for Brothertown-Language.")
                 else:
-                    print("INFO: Seeded default permissions for Brothertown-Language.")
+                    logger.info("Seeded default permissions for Brothertown-Language.")
         except Exception as e:
             session.rollback()
             raise e
@@ -194,15 +197,15 @@ class MigrationManager:
             if count_before == 0:
                 data_file = Path(__file__).parent / "data" / "iso-639-3.tab"
                 if not data_file.exists():
-                    print(f"ERROR: ISO 639-3 data file not found at {data_file}")
+                    logger.error("ISO 639-3 data file not found at %s", data_file)
                     return
 
                 if not is_production():
                     st.info(f"Seeding ISO 639-3 data from {data_file}...")
                     st.info(f"Records before seeding: {count_before}")
                 else:
-                    print(f"INFO: Seeding ISO 639-3 data from {data_file}...")
-                    print(f"INFO: Records before seeding: {count_before}")
+                    logger.info("Seeding ISO 639-3 data from %s...", data_file)
+                    logger.info("Records before seeding: %d", count_before)
 
                 with open(data_file, encoding='utf-8') as f:
                     content = f.read()
@@ -232,10 +235,10 @@ class MigrationManager:
                     st.info(f"Seeded {len(iso_entries)} ISO 639-3 language records.")
                     st.info(f"Records after seeding: {count_after}")
                 else:
-                    print(f"INFO: Seeded {len(iso_entries)} ISO 639-3 language records.")
-                    print(f"INFO: Records after seeding: {count_after}")
+                    logger.info("Seeded %d ISO 639-3 language records.", len(iso_entries))
+                    logger.info("Records after seeding: %d", count_after)
         except Exception as e:
-            print(f"ERROR: Failed to seed ISO 639-3 data: {e}")
+            logger.error("Failed to seed ISO 639-3 data: %s", e)
             session.rollback()
         finally:
             session.close()
