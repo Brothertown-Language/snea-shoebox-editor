@@ -45,11 +45,16 @@ class Permission(Base):
     """
     Access control mapping between GitHub Teams and application roles.
     Defines who can view or edit specific sources.
+    
+    ROLE ENFORCEMENT:
+    - 'admin': Automatic full access to all resources and administrative functions.
+    - 'editor': Access to edit, update, and manage MDF records ONLY.
+    - 'viewer': Read-only access to records. MAY NEVER edit or modify any data (HARD BLOCK).
     """
     __tablename__ = 'permissions'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    source_id = Column(Integer, ForeignKey('sources.id'))  # NULL = all
+    source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'))  # NULL = all
     github_org = Column(String, nullable=False)
-    github_team = Column(String)  # NULL = all org members
+    github_team = Column(String, nullable=False)  # Mandatory: No NULL teams allowed for security
     role = Column(String, nullable=False, default='viewer')  # 'admin', 'editor', 'viewer'
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())

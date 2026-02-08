@@ -54,16 +54,11 @@ def _auto_start_pgserver():
         uri = _pg_server.get_uri()
         
         # Ensure pgvector extension is enabled automatically for local dev
-        try:
-            from sqlalchemy import create_engine, text
-            engine = create_engine(uri)
-            with engine.connect() as conn:
-                conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-                conn.commit()
-        except Exception as e:
-            # We don't want to block startup if this fails, but it should be logged
-            if not is_production():
-                st.warning(f"Could not automatically enable pgvector: {e}")
+        from sqlalchemy import create_engine, text
+        engine = create_engine(uri)
+        with engine.connect() as conn:
+            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+            conn.commit()
         
         # Register cleanup on exit
         atexit.register(_stop_local_db)
@@ -123,54 +118,104 @@ def init_db():
     # Base.metadata.create_all is non-destructive for existing tables
     Base.metadata.create_all(engine)
     
+    # Seed default permissions if table is empty
+    seed_default_permissions(engine)
+    
     # Manual migration to add ON UPDATE CASCADE to user_email foreign keys
     # This is necessary because GitHub email addresses can change.
     with engine.connect() as conn:
-        try:
-            # 1. user_activity_log
-            conn.execute(text("ALTER TABLE user_activity_log DROP CONSTRAINT IF EXISTS user_activity_log_user_email_fkey;"))
-            conn.execute(text("ALTER TABLE user_activity_log ADD CONSTRAINT user_activity_log_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
-            
-            # 2. matchup_queue
-            conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_user_email_fkey;"))
-            conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
-            
-            # 3. edit_history
-            conn.execute(text("ALTER TABLE edit_history DROP CONSTRAINT IF EXISTS edit_history_user_email_fkey;"))
-            conn.execute(text("ALTER TABLE edit_history ADD CONSTRAINT edit_history_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
-            
-            # 4. records (updated_by)
-            conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_updated_by_fkey;"))
-            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+        # 1. user_activity_log
+        conn.execute(text("ALTER TABLE user_activity_log DROP CONSTRAINT IF EXISTS user_activity_log_user_email_fkey;"))
+        conn.execute(text("ALTER TABLE user_activity_log ADD CONSTRAINT user_activity_log_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+        
+        # 2. matchup_queue
+        conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_user_email_fkey;"))
+        conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+        
+        # 3. edit_history
+        conn.execute(text("ALTER TABLE edit_history DROP CONSTRAINT IF EXISTS edit_history_user_email_fkey;"))
+        conn.execute(text("ALTER TABLE edit_history ADD CONSTRAINT edit_history_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+        
+        # 4. records (updated_by)
+        conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_updated_by_fkey;"))
+        conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
 
-            # 5. records (reviewed_by)
-            conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_reviewed_by_fkey;"))
-            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+        # 5. records (reviewed_by)
+        conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_reviewed_by_fkey;"))
+        conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
 
-            conn.commit()
-        except Exception as e:
-            # Log but don't stop if migration fails (might already be fixed or different constraint names)
-            if not is_production():
-                st.warning(f"Could not automatically update foreign key constraints: {e}")
-            else:
-                print(f"ERROR: Failed to update foreign key constraints: {e}")
+        # 6. records (language_id)
+        conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_language_id_fkey;"))
+        conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_language_id_fkey FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT;"))
+
+        # 7. records (source_id)
+        conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_source_id_fkey;"))
+        conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"))
+
+        # 8. search_entries (record_id)
+        conn.execute(text("ALTER TABLE search_entries DROP CONSTRAINT IF EXISTS search_entries_record_id_fkey;"))
+        conn.execute(text("ALTER TABLE search_entries ADD CONSTRAINT search_entries_record_id_fkey FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE RESTRICT;"))
+
+        # 9. matchup_queue (source_id)
+        conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_source_id_fkey;"))
+        conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"))
+
+        # 10. matchup_queue (suggested_record_id)
+        conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_suggested_record_id_fkey;"))
+        conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_suggested_record_id_fkey FOREIGN KEY (suggested_record_id) REFERENCES records(id) ON DELETE RESTRICT;"))
+
+        # 11. permissions (source_id)
+        conn.execute(text("ALTER TABLE permissions DROP CONSTRAINT IF EXISTS permissions_source_id_fkey;"))
+        conn.execute(text("ALTER TABLE permissions ADD CONSTRAINT permissions_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"))
+
+        conn.commit()
 
     # Add embedding column if it doesn't exist (manual migration for now)
     # Note: In a full production app, we would use Alembic.
     with engine.connect() as conn:
-        try:
-            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS embedding vector(1536);"))
-            conn.commit()
-        except Exception as e:
-            # We log the error but don't stop the whole app from starting, 
-            # though the specific feature will be broken.
-            if not is_production():
-                st.error(f"Failed to add 'embedding' vector column: {e}")
-            else:
-                # In production, we should probably know about this
-                print(f"ERROR: Failed to add 'embedding' vector column: {e}")
+        conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS embedding vector(1536);"))
+        conn.commit()
             
     return engine
+
+def seed_default_permissions(engine):
+    """Seed default permissions if the table is empty."""
+    from .models.identity import Permission
+    Session = sessionmaker(bind=engine)
+    session = Session()
+    try:
+        # Check if table is empty
+        if session.query(Permission).count() == 0:
+            # Default permissions for Brothertown-Language
+            # Admin role for the proto-SNEA-admin team
+            admin_perm = Permission(
+                github_org="Brothertown-Language",
+                github_team="proto-SNEA-admin",
+                role="admin"
+            )
+            # Editor role for the proto-SNEA team
+            editor_perm = Permission(
+                github_org="Brothertown-Language",
+                github_team="proto-SNEA",
+                role="editor"
+            )
+            # Viewer role for the proto-SNEA-viewer team
+            viewer_perm = Permission(
+                github_org="Brothertown-Language",
+                github_team="proto-SNEA-viewer",
+                role="viewer"
+            )
+            session.add_all([admin_perm, editor_perm, viewer_perm])
+            session.commit()
+            if not is_production():
+                st.info("Seeded default permissions for Brothertown-Language.")
+            else:
+                print("INFO: Seeded default permissions for Brothertown-Language.")
+    except Exception as e:
+        session.rollback()
+        raise e
+    finally:
+        session.close()
 
 def get_session():
     """Get a new database session."""

@@ -46,8 +46,8 @@ class Record(Base):
     hm = Column(Integer, default=1)  # Homonym Number (\hm)
     ps = Column(String)  # Part of Speech (\ps)
     ge = Column(String)  # English Gloss (\ge)
-    language_id = Column(Integer, ForeignKey('languages.id'), nullable=False)
-    source_id = Column(Integer, ForeignKey('sources.id'), nullable=False)
+    language_id = Column(Integer, ForeignKey('languages.id', ondelete='RESTRICT'), nullable=False)
+    source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'), nullable=False)
     source_page = Column(String)  # Specific citation detail (\so)
     status = Column(String, nullable=False, default='draft')  # 'draft', 'edited', 'approved'
     embedding = Column(Vector(1536))  # Semantic cross-reference
@@ -64,5 +64,5 @@ class Record(Base):
     language = relationship("Language", back_populates="records")
     source = relationship("Source", back_populates="records")
     history = relationship("EditHistory", back_populates="record")
-    search_entries = relationship("SearchEntry", back_populates="record", cascade="all, delete-orphan")
+    search_entries = relationship("SearchEntry", back_populates="record")
     matchup_suggestions = relationship("MatchupQueue", back_populates="suggested_record")

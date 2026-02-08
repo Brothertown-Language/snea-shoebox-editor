@@ -10,7 +10,7 @@ class SearchEntry(Base):
     """
     __tablename__ = 'search_entries'
     id = Column(Integer, primary_key=True, autoincrement=True)
-    record_id = Column(Integer, ForeignKey('records.id'), nullable=False)
+    record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
     term = Column(String, nullable=False)  # The searchable form (\lx, \va, \se, etc.)
     entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'se', 'cf', 've'
     
