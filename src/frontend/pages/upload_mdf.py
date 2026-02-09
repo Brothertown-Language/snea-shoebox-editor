@@ -117,6 +117,12 @@ def upload_mdf():
             st.switch_page("pages/index.py")
 
     # ── Main panel: upload content ────────────────────────────────
+    # Display flash message from batch completion or other bulk actions
+    flash = st.session_state.pop("bulk_flash", None)
+    if flash:
+        level, msg = flash
+        getattr(st, level)(msg)
+
     if uploaded_file is not None:
         file_content = uploaded_file.getvalue().decode("utf-8")
 
@@ -357,7 +363,9 @@ def _render_review_table(batch_id, session_deps):
             .all()
         )
         if not rows:
-            st.info("No entries in this batch (all applied or discarded).")
+            st.session_state.pop("review_batch_id", None)
+            st.session_state["bulk_flash"] = ("success", "Batch complete — all entries have been applied or discarded.")
+            st.rerun()
             return
 
         # Determine source context for bulk buttons
@@ -417,12 +425,18 @@ def _render_review_table(batch_id, session_deps):
         st.divider()
         st.subheader("Bulk Actions")
 
+        # Display flash message from previous bulk action
+        flash = st.session_state.pop("bulk_flash", None)
+        if flash:
+            level, msg = flash
+            getattr(st, level)(msg)
+
         # D-1a: Bulk approval action buttons
         if is_new_source:
             if st.button("Approve All as New Records", key="bulk_approve_new"):
                 try:
                     UploadService.approve_all_new_source(batch_id)
-                    st.success("All entries approved as new records.")
+                    st.session_state["bulk_flash"] = ("success", "All entries approved as new records.")
                     st.rerun()
                 except Exception as e:
                     logger.error("Bulk approve failed: %s", e)
@@ -430,30 +444,48 @@ def _render_review_table(batch_id, session_deps):
         else:
             if st.button("Approve All Matched", key="bulk_approve_matched"):
                 try:
-                    UploadService.approve_all_by_record_match(batch_id)
-                    st.success("All matched entries approved.")
-                    st.rerun()
+                    import uuid as _bulk_uuid
+                    count = UploadService.approve_all_by_record_match(
+                        batch_id,
+                        user_email=user_email,
+                        language_id=language_id,
+                        session_id=str(_bulk_uuid.uuid4()),
+                    )
+                    if count:
+                        st.session_state["bulk_flash"] = ("success", f"{count} matched entr{'y' if count == 1 else 'ies'} applied.")
+                        st.rerun()
+                    else:
+                        st.info("No matched entries to apply.")
                 except Exception as e:
                     logger.error("Bulk approve matched failed: %s", e)
                     st.error(f"Bulk approve matched failed: {e}")
             if st.button("Approve Non-Matches as New", key="bulk_approve_nonmatch"):
                 try:
-                    UploadService.approve_non_matches_as_new(batch_id)
-                    st.success("Non-matching entries approved as new records.")
-                    st.rerun()
+                    import uuid as _bulk_uuid2
+                    count = UploadService.approve_non_matches_as_new(
+                        batch_id,
+                        user_email=user_email,
+                        language_id=language_id,
+                        session_id=str(_bulk_uuid2.uuid4()),
+                    )
+                    if count:
+                        st.session_state["bulk_flash"] = ("success", f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.")
+                        st.rerun()
+                    else:
+                        st.info("No non-matching entries to approve.")
                 except Exception as e:
                     logger.error("Bulk approve non-matches failed: %s", e)
                     st.error(f"Bulk approve non-matches failed: {e}")
 
-        # Discard Ignored — available regardless of new/existing source
-        if st.button("Discard Ignored", key="bulk_discard_ignored"):
+        # Discard Marked — available regardless of new/existing source
+        if st.button("Discard All Marked", key="bulk_discard_marked"):
             try:
-                count = UploadService.discard_ignored(batch_id)
+                count = UploadService.discard_marked(batch_id)
                 if count:
-                    st.success(f"Discarded {count} ignored entr{'y' if count == 1 else 'ies'}.")
+                    st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
                     st.rerun()
                 else:
-                    st.info("No ignored entries to discard.")
+                    st.info("No entries marked for discard.")
             except Exception as e:
                 logger.error("Discard ignored failed: %s", e)
                 st.error(f"Discard ignored failed: {e}")
@@ -521,7 +553,7 @@ def _render_review_table(batch_id, session_deps):
                     st.markdown("→ *No match*")
             with hdr_col3:
                 # Status selector
-                status_options = ['matched', 'create_new', 'create_homonym', 'ignore']
+                status_options = ['matched', 'create_new', 'create_homonym', 'discard', 'ignored']
                 # Map current_status to index
                 if current_status in status_options:
                     default_idx = status_options.index(current_status)
@@ -544,14 +576,16 @@ def _render_review_table(batch_id, session_deps):
                             _set_queue_status(row.id, 'create_new')
                         elif selected_status == 'create_homonym':
                             UploadService.mark_as_homonym(row.id)
-                        elif selected_status == 'ignore':
+                        elif selected_status == 'discard':
+                            UploadService.mark_as_discard(row.id)
+                        elif selected_status == 'ignored':
                             UploadService.ignore_entry(row.id)
                     except Exception as e:
                         logger.error("Status change failed: %s", e)
 
             with hdr_col4:
                 # D-1c: Per-record Apply Now button
-                actionable = selected_status in ('matched', 'create_new', 'create_homonym')
+                actionable = selected_status in ('matched', 'create_new', 'create_homonym', 'discard')
                 if st.button(
                     "Apply Now",
                     key=f"apply_{row.id}",
@@ -565,9 +599,12 @@ def _render_review_table(batch_id, session_deps):
                             language_id=language_id,
                             session_id=session_id,
                         )
-                        # Populate search entries
-                        UploadService.populate_search_entries([result['record_id']])
-                        st.success(f"✅ Applied: {result['lx']} → record #{result['record_id']}")
+                        # Populate search entries (skip for discards)
+                        if result.get('record_id'):
+                            UploadService.populate_search_entries([result['record_id']])
+                            st.success(f"✅ Applied: {result['lx']} → record #{result['record_id']}")
+                        else:
+                            st.success(f"✅ Discarded: {result['lx']}")
                         st.rerun()
                     except Exception as e:
                         logger.error("Apply single failed: %s", e)

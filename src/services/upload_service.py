@@ -609,48 +609,134 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def approve_all_by_record_match(batch_id: str) -> int:
-        """Bulk-approve pending rows with exact suggested matches as 'matched'.
+    def approve_all_by_record_match(batch_id: str, user_email: str,
+                                     language_id: int,
+                                     session_id: str) -> int:
+        """Bulk-apply matched rows to the records table.
 
-        Returns count of rows auto-approved.
+        Targets rows with a suggested_record_id and an exact or base_form
+        match_type that are still 'pending' or already 'matched' (the UI
+        selectbox may have defaulted them to 'matched' before the user
+        clicks the bulk button).
+
+        Each matched row is applied via apply_single (updates the existing
+        record, writes edit_history, populates search entries, and removes
+        the queue row).
+
+        Returns count of rows applied.
         """
+        # First ensure all qualifying rows have status='matched'
         session = get_session()
         try:
-            count = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='pending', match_type='exact')
-                .filter(MatchupQueue.suggested_record_id.isnot(None))
-                .update({'status': 'matched'})
-            )
+            session.query(MatchupQueue).filter_by(
+                batch_id=batch_id,
+            ).filter(
+                MatchupQueue.status.in_(['pending', 'matched']),
+                MatchupQueue.match_type.in_(['exact', 'base_form']),
+                MatchupQueue.suggested_record_id.isnot(None),
+            ).update({'status': 'matched'}, synchronize_session='fetch')
             session.commit()
-            return count
         except Exception:
             session.rollback()
             raise
         finally:
             session.close()
+
+        # Collect IDs of matched rows to apply
+        session = get_session()
+        try:
+            matched_rows = (
+                session.query(MatchupQueue)
+                .filter_by(batch_id=batch_id, status='matched')
+                .filter(MatchupQueue.suggested_record_id.isnot(None))
+                .all()
+            )
+            queue_ids = [r.id for r in matched_rows]
+        finally:
+            session.close()
+
+        applied = 0
+        for qid in queue_ids:
+            try:
+                UploadService.apply_single(
+                    queue_id=qid,
+                    user_email=user_email,
+                    language_id=language_id,
+                    session_id=session_id,
+                )
+                applied += 1
+            except Exception as e:
+                logger.error("approve_all_by_record_match: failed to apply queue_id=%s: %s", qid, e)
+
+        logger.info(
+            "approve_all_by_record_match: batch=%s, applied %d of %d matched rows",
+            batch_id, applied, len(queue_ids),
+        )
+        return applied
 
     @staticmethod
-    def approve_non_matches_as_new(batch_id: str) -> int:
-        """Bulk-approve pending rows with no suggestion as 'create_new'.
+    def approve_non_matches_as_new(batch_id: str, user_email: str,
+                                    language_id: int,
+                                    session_id: str) -> int:
+        """Bulk-apply unmatched rows as new records.
 
-        Returns count of rows marked.
+        Targets rows with no suggested_record_id that are still 'pending'
+        or already 'create_new' (the UI selectbox may have defaulted them
+        to 'create_new' before the user clicks the bulk button).
+
+        Each qualifying row is set to 'create_new' then applied via
+        apply_single (creates a new record, writes edit_history, populates
+        search entries, and removes the queue row).
+
+        Returns count of rows actually applied.
         """
+        # First ensure all qualifying rows have status='create_new'
         session = get_session()
         try:
-            count = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='pending')
-                .filter(MatchupQueue.suggested_record_id.is_(None))
-                .update({'status': 'create_new'})
-            )
+            session.query(MatchupQueue).filter_by(
+                batch_id=batch_id,
+            ).filter(
+                MatchupQueue.status.in_(['pending', 'create_new']),
+                MatchupQueue.suggested_record_id.is_(None),
+            ).update({'status': 'create_new'}, synchronize_session='fetch')
             session.commit()
-            return count
         except Exception:
             session.rollback()
             raise
         finally:
             session.close()
+
+        # Collect IDs of create_new rows to apply
+        session = get_session()
+        try:
+            rows = (
+                session.query(MatchupQueue)
+                .filter_by(batch_id=batch_id, status='create_new')
+                .filter(MatchupQueue.suggested_record_id.is_(None))
+                .all()
+            )
+            queue_ids = [r.id for r in rows]
+        finally:
+            session.close()
+
+        applied = 0
+        for qid in queue_ids:
+            try:
+                UploadService.apply_single(
+                    queue_id=qid,
+                    user_email=user_email,
+                    language_id=language_id,
+                    session_id=session_id,
+                )
+                applied += 1
+            except Exception as e:
+                logger.error("approve_non_matches_as_new: failed to apply queue_id=%s: %s", qid, e)
+
+        logger.info(
+            "approve_non_matches_as_new: batch=%s, applied %d of %d rows",
+            batch_id, applied, len(queue_ids),
+        )
+        return applied
 
     @staticmethod
     def mark_as_homonym(queue_id: int) -> None:
@@ -670,13 +756,29 @@ class UploadService:
 
     @staticmethod
     def ignore_entry(queue_id: int) -> None:
-        """Mark a matchup_queue row as 'ignored'."""
+        """Mark a matchup_queue row as 'ignored' (leave alone for later review)."""
         session = get_session()
         try:
             row = session.get(MatchupQueue, queue_id)
             if not row:
                 raise ValueError(f"Queue entry {queue_id} not found")
             row.status = 'ignored'
+            session.commit()
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def mark_as_discard(queue_id: int) -> None:
+        """Mark a matchup_queue row as 'discard'."""
+        session = get_session()
+        try:
+            row = session.get(MatchupQueue, queue_id)
+            if not row:
+                raise ValueError(f"Queue entry {queue_id} not found")
+            row.status = 'discard'
             session.commit()
         except Exception:
             session.rollback()
@@ -702,6 +804,13 @@ class UploadService:
                     f"Cannot apply entry with status '{row.status}'. "
                     "Set a valid actionable status first."
                 )
+
+            # Discard: just remove from queue without creating/updating records
+            if row.status == 'discard':
+                lx = row.lx
+                session.delete(row)
+                session.commit()
+                return {'action': 'discarded', 'record_id': None, 'lx': lx}
 
             from src.mdf.parser import parse_mdf as _parse
             parsed = _parse(row.mdf_data)
@@ -832,13 +941,13 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def discard_ignored(batch_id: str) -> int:
-        """Delete all 'ignore' status matchup_queue rows for a batch. Returns count deleted."""
+    def discard_marked(batch_id: str) -> int:
+        """Delete all 'discard' status matchup_queue rows for a batch. Returns count deleted."""
         session = get_session()
         try:
             count = (
                 session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='ignore')
+                .filter_by(batch_id=batch_id, status='discard')
                 .delete()
             )
             session.commit()

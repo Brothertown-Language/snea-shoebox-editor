@@ -61,16 +61,23 @@ class TestReviewTableRendering(unittest.TestCase):
         self._sidebar_mock = _setup_sidebar_mock()
 
     @patch("src.database.get_session")
-    @patch("streamlit.info")
-    def test_empty_batch_shows_info(self, mock_info, mock_get_session):
+    @patch("streamlit.rerun")
+    def test_empty_batch_redirects_to_upload(self, mock_rerun, mock_get_session):
+        """When batch is empty, clear review_batch_id and rerun to upload view."""
+        import streamlit as st
+        st.session_state["review_batch_id"] = "batch-1"
+
         mock_sess = MagicMock()
         mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = []
         mock_get_session.return_value = mock_sess
 
         from src.frontend.pages.upload_mdf import _render_review_table
         _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
-        mock_info.assert_called_once()
-        self.assertIn("No entries", mock_info.call_args[0][0])
+        mock_rerun.assert_called_once()
+        self.assertNotIn("review_batch_id", st.session_state)
+        flash = st.session_state.pop("bulk_flash", None)
+        self.assertIsNotNone(flash)
+        self.assertEqual(flash[0], "success")
 
     @patch("src.database.get_session")
     @patch("streamlit.subheader")
@@ -342,14 +349,14 @@ class TestPerRecordApplyNow(unittest.TestCase):
     @patch("streamlit.columns")
     @patch("streamlit.container")
     @patch("streamlit.markdown")
-    @patch("streamlit.selectbox", side_effect=lambda *a, **kw: 1 if "per page" in a[0] else "ignore")
+    @patch("streamlit.selectbox", side_effect=lambda *a, **kw: 1 if "per page" in a[0] else "ignored")
     @patch("streamlit.code")
     @patch("streamlit.info")
-    def test_apply_now_disabled_for_ignore(self, _info, _code,
+    def test_apply_now_disabled_for_ignored(self, _info, _code,
                                             _selectbox, _md, mock_container,
                                             mock_columns, mock_button, _subheader,
                                             mock_get_session):
-        """D-1c: Apply Now is disabled when status is 'ignore'."""
+        """D-1c: Apply Now is disabled when status is 'ignored'."""
         row = _make_queue_row(lx="test", status="ignored")
         lang = MagicMock()
         lang.id = 2

@@ -525,7 +525,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
     # --- B-6b: approve_all_by_record_match ---
 
     def test_approve_all_by_record_match(self):
-        self._add_record('esh', '\\lx esh\n\\ps n\n\\ge fire')
+        rec = self._add_record('esh', '\\lx esh\n\\ps n\n\\ge fire')
         batch_id = self._stage([
             {'lx': 'esh', 'mdf_data': '\\lx esh\n\\ps n\n\\ge flame'},
             {'lx': 'xyz', 'mdf_data': '\\lx xyz\n\\ps n\n\\ge unknown'},
@@ -533,13 +533,18 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         with self._patch_session():
             UploadService.suggest_matches(batch_id)
         with self._patch_session():
-            count = UploadService.approve_all_by_record_match(batch_id)
+            count = UploadService.approve_all_by_record_match(
+                batch_id, 'test@example.com', self.language_id, 'sess1',
+            )
         self.assertEqual(count, 1)
         from src.database import MatchupQueue
-        matched = self.session.query(MatchupQueue).filter_by(batch_id=batch_id, status='matched').count()
-        pending = self.session.query(MatchupQueue).filter_by(batch_id=batch_id, status='pending').count()
-        self.assertEqual(matched, 1)
-        self.assertEqual(pending, 1)
+        # Matched row should be removed from queue (applied)
+        remaining = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).all()
+        self.assertEqual(len(remaining), 1)
+        self.assertEqual(remaining[0].lx, 'xyz')
+        # Existing record should be updated
+        self.session.refresh(rec)
+        self.assertIn('flame', rec.mdf_data)
 
     # --- B-6c: approve_non_matches_as_new ---
 
@@ -552,8 +557,19 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         with self._patch_session():
             UploadService.suggest_matches(batch_id)
         with self._patch_session():
-            count = UploadService.approve_non_matches_as_new(batch_id)
+            count = UploadService.approve_non_matches_as_new(
+                batch_id, 'test@example.com', self.language_id, 'sess1',
+            )
         self.assertEqual(count, 1)
+        # Non-matched row should be removed from queue (applied as new record)
+        from src.database import MatchupQueue, Record
+        remaining = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).all()
+        self.assertEqual(len(remaining), 1)
+        self.assertEqual(remaining[0].lx, 'esh')
+        # New record should exist
+        new_rec = self.session.query(Record).filter_by(lx='xyz').first()
+        self.assertIsNotNone(new_rec)
+        self.assertIn('unknown', new_rec.ge)
 
     # --- B-6d: mark_as_homonym ---
 
@@ -577,7 +593,42 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         self.session.refresh(row)
         self.assertEqual(row.status, 'ignored')
 
-    # --- B-7a: discard_all ---
+    # --- B-7a: discard_marked ---
+
+    def test_discard_marked(self):
+        batch_id = self._stage([
+            {'lx': 'w1', 'mdf_data': '\\lx w1'},
+            {'lx': 'w2', 'mdf_data': '\\lx w2'},
+            {'lx': 'w3', 'mdf_data': '\\lx w3'},
+        ])
+        from src.database import MatchupQueue
+        rows = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).order_by(MatchupQueue.id).all()
+        # Mark first two as discard
+        with self._patch_session():
+            UploadService.mark_as_discard(rows[0].id)
+        with self._patch_session():
+            UploadService.mark_as_discard(rows[1].id)
+        with self._patch_session():
+            count = UploadService.discard_marked(batch_id)
+        self.assertEqual(count, 2)
+        remaining = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).all()
+        self.assertEqual(len(remaining), 1)
+        self.assertEqual(remaining[0].lx, 'w3')
+
+    def test_apply_single_discard(self):
+        batch_id = self._stage([{'lx': 'unwanted', 'mdf_data': '\\lx unwanted\n\\ps n\\n\\ge junk'}])
+        from src.database import MatchupQueue
+        row = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).first()
+        row.status = 'discard'
+        self.session.commit()
+        with self._patch_session():
+            result = UploadService.apply_single(row.id, 'test@example.com', self.language_id, 'sess1')
+        self.assertEqual(result['action'], 'discarded')
+        self.assertIsNone(result['record_id'])
+        remaining = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).count()
+        self.assertEqual(remaining, 0)
+
+    # --- B-7b: discard_all ---
 
     def test_discard_all(self):
         batch_id = self._stage([
