@@ -88,3 +88,8 @@ This file tracks critical operational errors and guideline violations to prevent
 
 ### 2026-02-08: Systemic fix for recurring absolute path / compound command violations
 - **Action**: Added **COMMAND TRANSLATION PROTOCOL (HARD GATE)** to `ai-behavior.md` as a mandatory pre-execution checklist. This is a 4-step gate that every terminal command must pass through before execution. Previous mitigations (self-check reminders, bold warnings) were insufficient — this elevates the rule to a formal behavioral protocol with explicit violation consequences.
+
+### 2026-02-09: Absolute path cd command queued for execution (7th occurrence)
+- **Violation**: A `cd /home/muksihs/git/snea-shoebox-editor` command was queued as the next terminal step, caught by the user before approval.
+- **Root Cause**: Same persistent pattern (Recurring Violation #3). The COMMAND TRANSLATION PROTOCOL was not applied.
+- **Correction**: Logged violation. Reinforcing: the shell is ALWAYS at the project root. NEVER issue `cd` to the project root. All terminal commands use relative paths only.
