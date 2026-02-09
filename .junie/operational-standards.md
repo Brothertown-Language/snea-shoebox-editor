@@ -7,6 +7,7 @@
 ### TECHNICAL EXECUTION RULES
 - **MANDATORY RELATIVE PATHS:** **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`) in all tool calls, terminal commands, file references, and output. **NEVER** use absolute paths (e.g., `/home/user/git/project/src/...`). The project root is the working directory; all paths must be relative to it.
 - **⚠️ NEVER PREFIX COMMANDS WITH `cd`:** The shell is ALREADY at the project root. Do NOT use `cd /path && command` or `cd /path; command`. Just run the command directly. **SELF-CHECK: If your command starts with `cd`, STOP and remove it.** This is a recurring violation (see VIOLATION_LOG.md #3).
+- **⚠️ NEVER COPY USER COMMANDS VERBATIM:** When the user provides a shell command in the issue description, treat it as a specification of *what* to run, NOT as a ready-to-execute command. **ALWAYS** translate it to guideline-compliant form: remove `cd /absolute/path`, split `&&` chains into separate tool calls, remove pipes (`|`). Each atomic command must be a separate step. User-provided commands often contain absolute paths and compound operators that violate these standards.
 - **MANDATORY psql FLAGS:** Always use `psql -c "QUERY" < /dev/null` or `psql -f script.sql < /dev/null` to prevent terminal hangs.
 - **NO INTERACTIVE COMMANDS:** **NEVER** run commands that require user input (e.g., `psql` without flags, `top`, `vim`).
 - **NO .git SEARCH:** **ALWAYS** exclude the `.git` directory when searching (e.g., `grep --exclude-dir=.git`).

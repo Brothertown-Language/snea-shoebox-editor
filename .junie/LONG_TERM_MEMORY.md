@@ -16,6 +16,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **COMMIT SCRIPT METHOD**: All source changes must be prepared as `tmp/commit_task.sh` scripts, never committed directly by the AI.
 - **NO `cd` IN COMMANDS**: The shell is always at the project root. NEVER prefix commands with `cd /path &&`. Just run the command directly. (Recurring violation #3 — see VIOLATION_LOG.md.)
 - **COMMIT SCRIPTS MUST EXECUTE `git commit`**: Never use `echo` to tell the user to run `git commit` separately. The script must run `git commit -F tmp/commit.msg` directly. The user's review step is choosing to run the script. (Recurring violation #4 — see VIOLATION_LOG.md.)
+- **NEVER COPY USER COMMANDS VERBATIM**: When the user provides a shell command in the issue description, treat it as a description of *what* to do, not *how*. Always translate to guideline-compliant form: remove `cd /absolute/path`, split `&&` into separate tool calls, avoid `|` pipes. Each command must be a separate step.
 - **1-BASED COUNTING ONLY**: All numbered steps, task IDs, and sequential labels must start from 1, never 0. The user is not a computer — use natural counting.
 
 ## KEY CROSS-SESSION DECISIONS

@@ -7,7 +7,7 @@ import uuid
 from typing import Optional
 
 from src.database import get_session, MatchupQueue, Record, EditHistory, SearchEntry, Source
-from src.mdf.parser import parse_mdf, normalize_nt_record
+from src.mdf.parser import parse_mdf, normalize_nt_record, format_mdf_record
 from src.logging_config import get_logger
 
 logger = get_logger("snea.upload")
@@ -682,7 +682,8 @@ class UploadService:
                 if not record:
                     raise ValueError(f"Suggested record {row.suggested_record_id} not found")
                 prev_data = record.mdf_data
-                normalized = normalize_nt_record(row.mdf_data, record.id)
+                formatted = format_mdf_record(row.mdf_data)
+                normalized = normalize_nt_record(formatted, record.id)
                 record.mdf_data = normalized
                 record.lx = entry['lx']
                 record.hm = entry.get('hm', 1)
@@ -725,7 +726,8 @@ class UploadService:
                 )
                 session.add(new_record)
                 session.flush()
-                normalized = normalize_nt_record(row.mdf_data, new_record.id)
+                formatted = format_mdf_record(row.mdf_data)
+                normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
                 session.add(EditHistory(
                     record_id=new_record.id,
@@ -751,7 +753,8 @@ class UploadService:
                 )
                 session.add(new_record)
                 session.flush()
-                normalized = normalize_nt_record(row.mdf_data, new_record.id)
+                formatted = format_mdf_record(row.mdf_data)
+                normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
                 session.add(EditHistory(
                     record_id=new_record.id,
@@ -799,6 +802,24 @@ class UploadService:
             session.close()
 
     @staticmethod
+    def discard_ignored(batch_id: str) -> int:
+        """Delete all 'ignore' status matchup_queue rows for a batch. Returns count deleted."""
+        session = get_session()
+        try:
+            count = (
+                session.query(MatchupQueue)
+                .filter_by(batch_id=batch_id, status='ignore')
+                .delete()
+            )
+            session.commit()
+            return count
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
     def commit_matched(batch_id: str, user_email: str,
                        session_id: str) -> int:
         """Commit all 'matched' rows: update records + edit_history. Returns count."""
@@ -815,7 +836,8 @@ class UploadService:
                 if not record:
                     continue
                 prev_data = record.mdf_data
-                normalized = normalize_nt_record(row.mdf_data, record.id)
+                formatted = format_mdf_record(row.mdf_data)
+                normalized = normalize_nt_record(formatted, record.id)
                 record.mdf_data = normalized
                 # Re-parse to update indexed fields
                 from src.mdf.parser import parse_mdf as _parse
@@ -904,7 +926,8 @@ class UploadService:
                 )
                 session.add(new_record)
                 session.flush()
-                normalized = normalize_nt_record(row.mdf_data, new_record.id)
+                formatted = format_mdf_record(row.mdf_data)
+                normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
                 session.add(EditHistory(
                     record_id=new_record.id,
@@ -953,7 +976,8 @@ class UploadService:
                 )
                 session.add(new_record)
                 session.flush()
-                normalized = normalize_nt_record(row.mdf_data, new_record.id)
+                formatted = format_mdf_record(row.mdf_data)
+                normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
                 session.add(EditHistory(
                     record_id=new_record.id,
