@@ -1,16 +1,18 @@
 # Copyright (c) 2026 Brothertown Language
-import streamlit as st
 import sys
 import os
-from src.logging_config import get_logger
-
-logger = get_logger("snea.app")
 
 # Add the project root to sys.path to ensure src imports work
+# This MUST happen before any `src.*` imports.
 current_dir = os.path.dirname(os.path.abspath(__file__))
 project_root = os.path.dirname(os.path.dirname(current_dir))
 if project_root not in sys.path:
     sys.path.insert(0, project_root)
+
+import streamlit as st
+from src.logging_config import get_logger
+
+logger = get_logger("snea.app")
 
 import src.frontend.pages as pages
 from src.database import init_db
