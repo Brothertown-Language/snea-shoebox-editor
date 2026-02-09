@@ -28,6 +28,22 @@ The SNEA Online Shoebox Editor is a collaborative platform for editing Southern 
 - **LEGACY PATH:** `src/frontend/app.py` is the mandatory entry point for Streamlit Cloud.
 - **DATA PERSISTENCE:** Aiven PostgreSQL (v17.7 prod, v16.2 dev compatible).
 
+### UI LAYOUT PATTERN — SIDEBAR CONTROLS
+When a page enters a **dedicated review or detail view**, all controls
+(navigation, pagination, bulk actions, filters) MUST be placed in
+`st.sidebar`.  The main panel is reserved exclusively for the primary
+content (e.g. record comparisons, data displays).  This maximises
+screen real estate for the content the user needs to inspect.
+
+- Use `with st.sidebar:` to group all control widgets.
+- Include a "← Back to …" button in the sidebar for view navigation.
+- **Hide the main navigation menu** by calling `hide_sidebar_nav()`
+  at the top of the view function.  The sidebar must show only
+  controls relevant to the current view — no global nav links.
+- Logout is handled by the global Streamlit navigation and does not
+  need to be duplicated, but the sidebar should be self-contained for
+  all page-specific controls.
+
 ### DATA LAYER (MDF)
 - **STANDARD:** Multi-Dictionary Formatter (MDF).
 - **CORE HIERARCHY:** `\lx` (Lexeme) -> `\ps` (Part of Speech) -> `\ge` (Gloss).

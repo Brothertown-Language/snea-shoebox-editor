@@ -14,6 +14,11 @@ def upload_mdf():
         st.error("You do not have permission to access this page. Editor or admin role required.")
         return
 
+    # View switching: if a batch is selected for review, show the dedicated review view
+    if st.session_state.get("review_batch_id"):
+        _render_review_view()
+        return
+
     st.title("Upload MDF File")
 
     # C-4: Source selector
@@ -105,7 +110,9 @@ def upload_mdf():
                 st.warning("Select a source collection before staging.")
             else:
                 user_email = st.session_state.get("user_email", "")
-                if st.button("Stage & Match", type="primary"):
+                # Disable after use until a new file is uploaded
+                already_staged = st.session_state.get("upload_staged_file") == uploaded_file.name
+                if st.button("Stage & Match", type="primary", disabled=already_staged):
                     try:
                         batch_id = UploadService.stage_entries(
                             user_email=user_email,
@@ -116,9 +123,10 @@ def upload_mdf():
                         match_results = UploadService.suggest_matches(batch_id)
                         st.session_state["upload_batch_id"] = batch_id
                         st.session_state["upload_match_results"] = match_results
-                        st.success(f"Staged **{len(entries)}** entries (batch `{batch_id[:8]}…`). "
-                                   f"**{sum(1 for m in match_results if m.get('suggested_record_id') is not None)}** "
-                                   f"matches suggested.")
+                        st.session_state["upload_staged_file"] = uploaded_file.name
+                        # Switch to dedicated review view
+                        st.session_state["review_batch_id"] = batch_id
+                        st.rerun()
                     except Exception as e:
                         logger.error("Stage & Match failed: %s", e)
                         st.error(f"Stage & Match failed: {e}")
@@ -145,30 +153,367 @@ def upload_mdf():
             batch_labels.append(label)
             batch_map[label] = b["batch_id"]
 
-        col_sel, col_btn = st.columns([4, 1])
-        with col_sel:
-            selected_label = st.selectbox("Select a pending batch", batch_labels, key="batch_selector")
+        selected_label = st.selectbox("Select a pending batch", batch_labels, key="batch_selector")
         selected_batch_id = batch_map.get(selected_label)
 
-        # C-6b: Re-Match button
-        with col_btn:
-            st.markdown("<br>", unsafe_allow_html=True)
-            if st.button("Re-Match", key="rematch_btn"):
-                try:
-                    match_results = UploadService.rematch_batch(selected_batch_id)
-                    st.session_state["upload_batch_id"] = selected_batch_id
-                    st.session_state["upload_match_results"] = match_results
-                    st.success(f"Re-matched batch `{selected_batch_id[:8]}…`. "
-                               f"**{sum(1 for m in match_results if m.get('suggested_record_id') is not None)}** "
-                               f"matches found.")
-                except Exception as e:
-                    logger.error("Re-Match failed: %s", e)
-                    st.error(f"Re-Match failed: {e}")
-
-        # Store selected batch for downstream phases
-        st.session_state["upload_batch_id"] = selected_batch_id
+        # Switch to dedicated review view on button click
+        if st.button("Review Selected Batch", type="primary"):
+            st.session_state["review_batch_id"] = selected_batch_id
+            st.rerun()
     else:
         st.info("No pending upload batches.")
+
+
+def _render_review_view():
+    """Dedicated full-width review view for a selected batch.
+
+    All controls live in the sidebar; the main panel is reserved
+    exclusively for record comparison content.
+    """
+    import streamlit as st
+    from src.services.upload_service import UploadService
+    from src.frontend.ui_utils import hide_sidebar_nav
+    from src.logging_config import get_logger
+
+    logger = get_logger("snea.upload_mdf.review")
+    batch_id = st.session_state.get("review_batch_id")
+    user_email = st.session_state.get("user_email", "")
+
+    # Hide the main navigation menu — this view owns the sidebar entirely
+    hide_sidebar_nav()
+
+    # Collapse default top padding in both sidebar and main panel
+    st.html(
+        """
+        <style>
+        .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
+        header[data-testid="stHeader"] { height: 2rem !important; min-height: 2rem !important; }
+        div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
+        div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
+        </style>
+        """
+    )
+
+    # Scroll to top when page changes (triggered by rerun after page nav)
+    st.html('<script>window.parent.document.querySelector(".main").scrollTo(0, 0);</script>')
+
+    # ── Sidebar: header ───────────────────────────────────────────
+    with st.sidebar:
+        st.header("Review Staged Entries")
+
+    # ── Main panel: record comparisons only ───────────────────────
+    _render_review_table(batch_id, session_deps={
+        'user_email': user_email,
+    })
+
+    # ── Sidebar bottom: records per page, re-match & back ─────────
+    with st.sidebar:
+        st.divider()
+
+        # Records per page selector
+        st.selectbox(
+            "Records per page",
+            [1, 5, 10, 25, 50],
+            index=[1, 5, 10, 25, 50].index(st.session_state.get("review_page_size", 1)),
+            key="review_page_size",
+        )
+
+        # C-6b: Re-Match button
+        if st.button("Re-Match", key="rematch_btn"):
+            try:
+                match_results = UploadService.rematch_batch(batch_id)
+                st.session_state["upload_batch_id"] = batch_id
+                st.session_state["upload_match_results"] = match_results
+                st.success(f"Re-matched batch. "
+                           f"**{sum(1 for m in match_results if m.get('suggested_record_id') is not None)}** "
+                           f"matches found.")
+            except Exception as e:
+                logger.error("Re-Match failed: %s", e)
+                st.error(f"Re-Match failed: {e}")
+
+        # Back button to return to upload view
+        if st.button("← Back to MDF Upload", key="back_to_upload"):
+            st.session_state.pop("review_batch_id", None)
+            st.rerun()
+            return
+
+
+def _render_review_table(batch_id, session_deps):
+    """Render the D-1 review table for a given batch_id."""
+    import streamlit as st
+    import uuid as _uuid
+    from src.database import get_session
+    from src.database.models.workflow import MatchupQueue
+    from src.database.models.core import Record, Language, Source
+    from src.services.upload_service import UploadService
+    from src.logging_config import get_logger
+
+    logger = get_logger("snea.upload_mdf.review")
+    user_email = session_deps['user_email']
+
+    session = get_session()
+    try:
+        rows = (
+            session.query(MatchupQueue)
+            .filter_by(batch_id=batch_id)
+            .order_by(MatchupQueue.id)
+            .all()
+        )
+        if not rows:
+            st.info("No entries in this batch (all applied or discarded).")
+            return
+
+        # Determine source context for bulk buttons
+        source_id = rows[0].source_id
+        existing_record_count = (
+            session.query(Record)
+            .filter_by(source_id=source_id, is_deleted=False)
+            .count()
+        )
+        is_new_source = existing_record_count == 0
+
+        # Get language_id (use first available language)
+        lang = session.query(Language).first()
+        language_id = lang.id if lang else 1
+
+        # Pre-fetch suggested records for comparison view
+        suggested_ids = [r.suggested_record_id for r in rows if r.suggested_record_id]
+        suggested_records = {}
+        if suggested_ids:
+            recs = session.query(Record).filter(Record.id.in_(suggested_ids)).all()
+            suggested_records = {r.id: r for r in recs}
+
+        # Get source name for cross-source info
+        source_obj = session.get(Source, source_id)
+        source_name = source_obj.name if source_obj else str(source_id)
+
+    finally:
+        session.close()
+
+    # ── Compute pagination ──────────────────────────────────────────
+    total_entries = len(rows)
+    page_size_options = [1, 5, 10, 25, 50]
+    page_size = st.session_state.get("review_page_size", page_size_options[0])
+    if page_size not in page_size_options:
+        page_size = page_size_options[0]
+    total_pages = max(1, (total_entries + page_size - 1) // page_size)
+    current_page = st.session_state.get("review_current_page", 1)
+    if current_page > total_pages:
+        current_page = total_pages
+    if current_page < 1:
+        current_page = 1
+
+    # ── Sidebar: page nav (top), bulk actions, then records per page at bottom ─
+    with st.sidebar:
+        # Page navigation at top
+        st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_entries} entries)")
+        nav_col1, nav_col2 = st.columns(2)
+        with nav_col1:
+            if st.button("◀ Previous", key="page_prev", disabled=(current_page <= 1)):
+                st.session_state["review_current_page"] = current_page - 1
+                st.rerun()
+        with nav_col2:
+            if st.button("Next ▶", key="page_next", disabled=(current_page >= total_pages)):
+                st.session_state["review_current_page"] = current_page + 1
+                st.rerun()
+
+        st.divider()
+        st.subheader("Bulk Actions")
+
+        # D-1a: Bulk approval action buttons
+        if is_new_source:
+            if st.button("Approve All as New Records", key="bulk_approve_new"):
+                try:
+                    UploadService.approve_all_new_source(batch_id)
+                    st.success("All entries approved as new records.")
+                    st.rerun()
+                except Exception as e:
+                    logger.error("Bulk approve failed: %s", e)
+                    st.error(f"Bulk approve failed: {e}")
+        else:
+            if st.button("Approve All Matched", key="bulk_approve_matched"):
+                try:
+                    UploadService.approve_all_by_record_match(batch_id)
+                    st.success("All matched entries approved.")
+                    st.rerun()
+                except Exception as e:
+                    logger.error("Bulk approve matched failed: %s", e)
+                    st.error(f"Bulk approve matched failed: {e}")
+            if st.button("Approve Non-Matches as New", key="bulk_approve_nonmatch"):
+                try:
+                    UploadService.approve_non_matches_as_new(batch_id)
+                    st.success("Non-matching entries approved as new records.")
+                    st.rerun()
+                except Exception as e:
+                    logger.error("Bulk approve non-matches failed: %s", e)
+                    st.error(f"Bulk approve non-matches failed: {e}")
+
+    # Slice rows for current page
+    start_idx = (current_page - 1) * page_size
+    end_idx = start_idx + page_size
+    page_rows = rows[start_idx:end_idx]
+
+    # D-1: Render each entry (paginated)
+    for row in page_rows:
+        # Compute default status based on D-1 logic
+        # Re-run suggest_matches data from the DB row itself
+        has_suggestion = row.suggested_record_id is not None
+        match_type = row.match_type or ""
+
+        # Cross-source info would require re-querying; use stored match_type
+        # record_id_conflict is detected by checking if suggested_record belongs to different source
+        record_id_conflict = False
+        conflict_sources = []
+
+        # Parse record_id from mdf_data for conflict check
+        uploaded_record_id = None
+        for line in row.mdf_data.split('\n'):
+            stripped = line.lstrip()
+            if stripped.startswith('\\nt Record:'):
+                val = stripped[len('\\nt Record:'):].strip()
+                if val.isdigit():
+                    uploaded_record_id = int(val)
+
+        # Determine default status
+        if row.status not in ('pending',):
+            current_status = row.status
+        elif record_id_conflict:
+            current_status = 'create_new'
+        elif has_suggestion and match_type == 'exact':
+            current_status = 'matched'
+        elif has_suggestion and match_type == 'base_form':
+            current_status = 'matched'
+        else:
+            current_status = 'create_new'
+
+        # Build display
+        suggested_rec = suggested_records.get(row.suggested_record_id)
+        suggested_display = ""
+        if suggested_rec:
+            suggested_display = f"{suggested_rec.lx} — {suggested_rec.ge or ''}"
+
+        badge = ""
+        if match_type == 'exact':
+            badge = "🟢 exact"
+        elif match_type == 'base_form':
+            badge = "🟡 base_form"
+
+        # Entry header
+        with st.container():
+            st.markdown(f"---")
+            hdr_col1, hdr_col2, hdr_col3, hdr_col4 = st.columns([2, 3, 2, 3])
+            with hdr_col1:
+                st.markdown(f"**{row.lx}**")
+            with hdr_col2:
+                if suggested_display:
+                    st.markdown(f"→ {suggested_display} {badge}")
+                else:
+                    st.markdown("→ *No match*")
+            with hdr_col3:
+                # Status selector
+                status_options = ['matched', 'create_new', 'create_homonym', 'ignore']
+                # Map current_status to index
+                if current_status in status_options:
+                    default_idx = status_options.index(current_status)
+                else:
+                    default_idx = 1  # create_new
+                selected_status = st.selectbox(
+                    "Status",
+                    status_options,
+                    index=default_idx,
+                    key=f"status_{row.id}",
+                    label_visibility="collapsed",
+                )
+                # Apply status change if different from DB
+                if selected_status != row.status:
+                    try:
+                        if selected_status == 'matched' and has_suggestion:
+                            UploadService.confirm_match(row.id)
+                        elif selected_status == 'create_new':
+                            # Set status directly
+                            _set_queue_status(row.id, 'create_new')
+                        elif selected_status == 'create_homonym':
+                            UploadService.mark_as_homonym(row.id)
+                        elif selected_status == 'ignore':
+                            UploadService.ignore_entry(row.id)
+                    except Exception as e:
+                        logger.error("Status change failed: %s", e)
+
+            with hdr_col4:
+                # D-1c: Per-record Apply Now button
+                actionable = selected_status in ('matched', 'create_new', 'create_homonym')
+                if st.button(
+                    "Apply Now",
+                    key=f"apply_{row.id}",
+                    disabled=not actionable,
+                ):
+                    try:
+                        session_id = str(_uuid.uuid4())
+                        result = UploadService.apply_single(
+                            queue_id=row.id,
+                            user_email=user_email,
+                            language_id=language_id,
+                            session_id=session_id,
+                        )
+                        # Populate search entries
+                        UploadService.populate_search_entries([result['record_id']])
+                        st.success(f"✅ Applied: {result['lx']} → record #{result['record_id']}")
+                        st.rerun()
+                    except Exception as e:
+                        logger.error("Apply single failed: %s", e)
+                        st.error(f"Apply failed: {e}")
+
+            # Record-id conflict warning
+            if record_id_conflict and conflict_sources:
+                st.warning(
+                    f"⚠️ Record #{uploaded_record_id} belongs to "
+                    f"{', '.join(conflict_sources)} — mark as 'create new' "
+                    f"to avoid cross-source conflict"
+                )
+
+            # D-1b: Full-width side-by-side comparison (always visible)
+            col_left, col_right = st.columns([1, 1])
+            with col_left:
+                if suggested_rec:
+                    st.markdown(f"**Existing record (#{suggested_rec.id})**")
+                    st.code(suggested_rec.mdf_data, language=None)
+                else:
+                    st.markdown("**No existing record**")
+                    st.info("This entry will be created as a new record.")
+            with col_right:
+                st.markdown("**New (uploaded)**")
+                st.code(row.mdf_data, language=None)
+
+                # Show prev/next nav below the last record's "New (uploaded)" box
+                if row == page_rows[-1] and total_pages > 1:
+                    nav_c1, nav_c2, nav_c3 = st.columns([2, 3, 2])
+                    with nav_c1:
+                        if st.button("◀ Previous", key="main_page_prev", disabled=(current_page <= 1)):
+                            st.session_state["review_current_page"] = current_page - 1
+                            st.rerun()
+                    with nav_c3:
+                        if st.button("Next ▶", key="main_page_next", disabled=(current_page >= total_pages), use_container_width=True):
+                            st.session_state["review_current_page"] = current_page + 1
+                            st.rerun()
+
+
+def _set_queue_status(queue_id, status):
+    """Directly set a matchup_queue row's status."""
+    from src.database import get_session
+    from src.database.models.workflow import MatchupQueue
+    session = get_session()
+    try:
+        row = session.get(MatchupQueue, queue_id)
+        if row:
+            row.status = status
+            session.commit()
+    except Exception:
+        session.rollback()
+        raise
+    finally:
+        session.close()
 
 
 if __name__ == "__main__":

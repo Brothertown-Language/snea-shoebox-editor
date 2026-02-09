@@ -552,7 +552,7 @@ regressions.
 
 ## Phase D — Review & Confirm Page (frontend)
 
-### D-1. Display match review table
+### D-1. Display match review table ✅
 Show each staged entry with columns: `lx`, suggested match (existing
 `lx` + `ge`), match type badge (`exact` / `base_form`), and a status
 selector (`match` / `create new` / `new homonym` / `ignore`).  If `cross_source_matches`
@@ -577,7 +577,7 @@ instead of reusing the conflicting record number.  The default status
 is already set to `create new` for these entries so the user can
 simply confirm without extra clicks.
 
-### D-1b. Implement responsive record comparison view
+### D-1b. Implement responsive record comparison view ✅
 When the user expands or selects a staged entry for review, display the
 **new (uploaded) MDF data** alongside the **existing (database) MDF data**
 so the user can compare before choosing a status.
@@ -600,7 +600,7 @@ Each panel should display:
 This comparison view is the primary tool the user relies on to decide
 whether a pending record should be updated, added as new, or discarded.
 
-### D-1a. Add bulk approval action buttons
+### D-1a. Add bulk approval action buttons ✅
 Above the review table, display contextual bulk-action buttons:
 
 - **New source** (source has no existing records): show an
@@ -616,7 +616,7 @@ Above the review table, display contextual bulk-action buttons:
 All buttons update `st.session_state` and refresh the review table so
 the user can still override individual entries before committing.
 
-### D-1c. Add per-record "Apply Now" button
+### D-1c. Add per-record "Apply Now" button ✅
 For each entry in the review table, display an **"Apply Now"** button
 next to the status selector.  The button is **enabled** only when the
 entry has an actionable status (`match`, `create new`, or
@@ -628,6 +628,47 @@ a brief inline confirmation (e.g. ✅ "Applied: ēsh → record #42").
 
 This lets the user process records one at a time without waiting to
 use the batch-level apply buttons (D-3).
+
+### D-1 Implementation Summary
+
+**Status:** Complete (2026-02-08)
+
+**Source files changed:**
+- `src/frontend/pages/upload_mdf.py` — Added `_render_review_table()` function
+  implementing D-1 (review table with status selectors and default status logic),
+  D-1a (bulk approval buttons: "Approve All as New Records" for new sources,
+  "Approve All Matched" and "Approve Non-Matches as New" for existing sources),
+  D-1b (side-by-side MDF comparison view using `st.columns([1,1])`),
+  D-1c (per-record "Apply Now" button, disabled for non-actionable statuses).
+  Added `_set_queue_status()` helper for direct status updates.
+  Stage & Match button is now disabled after use (via `upload_staged_file`
+  session state key) until a new file is uploaded.  After staging, the view
+  immediately reruns to show the review display.
+
+  **Sidebar layout refactor (2026-02-08):** All review controls (back
+  button, Re-Match, pagination, bulk actions) moved to `st.sidebar`.
+  The main panel is now reserved exclusively for record comparison
+  content.  This follows the project-wide UI layout pattern documented
+  in `.junie/project-architecture.md` § "UI LAYOUT PATTERN — SIDEBAR
+  CONTROLS".
+
+**Test files added:**
+- `tests/frontend/test_upload_review_d1.py` — 12 unit tests:
+  - 1 test for empty batch info message.
+  - 1 test for review table rendering (sidebar pagination).
+  - 1 test for exact match defaulting to 'matched' status.
+  - 1 test for new source showing "Approve All as New Records" button.
+  - 1 test for existing source showing two bulk buttons.
+  - 1 test for comparison view with existing record.
+  - 1 test for no-match placeholder text.
+  - 1 test for Apply Now disabled when status is 'ignore'.
+  - 1 test for Apply Now enabled when status is 'create_new'.
+  - 1 test for pagination page size selector.
+  - 1 test for pagination page count display.
+  - 1 test for Stage & Match button disabled after staging.
+
+**Test results:** All 143 tests pass (12 new + 131 existing) with zero
+regressions.
 
 ### D-2. Allow manual match override
 Provide a search/select widget so the user can pick a different existing

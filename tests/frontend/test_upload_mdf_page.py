@@ -401,39 +401,31 @@ class TestPendingBatchSelector(unittest.TestCase):
 
 
 class TestReMatchButton(unittest.TestCase):
-    """C-6b: Re-Match button calls rematch_batch."""
+    """C-6b: Re-Match button calls rematch_batch (now in dedicated review view)."""
 
     @patch("src.database.get_session")
-    @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("src.services.upload_service.UploadService.rematch_batch")
-    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
+    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
+                                        "review_batch_id": "abc-123"})
     @patch("streamlit.title")
-    @patch("streamlit.selectbox")
-    @patch("streamlit.file_uploader", return_value=None)
-    @patch("streamlit.divider")
-    @patch("streamlit.subheader")
     @patch("streamlit.columns")
     @patch("streamlit.button")
-    @patch("streamlit.markdown")
     @patch("streamlit.success")
-    def test_rematch_calls_service(self, mock_success, _md, mock_button, mock_columns,
-                                    _subheader, _divider, _fu, mock_selectbox, _title,
-                                    mock_rematch, mock_list_batches, mock_session):
-        from datetime import datetime, timezone
+    @patch("streamlit.subheader")
+    @patch("streamlit.info")
+    @patch("streamlit.markdown")
+    @patch("streamlit.selectbox", return_value="create_new")
+    @patch("streamlit.code")
+    @patch("streamlit.container")
+    def test_rematch_calls_service(self, mock_container, _code, _selectbox, _md,
+                                    mock_info, _subheader, mock_success, mock_button,
+                                    mock_columns, _title,
+                                    mock_rematch, mock_session):
         mock_sess = MagicMock()
-        mock_sess.query.return_value.order_by.return_value.all.return_value = []
+        # Empty batch so _render_review_table shows info and returns early
+        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
 
-        mock_list_batches.return_value = [
-            {
-                "batch_id": "abc-123",
-                "source_id": 1,
-                "source_name": "Natick",
-                "filename": "natick.txt",
-                "entry_count": 50,
-                "uploaded_at": datetime(2026, 2, 8, 14, 52, tzinfo=timezone.utc),
-            }
-        ]
         mock_rematch.return_value = [
             {"queue_id": 1, "lx": "word", "suggested_record_id": 10, "match_type": "exact"}
         ]
@@ -443,9 +435,8 @@ class TestReMatchButton(unittest.TestCase):
         col_mock.__exit__ = MagicMock(return_value=False)
         mock_columns.return_value = [col_mock, col_mock]
 
-        mock_selectbox.side_effect = ["TestSource", "Natick — natick.txt (50 entries, 2026-02-08 14:52)"]
-        # Re-Match button clicked
-        mock_button.return_value = True
+        # First button call is "Re-Match" (True), second is "Back to Upload" (False)
+        mock_button.side_effect = [True, False]
 
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
