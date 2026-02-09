@@ -63,6 +63,14 @@
 - **MANDATORY:** Check `ACTIVE_TASK.md` at the start of every session.
 - **UPDATES:** Keep progress markers accurate. **NEVER** mark as "DONE" without user instruction.
 
+### PROGRESS TRACKING EMOJI CONVENTION
+- **MANDATORY:** All project documentation (plans, roadmaps, active task files) **MUST** use the following tri-state emoji system for progress tracking:
+  - ✅ **Complete** — task or phase is finished.
+  - 🔄 **In Progress** — task or phase is actively being worked on.
+  - ⏳ **Pending** — task or phase is planned but not yet started.
+- **PLACEMENT:** Append the emoji to the end of the heading or task line, before any bracketed status tag (e.g., `### Phase 6: Search & Discovery ⏳ [PENDING]`).
+- **CONSISTENCY:** Every heading and task item in plan documents **MUST** have exactly one of these three emoji markers. Do not leave items unmarked.
+
 ---
 
 ## 4. IDE Integration (PyCharm)

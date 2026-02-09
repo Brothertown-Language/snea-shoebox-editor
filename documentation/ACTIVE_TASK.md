@@ -1,12 +1,16 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 # Active Task (Session)
 
-Date: 2026-02-07
+Date: 2026-02-08
 
 ## Status Overview
 - OAuth session rehydration: **WORKING**
 - Deep linking: **WORKING**
-- Phase 5 (Navigation & Access Control): **IN PROGRESS**
+- Phase 5 (Navigation & Access Control): **COMPLETED**
+- MDF Upload Feature: 🔄 **IN PROGRESS** — Phase D (Review & Confirm UI) partially complete
+  - Phases A (Parser), B (Upload Service), C (Upload Page): **COMPLETED**
+  - Phase D: D-1 block (review table, bulk actions, comparison view, per-record apply) **COMPLETED**
+  - Phase D: D-2 (manual match override), D-3 (batch apply buttons), D-3a (download pending), D-4 (results summary), D-5 (integration tests) ⏳ **PENDING**
 
 ## Accomplishments this Session
 - Reviewed roadmap and active tasks.
@@ -42,7 +46,7 @@ Date: 2026-02-07
 - **Manual Testing Mandate**: Recorded requirement for manual testing of the Full Auth Flow in `tmp/refactoring_plan.md` and `.junie/LONG_TERM_MEMORY.md`.
 
 ## Next Steps (Phase 5 Refactoring)
-1. **Navigation Service**: Move page definitions and navigation configuration out of `app.py`. [IN PROGRESS]
+1. **Navigation Service**: Move page definitions and navigation configuration out of `app.py`. 🔄 [IN PROGRESS]
 2. **Database Migration Management**: Clean up `src/database/connection.py` by extracting migration logic to a separate manager.
 
 ## Utility Scripts

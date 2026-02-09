@@ -149,6 +149,7 @@ snea-shoebox-editor/
 │   │   ├── security_manager.py       # RBAC, session rehydration
 │   │   ├── navigation_service.py     # Page registry & routing
 │   │   ├── audit_service.py          # Activity logging
+│   │   ├── upload_service.py         # MDF upload, staging & matchup workflow
 │   │   ├── infrastructure_service.py # Aiven API, network & system checks
 │   │   └── linguistic_service.py     # Record/Source CRUD (scaffold)
 │   └── auth.py            # OAuth integration
@@ -177,6 +178,7 @@ Comprehensive documentation is available in the `docs/` directory:
 - **[Database Comparison](docs/database/DB_COMPARISON.md)**: Why Aiven was chosen as the database provider.
 - **[Security Rotation](docs/development/SECURITY_ROTATION.md)**: Procedures for rotating compromised keys and secrets.
 - **[MDF Guidelines](docs/mdf/mdf-tag-reference.md)**: References for the Multi-Dictionary Form.
+- **[MDF Upload Plan](docs/plans/mdf-upload-plan.md)**: Implementation plan for the MDF file upload feature.
 - **[Contributing](CONTRIBUTING.md)**: Guidelines for contributing to the project.
 
 ## License

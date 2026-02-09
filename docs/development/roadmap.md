@@ -136,13 +136,20 @@ Before initializing the project, you must set up the hosting and database platfo
 - **Refactor: Database Migrations** (`src/database/migrations.py`): Centralized schema evolution, extension management, and data seeding via `MigrationManager`. [COMPLETED]
 - **Cleanup**: Removed deprecated `auth_utils.py`. Simplified `app.py` to orchestration-only (~100 lines). All HTML injections standardized via `ui_utils.py`. [COMPLETED]
 
-### Phase 6: Search & Discovery [PENDING]
+### MDF Upload Feature 🔄 [IN PROGRESS]
+- **MDF Parser Enhancements**: Extended parser for `\nt Record:`, `\va`, `\se`, `\cf`, `\ve` fields and normalization helpers. [COMPLETED]
+- **Upload Service** (`src/services/upload_service.py`): Full backend for MDF upload workflow — parse, stage to `matchup_queue`, suggest matches (exact + base-form + record-id), auto-remove duplicates, flag mismatches, bulk/single approve, commit matched/new/homonym records, populate search entries. [COMPLETED]
+- **Upload Page** (`src/frontend/pages/upload_mdf.py`): File uploader, source selector with create-new option, parse summary, Stage & Match, pending batch selector, Re-Match. Role-guarded to `editor`/`admin`. [COMPLETED]
+- **Review & Confirm UI**: Match review table with status selectors, default status logic, side-by-side MDF comparison, bulk approval buttons, per-record Apply Now. [IN PROGRESS — batch apply buttons, manual match override, download pending, and results summary pending]
+- **Detailed plan**: See [MDF Upload Plan](../plans/mdf-upload-plan.md).
+
+### Phase 6: Search & Discovery ⏳ [PENDING]
 - Implement full-text search (FTS) using PostgreSQL's native capabilities.
 - Leverage `pgvector` on Aiven for semantic cross-reference lookup.
     - *Note: Vector capability (pgvector) has been enabled in both local and production environments for future use in linking semantically related records.*
 - **D.R.Y. Service**: Centralize embedding generation and semantic search logic into a reusable `SearchService` to ensure consistency between bulk uploads and UI search.
 
-### Phase 7: Quality Control & Audit [PENDING]
+### Phase 7: Quality Control & Audit ⏳ [PENDING]
 - Implementation of the 'approved' status to flag records as vetted.
 - **Audit Infrastructure**: Establish a backend service layer to encapsulate logging logic (`UserActivityLog`, `EditHistory`) for cross-module consistency.
 - **Admin Dashboard**: Frontend UI for viewing audit logs and managing permissions.

@@ -76,7 +76,7 @@ regressions.
 
 ---
 
-## Phase B — Upload Service (backend)
+## Phase B — Upload Service (backend) ✅
 
 ### B-1. Add `batch_id`, `filename`, and `match_type` columns to `matchup_queue` ✅
 Add the following columns to the `MatchupQueue` model in
@@ -551,7 +551,9 @@ regressions.
 
 ---
 
-## Phase D — Review & Confirm Page (frontend)
+## Phase D — Review & Confirm Page (frontend) 🔄
+
+**Status:** In Progress (2026-02-08) — D-1 block complete; D-2 through D-5 pending.
 
 ### D-1. Display match review table ✅
 Show each staged entry with columns: `lx`, suggested match (existing
@@ -671,11 +673,11 @@ use the batch-level apply buttons (D-3).
 **Test results:** All 143 tests pass (12 new + 131 existing) with zero
 regressions.
 
-### D-2. Allow manual match override
+### D-2. Allow manual match override ⏳
 Provide a search/select widget so the user can pick a different existing
 record instead of the auto-suggested one.
 
-### D-3. Implement apply action buttons
+### D-3. Implement apply action buttons ⏳
 Replace the single "Commit" button with four distinct actions.  **Nothing
 touches the live `records` table or `edit_history` until one of the
 apply/add actions is performed.**  All operations generate a
@@ -709,7 +711,7 @@ If a user has a mix of statuses not fully covered by a single button
 "Apply Updates" and "Add New Records" separately, or use
 "Add & Apply All" to handle everything at once.
 
-### D-3a. Add "Download Pending Changes" button
+### D-3a. Add "Download Pending Changes" button ⏳
 Add a **"Download Pending Changes"** button to the review page that
 exports only the pending `matchup_queue` entries for the selected batch
 as an MDF-formatted text file.  The download includes **only** staged
@@ -729,20 +731,20 @@ records or discarded rows.
 This allows linguists to export staged entries, edit them offline in a
 text editor, and re-upload corrected MDF files.
 
-### D-4. Display apply results summary
+### D-4. Display apply results summary ⏳
 Show counts of updated records, new records, new homonyms, ignored
 entries, discarded entries, and any errors.  Provide a link back to the
 source view page.
 
-### D-5. Write integration tests for the upload flow
+### D-5. Write integration tests for the upload flow ⏳
 End-to-end test using the private Junie database and
 `src/seed_data/natick_sample_100.txt` as the upload input:
 - Upload the sample MDF file.
 - Verify staging, matching, committing, and search_entries population.
 - Verify edit_history rows and session_id grouping.
 
-### D-6. Write UI mock tests for the upload page (Phase C)
-Add tests in `tests/ui/test_upload_mdf_page.py` that mock Streamlit
+### D-6. Write UI mock tests for the upload page (Phase C) ✅
+Add tests in `tests/frontend/test_upload_mdf_page.py` that mock Streamlit
 widgets and `UploadService` calls to verify upload page logic without a
 running browser.  Each test patches `streamlit` functions (`st.selectbox`,
 `st.file_uploader`, `st.button`, `st.session_state`, etc.) and asserts
@@ -764,26 +766,29 @@ the correct service calls are made.  Cover:
 - **C-6b**: "Re-Match" button calls `rematch_batch` and refreshes the
   review table.
 
-### D-7. Write UI mock tests for the review & confirm page (Phase D)
-Add tests in `tests/ui/test_upload_review_page.py` that mock Streamlit
+**Implementation note:** Tests are in `tests/frontend/test_upload_mdf_page.py`
+(15 tests) rather than the originally planned `tests/ui/` path.
+
+### D-7. Write UI mock tests for the review & confirm page (Phase D) ⏳
+Add tests in `tests/frontend/test_upload_review_d1.py` that mock Streamlit
 widgets and `UploadService` calls to verify review page logic.  Cover:
 - **D-1**: review table renders columns (`lx`, suggested match, match
   type badge, status selector); cross-source info note displays when
   `cross_source_matches` is non-empty; `record_id_conflict` ⚠️ warning
-  displays; `hm_mismatch` ⚠️ error warning displays.
+  displays; `hm_mismatch` ⚠️ error warning displays. ✅
 - **D-1 default status**: status selector pre-selects correct default
   (`create new` for conflicts, `match` for exact/base_form suggestions,
-  `create new` for no suggestion).
+  `create new` for no suggestion). ✅
 - **D-1b**: comparison view shows existing data left/top and new data
-  right/bottom; "No existing record" placeholder when no match.
+  right/bottom; "No existing record" placeholder when no match. ✅
 - **D-1a**: bulk approval buttons render contextually — "Approve All as
   New Records" for new sources; "Approve All Matched" and "Approve
   Non-Matches as New" for existing sources; each calls the correct
-  backend method.
+  backend method. ✅
 - **D-1c**: per-record "Apply Now" button is enabled for actionable
   statuses (`match`, `create new`, `new homonym`) and disabled for
   `pending` / `ignore`; clicking calls `apply_single` and removes the
-  row.
+  row. ✅
 - **D-2**: manual match override widget calls `confirm_match` with the
   user-selected `record_id`.
 - **D-3**: four apply action buttons ("Apply Updates", "Add New Records",
@@ -796,23 +801,28 @@ widgets and `UploadService` calls to verify review page logic.  Cover:
 - **D-4**: results summary displays correct counts for updated, new,
   homonym, ignored, and discarded entries.
 
+**Implementation note:** D-1 block tests are in
+`tests/frontend/test_upload_review_d1.py` (12 tests) rather than the
+originally planned `tests/ui/` path.  Tests for D-2 through D-4 will be
+added as those features are implemented.
+
 ---
 
-## Phase E — Cleanup & Polish
+## Phase E — Cleanup & Polish ⏳
 
-### E-1. Add activity logging for upload events
+### E-1. Add activity logging for upload events ⏳
 Log `upload_start`, `upload_staged`, `upload_committed` actions via
 `AuditService` with the `session_id`.
 
-### E-2. Add batch rollback support
+### E-2. Add batch rollback support ⏳
 Implement `UploadService.rollback_session(session_id)` that restores
 `prev_data` from `edit_history` for all rows matching the session.
 
-### E-3. Write unit tests for rollback
+### E-3. Write unit tests for rollback ⏳
 Test that rollback restores records and removes the corresponding
 `search_entries`.
 
-### E-4. Update roadmap documentation
+### E-4. Update roadmap documentation ⏳
 Add the upload feature to the roadmap as a new phase entry once all
 steps are done (user approval required).  Do **not** mark the phase as
 completed until the user explicitly confirms it is finished.
