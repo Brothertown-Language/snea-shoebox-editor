@@ -149,7 +149,9 @@ def upload_mdf():
             else:
                 user_email = st.session_state.get("user_email", "")
                 # Disable after use until a new file is uploaded
-                already_staged = st.session_state.get("upload_staged_file") == uploaded_file.name
+                # Use Streamlit's unique file_id to distinguish re-uploads of the same filename
+                current_file_id = uploaded_file.file_id
+                already_staged = st.session_state.get("upload_staged_file_id") == current_file_id
                 if st.button("Stage & Match", type="primary", disabled=already_staged):
                     try:
                         batch_id = UploadService.stage_entries(
@@ -161,7 +163,7 @@ def upload_mdf():
                         match_results = UploadService.suggest_matches(batch_id)
                         st.session_state["upload_batch_id"] = batch_id
                         st.session_state["upload_match_results"] = match_results
-                        st.session_state["upload_staged_file"] = uploaded_file.name
+                        st.session_state["upload_staged_file_id"] = current_file_id
                         # Switch to dedicated review view
                         st.session_state["review_batch_id"] = batch_id
                         st.rerun()

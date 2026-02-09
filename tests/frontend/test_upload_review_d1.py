@@ -512,7 +512,7 @@ class TestStageAndMatchDisable(unittest.TestCase):
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@test.com",
-                                        "upload_staged_file": "test.txt"})
+                                        "upload_staged_file_id": "already-staged-id"})
     @patch("streamlit.title")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.dataframe")
@@ -538,6 +538,7 @@ class TestStageAndMatchDisable(unittest.TestCase):
 
         mock_file = MagicMock()
         mock_file.name = "test.txt"
+        mock_file.file_id = "already-staged-id"
         mock_file.getvalue.return_value = b"\\lx test\n\\ge testing"
         mock_parse.return_value = [{"lx": "test", "ps": "", "ge": "testing"}]
 
