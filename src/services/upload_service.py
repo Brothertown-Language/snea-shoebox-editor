@@ -534,6 +534,36 @@ class UploadService:
         return UploadService.suggest_matches(batch_id)
 
     @staticmethod
+    def search_records_for_override(source_id: int, query: str, limit: int = 20) -> list[dict]:
+        """Search existing records by lx or ge for manual match override.
+
+        Returns a list of dicts with id, lx, hm, and ge fields.
+        """
+        if not query or not query.strip():
+            return []
+        session = get_session()
+        try:
+            pattern = f"%{query.strip()}%"
+            from sqlalchemy import or_
+            rows = (
+                session.query(Record)
+                .filter_by(source_id=source_id, is_deleted=False)
+                .filter(or_(
+                    Record.lx.ilike(pattern),
+                    Record.ge.ilike(pattern),
+                ))
+                .order_by(Record.lx, Record.hm)
+                .limit(limit)
+                .all()
+            )
+            return [
+                {"id": r.id, "lx": r.lx, "hm": r.hm or 1, "ge": r.ge or ""}
+                for r in rows
+            ]
+        finally:
+            session.close()
+
+    @staticmethod
     def confirm_match(queue_id: int, record_id: Optional[int] = None) -> None:
         """Mark a matchup_queue row as 'matched'.
 

@@ -581,6 +581,44 @@ def _render_review_table(batch_id, session_deps):
                     f"to avoid cross-source conflict"
                 )
 
+            # D-2: Manual match override
+            with st.expander("🔍 Change match", expanded=False):
+                search_query = st.text_input(
+                    "Search existing records (by headword or gloss)",
+                    key=f"match_search_{row.id}",
+                    label_visibility="collapsed",
+                    placeholder="Search by headword or gloss…",
+                )
+                if search_query:
+                    candidates = UploadService.search_records_for_override(
+                        source_id, search_query
+                    )
+                    if candidates:
+                        options = [
+                            f"#{c['id']} — {c['lx']} (hm {c['hm']}) — {c['ge']}"
+                            for c in candidates
+                        ]
+                        chosen = st.selectbox(
+                            "Select record",
+                            options,
+                            key=f"match_select_{row.id}",
+                            label_visibility="collapsed",
+                        )
+                        chosen_idx = options.index(chosen)
+                        chosen_record_id = candidates[chosen_idx]["id"]
+                        if st.button("Confirm Override", key=f"match_confirm_{row.id}"):
+                            try:
+                                UploadService.confirm_match(row.id, chosen_record_id)
+                                st.success(
+                                    f"✅ Match overridden to record #{chosen_record_id}"
+                                )
+                                st.rerun()
+                            except Exception as e:
+                                logger.error("Match override failed: %s", e)
+                                st.error(f"Override failed: {e}")
+                    else:
+                        st.info("No matching records found.")
+
             # D-1b: Full-width side-by-side comparison (always visible)
             col_left, col_right = st.columns([1, 1])
             with col_left:

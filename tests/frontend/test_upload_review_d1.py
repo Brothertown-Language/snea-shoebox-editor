@@ -555,5 +555,220 @@ class TestStageAndMatchDisable(unittest.TestCase):
         self.assertTrue(stage_calls[0][1].get("disabled", False))
 
 
+class TestManualMatchOverride(unittest.TestCase):
+    """D-2: Manual match override widget."""
+
+    def setUp(self):
+        self._sidebar_mock = _setup_sidebar_mock()
+
+    @patch("src.database.get_session")
+    @patch("streamlit.subheader")
+    @patch("streamlit.button", return_value=False)
+    @patch("streamlit.columns")
+    @patch("streamlit.container")
+    @patch("streamlit.markdown")
+    @patch("streamlit.selectbox", side_effect=lambda *a, **kw: 1 if "per page" in a[0] else "create_new")
+    @patch("streamlit.code")
+    @patch("streamlit.info")
+    @patch("streamlit.text_input", return_value="")
+    @patch("streamlit.expander")
+    def test_override_expander_renders(self, mock_expander, _text_input, _info,
+                                        _code, _selectbox, _md, mock_container,
+                                        mock_columns, _btn, _subheader,
+                                        mock_get_session):
+        """D-2: Change match expander renders for each review row."""
+        row = _make_queue_row(lx="ēsh", suggested_record_id=None, status="pending")
+        lang = MagicMock()
+        lang.id = 2
+        source_obj = MagicMock()
+        source_obj.name = "TestSource"
+
+        mock_sess = MagicMock()
+        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = [row]
+        mock_sess.query.return_value.filter_by.return_value.count.return_value = 0
+        mock_sess.query.return_value.first.return_value = lang
+        mock_sess.get.return_value = source_obj
+
+        mock_expander.return_value.__enter__ = MagicMock()
+        mock_expander.return_value.__exit__ = MagicMock(return_value=False)
+        mock_columns.side_effect = _columns_side_effect
+        mock_container.return_value.__enter__ = MagicMock()
+        mock_container.return_value.__exit__ = MagicMock(return_value=False)
+
+        mock_get_session.return_value = mock_sess
+
+        from src.frontend.pages.upload_mdf import _render_review_table
+        _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
+
+        # Expander should be called with the change match label
+        expander_calls = [c for c in mock_expander.call_args_list
+                          if len(c[0]) > 0 and "Change match" in str(c[0][0])]
+        self.assertTrue(len(expander_calls) > 0)
+
+    @patch("src.database.get_session")
+    @patch("streamlit.subheader")
+    @patch("streamlit.button", return_value=False)
+    @patch("streamlit.columns")
+    @patch("streamlit.container")
+    @patch("streamlit.markdown")
+    @patch("streamlit.selectbox")
+    @patch("streamlit.code")
+    @patch("streamlit.info")
+    @patch("streamlit.text_input", return_value="fire")
+    @patch("streamlit.expander")
+    @patch("src.services.upload_service.UploadService.search_records_for_override")
+    def test_search_returns_candidates(self, mock_search, mock_expander,
+                                        _text_input, mock_info, _code,
+                                        mock_selectbox, _md, mock_container,
+                                        mock_columns, _btn, _subheader,
+                                        mock_get_session):
+        """D-2: Search with results shows selectbox with candidates."""
+        mock_search.return_value = [
+            {"id": 42, "lx": "ēsh", "hm": 1, "ge": "fire"},
+            {"id": 43, "lx": "ēsh", "hm": 2, "ge": "fireplace"},
+        ]
+        mock_selectbox.side_effect = lambda *a, **kw: (
+            1 if "per page" in a[0]
+            else "#42 — ēsh (hm 1) — fire" if "Select record" in a[0]
+            else "create_new"
+        )
+
+        row = _make_queue_row(lx="ēsh", suggested_record_id=None, status="pending")
+        lang = MagicMock()
+        lang.id = 2
+        source_obj = MagicMock()
+        source_obj.name = "TestSource"
+
+        mock_sess = MagicMock()
+        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = [row]
+        mock_sess.query.return_value.filter_by.return_value.count.return_value = 5
+        mock_sess.query.return_value.first.return_value = lang
+        mock_sess.query.return_value.filter.return_value.all.return_value = []
+        mock_sess.get.return_value = source_obj
+
+        mock_expander.return_value.__enter__ = MagicMock()
+        mock_expander.return_value.__exit__ = MagicMock(return_value=False)
+        mock_columns.side_effect = _columns_side_effect
+        mock_container.return_value.__enter__ = MagicMock()
+        mock_container.return_value.__exit__ = MagicMock(return_value=False)
+
+        mock_get_session.return_value = mock_sess
+
+        from src.frontend.pages.upload_mdf import _render_review_table
+        _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
+
+        mock_search.assert_called_once_with(1, "fire")
+        # Selectbox should have been called with the candidate options
+        select_calls = [c for c in mock_selectbox.call_args_list
+                        if len(c[0]) > 0 and c[0][0] == "Select record"]
+        self.assertTrue(len(select_calls) > 0)
+
+    @patch("src.database.get_session")
+    @patch("streamlit.subheader")
+    @patch("streamlit.button")
+    @patch("streamlit.columns")
+    @patch("streamlit.container")
+    @patch("streamlit.markdown")
+    @patch("streamlit.selectbox")
+    @patch("streamlit.code")
+    @patch("streamlit.info")
+    @patch("streamlit.text_input", return_value="fire")
+    @patch("streamlit.expander")
+    @patch("src.services.upload_service.UploadService.search_records_for_override")
+    @patch("src.services.upload_service.UploadService.confirm_match")
+    @patch("streamlit.success")
+    @patch("streamlit.rerun")
+    def test_confirm_override_calls_backend(self, mock_rerun, mock_success,
+                                             mock_confirm, mock_search,
+                                             mock_expander, _text_input,
+                                             _info, _code, mock_selectbox,
+                                             _md, mock_container, mock_columns,
+                                             mock_button, _subheader,
+                                             mock_get_session):
+        """D-2: Confirm Override button calls confirm_match with chosen record_id."""
+        mock_search.return_value = [
+            {"id": 42, "lx": "ēsh", "hm": 1, "ge": "fire"},
+        ]
+        mock_selectbox.side_effect = lambda *a, **kw: (
+            1 if "per page" in a[0]
+            else "#42 — ēsh (hm 1) — fire" if "Select record" in a[0]
+            else "create_new"
+        )
+        # Make Confirm Override button return True, others False
+        mock_button.side_effect = lambda label, **kw: label == "Confirm Override"
+
+        row = _make_queue_row(id=7, lx="ēsh", suggested_record_id=None, status="pending")
+        lang = MagicMock()
+        lang.id = 2
+        source_obj = MagicMock()
+        source_obj.name = "TestSource"
+
+        mock_sess = MagicMock()
+        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = [row]
+        mock_sess.query.return_value.filter_by.return_value.count.return_value = 5
+        mock_sess.query.return_value.first.return_value = lang
+        mock_sess.query.return_value.filter.return_value.all.return_value = []
+        mock_sess.get.return_value = source_obj
+
+        mock_expander.return_value.__enter__ = MagicMock()
+        mock_expander.return_value.__exit__ = MagicMock(return_value=False)
+        mock_columns.side_effect = _columns_side_effect
+        mock_container.return_value.__enter__ = MagicMock()
+        mock_container.return_value.__exit__ = MagicMock(return_value=False)
+
+        mock_get_session.return_value = mock_sess
+
+        from src.frontend.pages.upload_mdf import _render_review_table
+        _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
+
+        mock_confirm.assert_called_once_with(7, 42)
+
+    @patch("src.database.get_session")
+    @patch("streamlit.subheader")
+    @patch("streamlit.button", return_value=False)
+    @patch("streamlit.columns")
+    @patch("streamlit.container")
+    @patch("streamlit.markdown")
+    @patch("streamlit.selectbox", side_effect=lambda *a, **kw: 1 if "per page" in a[0] else "create_new")
+    @patch("streamlit.code")
+    @patch("streamlit.info")
+    @patch("streamlit.text_input", return_value="nonexistent")
+    @patch("streamlit.expander")
+    @patch("src.services.upload_service.UploadService.search_records_for_override", return_value=[])
+    def test_no_results_shows_info(self, mock_search, mock_expander,
+                                    _text_input, mock_info, _code,
+                                    _selectbox, _md, mock_container,
+                                    mock_columns, _btn, _subheader,
+                                    mock_get_session):
+        """D-2: Empty search results show info message."""
+        row = _make_queue_row(lx="ēsh", suggested_record_id=None, status="pending")
+        lang = MagicMock()
+        lang.id = 2
+        source_obj = MagicMock()
+        source_obj.name = "TestSource"
+
+        mock_sess = MagicMock()
+        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = [row]
+        mock_sess.query.return_value.filter_by.return_value.count.return_value = 0
+        mock_sess.query.return_value.first.return_value = lang
+        mock_sess.get.return_value = source_obj
+
+        mock_expander.return_value.__enter__ = MagicMock()
+        mock_expander.return_value.__exit__ = MagicMock(return_value=False)
+        mock_columns.side_effect = _columns_side_effect
+        mock_container.return_value.__enter__ = MagicMock()
+        mock_container.return_value.__exit__ = MagicMock(return_value=False)
+
+        mock_get_session.return_value = mock_sess
+
+        from src.frontend.pages.upload_mdf import _render_review_table
+        _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
+
+        # info should be called with "No matching records found."
+        info_calls = [c for c in mock_info.call_args_list
+                      if len(c[0]) > 0 and "No matching records found" in str(c[0][0])]
+        self.assertTrue(len(info_calls) > 0)
+
+
 if __name__ == "__main__":
     unittest.main()

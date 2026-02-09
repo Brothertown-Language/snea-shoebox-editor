@@ -553,7 +553,7 @@ regressions.
 
 ## Phase D — Review & Confirm Page (frontend) 🔄
 
-**Status:** In Progress (2026-02-08) — D-1 block complete; D-2 through D-5 pending.
+**Status:** In Progress (2026-02-09) — D-1 block and D-2 complete; D-3 through D-5 pending.
 
 ### D-1. Display match review table ✅
 Show each staged entry with columns: `lx`, suggested match (existing
@@ -673,9 +673,31 @@ use the batch-level apply buttons (D-3).
 **Test results:** All 143 tests pass (12 new + 131 existing) with zero
 regressions.
 
-### D-2. Allow manual match override ⏳
+### D-2. Allow manual match override ✅
 Provide a search/select widget so the user can pick a different existing
 record instead of the auto-suggested one.
+
+### D-2 Implementation Summary
+
+**Status:** Complete (2026-02-09)
+
+**Source files changed:**
+- `src/services/upload_service.py` — Added `search_records_for_override(source_id, query, limit)`
+  static method that searches existing records by `lx` or `ge` using case-insensitive
+  `ILIKE` matching, scoped to the given source.
+- `src/frontend/pages/upload_mdf.py` — Added manual match override widget inside
+  `_render_review_table()` as a collapsible `st.expander("🔍 Change match")` per row.
+  Contains a search text input, candidate selectbox, and "Confirm Override" button
+  that calls `UploadService.confirm_match(queue_id, record_id)`.
+
+**Test files updated:**
+- `tests/frontend/test_upload_review_d1.py` — 4 new tests (class `TestManualMatchOverride`):
+  - 1 test for override expander rendering.
+  - 1 test for search returning candidates and displaying selectbox.
+  - 1 test for Confirm Override calling `confirm_match` with chosen record_id.
+  - 1 test for empty search results showing info message.
+
+**Test results:** All 147 tests pass (4 new + 143 existing) with zero regressions.
 
 ### D-3. Implement apply action buttons ⏳
 Replace the single "Commit" button with four distinct actions.  **Nothing
