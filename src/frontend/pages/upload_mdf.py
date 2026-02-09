@@ -4,6 +4,7 @@ def upload_mdf():
     from src.database import get_session
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
+    from src.frontend.ui_utils import hide_sidebar_nav
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf")
@@ -14,71 +15,108 @@ def upload_mdf():
         st.error("You do not have permission to access this page. Editor or admin role required.")
         return
 
-    # View switching: if a batch is selected for review, show the dedicated review view
+    # View switching
     if st.session_state.get("review_batch_id"):
         _render_review_view()
         return
+    if st.session_state.get("show_pending_batches"):
+        _render_pending_batches_view()
+        return
 
-    st.title("Upload MDF File")
+    # Hide the main navigation menu — this view owns the sidebar entirely
+    hide_sidebar_nav()
 
-    # C-4: Source selector
-    session = get_session()
-    try:
-        sources = session.query(Source).order_by(Source.name).all()
-    finally:
-        session.close()
-
-    source_options = [s.name for s in sources]
-    source_ids = {s.name: s.id for s in sources}
-
-    CREATE_NEW_LABEL = "+ Add new source…"
-    source_options.append(CREATE_NEW_LABEL)
-
-    selected_source = st.selectbox("Target source collection", source_options)
-
-    # C-4a: Create new source inline
-    selected_source_id = None
-    if selected_source == CREATE_NEW_LABEL:
-        st.markdown("#### Create a new source")
-        new_name = st.text_input(
-            "Source name",
-            placeholder="Natick Dictionary — Trumbull",
-        )
-        new_description = st.text_input("Description (optional)")
-        if st.button("Create Source"):
-            if not new_name or not new_name.strip():
-                st.error("Source name is required.")
-            else:
-                session = get_session()
-                try:
-                    existing = session.query(Source).filter(Source.name == new_name.strip()).first()
-                    if existing:
-                        st.error(f"A source named '{new_name.strip()}' already exists.")
-                    else:
-                        new_source = Source(
-                            name=new_name.strip(),
-                            description=new_description.strip() if new_description else None,
-                        )
-                        session.add(new_source)
-                        session.commit()
-                        st.success(f"Source '{new_name.strip()}' created.")
-                        st.rerun()
-                except Exception as e:
-                    session.rollback()
-                    logger.error("Failed to create source: %s", e)
-                    st.error(f"Failed to create source: {e}")
-                finally:
-                    session.close()
-    else:
-        selected_source_id = source_ids.get(selected_source)
-
-    # C-3: File uploader
-    uploaded_file = st.file_uploader(
-        "Upload an MDF file",
-        type=["txt", "mdf"],
-        help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
+    # Collapse default top padding in both sidebar and main panel
+    st.html(
+        """
+        <style>
+        .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
+        header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
+        [data-testid="stStatusWidget"],
+        [data-testid="stToolbar"] { display: none !important; }
+        div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
+        div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
+        </style>
+        """
     )
 
+    # ── Sidebar: header and controls ──────────────────────────────
+    with st.sidebar:
+        st.header("Upload MDF File")
+
+        # C-4: Source selector
+        session = get_session()
+        try:
+            sources = session.query(Source).order_by(Source.name).all()
+        finally:
+            session.close()
+
+        source_options = [s.name for s in sources]
+        source_ids = {s.name: s.id for s in sources}
+
+        CREATE_NEW_LABEL = "+ Add new source…"
+        source_options.append(CREATE_NEW_LABEL)
+
+        selected_source = st.selectbox("Target source collection", source_options)
+
+        # C-4a: Create new source inline
+        selected_source_id = None
+        if selected_source == CREATE_NEW_LABEL:
+            st.markdown("#### Create a new source")
+            new_name = st.text_input(
+                "Source name",
+                placeholder="Natick Dictionary — Trumbull",
+            )
+            new_description = st.text_input("Description (optional)")
+            if st.button("Create Source"):
+                if not new_name or not new_name.strip():
+                    st.error("Source name is required.")
+                else:
+                    session = get_session()
+                    try:
+                        existing = session.query(Source).filter(Source.name == new_name.strip()).first()
+                        if existing:
+                            st.error(f"A source named '{new_name.strip()}' already exists.")
+                        else:
+                            new_source = Source(
+                                name=new_name.strip(),
+                                description=new_description.strip() if new_description else None,
+                            )
+                            session.add(new_source)
+                            session.commit()
+                            st.success(f"Source '{new_name.strip()}' created.")
+                            st.rerun()
+                    except Exception as e:
+                        session.rollback()
+                        logger.error("Failed to create source: %s", e)
+                        st.error(f"Failed to create source: {e}")
+                    finally:
+                        session.close()
+        else:
+            selected_source_id = source_ids.get(selected_source)
+
+        # C-3: File uploader
+        uploaded_file = st.file_uploader(
+            "Upload an MDF file",
+            type=["txt", "mdf"],
+            help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
+        )
+
+        st.divider()
+
+        # C-6a: Pending uploads — open dedicated view in main panel
+        if st.button("Pending Uploads", key="pending_uploads_btn"):
+            st.session_state["show_pending_batches"] = True
+            st.rerun()
+
+        st.divider()
+        if st.button("← Back to Main Menu", key="back_to_main"):
+            st.session_state.pop("review_batch_id", None)
+            st.switch_page("pages/index.py")
+
+    # ── Main panel: upload content ────────────────────────────────
     if uploaded_file is not None:
         file_content = uploaded_file.getvalue().decode("utf-8")
 
@@ -133,35 +171,88 @@ def upload_mdf():
 
         except ValueError as e:
             st.error(str(e))
-
-    # C-6a: Pending upload batch selector
-    st.divider()
-    st.subheader("Pending Uploads")
-    user_email = st.session_state.get("user_email", "")
-    if user_email:
-        batches = UploadService.list_pending_batches(user_email)
     else:
-        batches = []
+        st.info("Upload an MDF file using the sidebar to get started.")
 
-    if batches:
-        batch_labels = []
-        batch_map = {}
-        for b in batches:
-            ts = b["uploaded_at"]
-            ts_str = ts.strftime("%Y-%m-%d %H:%M") if ts else "unknown"
-            label = f"{b['source_name']} — {b['filename'] or 'unnamed'} ({b['entry_count']} entries, {ts_str})"
-            batch_labels.append(label)
-            batch_map[label] = b["batch_id"]
 
-        selected_label = st.selectbox("Select a pending batch", batch_labels, key="batch_selector")
-        selected_batch_id = batch_map.get(selected_label)
+def _render_pending_batches_view():
+    """Dedicated main-panel view listing all pending batches for the current user."""
+    import streamlit as st
+    from src.services.upload_service import UploadService
+    from src.frontend.ui_utils import hide_sidebar_nav
+    from src.logging_config import get_logger
 
-        # Switch to dedicated review view on button click
-        if st.button("Review Selected Batch", type="primary"):
-            st.session_state["review_batch_id"] = selected_batch_id
+    logger = get_logger("snea.upload_mdf.pending")
+
+    hide_sidebar_nav()
+
+    st.html(
+        """
+        <style>
+        .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
+        header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
+        [data-testid="stStatusWidget"],
+        [data-testid="stToolbar"] { display: none !important; }
+        div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
+        div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
+        </style>
+        """
+    )
+
+    with st.sidebar:
+        st.header("Pending Uploads")
+        st.divider()
+        if st.button("← Back to MDF Upload", key="pending_back_to_upload"):
+            st.session_state.pop("show_pending_batches", None)
             st.rerun()
-    else:
+            return
+        if st.button("← Back to Main Menu", key="pending_back_to_main"):
+            st.session_state.pop("show_pending_batches", None)
+            st.switch_page("pages/index.py")
+
+    # Main panel: list pending batches
+    user_email = st.session_state.get("user_email", "")
+    if not user_email:
+        st.warning("No user session found.")
+        return
+
+    batches = UploadService.list_pending_batches(user_email)
+
+    if not batches:
         st.info("No pending upload batches.")
+        return
+
+    st.subheader(f"{len(batches)} Pending Batch{'es' if len(batches) != 1 else ''}")
+
+    for b in batches:
+        ts = b["uploaded_at"]
+        ts_str = ts.strftime("%Y-%m-%d %H:%M") if ts else "unknown"
+        batch_id = b["batch_id"]
+
+        with st.container():
+            st.markdown("---")
+            col_info, col_review, col_discard = st.columns([5, 1, 1])
+            with col_info:
+                st.markdown(
+                    f"**{b['source_name']}** — {b['filename'] or 'unnamed'}  \n"
+                    f"{b['entry_count']} entries · {ts_str}"
+                )
+            with col_review:
+                if st.button("Review", key=f"review_{batch_id}", type="primary"):
+                    st.session_state["review_batch_id"] = batch_id
+                    st.session_state.pop("show_pending_batches", None)
+                    st.rerun()
+            with col_discard:
+                if st.button("Discard", key=f"discard_{batch_id}"):
+                    try:
+                        count = UploadService.discard_all(batch_id)
+                        st.toast(f"Discarded {count} entries.")
+                        st.rerun()
+                    except Exception as e:
+                        logger.error("Discard batch failed: %s", e)
+                        st.error(f"Discard failed: {e}")
 
 
 def _render_review_view():
@@ -189,7 +280,9 @@ def _render_review_view():
         .block-container { padding-top: 0px !important; margin-top: 0px !important; }
         section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
         section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
-        header[data-testid="stHeader"] { height: 2rem !important; min-height: 2rem !important; }
+        header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
+        [data-testid="stStatusWidget"],
+        [data-testid="stToolbar"] { display: none !important; }
         div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
         div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
         </style>
@@ -349,6 +442,19 @@ def _render_review_table(batch_id, session_deps):
                 except Exception as e:
                     logger.error("Bulk approve non-matches failed: %s", e)
                     st.error(f"Bulk approve non-matches failed: {e}")
+
+        # Discard Ignored — available regardless of new/existing source
+        if st.button("Discard Ignored", key="bulk_discard_ignored"):
+            try:
+                count = UploadService.discard_ignored(batch_id)
+                if count:
+                    st.success(f"Discarded {count} ignored entr{'y' if count == 1 else 'ies'}.")
+                    st.rerun()
+                else:
+                    st.info("No ignored entries to discard.")
+            except Exception as e:
+                logger.error("Discard ignored failed: %s", e)
+                st.error(f"Discard ignored failed: {e}")
 
     # Slice rows for current page
     start_idx = (current_page - 1) * page_size
