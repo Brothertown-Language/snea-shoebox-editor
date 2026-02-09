@@ -117,7 +117,7 @@ class UploadService:
                     filename=filename,
                     status='pending',
                     lx=entry.get('lx', ''),
-                    mdf_data=entry['mdf_data'],
+                    mdf_data=format_mdf_record(entry['mdf_data']),
                 )
                 session.add(row)
             session.commit()

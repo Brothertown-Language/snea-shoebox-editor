@@ -109,6 +109,7 @@ def format_mdf_record(mdf_text: str) -> str:
     Normalize formatting of an MDF record for storage:
     - Remove all leading indentation from lines.
     - Add one blank line before each \\se line (subentry).
+    - Add one blank line before each \\xv line (example vernacular).
     - Add one blank line before the \\nt Record: line.
     - Remove any other consecutive blank lines.
     """
@@ -119,8 +120,9 @@ def format_mdf_record(mdf_text: str) -> str:
         if not stripped:
             continue
         is_se = stripped.startswith('\\se ')
+        is_xv = stripped.startswith('\\xv ')
         is_nt_rec = _is_nt_record_line(stripped)
-        if (is_se or is_nt_rec) and result and result[-1] != '':
+        if (is_se or is_xv or is_nt_rec) and result and result[-1] != '':
             result.append('')
         result.append(stripped)
     return '\n'.join(result)

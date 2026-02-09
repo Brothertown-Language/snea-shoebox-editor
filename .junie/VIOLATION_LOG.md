@@ -18,7 +18,7 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Preventive Measure**: Updated `guidelines.md` to make `JUNIE_PRIVATE_DB=true` mandatory for ALL operations.
 
 ### 3. Absolute Paths and Compound Commands in Terminal
-- **Status**: ACTIVE RISK (3 occurrences: 2026-02-08)
+- **Status**: ACTIVE RISK (6 occurrences: 2026-02-08)
 - **Description**: Using `cd /home/muksihs/git/snea-shoebox-editor && <command>` instead of just `<command>`. Combines two violations: absolute paths and compound commands (`&&`).
 - **Root Cause**: Persistent habit of prefixing commands with `cd` to the project root, despite the shell already being at the project root.
 - **Preventive Measure**: Rules added to `guidelines.md` Section I.1 and `operational-standards.md`. **Self-check before every terminal command**: "Does this command start with `cd`? If yes, STOP and remove it. The shell is already at the project root."
@@ -80,3 +80,11 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Executed `cd /home/muksihs/git/snea-shoebox-editor && git stash && JUNIE_PRIVATE_DB=true uv run python -m pytest tests/frontend/test_upload_mdf_page.py -x -q 2>&1 | tail -5` — combines absolute path `cd`, compound commands (`&&`), and pipe (`|`). Three violations in one command.
 - **Root Cause**: Copied the user's command verbatim instead of translating it to guideline-compliant form. User-provided commands are examples of *what* to run, not *how* to run it.
 - **Correction**: (1) Logged violation. (2) Added new rule to guidelines: "NEVER copy user-provided shell commands verbatim. Always translate to guideline-compliant form: remove `cd`, split `&&` into separate steps, avoid pipes." (3) Updated LONG_TERM_MEMORY.md with this constraint.
+
+### 2026-02-08: Absolute path + compound command in git diff (6th occurrence)
+- **Violation**: Executed `cd /home/muksihs/git/snea-shoebox-editor && git diff --stat HEAD` — absolute path + compound command.
+- **Root Cause**: Same persistent habit (Recurring Violation #3). Despite 5 prior corrections, the pattern continues.
+- **Correction**: Logged violation. Reinforcing self-check: "Does this command start with `cd`? STOP."
+
+### 2026-02-08: Systemic fix for recurring absolute path / compound command violations
+- **Action**: Added **COMMAND TRANSLATION PROTOCOL (HARD GATE)** to `ai-behavior.md` as a mandatory pre-execution checklist. This is a 4-step gate that every terminal command must pass through before execution. Previous mitigations (self-check reminders, bold warnings) were insufficient — this elevates the rule to a formal behavioral protocol with explicit violation consequences.

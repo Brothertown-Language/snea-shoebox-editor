@@ -30,29 +30,29 @@ class TestUploadMdfRoleGuard(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.file_uploader", return_value=None)
-    def test_editor_allowed(self, _fu, _sb, mock_title, mock_session):
+    def test_editor_allowed(self, _fu, _sb, mock_header, mock_session):
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
-        mock_title.assert_called_once_with("Upload MDF File")
+        mock_header.assert_any_call("Upload MDF File")
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "admin"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.file_uploader", return_value=None)
-    def test_admin_allowed(self, _fu, _sb, mock_title, mock_session):
+    def test_admin_allowed(self, _fu, _sb, mock_header, mock_session):
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
-        mock_title.assert_called_once_with("Upload MDF File")
+        mock_header.assert_any_call("Upload MDF File")
 
 
 class TestUploadMdfSourceSelector(unittest.TestCase):
@@ -60,7 +60,7 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.file_uploader", return_value=None)
     @patch("streamlit.selectbox")
     def test_source_options_include_create_new(self, mock_selectbox, _fu, _title, mock_session):
@@ -83,7 +83,7 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.file_uploader", return_value=None)
     @patch("streamlit.selectbox", return_value="+ Add new source…")
     @patch("streamlit.markdown")
@@ -106,7 +106,7 @@ class TestUploadMdfFileUploader(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.file_uploader")
     def test_file_uploader_accepts_txt_mdf(self, mock_uploader, _sb, _title, mock_session):
@@ -128,7 +128,7 @@ class TestUploadMdfParseSummary(unittest.TestCase):
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.dataframe")
     @patch("streamlit.success")
@@ -166,7 +166,7 @@ class TestUploadMdfParseSummary(unittest.TestCase):
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.error")
     @patch("streamlit.expander")
@@ -196,7 +196,7 @@ class TestUploadMdfParseSummary(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "admin"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.dataframe")
     @patch("streamlit.success")
@@ -240,7 +240,7 @@ class TestStageAndMatch(unittest.TestCase):
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.dataframe")
     @patch("streamlit.success")
@@ -251,7 +251,9 @@ class TestStageAndMatch(unittest.TestCase):
     @patch("streamlit.divider")
     @patch("streamlit.subheader")
     @patch("streamlit.info")
-    def test_stage_and_match_called(self, _info, _subheader, _divider, _warning,
+    @patch("streamlit.rerun")
+    @patch("streamlit.switch_page")
+    def test_stage_and_match_called(self, _switch_page, _rerun, _info, _subheader, _divider, _warning,
                                      mock_button, mock_uploader, mock_expander,
                                      mock_success, _df, _sb, _title,
                                      mock_list_batches, mock_parse, mock_stage, mock_suggest,
@@ -293,7 +295,7 @@ class TestStageAndMatch(unittest.TestCase):
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="+ Add new source…")
     @patch("streamlit.file_uploader")
     @patch("streamlit.warning")
@@ -326,25 +328,26 @@ class TestStageAndMatch(unittest.TestCase):
 
 
 class TestPendingBatchSelector(unittest.TestCase):
-    """C-6a: Pending upload batch selector."""
+    """C-6a: Pending upload batches view."""
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
-    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
-    @patch("streamlit.title")
-    @patch("streamlit.selectbox")
-    @patch("streamlit.file_uploader", return_value=None)
-    @patch("streamlit.divider")
+    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
+                                        "show_pending_batches": True})
+    @patch("streamlit.header")
+    @patch("streamlit.html")
+    @patch("streamlit.sidebar", new_callable=MagicMock)
     @patch("streamlit.subheader")
     @patch("streamlit.columns")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.markdown")
-    def test_batch_selector_displayed(self, _md, _btn, mock_columns, _subheader, _divider,
-                                       _fu, mock_selectbox, _title, mock_list_batches,
-                                       mock_session):
+    @patch("streamlit.container")
+    @patch("streamlit.divider")
+    def test_batch_selector_displayed(self, _divider, mock_container, _md, _btn, mock_columns,
+                                       mock_subheader, mock_sidebar, _html, _title,
+                                       mock_list_batches, mock_session):
         from datetime import datetime, timezone
         mock_sess = MagicMock()
-        mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
 
         mock_list_batches.return_value = [
@@ -361,38 +364,47 @@ class TestPendingBatchSelector(unittest.TestCase):
         col_mock = MagicMock()
         col_mock.__enter__ = MagicMock(return_value=col_mock)
         col_mock.__exit__ = MagicMock(return_value=False)
-        mock_columns.return_value = [col_mock, col_mock]
+        mock_columns.return_value = [col_mock, col_mock, col_mock]
 
-        # First call is source selector, second is batch selector
-        mock_selectbox.side_effect = ["TestSource", "Natick — natick.txt (50 entries, 2026-02-08 14:52)"]
+        container_mock = MagicMock()
+        container_mock.__enter__ = MagicMock(return_value=container_mock)
+        container_mock.__exit__ = MagicMock(return_value=False)
+        mock_container.return_value = container_mock
+
+        sidebar_mock = MagicMock()
+        sidebar_mock.__enter__ = MagicMock(return_value=sidebar_mock)
+        sidebar_mock.__exit__ = MagicMock(return_value=False)
+        mock_sidebar.__enter__ = MagicMock(return_value=sidebar_mock)
+        mock_sidebar.__exit__ = MagicMock(return_value=False)
 
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
 
-        # Verify batch selector was called with correct label
-        batch_call = mock_selectbox.call_args_list[1]
-        self.assertIn("pending batch", batch_call[0][0].lower())
-        options = batch_call[0][1]
-        self.assertEqual(len(options), 1)
-        self.assertIn("Natick", options[0])
-        self.assertIn("50 entries", options[0])
-        self.assertIn("2026-02-08 14:52", options[0])
+        # Verify list_pending_batches was called and subheader shows count
+        mock_list_batches.assert_called_once_with("test@example.com")
+        mock_subheader.assert_any_call("1 Pending Batch")
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
-    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
-    @patch("streamlit.title")
-    @patch("streamlit.selectbox", return_value="TestSource")
-    @patch("streamlit.file_uploader", return_value=None)
-    @patch("streamlit.divider")
-    @patch("streamlit.subheader")
+    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
+                                        "show_pending_batches": True})
+    @patch("streamlit.header")
+    @patch("streamlit.html")
+    @patch("streamlit.sidebar", new_callable=MagicMock)
+    @patch("streamlit.button", return_value=False)
     @patch("streamlit.info")
-    def test_no_batches_shows_info(self, mock_info, _subheader, _divider, _fu, _sb, _title,
+    @patch("streamlit.divider")
+    def test_no_batches_shows_info(self, _divider, mock_info, _btn, mock_sidebar, _html, _title,
                                     mock_list_batches, mock_session):
         mock_sess = MagicMock()
-        mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
         mock_list_batches.return_value = []
+
+        sidebar_mock = MagicMock()
+        sidebar_mock.__enter__ = MagicMock(return_value=sidebar_mock)
+        sidebar_mock.__exit__ = MagicMock(return_value=False)
+        mock_sidebar.__enter__ = MagicMock(return_value=sidebar_mock)
+        mock_sidebar.__exit__ = MagicMock(return_value=False)
 
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
@@ -407,7 +419,7 @@ class TestReMatchButton(unittest.TestCase):
     @patch("src.services.upload_service.UploadService.rematch_batch")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
                                         "review_batch_id": "abc-123"})
-    @patch("streamlit.title")
+    @patch("streamlit.header")
     @patch("streamlit.columns")
     @patch("streamlit.button")
     @patch("streamlit.success")
