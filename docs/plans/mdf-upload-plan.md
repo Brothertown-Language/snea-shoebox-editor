@@ -49,8 +49,9 @@ Add tests in `tests/` covering:
 - Parsing entries with `\va`, `\se`, `\cf`, `\ve`.
 - `normalize_nt_record` adding, replacing, and deduplicating the tag.
 
-Use `src/seed_data/natick_sample_100.txt` (100 randomly selected records
-from the full Natick dictionary) as the test fixture for all parser tests.
+Use `src/seed_data/natick_sample_100.txt` (150 randomly selected records,
+larger than median size, from the full Natick dictionary) as the test fixture
+for all parser tests.
 
 ### Phase A — Implementation Summary
 
@@ -58,7 +59,7 @@ from the full Natick dictionary) as the test fixture for all parser tests.
 - `src/mdf/parser.py` — Rewrote parser using simple line-oriented parsing
   (no regex).  Added helper functions `_extract_tag()` and
   `_is_nt_record_line()`.  Added `normalize_nt_record()`.
-- `src/seed_data/natick_sample_100.txt` — Regenerated with 100 randomly
+- `src/seed_data/natick_sample_100.txt` — Regenerated with 150 randomly
   selected records (seed=42) from the full Natick dictionary.
 
 **Test files added:**

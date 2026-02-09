@@ -226,9 +226,9 @@ class TestUploadMdfParseSummary(unittest.TestCase):
         upload_mdf()
 
         mock_success.assert_called_once()
-        self.assertIn("100", mock_success.call_args[0][0])
         rows = mock_dataframe.call_args[0][0]
-        self.assertEqual(len(rows), 100)
+        self.assertIn(str(len(rows)), mock_success.call_args[0][0])
+        self.assertEqual(len(rows), 150)
 
 
 class TestStageAndMatch(unittest.TestCase):

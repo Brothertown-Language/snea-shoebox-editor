@@ -52,7 +52,7 @@ class TestParseUpload(unittest.TestCase):
             self.skipTest("Sample file not available")
         content = SAMPLE_FILE.read_text(encoding='utf-8')
         result = UploadService.parse_upload(content)
-        self.assertEqual(len(result), 100)
+        self.assertEqual(len(result), 150)
 
 
 class TestAssignHomonymNumbers(unittest.TestCase):
