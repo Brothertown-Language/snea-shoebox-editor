@@ -155,3 +155,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Fragmentation and "wordiness" in auxiliary guideline files.
 - **Root Cause**: Redundant files like `algonquian-shoebox.md` existed outside the primary architecture.
 - **Correction**: Merged linguistic context into `project-architecture.md` and deleted redundant files. Updated `guidelines.md` to point to the consolidated architecture.
+
+### 2026-02-10: Recurring Unauthorized Commit Preparation (Critical)
+- **Violation**: Repeatedly creating `tmp/commit_task.sh` and `tmp/commit.msg` without explicit user instruction.
+- **Root Cause**: Failure to adhere to the "STOP AND ASK" protocol and over-eagerness to automate the end-of-task workflow. Misinterpretation of "done" to include VCS preparation.
+- **Correction**: (1) Significantly strengthened PROHIBITION language in `ai-behavior.md` and `development-workflow.md`, including a "HARD STOP" mandate. (2) Mandated that AI must never mention or suggest a commit unless the user initiates. (3) Added "ABSOLUTE PROHIBITION ON PROACTIVE PREP" as a top-level rule.

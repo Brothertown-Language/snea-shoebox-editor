@@ -43,7 +43,8 @@
 
 ## 3. Version Control and Task Management
 ### VCS COMPLIANCE
-- **MANDATORY COMMIT PREPARATION METHOD**: All source code commits MUST be facilitated by a shell script and message file(s) in `tmp/` **ONLY when directly instructed by the User to prepare for a commit**.
+- **MANDATORY COMMIT PREPARATION METHOD**: All source code commits MUST be facilitated by a shell script and message file(s) in `tmp/` **ONLY when directly and explicitly instructed by the User to "prepare for a commit" or "create a commit script"**. 
+  - **ABSOLUTE PROHIBITION ON PROACTIVE PREP**: You are strictly forbidden from creating these files based on an assumption of task completion. You must never mention, suggest, or offer to create a commit script. You must wait for the user to initiate this request.
   - **PROHIBITION ON EXECUTION**: You are strictly forbidden from running the `git commit` command OR executing the prepared commit script. Your role is limited to *creating* the artifacts for human review. **Only the User is authorized to run the commit script.**
   - **USER REVIEW MANDATORY**: The user MUST review the script and commit messages before they are executed.
   - **REVIEW ALL UNCOMMITTED FILES**: Before preparing the commit, run `git status` and review **all** uncommitted changes — both modified and untracked files. Determine which files semantically belong in the commit.
@@ -52,7 +53,7 @@
     - **METHOD**: Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
   - **MANDATORY BOILERPLATE**: The script MUST include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS).
   - **MESSAGE FORMAT**: Write messages to `tmp/commit.msg` (or `tmp/commit_N.msg`). **NO PREFIXES:** Never use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
-- **REASON**: Maintains absolute project safety and ensures the human lead is the sole authority for repository history.
+- **REASON**: Maintains absolute project safety and ensures the human lead is the sole authority for repository history. Violation of this protocol is a critical breach of trust.
 
 
 ### ACTIVE TASK MANAGEMENT
