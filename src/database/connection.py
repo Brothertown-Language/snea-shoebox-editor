@@ -45,9 +45,9 @@ def is_production():
 def _write_dbeaver_connection(uri):
     """Write a DBeaver project archive (.dbp) to tmp/ for local dev convenience.
 
-    Reads the template file tmp/SNEA-20260209.dbp (the production project
-    export) and replaces the production connection with the local pgserver
-    connection details, renaming it to ``snea-editor-db-local-dev``.
+    Reads the template file src/seed_data/snea-local-dev.dbp and replaces
+    the connection with the local pgserver connection details, renaming it
+    to ``snea-editor-db-local-dev``.
 
     The output is written to tmp/snea-local-dev.dbp and can be imported via
     File → Import → DBeaver → DBeaver Project (.dbp).
@@ -62,7 +62,7 @@ def _write_dbeaver_connection(uri):
         parsed = urlparse(uri)
         project_root = Path(__file__).parent.parent.parent
         tmp_dir = project_root / "tmp"
-        template_path = tmp_dir / "SNEA-20260209.dbp"
+        template_path = Path(__file__).parent.parent / "seed_data" / "snea-local-dev.dbp"
 
         if not template_path.exists():
             return
