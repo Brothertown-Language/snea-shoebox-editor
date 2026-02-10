@@ -204,9 +204,16 @@ def _auto_start_pgserver():
     if is_production():
         return None
 
+    # Use a persistent empty container for the pgserver warning so we can
+    # clear it later if the startup finally succeeds in a subsequent call.
+    if "pgserver_warning" not in st.session_state:
+        st.session_state.pgserver_warning = st.empty()
+    warning_placeholder = st.session_state.pgserver_warning
+
     # If pgserver is already running, return the cached URI immediately
     # to avoid re-initializing on every Streamlit rerun.
     if _pg_server is not None:
+        warning_placeholder.empty()
         is_junie = os.getenv("JUNIE_PRIVATE_DB") == "true"
         if not is_junie:
             uri = "postgresql://postgres:@localhost:5432/postgres"
@@ -267,6 +274,7 @@ def _auto_start_pgserver():
         _write_dbeaver_connection(uri)
 
         _logger.debug("Local pgserver fully initialized.")
+        warning_placeholder.empty()
         return uri
     except ImportError:
         _logger.debug("pgserver not installed — skipping local DB auto-start.")
@@ -277,12 +285,12 @@ def _auto_start_pgserver():
         if not is_production():
             err_msg = str(e)
             if "shutting down" in err_msg:
-                st.warning(
+                warning_placeholder.warning(
                     "Local PostgreSQL is still shutting down from a previous session. "
                     "Please wait a few seconds and refresh the page."
                 )
             else:
-                st.warning(f"Failed to auto-start local PostgreSQL: {e}")
+                warning_placeholder.warning(f"Failed to auto-start local PostgreSQL: {e}")
         return None
 
 def get_db_url():
