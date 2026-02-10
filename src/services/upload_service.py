@@ -619,18 +619,14 @@ class UploadService:
             applied = 0
             total = len(queue_ids)
             for i, qid in enumerate(queue_ids, 1):
-                try:
-                    UploadService.apply_single(
-                        queue_id=qid,
-                        user_email=user_email,
-                        language_id=language_id,
-                        session_id=session_id,
-                        session=session
-                    )
-                    applied += 1
-                except Exception as e:
-                    logger.error("approve_all_new_source: failed to apply queue_id=%s: %s", qid, e)
-                    session.rollback()
+                UploadService.apply_single(
+                    queue_id=qid,
+                    user_email=user_email,
+                    language_id=language_id,
+                    session_id=session_id,
+                    session=session
+                )
+                applied += 1
                 
                 if progress_callback:
                     progress_callback(i, total)
@@ -685,18 +681,14 @@ class UploadService:
             applied = 0
             total = len(queue_ids)
             for i, qid in enumerate(queue_ids, 1):
-                try:
-                    UploadService.apply_single(
-                        queue_id=qid,
-                        user_email=user_email,
-                        language_id=language_id,
-                        session_id=session_id,
-                        session=session
-                    )
-                    applied += 1
-                except Exception as e:
-                    logger.error("approve_all_by_record_match: failed to apply queue_id=%s: %s", qid, e)
-                    session.rollback()
+                UploadService.apply_single(
+                    queue_id=qid,
+                    user_email=user_email,
+                    language_id=language_id,
+                    session_id=session_id,
+                    session=session
+                )
+                applied += 1
                 
                 if progress_callback:
                     progress_callback(i, total)
@@ -753,18 +745,14 @@ class UploadService:
             applied = 0
             total = len(queue_ids)
             for i, qid in enumerate(queue_ids, 1):
-                try:
-                    UploadService.apply_single(
-                        queue_id=qid,
-                        user_email=user_email,
-                        language_id=language_id,
-                        session_id=session_id,
-                        session=session
-                    )
-                    applied += 1
-                except Exception as e:
-                    logger.error("approve_non_matches_as_new: failed to apply queue_id=%s: %s", qid, e)
-                    session.rollback()
+                UploadService.apply_single(
+                    queue_id=qid,
+                    user_email=user_email,
+                    language_id=language_id,
+                    session_id=session_id,
+                    session=session
+                )
+                applied += 1
                 
                 if progress_callback:
                     progress_callback(i, total)

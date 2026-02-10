@@ -33,7 +33,7 @@ class StatisticsService:
                 }
             except Exception as e:
                 logger.error(f"Error fetching summary stats: {e}")
-                return {"records": 0, "sources": 0, "languages": 0}
+                raise
 
     @classmethod
     def get_status_distribution(cls) -> Dict[str, int]:
@@ -46,7 +46,7 @@ class StatisticsService:
                 return {status: count for status, count in results}
             except Exception as e:
                 logger.error(f"Error fetching status distribution: {e}")
-                return {}
+                raise
 
     @classmethod
     def get_top_parts_of_speech(cls, limit: int = 10) -> Dict[str, int]:
@@ -62,7 +62,7 @@ class StatisticsService:
                 return {ps if ps else "Unknown": count for ps, count in results}
             except Exception as e:
                 logger.error(f"Error fetching POS distribution: {e}")
-                return {}
+                raise
 
     @classmethod
     def get_source_distribution(cls) -> Dict[str, int]:
@@ -77,7 +77,7 @@ class StatisticsService:
                 return {name: count for name, count in results}
             except Exception as e:
                 logger.error(f"Error fetching source distribution: {e}")
-                return {}
+                raise
 
     @classmethod
     def get_language_distribution(cls, primary_only: bool = True) -> Dict[str, int]:
@@ -98,7 +98,7 @@ class StatisticsService:
                 return {name: count for name, count in results}
             except Exception as e:
                 logger.error(f"Error fetching language distribution: {e}")
-                return {}
+                raise
 
     @classmethod
     def get_recent_activity(cls, limit: int = 5) -> List[Dict[str, Any]]:
@@ -123,4 +123,4 @@ class StatisticsService:
                 return activity
             except Exception as e:
                 logger.error(f"Error fetching recent activity: {e}")
-                return []
+                raise

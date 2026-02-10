@@ -274,7 +274,8 @@ class InfrastructureService:
             finally:
                 session.close()
         except Exception as e:
-            return False, str(e), {}
+            # Database operation failures are fatal; do not swallow.
+            raise
 
     # ── System Inspection ──────────────────────────────────────────────
 
