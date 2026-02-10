@@ -828,16 +828,14 @@ class UploadService:
                 record.hm = entry.get('hm', 1)
                 record.ps = entry.get('ps', '')
                 record.ge = entry.get('ge', '')
-                latest_version = (
-                    session.query(EditHistory)
-                    .filter_by(record_id=record.id)
-                    .count()
-                )
+                record.updated_by = user_email
+                # current_version is auto-incremented by SQLAlchemy optimistic locking
+                next_version = record.current_version + 1
                 session.add(EditHistory(
                     record_id=record.id,
                     user_email=user_email,
                     session_id=session_id,
-                    version=latest_version + 1,
+                    version=next_version,
                     change_summary="MDF upload: updated from matchup_queue",
                     prev_data=prev_data,
                     current_data=normalized,
@@ -970,6 +968,7 @@ class UploadService:
                 .all()
             )
             count = 0
+            updated_record_ids = []
             for row in rows:
                 record = session.get(Record, row.suggested_record_id)
                 if not record:
@@ -987,23 +986,27 @@ class UploadService:
                     record.hm = e.get('hm', 1)
                     record.ps = e.get('ps', '')
                     record.ge = e.get('ge', '')
-                latest_version = (
-                    session.query(EditHistory)
-                    .filter_by(record_id=record.id)
-                    .count()
-                )
+                record.updated_by = user_email
+                # current_version is auto-incremented by SQLAlchemy optimistic locking
+                next_version = record.current_version + 1
                 session.add(EditHistory(
                     record_id=record.id,
                     user_email=user_email,
                     session_id=session_id,
-                    version=latest_version + 1,
+                    version=next_version,
                     change_summary="MDF upload: updated from matchup_queue",
                     prev_data=prev_data,
                     current_data=normalized,
                 ))
                 session.delete(row)
+                updated_record_ids.append(record.id)
                 count += 1
             session.commit()
+
+            # Rebuild search entries so the browse/search table reflects updates
+            if updated_record_ids:
+                UploadService.populate_search_entries(updated_record_ids)
+
             return count
         except Exception:
             session.rollback()

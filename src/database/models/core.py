@@ -66,3 +66,7 @@ class Record(Base):
     history = relationship("EditHistory", back_populates="record")
     search_entries = relationship("SearchEntry", back_populates="record")
     matchup_suggestions = relationship("MatchupQueue", back_populates="suggested_record")
+
+    __mapper_args__ = {
+        "version_id_col": current_version,
+    }

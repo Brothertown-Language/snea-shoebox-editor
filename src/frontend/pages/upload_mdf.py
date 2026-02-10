@@ -594,6 +594,9 @@ def _render_review_table(batch_id, session_deps):
                         if st.button("Confirm Override", key=f"match_confirm_{row.id}"):
                             try:
                                 UploadService.confirm_match(row.id, chosen_record_id)
+                                # Clear the cached selectbox value so it picks up
+                                # the new 'matched' status from the DB on rerun.
+                                st.session_state.pop(f"status_{row.id}", None)
                                 st.success(
                                     f"✅ Match overridden to record #{chosen_record_id}"
                                 )

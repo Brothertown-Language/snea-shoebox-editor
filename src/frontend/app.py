@@ -19,12 +19,41 @@ from src.database import init_db
 from src.frontend.ui_utils import hide_sidebar_nav
 @st.cache_resource
 def _initialize_database():
-    """Run database initialization once on app startup."""
-    try:
-        init_db()
-    except Exception as e:
-        st.error(f"Critical Error: Failed to initialize database: {e}")
-        st.stop()
+    """Run database initialization once on app startup.
+
+    Retries with exponential back-off for up to ~30 seconds to handle
+    transient failures such as the local PostgreSQL still shutting down
+    from a previous session.
+    """
+    import time as _time
+
+    max_attempts = 8
+    base_delay = 1.0  # seconds
+
+    for attempt in range(1, max_attempts + 1):
+        try:
+            init_db()
+            return  # success
+        except Exception as e:
+            err_msg = str(e)
+            is_transient = any(phrase in err_msg for phrase in (
+                "shutting down",
+                "starting up",
+                "the database system is not yet accepting connections",
+                "could not connect to server",
+                "connection refused",
+                "Connection refused",
+            ))
+            if is_transient and attempt < max_attempts:
+                delay = base_delay * attempt
+                logger.warning(
+                    "Database init attempt %d/%d failed (transient): %s — retrying in %.1fs",
+                    attempt, max_attempts, e, delay,
+                )
+                _time.sleep(delay)
+            else:
+                st.error(f"Critical Error: Failed to initialize database: {e}")
+                st.stop()
 
 
 def main():

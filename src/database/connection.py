@@ -204,6 +204,17 @@ def _auto_start_pgserver():
     if is_production():
         return None
 
+    # If pgserver is already running, return the cached URI immediately
+    # to avoid re-initializing on every Streamlit rerun.
+    if _pg_server is not None:
+        is_junie = os.getenv("JUNIE_PRIVATE_DB") == "true"
+        if not is_junie:
+            uri = "postgresql://postgres:@localhost:5432/postgres"
+        else:
+            uri = _pg_server.get_uri()
+        _logger.debug("pgserver already running, returning cached URI.")
+        return uri
+
     is_junie = os.getenv("JUNIE_PRIVATE_DB") == "true"
 
     try:
