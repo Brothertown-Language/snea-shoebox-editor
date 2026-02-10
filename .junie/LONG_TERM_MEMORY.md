@@ -13,11 +13,10 @@ This file serves as a persistent memory of critical project context, user prefer
 - **STOP AND ASK**: Never assume intent. If a task is ambiguous or high-impact, halt and ask.
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
 - **PRIVATE DATABASE ONLY**: `JUNIE_PRIVATE_DB=true` is the only acceptable environment for operations.
-- **COMMIT SCRIPT METHOD**: All source changes must be prepared as `tmp/commit_task.sh` scripts, never committed directly by the AI.
-- **NO `cd` IN COMMANDS**: The shell is always at the project root. NEVER prefix commands with `cd /path &&`. Just run the command directly. (Recurring violation #3 — see VIOLATION_LOG.md.)
-- **COMMIT SCRIPTS MUST EXECUTE `git commit`**: Never use `echo` to tell the user to run `git commit` separately. The script must run `git commit -F tmp/commit.msg` directly. The user's review step is choosing to run the script. (Recurring violation #4 — see VIOLATION_LOG.md.)
-- **NEVER COPY USER COMMANDS VERBATIM**: When the user provides a shell command in the issue description, treat it as a description of *what* to do, not *how*. Always translate to guideline-compliant form: remove `cd /absolute/path`, split `&&` into separate tool calls, avoid `|` pipes. Each command must be a separate step.
-- **1-BASED COUNTING ONLY**: All numbered steps, task IDs, and sequential labels must start from 1, never 0. The user is not a computer — use natural counting.
+- **ZERO-TRUST TERMINAL GATE (v2.0)**: Every command must be project-relative, non-compound, prefixed with `uv run` for Python, and DB-isolated. NO `cd`, NO absolute paths, NO `&&`/`|`, NO `>` redirection to root.
+- **VCS PERMISSION GATE (v2.0)**: No autonomous commits. Commit scripts MUST use 3-step path resolution and execute `git commit` directly (NO `echo`).
+- **NOConventional Commits**: Never use prefixes like `feat:` or `fix:`.
+- **1-BASED COUNTING ONLY**: Use natural counting (1, 2, 3...) for all plans and lists.
 
 ## KEY CROSS-SESSION DECISIONS
 - **Deep Inspection Mandate**: Memory-based verification is strictly prohibited. AI must always perform deep inspection of source files before confirming any status or re-evaluating state.

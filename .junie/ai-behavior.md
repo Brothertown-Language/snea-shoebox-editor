@@ -31,14 +31,16 @@
 ### NATURAL COUNTING (1-BASED NUMBERING)
 - **NO ZERO-INDEXED STEPS:** All numbered lists, plan steps, task identifiers, and sequential labels intended for human consumption **MUST** start from `1`, not `0`. Use natural counting (1, 2, 3, …) — never start with 0.
 
-### COMMAND TRANSLATION PROTOCOL (HARD GATE)
-Every terminal command MUST pass through this gate before execution. No exceptions.
-1. **Does it contain an absolute path?** (e.g., `/home/...`) → STRIP IT. Use relative paths only.
-2. **Does it contain `&&`, `;`, or `|`?** → SPLIT into separate tool calls, one command per call.
-3. **Does it start with `cd`?** → REMOVE IT. The shell is already at the project root.
-4. **Was it copied from the user's message?** → It is a SPECIFICATION, not a ready command. TRANSLATE it.
-5. **Is it a Python one-liner or multi-statement `-c` command?** → STOP. Create a readable script file in `tmp/` and run it with `uv run python tmp/<script>.py`. **NEVER** run `uv run python -c "..."` with complex logic.
-6. **Does it use `>` or `>>` to redirect output to the project root?** → STOP. Redirect ALL output and transient files to the `tmp/` directory. **ZERO TOLERANCE FOR LOGS OR `.output.txt` IN ROOT.**
+### THE "ZERO-TRUST" TERMINAL GATE (MANDATORY)
+Every terminal command MUST pass this checklist before execution.
+1. **NO `cd`**: Never start a command with `cd`. The shell is ALREADY at the project root.
+2. **NO ABSOLUTE PATHS**: Strip all `/home/...` prefixes. Use project-relative paths only.
+3. **NO COMPOUND COMMANDS**: No `&&`, `;`, or `|`. Split into separate tool calls.
+4. **NO SHELL REDIRECTS**: No `>` or `>>` for file editing. Use `create`/`multi_edit` ONLY.
+5. **`uv run` PREFIX**: Every Python execution MUST start with `uv run`.
+6. **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
+7. **NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
+8. **ZERO TOLERANCE FOR LOGS IN ROOT**: Redirect ALL output to `tmp/`. No `.output.txt` in root.
 - **FAILURE TO APPLY THIS GATE IS A CRITICAL VIOLATION.** Log it in `VIOLATION_LOG.md` immediately.
 
 ### GUIDELINE ADHERENCE

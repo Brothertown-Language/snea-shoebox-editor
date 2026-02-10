@@ -51,14 +51,38 @@ screen real estate for the content the user needs to inspect.
 
 ---
 
-## 3. Linguistic Context
+## 3. Linguistic Context (SNEA/MDF)
 
 ### MDF TAGS AND STRUCTURE
 - `\lx`: Headword.
-- `\ps`: Part of Speech.
-- `\ge`: English Gloss.
+- `\ps`: Part of Speech (AI, II, TA, TI, N, etc.).
+- `\ge`: English Gloss (for headword or inflection).
+- `\de`: Full definition.
+- `\inf`: Inflected surface form.
+- `\infg`: Inflectional features (person→object, order, mode, etc.).
+- `\morph`: Morphological segmentation of the inflected form.
 - `\dt`: Date of last update.
 - **VALIDATION:** System provides advisory visual hints; linguists have final authority.
+
+### ENCODING PRINCIPLES
+- **ONE LEXEME PER ENTRY:** Each lexical entry corresponds to one lexeme.
+- **HEADWORD IN `\lx`:** The citation form is stored in `\lx`.
+- **INFLECTIONS INSIDE SAME RECORD:** Inflected forms are stored inside the same record as repeated `\inf` blocks, not as separate entries.
+- **INFLECTIONAL SPACE:** Reflect person, object, animacy, obviation, order, and mode.
+
+### INFLECTION BLOCK CONVENTION
+Each `\inf` should be followed by its own `\ge`, `\infg`, and `\morph` block:
+```
+\inf  niwîcihâw
+\ge   I help him
+\infg 1→3 IND
+\morph ni- + wîcihê- + -âw
+```
+
+### NOTATION STANDARDS
+- **PERSON→OBJECT:** `1→3`, `3→2`, `3→3'`, `1PL.EXCL→3`.
+- **ORDER/MODE:** `IND` (Indicative), `CONJ` (Conjunct), `IMP` (Imperative).
+- **NUMBER:** `SG`, `PL`.
 
 ### SNEA CONTEXT
 - Work involves historical records and contemporary documentation.
