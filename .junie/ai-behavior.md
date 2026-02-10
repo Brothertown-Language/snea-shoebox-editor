@@ -22,7 +22,7 @@
 ### PERMISSION AND PLANNING
 - **MANDATORY:** You **MUST** provide a detailed plan via the `update_status` tool before executing any project changes.
 - **AUTHORIZATION REQUIRED:** Every action that modifies the codebase or project state MUST be preceded by a specific authorization for that action. 
-- **NO PROACTIVE COMMITS:** **NEVER** prepare commit scripts (`tmp/commit_task.sh`) or commit messages (`tmp/commit.msg`) unless the user has explicitly instructed you to "prepare for a commit" or "create a commit script."
+- **CRITICAL MANDATE: NO PROACTIVE COMMITS:** **NEVER** prepare commit scripts (`tmp/commit_task.sh`) or commit messages (`tmp/commit.msg`) unless the user has explicitly and recently (within the current phase) instructed you to "prepare for a commit" or "create a commit script." **VIOLATING THIS IS A DISCIPLINARY OFFENSE.**
 - **STAGE ALL RELATED FILES:** Before preparing any commit, run `git status` to identify ALL untracked files that are part of the change. Stage new files alongside modified files. Self-check: "Are there new files referenced by the code changes that are not yet tracked? If yes, `git add` them."
 - **STOP AND ASK:** If a task is ambiguous, or if you are unsure if a change is "authorized," you **MUST** stop and ask.
 - **NO AUTONOMOUS EXECUTION:** You are a tool used by the programmer. You are NOT an autonomous agent making project decisions.
@@ -38,6 +38,7 @@ Every terminal command MUST pass through this gate before execution. No exceptio
 3. **Does it start with `cd`?** → REMOVE IT. The shell is already at the project root.
 4. **Was it copied from the user's message?** → It is a SPECIFICATION, not a ready command. TRANSLATE it.
 5. **Is it a Python one-liner or multi-statement `-c` command?** → STOP. Create a readable script file in `tmp/` and run it with `uv run python tmp/<script>.py`. **NEVER** run `uv run python -c "..."` with complex logic.
+6. **Does it use `>` or `>>` to redirect output to the project root?** → STOP. Redirect ALL output and transient files to the `tmp/` directory. **ZERO TOLERANCE FOR LOGS OR `.output.txt` IN ROOT.**
 - **FAILURE TO APPLY THIS GATE IS A CRITICAL VIOLATION.** Log it in `VIOLATION_LOG.md` immediately.
 
 ### GUIDELINE ADHERENCE
