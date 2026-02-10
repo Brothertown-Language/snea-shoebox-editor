@@ -32,7 +32,17 @@ class Language(Base):
     name = Column(String, nullable=False)  # Display name
     description = Column(Text)
     
-    records = relationship("Record", back_populates="language")
+    records = relationship("Record", secondary="record_languages", back_populates="language")
+
+class RecordLanguage(Base):
+    """
+    Auxiliary join table to support 1-record-to-many-languages.
+    """
+    __tablename__ = 'record_languages'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(Integer, ForeignKey('records.id', ondelete='CASCADE'), nullable=False)
+    language_id = Column(Integer, ForeignKey('languages.id', ondelete='RESTRICT'), nullable=False)
+    is_primary = Column(Boolean, nullable=False, default=False)
 
 class Record(Base):
     """
@@ -61,7 +71,7 @@ class Record(Base):
     reviewed_at = Column(TIMESTAMP(timezone=True))
     reviewed_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))
     
-    language = relationship("Language", back_populates="records")
+    language = relationship("Language", secondary="record_languages", back_populates="records")
     source = relationship("Source", back_populates="records")
     history = relationship("EditHistory", back_populates="record")
     search_entries = relationship("SearchEntry", back_populates="record")

@@ -47,6 +47,7 @@ def parse_mdf(content):
             'ps': '',
             'ge': '',
             'record_id': None,
+            'lg': [],
             'va': [],
             'se': [],
             'cf': [],
@@ -72,6 +73,20 @@ def parse_mdf(content):
             val = _extract_tag(line, 'ge')
             if val is not None and not record['ge']:
                 record['ge'] = val
+                continue
+
+            val = _extract_tag(line, 'lg')
+            if val is not None:
+                # Handle cases like "Wampanoag [wam]" -> name="Wampanoag", code="wam"
+                # If no brackets, name is full value, code is None
+                import re
+                match = re.search(r'^(.*?)\[(.*?)\]', val)
+                if match:
+                    name = match.group(1).strip()
+                    code = match.group(2).strip()
+                    record['lg'].append({'name': name, 'code': code})
+                else:
+                    record['lg'].append({'name': val.strip(), 'code': None})
                 continue
 
             val = _extract_tag(line, 'va')

@@ -1,4 +1,4 @@
-from .core import Source, Language, Record
+from .core import Source, Language, RecordLanguage, Record
 from .search import SearchEntry
 from .workflow import MatchupQueue, EditHistory
 from .identity import User, UserActivityLog, Permission
@@ -8,6 +8,7 @@ from .iso639 import ISO639_3
 __all__ = [
     'Source',
     'Language',
+    'RecordLanguage',
     'Record',
     'SearchEntry',
     'MatchupQueue',

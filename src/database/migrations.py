@@ -26,6 +26,9 @@ class MigrationManager:
         (1, "_migrate_cascade_constraints", "Add ON UPDATE CASCADE / ON DELETE RESTRICT constraints"),
         (2, "_migrate_add_embedding_column", "Add embedding vector column to records"),
         (3, "_migrate_add_matchup_queue_columns", "Add batch_id, filename, match_type to matchup_queue"),
+        (4, "_migrate_create_record_languages_table", "Create record_languages join table"),
+        (5, "_migrate_backfill_record_languages", "Backfill record_languages from existing records"),
+        (6, "_migrate_drop_records_language_id", "Drop redundant language_id from records table"),
     ]
 
     def __init__(self, engine):
@@ -150,6 +153,87 @@ class MigrationManager:
             # Backfill batch_id for any pre-existing rows so NOT NULL can be enforced
             conn.execute(text("UPDATE matchup_queue SET batch_id = 'legacy' WHERE batch_id IS NULL;"))
             conn.execute(text("ALTER TABLE matchup_queue ALTER COLUMN batch_id SET NOT NULL;"))
+            conn.commit()
+
+    def _migrate_create_record_languages_table(self):
+        """Migration 4: Create record_languages join table."""
+        with self._engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS record_languages (
+                    id SERIAL PRIMARY KEY,
+                    record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE CASCADE,
+                    language_id INTEGER NOT NULL REFERENCES languages(id) ON DELETE RESTRICT,
+                    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+                    created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+                );
+            """))
+            conn.commit()
+
+    def _migrate_backfill_record_languages(self):
+        """Migration 5: Backfill record_languages from existing records' MDF data."""
+        from .models.core import Record, RecordLanguage, Language
+        from src.mdf.parser import parse_mdf
+        
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            records = session.query(Record).all()
+            for rec in records:
+                # 1. Parse \lg entries from raw mdf_data
+                parsed = parse_mdf(rec.mdf_data)
+                if not parsed:
+                    continue
+                lg_entries = parsed[0].get('lg', [])
+                
+                # 2. If no \lg values found in MDF, fallback to existing language_id if it exists
+                # We need to peek at language_id before dropping it in next migration.
+                # Since we haven't dropped it yet, it's still available on the object.
+                existing_lang_id = getattr(rec, 'language_id', None)
+                
+                if not lg_entries and existing_lang_id:
+                    # Create one entry from the old foreign key
+                    rl = RecordLanguage(record_id=rec.id, language_id=existing_lang_id, is_primary=True)
+                    session.add(rl)
+                else:
+                    # Create entries for each parsed \lg
+                    for i, lg in enumerate(lg_entries):
+                        lg_name = lg['name']
+                        lg_code = lg['code']
+                        
+                        # Find or create Language entry
+                        lang = session.query(Language).filter_by(name=lg_name).first()
+                        if not lang and lg_code:
+                            lang = session.query(Language).filter_by(code=lg_code).first()
+                            
+                        if not lang:
+                            final_code = lg_code if lg_code else lg_name[:10]
+                            lang = Language(name=lg_name, code=final_code)
+                            session.add(lang)
+                            session.flush()
+                        elif lg_code and not lang.code:
+                            lang.code = lg_code
+                            session.flush()
+                        
+                        rl = RecordLanguage(
+                            record_id=rec.id, 
+                            language_id=lang.id, 
+                            is_primary=(i == 0)
+                        )
+                        session.add(rl)
+            session.commit()
+        except Exception as e:
+            logger.error(f"Backfill failed: {e}")
+            session.rollback()
+            raise e
+        finally:
+            session.close()
+
+    def _migrate_drop_records_language_id(self):
+        """Migration 6: Drop redundant language_id from records table."""
+        with self._engine.connect() as conn:
+            # We must drop the constraint first
+            conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_language_id_fkey;"))
+            conn.execute(text("ALTER TABLE records DROP COLUMN IF EXISTS language_id;"))
             conn.commit()
 
     # ── Data Seeding ──────────────────────────────────────────────────

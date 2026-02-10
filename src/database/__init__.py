@@ -11,6 +11,7 @@ __all__ = [
     'Base',
     'Source',
     'Language',
+    'RecordLanguage',
     'Record',
     'SearchEntry',
     'MatchupQueue',

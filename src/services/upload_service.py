@@ -812,9 +812,52 @@ class UploadService:
                 session.commit()
                 return {'action': 'discarded', 'record_id': None, 'lx': lx}
 
-            from src.mdf.parser import parse_mdf as _parse
+            from src.mdf.parser import parse_mdf as _parse, format_mdf_record, normalize_nt_record
             parsed = _parse(row.mdf_data)
-            entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': ''}
+            entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': '', 'lg': []}
+
+            from src.database.models.core import RecordLanguage, Language
+
+            # Helper to manage languages
+            def _update_languages(record, lg_entries, default_lang_id):
+                # 1. Clear existing
+                session.query(RecordLanguage).filter_by(record_id=record.id).delete()
+                
+                # 2. Add new from MDF if present, else fallback to UI selected language
+                if lg_entries:
+                    for i, lg in enumerate(lg_entries):
+                        lg_name = lg['name']
+                        lg_code = lg['code']
+                        
+                        # Find by name first
+                        lang = session.query(Language).filter_by(name=lg_name).first()
+                        
+                        # If not found by name, try to find by code if we have one
+                        if not lang and lg_code:
+                            lang = session.query(Language).filter_by(code=lg_code).first()
+                            
+                        if not lang:
+                            # Use provided code or fallback to name-based dummy code
+                            final_code = lg_code if lg_code else lg_name[:10]
+                            lang = Language(name=lg_name, code=final_code)
+                            session.add(lang)
+                            session.flush()
+                        elif lg_code and not lang.code:
+                            # Update existing language with code if it was missing
+                            lang.code = lg_code
+                            session.flush()
+                        
+                        session.add(RecordLanguage(
+                            record_id=record.id,
+                            language_id=lang.id,
+                            is_primary=(i == 0)
+                        ))
+                else:
+                    session.add(RecordLanguage(
+                        record_id=record.id,
+                        language_id=default_lang_id,
+                        is_primary=True
+                    ))
 
             if row.status == 'matched':
                 record = session.get(Record, row.suggested_record_id)
@@ -829,6 +872,9 @@ class UploadService:
                 record.ps = entry.get('ps', '')
                 record.ge = entry.get('ge', '')
                 record.updated_by = user_email
+                
+                _update_languages(record, entry.get('lg', []), language_id)
+
                 # current_version is auto-incremented by SQLAlchemy optimistic locking
                 next_version = record.current_version + 1
                 session.add(EditHistory(
@@ -857,12 +903,14 @@ class UploadService:
                     hm=new_hm,
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
-                    language_id=language_id,
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
+                
+                _update_languages(new_record, entry.get('lg', []), language_id)
+
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
@@ -884,12 +932,14 @@ class UploadService:
                     hm=entry.get('hm', 1),
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
-                    language_id=language_id,
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
+                
+                _update_languages(new_record, entry.get('lg', []), language_id)
+
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
