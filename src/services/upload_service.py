@@ -627,7 +627,7 @@ class UploadService:
 
         applied = 0
         total = len(queue_ids)
-        for idx, qid in enumerate(queue_ids, 1):
+        for i, qid in enumerate(queue_ids, 1):
             try:
                 UploadService.apply_single(
                     queue_id=qid,
@@ -636,10 +636,11 @@ class UploadService:
                     session_id=session_id,
                 )
                 applied += 1
-                if progress_callback:
-                    progress_callback(idx, total)
             except Exception as e:
                 logger.error("approve_all_new_source: failed to apply queue_id=%s: %s", qid, e)
+            
+            if progress_callback:
+                progress_callback(i, total)
 
         return applied
 
@@ -693,7 +694,7 @@ class UploadService:
 
         applied = 0
         total = len(queue_ids)
-        for idx, qid in enumerate(queue_ids, 1):
+        for i, qid in enumerate(queue_ids, 1):
             try:
                 UploadService.apply_single(
                     queue_id=qid,
@@ -702,10 +703,11 @@ class UploadService:
                     session_id=session_id,
                 )
                 applied += 1
-                if progress_callback:
-                    progress_callback(idx, total)
             except Exception as e:
                 logger.error("approve_all_by_record_match: failed to apply queue_id=%s: %s", qid, e)
+            
+            if progress_callback:
+                progress_callback(i, total)
 
         logger.info(
             "approve_all_by_record_match: batch=%s, applied %d of %d matched rows",
@@ -761,7 +763,7 @@ class UploadService:
 
         applied = 0
         total = len(queue_ids)
-        for idx, qid in enumerate(queue_ids, 1):
+        for i, qid in enumerate(queue_ids, 1):
             try:
                 UploadService.apply_single(
                     queue_id=qid,
@@ -770,10 +772,11 @@ class UploadService:
                     session_id=session_id,
                 )
                 applied += 1
-                if progress_callback:
-                    progress_callback(idx, total)
             except Exception as e:
                 logger.error("approve_non_matches_as_new: failed to apply queue_id=%s: %s", qid, e)
+            
+            if progress_callback:
+                progress_callback(i, total)
 
         logger.info(
             "approve_non_matches_as_new: batch=%s, applied %d of %d rows",
@@ -1183,12 +1186,18 @@ class UploadService:
                     hm=new_hm,
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
-                    language_id=language_id,
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
+                
+                from src.database import RecordLanguage
+                session.add(RecordLanguage(
+                    record_id=new_record.id,
+                    language_id=language_id,
+                    is_primary=True
+                ))
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
@@ -1237,12 +1246,18 @@ class UploadService:
                     hm=entry.get('hm', 1),
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
-                    language_id=language_id,
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
+
+                from src.database import RecordLanguage
+                session.add(RecordLanguage(
+                    record_id=new_record.id,
+                    language_id=language_id,
+                    is_primary=True
+                ))
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
