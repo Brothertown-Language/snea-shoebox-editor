@@ -93,6 +93,11 @@ uv run streamlit run src/frontend/app.py
 - **MANDATORY:** **ALWAYS** use `st.html()` for injecting raw HTML, CSS, or JavaScript into the application.
 - **RATIONALE:** `st.html()` is the purpose-built, safer, and cleaner method for raw web content injection in Streamlit (available in versions >= 1.34.0).
 
+### MDF Record Display (Project Default)
+- **MANDATORY:** When displaying MDF record text (e.g., in comparison views, record detail pages), **ALWAYS** use `render_mdf_block()` from `src.frontend.ui_utils`.
+- **NEVER** use `st.code()` for MDF record display — it does not soft-wrap and makes long lines unreadable.
+- **Behavior:** `render_mdf_block()` renders a `<pre>` block with `white-space: pre-wrap` and a hanging indent so users can visually distinguish true newlines from soft-wrapped overflow.
+
 ### Code Style
 - **Minimal imports:** Only import what's needed.
 - **Clear naming:** `selected_record`, `update_payload`, `auth_headers`.

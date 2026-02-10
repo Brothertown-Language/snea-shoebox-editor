@@ -115,6 +115,93 @@ def ensure_db_alive():
         st.stop()
 
 
+# ── MDF Display Utilities ──────────────────────────────────────────────
+
+
+def _arrow_svg(color: str) -> str:
+    """Return a percent-encoded SVG arrow glyph for use in CSS url()."""
+    from urllib.parse import quote
+    svg = (
+        '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'
+        f'<text x="0" y="42" font-size="48" font-weight="bold" fill="{color}">➥</text></svg>'
+    )
+    return quote(svg, safe='')
+
+
+def render_mdf_block(mdf_text: str, key: str = "") -> None:
+    """Render MDF data in a soft-wrapped <pre> block with a wrap indicator.
+
+    Lines that wrap display a continuation marker (↩) via a hanging indent
+    so the user can distinguish true newlines from soft-wrapped overflow.
+    This is the project-default way to display MDF record text.
+    """
+    import html as _html
+    # Wrap each line in its own <div> so the hanging indent only affects
+    # soft-wrapped continuation lines, not true newlines.
+    lines = mdf_text.split('\n')
+    line_divs = ''.join(
+        f'<div class="mdf-line">{_html.escape(line)}</div>' for line in lines
+    )
+    # st.html() renders inside an iframe that does NOT inherit Streamlit's
+    # CSS custom properties.  We must read the theme colours from the parent
+    # frame via JavaScript and apply them to the block.
+    st.html(f"""
+        <style>
+        .mdf-wrap-block {{
+            border: 1px solid #ccc;
+            border-radius: 0.5rem;
+            padding: 0.75rem 1rem;
+            font-family: 'Source Code Pro', monospace;
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin: 0;
+        }}
+        .mdf-line {{
+            white-space: pre-wrap;
+            word-break: break-word;
+            overflow-wrap: break-word;
+            /* Hanging indent: only soft-wrapped continuation lines are indented */
+            padding-left: 2.5rem;
+            text-indent: -2.5rem;
+            /* SVG arrow for soft-wrap indicator */
+            background-repeat: no-repeat;
+            background-position: 0.1rem 1.5em;
+            background-size: 2.2rem 1.5em;
+        }}
+        /* Light theme arrow (deep orange on light bg) */
+        @media (prefers-color-scheme: light) {{
+            .mdf-wrap-block {{ color: #31333F; background-color: #f0f2f6; border-color: #31333F; }}
+            .mdf-line {{ background-image: url("data:image/svg+xml,{_arrow_svg('#cc6622')}"); }}
+        }}
+        /* Dark theme arrow (bright orange on dark bg) */
+        @media (prefers-color-scheme: dark) {{
+            .mdf-wrap-block {{ color: #fafafa; background-color: #262730; border-color: #fafafa; }}
+            .mdf-line {{ background-image: url("data:image/svg+xml,{_arrow_svg('#e8943a')}"); }}
+        }}
+        </style>
+        <div class="mdf-wrap-block" id="mdf-block">{line_divs}</div>
+        <script>
+        (function() {{
+            // Try to read actual Streamlit theme colors from parent frame
+            var el = document.getElementById('mdf-block');
+            try {{
+                var parentEl = window.parent.document.querySelector('[data-testid="stAppViewContainer"]');
+                if (parentEl) {{
+                    var cs = window.parent.getComputedStyle(parentEl);
+                    var bg = cs.backgroundColor;
+                    var fg = cs.color;
+                    if (bg && fg) {{
+                        el.style.color = fg;
+                        el.style.backgroundColor = bg;
+                        el.style.borderColor = fg;
+                    }}
+                }}
+            }} catch(e) {{}}
+        }})();
+        </script>
+    """)
+
+
 # ── Sidebar Utilities ──────────────────────────────────────────────────
 
 

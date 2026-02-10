@@ -4,7 +4,7 @@ def upload_mdf():
     from src.database import get_session
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf")
@@ -218,7 +218,7 @@ def _render_review_view():
     """
     import streamlit as st
     from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")
@@ -296,6 +296,7 @@ def _render_review_table(batch_id, session_deps):
     from src.database.models.workflow import MatchupQueue
     from src.database.models.core import Record, Language, Source
     from src.services.upload_service import UploadService
+    from src.frontend.ui_utils import render_mdf_block
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")
@@ -608,13 +609,13 @@ def _render_review_table(batch_id, session_deps):
             with col_left:
                 if suggested_rec:
                     st.markdown(f"**Existing record (#{suggested_rec.id})**")
-                    st.code(suggested_rec.mdf_data, language=None)
+                    render_mdf_block(suggested_rec.mdf_data)
                 else:
                     st.markdown("**No existing record**")
                     st.info("This entry will be created as a new record.")
             with col_right:
                 st.markdown("**New (uploaded)**")
-                st.code(row.mdf_data, language=None)
+                render_mdf_block(row.mdf_data)
 
                 # Show prev/next nav below the last record's "New (uploaded)" box
                 if row == page_rows[-1] and total_pages > 1:
