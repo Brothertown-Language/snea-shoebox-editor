@@ -607,42 +607,41 @@ class UploadService:
                 status='pending',
             ).update({'status': 'create_new'})
             session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
 
-        # Collect IDs to apply
-        session = get_session()
-        try:
+            # Collect IDs to apply
             rows = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id, status='create_new')
                 .all()
             )
             queue_ids = [r.id for r in rows]
+
+            applied = 0
+            total = len(queue_ids)
+            for i, qid in enumerate(queue_ids, 1):
+                try:
+                    UploadService.apply_single(
+                        queue_id=qid,
+                        user_email=user_email,
+                        language_id=language_id,
+                        session_id=session_id,
+                        session=session
+                    )
+                    applied += 1
+                except Exception as e:
+                    logger.error("approve_all_new_source: failed to apply queue_id=%s: %s", qid, e)
+                    session.rollback()
+                
+                if progress_callback:
+                    progress_callback(i, total)
+
+            session.commit()
+            return applied
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
-
-        applied = 0
-        total = len(queue_ids)
-        for i, qid in enumerate(queue_ids, 1):
-            try:
-                UploadService.apply_single(
-                    queue_id=qid,
-                    user_email=user_email,
-                    language_id=language_id,
-                    session_id=session_id,
-                )
-                applied += 1
-            except Exception as e:
-                logger.error("approve_all_new_source: failed to apply queue_id=%s: %s", qid, e)
-            
-            if progress_callback:
-                progress_callback(i, total)
-
-        return applied
 
     @staticmethod
     def approve_all_by_record_match(batch_id: str, user_email: str,
@@ -673,15 +672,8 @@ class UploadService:
                 MatchupQueue.suggested_record_id.isnot(None),
             ).update({'status': 'matched'}, synchronize_session='fetch')
             session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
 
-        # Collect IDs of matched rows to apply
-        session = get_session()
-        try:
+            # Collect IDs of matched rows to apply
             matched_rows = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id, status='matched')
@@ -689,31 +681,37 @@ class UploadService:
                 .all()
             )
             queue_ids = [r.id for r in matched_rows]
+
+            applied = 0
+            total = len(queue_ids)
+            for i, qid in enumerate(queue_ids, 1):
+                try:
+                    UploadService.apply_single(
+                        queue_id=qid,
+                        user_email=user_email,
+                        language_id=language_id,
+                        session_id=session_id,
+                        session=session
+                    )
+                    applied += 1
+                except Exception as e:
+                    logger.error("approve_all_by_record_match: failed to apply queue_id=%s: %s", qid, e)
+                    session.rollback()
+                
+                if progress_callback:
+                    progress_callback(i, total)
+
+            session.commit()
+            logger.info(
+                "approve_all_by_record_match: batch=%s, applied %d of %d matched rows",
+                batch_id, applied, len(queue_ids),
+            )
+            return applied
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
-
-        applied = 0
-        total = len(queue_ids)
-        for i, qid in enumerate(queue_ids, 1):
-            try:
-                UploadService.apply_single(
-                    queue_id=qid,
-                    user_email=user_email,
-                    language_id=language_id,
-                    session_id=session_id,
-                )
-                applied += 1
-            except Exception as e:
-                logger.error("approve_all_by_record_match: failed to apply queue_id=%s: %s", qid, e)
-            
-            if progress_callback:
-                progress_callback(i, total)
-
-        logger.info(
-            "approve_all_by_record_match: batch=%s, applied %d of %d matched rows",
-            batch_id, applied, len(queue_ids),
-        )
-        return applied
 
     @staticmethod
     def approve_non_matches_as_new(batch_id: str, user_email: str,
@@ -742,15 +740,8 @@ class UploadService:
                 MatchupQueue.suggested_record_id.is_(None),
             ).update({'status': 'create_new'}, synchronize_session='fetch')
             session.commit()
-        except Exception:
-            session.rollback()
-            raise
-        finally:
-            session.close()
 
-        # Collect IDs of create_new rows to apply
-        session = get_session()
-        try:
+            # Collect IDs of create_new rows to apply
             rows = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id, status='create_new')
@@ -758,31 +749,37 @@ class UploadService:
                 .all()
             )
             queue_ids = [r.id for r in rows]
+
+            applied = 0
+            total = len(queue_ids)
+            for i, qid in enumerate(queue_ids, 1):
+                try:
+                    UploadService.apply_single(
+                        queue_id=qid,
+                        user_email=user_email,
+                        language_id=language_id,
+                        session_id=session_id,
+                        session=session
+                    )
+                    applied += 1
+                except Exception as e:
+                    logger.error("approve_non_matches_as_new: failed to apply queue_id=%s: %s", qid, e)
+                    session.rollback()
+                
+                if progress_callback:
+                    progress_callback(i, total)
+
+            session.commit()
+            logger.info(
+                "approve_non_matches_as_new: batch=%s, applied %d of %d rows",
+                batch_id, applied, len(queue_ids),
+            )
+            return applied
+        except Exception:
+            session.rollback()
+            raise
         finally:
             session.close()
-
-        applied = 0
-        total = len(queue_ids)
-        for i, qid in enumerate(queue_ids, 1):
-            try:
-                UploadService.apply_single(
-                    queue_id=qid,
-                    user_email=user_email,
-                    language_id=language_id,
-                    session_id=session_id,
-                )
-                applied += 1
-            except Exception as e:
-                logger.error("approve_non_matches_as_new: failed to apply queue_id=%s: %s", qid, e)
-            
-            if progress_callback:
-                progress_callback(i, total)
-
-        logger.info(
-            "approve_non_matches_as_new: batch=%s, applied %d of %d rows",
-            batch_id, applied, len(queue_ids),
-        )
-        return applied
 
     @staticmethod
     def mark_as_homonym(queue_id: int) -> None:
@@ -834,12 +831,15 @@ class UploadService:
 
     @staticmethod
     def apply_single(queue_id: int, user_email: str, language_id: int,
-                     session_id: str) -> dict:
+                     session_id: str, session=None) -> dict:
         """Apply a single matchup_queue row immediately.
 
         Returns {action, record_id, lx}.
         """
-        session = get_session()
+        _provided_session = session is not None
+        if not _provided_session:
+            session = get_session()
+        
         try:
             row = session.get(MatchupQueue, queue_id)
             if not row:
@@ -855,7 +855,8 @@ class UploadService:
             if row.status == 'discard':
                 lx = row.lx
                 session.delete(row)
-                session.commit()
+                if not _provided_session:
+                    session.commit()
                 return {'action': 'discarded', 'record_id': None, 'lx': lx}
 
             from src.mdf.parser import parse_mdf as _parse, format_mdf_record, normalize_nt_record
@@ -1004,17 +1005,20 @@ class UploadService:
                 raise ValueError(f"Unexpected status '{row.status}'")
 
             session.delete(row)
-            session.commit()
+            if not _provided_session:
+                session.commit()
 
             # Populate search entries
-            UploadService.populate_search_entries([record_id])
+            UploadService.populate_search_entries([record_id], session=session)
 
             return {'action': action, 'record_id': record_id, 'lx': entry['lx']}
         except Exception:
-            session.rollback()
+            if not _provided_session:
+                session.rollback()
             raise
         finally:
-            session.close()
+            if not _provided_session:
+                session.close()
 
     @staticmethod
     def discard_all(batch_id: str) -> int:
@@ -1127,7 +1131,7 @@ class UploadService:
 
             # Rebuild search entries so the browse/search table reflects updates
             if updated_record_ids:
-                UploadService.populate_search_entries(updated_record_ids)
+                UploadService.populate_search_entries(updated_record_ids, session=session)
 
             return count
         except Exception:
@@ -1191,7 +1195,7 @@ class UploadService:
                 )
                 session.add(new_record)
                 session.flush()
-                
+
                 from src.database import RecordLanguage
                 session.add(RecordLanguage(
                     record_id=new_record.id,
@@ -1214,6 +1218,13 @@ class UploadService:
                 count += 1
                 if progress_callback:
                     progress_callback(idx, total)
+            
+            # Rebuild search entries
+            session.flush()
+            homonym_record_ids = [r.id for r in session if isinstance(r, Record) and r.id is not None]
+            if homonym_record_ids:
+                UploadService.populate_search_entries(homonym_record_ids, session=session)
+
             session.commit()
             return count
         except Exception:
@@ -1274,6 +1285,13 @@ class UploadService:
                 count += 1
                 if progress_callback:
                     progress_callback(idx, total)
+            
+            # Rebuild search entries
+            session.flush()
+            new_record_ids = [r.id for r in session if isinstance(r, Record) and r.id is not None]
+            if new_record_ids:
+                UploadService.populate_search_entries(new_record_ids, session=session)
+
             session.commit()
             return count
         except Exception:
@@ -1283,9 +1301,11 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def populate_search_entries(record_ids: list[int]) -> int:
+    def populate_search_entries(record_ids: list[int], session=None) -> int:
         """Rebuild search_entries for given record ids. Returns count created."""
-        session = get_session()
+        _provided_session = session is not None
+        if not _provided_session:
+            session = get_session()
         try:
             total = 0
             for rid in record_ids:
@@ -1313,10 +1333,13 @@ class UploadService:
                             session.add(SearchEntry(record_id=rid, term=val, entry_type=field))
                             total += 1
 
-            session.commit()
+            if not _provided_session:
+                session.commit()
             return total
         except Exception:
-            session.rollback()
+            if not _provided_session:
+                session.rollback()
             raise
         finally:
-            session.close()
+            if not _provided_session:
+                session.close()

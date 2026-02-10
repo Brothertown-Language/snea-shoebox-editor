@@ -325,14 +325,19 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         return patch('src.services.upload_service.get_session', return_value=self.Session())
 
     def _add_record(self, lx, mdf_data, hm=1, ps='n', ge='gloss', source_id=None):
-        from src.database import Record
+        from src.database import Record, RecordLanguage
         rec = Record(
             lx=lx, hm=hm, ps=ps, ge=ge,
-            language_id=self.language_id,
             source_id=source_id or self.source_id,
             mdf_data=mdf_data,
         )
         self.session.add(rec)
+        self.session.flush()
+        
+        # Add primary language entry
+        rl = RecordLanguage(record_id=rec.id, language_id=self.language_id, is_primary=True)
+        self.session.add(rl)
+        
         self.session.commit()
         return rec
 
@@ -515,7 +520,9 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             {'lx': 'w2', 'mdf_data': '\\lx w2'},
         ])
         with self._patch_session():
-            count = UploadService.approve_all_new_source(batch_id)
+            count = UploadService.approve_all_new_source(
+                batch_id, 'test@example.com', self.language_id, 'sess1'
+            )
         self.assertEqual(count, 2)
         from src.database import MatchupQueue
         rows = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).all()
@@ -745,7 +752,15 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             {'lx': 'new2', 'mdf_data': '\\lx new2\n\\ps v\n\\ge thing2'},
         ])
         with self._patch_session():
-            UploadService.approve_all_new_source(batch_id)
+            count = UploadService.commit_new(batch_id, 'test@example.com', self.language_id, 'sess1')
+        self.assertEqual(count, 0) # Should be 0 as they are pending
+        
+        from src.database import MatchupQueue
+        rows = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).all()
+        for row in rows:
+            row.status = 'create_new'
+        self.session.commit()
+
         with self._patch_session():
             count = UploadService.commit_new(batch_id, 'test@example.com', self.language_id, 'sess1')
         self.assertEqual(count, 2)

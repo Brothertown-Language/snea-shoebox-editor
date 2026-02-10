@@ -184,7 +184,7 @@ def upload_mdf():
                     "ps": e.get("ps", ""),
                     "ge": e.get("ge", ""),
                 })
-            st.dataframe(rows, use_container_width=True, height=300)
+            st.dataframe(rows, width="stretch", height=300)
 
             # Store parsed data in session state for later phases
             st.session_state["upload_entries"] = entries
@@ -714,7 +714,7 @@ def _render_review_table(batch_id, session_deps):
                             st.session_state["review_current_page"] = current_page - 1
                             st.rerun()
                     with nav_c3:
-                        if st.button("Next ▶", key="main_page_next", disabled=(current_page >= total_pages), use_container_width=True):
+                        if st.button("Next ▶", key="main_page_next", disabled=(current_page >= total_pages), width="stretch"):
                             st.session_state["review_current_page"] = current_page + 1
                             st.rerun()
 
