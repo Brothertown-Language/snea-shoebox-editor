@@ -140,7 +140,7 @@ def render_mdf_block(mdf_text: str, key: str = "") -> None:
     # soft-wrapped continuation lines, not true newlines.
     lines = mdf_text.split('\n')
     line_divs = ''.join(
-        f'<div class="mdf-line">{_html.escape(line)}</div>' for line in lines
+        f'<div class="mdf-line">{_html.escape(line) if line else "&nbsp;"}</div>' for line in lines
     )
     # st.html() renders inside an iframe that does NOT inherit Streamlit's
     # CSS custom properties.  We must read the theme colours from the parent
