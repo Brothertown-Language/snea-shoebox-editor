@@ -36,9 +36,7 @@ Date: 2026-02-08
 - **Verification**: Updated and verified `tests/test_security_manager.py` and `tests/services/test_identity_service.py`. All tests passing.
 - **Refactoring Plan Update**: Updated `tmp/refactoring_plan.md` (reverted Stage 3 completion mark per guidelines).
 - **Bug Fix (Streamlit API Error)**: Resolved `StreamlitAPIException: Multiple Pages specified with default=True` by refactoring `NavigationService` to use module-level constants and explicitly setting `PAGE_HOME` as the default.
-- **Mandated Commit Script Method**: Updated AI guidelines to require the commit script method for all source code changes.
-- **Prohibition on Committing Temporary Files**: Updated `.junie/guidelines.md`, `.junie/operational-standards.md`, and `.junie/development-workflow.md` to explicitly forbid committing any files from the `tmp/` directory.
-- **Commit Script Timing Restriction**: Updated guidelines to explicitly prohibit creating commit scripts or messages without direct user instruction.
+- **VCS Permission Gate Refinement (v4.1)**: Updated guidelines to explicitly prohibit AI from executing commit scripts. AI may only create scripts/messages upon request; user review and manual execution are mandatory.
 - **Guideline Adherence Correction**: Updated `tmp/commit_task.sh` to strictly follow mandatory path resolution rules (`git rev-parse`) for reliable execution within IDE environments.
 - **Refactored HTML/CSS Injection**: Replaced `st.markdown(..., unsafe_allow_html=True)` with `st.html()` in `app.py` and `login.py`.
 - **Updated UI Guidelines**: Added mandatory rule to `.junie/ui-development-spr.md` to use `st.html()` for all HTML/CSS/JS content.

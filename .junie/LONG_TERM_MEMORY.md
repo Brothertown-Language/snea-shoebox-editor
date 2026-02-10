@@ -14,7 +14,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
 - **PRIVATE DATABASE ONLY**: `JUNIE_PRIVATE_DB=true` is the only acceptable environment for operations.
 - **ZERO-TRUST TERMINAL GATE (v2.0)**: Every command must be project-relative, non-compound, prefixed with `uv run` for Python, and DB-isolated. NO `cd`, NO absolute paths, NO `&&`/`|`, NO `>` redirection to root.
-- **VCS PERMISSION GATE (v2.0)**: No autonomous commits. Commit scripts MUST use 3-step path resolution and execute `git commit` directly (NO `echo`).
+- **VCS PERMISSION GATE (v4.1)**: Absolute prohibition on performing git commits. Preparation of commit scripts and messages is ONLY permitted upon explicit user request. AI is forbidden from executing the commit script; only the user is authorized to review and run it. Autonomous preparation is strictly forbidden.
 - **NOConventional Commits**: Never use prefixes like `feat:` or `fix:`.
 - **1-BASED COUNTING ONLY**: Use natural counting (1, 2, 3...) for all plans and lists.
 

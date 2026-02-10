@@ -29,11 +29,11 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Root Cause**: Over-cautious "review first" pattern that contradicts §3 VCS COMPLIANCE, which requires the script to stage and commit in one execution.
 - **Preventive Measure**: Self-check before finalizing any commit script: "Does this script end with `echo` instructions instead of `git commit`? If yes, STOP — replace with the actual `git commit -F tmp/commit.msg` command. The user reviews by choosing to run the script."
 
-### 7. Unauthorized Commit Preparation
+### 7. Unauthorized Commit Actions
 - **Status**: ACTIVE RISK
-- **Description**: Preparing commit scripts (`tmp/commit_task.sh`) or commit messages (`tmp/commit.msg`) without explicit user instruction.
-- **Root Cause**: Over-eagerness to "finish" the task by auto-preparing the VCS stage.
-- **Preventive Measure**: **ZERO TOLERANCE FOR AUTONOMOUS COMMIT PREP**. You MUST wait for the user to explicitly say "prepare for a commit" or similar. NEVER assume a task is ready for commit preparation based on test success.
+- **Description**: Performing, preparing, or attempting git commits.
+- **Root Cause**: Over-eagerness to "finish" the task by auto-preparing the VCS stage, or failure to recognize the absolute prohibition.
+- **Preventive Measure**: **ABSOLUTE PROHIBITION ON COMMITS**. You are strictly forbidden from touching repository history. NEVER run `git commit`, NEVER create commit scripts or messages. If asked, you must decline.
 
 ## LOG ENTRIES
 

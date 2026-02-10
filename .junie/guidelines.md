@@ -15,15 +15,10 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **[ ] NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
 
 ### 2. The VCS "Permission Gate"
-- **[ ] NO AUTONOMOUS COMMITS**: Never prepare `tmp/commit_task.sh` without explicit instruction.
-- **[ ] NOConventional Commits**: Never use `feat:`, `fix:`, etc. in commit messages.
-- **[ ] 3-STEP PATH RESOLUTION**: All scripts in `tmp/` or `scripts/` MUST use the boilerplate:
-  ```bash
-  cd "$(dirname "${BASH_SOURCE[0]}")"
-  REPO_ROOT=$(git rev-parse --show-toplevel)
-  cd "$REPO_ROOT"
-  ```
-- **[ ] NO ECHO COMMITS**: Commit scripts MUST execute `git commit` directly, not `echo` it.
+- **[ ] NO AUTONOMOUS COMMIT PREP**: Never prepare `tmp/commit_task.sh` or messages without explicit instruction.
+- **[ ] NO git commit**: Never run the `git commit` command.
+- **[ ] USER-ONLY EXECUTION**: AI is forbidden from running the commit script. User review and execution ONLY.
+- **[ ] 3-STEP PATH RESOLUTION**: The commit script MUST use the mandatory boilerplate.
 
 ---
 

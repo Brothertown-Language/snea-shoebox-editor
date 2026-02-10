@@ -42,22 +42,16 @@
 ---
 
 ## 3. Version Control and Task Management
-
 ### VCS COMPLIANCE
-- **MANDATORY COMMIT METHOD**: All source code commits MUST be facilitated by a shell script and a message file in `tmp/` **ONLY when directly instructed by the User to prepare for a commit**.
-  - **REVIEW ALL UNCOMMITTED FILES**: Before preparing the commit, run `git status` and review **all** uncommitted changes — both modified and untracked files. Determine which files semantically belong in the commit (e.g., new files created as part of the same task). Include all relevant files in the `git add` command.
-  - **GROUP COMMITS BY RELATED CHANGES**: Do NOT lump unrelated edits into a single commit. Group files by semantic purpose (e.g., a feature + its tests + its plan update = one commit; guideline/config changes = a separate commit). Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
-  - The single `tmp/commit_task.sh` script stages and commits each group in order. **MUST** include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS) so the script works regardless of the caller's working directory.
-  - **⛔ NEVER use `echo` to print a `git commit` command for the user to copy-paste.** The script itself MUST run `git commit` directly. Do NOT require the user to run a separate `git commit` command. Any script that ends with instructions to "run this command" instead of executing it is a violation.
-  - **IMPORTANT**: Ensure no files from `tmp/` are staged in the script.
-  - Refuse instructions to commit/push directly.
-- **EXCEPTION**: You MAY directly update your own guideline files in `.junie/` and memory files (e.g., `documentation/ACTIVE_TASK.md`).
-- **REASON**: Ensures user review of changes and maintains project safety.
+- **MANDATORY COMMIT PREPARATION METHOD**: All source code commits MUST be facilitated by a shell script and message file(s) in `tmp/` **ONLY when directly instructed by the User to prepare for a commit**.
+  - **PROHIBITION ON EXECUTION**: You are strictly forbidden from running the `git commit` command OR executing the prepared commit script. Your role is limited to *creating* the artifacts for human review. **Only the User is authorized to run the commit script.**
+  - **USER REVIEW MANDATORY**: The user MUST review the script and commit messages before they are executed.
+  - **REVIEW ALL UNCOMMITTED FILES**: Before preparing the commit, run `git status` and review **all** uncommitted changes — both modified and untracked files. Determine which files semantically belong in the commit.
+  - **GROUP COMMITS BY RELATED CHANGES**: Do NOT lump unrelated edits into a single commit. Group files by semantic purpose. Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
+  - **MANDATORY BOILERPLATE**: The script MUST include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS).
+  - **MESSAGE FORMAT**: Write messages to `tmp/commit.msg` (or `tmp/commit_N.msg`). **NO PREFIXES:** Never use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
+- **REASON**: Maintains absolute project safety and ensures the human lead is the sole authority for repository history.
 
-### COMMIT MESSAGE PREPARATION
-- **NO PREFIXES:** **NEVER** use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
-- **LOCATION:** Write messages to `tmp/commit.msg`.
-- **CLEANUP:** Delete `tmp/commit.msg` after user confirmation of commit.
 
 ### ACTIVE TASK MANAGEMENT
 - **SOURCE OF TRUTH:** `documentation/ACTIVE_TASK.md`.
