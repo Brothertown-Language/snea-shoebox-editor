@@ -21,39 +21,60 @@ from src.frontend.ui_utils import hide_sidebar_nav
 def _initialize_database():
     """Run database initialization once on app startup.
 
-    Retries with exponential back-off for up to ~30 seconds to handle
-    transient failures such as the local PostgreSQL still shutting down
-    from a previous session.
+    Retries with exponential back-off to handle transient failures
+    (e.g., local PostgreSQL still shutting down). Shows a user-friendly
+    spinner and guidance instead of flooding the UI/logs.
     """
     import time as _time
 
-    max_attempts = 8
+    max_attempts = 6
     base_delay = 1.0  # seconds
 
-    for attempt in range(1, max_attempts + 1):
-        try:
-            init_db()
-            return  # success
-        except Exception as e:
-            err_msg = str(e)
-            is_transient = any(phrase in err_msg for phrase in (
-                "shutting down",
-                "starting up",
-                "the database system is not yet accepting connections",
-                "could not connect to server",
-                "connection refused",
-                "Connection refused",
-            ))
-            if is_transient and attempt < max_attempts:
-                delay = base_delay * attempt
-                logger.warning(
-                    "Database init attempt %d/%d failed (transient): %s — retrying in %.1fs",
-                    attempt, max_attempts, e, delay,
-                )
-                _time.sleep(delay)
-            else:
-                st.error(f"Critical Error: Failed to initialize database: {e}")
-                st.stop()
+    with st.spinner("Initializing database…"):
+        status = st.empty()
+        for attempt in range(1, max_attempts + 1):
+            try:
+                init_db()
+                status.empty()
+                return  # success
+            except Exception as e:
+                err_msg = str(e)
+                is_transient = any(phrase in err_msg for phrase in (
+                    "shutting down",
+                    "starting up",
+                    "the database system is not yet accepting connections",
+                    "could not connect to server",
+                    "connection refused",
+                    "Connection refused",
+                ))
+                if is_transient and attempt < max_attempts:
+                    delay = base_delay * attempt
+                    # Keep logs concise at INFO and show user-facing hint
+                    logger.info(
+                        "DB init transient failure %d/%d: %s — retrying in %.1fs",
+                        attempt, max_attempts, e, delay,
+                    )
+                    status.info(
+                        f"Database is starting up or recovering (attempt {attempt}/{max_attempts}). "
+                        f"This is usually temporary. Retrying in {delay:.1f}s…"
+                    )
+                    _time.sleep(delay)
+                else:
+                    # Final failure: provide actionable guidance without stack spam
+                    status.empty()
+                    st.error(
+                        "Database is unavailable. Please try one of the following:"
+                    )
+                    with st.expander("Troubleshooting tips"):
+                        st.markdown(
+                            "- Wait a few seconds and press the R key to refresh the page.\n"
+                            "- If running locally, ensure the embedded PostgreSQL can start.\n"
+                            "- Advanced: run `scripts/test_db_connection.py` to diagnose connectivity.\n"
+                            "- If the problem persists, stop all local Postgres services and restart the app."
+                        )
+                    # Still log the underlying error at WARNING for operators
+                    logger.warning("DB init failed: %s", e)
+                    st.stop()
 
 
 def main():

@@ -197,6 +197,49 @@ def _enable_tcp_listening(pg_server):
     _logger.debug("PostgreSQL restarted with TCP on localhost:5432.")
 
 
+def _force_stop_stuck_db(db_path):
+    """Detect and force-stop a local DB that is stuck in a 'shutting down' state.
+
+    If postmaster.pid exists and hasn't been touched for 30 seconds, and we 
+    are seeing 'shutting down' errors, it's likely stuck.
+    """
+    pid_file = Path(db_path) / "postmaster.pid"
+    if not pid_file.exists():
+        return
+
+    import time
+    from pgserver._commands import pg_ctl
+
+    last_mod = pid_file.stat().st_mtime
+    age = time.time() - last_mod
+
+    if age > 30:
+        _logger.warning(
+            "Local DB appears stuck in 'shutting down' state (age=%.1fs). "
+            "Forcing immediate shutdown of pgdata=%s…", 
+            age, db_path
+        )
+        try:
+            # -m immediate forces shutdown without waiting for clients
+            # We must pass the arguments as a list to the underlying pg_ctl wrapper
+            pg_ctl(['stop', '-m', 'immediate', '-D', str(db_path)], pgdata=str(db_path))
+            _logger.info("Force-stop command issued to stuck DB.")
+            # Small wait to allow OS to clean up the PID file if pg_ctl succeeded
+            time.sleep(1)
+            # If the PID file still exists, it might be because the process was 
+            # already gone but the file remained. In this case, we should 
+            # manually remove it so pgserver can start.
+            if pid_file.exists():
+                _logger.info("PID file still exists after force-stop, removing manually.")
+                pid_file.unlink()
+        except Exception as e:
+            _logger.debug("Failed to force-stop DB: %s", e)
+            # Fallback: try to remove PID file manually if it seems stuck
+            if pid_file.exists():
+                _logger.info("Removing stuck PID file manually after failed force-stop.")
+                pid_file.unlink()
+
+
 def _auto_start_pgserver():
     """Try to auto-start pgserver for local development."""
     global _pg_server
@@ -231,6 +274,9 @@ def _auto_start_pgserver():
         db_path = _get_local_db_path()
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
+        # Check if DB is stuck before attempting to start it
+        _force_stop_stuck_db(db_path)
+
         _logger.debug("Starting pgserver (db_path=%s)…", db_path)
         _pg_server = pgserver.get_server(str(db_path))
         _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
