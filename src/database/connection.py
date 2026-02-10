@@ -381,7 +381,9 @@ def init_db():
     if not db_url:
         raise ValueError("Database URL not found in secrets or environment.")
     
-    engine = create_engine(db_url)
+    # pool_size=0 and pool_recycle=5 ensures that the pool can become empty when idle,
+    # and stale connections are removed quickly to preserve limited production resources.
+    engine = create_engine(db_url, pool_size=0, max_overflow=20, pool_recycle=5)
     Base.metadata.create_all(engine)
     from .migrations import MigrationManager
     MigrationManager(engine).run_all()
@@ -393,6 +395,8 @@ def get_session():
     if not db_url:
         raise ValueError("Database URL not found in secrets or environment.")
     
-    engine = create_engine(db_url)
+    # pool_size=0 and pool_recycle=5 ensures that the pool can become empty when idle,
+    # and stale connections are removed quickly to preserve limited production resources.
+    engine = create_engine(db_url, pool_size=0, max_overflow=20, pool_recycle=5)
     Session = sessionmaker(bind=engine)
     return Session()
