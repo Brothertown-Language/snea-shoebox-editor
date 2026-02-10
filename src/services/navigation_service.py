@@ -10,8 +10,6 @@ logger = get_logger("snea.navigation")
 PAGE_LOGIN = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
 PAGE_STATUS = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status")
 PAGE_HOME = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index", default=True)
-PAGE_RECORD = st.Page("pages/view_record.py", title="Record View", icon="📝", url_path="record")
-PAGE_SOURCE = st.Page("pages/view_source.py", title="Source View", icon="📖", url_path="source")
 PAGE_USER = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
 PAGE_UPLOAD = st.Page("pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
 PAGE_LOGOUT = st.Page("pages/logout.py", title="Logout", icon="🚪", url_path="logout")
@@ -25,8 +23,6 @@ class NavigationService:
     PAGE_LOGIN = PAGE_LOGIN
     PAGE_STATUS = PAGE_STATUS
     PAGE_HOME = PAGE_HOME
-    PAGE_RECORD = PAGE_RECORD
-    PAGE_SOURCE = PAGE_SOURCE
     PAGE_USER = PAGE_USER
     PAGE_UPLOAD = PAGE_UPLOAD
     PAGE_LOGOUT = PAGE_LOGOUT
@@ -45,7 +41,7 @@ class NavigationService:
         if logged_in:
             logger.debug("Returning authenticated navigation tree")
             return {
-                "Main": [cls.PAGE_HOME, cls.PAGE_RECORD, cls.PAGE_SOURCE, cls.PAGE_UPLOAD],
+                "Main": [cls.PAGE_HOME, cls.PAGE_UPLOAD],
                 "System": [cls.PAGE_STATUS],
                 "Account": [cls.PAGE_USER, cls.PAGE_LOGOUT]
             }
@@ -57,8 +53,6 @@ class NavigationService:
             return [
                 cls.PAGE_LOGIN, 
                 cls.PAGE_HOME, 
-                cls.PAGE_RECORD, 
-                cls.PAGE_SOURCE, 
                 cls.PAGE_UPLOAD,
                 cls.PAGE_STATUS, 
                 cls.PAGE_USER, 
@@ -74,8 +68,6 @@ class NavigationService:
         return {
             cls.PAGE_STATUS: "pages/system_status.py",
             cls.PAGE_HOME: "pages/index.py",
-            cls.PAGE_RECORD: "pages/view_record.py",
-            cls.PAGE_SOURCE: "pages/view_source.py",
             cls.PAGE_USER: "pages/user_info.py",
             cls.PAGE_UPLOAD: "pages/upload_mdf.py",
         }

@@ -85,9 +85,6 @@ def index():
             with st.expander(f"Record {item['record_id']} ({item['lx']}) edited by {item['user']}"):
                 st.write(f"**Time:** {item['timestamp']}")
                 st.write(f"**Change:** {item['summary']}")
-                if st.button(f"View Record {item['record_id']}", key=f"btn_{item['record_id']}_{item['timestamp']}"):
-                    st.query_params["id"] = item['record_id']
-                    st.switch_page("pages/view_record.py")
     else:
         st.info("No recent activity recorded.")
 
