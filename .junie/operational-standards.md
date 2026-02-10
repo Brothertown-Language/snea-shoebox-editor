@@ -40,6 +40,8 @@
 - **HARDCODING PROHIBITED:** **NEVER** hardcode secrets in source code. Use environment variables or Streamlit secrets.
 - **MANDATORY CHECK:** Use `git check-ignore <path>` to verify if a file is excluded from VCS before creation.
 - **PROHIBITION ON COMMITTING `tmp/`**: **NEVER** include files from the `tmp/` directory in a git commit. The `tmp/` directory is strictly for transient logs, database instances, and coordination files that must never enter the repository history.
+- **AGGRESSIVE DB CONNECTION REUSE**: The production environment has a very low limit for concurrent connections. **ALWAYS** reuse database sessions in loops or bulk operations. Pass an existing `session` object to sub-calls instead of creating new ones. Creating $O(N)$ connections (where $N$ is the number of records) is a CRITICAL FAILURE that causes production outages. **SELF-CHECK: Does this loop or bulk operation create a new DB session inside the iteration? If yes, STOP and refactor to reuse a single session.**
+- **IDLE CONNECTION MANAGEMENT**: Database connection pooling is recommended, but idle connections MUST be closed and removed from the pool after a short period (e.g., 5 seconds). If all connections in the pool become idle, the pool is allowed to become empty. This ensures that unused slots are returned to the database as quickly as possible. In SQLAlchemy, this is typically achieved by setting `pool_size=0` and a low `pool_recycle`.
 
 ### DEPENDENCY SECURITY
 - **ALWAYS PIN VERSIONS:** Use exact versions in `pyproject.toml` for production.
