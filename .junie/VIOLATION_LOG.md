@@ -29,6 +29,12 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Root Cause**: Over-cautious "review first" pattern that contradicts §3 VCS COMPLIANCE, which requires the script to stage and commit in one execution.
 - **Preventive Measure**: Self-check before finalizing any commit script: "Does this script end with `echo` instructions instead of `git commit`? If yes, STOP — replace with the actual `git commit -F tmp/commit.msg` command. The user reviews by choosing to run the script."
 
+### 5. Failing to Stage Untracked Related Files in Commits
+- **Status**: ACTIVE RISK
+- **Description**: Preparing commit scripts that only stage modified files (`git diff --name-only`) without checking for new untracked files that are part of the same change.
+- **Root Cause**: Relying solely on `git diff` output instead of `git status` to identify all files belonging to a commit.
+- **Preventive Measure**: Before preparing any commit, run `git status` to identify ALL related untracked files. Stage them alongside modified files. Self-check: "Are there any new files referenced by the code changes that are not yet tracked? If yes, add them."
+
 ## LOG ENTRIES
 
 ### 2026-02-07: Unauthorized completion marks in refactoring plan
@@ -108,3 +114,18 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Ran large Python one-liner via `uv run python -c "import zipfile; zf=..."` to inspect a zip file. This is an unreadable shell blob.
 - **Root Cause**: Using inline Python instead of creating a readable script file in `tmp/`.
 - **Correction**: Logged violation. Updated `ai-behavior.md` with explicit rule: **NEVER run Python one-liners or multi-statement `-c` commands. Always create a script file in `tmp/` and run it with `uv run python tmp/script.py`.**
+
+### 2026-02-09: Failed to stage untracked related file in commit (11th violation)
+- **Violation**: Prepared a commit script that referenced `src/seed_data/snea-local-dev.dbp` as the new template but did not `git add` the untracked file. Only the modified `src/database/connection.py` was staged.
+- **Root Cause**: Commit preparation only checked `git diff --name-only` (modified files) and did not check `git status` for untracked files that are part of the change.
+- **Correction**: (1) Fixed commit script to include the untracked file. (2) Added Recurring Violation #5 and a new rule to `ai-behavior.md` PERMISSION AND PLANNING section: before preparing any commit, run `git status` to identify ALL related untracked files and stage them alongside modified files.
+
+### 2026-02-09: Absolute path in git diff --stat (12th violation)
+- **Violation**: Executed `cd /home/muksihs/git/snea-shoebox-editor && git diff --stat` — absolute path `cd` + compound command `&&`.
+- **Root Cause**: Same persistent pattern (Recurring Violation #3).
+- **Correction**: Logged violation. User explicitly demanded compliance and guideline update.
+
+### 2026-02-09: Mixed unrelated edits in a single commit (13th violation)
+- **Violation**: Prepared a single commit bundling 3 unrelated change sets: MDF display UI, pgserver logging/retry, and AI guideline updates.
+- **Root Cause**: Defaulted to "one commit for everything" instead of grouping by semantic purpose.
+- **Correction**: Split into 3 separate commits in a single `tmp/commit_task.sh` script. Updated `development-workflow.md` §3 VCS COMPLIANCE with explicit "GROUP COMMITS BY RELATED CHANGES" rule requiring separate `git add` + `git commit` blocks per logical group.
