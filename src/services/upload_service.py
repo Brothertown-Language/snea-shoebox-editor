@@ -957,6 +957,26 @@ class UploadService:
             session.close()
 
     @staticmethod
+    def get_pending_batch_mdf(batch_id: str) -> str:
+        """Retrieve all pending records in a batch and return them as MDF text.
+
+        Pending records are those that have not yet been applied to the live records
+        table and are not marked for discard.
+        """
+        session = get_session()
+        try:
+            rows = (
+                session.query(MatchupQueue)
+                .filter(MatchupQueue.batch_id == batch_id)
+                .filter(MatchupQueue.status.in_(['pending', 'matched', 'create_new', 'create_homonym', 'ignored']))
+                .order_by(MatchupQueue.id)
+                .all()
+            )
+            return "\n\n".join([row.mdf_data for row in rows])
+        finally:
+            session.close()
+
+    @staticmethod
     def commit_matched(batch_id: str, user_email: str,
                        session_id: str) -> int:
         """Commit all 'matched' rows: update records + edit_history. Returns count."""

@@ -124,7 +124,7 @@ def upload_mdf():
             batch_id = b["batch_id"]
             with st.container():
                 st.markdown("---")
-                col_info, col_review, col_discard = st.columns([5, 1, 1])
+                col_info, col_review, col_download, col_discard = st.columns([4, 1, 1, 1])
                 with col_info:
                     st.markdown(
                         f"**{b['source_name']}** — {b['filename'] or 'unnamed'}  \n"
@@ -134,6 +134,18 @@ def upload_mdf():
                     if st.button("Review", key=f"review_{batch_id}", type="primary"):
                         st.session_state["review_batch_id"] = batch_id
                         st.rerun()
+                with col_download:
+                    try:
+                        mdf_blob = UploadService.get_pending_batch_mdf(batch_id)
+                        st.download_button(
+                            label="Download",
+                            data=mdf_blob,
+                            file_name=f"pending_{batch_id}.txt",
+                            mime="text/plain",
+                            key=f"download_{batch_id}"
+                        )
+                    except Exception as e:
+                        st.error("Error preparing download")
                 with col_discard:
                     if st.button("Discard", key=f"discard_{batch_id}"):
                         try:

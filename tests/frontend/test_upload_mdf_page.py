@@ -365,7 +365,7 @@ class TestPendingBatchSelector(unittest.TestCase):
         col_mock = MagicMock()
         col_mock.__enter__ = MagicMock(return_value=col_mock)
         col_mock.__exit__ = MagicMock(return_value=False)
-        mock_columns.return_value = [col_mock, col_mock, col_mock]
+        mock_columns.return_value = [col_mock, col_mock, col_mock, col_mock]
 
         container_mock = MagicMock()
         container_mock.__enter__ = MagicMock(return_value=container_mock)
@@ -373,11 +373,22 @@ class TestPendingBatchSelector(unittest.TestCase):
         mock_container.return_value = container_mock
 
         from src.frontend.pages.upload_mdf import upload_mdf
-        upload_mdf()
+        with patch("src.services.upload_service.UploadService.get_pending_batch_mdf") as mock_get_mdf, \
+             patch("streamlit.download_button") as mock_download_btn:
+            mock_get_mdf.return_value = "\\lx test\n\\ge gloss"
+            upload_mdf()
 
-        # Verify list_pending_batches was called and subheader shows count
-        mock_list_batches.assert_called_once_with("test@example.com")
-        mock_subheader.assert_any_call("1 Pending Batch")
+            # Verify list_pending_batches was called and subheader shows count
+            mock_list_batches.assert_called_once_with("test@example.com")
+            mock_subheader.assert_any_call("1 Pending Batch")
+            
+            # Verify columns were created for Review, Download, Discard (4 columns total with info)
+            mock_columns.assert_any_call([4, 1, 1, 1])
+            
+            # Verify download button was rendered
+            mock_download_btn.assert_called_once()
+            self.assertEqual(mock_download_btn.call_args[1]['data'], "\\lx test\n\\ge gloss")
+            self.assertEqual(mock_download_btn.call_args[1]['mime'], "text/plain")
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
