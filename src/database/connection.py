@@ -13,6 +13,7 @@ _logger = get_logger("snea.database.pgserver")
 
 # Global variable to hold the pgserver instance if auto-started
 _pg_server = None
+_db_url_cache = None
 
 def _get_local_db_path():
     """Get the path to the local database directory."""
@@ -295,6 +296,10 @@ def _auto_start_pgserver():
 
 def get_db_url():
     """Get database URL from Streamlit secrets or environment variables."""
+    global _db_url_cache
+    if _db_url_cache:
+        return _db_url_cache
+
     # 1. If we are in local dev, prioritize auto-starting pgserver
     # to avoid accidentally using production secrets from .streamlit/secrets.toml
     # or DATABASE_URL environment variable if it happens to be set to prod.
@@ -303,11 +308,13 @@ def get_db_url():
         if auto_url:
             # Set environment variable so other parts of the app can use it
             os.environ["DATABASE_URL"] = auto_url
+            _db_url_cache = auto_url
             return auto_url
 
     # 2. Check environment variable
     env_url = os.getenv("DATABASE_URL")
     if env_url:
+        _db_url_cache = env_url
         return env_url
 
     # 3. Check Streamlit secrets (Production fallback)
@@ -315,6 +322,7 @@ def get_db_url():
         if "connections" in st.secrets and "postgresql" in st.secrets["connections"]:
             url = st.secrets["connections"]["postgresql"]["url"]
             if url:
+                _db_url_cache = url
                 return url
     except Exception:
         pass

@@ -24,19 +24,24 @@ def upload_mdf():
     hide_sidebar_nav()
 
     # Collapse default top padding in both sidebar and main panel
-    st.html(
+    st.markdown(
         """
         <style>
         .block-container { padding-top: 0px !important; margin-top: 0px !important; }
         section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
         section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
         header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
-        [data-testid="stStatusWidget"],
         [data-testid="stToolbar"] { display: none !important; }
         div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
         div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
+        
+        /* st.status widget default styling - no overlay */
+        div[data-testid="stStatusWidget"] {
+            margin-bottom: 1rem !important;
+        }
         </style>
-        """
+        """,
+        unsafe_allow_html=True
     )
 
     # ── Sidebar: header and controls ──────────────────────────────
@@ -241,7 +246,7 @@ def _render_review_view():
     hide_sidebar_nav()
 
     # Collapse default top padding in both sidebar and main panel
-    st.html(
+    st.markdown(
         """
         <style>
         .block-container { padding-top: 0px !important; margin-top: 0px !important; }
@@ -257,12 +262,17 @@ def _render_review_view():
         section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
         section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
         header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
-        [data-testid="stStatusWidget"],
         [data-testid="stToolbar"] { display: none !important; }
         div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
         div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
+
+        /* st.status widget default styling - no overlay */
+        div[data-testid="stStatusWidget"] {
+            margin-bottom: 1rem !important;
+        }
         </style>
-        """
+        """,
+        unsafe_allow_html=True
     )
 
     # Scroll to top when page changes (triggered by rerun after page nav)
@@ -403,61 +413,95 @@ def _render_review_table(batch_id, session_deps):
         # D-1a: Bulk approval action buttons
         if is_new_source:
             if st.button("Approve All as New Records", key="bulk_approve_new"):
-                try:
-                    UploadService.approve_all_new_source(batch_id)
-                    st.session_state["bulk_flash"] = ("success", "All entries approved as new records.")
-                    st.rerun()
-                except Exception as e:
-                    logger.error("Bulk approve failed: %s", e)
-                    st.error(f"Bulk approve failed: {e}")
+                with st.status("Approving all as new...", expanded=True) as status:
+                    progress_bar = st.progress(0.0)
+                    def update_progress(curr, tot):
+                        progress_bar.progress(curr / tot if tot > 0 else 1.0)
+                    try:
+                        UploadService.approve_all_new_source(batch_id, progress_callback=update_progress)
+                        status.update(label="All entries approved!", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("success", "All entries approved as new records.")
+                        import time as _time
+                        _time.sleep(0.5)
+                        st.rerun()
+                    except Exception as e:
+                        logger.error("Bulk approve failed: %s", e)
+                        st.error(f"Bulk approve failed: {e}")
         else:
             if st.button("Approve All Matched", key="bulk_approve_matched"):
-                try:
-                    import uuid as _bulk_uuid
-                    count = UploadService.approve_all_by_record_match(
-                        batch_id,
-                        user_email=user_email,
-                        language_id=language_id,
-                        session_id=str(_bulk_uuid.uuid4()),
-                    )
-                    if count:
-                        st.session_state["bulk_flash"] = ("success", f"{count} matched entr{'y' if count == 1 else 'ies'} applied.")
-                        st.rerun()
-                    else:
-                        st.info("No matched entries to apply.")
-                except Exception as e:
-                    logger.error("Bulk approve matched failed: %s", e)
-                    st.error(f"Bulk approve matched failed: {e}")
+                with st.status("Applying matched entries...", expanded=True) as status:
+                    progress_bar = st.progress(0.0)
+                    def update_progress(curr, tot):
+                        progress_bar.progress(curr / tot if tot > 0 else 1.0)
+                    try:
+                        import uuid as _bulk_uuid
+                        count = UploadService.approve_all_by_record_match(
+                            batch_id,
+                            user_email=user_email,
+                            language_id=language_id,
+                            session_id=str(_bulk_uuid.uuid4()),
+                            progress_callback=update_progress
+                        )
+                        if count:
+                            status.update(label=f"Applied {count} matched entries!", state="complete", expanded=False)
+                            st.session_state["bulk_flash"] = ("success", f"{count} matched entr{'y' if count == 1 else 'ies'} applied.")
+                            import time as _time
+                            _time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            status.update(label="No matched entries found.", state="complete", expanded=False)
+                            st.info("No matched entries to apply.")
+                    except Exception as e:
+                        logger.error("Bulk approve matched failed: %s", e)
+                        st.error(f"Bulk approve matched failed: {e}")
+
             if st.button("Approve Non-Matches as New", key="bulk_approve_nonmatch"):
-                try:
-                    import uuid as _bulk_uuid2
-                    count = UploadService.approve_non_matches_as_new(
-                        batch_id,
-                        user_email=user_email,
-                        language_id=language_id,
-                        session_id=str(_bulk_uuid2.uuid4()),
-                    )
-                    if count:
-                        st.session_state["bulk_flash"] = ("success", f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.")
-                        st.rerun()
-                    else:
-                        st.info("No non-matching entries to approve.")
-                except Exception as e:
-                    logger.error("Bulk approve non-matches failed: %s", e)
-                    st.error(f"Bulk approve non-matches failed: {e}")
+                with st.status("Approving non-matches as new records...", expanded=True) as status:
+                    progress_bar = st.progress(0.0)
+                    def update_progress(curr, tot):
+                        progress_bar.progress(curr / tot if tot > 0 else 1.0)
+                    try:
+                        import uuid as _bulk_uuid2
+                        count = UploadService.approve_non_matches_as_new(
+                            batch_id,
+                            user_email=user_email,
+                            language_id=language_id,
+                            session_id=str(_bulk_uuid2.uuid4()),
+                            progress_callback=update_progress
+                        )
+                        if count:
+                            status.update(label=f"Approved {count} new records!", state="complete", expanded=False)
+                            st.session_state["bulk_flash"] = ("success", f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.")
+                            import time as _time
+                            _time.sleep(0.5)
+                            st.rerun()
+                        else:
+                            status.update(label="No non-matching entries found.", state="complete", expanded=False)
+                            st.info("No non-matching entries to approve.")
+                    except Exception as e:
+                        logger.error("Bulk approve non-matches failed: %s", e)
+                        st.error(f"Bulk approve non-matches failed: {e}")
 
         # Discard Marked — available regardless of new/existing source
         if st.button("Discard All Marked", key="bulk_discard_marked"):
-            try:
-                count = UploadService.discard_marked(batch_id)
-                if count:
-                    st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
-                    st.rerun()
-                else:
-                    st.info("No entries marked for discard.")
-            except Exception as e:
-                logger.error("Discard ignored failed: %s", e)
-                st.error(f"Discard ignored failed: {e}")
+            with st.status("Discarding marked entries...", expanded=True) as status:
+                progress_bar = st.progress(0.0)
+                def update_progress(curr, tot):
+                    progress_bar.progress(curr / tot if tot > 0 else 1.0)
+                try:
+                    count = UploadService.discard_marked(batch_id, progress_callback=update_progress)
+                    if count:
+                        status.update(label=f"Discarded {count} entries!", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
+                        import time as _time
+                        _time.sleep(0.5)
+                        st.rerun()
+                    else:
+                        status.update(label="No entries marked for discard.", state="complete", expanded=False)
+                        st.info("No entries marked for discard.")
+                except Exception as e:
+                    logger.error("Discard ignored failed: %s", e)
+                    st.error(f"Discard ignored failed: {e}")
 
     # Slice rows for current page
     start_idx = (current_page - 1) * page_size

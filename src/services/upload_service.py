@@ -588,19 +588,26 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def approve_all_new_source(batch_id: str) -> int:
+    def approve_all_new_source(batch_id: str, progress_callback: Optional[callable] = None) -> int:
         """Bulk-approve all pending rows as 'create_new' for new-source uploads.
 
         Returns count of rows updated.
         """
         session = get_session()
         try:
+            # First, fetch IDs to allow progress reporting if needed, 
+            # though update() is usually a single DB call.
+            # To support progress reporting accurately for large batches,
+            # we can either do it in chunks or just report 0 and 100%.
+            # For consistency with other methods, let's just do the update.
             count = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id, status='pending')
                 .update({'status': 'create_new'})
             )
             session.commit()
+            if progress_callback:
+                progress_callback(count, count)
             return count
         except Exception:
             session.rollback()
@@ -611,7 +618,8 @@ class UploadService:
     @staticmethod
     def approve_all_by_record_match(batch_id: str, user_email: str,
                                      language_id: int,
-                                     session_id: str) -> int:
+                                     session_id: str,
+                                     progress_callback: Optional[callable] = None) -> int:
         """Bulk-apply matched rows to the records table.
 
         Targets rows with a suggested_record_id and an exact or base_form
@@ -656,7 +664,8 @@ class UploadService:
             session.close()
 
         applied = 0
-        for qid in queue_ids:
+        total = len(queue_ids)
+        for idx, qid in enumerate(queue_ids, 1):
             try:
                 UploadService.apply_single(
                     queue_id=qid,
@@ -665,6 +674,8 @@ class UploadService:
                     session_id=session_id,
                 )
                 applied += 1
+                if progress_callback:
+                    progress_callback(idx, total)
             except Exception as e:
                 logger.error("approve_all_by_record_match: failed to apply queue_id=%s: %s", qid, e)
 
@@ -677,7 +688,8 @@ class UploadService:
     @staticmethod
     def approve_non_matches_as_new(batch_id: str, user_email: str,
                                     language_id: int,
-                                    session_id: str) -> int:
+                                    session_id: str,
+                                    progress_callback: Optional[callable] = None) -> int:
         """Bulk-apply unmatched rows as new records.
 
         Targets rows with no suggested_record_id that are still 'pending'
@@ -720,7 +732,8 @@ class UploadService:
             session.close()
 
         applied = 0
-        for qid in queue_ids:
+        total = len(queue_ids)
+        for idx, qid in enumerate(queue_ids, 1):
             try:
                 UploadService.apply_single(
                     queue_id=qid,
@@ -729,6 +742,8 @@ class UploadService:
                     session_id=session_id,
                 )
                 applied += 1
+                if progress_callback:
+                    progress_callback(idx, total)
             except Exception as e:
                 logger.error("approve_non_matches_as_new: failed to apply queue_id=%s: %s", qid, e)
 
@@ -989,7 +1004,7 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def discard_marked(batch_id: str) -> int:
+    def discard_marked(batch_id: str, progress_callback: Optional[callable] = None) -> int:
         """Delete all 'discard' status matchup_queue rows for a batch. Returns count deleted."""
         session = get_session()
         try:
@@ -999,6 +1014,8 @@ class UploadService:
                 .delete()
             )
             session.commit()
+            if progress_callback:
+                progress_callback(count, count)
             return count
         except Exception:
             session.rollback()
@@ -1028,7 +1045,8 @@ class UploadService:
 
     @staticmethod
     def commit_matched(batch_id: str, user_email: str,
-                       session_id: str) -> int:
+                       session_id: str,
+                       progress_callback: Optional[callable] = None) -> int:
         """Commit all 'matched' rows: update records + edit_history. Returns count."""
         session = get_session()
         try:
@@ -1038,8 +1056,9 @@ class UploadService:
                 .all()
             )
             count = 0
+            total = len(rows)
             updated_record_ids = []
-            for row in rows:
+            for idx, row in enumerate(rows, 1):
                 record = session.get(Record, row.suggested_record_id)
                 if not record:
                     continue
@@ -1071,6 +1090,8 @@ class UploadService:
                 session.delete(row)
                 updated_record_ids.append(record.id)
                 count += 1
+                if progress_callback:
+                    progress_callback(idx, total)
             session.commit()
 
             # Rebuild search entries so the browse/search table reflects updates
@@ -1086,7 +1107,8 @@ class UploadService:
 
     @staticmethod
     def commit_homonyms(batch_id: str, user_email: str, language_id: int,
-                        session_id: str) -> int:
+                        session_id: str,
+                        progress_callback: Optional[callable] = None) -> int:
         """Commit all 'create_homonym' rows: create new homonym records. Returns count."""
         session = get_session()
         try:
@@ -1096,7 +1118,8 @@ class UploadService:
                 .all()
             )
             count = 0
-            for row in rows:
+            total = len(rows)
+            for idx, row in enumerate(rows, 1):
                 from src.mdf.parser import parse_mdf as _parse
                 parsed = _parse(row.mdf_data)
                 entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': ''}
@@ -1152,6 +1175,8 @@ class UploadService:
                 ))
                 session.delete(row)
                 count += 1
+                if progress_callback:
+                    progress_callback(idx, total)
             session.commit()
             return count
         except Exception:
@@ -1162,7 +1187,8 @@ class UploadService:
 
     @staticmethod
     def commit_new(batch_id: str, user_email: str, language_id: int,
-                   session_id: str) -> int:
+                   session_id: str,
+                   progress_callback: Optional[callable] = None) -> int:
         """Commit all 'create_new' rows: insert new records. Returns count."""
         session = get_session()
         try:
@@ -1172,7 +1198,8 @@ class UploadService:
                 .all()
             )
             count = 0
-            for row in rows:
+            total = len(rows)
+            for idx, row in enumerate(rows, 1):
                 from src.mdf.parser import parse_mdf as _parse
                 parsed = _parse(row.mdf_data)
                 entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': ''}
@@ -1202,6 +1229,8 @@ class UploadService:
                 ))
                 session.delete(row)
                 count += 1
+                if progress_callback:
+                    progress_callback(idx, total)
             session.commit()
             return count
         except Exception:
