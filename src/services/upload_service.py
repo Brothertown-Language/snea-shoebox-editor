@@ -588,32 +588,60 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def approve_all_new_source(batch_id: str, progress_callback: Optional[callable] = None) -> int:
-        """Bulk-approve all pending rows as 'create_new' for new-source uploads.
+    def approve_all_new_source(batch_id: str, user_email: str,
+                               language_id: int,
+                               session_id: str,
+                               progress_callback: Optional[callable] = None) -> int:
+        """Bulk-approve and apply all pending rows as new records for new sources.
 
-        Returns count of rows updated.
+        Targets all rows in the batch that are 'pending'. Sets them to
+        'create_new' and applies them via apply_single.
+
+        Returns count of rows applied.
         """
+        # First mark all pending as create_new
         session = get_session()
         try:
-            # First, fetch IDs to allow progress reporting if needed, 
-            # though update() is usually a single DB call.
-            # To support progress reporting accurately for large batches,
-            # we can either do it in chunks or just report 0 and 100%.
-            # For consistency with other methods, let's just do the update.
-            count = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='pending')
-                .update({'status': 'create_new'})
-            )
+            session.query(MatchupQueue).filter_by(
+                batch_id=batch_id,
+                status='pending',
+            ).update({'status': 'create_new'})
             session.commit()
-            if progress_callback:
-                progress_callback(count, count)
-            return count
         except Exception:
             session.rollback()
             raise
         finally:
             session.close()
+
+        # Collect IDs to apply
+        session = get_session()
+        try:
+            rows = (
+                session.query(MatchupQueue)
+                .filter_by(batch_id=batch_id, status='create_new')
+                .all()
+            )
+            queue_ids = [r.id for r in rows]
+        finally:
+            session.close()
+
+        applied = 0
+        total = len(queue_ids)
+        for idx, qid in enumerate(queue_ids, 1):
+            try:
+                UploadService.apply_single(
+                    queue_id=qid,
+                    user_email=user_email,
+                    language_id=language_id,
+                    session_id=session_id,
+                )
+                applied += 1
+                if progress_callback:
+                    progress_callback(idx, total)
+            except Exception as e:
+                logger.error("approve_all_new_source: failed to apply queue_id=%s: %s", qid, e)
+
+        return applied
 
     @staticmethod
     def approve_all_by_record_match(batch_id: str, user_email: str,

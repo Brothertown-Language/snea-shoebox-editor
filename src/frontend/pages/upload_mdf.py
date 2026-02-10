@@ -418,9 +418,16 @@ def _render_review_table(batch_id, session_deps):
                     def update_progress(curr, tot):
                         progress_bar.progress(curr / tot if tot > 0 else 1.0)
                     try:
-                        UploadService.approve_all_new_source(batch_id, progress_callback=update_progress)
-                        status.update(label="All entries approved!", state="complete", expanded=False)
-                        st.session_state["bulk_flash"] = ("success", "All entries approved as new records.")
+                        import uuid as _bulk_uuid_new
+                        count = UploadService.approve_all_new_source(
+                            batch_id,
+                            user_email=user_email,
+                            language_id=language_id,
+                            session_id=str(_bulk_uuid_new.uuid4()),
+                            progress_callback=update_progress
+                        )
+                        status.update(label=f"Applied {count} new records!", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("success", f"All {count} entries applied as new records.")
                         import time as _time
                         _time.sleep(0.5)
                         st.rerun()
