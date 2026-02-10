@@ -42,6 +42,10 @@ Date: 2026-02-08
 - **Updated UI Guidelines**: Added mandatory rule to `.junie/ui-development-spr.md` to use `st.html()` for all HTML/CSS/JS content.
 - **Reinforced Path Resolution Guidelines**: Updated `.junie/development-workflow.md` to mandate the 3-step path resolution boilerplate for all shell scripts.
 - **Manual Testing Mandate**: Recorded requirement for manual testing of the Full Auth Flow in `tmp/refactoring_plan.md` and `.junie/LONG_TERM_MEMORY.md`.
+- **Linguistic Distribution Enhancements**:
+    - Refactored `Record` model to remove deprecated `language_id` (fully transitioning to `RecordLanguage` join table).
+    - Updated `MigrationManager` to handle `language_id` removal safely across legacy schema states.
+    - Enhanced Home Page distribution charts to show both Primary and All Languages distributions.
 
 ## Next Steps (Phase 5 Refactoring)
 1. **Navigation Service**: Move page definitions and navigation configuration out of `app.py`. 🔄 [IN PROGRESS]

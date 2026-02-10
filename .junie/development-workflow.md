@@ -47,7 +47,9 @@
   - **PROHIBITION ON EXECUTION**: You are strictly forbidden from running the `git commit` command OR executing the prepared commit script. Your role is limited to *creating* the artifacts for human review. **Only the User is authorized to run the commit script.**
   - **USER REVIEW MANDATORY**: The user MUST review the script and commit messages before they are executed.
   - **REVIEW ALL UNCOMMITTED FILES**: Before preparing the commit, run `git status` and review **all** uncommitted changes — both modified and untracked files. Determine which files semantically belong in the commit.
-  - **GROUP COMMITS BY RELATED CHANGES**: Do NOT lump unrelated edits into a single commit. Group files by semantic purpose. Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
+  - **GROUP COMMITS BY RELATED CHANGES (ATOMIC COMMITS)**: Do NOT lump unrelated edits into a single commit. Group files by semantic purpose.
+    - **CRITICAL MANDATE**: AI Guideline updates (`.junie/`, `VIOLATION_LOG.md`, etc.) MUST ALWAYS be in a separate commit from application code changes.
+    - **METHOD**: Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
   - **MANDATORY BOILERPLATE**: The script MUST include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS).
   - **MESSAGE FORMAT**: Write messages to `tmp/commit.msg` (or `tmp/commit_N.msg`). **NO PREFIXES:** Never use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
 - **REASON**: Maintains absolute project safety and ensures the human lead is the sole authority for repository history.

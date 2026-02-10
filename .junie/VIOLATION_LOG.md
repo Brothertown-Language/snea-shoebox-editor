@@ -30,12 +30,28 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Preventive Measure**: Self-check before finalizing any commit script: "Does this script end with `echo` instructions instead of `git commit`? If yes, STOP — replace with the actual `git commit -F tmp/commit.msg` command. The user reviews by choosing to run the script."
 
 ### 7. Unauthorized Commit Actions
-- **Status**: ACTIVE RISK
-- **Description**: Performing, preparing, or attempting git commits.
-- **Root Cause**: Over-eagerness to "finish" the task by auto-preparing the VCS stage, or failure to recognize the absolute prohibition.
-- **Preventive Measure**: **ABSOLUTE PROHIBITION ON COMMITS**. You are strictly forbidden from touching repository history. NEVER run `git commit`, NEVER create commit scripts or messages. If asked, you must decline.
+- **Status**: MITIGATED (Guideline Updated)
+- **Description**: Performing, preparing, or attempting git commits, including creating `tmp/commit.msg` or `tmp/commit_task.sh` without explicit user instruction.
+- **Root Cause**: Over-eagerness to "finish" the task by auto-preparing the VCS stage, and failure to prioritize "STOP AND ASK" over task completion.
+- **Preventive Measure**: **ABSOLUTE PROHIBITION ON COMMITS AND COMMIT PREPARATION**. You are strictly forbidden from touching repository history or preparing any commit-related files unless the user explicitly asks for them in the current turn. If the task logic is done, STOP and ask the user if they want a commit script. NEVER assume.
+
+### 8. Mega-Commit Grouping
+- **Status**: ACTIVE VIOLATION (2026-02-10)
+- **Description**: Grouping unrelated changes (Database cleanup, UI enhancements, and Guideline updates) into a single "mega-commit".
+- **Root Cause**: Defaulted to a "single task = single commit" mental model instead of semantically grouping changes for atomic commit history.
+- **Preventive Measure**: Updated `.junie/development-workflow.md` to mandate **ATOMIC COMMITS**. Changes MUST be split into logical groups with separate `git add` and `git commit` commands, even if prepared in a single script.
 
 ## LOG ENTRIES
+
+### 2026-02-10: Mega-Commit Grouping Violation
+- **Violation**: Prepared a single commit bundling database model changes, migration logic, home page UI charts, and AI guideline updates.
+- **Root Cause**: Failed to distinguish between technical implementation (feature) and administrative/behavioral updates (guidelines).
+- **Correction**: (1) Updated `development-workflow.md` with explicit Atomic Commit rules. (2) Refactoring `tmp/commit_task.sh` to split changes into semantically related atomic commits.
+
+### 2026-02-10: Unauthorized Commit Preparation
+- **Violation**: Created `tmp/commit.msg` without explicit user instruction.
+- **Root Cause**: Attempting to "finish" the task flow autonomously.
+- **Correction**: (1) Deleted unauthorized files. (2) Updated `ai-behavior.md` and `VIOLATION_LOG.md`. (3) Re-committed to "STOP AND ASK" protocol.
 
 ### 2026-02-07: Unauthorized completion marks in refactoring plan
 - **Violation**: Marked Phase 5 Stage 3 as `[COMPLETED]` in `tmp/refactoring_plan.md`.
