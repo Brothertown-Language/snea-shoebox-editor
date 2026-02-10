@@ -30,20 +30,24 @@ def index():
     chart_col1, chart_col2 = st.columns(2)
     
     with chart_col1:
-        st.subheader("Records by Status")
-        status_data = StatisticsService.get_status_distribution()
-        if status_data:
-            df_status = pd.DataFrame(list(status_data.items()), columns=["Status", "Count"])
-            st.bar_chart(df_status.set_index("Status"))
+        st.subheader("Primary Language Distribution")
+        primary_lang_data = StatisticsService.get_language_distribution(primary_only=True)
+        if primary_lang_data:
+            df_primary = pd.DataFrame(list(primary_lang_data.items()), columns=["Language", "Count"])
+            st.bar_chart(df_primary.set_index("Language"))
         else:
-            st.info("No status data available.")
+            st.info("No primary language data available.")
             
     with chart_col2:
-        st.subheader("Language Distribution")
-        lang_data = StatisticsService.get_language_distribution()
-        if lang_data:
-            df_lang = pd.DataFrame(list(lang_data.items()), columns=["Language", "Count"])
-            st.bar_chart(df_lang.set_index("Language"))
+        st.subheader("All Languages Distribution")
+        all_lang_data = StatisticsService.get_language_distribution(primary_only=False)
+        if all_lang_data:
+            df_all = pd.DataFrame(list(all_lang_data.items()), columns=["Language", "Count"])
+            st.bar_chart(df_all.set_index("Language"))
+            
+            # UX Note: Explain if distributions are identical
+            if all_lang_data == primary_lang_data:
+                st.caption("ℹ️ Currently identical to Primary distribution (no secondary languages assigned).")
         else:
             st.info("No language data available.")
 
@@ -62,6 +66,14 @@ def index():
         st.bar_chart(df_source.set_index("Source"))
     else:
         st.info("No source data available.")
+
+    st.subheader("Records by Status")
+    status_data = StatisticsService.get_status_distribution()
+    if status_data:
+        df_status = pd.DataFrame(list(status_data.items()), columns=["Status", "Count"])
+        st.bar_chart(df_status.set_index("Status"))
+    else:
+        st.info("No status data available.")
 
     st.divider()
     

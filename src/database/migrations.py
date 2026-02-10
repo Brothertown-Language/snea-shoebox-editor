@@ -112,9 +112,9 @@ class MigrationManager:
             conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_reviewed_by_fkey;"))
             conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
 
-            # 6. records (language_id)
-            conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_language_id_fkey;"))
-            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_language_id_fkey FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT;"))
+            # 6. records (language_id) - DEPRECATED (dropped in migration 6)
+            # conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_language_id_fkey;"))
+            # conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_language_id_fkey FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT;"))
 
             # 7. records (source_id)
             conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_source_id_fkey;"))
@@ -187,8 +187,9 @@ class MigrationManager:
                 
                 # 2. If no \lg values found in MDF, fallback to existing language_id if it exists
                 # We need to peek at language_id before dropping it in next migration.
-                # Since we haven't dropped it yet, it's still available on the object.
-                existing_lang_id = getattr(rec, 'language_id', None)
+                # Use raw SQL to avoid relying on model which no longer has this column.
+                row = session.execute(text("SELECT language_id FROM records WHERE id = :id"), {"id": rec.id}).first()
+                existing_lang_id = row[0] if row else None
                 
                 if not lg_entries and existing_lang_id:
                     # Create one entry from the old foreign key

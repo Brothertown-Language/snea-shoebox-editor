@@ -56,7 +56,6 @@ class Record(Base):
     hm = Column(Integer, default=1)  # Homonym Number (\hm)
     ps = Column(String)  # Part of Speech (\ps)
     ge = Column(String)  # English Gloss (\ge)
-    language_id = Column(Integer, ForeignKey('languages.id', ondelete='RESTRICT'), nullable=False)
     source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'), nullable=False)
     source_page = Column(String)  # Specific citation detail (\so)
     status = Column(String, nullable=False, default='draft')  # 'draft', 'edited', 'approved'
