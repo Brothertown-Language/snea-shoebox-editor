@@ -7,6 +7,9 @@ import getpass
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from .base import Base
+from src.logging_config import get_logger
+
+_logger = get_logger("snea.database.pgserver")
 
 # Global variable to hold the pgserver instance if auto-started
 _pg_server = None
@@ -17,18 +20,25 @@ def _get_local_db_path():
     
     # Junie separation: Use a dedicated path if JUNIE_PRIVATE_DB is set
     if os.getenv("JUNIE_PRIVATE_DB") == "true":
-        return project_root / "tmp" / "junie_db"
-        
-    return project_root / "tmp" / "local_db"
+        db_path = project_root / "tmp" / "junie_db"
+        _logger.debug("Using Junie-private DB path: %s", db_path)
+        return db_path
+
+    db_path = project_root / "tmp" / "local_db"
+    _logger.debug("Using local DB path: %s", db_path)
+    return db_path
 
 def _stop_local_db():
     """Stop the local database if it was auto-started."""
     global _pg_server
     if _pg_server:
+        _logger.debug("Stopping local PostgreSQL (pgdata=%s)…", getattr(_pg_server, 'pgdata', '?'))
         try:
             _pg_server.cleanup()
             _pg_server = None
-        except Exception:
+            _logger.debug("Local PostgreSQL stopped successfully.")
+        except Exception as e:
+            _logger.debug("Error stopping local PostgreSQL: %s", e)
             pass
 
 def is_production():
@@ -166,9 +176,12 @@ def _enable_tcp_listening(pg_server):
     parsed = urlparse(pg_server.get_uri())
     query_params = parse_qs(parsed.query)
     socket_dir = query_params.get("host", [None])[0] or str(pg_server.pgdata)
+    _logger.debug("TCP enable: socket_dir=%s, pgdata=%s", socket_dir, pg_server.pgdata)
 
     # Stop the socket-only instance
+    _logger.debug("Stopping socket-only PostgreSQL instance…")
     pg_ctl(['-w', 'stop'], pgdata=pg_server.pgdata, user=pg_server.system_user)
+    _logger.debug("Socket-only instance stopped.")
 
     # Restart with TCP enabled on localhost
     pg_ctl_args = [
@@ -178,7 +191,9 @@ def _enable_tcp_listening(pg_server):
         '-l', str(pg_server.log),
         'start',
     ]
+    _logger.debug("Restarting PostgreSQL with TCP (args=%s)…", pg_ctl_args)
     pg_ctl(pg_ctl_args, pgdata=pg_server.pgdata, user=pg_server.system_user, timeout=10)
+    _logger.debug("PostgreSQL restarted with TCP on localhost:5432.")
 
 
 def _auto_start_pgserver():
@@ -193,41 +208,70 @@ def _auto_start_pgserver():
 
     try:
         import pgserver
+        import time as _time
         db_path = _get_local_db_path()
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
+        _logger.debug("Starting pgserver (db_path=%s)…", db_path)
         _pg_server = pgserver.get_server(str(db_path))
+        _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
 
         # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
         # connect via localhost:5432.  Junie keeps the default socket-only
         # connection to avoid port conflicts.
         if not is_junie:
+            _logger.debug("Enabling TCP listening for local dev…")
             _enable_tcp_listening(_pg_server)
             uri = "postgresql://postgres:@localhost:5432/postgres"
         else:
             uri = _pg_server.get_uri()
+        _logger.debug("Connection URI: %s", uri)
         
-        # Ensure pgvector extension is enabled automatically for local dev
+        # Ensure pgvector extension is enabled automatically for local dev.
+        # Retry with backoff — the database may still be recovering from a
+        # previous unclean shutdown ("the database system is shutting down").
         from sqlalchemy import create_engine, text
         engine = create_engine(uri)
-        with engine.connect() as conn:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-            conn.commit()
+        max_retries = 5
+        for attempt in range(max_retries):
+            try:
+                _logger.debug("Verifying database connection (attempt %d/%d)…", attempt + 1, max_retries)
+                with engine.connect() as conn:
+                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                    conn.commit()
+                _logger.debug("Database connection verified; pgvector extension ready.")
+                break
+            except Exception as conn_err:
+                _logger.debug("Connection attempt %d failed: %s", attempt + 1, conn_err)
+                if attempt < max_retries - 1:
+                    _time.sleep(1 * (attempt + 1))
+                else:
+                    raise conn_err
         
         # Register cleanup on exit
         atexit.register(_stop_local_db)
+        _logger.debug("Registered atexit cleanup handler.")
 
         # Generate DBeaver connection file for local dev convenience
         _write_dbeaver_connection(uri)
 
+        _logger.debug("Local pgserver fully initialized.")
         return uri
     except ImportError:
-        # pgserver not installed (likely production or not in dev group)
+        _logger.debug("pgserver not installed — skipping local DB auto-start.")
         return None
     except Exception as e:
+        _logger.debug("pgserver auto-start failed: %s", e)
         # Only warn if not in production and import succeeded but start failed
         if not is_production():
-            st.warning(f"Failed to auto-start local PostgreSQL: {e}")
+            err_msg = str(e)
+            if "shutting down" in err_msg:
+                st.warning(
+                    "Local PostgreSQL is still shutting down from a previous session. "
+                    "Please wait a few seconds and refresh the page."
+                )
+            else:
+                st.warning(f"Failed to auto-start local PostgreSQL: {e}")
         return None
 
 def get_db_url():
