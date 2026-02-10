@@ -7,7 +7,7 @@
 ### NO "VIBE CODING"
 - **NO ASSUMPTIONS:** **NEVER** write code based on "vibes" or incomplete understanding.
 - **DEEP INSPECTION MANDATORY:** **NEVER** rely on your internal memory for verifying code state, status, or prior changes. Your memory does not reflect modifications made by the User or external processes. **ALWAYS** perform a deep inspection of the actual source files and project state before confirming completion or re-evaluating any task.
-- **NO ERROR HIDING:** **NEVER** swallow or hide exceptions unless explicitly required by the business logic. "Failing fast" is preferred over silent failure.
+- **NO ERROR HIDING:** **NEVER** swallow or hide exceptions unless explicitly required by the business logic. "Failing fast" is preferred over silent failure. **FAILED DB OPERATIONS ARE FATAL ERRORS.**
 - **SCOPE LOCK:** **NEVER** "clean up," "fix typos," or perform "proactive refactoring" outside the immediate scope.
 - **VERIFICATION:** **ALWAYS** verify assumptions by reading source code, existing documentation, and database schemas.
 - **JUSTIFICATION:** **ALWAYS** cite the specific guideline or user instruction that justifies every file modification.
