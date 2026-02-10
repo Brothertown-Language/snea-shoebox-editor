@@ -103,3 +103,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Executed `cd /home/muksihs/git/snea-shoebox-editor && git diff --stat` — absolute path `cd` + compound command `&&`.
 - **Root Cause**: Same persistent pattern (Recurring Violation #3). The very first command of a new session violated the mandate.
 - **Correction**: Logged violation. Corrected to `git diff --stat`. User explicitly demanded compliance.
+
+### 2026-02-09: Python one-liner shell blob (10th violation)
+- **Violation**: Ran large Python one-liner via `uv run python -c "import zipfile; zf=..."` to inspect a zip file. This is an unreadable shell blob.
+- **Root Cause**: Using inline Python instead of creating a readable script file in `tmp/`.
+- **Correction**: Logged violation. Updated `ai-behavior.md` with explicit rule: **NEVER run Python one-liners or multi-statement `-c` commands. Always create a script file in `tmp/` and run it with `uv run python tmp/script.py`.**

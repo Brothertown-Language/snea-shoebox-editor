@@ -328,26 +328,27 @@ class TestStageAndMatch(unittest.TestCase):
 
 
 class TestPendingBatchSelector(unittest.TestCase):
-    """C-6a: Pending upload batches view."""
+    """C-6a: Pending upload batches shown inline on main upload view."""
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
-    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
-                                        "show_pending_batches": True})
+    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
     @patch("streamlit.header")
-    @patch("streamlit.html")
-    @patch("streamlit.sidebar", new_callable=MagicMock)
+    @patch("streamlit.selectbox", return_value="TestSource")
+    @patch("streamlit.file_uploader", return_value=None)
     @patch("streamlit.subheader")
     @patch("streamlit.columns")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.markdown")
     @patch("streamlit.container")
     @patch("streamlit.divider")
-    def test_batch_selector_displayed(self, _divider, mock_container, _md, _btn, mock_columns,
-                                       mock_subheader, mock_sidebar, _html, _title,
+    @patch("streamlit.info")
+    def test_batch_selector_displayed(self, _info, _divider, mock_container, _md, _btn, mock_columns,
+                                       mock_subheader, _fu, _sb, _title,
                                        mock_list_batches, mock_session):
         from datetime import datetime, timezone
         mock_sess = MagicMock()
+        mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
 
         mock_list_batches.return_value = [
@@ -371,12 +372,6 @@ class TestPendingBatchSelector(unittest.TestCase):
         container_mock.__exit__ = MagicMock(return_value=False)
         mock_container.return_value = container_mock
 
-        sidebar_mock = MagicMock()
-        sidebar_mock.__enter__ = MagicMock(return_value=sidebar_mock)
-        sidebar_mock.__exit__ = MagicMock(return_value=False)
-        mock_sidebar.__enter__ = MagicMock(return_value=sidebar_mock)
-        mock_sidebar.__exit__ = MagicMock(return_value=False)
-
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
 
@@ -386,30 +381,25 @@ class TestPendingBatchSelector(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
-    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
-                                        "show_pending_batches": True})
+    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
     @patch("streamlit.header")
-    @patch("streamlit.html")
-    @patch("streamlit.sidebar", new_callable=MagicMock)
+    @patch("streamlit.selectbox", return_value="TestSource")
+    @patch("streamlit.file_uploader", return_value=None)
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.info")
     @patch("streamlit.divider")
-    def test_no_batches_shows_info(self, _divider, mock_info, _btn, mock_sidebar, _html, _title,
-                                    mock_list_batches, mock_session):
+    def test_no_batches_shows_upload_info(self, _divider, mock_info, _btn, _fu, _sb, _title,
+                                          mock_list_batches, mock_session):
         mock_sess = MagicMock()
+        mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
         mock_list_batches.return_value = []
-
-        sidebar_mock = MagicMock()
-        sidebar_mock.__enter__ = MagicMock(return_value=sidebar_mock)
-        sidebar_mock.__exit__ = MagicMock(return_value=False)
-        mock_sidebar.__enter__ = MagicMock(return_value=sidebar_mock)
-        mock_sidebar.__exit__ = MagicMock(return_value=False)
 
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
 
-        mock_info.assert_any_call("No pending upload batches.")
+        # With no batches and no file, should show the upload prompt
+        mock_info.assert_any_call("Upload an MDF file using the sidebar to get started.")
 
 
 class TestReMatchButton(unittest.TestCase):

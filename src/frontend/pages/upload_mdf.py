@@ -19,9 +19,6 @@ def upload_mdf():
     if st.session_state.get("review_batch_id"):
         _render_review_view()
         return
-    if st.session_state.get("show_pending_batches"):
-        _render_pending_batches_view()
-        return
 
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
@@ -105,13 +102,6 @@ def upload_mdf():
         )
 
         st.divider()
-
-        # C-6a: Pending uploads — open dedicated view in main panel
-        if st.button("Pending Uploads", key="pending_uploads_btn"):
-            st.session_state["show_pending_batches"] = True
-            st.rerun()
-
-        st.divider()
         if st.button("← Back to Main Menu", key="back_to_main"):
             st.session_state.pop("review_batch_id", None)
             st.switch_page("pages/index.py")
@@ -122,6 +112,41 @@ def upload_mdf():
     if flash:
         level, msg = flash
         getattr(st, level)(msg)
+
+    # ── Pending batches list ─────────────────────────────────────
+    user_email = st.session_state.get("user_email", "")
+    batches = UploadService.list_pending_batches(user_email) if user_email else []
+    if batches:
+        st.subheader(f"{len(batches)} Pending Batch{'es' if len(batches) != 1 else ''}")
+        for b in batches:
+            ts = b["uploaded_at"]
+            ts_str = ts.strftime("%Y-%m-%d %H:%M") if ts else "unknown"
+            batch_id = b["batch_id"]
+            with st.container():
+                st.markdown("---")
+                col_info, col_review, col_discard = st.columns([5, 1, 1])
+                with col_info:
+                    st.markdown(
+                        f"**{b['source_name']}** — {b['filename'] or 'unnamed'}  \n"
+                        f"{b['entry_count']} entries · {ts_str}"
+                    )
+                with col_review:
+                    if st.button("Review", key=f"review_{batch_id}", type="primary"):
+                        st.session_state["review_batch_id"] = batch_id
+                        st.rerun()
+                with col_discard:
+                    if st.button("Discard", key=f"discard_{batch_id}"):
+                        try:
+                            count = UploadService.discard_all(batch_id)
+                            st.toast(f"Discarded {count} entries.")
+                            st.rerun()
+                        except Exception as e:
+                            logger.error("Discard batch failed: %s", e)
+                            st.error(f"Discard failed: {e}")
+        st.divider()
+
+    # Track whether pending batches exist for the prompt message
+    has_pending_batches = bool(batches)
 
     if uploaded_file is not None:
         file_content = uploaded_file.getvalue().decode("utf-8")
@@ -179,88 +204,10 @@ def upload_mdf():
 
         except ValueError as e:
             st.error(str(e))
-    else:
+    elif not has_pending_batches:
         st.info("Upload an MDF file using the sidebar to get started.")
-
-
-def _render_pending_batches_view():
-    """Dedicated main-panel view listing all pending batches for the current user."""
-    import streamlit as st
-    from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav
-    from src.logging_config import get_logger
-
-    logger = get_logger("snea.upload_mdf.pending")
-
-    hide_sidebar_nav()
-
-    st.html(
-        """
-        <style>
-        .block-container { padding-top: 0px !important; margin-top: 0px !important; }
-        section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
-        section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
-        header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
-        [data-testid="stStatusWidget"],
-        [data-testid="stToolbar"] { display: none !important; }
-        div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
-        div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
-        </style>
-        """
-    )
-
-    with st.sidebar:
-        st.header("Pending Uploads")
-        st.divider()
-        if st.button("← Back to MDF Upload", key="pending_back_to_upload"):
-            st.session_state.pop("show_pending_batches", None)
-            st.rerun()
-            return
-        if st.button("← Back to Main Menu", key="pending_back_to_main"):
-            st.session_state.pop("show_pending_batches", None)
-            st.switch_page("pages/index.py")
-
-    # Main panel: list pending batches
-    user_email = st.session_state.get("user_email", "")
-    if not user_email:
-        st.warning("No user session found.")
-        return
-
-    batches = UploadService.list_pending_batches(user_email)
-
-    if not batches:
-        st.info("No pending upload batches.")
-        return
-
-    st.subheader(f"{len(batches)} Pending Batch{'es' if len(batches) != 1 else ''}")
-
-    for b in batches:
-        ts = b["uploaded_at"]
-        ts_str = ts.strftime("%Y-%m-%d %H:%M") if ts else "unknown"
-        batch_id = b["batch_id"]
-
-        with st.container():
-            st.markdown("---")
-            col_info, col_review, col_discard = st.columns([5, 1, 1])
-            with col_info:
-                st.markdown(
-                    f"**{b['source_name']}** — {b['filename'] or 'unnamed'}  \n"
-                    f"{b['entry_count']} entries · {ts_str}"
-                )
-            with col_review:
-                if st.button("Review", key=f"review_{batch_id}", type="primary"):
-                    st.session_state["review_batch_id"] = batch_id
-                    st.session_state.pop("show_pending_batches", None)
-                    st.rerun()
-            with col_discard:
-                if st.button("Discard", key=f"discard_{batch_id}"):
-                    try:
-                        count = UploadService.discard_all(batch_id)
-                        st.toast(f"Discarded {count} entries.")
-                        st.rerun()
-                    except Exception as e:
-                        logger.error("Discard batch failed: %s", e)
-                        st.error(f"Discard failed: {e}")
+    else:
+        st.info("Upload another MDF file using the sidebar, or review a pending batch above.")
 
 
 def _render_review_view():

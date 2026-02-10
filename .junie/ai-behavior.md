@@ -36,6 +36,7 @@ Every terminal command MUST pass through this gate before execution. No exceptio
 2. **Does it contain `&&`, `;`, or `|`?** → SPLIT into separate tool calls, one command per call.
 3. **Does it start with `cd`?** → REMOVE IT. The shell is already at the project root.
 4. **Was it copied from the user's message?** → It is a SPECIFICATION, not a ready command. TRANSLATE it.
+5. **Is it a Python one-liner or multi-statement `-c` command?** → STOP. Create a readable script file in `tmp/` and run it with `uv run python tmp/<script>.py`. **NEVER** run `uv run python -c "..."` with complex logic.
 - **FAILURE TO APPLY THIS GATE IS A CRITICAL VIOLATION.** Log it in `VIOLATION_LOG.md` immediately.
 
 ### GUIDELINE ADHERENCE

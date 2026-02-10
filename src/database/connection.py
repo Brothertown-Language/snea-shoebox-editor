@@ -42,6 +42,145 @@ def is_production():
         # Fallback to local if user cannot be determined
         return False
 
+def _write_dbeaver_connection(uri):
+    """Write a DBeaver project archive (.dbp) to tmp/ for local dev convenience.
+
+    Reads the template file tmp/SNEA-20260209.dbp (the production project
+    export) and replaces the production connection with the local pgserver
+    connection details, renaming it to ``snea-editor-db-local-dev``.
+
+    The output is written to tmp/snea-local-dev.dbp and can be imported via
+    File → Import → DBeaver → DBeaver Project (.dbp).
+    """
+    try:
+        import json
+        import time
+        import zipfile
+        import socket
+        from urllib.parse import urlparse
+
+        parsed = urlparse(uri)
+        project_root = Path(__file__).parent.parent.parent
+        tmp_dir = project_root / "tmp"
+        template_path = tmp_dir / "SNEA-20260209.dbp"
+
+        if not template_path.exists():
+            return
+
+        db_name = parsed.path.lstrip("/") or "postgres"
+        timestamp_ms = str(int(time.time() * 1000))
+        hostname = socket.gethostname()
+
+        host = parsed.hostname or "localhost"
+        port = str(parsed.port or 5432)
+        jdbc_url = f"jdbc:postgresql://{host}:{port}/{db_name}"
+
+        # Read all files from the template archive, renaming the project
+        # folder from "SNEA" to "SNEA Local Dev"
+        old_project = "projects/SNEA/"
+        new_project = "projects/SNEA Local Dev/"
+        with zipfile.ZipFile(str(template_path), "r") as src:
+            template_entries = {}
+            for info in src.infolist():
+                new_name = info.filename.replace(old_project, new_project)
+                template_entries[new_name] = src.read(info.filename)
+
+        # Replace data-sources.json with local dev connection
+        ds_key = "projects/SNEA Local Dev/.dbeaver/data-sources.json"
+        ds_raw = template_entries[ds_key].decode("utf-8")
+        data_sources = json.loads(ds_raw)
+
+        # Remove all existing connections and insert the local dev one
+        conn_id = "postgres-jdbc-snea-local-dev"
+        connection_entry = {
+            "provider": "postgresql",
+            "driver": "postgres-jdbc",
+            "name": "snea-editor-db-local-dev",
+            "save-password": True,
+            "configuration": {
+                "host": host,
+                "port": port,
+                "database": db_name,
+                "user": "postgres",
+                "url": jdbc_url,
+                "configurationType": "MANUAL",
+                "type": "dev",
+                "closeIdleConnection": False,
+                "auth-model": "native",
+            },
+        }
+        data_sources["connections"] = {conn_id: connection_entry}
+        template_entries[ds_key] = (json.dumps(data_sources, indent="\t") + "\n").encode("utf-8")
+
+        # Update meta.xml timestamp
+        meta_key = "meta.xml"
+        meta_xml = template_entries[meta_key].decode("utf-8")
+        # Replace the timestamp in the source element
+        import re
+        meta_xml = re.sub(
+            r'time="[^"]*"',
+            f'time="{timestamp_ms}"',
+            meta_xml,
+        )
+        meta_xml = re.sub(
+            r'host="[^"]*"',
+            f'host="{hostname}"',
+            meta_xml,
+        )
+        template_entries[meta_key] = meta_xml.encode("utf-8")
+
+        # Update project name in meta.xml
+        meta_xml = re.sub(
+            r'<project name="[^"]*"',
+            '<project name="SNEA Local Dev"',
+            meta_xml,
+        )
+        template_entries[meta_key] = meta_xml.encode("utf-8")
+
+        # Skip credentials-config.json (encrypted, not needed for local dev)
+        creds_key = "projects/SNEA Local Dev/.dbeaver/credentials-config.json"
+
+        # Write the output archive
+        dbp_path = tmp_dir / "snea-local-dev.dbp"
+        with zipfile.ZipFile(str(dbp_path), "w", zipfile.ZIP_DEFLATED) as zf:
+            for filename, data in template_entries.items():
+                if filename == creds_key:
+                    continue
+                zf.writestr(filename, data)
+    except Exception:
+        pass
+
+
+def _enable_tcp_listening(pg_server):
+    """Stop pgserver's socket-only postgres and restart with TCP on localhost:5432.
+
+    pgserver hardcodes ``-h ""`` which disables TCP.  This function stops the
+    running postgres, then restarts it with ``-h "localhost"`` so that both
+    TCP (port 5432) and the Unix socket remain available.  The pgserver handle
+    stays valid because the same pgdata directory is reused.
+    """
+    from pgserver._commands import pg_ctl
+
+    # Determine the socket directory from the current URI
+    from urllib.parse import urlparse, parse_qs
+    parsed = urlparse(pg_server.get_uri())
+    query_params = parse_qs(parsed.query)
+    socket_dir = query_params.get("host", [None])[0] or str(pg_server.pgdata)
+
+    # Stop the socket-only instance
+    pg_ctl(['-w', 'stop'], pgdata=pg_server.pgdata, user=pg_server.system_user)
+
+    # Restart with TCP enabled on localhost
+    pg_ctl_args = [
+        '-w',
+        '-o', '-h "localhost"',
+        '-o', f'-k {socket_dir}',
+        '-l', str(pg_server.log),
+        'start',
+    ]
+    pg_ctl(pg_ctl_args, pgdata=pg_server.pgdata, user=pg_server.system_user, timeout=10)
+
+
 def _auto_start_pgserver():
     """Try to auto-start pgserver for local development."""
     global _pg_server
@@ -50,13 +189,23 @@ def _auto_start_pgserver():
     if is_production():
         return None
 
+    is_junie = os.getenv("JUNIE_PRIVATE_DB") == "true"
+
     try:
         import pgserver
         db_path = _get_local_db_path()
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
         _pg_server = pgserver.get_server(str(db_path))
-        uri = _pg_server.get_uri()
+
+        # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
+        # connect via localhost:5432.  Junie keeps the default socket-only
+        # connection to avoid port conflicts.
+        if not is_junie:
+            _enable_tcp_listening(_pg_server)
+            uri = "postgresql://postgres:@localhost:5432/postgres"
+        else:
+            uri = _pg_server.get_uri()
         
         # Ensure pgvector extension is enabled automatically for local dev
         from sqlalchemy import create_engine, text
@@ -67,7 +216,10 @@ def _auto_start_pgserver():
         
         # Register cleanup on exit
         atexit.register(_stop_local_db)
-        
+
+        # Generate DBeaver connection file for local dev convenience
+        _write_dbeaver_connection(uri)
+
         return uri
     except ImportError:
         # pgserver not installed (likely production or not in dev group)
