@@ -245,6 +245,15 @@ def _render_review_view():
         """
         <style>
         .block-container { padding-top: 0px !important; margin-top: 0px !important; }
+        
+        /* Custom class for ultra-tight horizontal padding */
+        @media (min-width: calc(736px + 8rem)) {
+            .block-container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+        
         section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
         section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
         header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
@@ -501,8 +510,7 @@ def _render_review_table(batch_id, session_deps):
             badge = "🟡 base_form"
 
         # Entry header
-        with st.container():
-            st.markdown(f"---")
+        with st.container(border=True):
             hdr_col1, hdr_col2, hdr_col3, hdr_col4 = st.columns([2, 3, 2, 3])
             with hdr_col1:
                 st.markdown(f"**{row.lx}**")
@@ -620,6 +628,21 @@ def _render_review_table(batch_id, session_deps):
                         st.info("No matching records found.")
 
             # D-1b: Full-width side-by-side comparison (always visible)
+            st.html(
+                """
+                <style>
+                /* Target only columns inside the bordered container to avoid affecting sidebar or headers */
+                [data-testid="stElementContainer"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] {
+                    padding-left: 0rem !important;
+                    padding-right: 0rem !important;
+                }
+                /* Add back spacing between columns EXCEPT the first one in any row */
+                [data-testid="stElementContainer"] [data-testid="stVerticalBlockBorderWrapper"] [data-testid="column"] + [data-testid="column"] {
+                    padding-left: 1rem !important;
+                }
+                </style>
+                """
+            )
             col_left, col_right = st.columns([1, 1])
             with col_left:
                 if suggested_rec:
