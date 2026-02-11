@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 def upload_mdf():
     import streamlit as st
     from src.database import get_session
@@ -58,18 +59,103 @@ def upload_mdf():
         source_options = [s.name for s in sources]
         source_ids = {s.name: s.id for s in sources}
 
+        SELECT_SOURCE_LABEL = "Select a source..."
         CREATE_NEW_LABEL = "+ Add new source…"
-        source_options.append(CREATE_NEW_LABEL)
+        
+        # Build options: placeholder first, then sources, then create new
+        final_options = [SELECT_SOURCE_LABEL] + source_options + [CREATE_NEW_LABEL]
 
-        selected_source = st.selectbox("Target source collection", source_options)
+        # Handle automatic selection of newly created source
+        newly_created = st.session_state.pop("newly_created_source_name", None)
+        if newly_created and newly_created in final_options:
+            st.session_state["upload_active_source_name"] = newly_created
+        
+        # Initialize default from session state key if available
+        current_selection = st.session_state.get("upload_active_source_name", SELECT_SOURCE_LABEL)
+        try:
+            default_index = final_options.index(current_selection)
+        except ValueError:
+            default_index = 0
+
+        selected_source = st.selectbox(
+            "Target source collection", 
+            final_options, 
+            index=default_index,
+            key="upload_active_source_name"
+        )
+
+        # Clear focus flag if we are NOT on the create new source label
+        if selected_source != CREATE_NEW_LABEL:
+            st.session_state.pop("source_focus_done", None)
 
         # C-4a: Create new source inline
         selected_source_id = None
         if selected_source == CREATE_NEW_LABEL:
+            # Only trigger focus once per selection
+            if not st.session_state.get("source_focus_done"):
+                st.toast("Add New Source Selected")
+                # Inject focus script for the name input using components.html for better JS execution
+                import streamlit.components.v1 as components
+                components.html("""
+                    <script>
+                    (function() {
+                        const TARGET_PLACEHOLDER = "Book/Document — Author/Linguist";
+                        const TARGET_LABEL = "Source name";
+                        const log = (msg) => {
+                            const m = "[SNEA Focus] " + msg;
+                            console.log(m);
+                            if (window.parent && window.parent.console) window.parent.console.log(m);
+                        };
+                        
+                        const focusInput = () => {
+                            try {
+                                const doc = window.parent.document || window.top.document;
+                                // 1. Try by placeholder
+                                const inputs = doc.querySelectorAll('input');
+                                for (const input of inputs) {
+                                    if (input.placeholder === TARGET_PLACEHOLDER) {
+                                        log("Found input by placeholder. Focusing...");
+                                        input.focus();
+                                        return true;
+                                    }
+                                }
+                                // 2. Try by label
+                                const labels = doc.querySelectorAll('label');
+                                for (const label of labels) {
+                                    if (label.innerText.includes(TARGET_LABEL)) {
+                                        const inputId = label.getAttribute('for');
+                                        const input = inputId ? doc.getElementById(inputId) : null;
+                                        if (input) {
+                                            log("Found input by label. Focusing...");
+                                            input.focus();
+                                            return true;
+                                        }
+                                    }
+                                }
+                            } catch (e) {
+                                log("Error accessing parent: " + e.message);
+                            }
+                            return false;
+                        };
+                        
+                        log("Focus script starting...");
+                        if (!focusInput()) {
+                            const observer = new MutationObserver(() => {
+                                if (focusInput()) observer.disconnect();
+                            });
+                            try {
+                                observer.observe(window.parent.document.body, { childList: true, subtree: true });
+                                setTimeout(() => { observer.disconnect(); log("Timeout reached."); }, 5000);
+                            } catch (e) { log("Observer failed: " + e.message); }
+                        }
+                    })();
+                    </script>
+                """, height=0)
+                st.session_state["source_focus_done"] = True
             st.markdown("#### Create a new source")
             new_name = st.text_input(
                 "Source name",
-                placeholder="Natick Dictionary — Trumbull",
+                placeholder="Book/Document — Author/Linguist",
             )
             new_description = st.text_input("Description (optional)")
             if st.button("Create Source"):
@@ -88,6 +174,7 @@ def upload_mdf():
                             )
                             session.add(new_source)
                             session.commit()
+                            st.session_state["newly_created_source_name"] = new_name.strip()
                             st.success(f"Source '{new_name.strip()}' created.")
                             st.rerun()
                     except Exception as e:
@@ -105,10 +192,22 @@ def upload_mdf():
             type=["txt", "mdf"],
             help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
         )
+        
+        # Persistence: If a file is uploaded, store it. If not, check if we have one in state.
+        if uploaded_file is not None:
+            st.session_state["pending_upload_content"] = uploaded_file.getvalue().decode("utf-8")
+            st.session_state["pending_upload_name"] = uploaded_file.name
+            st.session_state["pending_upload_file_id"] = uploaded_file.file_id
+        
+        # Use state if available
+        active_content = st.session_state.get("pending_upload_content")
+        active_name = st.session_state.get("pending_upload_name")
+        active_file_id = st.session_state.get("pending_upload_file_id")
 
         st.divider()
         if st.button("← Back to Main Menu", key="back_to_main"):
             st.session_state.pop("review_batch_id", None)
+            st.session_state.pop("upload_active_source_name", None)
             st.switch_page("pages/index.py")
 
     # ── Main panel: upload content ────────────────────────────────
@@ -165,16 +264,14 @@ def upload_mdf():
     # Track whether pending batches exist for the prompt message
     has_pending_batches = bool(batches)
 
-    if uploaded_file is not None:
-        file_content = uploaded_file.getvalue().decode("utf-8")
-
+    if active_content:
         with st.expander("Raw file preview", expanded=False):
-            st.code(file_content, language=None)
+            st.code(active_content, language=None)
 
         # C-5: Parse and display upload summary
         try:
-            entries = UploadService.parse_upload(file_content)
-            st.success(f"**{len(entries)}** entries found in `{uploaded_file.name}`.")
+            entries = UploadService.parse_upload(active_content)
+            st.success(f"**{len(entries)}** entries found in `{active_name}`.")
 
             # Build summary table
             rows = []
@@ -188,30 +285,35 @@ def upload_mdf():
 
             # Store parsed data in session state for later phases
             st.session_state["upload_entries"] = entries
-            st.session_state["upload_filename"] = uploaded_file.name
+            st.session_state["upload_filename"] = active_name
             st.session_state["upload_source_id"] = selected_source_id
 
             # C-6: Stage & Match button
             if selected_source_id is None:
                 st.warning("Select a source collection before staging.")
+                st.button("Stage & Match", type="primary", disabled=True, help="You must select a source collection first.")
             else:
                 user_email = st.session_state.get("user_email", "")
                 # Disable after use until a new file is uploaded
                 # Use Streamlit's unique file_id to distinguish re-uploads of the same filename
-                current_file_id = uploaded_file.file_id
-                already_staged = st.session_state.get("upload_staged_file_id") == current_file_id
+                already_staged = st.session_state.get("upload_staged_file_id") == active_file_id
                 if st.button("Stage & Match", type="primary", disabled=already_staged):
                     try:
                         batch_id = UploadService.stage_entries(
                             user_email=user_email,
                             source_id=selected_source_id,
                             entries=entries,
-                            filename=uploaded_file.name,
+                            filename=active_name,
                         )
                         match_results = UploadService.suggest_matches(batch_id)
                         st.session_state["upload_batch_id"] = batch_id
-                        st.session_state["upload_match_results"] = match_results
-                        st.session_state["upload_staged_file_id"] = current_file_id
+                        st.session_state["upload_staged_file_id"] = active_file_id
+                        
+                        # Clear pending upload after successful staging
+                        st.session_state.pop("pending_upload_content", None)
+                        st.session_state.pop("pending_upload_name", None)
+                        st.session_state.pop("pending_upload_file_id", None)
+                        st.session_state.pop("upload_active_source_name", None)
                         # Switch to dedicated review view
                         st.session_state["review_batch_id"] = batch_id
                         st.rerun()
@@ -628,6 +730,11 @@ def _render_review_table(batch_id, session_deps):
                     except Exception as e:
                         logger.error("Apply single failed: %s", e)
                         st.error(f"Apply failed: {e}")
+
+            # Dynamic cross-source informational note
+            cross_sources = UploadService.get_cross_source_info(row.lx, source_id)
+            if cross_sources:
+                st.caption(f"Also in: {', '.join(cross_sources)}")
 
             # Record-id conflict warning
             if record_id_conflict and conflict_sources:
