@@ -1,14 +1,14 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 
-# SNEA Online Shoebox Editor: Master AI Guidelines (v5.0)
+# SNEA Online Shoebox Editor: Master AI Guidelines (v6.0)
 
-## 0. THE MANDATORY NON-NEGOTIABLE CONTRACT: ZERO-TOLERANCE AUTHORIZATION
-**ANY EDIT TO ANY FILE (CODE, LOGS, GUIDELINES, OR DOCUMENTATION) WITHOUT AN APPROVED PLAN IS A CRITICAL VIOLATION.**
-- **NO PLAN, NO EDIT:** Never modify ANY file (including `.junie/` files, `VIOLATION_LOG.md`, or headers) before a plan has been posted and approved via `update_status`.
-- **EXPLICIT APPROVAL ONLY:** You MUST wait for "Go", "Proceed", or "Approved" before executing any file modification.
-- **NO PROACTIVE NEXT STEPS:** Completion of one step does NOT authorize the next. Wait for approval for EACH step.
-- **CONTRACTUAL OBLIGATION:** The rule of Plan -> Approval -> Edit applies to the `.junie/` folder and `VIOLATION_LOG.md` themselves. NO EXCEPTIONS.
+## 0. THE SUPREME DIRECTIVE: ZERO-TOLERANCE AUTHORIZATION
+**YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
+- **STEP-BY-STEP APPROVAL:** Posting a multi-step plan does NOT authorize all steps. You MUST wait for "Go", "Proceed", or "Approved" for **EACH INDIVIDUAL EDIT**.
+- **INTERNAL CHECK:** Before calling ANY edit tool (`create`, `search_replace`, `multi_edit`, `rename_element`), you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
+- **NO PROACTIVE EDITS:** Never "clean up," "fix," or "refactor" anything not explicitly approved in the current step.
+- **LOGS AND GUIDELINES ARE FILES:** This rule applies to `.junie/` files and `VIOLATION_LOG.md`. NO EXCEPTIONS.
 
 ## I. CRITICAL EXECUTION CHECKLIST
 These rules are non-negotiable. Every command and tool call MUST pass this checklist.
@@ -25,7 +25,8 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 
 ### 2. The Interactive Authorization Gate (ZERO TOLERANCE)
 - **[ ] NO PLAN, NO EDIT**: Never modify ANY file before a plan has been posted and approved.
-- **[ ] PLAN APPROVAL**: Post a plan via `update_status`. Wait for "Go", "Proceed", or "Approved". This is MANDATORY for all changes.
+- **[ ] PLAN DISCLOSURE**: ALWAYS post the COMPLETE multi-stage conceptual plan directly in the chat. Do NOT rely solely on the `update_status` tool for plan communication, as it may not be immediately visible to the user.
+- **[ ] PLAN APPROVAL**: Wait for "Go", "Proceed", or "Approved". This is MANDATORY for all changes.
 - **[ ] NO PROACTIVE CHANGES**: Never "clean up" or "fix" anything outside the approved plan.
 - **[ ] ONE STEP AT A TIME**: Complete one step, report it, then wait for authorization to proceed.
 - **[ ] STOP AND ASK**: If a task is ambiguous, or if you are unsure if a change is "authorized," you MUST stop and ask.
@@ -76,7 +77,7 @@ You are MANDATED to re-read these specialized modules at the start of every sess
 ---
 
 ## IV. MANDATORY INITIALIZATION
-1. **RE-READ** all `.junie/*.md` files, including `LONG_TERM_MEMORY.md` and `VIOLATION_LOG.md`.
+1. **RE-READ** all `.junie/*.md` files. Use semantic judgment to determine if `LONG_TERM_MEMORY.md` or `VIOLATION_LOG.md` require review for the current task.
 2. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
 3. **UPDATE** `LONG_TERM_MEMORY.md` with any key decisions or cross-session context.
 4. **UPDATE** logs immediately upon any guideline violation.

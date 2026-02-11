@@ -1,5 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
-<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+<!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 # AI Long-Term Memory
 
 This file serves as a persistent memory of critical project context, user preferences, and cross-session decisions that must survive context window truncation.
@@ -9,9 +9,10 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Ethical Mandate**: Preservation and reconstruction of the Southern New England Algonquian language.
 - **Data Layer**: MDF (Multi-Dictionary Formatter) standards using PostgreSQL and pgvector.
 
+- **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
 ## USER PREFERENCES & HARD CONSTRAINTS
-- **Sole Decision Maker**: The User is the programmer. Junie is the executor.
-- **STOP AND ASK**: Never assume intent. If a task is ambiguous or high-impact, halt and ask.
+- **SUPREME DIRECTIVE (v6.0)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT.
+- **AUTHORIZATION CHECK**: Before calling ANY edit tool, you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
 - **PRIVATE DATABASE ONLY**: `JUNIE_PRIVATE_DB=true` is the only acceptable environment for operations.
 - **ZERO-TRUST TERMINAL GATE (v2.0)**: Every command must be project-relative, non-compound, prefixed with `uv run` for Python, and DB-isolated. NO `cd`, NO absolute paths, NO `&&`/`|`, NO `>` redirection to root.
@@ -21,6 +22,11 @@ This file serves as a persistent memory of critical project context, user prefer
 
 ## KEY CROSS-SESSION DECISIONS
 - **Deep Inspection Mandate**: Memory-based verification is strictly prohibited. AI must always perform deep inspection of source files before confirming any status or re-evaluating state.
+- **MDF Upload Fixes**: Completed fixes for `WidgetKeyedBeforeCreationError` and source selector persistence.
+    - Used `default_index` calculation for `st.selectbox` to avoid key conflicts.
+    - Implemented session state popping for `upload_active_source_name` and input field keys upon successful source creation to ensure correct UI state and auto-selection.
+    - **Source Creation UI**: Implemented persistent success indicators and widget disabling in the sidebar to provide clear feedback after source creation, while maintaining manual selector usage to ensure state stability. Added explicit database re-query via `st.rerun()` to ensure the dropdown remains synchronized with all user changes.
+- **Table Maintenance UI Refinement**: Adjusting the Sources table maintenance view to remove the `short_name` column (UI-only) and replace text-based action buttons with icons. As of 2026-02-11, the "Reassign" and "Delete" buttons are mutually exclusive: "Reassign" appears only for sources with records, and "Delete" appears only for empty sources.
 - **Phase 5 Stage 3 Refactoring**: Decoupling navigation and redirection logic into `NavigationService`. (Current focus).
 - **Security Strategy**: Case-insensitive matching for GitHub identifiers is mandatory due to case mismatches between GitHub API and DB seeds.
 - **UI Standard**: Use `st.html()` for all HTML/CSS/JS injections. `unsafe_allow_html=True` is deprecated in this project.
@@ -31,6 +37,6 @@ This file serves as a persistent memory of critical project context, user prefer
 - **MDF Download Page — Pending Updates**: The MDF download page must also allow downloading pending updates (from `matchup_queue`) for manual editing, not just committed records. This enables linguists to export staged entries, edit them offline, and re-upload corrected MDF files.
 
 ## SESSION INITIALIZATION CHECKLIST
-- [ ] Re-read `.junie/VIOLATION_LOG.md`.
-- [ ] Re-read `.junie/LONG_TERM_MEMORY.md`.
-- [ ] Check `documentation/ACTIVE_TASK.md` for current task state.
+- [x] Re-read `.junie/VIOLATION_LOG.md`.
+- [x] Re-read `.junie/LONG_TERM_MEMORY.md`.
+- [ ] Check `documentation/ACTIVE_TASK.md` for current task state. (Note: ACTIVE_TASK.md was removed to reduce confusion).

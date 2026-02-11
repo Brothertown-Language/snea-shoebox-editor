@@ -1,5 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
-<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+<!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 
 # Project Architecture and Linguistic Context
 
@@ -44,6 +44,11 @@ screen real estate for the content the user needs to inspect.
 - **Hide the main navigation menu** by calling `hide_sidebar_nav()`
   at the top of the view function.  The sidebar must show only
   controls relevant to the current view — no global nav links.
+- **Prefer icons to text for common actions**: For frequent or
+  repetitive UI actions such as "Edit", "Reassign", "Delete",
+  "Download", etc., use icon-only buttons (or buttons with
+  prominent icons) to conserve space and prevent text wrapping, 
+  especially in dense table views.
 - Logout is handled by the global Streamlit navigation and does not
   need to be duplicated, but the sidebar should be self-contained for
   all page-specific controls.

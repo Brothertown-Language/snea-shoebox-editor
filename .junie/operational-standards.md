@@ -1,5 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
-<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+<!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 
 # Operational Standards: Environment, Tools, and Security
 
