@@ -80,7 +80,7 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
         upload_mdf()
 
         options = mock_selectbox.call_args[0][1]
-        self.assertEqual(options, ["Alpha", "Beta", "+ Add new source…"])
+        self.assertEqual(options, ["Select a source...", "+ Add new source…", "Alpha", "Beta"])
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})

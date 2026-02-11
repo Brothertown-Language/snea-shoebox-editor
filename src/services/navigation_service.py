@@ -13,6 +13,7 @@ PAGE_STATUS = st.Page("pages/system_status.py", title="System Status", icon="�
 PAGE_HOME = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index", default=True)
 PAGE_USER = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
 PAGE_UPLOAD = st.Page("pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
+PAGE_TABLE_MAINTENANCE = st.Page("pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance")
 PAGE_LOGOUT = st.Page("pages/logout.py", title="Logout", icon="🚪", url_path="logout")
 
 class NavigationService:
@@ -26,6 +27,7 @@ class NavigationService:
     PAGE_HOME = PAGE_HOME
     PAGE_USER = PAGE_USER
     PAGE_UPLOAD = PAGE_UPLOAD
+    PAGE_TABLE_MAINTENANCE = PAGE_TABLE_MAINTENANCE
     PAGE_LOGOUT = PAGE_LOGOUT
 
     @classmethod
@@ -43,7 +45,7 @@ class NavigationService:
             logger.debug("Returning authenticated navigation tree")
             return {
                 "Main": [cls.PAGE_HOME, cls.PAGE_UPLOAD],
-                "System": [cls.PAGE_STATUS],
+                "System": [cls.PAGE_STATUS, cls.PAGE_TABLE_MAINTENANCE],
                 "Account": [cls.PAGE_USER, cls.PAGE_LOGOUT]
             }
         else:
@@ -56,6 +58,7 @@ class NavigationService:
                 cls.PAGE_HOME, 
                 cls.PAGE_UPLOAD,
                 cls.PAGE_STATUS, 
+                cls.PAGE_TABLE_MAINTENANCE,
                 cls.PAGE_USER, 
                 cls.PAGE_LOGOUT
             ]
@@ -71,6 +74,7 @@ class NavigationService:
             cls.PAGE_HOME: "pages/index.py",
             cls.PAGE_USER: "pages/user_info.py",
             cls.PAGE_UPLOAD: "pages/upload_mdf.py",
+            cls.PAGE_TABLE_MAINTENANCE: "pages/table_maintenance.py",
         }
 
     @classmethod

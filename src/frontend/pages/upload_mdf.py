@@ -1,5 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
-# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+# 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨
 def upload_mdf():
     import streamlit as st
     from src.database import get_session
@@ -62,16 +62,12 @@ def upload_mdf():
         SELECT_SOURCE_LABEL = "Select a source..."
         CREATE_NEW_LABEL = "+ Add new source…"
         
-        # Build options: placeholder first, then sources, then create new
-        final_options = [SELECT_SOURCE_LABEL] + source_options + [CREATE_NEW_LABEL]
+        # Build options: placeholder first, then create new, then sources
+        final_options = [SELECT_SOURCE_LABEL, CREATE_NEW_LABEL] + source_options
 
-        # Handle automatic selection of newly created source
-        newly_created = st.session_state.pop("newly_created_source_name", None)
-        if newly_created and newly_created in final_options:
-            st.session_state["upload_active_source_name"] = newly_created
-        
-        # Initialize default from session state key if available
+        # Initialize default from session state or placeholder.
         current_selection = st.session_state.get("upload_active_source_name", SELECT_SOURCE_LABEL)
+        
         try:
             default_index = final_options.index(current_selection)
         except ValueError:
@@ -84,9 +80,10 @@ def upload_mdf():
             key="upload_active_source_name"
         )
 
-        # Clear focus flag if we are NOT on the create new source label
+        # Clear focus flag and success state if we are NOT on the create new source label
         if selected_source != CREATE_NEW_LABEL:
             st.session_state.pop("source_focus_done", None)
+            st.session_state.pop("source_creation_success_name", None)
 
         # C-4a: Create new source inline
         selected_source_id = None
@@ -153,12 +150,26 @@ def upload_mdf():
                 """, height=0)
                 st.session_state["source_focus_done"] = True
             st.markdown("#### Create a new source")
+            
+            # Persistent success indicator
+            success_name = st.session_state.get("source_creation_success_name")
+            if success_name:
+                st.success(f"Source '{success_name}' created successfully. Please select it from the dropdown above.")
+            
+            is_disabled = bool(success_name)
+            
             new_name = st.text_input(
                 "Source name",
                 placeholder="Book/Document — Author/Linguist",
+                key="new_source_name_input",
+                disabled=is_disabled
             )
-            new_description = st.text_input("Description (optional)")
-            if st.button("Create Source"):
+            new_description = st.text_input(
+                "Description (optional)",
+                key="new_source_description_input",
+                disabled=is_disabled
+            )
+            if st.button("Create Source", disabled=is_disabled):
                 if not new_name or not new_name.strip():
                     st.error("Source name is required.")
                 else:
@@ -174,8 +185,11 @@ def upload_mdf():
                             )
                             session.add(new_source)
                             session.commit()
-                            st.session_state["newly_created_source_name"] = new_name.strip()
-                            st.success(f"Source '{new_name.strip()}' created.")
+                            # Track success for persistence across rerun
+                            st.session_state["source_creation_success_name"] = new_name.strip()
+                            # Clear input fields state
+                            st.session_state.pop("new_source_name_input", None)
+                            st.session_state.pop("new_source_description_input", None)
                             st.rerun()
                     except Exception as e:
                         session.rollback()
