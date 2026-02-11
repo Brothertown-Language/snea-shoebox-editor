@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 from typing import Dict, Any, List, Optional
 from sqlalchemy import func, desc
 from src.database.connection import get_session

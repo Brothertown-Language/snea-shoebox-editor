@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 """Tests for Phase D-1: Review table, bulk actions, comparison view, Apply Now."""
 import unittest
 from unittest.mock import patch, MagicMock, PropertyMock
@@ -262,9 +263,9 @@ class TestComparisonView(unittest.TestCase):
     @patch("streamlit.container")
     @patch("streamlit.markdown")
     @patch("streamlit.selectbox", side_effect=lambda *a, **kw: 1 if "per page" in a[0] else "matched")
-    @patch("streamlit.code")
+    @patch("src.frontend.ui_utils.render_mdf_block")
     @patch("streamlit.info")
-    def test_comparison_shows_existing_and_new(self, _info, mock_code,
+    def test_comparison_shows_existing_and_new(self, _info, mock_render,
                                                 _selectbox, mock_md, mock_container,
                                                 mock_columns, _btn, _subheader,
                                                 mock_get_session):
@@ -293,9 +294,9 @@ class TestComparisonView(unittest.TestCase):
         from src.frontend.pages.upload_mdf import _render_review_table
         _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
 
-        # Code should be called with the existing record's mdf_data
-        code_calls = [str(c) for c in mock_code.call_args_list]
-        self.assertTrue(any("fire" in c for c in code_calls))
+        # render_mdf_block should be called with the existing record's mdf_data
+        render_calls = [str(c) for c in mock_render.call_args_list]
+        self.assertTrue(any("fire" in c for c in render_calls))
 
     @patch("src.database.get_session")
     @patch("streamlit.subheader")

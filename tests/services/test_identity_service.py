@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import unittest
 from unittest.mock import MagicMock, patch
 import streamlit as st

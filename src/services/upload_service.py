@@ -1,10 +1,12 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 """
 Upload Service for MDF file upload, staging, matching, and commit operations.
 """
 import unicodedata
 import uuid
 from typing import Optional
+from sqlalchemy import func
 
 from src.database import get_session, MatchupQueue, Record, EditHistory, SearchEntry, Source
 from src.mdf.parser import parse_mdf, normalize_nt_record, format_mdf_record
@@ -169,6 +171,36 @@ class UploadService:
                 }
                 for r in rows
             ]
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_cross_source_info(lx: str, current_source_id: int) -> list[str]:
+        """Find other sources containing this lexeme (exact or base form).
+        
+        Returns a sorted list of unique source names.
+        """
+        if not lx:
+            return []
+        
+        session = get_session()
+        try:
+            base_lx = _strip_diacritics(lx).lower()
+            
+            # Query for exact match or base form match in other sources
+            matches = (
+                session.query(Source.name)
+                .join(Record, Record.source_id == Source.id)
+                .filter(Record.source_id != current_source_id)
+                .filter(Record.is_deleted == False)
+                .filter(
+                    (Record.lx == lx) |
+                    (func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base_lx)
+                )
+                .distinct()
+                .all()
+            )
+            return sorted([m[0] for m in matches])
         finally:
             session.close()
 

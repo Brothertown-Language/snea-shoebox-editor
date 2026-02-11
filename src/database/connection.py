@@ -1,4 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- Copyright (c) 2026 Brothertown Language -->
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import os
 import streamlit as st
 from pathlib import Path
@@ -170,7 +172,7 @@ def _enable_tcp_listening(pg_server):
     TCP (port 5432) and the Unix socket remain available.  The pgserver handle
     stays valid because the same pgdata directory is reused.
     """
-    from pgserver._commands import pg_ctl
+    from pgserver import pg_ctl
 
     # Determine the socket directory from the current URI
     from urllib.parse import urlparse, parse_qs
@@ -208,7 +210,7 @@ def _force_stop_stuck_db(db_path):
         return
 
     import time
-    from pgserver._commands import pg_ctl
+    from pgserver import pg_ctl
 
     last_mod = pid_file.stat().st_mtime
     age = time.time() - last_mod
@@ -270,6 +272,7 @@ def _auto_start_pgserver():
 
     try:
         import pgserver
+        from pgserver import pg_ctl
         import time as _time
         db_path = _get_local_db_path()
         db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -278,8 +281,22 @@ def _auto_start_pgserver():
         _force_stop_stuck_db(db_path)
 
         _logger.debug("Starting pgserver (db_path=%s)…", db_path)
-        _pg_server = pgserver.get_server(str(db_path))
-        _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
+        
+        # Retry logic for pgserver.get_server() to handle "shutting down" states
+        # by triggering a force-stop.
+        max_start_attempts = 3
+        for start_attempt in range(1, max_start_attempts + 1):
+            try:
+                _pg_server = pgserver.get_server(str(db_path))
+                _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
+                break
+            except Exception as start_err:
+                if "shutting down" in str(start_err) and start_attempt < max_start_attempts:
+                    _logger.warning("pgserver failed to start (shutting down). Triggering force-stop and retrying (%d/%d)…", start_attempt, max_start_attempts)
+                    _force_stop_stuck_db(db_path)
+                    _time.sleep(2)
+                else:
+                    raise start_err
 
         # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
         # connect via localhost:5432.  Junie keeps the default socket-only
@@ -297,7 +314,7 @@ def _auto_start_pgserver():
         # previous unclean shutdown ("the database system is shutting down").
         from sqlalchemy import create_engine, text
         engine = create_engine(uri)
-        max_retries = 5
+        max_retries = 10
         for attempt in range(max_retries):
             try:
                 _logger.debug("Verifying database connection (attempt %d/%d)…", attempt + 1, max_retries)

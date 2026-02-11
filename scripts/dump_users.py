@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 """
 Script to dump the local user accounts list and the local user activity list to CSV files.
 Usage: uv run python scripts/dump_users.py

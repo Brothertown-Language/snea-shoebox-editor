@@ -1,3 +1,4 @@
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 from .core import Source, Language, RecordLanguage, Record
 from .search import SearchEntry
 from .workflow import MatchupQueue, EditHistory

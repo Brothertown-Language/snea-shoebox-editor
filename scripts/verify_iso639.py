@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 """
 Script to verify the ISO 639-3 table is loaded and report stats.
 Usage: uv run python scripts/verify_iso639.py

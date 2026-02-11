@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 """
 Manual script to clear the permissions table for testing.
 Usage: uv run python scripts/clear_permissions.py

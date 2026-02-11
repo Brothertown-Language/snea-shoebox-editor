@@ -1,3 +1,4 @@
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 from sqlalchemy import Column, Integer, String, TIMESTAMP, Text
 from sqlalchemy.sql import func
 from ..base import Base

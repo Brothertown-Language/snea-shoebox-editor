@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import sys
 import os
 
@@ -27,7 +28,7 @@ def _initialize_database():
     """
     import time as _time
 
-    max_attempts = 6
+    max_attempts = 10
     base_delay = 1.0  # seconds
 
     with st.spinner("Initializing database…"):

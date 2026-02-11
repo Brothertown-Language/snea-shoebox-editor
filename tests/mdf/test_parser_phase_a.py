@@ -1,4 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
+# <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 """Tests for Phase A parser enhancements: record_id, sub-entry fields, normalize_nt_record."""
 import os
 import unittest
