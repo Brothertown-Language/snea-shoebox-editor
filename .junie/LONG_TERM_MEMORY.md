@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # AI Long-Term Memory
 
 This file serves as a persistent memory of critical project context, user preferences, and cross-session decisions that must survive context window truncation.

@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # MDF File Upload — Implementation Plan
 
 This plan covers the end-to-end feature for uploading MDF files, staging

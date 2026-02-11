@@ -1,8 +1,12 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 
 # Operational Standards: Environment, Tools, and Security
 
-## 1. Commands and Tools
+## 1. MANDATORY PLAN APPROVAL
+- **ZERO-TOLERANCE:** All technical execution is secondary to the Authorization Gate. Never modify ANY file (including this one) without an approved plan. See `.junie/guidelines.md`.
+
+## 2. Commands and Tools
 
 ### TECHNICAL EXECUTION RULES
 - **MANDATORY RELATIVE PATHS:** **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`) in all tool calls, terminal commands, file references, and output. **NEVER** use absolute paths (e.g., `/home/user/git/project/src/...`). The project root is the working directory; all paths must be relative to it.

@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # MDF TAG REFERENCE - SPR COMPRESSED (2026-01-26)
 
 [CONTEXT]

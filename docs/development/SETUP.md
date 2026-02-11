@@ -1,3 +1,4 @@
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # SNEA Shoebox Editor - Setup Guide
 
 This guide provides instructions for setting up the SNEA Shoebox Editor.

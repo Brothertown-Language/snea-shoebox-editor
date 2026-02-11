@@ -1,8 +1,12 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 
 # Development Workflow: Execution, Testing, and VCS
 
-## 1. Running the Application
+## 1. MANDATORY PLAN APPROVAL
+- **ZERO-TOLERANCE:** All technical execution is secondary to the Authorization Gate. Never modify ANY file without an approved plan. See `.junie/guidelines.md`.
+
+## 2. Running the Application
 
 ### MANDATORY BACKGROUND EXECUTION
 - **CRITICAL RULE:** **ALWAYS** start Streamlit using `./scripts/start_streamlit.sh` or manually with `nohup`.

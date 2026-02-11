@@ -1,3 +1,4 @@
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 ---
 author: Michael Conrad
 contributor: Junie (gemini-3-flash-preview)

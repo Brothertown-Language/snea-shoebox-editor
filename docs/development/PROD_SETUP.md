@@ -1,3 +1,4 @@
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Infrastructure & Production Setup Guide
 
 This guide provides instructions for setting up the production environment for the SNEA Shoebox Editor.

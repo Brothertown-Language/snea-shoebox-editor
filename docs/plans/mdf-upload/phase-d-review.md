@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Phase D — Review & Confirm Page (frontend) 🔄
 
 **Status:** In Progress (2026-02-09) — D-1 block and D-2 complete; D-3

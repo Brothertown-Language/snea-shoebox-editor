@@ -1,3 +1,4 @@
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Production Database Specification (Aiven)
 
 This document records the configuration and capabilities of the production Aiven PostgreSQL instance as of 2026-02-03.

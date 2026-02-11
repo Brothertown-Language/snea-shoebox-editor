@@ -1,3 +1,4 @@
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # OAuth2 and Deep Link Setup Guide
 
 ---

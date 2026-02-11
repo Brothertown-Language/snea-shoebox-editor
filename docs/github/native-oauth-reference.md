@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # [DEPRECATED] Native Streamlit OAuth2 Reference (GitHub)
 # DO NOT USE: INCOMPATIBLE WITH GITHUB
 # GitHub is primarily an OAuth2 provider and does not provide a standard OIDC discovery endpoint

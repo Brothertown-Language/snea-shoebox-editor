@@ -1,8 +1,12 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 
 # Project Architecture and Linguistic Context
 
-## 1. Project Overview and Ethics
+## 1. MANDATORY PLAN APPROVAL
+- **ZERO-TOLERANCE:** All technical execution is secondary to the Authorization Gate. Never modify ANY file without an approved plan. See `.junie/guidelines.md`.
+
+## 2. Project Overview and Ethics
 
 ### IDENTITY AND PURPOSE
 The SNEA Online Shoebox Editor is a collaborative platform for editing Southern New England Algonquian (SNEA) language records in MDF format.

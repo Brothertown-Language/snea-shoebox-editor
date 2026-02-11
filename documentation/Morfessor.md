@@ -1,3 +1,4 @@
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Why Morfessor Is the Best Overall Fit for Natick/Trumbull Morphological Segmentation
 
 ## Overview

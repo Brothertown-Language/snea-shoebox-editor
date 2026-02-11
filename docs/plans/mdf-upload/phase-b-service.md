@@ -1,4 +1,5 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
+<!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Phase B — Upload Service (backend) ✅
 
 ### B-1. Add `batch_id`, `filename`, and `match_type` columns to `matchup_queue` ✅
