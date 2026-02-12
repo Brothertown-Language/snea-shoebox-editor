@@ -193,25 +193,16 @@ The `commit_matched`, `commit_homonyms`, and `commit_new` batch methods
 currently called by the frontend — all frontend paths use `apply_single`
 instead.
 
-### D-3a. Add "Download Pending Changes" button ⏳
-Add a **"Download Pending Changes"** button to the review page that
-exports only the pending `matchup_queue` entries for the selected batch
-as an MDF-formatted text file.  The download includes **only** staged
-entries that have not yet been applied — it does not include committed
-records or discarded rows.
+### D-3a. Add "Download Pending Changes" button ✅
+The "Download" button on the main MDF Upload page's pending batch list
+fulfills this requirement. It exports all pending `matchup_queue` entries
+for the selected batch as an MDF-formatted text file. The download
+includes **only** staged entries that have not yet been applied.
 
-- Retrieve all `matchup_queue` rows for the current `batch_id` that
-  still have a pending status (not yet committed or discarded).
-- Render each row's `new_data` as MDF text using the existing MDF
-  formatter.
-- Offer the result as a Streamlit download button (`st.download_button`)
-  with a filename derived from the batch source name and batch id
-  (e.g. `pending_<source>_<batch_id_short>.txt`).
-- The button is only visible when the batch has at least one pending
-  entry.
-
-This allows linguists to export staged entries, edit them offline in a
-text editor, and re-upload corrected MDF files.
+- Filename includes source name and timestamp:
+  `pending_<source>_<yyyy-mm-dd>_<sssss>.txt`.
+- Data retrieved via `UploadService.get_pending_batch_mdf(batch_id)`.
+- Verified by UI mock tests in `tests/frontend/test_upload_mdf_page.py`.
 
 ### D-4. Display apply results summary ⏳
 Show counts of updated records, new records, new homonyms, ignored
@@ -278,9 +269,9 @@ widgets and `UploadService` calls to verify review page logic.  Cover:
   as New", "Discard All Marked") each call the correct backend methods
   and immediately apply changes; review table refreshes after each
   action; per-record "Apply Now" handles individual entries.
-- **D-3a**: "Download Pending Changes" button renders only when pending
-  entries exist; downloaded file contains only pending `matchup_queue`
-  entries as MDF text; button is hidden when no pending entries remain.
+- **D-3a**: verify that the existing dashboard "Download" button correctly
+  exports pending `matchup_queue` entries with the improved filename
+  format (source + timestamp). ✅
 - **Discard workflow**: `mark_as_discard` sets status; `discard_marked`
   bulk-deletes; `apply_single` with `'discard'` status removes row
   without record writes.

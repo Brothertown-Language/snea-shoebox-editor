@@ -30,7 +30,8 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Phase 5 Stage 3 Refactoring**: Decoupling navigation and redirection logic into `NavigationService`. (Current focus).
 - **Security Strategy**: Case-insensitive matching for GitHub identifiers is mandatory due to case mismatches between GitHub API and DB seeds.
 - **UI Standard**: Use `st.html()` for all HTML/CSS/JS injections. `unsafe_allow_html=True` is deprecated in this project.
-- **Path Resolution**: Always use the 3-step `git rev-parse` boilerplate in shell scripts for IDE compatibility. NEVER use `cd "$(dirname "$0")/.."` — use `BASH_SOURCE[0]` instead of `$0`.
+- **Local LLM**: Using Ollama with `qwen2.5-coder:14b` (~9GB, Q4_K_M) for coding assistance in PyCharm. A startup script `scripts/start_ollama_qwen.sh` and PyCharm launcher `launchers/Ollama_Qwen.xml` manage this. Detailed setup instructions for PyCharm plugins are available in `docs/development/ai-setup.md`.
+- **Path Resolution**: Always use the mandatory one-liner boilerplate `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"` in shell scripts for reliability.
 - **Manual Testing Requirement**: The **Full Auth Flow** (OAuth -> Sync -> RBAC -> Navigation tree update) requires manual verification by the user end-to-end, as it cannot be fully automated in the current environment.
 
 ## FUTURE FEATURE NOTES

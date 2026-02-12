@@ -2,6 +2,7 @@
 # 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨
 def upload_mdf():
     import streamlit as st
+    import datetime as _dt
     from src.database import get_session
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
@@ -255,10 +256,21 @@ def upload_mdf():
                 with col_download:
                     try:
                         mdf_blob = UploadService.get_pending_batch_mdf(batch_id)
+                        # Build cross-OS compatible filename for pending records:
+                        # Format: pending_<Source>_<YYYY-MM-DD>_<SSSSS>.txt
+                        # - pending_: prefix to distinguish from committed records.
+                        # - <Source>: Alphanumeric only (non-alphanumeric replaced by underscores).
+                        # - <YYYY-MM-DD>: Date of upload or current date.
+                        # - <SSSSS>: Seconds since midnight, zero-padded to 5 digits.
+                        safe_source = "".join(c if c.isalnum() else "_" for c in b['source_name'])
+                        now = b["uploaded_at"] or _dt.datetime.now()
+                        seconds_since_midnight = (now.hour * 3600) + (now.minute * 60) + now.second
+                        fname = f"pending_{safe_source}_{now.strftime('%Y-%m-%d')}_{seconds_since_midnight:05d}.txt"
+
                         st.download_button(
                             label="Download",
                             data=mdf_blob,
-                            file_name=f"pending_{batch_id}.txt",
+                            file_name=fname,
                             mime="text/plain",
                             key=f"download_{batch_id}"
                         )

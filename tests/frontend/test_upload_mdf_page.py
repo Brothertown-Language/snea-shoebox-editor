@@ -386,10 +386,12 @@ class TestPendingBatchSelector(unittest.TestCase):
             # Verify columns were created for Review, Download, Discard (4 columns total with info)
             mock_columns.assert_any_call([4, 1, 1, 1])
             
-            # Verify download button was rendered
+            # Verify download button was rendered with the improved filename format
             mock_download_btn.assert_called_once()
             self.assertEqual(mock_download_btn.call_args[1]['data'], "\\lx test\n\\ge gloss")
             self.assertEqual(mock_download_btn.call_args[1]['mime'], "text/plain")
+            # 14:52 = 14*3600 + 52*60 = 50400 + 3120 = 53520
+            self.assertEqual(mock_download_btn.call_args[1]['file_name'], "pending_Natick_2026-02-08_53520.txt")
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
