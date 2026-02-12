@@ -1,6 +1,6 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, Boolean
+from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, Boolean, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
@@ -25,6 +25,26 @@ class User(Base):
     edit_history = relationship("EditHistory", back_populates="user")
     activity_logs = relationship("UserActivityLog", back_populates="user")
     matchup_entries = relationship("MatchupQueue", back_populates="user")
+    preferences = relationship("UserPreference", back_populates="user")
+
+class UserPreference(Base):
+    """
+    Persistent UI and workflow settings per user and view.
+    Examples: 'upload_review' -> 'page_size' -> '25'
+    """
+    __tablename__ = 'user_preferences'
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    user_email = Column(String, ForeignKey('users.email', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    view_name = Column(String, nullable=False)  # e.g., 'upload_review'
+    preference_key = Column(String, nullable=False)  # e.g., 'page_size'
+    preference_value = Column(String, nullable=False)
+    updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
+
+    __table_args__ = (
+        UniqueConstraint('user_email', 'view_name', 'preference_key', name='uix_user_pref_view_key'),
+    )
+
+    user = relationship("User", back_populates="preferences")
 
 class UserActivityLog(Base):
     """

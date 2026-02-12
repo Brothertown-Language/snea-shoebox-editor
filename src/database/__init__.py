@@ -18,6 +18,7 @@ __all__ = [
     'MatchupQueue',
     'EditHistory',
     'User',
+    'UserPreference',
     'UserActivityLog',
     'Permission',
     'SchemaVersion'

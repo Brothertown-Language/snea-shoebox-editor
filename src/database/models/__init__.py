@@ -2,7 +2,7 @@
 from .core import Source, Language, RecordLanguage, Record
 from .search import SearchEntry
 from .workflow import MatchupQueue, EditHistory
-from .identity import User, UserActivityLog, Permission
+from .identity import User, UserPreference, UserActivityLog, Permission
 from .meta import SchemaVersion
 from .iso639 import ISO639_3
 
@@ -15,6 +15,7 @@ __all__ = [
     'MatchupQueue',
     'EditHistory',
     'User',
+    'UserPreference',
     'UserActivityLog',
     'Permission',
     'SchemaVersion',
