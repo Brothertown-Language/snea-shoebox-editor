@@ -2,9 +2,8 @@
 <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Phase D — Review & Confirm Page (frontend) 🔄
 
-**Status:** In Progress (2026-02-09) — D-1 block and D-2 complete; D-3
-effectively superseded by immediate-apply pattern (see below); D-3a
-through D-5 pending.
+**Status:** In Progress (2026-02-11) — D-1 block, D-2, D-3a, D-4.1, D-4.2, and D-5 complete;
+D-3 effectively superseded by immediate-apply pattern; D-4b in progress; D-6 pending.
 
 ### D-1. Display match review table ✅
 Show each staged entry with columns: `lx`, suggested match (existing
@@ -204,19 +203,43 @@ includes **only** staged entries that have not yet been applied.
 - Data retrieved via `UploadService.get_pending_batch_mdf(batch_id)`.
 - Verified by UI mock tests in `tests/frontend/test_upload_mdf_page.py`.
 
-### D-4. Display apply results summary ⏳
-Show counts of updated records, new records, new homonyms, ignored
-entries, discarded entries, and any errors.  Provide a link back to the
-source view page.
+### D-4. Integration Tests & Data Preparation 🔄
 
-### D-5. Write integration tests for the upload flow ⏳
-End-to-end test using the private Junie database and
-`src/seed_data/natick_sample_100.txt` as the upload input:
-- Upload the sample MDF file.
-- Verify staging, matching, committing, and search_entries population.
-- Verify edit_history rows and session_id grouping.
+This phase ensures the robustness of the upload matching logic and persistence layer through automated testing and specialized data samples.
 
-### D-6. Write UI mock tests for the upload page (Phase C) ✅
+#### 1. File Transformation & Verification Utility ✅
+- **Objective**: Generate a secondary test file with no diacritics in the headwords (`\lx`) to verify base-form matching logic.
+- **Implementation**: Used a script to parse `src/seed_data/natick_sample_100.txt` and strip Unicode diacritics (NFD normalization + Mn category removal).
+- **Result**: `src/seed_data/natick_sample_100_no_diacritics.txt` created and verified as distinct from the original.
+- **Status**: Complete (2026-02-11).
+
+#### 2. E2E Upload Flow Integration Test ✅
+- **Objective**: Perform a comprehensive end-to-end test using the private Junie database (`JUNIE_PRIVATE_DB=true`) to verify the entire lifecycle of an upload batch.
+- **Workflow**:
+    1.  **Staging**: Call `UploadService.stage_entries` with a sample file and verify rows appear in `matchup_queue` with a valid `batch_id`.
+    2.  **Matching**: Call `UploadService.suggest_matches` and verify:
+        *   `suggested_record_id` is populated for exact or base-form matches.
+        *   `match_type` is correctly assigned (`exact` or `base_form`).
+    3.  **Manual Override**: Test `UploadService.confirm_match` to ensure a user can manually change a suggested match.
+    4.  **Immediate Apply**: Call `UploadService.apply_single` for various statuses:
+        *   `matched`: Updates existing record and removes queue row.
+        *   `create_new`: Creates new record and removes queue row.
+        *   `discard`: Simply removes queue row.
+    5.  **Persistence Verification**:
+        *   Verify `records` table reflects the changes.
+        *   Verify `edit_history` has rows grouped by `session_id`.
+        *   Verify `search_entries` (the search index) is correctly populated for the new/updated records.
+- **Implementation**: `tests/integration/test_upload_e2e.py` created.
+- **Status**: Complete (2026-02-11).
+    
+### D-4b. Add review table filtering options ⏳
+
+Add filtering controls to the sidebar to allow users to narrow down the records displayed in the review table.
+
+- **Filter by Status**: Allow filtering entries by their current status in the queue. The `matched` status must be split into **Matched (Exact)** and **Matched (Base-form)** to allow users to specifically review non-exact suggestions. Other statuses include `create_new`, `create_homonym`, `discard`, `pending`, and `ignored`.
+- **UI Placement**: Controls should be integrated into the existing sidebar alongside pagination and bulk actions.
+
+### D-5. Write UI mock tests for the upload page (Phase C) ✅
 Add tests in `tests/frontend/test_upload_mdf_page.py` that mock Streamlit
 widgets and `UploadService` calls to verify upload page logic without a
 running browser.  Each test patches `streamlit` functions (`st.selectbox`,
@@ -242,7 +265,7 @@ the correct service calls are made.  Cover:
 **Implementation note:** Tests are in `tests/frontend/test_upload_mdf_page.py`
 (15 tests) rather than the originally planned `tests/ui/` path.
 
-### D-7. Write UI mock tests for the review & confirm page (Phase D) ⏳
+### D-6. Write UI mock tests for the review & confirm page (Phase D) ⏳
 Add tests in `tests/frontend/test_upload_review_d1.py` that mock Streamlit
 widgets and `UploadService` calls to verify review page logic.  Cover:
 - **D-1**: review table renders columns (`lx`, suggested match, match
@@ -275,10 +298,7 @@ widgets and `UploadService` calls to verify review page logic.  Cover:
 - **Discard workflow**: `mark_as_discard` sets status; `discard_marked`
   bulk-deletes; `apply_single` with `'discard'` status removes row
   without record writes.
-- **D-4**: results summary displays correct counts for updated, new,
-  homonym, ignored, and discarded entries.
 
 **Implementation note:** D-1 block tests are in
 `tests/frontend/test_upload_review_d1.py` (16 tests: 12 from D-1 + 4
-from D-2) rather than the originally planned `tests/ui/` path.  Tests
-for D-3 through D-4 will be added as those features are implemented.
+from D-2) rather than the originally planned `tests/ui/` path.
