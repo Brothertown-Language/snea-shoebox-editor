@@ -15,11 +15,9 @@
 - **LOCAL DEV:** **ALWAYS** use `uv run --extra local` to ensure `pgserver` availability.
 
 ### PATH RESOLUTION IN SCRIPTS
-- **MANDATORY:** **ALL** shell scripts created or modified MUST use the following 3-step boilerplate for path resolution to ensure reliability across all execution environments (terminal, IDE, background tasks).
-- **MANDATORY ORDER (NO EXCEPTIONS):**
-    1. `cd "$(dirname "${BASH_SOURCE[0]}")"`: Change to the script's directory.
-    2. `REPO_ROOT=$(git rev-parse --show-toplevel)`: Resolve the repository root.
-    3. `cd "$REPO_ROOT"`: Change to the repository root before any other operations.
+- **MANDATORY:** **ALL** shell scripts created or modified MUST use the following one-liner boilerplate for path resolution to ensure reliability across all execution environments (terminal, IDE, background tasks).
+- **MANDATORY ONE-LINER (NO EXCEPTIONS):**
+    `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`
 
 ---
 
@@ -55,7 +53,7 @@
   - **GROUP COMMITS BY RELATED CHANGES (ATOMIC COMMITS)**: Do NOT lump unrelated edits into a single commit. Group files by semantic purpose.
     - **CRITICAL MANDATE**: AI Guideline updates (`.junie/`, `VIOLATION_LOG.md`, etc.) MUST ALWAYS be in a separate commit from application code changes.
     - **METHOD**: Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
-  - **MANDATORY BOILERPLATE**: The script MUST include the mandatory 3-step path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS).
+  - **MANDATORY BOILERPLATE**: The script MUST include the mandatory one-liner path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS).
   - **MESSAGE FORMAT**: Write messages to `tmp/commit.msg` (or `tmp/commit_N.msg`). **NO PREFIXES:** Never use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
 - **REASON**: Maintains absolute project safety and ensures the human lead is the sole authority for repository history. Violation of this protocol is a critical breach of trust.
 
