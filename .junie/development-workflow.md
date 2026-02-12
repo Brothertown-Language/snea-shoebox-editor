@@ -54,7 +54,10 @@
     - **CRITICAL MANDATE**: AI Guideline updates (`.junie/`, `VIOLATION_LOG.md`, etc.) MUST ALWAYS be in a separate commit from application code changes.
     - **METHOD**: Use a single `tmp/commit_task.sh` script that performs multiple `git add` + `git commit` blocks in sequence, one per group. Create separate `tmp/commit_<N>.msg` files for each group's message, numbered sequentially (1, 2, 3…).
   - **MANDATORY BOILERPLATE**: The script MUST include the mandatory one-liner path resolution boilerplate (see §1 PATH RESOLUTION IN SCRIPTS).
-  - **MESSAGE FORMAT**: Write messages to `tmp/commit.msg` (or `tmp/commit_N.msg`). **NO PREFIXES:** Never use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
+  - **MESSAGE FORMAT**: Write messages to `tmp/commit.msg` (or `tmp/commit_N.msg`).
+    - **NO PREFIXES:** Never use Conventional Commits prefixes (e.g., `feat:`, `fix:`).
+    - **STRUCTURE:** Use a single summary sentence, followed by a single blank line, followed by a high-level focused overview of the commit's changes.
+    - **DIRECT LANGUAGE:** Avoid redundant phrases like "This commit ", "This change ", or "The documentation ". Focus directly on the impact and content of the changes.
 - **REASON**: Maintains absolute project safety and ensures the human lead is the sole authority for repository history. Violation of this protocol is a critical breach of trust.
 
 
