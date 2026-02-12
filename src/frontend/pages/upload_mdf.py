@@ -415,17 +415,9 @@ def _render_review_view():
         'user_email': user_email,
     })
 
-    # ── Sidebar bottom: records per page, re-match & back ─────────
+    # ── Sidebar bottom: re-match & back ─────────
     with st.sidebar:
         st.divider()
-
-        # Records per page selector
-        st.selectbox(
-            "Records per page",
-            [1, 5, 10, 25, 50],
-            index=[1, 5, 10, 25, 50].index(st.session_state.get("review_page_size", 1)),
-            key="review_page_size",
-        )
 
         # C-6b: Re-Match button
         if st.button("Re-Match", key="rematch_btn"):
@@ -455,6 +447,7 @@ def _render_review_table(batch_id, session_deps):
     from src.database.models.workflow import MatchupQueue
     from src.database.models.core import Record, Language, Source
     from src.services.upload_service import UploadService
+    from src.services.preference_service import PreferenceService
     from src.frontend.ui_utils import render_mdf_block
     from src.logging_config import get_logger
 
@@ -502,12 +495,86 @@ def _render_review_table(batch_id, session_deps):
     finally:
         session.close()
 
+    # ── Filtering ───────────────────────────────────────────────────
+    filter_options = {
+        "All Records": (None, None),
+        "Matched (Exact)": ("matched", "exact"),
+        "Matched (Base-form)": ("matched", "base_form"),
+        "Create New Record": ("create_new", None),
+        "Create Homonym": ("create_homonym", None),
+        "Discard Entry": ("discard", None),
+        "Ignored": ("ignored", None),
+    }
+    
+    with st.sidebar:
+        st.subheader("Filters")
+        
+        # ── Pagination State ───────────────────────────────────────────
+        page_size_options = [1, 5, 10, 25, 50]
+        
+        # Initialize review_page_size from database if not set in session
+        if "review_page_size" not in st.session_state:
+            saved_pref = PreferenceService.get_preference(
+                user_email, "upload_review", "page_size", str(page_size_options[1]) # Default 5
+            )
+            st.session_state["review_page_size"] = int(saved_pref) if saved_pref and saved_pref.isdigit() else page_size_options[1]
+
+        page_size = st.session_state.get("review_page_size", page_size_options[1])
+        if page_size not in page_size_options:
+            page_size = page_size_options[1]
+
+        # Get current selection from session state
+        saved_filter = st.session_state.get("review_filter_status", "All Records")
+        filter_labels = list(filter_options.keys())
+        try:
+            default_ix = filter_labels.index(saved_filter)
+        except ValueError:
+            default_ix = 0
+
+        selected_filter = st.selectbox(
+            "Filter by Status",
+            options=filter_labels,
+            index=default_ix,
+            key="review_filter_status_widget"
+        )
+        # Update session state for persistence
+        if selected_filter != st.session_state.get("review_filter_status"):
+            st.session_state["review_filter_status"] = selected_filter
+            st.session_state["review_current_page"] = 1 # Reset to page 1 on filter change
+            st.rerun()
+
+    # Apply filters to rows
+    if selected_filter != "All Records":
+        filtered_rows = []
+        f_status, f_match_type = filter_options[selected_filter]
+        for row in rows:
+            # Determine row's effective status/match_type pair
+            # (Matches D-1 logic used later for default status)
+            has_suggestion = row.suggested_record_id is not None
+            row_match_type = row.match_type if has_suggestion else None
+            
+            if row.status not in ('pending',):
+                eff_status = row.status
+                eff_match_type = row.match_type if eff_status == 'matched' else None
+            else:
+                # Recommendation logic (simplification for filtering)
+                # Note: record_id_conflict is not re-calculated here for performance,
+                # but it defaults to create_new anyway if not matched.
+                if has_suggestion:
+                    eff_status = 'matched'
+                    eff_match_type = row.match_type
+                else:
+                    eff_status = 'create_new'
+                    eff_match_type = None
+            
+            if eff_status == f_status:
+                if f_match_type is None or eff_match_type == f_match_type:
+                    filtered_rows.append(row)
+        rows = filtered_rows
+
     # ── Compute pagination ──────────────────────────────────────────
     total_entries = len(rows)
-    page_size_options = [1, 5, 10, 25, 50]
-    page_size = st.session_state.get("review_page_size", page_size_options[0])
-    if page_size not in page_size_options:
-        page_size = page_size_options[0]
+    page_size = st.session_state.get("review_page_size", 1)
     total_pages = max(1, (total_entries + page_size - 1) // page_size)
     current_page = st.session_state.get("review_current_page", 1)
     if current_page > total_pages:
@@ -515,7 +582,7 @@ def _render_review_table(batch_id, session_deps):
     if current_page < 1:
         current_page = 1
 
-    # ── Sidebar: page nav (top), bulk actions, then records per page at bottom ─
+    # ── Sidebar: page nav (top), bulk actions ─────────
     with st.sidebar:
         # Page navigation at top
         st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_entries} entries)")
@@ -638,6 +705,21 @@ def _render_review_table(batch_id, session_deps):
                     logger.error("Discard ignored failed: %s", e)
                     st.error(f"Discard ignored failed: {e}")
 
+        st.divider()
+        # Records per page selector (at bottom)
+        selected_page_size = st.selectbox(
+            "Records per page",
+            options=page_size_options,
+            index=page_size_options.index(page_size),
+            key="review_page_size_widget"
+        )
+        if selected_page_size != st.session_state.get("review_page_size"):
+            st.session_state["review_page_size"] = selected_page_size
+            st.session_state["review_current_page"] = 1
+            # Persist to database
+            PreferenceService.set_preference(user_email, "upload_review", "page_size", str(selected_page_size))
+            st.rerun()
+
     # Slice rows for current page
     start_idx = (current_page - 1) * page_size
     end_idx = start_idx + page_size
@@ -700,19 +782,29 @@ def _render_review_table(batch_id, session_deps):
                     st.markdown("→ *No match*")
             with hdr_col3:
                 # Status selector
-                status_options = ['matched', 'create_new', 'create_homonym', 'discard', 'ignored']
-                # Map current_status to index
-                if current_status in status_options:
-                    default_idx = status_options.index(current_status)
-                else:
-                    default_idx = 1  # create_new
-                selected_status = st.selectbox(
+                status_map = {
+                    "Matched": "matched",
+                    "Create New Record": "create_new",
+                    "Create Homonym": "create_homonym",
+                    "Discard Entry": "discard",
+                    "Ignored": "ignored",
+                }
+                status_options = list(status_map.keys())
+                # Internal status to display name
+                rev_status_map = {v: k for k, v in status_map.items()}
+                
+                display_status = rev_status_map.get(current_status, "Create New Record")
+                default_idx = status_options.index(display_status)
+
+                selected_label = st.selectbox(
                     "Status",
                     status_options,
                     index=default_idx,
                     key=f"status_{row.id}",
                     label_visibility="collapsed",
                 )
+                selected_status = status_map[selected_label]
+
                 # Apply status change if different from DB
                 if selected_status != row.status:
                     try:
