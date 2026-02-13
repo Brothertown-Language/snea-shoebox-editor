@@ -9,6 +9,7 @@
 ## 2. Commands and Tools
 
 ### TECHNICAL EXECUTION RULES
+- **NO PROACTIVITY:** **NEVER** perform actions not explicitly requested by the user. This includes "cleaning up," "fixing typos," "proactive refactoring," or preparing VCS documentation (commit messages, `tmp/commit.sh`). AI must stop and wait for explicit instructions for every action.
 - **MANDATORY RELATIVE PATHS:** **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`) in all tool calls, terminal commands, file references, and output. **NEVER** use absolute paths (e.g., `/home/user/git/project/src/...`). The project root is the working directory; all paths must be relative to it.
 - **⚠️ NEVER PREFIX COMMANDS WITH `cd`:** The shell is ALREADY at the project root. Do NOT use `cd /path && command` or `cd /path; command`. Just run the command directly. **SELF-CHECK: If your command starts with `cd`, STOP and remove it.** This is a recurring violation (see VIOLATION_LOG.md #3).
 - **⚠️ NEVER COPY USER COMMANDS VERBATIM:** When the user provides a shell command in the issue description, treat it as a specification of *what* to run, NOT as a ready-to-execute command. **ALWAYS** translate it to guideline-compliant form: remove `cd /absolute/path`, split `&&` chains into separate tool calls, remove pipes (`|`). Each atomic command must be a separate step. User-provided commands often contain absolute paths and compound operators that violate these standards.
@@ -46,8 +47,10 @@
 
 ### SECURITY HARDENING
 - **HARDCODING PROHIBITED:** **NEVER** hardcode secrets in source code. Use environment variables or Streamlit secrets.
-- **MANDATORY CHECK:** You MUST run `bash scripts/pre_commit_check.sh <paths>` to verify if files are excluded from VCS before creating commit scripts or staging files.
+- **MANDATORY CHECK:** You MUST run `bash scripts/pre_commit_check.sh` to verify if files are excluded from VCS before creating commit scripts or staging files. This script SHOULD read from `tmp/commit_files.txt` for the target list.
 - **DECLARATIVE STAGING ONLY (v8.0):** **NEVER** run `git add` or `git commit` directly in the terminal. All staging MUST be performed via an explicit, path-by-path `tmp/commit.sh` script.
+- **COMMIT FILE MANIFEST:** **ALWAYS** maintain a `tmp/commit_files.txt` file that lists every project-relative path intended for the current commit cycle. This file is the source of truth for `pre_commit_check.sh` and the staging script.
+- **PRE-CLEAN COMMIT ARTIFACTS:** **MANDATORY:** Before generating any new commit-related files (`tmp/commit_files.txt`, `tmp/commit*.msg`, `tmp/commit.sh`), you **MUST** first delete any existing ones. This prevents stale data from polluting new commit cycles. Use `rm -f tmp/commit*` as the very first step of commit preparation.
 - **LOGICAL GROUPING REQUIRED:** Commits MUST be grouped logically (e.g., guidelines, docs, src) and committed separately. A single `tmp/commit.sh` MUST handle all logical commits to ensure consistency and reviewability.
 - **STANDARD GIT MESSAGING:** Each commit MUST use a `commit*.msg` file in `tmp/`. The message MUST have a precise summary (50 chars), a blank line, and a focused overview.
 - **PROHIBITION ON COMMITTING `tmp/`**: **NEVER** include files from the `tmp/` directory in a git commit. The `tmp/` directory is strictly for transient logs, database instances, and coordination files that must never enter the repository history.
@@ -80,6 +83,7 @@ Database connection pooling is recommended, but idle connections MUST be closed 
 - [ ] No required files left untracked (Review `scripts/pre_commit_check.sh` output).
 - [ ] All new functions have strict type annotations.
 - [ ] Copyright headers are present.
+- [ ] Adheres to [UI Guidelines](docs/ui-guidelines.md) for all new views.
 - [ ] No debug `print` statements (Use `logging`).
 - [ ] No commented-out code.
 
