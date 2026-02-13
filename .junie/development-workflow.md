@@ -47,8 +47,9 @@
 ### VCS COMPLIANCE: DECLARATIVE COMMIT PROTOCOL
 - **STRICT PROHIBITION ON DIRECT GIT**: You are strictly forbidden from running `git add` or `git commit` directly in the terminal.
 - **MANDATORY PREPARATION METHOD**: Commits are ONLY permitted when explicitly instructed by the User. 
+- **STEP 0: SECURITY INSPECTION**: Before creating ANY commit artifacts, you MUST run `bash scripts/pre_commit_check.sh <files>` to verify that no ignored files, secrets, or unintended changes are being prepared for staging.
 - **STEP 1: CREATE MESSAGES**: Create `tmp/commit_<N>.msg` files for each semantic group.
-- **STEP 2: GENERATE VALIDATED SCRIPT**: Create `tmp/commit_task.sh`.
+- **STEP 2: GENERATE VALIDATED SCRIPT**: Create `tmp/commit.sh`.
   - **MANDATORY PATH RESOLUTION**: The script MUST include the path resolution boilerplate (`cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`) as the first command after `set -e`.
   - **NO FORCE**: The `-f` flag is strictly PROHIBITED.
   - **ATOMIC COMMITS**: Use separate `git add` + `git commit` blocks per semantic group.

@@ -46,7 +46,7 @@
 
 ### SECURITY HARDENING
 - **HARDCODING PROHIBITED:** **NEVER** hardcode secrets in source code. Use environment variables or Streamlit secrets.
-- **MANDATORY CHECK:** Use `git check-ignore <path>` to verify if a file is excluded from VCS before creation.
+- **MANDATORY CHECK:** You MUST run `bash scripts/pre_commit_check.sh <paths>` to verify if files are excluded from VCS before creating commit scripts or staging files.
 - **DECLARATIVE STAGING ONLY (v8.0):** **NEVER** run `git add` or `git commit` directly in the terminal. All staging MUST be performed via an explicit, path-by-path `tmp/commit.sh` script.
 - **LOGICAL GROUPING REQUIRED:** Commits MUST be grouped logically (e.g., guidelines, docs, src) and committed separately. A single `tmp/commit.sh` MUST handle all logical commits to ensure consistency and reviewability.
 - **STANDARD GIT MESSAGING:** Each commit MUST use a `commit*.msg` file in `tmp/`. The message MUST have a precise summary (50 chars), a blank line, and a focused overview.
