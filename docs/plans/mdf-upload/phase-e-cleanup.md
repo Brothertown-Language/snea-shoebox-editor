@@ -3,7 +3,7 @@
 # Phase E — Cleanup & Polish ⏳
 
 ### E-1. Add activity logging for upload events ✅
-Log `upload_start`, `upload_staged`, `upload_committed` actions via
+Log `upload_start`, `upload_staged`, `upload_batch_committed`, and `upload_record_committed` actions via
 `AuditService` with the `session_id`.
 
 ### E-2. Add batch rollback support ✅

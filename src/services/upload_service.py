@@ -682,6 +682,15 @@ class UploadService:
                     progress_callback(i, total)
 
             session.commit()
+            
+            # Log upload committed (bulk new source)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_batch_committed",
+                details=f"Committed {applied} records from batch {batch_id} (new source)",
+                session_id=session_id
+            )
+
             return applied
         except Exception:
             session.rollback()
@@ -744,6 +753,15 @@ class UploadService:
                     progress_callback(i, total)
 
             session.commit()
+            
+            # Log upload committed (bulk matched)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_batch_committed",
+                details=f"Committed {applied} matched records from batch {batch_id}",
+                session_id=session_id
+            )
+
             logger.info(
                 "approve_all_by_record_match: batch=%s, applied %d of %d matched rows",
                 batch_id, applied, len(queue_ids),
@@ -808,6 +826,15 @@ class UploadService:
                     progress_callback(i, total)
 
             session.commit()
+
+            # Log upload committed (bulk non-matches)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_batch_committed",
+                details=f"Committed {applied} non-matching records from batch {batch_id} as new",
+                session_id=session_id
+            )
+
             logger.info(
                 "approve_non_matches_as_new: batch=%s, applied %d of %d rows",
                 batch_id, applied, len(queue_ids),
@@ -1052,8 +1079,8 @@ class UploadService:
             # Log upload committed (single)
             AuditService.log_activity(
                 user_email=user_email,
-                action="upload_committed",
-                details=f"Single record {action}: {entry['lx']} (record_id={record_id})",
+                action="upload_record_committed",
+                details=f"Record {action}: {entry['lx']} (record_id={record_id})",
                 session_id=session_id
             )
 
@@ -1182,7 +1209,7 @@ class UploadService:
             # Log upload committed (matched)
             AuditService.log_activity(
                 user_email=user_email,
-                action="upload_committed",
+                action="upload_batch_committed",
                 details=f"Committed {count} matched records from batch {batch_id}",
                 session_id=session_id
             )
@@ -1284,7 +1311,7 @@ class UploadService:
             # Log upload committed (homonyms)
             AuditService.log_activity(
                 user_email=user_email,
-                action="upload_committed",
+                action="upload_batch_committed",
                 details=f"Committed {count} homonym records from batch {batch_id}",
                 session_id=session_id
             )
@@ -1360,7 +1387,7 @@ class UploadService:
             # Log upload committed (new)
             AuditService.log_activity(
                 user_email=user_email,
-                action="upload_committed",
+                action="upload_batch_committed",
                 details=f"Committed {count} new records from batch {batch_id}",
                 session_id=session_id
             )
@@ -1417,36 +1444,59 @@ class UploadService:
                 session.close()
 
     @staticmethod
-    def rollback_session(session_id: str, user_email: str = "system") -> dict:
+    def rollback_session(session_id: str, user_email: str = "system",
+                         progress_callback: Optional[callable] = None) -> dict:
         """Rollback all changes associated with a session_id.
         
+        ONLY rolls back records that have NOT been superseded by later sessions.
         Restores records to prev_data or deletes created records.
-        Returns {'rolled_back_count': N, 'deleted_count': M}.
+        Returns {'rolled_back_count': N, 'deleted_count': M, 'skipped_count': S}.
         """
         session = get_session()
         try:
-            # Sort by version ascending to ensure we see the first change in the session
-            history = (
+            # 1. Identify all records touched by this session
+            history_entries = (
                 session.query(EditHistory)
                 .filter_by(session_id=session_id)
                 .order_by(EditHistory.version.asc())
                 .all()
             )
-            if not history:
-                return {'rolled_back_count': 0, 'deleted_count': 0}
-            
-            rolled_back = 0
-            deleted = 0
+            if not history_entries:
+                return {'rolled_back_count': 0, 'deleted_count': 0, 'skipped_count': 0}
             
             # Map of record_id to the earliest prev_data in this session
             record_changes = {}
-            for h in history:
+            for h in history_entries:
                 if h.record_id not in record_changes:
                     record_changes[h.record_id] = h.prev_data
             
-            for rid, prev_data in record_changes.items():
+            rolled_back = 0
+            deleted = 0
+            skipped = 0
+            total = len(record_changes)
+            
+            # 2. Process each record with supersede check
+            for i, (rid, prev_data) in enumerate(record_changes.items(), 1):
+                # Fetch the LATEST session_id for this record
+                latest_h = (
+                    session.query(EditHistory)
+                    .filter_by(record_id=rid)
+                    .order_by(EditHistory.version.desc())
+                    .first()
+                )
+                
+                # If the record has been modified by a LATER session, skip it
+                if not latest_h or latest_h.session_id != session_id:
+                    skipped += 1
+                    if progress_callback:
+                        progress_callback(i, total)
+                    continue
+
                 record = session.get(Record, rid)
                 if not record:
+                    skipped += 1 # Should not happen if history exists
+                    if progress_callback:
+                        progress_callback(i, total)
                     continue
                 
                 if prev_data is None:
@@ -1474,17 +1524,25 @@ class UploadService:
                     
                     # Repopulate search entries
                     UploadService.populate_search_entries([rid], session=session)
+                
+                if progress_callback:
+                    progress_callback(i, total)
             
             session.commit()
             
             AuditService.log_activity(
                 user_email=user_email,
                 action="batch_rollback",
-                details=f"Rolled back session {session_id}: {rolled_back} updated, {deleted} deleted",
+                details=(f"Rolled back session {session_id}: {rolled_back} updated, "
+                         f"{deleted} deleted, {skipped} skipped (superseded)"),
                 session_id=session_id
             )
             
-            return {'rolled_back_count': rolled_back, 'deleted_count': deleted}
+            return {
+                'rolled_back_count': rolled_back, 
+                'deleted_count': deleted, 
+                'skipped_count': skipped
+            }
         except Exception:
             session.rollback()
             raise
