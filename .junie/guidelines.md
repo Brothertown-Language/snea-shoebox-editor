@@ -50,7 +50,7 @@ You MUST operate as a deterministic, approval-gated execution agent.
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 
-# SNEA Online Shoebox Editor: Master AI Guidelines (v8.1)
+# SNEA Online Shoebox Editor: Master AI Guidelines (v8.2)
 
 ## 0. THE SUPREME DIRECTIVE: ZERO-TOLERANCE AUTHORIZATION
 **YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
@@ -59,6 +59,7 @@ You MUST operate as a deterministic, approval-gated execution agent.
     - **"Go <thing/step>"**: Authorizes ONLY that specific item. AI must stop and wait for instruction immediately after completion.
     - **"Go" (No qualifier)**: Authorizes the entire immediate plan. AI must stop and wait for instruction immediately after the plan is finished.
 - **INTERNAL CHECK:** Before calling ANY edit tool (`create`, `search_replace`, `multi_edit`, `rename_element`), you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
+- **CHECKLIST & INSPECTION MANDATE:** You MUST follow checklists for all actions. You are FORBIDDEN from relying on memory, code comments, or existing documents to check items off. EVERY item MUST be verified by DIRECT INSPECTION of the codebase/system state.
 - **NO PROACTIVE EDITS:** Never "clean up," "fix," or "refactor" anything not explicitly approved in the current step.
 - **LOGS AND GUIDELINES ARE FILES:** This rule applies to `.junie/` files and `VIOLATION_LOG.md`. NO EXCEPTIONS.
 
@@ -112,19 +113,11 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 
 ---
 
-## IV. VCS & TASK MANAGEMENT (DECLARATIVE COMMIT PROTOCOL v8.1)
-- **STRICT PROHIBITION**: NEVER run `git add` or `git commit` directly in the terminal.
-- **COMMIT DIRECTIVE MANDATE**: ONLY prepare commits when explicitly asked (e.g., "Prepare a commit").
-- **MANIFEST-DRIVEN STAGING**: 
-    1. Run `bash scripts/pre_commit_check.sh` using `tmp/commit_files.txt`.
-    2. Create `tmp/commit_<N>.msg` files.
-    3. Generate `tmp/commit.sh` with `set -e` and explicit, path-by-path `git add` commands.
-- **COMMIT SCRIPT STANDARDS**:
-    - **`set -e`**: Every commit script MUST include `set -e` to stop on security check failure.
-    - **No Arguments**: Call `bash scripts/pre_commit_check.sh` with NO arguments to use `tmp/commit_files.txt`.
-- **ATOMIC COMMITS**: Group changes logically. Use separate `git add` + `git commit` blocks per group.
-- **NO FORCE**: The `-f` flag is strictly PROHIBITED.
-- **USER-ONLY EXECUTION**: AI is forbidden from running the commit script.
+## IV. VCS & TASK MANAGEMENT (DECLARATIVE COMMIT PROTOCOL v8.3)
+- **ABSOLUTE PROHIBITION ON COMMIT ACTIONS**: The AI is strictly FORBIDDEN from creating commit message files, commit scripts (e.g., `tmp/commit.sh`), staging files, or executing any `git commit` related commands.
+- **RATIONALE**: This ensures full human accountability and prevents the AI from accidentally staging ignored files, secrets, or unauthorized changes. This mandate was established because the Junie agent willfully disregarded prior instructions regarding when to create commit files and repeatedly created them automatically when not requested.
+- **MANDATORY REFUSAL**: Even if explicitly requested by the user to "prepare a commit" or "stage files", the AI MUST REFUSE and remind the user that commit actions are strictly reserved for the user.
+- **USER-ONLY RESPONSIBILITY**: All staging, manifest creation, message drafting, and committing MUST be performed manually by the user.
 
 ---
 
