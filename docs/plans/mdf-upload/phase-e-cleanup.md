@@ -6,11 +6,11 @@
 Log `upload_start`, `upload_staged`, `upload_committed` actions via
 `AuditService` with the `session_id`.
 
-### E-2. Add batch rollback support ⏳
+### E-2. Add batch rollback support ✅
 Implement `UploadService.rollback_session(session_id)` that restores
 `prev_data` from `edit_history` for all rows matching the session.
 
-### E-3. Write unit tests for rollback ⏳
+### E-3. Write unit tests for rollback ✅
 Test that rollback restores records and removes the corresponding
 `search_entries`.
 
