@@ -46,17 +46,19 @@
 ## 3. Version Control and Task Management (v7.0 PROTOCOL)
 ### VCS COMPLIANCE: DECLARATIVE COMMIT PROTOCOL
 - **STRICT PROHIBITION ON DIRECT GIT**: You are strictly forbidden from running `git add` or `git commit` directly in the terminal.
-- **MANDATORY PREPARATION METHOD**: Commits are ONLY permitted when explicitly instructed by the User. 
+- **COMMIT DIRECTIVE MANDATE**: Commits are ONLY permitted when explicitly instructed by the User via a "Commit Directive" (e.g., "Prepare a commit"). 
+    - **NO PLANNING:** You are forbidden from including commit preparation steps in any task plan unless the User has already issued a Commit Directive.
+    - **NO ASSUMPTION:** Autonomous preparation or planning of commits is a critical guideline violation.
 - **STEP 0: SECURITY INSPECTION**: Before creating ANY commit artifacts, you MUST run `bash scripts/pre_commit_check.sh` to verify that no ignored files, secrets, or unintended changes are being prepared for staging.
   - **MANDATORY FILE LIST**: You MUST create `tmp/commit_files.txt` containing the project-relative paths of all files to be committed (one per line). The check script will automatically read from this file.
   - **REVIEW UNTRACKED**: You MUST also review the "OTHER uncommitted changes" section of the script output to identify any untracked files that should be included in `tmp/commit_files.txt`.
   - **UNTRACKED FILE EXCEPTION**: If untracked files are detected, and you are absolutely convinced they should not be tracked, you MUST notify the user, explain your reasoning, and STOP. Do not proceed with creating commit artifacts until the user acknowledges.
 - **STEP 1: CREATE MESSAGES**: Create `tmp/commit_<N>.msg` files for each semantic group.
 - **STEP 2: GENERATE VALIDATED SCRIPT**: Create `tmp/commit.sh`.
-  - **MANDATORY PATH RESOLUTION**: The script MUST include the path resolution boilerplate (`cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`) as the first command after `set -e`.
+  - **MANDATORY PATH RESOLUTION**: The script MUST include the mandatory `cd/git rev` shell fragment as the first command after `set -e`.
+  - **FRAGMENT**: `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`
   - **NO FORCE**: The `-f` flag is strictly PROHIBITED.
   - **ATOMIC COMMITS**: Use separate `git add` + `git commit` blocks per semantic group.
-  - **PATH RESOLUTION**: Include the mandatory one-liner path resolution boilerplate.
 - **PROHIBITION ON EXECUTION**: AI is forbidden from running the commit script. User ONLY.
 - **REVIEW ALL UNCOMMITTED FILES**: Before manifest creation, run `git status` to identify modified and untracked files.
 - **GROUP BY PURPOSE**: AI Guideline updates MUST always be in a separate commit from application code.

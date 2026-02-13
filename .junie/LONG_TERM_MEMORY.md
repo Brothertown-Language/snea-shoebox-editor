@@ -12,6 +12,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
 ## USER PREFERENCES & HARD CONSTRAINTS
 - **SUPREME DIRECTIVE (v7.0)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT.
+- **PASSIVE EXECUTION MANDATE**: You are forbidden from being proactive. NO cleanup, NO polish, NO unauthorized optimization. Proactivity is considered destructive.
 - **AUTHORIZATION CHECK**: Before calling ANY edit tool, you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
 - **PRIVATE DATABASE ONLY**: `JUNIE_PRIVATE_DB=true` is the only acceptable environment for operations.
@@ -33,7 +34,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Phase D-4 Step 1**: Generated `src/seed_data/natick_sample_100_no_diacritics.txt` for base-form matching verification. Verified that stripping diacritics correctly produces a different file when diacritics are present.
 - **UI Standard**: Use `st.html()` for all HTML/CSS/JS injections. `unsafe_allow_html=True` is deprecated in this project.
 - **Local LLM**: Using Ollama with `qwen2.5-coder:14b` (~9GB, Q4_K_M) for coding assistance in PyCharm. A startup script `scripts/start_ollama_qwen.sh` and PyCharm launcher `launchers/Ollama_Qwen.xml` manage this. Detailed setup instructions for PyCharm plugins are available in `docs/development/ai-setup.md`.
-- **Path Resolution**: Always use the mandatory one-liner boilerplate `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"` in shell scripts for reliability.
+- **Path Resolution**: Always use the mandatory one-liner `cd/git rev` shell fragment `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"` in shell scripts (including `tmp/commit.sh`) for reliability.
 - **Manual Testing Requirement**: The **Full Auth Flow** (OAuth -> Sync -> RBAC -> Navigation tree update) requires manual verification by the user end-to-end, as it cannot be fully automated in the current environment.
 - **pgserver Resilience**: Refined the local database startup mechanism in `src/database/connection.py`. Removed the 30-second PID file age check and replaced it with a duration-based "stuckness" detection using `st.session_state["pg_shutdown_first_seen"]`. If the database reports a "shutting down" state for more than 5 seconds across connection attempts, an immediate force-stop (`-m immediate`) and PID file cleanup are triggered to restore availability.
 - **Audit Logging**: Updated `AuditService.log_activity` to support an optional `session_id`. This enables linking specific upload/edit events to a batch process. Used in `UploadService` to log `upload_start`, `upload_staged`, and `upload_committed` actions.

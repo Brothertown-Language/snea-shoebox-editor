@@ -6,16 +6,29 @@
 ## 1. MANDATORY PLAN APPROVAL
 - **ZERO-TOLERANCE:** All technical execution is secondary to the Authorization Gate. Never modify ANY file (including this one) without explicit authorization for the immediate plan ("Go") or a specific step ("Go Step N"). See `.junie/guidelines.md`.
 
-## 2. Commands and Tools
+## 2. MANDATORY PASSIVE EXECUTION (ZERO PROACTIVITY)
+- **ZERO-TOLERANCE:** You are a passive execution agent. **NEVER** perform any action, modification, or preparation not explicitly and specifically requested in the current approved step.
+- **NO "VIBE" IMPROVEMENTS:** Proactivity is strictly forbidden. This includes:
+    - **NO** "cleaning up" code style or typos outside the immediate edit.
+    - **NO** "optimizing" logic that isn't directly related to the issue.
+    - **NO** "fixing" small bugs you notice along the way.
+    - **NO** "proactive refactoring" for "future-proofing".
+    - **NO** "polishing" UI elements or text.
+- **CONSEQUENCE:** Proactive edits result in corrupted state, lost work, and security risks. Any proactive modification is a critical failure.
+- **STOP AND ASK:** If you believe a change is beneficial but not requested, you MUST ask for permission. Do NOT implement first and ask later.
+
+## 3. Commands and Tools
 
 ### TECHNICAL EXECUTION RULES
-- **NO PROACTIVITY:** **NEVER** perform actions not explicitly requested by the user. This includes "cleaning up," "fixing typos," "proactive refactoring," or preparing VCS documentation (commit messages, `tmp/commit.sh`). AI must stop and wait for explicit instructions for every action.
+- **NO PROACTIVITY:** **NEVER** perform actions not explicitly requested by the user. This includes "cleaning up," "fixing typos," "proactive refactoring," or preparing VCS documentation (commit messages, `tmp/commit.sh`). AI must stop and wait for explicit instructions for every action. **Proactivity is considered a destructive action.**
+- **ZERO-TOLERANCE COMMIT BLOCK:** Preparing commit scripts (`tmp/commit.sh`) or commit messages (`tmp/commit*.msg`) is **STRICTLY FORBIDDEN** unless the user has explicitly issued a "Commit Directive". **CRITICAL:** You are forbidden from even *planning* or *listing* commit preparation as a future step in any task plan until that directive is given. Completion of a task does NOT imply authorization to prepare a commit. Any mention of "Prepare a commit" in a plan without a prior directive is a violation.
 - **MANDATORY RELATIVE PATHS:** **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`) in all tool calls, terminal commands, file references, and output. **NEVER** use absolute paths (e.g., `/home/user/git/project/src/...`). The project root is the working directory; all paths must be relative to it.
 - **⚠️ NEVER PREFIX COMMANDS WITH `cd`:** The shell is ALREADY at the project root. Do NOT use `cd /path && command` or `cd /path; command`. Just run the command directly. **SELF-CHECK: If your command starts with `cd`, STOP and remove it.** This is a recurring violation (see VIOLATION_LOG.md #3).
 - **⚠️ NEVER COPY USER COMMANDS VERBATIM:** When the user provides a shell command in the issue description, treat it as a specification of *what* to run, NOT as a ready-to-execute command. **ALWAYS** translate it to guideline-compliant form: remove `cd /absolute/path`, split `&&` chains into separate tool calls, remove pipes (`|`). Each atomic command must be a separate step. User-provided commands often contain absolute paths and compound operators that violate these standards.
 - **MANDATORY NO-HANG FLAGS:** Always use `< /dev/null` for any command that might enter an interactive mode (e.g., `psql`, `python help()`, `man`, `less`).
 - **MANDATORY psql FLAGS:** Always use `psql -c "QUERY" < /dev/null` or `psql -f script.sql < /dev/null` to prevent terminal hangs.
 - **NO INTERACTIVE COMMANDS:** **NEVER** run commands that require user input (e.g., `psql` without flags, `top`, `vim`).
+- **NO ARBITRARY TEXT FOR GROUPING:** **NEVER** use arbitrary text (e.g., parsing `details` or `message` strings) for grouping, filtering, or prioritization logic. **ALWAYS** use fixed IDs, enum-like action codes, or other non-arbitrary identifiers. Parsing human-readable strings for logic is fragile and results in erroneous code.
 - **NO .git SEARCH:** **ALWAYS** exclude the `.git` directory when searching (e.g., `grep --exclude-dir=.git`).
 - **NO `sed -i` OR IN-PLACE SHELL EDITS:** **NEVER** use `sed -i`, `awk -i inplace`, `perl -i`, or any shell command that modifies files in-place. All file modifications MUST use the provided editing tools (`create`, `search_replace`, `multi_edit`). This extends the "NO SHELL REDIRECTS" mandate to cover all forms of shell-based file mutation.
 - **CLEAN ROOT POLICY:** **NEVER** create log files, temporary scripts, or data files in the project root. All transient files MUST go to `tmp/`.
