@@ -25,18 +25,10 @@ def upload_mdf():
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
 
-    # Collapse default top padding in both sidebar and main panel
+    # st.markdown handles CSS overrides for layout consistency
     st.markdown(
         """
         <style>
-        .block-container { padding-top: 0px !important; margin-top: 0px !important; }
-        section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
-        section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
-        header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
-        [data-testid="stToolbar"] { display: none !important; }
-        div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
-        div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
-        
         /* st.status widget default styling - no overlay */
         div[data-testid="stStatusWidget"] {
             margin-bottom: 1rem !important;
@@ -373,12 +365,10 @@ def _render_review_view():
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
 
-    # Collapse default top padding in both sidebar and main panel
+    # st.markdown handles CSS overrides for layout consistency
     st.markdown(
         """
         <style>
-        .block-container { padding-top: 0px !important; margin-top: 0px !important; }
-        
         /* Custom class for ultra-tight horizontal padding */
         @media (min-width: calc(736px + 8rem)) {
             .block-container {
@@ -387,13 +377,6 @@ def _render_review_view():
             }
         }
         
-        section[data-testid="stSidebar"] .block-container { padding-top: 0px !important; margin-top: 0px !important; }
-        section[data-testid="stSidebar"] > div:first-child { padding-top: 0px !important; margin-top: 0px !important; }
-        header[data-testid="stHeader"] { height: 0px !important; min-height: 0px !important; padding: 0px !important; overflow: visible !important; }
-        [data-testid="stToolbar"] { display: none !important; }
-        div[data-testid="stSidebarHeader"] { height: 2rem !important; min-height: 2rem !important; padding: 0px !important; }
-        div[data-testid="stSidebarUserContent"] { padding-top: 0px !important; }
-
         /* st.status widget default styling - no overlay */
         div[data-testid="stStatusWidget"] {
             margin-bottom: 1rem !important;

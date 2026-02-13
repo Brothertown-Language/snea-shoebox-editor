@@ -11,6 +11,7 @@ from sqlalchemy import func
 from src.database import get_session, MatchupQueue, Record, EditHistory, SearchEntry, Source
 from src.mdf.parser import parse_mdf, normalize_nt_record, format_mdf_record
 from src.logging_config import get_logger
+from src.services.audit_service import AuditService
 
 logger = get_logger("snea.upload")
 
@@ -109,6 +110,15 @@ class UploadService:
         Returns the generated batch_id (UUID string).
         """
         batch_id = str(uuid.uuid4())
+        
+        # Log upload start
+        AuditService.log_activity(
+            user_email=user_email,
+            action="upload_start",
+            details=f"Starting MDF upload: {filename or 'unknown'} ({len(entries)} entries)",
+            session_id=batch_id
+        )
+
         session = get_session()
         try:
             for entry in entries:
@@ -123,6 +133,14 @@ class UploadService:
                 )
                 session.add(row)
             session.commit()
+            
+            # Log upload staged
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_staged",
+                details=f"Staged {len(entries)} entries with batch_id {batch_id}",
+                session_id=batch_id
+            )
         except Exception:
             session.rollback()
             raise
@@ -1031,6 +1049,14 @@ class UploadService:
             # Populate search entries
             UploadService.populate_search_entries([record_id], session=session)
 
+            # Log upload committed (single)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_committed",
+                details=f"Single record {action}: {entry['lx']} (record_id={record_id})",
+                session_id=session_id
+            )
+
             return {'action': action, 'record_id': record_id, 'lx': entry['lx']}
         except Exception:
             if not _provided_session:
@@ -1153,6 +1179,14 @@ class UploadService:
             if updated_record_ids:
                 UploadService.populate_search_entries(updated_record_ids, session=session)
 
+            # Log upload committed (matched)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_committed",
+                details=f"Committed {count} matched records from batch {batch_id}",
+                session_id=session_id
+            )
+
             return count
         except Exception:
             session.rollback()
@@ -1246,6 +1280,15 @@ class UploadService:
                 UploadService.populate_search_entries(homonym_record_ids, session=session)
 
             session.commit()
+
+            # Log upload committed (homonyms)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_committed",
+                details=f"Committed {count} homonym records from batch {batch_id}",
+                session_id=session_id
+            )
+
             return count
         except Exception:
             session.rollback()
@@ -1313,6 +1356,15 @@ class UploadService:
                 UploadService.populate_search_entries(new_record_ids, session=session)
 
             session.commit()
+
+            # Log upload committed (new)
+            AuditService.log_activity(
+                user_email=user_email,
+                action="upload_committed",
+                details=f"Committed {count} new records from batch {batch_id}",
+                session_id=session_id
+            )
+
             return count
         except Exception:
             session.rollback()
