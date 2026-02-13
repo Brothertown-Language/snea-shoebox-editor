@@ -1,9 +1,10 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-# Phase D — Review & Confirm Page (frontend) 🔄
+# Phase D — Review & Confirm Page (frontend) ✅
 
-**Status:** In Progress (2026-02-11) — D-1 block, D-2, D-3a, D-4.1, D-4.2, and D-5 complete;
-D-3 effectively superseded by immediate-apply pattern; D-4b in progress; D-6 pending.
+**Status:** Complete (2026-02-12) — All blocks D-1 through D-6 completed.
+D-4b (filtering) and D-6 (mock tests) finalized; persistent pagination 
+settings implemented via Preference Service.
 
 ### D-1. Display match review table ✅
 Show each staged entry with columns: `lx`, suggested match (existing
@@ -232,12 +233,22 @@ This phase ensures the robustness of the upload matching logic and persistence l
 - **Implementation**: `tests/integration/test_upload_e2e.py` created.
 - **Status**: Complete (2026-02-11).
     
-### D-4b. Add review table filtering options ⏳
+### D-4b. Add review table filtering options ✅
 
 Add filtering controls to the sidebar to allow users to narrow down the records displayed in the review table.
 
-- **Filter by Status**: Allow filtering entries by their current status in the queue. The `matched` status must be split into **Matched (Exact)** and **Matched (Base-form)** to allow users to specifically review non-exact suggestions. Other statuses include `create_new`, `create_homonym`, `discard`, `pending`, and `ignored`.
-- **UI Placement**: Controls should be integrated into the existing sidebar alongside pagination and bulk actions.
+- **Filter by Status**: Allow filtering entries by their current status in the queue. The `matched` status is split into **Matched (Exact)** and **Matched (Base-form)** to allow users to specifically review non-exact suggestions. Other statuses include `create_new`, `create_homonym`, `discard`, and `ignored`.
+- **UI Placement**: Controls are integrated into the existing sidebar alongside pagination and bulk actions.
+- **Persistence**: Page size preference is persisted to the database via `PreferenceService`, ensuring a consistent experience across sessions.
+
+### D-4b Implementation Summary
+
+**Status:** Complete (2026-02-12)
+
+**Source files changed:**
+- `src/services/preference_service.py` — New service to manage persistent user settings.
+- `src/database/models/identity.py` — Added `UserPreference` model.
+- `src/frontend/pages/upload_mdf.py` — Implemented status filtering and integration with `PreferenceService`.
 
 ### D-5. Write UI mock tests for the upload page (Phase C) ✅
 Add tests in `tests/frontend/test_upload_mdf_page.py` that mock Streamlit
@@ -265,7 +276,7 @@ the correct service calls are made.  Cover:
 **Implementation note:** Tests are in `tests/frontend/test_upload_mdf_page.py`
 (15 tests) rather than the originally planned `tests/ui/` path.
 
-### D-6. Write UI mock tests for the review & confirm page (Phase D) ⏳
+### D-6. Write UI mock tests for the review & confirm page (Phase D) ✅
 Add tests in `tests/frontend/test_upload_review_d1.py` that mock Streamlit
 widgets and `UploadService` calls to verify review page logic.  Cover:
 - **D-1**: review table renders columns (`lx`, suggested match, match
@@ -286,19 +297,22 @@ widgets and `UploadService` calls to verify review page logic.  Cover:
   disabled for `pending` / `ignored`; clicking calls `apply_single` and
   removes the row. ✅
 - **D-2**: manual match override widget calls `confirm_match` with the
-  user-selected `record_id`.
+  user-selected `record_id`. ✅
 - **D-3**: (superseded) verify that the immediate-apply pattern works
   correctly: bulk buttons ("Approve All Matched", "Approve Non-Matches
   as New", "Discard All Marked") each call the correct backend methods
   and immediately apply changes; review table refreshes after each
-  action; per-record "Apply Now" handles individual entries.
+  action; per-record "Apply Now" handles individual entries. ✅
 - **D-3a**: verify that the existing dashboard "Download" button correctly
   exports pending `matchup_queue` entries with the improved filename
   format (source + timestamp). ✅
 - **Discard workflow**: `mark_as_discard` sets status; `discard_marked`
   bulk-deletes; `apply_single` with `'discard'` status removes row
-  without record writes.
+  without record writes. ✅
+- **D-4b Filtering**: verify that status filtering correctly limits the 
+  rows displayed and interacts correctly with pagination. ✅
 
 **Implementation note:** D-1 block tests are in
-`tests/frontend/test_upload_review_d1.py` (16 tests: 12 from D-1 + 4
-from D-2) rather than the originally planned `tests/ui/` path.
+`tests/frontend/test_upload_review_d1.py` (22 tests: including D-1, D-2, 
+D-3, and D-4b filtering tests) rather than the originally planned 
+`tests/ui/` path.

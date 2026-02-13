@@ -2,7 +2,7 @@
 <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 # Phase E — Cleanup & Polish ⏳
 
-### E-1. Add activity logging for upload events ⏳
+### E-1. Add activity logging for upload events ✅
 Log `upload_start`, `upload_staged`, `upload_committed` actions via
 `AuditService` with the `session_id`.
 
