@@ -77,6 +77,7 @@ Database connection pooling is recommended, but idle connections MUST be closed 
 ### PRE-COMMIT CHECKLIST
 - [ ] No secrets or PII in code or comments.
 - [ ] No sensitive files staged (Verify with `git status`).
+- [ ] No required files left untracked (Review `scripts/pre_commit_check.sh` output).
 - [ ] All new functions have strict type annotations.
 - [ ] Copyright headers are present.
 - [ ] No debug `print` statements (Use `logging`).

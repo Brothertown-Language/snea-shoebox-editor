@@ -47,7 +47,10 @@
 ### VCS COMPLIANCE: DECLARATIVE COMMIT PROTOCOL
 - **STRICT PROHIBITION ON DIRECT GIT**: You are strictly forbidden from running `git add` or `git commit` directly in the terminal.
 - **MANDATORY PREPARATION METHOD**: Commits are ONLY permitted when explicitly instructed by the User. 
-- **STEP 0: SECURITY INSPECTION**: Before creating ANY commit artifacts, you MUST run `bash scripts/pre_commit_check.sh <files>` to verify that no ignored files, secrets, or unintended changes are being prepared for staging.
+- **STEP 0: SECURITY INSPECTION**: Before creating ANY commit artifacts, you MUST run `bash scripts/pre_commit_check.sh` to verify that no ignored files, secrets, or unintended changes are being prepared for staging.
+  - **MANDATORY FILE LIST**: You MUST create `tmp/commit_files.txt` containing the project-relative paths of all files to be committed (one per line). The check script will automatically read from this file.
+  - **REVIEW UNTRACKED**: You MUST also review the "OTHER uncommitted changes" section of the script output to identify any untracked files that should be included in `tmp/commit_files.txt`.
+  - **UNTRACKED FILE EXCEPTION**: If untracked files are detected, and you are absolutely convinced they should not be tracked, you MUST notify the user, explain your reasoning, and STOP. Do not proceed with creating commit artifacts until the user acknowledges.
 - **STEP 1: CREATE MESSAGES**: Create `tmp/commit_<N>.msg` files for each semantic group.
 - **STEP 2: GENERATE VALIDATED SCRIPT**: Create `tmp/commit.sh`.
   - **MANDATORY PATH RESOLUTION**: The script MUST include the path resolution boilerplate (`cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`) as the first command after `set -e`.
