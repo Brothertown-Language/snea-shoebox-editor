@@ -133,30 +133,197 @@ class LinguisticService:
 
     @staticmethod
     def get_record(record_id: int) -> Optional[Dict[str, Any]]:
-        """Retrieve a single record by ID."""
-        raise NotImplementedError("LinguisticService.get_record is not yet implemented.")
+        """
+        Retrieve a single record by ID with joined source and language info.
+        """
+        with get_session() as session:
+            record = (
+                session.query(Record)
+                .filter(Record.id == record_id)
+                .filter(Record.is_deleted == False)
+                .first()
+            )
+            if not record:
+                return None
+            
+            # Get languages
+            languages = [
+                {"id": lang.id, "code": lang.code, "name": lang.name}
+                for lang in record.language
+            ]
+            
+            return {
+                "id": record.id,
+                "lx": record.lx,
+                "hm": record.hm,
+                "ps": record.ps,
+                "ge": record.ge,
+                "source_id": record.source_id,
+                "source_name": record.source.name if record.source else None,
+                "source_page": record.source_page,
+                "status": record.status,
+                "mdf_data": record.mdf_data,
+                "languages": languages,
+                "updated_at": record.updated_at,
+                "updated_by": record.updated_by,
+                "reviewed_at": record.reviewed_at,
+                "reviewed_by": record.reviewed_by,
+                "current_version": record.current_version
+            }
 
     @staticmethod
     def get_source(source_id: int) -> Optional[Dict[str, Any]]:
-        """Retrieve a single source by ID."""
-        raise NotImplementedError("LinguisticService.get_source is not yet implemented.")
+        """
+        Retrieve a single source by ID.
+        """
+        with get_session() as session:
+            source = session.query(Source).filter(Source.id == source_id).first()
+            if not source:
+                return None
+            
+            return {
+                "id": source.id,
+                "name": source.name,
+                "short_name": source.short_name,
+                "description": source.description,
+                "citation_format": source.citation_format,
+                "created_at": source.created_at
+            }
 
     @staticmethod
-    def search_records(**filters: Any) -> List[Dict[str, Any]]:
-        """Search records with optional filters (language, source, status, etc.)."""
-        raise NotImplementedError("LinguisticService.search_records is not yet implemented.")
+    def search_records(
+        source_id: Optional[int] = None,
+        language_id: Optional[int] = None,
+        status: Optional[str] = None,
+        search_term: Optional[str] = None,
+        limit: int = 50,
+        offset: int = 0
+    ) -> List[Dict[str, Any]]:
+        """
+        Search records with optional filters.
+        """
+        with get_session() as session:
+            query = session.query(Record).filter(Record.is_deleted == False)
+            
+            if source_id:
+                query = query.filter(Record.source_id == source_id)
+            
+            if language_id:
+                query = query.join(Record.language).filter(Language.id == language_id)
+            
+            if status:
+                query = query.filter(Record.status == status)
+            
+            if search_term:
+                term = f"%{search_term}%"
+                query = query.filter(
+                    (Record.lx.ilike(term)) | (Record.ge.ilike(term))
+                )
+            
+            # Order by lx (headword)
+            query = query.order_by(Record.lx, Record.hm)
+            
+            # Apply pagination
+            total_count = query.count()
+            results = query.offset(offset).limit(limit).all()
+            
+            records = []
+            for r in results:
+                records.append({
+                    "id": r.id,
+                    "lx": r.lx,
+                    "hm": r.hm,
+                    "ps": r.ps,
+                    "ge": r.ge,
+                    "status": r.status,
+                    "source_name": r.source.name if r.source else None
+                })
+            
+            return records
 
     @staticmethod
-    def create_record(**fields: Any) -> Dict[str, Any]:
-        """Create a new record."""
-        raise NotImplementedError("LinguisticService.create_record is not yet implemented.")
+    def create_record(**fields: Any) -> Optional[int]:
+        """
+        Create a new record.
+        """
+        with get_session() as session:
+            try:
+                record = Record(**fields)
+                session.add(record)
+                session.commit()
+                session.refresh(record)
+                logger.info(f"Created record {record.id}")
+                return record.id
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Failed to create record: {e}")
+                return None
 
     @staticmethod
-    def update_record(record_id: int, **fields: Any) -> Dict[str, Any]:
-        """Update an existing record."""
-        raise NotImplementedError("LinguisticService.update_record is not yet implemented.")
+    def update_record(
+        record_id: int, 
+        user_email: str,
+        session_id: Optional[str] = None,
+        change_summary: Optional[str] = None,
+        **fields: Any
+    ) -> bool:
+        """
+        Update an existing record and record history.
+        """
+        from src.database.models.workflow import EditHistory
+        
+        with get_session() as session:
+            record = session.query(Record).filter(Record.id == record_id).first()
+            if not record:
+                return False
+            
+            prev_data = record.mdf_data
+            
+            # Handle special status transition logic
+            if fields.get('status') == 'approved' and record.status != 'approved':
+                record.reviewed_at = func.now()
+                record.reviewed_by = user_email
+            
+            # Update fields
+            for key, value in fields.items():
+                if hasattr(record, key):
+                    setattr(record, key, value)
+            
+            record.updated_by = user_email
+            
+            try:
+                # Create history entry
+                history = EditHistory(
+                    record_id=record.id,
+                    user_email=user_email,
+                    session_id=session_id,
+                    version=record.current_version + 1,
+                    change_summary=change_summary or "Manual edit",
+                    prev_data=prev_data,
+                    current_data=record.mdf_data
+                )
+                session.add(history)
+                
+                # SQLAlchemy handles current_version increment via __mapper_args__ if configured,
+                # but we'll manually ensure it if not automatically handled by the version_id_col.
+                # Actually, core.py has version_id_col: current_version.
+                
+                session.commit()
+                logger.info(f"Updated record {record_id} by {user_email}")
+                return True
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Failed to update record {record_id}: {e}")
+                return False
 
     @staticmethod
-    def soft_delete_record(record_id: int) -> None:
-        """Soft-delete a record by setting is_deleted=True."""
-        raise NotImplementedError("LinguisticService.soft_delete_record is not yet implemented.")
+    def soft_delete_record(record_id: int, user_email: str) -> bool:
+        """
+        Soft-delete a record.
+        """
+        return LinguisticService.update_record(
+            record_id=record_id,
+            user_email=user_email,
+            change_summary="Soft delete",
+            is_deleted=True
+        )

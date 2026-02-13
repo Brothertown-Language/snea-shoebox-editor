@@ -61,10 +61,18 @@ def index():
         st.info("No POS data available.")
 
     st.subheader("Records per Source")
-    source_data = StatisticsService.get_source_distribution()
-    if source_data:
-        df_source = pd.DataFrame(list(source_data.items()), columns=["Source", "Count"])
+    source_distribution = StatisticsService.get_source_distribution()
+    if source_distribution:
+        # Get source IDs to create links
+        from src.services.linguistic_service import LinguisticService
+        sources = LinguisticService.get_sources_with_counts()
+        source_id_map = {s['name']: s['id'] for s in sources}
+        
+        df_source = pd.DataFrame(list(source_distribution.items()), columns=["Source", "Count"])
         st.bar_chart(df_source.set_index("Source"))
+        
+        # Add links to sources (Logic removed: view_source.py is a placeholder)
+        pass
     else:
         st.info("No source data available.")
 
@@ -86,13 +94,10 @@ def index():
             with st.expander(f"Record {item['record_id']} ({item['lx']}) edited by {item['user']}"):
                 st.write(f"**Time:** {item['timestamp']}")
                 st.write(f"**Change:** {item['summary']}")
+                # View button removed (view_record.py is a placeholder)
     else:
         st.info("No recent activity recorded.")
 
-    st.divider()
-    st.subheader("Navigation")
-    if st.button("Go to System Status"):
-        st.switch_page("pages/system_status.py")
 
 if __name__ == "__main__":
     index()

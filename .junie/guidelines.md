@@ -140,3 +140,12 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 2. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
 3. **UPDATE** `LONG_TERM_MEMORY.md` with key decisions.
 4. **UPDATE** logs immediately upon any guideline violation.
+
+---
+
+## VII. PROMPT-DRIVEN MOCKING
+- **Authority**: AI generates or updates mocks in `tests/ui/mocks/` ONLY based on explicit text instructions.
+- **Stability**: Mocks MUST remain functional (runnable via `uv run streamlit`) after every update.
+- **Synthetics**: If instructions imply new data fields, AI must create realistic synthetic data in the mock's local state. Never use production database schemas if they haven't been implemented yet.
+- **Compliance**: All generated mock code MUST follow the UI patterns in Guideline V (Sidebar, MDF rendering, Icon buttons).
+- **Composites**: For complex layouts, the AI must use standard Streamlit containers (`st.container`, `st.expander`, `st.tabs`) to group related elements logically as "composite components".
