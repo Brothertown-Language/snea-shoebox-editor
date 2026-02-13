@@ -13,6 +13,7 @@ PAGE_STATUS = st.Page("pages/system_status.py", title="System Status", icon="�
 PAGE_HOME = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index", default=True)
 PAGE_USER = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
 PAGE_UPLOAD = st.Page("pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
+PAGE_BATCH_ROLLBACK = st.Page("pages/batch_rollback.py", title="Batch Rollback", icon="🔙", url_path="rollback")
 PAGE_TABLE_MAINTENANCE = st.Page("pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance")
 PAGE_LOGOUT = st.Page("pages/logout.py", title="Logout", icon="🚪", url_path="logout")
 
@@ -27,27 +28,35 @@ class NavigationService:
     PAGE_HOME = PAGE_HOME
     PAGE_USER = PAGE_USER
     PAGE_UPLOAD = PAGE_UPLOAD
+    PAGE_BATCH_ROLLBACK = PAGE_BATCH_ROLLBACK
     PAGE_TABLE_MAINTENANCE = PAGE_TABLE_MAINTENANCE
     PAGE_LOGOUT = PAGE_LOGOUT
 
     @classmethod
-    def get_navigation_tree(cls, logged_in: bool = False) -> Union[Dict[str, List[st.Page]], List[st.Page]]:
+    def get_navigation_tree(cls, logged_in: bool = False, user_role: str = None) -> Union[Dict[str, List[st.Page]], List[st.Page]]:
         """
         Returns the navigation structure based on login status and user role.
         
         Args:
             logged_in: Whether the user is currently logged in.
+            user_role: The role of the current user (e.g., 'admin', 'editor', 'viewer').
             
         Returns:
             A dictionary or list formatted for st.navigation.
         """
         if logged_in:
-            logger.debug("Returning authenticated navigation tree")
-            return {
+            logger.debug("Returning authenticated navigation tree for role: %s", user_role)
+            nav_tree = {
                 "Main": [cls.PAGE_HOME, cls.PAGE_UPLOAD],
                 "System": [cls.PAGE_STATUS, cls.PAGE_TABLE_MAINTENANCE],
                 "Account": [cls.PAGE_USER, cls.PAGE_LOGOUT]
             }
+            
+            # Admin section
+            if user_role == 'admin':
+                nav_tree["Admin"] = [cls.PAGE_BATCH_ROLLBACK]
+            
+            return nav_tree
         else:
             logger.debug("Returning unauthenticated navigation tree")
             # Include all pages in navigation even when not logged in,
@@ -57,6 +66,7 @@ class NavigationService:
                 cls.PAGE_LOGIN, 
                 cls.PAGE_HOME, 
                 cls.PAGE_UPLOAD,
+                cls.PAGE_BATCH_ROLLBACK,
                 cls.PAGE_STATUS, 
                 cls.PAGE_TABLE_MAINTENANCE,
                 cls.PAGE_USER, 
@@ -74,6 +84,7 @@ class NavigationService:
             cls.PAGE_HOME: "pages/index.py",
             cls.PAGE_USER: "pages/user_info.py",
             cls.PAGE_UPLOAD: "pages/upload_mdf.py",
+            cls.PAGE_BATCH_ROLLBACK: "pages/batch_rollback.py",
             cls.PAGE_TABLE_MAINTENANCE: "pages/table_maintenance.py",
         }
 

@@ -134,8 +134,9 @@ def main():
 
     # Access control logic
     logged_in = st.session_state.logged_in
-    logger.debug("Building navigation tree (logged_in=%s)", logged_in)
-    nav_tree = NavigationService.get_navigation_tree(logged_in)
+    user_role = st.session_state.get("user_role")
+    logger.debug("Building navigation tree (logged_in=%s, user_role=%s)", logged_in, user_role)
+    nav_tree = NavigationService.get_navigation_tree(logged_in, user_role)
     
     pg = st.navigation(nav_tree)
 

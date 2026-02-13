@@ -1415,3 +1415,78 @@ class UploadService:
         finally:
             if not _provided_session:
                 session.close()
+
+    @staticmethod
+    def rollback_session(session_id: str, user_email: str = "system") -> dict:
+        """Rollback all changes associated with a session_id.
+        
+        Restores records to prev_data or deletes created records.
+        Returns {'rolled_back_count': N, 'deleted_count': M}.
+        """
+        session = get_session()
+        try:
+            # Sort by version ascending to ensure we see the first change in the session
+            history = (
+                session.query(EditHistory)
+                .filter_by(session_id=session_id)
+                .order_by(EditHistory.version.asc())
+                .all()
+            )
+            if not history:
+                return {'rolled_back_count': 0, 'deleted_count': 0}
+            
+            rolled_back = 0
+            deleted = 0
+            
+            # Map of record_id to the earliest prev_data in this session
+            record_changes = {}
+            for h in history:
+                if h.record_id not in record_changes:
+                    record_changes[h.record_id] = h.prev_data
+            
+            for rid, prev_data in record_changes.items():
+                record = session.get(Record, rid)
+                if not record:
+                    continue
+                
+                if prev_data is None:
+                    # Record was created in this session -> delete it
+                    session.query(SearchEntry).filter_by(record_id=rid).delete()
+                    session.query(EditHistory).filter_by(record_id=rid).delete()
+                    session.delete(record)
+                    deleted += 1
+                else:
+                    # Record was updated -> restore from prev_data
+                    record.mdf_data = prev_data
+                    
+                    from src.mdf.parser import parse_mdf as _parse
+                    parsed = _parse(prev_data)
+                    if parsed:
+                        entry = parsed[0]
+                        record.lx = entry.get('lx')
+                        record.hm = entry.get('hm', 1)
+                        record.ps = entry.get('ps', '')
+                        record.ge = entry.get('ge', '')
+                    
+                    # Delete history entries for this session for this record
+                    session.query(EditHistory).filter_by(session_id=session_id, record_id=rid).delete()
+                    rolled_back += 1
+                    
+                    # Repopulate search entries
+                    UploadService.populate_search_entries([rid], session=session)
+            
+            session.commit()
+            
+            AuditService.log_activity(
+                user_email=user_email,
+                action="batch_rollback",
+                details=f"Rolled back session {session_id}: {rolled_back} updated, {deleted} deleted",
+                session_id=session_id
+            )
+            
+            return {'rolled_back_count': rolled_back, 'deleted_count': deleted}
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()

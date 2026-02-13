@@ -2,13 +2,12 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
 from src.services.linguistic_service import LinguisticService
+from src.frontend.ui_utils import hide_sidebar_nav
 from src.logging_config import get_logger
 
 logger = get_logger("snea.pages.table_maintenance")
 
 def render_sources_maintenance():
-    st.header("Sources Maintenance")
-    
     # Load data
     sources = LinguisticService.get_sources_with_counts()
     
@@ -17,8 +16,6 @@ def render_sources_maintenance():
         return
 
     # Table view
-    st.subheader("Existing Sources")
-    
     # Using a list of dicts for the table
     # We'll use streamlit columns to simulate a table with actions
     cols = st.columns([3, 4, 1, 2])
@@ -111,16 +108,45 @@ def render_reassign_dialog(source, all_sources):
             st.rerun()
 
 def main():
-    st.title("Table Maintenance")
-    
-    # Internal Sidebar Navigation for extensibility
-    st.sidebar.title("Maintenance Tables")
-    table_option = st.sidebar.radio(
-        "Select a table to maintain:",
-        ["Sources"],
-        index=0
+    # Role guard — only editor or admin
+    user_role = st.session_state.get("user_role")
+    if user_role not in ("editor", "admin"):
+        st.error("You do not have permission to access this page. Editor or admin role required.")
+        return
+
+    # Hide the main navigation menu — this view owns the sidebar entirely
+    hide_sidebar_nav()
+
+    # st.markdown handles CSS overrides for layout consistency
+    st.markdown(
+        """
+        <style>
+        /* st.status widget default styling - no overlay */
+        div[data-testid="stStatusWidget"] {
+            margin-bottom: 1rem !important;
+        }
+        </style>
+        """,
+        unsafe_allow_html=True
     )
-    
+
+    # ── Sidebar: header and controls ──────────────────────────────
+    with st.sidebar:
+        st.header("Table Maintenance")
+        
+        # Internal Sidebar Navigation for extensibility
+        st.subheader("Maintenance Tables")
+        table_option = st.radio(
+            "Select a table to maintain:",
+            ["Sources"],
+            index=0,
+            label_visibility="collapsed"
+        )
+        
+        st.divider()
+        if st.button("Back to Home", use_container_width=True):
+            st.switch_page("pages/index.py")
+
     if table_option == "Sources":
         render_sources_maintenance()
     else:
