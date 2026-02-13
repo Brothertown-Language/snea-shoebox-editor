@@ -145,16 +145,18 @@ Before initializing the project, you must set up the hosting and database platfo
 - **Cleanup & Audit**: Implementation of batch rollback, activity logging via AuditService, and standardized MDF export formatting. [COMPLETED]
 - **Detailed plan**: See [MDF Upload Plan](../plans/mdf-upload-plan.md).
 
-### Phase 6: Search & Discovery ⏳ [PENDING]
-- Implement full-text search (FTS) using PostgreSQL's native capabilities.
-- Leverage `pgvector` on Aiven for semantic cross-reference lookup.
-    - *Note: Vector capability (pgvector) has been enabled in both local and production environments for future use in linking semantically related records.*
-- **D.R.Y. Service**: Centralize embedding generation and semantic search logic into a reusable `SearchService` to ensure consistency between bulk uploads and UI search.
+### Phase 6a: Linguistic Service CRUD ⏳ [IMMEDIATE NEXT]
+- **Service Completion**: Complete the `get_record`, `search_records`, and `update_record` stubs in `LinguisticService` to provide a functional data access layer.
+- **Record/Source Views**: Connect `view_record.py` and `view_source.py` placeholders to live database data for detailed inspection.
 
-### Phase 7: Quality Control & Audit ⏳ [PENDING]
-- Implementation of the 'approved' status to flag records as vetted.
-- **Audit Infrastructure**: Establish a backend service layer to encapsulate logging logic (`UserActivityLog`, `EditHistory`) for cross-module consistency.
-- **Admin Dashboard**: Frontend UI for viewing audit logs and managing permissions.
+### Phase 6b: Full-Text Search Implementation ⏳ [PENDING]
+- **Native FTS**: Implement full-text search (FTS) using PostgreSQL's native capabilities, including GIN indexes on `lx`, `ge`, and `mdf_data`.
+- **Search Page**: Create a unified search interface in `src/frontend/pages/search.py`.
+- **D.R.Y. Service**: Centralize embedding generation and semantic search logic into a reusable `SearchService` (leveraging `pgvector` on Aiven).
+
+### Phase 7: Quality Control & Admin UI ⏳ [PENDING]
+- **Approval Workflow**: Implement the 'approved' status logic in `LinguisticService.update_record` to handle record vetting, including `reviewed_by` and `reviewed_at` timestamps.
+- **Admin Dashboard**: Frontend UI (`src/frontend/pages/admin_dashboard.py`) for viewing `UserActivityLog` and `EditHistory`.
 
 ---
 
