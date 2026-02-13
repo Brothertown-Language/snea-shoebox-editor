@@ -1,11 +1,14 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 
-# SNEA Online Shoebox Editor: Master AI Guidelines (v6.0)
+# SNEA Online Shoebox Editor: Master AI Guidelines (v7.0)
 
 ## 0. THE SUPREME DIRECTIVE: ZERO-TOLERANCE AUTHORIZATION
 **YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
-- **STEP-BY-STEP APPROVAL:** Posting a multi-step plan does NOT authorize all steps. You MUST wait for "Go", "Proceed", or "Approved" for **EACH INDIVIDUAL EDIT**.
+- **STEP-BY-STEP APPROVAL:** Posting a multi-step plan does NOT authorize all steps. You MUST wait for explicit authorization for **EACH INDIVIDUAL EDIT**.
+- **AUTHORIZATION FORMS:**
+    - **"Go <thing/step>"**: Authorizes ONLY that specific item. AI must stop and wait for instruction immediately after completion.
+    - **"Go" (No qualifier)**: Authorizes the entire immediate plan. AI must stop and wait for instruction immediately after the plan is finished.
 - **INTERNAL CHECK:** Before calling ANY edit tool (`create`, `search_replace`, `multi_edit`, `rename_element`), you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **NO PROACTIVE EDITS:** Never "clean up," "fix," or "refactor" anything not explicitly approved in the current step.
 - **LOGS AND GUIDELINES ARE FILES:** This rule applies to `.junie/` files and `VIOLATION_LOG.md`. NO EXCEPTIONS.
@@ -31,11 +34,13 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **[ ] ONE STEP AT A TIME**: Complete one step, report it, then wait for authorization to proceed.
 - **[ ] STOP AND ASK**: If a task is ambiguous, or if you are unsure if a change is "authorized," you MUST stop and ask.
 
-### 3. The VCS "Permission Gate"
-- **[ ] NO AUTONOMOUS COMMIT PREP**: Never prepare `tmp/commit_task.sh` or messages without explicit instruction.
-- **[ ] NO git commit**: Never run the `git commit` command.
+### 3. The VCS "Transparent Review" Protocol (v8.0)
+- **[ ] NO DIRECT GIT STAGING**: Never run `git add` or `git commit` directly in the terminal.
+- **[ ] LOGICAL GROUPING**: Commits MUST be grouped logically and committed separately (e.g., guidelines, docs, src).
+- **[ ] EXPLICIT STAGING SCRIPT**: A single `tmp/commit.sh` MUST be used to execute all commits. This script MUST list every file being staged with an explicit `git add <file>` command. No loops, no manifests, no opaque logic.
+- **[ ] STANDARD MESSAGE FILES**: AI MUST create standard `commit*.msg` files for each commit. These files MUST follow standard git messaging rules: a precise summary line (50 chars or less), a blank line, and a focused overview of the changes.
+- **[ ] NO FORCE**: The `-f` flag is strictly PROHIBITED for all git commands.
 - **[ ] USER-ONLY EXECUTION**: AI is forbidden from running the commit script. User review and execution ONLY.
-- **[ ] 3-STEP PATH RESOLUTION**: The commit script MUST use the mandatory boilerplate.
 
 ---
 
@@ -53,10 +58,12 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **STATUS CONTROL:** NEVER mark a task as "COMPLETED" without explicit user instruction.
 
 ### 3. Communication Standards
-- **NO APOLOGIES:** Do not apologize for errors.
-- **NO SYCOPHANTISM:** Avoid flowery or excessively polite language.
-- **NATURAL COUNTING:** Use 1-based numbering (1, 2, 3...) for all plans and lists.
-- **TECHNICAL FOCUS:** Keep communication concise, objective, and focused on implementation.
+- **NO CODE BLOBS**: AI is strictly forbidden from providing raw code fragments, line-by-line edits, or `search_replace` blocks in the chat dialogue.
+- **FOCUSED OVERVIEWS**: Always provide high-level summaries of *what* will change and *why*.
+- **NO APOLOGIES**: Do not apologize for errors.
+- **NO SYCOPHANTISM**: Avoid flowery or excessively polite language.
+- **NATURAL COUNTING**: Use 1-based numbering (1, 2, 3...) for all plans and lists.
+- **TECHNICAL FOCUS**: Keep communication concise, objective, and focused on implementation.
 
 ---
 

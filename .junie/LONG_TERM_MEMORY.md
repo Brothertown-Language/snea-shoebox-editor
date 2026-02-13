@@ -11,12 +11,12 @@ This file serves as a persistent memory of critical project context, user prefer
 
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
 ## USER PREFERENCES & HARD CONSTRAINTS
-- **SUPREME DIRECTIVE (v6.0)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT.
+- **SUPREME DIRECTIVE (v7.0)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT.
 - **AUTHORIZATION CHECK**: Before calling ANY edit tool, you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
 - **PRIVATE DATABASE ONLY**: `JUNIE_PRIVATE_DB=true` is the only acceptable environment for operations.
 - **ZERO-TRUST TERMINAL GATE (v2.0)**: Every command must be project-relative, non-compound, prefixed with `uv run` for Python, and DB-isolated. NO `cd`, NO absolute paths, NO `&&`/`|`, NO `>` redirection to root.
-- **VCS PERMISSION GATE (v4.1)**: Absolute prohibition on performing git commits. Preparation of commit scripts and messages is ONLY permitted upon explicit user request. AI is forbidden from executing the commit script; only the user is authorized to review and run it. Autonomous preparation is strictly forbidden.
+- **VCS PERMISSION GATE (v7.0 PROTOCOL)**: Absolute prohibition on performing `git add` or `git commit` in the terminal. Commits are strictly manifest-driven (`tmp/commit_manifest.txt`) and validated via `git check-ignore` within a single `tmp/commit.sh` script. Logical grouping is mandatory. Use of `-f` is a fatal violation. AI is forbidden from executing the commit script; only the user is authorized to review and run it. Autonomous preparation is strictly forbidden.
 - **NOConventional Commits**: Never use prefixes like `feat:` or `fix:`.
 - **1-BASED COUNTING ONLY**: Use natural counting (1, 2, 3...) for all plans and lists.
 
@@ -35,6 +35,8 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Path Resolution**: Always use the mandatory one-liner boilerplate `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"` in shell scripts for reliability.
 - **Manual Testing Requirement**: The **Full Auth Flow** (OAuth -> Sync -> RBAC -> Navigation tree update) requires manual verification by the user end-to-end, as it cannot be fully automated in the current environment.
 - **pgserver Resilience**: Refined the local database startup mechanism in `src/database/connection.py`. Removed the 30-second PID file age check and replaced it with a duration-based "stuckness" detection using `st.session_state["pg_shutdown_first_seen"]`. If the database reports a "shutting down" state for more than 5 seconds across connection attempts, an immediate force-stop (`-m immediate`) and PID file cleanup are triggered to restore availability.
+- **Audit Logging**: Updated `AuditService.log_activity` to support an optional `session_id`. This enables linking specific upload/edit events to a batch process. Used in `UploadService` to log `upload_start`, `upload_staged`, and `upload_committed` actions.
+- **UI Restoration (MDF Upload)**: Restored the standard Streamlit header, toolbar, and sidebar header in the MDF upload view to ensure accessibility and layout consistency. The custom CSS overrides that previously hid the toolbar, collapsed the header, and shrunk the sidebar header were removed in Feb 2026. Standard top padding and margins were also restored to prevent content from overlapping the toolbar.
 - **Persistent User Preferences**: Implemented a database-backed preference system using `UserPreference` model and `PreferenceService`. Currently used to persist `page_size` in the MDF upload review table across sessions for each user.
 
 ## FUTURE FEATURE NOTES
