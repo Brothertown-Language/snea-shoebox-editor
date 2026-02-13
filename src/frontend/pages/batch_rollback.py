@@ -4,49 +4,77 @@ import streamlit as st
 from src.logging_config import get_logger
 from src.services.upload_service import UploadService
 from src.database import get_session, UserActivityLog, EditHistory
-from sqlalchemy import desc
+from sqlalchemy import desc, text
 
 logger = get_logger("snea.pages.batch_rollback")
 
 def get_recent_sessions():
-    """Fetch recent upload sessions that can be rolled back."""
+    """Fetch recent upload sessions that can be rolled back using discrete steps."""
     session = get_session()
     try:
-        # 1. Get all upload_committed actions
-        uploads = (
-            session.query(UserActivityLog)
-            .filter_by(action="upload_committed")
-            .order_by(desc(UserActivityLog.timestamp))
-            .limit(50)
-            .all()
-        )
+        # Step 1: Discover sessions that had more than 1 record initially.
+        # This query is kept simple and focused on discovery.
+        sessions_query = text("""
+            SELECT session_id, min(timestamp) as earliest_ts, 
+                   min(user_email) as user_email, min(source_name) as source_name,
+                   min(full_name) as full_name
+            FROM (
+                SELECT eh.session_id, eh.timestamp, eh.user_email,
+                       s.name as source_name, u.full_name
+                FROM edit_history eh
+                JOIN records r ON r.id = eh.record_id
+                JOIN sources s ON s.id = r.source_id
+                LEFT JOIN users u ON u.email = eh.user_email
+                WHERE r.is_deleted = False
+            ) AS history
+            WHERE session_id IS NOT NULL
+            GROUP BY session_id
+            ORDER BY earliest_ts DESC
+            LIMIT 50;
+        """)
         
-        # 2. Get all rollback actions to filter out already rolled back sessions
-        rollbacks = (
-            session.query(UserActivityLog)
-            .filter_by(action="batch_rollback")
-            .all()
-        )
-        rolled_back_ids = {r.session_id for r in rollbacks if r.session_id}
+        raw_sessions = session.execute(sessions_query).all()
         
         available_sessions = []
-        for u in uploads:
-            if u.session_id and u.session_id not in rolled_back_ids:
-                # Count affected records from EditHistory
-                count = (
-                    session.query(EditHistory)
-                    .filter_by(session_id=u.session_id)
-                    .distinct(EditHistory.record_id)
-                    .count()
-                )
-                if count > 0:
-                    available_sessions.append({
-                        "session_id": u.session_id,
-                        "timestamp": u.timestamp,
-                        "user": u.user_email,
-                        "details": u.details,
-                        "record_count": count
-                    })
+        for row in raw_sessions:
+            sid = row.session_id
+            
+            # Step 2: Discrete count - Total records touched by this session
+            total_q = text("SELECT count(DISTINCT record_id) FROM edit_history WHERE session_id = :sid")
+            total_count = session.execute(total_q, {"sid": sid}).scalar()
+            
+            if total_count <= 1:
+                continue # Skip non-batch sessions
+
+            # Step 3: Discrete count - Records where this session is still the LATEST (leaf)
+            reversible_q = text("""
+                SELECT count(*) 
+                FROM (
+                    SELECT DISTINCT ON (record_id) session_id
+                    FROM edit_history
+                    WHERE record_id IN (SELECT record_id FROM edit_history WHERE session_id = :sid)
+                    ORDER BY record_id, timestamp DESC, id DESC
+                ) as latest
+                WHERE session_id = :sid
+            """)
+            reversible_count = session.execute(reversible_q, {"sid": sid}).scalar()
+
+            if reversible_count == 0:
+                continue # Skip sessions where all records have been superseded
+
+            full_name = row.full_name
+            email = row.user_email
+            display_user = f"{full_name} ({email})" if full_name else email
+
+            available_sessions.append({
+                "session_id": sid,
+                "timestamp": row.earliest_ts,
+                "user": display_user,
+                "source_name": row.source_name,
+                "record_count": f"{reversible_count} / {total_count}",
+                "reversible_count": reversible_count
+            })
+
         return available_sessions
     finally:
         session.close()
@@ -54,23 +82,43 @@ def get_recent_sessions():
 @st.dialog("Confirm Rollback")
 def confirm_rollback_dialog(session_data):
     st.warning(f"Are you sure you want to rollback session **{session_data['session_id'][:8]}...**?")
+    st.write(f"- **Source:** {session_data['source_name']}")
     st.write(f"- **User:** {session_data['user']}")
     st.write(f"- **Date:** {session_data['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
-    st.write(f"- **Affected Records:** {session_data['record_count']}")
-    st.write(f"- **Details:** {session_data['details']}")
+    st.write(f"- **Records (reversible/total):** {session_data['record_count']}")
     
-    st.error("This action will restore records to their previous state and delete newly created records. This cannot be undone.")
+    st.error("This action will restore records to their previous state and delete newly created records. Superseded records will be skipped. This cannot be undone.")
     
     if st.button("Yes, Rollback Session", type="primary", use_container_width=True):
-        with st.spinner("Rolling back..."):
+        # We'll use a placeholder in the dialog for progress
+        progress_container = st.container()
+        with progress_container:
+            status = st.status("Initializing rollback...", expanded=True)
+            progress_bar = st.progress(0.0)
+            
+            def update_progress(curr, total):
+                status.update(label=f"Rolling back: {curr}/{total} records...")
+                progress_bar.progress(curr / total if total > 0 else 1.0)
+
             try:
                 result = UploadService.rollback_session(
                     session_data['session_id'], 
-                    user_email=st.session_state.get("user_email", "system")
+                    user_email=st.session_state.get("user_email", "system"),
+                    progress_callback=update_progress
                 )
-                st.success(f"Rollback successful! {result['rolled_back_count']} updated, {result['deleted_count']} deleted.")
+                
+                msg = f"Rollback successful! {result['rolled_back_count']} updated, {result['deleted_count']} deleted."
+                if result['skipped_count'] > 0:
+                    msg += f" {result['skipped_count']} records skipped (already modified later)."
+                
+                status.update(label="Rollback Complete", state="complete")
+                st.success(msg)
+                
+                import time
+                time.sleep(1.5)
                 st.rerun()
             except Exception as e:
+                status.update(label="Rollback Failed", state="error")
                 st.error(f"Rollback failed: {e}")
                 logger.error("Rollback failed for session %s: %s", session_data['session_id'], e)
 
@@ -93,25 +141,59 @@ def main():
     # Display sessions in a table-like view
     st.subheader("Recent Upload Sessions")
     
+    # Pagination configuration
+    PAGE_SIZE = 5
+    if "rollback_page_idx" not in st.session_state:
+        st.session_state.rollback_page_idx = 0
+    
+    total_sessions = len(sessions)
+    total_pages = (total_sessions + PAGE_SIZE - 1) // PAGE_SIZE
+    
+    # Safety check for page index after rollbacks/refresh
+    if st.session_state.rollback_page_idx >= total_pages:
+        st.session_state.rollback_page_idx = max(0, total_pages - 1)
+        
+    start_idx = st.session_state.rollback_page_idx * PAGE_SIZE
+    end_idx = min(start_idx + PAGE_SIZE, total_sessions)
+    page_sessions = sessions[start_idx:end_idx]
+
     cols = st.columns([2, 2, 3, 1, 1])
     cols[0].write("**Date**")
     cols[1].write("**User**")
-    cols[2].write("**Details**")
+    cols[2].write("**Source**")
     cols[3].write("**Records**")
     cols[4].write("**Action**")
     
     st.divider()
     
-    for s in sessions:
+    for s in page_sessions:
         with st.container():
             c1, c2, c3, c4, c5 = st.columns([2, 2, 3, 1, 1])
             c1.write(s["timestamp"].strftime("%Y-%m-%d %H:%M"))
             c2.write(s["user"])
-            c3.write(s["details"])
+            c3.write(s["source_name"])
             c4.write(str(s["record_count"]))
             
             if c5.button("Undo", key=f"undo_{s['session_id']}", help="Rollback this session"):
                 confirm_rollback_dialog(s)
+
+    # Pagination controls
+    if total_pages > 1:
+        st.divider()
+        nav_cols = st.columns([1, 2, 1])
+        
+        with nav_cols[0]:
+            if st.button("⬅️ Previous", disabled=st.session_state.rollback_page_idx == 0, use_container_width=True):
+                st.session_state.rollback_page_idx -= 1
+                st.rerun()
+                
+        with nav_cols[1]:
+            st.markdown(f"<p style='text-align: center;'>Page {st.session_state.rollback_page_idx + 1} of {total_pages}</p>", unsafe_allow_html=True)
+            
+        with nav_cols[2]:
+            if st.button("Next ➡️", disabled=st.session_state.rollback_page_idx >= total_pages - 1, use_container_width=True):
+                st.session_state.rollback_page_idx += 1
+                st.rerun()
 
 if __name__ == "__main__":
     main()
