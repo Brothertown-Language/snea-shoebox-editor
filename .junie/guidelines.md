@@ -50,7 +50,7 @@ You MUST operate as a deterministic, approval-gated execution agent.
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 
-# SNEA Online Shoebox Editor: Master AI Guidelines (v8.0)
+# SNEA Online Shoebox Editor: Master AI Guidelines (v8.1)
 
 ## 0. THE SUPREME DIRECTIVE: ZERO-TOLERANCE AUTHORIZATION
 **YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
@@ -72,6 +72,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **RELATIVE PATHS ONLY**: **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`). **NEVER** use absolute paths (e.g., `/home/user/...`).
 - **NO COMPOUND COMMANDS**: No `&&`, `;`, or `|`. Split into separate tool calls.
 - **NO SHELL REDIRECTS**: No `>` or `>>` for file editing. Use `create`/`multi_edit` ONLY.
+- **NO COMPLEX SHELL CREATION**: Forbidden from using `printf` or `echo` with complex strings to create files (e.g., commit messages). Use the designated `create` tool.
 - **`uv run` PREFIX**: Every Python execution MUST start with `uv run`.
 - **PYTHONPATH FOR LOCAL SCRIPTS**: When using `uv run` for local scripts importing `src/`, prefix with `PYTHONPATH=.`.
 - **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
@@ -111,13 +112,16 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 
 ---
 
-## IV. VCS & TASK MANAGEMENT (DECLARATIVE COMMIT PROTOCOL)
+## IV. VCS & TASK MANAGEMENT (DECLARATIVE COMMIT PROTOCOL v8.1)
 - **STRICT PROHIBITION**: NEVER run `git add` or `git commit` directly in the terminal.
 - **COMMIT DIRECTIVE MANDATE**: ONLY prepare commits when explicitly asked (e.g., "Prepare a commit").
 - **MANIFEST-DRIVEN STAGING**: 
     1. Run `bash scripts/pre_commit_check.sh` using `tmp/commit_files.txt`.
     2. Create `tmp/commit_<N>.msg` files.
-    3. Generate `tmp/commit.sh` with explicit, path-by-path `git add` commands.
+    3. Generate `tmp/commit.sh` with `set -e` and explicit, path-by-path `git add` commands.
+- **COMMIT SCRIPT STANDARDS**:
+    - **`set -e`**: Every commit script MUST include `set -e` to stop on security check failure.
+    - **No Arguments**: Call `bash scripts/pre_commit_check.sh` with NO arguments to use `tmp/commit_files.txt`.
 - **ATOMIC COMMITS**: Group changes logically. Use separate `git add` + `git commit` blocks per group.
 - **NO FORCE**: The `-f` flag is strictly PROHIBITED.
 - **USER-ONLY EXECUTION**: AI is forbidden from running the commit script.

@@ -5,11 +5,19 @@ set -e
 cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"
 
 # Check if arguments are provided
+if [ "$#" -eq 1 ] && [ "$1" == "tmp/commit_files.txt" ]; then
+    echo "Using tmp/commit_files.txt as manifest..."
+    shift
+fi
+
 if [ "$#" -eq 0 ]; then
     if [ -f "tmp/commit_files.txt" ]; then
         echo "Reading target files from tmp/commit_files.txt..."
         TARGET_FILES=()
         while IFS= read -r line || [[ -n "$line" ]]; do
+            # Ignore empty lines and comments
+            [[ "$line" =~ ^[[:space:]]*# ]] && continue
+            [[ -z "${line// }" ]] && continue
             TARGET_FILES+=("$line")
         done < tmp/commit_files.txt
         set -- "${TARGET_FILES[@]}"
