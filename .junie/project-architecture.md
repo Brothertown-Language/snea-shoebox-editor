@@ -55,6 +55,7 @@ screen real estate for the content the user needs to inspect.
 
 ### DATA LAYER (MDF)
 - **STANDARD:** Multi-Dictionary Formatter (MDF).
+- **RECORD SPACING:** Double blank lines (`\n\n`) MUST be used as the separator between individual MDF records in all text files and exports.
 - **CORE HIERARCHY:** `\lx` (Lexeme) -> `\ps` (Part of Speech) -> `\ge` (Gloss).
 - **COMPATIBILITY:** Target PostgreSQL 16.2 features for alignment between dev and prod.
 
@@ -74,6 +75,7 @@ screen real estate for the content the user needs to inspect.
 - **VALIDATION:** System provides advisory visual hints; linguists have final authority.
 
 ### ENCODING PRINCIPLES
+- **RECORD SPACING:** Double blank lines (`\n\n`) are mandatory between records.
 - **ONE LEXEME PER ENTRY:** Each lexical entry corresponds to one lexeme.
 - **HEADWORD IN `\lx`:** The citation form is stored in `\lx`.
 - **INFLECTIONS INSIDE SAME RECORD:** Inflected forms are stored inside the same record as repeated `\inf` blocks, not as separate entries.

@@ -20,7 +20,10 @@ This file serves as a persistent memory of critical project context, user prefer
 - **VCS PERMISSION GATE (v7.0 PROTOCOL)**: Absolute prohibition on performing `git add` or `git commit` in the terminal. Commits are strictly manifest-driven and validated via `bash scripts/pre_commit_check.sh` within a single, mandatory `tmp/commit.sh` script. This validation MUST use `tmp/commit_files.txt` for target selection and include a review of all uncommitted and untracked files in the repository. Logical grouping is mandatory. Use of `-f` is a fatal violation. AI is forbidden from executing the commit script; only the user is authorized to review and run it. Autonomous preparation is strictly forbidden.
 - **STRICT FILENAME MANDATE**: The staging script MUST always be named `tmp/commit.sh`. Variations (e.g., `commit_task.sh`, `commit_simple.sh`) are strictly prohibited to avoid user confusion.
 - **NOConventional Commits**: Never use prefixes like `feat:` or `fix:`.
+- **STRICT COMMUNICATION MANDATE (v7.5)**: AI is strictly forbidden from providing raw code fragments, line-by-line edits, or `search_replace` blocks in the chat dialogue. All proposals MUST be presented as high-level, focused overviews of *what* will be changed and *why*. Proactivity in providing code blobs is a violation of the "Zero-Trust" interaction protocol.
 - **1-BASED COUNTING ONLY**: Use natural counting (1, 2, 3...) for all plans and lists.
+- **MANDATORY MDF SPACING**: Always use double blank lines (`\n\n`) between records in text files and exports.
+- **MANDATORY MDF FILENAME PATTERN**: All MDF downloads must use the pattern `<prefix>_<Source>_<GitHubUsername>_<YYYY-MM-DD>_<SSSSS>.txt` via `UploadService.generate_mdf_filename`. This pattern uses underscores as separators, collapses multiple underscores, and allows alphanumeric, dot, at, and dash characters. As of 2026-02-13, the GitHub username is used instead of the email address.
 
 ## KEY CROSS-SESSION DECISIONS
 - **Deep Inspection Mandate**: Memory-based verification is strictly prohibited. AI must always perform deep inspection of source files before confirming any status or re-evaluating state.

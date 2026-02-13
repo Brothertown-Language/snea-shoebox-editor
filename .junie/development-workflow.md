@@ -21,15 +21,22 @@
 
 ---
 
-## 2. Testing Standards
+### 2. Testing Standards
 
-### EXECUTION AND VALIDATION
+#### EXECUTION AND VALIDATION
 - **MANDATORY:** **ALWAYS** run tests in the terminal. **NEVER** simulate results mentally.
 - **JUNIE PRIVATE DB:** **ALWAYS** set `JUNIE_PRIVATE_DB=true` when running tests or scripts that modify the database.
   - *Correct:* `JUNIE_PRIVATE_DB=true uv run pytest`
 - **NO BYPASS:** **NEVER** weaken, mock, or disable failed tests to force a pass.
 - **3-STRIKE RULE:** After 3 failed fix attempts, you **MUST** stop and ask the user for guidance.
 - **CLEAN START:** Fix all compilation errors before running tests.
+
+#### PERFORMANCE AND EFFICIENCY (v2.0)
+- **MANDATORY LAZY EXECUTION**: You are ABSOLUTELY FORBIDDEN from pre-generating, pre-calculating, or pre-fetching any data that is not immediately required for the current view's initial render. 
+- **NO PRE-GENERATION OF EXPENSIVE DATA**: Specifically, do not generate MDF exports, reports, heavy DB queries, or complex transformations within UI rendering loops or lists.
+- **LAZY LOADING PATTERN**: All expensive operations MUST be lazy. Data should ONLY be computed or fetched based on explicit, purposeful user interactions (e.g., clicking a "Prepare" or "Generate" button).
+- **STREAMLIT ENFORCEMENT**: In Streamlit, this means using session state flags to trigger computation on a subsequent rerun, rather than performing the work inside the rendering loop of a list.
+- **REASON**: Pre-generation causes massive, unnecessary overhead, redundant DB queries, and destroys application performance. Violation is a critical failure.
 
 ### TEST STRATEGY
 - **BUG FIX:** Write a reproduction test first; verify it fails, then fix.
@@ -43,13 +50,13 @@
 
 ---
 
-## 3. Version Control and Task Management (v7.0 PROTOCOL)
+## 3. Version Control and Task Management (v8.0 PROTOCOL)
 ### VCS COMPLIANCE: DECLARATIVE COMMIT PROTOCOL
 - **STRICT PROHIBITION ON DIRECT GIT**: You are strictly forbidden from running `git add` or `git commit` directly in the terminal.
-- **COMMIT DIRECTIVE MANDATE**: Commits are ONLY permitted when explicitly instructed by the User via a "Commit Directive" (e.g., "Prepare a commit"). 
+- **COMMIT DIRECTIVE MANDATE (ZERO TOLERANCE)**: You are ABSOLUTELY FORBIDDEN from creating commit scripts (`tmp/commit.sh`) or message files (`tmp/commit*.msg`) WITHOUT an explicit, direct instruction from the User via a "Commit Directive" (e.g., "Prepare a commit").
     - **NO PLANNING:** You are forbidden from including commit preparation steps in any task plan unless the User has already issued a Commit Directive.
-    - **NO ASSUMPTION:** Autonomous preparation or planning of commits is a critical guideline violation.
-- **STEP 0: SECURITY INSPECTION**: Before creating ANY commit artifacts, you MUST run `bash scripts/pre_commit_check.sh` to verify that no ignored files, secrets, or unintended changes are being prepared for staging.
+    - **NO ASSUMPTION:** Autonomous preparation or planning of commits is a critical guideline violation. NO EXCEPTIONS EVER.
+- **STEP 0: SECURITY INSPECTION**: ONLY after a Commit Directive is received, you MUST run `bash scripts/pre_commit_check.sh` to verify that no ignored files, secrets, or unintended changes are being prepared for staging.
   - **MANDATORY FILE LIST**: You MUST create `tmp/commit_files.txt` containing the project-relative paths of all files to be committed (one per line). The check script will automatically read from this file.
   - **REVIEW UNTRACKED**: You MUST also review the "OTHER uncommitted changes" section of the script output to identify any untracked files that should be included in `tmp/commit_files.txt`.
   - **UNTRACKED FILE EXCEPTION**: If untracked files are detected, and you are absolutely convinced they should not be tracked, you MUST notify the user, explain your reasoning, and STOP. Do not proceed with creating commit artifacts until the user acknowledges.

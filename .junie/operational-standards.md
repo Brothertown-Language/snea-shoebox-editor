@@ -23,8 +23,12 @@
 - **NO PROACTIVITY:** **NEVER** perform actions not explicitly requested by the user. This includes "cleaning up," "fixing typos," "proactive refactoring," or preparing VCS documentation (commit messages, `tmp/commit.sh`). AI must stop and wait for explicit instructions for every action. **Proactivity is considered a destructive action.**
 - **ZERO-TOLERANCE COMMIT BLOCK:** Preparing commit scripts (`tmp/commit.sh`) or commit messages (`tmp/commit*.msg`) is **STRICTLY FORBIDDEN** unless the user has explicitly issued a "Commit Directive". **CRITICAL:** You are forbidden from even *planning* or *listing* commit preparation as a future step in any task plan until that directive is given. Completion of a task does NOT imply authorization to prepare a commit. Any mention of "Prepare a commit" in a plan without a prior directive is a violation.
 - **MANDATORY RELATIVE PATHS:** **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`) in all tool calls, terminal commands, file references, and output. **NEVER** use absolute paths (e.g., `/home/user/git/project/src/...`). The project root is the working directory; all paths must be relative to it.
+- **NO TRUNCATED IDENTIFIERS:** You are ABSOLUTELY FORBIDDEN from using truncated IDs, hashes, or session tokens for any database or CRUD operations. Truncation is for UI DISPLAY ONLY. All backend logic, service calls, and database queries MUST use the full, original identifier to prevent hash collisions and data corruption.
 - **⚠️ NEVER PREFIX COMMANDS WITH `cd`:** The shell is ALREADY at the project root. Do NOT use `cd /path && command` or `cd /path; command`. Just run the command directly. **SELF-CHECK: If your command starts with `cd`, STOP and remove it.** This is a recurring violation (see VIOLATION_LOG.md #3).
 - **⚠️ NEVER COPY USER COMMANDS VERBATIM:** When the user provides a shell command in the issue description, treat it as a specification of *what* to run, NOT as a ready-to-execute command. **ALWAYS** translate it to guideline-compliant form: remove `cd /absolute/path`, split `&&` chains into separate tool calls, remove pipes (`|`). Each atomic command must be a separate step. User-provided commands often contain absolute paths and compound operators that violate these standards.
+- **PYTHONPATH FOR LOCAL SCRIPTS:** When using `uv run` to execute local Python scripts that import project modules (e.g., from `src/`), you **MUST** prefix the command with `PYTHONPATH=.`. 
+    - **Correct:** `PYTHONPATH=. JUNIE_PRIVATE_DB=true uv run tmp/my_script.py`
+    - **Incorrect:** `uv run tmp/my_script.py` (will cause `ModuleNotFoundError: No module named 'src'`)
 - **MANDATORY NO-HANG FLAGS:** Always use `< /dev/null` for any command that might enter an interactive mode (e.g., `psql`, `python help()`, `man`, `less`).
 - **MANDATORY psql FLAGS:** Always use `psql -c "QUERY" < /dev/null` or `psql -f script.sql < /dev/null` to prevent terminal hangs.
 - **NO INTERACTIVE COMMANDS:** **NEVER** run commands that require user input (e.g., `psql` without flags, `top`, `vim`).
@@ -104,8 +108,9 @@ Database connection pooling is recommended, but idle connections MUST be closed 
 
 ## 5. Communication Standards
 
-### FOCUSED OVERVIEW PLANS
+### FOCUSED OVERVIEW PLANS (v7.5)
 - **FOCUSED OVERVIEW PLANS:** Always present plans as high-level, focused overviews of *what* will be changed and *why*.
-- **NO RAW CODE BLOBS:** **NEVER** include large quantities of raw code, line-by-line edit plans, or `search_replace` blocks in the chat dialogue. The chat is defective for code review.
-- **CLARITY OVER DETAIL:** Prioritize high-level clarity. Implementation details are reviewed in the files or the commit script.
+- **STRICT PROHIBITION ON RAW CODE BLOBS:** **NEVER** include large quantities of raw code, line-by-line edit plans, or `search_replace` blocks in the chat dialogue. The chat is defective for code review and is for conceptual alignment ONLY.
+- **NO "SHADOW" CODE DUMPS:** Do not use `<<<<...====...>>>>` blocks or any other custom markers to sneak code into the dialogue.
+- **CLARITY OVER DETAIL:** Prioritize high-level clarity. Implementation details are reviewed in the files themselves during deep inspection or in the commit script.
 - **POSITIVE REINFORCEMENT:** The "Focused Overview" format is established as the excellent standard for this project.

@@ -57,9 +57,10 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **MDF RECORD MARKER:** NEVER change the MDF record marker from `\n\n`.
 - **STATUS CONTROL:** NEVER mark a task as "COMPLETED" without explicit user instruction.
 
-### 3. Communication Standards
+### 3. Communication Standards (v7.5)
 - **NO CODE BLOBS**: AI is strictly forbidden from providing raw code fragments, line-by-line edits, or `search_replace` blocks in the chat dialogue.
 - **FOCUSED OVERVIEWS**: Always provide high-level summaries of *what* will change and *why*.
+- **NO PROACTIVITY**: Never offer code fragments even if you believe they will clarify the plan. High-level conceptual descriptions only.
 - **NO APOLOGIES**: Do not apologize for errors.
 - **NO SYCOPHANTISM**: Avoid flowery or excessively polite language.
 - **NATURAL COUNTING**: Use 1-based numbering (1, 2, 3...) for all plans and lists.

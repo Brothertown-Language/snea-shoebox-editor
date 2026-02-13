@@ -279,3 +279,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Prepared `tmp/commit.sh` without the mandatory `cd/git rev` shell fragment, despite it being a requirement in the Declarative Commit Protocol.
 - **Root Cause**: Oversight during the transition to the new commit protocol. Failed to verify the generated script against the protocol's own requirements.
 - **Correction**: (1) Logged violation. (2) Updated `development-workflow.md` to make the mandate for the `cd/git rev` shell fragment more explicit and visible. (3) Updated `tmp/commit.sh` to include the fragment.
+
+### 2026-02-13: Unauthorized Code Blob in Dialogue (Violation #21)
+- **Violation**: Provided raw code fragments using `<<<<...====...>>>>` markers in the chat dialogue while proposing a fix for navigation order.
+- **Root Cause**: Failed to adhere to Guideline II.3 (No Code Blobs) and over-prioritized "clariy" of implementation over communication standards.
+- **Correction**: (1) Logged violation. (2) Updated `LONG_TERM_MEMORY.md`, `guidelines.md`, and `operational-standards.md` to reinforce the strict prohibition on raw code in chat. (3) Adopted the "Focused Overview" (What/Why) format for all future proposals.
