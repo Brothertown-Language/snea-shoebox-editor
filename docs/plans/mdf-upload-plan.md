@@ -24,12 +24,12 @@ The implementation is divided into the following phases:
     *   Streamlit page registration and role-based access.
     *   File uploader, source selector, and batch management UI.
 
-4.  **[Phase D: Review & Confirm Page (Frontend)](mdf-upload/phase-d-review.md)** 🔄
+4.  **[Phase D: Review & Confirm Page (Frontend)](mdf-upload/phase-d-review.md)** ✅
     *   Interactive review table with responsive record comparison.
     *   Bulk approval actions and per-record "Apply Now" workflow.
     *   Manual match overrides and pending changes download.
 
-5.  **[Phase E: Cleanup & Polish](mdf-upload/phase-e-cleanup.md)** ⏳
+5.  **[Phase E: Cleanup & Polish](mdf-upload/phase-e-cleanup.md)** ✅
     *   Activity logging and batch rollback support.
     *   Final documentation updates and polish.
 
