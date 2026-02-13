@@ -168,6 +168,26 @@ class IdentityService:
         }
 
     @staticmethod
+    @st.cache_data
+    def get_github_username(email: str) -> Optional[str]:
+        """
+        Fetch the GitHub username for a given email address.
+        Cached to minimize database hits.
+        """
+        if not email:
+            return None
+        
+        session = get_session()
+        try:
+            user = session.query(User).filter_by(email=email).first()
+            return user.username if user else None
+        except Exception as e:
+            logger.error("Failed to fetch github username for %s: %s", email, e)
+            return None
+        finally:
+            session.close()
+
+    @staticmethod
     def sync_identity(access_token: str) -> bool:
         """
         Orchestrate the synchronization of GitHub identity.
