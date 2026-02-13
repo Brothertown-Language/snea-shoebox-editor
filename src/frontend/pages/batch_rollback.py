@@ -3,6 +3,7 @@
 import streamlit as st
 from src.logging_config import get_logger
 from src.services.upload_service import UploadService
+from src.services.identity_service import IdentityService
 from src.database import get_session, UserActivityLog, EditHistory
 from sqlalchemy import desc, text
 
@@ -79,9 +80,42 @@ def get_recent_sessions():
     finally:
         session.close()
 
+@st.dialog("Download Rollback MDF")
+def download_mdf_dialog(session_data):
+    """Prompt the user to download the MDF data for a session."""
+    session_id = session_data.get('session_id')
+    st.write(f"Preparing records from session **{session_id[:8]}** for download.")
+    st.info("This will include all records that are currently eligible for rollback.")
+    
+    with st.spinner("Generating MDF content..."):
+        mdf_content = UploadService.get_session_rollback_mdf(session_id)
+    
+    if mdf_content:
+        github_username = IdentityService.get_github_username(st.session_state.get("user_email"))
+        filename = UploadService.generate_mdf_filename(
+            "rollback", 
+            session_data.get('source_name', 'unknown'), 
+            session_data.get('timestamp'),
+            github_username=github_username
+        )
+        st.download_button(
+            label="Download MDF File",
+            data=mdf_content,
+            file_name=filename,
+            mime="text/plain",
+            use_container_width=True,
+            type="primary"
+        )
+        st.caption("Click the button above to save the file to your computer.")
+    else:
+        st.error("No records found that can be rolled back for this session.")
+        if st.button("Close"):
+            st.rerun()
+
 @st.dialog("Confirm Rollback")
 def confirm_rollback_dialog(session_data):
-    st.warning(f"Are you sure you want to rollback session **{session_data['session_id'][:8]}...**?")
+    session_id = session_data.get('session_id')
+    st.warning(f"Are you sure you want to rollback session **{session_id[:8]}...**?")
     st.write(f"- **Source:** {session_data['source_name']}")
     st.write(f"- **User:** {session_data['user']}")
     st.write(f"- **Date:** {session_data['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
@@ -99,10 +133,10 @@ def confirm_rollback_dialog(session_data):
             def update_progress(curr, total):
                 status.update(label=f"Rolling back: {curr}/{total} records...")
                 progress_bar.progress(curr / total if total > 0 else 1.0)
-
+            
             try:
                 result = UploadService.rollback_session(
-                    session_data['session_id'], 
+                    session_id, 
                     user_email=st.session_state.get("user_email", "system"),
                     progress_callback=update_progress
                 )
@@ -157,24 +191,35 @@ def main():
     end_idx = min(start_idx + PAGE_SIZE, total_sessions)
     page_sessions = sessions[start_idx:end_idx]
 
-    cols = st.columns([2, 2, 3, 1, 1])
+    cols = st.columns([2, 2, 3, 1, 1.5])
     cols[0].write("**Date**")
     cols[1].write("**User**")
     cols[2].write("**Source**")
     cols[3].write("**Records**")
-    cols[4].write("**Action**")
+    cols[4].write("**Actions**")
     
     st.divider()
     
     for s in page_sessions:
         with st.container():
-            c1, c2, c3, c4, c5 = st.columns([2, 2, 3, 1, 1])
+            c1, c2, c3, c4, c5 = st.columns([2, 2, 3, 1, 1.5])
             c1.write(s["timestamp"].strftime("%Y-%m-%d %H:%M"))
             c2.write(s["user"])
             c3.write(s["source_name"])
             c4.write(str(s["record_count"]))
             
-            if c5.button("Undo", key=f"undo_{s['session_id']}", help="Rollback this session"):
+            # Action buttons
+            btn_cols = c5.columns(2)
+            
+            # 1. Download MDF (Deferred via Dialog)
+            if btn_cols[0].button("📥", key=f"dl_{s['session_id']}", help="Download MDF of records"):
+                # Use a specific key in session_state to store the full session_id for the dialog
+                st.session_state.current_dl_session = s['session_id']
+                download_mdf_dialog(s)
+            
+            # 2. Undo
+            if btn_cols[1].button("🔙", key=f"undo_{s['session_id']}", help="Rollback this session"):
+                st.session_state.current_rollback_session = s['session_id']
                 confirm_rollback_dialog(s)
 
     # Pagination controls

@@ -3,6 +3,7 @@
 """
 Upload Service for MDF file upload, staging, matching, and commit operations.
 """
+import re
 import unicodedata
 import uuid
 from typing import Optional
@@ -1147,7 +1148,7 @@ class UploadService:
                 .order_by(MatchupQueue.id)
                 .all()
             )
-            return "\n\n".join([row.mdf_data for row in rows])
+            return "\n\n\n".join([row.mdf_data.strip() for row in rows])
         finally:
             session.close()
 
@@ -1444,6 +1445,49 @@ class UploadService:
                 session.close()
 
     @staticmethod
+    def get_session_rollback_mdf(session_id: str) -> Optional[str]:
+        """Generate a single MDF string containing the current state of all records 
+        that would be affected by rolling back the given session_id.
+        
+        Only includes records that have NOT been superseded.
+        """
+        session = get_session()
+        try:
+            # 1. Identify all record_ids touched by this session
+            history_entries = (
+                session.query(EditHistory.record_id)
+                .filter_by(session_id=session_id)
+                .distinct()
+                .all()
+            )
+            record_ids = [h.record_id for h in history_entries]
+            if not record_ids:
+                return None
+            
+            mdf_blocks = []
+            
+            # 2. For each record, check if it's still the latest session
+            for rid in record_ids:
+                latest_h = (
+                    session.query(EditHistory)
+                    .filter_by(record_id=rid)
+                    .order_by(EditHistory.timestamp.desc(), EditHistory.id.desc())
+                    .first()
+                )
+                
+                if latest_h and latest_h.session_id == session_id:
+                    record = session.get(Record, rid)
+                    if record and record.mdf_data:
+                        mdf_blocks.append(record.mdf_data)
+            
+            if not mdf_blocks:
+                return None
+            
+            return "\n\n\n".join([b.strip() for b in mdf_blocks])
+        finally:
+            session.close()
+
+    @staticmethod
     def rollback_session(session_id: str, user_email: str = "system",
                          progress_callback: Optional[callable] = None) -> dict:
         """Rollback all changes associated with a session_id.
@@ -1481,7 +1525,7 @@ class UploadService:
                 latest_h = (
                     session.query(EditHistory)
                     .filter_by(record_id=rid)
-                    .order_by(EditHistory.version.desc())
+                    .order_by(EditHistory.timestamp.desc(), EditHistory.id.desc())
                     .first()
                 )
                 
@@ -1548,3 +1592,34 @@ class UploadService:
             raise
         finally:
             session.close()
+
+    @staticmethod
+    def generate_mdf_filename(prefix: str, source_name: str, timestamp, github_username: Optional[str] = None) -> str:
+        """Build cross-OS compatible filename for MDF downloads.
+        Format: <prefix>_<Source>_<GitHubUsername>_<YYYY-MM-DD>_<SSSSS>.txt
+        - prefix: e.g. 'pending' or 'rollback'.
+        - <Source>: Alphanumeric, dot, at, and dash only.
+        - <GitHubUsername>: Optional. Alphanumeric, dot, at, and dash only.
+        - <YYYY-MM-DD>: Date of upload/session.
+        - <SSSSS>: Seconds since midnight, zero-padded to 5 digits.
+        """
+        def _safe(s):
+            return "".join(c if (c.isalnum() or c in ".@-") else "_" for c in s)
+
+        safe_source = _safe(source_name)
+        date_str = timestamp.strftime('%Y-%m-%d')
+        seconds_since_midnight = (timestamp.hour * 3600) + (timestamp.minute * 60) + timestamp.second
+        
+        filename_parts = [prefix, safe_source]
+        if github_username:
+            safe_user = _safe(github_username)
+            if safe_user:
+                filename_parts.append(safe_user)
+        
+        filename_parts.extend([date_str, f"{seconds_since_midnight:05d}"])
+        filename = "_".join(filename_parts)
+        
+        # Collapse multiple underscores into one
+        filename = re.sub(r'_+', '_', filename)
+        
+        return filename + ".txt"

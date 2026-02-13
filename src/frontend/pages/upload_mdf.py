@@ -6,6 +6,7 @@ def upload_mdf():
     from src.database import get_session
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
+    from src.services.identity_service import IdentityService
     from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block
     from src.logging_config import get_logger
 
@@ -248,16 +249,16 @@ def upload_mdf():
                 with col_download:
                     try:
                         mdf_blob = UploadService.get_pending_batch_mdf(batch_id)
-                        # Build cross-OS compatible filename for pending records:
-                        # Format: pending_<Source>_<YYYY-MM-DD>_<SSSSS>.txt
-                        # - pending_: prefix to distinguish from committed records.
-                        # - <Source>: Alphanumeric only (non-alphanumeric replaced by underscores).
-                        # - <YYYY-MM-DD>: Date of upload or current date.
-                        # - <SSSSS>: Seconds since midnight, zero-padded to 5 digits.
-                        safe_source = "".join(c if c.isalnum() else "_" for c in b['source_name'])
                         now = b["uploaded_at"] or _dt.datetime.now()
-                        seconds_since_midnight = (now.hour * 3600) + (now.minute * 60) + now.second
-                        fname = f"pending_{safe_source}_{now.strftime('%Y-%m-%d')}_{seconds_since_midnight:05d}.txt"
+                        
+                        github_username = IdentityService.get_github_username(st.session_state.get("user_email"))
+                        
+                        fname = UploadService.generate_mdf_filename(
+                            "pending", 
+                            b['source_name'], 
+                            now,
+                            github_username=github_username
+                        )
 
                         st.download_button(
                             label="Download",

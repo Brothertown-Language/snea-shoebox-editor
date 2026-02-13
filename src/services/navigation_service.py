@@ -49,12 +49,13 @@ class NavigationService:
             nav_tree = {
                 "Main": [cls.PAGE_HOME, cls.PAGE_UPLOAD],
                 "System": [cls.PAGE_STATUS, cls.PAGE_TABLE_MAINTENANCE],
-                "Account": [cls.PAGE_USER, cls.PAGE_LOGOUT]
             }
             
             # Admin section
             if user_role == 'admin':
                 nav_tree["Admin"] = [cls.PAGE_BATCH_ROLLBACK]
+
+            nav_tree["Account"] = [cls.PAGE_USER, cls.PAGE_LOGOUT]
             
             return nav_tree
         else:
