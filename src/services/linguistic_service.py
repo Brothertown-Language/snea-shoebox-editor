@@ -236,7 +236,9 @@ class LinguisticService:
                     "ps": r.ps,
                     "ge": r.ge,
                     "status": r.status,
-                    "source_name": r.source.name if r.source else None
+                    "source_id": r.source_id,
+                    "source_name": r.source.name if r.source else None,
+                    "mdf_data": r.mdf_data
                 })
             
             return records

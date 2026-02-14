@@ -10,8 +10,9 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Data Layer**: MDF (Multi-Dictionary Formatter) standards using PostgreSQL and pgvector.
 
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
+- **UI Header Redundancy**: Removed redundant "Records (Mock)" and "Record View" headers from the `records` mock to streamline the UI.
 ## USER PREFERENCES & HARD CONSTRAINTS
-- **SUPREME DIRECTIVE (v8.2)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
+- **SUPREME DIRECTIVE (v8.4)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Authorization never carries over and is PLAN-SPECIFIC: "Go" applies only to the immediately preceding plan. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
 - **PASSIVE EXECUTION MANDATE**: You are forbidden from being proactive. NO cleanup, NO polish, NO unauthorized optimization. Proactivity is considered destructive.
 - **AUTHORIZATION CHECK**: Before calling ANY edit tool, you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
@@ -46,7 +47,10 @@ This file serves as a persistent memory of critical project context, user prefer
 - **UI Restoration (MDF Upload)**: Restored the standard Streamlit header, toolbar, and sidebar header in the MDF upload view to ensure accessibility and layout consistency. The custom CSS overrides that previously hid the toolbar, collapsed the header, and shrunk the sidebar header were removed in Feb 2026. Standard top padding and margins were also restored to prevent content from overlapping the toolbar.
 - **Persistent User Preferences**: Implemented a database-backed preference system using `UserPreference` model and `PreferenceService`. Currently used to persist `page_size` in the MDF upload review table across sessions for each user.
 - **Streamlit Execution Mandate (v8.3)**: Foreground Streamlit execution is strictly forbidden. All Streamlit processes (including mocks) must be started in the background using `nohup` with output redirected to `tmp/` and verified by polling logs. This ensures session persistence and prevents terminal locking.
-- **Records View Navigation Layout**: As of 2026-02-14, navigation components (Prev/Next buttons and Jump to Record input) in the `records` mock have been moved from the sidebar to the main panel, positioned between the MDF record display and the copy buttons.
+- **SCOPE ENFORCEMENT MANDATE (v8.4)**: Strictly FORBIDDEN from modifying `src/` (Production) when the primary task is focused on `tests/ui/mocks/` (Mocks) or `docs/` (Documentation). Any attempt to "standardize" code by moving logic from a mock into `src/` without explicit "Scope Crossing Approval" is a violation of the zero-trust protocol.
+- **Records View Layout (v2.0)**: As of 2026-02-14, navigation components (Prev/Next buttons, Page X of Y, and Results per page) in the `records` view (and mock) have been moved from the main panel to the sidebar. URL parameter tracking (`search`, `search_mode`, `source`, `page`, `page_size`) is implemented to support bookmarking.
+- **Records View Implementation**: Production Records View implemented at `src/frontend/pages/records.py` and registered in `NavigationService` between Home and Upload MDF.
+- **Lifecycle Script Mandate**: AI Guidelines updated to mandate the use of `./scripts/start_view_mocks.sh`, `./scripts/stop_view_mocks.sh`, `./scripts/start_streamlit.sh`, and `./scripts/stop_streamlit.sh` for all Streamlit execution.
 - **ModuleNotFoundError Fix**: Verified that `PYTHONPATH=.` is required when running mock scripts from the root to ensure imports from `src/` are resolved correctly.
 
 ## FUTURE FEATURE NOTES
@@ -57,3 +61,5 @@ This file serves as a persistent memory of critical project context, user prefer
 2. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
 3. **UPDATE** `LONG_TERM_MEMORY.md` with key decisions.
 4. **UPDATE** logs immediately upon any guideline violation.
+
+- **STRICT GUIDELINE ENFORCEMENT (v8.5)**: Updated guidelines to include `NO STEP-SKIPPING` and `AI PERSONALITY SUPPRESSION`. AI is forbidden from combining steps or proceeding without explicit per-step authorization. Efficiency is explicitly deprioritized in favor of strict compliance and human review.

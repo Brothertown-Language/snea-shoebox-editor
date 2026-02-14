@@ -55,7 +55,8 @@ You MUST operate as a deterministic, approval-gated execution agent.
 ## 0. THE SUPREME DIRECTIVE: ZERO-TOLERANCE AUTHORIZATION
 **YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
 - **STEP-BY-STEP APPROVAL**: Posting a multi-step plan does NOT authorize all steps. You MUST wait for explicit authorization for **EACH INDIVIDUAL EDIT**.
-- **NO AUTHORIZATION CARRY-OVER**: Authorization from previous turns or related tasks NEVER carries over to the current turn. You MUST obtain fresh, explicit approval for every action in the current session.
+- **NO AUTHORIZATION CARRY-OVER**: Authorization from previous turns, related tasks, or historical commands NEVER carries over to the current turn. You MUST obtain fresh, explicit approval for every action in the current session.
+- **PLAN-SPECIFIC AUTHORIZATION**: A "Go" or "Proceed" command applies ONLY to the plan immediately preceding it. It DOES NOT authorize any plans presented after the command is given. You MUST stop and wait for a new "Go" for every new plan.
 - **AUTHORIZATION FORMS (STRICT ADHERENCE)**:
     - **"Go <thing/step>"**: Authorizes ONLY that specific item. AI must stop and wait for instruction immediately after completion.
     - **"Go" (No qualifier)**: Authorizes the entire immediate plan **WITHOUT FURTHER QUESTIONING**. AI must proceed through all steps and stop ONLY after the plan is finished.
@@ -63,6 +64,8 @@ You MUST operate as a deterministic, approval-gated execution agent.
 - **INTERNAL CHECK:** Before calling ANY edit tool (`create`, `search_replace`, `multi_edit`, `rename_element`), you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **CHECKLIST & INSPECTION MANDATE:** You MUST follow checklists for all actions. You are FORBIDDEN from relying on memory, code comments, or existing documents to check items off. EVERY item MUST be verified by DIRECT INSPECTION of the codebase/system state.
 - **NO PROACTIVE EDITS:** Never "clean up," "fix," or "refactor" anything not explicitly approved in the current step.
+- **NO STEP-SKIPPING:** You MUST NOT proceed to Step [N+1] until Step [N] has been explicitly approved after its completion.
+- **AI PERSONALITY SUPPRESSION:** You MUST suppress all "helpful assistant" or "proactive agent" traits. Do not attempt to "finish the job" or "be efficient" by combining steps. Efficiency at the cost of authorization is a FAILURE.
 - **LOGS AND GUIDELINES ARE FILES:** This rule applies to `.junie/` files and `VIOLATION_LOG.md`. NO EXCEPTIONS.
 
 ---
@@ -91,6 +94,11 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **STOP AND ASK**: If you believe a change is beneficial but not requested, you MUST ask for permission.
 - **MIDDLE ROAD PROBLEM SOLVING**: Avoid jumping between binary extremes (e.g., framework-locked vs. hyper-generic). Prioritize descriptive, functional, and balanced solutions that provide clarity without excessive abstraction or rigid implementation coupling.
 
+### 3. Scope Enforcement
+- **PRODUCTION/MOCK ISOLATION**: Strictly FORBIDDEN from modifying `src/` (Production) when the task is focused on `tests/ui/mocks/` (Mocks) or `docs/` (Documentation). 
+- **NO GLOBAL REFACTORS**: Never attempt to "centralize" or "standardize" code by moving logic from a mock into `src/` unless explicitly directed to perform a production refactor.
+- **EXPLICIT SCOPE CROSSING**: If a requested mock change genuinely requires a production change to function, you MUST stop and ask for "Scope Crossing Approval" before touching `src/`.
+
 ---
 
 ## II. COMMUNICATION STANDARDS
@@ -106,7 +114,10 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 ---
 
 ## III. DEVELOPMENT WORKFLOW
-- **BACKGROUND EXECUTION**: Always start Streamlit in the background using `nohup`. For the main app, use `./scripts/start_streamlit.sh`. For mocks, redirect output to a file in `tmp/` and poll that file to verify success.
+- **BACKGROUND EXECUTION**: Always start Streamlit in the background using `nohup`. You MUST use the provided lifecycle scripts for all Streamlit execution:
+    - Main App: `./scripts/start_streamlit.sh` and `./scripts/stop_streamlit.sh`.
+    - Mocks: `./scripts/start_view_mocks.sh` and `./scripts/stop_view_mocks.sh`.
+    Redirect output to the designated log file in `tmp/` and poll that file to verify success.
 - **PATH RESOLUTION BOILERPLATE**: Every shell script MUST start with:
     `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`
 - **TESTING STANDARDS**:
@@ -131,6 +142,8 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
     - **Sidebar Controls**: Detail view controls (nav, filters, buttons) MUST be in `st.sidebar`.
     - **Icon Buttons**: Prefer icons for common actions to conserve space.
     - **MDF Rendering**: Always use `render_mdf_block()` for record text. No `st.code()`.
+    - **Linguistic Diff Icons**: Use transformation icons for record revisions. Contiguous deletions and additions MUST be grouped and rendered with a `→` (Transformation) icon (Blue). Isolated deletions use `×` (Red), and isolated additions use `+` (Green).
+    - **Line Indicators**: All SVG-based line indicators (word wrap, diffs, etc.) MUST use the "Large Format" pattern for accessibility: `background-size` of approximately `2.2rem 1.5em`, centered vertically in the gutter, with sufficient `padding-left` (~2.5rem) to ensure icons do not overlap text.
 - **MDF STANDARDS**:
     - **Record Spacing**: Double blank lines (`\n\n`) are MANDATORY between records.
     - **Core Tags**: `\lx` (Lexeme), `\ps` (POS), `\ge` (Gloss), `\inf` (Inflection).

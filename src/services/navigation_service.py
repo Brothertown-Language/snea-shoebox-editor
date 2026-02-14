@@ -12,6 +12,7 @@ PAGE_LOGIN = st.Page("pages/login.py", title="Login", icon="🔐", url_path="log
 PAGE_STATUS = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status")
 PAGE_HOME = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index", default=True)
 PAGE_USER = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
+PAGE_RECORDS = st.Page("pages/records.py", title="Records", icon="📚", url_path="records")
 PAGE_UPLOAD = st.Page("pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
 PAGE_BATCH_ROLLBACK = st.Page("pages/batch_rollback.py", title="Batch Rollback", icon="🔙", url_path="rollback")
 PAGE_TABLE_MAINTENANCE = st.Page("pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance")
@@ -27,6 +28,7 @@ class NavigationService:
     PAGE_STATUS = PAGE_STATUS
     PAGE_HOME = PAGE_HOME
     PAGE_USER = PAGE_USER
+    PAGE_RECORDS = PAGE_RECORDS
     PAGE_UPLOAD = PAGE_UPLOAD
     PAGE_BATCH_ROLLBACK = PAGE_BATCH_ROLLBACK
     PAGE_TABLE_MAINTENANCE = PAGE_TABLE_MAINTENANCE
@@ -47,7 +49,7 @@ class NavigationService:
         if logged_in:
             logger.debug("Returning authenticated navigation tree for role: %s", user_role)
             nav_tree = {
-                "Main": [cls.PAGE_HOME, cls.PAGE_UPLOAD],
+                "Main": [cls.PAGE_HOME, cls.PAGE_RECORDS, cls.PAGE_UPLOAD],
                 "System": [cls.PAGE_STATUS, cls.PAGE_TABLE_MAINTENANCE],
             }
             
@@ -66,6 +68,7 @@ class NavigationService:
             return [
                 cls.PAGE_LOGIN, 
                 cls.PAGE_HOME, 
+                cls.PAGE_RECORDS,
                 cls.PAGE_UPLOAD,
                 cls.PAGE_BATCH_ROLLBACK,
                 cls.PAGE_STATUS, 
@@ -83,6 +86,7 @@ class NavigationService:
         return {
             cls.PAGE_STATUS: "pages/system_status.py",
             cls.PAGE_HOME: "pages/index.py",
+            cls.PAGE_RECORDS: "pages/records.py",
             cls.PAGE_USER: "pages/user_info.py",
             cls.PAGE_UPLOAD: "pages/upload_mdf.py",
             cls.PAGE_BATCH_ROLLBACK: "pages/batch_rollback.py",
