@@ -83,7 +83,7 @@
 **Behavior**:
 - **Multi-Record Viewing**: Multiple records are displayed simultaneously in a scrollable list.
 - **Pagination**:
-    - Records are loaded in batches based on "Results per page" (e.g., 10, 25, 50, 100).
+    - Records are loaded in batches based on "Results per page" (e.g., 1, 5, 10, 25, 50, 100).
     - **Lazy Loading**: Only the records for the current page are fetched from the database (simulated in mock) and rendered in the UI.
     - Page size preference is persisted in `UserPreference`.
     - Navigating between pages updates the record set without reloading the entire page.

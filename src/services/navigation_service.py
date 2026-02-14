@@ -10,7 +10,7 @@ logger = get_logger("snea.navigation")
 # Paths are relative to src/frontend/
 PAGE_LOGIN = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
 PAGE_STATUS = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status")
-PAGE_HOME = st.Page("pages/index.py", title="Home", icon="🏠", url_path="index", default=True)
+PAGE_HOME = st.Page("pages/index.py", title="Main Menu", icon="🏠", url_path="index", default=True)
 PAGE_USER = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
 PAGE_RECORDS = st.Page("pages/records.py", title="Records", icon="📚", url_path="records")
 PAGE_UPLOAD = st.Page("pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
@@ -131,7 +131,7 @@ class NavigationService:
             if "redirect_params" in st.session_state:
                 params = st.session_state.pop("redirect_params")
                 next_page = params.pop("next", "pages/index.py")
-                logger.debug("Post-login redirect to deep-link: %s", next_page)
+                logger.debug("Post-login redirect to deep-link: %s with params: %s", next_page, params)
                 for k, v in params.items():
                     st.query_params[k] = v
                 st.switch_page(next_page)

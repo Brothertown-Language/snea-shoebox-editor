@@ -10,7 +10,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Data Layer**: MDF (Multi-Dictionary Formatter) standards using PostgreSQL and pgvector.
 
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
-- **UI Header Redundancy**: Removed redundant "Records (Mock)" and "Record View" headers from the `records` mock to streamline the UI.
+- **Pagination Options**: Added sizes 1 and 5 to the "Results per page" selector in the records view to allow for more granular inspection and testing. (2026-02-14)
 - **Copy Feature Removal**: Removed "Copy Plain" and "Copy Rich" features from the `records` page and mock as they were unreliable and difficult to maintain in a pure Streamlit environment without extensive JS integration.
 ## USER PREFERENCES & HARD CONSTRAINTS
 - **SUPREME DIRECTIVE (v8.5)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Authorization NEVER carries over and is PLAN-SPECIFIC: a "Go" applies ONLY to the immediately preceding plan. You MUST stop and wait for a new "Go" for every new plan. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
@@ -96,7 +96,29 @@ This file serves as a persistent memory of critical project context, user prefer
     - Iconography is used for all selection buttons for consistency: "View Selection" uses 🧺 (toggles to 📚 "Show All" when active).
     - This filter is persisted in the URL as `view_selection=True`.
 
+- **Emoji Compatibility Mandate (v1.0)**: As of 2026-02-14, resolved a Streamlit crash caused by using non-emoji symbols (e.g., "←", "◀", "▶") in the `icon=` parameter of widgets. Streamlit's `validate_emoji` is strict and requires valid Unicode emojis (e.g., "⬅️", "◀️", "▶️"). All such symbols in `src/` were audited and replaced with their emoji counterparts.
+
 - **Strict UI Consistency Mandate (v1.0)**: As of 2026-02-14, updated AI and Project Guidelines to enforce strict visual consistency.
     - Added "Visual Consistency" rule to AI Guidelines (Section V).
     - Added "Iconography and Visual Consistency" section to `docs/ui-guidelines.md`.
     - Added "SELF-CORRECTION & CONSISTENCY CHECK" (Section VIII) to AI Guidelines to prevent "sloppiness" through pre-flight checks and post-implementation audits.
+
+- **Record Export Capability (v1.2)**: As of 2026-02-14, refined bulk record export in the Records sidebar.
+    - Added `LinguisticService.get_all_records_for_export` to fetch full record sets matching current filters without pagination.
+    - Added dynamic export section at the bottom of the sidebar (just above "Back to Main Menu").
+    - Header is renamed to "Export Source" or "Export All Sources" based on the results.
+    - Single Source: Offers a "Download Source (MDF)" button for direct MDF download.
+    - Multiple Sources: Offers a "Download All (Zip)" button that bundles sources into individual MDF files within a ZIP archive.
+    - **Robustness**: Implemented explicit skip logic to ensure empty record sets are never included in the ZIP archive.
+    - Adheres to the strict MDF filename mandate using `UploadService.generate_mdf_filename`.
+
+- **MDF Legacy Tag Mapping (v1.0)**: As of 2026-02-14, updated `MDFValidator` to detect and suggest updates for legacy tags found in older datasets (e.g., Trumbull Natick Dictionary).
+    - Mappings: `\lmm` → `\lx`, `\ctg` → `\ps`, `\gls` → `\ge`, `\src` → `\rf`, `\etm` → `\et`, `\rmk` → `\nt`, `\cmt` → `\nt`, `\twn` → `\cf`, `\drv` → `\dr`.
+    - Added `docs/mdf/tag_mappings.md` to document these mappings.
+    - Updated `MDFValidator` regex to support leading whitespace (`r"^\s*\\([a-z]+)"`), common in legacy files.
+
+- **Robust URL Parameter Synchronization (v1.0)**: As of 2026-02-14, implemented robust URL parameter synchronization in the Records view to resolve an issue where manual reloads or deep-links lost parameters. 
+    - The new logic in `src/frontend/pages/records.py` detects manual URL overrides even if a session is already active.
+    - Added `page_size` and `view_selection` to the synchronized parameter set.
+    - Implemented comprehensive debug logging in `app.py`, `navigation_service.py`, and `records.py` to trace the parameter lifecycle from entry point to page execution.
+    - Fixed a crash in the Records view caused by missing initialization of `st.session_state.structural_highlighting` for unauthenticated users.

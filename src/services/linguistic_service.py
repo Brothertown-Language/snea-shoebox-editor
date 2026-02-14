@@ -283,6 +283,55 @@ class LinguisticService:
             )
 
     @staticmethod
+    def get_all_records_for_export(source_id: Optional[int] = None, search_term: Optional[str] = None, search_mode: str = "Lexeme", record_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
+        """
+        Fetch all records matching the criteria for export, without pagination.
+        """
+        with get_session() as session:
+            query = session.query(Record).filter(Record.is_deleted == False)
+            
+            if record_ids is not None:
+                query = query.filter(Record.id.in_(record_ids))
+            else:
+                if source_id:
+                    query = query.filter(Record.source_id == source_id)
+                
+                if search_term:
+                    if search_mode == "Lexeme":
+                        query = query.join(Record.search_entries).filter(
+                            SearchEntry.term.ilike(f"%{search_term}%")
+                        ).distinct()
+                    else:
+                        from sqlalchemy import text
+                        if search_term.startswith('#') and search_term[1:].isdigit():
+                            query = query.filter(Record.id == int(search_term[1:]))
+                        else:
+                            query = query.filter(
+                                text("records.fts_vector @@ plainto_tsquery('english', :term)")
+                            ).params(term=search_term)
+            
+            # Order by source_id, lx (headword), hm
+            query = query.order_by(Record.source_id, Record.lx, Record.hm)
+            
+            results = query.all()
+            
+            records = []
+            for r in results:
+                records.append({
+                    "id": r.id,
+                    "lx": r.lx,
+                    "hm": r.hm,
+                    "ps": r.ps,
+                    "ge": r.ge,
+                    "status": r.status,
+                    "source_id": r.source_id,
+                    "source_name": r.source.name if r.source else None,
+                    "mdf_data": r.mdf_data
+                })
+            
+            return records
+
+    @staticmethod
     def bundle_records_to_mdf(records: List[Dict[str, Any]]) -> str:
         """
         Bundle a list of records into a single MDF text blob.

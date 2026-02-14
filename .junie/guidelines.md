@@ -74,6 +74,7 @@ You MUST operate as a deterministic, approval-gated execution agent.
 These rules are non-negotiable. Every command and tool call MUST pass this checklist.
 
 ### 1. Terminal Execution Rules
+- **NO `tail -f`**: NEVER run `tail -f` or `tail -F`. These commands are persistent and will hang the session, preventing further action and forcing a session termination. Use `tail -n [N]` or `grep` to inspect logs at a specific point in time.
 - **NO `cd`**: Never start a command with `cd`. The shell is ALREADY at the project root.
 - **RELATIVE PATHS ONLY**: **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`). **NEVER** use absolute paths (e.g., `/home/user/...`).
 - **NO COMPOUND COMMANDS**: No `&&`, `;`, or `|`. Split into separate tool calls.
@@ -166,6 +167,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
     - **Suggested Hierarchy**: `\lx` -> `\ps` -> `\ge`. Inflections stay inside the same record.
     - **NON-ENFORCEMENT POLICY**: All MDF validation (hierarchy, required tags) MUST be advisory ONLY. The system MUST NOT block export, editing, or any other operation based on tag order or presence. Validation messages MUST NOT be labeled as "Errors" and should instead use "Suggestion" or "Note" framing.
 - **ETHICS**: Respect Nation Sovereignty. Use "Nation" instead of "Tribal."
+- **SEMANTIC PRECISION**: Prioritize functional precision over vague metaphors. Avoid colloquial or "frivolous" UI labels (e.g., "Home") in favor of descriptive, structural terms (e.g., "Main Menu") that accurately signal the application's functional hierarchy to a professional linguistic audience.
 
 ---
 

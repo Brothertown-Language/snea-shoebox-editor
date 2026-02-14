@@ -134,7 +134,7 @@ def main():
         )
         
         st.divider()
-        if st.button("Back to Home", use_container_width=True):
+        if st.button("Back to Main Menu", use_container_width=True):
             st.switch_page("pages/index.py")
 
     if table_option == "Sources":

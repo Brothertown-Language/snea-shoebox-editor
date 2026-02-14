@@ -10,6 +10,17 @@ class MDFValidator:
     """
 
     REQUIRED_HIERARCHY = ["lx", "ps", "ge"]
+    LEGACY_TAG_MAPPING = {
+        "lmm": "lx",
+        "ctg": "ps",
+        "gls": "ge",
+        "src": "rf",
+        "etm": "et",
+        "rmk": "nt",
+        "cmt": "nt",
+        "twn": "cf",
+        "drv": "dr"
+    }
 
     @staticmethod
     def validate_record(lines: List[str]) -> Dict[str, Any]:
@@ -31,7 +42,7 @@ class MDFValidator:
         """
         diagnostics = []
         found_req_tags = []
-        tag_pattern = re.compile(r"\\([a-z]+)")
+        tag_pattern = re.compile(r"^\s*\\([a-z]+)")
 
         # 1. First pass: Identify tags and check basic formatting
         for line in lines:
@@ -50,7 +61,17 @@ class MDFValidator:
             
             tag = match.group(1)
             found_req_tags.append(tag)
-            diagnostics.append({"status": "ok", "message": "", "tag": tag})
+            
+            # Check for legacy tags
+            if tag in MDFValidator.LEGACY_TAG_MAPPING:
+                modern = MDFValidator.LEGACY_TAG_MAPPING[tag]
+                diagnostics.append({
+                    "status": "suggestion",
+                    "message": f"Legacy tag \\{tag} detected. Consider updating to the modern MDF form \\{modern}.",
+                    "tag": tag
+                })
+            else:
+                diagnostics.append({"status": "ok", "message": "", "tag": tag})
 
         # 2. Second pass: Check Hierarchy and Order
         last_req_idx = -1

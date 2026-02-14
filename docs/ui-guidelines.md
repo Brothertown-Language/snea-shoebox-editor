@@ -12,7 +12,7 @@ To provide a focused workspace and consistent navigation, views must suppress de
 - **[ ] Suppress Default Nav**: Call `hide_sidebar_nav()` (from `src.frontend.ui_utils`) at the very top of the main function.
 - **[ ] Sidebar Header**: Use `with st.sidebar: st.header("Page Title")` to establish context.
 - **[ ] Local Controls**: Move page-specific filters, selectors, and settings into the sidebar.
-- **[ ] Back Navigation**: Provide a "Back to Home" or "Back to [Parent]" button at the bottom of the sidebar.
+- **[ ] Back Navigation**: Provide a "Back to Main Menu" or "Back to [Parent]" button at the bottom of the sidebar.
 - **[ ] Default Spacing**: DO NOT override `.block-container` padding unless absolutely necessary for record comparison. Use default Streamlit spacing to avoid toolbar overlap.
 
 ## 2. Main Panel Optimization (Removal of Redundant Headers)

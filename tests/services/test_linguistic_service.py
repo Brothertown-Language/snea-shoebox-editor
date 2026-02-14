@@ -196,6 +196,35 @@ class TestLinguisticService(unittest.TestCase):
             self.assertEqual(result.limit, 5)
             self.assertEqual(result.offset, 5)
 
+    def test_get_all_records_for_export(self):
+        """Test fetching all records matching criteria without pagination."""
+        # Create some records first
+        r1 = Record(lx='test1', source_id=self.source_id, mdf_data='\\lx test1')
+        r2 = Record(lx='test2', source_id=self.source_id, mdf_data='\\lx test2')
+        self.session.add_all([r1, r2])
+        self.session.commit()
+        
+        with self._patch_session():
+            records = LinguisticService.get_all_records_for_export(source_id=self.source_id)
+            self.assertGreaterEqual(len(records), 2)
+            for r in records:
+                self.assertEqual(r['source_id'], self.source_id)
+            
+            # Test with search term (manually add search entry since we bypass search_records)
+            from src.database.models.search import SearchEntry
+            self.session.add(SearchEntry(record_id=r1.id, term='test1', entry_type='lx'))
+            self.session.commit()
+
+            records = LinguisticService.get_all_records_for_export(search_term="test1")
+            self.assertEqual(len(records), 1)
+            self.assertEqual(records[0]['lx'], 'test1')
+            
+            # Test with record IDs
+            rid = r1.id
+            records_by_id = LinguisticService.get_all_records_for_export(record_ids=[rid])
+            self.assertEqual(len(records_by_id), 1)
+            self.assertEqual(records_by_id[0]['id'], rid)
+
     def test_bundle_records_to_mdf(self):
         records = [
             {'lx': 'apple', 'mdf_data': '\\lx apple\n\\ge fruit'},

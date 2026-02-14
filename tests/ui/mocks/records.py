@@ -286,7 +286,7 @@ with st.sidebar:
     
     st.markdown(f"<p style='text-align: center; margin-bottom: 0;'>Page {st.session_state.current_page} of {num_pages}</p>", unsafe_allow_html=True)
     
-    new_page_size = st.selectbox("Results per page", [10, 25, 50, 100], index=[10, 25, 50, 100].index(st.session_state.page_size), key="sidebar_page_size")
+    new_page_size = st.selectbox("Results per page", [1, 5, 10, 25, 50, 100], index=[1, 5, 10, 25, 50, 100].index(st.session_state.page_size), key="sidebar_page_size")
     if new_page_size != st.session_state.page_size:
         st.session_state.page_size = new_page_size
         st.session_state.current_page = 1

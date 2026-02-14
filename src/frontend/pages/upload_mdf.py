@@ -203,7 +203,7 @@ def upload_mdf():
         active_file_id = st.session_state.get("pending_upload_file_id")
 
         st.divider()
-        if st.button("Back to Main Menu", icon="←", key="back_to_main"):
+        if st.button("Back to Main Menu", icon="⬅️", key="back_to_main"):
             st.session_state.pop("review_batch_id", None)
             st.session_state.pop("upload_active_source_name", None)
             st.switch_page("pages/index.py")
@@ -389,7 +389,7 @@ def _render_review_view():
                 st.error(f"Re-Match failed: {e}")
 
         # Back button to return to upload view
-        if st.button("Back to MDF Upload", icon="←", key="back_to_upload"):
+        if st.button("Back to MDF Upload", icon="⬅️", key="back_to_upload"):
             st.session_state.pop("review_batch_id", None)
             st.rerun()
             return
@@ -544,11 +544,11 @@ def _render_review_table(batch_id, session_deps):
         st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_entries} entries)")
         nav_col1, nav_col2 = st.columns(2)
         with nav_col1:
-            if st.button("Previous", icon="◀", key="page_prev", disabled=(current_page <= 1)):
+            if st.button("Previous", icon="◀️", key="page_prev", disabled=(current_page <= 1)):
                 st.session_state["review_current_page"] = current_page - 1
                 st.rerun()
         with nav_col2:
-            if st.button("Next", icon="▶", key="page_next", disabled=(current_page >= total_pages)):
+            if st.button("Next", icon="▶️", key="page_next", disabled=(current_page >= total_pages)):
                 st.session_state["review_current_page"] = current_page + 1
                 st.rerun()
 
@@ -891,11 +891,11 @@ def _render_review_table(batch_id, session_deps):
                 if row == page_rows[-1] and total_pages > 1:
                     nav_c1, nav_c2, nav_c3 = st.columns([2, 3, 2])
                     with nav_c1:
-                        if st.button("Previous", icon="◀", key="main_page_prev", disabled=(current_page <= 1)):
+                        if st.button("Previous", icon="◀️", key="main_page_prev", disabled=(current_page <= 1)):
                             st.session_state["review_current_page"] = current_page - 1
                             st.rerun()
                     with nav_c3:
-                        if st.button("Next", icon="▶", key="main_page_next", disabled=(current_page >= total_pages), use_container_width=True):
+                        if st.button("Next", icon="▶️", key="main_page_next", disabled=(current_page >= total_pages), use_container_width=True):
                             st.session_state["review_current_page"] = current_page + 1
                             st.rerun()
 

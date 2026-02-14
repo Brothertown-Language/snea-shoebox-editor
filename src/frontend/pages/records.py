@@ -4,6 +4,8 @@ import streamlit as st
 import pandas as pd
 import datetime as _dt
 import json
+import zipfile
+import io
 from typing import List, Dict, Any, Optional
 from src.services.linguistic_service import LinguisticService
 from src.services.upload_service import UploadService
@@ -29,20 +31,79 @@ def records():
     # --- 1. Load Initial State from URL / Preferences ---
     query_params = st.query_params
     
-    # Sync search from URL
-    if "search" in query_params:
-        st.session_state.search_query = query_params["search"]
-    if "search_mode" in query_params:
-        st.session_state.search_mode = query_params["search_mode"]
-    if "source" in query_params:
-        st.session_state.selected_source_id = query_params["source"]
-    if "page" in query_params:
-        try:
-            st.session_state.current_page = int(query_params["page"])
-        except ValueError:
-            pass
+    # Use a session state flag to ensure URL sync only happens once per page load
+    # BUT, we also want to allow manual URL changes if the user reloads.
+    # Streamlit doesn't give us an easy "is_reload" flag.
+    # We'll use the sync_key to avoid INFINITE LOOPS if update_url_params 
+    # triggers a rerun (it shouldn't, but safety first).
+    sync_key = f"records_url_synced_{st.session_state.get('user_email', 'anon')}"
     
-    # Load persistence preferences
+    # We'll re-sync if the sync_key is missing OR if we detect a manual URL override
+    # (though detecting a manual override is hard without comparing all state).
+    
+    if not st.session_state.get(sync_key, False):
+        logger.debug("First load/sync of records page. Query params: %s", query_params)
+        # Sync search from URL
+        if "search" in query_params:
+            st.session_state.search_query = query_params["search"]
+        if "search_mode" in query_params:
+            st.session_state.search_mode = query_params["search_mode"]
+        if "source" in query_params:
+            st.session_state.selected_source_id = query_params["source"]
+        if "page" in query_params:
+            try:
+                st.session_state.current_page = int(query_params["page"])
+            except ValueError:
+                pass
+        if "page_size" in query_params:
+            try:
+                st.session_state.page_size = int(query_params["page_size"])
+            except ValueError:
+                pass
+        if "view_selection" in query_params:
+            st.session_state.view_selection_only = query_params["view_selection"] == "True"
+
+        st.session_state[sync_key] = True
+    else:
+        # Check for manual URL parameter changes even if already synced
+        # This handles the case where a user manually edits the URL and presses Enter
+        # which might not trigger a new session but does trigger a rerun.
+        # However, we must be careful not to let session state (truth) be 
+        # overwritten by OLD URL params if update_url_params hasn't run yet.
+        # Actually, if the user manually changed the URL, st.query_params WILL differ from session state.
+        
+        url_changes = {}
+        if "search" in query_params and query_params["search"] != st.session_state.get("search_query"):
+            url_changes["search_query"] = query_params["search"]
+        if "search_mode" in query_params and query_params["search_mode"] != st.session_state.get("search_mode"):
+            url_changes["search_mode"] = query_params["search_mode"]
+        if "source" in query_params and query_params["source"] != str(st.session_state.get("selected_source_id")):
+            url_changes["selected_source_id"] = query_params["source"]
+        if "page" in query_params:
+            try:
+                if int(query_params["page"]) != st.session_state.get("current_page"):
+                    url_changes["current_page"] = int(query_params["page"])
+            except ValueError:
+                pass
+        if "page_size" in query_params:
+            try:
+                if int(query_params["page_size"]) != st.session_state.get("page_size"):
+                    url_changes["page_size"] = int(query_params["page_size"])
+            except ValueError:
+                pass
+        if "view_selection" in query_params:
+            val = query_params["view_selection"] == "True"
+            if val != st.session_state.get("view_selection_only"):
+                url_changes["view_selection_only"] = val
+
+        if url_changes:
+            logger.debug("Manual URL override detected, updating session state: %s", url_changes)
+            for k, v in url_changes.items():
+                st.session_state[k] = v
+            # Rerun to ensure everything (including sidebar inputs) reflects the new state
+            st.rerun()
+    
+    # Load persistence preferences only if NOT provided in URL
     if user_email:
         if "page_size" not in st.session_state:
             saved_size = PreferenceService.get_preference(user_email, "records", "page_size", "25")
@@ -70,7 +131,9 @@ def records():
     if "local_edits" not in st.session_state:
         st.session_state.local_edits = set()
     if "view_selection_only" not in st.session_state:
-        st.session_state.view_selection_only = query_params.get("view_selection", "False") == "True"
+        st.session_state.view_selection_only = False
+    if "structural_highlighting" not in st.session_state:
+        st.session_state.structural_highlighting = True
     if "selection" not in st.session_state:
         # Try to load selection from persistence
         st.session_state.selection = []
@@ -88,13 +151,42 @@ def records():
             except Exception as e:
                 logger.error(f"Failed to load selection for {user_email}: {e}")
 
+    def on_search_change():
+        st.session_state.search_query = st.session_state.search_query_input
+        st.session_state.current_page = 1
+        update_url_params()
+
+    def on_mode_change():
+        st.session_state.search_mode = st.session_state.search_mode_radio
+        st.session_state.current_page = 1
+        update_url_params()
+
+    def on_source_change():
+        sources = LinguisticService.get_sources_with_counts()
+        source_id_map = {s['name']: s['id'] for s in sources}
+        selected_name = st.session_state.source_select
+        st.session_state.selected_source_id = source_id_map.get(selected_name, "All")
+        st.session_state.current_page = 1
+        update_url_params()
+
     def update_url_params():
-        st.query_params["search"] = st.session_state.search_query
-        st.query_params["search_mode"] = st.session_state.search_mode
-        st.query_params["source"] = str(st.session_state.selected_source_id)
-        st.query_params["page"] = st.session_state.current_page
-        st.query_params["page_size"] = st.session_state.page_size
-        st.query_params["view_selection"] = str(st.session_state.view_selection_only)
+        changed = False
+        new_params = {
+            "search": st.session_state.search_query,
+            "search_mode": st.session_state.search_mode,
+            "source": str(st.session_state.selected_source_id),
+            "page": str(st.session_state.current_page),
+            "page_size": str(st.session_state.page_size),
+            "view_selection": str(st.session_state.view_selection_only)
+        }
+        for k, v in new_params.items():
+            if st.query_params.get(k) != v:
+                st.query_params[k] = v
+                changed = True
+        
+        if changed:
+            logger.debug("URL parameters updated: %s", new_params)
+        return changed
 
     # --- 2. Calculate Search Results (Pre-calculate for Header Count) ---
     source_filter_id = None if st.session_state.selected_source_id == "All" else int(st.session_state.selected_source_id)
@@ -144,21 +236,20 @@ def records():
         st.markdown(f"**{header_text}**")
         
         search_query = st.text_input("Enter text...", value=st.session_state.search_query, 
-                                    key="search_query_input", label_visibility="collapsed")
+                                    key="search_query_input", label_visibility="collapsed",
+                                    on_change=on_search_change)
 
         # Lexeme/FTS + Search/Clear Buttons on one line
         c_mode, c_s, c_c = st.columns([0.7, 0.15, 0.15])
         with c_mode:
-            search_mode = st.radio("Search Mode", ["Lexeme", "FTS"], 
+            st.radio("Search Mode", ["Lexeme", "FTS"], 
                                    index=["Lexeme", "FTS"].index(st.session_state.search_mode), 
-                                   horizontal=True, key="search_mode_radio", label_visibility="collapsed")
+                                   horizontal=True, key="search_mode_radio", label_visibility="collapsed",
+                                   on_change=on_mode_change)
         with c_s:
             if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
-                if search_query != st.session_state.search_query:
-                    st.session_state.search_query = search_query
-                    st.session_state.current_page = 1
-                    update_url_params()
-                    st.rerun()
+                on_search_change()
+                st.rerun()
         with c_c:
             if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
                 st.session_state.search_query = ""
@@ -166,41 +257,22 @@ def records():
                 update_url_params()
                 st.rerun()
 
-        # Handle Enter key in text_input
-        if search_query != st.session_state.search_query:
-            st.session_state.search_query = search_query
-            st.session_state.current_page = 1
-            update_url_params()
-            st.rerun()
-
-        if search_mode != st.session_state.search_mode:
-            st.session_state.search_mode = search_mode
-            st.session_state.current_page = 1
-            update_url_params()
-            st.rerun()
-
         sources = LinguisticService.get_sources_with_counts()
         source_options = ["All"] + [s['name'] for s in sources]
-        source_id_map = {s['name']: s['id'] for s in sources}
         source_name_map = {str(s['id']): s['name'] for s in sources}
         source_name_map["All"] = "All"
 
         current_source_name = source_name_map.get(str(st.session_state.selected_source_id), "All")
-        selected_source_name = st.selectbox("Select Source", source_options, 
+        st.selectbox("Select Source", source_options, 
                                             index=source_options.index(current_source_name), 
                                             key="source_select",
-                                            label_visibility="collapsed")
-        selected_source_id = source_id_map.get(selected_source_name, "All")
-        if selected_source_id != st.session_state.selected_source_id:
-            st.session_state.selected_source_id = selected_source_id
-            st.session_state.current_page = 1
-            update_url_params()
-            st.rerun()
+                                            label_visibility="collapsed",
+                                            on_change=on_source_change)
 
         st.markdown("**Pagination**")
         
         c1, c2 = st.columns(2)
-        if c1.button("Prev", icon="◀", disabled=(st.session_state.current_page <= 1), use_container_width=True):
+        if c1.button("Prev", icon="◀️", disabled=(st.session_state.current_page <= 1), use_container_width=True):
             if st.session_state.global_edit_mode and st.session_state.pending_edits:
                 for rid, mdf in st.session_state.pending_edits.items():
                     LinguisticService.update_record(
@@ -213,7 +285,7 @@ def records():
             st.session_state.current_page -= 1
             update_url_params()
             st.rerun()
-        if c2.button("Next", icon="▶", disabled=not has_next, use_container_width=True):
+        if c2.button("Next", icon="▶️", disabled=not has_next, use_container_width=True):
             if st.session_state.global_edit_mode and st.session_state.pending_edits:
                 for rid, mdf in st.session_state.pending_edits.items():
                     LinguisticService.update_record(
@@ -230,8 +302,8 @@ def records():
         st.markdown(f"<p style='text-align: center; margin-bottom: 0;'>Page {st.session_state.current_page} of {total_pages}</p>", unsafe_allow_html=True)
         st.markdown(f"<p style='text-align: center; font-size: 0.8em; color: gray;'>Showing {offset + 1}-{min(offset + len(records_batch), total_count)} of {total_count}</p>", unsafe_allow_html=True)
         
-        new_page_size = st.selectbox("Results per page", [10, 25, 50, 100], 
-                                     index=[10, 25, 50, 100].index(st.session_state.page_size))
+        new_page_size = st.selectbox("Results per page", [1, 5, 10, 25, 50, 100], 
+                                     index=[1, 5, 10, 25, 50, 100].index(st.session_state.page_size))
         if new_page_size != st.session_state.page_size:
             st.session_state.page_size = new_page_size
             st.session_state.current_page = 1
@@ -326,7 +398,82 @@ def records():
             selection_col3.button("🗑️", disabled=True, use_container_width=True)
 
         st.divider()
-        if st.button("Back to Home", use_container_width=True):
+        
+        # Determine what to export based on filters
+        export_source_id = source_filter_id
+        export_search_term = search_term
+        export_record_ids = selection_record_ids
+        
+        # Prepare export data
+        all_matching_records = LinguisticService.get_all_records_for_export(
+            source_id=export_source_id,
+            search_term=export_search_term,
+            search_mode=st.session_state.search_mode,
+            record_ids=export_record_ids
+        )
+        
+        distinct_sources = sorted(list(set(r['source_name'] for r in all_matching_records if r.get('source_name'))))
+        export_header = "Export All Sources" if len(distinct_sources) > 1 else "Export Source"
+        st.markdown(f"**{export_header}**")
+        
+        if all_matching_records:
+            github_username = IdentityService.get_github_username(user_email)
+            
+            if len(distinct_sources) > 1:
+                # Multiple sources: Zip file
+                zip_buffer = io.BytesIO()
+                with zipfile.ZipFile(zip_buffer, "a", zipfile.ZIP_DEFLATED, False) as zip_file:
+                    for src_name in distinct_sources:
+                        src_records = [r for r in all_matching_records if r['source_name'] == src_name]
+                        if not src_records:
+                            continue
+                            
+                        mdf_content = LinguisticService.bundle_records_to_mdf(src_records)
+                        
+                        # Generate individual filename for the entry in zip
+                        entry_fname = UploadService.generate_mdf_filename(
+                            prefix="export",
+                            source_name=src_name,
+                            timestamp=_dt.datetime.now(),
+                            github_username=github_username
+                        )
+                        zip_file.writestr(entry_fname, mdf_content)
+                
+                zip_filename = f"snea_export_{_dt.datetime.now().strftime('%Y%m%d_%H%M%S')}.zip"
+                
+                st.download_button(
+                    label="Download All (Zip)",
+                    data=zip_buffer.getvalue(),
+                    file_name=zip_filename,
+                    mime="application/zip",
+                    use_container_width=True,
+                    help=f"Download {len(all_matching_records)} records from {len(distinct_sources)} sources as a ZIP of MDF files"
+                )
+            else:
+                # Single source: Direct MDF download
+                mdf_bundle = LinguisticService.bundle_records_to_mdf(all_matching_records)
+                source_name = distinct_sources[0] if distinct_sources else "results"
+                
+                fname = UploadService.generate_mdf_filename(
+                    prefix="export",
+                    source_name=source_name,
+                    timestamp=_dt.datetime.now(),
+                    github_username=github_username
+                )
+                
+                st.download_button(
+                    label="Download Source (MDF)",
+                    data=mdf_bundle,
+                    file_name=fname,
+                    mime="text/plain",
+                    use_container_width=True,
+                    help=f"Download {len(all_matching_records)} records from {source_name} as MDF"
+                )
+        else:
+            st.button("Download (Empty)", disabled=True, use_container_width=True)
+
+        st.divider()
+        if st.button("Back to Main Menu", use_container_width=True):
             st.switch_page("pages/index.py")
 
     # --- 4. Main Panel: Records List ---
