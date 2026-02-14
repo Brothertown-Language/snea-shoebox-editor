@@ -23,6 +23,10 @@ def main():
     with st.sidebar:
         st.title("SNEA Mock Viewer")
         selected_name = st.selectbox("Select Mock", list(mock_options.keys()))
+        
+        if st.button("Reload Mock", use_container_width=True):
+            st.rerun()
+
         st.divider()
         st.info(f"Running: {selected_name}")
 

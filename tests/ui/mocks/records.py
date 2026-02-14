@@ -70,20 +70,6 @@ with st.sidebar:
     if st.session_state.record_index >= len(filtered_records):
         st.session_state.record_index = 0
         
-    # 3. Navigation
-    st.subheader("Navigation")
-    col1, col2 = st.columns(2)
-    if col1.button("Prev", use_container_width=True, disabled=st.session_state.edit_mode):
-        st.session_state.record_index = max(0, st.session_state.record_index - 1)
-    if col2.button("Next", use_container_width=True, disabled=st.session_state.edit_mode):
-        st.session_state.record_index = min(len(filtered_records) - 1, st.session_state.record_index + 1)
-        
-    # 4. Jump to Record
-    jump_idx = st.number_input("Jump to Record #", min_value=1, max_value=max(1, len(filtered_records)), value=st.session_state.record_index + 1)
-    if jump_idx != st.session_state.record_index + 1:
-        st.session_state.record_index = jump_idx - 1
-        st.rerun()
-
     st.divider()
     
     # 5. Download Cart
@@ -142,6 +128,14 @@ else:
             diagnostics = MDFValidator.diagnose_record(mdf_lines)
         
         render_mdf_block(current_record["mdf"], diagnostics=diagnostics)
+        
+        # Navigation
+        st.subheader("Navigation")
+        nav_cols = st.columns([1, 1, 2])
+        if nav_cols[0].button("Prev", use_container_width=True):
+            st.session_state.record_index = max(0, st.session_state.record_index - 1)
+        if nav_cols[1].button("Next", use_container_width=True):
+            st.session_state.record_index = min(len(filtered_records) - 1, st.session_state.record_index + 1)
         
         # Copy Buttons
         copy_cols = st.columns([1, 1, 2])

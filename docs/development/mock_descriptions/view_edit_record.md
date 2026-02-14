@@ -15,23 +15,21 @@
 │  (●) Lexeme  ( ) FTS      │  │ \inf examples                              │  │
 │                           │  └────────────────────────────────────────────┘  │
 │  Source Collection        │                                                  │
-│  [ Mohegan          ▾ ]   │  ┌────────────────────────────────────────────┐  │
-│                           │  │ [Copy Plain]  [Copy Rich]                  │  │
-│  Navigation               │  ├────────────────────────────────────────────┤  │
-│  [ Prev ]    [ Next ]     │  │ [Add to Cart]      [edit]      [delete]    │  │
-│                           │  └────────────────────────────────────────────┘  │
-│  Jump to Record #         │                                                  │
-│  [ 42                 ]   │  [ ] Structural Highlighting                     │
+│  [ Mohegan          ▾ ]   │  Navigation                                      │
+│                           │  [ Prev ]    [ Next ]                            │
+│                           │                                                  │
+│                           │                                                  │
+│                           │                                                  │
+│                           │                                                  │
+│ ┌───────────────────────┐ │  ┌────────────────────────────────────────────┐  │
+│ │ Download Cart         │ │  │ [Copy Plain]  [Copy Rich]                  │  │
+│ │ 12 records            │ │  ├────────────────────────────────────────────┤  │
+│ │                       │ │  │ [Add to Cart]      [edit]      [delete]    │  │
+│ │ [Download] [Discard]  │ │  └────────────────────────────────────────────┘  │
+│ └───────────────────────┘ │                                                  │
+│                           │  [ ] Structural Highlighting                     │
 │                           │                                                  │
 │                           │  ▶ Revision History                              │
-│                           │                                                  │
-├───────────────────────────┤                                                  │
-│ ┌───────────────────────┐ │                                                  │
-│ │ Download Cart         │ │                                                  │
-│ │ 12 records            │ │                                                  │
-│ │                       │ │                                                  │
-│ │ [Download] [Discard]  │ │                                                  │
-│ └───────────────────────┘ │                                                  │
 └───────────────────────────┴──────────────────────────────────────────────────┘
 
 (Edit Mode Main Panel)
@@ -64,10 +62,9 @@
     - Single-line Text Input ("Search")
     - Search Mode Toggle ("Lexeme" vs "Fulltext Search (FTS)")
     - Dropdown Selector ("Source Collection": All Sources, or specific source)
-    - Numeric Index Input ("Jump to Record #")
-    - Navigation Action Buttons ("Previous", "Next")
 - **Main Display Area**:
     - Specialized MDF Renderer (displays the record in MDF format with optional structural highlighting)
+    - Navigation Action Buttons ("Previous", "Next")
     - Horizontal Action Button Group: `[Add to Cart]`, `[edit]` (conditional), `[delete]` (conditional)
     - Copy Action Group: `[Copy Plain]`, `[Copy Rich]`
     - Preference Toggle: "Structural Highlighting" checkbox/toggle
@@ -110,4 +107,4 @@
     - `[Download]` triggers the export process (bundled zip if multiple sources).
     - `[Discard]` clears all records from the current cart session.
     - If records from multiple sources are in the cart, the system indicates that exports will be bundled in a zip archive.
-- **Record Navigation**: "Jump to Record" and "Next/Previous" actions update the currently displayed record index based on the active search/source filters.
+- **Record Navigation**: "Next/Previous" actions update the currently displayed record index based on the active search/source filters.

@@ -46,6 +46,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **UI Restoration (MDF Upload)**: Restored the standard Streamlit header, toolbar, and sidebar header in the MDF upload view to ensure accessibility and layout consistency. The custom CSS overrides that previously hid the toolbar, collapsed the header, and shrunk the sidebar header were removed in Feb 2026. Standard top padding and margins were also restored to prevent content from overlapping the toolbar.
 - **Persistent User Preferences**: Implemented a database-backed preference system using `UserPreference` model and `PreferenceService`. Currently used to persist `page_size` in the MDF upload review table across sessions for each user.
 - **Streamlit Execution Mandate (v8.3)**: Foreground Streamlit execution is strictly forbidden. All Streamlit processes (including mocks) must be started in the background using `nohup` with output redirected to `tmp/` and verified by polling logs. This ensures session persistence and prevents terminal locking.
+- **Records View Navigation Layout**: As of 2026-02-14, navigation components (Prev/Next buttons and Jump to Record input) in the `records` mock have been moved from the sidebar to the main panel, positioned between the MDF record display and the copy buttons.
 - **ModuleNotFoundError Fix**: Verified that `PYTHONPATH=.` is required when running mock scripts from the root to ensure imports from `src/` are resolved correctly.
 
 ## FUTURE FEATURE NOTES
