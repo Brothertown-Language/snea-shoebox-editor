@@ -108,10 +108,10 @@ def render_reassign_dialog(source, all_sources):
             st.rerun()
 
 def main():
-    # Role guard — only editor or admin
+    # Role guard — only admin
     user_role = st.session_state.get("user_role")
-    if user_role not in ("editor", "admin"):
-        st.error("You do not have permission to access this page. Editor or admin role required.")
+    if user_role != "admin":
+        st.error("You do not have permission to access this page. Admin role required.")
         return
 
     # Hide the main navigation menu — this view owns the sidebar entirely
@@ -128,7 +128,7 @@ def main():
         st.markdown("**Maintenance Tables**")
         table_option = st.radio(
             "Select a table to maintain:",
-            ["Sources"],
+            ["Sources", "Soft Deleted Records"],
             index=0,
             label_visibility="collapsed"
         )
@@ -139,8 +139,73 @@ def main():
 
     if table_option == "Sources":
         render_sources_maintenance()
+    elif table_option == "Soft Deleted Records":
+        render_deleted_records_maintenance()
     else:
         st.info(f"Maintenance for {table_option} is not yet implemented.")
+
+def render_deleted_records_maintenance():
+    # Load deleted records
+    records = LinguisticService.get_deleted_records()
+    
+    if not records:
+        st.info("No soft-deleted records found.")
+        return
+
+    # Table view
+    cols = st.columns([1, 4, 3, 2])
+    cols[0].write("**ID**")
+    cols[1].write("**Headword (lx)**")
+    cols[2].write("**Deleted By**")
+    cols[3].write("**Actions**")
+    
+    st.divider()
+    
+    user_email = st.session_state.get("user_email")
+
+    for record in records:
+        with st.container():
+            c1, c2, c3, c4 = st.columns([1, 4, 3, 2])
+            c1.write(str(record["id"]))
+            c2.write(record["lx"])
+            c3.write(record["deleted_by"] or "Unknown")
+            
+            # Actions
+            action_cols = c4.columns(2)
+            
+            # Restore Button
+            if action_cols[0].button("", icon="↩️", key=f"restore_{record['id']}", help="Restore record"):
+                if LinguisticService.restore_record(record["id"], user_email):
+                    st.success(f"Restored record: {record['lx']}")
+                    st.rerun()
+                else:
+                    st.error(f"Failed to restore record: {record['lx']}")
+            
+            # Hard Delete Button
+            if action_cols[1].button("", icon="🗑️", key=f"hard_delete_{record['id']}", help="Permanently delete record"):
+                st.session_state[f"confirm_hard_delete_{record['id']}"] = True
+
+            # Dialog for Hard Delete Confirmation
+            if st.session_state.get(f"confirm_hard_delete_{record['id']}", False):
+                render_hard_delete_dialog(record)
+
+@st.dialog("Confirm Permanent Deletion")
+def render_hard_delete_dialog(record):
+    st.error(f"Are you sure you want to PERMANENTLY delete record #{record['id']} ({record['lx']})?")
+    st.warning("This action cannot be undone and will remove all edit history for this record.")
+    
+    col1, col2 = st.columns(2)
+    if col1.button("Yes, Delete Permanently", type="primary", use_container_width=True):
+        if LinguisticService.hard_delete_record(record["id"]):
+            st.success(f"Permanently deleted record #{record['id']}")
+            del st.session_state[f"confirm_hard_delete_{record['id']}"]
+            st.rerun()
+        else:
+            st.error(f"Failed to delete record #{record['id']}")
+            
+    if col2.button("Cancel", use_container_width=True):
+        del st.session_state[f"confirm_hard_delete_{record['id']}"]
+        st.rerun()
 
 if __name__ == "__main__":
     main()

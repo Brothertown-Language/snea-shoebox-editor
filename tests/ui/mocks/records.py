@@ -54,6 +54,8 @@ if "user_role" not in st.session_state:
     st.session_state.user_role = "Editor"
 if "structural_highlighting" not in st.session_state:
     st.session_state.structural_highlighting = True
+if "confirm_delete_id" not in st.session_state:
+    st.session_state.confirm_delete_id = None
 if "history_loaded" not in st.session_state:
     st.session_state.history_loaded = {}  # {record_id: previous_mdf}
 
@@ -443,8 +445,21 @@ else:
                     st.rerun()
             
                 if st.session_state.user_role == "Editor":
-                    if toolbar[1].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
-                        st.error(f"Delete clicked for Record #{record_id} (Mock)")
+                    if st.session_state.get("confirm_delete_id") == record_id:
+                        st.warning("Confirm deletion?")
+                        c_del1, c_del2, _ = st.columns([1, 1, 3])
+                        if c_del1.button("Confirm", key=f"confirm_del_{record_id}", type="primary", use_container_width=True):
+                            st.success(f"Record #{record_id} deleted (Mock).")
+                            st.session_state.confirm_delete_id = None
+                            update_url_params()
+                            st.rerun()
+                        if c_del2.button("Cancel", key=f"cancel_del_{record_id}", use_container_width=True):
+                            st.session_state.confirm_delete_id = None
+                            st.rerun()
+                    else:
+                        if toolbar[1].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
+                            st.session_state.confirm_delete_id = record_id
+                            st.rerun()
                     
                     if not st.session_state.global_edit_mode:
                         if toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}"):

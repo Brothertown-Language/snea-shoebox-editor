@@ -297,3 +297,5 @@ def reload_page_at_root(delay_ms: int = 0) -> None:
         </script>
     """
     components.html(js_code, height=0)
+
+

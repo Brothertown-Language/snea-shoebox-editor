@@ -80,7 +80,6 @@ def _initialize_database():
 
 
 def main():
-    logger.debug("App main() entry. Query params: %s", st.query_params)
     # Page configuration MUST be the first Streamlit command
     st.set_page_config(
         page_title="SNEA Shoebox Editor",
@@ -145,9 +144,7 @@ def main():
         hide_sidebar_nav()
 
     # 4. Handle Redirection
-    logger.debug("Before handle_redirection. Query params: %s", st.query_params)
     NavigationService.handle_redirection(pg)
-    logger.debug("After handle_redirection. Query params: %s", st.query_params)
     
     # Run the selected page
     logger.debug("Running page: %s", getattr(pg, 'title', pg))

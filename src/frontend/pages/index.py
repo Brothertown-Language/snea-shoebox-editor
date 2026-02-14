@@ -77,8 +77,8 @@ def index():
             source_id = source_id_map.get(source_name)
             if source_id:
                 if cols[i % 3].button(f"{source_name} ({count})", key=f"src_btn_{source_id}", use_container_width=True):
-                    st.query_params["source"] = str(source_id)
-                    st.query_params["page"] = "1"
+                    st.session_state.selected_source_id = str(source_id)
+                    st.session_state.current_page = 1
                     st.switch_page("pages/records.py")
     else:
         st.info("No source data available.")
@@ -103,8 +103,9 @@ def index():
                 st.write(f"**Change:** {item['summary']}")
                 
                 if st.button("View in Records", icon="🔍", key=f"view_rec_{item['record_id']}_{i}"):
-                    st.query_params["search"] = f"#{item['record_id']}"
-                    st.query_params["search_mode"] = "FTS"
+                    st.session_state.search_query = f"#{item['record_id']}"
+                    st.session_state.search_mode = "FTS"
+                    st.session_state.current_page = 1
                     st.switch_page("pages/records.py")
     else:
         st.info("No recent activity recorded.")

@@ -9,6 +9,7 @@ from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from src.database.connection import get_session
 from src.database.models.core import Source, Record, Language
+from src.database.models.workflow import MatchupQueue
 from src.database.models.search import SearchEntry
 from src.logging_config import get_logger
 
@@ -32,11 +33,11 @@ class LinguisticService:
     @staticmethod
     def get_sources_with_counts() -> List[Dict[str, Any]]:
         """
-        Retrieve all sources with their associated record counts.
+        Retrieve all sources with their associated record counts (Records + MatchupQueue).
         """
         with get_session() as session:
             # Subquery to count records per source
-            count_subquery = (
+            record_counts = (
                 session.query(
                     Record.source_id,
                     func.count(Record.id).label('record_count')
@@ -45,13 +46,27 @@ class LinguisticService:
                 .subquery()
             )
 
-            # Join sources with the counts
+            # Subquery to count matchup queue entries per source
+            matchup_counts = (
+                session.query(
+                    MatchupQueue.source_id,
+                    func.count(MatchupQueue.id).label('matchup_count')
+                )
+                .group_by(MatchupQueue.source_id)
+                .subquery()
+            )
+
+            # Join sources with both counts and sum them
             query = (
                 session.query(
                     Source,
-                    func.coalesce(count_subquery.c.record_count, 0).label('record_count')
+                    (
+                        func.coalesce(record_counts.c.record_count, 0) +
+                        func.coalesce(matchup_counts.c.matchup_count, 0)
+                    ).label('total_count')
                 )
-                .outerjoin(count_subquery, Source.id == count_subquery.c.source_id)
+                .outerjoin(record_counts, Source.id == record_counts.c.source_id)
+                .outerjoin(matchup_counts, Source.id == matchup_counts.c.source_id)
                 .order_by(Source.name)
             )
 
@@ -93,8 +108,8 @@ class LinguisticService:
     @staticmethod
     def reassign_records(from_source_id: int, to_source_id: int) -> int:
         """
-        Reassign all records from one source to another.
-        Returns the number of records reassigned.
+        Reassign all records and matchup queue entries from one source to another.
+        Returns the total number of items reassigned.
         """
         with get_session() as session:
             # Ensure target source exists
@@ -104,29 +119,45 @@ class LinguisticService:
                 return 0
             
             try:
+                # Reassign records
                 rows_updated = (
                     session.query(Record)
                     .filter(Record.source_id == from_source_id)
                     .update({Record.source_id: to_source_id}, synchronize_session=False)
                 )
+                
+                # Reassign matchup queue entries
+                matchup_updated = (
+                    session.query(MatchupQueue)
+                    .filter(MatchupQueue.source_id == from_source_id)
+                    .update({MatchupQueue.source_id: to_source_id}, synchronize_session=False)
+                )
+                
                 session.commit()
-                logger.info(f"Reassigned {rows_updated} records from source {from_source_id} to {to_source_id}.")
-                return rows_updated
+                total_updated = rows_updated + matchup_updated
+                logger.info(f"Reassigned {rows_updated} records and {matchup_updated} matchup entries (Total: {total_updated}) from source {from_source_id} to {to_source_id}.")
+                return total_updated
             except Exception as e:
                 session.rollback()
-                logger.error(f"Failed to reassign records: {e}")
+                logger.error(f"Failed to reassign items: {e}")
                 return 0
 
     @staticmethod
     def delete_source(source_id: int) -> bool:
         """
-        Delete a source if it has no associated records.
+        Delete a source if it has no associated records or matchup queue entries.
         """
         with get_session() as session:
             # Explicit check for records
             record_count = session.query(Record).filter(Record.source_id == source_id).count()
             if record_count > 0:
                 logger.warning(f"Cannot delete source {source_id}: it has {record_count} records.")
+                return False
+            
+            # Explicit check for matchup queue entries
+            matchup_count = session.query(MatchupQueue).filter(MatchupQueue.source_id == source_id).count()
+            if matchup_count > 0:
+                logger.warning(f"Cannot delete source {source_id}: it has {matchup_count} matchup queue entries.")
                 return False
             
             source = session.query(Source).filter(Source.id == source_id).first()
@@ -454,4 +485,66 @@ class LinguisticService:
             user_email=user_email,
             change_summary="Soft delete",
             is_deleted=True
+        )
+
+    @staticmethod
+    def get_deleted_records() -> List[Dict[str, Any]]:
+        """
+        Fetch all soft-deleted records.
+        """
+        from src.database.models.identity import User
+        with get_session() as session:
+            # Join with User to get names if possible, but keep it simple
+            records = session.query(Record).filter(Record.is_deleted == True).all()
+            return [
+                {
+                    "id": r.id,
+                    "lx": r.lx,
+                    "deleted_by": r.updated_by,
+                    "deleted_at": r.updated_at.strftime("%Y-%m-%d %H:%M:%S") if r.updated_at else "N/A"
+                }
+                for r in records
+            ]
+
+    @staticmethod
+    def hard_delete_record(record_id: int) -> bool:
+        """
+        Permanently delete a record and its history.
+        """
+        from src.database.models.workflow import EditHistory, MatchupQueue
+        from src.database.models.search import SearchEntry
+        with get_session() as session:
+            try:
+                # 1. Delete history first
+                session.query(EditHistory).filter(EditHistory.record_id == record_id).delete()
+                
+                # 2. Delete search entries
+                session.query(SearchEntry).filter(SearchEntry.record_id == record_id).delete()
+                
+                # 3. Handle matchup queue suggestions (set to NULL or delete?)
+                # Since this is a hard delete of the record, we should NULL the suggestion
+                # so the entry remains in the queue but is no longer linked to a non-existent record.
+                session.query(MatchupQueue).filter(MatchupQueue.suggested_record_id == record_id).update({"suggested_record_id": None})
+                
+                # 4. Delete record (CASCADE handles record_languages)
+                session.query(Record).filter(Record.id == record_id).delete()
+                
+                session.commit()
+                logger.info(f"Hard deleted record {record_id}")
+                return True
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Failed to hard delete record {record_id}: {e}")
+                return False
+
+    @staticmethod
+    def restore_record(record_id: int, user_email: str) -> bool:
+        """
+        Restore a soft-deleted record.
+        """
+        return LinguisticService.update_record(
+            record_id=record_id,
+            user_email=user_email,
+            change_summary="Restored",
+            is_deleted=False
         )

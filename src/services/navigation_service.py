@@ -50,12 +50,12 @@ class NavigationService:
             logger.debug("Returning authenticated navigation tree for role: %s", user_role)
             nav_tree = {
                 "Main": [cls.PAGE_HOME, cls.PAGE_RECORDS, cls.PAGE_UPLOAD],
-                "System": [cls.PAGE_STATUS, cls.PAGE_TABLE_MAINTENANCE],
+                "System": [cls.PAGE_STATUS],
             }
             
             # Admin section
             if user_role == 'admin':
-                nav_tree["Admin"] = [cls.PAGE_BATCH_ROLLBACK]
+                nav_tree["Admin"] = [cls.PAGE_BATCH_ROLLBACK, cls.PAGE_TABLE_MAINTENANCE]
 
             nav_tree["Account"] = [cls.PAGE_USER, cls.PAGE_LOGOUT]
             
@@ -111,9 +111,7 @@ class NavigationService:
             
             page_to_path = cls.get_page_to_path_map()
             if pg in page_to_path:
-                current_params = {k: v for k, v in st.query_params.items()}
-                current_params["next"] = page_to_path[pg]
-                st.session_state["redirect_params"] = current_params
+                st.session_state["redirect_to"] = page_to_path[pg]
                 logger.debug("Deep-link captured, redirecting to login with next=%s", page_to_path[pg])
                 st.switch_page(cls.PAGE_LOGIN)
 
@@ -127,13 +125,10 @@ class NavigationService:
                 user_teams = st.session_state.get("user_teams", [])
                 st.session_state["user_role"] = SecurityManager.get_user_role(user_teams)
             
-            # Priority 1: Check session state for saved params (from deep links)
-            if "redirect_params" in st.session_state:
-                params = st.session_state.pop("redirect_params")
-                next_page = params.pop("next", "pages/index.py")
-                logger.debug("Post-login redirect to deep-link: %s with params: %s", next_page, params)
-                for k, v in params.items():
-                    st.query_params[k] = v
+            # Priority 1: Check session state for saved destination (from deep links)
+            if "redirect_to" in st.session_state:
+                next_page = st.session_state.pop("redirect_to", "pages/index.py")
+                logger.debug("Post-login redirect to deep-link: %s", next_page)
                 st.switch_page(next_page)
                 
             # Priority 2: Check query params (simple internal redirects)

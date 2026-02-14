@@ -49,7 +49,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Persistent User Preferences**: Implemented a database-backed preference system using `UserPreference` model and `PreferenceService`. Currently used to persist `page_size` in the MDF upload review table across sessions for each user.
 - **Streamlit Execution Mandate (v8.3)**: Foreground Streamlit execution is strictly forbidden. All Streamlit processes (including mocks) must be started in the background using `nohup` with output redirected to `tmp/` and verified by polling logs. This ensures session persistence and prevents terminal locking.
 - **SCOPE ENFORCEMENT MANDATE (v8.4)**: Strictly FORBIDDEN from modifying `src/` (Production) when the primary task is focused on `tests/ui/mocks/` (Mocks) or `docs/` (Documentation). Any attempt to "standardize" code by moving logic from a mock into `src/` without explicit "Scope Crossing Approval" is a violation of the zero-trust protocol.
-- **Records View Layout (v2.0)**: As of 2026-02-14, navigation components (Prev/Next buttons, Page X of Y, and Results per page) in the `records` view (and mock) have been moved from the main panel to the sidebar. URL parameter tracking (`search`, `search_mode`, `source`, `page`, `page_size`) is implemented to support bookmarking.
+- **Records View Layout (v2.0)**: As of 2026-02-14, navigation components (Prev/Next buttons, Page X of Y, and Results per page) in the `records` view (and mock) have been moved from the main panel to the sidebar.
 - **Records View Implementation**: Production Records View implemented at `src/frontend/pages/records.py` and registered in `NavigationService` between Home and Upload MDF.
 - **Records View Stabilization**: Fixed a crash caused by invalid icon usage ('✎' and '✖'). Replaced with standard emojis ('📝' and '🗑️') in both production and mock views. Fixed a rendering loop error in the mock toolbar.
 - **Lifecycle Script Mandate**: AI Guidelines updated to mandate the use of `./scripts/start_view_mocks.sh`, `./scripts/stop_view_mocks.sh`, `./scripts/start_streamlit.sh`, and `./scripts/stop_streamlit.sh` for all Streamlit execution.
@@ -94,7 +94,7 @@ This file serves as a persistent memory of critical project context, user prefer
     - Selection contents are persisted in the database via `PreferenceService` (`view_name='global'`, `preference_key='selection_contents'`).
     - The "View Selection" button activates a filter that isolates selected records using a new `record_ids` parameter in `LinguisticService.search_records`.
     - Iconography is used for all selection buttons for consistency: "View Selection" uses 🧺 (toggles to 📚 "Show All" when active).
-    - This filter is persisted in the URL as `view_selection=True`.
+    - This filter is no longer persisted in the URL.
 
 - **Emoji Compatibility Mandate (v1.0)**: As of 2026-02-14, resolved a Streamlit crash caused by using non-emoji symbols (e.g., "←", "◀", "▶") in the `icon=` parameter of widgets. Streamlit's `validate_emoji` is strict and requires valid Unicode emojis (e.g., "⬅️", "◀️", "▶️"). All such symbols in `src/` were audited and replaced with their emoji counterparts.
 
@@ -111,14 +111,15 @@ This file serves as a persistent memory of critical project context, user prefer
     - Multiple Sources: Offers a "Download All (Zip)" button that bundles sources into individual MDF files within a ZIP archive.
     - **Robustness**: Implemented explicit skip logic to ensure empty record sets are never included in the ZIP archive.
     - Adheres to the strict MDF filename mandate using `UploadService.generate_mdf_filename`.
-
+- **Records View Deletion (v1.1)**: As of 2026-02-14, refined the record deletion behavior.
+    - Deletion still requires a "Confirm" step within the record's container.
+    - On confirmed deletion, the view remains on the same page. A previous attempt to use a JavaScript `scroll_to_top()` utility was removed as it was non-functional in the production environment.
 - **MDF Legacy Tag Mapping (v1.0)**: As of 2026-02-14, updated `MDFValidator` to detect and suggest updates for legacy tags found in older datasets (e.g., Trumbull Natick Dictionary).
     - Mappings: `\lmm` → `\lx`, `\ctg` → `\ps`, `\gls` → `\ge`, `\src` → `\rf`, `\etm` → `\et`, `\rmk` → `\nt`, `\cmt` → `\nt`, `\twn` → `\cf`, `\drv` → `\dr`.
     - Added `docs/mdf/tag_mappings.md` to document these mappings.
     - Updated `MDFValidator` regex to support leading whitespace (`r"^\s*\\([a-z]+)"`), common in legacy files.
 
-- **Robust URL Parameter Synchronization (v1.0)**: As of 2026-02-14, implemented robust URL parameter synchronization in the Records view to resolve an issue where manual reloads or deep-links lost parameters. 
-    - The new logic in `src/frontend/pages/records.py` detects manual URL overrides even if a session is already active.
-    - Added `page_size` and `view_selection` to the synchronized parameter set.
-    - Implemented comprehensive debug logging in `app.py`, `navigation_service.py`, and `records.py` to trace the parameter lifecycle from entry point to page execution.
-    - Fixed a crash in the Records view caused by missing initialization of `st.session_state.structural_highlighting` for unauthenticated users.
+- **Records View Stabilization**: Fixed a crash in the Records view caused by missing initialization of `st.session_state.structural_highlighting` for unauthenticated users. (2026-02-14)
+- **Source Deletion Fix**: Updated `LinguisticService.delete_source` to check for both `Record` and `MatchupQueue` entries before allowing deletion. This prevents a `NotNullViolation` when a source has pending matchup entries. (2026-02-14)
+- **Source Record Counts**: Updated `LinguisticService.get_sources_with_counts` to include entries from the `matchup_queue` table in the total record count per source. This ensures the UI reflects all associated records, including those staged for matching. (2026-02-14)
+- **Source Reassignment Fix**: Updated `LinguisticService.reassign_records` to also reassign entries in the `matchup_queue` table when a source is reassigned. (2026-02-14)

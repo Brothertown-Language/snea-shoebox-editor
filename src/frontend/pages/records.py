@@ -28,82 +28,8 @@ def records():
     # DEBUG: Show user role to verify access
     # st.sidebar.info(f"DEBUG: Role={user_role}")
     
-    # --- 1. Load Initial State from URL / Preferences ---
-    query_params = st.query_params
-    
-    # Use a session state flag to ensure URL sync only happens once per page load
-    # BUT, we also want to allow manual URL changes if the user reloads.
-    # Streamlit doesn't give us an easy "is_reload" flag.
-    # We'll use the sync_key to avoid INFINITE LOOPS if update_url_params 
-    # triggers a rerun (it shouldn't, but safety first).
-    sync_key = f"records_url_synced_{st.session_state.get('user_email', 'anon')}"
-    
-    # We'll re-sync if the sync_key is missing OR if we detect a manual URL override
-    # (though detecting a manual override is hard without comparing all state).
-    
-    if not st.session_state.get(sync_key, False):
-        logger.debug("First load/sync of records page. Query params: %s", query_params)
-        # Sync search from URL
-        if "search" in query_params:
-            st.session_state.search_query = query_params["search"]
-        if "search_mode" in query_params:
-            st.session_state.search_mode = query_params["search_mode"]
-        if "source" in query_params:
-            st.session_state.selected_source_id = query_params["source"]
-        if "page" in query_params:
-            try:
-                st.session_state.current_page = int(query_params["page"])
-            except ValueError:
-                pass
-        if "page_size" in query_params:
-            try:
-                st.session_state.page_size = int(query_params["page_size"])
-            except ValueError:
-                pass
-        if "view_selection" in query_params:
-            st.session_state.view_selection_only = query_params["view_selection"] == "True"
-
-        st.session_state[sync_key] = True
-    else:
-        # Check for manual URL parameter changes even if already synced
-        # This handles the case where a user manually edits the URL and presses Enter
-        # which might not trigger a new session but does trigger a rerun.
-        # However, we must be careful not to let session state (truth) be 
-        # overwritten by OLD URL params if update_url_params hasn't run yet.
-        # Actually, if the user manually changed the URL, st.query_params WILL differ from session state.
-        
-        url_changes = {}
-        if "search" in query_params and query_params["search"] != st.session_state.get("search_query"):
-            url_changes["search_query"] = query_params["search"]
-        if "search_mode" in query_params and query_params["search_mode"] != st.session_state.get("search_mode"):
-            url_changes["search_mode"] = query_params["search_mode"]
-        if "source" in query_params and query_params["source"] != str(st.session_state.get("selected_source_id")):
-            url_changes["selected_source_id"] = query_params["source"]
-        if "page" in query_params:
-            try:
-                if int(query_params["page"]) != st.session_state.get("current_page"):
-                    url_changes["current_page"] = int(query_params["page"])
-            except ValueError:
-                pass
-        if "page_size" in query_params:
-            try:
-                if int(query_params["page_size"]) != st.session_state.get("page_size"):
-                    url_changes["page_size"] = int(query_params["page_size"])
-            except ValueError:
-                pass
-        if "view_selection" in query_params:
-            val = query_params["view_selection"] == "True"
-            if val != st.session_state.get("view_selection_only"):
-                url_changes["view_selection_only"] = val
-
-        if url_changes:
-            logger.debug("Manual URL override detected, updating session state: %s", url_changes)
-            for k, v in url_changes.items():
-                st.session_state[k] = v
-            # Rerun to ensure everything (including sidebar inputs) reflects the new state
-            st.rerun()
-    
-    # Load persistence preferences only if NOT provided in URL
+    # --- 1. Load Initial State from Preferences ---
+    # Load persistence preferences
     if user_email:
         if "page_size" not in st.session_state:
             saved_size = PreferenceService.get_preference(user_email, "records", "page_size", "25")
@@ -134,6 +60,8 @@ def records():
         st.session_state.view_selection_only = False
     if "structural_highlighting" not in st.session_state:
         st.session_state.structural_highlighting = True
+    if "confirm_delete_id" not in st.session_state:
+        st.session_state.confirm_delete_id = None
     if "selection" not in st.session_state:
         # Try to load selection from persistence
         st.session_state.selection = []
@@ -154,12 +82,10 @@ def records():
     def on_search_change():
         st.session_state.search_query = st.session_state.search_query_input
         st.session_state.current_page = 1
-        update_url_params()
 
     def on_mode_change():
         st.session_state.search_mode = st.session_state.search_mode_radio
         st.session_state.current_page = 1
-        update_url_params()
 
     def on_source_change():
         sources = LinguisticService.get_sources_with_counts()
@@ -167,26 +93,6 @@ def records():
         selected_name = st.session_state.source_select
         st.session_state.selected_source_id = source_id_map.get(selected_name, "All")
         st.session_state.current_page = 1
-        update_url_params()
-
-    def update_url_params():
-        changed = False
-        new_params = {
-            "search": st.session_state.search_query,
-            "search_mode": st.session_state.search_mode,
-            "source": str(st.session_state.selected_source_id),
-            "page": str(st.session_state.current_page),
-            "page_size": str(st.session_state.page_size),
-            "view_selection": str(st.session_state.view_selection_only)
-        }
-        for k, v in new_params.items():
-            if st.query_params.get(k) != v:
-                st.query_params[k] = v
-                changed = True
-        
-        if changed:
-            logger.debug("URL parameters updated: %s", new_params)
-        return changed
 
     # --- 2. Calculate Search Results (Pre-calculate for Header Count) ---
     source_filter_id = None if st.session_state.selected_source_id == "All" else int(st.session_state.selected_source_id)
@@ -214,7 +120,6 @@ def records():
     # Ensure current page is within bounds
     if st.session_state.current_page > total_pages:
         st.session_state.current_page = max(1, total_pages)
-        update_url_params()
         st.rerun()
 
     has_next = st.session_state.current_page < total_pages
@@ -254,7 +159,6 @@ def records():
             if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
                 st.session_state.search_query = ""
                 st.session_state.current_page = 1
-                update_url_params()
                 st.rerun()
 
         sources = LinguisticService.get_sources_with_counts()
@@ -283,7 +187,6 @@ def records():
                     )
                 st.session_state.pending_edits = {}
             st.session_state.current_page -= 1
-            update_url_params()
             st.rerun()
         if c2.button("Next", icon="▶️", disabled=not has_next, use_container_width=True):
             if st.session_state.global_edit_mode and st.session_state.pending_edits:
@@ -296,7 +199,6 @@ def records():
                     )
                 st.session_state.pending_edits = {}
             st.session_state.current_page += 1
-            update_url_params()
             st.rerun()
             
         st.markdown(f"<p style='text-align: center; margin-bottom: 0;'>Page {st.session_state.current_page} of {total_pages}</p>", unsafe_allow_html=True)
@@ -309,7 +211,6 @@ def records():
             st.session_state.current_page = 1
             if user_email:
                 PreferenceService.set_preference(user_email, "records", "page_size", str(new_page_size))
-            update_url_params()
             st.rerun()
 
         # Moved Editing Controls here
@@ -358,7 +259,6 @@ def records():
         if selection_col1.button("", icon=view_icon, use_container_width=True, help=view_help):
             st.session_state.view_selection_only = not st.session_state.view_selection_only
             st.session_state.current_page = 1
-            update_url_params()
             st.rerun()
 
         if st.session_state.selection:
@@ -570,12 +470,23 @@ def records():
                         st.rerun()
                     
                     if user_role in ["editor", "admin"]:
-                        if toolbar[1].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
-                            if LinguisticService.soft_delete_record(record_id, user_email):
-                                st.success(f"Record #{record_id} deleted.")
+                        if st.session_state.confirm_delete_id == record_id:
+                            st.warning("Confirm deletion?")
+                            c_del1, c_del2, _ = st.columns([1, 1, 4])
+                            if c_del1.button("Confirm", key=f"confirm_del_{record_id}", type="primary", use_container_width=True):
+                                if LinguisticService.soft_delete_record(record_id, user_email):
+                                    st.success(f"Record #{record_id} deleted.")
+                                    st.session_state.confirm_delete_id = None
+                                    st.rerun()
+                                else:
+                                    st.error(f"Failed to delete Record #{record_id}.")
+                            if c_del2.button("Cancel", key=f"cancel_del_{record_id}", use_container_width=True):
+                                st.session_state.confirm_delete_id = None
                                 st.rerun()
-                            else:
-                                st.error(f"Failed to delete Record #{record_id}.")
+                        else:
+                            if toolbar[1].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
+                                st.session_state.confirm_delete_id = record_id
+                                st.rerun()
                         
                         if not st.session_state.global_edit_mode:
                             if toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}"):
