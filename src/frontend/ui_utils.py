@@ -224,6 +224,28 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
 # ── Sidebar Utilities ──────────────────────────────────────────────────
 
 
+def get_mdf_rich_html(mdf_text: str) -> str:
+    """Return an HTML representation of MDF data suitable for rich-text clipboard."""
+    import html as _html
+    lines = mdf_text.split('\n')
+    line_html = []
+    for line in lines:
+        if not line.strip():
+            line_html.append("<br>")
+            continue
+        escaped = _html.escape(line)
+        # Basic structural highlighting for tags
+        if line.startswith('\\'):
+            parts = escaped.split(' ', 1)
+            tag = parts[0]
+            content = parts[1] if len(parts) > 1 else ""
+            line_html.append(f'<div><b style="color: #cc6622;">{tag}</b> {content}</div>')
+        else:
+            line_html.append(f'<div>{escaped}</div>')
+    
+    return f'<div style="font-family: monospace; white-space: pre-wrap;">{"".join(line_html)}</div>'
+
+
 def hide_sidebar_nav() -> None:
     """Hide the default Streamlit sidebar navigation links."""
     st.html(
@@ -231,6 +253,32 @@ def hide_sidebar_nav() -> None:
         <style>
         [data-testid="stSidebarNav"] {
             display: none;
+        }
+        </style>
+        """
+    )
+
+
+def apply_standard_layout_css() -> None:
+    """
+    Applies standard SNEA layout CSS for consistent padding and margins.
+    Reduces block container padding on large screens and fixes status widget spacing.
+    """
+    import streamlit as st
+    st.html(
+        """
+        <style>
+        /* Custom class for ultra-tight horizontal padding on large screens */
+        @media (min-width: calc(736px + 8rem)) {
+            .block-container {
+                padding-left: 1rem !important;
+                padding-right: 1rem !important;
+            }
+        }
+        
+        /* st.status widget default styling - no overlay */
+        div[data-testid="stStatusWidget"] {
+            margin-bottom: 1rem !important;
         }
         </style>
         """

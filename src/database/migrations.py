@@ -30,6 +30,7 @@ class MigrationManager:
         (4, "_migrate_create_record_languages_table", "Create record_languages join table"),
         (5, "_migrate_backfill_record_languages", "Backfill record_languages from existing records"),
         (6, "_migrate_drop_records_language_id", "Drop redundant language_id from records table"),
+        (8, "_migrate_add_fts_index", "Add GIN FTS index to records for full-text search"),
     ]
 
     def __init__(self, engine):
@@ -236,6 +237,25 @@ class MigrationManager:
             # We must drop the constraint first
             conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_language_id_fkey;"))
             conn.execute(text("ALTER TABLE records DROP COLUMN IF EXISTS language_id;"))
+            conn.commit()
+
+    def _migrate_add_trgm_index(self):
+        """Migration 7: Add GIN Trigram index to search_entries table."""
+        with self._engine.connect() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_search_entries_term_trgm ON search_entries USING gin (term gin_trgm_ops);"))
+            conn.commit()
+
+    def _migrate_add_fts_index(self):
+        """Migration 8: Add GIN FTS index to records table."""
+        with self._engine.connect() as conn:
+            # Create a generated column for FTS
+            conn.execute(text("""
+                ALTER TABLE records ADD COLUMN IF NOT EXISTS fts_vector tsvector
+                GENERATED ALWAYS AS (
+                    to_tsvector('english', coalesce(lx, '') || ' ' || coalesce(ge, '') || ' ' || coalesce(mdf_data, ''))
+                ) STORED;
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_fts ON records USING gin (fts_vector);"))
             conn.commit()
 
     # ── Data Seeding ──────────────────────────────────────────────────

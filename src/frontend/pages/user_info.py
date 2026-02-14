@@ -3,8 +3,8 @@
 
 def user_info_page() -> None:
     import streamlit as st
-    
-    st.title("User Information")
+    from src.frontend.ui_utils import apply_standard_layout_css
+    apply_standard_layout_css()
     
     if not st.session_state.get("logged_in"):
         st.warning("Please login to view user information.")

@@ -7,7 +7,7 @@ def upload_mdf():
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
     from src.services.identity_service import IdentityService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf")
@@ -26,22 +26,12 @@ def upload_mdf():
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
 
-    # st.markdown handles CSS overrides for layout consistency
-    st.markdown(
-        """
-        <style>
-        /* st.status widget default styling - no overlay */
-        div[data-testid="stStatusWidget"] {
-            margin-bottom: 1rem !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    # Apply standard SNEA layout CSS
+    apply_standard_layout_css()
 
     # ── Sidebar: header and controls ──────────────────────────────
     with st.sidebar:
-        st.header("Upload MDF File")
+        st.markdown("**Upload MDF File**")
 
         # C-4: Source selector
         session = get_session()
@@ -356,7 +346,7 @@ def _render_review_view():
     """
     import streamlit as st
     from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")
@@ -366,33 +356,15 @@ def _render_review_view():
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
 
-    # st.markdown handles CSS overrides for layout consistency
-    st.markdown(
-        """
-        <style>
-        /* Custom class for ultra-tight horizontal padding */
-        @media (min-width: calc(736px + 8rem)) {
-            .block-container {
-                padding-left: 1rem !important;
-                padding-right: 1rem !important;
-            }
-        }
-        
-        /* st.status widget default styling - no overlay */
-        div[data-testid="stStatusWidget"] {
-            margin-bottom: 1rem !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    # Apply standard SNEA layout CSS
+    apply_standard_layout_css()
 
     # Scroll to top when page changes (triggered by rerun after page nav)
     st.html('<script>window.parent.document.querySelector(".main").scrollTo(0, 0);</script>')
 
     # ── Sidebar: header ───────────────────────────────────────────
     with st.sidebar:
-        st.header("Review Staged Entries")
+        st.markdown("**Review Staged Entries**")
 
     # ── Main panel: record comparisons only ───────────────────────
     _render_review_table(batch_id, session_deps={
@@ -491,7 +463,7 @@ def _render_review_table(batch_id, session_deps):
     }
     
     with st.sidebar:
-        st.subheader("Filters")
+        st.markdown("**Filters**")
         
         # ── Pagination State ───────────────────────────────────────────
         page_size_options = [1, 5, 10, 25, 50]
@@ -581,7 +553,7 @@ def _render_review_table(batch_id, session_deps):
                 st.rerun()
 
         st.divider()
-        st.subheader("Bulk Actions")
+        st.markdown("**Bulk Actions**")
 
         # Display flash message from previous bulk action
         flash = st.session_state.pop("bulk_flash", None)

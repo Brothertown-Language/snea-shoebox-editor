@@ -10,6 +10,8 @@ def logout_page() -> None:
     Handle the logout process: clear session, purge cookies, 
     and redirect to root with a full browser reload.
     """
+    from src.frontend.ui_utils import apply_standard_layout_css
+    apply_standard_layout_css()
     logger.debug("Logout page entered")
     
     from src.frontend.constants import GH_AUTH_TOKEN_COOKIE

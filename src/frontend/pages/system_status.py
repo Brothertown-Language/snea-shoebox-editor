@@ -4,8 +4,9 @@ def system_status():
     import streamlit as st
     import os
     from src.services.infrastructure_service import InfrastructureService
-    st.title("SNEA Shoebox Editor - System Status")
-    st.write("Welcome to the SNEA Online Shoebox Editor. Below is the current system status.")
+    from src.frontend.ui_utils import apply_standard_layout_css
+    apply_standard_layout_css()
+    st.write("Current system status and connectivity diagnostics.")
 
     col1, col2 = st.columns(2)
 

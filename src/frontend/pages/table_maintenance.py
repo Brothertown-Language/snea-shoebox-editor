@@ -2,7 +2,7 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
 from src.services.linguistic_service import LinguisticService
-from src.frontend.ui_utils import hide_sidebar_nav
+from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css
 from src.logging_config import get_logger
 
 logger = get_logger("snea.pages.table_maintenance")
@@ -117,25 +117,15 @@ def main():
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
 
-    # st.markdown handles CSS overrides for layout consistency
-    st.markdown(
-        """
-        <style>
-        /* st.status widget default styling - no overlay */
-        div[data-testid="stStatusWidget"] {
-            margin-bottom: 1rem !important;
-        }
-        </style>
-        """,
-        unsafe_allow_html=True
-    )
+    # Apply standard SNEA layout CSS
+    apply_standard_layout_css()
 
     # ── Sidebar: header and controls ──────────────────────────────
     with st.sidebar:
-        st.header("Table Maintenance")
+        st.markdown("**Table Maintenance**")
         
         # Internal Sidebar Navigation for extensibility
-        st.subheader("Maintenance Tables")
+        st.markdown("**Maintenance Tables**")
         table_option = st.radio(
             "Select a table to maintain:",
             ["Sources"],

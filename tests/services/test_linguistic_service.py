@@ -33,6 +33,15 @@ class TestLinguisticService(unittest.TestCase):
                 conn.commit()
 
             Base.metadata.create_all(cls.engine)
+            
+            # Run migrations to ensure generated columns and indexes are present
+            from src.database.migrations import MigrationManager
+            manager = MigrationManager(cls.engine)
+            # We don't want to seed data in tests usually, but run_all() is fine for schema
+            # Actually manager.run_all() seeds permissions and iso data.
+            manager._ensure_extensions()
+            manager._run_migrations()
+            
             cls.Session = sessionmaker(bind=cls.engine)
         except ImportError:
             raise unittest.SkipTest("pgserver not available")
@@ -109,20 +118,92 @@ class TestLinguisticService(unittest.TestCase):
         self.assertEqual(res['languages'][0]['code'], 'wqk')
 
     def test_search_records(self):
+        from src.database.models.search import SearchEntry
         r1 = Record(lx='apple', ge='fruit', source_id=self.source_id, mdf_data='\\lx apple')
         r2 = Record(lx='banana', ge='fruit', source_id=self.source_id, mdf_data='\\lx banana')
         self.session.add_all([r1, r2])
         self.session.commit()
+        
+        # Add search entries for r1
+        s1 = SearchEntry(record_id=r1.id, term='apple', entry_type='lx')
+        self.session.add(s1)
+        self.session.commit()
 
         with self._patch_session():
-            # Search by term
-            results = LinguisticService.search_records(search_term='apple')
-            self.assertEqual(len(results), 1)
-            self.assertEqual(results[0]['lx'], 'apple')
+            # Search by term (Lexeme mode default)
+            result = LinguisticService.search_records(search_term='apple')
+            self.assertEqual(len(result.records), 1)
+            self.assertEqual(result.records[0]['lx'], 'apple')
+            self.assertEqual(result.total_count, 1)
 
             # Search by source
-            results = LinguisticService.search_records(source_id=self.source_id)
-            self.assertEqual(len(results), 2)
+            result = LinguisticService.search_records(source_id=self.source_id)
+            self.assertEqual(len(result.records), 2)
+            self.assertEqual(result.total_count, 2)
+
+    def test_search_records_lexeme_variants(self):
+        from src.database.models.search import SearchEntry
+        r1 = Record(lx='run', ge='to move fast', source_id=self.source_id, mdf_data='\\lx run\n\\va ran')
+        self.session.add(r1)
+        self.session.commit()
+
+        # Add search entries
+        s1 = SearchEntry(record_id=r1.id, term='run', entry_type='lx')
+        s2 = SearchEntry(record_id=r1.id, term='ran', entry_type='va')
+        self.session.add_all([s1, s2])
+        self.session.commit()
+
+        with self._patch_session():
+            # Search for variant
+            result = LinguisticService.search_records(search_term='ran', search_mode='Lexeme')
+            self.assertEqual(len(result.records), 1)
+            self.assertEqual(result.records[0]['lx'], 'run')
+            self.assertEqual(result.total_count, 1)
+
+    def test_search_records_fts(self):
+        r1 = Record(lx='dog', ge='canine', source_id=self.source_id, mdf_data='\\lx dog\n\\nt some note')
+        self.session.add(r1)
+        self.session.commit()
+
+        with self._patch_session():
+            # Search in gloss
+            result = LinguisticService.search_records(search_term='canine', search_mode='FTS')
+            self.assertEqual(len(result.records), 1)
+            self.assertEqual(result.total_count, 1)
+
+            # Search in mdf_data
+            result = LinguisticService.search_records(search_term='some note', search_mode='FTS')
+            self.assertEqual(len(result.records), 1)
+            self.assertEqual(result.total_count, 1)
+
+    def test_search_records_pagination(self):
+        records = [Record(lx=f'word{i}', source_id=self.source_id, mdf_data=f'\\lx word{i}') for i in range(10)]
+        self.session.add_all(records)
+        self.session.commit()
+
+        with self._patch_session():
+            # Test limit
+            result = LinguisticService.search_records(limit=5)
+            self.assertEqual(len(result.records), 5)
+            self.assertEqual(result.total_count, 10)
+            self.assertEqual(result.limit, 5)
+            self.assertEqual(result.offset, 0)
+
+            # Test offset
+            result = LinguisticService.search_records(limit=5, offset=5)
+            self.assertEqual(len(result.records), 5)
+            self.assertEqual(result.total_count, 10)
+            self.assertEqual(result.limit, 5)
+            self.assertEqual(result.offset, 5)
+
+    def test_bundle_records_to_mdf(self):
+        records = [
+            {'lx': 'apple', 'mdf_data': '\\lx apple\n\\ge fruit'},
+            {'lx': 'banana', 'mdf_data': '\\lx banana\n\\ge fruit'}
+        ]
+        bundle = LinguisticService.bundle_records_to_mdf(records)
+        expected = "\\lx apple\n\\ge fruit\n\n\\lx banana\n\\ge fruit"
+        self.assertEqual(bundle, expected)
 
     def test_create_record(self):
         fields = {
@@ -164,6 +245,28 @@ class TestLinguisticService(unittest.TestCase):
         history = self.session.query(EditHistory).filter_by(record_id=record.id).first()
         self.assertIsNotNone(history)
         self.assertEqual(history.user_email, 'editor@example.com')
+
+    def test_get_edit_history(self):
+        record = Record(lx='history', source_id=self.source_id, mdf_data='\\lx history')
+        self.session.add(record)
+        self.session.commit()
+        
+        history = EditHistory(
+            record_id=record.id,
+            user_email='editor@example.com',
+            version=1,
+            change_summary='Creation',
+            current_data='\\lx history'
+        )
+        self.session.add(history)
+        self.session.commit()
+        
+        with self._patch_session():
+            res = LinguisticService.get_edit_history(record.id)
+        
+        self.assertEqual(len(res), 1)
+        self.assertEqual(res[0]['version'], 1)
+        self.assertEqual(res[0]['user_email'], 'editor@example.com')
 
     def test_soft_delete_record(self):
         record = Record(lx='todelete', source_id=self.source_id, mdf_data='\\lx todelete')

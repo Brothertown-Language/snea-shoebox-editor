@@ -73,3 +73,10 @@ This file serves as a persistent memory of critical project context, user prefer
     - Each record has an individual "Update" button for granular saving.
     - Pending edits are buffered in `st.session_state.pending_edits` to survive re-runs.
     - Legacy "Clickable Record" logic, "Edit Record" per-record button, and legacy fallback edit mode have been completely removed.
+- **Records View Search UI (v4.1)**: As of 2026-02-14, the search interface in `records.py` was refined for compactness and clarity.
+    - Search result calculation moved before sidebar rendering to allow dynamic record counts in the header.
+    - Header updated to `Search (xxx records)` when a search is active.
+    - Search input, execution icon (🔍), and clear icon (❌) are placed side-by-side using `st.columns`.
+    - Local CSS applied to the sidebar to reduce vertical gap between widgets to `0.5rem`.
+    - Redundant "Source Collection" header and "Select Source" label removed to save vertical space.
+- **Home Page Stabilization**: Fixed a `StreamlitDuplicateElementKey` crash on the Home page caused by non-unique button keys in the "Recent Activity" feed.

@@ -5,6 +5,7 @@ from src.logging_config import get_logger
 from src.services.upload_service import UploadService
 from src.services.identity_service import IdentityService
 from src.database import get_session, UserActivityLog, EditHistory
+from src.frontend.ui_utils import apply_standard_layout_css
 from sqlalchemy import desc, text
 
 logger = get_logger("snea.pages.batch_rollback")
@@ -167,10 +168,10 @@ def main():
         st.error("You do not have permission to access this page. Administrator role required.")
         return
 
-    st.title("🔙 Batch Rollback")
+    apply_standard_layout_css()
     
-    st.write("Administrators can use this page to undo entire upload sessions. "
-             "Only sessions that haven't been previously rolled back are shown.")
+    st.write("Undo entire upload sessions. "
+             "Only reversible sessions are shown below.")
     
     sessions = get_recent_sessions()
     

@@ -3,14 +3,26 @@
 """
 Linguistic Service for CRUD operations on Record, Source, and Language models.
 """
-from typing import Optional, List, Dict, Any
-from sqlalchemy import func
+from dataclasses import dataclass
+from typing import Optional, List, Dict, Any, Tuple
+from sqlalchemy import func, or_
 from sqlalchemy.orm import Session
 from src.database.connection import get_session
 from src.database.models.core import Source, Record, Language
+from src.database.models.search import SearchEntry
 from src.logging_config import get_logger
 
 logger = get_logger("snea.linguistic_service")
+
+@dataclass
+class RecordSearchResult:
+    """
+    Container for search results and metadata for pagination.
+    """
+    records: List[Dict[str, Any]]
+    total_count: int
+    limit: int
+    offset: int
 
 class LinguisticService:
     """
@@ -196,11 +208,13 @@ class LinguisticService:
         language_id: Optional[int] = None,
         status: Optional[str] = None,
         search_term: Optional[str] = None,
+        search_mode: str = "Lexeme",
         limit: int = 50,
         offset: int = 0
-    ) -> List[Dict[str, Any]]:
+    ) -> RecordSearchResult:
         """
         Search records with optional filters.
+        Supports 'Lexeme' mode (via search_entries) and 'FTS' mode.
         """
         with get_session() as session:
             query = session.query(Record).filter(Record.is_deleted == False)
@@ -215,10 +229,25 @@ class LinguisticService:
                 query = query.filter(Record.status == status)
             
             if search_term:
-                term = f"%{search_term}%"
-                query = query.filter(
-                    (Record.lx.ilike(term)) | (Record.ge.ilike(term))
-                )
+                if search_mode == "Lexeme":
+                    # Join with search_entries to find matches in lx, va, se, etc.
+                    # Standard ILIKE search as pg_trgm is not in the pgserver envelope.
+                    query = query.join(Record.search_entries).filter(
+                        SearchEntry.term.ilike(f"%{search_term}%")
+                    ).distinct()
+                else:
+                    # Native Full-Text Search (Roadmap Phase 6b)
+                    # Supported by the pgserver envelope.
+                    # Uses fts_vector column and GIN index via Migration 8
+                    from sqlalchemy import text
+                    
+                    # Support for specific record ID search via #<id>
+                    if search_term.startswith('#') and search_term[1:].isdigit():
+                        query = query.filter(Record.id == int(search_term[1:]))
+                    else:
+                        query = query.filter(
+                            text("records.fts_vector @@ plainto_tsquery('english', :term)")
+                        ).params(term=search_term)
             
             # Order by lx (headword)
             query = query.order_by(Record.lx, Record.hm)
@@ -241,7 +270,31 @@ class LinguisticService:
                     "mdf_data": r.mdf_data
                 })
             
-            return records
+            return RecordSearchResult(
+                records=records,
+                total_count=total_count,
+                limit=limit,
+                offset=offset
+            )
+
+    @staticmethod
+    def bundle_records_to_mdf(records: List[Dict[str, Any]]) -> str:
+        """
+        Bundle a list of records into a single MDF text blob.
+        Each record is separated by double blank lines.
+        """
+        # Ensure we have mdf_data and handle potential missing keys
+        mdf_blocks = []
+        for r in records:
+            if 'mdf_data' in r:
+                mdf_blocks.append(r['mdf_data'])
+            elif 'id' in r:
+                # Fallback to fetch if data is missing, though usually provided
+                full_record = LinguisticService.get_record(r['id'])
+                if full_record:
+                    mdf_blocks.append(full_record['mdf_data'])
+        
+        return "\n\n".join(mdf_blocks)
 
     @staticmethod
     def create_record(**fields: Any) -> Optional[int]:
@@ -317,6 +370,25 @@ class LinguisticService:
                 session.rollback()
                 logger.error(f"Failed to update record {record_id}: {e}")
                 return False
+
+    @staticmethod
+    def get_edit_history(record_id: int) -> List[Dict[str, Any]]:
+        """
+        Fetch revision history for a record.
+        """
+        from src.database.models.workflow import EditHistory
+        with get_session() as session:
+            history = session.query(EditHistory).filter(EditHistory.record_id == record_id).order_by(EditHistory.timestamp.desc()).all()
+            return [
+                {
+                    "id": h.id,
+                    "user_email": h.user_email,
+                    "version": h.version,
+                    "change_summary": h.change_summary,
+                    "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S") if h.timestamp else "N/A"
+                }
+                for h in history
+            ]
 
     @staticmethod
     def soft_delete_record(record_id: int, user_email: str) -> bool:

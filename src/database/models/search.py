@@ -7,7 +7,8 @@ from ..base import Base
 class SearchEntry(Base):
     """
     Consolidated lookup table for instant search across all linguistic forms.
-    Indexed using GIN Trigram (pg_trgm) for fragment matching.
+    Indexed for fast lookup; utilizes standard ILIKE matching to remain compatible 
+    with the pgserver envelope.
     """
     __tablename__ = 'search_entries'
     id = Column(Integer, primary_key=True, autoincrement=True)

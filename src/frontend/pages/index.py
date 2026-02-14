@@ -3,8 +3,10 @@
 import streamlit as st
 import pandas as pd
 from src.services.statistics_service import StatisticsService
+from src.frontend.ui_utils import apply_standard_layout_css
 
 def index():
+    apply_standard_layout_css()
     # Handle logout reload if coming from logout page
     if st.session_state.get("trigger_logout_reload"):
         del st.session_state["trigger_logout_reload"]
@@ -12,11 +14,8 @@ def index():
         reload_page_at_root()
         st.stop()
 
-    st.title("SNEA Shoebox Editor")
-    st.write("Welcome to the SNEA Online Shoebox Editor.")
-    
     # --- Statistics Section ---
-    st.header("Database Statistics")
+    st.markdown("### Database Statistics")
     
     # Summary Metrics
     stats = StatisticsService.get_summary_stats()
@@ -71,8 +70,16 @@ def index():
         df_source = pd.DataFrame(list(source_distribution.items()), columns=["Source", "Count"])
         st.bar_chart(df_source.set_index("Source"))
         
-        # Add links to sources (Logic removed: view_source.py is a placeholder)
-        pass
+        # Add links to sources
+        st.write("**Explore by Source:**")
+        cols = st.columns(3)
+        for i, (source_name, count) in enumerate(source_distribution.items()):
+            source_id = source_id_map.get(source_name)
+            if source_id:
+                if cols[i % 3].button(f"{source_name} ({count})", key=f"src_btn_{source_id}", use_container_width=True):
+                    st.query_params["source"] = str(source_id)
+                    st.query_params["page"] = "1"
+                    st.switch_page("pages/records.py")
     else:
         st.info("No source data available.")
 
@@ -90,11 +97,15 @@ def index():
     st.subheader("Recent Activity")
     activity = StatisticsService.get_recent_activity()
     if activity:
-        for item in activity:
+        for i, item in enumerate(activity):
             with st.expander(f"Record {item['record_id']} ({item['lx']}) edited by {item['user']}"):
                 st.write(f"**Time:** {item['timestamp']}")
                 st.write(f"**Change:** {item['summary']}")
-                # View button removed (view_record.py is a placeholder)
+                
+                if st.button("🔍 View in Records", key=f"view_rec_{item['record_id']}_{i}"):
+                    st.query_params["search"] = f"#{item['record_id']}"
+                    st.query_params["search_mode"] = "FTS"
+                    st.switch_page("pages/records.py")
     else:
         st.info("No recent activity recorded.")
 

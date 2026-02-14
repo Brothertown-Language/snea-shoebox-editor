@@ -44,7 +44,9 @@ def login():
     import streamlit as st
     from streamlit_oauth import OAuth2Component
     import requests
+    from src.frontend.ui_utils import apply_standard_layout_css
 
+    apply_standard_layout_css()
     logger.debug("Login page loaded")
 
     if "cookie_controller" not in st.session_state:
