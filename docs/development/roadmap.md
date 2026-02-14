@@ -163,4 +163,5 @@ Before initializing the project, you must set up the hosting and database platfo
 ## Technical Documentation
 
 - [OAuth2 and Deep Link Setup Guide](oauth2-deeplink-setup.md)
+- [View Guard & Security Standard](view_guard_standard.md)
 

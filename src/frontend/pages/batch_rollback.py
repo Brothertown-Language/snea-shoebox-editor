@@ -161,6 +161,12 @@ def main():
     UI for Phase E-2: Batch Rollback Support.
     Allows administrators to rollback upload sessions.
     """
+    # Role guard — only admin
+    user_role = st.session_state.get("user_role")
+    if user_role not in ("admin",):
+        st.error("You do not have permission to access this page. Administrator role required.")
+        return
+
     st.title("🔙 Batch Rollback")
     
     st.write("Administrators can use this page to undo entire upload sessions. "
