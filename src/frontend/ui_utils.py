@@ -179,6 +179,14 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
             background-position: 0.1rem 1.5em;
             background-size: 2.2rem 1.5em;
         }}
+        .mdf-line.status-suggestion {{
+            background-color: rgba(255, 165, 0, 0.15);
+            border-left: 3.5px solid #ffa500;
+        }}
+        .mdf-line.status-note {{
+            background-color: rgba(0, 123, 255, 0.1);
+            border-left: 3.5px solid #007bff;
+        }}
         .mdf-line.status-error {{
             background-color: rgba(255, 0, 0, 0.1);
             border-left: 3px solid #ff4b4b;
@@ -224,26 +232,6 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
 # ── Sidebar Utilities ──────────────────────────────────────────────────
 
 
-def get_mdf_rich_html(mdf_text: str) -> str:
-    """Return an HTML representation of MDF data suitable for rich-text clipboard."""
-    import html as _html
-    lines = mdf_text.split('\n')
-    line_html = []
-    for line in lines:
-        if not line.strip():
-            line_html.append("<br>")
-            continue
-        escaped = _html.escape(line)
-        # Basic structural highlighting for tags
-        if line.startswith('\\'):
-            parts = escaped.split(' ', 1)
-            tag = parts[0]
-            content = parts[1] if len(parts) > 1 else ""
-            line_html.append(f'<div><b style="color: #cc6622;">{tag}</b> {content}</div>')
-        else:
-            line_html.append(f'<div>{escaped}</div>')
-    
-    return f'<div style="font-family: monospace; white-space: pre-wrap;">{"".join(line_html)}</div>'
 
 
 def hide_sidebar_nav() -> None:

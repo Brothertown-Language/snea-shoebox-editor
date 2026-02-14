@@ -209,45 +209,50 @@ class LinguisticService:
         status: Optional[str] = None,
         search_term: Optional[str] = None,
         search_mode: str = "Lexeme",
+        record_ids: Optional[List[int]] = None,
         limit: int = 50,
         offset: int = 0
     ) -> RecordSearchResult:
         """
         Search records with optional filters.
         Supports 'Lexeme' mode (via search_entries) and 'FTS' mode.
+        If record_ids is provided, other filters are ignored except for is_deleted.
         """
         with get_session() as session:
             query = session.query(Record).filter(Record.is_deleted == False)
             
-            if source_id:
-                query = query.filter(Record.source_id == source_id)
-            
-            if language_id:
-                query = query.join(Record.language).filter(Language.id == language_id)
-            
-            if status:
-                query = query.filter(Record.status == status)
-            
-            if search_term:
-                if search_mode == "Lexeme":
-                    # Join with search_entries to find matches in lx, va, se, etc.
-                    # Standard ILIKE search as pg_trgm is not in the pgserver envelope.
-                    query = query.join(Record.search_entries).filter(
-                        SearchEntry.term.ilike(f"%{search_term}%")
-                    ).distinct()
-                else:
-                    # Native Full-Text Search (Roadmap Phase 6b)
-                    # Supported by the pgserver envelope.
-                    # Uses fts_vector column and GIN index via Migration 8
-                    from sqlalchemy import text
-                    
-                    # Support for specific record ID search via #<id>
-                    if search_term.startswith('#') and search_term[1:].isdigit():
-                        query = query.filter(Record.id == int(search_term[1:]))
+            if record_ids is not None:
+                query = query.filter(Record.id.in_(record_ids))
+            else:
+                if source_id:
+                    query = query.filter(Record.source_id == source_id)
+                
+                if language_id:
+                    query = query.join(Record.language).filter(Language.id == language_id)
+                
+                if status:
+                    query = query.filter(Record.status == status)
+                
+                if search_term:
+                    if search_mode == "Lexeme":
+                        # Join with search_entries to find matches in lx, va, se, etc.
+                        # Standard ILIKE search as pg_trgm is not in the pgserver envelope.
+                        query = query.join(Record.search_entries).filter(
+                            SearchEntry.term.ilike(f"%{search_term}%")
+                        ).distinct()
                     else:
-                        query = query.filter(
-                            text("records.fts_vector @@ plainto_tsquery('english', :term)")
-                        ).params(term=search_term)
+                        # Native Full-Text Search (Roadmap Phase 6b)
+                        # Supported by the pgserver envelope.
+                        # Uses fts_vector column and GIN index via Migration 8
+                        from sqlalchemy import text
+                        
+                        # Support for specific record ID search via #<id>
+                        if search_term.startswith('#') and search_term[1:].isdigit():
+                            query = query.filter(Record.id == int(search_term[1:]))
+                        else:
+                            query = query.filter(
+                                text("records.fts_vector @@ plainto_tsquery('english', :term)")
+                            ).params(term=search_term)
             
             # Order by lx (headword)
             query = query.order_by(Record.lx, Record.hm)

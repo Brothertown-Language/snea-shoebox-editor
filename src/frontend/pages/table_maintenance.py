@@ -37,17 +37,17 @@ def render_sources_maintenance():
             action_cols = c4.columns(2)
             
             # Edit Button
-            if action_cols[0].button("📝", key=f"edit_{source['id']}", help="Edit source details"):
+            if action_cols[0].button("", icon="📝", key=f"edit_{source['id']}", help="Edit source details"):
                 st.session_state[f"edit_source_{source['id']}"] = True
             
             # Reassign or Delete (Mutually Exclusive)
             if source["record_count"] > 0:
                 # Reassign Button
-                if action_cols[1].button("🔄", key=f"reassign_{source['id']}", help="Reassign records to another source"):
+                if action_cols[1].button("", icon="🔄", key=f"reassign_{source['id']}", help="Reassign records to another source"):
                     st.session_state[f"reassign_source_{source['id']}"] = True
             else:
                 # Delete Button
-                if action_cols[1].button("🗑️", key=f"delete_{source['id']}", help="Delete empty source"):
+                if action_cols[1].button("", icon="🗑️", key=f"delete_{source['id']}", help="Delete empty source"):
                     if LinguisticService.delete_source(source["id"]):
                         st.success(f"Deleted source: {source['name']}")
                         st.rerun()

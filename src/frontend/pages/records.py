@@ -2,8 +2,12 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
 import pandas as pd
+import datetime as _dt
+import json
 from typing import List, Dict, Any, Optional
 from src.services.linguistic_service import LinguisticService
+from src.services.upload_service import UploadService
+from src.services.identity_service import IdentityService
 from src.services.preference_service import PreferenceService
 from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav
 from src.mdf.validator import MDFValidator
@@ -63,8 +67,26 @@ def records():
         st.session_state.global_edit_mode = False
     if "pending_edits" not in st.session_state:
         st.session_state.pending_edits = {}
-    if "cart" not in st.session_state:
-        st.session_state.cart = []
+    if "local_edits" not in st.session_state:
+        st.session_state.local_edits = set()
+    if "view_selection_only" not in st.session_state:
+        st.session_state.view_selection_only = query_params.get("view_selection", "False") == "True"
+    if "selection" not in st.session_state:
+        # Try to load selection from persistence
+        st.session_state.selection = []
+        if user_email:
+            selection_json = PreferenceService.get_preference(user_email, "global", "selection_contents", "[]")
+            try:
+                selection_ids = json.loads(selection_json)
+                if selection_ids:
+                    loaded_records = []
+                    for rid in selection_ids:
+                        rec = LinguisticService.get_record(rid)
+                        if rec:
+                            loaded_records.append(rec)
+                    st.session_state.selection = loaded_records
+            except Exception as e:
+                logger.error(f"Failed to load selection for {user_email}: {e}")
 
     def update_url_params():
         st.query_params["search"] = st.session_state.search_query
@@ -72,6 +94,7 @@ def records():
         st.query_params["source"] = str(st.session_state.selected_source_id)
         st.query_params["page"] = st.session_state.current_page
         st.query_params["page_size"] = st.session_state.page_size
+        st.query_params["view_selection"] = str(st.session_state.view_selection_only)
 
     # --- 2. Calculate Search Results (Pre-calculate for Header Count) ---
     source_filter_id = None if st.session_state.selected_source_id == "All" else int(st.session_state.selected_source_id)
@@ -81,10 +104,13 @@ def records():
     limit = st.session_state.page_size
     offset = (st.session_state.current_page - 1) * limit
     
+    selection_record_ids = [r['id'] for r in st.session_state.selection] if st.session_state.view_selection_only else None
+    
     search_result = LinguisticService.search_records(
         source_id=source_filter_id,
         search_term=search_term,
         search_mode=st.session_state.search_mode,
+        record_ids=selection_record_ids,
         limit=limit,
         offset=offset
     )
@@ -109,29 +135,32 @@ def records():
             [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
                 gap: 0.5rem !important;
             }
-            [data-testid="stSidebar"] .stButton > button {
-                padding-left: 0;
-                padding-right: 0;
-            }
             </style>
         """)
         
         header_text = f"Search ({total_count} records)" if search_term else "Search"
+        if st.session_state.view_selection_only:
+            header_text = f"Selection Contents ({total_count} records)"
         st.markdown(f"**{header_text}**")
         
-        c_in, c_s, c_c = st.columns([0.7, 0.15, 0.15])
-        with c_in:
-            search_query = st.text_input("Enter text...", value=st.session_state.search_query, 
-                                        key="search_query_input", label_visibility="collapsed")
+        search_query = st.text_input("Enter text...", value=st.session_state.search_query, 
+                                    key="search_query_input", label_visibility="collapsed")
+
+        # Lexeme/FTS + Search/Clear Buttons on one line
+        c_mode, c_s, c_c = st.columns([0.7, 0.15, 0.15])
+        with c_mode:
+            search_mode = st.radio("Search Mode", ["Lexeme", "FTS"], 
+                                   index=["Lexeme", "FTS"].index(st.session_state.search_mode), 
+                                   horizontal=True, key="search_mode_radio", label_visibility="collapsed")
         with c_s:
-            if st.button("🔍", key="search_trigger", help="Execute Search", use_container_width=True):
+            if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
                 if search_query != st.session_state.search_query:
                     st.session_state.search_query = search_query
                     st.session_state.current_page = 1
                     update_url_params()
                     st.rerun()
         with c_c:
-            if st.button("❌", key="search_clear", help="Clear Search", use_container_width=True):
+            if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
                 st.session_state.search_query = ""
                 st.session_state.current_page = 1
                 update_url_params()
@@ -144,9 +173,6 @@ def records():
             update_url_params()
             st.rerun()
 
-        search_mode = st.radio("Search Mode", ["Lexeme", "FTS"], 
-                               index=["Lexeme", "FTS"].index(st.session_state.search_mode), 
-                               horizontal=True, key="search_mode_radio", label_visibility="collapsed")
         if search_mode != st.session_state.search_mode:
             st.session_state.search_mode = search_mode
             st.session_state.current_page = 1
@@ -171,40 +197,10 @@ def records():
             update_url_params()
             st.rerun()
 
-        st.divider()
-        st.markdown("**Editing**")
-        if user_role in ["editor", "admin"]:
-            if not st.session_state.global_edit_mode:
-                if st.button("📝 Enter Edit Mode", use_container_width=True):
-                    st.session_state.global_edit_mode = True
-                    st.rerun()
-            else:
-                col_e1, col_e2 = st.columns(2)
-                if col_e1.button("❌ Cancel All", use_container_width=True):
-                    st.session_state.global_edit_mode = False
-                    st.session_state.pending_edits = {}
-                    st.rerun()
-                if col_e2.button("💾 Save All", type="primary", use_container_width=True):
-                    # Save all pending edits
-                    for rid, mdf in st.session_state.pending_edits.items():
-                        LinguisticService.update_record(
-                            record_id=rid,
-                            user_email=user_email,
-                            mdf_data=mdf,
-                            change_summary="Bulk update via global edit mode"
-                        )
-                    st.session_state.pending_edits = {}
-                    st.session_state.global_edit_mode = False
-                    st.success("All changes saved!")
-                    st.rerun()
-        else:
-            st.info("View-only mode (Editor access required)")
-
-        st.divider()
         st.markdown("**Pagination**")
         
         c1, c2 = st.columns(2)
-        if c1.button("◀ Prev", disabled=(st.session_state.current_page <= 1), use_container_width=True):
+        if c1.button("Prev", icon="◀", disabled=(st.session_state.current_page <= 1), use_container_width=True):
             if st.session_state.global_edit_mode and st.session_state.pending_edits:
                 for rid, mdf in st.session_state.pending_edits.items():
                     LinguisticService.update_record(
@@ -217,7 +213,7 @@ def records():
             st.session_state.current_page -= 1
             update_url_params()
             st.rerun()
-        if c2.button("Next ▶", disabled=not has_next, use_container_width=True):
+        if c2.button("Next", icon="▶", disabled=not has_next, use_container_width=True):
             if st.session_state.global_edit_mode and st.session_state.pending_edits:
                 for rid, mdf in st.session_state.pending_edits.items():
                     LinguisticService.update_record(
@@ -244,6 +240,33 @@ def records():
             update_url_params()
             st.rerun()
 
+        # Moved Editing Controls here
+        if user_role in ["editor", "admin"]:
+            if not st.session_state.global_edit_mode:
+                if st.button("Enter Edit Mode", icon="📝", use_container_width=True):
+                    st.session_state.global_edit_mode = True
+                    st.rerun()
+            else:
+                col_e1, col_e2 = st.columns(2)
+                if col_e1.button("Cancel All", icon="❌", use_container_width=True):
+                    st.session_state.global_edit_mode = False
+                    st.session_state.pending_edits = {}
+                    st.rerun()
+                if col_e2.button("Save All", icon="💾", type="primary", use_container_width=True):
+                    for rid, mdf in st.session_state.pending_edits.items():
+                        LinguisticService.update_record(
+                            record_id=rid,
+                            user_email=user_email,
+                            mdf_data=mdf,
+                            change_summary="Bulk update via global edit mode"
+                        )
+                    st.session_state.pending_edits = {}
+                    st.session_state.global_edit_mode = False
+                    st.success("All changes saved!")
+                    st.rerun()
+        else:
+            st.info("View-only mode (Editor access required)")
+
         st.divider()
         st.markdown("**Preferences**")
         structural_highlighting = st.toggle("Structural Highlighting", value=st.session_state.structural_highlighting)
@@ -254,23 +277,53 @@ def records():
             st.rerun()
 
         st.divider()
-        st.markdown("**Download Cart**")
-        st.write(f"**{len(st.session_state.cart)} records** tagged")
-        if st.session_state.cart:
+        st.markdown(f"**My Selection** ({len(st.session_state.selection)} records)")
+        
+        selection_col1, selection_col2, selection_col3 = st.columns(3)
+        
+        view_icon = "📚" if st.session_state.view_selection_only else "🧺"
+        view_help = "Show all records" if st.session_state.view_selection_only else "Filter list to show only selected items"
+        if selection_col1.button("", icon=view_icon, use_container_width=True, help=view_help):
+            st.session_state.view_selection_only = not st.session_state.view_selection_only
+            st.session_state.current_page = 1
+            update_url_params()
+            st.rerun()
+
+        if st.session_state.selection:
             # Generate MDF bundle text
-            mdf_bundle = LinguisticService.bundle_records_to_mdf(st.session_state.cart)
+            mdf_bundle = LinguisticService.bundle_records_to_mdf(st.session_state.selection)
             
-            st.download_button(
-                label="📥 Download Bundle",
+            # Determine source name for filename
+            sources = set(r.get('source_name') for r in st.session_state.selection if r.get('source_name'))
+            source_name = list(sources)[0] if len(sources) == 1 else "mixed"
+            
+            github_username = IdentityService.get_github_username(st.session_state.get("user_email"))
+            
+            fname = UploadService.generate_mdf_filename(
+                prefix="selection",
+                source_name=source_name,
+                timestamp=_dt.datetime.now(),
+                github_username=github_username
+            )
+
+            selection_col2.download_button(
+                label="📥",
                 data=mdf_bundle,
-                file_name=f"snea_bundle_{len(st.session_state.cart)}.txt",
+                file_name=fname,
                 mime="text/plain",
-                use_container_width=True
+                use_container_width=True,
+                help="Download selection as MDF"
             )
             
-            if st.button("Discard Cart", use_container_width=True):
-                st.session_state.cart = []
+            if selection_col3.button("🗑️", use_container_width=True, help="Discard selection"):
+                st.session_state.selection = []
+                if user_email:
+                    PreferenceService.set_preference(user_email, "global", "selection_contents", "[]")
+                st.session_state.view_selection_only = False
                 st.rerun()
+        else:
+            selection_col2.button("📥", disabled=True, use_container_width=True)
+            selection_col3.button("🗑️", disabled=True, use_container_width=True)
 
         st.divider()
         if st.button("Back to Home", use_container_width=True):
@@ -288,8 +341,10 @@ def records():
             with st.container(border=True):
                 st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'})")
                 
-                if st.session_state.global_edit_mode:
-                    # Global Edit Mode: All records in text areas
+                is_editing = st.session_state.global_edit_mode or record_id in st.session_state.local_edits
+                
+                if is_editing:
+                    # Edit Mode: Record in text area
                     # Initialize pending_edits from record data if not present
                     initial_val = st.session_state.pending_edits.get(record_id, mdf_data)
                     
@@ -305,18 +360,21 @@ def records():
                     if edited_mdf != initial_val:
                         st.session_state.pending_edits[record_id] = edited_mdf
                     
-                    col_s1, _ = st.columns([1, 5])
+                    col_s1, col_s2, _ = st.columns([1, 1, 4])
                     if col_s1.button("Update", key=f"update_{record_id}", type="primary", use_container_width=True):
                         try:
+                            summary = "Individual update" if not st.session_state.global_edit_mode else "Individual update in global edit mode"
                             success = LinguisticService.update_record(
                                 record_id=record_id,
                                 user_email=user_email,
                                 mdf_data=edited_mdf,
-                                change_summary="Individual update in global edit mode"
+                                change_summary=summary
                             )
                             if success:
                                 if record_id in st.session_state.pending_edits:
                                     del st.session_state.pending_edits[record_id]
+                                if record_id in st.session_state.local_edits:
+                                    st.session_state.local_edits.remove(record_id)
                                 st.success(f"Record #{record_id} saved.")
                                 st.rerun()
                             else:
@@ -324,7 +382,15 @@ def records():
                         except Exception as e:
                             st.error(f"Error saving record: {e}")
                     
-                elif st.session_state.global_edit_mode is False:
+                    if not st.session_state.global_edit_mode:
+                        if col_s2.button("Cancel", key=f"cancel_local_{record_id}", use_container_width=True):
+                            if record_id in st.session_state.local_edits:
+                                st.session_state.local_edits.remove(record_id)
+                            if record_id in st.session_state.pending_edits:
+                                del st.session_state.pending_edits[record_id]
+                            st.rerun()
+                    
+                else:
                     # View Mode
                     diagnostics = None
                     if st.session_state.structural_highlighting:
@@ -333,56 +399,41 @@ def records():
                     render_mdf_block(mdf_data, diagnostics=diagnostics, key=f"render_{record_id}")
                     
                     # Action Toolbar
-                    toolbar = st.columns([1, 1, 1, 1])
+                    toolbar_cols = [1, 1]
+                    if user_role in ["editor", "admin"] and not st.session_state.global_edit_mode:
+                        toolbar_cols.append(1)
                     
-                    if toolbar[0].button("Copy Plain", use_container_width=True, key=f"cp_{record_id}"):
-                        # Copy plain text to clipboard via JS injection
-                        import html as _html
-                        escaped_mdf = _html.escape(mdf_data).replace("`", "\\`").replace("$", "\\$")
-                        st.components.v1.html(f"""
-                            <script>
-                            const text = `{escaped_mdf}`;
-                            navigator.clipboard.writeText(text).then(() => {{
-                                window.parent.postMessage({{type: 'streamlit:message', message: 'Copied Record #{record_id} to clipboard!'}}, '*');
-                            }});
-                            </script>
-                        """, height=0)
-                        st.toast(f"Copied Record #{record_id}!")
+                    toolbar = st.columns(toolbar_cols)
                     
-                    if toolbar[1].button("Copy Rich", use_container_width=True, key=f"cr_{record_id}"):
-                        # Copy rich text (HTML) to clipboard via JS injection
-                        from src.frontend.ui_utils import get_mdf_rich_html
-                        rich_html = get_mdf_rich_html(mdf_data)
-                        escaped_html = rich_html.replace("`", "\\`").replace("$", "\\$")
-                        
-                        st.components.v1.html(f"""
-                            <script>
-                            const html = `{escaped_html}`;
-                            const type = "text/html";
-                            const blob = new Blob([html], {{ type }});
-                            const data = [new ClipboardItem({{ [type]: blob }})];
-                            navigator.clipboard.write(data).then(() => {{
-                                window.parent.postMessage({{type: 'streamlit:message', message: 'Copied Record #{record_id} (Rich) to clipboard!'}}, '*');
-                            }});
-                            </script>
-                        """, height=0)
-                        st.toast(f"Copied Record #{record_id} (Rich)!")
-                        
-                    if toolbar[2].button("Add to Cart", use_container_width=True, key=f"cart_{record_id}"):
-                        if record_id not in [r['id'] for r in st.session_state.cart]:
-                            st.session_state.cart.append(record)
-                            st.toast(f"Added Record #{record_id} to cart")
-                            st.rerun()
+                    in_selection = record_id in [r['id'] for r in st.session_state.selection]
+                    selection_label = "Remove from Selection" if in_selection else "Add to Selection"
+                    selection_icon = "🧺" if not in_selection else "❌"
+                    
+                    if toolbar[0].button(selection_label, use_container_width=True, icon=selection_icon, key=f"selection_{record_id}"):
+                        if not in_selection:
+                            st.session_state.selection.append(record)
+                            st.toast(f"Added Record #{record_id} to selection")
                         else:
-                            st.toast(f"Record #{record_id} already in cart")
+                            st.session_state.selection = [r for r in st.session_state.selection if r['id'] != record_id]
+                            st.toast(f"Removed Record #{record_id} from selection")
+                        
+                        if user_email:
+                            selection_ids = [r['id'] for r in st.session_state.selection]
+                            PreferenceService.set_preference(user_email, "global", "selection_contents", json.dumps(selection_ids))
+                        st.rerun()
                     
                     if user_role in ["editor", "admin"]:
-                        if toolbar[3].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
+                        if toolbar[1].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
                             if LinguisticService.soft_delete_record(record_id, user_email):
                                 st.success(f"Record #{record_id} deleted.")
                                 st.rerun()
                             else:
                                 st.error(f"Failed to delete Record #{record_id}.")
+                        
+                        if not st.session_state.global_edit_mode:
+                            if toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}"):
+                                st.session_state.local_edits.add(record_id)
+                                st.rerun()
 
                 # Revision History
                 with st.expander("Revision History"):

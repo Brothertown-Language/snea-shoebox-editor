@@ -44,8 +44,12 @@ if "pending_edits" not in st.session_state:
     st.session_state.pending_edits = {}
 if "global_edit_mode" not in st.session_state:
     st.session_state.global_edit_mode = False
-if "cart" not in st.session_state:
-    st.session_state.cart = []
+if "local_edits" not in st.session_state:
+    st.session_state.local_edits = set()
+if "view_selection_only" not in st.session_state:
+    st.session_state.view_selection_only = query_params.get("view_selection", "False") == "True"
+if "selection" not in st.session_state:
+    st.session_state.selection = []
 if "user_role" not in st.session_state:
     st.session_state.user_role = "Editor"
 if "structural_highlighting" not in st.session_state:
@@ -60,6 +64,7 @@ def update_url_params():
     st.query_params["source"] = st.session_state.get("selected_source", "All Sources")
     st.query_params["page"] = st.session_state.get("current_page", 1)
     st.query_params["page_size"] = st.session_state.get("page_size", 25)
+    st.query_params["view_selection"] = str(st.session_state.get("view_selection_only", False))
 
 def _diff_icon_svg(symbol: str, color: str) -> str:
     """Return a percent-encoded SVG for diff indicators."""
@@ -162,30 +167,60 @@ def render_diff_view(prev_mdf: str, curr_mdf: str):
 
 # --- SIDEBAR ---
 with st.sidebar:
+    # Compact Search Controls
+    st.html("""
+        <style>
+        [data-testid="stSidebar"] [data-testid="stVerticalBlock"] {
+            gap: 0.5rem !important;
+        }
+        </style>
+""")
     
-    # 1. Search
-    st.subheader("Search")
-    old_query = st.session_state.get("search_query", "")
-    search_query = st.text_input("Enter text...", value=old_query, key="search_query_input")
-    if search_query != old_query:
+    st.markdown("**Search**")
+    
+    search_query = st.text_input("Enter text...", value=st.session_state.get("search_query", ""), 
+                                key="search_query_input", label_visibility="collapsed")
+
+    # Lexeme/FTS + Search/Clear Buttons on one line
+    c_mode, c_s, c_c = st.columns([0.7, 0.15, 0.15])
+    with c_mode:
+        search_mode = st.radio("Search Mode", ["Lexeme", "FTS"], 
+                               index=["Lexeme", "FTS"].index(st.session_state.get("search_mode", "Lexeme")), 
+                               horizontal=True, key="search_mode_radio", label_visibility="collapsed")
+    with c_s:
+        if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
+            if search_query != st.session_state.search_query:
+                st.session_state.search_query = search_query
+                st.session_state.current_page = 1
+                update_url_params()
+                st.rerun()
+    with c_c:
+        if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
+            st.session_state.search_query = ""
+            st.session_state.current_page = 1
+            update_url_params()
+            st.rerun()
+
+    # Handle Enter key in text_input
+    if search_query != st.session_state.get("search_query", ""):
         st.session_state.search_query = search_query
         st.session_state.current_page = 1
         update_url_params()
         st.rerun()
 
-    old_mode = st.session_state.get("search_mode", "Lexeme")
-    search_mode = st.radio("Search Mode", ["Lexeme", "FTS"], index=["Lexeme", "FTS"].index(old_mode), horizontal=True, key="search_mode_radio")
-    if search_mode != old_mode:
+    if search_mode != st.session_state.get("search_mode", "Lexeme"):
         st.session_state.search_mode = search_mode
         st.session_state.current_page = 1
         update_url_params()
         st.rerun()
-    
+
     # 2. Source Selection
-    st.subheader("Source Collection")
-    old_source = st.session_state.get("selected_source", "All Sources")
-    selected_source = st.selectbox("Select Source", MOCK_SOURCES, index=MOCK_SOURCES.index(old_source), key="source_select")
-    if selected_source != old_source:
+    current_source = st.session_state.get("selected_source", "All Sources")
+    selected_source = st.selectbox("Select Source", MOCK_SOURCES, 
+                                   index=MOCK_SOURCES.index(current_source), 
+                                   key="source_select",
+                                   label_visibility="collapsed")
+    if selected_source != current_source:
         st.session_state.selected_source = selected_source
         st.session_state.current_page = 1
         update_url_params()
@@ -193,16 +228,20 @@ with st.sidebar:
     
     # Filter Records
     filtered_records = MOCK_RECORDS
-    if st.session_state.get("selected_source", "All Sources") != "All Sources":
-        filtered_records = [r for r in filtered_records if r["source"] == st.session_state.selected_source]
     
-    search_q = st.session_state.get("search_query", "")
-    if search_q:
-        # Simple mock search logic
-        if st.session_state.get("search_mode", "Lexeme") == "Lexeme":
-            filtered_records = [r for r in filtered_records if search_q.lower() in r["mdf"].split('\n')[0].lower()]
-        else:
-            filtered_records = [r for r in filtered_records if search_q.lower() in r["mdf"].lower()]
+    if st.session_state.get("view_selection_only", False):
+        filtered_records = st.session_state.selection
+    else:
+        if st.session_state.get("selected_source", "All Sources") != "All Sources":
+            filtered_records = [r for r in filtered_records if r["source"] == st.session_state.selected_source]
+        
+        search_q = st.session_state.get("search_query", "")
+        if search_q:
+            # Simple mock search logic
+            if st.session_state.get("search_mode", "Lexeme") == "Lexeme":
+                filtered_records = [r for r in filtered_records if search_q.lower() in r["mdf"].split('\n')[0].lower()]
+            else:
+                filtered_records = [r for r in filtered_records if search_q.lower() in r["mdf"].lower()]
 
     # Pagination calculation
     total_records = len(filtered_records)
@@ -218,39 +257,11 @@ with st.sidebar:
     end_idx = start_idx + st.session_state.page_size
     page_records = filtered_records[start_idx:end_idx]
 
-    st.divider()
-    st.markdown("**Editing**")
-    if st.session_state.user_role == "Editor":
-        if not st.session_state.global_edit_mode:
-            if st.button("📝 Enter Edit Mode", use_container_width=True, key="sidebar_enter_edit"):
-                st.session_state.global_edit_mode = True
-                st.rerun()
-        else:
-            col_e1, col_e2 = st.columns(2)
-            if col_e1.button("❌ Cancel All", use_container_width=True, key="sidebar_cancel_all"):
-                st.session_state.global_edit_mode = False
-                st.session_state.pending_edits = {}
-                st.rerun()
-            if col_e2.button("💾 Save All", type="primary", use_container_width=True, key="sidebar_save_all"):
-                # Mock Save all pending edits
-                for rid, mdf in st.session_state.pending_edits.items():
-                    # Update MOCK_RECORDS
-                    for r in MOCK_RECORDS:
-                        if r["id"] == rid:
-                            r["mdf"] = mdf
-                st.session_state.pending_edits = {}
-                st.session_state.global_edit_mode = False
-                st.success("All changes saved! (Mock)")
-                st.rerun()
-    else:
-        st.info("View-only mode (Editor access required)")
-
-    st.divider()
-
+    st.markdown("**Pagination**")
+    
     # 3. Pagination Control
-    st.subheader("Pagination")
     c1, c2 = st.columns(2)
-    if c1.button("◀ Prev", disabled=(st.session_state.current_page <= 1), use_container_width=True, key="sidebar_prev"):
+    if c1.button("Prev", icon="◀", disabled=(st.session_state.current_page <= 1), use_container_width=True, key="sidebar_prev"):
         if st.session_state.global_edit_mode and st.session_state.pending_edits:
             for rid, mdf in st.session_state.pending_edits.items():
                 for r in MOCK_RECORDS:
@@ -261,7 +272,7 @@ with st.sidebar:
         st.session_state.current_page -= 1
         update_url_params()
         st.rerun()
-    if c2.button("Next ▶", disabled=(st.session_state.current_page >= num_pages), use_container_width=True, key="sidebar_next"):
+    if c2.button("Next", icon="▶", disabled=(st.session_state.current_page >= num_pages), use_container_width=True, key="sidebar_next"):
         if st.session_state.global_edit_mode and st.session_state.pending_edits:
             for rid, mdf in st.session_state.pending_edits.items():
                 for r in MOCK_RECORDS:
@@ -283,23 +294,58 @@ with st.sidebar:
         st.info("Preference saved to DB (Mock)")
         st.rerun()
 
+    # Moved Editing Controls here
+    if st.session_state.user_role == "Editor":
+        if not st.session_state.global_edit_mode:
+            if st.button("Enter Edit Mode", icon="📝", use_container_width=True, key="sidebar_enter_edit"):
+                st.session_state.global_edit_mode = True
+                st.rerun()
+        else:
+            col_e1, col_e2 = st.columns(2)
+            if col_e1.button("Cancel All", icon="❌", use_container_width=True, key="sidebar_cancel_all"):
+                st.session_state.global_edit_mode = False
+                st.session_state.pending_edits = {}
+                st.rerun()
+            if col_e2.button("Save All", icon="💾", type="primary", use_container_width=True, key="sidebar_save_all"):
+                # Mock Save all pending edits
+                for rid, mdf in st.session_state.pending_edits.items():
+                    # Update MOCK_RECORDS
+                    for r in MOCK_RECORDS:
+                        if r["id"] == rid:
+                            r["mdf"] = mdf
+                st.session_state.pending_edits = {}
+                st.session_state.global_edit_mode = False
+                st.success("All changes saved! (Mock)")
+                st.rerun()
+    else:
+        st.info("View-only mode (Editor access required)")
+
     st.divider()
     
-    # 5. Download Cart
-    st.subheader("Download Cart")
-    cart_container = st.container(border=True)
-    with cart_container:
-        st.write(f"**{len(st.session_state.cart)} records** tagged")
-        sources_in_cart = set(r["source"] for r in st.session_state.cart)
-        if len(sources_in_cart) > 1:
-            st.info("Bundle: ZIP archive")
-        
-        c1, c2 = st.columns(2)
-        if c1.button("Download", use_container_width=True, type="primary"):
+    # 5. My Selection
+    header_text = f"My Selection ({len(st.session_state.selection)} records)"
+    st.markdown(f"**{header_text}**")
+    
+    selection_col1, selection_col2, selection_col3 = st.columns(3)
+    
+    view_icon = "📚" if st.session_state.get("view_selection_only", False) else "🧺"
+    view_help = "Show all records" if st.session_state.get("view_selection_only", False) else "Filter list to show only selected items"
+    if selection_col1.button("", icon=view_icon, use_container_width=True, key="view_selection_toggle", help=view_help):
+        st.session_state.view_selection_only = not st.session_state.get("view_selection_only", False)
+        st.session_state.current_page = 1
+        update_url_params()
+        st.rerun()
+
+    if st.session_state.selection:
+        if selection_col2.button("📥", use_container_width=True, key="download_selection_mock", help="Download (Mock)"):
             st.success("Downloading...")
-        if c2.button("Discard", use_container_width=True):
-            st.session_state.cart = []
+        if selection_col3.button("🗑️", use_container_width=True, key="discard_selection_mock", help="Discard (Mock)"):
+            st.session_state.selection = []
+            st.session_state.view_selection_only = False
             st.rerun()
+    else:
+        selection_col2.button("📥", disabled=True, use_container_width=True, key="download_selection_mock_disabled")
+        selection_col3.button("🗑️", disabled=True, use_container_width=True, key="discard_selection_mock_disabled")
 
     st.divider()
     st.session_state.user_role = st.selectbox("Role Simulation", ["Viewer", "Editor"])
@@ -330,8 +376,10 @@ else:
         with st.container(border=True):
             st.markdown(f"**Record #{record_id} [{record['source']}]**")
             
-            if st.session_state.global_edit_mode:
-                # GLOBAL EDIT MODE
+            is_editing = st.session_state.global_edit_mode or record_id in st.session_state.local_edits
+            
+            if is_editing:
+                # EDIT MODE
                 initial_val = st.session_state.pending_edits.get(record_id, record["mdf"])
                 edited_mdf = st.text_area(
                     "MDF Editor", 
@@ -344,7 +392,7 @@ else:
                 if edited_mdf != initial_val:
                     st.session_state.pending_edits[record_id] = edited_mdf
 
-                col_s1, _ = st.columns([1, 4])
+                col_s1, col_s2, _ = st.columns([1, 1, 3])
                 if col_s1.button("Update", type="primary", key=f"update_{record_id}", use_container_width=True):
                     # Update the mock data in session
                     for r in MOCK_RECORDS:
@@ -352,8 +400,18 @@ else:
                             r["mdf"] = edited_mdf
                     if record_id in st.session_state.pending_edits:
                         del st.session_state.pending_edits[record_id]
+                    if record_id in st.session_state.local_edits:
+                        st.session_state.local_edits.remove(record_id)
                     st.success(f"Saved Record #{record_id}! (Mock)")
                     st.rerun()
+                
+                if not st.session_state.global_edit_mode:
+                    if col_s2.button("Cancel", key=f"cancel_local_{record_id}", use_container_width=True):
+                        if record_id in st.session_state.local_edits:
+                            st.session_state.local_edits.remove(record_id)
+                        if record_id in st.session_state.pending_edits:
+                            del st.session_state.pending_edits[record_id]
+                        st.rerun()
             else:
                 # VIEW MODE
                 mdf_lines = record["mdf"].split('\n')
@@ -364,27 +422,34 @@ else:
                 render_mdf_block(record["mdf"], diagnostics=diagnostics)
             
                 # Action Toolbar for each record
-                toolbar = st.columns([1, 1, 1, 1])
+                toolbar_cols = [1, 1]
+                if st.session_state.user_role == "Editor" and not st.session_state.global_edit_mode:
+                    toolbar_cols.append(1)
                 
-                # 0. Copy Buttons
-                if toolbar[0].button("Copy Plain", use_container_width=True, key=f"copy_plain_{record_id}"):
-                    st.write(f'<script>navigator.clipboard.writeText(`{record["mdf"]}`);</script>', unsafe_allow_html=True)
-                    st.toast(f"Copied Record #{record_id} (Plain)!")
-                if toolbar[1].button("Copy Rich", use_container_width=True, key=f"copy_rich_{record_id}"):
-                    st.toast(f"Copied Record #{record_id} (Rich)!")
-            
+                toolbar = st.columns(toolbar_cols)
+                
                 # 1. Actions
-                if toolbar[2].button("Add to Cart", use_container_width=True, key=f"add_cart_{record_id}"):
-                    if record not in st.session_state.cart:
-                        st.session_state.cart.append(record)
-                        st.toast(f"Record #{record_id} added to cart!")
-                        st.rerun()
+                in_selection = record in st.session_state.selection
+                selection_label = "Remove from Selection" if in_selection else "Add to Selection"
+                selection_icon = "🧺" if not in_selection else "❌"
+                
+                if toolbar[0].button(selection_label, use_container_width=True, icon=selection_icon, key=f"add_selection_{record_id}"):
+                    if not in_selection:
+                        st.session_state.selection.append(record)
+                        st.toast(f"Record #{record_id} added to selection!")
                     else:
-                        st.toast(f"Record #{record_id} already in cart!")
+                        st.session_state.selection.remove(record)
+                        st.toast(f"Record #{record_id} removed from selection!")
+                    st.rerun()
             
                 if st.session_state.user_role == "Editor":
-                    if toolbar[3].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
+                    if toolbar[1].button("Delete", use_container_width=True, icon="🗑️", key=f"del_{record_id}"):
                         st.error(f"Delete clicked for Record #{record_id} (Mock)")
+                    
+                    if not st.session_state.global_edit_mode:
+                        if toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}"):
+                            st.session_state.local_edits.add(record_id)
+                            st.rerun()
             
                 # Revision History (compact per record)
                 with st.expander("Revision History", expanded=False):

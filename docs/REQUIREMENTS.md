@@ -19,7 +19,10 @@ A dedicated administrative interface must be provided for managing the `sources`
 
 ## 3. MDF Standards & Conventions
 
-### 3.1 Cross-References
+### 3.1 Validation Philosophy
+The SNEA Shoebox Editor prioritizes linguistic flexibility. All validation checks regarding MDF tag hierarchy, order, or presence are advisory ONLY. The software must never block export, saving, or editing based on these suggestions.
+
+### 3.2 Cross-References
 To maintain MDF parity while supporting multiple source references, the following convention is used:
 - **Tag**: `\cf` (Compare/Cross-reference)
 - **Format**: All external source references within the `\cf` tag must be prefixed with `Also: ` to distinguish them from standard linguistic cross-references.

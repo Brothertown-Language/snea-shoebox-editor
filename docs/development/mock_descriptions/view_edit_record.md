@@ -12,17 +12,17 @@
 │  [ Enter text...      ]   │  │ \ps n                                      │  │
 │                           │  │ \ge translation 1                          │  │
 │  Search Mode              │  └────────────────────────────────────────────┘  │
-│  (●) Lexeme  ( ) FTS      │  [<] [>] [Copy Plain] [Copy Rich] [Add] [x] [✎]  │
+│  (●) Lexeme  ( ) FTS      │  [<] [>] [Add] [x] [✎]  │
 │                           │                                                  │
 │  Source Collection        │  ┌────────────────────────────────────────────┐  │
 │  [ Mohegan          ▾ ]   │  │ \lx example 2                              │  │
 │                           │  │ \ps v                                      │  │
 │  Pagination               │  │ \ge translation 2                          │  │
 │  [< Prev] [Next >]        │  └────────────────────────────────────────────┘  │
-│  Page 1 of 10             │  [<] [>] [Copy Plain] [Copy Rich] [Add] [x] [✎]  │
+│  Page 1 of 10             │  [<] [>] [Add] [x] [✎]  │
 │  Size: [ 25 ▾ ]           │                                                  │
 │ ┌───────────────────────┐ │                                                  │
-│ │ Download Cart         │ │                                                  │
+│ │ My Selection           │ │                                                  │
 └───────────────────────────┴──────────────────────────────────────────────────┘
 ```
 
@@ -34,7 +34,7 @@
 ## 2. Layout Location
 **Location**: 
 - **Main Panel**: Primary record display and edit area.
-- **Sidebar**: All navigation, search filters, source switching, and download cart status.
+- **Sidebar**: All navigation, search filters, source switching, and selection status.
 
 ## 3. Visual Elements
 **Functional UI Components**:
@@ -51,7 +51,7 @@
     - Specialized MDF Renderer (displays the record in MDF format with optional structural highlighting)
     - Multi-line Text Editor (visible only in Edit Mode for a specific record)
     - Edit Actions: `[Save]`, `[Cancel]` (visible only in Edit Mode; positioned immediately below the Text Editor)
-    - Action Toolbar: `[<]`, `[>]`, `[Copy Plain]`, `[Copy Rich]`, `[Add to Cart]`, `[edit]` (conditional), `[delete]` (conditional) (consolidated per record)
+    - Action Toolbar: `[<]`, `[>]`, `[Add to Selection]`, `[edit]` (conditional), `[delete]` (conditional) (consolidated per record)
     - Preference Toggle: "Structural Highlighting" checkbox/toggle
     - Collapsible Detail Section ("Revision History")
     - **Revision History Detail**:
@@ -59,8 +59,8 @@
         - Highlighted Diff (comparing current record with previous version).
         - "Restore to Editor" action (conditional on Edit Mode).
 - **Status & Notifications**:
-    - Information Panel in Sidebar (Download Cart summary: "X records from Y sources")
-    - Cart Action Buttons: `[Download]`, `[Discard]`
+    - Information Panel in Sidebar (Selection summary: "X records from Y sources")
+    - Selection Action Buttons: `[Download]`, `[Discard]`
 
 ## 4. Data Requirements
 **Mock Data**:
@@ -76,7 +76,7 @@
 - **Display/Edit Container**: A logical group wrapping the MDF Renderer (View Mode) or Multi-line Text Editor (Edit Mode) within a Record Card. 
     - In **View Mode**, it includes the MDF Renderer and the Action Toolbar.
     - In **Edit Mode**, it replaces the MDF Renderer with the Multi-line Text Editor and adds `[Save]` / `[Cancel]` buttons immediately below it.
-- **Cart Summary Widget**: A dedicated functional block in the sidebar summarizing tagged records, including `[Download]` and `[Discard]` actions.
+- **Selection Summary Widget**: A dedicated functional block in the sidebar summarizing tagged records, including `[Download]` and `[Discard]` actions.
 - **Pagination Widget**: A composite control in the sidebar for navigating pages.
 
 ## 6. Interactions & State
@@ -93,19 +93,16 @@
     - Problematic lines are visually highlighted (e.g., subtle red background or warning icon).
     - **Toggleability**: Structural highlighting can be toggled on/off via a "Structural Highlighting" checkbox. 
     - **Persistence**: The toggle state is persisted in the database as the user's default preference for the `records` view.
-- **Copy to Clipboard**:
-    - `[Copy Plain]`: Copies the raw MDF text of the record to the system clipboard.
-    - `[Copy Rich]`: Copies the record with structural highlighting applied (simulated in mock as a success notification).
 - **Edit Mode Transition**: Clicking the record view or the `[edit]` action button (if user has edit permissions) replaces the MDF Renderer with the Multi-line Text Editor and reveals the `[Save]` / `[Cancel]` buttons.
 - **Search & Filtering**: 
     - The Search Mode Toggle determines whether the text input filters by the primary lexeme field (`\lx`) or performs a full-text search (FTS) across all MDF tags.
     - Updating search terms, toggling the search mode, or changing the source dropdown in the sidebar immediately filters the navigable record set.
 - **Permission-Gated Elements**: `[edit]` and `[delete]` action buttons are only rendered if the user session has "Editor" permissions.
-- **Download Cart Logic**: 
-    - `[Add to Cart]` appends the current record to a persistent tracking list.
+- **Selection Logic**: 
+    - `[Add to Selection]` appends the current record to a persistent tracking list.
     - `[Download]` triggers the export process (bundled zip if multiple sources).
-    - `[Discard]` clears all records from the current cart session.
-    - If records from multiple sources are in the cart, the system indicates that exports will be bundled in a zip archive.
+    - `[Discard]` clears all records from the current selection session.
+    - If records from multiple sources are in the selection, the system indicates that exports will be bundled in a zip archive.
 - **Record Navigation**: "Next/Previous" actions update the currently displayed record index based on the active search/source filters.
 - **Layout Consistency**: The view applies standard 1rem horizontal padding for the main panel to maintain project-wide alignment.
 - **Revision History & Versioning**:

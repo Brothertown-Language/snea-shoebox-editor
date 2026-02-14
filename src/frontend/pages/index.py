@@ -102,7 +102,7 @@ def index():
                 st.write(f"**Time:** {item['timestamp']}")
                 st.write(f"**Change:** {item['summary']}")
                 
-                if st.button("🔍 View in Records", key=f"view_rec_{item['record_id']}_{i}"):
+                if st.button("View in Records", icon="🔍", key=f"view_rec_{item['record_id']}_{i}"):
                     st.query_params["search"] = f"#{item['record_id']}"
                     st.query_params["search_mode"] = "FTS"
                     st.switch_page("pages/records.py")

@@ -14,11 +14,11 @@ Language project. MDF is a standard for structuring lexical data in software lik
 
 ---
 
-### Core Hierarchy
+### Suggested Hierarchy
 
-MDF entries are structured hierarchically. The order of tags determines how they are bundled together. In this project, every entry MUST include `\lg` (Language) and `\so` (Source) markers.
+MDF entries are typically structured hierarchically. The order of tags determines how they are bundled together. In this project, every entry SHOULD include `\lg` (Language) and `\so` (Source) markers for best compatibility.
 
-#### Standard Hierarchy
+#### Suggested Standard Hierarchy (Lexeme-Oriented)
 
 `\lx` (Lexeme) > `\lg` (Language) > `\so` (Source) > `\ps` (Part of Speech) > `\sn` (Sense) > `\se` (Subentry)
 

@@ -34,6 +34,32 @@ if user_role not in ("editor", "admin"):
     st.error("You do not have permission to access this page. Editor or admin role required.")
     return
 ```
-
 ---
+## 4. Validation and Feedback
+
+All validation for linguistic data (MDF tags) must be advisory and non-blocking.
+- **Advisory Labels**: Use "Suggestion" or "Note" instead of "Error" for structural MDF issues.
+- **Non-blocking**: Validation state must not prevent the user from performing any action (e.g., exporting, navigating, or editing).
+- **Remediation-focused**: Tooltips and feedback messages should explain the *suggested* best practice and how to achieve it, without implying the current state is "wrong" or "invalid".
+
+## 5. Iconography and Visual Consistency
+
+Visual elements must maintain strict consistency across all views and components.
+
+### Rules:
+- **Group Consistency**: When adding components to a group (e.g., a toolbar, a row of buttons, or a sidebar section), all items MUST match the established style.
+    - If existing buttons use icons, new buttons in that group MUST use icons.
+    - If existing buttons use labels, new buttons in that group MUST use labels.
+    - If a hybrid approach is used (icon + label), maintain it across the group.
+- **Icon Semantic Consistency**: Use standard emojis/icons consistently for the same actions across the entire application:
+    - 🔍 Search
+    - ❌ Clear/Cancel/Close
+    - 📥 Download/Export
+    - 🗑️ Delete/Discard
+    - 📝 Edit/Write
+    - 💾 Save
+    - 🧺 Add to Selection / View Selection
+    - 📚 Show All / Records
+- **Mirror Existing Patterns**: Before implementing a new UI element, inspect the surrounding code and existing mocks to identify and replicate established visual patterns.
+
 *Note: This pattern is mandatory for all new views created after February 2026.*

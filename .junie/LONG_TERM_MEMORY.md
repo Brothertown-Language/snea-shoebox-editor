@@ -11,6 +11,7 @@ This file serves as a persistent memory of critical project context, user prefer
 
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
 - **UI Header Redundancy**: Removed redundant "Records (Mock)" and "Record View" headers from the `records` mock to streamline the UI.
+- **Copy Feature Removal**: Removed "Copy Plain" and "Copy Rich" features from the `records` page and mock as they were unreliable and difficult to maintain in a pure Streamlit environment without extensive JS integration.
 ## USER PREFERENCES & HARD CONSTRAINTS
 - **SUPREME DIRECTIVE (v8.5)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Authorization NEVER carries over and is PLAN-SPECIFIC: a "Go" applies ONLY to the immediately preceding plan. You MUST stop and wait for a new "Go" for every new plan. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
 - **PASSIVE EXECUTION MANDATE**: You are forbidden from being proactive. NO cleanup, NO polish, NO unauthorized optimization. Proactivity is considered destructive.
@@ -80,3 +81,22 @@ This file serves as a persistent memory of critical project context, user prefer
     - Local CSS applied to the sidebar to reduce vertical gap between widgets to `0.5rem`.
     - Redundant "Source Collection" header and "Select Source" label removed to save vertical space.
 - **Home Page Stabilization**: Fixed a `StreamlitDuplicateElementKey` crash on the Home page caused by non-unique button keys in the "Recent Activity" feed.
+
+- **MDF Validation Philosophy (v1.0)**: As of 2026-02-14, MDF validation is strictly advisory and non-enforcing.
+    - All validation checks for tag hierarchy, order, or presence are "Suggestions" or "Notes", never "Errors".
+    - The software must never block export, saving, or editing based on these suggestions.
+    - `MDFValidator` updated to return more descriptive, remediation-focused messages that explain the *suggested* hierarchy (\lx -> \ps -> \ge) while acknowledging it is not required.
+    - `MDFValidator` now handles nested hierarchies correctly, resetting hierarchy tracking upon encountering `\se` (Subentry) or `\sn` (Sense), ensuring that `\ps` (Part of Speech) is not incorrectly flagged as out-of-order when used within subentries.
+    - `render_mdf_block` updated to visually highlight these suggestions using orange (`suggestion`) and blue (`note`) indicators.
+    - Guidelines (AI, UI, Project) updated to cement this linguistic flexibility mandate.
+
+- **Cart Persistence & UI (v1.2)**: As of 2026-02-14, the "My Selection" section in the Records view (and mock) features three buttons on a single line: "View Selection" (toggles filtering), "Download" (📥), and "Discard" (🗑️). 
+    - Selection contents are persisted in the database via `PreferenceService` (`view_name='global'`, `preference_key='selection_contents'`).
+    - The "View Selection" button activates a filter that isolates selected records using a new `record_ids` parameter in `LinguisticService.search_records`.
+    - Iconography is used for all selection buttons for consistency: "View Selection" uses 🧺 (toggles to 📚 "Show All" when active).
+    - This filter is persisted in the URL as `view_selection=True`.
+
+- **Strict UI Consistency Mandate (v1.0)**: As of 2026-02-14, updated AI and Project Guidelines to enforce strict visual consistency.
+    - Added "Visual Consistency" rule to AI Guidelines (Section V).
+    - Added "Iconography and Visual Consistency" section to `docs/ui-guidelines.md`.
+    - Added "SELF-CORRECTION & CONSISTENCY CHECK" (Section VIII) to AI Guidelines to prevent "sloppiness" through pre-flight checks and post-implementation audits.

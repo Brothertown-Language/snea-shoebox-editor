@@ -235,7 +235,7 @@ def main():
         nav_cols = st.columns([1, 2, 1])
         
         with nav_cols[0]:
-            if st.button("⬅️ Previous", disabled=st.session_state.rollback_page_idx == 0, use_container_width=True):
+            if st.button("Previous", icon="⬅️", disabled=st.session_state.rollback_page_idx == 0, use_container_width=True):
                 st.session_state.rollback_page_idx -= 1
                 st.rerun()
                 
@@ -243,7 +243,7 @@ def main():
             st.markdown(f"<p style='text-align: center;'>Page {st.session_state.rollback_page_idx + 1} of {total_pages}</p>", unsafe_allow_html=True)
             
         with nav_cols[2]:
-            if st.button("Next ➡️", disabled=st.session_state.rollback_page_idx >= total_pages - 1, use_container_width=True):
+            if st.button("Next", icon="➡️", disabled=st.session_state.rollback_page_idx >= total_pages - 1, use_container_width=True):
                 st.session_state.rollback_page_idx += 1
                 st.rerun()
 

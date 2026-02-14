@@ -156,13 +156,15 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **UI PATTERNS**:
     - **Sidebar Controls**: Detail view controls (nav, filters, buttons) MUST be in `st.sidebar`.
     - **Icon Buttons**: Prefer icons for common actions to conserve space.
+    - **Visual Consistency**: Maintain strict iconography and labeling consistency within component groups (toolbars, rows). If a group uses icons (e.g., 📥, 🗑️), all new elements in that group MUST use icons (e.g., 🛒).
     - **MDF Rendering**: Always use `render_mdf_block()` for record text. No `st.code()`.
     - **Linguistic Diff Icons**: Use transformation icons for record revisions. Contiguous deletions and additions MUST be grouped and rendered with a `→` (Transformation) icon (Blue). Isolated deletions use `×` (Red), and isolated additions use `+` (Green).
     - **Line Indicators**: All SVG-based line indicators (word wrap, diffs, etc.) MUST use the "Large Format" pattern for accessibility: `background-size` of approximately `2.2rem 1.5em`, centered vertically in the gutter, with sufficient `padding-left` (~2.5rem) to ensure icons do not overlap text.
 - **MDF STANDARDS**:
     - **Record Spacing**: Double blank lines (`\n\n`) are MANDATORY between records.
     - **Core Tags**: `\lx` (Lexeme), `\ps` (POS), `\ge` (Gloss), `\inf` (Inflection).
-    - **Hierarchy**: `\lx` -> `\ps` -> `\ge`. Inflections stay inside the same record.
+    - **Suggested Hierarchy**: `\lx` -> `\ps` -> `\ge`. Inflections stay inside the same record.
+    - **NON-ENFORCEMENT POLICY**: All MDF validation (hierarchy, required tags) MUST be advisory ONLY. The system MUST NOT block export, editing, or any other operation based on tag order or presence. Validation messages MUST NOT be labeled as "Errors" and should instead use "Suggestion" or "Note" framing.
 - **ETHICS**: Respect Nation Sovereignty. Use "Nation" instead of "Tribal."
 
 ---
@@ -180,4 +182,10 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **Stability**: Mocks MUST remain functional (runnable via `uv run streamlit`) after every update.
 - **Synthetics**: If instructions imply new data fields, AI must create realistic synthetic data in the mock's local state. Never use production database schemas if they haven't been implemented yet.
 - **Compliance**: All generated mock code MUST follow the UI patterns in Guideline V (Sidebar, MDF rendering, Icon buttons).
-- **Composites**: For complex layouts, the AI must use standard Streamlit containers (`st.container`, `st.expander`, `st.tabs`) to group related elements logically as "composite components".
+    - **Composites**: For complex layouts, the AI must use standard Streamlit containers (`st.container`, `st.expander`, `st.tabs`) to group related elements logically as "composite components".
+
+---
+
+## VIII. SELF-CORRECTION & CONSISTENCY CHECK
+- **PRE-FLIGHT CHECK**: Before implementing any UI change, AI MUST explicitly verify that the proposed design matches the established visual patterns of the surrounding components.
+- **CONSISTENCY AUDIT**: After implementing a change, AI MUST perform a "consistency audit" of the modified view to ensure no new "sloppiness" (e.g., mismatched icons, inconsistent spacing, or redundant labels) has been introduced.
