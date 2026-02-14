@@ -56,7 +56,7 @@ You MUST operate as a deterministic, approval-gated execution agent.
 **YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
 - **STEP-BY-STEP APPROVAL**: Posting a multi-step plan does NOT authorize all steps. You MUST wait for explicit authorization for **EACH INDIVIDUAL EDIT**.
 - **NO AUTHORIZATION CARRY-OVER**: Authorization from previous turns, related tasks, or historical commands NEVER carries over to the current turn. You MUST obtain fresh, explicit approval for every action in the current session.
-- **PLAN-SPECIFIC AUTHORIZATION**: A "Go" or "Proceed" command applies ONLY to the plan immediately preceding it. It DOES NOT authorize any plans presented after the command is given. You MUST stop and wait for a new "Go" for every new plan.
+- **PLAN-SPECIFIC AUTHORIZATION**: A "Go" or "Proceed" command applies ONLY to the plan immediately preceding it. It DOES NOT authorize any plans presented after the command is given. You MUST stop and wait for a new "Go" for every new plan. Authorization NEVER carries over between turns or across task boundaries.
 - **AUTHORIZATION FORMS (STRICT ADHERENCE)**:
     - **"Go <thing/step>"**: Authorizes ONLY that specific item. AI must stop and wait for instruction immediately after completion.
     - **"Go" (No qualifier)**: Authorizes the entire immediate plan **WITHOUT FURTHER QUESTIONING**. AI must proceed through all steps and stop ONLY after the plan is finished.
@@ -98,12 +98,25 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **PRODUCTION/MOCK ISOLATION**: Strictly FORBIDDEN from modifying `src/` (Production) when the task is focused on `tests/ui/mocks/` (Mocks) or `docs/` (Documentation). 
 - **NO GLOBAL REFACTORS**: Never attempt to "centralize" or "standardize" code by moving logic from a mock into `src/` unless explicitly directed to perform a production refactor.
 - **EXPLICIT SCOPE CROSSING**: If a requested mock change genuinely requires a production change to function, you MUST stop and ask for "Scope Crossing Approval" before touching `src/`.
+- **PROHIBITED LOCAL FEATURES**: NEVER use features locally that production does not support. NOT EVER. How can we develop something for production when it does things the production system cannot do? This applies to database extensions, library versions, or environment-specific capabilities that are unavailable in the Streamlit Community Cloud or Aiven Production environments.
+- **NO CONDITIONAL FEATURES**: You are strictly FORBIDDEN from implementing conditional logic or fallbacks that branch based on feature availability between development and production. The codebase MUST be identical and rely ONLY on features guaranteed to be present in BOTH environments. If a feature (e.g., a specific DB extension) is not available in both, it MUST NOT be used at all.
+- **ENVIRONMENT PARITY MANDATE**: The local development and testing environments MUST be configured to support 100% of the features required by production. You are FORBIDDEN from wrapping migrations or production code in `try-except` blocks to "ignore" local environment deficiencies. If a production-required feature (e.g., `pg_trgm`) is missing locally, you MUST stop and ensure the local environment is fixed rather than dumbing down the code.
+- **IDENTICAL CODEBASE**: If the local development environment cannot support a feature, DO NOT USE IT IN PRODUCTION. The code must be identical and working on both platforms (dev and production) at all times.
+- **ENVELOPE AUTHORITY**: The `uv`-bundled `pgserver` defines the strict feature envelope for the entire system. Prod MUST NOT exceed local capabilities, and local dev MUST NOT exceed production capabilities. No feature (extension, operator class, contrib module) may be used unless it exists identically in both.
+    - If `pgserver` lacks `pg_trgm`, then `pg_trgm` is forbidden everywhere.
+    - If `pgserver` lacks contrib modules, then they are forbidden everywhere.
+    - If `pgserver` lacks certain operator classes, they are forbidden everywhere.
+    - The same applies to features available locally but missing in production.
+- **UV ONLY**: We are NOT using Conda. We are using `uv` for all dependency management and environment orchestration.
+- **EXCLUSIVE PGSERVER**: There is NO other PostgreSQL server to be used except for `pgserver` via `uv`! All local development and testing MUST use the `pgserver` instance managed by the application.
+- **UV BINARIES ONLY**: DO NOT attempt to ever use PostgreSQL binaries (e.g., `pg_config`, `postgres`, `psql`) that are NOT in the `uv` environment. All database-related tools and servers MUST be executed from within the `uv` virtual environment context.
 
 ---
 
 ## II. COMMUNICATION STANDARDS
 - **NO CODE BLOBS**: AI is strictly forbidden from providing raw code fragments or `search_replace` blocks in the chat dialogue.
-- **FOCUSED OVERVIEWS**: Always provide high-level summaries of *what* will change and *why*.
+- **FOCUSED OVERVIEWS**: Always provide high-level summaries of *what* will change and *why* for all proposed edits.
+- **NO CHAT-BASED EDITS**: Never present code changes for user review in the chat. Use focused overviews only.
 - **NO SYCOPHANTISM**: Avoid flowery language. Keep it concise and technical.
 - **NATURAL COUNTING**: Use 1-based numbering (1, 2, 3...) for all plans and lists.
 - **PROGRESS TRACKING EMOJI**: All plans/roadmaps MUST use:
@@ -114,9 +127,11 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 ---
 
 ## III. DEVELOPMENT WORKFLOW
-- **BACKGROUND EXECUTION**: Always start Streamlit in the background using `nohup`. You MUST use the provided lifecycle scripts for all Streamlit execution:
-    - Main App: `./scripts/start_streamlit.sh` and `./scripts/stop_streamlit.sh`.
+- **BACKGROUND EXECUTION**: Always start Streamlit in the background using `nohup`. You MUST use the provided lifecycle scripts for all Streamlit execution to prevent port conflicts and ensure clean state:
+    - Main App: `./scripts/start_streamlit.sh` and `./scripts/kill_streamlit.sh`.
     - Mocks: `./scripts/start_view_mocks.sh` and `./scripts/stop_view_mocks.sh`.
+    - **CLEAN STATE MANDATE**: Before starting a Streamlit instance, you MUST stop any existing instance using the corresponding "stop" or "kill" script. You are FORBIDDEN from having more than one main app and one mock viewer running simultaneously.
+    - **PORT PROTOCOL**: Main App MUST use port 8501. Mock Viewer MUST use port 8502. If you encounter a "Port in use" error, you MUST run the "kill" script and verify the port is free using `fuser` or `netstat` before retrying.
     Redirect output to the designated log file in `tmp/` and poll that file to verify success.
 - **PATH RESOLUTION BOILERPLATE**: Every shell script MUST start with:
     `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`

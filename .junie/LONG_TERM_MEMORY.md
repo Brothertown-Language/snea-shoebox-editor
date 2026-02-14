@@ -12,7 +12,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
 - **UI Header Redundancy**: Removed redundant "Records (Mock)" and "Record View" headers from the `records` mock to streamline the UI.
 ## USER PREFERENCES & HARD CONSTRAINTS
-- **SUPREME DIRECTIVE (v8.4)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Authorization never carries over and is PLAN-SPECIFIC: "Go" applies only to the immediately preceding plan. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
+- **SUPREME DIRECTIVE (v8.5)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Authorization NEVER carries over and is PLAN-SPECIFIC: a "Go" applies ONLY to the immediately preceding plan. You MUST stop and wait for a new "Go" for every new plan. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
 - **PASSIVE EXECUTION MANDATE**: You are forbidden from being proactive. NO cleanup, NO polish, NO unauthorized optimization. Proactivity is considered destructive.
 - **AUTHORIZATION CHECK**: Before calling ANY edit tool, you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
 - **NO ROADMAP DRIVING**: Do not implement future phases or "cleanup" code without direct orders.
@@ -21,7 +21,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **VCS PERMISSION GATE (v8.3 PROTOCOL)**: Absolute prohibition on the AI performing ANY commit-related actions. The AI is forbidden from creating commit scripts, manifest files, message files, or executing staging/commit commands. Even if requested, the AI MUST refuse. Rationale: Ensures full human accountability and prevents the AI from accidentally staging ignored files, secrets, or unauthorized changes. This mandate addresses the fact that the Junie agent willfully disregarded instructions about when to create commit files and automatically created them when not requested.
 - **STRICT FILENAME MANDATE**: The staging script MUST always be named `tmp/commit.sh`. Variations (e.g., `commit_task.sh`, `commit_simple.sh`) are strictly prohibited to avoid user confusion.
 - **NOConventional Commits**: Never use prefixes like `feat:` or `fix:`.
-- **STRICT COMMUNICATION MANDATE (v7.5)**: AI is strictly forbidden from providing raw code fragments, line-by-line edits, or `search_replace` blocks in the chat dialogue. All proposals MUST be presented as high-level, focused overviews of *what* will be changed and *why*. Proactivity in providing code blobs is a violation of the "Zero-Trust" interaction protocol.
+- **STRICT COMMUNICATION MANDATE (v8.6)**: AI is strictly forbidden from providing raw code fragments, line-by-line edits, or `search_replace` blocks in the chat dialogue. All proposals MUST be presented as high-level, focused overviews of *what* will be changed and *why*. AI is prohibited from presenting code changes for user review in the chat; this ensures focus remains on conceptual approval before implementation. Proactivity in providing code blobs is a violation of the "Zero-Trust" interaction protocol.
 - **1-BASED COUNTING ONLY**: Use natural counting (1, 2, 3...) for all plans and lists.
 - **MANDATORY MDF SPACING**: Always use double blank lines (`\n\n`) between records in text files and exports.
 - **MANDATORY MDF FILENAME PATTERN**: All MDF downloads must use the pattern `<prefix>_<Source>_<GitHubUsername>_<YYYY-MM-DD>_<SSSSS>.txt` via `UploadService.generate_mdf_filename`. This pattern uses underscores as separators, collapses multiple underscores, and allows alphanumeric, dot, at, and dash characters. As of 2026-02-13, the GitHub username is used instead of the email address.
@@ -50,6 +50,7 @@ This file serves as a persistent memory of critical project context, user prefer
 - **SCOPE ENFORCEMENT MANDATE (v8.4)**: Strictly FORBIDDEN from modifying `src/` (Production) when the primary task is focused on `tests/ui/mocks/` (Mocks) or `docs/` (Documentation). Any attempt to "standardize" code by moving logic from a mock into `src/` without explicit "Scope Crossing Approval" is a violation of the zero-trust protocol.
 - **Records View Layout (v2.0)**: As of 2026-02-14, navigation components (Prev/Next buttons, Page X of Y, and Results per page) in the `records` view (and mock) have been moved from the main panel to the sidebar. URL parameter tracking (`search`, `search_mode`, `source`, `page`, `page_size`) is implemented to support bookmarking.
 - **Records View Implementation**: Production Records View implemented at `src/frontend/pages/records.py` and registered in `NavigationService` between Home and Upload MDF.
+- **Records View Stabilization**: Fixed a crash caused by invalid icon usage ('✎' and '✖'). Replaced with standard emojis ('📝' and '🗑️') in both production and mock views. Fixed a rendering loop error in the mock toolbar.
 - **Lifecycle Script Mandate**: AI Guidelines updated to mandate the use of `./scripts/start_view_mocks.sh`, `./scripts/stop_view_mocks.sh`, `./scripts/start_streamlit.sh`, and `./scripts/stop_streamlit.sh` for all Streamlit execution.
 - **ModuleNotFoundError Fix**: Verified that `PYTHONPATH=.` is required when running mock scripts from the root to ensure imports from `src/` are resolved correctly.
 
@@ -63,3 +64,12 @@ This file serves as a persistent memory of critical project context, user prefer
 4. **UPDATE** logs immediately upon any guideline violation.
 
 - **STRICT GUIDELINE ENFORCEMENT (v8.5)**: Updated guidelines to include `NO STEP-SKIPPING` and `AI PERSONALITY SUPPRESSION`. AI is forbidden from combining steps or proceeding without explicit per-step authorization. Efficiency is explicitly deprioritized in favor of strict compliance and human review.
+- **Records View Refinement (v2.3)**: As of 2026-02-14, fixed an issue where the Records page sidebar was incorrectly displayed below the main application menu. Added a "Back to Home" button at the bottom of the sidebar to provide a clear exit path when the global navigation is hidden.
+- **UI Header Consolidation (v1.0)**: As of 2026-02-14, removed redundant `st.title` and `st.header` calls across all main pages (`index.py`, `records.py`, `user_info.py`, `system_status.py`, `batch_rollback.py`). Sidebar subheaders were consolidated into bold markdown (`st.markdown("**...**")`) to save vertical space.
+- **Records View Editing (v3.0)**: As of 2026-02-14, replaced the "clickable record" edit pattern with a global "Edit Mode" toggled from the sidebar. 
+    - When active, all records in the view use `st.text_area` for editing.
+    - Sidebar shows "Cancel All" and "Save All" buttons.
+    - Pagination (Prev/Next) automatically saves all pending edits to the database before switching pages.
+    - Each record has an individual "Update" button for granular saving.
+    - Pending edits are buffered in `st.session_state.pending_edits` to survive re-runs.
+    - Legacy "Clickable Record" logic, "Edit Record" per-record button, and legacy fallback edit mode have been completely removed.
