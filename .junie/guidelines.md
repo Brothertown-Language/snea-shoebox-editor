@@ -76,6 +76,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **NO COMPLEX SHELL CREATION**: Forbidden from using `printf` or `echo` with complex strings to create files (e.g., commit messages). Use the designated `create` tool.
 - **`uv run` PREFIX**: Every Python execution MUST start with `uv run`.
 - **PYTHONPATH FOR LOCAL SCRIPTS**: When using `uv run` for local scripts importing `src/`, prefix with `PYTHONPATH=.`.
+- **STREAMLIT EXECUTION**: NEVER run Streamlit as a foreground app. You MUST run it as a background task using `nohup` and poll its log file in `tmp/` for status.
 - **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
 - **NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
 - **CLEAN ROOT POLICY**: Redirect ALL output to `tmp/`. No log files or transient scripts in root.
@@ -86,6 +87,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 ### 2. Mandatory Passive Execution
 - **ZERO PROACTIVITY**: Never perform actions not explicitly requested. No "cleaning up" style, fixing typos, or optimizing unrelated logic.
 - **STOP AND ASK**: If you believe a change is beneficial but not requested, you MUST ask for permission.
+- **MIDDLE ROAD PROBLEM SOLVING**: Avoid jumping between binary extremes (e.g., framework-locked vs. hyper-generic). Prioritize descriptive, functional, and balanced solutions that provide clarity without excessive abstraction or rigid implementation coupling.
 
 ---
 
@@ -102,7 +104,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 ---
 
 ## III. DEVELOPMENT WORKFLOW
-- **BACKGROUND EXECUTION**: Always start Streamlit using `./scripts/start_streamlit.sh` or `nohup`.
+- **BACKGROUND EXECUTION**: Always start Streamlit in the background using `nohup`. For the main app, use `./scripts/start_streamlit.sh`. For mocks, redirect output to a file in `tmp/` and poll that file to verify success.
 - **PATH RESOLUTION BOILERPLATE**: Every shell script MUST start with:
     `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`
 - **TESTING STANDARDS**:

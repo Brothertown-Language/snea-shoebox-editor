@@ -17,34 +17,62 @@ class MDFValidator:
         Validates a single MDF record.
         Returns a dictionary with 'valid' (bool) and 'errors' (list of str).
         """
-        errors = []
-        found_tags = []
+        diagnostics = MDFValidator.diagnose_record(lines)
+        errors = [d["message"] for d in diagnostics if d["status"] == "error"]
         
-        tag_pattern = re.compile(r"\\([a-z]+)")
-
-        for line in lines:
-            match = tag_pattern.match(line)
-            if match:
-                found_tags.append(match.group(1))
-
-        # Check hierarchy
-        # All required tags must exist and be in order relative to each other
-        found_req_tags = [tag for tag in found_tags if tag in MDFValidator.REQUIRED_HIERARCHY]
-        
-        # Check for missing tags
-        for req_tag in MDFValidator.REQUIRED_HIERARCHY:
-            if req_tag not in found_req_tags:
-                errors.append(f"Missing required tag: \\{req_tag}")
-
-        # Check for order
-        last_req_idx = -1
-        for tag in found_req_tags:
-            req_idx = MDFValidator.REQUIRED_HIERARCHY.index(tag)
-            if req_idx < last_req_idx:
-                errors.append(f"Tag \\{tag} found out of order.")
-            last_req_idx = req_idx
-
         return {
             "valid": len(errors) == 0,
             "errors": errors
         }
+
+    @staticmethod
+    def diagnose_record(lines: List[str]) -> List[Dict[str, str]]:
+        """
+        Diagnoses each line of an MDF record for structural integrity.
+        Returns a list of dicts: {"status": "ok"|"error"|"warning", "message": "..."}
+        """
+        diagnostics = []
+        found_req_tags = []
+        tag_pattern = re.compile(r"\\([a-z]+)")
+
+        # 1. First pass: Identify tags and check basic formatting
+        for line in lines:
+            line = line.strip()
+            if not line:
+                diagnostics.append({"status": "ok", "message": ""})
+                continue
+                
+            match = tag_pattern.match(line)
+            if not match:
+                diagnostics.append({
+                    "status": "error",
+                    "message": "Line does not start with a valid MDF tag (e.g., \\lx)."
+                })
+                continue
+            
+            tag = match.group(1)
+            found_req_tags.append(tag)
+            diagnostics.append({"status": "ok", "message": "", "tag": tag})
+
+        # 2. Second pass: Check Hierarchy and Order
+        last_req_idx = -1
+        for i, diag in enumerate(diagnostics):
+            if "tag" not in diag:
+                continue
+                
+            tag = diag["tag"]
+            if tag in MDFValidator.REQUIRED_HIERARCHY:
+                req_idx = MDFValidator.REQUIRED_HIERARCHY.index(tag)
+                if req_idx < last_req_idx:
+                    diag["status"] = "error"
+                    diag["message"] = f"Tag \\{tag} is out of order (must follow previous required tags)."
+                last_req_idx = req_idx
+
+        # 3. Global Check: Missing Tags (attach to first line for visibility)
+        missing = [t for t in MDFValidator.REQUIRED_HIERARCHY if t not in found_req_tags]
+        if missing and diagnostics:
+            if diagnostics[0]["status"] == "ok":
+                diagnostics[0]["status"] = "warning"
+                diagnostics[0]["message"] = f"Missing required tags: {', '.join(['\\'+t for t in missing])}"
+
+        return diagnostics

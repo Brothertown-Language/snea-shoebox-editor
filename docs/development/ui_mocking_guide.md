@@ -4,7 +4,10 @@
 
 To help the AI agent generate or update UI mocks efficiently in `tests/ui/mocks/`, please use the following template to describe the components you need.
 
-## 1. Description Template
+## 1. Visual Representation
+AI MUST generate a conceptual visual representation of the described UI using **UTF-8 Box-Drawing characters** (e.g., ┌ ┐ └ ┘ ├ ┤ ┬ ┴ ┼ │ ─) and place it at the top of the description file within a `text` code block. This serves as a stable, cross-platform spatial reference for the component layout.
+
+## 2. Description Template
 
 When requesting a mock, try to include these details:
 
@@ -32,10 +35,10 @@ Composite components are groups of elements that function together. When describ
 >   - If 'Editor Mode' is ON: Show a composite component consisting of a large `st.text_area` for editing the MDF and a 'Save' button below it.
 > - **Data**: Use a synthetic record with `lx`, `ps`, and `mdf_data` fields."
 
-## 4. Execution Protocol
+## 2. Execution Protocol
 
 Once you provide these instructions, the AI will:
-1.  Draft a design plan.
-2.  Create/Update a file in `tests/ui/mocks/` (e.g., `mock_combined_view.py`).
+1.  **Draft a design plan**: Detailed markdown description using the template.
+2.  **Create/Update a file in `tests/ui/mocks/`** (e.g., `mock_combined_view.py`).
 3.  Ensure the mock is runnable via:
     `uv run streamlit run tests/ui/mocks/mock_combined_view.py`

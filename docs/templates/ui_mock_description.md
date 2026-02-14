@@ -1,22 +1,35 @@
 <!-- Copyright (c) 2026 Brothertown Language -->
 # UI Mock Description Template
 
-Use this template to describe a new UI mock or updates to an existing one.
+## 1. Visual Mock
 
-## 1. Component Name & Context
+```text
+┌───────────────────────────┬──────────────────────────────────────────────────┐
+│ [Component Name]          │  [Main View]                                     │
+├───────────────────────────┼──────────────────────────────────────────────────┤
+│                           │                                                  │
+│  [Element 1]              │  ┌────────────────────────────────────────────┐  │
+│  [ ( ) Select ]           │  │ [Specialized Content]                      │  │
+│                           │  └────────────────────────────────────────────┘  │
+└───────────────────────────┴──────────────────────────────────────────────────┘
+```
+
+## 2. Component Name & Context
 **Name**: [e.g., Record View/Edit]
 **Context**: [What is the primary goal of this feature?]
 
 ## 2. Layout Location
-**Location**: [e.g., `st.sidebar`, Main Panel, or specific `st.container`]
+**Location**: [e.g., Sidebar, Main Panel, or specific Container]
 
 ## 3. Visual Elements
-**Streamlit Elements**:
-- [ ] `st.button`
-- [ ] `st.text_area` / `st.text_input`
-- [ ] `st.selectbox` / `st.multiselect`
-- [ ] `st.dataframe` / `st.table`
-- [ ] `render_mdf_block()` (custom)
+**Functional UI Components**:
+- [ ] Action Buttons (triggers)
+- [ ] Single-line Text Input
+- [ ] Multi-line Text Editor
+- [ ] Dropdown Selector (single/multi)
+- [ ] Data Display Table
+- [ ] Specialized Content Renderer (e.g., MDF)
+- [ ] Collapsible Detail Section
 - [ ] Other: [specify]
 
 ## 4. Data Requirements
@@ -27,9 +40,9 @@ Use this template to describe a new UI mock or updates to an existing one.
 
 ## 5. Composite Logic
 **Grouping & Containers**:
-- [e.g., "Main record view uses an `st.container` with `render_mdf_block` followed by an action button row."]
+- [e.g., "Main record view uses a container with the MDF block renderer followed by an action button row."]
 
 ## 6. Interactions & State
 **Behavior**:
-- [e.g., "Clicking 'Edit' switches the display to an `st.text_area`."]
+- [e.g., "Clicking 'Edit' switches the display to a text area."]
 - [e.g., "Sidebar search filters the records displayed in the main panel."]

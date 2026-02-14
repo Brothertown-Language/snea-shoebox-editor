@@ -4,7 +4,7 @@
 UI utilities for Streamlit components.
 """
 import time
-from typing import Dict
+from typing import Dict, List, Optional
 
 import streamlit as st
 import streamlit.components.v1 as components
@@ -129,20 +129,30 @@ def _arrow_svg(color: str) -> str:
     return quote(svg, safe='')
 
 
-def render_mdf_block(mdf_text: str, key: str = "") -> None:
-    """Render MDF data in a soft-wrapped <pre> block with a wrap indicator.
+def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Dict]] = None) -> None:
+    """Render MDF data in a soft-wrapped <pre> block with structural highlighting.
 
-    Lines that wrap display a continuation marker (↩) via a hanging indent
-    so the user can distinguish true newlines from soft-wrapped overflow.
-    This is the project-default way to display MDF record text.
+    Lines that wrap display a continuation marker (↩) via a hanging indent.
+    If 'diagnostics' is provided, lines are highlighted based on their status
+    (error, warning, ok).
     """
     import html as _html
-    # Wrap each line in its own <div> so the hanging indent only affects
-    # soft-wrapped continuation lines, not true newlines.
     lines = mdf_text.split('\n')
-    line_divs = ''.join(
-        f'<div class="mdf-line">{_html.escape(line) if line else "&nbsp;"}</div>' for line in lines
-    )
+    
+    line_html_parts = []
+    for i, line in enumerate(lines):
+        diag = diagnostics[i] if diagnostics and i < len(diagnostics) else {"status": "ok"}
+        status_cls = f"status-{diag['status']}"
+        msg = diag.get("message", "")
+        escaped_line = _html.escape(line) if line else "&nbsp;"
+        
+        # Build line with optional tooltip/highlight
+        title_attr = f'title="{_html.escape(msg)}"' if msg else ""
+        line_html_parts.append(
+            f'<div class="mdf-line {status_cls}" {title_attr}>{escaped_line}</div>'
+        )
+    
+    line_divs = ''.join(line_html_parts)
     # st.html() renders inside an iframe that does NOT inherit Streamlit's
     # CSS custom properties.  We must read the theme colours from the parent
     # frame via JavaScript and apply them to the block.
@@ -168,6 +178,14 @@ def render_mdf_block(mdf_text: str, key: str = "") -> None:
             background-repeat: no-repeat;
             background-position: 0.1rem 1.5em;
             background-size: 2.2rem 1.5em;
+        }}
+        .mdf-line.status-error {{
+            background-color: rgba(255, 0, 0, 0.1);
+            border-left: 3px solid #ff4b4b;
+        }}
+        .mdf-line.status-warning {{
+            background-color: rgba(255, 165, 0, 0.1);
+            border-left: 3px solid #ffa500;
         }}
         /* Light theme arrow (deep orange on light bg) */
         @media (prefers-color-scheme: light) {{
