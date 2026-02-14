@@ -50,12 +50,13 @@ You MUST operate as a deterministic, approval-gated execution agent.
 <!-- Copyright (c) 2026 Brothertown Language -->
 <!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 
-# SNEA Online Shoebox Editor: Master AI Guidelines (v8.2)
+# SNEA Online Shoebox Editor: Master AI Guidelines (v8.3)
 
 ## 0. THE SUPREME DIRECTIVE: ZERO-TOLERANCE AUTHORIZATION
 **YOU ARE FORBIDDEN FROM MODIFYING ANY FILE WITHOUT EXPLICIT, PER-STEP APPROVAL.**
-- **STEP-BY-STEP APPROVAL:** Posting a multi-step plan does NOT authorize all steps. You MUST wait for explicit authorization for **EACH INDIVIDUAL EDIT**.
-- **AUTHORIZATION FORMS:**
+- **STEP-BY-STEP APPROVAL**: Posting a multi-step plan does NOT authorize all steps. You MUST wait for explicit authorization for **EACH INDIVIDUAL EDIT**.
+- **NO AUTHORIZATION CARRY-OVER**: Authorization from previous turns or related tasks NEVER carries over to the current turn. You MUST obtain fresh, explicit approval for every action in the current session.
+- **AUTHORIZATION FORMS**:
     - **"Go <thing/step>"**: Authorizes ONLY that specific item. AI must stop and wait for instruction immediately after completion.
     - **"Go" (No qualifier)**: Authorizes the entire immediate plan. AI must stop and wait for instruction immediately after the plan is finished.
 - **INTERNAL CHECK:** Before calling ANY edit tool (`create`, `search_replace`, `multi_edit`, `rename_element`), you MUST explicitly state in your thoughts: "AUTHORIZATION CHECK: [User Approval String] detected. Proceeding with Step [N]."
