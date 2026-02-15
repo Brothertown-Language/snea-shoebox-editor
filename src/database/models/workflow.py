@@ -9,6 +9,19 @@ class MatchupQueue(Base):
     """
     Staging area for uploaded MDF data requiring manual matching.
     Isolates sessions by user and source.
+
+    Attributes:
+        id (int): Primary key.
+        user_email (str): FK to users table, session owner.
+        source_id (int): FK to sources table, target collection.
+        suggested_record_id (int): Optional FK to an existing potential match in records.
+        batch_id (str): UUID identifying a specific upload batch.
+        filename (str): Name of the original uploaded file.
+        status (str): Queue state ('pending', 'matched', 'ignored').
+        lx (str): Uploaded lexeme for suggestion logic.
+        mdf_data (str): Full raw uploaded MDF entry.
+        match_type (str): Logic used for suggestion ('exact', 'base_form').
+        created_at (datetime): Timestamp of upload.
     """
     __tablename__ = 'matchup_queue'
     id = Column(Integer, primary_key=True, autoincrement=True)

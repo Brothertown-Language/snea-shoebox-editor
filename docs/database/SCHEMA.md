@@ -20,14 +20,34 @@ CREATE TABLE records (
     hm INTEGER DEFAULT 1,                 -- Homonym Number (\hm)
     ps TEXT,                              -- Part of Speech (\ps)
     ge TEXT,                              -- English Gloss (\ge)
-    language_id INTEGER NOT NULL,         -- FK to languages.id
     source_id INTEGER NOT NULL,           -- FK to sources.id
     source_page TEXT,                     -- Specific citation (\so)
     status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', 'approved'
-    embedding VECTOR(1536),               -- For cross-reference lookup
+    embedding VECTOR(1536),               -- For semantic lookup
     mdf_data TEXT NOT NULL,               -- Full raw MDF text
-    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT,
-    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT
+    current_version INTEGER NOT NULL DEFAULT 1, -- Optimistic locking / versioning
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
+    updated_by TEXT,                      -- email of last editor
+    reviewed_at TIMESTAMP WITH TIME ZONE,
+    reviewed_by TEXT,
+    FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT,
+    FOREIGN KEY (updated_by) REFERENCES users(email) ON DELETE RESTRICT,
+    FOREIGN KEY (reviewed_by) REFERENCES users(email) ON DELETE RESTRICT
+);
+```
+
+### `record_languages`
+Join table supporting many-to-many relationship between records and languages.
+
+```sql
+CREATE TABLE record_languages (
+    id SERIAL PRIMARY KEY,
+    record_id INTEGER NOT NULL,
+    language_id INTEGER NOT NULL,
+    is_primary BOOLEAN NOT NULL DEFAULT FALSE,
+    FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE CASCADE,
+    FOREIGN KEY (language_id) REFERENCES languages(id) ON DELETE RESTRICT
 );
 ```
 
@@ -56,13 +76,33 @@ CREATE TABLE matchup_queue (
     user_email TEXT NOT NULL,             -- FK to users.email
     source_id INTEGER NOT NULL,           -- Target collection
     suggested_record_id INTEGER,          -- System potential match (FK to records.id)
+    batch_id TEXT NOT NULL,               -- UUID for the upload session
+    filename TEXT,                        -- Original file name
     status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'matched', 'ignored'
     lx TEXT,                              -- Uploaded Lexeme
     mdf_data TEXT NOT NULL,               -- Raw uploaded entry
+    match_type TEXT,                      -- 'exact', 'base_form'
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_email) REFERENCES users(email) ON DELETE RESTRICT,
     FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT,
     FOREIGN KEY (suggested_record_id) REFERENCES records(id) ON DELETE RESTRICT
+);
+```
+
+### `iso_639_3`
+Reference table for ISO 639-3 language codes.
+
+```sql
+CREATE TABLE iso_639_3 (
+    id VARCHAR(3) PRIMARY KEY,            -- 3-letter code
+    part2b VARCHAR(3),
+    part2t VARCHAR(3),
+    part1 VARCHAR(2),
+    scope VARCHAR(1),
+    language_type VARCHAR(1),
+    ref_name TEXT NOT NULL,
+    comment TEXT,
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 ```
 
@@ -102,9 +142,10 @@ CREATE TABLE users (
     username TEXT UNIQUE NOT NULL,        -- GitHub Handle
     github_id INTEGER UNIQUE NOT NULL,    -- GitHub Numeric ID
     full_name TEXT,
+    is_active BOOLEAN NOT NULL DEFAULT TRUE,
     last_login TIMESTAMP WITH TIME ZONE,
     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
-    metadata JSONB
+    extra_metadata JSONB
 );
 ```
 

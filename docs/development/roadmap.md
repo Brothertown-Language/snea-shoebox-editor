@@ -106,7 +106,7 @@ Before initializing the project, you must set up the hosting and database platfo
 
 - **Format**: MDF (Multi-Dictionary Formatter).
 - **Schema**: Tables for `sources`, `records`, `languages`, `search_entries`, `matchup_queue`, `users`, `permissions`, `edit_history`, `user_activity_log`.
-- **NFD Sorting**: Records are sorted by their extracted headword (\lx) using NFD normalization.
+- **NFD Sorting**: Records are sorted by their extracted headword (\lx) using NFD normalization, with leading punctuation ignored.
 
 ---
 

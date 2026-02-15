@@ -34,10 +34,10 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 
 ## Requirements
 
-- **Python 3.12** — exact version required (`requires-python = "==3.12.*"`).
-- **uv** — for dependency management and virtual environment.
-- **Aiven Account** — for hosting the PostgreSQL database (production).
-- **GitHub Account** — for authentication (OAuth) and deployment.
+- **Python 3.12** — exact version recommended (`requires-python = "==3.12.*"`).
+- **uv** — for dependency management and environment orchestration.
+- **PostgreSQL 16+** — local development uses `pgserver` (embedded Postgres).
+- **GitHub Account** — for authentication and team-based RBAC.
 
 ## Setup & Run
 
@@ -48,77 +48,39 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
     uv sync --extra local
     ```
 
-2. **Run the app**:
+2. **Start the local environment**:
     ```bash
     ./scripts/start_streamlit.sh
     ```
 
-    If no database URL is configured in secrets or environment, the app automatically starts a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).
+    The app automatically manages its own `pgserver` instance and schema. Data is stored in `tmp/local_db`.
 
-3. **Stop the app**:
+3. **Stop the environment**:
     ```bash
     ./scripts/kill_streamlit.sh
     ```
 
-4. **Configure secrets** (optional): Create `.streamlit/secrets.toml` with your GitHub OAuth credentials to test authentication.
-
-> Always use the start script or `nohup` for background execution. For local development, **always** include `--extra local` in your `uv` commands.
-
-## Environment Secrets
-
-Secrets are managed via `.streamlit/secrets.toml` locally and the Streamlit Cloud "Secrets" UI in production.
-
-| Secret                          | Description                        |
-|---------------------------------|------------------------------------|
-| `connections.postgresql.url`    | Aiven PostgreSQL connection URI    |
-| `github_oauth.client_id`       | GitHub OAuth Client ID             |
-| `github_oauth.client_secret`   | GitHub OAuth Client Secret         |
-| `github_oauth.redirect_uri`    | App callback URL                   |
-
-> **Do not commit secrets to the repository.** If secrets were accidentally committed, follow the **[Security Rotation Guide](docs/development/SECURITY_ROTATION.md)** immediately.
-
-## Tests
-
-Run the full test suite:
-
-```bash
-uv run pytest tests/
-```
-
-Run a specific test file:
-
-```bash
-uv run pytest tests/test_security_manager.py
-```
-
-Test directories mirror the `src/` layout:
-
-| Directory          | Covers                       |
-|--------------------|------------------------------|
-| `tests/database/`  | Database models & connection |
-| `tests/frontend/`  | UI components & pages        |
-| `tests/mdf/`       | MDF parser & validator       |
-| `tests/services/`  | Service layer                |
-| `tests/ui/`        | UI utilities                 |
+4. **Background Mock Viewer** (optional):
+    ```bash
+    ./scripts/start_view_mocks.sh
+    ```
+    This launches the mock component gallery on port 8502. Stop it with `./scripts/stop_view_mocks.sh`.
 
 ## Scripts
 
-All utility scripts are in the `scripts/` directory.
+All utility scripts are in the `scripts/` directory and should be run with `uv run`.
 
 | Script                        | Description                                      |
 |-------------------------------|--------------------------------------------------|
-| `start_streamlit.sh`          | Start the local dev server (background, `nohup`) |
-| `kill_streamlit.sh`           | Stop the running Streamlit server                |
-| `manage_local_db.py`          | Manage the local `pgserver` database             |
-| `clone_db.py`                 | Clone a database                                 |
-| `seed_permissions.py`         | Seed permission data                             |
-| `dump_permissions.py`         | Dump current permissions                         |
-| `clear_permissions.py`        | Clear permission data                            |
-| `dump_users.py`               | Dump user records                                |
-| `check_db_resolution.py`      | Check database DNS resolution                    |
-| `test_db_connection.py`       | Test database connectivity                       |
-| `verify_iso639.py`            | Verify ISO 639 language code data                |
-| `download_ci_logs.py`         | Download CI log artifacts                        |
+| `start_streamlit.sh`          | Start main app on port 8501 (background)         |
+| `kill_streamlit.sh`           | Stop main app                                    |
+| `start_view_mocks.sh`         | Start mock viewer on port 8502 (background)      |
+| `stop_view_mocks.sh`          | Stop mock viewer                                 |
+| `manage_local_db.py`          | Inspect or reset local `pgserver`                |
+| `verify_iso639.py`            | Refresh ISO 639 reference data                   |
+| `seed_permissions.py`         | Load RBAC rules from `permissions.json`          |
+| `dump_users.py`               | Inspect synchronized GitHub user accounts        |
+| `test_db_connection.py`       | Verify connectivity to Aiven or local DB         |
 
 Run Python scripts with:
 

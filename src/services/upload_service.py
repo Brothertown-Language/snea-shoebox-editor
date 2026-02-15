@@ -27,6 +27,12 @@ class UploadService:
     """
     Service for MDF file upload workflow: parse, stage, match, review, and commit.
     All matchup_queue operations are scoped by batch_id.
+
+    This service handles the "Round-Trip" synchronization workflow where external 
+    MDF files are uploaded, matched against existing records in the database, 
+    and then merged or created as new records. It maintains a staging area 
+    (matchup_queue) to allow linguists to review and override automated matching 
+    decisions before they affect production data.
     """
 
     @staticmethod

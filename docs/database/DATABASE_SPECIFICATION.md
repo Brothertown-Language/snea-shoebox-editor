@@ -48,12 +48,28 @@ The schema is organized for human readability in SQL viewers like **DBeaver**, p
 | **`hm`** | INTEGER | Homonym Number | Distinguishes entries with identical headwords. |
 | **`ps`** | TEXT | Part of Speech | Grammatical classification. |
 | **`ge`** | TEXT | English Gloss | Primary definition for searching/sorting. |
-| **`language_id`** | INTEGER | FK to `languages.id` | Identifies the dialect/language. |
 | **`source_id`** | INTEGER | FK to `sources.id` | Identifies the origin collection. |
 | **`source_page`** | TEXT | Source Citation | Specific page or section number. |
 | **`status`** | TEXT | Workflow State | 'draft', 'edited', 'approved'. |
 | **`embedding`** | VECTOR(1536) | Semantic Vector | Used for cross-reference lookup (not general search). |
 | **`mdf_data`** | TEXT | Raw MDF Body | The full, unparsed linguistic entry. |
+| **`current_version`** | INTEGER | Version Number | Optimistic locking and revision tracking. |
+| **`is_deleted`** | BOOLEAN | Soft Delete Flag | Allows restoration and maintains audit integrity. |
+| **`updated_at`** | TIMESTAMP | Last Update | Automated timestamp. |
+| **`updated_by`** | TEXT | Last Editor | FK to `users.email`. |
+| **`reviewed_at`** | TIMESTAMP | Review Date | Timestamp of approval. |
+| **`reviewed_by`** | TEXT | Reviewer | FK to `users.email`. |
+
+#### `record_languages` (M:M Join Table)
+
+Supports records having multiple languages (e.g., cross-dialectal entries).
+
+| Column | Type | Description | Justification |
+| :--- | :--- | :--- | :--- |
+| **`id`** | SERIAL | Primary Key | Standard identifier. |
+| **`record_id`** | INTEGER | FK to `records.id` | Link to linguistic record. |
+| **`language_id`** | INTEGER | FK to `languages.id` | Link to language metadata. |
+| **`is_primary`** | BOOLEAN | Primary Marker | Indicates the primary language of the record. |
 
 #### `search_entries` (Consolidated Lookup)
 
@@ -76,10 +92,21 @@ Enables linguists to upload MDF files and manually match them against production
 | **`user_email`** | TEXT | FK to `users.email` | Isolates sessions between different users. |
 | **`source_id`** | INTEGER | FK to `sources.id` | Target source for the upload. |
 | **`suggested_record_id`** | INTEGER | FK to `records.id` | Optional link to an existing potential match. |
+| **`batch_id`** | TEXT | Batch ID | UUID identifying the upload session. |
+| **`filename`** | TEXT | Filename | Original name of the uploaded file. |
 | **`status`** | TEXT | Queue State | 'pending', 'matched', 'ignored'. |
 | **`lx`** | TEXT | Uploaded Lexeme | Used for automated matching suggestions. |
 | **`mdf_data`** | TEXT | Raw Uploaded MDF | Preservation of data as provided by the user. |
+| **`match_type`** | TEXT | Match Logic | 'exact' or 'base_form'. |
 | **`created_at`** | TIMESTAMP | Creation Date | Audit trail for the upload session. |
+
+#### `iso_639_3` (Standard Reference)
+
+| Column | Type | Description | Justification |
+| :--- | :--- | :--- | :--- |
+| **`id`** | VARCHAR(3) | Primary Key | The 3-letter ISO code. |
+| **`ref_name`** | TEXT | Language Name | Reference name from the ISO standard. |
+| **`comment`** | TEXT | SIL Notes | Additional context from the standard. |
 
 #### Lookup Tables (Reference Data)
 
@@ -115,7 +142,7 @@ Enables linguists to upload MDF files and manually match them against production
 | **`is_active`** | BOOLEAN | Account Status | Flag to enable/disable user access. |
 | **`last_login`** | TIMESTAMP | Last Login | Audit trail for user activity. |
 | **`created_at`** | TIMESTAMP | Join Date | When the user first logged in. |
-| **`metadata`** | JSONB | Settings/Info | Flexible storage for future extension (pushed right). |
+| **`extra_metadata`** | JSONB | Settings/Info | Flexible storage for future extension (pushed right). |
 
 **`edit_history`**
 

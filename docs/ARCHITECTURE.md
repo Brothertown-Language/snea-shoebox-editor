@@ -12,23 +12,25 @@ The SNEA Online Shoebox Editor is a collaborative, version-controlled platform f
 - **Streamlit Application**: [Streamlit](https://streamlit.io/) (Hosted on Streamlit Community Cloud).
   - A unified Python application serves both the frontend and backend logic.
   - Handles UI rendering, authentication, and database interactions.
-  - Implements optimistic locking for concurrent editing. (Pending)
-  - Implemented: Basic record viewing, automatic schema initialization.
+  - Implements optimistic locking and versioning for concurrent editing.
+  - Features a multi-user "Matchup Review" workflow for MDF synchronization.
 - **Database**: [Aiven](https://aiven.io/) (PostgreSQL).
-  - Persistent PostgreSQL database using a dual-engine search strategy (FTS + Trigram).
-  - Stores linguistic records, search entries, audit trails, and staging queues.
-  - Implemented tables: `records`, `sources`, `languages`, `search_entries`, `matchup_queue`, `users`, `permissions`, `edit_history`, `user_activity_log`.
-- **Authentication**: Simple session-based login.
-  - Relying on Streamlit's `st.session_state` for the current session.
-  - (Planned) Integrated via GitHub OAuth.
+  - Persistent PostgreSQL database utilizing standard `ILIKE` and specialized indexing for performance.
+  - Supports Many-to-Many relationships for cross-dialectal linguistic records.
+  - Integrated ISO 639-3 reference data for language normalization.
+- **Authentication**: GitHub OAuth & RBAC.
+  - Integrated via GitHub OAuth for secure user identification.
+  - Role-Based Access Control (RBAC) mapping GitHub Teams to application roles (Admin, Editor, Viewer).
+  - Cookie-based session rehydration for seamless multi-page experience.
 
 ## Data Model & Schema Management
 
 The primary data format is MDF (Multi-Dictionary Form).
-- **Hierarchy**: \lx (Lexeme) -> \ps (Part of Speech) -> \ge (Gloss English).
+- **Hierarchy**: `\lx` (Lexeme) -> `\ps` (Part of Speech) -> `\ge` (Gloss English).
+- **Language Mapping**: Supports multiple languages per record via a join table, allowing for complex cross-references.
 - **Validation**: Advisory visual feedback on MDF compliance; linguists decide whether to enforce.
 - **History**: Every change is tracked in an `edit_history` table for full auditability and version control.
-- **Automated Schema**: The application is responsible for its own database schema. On startup, the app automatically creates missing tables and applies necessary `ALTER` statements to existing tables. No manual SQL execution is required for schema maintenance.
+- **Automated Schema**: The application manages its own database schema via SQLAlchemy models. On startup, the app automatically creates missing tables and applies necessary updates. No manual SQL execution is required for schema maintenance.
 
 ## Deployment Pipeline
 

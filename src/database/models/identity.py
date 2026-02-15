@@ -10,6 +10,17 @@ class User(Base):
     """
     User identity and metadata linked to GitHub authentication.
     Uses email as the primary logical identifier for cross-session audit trails.
+
+    Attributes:
+        id (int): Primary key.
+        email (str): Primary logical key, unique identifier for auth and audit.
+        username (str): GitHub handle.
+        github_id (int): Immutable GitHub numeric ID.
+        full_name (str): Real name from GitHub profile.
+        is_active (bool): Flag for account status.
+        last_login (datetime): Timestamp of most recent authentication.
+        created_at (datetime): Timestamp of account creation.
+        extra_metadata (dict): JSON storage for flexible settings/metadata.
     """
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True, autoincrement=True)

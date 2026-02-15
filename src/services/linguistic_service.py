@@ -285,6 +285,7 @@ class LinguisticService:
                                 text("records.fts_vector @@ plainto_tsquery('english', :term)")
                             ).params(term=search_term)
             
+            # TODO: Sorting needs to be NFD with leading punctuation ignored.
             # Order by lx (headword)
             query = query.order_by(Record.lx, Record.hm)
             
@@ -341,6 +342,7 @@ class LinguisticService:
                                 text("records.fts_vector @@ plainto_tsquery('english', :term)")
                             ).params(term=search_term)
             
+            # TODO: Sorting needs to be NFD with leading punctuation ignored.
             # Order by source_id, lx (headword), hm
             query = query.order_by(Record.source_id, Record.lx, Record.hm)
             
