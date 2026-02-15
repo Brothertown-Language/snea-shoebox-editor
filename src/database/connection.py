@@ -253,13 +253,20 @@ def _force_stop_stuck_db(db_path):
         # 2. Try pg_ctl stop -m immediate
         _logger.debug("[DEV] Calling pg_ctl stop -m immediate...")
         import pgserver
-        pg_ctl_path = Path(pgserver.__file__).parent / "pgbin" / "bin" / "pg_ctl"
+        # Try multiple common locations for pg_ctl in the pgserver package
+        pg_ctl_path = None
+        for subpath in [["pgbin", "bin", "pg_ctl"], ["pginstall", "bin", "pg_ctl"]]:
+            candidate = Path(pgserver.__file__).parent.joinpath(*subpath)
+            if candidate.exists():
+                pg_ctl_path = candidate
+                break
         
-        if pg_ctl_path.exists():
+        if pg_ctl_path:
             cmd = [str(pg_ctl_path), 'stop', '-m', 'immediate', '-D', str(db_path)]
         else:
             cmd = ['pg_ctl', 'stop', '-m', 'immediate', '-D', str(db_path)]
             
+        _logger.debug("[DEV] Executing: %s", " ".join(cmd))
         subprocess.run(cmd, capture_output=True, text=True)
 
         # 3. If PID is still alive or known, use signals
@@ -292,10 +299,9 @@ def _force_stop_stuck_db(db_path):
         # 4. Search for orphaned postgres processes belonging to this DB path
         # This is a fallback for when the PID file is gone but processes remain.
         try:
-            current_user = os.getlogin()
             # Simple check for processes with 'postgres' and the db_path in their cmdline
             import subprocess
-            pg_procs = subprocess.run(['ps', '-u', current_user, '-o', 'pid,cmd'], capture_output=True, text=True)
+            pg_procs = subprocess.run(['ps', '-o', 'pid,cmd'], capture_output=True, text=True)
             for proc_line in pg_procs.stdout.splitlines():
                 if 'postgres' in proc_line and str(db_path) in proc_line:
                     try:
