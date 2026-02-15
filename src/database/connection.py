@@ -227,6 +227,7 @@ def _force_stop_stuck_db(db_path):
     _logger.debug("[DEV] Entering _force_stop_stuck_db(db_path=%s)", db_path)
     pid_file = Path(db_path) / "postmaster.pid"
     lock_file = Path(db_path) / ".s.PGSQL.5432.lock"
+    opts_file = Path(db_path) / "postmaster.opts"
     
     import time
     import signal
@@ -267,13 +268,23 @@ def _force_stop_stuck_db(db_path):
             cmd = ['pg_ctl', 'stop', '-m', 'immediate', '-D', str(db_path)]
             
         _logger.debug("[DEV] Executing: %s", " ".join(cmd))
-        subprocess.run(cmd, capture_output=True, text=True)
+        subprocess.run(cmd, capture_output=True, text=True, timeout=5)
 
-        # 3. If PID is still alive or known, use signals
+        # 3. Use fuser to kill processes using the DB directory (Most Aggressive)
+        try:
+            _logger.debug("[DEV] Attempting fuser -k -TERM on %s", db_path)
+            subprocess.run(['fuser', '-k', '-TERM', str(db_path)], capture_output=True, timeout=5)
+            time.sleep(0.5)
+            _logger.debug("[DEV] Attempting fuser -k -KILL on %s", db_path)
+            subprocess.run(['fuser', '-k', '-KILL', str(db_path)], capture_output=True, timeout=5)
+        except Exception as e:
+            _logger.debug("[DEV] fuser failed (might not be installed or permissions): %s", e)
+
+        # 4. If PID is still alive or known, use signals
         if pid:
             try:
                 os.kill(pid, 0) # Check if alive
-                _logger.warning("[DEV] Process %d still alive after pg_ctl. Sending SIGTERM.", pid)
+                _logger.warning("[DEV] Process %d still alive. Sending SIGTERM.", pid)
                 os.kill(pid, signal.SIGTERM)
                 
                 try:
@@ -281,7 +292,7 @@ def _force_stop_stuck_db(db_path):
                     os.killpg(pgid, signal.SIGTERM)
                 except Exception: pass
                 
-                time.sleep(1)
+                time.sleep(0.5)
                 
                 try:
                     os.kill(pid, 0)
@@ -296,35 +307,47 @@ def _force_stop_stuck_db(db_path):
             except ProcessLookupError:
                 _logger.debug("[DEV] Process %d is gone.", pid)
 
-        # 4. Search for orphaned postgres processes belonging to this DB path
-        # This is a fallback for when the PID file is gone but processes remain.
+        # 5. Search for orphaned postgres/postmaster processes belonging to this DB path
+        # Use ps -axww to ensure we see the full command line
         try:
-            # Simple check for processes with 'postgres' and the db_path in their cmdline
-            import subprocess
-            pg_procs = subprocess.run(['ps', '-o', 'pid,cmd'], capture_output=True, text=True)
+            _logger.debug("[DEV] Scanning ps for orphaned processes associated with %s", db_path)
+            pg_procs = subprocess.run(['ps', '-axww', '-o', 'pid,cmd'], capture_output=True, text=True, timeout=5)
             for proc_line in pg_procs.stdout.splitlines():
-                if 'postgres' in proc_line and str(db_path) in proc_line:
+                line = proc_line.strip()
+                if not line: continue
+                
+                # Check for postgres or postmaster and the db_path
+                is_pg = 'postgres' in line or 'postmaster' in line
+                has_path = str(db_path) in line
+                
+                if is_pg and has_path:
                     try:
-                        o_pid = int(proc_line.strip().split()[0])
-                        _logger.warning("[DEV] Killing orphaned postgres process %d associated with %s", o_pid, db_path)
+                        o_pid = int(line.split()[0])
+                        # Don't kill ourselves
+                        if o_pid == os.getpid(): continue
+                        
+                        _logger.warning("[DEV] Killing orphaned process %d: %s", o_pid, line)
                         os.kill(o_pid, signal.SIGKILL)
-                    except (ValueError, ProcessLookupError):
+                    except (ValueError, IndexError, ProcessLookupError):
                         pass
         except Exception as e:
             _logger.debug("[DEV] Error checking for orphaned processes: %s", e)
 
-        # 5. Lock file cleanup (CRITICAL)
-        for f in [pid_file, lock_file]:
+        # 6. Lock file cleanup (CRITICAL)
+        for f in [pid_file, lock_file, opts_file]:
             if f.exists():
-                _logger.info("Removing stale lock file: %s", f.name)
-                f.unlink()
+                _logger.info("Removing stale file: %s", f.name)
+                try:
+                    f.unlink()
+                except Exception as e:
+                    _logger.error("Failed to remove %s: %s", f.name, e)
 
         _logger.info("Force-stop sequence completed.")
         time.sleep(0.5)
     except Exception as e:
         _logger.error("[DEV] Failed to force-stop DB: %s", e, exc_info=True)
         # Final fallback for lock files
-        for f in [pid_file, lock_file]:
+        for f in [pid_file, lock_file, opts_file]:
             if f.exists():
                 try: f.unlink()
                 except: pass
