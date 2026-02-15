@@ -221,27 +221,25 @@ def _enable_tcp_listening(pg_server):
 def _force_stop_stuck_db(db_path):
     """Force-stop a local DB that is stuck in a 'shutting down' state.
     
-    Proceeds with an immediate shutdown and PID file cleanup.
+    Proceeds with an immediate shutdown and PID file/lock cleanup even if 
+    postmaster.pid is missing, as the server may be stuck in shared memory.
     """
     _logger.debug("[DEV] Entering _force_stop_stuck_db(db_path=%s)", db_path)
     pid_file = Path(db_path) / "postmaster.pid"
-    if not pid_file.exists():
-        _logger.debug("[DEV] No postmaster.pid found at %s. Skipping force-stop.", db_path)
-        return
-
-    _logger.debug("[DEV] postmaster.pid exists at %s. Content: %s", pid_file, pid_file.read_text().strip() if pid_file.exists() else "N/A")
-
+    lock_file = Path(db_path) / ".s.PGSQL.5432.lock"
+    
     import time
     import signal
     import subprocess
     import os
 
     _logger.warning(
-        "Forcing immediate shutdown of potentially stuck DB (pgdata=%s)…", 
+        "Forcing cleanup of potentially stuck DB (pgdata=%s). Starting recovery sequence…", 
         db_path
     )
+    
     try:
-        # Read PID from postmaster.pid
+        # 1. Read PID if possible
         pid = None
         if pid_file.exists():
             try:
@@ -252,7 +250,7 @@ def _force_stop_stuck_db(db_path):
             except Exception as e:
                 _logger.debug("[DEV] Error reading PID from file: %s", e)
 
-        # 1. Try pg_ctl stop -m immediate
+        # 2. Try pg_ctl stop -m immediate
         _logger.debug("[DEV] Calling pg_ctl stop -m immediate...")
         import pgserver
         pg_ctl_path = Path(pgserver.__file__).parent / "pgbin" / "bin" / "pg_ctl"
@@ -264,52 +262,66 @@ def _force_stop_stuck_db(db_path):
             
         subprocess.run(cmd, capture_output=True, text=True)
 
-        # 2. If PID is still alive, use SIGTERM on process group or postmaster
+        # 3. If PID is still alive or known, use signals
         if pid:
             try:
                 os.kill(pid, 0) # Check if alive
-                _logger.warning("[DEV] Process %d still alive after pg_ctl. Sending SIGTERM to postmaster/group.", pid)
-                
-                # SIGTERM to postmaster is a fast shutdown
-                _logger.info("[DEV] Sending SIGTERM to postmaster PID %d", pid)
+                _logger.warning("[DEV] Process %d still alive after pg_ctl. Sending SIGTERM.", pid)
                 os.kill(pid, signal.SIGTERM)
                 
                 try:
                     pgid = os.getpgid(pid)
-                    _logger.info("[DEV] Sending SIGTERM to process group %d", pgid)
                     os.killpg(pgid, signal.SIGTERM)
-                except Exception as e:
-                    _logger.debug("[DEV] Could not kill process group: %s", e)
+                except Exception: pass
                 
                 time.sleep(1)
                 
-                # 3. Final desperation: SIGKILL
                 try:
                     os.kill(pid, 0)
-                    _logger.warning("[DEV] Process %d still alive after SIGTERM. Sending SIGKILL.", pid)
+                    _logger.warning("[DEV] Process %d still alive. Sending SIGKILL.", pid)
                     os.kill(pid, signal.SIGKILL)
                     try:
                         pgid = os.getpgid(pid)
                         os.killpg(pgid, signal.SIGKILL)
-                    except Exception:
-                        pass
+                    except Exception: pass
                 except ProcessLookupError:
-                    _logger.info("[DEV] Process %d terminated successfully after SIGTERM.", pid)
+                    _logger.info("[DEV] Process %d terminated.", pid)
             except ProcessLookupError:
                 _logger.debug("[DEV] Process %d is gone.", pid)
 
+        # 4. Search for orphaned postgres processes belonging to this DB path
+        # This is a fallback for when the PID file is gone but processes remain.
+        try:
+            current_user = os.getlogin()
+            # Simple check for processes with 'postgres' and the db_path in their cmdline
+            import subprocess
+            pg_procs = subprocess.run(['ps', '-u', current_user, '-o', 'pid,cmd'], capture_output=True, text=True)
+            for proc_line in pg_procs.stdout.splitlines():
+                if 'postgres' in proc_line and str(db_path) in proc_line:
+                    try:
+                        o_pid = int(proc_line.strip().split()[0])
+                        _logger.warning("[DEV] Killing orphaned postgres process %d associated with %s", o_pid, db_path)
+                        os.kill(o_pid, signal.SIGKILL)
+                    except (ValueError, ProcessLookupError):
+                        pass
+        except Exception as e:
+            _logger.debug("[DEV] Error checking for orphaned processes: %s", e)
+
+        # 5. Lock file cleanup (CRITICAL)
+        for f in [pid_file, lock_file]:
+            if f.exists():
+                _logger.info("Removing stale lock file: %s", f.name)
+                f.unlink()
+
         _logger.info("Force-stop sequence completed.")
-        time.sleep(1)
-        if pid_file.exists():
-            _logger.info("Removing stuck PID file manually.")
-            pid_file.unlink()
+        time.sleep(0.5)
     except Exception as e:
         _logger.error("[DEV] Failed to force-stop DB: %s", e, exc_info=True)
-        # Fallback: remove PID file manually
-        if pid_file.exists():
-            _logger.info("Removing stuck PID file manually after failed force-stop.")
-            pid_file.unlink()
-            _logger.debug("[DEV] Fallback: Manually unlinked %s", pid_file)
+        # Final fallback for lock files
+        for f in [pid_file, lock_file]:
+            if f.exists():
+                try: f.unlink()
+                except: pass
 
 
 def _auto_start_pgserver():
@@ -374,10 +386,6 @@ def _auto_start_pgserver():
         # by triggering a force-stop.
         max_start_attempts = 5
         for start_attempt in range(1, max_start_attempts + 1):
-            if pid_file.exists():
-                _logger.warning("[DEV] PID file exists at start of attempt %d. Triggering force-kill.", start_attempt)
-                _force_stop_stuck_db(db_path)
-
             try:
                 _pg_server = pgserver.get_server(str(db_path))
                 _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
@@ -388,37 +396,40 @@ def _auto_start_pgserver():
                 err_msg = str(start_err)
                 _logger.debug("[DEV] pgserver.get_server() failed (%s): %s", err_type, err_msg)
                 
-                # If it failed and PID file exists, it might be "shutting down" or just stuck
-                if pid_file.exists():
-                    # Treat AssertionError as potential stuck state if it has no message
-                    # or if specific phrases match.
-                    is_stuck_err = (
-                        err_type == "AssertionError" or 
-                        any(phrase in err_msg for phrase in ["shutting down", "already running", "lock file", "starting up"])
-                    )
+                # UNGATED: Treat any failed start as a potential reason to attempt recovery
+                # if it looks like a stuck state.
+                is_stuck_err = (
+                    err_type == "AssertionError" or 
+                    any(phrase in err_msg for phrase in ["shutting down", "already running", "lock file", "starting up"])
+                )
+                
+                if is_stuck_err:
+                    _logger.debug("[DEV] Detected potential stuck state (%s): %s", err_type, err_msg)
+                    if "pg_shutdown_first_seen" not in st.session_state:
+                        st.session_state["pg_shutdown_first_seen"] = _time.time()
+                        _logger.debug("[DEV] Set pg_shutdown_first_seen in session_state")
                     
-                    if is_stuck_err:
-                        _logger.debug("[DEV] Detected potential stuck state (%s): %s", err_type, err_msg)
-                        if "pg_shutdown_first_seen" not in st.session_state:
-                            st.session_state["pg_shutdown_first_seen"] = _time.time()
-                            _logger.debug("[DEV] Set pg_shutdown_first_seen in session_state")
-                        
-                        duration = _time.time() - st.session_state["pg_shutdown_first_seen"]
-                        if start_attempt < max_start_attempts:
-                            _logger.warning("pgserver failed to start. Attempt %d/%d (duration=%.1fs)…", start_attempt, max_start_attempts, duration)
-                            # Be more aggressive: if we failed once and PID exists, try a force stop
-                            _logger.warning("[DEV] Triggering force-kill on attempt %d due to stuck state", start_attempt)
-                            _force_stop_stuck_db(db_path)
-                            st.session_state.pop("pg_shutdown_first_seen", None)
-                            _time.sleep(1)
-                        else:
-                            _logger.error("[DEV] Max start attempts reached for stuck state.")
-                            # Final desperation: force stop even on last attempt failure
-                            _force_stop_stuck_db(db_path)
-                            raise start_err
+                    duration = _time.time() - st.session_state["pg_shutdown_first_seen"]
+                    if start_attempt < max_start_attempts:
+                        _logger.warning("pgserver failed to start. Attempt %d/%d (duration=%.1fs)…", start_attempt, max_start_attempts, duration)
+                        # Be aggressive: trigger force cleanup
+                        _logger.warning("[DEV] Triggering force-kill on attempt %d due to stuck state", start_attempt)
+                        _force_stop_stuck_db(db_path)
+                        st.session_state.pop("pg_shutdown_first_seen", None)
+                        _time.sleep(1)
                     else:
+                        _logger.error("[DEV] Max start attempts reached for stuck state. Final attempt at force-stop.")
+                        _force_stop_stuck_db(db_path)
                         raise start_err
                 else:
+                    # Even if it doesn't match a "stuck" signature, if a PID file exists,
+                    # something is clearly wrong and we should try to clear it.
+                    if pid_file.exists():
+                        _logger.warning("[DEV] Unexpected start failure but postmaster.pid exists. Attempting recovery.")
+                        _force_stop_stuck_db(db_path)
+                        if start_attempt < max_start_attempts:
+                            _time.sleep(1)
+                            continue
                     raise start_err
 
         # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
