@@ -53,7 +53,8 @@ def _process_block_into_record(lines_buffer):
         # Check for structural branching tags
         if _extract_tag(line, 'se') is not None or \
            _extract_tag(line, 'sn') is not None or \
-           _extract_tag(line, 'va') is not None:
+           _extract_tag(line, 'va') is not None or \
+           _extract_tag(line, 'xv') is not None:
             in_headword = False
 
         val = _extract_tag(line, 'lx')
