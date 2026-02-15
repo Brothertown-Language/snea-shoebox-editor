@@ -1,0 +1,133 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Proto-SNEA Dictionary — XeLaTeX Template
+% Sections sorted by first letter (NFD)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass[12pt]{article}
+
+\usepackage{fontspec}
+\usepackage{polyglossia}
+\setmainlanguage{english}
+
+% Set your preferred fonts here:
+% \setmainfont{Junicode}
+% \newfontfamily\vernfont{YourProtoFont}
+
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{microtype}
+\usepackage{geometry}
+\geometry{margin=1in}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Entry Macros
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Main entry environment
+\newenvironment{entry}[1]{
+  \section*{#1}
+  \addcontentsline{toc}{section}{#1}
+  \begin{description}[leftmargin=1.5em, style=nextline]
+}{
+  \end{description}
+  \vspace{1em}
+}
+
+% Subentry environment (derivatives, allomorphs, related stems)
+\newenvironment{subentry}[1]{
+  \subsection*{#1}
+  \begin{description}[leftmargin=2em, style=nextline]
+}{
+  \end{description}
+  \vspace{0.5em}
+}
+
+% Field macros
+\newcommand{\headword}[1]{\item[\textbf{Headword:}] #1}
+\newcommand{\reconstruction}[1]{\item[\textbf{Reconstruction:}] #1}
+\newcommand{\variant}[1]{\item[\textbf{Variant(s):}] #1}
+\newcommand{\language}[1]{\item[\textbf{Language:}] #1}
+\newcommand{\source}[1]{\item[\textbf{Source(s):}] #1}
+\newcommand{\pos}[1]{\item[\textbf{Category:}] #1}
+\newcommand{\gloss}[1]{\item[\textbf{Gloss:}] #1}
+\newcommand{\stem}[1]{\item[\textbf{Stem:}] #1}
+\newcommand{\morphology}[1]{\item[\textbf{Morphology:}] #1}
+\newcommand{\notes}[1]{\item[\textbf{Notes:}] #1}
+\newcommand{\etymology}[1]{\item[\textbf{Etymology:}] #1}
+\newcommand{\correspondences}[1]{\item[\textbf{Reflexes / Correspondences:}] #1}
+\newcommand{\crossrefs}[1]{\item[\textbf{Cross-refs:}] #1}
+
+% Example block (for cited forms, example reconstructions, or key attestations)
+\newenvironment{examples}{
+  \item[\textbf{Examples / Attestations:}]
+  \begin{description}[leftmargin=3em, style=nextline]
+}{
+  \end{description}
+}
+
+\newcommand{\vernacular}[1]{\item[\textit{Form:}] #1}
+\newcommand{\english}[1]{\item[\textit{Gloss:}] #1}
+\newcommand{\exsource}[1]{\item[\textit{Source:}] #1}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Alphabetical Sectioning (NFD)
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Python will emit:
+% \lettersection{A}
+% \lettersection{B}
+% etc., based on NFD-normalized first letter.
+
+\newcommand{\lettersection}[1]{
+  \clearpage
+  \section*{#1}
+  \addcontentsline{toc}{section}{#1}
+}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% Document Start
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\begin{document}
+
+\tableofcontents
+\clearpage
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% === BEGIN GENERATED CONTENT ===
+% Your Python script will generate everything below.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+% Example of what your generator might emit:
+
+% \lettersection{A}
+
+% \begin{entry}{*aθk-}
+%   \headword{*aθk-}
+%   \reconstruction{Proto-SNEA *aθk-}
+%   \language{Proto-SNEA}
+%   \source{H.431–434; internal reconstruction}
+%   \pos{Verb root ‘watch, lie in wait’}
+%   \gloss{to watch; to lie in wait}
+%   \morphology{Root *aθk- + various finals (e.g. TI, TA).}
+%
+%   \correspondences{Mass. \textit{askuhhum}, \textit{askuhwheteau}; Cree …; Ojibwe …}
+%
+%   \begin{examples}
+%     \vernacular{*aθk-e·wa-}
+%     \english{he watches, keeps watch}
+%     \exsource{Reconstructed thematic stem}
+%   \end{examples}
+%
+%   \etymology{Compare broader Algonquian *aΘk- ‘watch’.}
+%   \notes{Used as base for multiple watch/ambush lexemes in daughter languages.}
+% \end{entry}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% === END GENERATED CONTENT ===
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\end{document}
