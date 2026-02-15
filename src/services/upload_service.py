@@ -640,7 +640,6 @@ class UploadService:
 
     @staticmethod
     def approve_all_new_source(batch_id: str, user_email: str,
-                               language_id: int,
                                session_id: str,
                                progress_callback: Optional[callable] = None) -> int:
         """Bulk-approve and apply all pending rows as new records for new sources.
@@ -673,7 +672,6 @@ class UploadService:
                 UploadService.apply_single(
                     queue_id=qid,
                     user_email=user_email,
-                    language_id=language_id,
                     session_id=session_id,
                     session=session
                 )
@@ -701,7 +699,6 @@ class UploadService:
 
     @staticmethod
     def approve_all_by_record_match(batch_id: str, user_email: str,
-                                     language_id: int,
                                      session_id: str,
                                      progress_callback: Optional[callable] = None) -> int:
         """Bulk-apply matched rows to the records table.
@@ -744,7 +741,6 @@ class UploadService:
                 UploadService.apply_single(
                     queue_id=qid,
                     user_email=user_email,
-                    language_id=language_id,
                     session_id=session_id,
                     session=session
                 )
@@ -776,7 +772,6 @@ class UploadService:
 
     @staticmethod
     def approve_non_matches_as_new(batch_id: str, user_email: str,
-                                    language_id: int,
                                     session_id: str,
                                     progress_callback: Optional[callable] = None) -> int:
         """Bulk-apply unmatched rows as new records.
@@ -817,7 +812,6 @@ class UploadService:
                 UploadService.apply_single(
                     queue_id=qid,
                     user_email=user_email,
-                    language_id=language_id,
                     session_id=session_id,
                     session=session
                 )
@@ -896,7 +890,49 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def apply_single(queue_id: int, user_email: str, language_id: int,
+    def _update_record_languages(session, record, lg_entries):
+        """Helper to manage record-language associations.
+        
+        If lg_entries (from MDF parsing) is provided, it finds/creates the
+        languages and links them.
+        """
+        from src.database.models.core import RecordLanguage, Language
+        
+        # 1. Clear existing
+        session.query(RecordLanguage).filter_by(record_id=record.id).delete()
+        
+        # 2. Add new from MDF if present
+        if lg_entries:
+            for i, lg in enumerate(lg_entries):
+                lg_name = lg['name']
+                lg_code = lg['code']
+                
+                # Find by name first
+                lang = session.query(Language).filter_by(name=lg_name).first()
+                
+                # If not found by name, try to find by code if we have one
+                if not lang and lg_code:
+                    lang = session.query(Language).filter_by(code=lg_code).first()
+                    
+                if not lang:
+                    # Use provided code or fallback to name-based dummy code
+                    final_code = lg_code if lg_code else lg_name[:10]
+                    lang = Language(name=lg_name, code=final_code)
+                    session.add(lang)
+                    session.flush()
+                elif lg_code and not lang.code:
+                    # Update existing language with code if it was missing
+                    lang.code = lg_code
+                    session.flush()
+                
+                session.add(RecordLanguage(
+                    record_id=record.id,
+                    language_id=lang.id,
+                    is_primary=lg.get('is_primary', False)
+                ))
+
+    @staticmethod
+    def apply_single(queue_id: int, user_email: str,
                      session_id: str, session=None) -> dict:
         """Apply a single matchup_queue row immediately.
 
@@ -931,47 +967,6 @@ class UploadService:
 
             from src.database.models.core import RecordLanguage, Language
 
-            # Helper to manage languages
-            def _update_languages(record, lg_entries, default_lang_id):
-                # 1. Clear existing
-                session.query(RecordLanguage).filter_by(record_id=record.id).delete()
-                
-                # 2. Add new from MDF if present, else fallback to UI selected language
-                if lg_entries:
-                    for i, lg in enumerate(lg_entries):
-                        lg_name = lg['name']
-                        lg_code = lg['code']
-                        
-                        # Find by name first
-                        lang = session.query(Language).filter_by(name=lg_name).first()
-                        
-                        # If not found by name, try to find by code if we have one
-                        if not lang and lg_code:
-                            lang = session.query(Language).filter_by(code=lg_code).first()
-                            
-                        if not lang:
-                            # Use provided code or fallback to name-based dummy code
-                            final_code = lg_code if lg_code else lg_name[:10]
-                            lang = Language(name=lg_name, code=final_code)
-                            session.add(lang)
-                            session.flush()
-                        elif lg_code and not lang.code:
-                            # Update existing language with code if it was missing
-                            lang.code = lg_code
-                            session.flush()
-                        
-                        session.add(RecordLanguage(
-                            record_id=record.id,
-                            language_id=lang.id,
-                            is_primary=(i == 0)
-                        ))
-                else:
-                    session.add(RecordLanguage(
-                        record_id=record.id,
-                        language_id=default_lang_id,
-                        is_primary=True
-                    ))
-
             if row.status == 'matched':
                 record = session.get(Record, row.suggested_record_id)
                 if not record:
@@ -986,7 +981,7 @@ class UploadService:
                 record.ge = entry.get('ge', '')
                 record.updated_by = user_email
                 
-                _update_languages(record, entry.get('lg', []), language_id)
+                UploadService._update_record_languages(session, record, entry.get('lg', []))
 
                 # current_version is auto-incremented by SQLAlchemy optimistic locking
                 next_version = record.current_version + 1
@@ -1022,7 +1017,7 @@ class UploadService:
                 session.add(new_record)
                 session.flush()
                 
-                _update_languages(new_record, entry.get('lg', []), language_id)
+                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
 
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
@@ -1051,7 +1046,7 @@ class UploadService:
                 session.add(new_record)
                 session.flush()
                 
-                _update_languages(new_record, entry.get('lg', []), language_id)
+                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
 
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
@@ -1223,7 +1218,7 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def commit_homonyms(batch_id: str, user_email: str, language_id: int,
+    def commit_homonyms(batch_id: str, user_email: str,
                         session_id: str,
                         progress_callback: Optional[callable] = None) -> int:
         """Commit all 'create_homonym' rows: create new homonym records. Returns count."""
@@ -1278,12 +1273,8 @@ class UploadService:
                 session.add(new_record)
                 session.flush()
 
-                from src.database import RecordLanguage
-                session.add(RecordLanguage(
-                    record_id=new_record.id,
-                    language_id=language_id,
-                    is_primary=True
-                ))
+                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
+
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized
@@ -1325,7 +1316,7 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def commit_new(batch_id: str, user_email: str, language_id: int,
+    def commit_new(batch_id: str, user_email: str,
                    session_id: str,
                    progress_callback: Optional[callable] = None) -> int:
         """Commit all 'create_new' rows: insert new records. Returns count."""
@@ -1354,12 +1345,8 @@ class UploadService:
                 session.add(new_record)
                 session.flush()
 
-                from src.database import RecordLanguage
-                session.add(RecordLanguage(
-                    record_id=new_record.id,
-                    language_id=language_id,
-                    is_primary=True
-                ))
+                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
+
                 formatted = format_mdf_record(row.mdf_data)
                 normalized = normalize_nt_record(formatted, new_record.id)
                 new_record.mdf_data = normalized

@@ -48,7 +48,14 @@ def _process_block_into_record(lines_buffer):
         've': []
     }
 
+    in_headword = True
     for line in lines_buffer:
+        # Check for structural branching tags
+        if _extract_tag(line, 'se') is not None or \
+           _extract_tag(line, 'sn') is not None or \
+           _extract_tag(line, 'va') is not None:
+            in_headword = False
+
         val = _extract_tag(line, 'lx')
         if val is not None and not record['lx']:
             record['lx'] = val
@@ -69,16 +76,16 @@ def _process_block_into_record(lines_buffer):
             record['ge'] = val
             continue
 
-        val = _extract_tag(line, 'lg')
+        val = _extract_tag(line, 'ln')
         if val is not None:
             import re
             match = re.search(r'^(.*?)\[(.*?)\]', val)
             if match:
                 name = match.group(1).strip()
                 code = match.group(2).strip()
-                record['lg'].append({'name': name, 'code': code})
+                record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
             else:
-                record['lg'].append({'name': val.strip(), 'code': None})
+                record['lg'].append({'name': val.strip(), 'code': None, 'is_primary': in_headword})
             continue
 
         val = _extract_tag(line, 'va')

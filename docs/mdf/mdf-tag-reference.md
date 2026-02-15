@@ -16,15 +16,15 @@ Language project. MDF is a standard for structuring lexical data in software lik
 
 ### Suggested Hierarchy
 
-MDF entries are typically structured hierarchically. The order of tags determines how they are bundled together. In this project, every entry SHOULD include `\lg` (Language) and `\so` (Source) markers for best compatibility.
+MDF entries are typically structured hierarchically. The order of tags determines how they are bundled together. In this project, every entry SHOULD include `\ln` (Language) and `\so` (Source) markers for best compatibility.
 
 #### Suggested Standard Hierarchy (Lexeme-Oriented)
 
-`\lx` (Lexeme) > `\lg` (Language) > `\so` (Source) > `\ps` (Part of Speech) > `\sn` (Sense) > `\se` (Subentry)
+`\lx` (Lexeme) > `\ln` (Language) > `\so` (Source) > `\ps` (Part of Speech) > `\sn` (Sense) > `\se` (Subentry)
 
 #### Alternate Hierarchy (Sense-Oriented)
 
-`\lx` (Lexeme) > `\lg` (Language) > `\so` (Source) > `\sn` (Sense) > `\se` (Subentry) > `\ps` (Part of Speech)
+`\lx` (Lexeme) > `\ln` (Language) > `\so` (Source) > `\sn` (Sense) > `\se` (Subentry) > `\ps` (Part of Speech)
 
 ---
 
@@ -38,6 +38,7 @@ MDF entries are typically structured hierarchically. The order of tags determine
 - `\ps`: **Part of Speech**. The grammatical category (typically in English).
 - `\pn`: **Part of Speech (National)**. The POS in the national language.
 - `\sn`: **Sense Number**. Used to distinguish multiple meanings of a single lexeme.
+- `\va`: **Variant Form**. Marks variant forms of the entry or subentry (e.g., from another dialect).
 
 #### Glosses and Definitions
 
@@ -45,6 +46,7 @@ MDF entries are typically structured hierarchically. The order of tags determine
 - `\gn`: **Gloss (National)**. Brief equivalent in the national language.
 - `\de`: **Definition (English)**. A full sentence or phrase explaining the meaning.
 - `\dn`: **Definition (National)**. Full definition in the national language.
+- `\dv`: **Definition (Vernacular)**. Explanation in the target language; also used for **dialect notes**.
 - `\lt`: **Literal Meaning**. Used for idioms or complex terms.
 
 #### Examples and Translations
@@ -59,7 +61,6 @@ MDF entries are typically structured hierarchically. The order of tags determine
 - `\ce`: **Cross-reference Gloss (English)**. Brief gloss for the cross-referenced item.
 - `\sy`: **Synonym**. Links to a word with the same meaning.
 - `\an`: **Antonym**. Links to a word with the opposite meaning.
-- `\va`: **Variant Form**. Links to another form of the same word.
 
 #### Etymology and Morphology
 
@@ -78,8 +79,11 @@ MDF entries are typically structured hierarchically. The order of tags determine
 #### Source and Language Markers
 
 - `\so`: **Source**. The original source of the data (e.g., Trumbull pg3).
-- `\lg`: **Language Name**. The name of the language or dialect for this entry (e.g., `Wampanoag [wam]`).
-- `\ln`: **Language (National)**. The name of the language in the national language.
+- `\ln`: **Language Name**. The name of the language or dialect for this entry (e.g., `Wampanoag [wam]`).
+- `\pn`: **Part of Speech (National)**. The POS in the national language.
+- `\ve`: **Variant Comment (English)**. Bundled with `\va`; specifies dialect name or area.
+- `\vn`: **Variant Comment (National)**. Bundled with `\va`; specifies dialect name/area.
+- `\vr`: **Variant Comment (Regional)**. Bundled with `\va`; specifies dialect name/area.
 
 ---
 
@@ -87,10 +91,10 @@ MDF entries are typically structured hierarchically. The order of tags determine
 
 In projects involving multiple languages or dialects (like the Brothertown project's use of Natick, Mohegan, and Narragansett data), the following conventions are used:
 
-1. **The `\lg` Tag**: Use the `\lg` tag to explicitly identify the language or dialect of a record. For consistency, use the language name followed by its ISO 639-3 code in brackets.
-   - Example: `\lg Narragansett [xnt]`
+1. **The `\ln` Tag**: Use the `\ln` tag to explicitly identify the language or dialect of a record. For consistency, use the language name followed by its ISO 639-3 code in brackets.
+   - Example: `\ln Narragansett [xnt]`
 2. **Language Abbreviations**: When citing comparative data from other languages within a note or definition, use standard abbreviations (e.g., `Abn.` for Abenaki, `Del.` for Delaware). Refer to the project guidelines for a full list of abbreviations.
-3. **Asterisk (*) Prefix**: In some source materials (like Trumbull's Natick dictionary), an asterisk `*` before a headword indicates it belongs to a related dialect (e.g., Wampanoag) rather than the primary dialect. These should be tagged with the appropriate `\lg` marker during processing.
+3. **Asterisk (*) Prefix**: In some source materials (like Trumbull's Natick dictionary), an asterisk `*` before a headword indicates it belongs to a related dialect (e.g., Wampanoag) rather than the primary dialect. These should be tagged with the appropriate `\ln` marker during processing.
 4. **Loanwords**: Use `\et` (Etymology) and `\eg` (Etymology Gloss) to document loanwords and their sources.
 
 ---

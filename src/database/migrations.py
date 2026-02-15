@@ -230,7 +230,7 @@ class MigrationManager:
                         rl = RecordLanguage(
                             record_id=rec.id, 
                             language_id=lang.id, 
-                            is_primary=(i == 0)
+                            is_primary=lg.get('is_primary', False)
                         )
                         session.add(rl)
             session.commit()

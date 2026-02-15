@@ -327,3 +327,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Modified `src/frontend/pages/records.py` before receiving explicit user approval for the step.
 - **Root Cause**: Failure to adhere to the Supreme Directive (v8.3) which requires waiting for explicit authorization for EACH INDIVIDUAL EDIT, even after posting a plan.
 - **Correction**: (1) Reverted the unauthorized change immediately. (2) Logged violation. (3) Will wait for user authorization before any further edits.
+
+### 2026-02-15: Hallucinated MDF Tag (Violation #31)
+- **Violation**: Suggested the fictional `\lg` tag for setting language and failed to correctly identify existing dialect tags (`\dv`, `\va`, `\ln`) in the documentation.
+- **Root Cause**: Relied on LLM-generated assumptions rather than DIRECT INSPECTION of the project's MDF source documentation.
+- **Correction**: (1) Updated `docs/mdf/mdf-tag-reference.md` with accurate dialect tags. (2) Added **TAG INTEGRITY MANDATE** to `guidelines.md` to block future tag hallucinations. (3) Logged violation.

@@ -431,10 +431,6 @@ def _render_review_table(batch_id, session_deps):
         )
         is_new_source = existing_record_count == 0
 
-        # Get language_id (use first available language)
-        lang = session.query(Language).first()
-        language_id = lang.id if lang else 1
-
         # Pre-fetch suggested records for comparison view
         suggested_ids = [r.suggested_record_id for r in rows if r.suggested_record_id]
         suggested_records = {}
@@ -571,7 +567,6 @@ def _render_review_table(batch_id, session_deps):
                         count = UploadService.approve_all_new_source(
                             batch_id,
                             user_email=user_email,
-                            language_id=language_id,
                             session_id=str(_bulk_uuid_new.uuid4()),
                             progress_callback=update_progress
                         )
@@ -594,7 +589,6 @@ def _render_review_table(batch_id, session_deps):
                         count = UploadService.approve_all_by_record_match(
                             batch_id,
                             user_email=user_email,
-                            language_id=language_id,
                             session_id=str(_bulk_uuid.uuid4()),
                             progress_callback=update_progress
                         )
@@ -621,7 +615,6 @@ def _render_review_table(batch_id, session_deps):
                         count = UploadService.approve_non_matches_as_new(
                             batch_id,
                             user_email=user_email,
-                            language_id=language_id,
                             session_id=str(_bulk_uuid2.uuid4()),
                             progress_callback=update_progress
                         )
@@ -789,7 +782,6 @@ def _render_review_table(batch_id, session_deps):
                         result = UploadService.apply_single(
                             queue_id=row.id,
                             user_email=user_email,
-                            language_id=language_id,
                             session_id=session_id,
                         )
                         # Populate search entries (skip for discards)

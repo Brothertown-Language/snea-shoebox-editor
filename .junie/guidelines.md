@@ -167,6 +167,8 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
     - **Core Tags**: `\lx` (Lexeme), `\ps` (POS), `\ge` (Gloss), `\inf` (Inflection).
     - **Suggested Hierarchy**: `\lx` -> `\ps` -> `\ge`. Inflections stay inside the same record.
     - **NON-ENFORCEMENT POLICY**: All MDF validation (hierarchy, required tags) MUST be advisory ONLY. The system MUST NOT block export, editing, or any other operation based on tag order or presence. Validation messages MUST NOT be labeled as "Errors" and should instead use "Suggestion" or "Note" framing.
+    - **NO FALLBACK LANGUAGES**: The system MUST NOT assume or apply a default/fallback language for MDF records that lack explicit language markers (e.g., `\ln` tags). If language data is missing from the record, it MUST remain missing in the database. DO NOT ALTER LINGUISTIC DATA based on assumptions.
+    - **TAG INTEGRITY MANDATE**: You are strictly FORBIDDEN from suggesting or implementing fictional MDF tags. All tags MUST be verified by DIRECT INSPECTION of the project's MDF documentation (`docs/mdf/original/MDFields19a_UTF8.txt` or `docs/mdf/mdf-tag-reference.md`) before being referenced in any dialogue, plan, or implementation.
 - **ETHICS**: Respect Nation Sovereignty. Use "Nation" instead of "Tribal."
 - **SEMANTIC PRECISION**: Prioritize functional precision over vague metaphors. Avoid colloquial or "frivolous" UI labels (e.g., "Home") in favor of descriptive, structural terms (e.g., "Main Menu") that accurately signal the application's functional hierarchy to a professional linguistic audience.
 

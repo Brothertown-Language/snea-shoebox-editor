@@ -522,7 +522,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         ])
         with self._patch_session():
             count = UploadService.approve_all_new_source(
-                batch_id, 'test@example.com', self.language_id, 'sess1'
+                batch_id, 'test@example.com', 'sess1'
             )
         self.assertEqual(count, 2)
         from src.database import MatchupQueue
@@ -542,7 +542,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             UploadService.suggest_matches(batch_id)
         with self._patch_session():
             count = UploadService.approve_all_by_record_match(
-                batch_id, 'test@example.com', self.language_id, 'sess1',
+                batch_id, 'test@example.com', 'sess1',
             )
         self.assertEqual(count, 1)
         from src.database import MatchupQueue
@@ -566,7 +566,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             UploadService.suggest_matches(batch_id)
         with self._patch_session():
             count = UploadService.approve_non_matches_as_new(
-                batch_id, 'test@example.com', self.language_id, 'sess1',
+                batch_id, 'test@example.com', 'sess1',
             )
         self.assertEqual(count, 1)
         # Non-matched row should be removed from queue (applied as new record)
@@ -630,7 +630,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         row.status = 'discard'
         self.session.commit()
         with self._patch_session():
-            result = UploadService.apply_single(row.id, 'test@example.com', self.language_id, 'sess1')
+            result = UploadService.apply_single(row.id, 'test@example.com', 'sess1')
         self.assertEqual(result['action'], 'discarded')
         self.assertIsNone(result['record_id'])
         remaining = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).count()
@@ -659,7 +659,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         row.status = 'create_new'
         self.session.commit()
         with self._patch_session():
-            result = UploadService.apply_single(row.id, 'test@example.com', self.language_id, 'sess1')
+            result = UploadService.apply_single(row.id, 'test@example.com', 'sess1')
         self.assertEqual(result['action'], 'created')
         self.assertEqual(result['lx'], 'newword')
         from src.database import Record
@@ -677,7 +677,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         row.status = 'matched'
         self.session.commit()
         with self._patch_session():
-            result = UploadService.apply_single(row.id, 'test@example.com', self.language_id, 'sess1')
+            result = UploadService.apply_single(row.id, 'test@example.com', 'sess1')
         self.assertEqual(result['action'], 'updated')
         self.session.refresh(rec)
         self.assertIn('flame', rec.mdf_data)
@@ -688,7 +688,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         row = self.session.query(MatchupQueue).filter_by(batch_id=batch_id).first()
         with self._patch_session():
             with self.assertRaises(ValueError):
-                UploadService.apply_single(row.id, 'test@example.com', self.language_id, 'sess1')
+                UploadService.apply_single(row.id, 'test@example.com', 'sess1')
 
     def test_apply_single_create_homonym(self):
         self._add_record('esh', '\\lx esh\n\\ps n\n\\ge fire')
@@ -698,7 +698,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         row.status = 'create_homonym'
         self.session.commit()
         with self._patch_session():
-            result = UploadService.apply_single(row.id, 'test@example.com', self.language_id, 'sess1')
+            result = UploadService.apply_single(row.id, 'test@example.com', 'sess1')
         self.assertEqual(result['action'], 'created_homonym')
         from src.database import Record
         new_rec = self.session.get(Record, result['record_id'])
@@ -737,7 +737,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         row.status = 'create_homonym'
         self.session.commit()
         with self._patch_session():
-            count = UploadService.commit_homonyms(batch_id, 'test@example.com', self.language_id, 'sess1')
+            count = UploadService.commit_homonyms(batch_id, 'test@example.com', 'sess1')
         self.assertEqual(count, 1)
         from src.database import Record
         homonyms = self.session.query(Record).filter_by(lx='esh', source_id=self.source_id).all()
@@ -753,7 +753,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             {'lx': 'new2', 'mdf_data': '\\lx new2\n\\ps v\n\\ge thing2'},
         ])
         with self._patch_session():
-            count = UploadService.commit_new(batch_id, 'test@example.com', self.language_id, 'sess1')
+            count = UploadService.commit_new(batch_id, 'test@example.com', 'sess1')
         self.assertEqual(count, 0) # Should be 0 as they are pending
         
         from src.database import MatchupQueue
@@ -763,7 +763,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         self.session.commit()
 
         with self._patch_session():
-            count = UploadService.commit_new(batch_id, 'test@example.com', self.language_id, 'sess1')
+            count = UploadService.commit_new(batch_id, 'test@example.com', 'sess1')
         self.assertEqual(count, 2)
         from src.database import Record, EditHistory
         recs = self.session.query(Record).filter_by(source_id=self.source_id).all()
