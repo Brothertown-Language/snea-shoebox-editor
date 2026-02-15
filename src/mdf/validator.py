@@ -2,6 +2,7 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import re
 from typing import List, Optional, Dict, Any
+from .tag_loader import get_valid_tags
 
 class MDFValidator:
     r"""
@@ -43,15 +44,16 @@ class MDFValidator:
         diagnostics = []
         found_req_tags = []
         tag_pattern = re.compile(r"^\s*\\([a-z]+)")
+        valid_tags = get_valid_tags()
 
         # 1. First pass: Identify tags and check basic formatting
         for line in lines:
-            line = line.strip()
-            if not line:
+            line_content = line.strip()
+            if not line_content:
                 diagnostics.append({"status": "ok", "message": ""})
                 continue
                 
-            match = tag_pattern.match(line)
+            match = tag_pattern.match(line_content)
             if not match:
                 diagnostics.append({
                     "status": "note",
@@ -68,6 +70,12 @@ class MDFValidator:
                 diagnostics.append({
                     "status": "suggestion",
                     "message": f"Legacy tag \\{tag} detected. Consider updating to the modern MDF form \\{modern}.",
+                    "tag": tag
+                })
+            elif tag not in valid_tags:
+                diagnostics.append({
+                    "status": "note",
+                    "message": f"Unrecognized MDF tag \\{tag}. Please verify if this follows the standard MDF specification.",
                     "tag": tag
                 })
             else:
@@ -104,12 +112,22 @@ class MDFValidator:
         # 3. Global Check: Missing Tags (attach to first line for visibility)
         missing = [t for t in MDFValidator.REQUIRED_HIERARCHY if t not in found_req_tags]
         if missing and diagnostics:
-            if diagnostics[0]["status"] == "ok":
-                diagnostics[0]["status"] = "suggestion"
-                missing_str = ", ".join([f"\\{t}" for t in missing])
-                diagnostics[0]["message"] = (
-                    f"Note: This record is missing suggested tags ({missing_str}). "
-                    f"Including {hierarchy_str} is recommended for standard MDF compatibility."
-                )
+            # Find first line with a tag to attach the missing tags note
+            target_idx = -1
+            for i, d in enumerate(diagnostics):
+                if "tag" in d:
+                    target_idx = i
+                    break
+            
+            if target_idx != -1:
+                # If it's already a suggestion/note, we might append or keep it.
+                # Here we prepend the missing tags message if it was "ok"
+                if diagnostics[target_idx]["status"] == "ok":
+                    diagnostics[target_idx]["status"] = "suggestion"
+                    missing_str = ", ".join([f"\\{t}" for t in missing])
+                    diagnostics[target_idx]["message"] = (
+                        f"Note: This record is missing suggested tags ({missing_str}). "
+                        f"Including {hierarchy_str} is recommended for standard MDF compatibility."
+                    )
 
         return diagnostics
