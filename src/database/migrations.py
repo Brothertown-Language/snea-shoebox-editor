@@ -280,6 +280,13 @@ class MigrationManager:
                 session.execute(text("ALTER SEQUENCE sources_id_seq RESTART WITH 1"))
                 session.commit()
 
+            # Reset records autoincrement if empty
+            from .models.core import Record
+            if session.query(Record).count() == 0:
+                logger.info("Records table is empty, resetting autoincrement value.")
+                session.execute(text("ALTER SEQUENCE records_id_seq RESTART WITH 1"))
+                session.commit()
+
             default_sources = [
                 {
                     "name": "Trumbull/Natick",

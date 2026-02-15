@@ -31,7 +31,23 @@ def upload_mdf():
 
     # ── Sidebar: header and controls ──────────────────────────────
     with st.sidebar:
-        st.markdown("**Upload MDF File**")
+        # C-3: File uploader
+        uploaded_file = st.file_uploader(
+            "Upload MDF File",
+            type=["txt", "mdf"],
+            help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
+        )
+        
+        # Persistence: If a file is uploaded, store it. If not, check if we have one in state.
+        if uploaded_file is not None:
+            st.session_state["pending_upload_content"] = uploaded_file.getvalue().decode("utf-8")
+            st.session_state["pending_upload_name"] = uploaded_file.name
+            st.session_state["pending_upload_file_id"] = uploaded_file.file_id
+        
+        # Use state if available
+        active_content = st.session_state.get("pending_upload_content")
+        active_name = st.session_state.get("pending_upload_name")
+        active_file_id = st.session_state.get("pending_upload_file_id")
 
         # C-4: Source selector
         session = get_session()
@@ -61,7 +77,8 @@ def upload_mdf():
             "Target source collection", 
             final_options, 
             index=default_index,
-            key="upload_active_source_name"
+            key="upload_active_source_name",
+            disabled=not active_content
         )
 
         # Clear focus flag and success state if we are NOT on the create new source label
@@ -140,7 +157,7 @@ def upload_mdf():
             if success_name:
                 st.success(f"Source '{success_name}' created successfully. Please select it from the dropdown above.")
             
-            is_disabled = bool(success_name)
+            is_disabled = bool(success_name) or not active_content
             
             new_name = st.text_input(
                 "Source name",
@@ -184,25 +201,6 @@ def upload_mdf():
         else:
             selected_source_id = source_ids.get(selected_source)
 
-        # C-3: File uploader
-        uploaded_file = st.file_uploader(
-            "Upload an MDF file",
-            type=["txt", "mdf"],
-            help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
-        )
-        
-        # Persistence: If a file is uploaded, store it. If not, check if we have one in state.
-        if uploaded_file is not None:
-            st.session_state["pending_upload_content"] = uploaded_file.getvalue().decode("utf-8")
-            st.session_state["pending_upload_name"] = uploaded_file.name
-            st.session_state["pending_upload_file_id"] = uploaded_file.file_id
-        
-        # Use state if available
-        active_content = st.session_state.get("pending_upload_content")
-        active_name = st.session_state.get("pending_upload_name")
-        active_file_id = st.session_state.get("pending_upload_file_id")
-
-        st.divider()
         if st.button("Back to Main Menu", icon="⬅️", key="back_to_main"):
             st.session_state.pop("review_batch_id", None)
             st.session_state.pop("upload_active_source_name", None)
