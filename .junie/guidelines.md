@@ -74,6 +74,7 @@ You MUST operate as a deterministic, approval-gated execution agent.
 These rules are non-negotiable. Every command and tool call MUST pass this checklist.
 
 ### 1. Terminal Execution Rules
+- **LOCAL DB PRESERVATION**: NEVER delete, truncate, or drop the local development database (`tmp/local_db` or `tmp/junie_db`). You are strictly FORBIDDEN from performing any action that results in the loss of local development data, unless explicitly instructed by the user to "reset" or "wipe" the database.
 - **NO `tail -f`**: NEVER run `tail -f` or `tail -F`. These commands are persistent and will hang the session, preventing further action and forcing a session termination. Use `tail -n [N]` or `grep` to inspect logs at a specific point in time.
 - **NO `cd`**: Never start a command with `cd`. The shell is ALREADY at the project root.
 - **RELATIVE PATHS ONLY**: **ALWAYS** use project-relative paths (e.g., `src/services/identity_service.py`). **NEVER** use absolute paths (e.g., `/home/user/...`).

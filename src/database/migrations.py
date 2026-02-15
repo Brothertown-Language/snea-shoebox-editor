@@ -31,7 +31,6 @@ class MigrationManager:
         (5, "_migrate_backfill_record_languages", "Backfill record_languages from existing records"),
         (6, "_migrate_drop_records_language_id", "Drop redundant language_id from records table"),
         (8, "_migrate_add_fts_index", "Add GIN FTS index to records for full-text search"),
-        (9, "_migrate_seed_default_sources", "Seed default sources including Mohegan Dictionary - Fielding"),
     ]
 
     def __init__(self, engine):
@@ -41,6 +40,7 @@ class MigrationManager:
         """Public entry point. Runs extensions, migrations, and seeds in order."""
         self._ensure_extensions()
         self._run_migrations()
+        self._seed_default_sources()
         self.seed_default_permissions()
         self.seed_iso_639_data()
 
@@ -268,8 +268,8 @@ class MigrationManager:
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_fts ON records USING gin (fts_vector);"))
             conn.commit()
 
-    def _migrate_seed_default_sources(self):
-        """Migration 9: Seed default sources."""
+    def _seed_default_sources(self):
+        """Seed default sources if table is empty or missing specific entries."""
         from .models.core import Source
         Session = sessionmaker(bind=self._engine)
         session = Session()
@@ -278,6 +278,7 @@ class MigrationManager:
             if session.query(Source).count() == 0:
                 logger.info("Sources table is empty, resetting autoincrement value.")
                 session.execute(text("ALTER SEQUENCE sources_id_seq RESTART WITH 1"))
+                session.commit()
 
             default_sources = [
                 {
