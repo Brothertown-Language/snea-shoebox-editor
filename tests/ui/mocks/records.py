@@ -10,9 +10,9 @@ from src.frontend.ui_utils import render_mdf_block
 from src.mdf.validator import MDFValidator
 
 # --- MOCK DATA ---
-MOCK_SOURCES = ["All Sources", "Mohegan", "Natick", "SNEA-General"]
+MOCK_SOURCES = ["All Sources", "Trumbull/Natick", "Fielding/Mohegan", "SNEA-General"]
 MOCK_RECORDS = [
-    {"id": i, "source": ["Mohegan", "Natick", "SNEA-General"][i % 3], "mdf": f"\\lx record {i}\n\\ps n\n\\ge gloss {i}\n\\inf inflection {i}"}
+    {"id": i, "source": ["Fielding/Mohegan", "Trumbull/Natick", "SNEA-General"][i % 3], "mdf": f"\\lx record {i}\n\\ps n\n\\ge gloss {i}\n\\inf inflection {i}"}
     for i in range(1, 1001)
 ]
 

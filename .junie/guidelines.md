@@ -86,7 +86,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
 - **NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
 - **CLEAN ROOT POLICY**: Redirect ALL output to `tmp/`. No log files or transient scripts in root.
-- **NO INTERACTIVE COMMANDS**: Use `< /dev/null` or non-interactive flags (e.g., `psql -c "QUERY"`).
+- **NO INTERACTIVE COMMANDS**: Use `< /dev/null` or non-interactive flags (e.g., `psql -c "QUERY"`). **STRICTLY FORBIDDEN**: Running any command that might prompt for input or hang waiting for user interaction. These commands will be automatically cancelled by the system, yielding no output and wasting session time. Always ensure commands are fully automated and headless.
 - **NO .git SEARCH**: Always exclude `.git` when searching (e.g., `grep --exclude-dir=.git`).
 - **NO `sed -i`**: Never use in-place shell edits. Use `search_replace` or `multi_edit`.
 

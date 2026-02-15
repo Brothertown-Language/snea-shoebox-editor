@@ -83,6 +83,9 @@ class IdentityService:
                 st.session_state["is_unauthorized"] = True
                 return False
 
+            # Cache user role for navigation and access control
+            st.session_state["user_role"] = user_role
+
             # Debug: log identity details
             logger.debug("User email: %s, username: %s, orgs: %s, teams: %s",
                          primary_email,

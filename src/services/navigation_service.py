@@ -77,21 +77,6 @@ class NavigationService:
                 cls.PAGE_LOGOUT
             ]
 
-    @classmethod
-    def get_page_to_path_map(cls) -> Dict[st.Page, str]:
-        """
-        Returns a mapping of page objects to their script paths.
-        Used for deep-link redirection logic.
-        """
-        return {
-            cls.PAGE_STATUS: "pages/system_status.py",
-            cls.PAGE_HOME: "pages/index.py",
-            cls.PAGE_RECORDS: "pages/records.py",
-            cls.PAGE_USER: "pages/user_info.py",
-            cls.PAGE_UPLOAD: "pages/upload_mdf.py",
-            cls.PAGE_BATCH_ROLLBACK: "pages/batch_rollback.py",
-            cls.PAGE_TABLE_MAINTENANCE: "pages/table_maintenance.py",
-        }
 
     @classmethod
     def handle_redirection(cls, pg: st.Page):
@@ -109,25 +94,19 @@ class NavigationService:
                 logger.debug("Unauthenticated user hit logout, redirecting to login")
                 st.switch_page(cls.PAGE_LOGIN)
             
-            page_to_path = cls.get_page_to_path_map()
-            if pg in page_to_path:
-                st.session_state["redirect_to"] = page_to_path[pg]
-                logger.debug("Deep-link captured, redirecting to login with next=%s", page_to_path[pg])
-                st.switch_page(cls.PAGE_LOGIN)
+            # Capture the Page object itself for more reliable redirection
+            st.session_state["redirect_to"] = pg
+            logger.debug("Deep-link captured (Page object), redirecting to login")
+            st.switch_page(cls.PAGE_LOGIN)
 
         # 2. Global redirection handler after login/rehydration
         from src.services.identity_service import IdentityService
         from src.services.security_manager import SecurityManager
         
         if logged_in and IdentityService.is_identity_synchronized():
-            # Ensure user role is set
-            if "user_role" not in st.session_state:
-                user_teams = st.session_state.get("user_teams", [])
-                st.session_state["user_role"] = SecurityManager.get_user_role(user_teams)
-            
             # Priority 1: Check session state for saved destination (from deep links)
             if "redirect_to" in st.session_state:
-                next_page = st.session_state.pop("redirect_to", "pages/index.py")
+                next_page = st.session_state.pop("redirect_to", cls.PAGE_HOME)
                 logger.debug("Post-login redirect to deep-link: %s", next_page)
                 st.switch_page(next_page)
                 
@@ -138,7 +117,7 @@ class NavigationService:
                 del st.query_params["next"]
                 
                 # If next points to logout, ignore it to prevent immediate logout after login
-                if "logout.py" in next_page or "logout" in next_page:
-                    st.switch_page("pages/index.py")
+                if isinstance(next_page, str) and ("logout.py" in next_page or "logout" in next_page):
+                    st.switch_page(cls.PAGE_HOME)
                 else:
                     st.switch_page(next_page)

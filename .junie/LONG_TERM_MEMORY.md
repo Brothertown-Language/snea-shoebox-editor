@@ -11,6 +11,7 @@ This file serves as a persistent memory of critical project context, user prefer
 
 - **Source Selector Simplification**: All logic attempting to automatically switch the "Target source collection" to newly created sources has been removed to simplify state management and resolve persistent regressions. As of 2026-02-11, the selector remains on the current selection after source creation, requiring manual user selection.
 - **Pagination Options**: Added sizes 1 and 5 to the "Results per page" selector in the records view to allow for more granular inspection and testing. (2026-02-14)
+- **Source Seeding Update**: Updated default sources to include Trumbull/Natick and Fielding/Mohegan with detailed descriptions and citation formats. Natick is now seeded before Mohegan. (2026-02-14)
 - **Copy Feature Removal**: Removed "Copy Plain" and "Copy Rich" features from the `records` page and mock as they were unreliable and difficult to maintain in a pure Streamlit environment without extensive JS integration.
 ## USER PREFERENCES & HARD CONSTRAINTS
 - **SUPREME DIRECTIVE (v8.5)**: Absolute prohibition on modifying any file without explicit, per-step approval. You MUST wait for "Go", "Proceed", or "Approved" for EACH INDIVIDUAL EDIT. Authorization NEVER carries over and is PLAN-SPECIFIC: a "Go" applies ONLY to the immediately preceding plan. You MUST stop and wait for a new "Go" for every new plan. Every action MUST follow a checklist verified by DIRECT INSPECTION of the codebase.
@@ -111,6 +112,7 @@ This file serves as a persistent memory of critical project context, user prefer
     - Multiple Sources: Offers a "Download All (Zip)" button that bundles sources into individual MDF files within a ZIP archive.
     - **Robustness**: Implemented explicit skip logic to ensure empty record sets are never included in the ZIP archive.
     - Adheres to the strict MDF filename mandate using `UploadService.generate_mdf_filename`.
+- **Default Sources (v1.0)**: Added "Mohegan Dictionary - Fielding" and "Natick/Trumbull" as default seeded sources in Migration 9. (2026-02-14)
 - **Records View Deletion (v1.1)**: As of 2026-02-14, refined the record deletion behavior.
     - Deletion still requires a "Confirm" step within the record's container.
     - On confirmed deletion, the view remains on the same page. A previous attempt to use a JavaScript `scroll_to_top()` utility was removed as it was non-functional in the production environment.

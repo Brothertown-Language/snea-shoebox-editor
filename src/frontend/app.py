@@ -134,6 +134,12 @@ def main():
 
     # Access control logic
     logged_in = st.session_state.logged_in
+    
+    # Ensure user role is resolved before building navigation tree if logged in
+    if logged_in and "user_role" not in st.session_state and "user_teams" in st.session_state:
+        from src.services.security_manager import SecurityManager
+        st.session_state["user_role"] = SecurityManager.get_user_role(st.session_state["user_teams"])
+        
     user_role = st.session_state.get("user_role")
     logger.debug("Building navigation tree (logged_in=%s, user_role=%s)", logged_in, user_role)
     nav_tree = NavigationService.get_navigation_tree(logged_in, user_role)

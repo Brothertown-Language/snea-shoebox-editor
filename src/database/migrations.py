@@ -31,6 +31,7 @@ class MigrationManager:
         (5, "_migrate_backfill_record_languages", "Backfill record_languages from existing records"),
         (6, "_migrate_drop_records_language_id", "Drop redundant language_id from records table"),
         (8, "_migrate_add_fts_index", "Add GIN FTS index to records for full-text search"),
+        (9, "_migrate_seed_default_sources", "Seed default sources including Mohegan Dictionary - Fielding"),
     ]
 
     def __init__(self, engine):
@@ -179,6 +180,15 @@ class MigrationManager:
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
+            # If tables are empty, reset autoincrement values
+            if session.query(Language).count() == 0:
+                logger.info("Languages table is empty, resetting autoincrement value.")
+                session.execute(text("ALTER SEQUENCE languages_id_seq RESTART WITH 1"))
+            
+            if session.query(RecordLanguage).count() == 0:
+                logger.info("RecordLanguages table is empty, resetting autoincrement value.")
+                session.execute(text("ALTER SEQUENCE record_languages_id_seq RESTART WITH 1"))
+
             records = session.query(Record).all()
             for rec in records:
                 # 1. Parse \lg entries from raw mdf_data
@@ -258,6 +268,47 @@ class MigrationManager:
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_fts ON records USING gin (fts_vector);"))
             conn.commit()
 
+    def _migrate_seed_default_sources(self):
+        """Migration 9: Seed default sources."""
+        from .models.core import Source
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            # If table is empty, reset autoincrement value
+            if session.query(Source).count() == 0:
+                logger.info("Sources table is empty, resetting autoincrement value.")
+                session.execute(text("ALTER SEQUENCE sources_id_seq RESTART WITH 1"))
+
+            default_sources = [
+                {
+                    "name": "Trumbull/Natick",
+                    "short_name": "Trumbull (1903)",
+                    "description": "Comprehensive lexicon of the Massachusett language based on 17th-century colonial documents and the Eliot Bible.",
+                    "citation_format": "Trumbull, James Hammond. (1903). *Natick Dictionary*. Bureau of American Ethnology Bulletin 25. Washington: Government Printing Office."
+                },
+                {
+                    "name": "Fielding/Mohegan",
+                    "short_name": "Fielding (2013)",
+                    "description": "Modern reconstruction of the Mohegan-Pequot language using historical diaries and comparative Algonquian analysis.",
+                    "citation_format": "Fielding, Stephanie. (2013). *A Modern Mohegan Dictionary*. (D. J. Costa, Ed.). Uncasville, CT: Mohegan Council of Elders."
+                }
+            ]
+            
+            for src_data in default_sources:
+                existing = session.query(Source).filter_by(name=src_data["name"]).first()
+                if not existing:
+                    new_source = Source(**src_data)
+                    session.add(new_source)
+                    logger.info(f"Seeded source: {src_data['name']}")
+            
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to seed default sources: {e}")
+            raise e
+        finally:
+            session.close()
+
     # ── Data Seeding ──────────────────────────────────────────────────
 
     def seed_default_permissions(self):
@@ -276,6 +327,8 @@ class MigrationManager:
 
             # 2. Seed defaults if table is empty
             if session.query(Permission).count() == 0:
+                logger.info("Permissions table is empty, resetting autoincrement value.")
+                session.execute(text("ALTER SEQUENCE permissions_id_seq RESTART WITH 1"))
                 data_file = Path(__file__).parent / "data" / "default_permissions.json"
                 if not data_file.exists():
                     logger.error("Default permissions data file not found at %s", data_file)
