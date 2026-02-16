@@ -3,6 +3,7 @@
 import datetime
 import streamlit as st
 from src.database import get_session, User
+from src.frontend.ui_utils import handle_ui_error
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from typing import Optional, Dict, Any
@@ -48,7 +49,7 @@ def login_user_simple(username: str):
         return user
     except Exception as e:
         db.rollback()
-        st.error(f"Database error during login: {e}")
+        handle_ui_error(e, "Database error during login.", logger_name="snea.auth")
         return None
     finally:
         db.close()
@@ -103,7 +104,7 @@ def login_user(github_user_data: Dict[str, Any]):
         return user
     except Exception as e:
         db.rollback()
-        st.error(f"Database error during login: {e}")
+        handle_ui_error(e, "Database error during login.", logger_name="snea.auth")
         return None
     finally:
         db.close()

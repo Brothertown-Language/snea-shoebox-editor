@@ -11,7 +11,7 @@ from src.services.linguistic_service import LinguisticService
 from src.services.upload_service import UploadService
 from src.services.identity_service import IdentityService
 from src.services.preference_service import PreferenceService
-from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav
+from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error
 from src.mdf.validator import MDFValidator
 from src.logging_config import get_logger
 
@@ -77,7 +77,7 @@ def records():
                             loaded_records.append(rec)
                     st.session_state.selection = loaded_records
             except Exception as e:
-                logger.error(f"Failed to load selection for {user_email}: {e}")
+                handle_ui_error(e, f"Failed to load selection for {user_email}", logger_name="snea.pages.records")
 
     def on_search_change():
         st.session_state.search_query = st.session_state.search_query_input
@@ -441,7 +441,7 @@ def records():
                             else:
                                 st.error(f"Failed to save Record #{record_id}.")
                         except Exception as e:
-                            st.error(f"Error saving record: {e}")
+                            handle_ui_error(e, "Error saving record", logger_name="snea.pages.records")
                     
                     if not st.session_state.global_edit_mode:
                         if col_s2.button("Cancel", key=f"cancel_local_{record_id}", use_container_width=True):
@@ -493,7 +493,7 @@ def records():
                                     st.session_state.confirm_delete_id = None
                                     st.rerun()
                                 else:
-                                    st.error(f"Failed to delete Record #{record_id}.")
+                                    handle_ui_error(Exception("Delete failed"), f"Failed to delete Record #{record_id}.", logger_name="snea.pages.records")
                             if c_del2.button("Cancel", key=f"cancel_del_{record_id}", use_container_width=True):
                                 st.session_state.confirm_delete_id = None
                                 st.rerun()

@@ -7,7 +7,7 @@ def upload_mdf():
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
     from src.services.identity_service import IdentityService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf")
@@ -194,8 +194,7 @@ def upload_mdf():
                             st.rerun()
                     except Exception as e:
                         session.rollback()
-                        logger.error("Failed to create source: %s", e)
-                        st.error(f"Failed to create source: {e}")
+                        handle_ui_error(e, "Failed to create source collection.", logger_name="snea.upload_mdf")
                     finally:
                         session.close()
         else:
@@ -256,7 +255,7 @@ def upload_mdf():
                             key=f"download_{batch_id}"
                         )
                     except Exception as e:
-                        st.error("Error preparing download")
+                        handle_ui_error(e, "Failed to prepare download.", logger_name="snea.upload_mdf")
                 with col_discard:
                     if st.button("Discard", key=f"discard_{batch_id}"):
                         try:
@@ -264,8 +263,7 @@ def upload_mdf():
                             st.toast(f"Discarded {count} entries.")
                             st.rerun()
                         except Exception as e:
-                            logger.error("Discard batch failed: %s", e)
-                            st.error(f"Discard failed: {e}")
+                            handle_ui_error(e, "Failed to discard batch.", logger_name="snea.upload_mdf")
         st.divider()
 
     # Track whether pending batches exist for the prompt message
@@ -325,8 +323,7 @@ def upload_mdf():
                         st.session_state["review_batch_id"] = batch_id
                         st.rerun()
                     except Exception as e:
-                        logger.error("Stage & Match failed: %s", e)
-                        st.error(f"Stage & Match failed: {e}")
+                        handle_ui_error(e, "Staging and matching failed. Please verify the MDF format.", logger_name="snea.upload_mdf")
 
         except ValueError as e:
             st.error(str(e))
@@ -344,7 +341,7 @@ def _render_review_view():
     """
     import streamlit as st
     from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")
@@ -383,8 +380,7 @@ def _render_review_view():
                            f"**{sum(1 for m in match_results if m.get('suggested_record_id') is not None)}** "
                            f"matches found.")
             except Exception as e:
-                logger.error("Re-Match failed: %s", e)
-                st.error(f"Re-Match failed: {e}")
+                handle_ui_error(e, "Re-match failed.", logger_name="snea.upload_mdf.review")
 
         # Back button to return to upload view
         if st.button("Back to MDF Upload", icon="⬅️", key="back_to_upload"):
@@ -402,7 +398,7 @@ def _render_review_table(batch_id, session_deps):
     from src.database.models.core import Record, Language, Source
     from src.services.upload_service import UploadService
     from src.services.preference_service import PreferenceService
-    from src.frontend.ui_utils import render_mdf_block
+    from src.frontend.ui_utils import render_mdf_block, handle_ui_error
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")
@@ -588,8 +584,7 @@ def _render_review_table(batch_id, session_deps):
                         _time.sleep(0.5)
                         st.rerun()
                     except Exception as e:
-                        logger.error("Bulk approve failed: %s", e)
-                        st.error(f"Bulk approve failed: {e}")
+                        handle_ui_error(e, "Failed to bulk approve matches.", logger_name="snea.upload_mdf.review")
         else:
             if st.button("Approve All Matched", key="bulk_approve_matched"):
                 with st.status("Applying matched entries...", expanded=True) as status:
@@ -614,8 +609,7 @@ def _render_review_table(batch_id, session_deps):
                             status.update(label="No matched entries found.", state="complete", expanded=False)
                             st.info("No matched entries to apply.")
                     except Exception as e:
-                        logger.error("Bulk approve matched failed: %s", e)
-                        st.error(f"Bulk approve matched failed: {e}")
+                        handle_ui_error(e, "Failed to approve matched entries.", logger_name="snea.upload_mdf.review")
 
             if st.button("Approve Non-Matches as New", key="bulk_approve_nonmatch"):
                 with st.status("Approving non-matches as new records...", expanded=True) as status:
@@ -640,8 +634,7 @@ def _render_review_table(batch_id, session_deps):
                             status.update(label="No non-matching entries found.", state="complete", expanded=False)
                             st.info("No non-matching entries to approve.")
                     except Exception as e:
-                        logger.error("Bulk approve non-matches failed: %s", e)
-                        st.error(f"Bulk approve non-matches failed: {e}")
+                        handle_ui_error(e, "Failed to approve non-matching entries.", logger_name="snea.upload_mdf.review")
 
         # Discard Marked — available regardless of new/existing source
         if st.button("Discard All Marked", key="bulk_discard_marked"):
@@ -661,8 +654,7 @@ def _render_review_table(batch_id, session_deps):
                         status.update(label="No entries marked for discard.", state="complete", expanded=False)
                         st.info("No entries marked for discard.")
                 except Exception as e:
-                    logger.error("Discard ignored failed: %s", e)
-                    st.error(f"Discard ignored failed: {e}")
+                    handle_ui_error(e, "Failed to discard ignored entries.", logger_name="snea.upload_mdf.review")
 
         st.divider()
         # Records per page selector (at bottom)
@@ -801,8 +793,7 @@ def _render_review_table(batch_id, session_deps):
                             st.success(f"✅ Discarded: {result['lx']}")
                         st.rerun()
                     except Exception as e:
-                        logger.error("Apply single failed: %s", e)
-                        st.error(f"Apply failed: {e}")
+                        handle_ui_error(e, "Failed to apply entry.", logger_name="snea.upload_mdf.review")
 
             # Dynamic cross-source informational note
             cross_sources = UploadService.get_cross_source_info(row.lx, source_id)
@@ -853,8 +844,7 @@ def _render_review_table(batch_id, session_deps):
                                 )
                                 st.rerun()
                             except Exception as e:
-                                logger.error("Match override failed: %s", e)
-                                st.error(f"Override failed: {e}")
+                                handle_ui_error(e, "Failed to override match.", logger_name="snea.upload_mdf.review")
                     else:
                         st.info("No matching records found.")
 

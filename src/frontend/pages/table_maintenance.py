@@ -2,7 +2,7 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
 from src.services.linguistic_service import LinguisticService
-from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css
+from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css, handle_ui_error
 from src.logging_config import get_logger
 
 logger = get_logger("snea.pages.table_maintenance")
@@ -52,7 +52,7 @@ def render_sources_maintenance():
                         st.success(f"Deleted source: {source['name']}")
                         st.rerun()
                     else:
-                        st.error(f"Failed to delete source: {source['name']}")
+                        handle_ui_error(Exception("Delete failed"), f"Failed to delete source: {source['name']}", logger_name="snea.pages.table_maintenance")
 
             # Dialogs (conditional rendering)
             if st.session_state.get(f"edit_source_{source['id']}", False):
@@ -73,7 +73,7 @@ def render_edit_dialog(source):
             del st.session_state[f"edit_source_{source['id']}"]
             st.rerun()
         else:
-            st.error("Failed to update source.")
+            handle_ui_error(Exception("Update failed"), "Failed to update source.", logger_name="snea.pages.table_maintenance")
             
     if col2.button("Cancel", use_container_width=True):
         del st.session_state[f"edit_source_{source['id']}"]
@@ -101,7 +101,7 @@ def render_reassign_dialog(source, all_sources):
                 del st.session_state[f"reassign_source_{source['id']}"]
                 st.rerun()
             else:
-                st.error("Reassignment failed.")
+                handle_ui_error(Exception("Reassignment failed"), "Reassignment failed.", logger_name="snea.pages.table_maintenance")
                 
         if col2.button("Cancel", use_container_width=True):
             del st.session_state[f"reassign_source_{source['id']}"]
@@ -179,7 +179,7 @@ def render_deleted_records_maintenance():
                     st.success(f"Restored record: {record['lx']}")
                     st.rerun()
                 else:
-                    st.error(f"Failed to restore record: {record['lx']}")
+                    handle_ui_error(Exception("Restore failed"), f"Failed to restore record: {record['lx']}", logger_name="snea.pages.table_maintenance")
             
             # Hard Delete Button
             if action_cols[1].button("", icon="🗑️", key=f"hard_delete_{record['id']}", help="Permanently delete record"):
@@ -201,7 +201,7 @@ def render_hard_delete_dialog(record):
             del st.session_state[f"confirm_hard_delete_{record['id']}"]
             st.rerun()
         else:
-            st.error(f"Failed to delete record #{record['id']}")
+            handle_ui_error(Exception("Delete failed"), f"Failed to delete record #{record['id']}", logger_name="snea.pages.table_maintenance")
             
     if col2.button("Cancel", use_container_width=True):
         del st.session_state[f"confirm_hard_delete_{record['id']}"]

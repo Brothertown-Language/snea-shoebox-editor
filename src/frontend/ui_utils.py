@@ -11,6 +11,36 @@ import streamlit.components.v1 as components
 from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
 
+# ── Error Handling ─────────────────────────────────────────────────────
+
+
+def handle_ui_error(e: Exception, user_message: str = "An unexpected error occurred.", logger_name: Optional[str] = None):
+    """
+    Standardized error handler for UI-facing code.
+    Logs the full stack trace to server logs and shows a sanitized message to the user.
+
+    Args:
+        e: The exception that occurred.
+        user_message: A safe, user-friendly message to display in the UI.
+        logger_name: Optional name for the logger. If None, uses the calling module's name.
+    """
+    from src.logging_config import get_logger
+    from src.database.connection import is_production
+
+    # 1. Server-side logging (Full trace)
+    log = get_logger(logger_name or "ui_error_handler")
+    log.error(f"{user_message} Detail: {str(e)}", exc_info=True)
+
+    # 2. UI Display (Sanitized)
+    if is_production():
+        st.error(user_message)
+    else:
+        # In dev, we can be slightly more helpful but still keep the UI clean
+        with st.expander(user_message, expanded=True):
+            st.error(f"**Technical Error:** {type(e).__name__}: {e}")
+            st.info("💡 *Full stack trace available in server logs (tmp/streamlit.log).*")
+
+
 # ── Infrastructure Dialogs ─────────────────────────────────────────────
 
 

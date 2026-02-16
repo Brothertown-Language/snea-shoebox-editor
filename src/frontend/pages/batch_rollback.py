@@ -5,7 +5,7 @@ from src.logging_config import get_logger
 from src.services.upload_service import UploadService
 from src.services.identity_service import IdentityService
 from src.database import get_session, UserActivityLog, EditHistory
-from src.frontend.ui_utils import apply_standard_layout_css
+from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
 from sqlalchemy import desc, text
 
 logger = get_logger("snea.pages.batch_rollback")
@@ -154,8 +154,7 @@ def confirm_rollback_dialog(session_data):
                 st.rerun()
             except Exception as e:
                 status.update(label="Rollback Failed", state="error")
-                st.error(f"Rollback failed: {e}")
-                logger.error("Rollback failed for session %s: %s", session_data['session_id'], e)
+                handle_ui_error(e, "Rollback failed.", logger_name="snea.pages.batch_rollback")
 
 def main():
     """

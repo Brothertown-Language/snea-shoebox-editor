@@ -44,7 +44,7 @@ def login():
     import streamlit as st
     from streamlit_oauth import OAuth2Component
     import requests
-    from src.frontend.ui_utils import apply_standard_layout_css
+    from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
 
     apply_standard_layout_css()
     logger.debug("Login page loaded")
@@ -66,8 +66,7 @@ def login():
             st.secrets["github_oauth"]["redirect_uri"]
         )
     except Exception as e:
-        st.error(f"Failed to initialize OAuth component: {e}")
-        logger.error("OAuth2Component initialization failed: %s", e)
+        handle_ui_error(e, "Failed to initialize OAuth component.", logger_name="snea.login")
         st.stop()
 
     if st.session_state.get("is_unauthorized"):
@@ -96,8 +95,7 @@ def login():
                 scope="read:user user:email read:org",
             )
         except Exception as e:
-            st.error(f"OAuth authorization failed: {e}")
-            logger.error("OAuth authorize_button failed: %s", e)
+            handle_ui_error(e, "OAuth authorization failed.", logger_name="snea.login")
             st.stop()
             
         if result:

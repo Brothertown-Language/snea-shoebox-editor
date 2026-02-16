@@ -4,6 +4,7 @@ import requests
 import time
 import os
 import streamlit as st
+from src.frontend.ui_utils import handle_ui_error
 from typing import Optional, Dict, Any
 
 def get_aiven_config() -> Optional[Dict[str, str]]:
@@ -33,7 +34,7 @@ def get_service_info(config: Dict[str, str]) -> Optional[Dict[str, Any]]:
         return data.get("service")
     except Exception as e:
         if "404" not in str(e):
-            st.error(f"Error checking Aiven service status: {e}")
+            handle_ui_error(e, "Error checking Aiven service status.", logger_name="snea.aiven_utils")
         return None
 
 def get_service_status(config: Dict[str, str]) -> Optional[str]:
@@ -52,7 +53,7 @@ def start_service(config: Dict[str, str]) -> bool:
         response.raise_for_status()
         return True
     except Exception as e:
-        st.error(f"Error starting Aiven service: {e}")
+        handle_ui_error(e, "Error starting Aiven service.", logger_name="snea.aiven_utils")
         return False
 
 @st.dialog("Database Starting")
