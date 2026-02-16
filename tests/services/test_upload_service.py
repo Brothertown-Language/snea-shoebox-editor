@@ -125,6 +125,50 @@ class TestAssignHomonymNumbers(unittest.TestCase):
         result = UploadService.assign_homonym_numbers(entries)
         self.assertNotIn('\\hm', result[0]['mdf_data'])
 
+    def test_mixed_explicit_and_implicit_hm(self):
+        # Entry 1: explicit \hm 2
+        # Entry 2: no hm
+        # Entry 3: no hm
+        # Expected: Entry 2 gets 1, Entry 3 gets 3
+        entries = [
+            self._make_entry("esh", hm_tag="2"),
+            self._make_entry("esh"),
+            self._make_entry("esh"),
+        ]
+        result = UploadService.assign_homonym_numbers(entries)
+        
+        # We need to find which one is which in the result
+        # Note: the input order is preserved in the implementation
+        self.assertEqual(result[0]['hm'], 2)
+        self.assertEqual(result[1]['hm'], 1)
+        self.assertEqual(result[2]['hm'], 3)
+        
+        self.assertIn('\\hm 2', result[0]['mdf_data'])
+        self.assertIn('\\hm 1', result[1]['mdf_data'])
+        self.assertIn('\\hm 3', result[2]['mdf_data'])
+
+    def test_indented_lx_insertion(self):
+        # Verify that \hm is inserted correctly even if \lx is indented
+        entry = self._make_entry("esh")
+        entry['mdf_data'] = "  \\lx esh\n  \\ps n"
+        entries = [entry, self._make_entry("esh")]
+        
+        result = UploadService.assign_homonym_numbers(entries)
+        self.assertIn("  \\lx esh\n\\hm 1", result[0]['mdf_data'])
+
+    def test_multiple_groups(self):
+        entries = [
+            self._make_entry("esh"),
+            self._make_entry("esh"),
+            self._make_entry("word"),
+            self._make_entry("word"),
+        ]
+        result = UploadService.assign_homonym_numbers(entries)
+        self.assertEqual(result[0]['hm'], 1)
+        self.assertEqual(result[1]['hm'], 2)
+        self.assertEqual(result[2]['hm'], 1)
+        self.assertEqual(result[3]['hm'], 2)
+
 
 class TestStageAndListBatches(unittest.TestCase):
     """Tests for stage_entries and list_pending_batches using a real pgserver DB."""

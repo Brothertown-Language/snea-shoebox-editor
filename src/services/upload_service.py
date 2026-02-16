@@ -7,6 +7,7 @@ import re
 import unicodedata
 import uuid
 from typing import Optional
+from collections import defaultdict
 from sqlalchemy import func
 
 from src.database import get_session, MatchupQueue, Record, EditHistory, SearchEntry, Source
@@ -57,55 +58,51 @@ class UploadService:
         multiple entries, assigns sequential \\hm values (preserving any
         existing \\hm tags). Updates both the parsed dict and raw mdf_data.
         """
-        from collections import defaultdict
-
         # Group entries by diacritics-stripped base form
+        # Store indices to minimize memory overhead during grouping
         groups = defaultdict(list)
-        for entry in entries:
+        for i, entry in enumerate(entries):
             base = _strip_diacritics(entry['lx'])
-            groups[base].append(entry)
+            groups[base].append(i)
 
-        for base, group in groups.items():
-            if len(group) < 2:
+        for base, indices in groups.items():
+            if len(indices) < 2:
                 continue
 
-            # Find already-assigned hm values (hm defaults to 1 in parser,
-            # but we only treat it as "explicitly set" if \hm appears in mdf_data)
+            # Identify entries with explicit \hm in their raw MDF data
+            # (hm defaults to 1 in parser, but we only treat it as "explicitly set" 
+            # if \hm appears in the raw mdf_data of this entry)
             used = set()
             has_explicit_hm = []
-            for entry in group:
-                lines = entry['mdf_data'].split('\n')
-                explicit = False
-                for line in lines:
-                    stripped = line.lstrip()
-                    if stripped.startswith('\\hm '):
-                        val = stripped[len('\\hm '):].strip()
-                        if val.isdigit():
-                            used.add(int(val))
-                            explicit = True
-                            break
-                has_explicit_hm.append(explicit)
+            for idx in indices:
+                entry = entries[idx]
+                explicit_val = entry.get('hm') if '\\hm ' in entry['mdf_data'] else None
+                if explicit_val:
+                    used.add(explicit_val)
+                    has_explicit_hm.append(True)
+                else:
+                    has_explicit_hm.append(False)
 
             # Assign sequential hm to entries without explicit \hm
             next_hm = 1
-            for i, entry in enumerate(group):
+            for i, idx in enumerate(indices):
                 if has_explicit_hm[i]:
                     continue
+                
+                entry = entries[idx]
                 while next_hm in used:
                     next_hm += 1
                 used.add(next_hm)
                 entry['hm'] = next_hm
 
                 # Insert \hm line after \lx in mdf_data
-                lines = entry['mdf_data'].split('\n')
-                new_lines = []
-                inserted = False
-                for line in lines:
-                    new_lines.append(line)
-                    if not inserted and line.lstrip().startswith('\\lx '):
-                        new_lines.append(f'\\hm {next_hm}')
-                        inserted = True
-                entry['mdf_data'] = '\n'.join(new_lines)
+                entry['mdf_data'] = re.sub(
+                    r'^(\s*\\lx .*)$', 
+                    rf'\1\n\\hm {next_hm}', 
+                    entry['mdf_data'], 
+                    count=1, 
+                    flags=re.MULTILINE
+                )
                 next_hm += 1
 
         return entries
@@ -236,143 +233,223 @@ class UploadService:
     def suggest_matches(batch_id: str) -> list[dict]:
         """Run match suggestions for all pending rows in a batch.
 
+        Uses a batching approach with targeted SQL queries to avoid OOM
+        risks when dealing with large databases or batches.
+        
         Returns list of {queue_id, lx, suggested_record_id, suggested_lx,
         match_type, cross_source_matches, record_id_conflict,
         record_id_conflict_sources}.
         """
         session = get_session()
         try:
-            rows = (
+            # Get all pending rows for this batch
+            pending_rows = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id, status='pending')
+                .order_by(MatchupQueue.id)
                 .all()
             )
-            if not rows:
+            if not pending_rows:
                 return []
 
-            source_id = rows[0].source_id
-
-            # Load all records for the same source (for matching)
-            same_source_records = (
-                session.query(Record.id, Record.lx, Record.hm)
-                .filter_by(source_id=source_id, is_deleted=False)
-                .all()
-            )
-
-            # Build lookup structures for same-source records
-            # exact lx -> list of records
-            from collections import defaultdict
-            exact_map = defaultdict(list)
-            base_map = defaultdict(list)
-            id_map = {}  # record.id -> record (actually Row object)
-            for rec in same_source_records:
-                exact_map[rec.lx].append(rec)
-                base_map[_strip_diacritics(rec.lx)].append(rec)
-                id_map[rec.id] = rec
-
-            # Load all records from OTHER sources for cross-source checks
-            other_records = (
-                session.query(Record.id, Record.lx, Record.source_id)
-                .filter(Record.source_id != source_id, Record.is_deleted == False)
-                .all()
-            )
-            other_exact_map = defaultdict(list)
-            other_base_map = defaultdict(list)
-            other_id_map = defaultdict(list)  # record_id -> list of (record, source_name)
-            # Cache source names
-            source_names = {}
-            for rec in other_records:
-                if rec.source_id not in source_names:
-                    src = session.get(Source, rec.source_id)
-                    source_names[rec.source_id] = src.name if src else str(rec.source_id)
-                sname = source_names[rec.source_id]
-                other_exact_map[rec.lx].append(sname)
-                other_base_map[_strip_diacritics(rec.lx)].append(sname)
-                other_id_map[rec.id].append(sname)
+            source_id = pending_rows[0].source_id
+            
+            # Cache source names (few enough that this is safe)
+            sources = session.query(Source.id, Source.name).all()
+            source_names = {s.id: s.name for s in sources}
+            current_source_name = source_names.get(source_id, str(source_id))
 
             results = []
-            for row in rows:
-                suggested_record_id = None
-                suggested_lx = None
-                match_type = None
-
-                # Parse record_id from uploaded entry
-                uploaded_record_id = None
-                for line in row.mdf_data.split('\n'):
-                    stripped = line.lstrip()
-                    if stripped.startswith('\\nt Record:'):
-                        val = stripped[len('\\nt Record:'):].strip()
-                        if val.isdigit():
-                            uploaded_record_id = int(val)
-
-                # 1. Try record_id match first (if uploaded entry has \nt Record:)
-                if uploaded_record_id and uploaded_record_id in id_map:
-                    rec = id_map[uploaded_record_id]
-                    suggested_record_id = rec.id
-                    suggested_lx = rec.lx
-                    match_type = 'exact'
-
-                # 2. Exact lx match
-                if not suggested_record_id and row.lx in exact_map:
-                    candidates = exact_map[row.lx]
-                    # Prefer hm match if available
+            
+            # Process in chunks to keep memory usage low and query sizes manageable
+            chunk_size = 100
+            for i in range(0, len(pending_rows), chunk_size):
+                chunk = pending_rows[i:i + chunk_size]
+                
+                # 1. Collect all lx and potential record_ids from the chunk
+                chunk_lxs = set()
+                chunk_base_lxs = set()
+                chunk_uploaded_ids = set()
+                
+                row_data = [] # Store parsed info for this chunk
+                for row in chunk:
+                    chunk_lxs.add(row.lx)
+                    chunk_base_lxs.add(_strip_diacritics(row.lx))
+                    
+                    uploaded_id = None
                     parsed_hm = None
                     for line in row.mdf_data.split('\n'):
                         s = line.lstrip()
-                        if s.startswith('\\hm '):
+                        if s.startswith('\\nt Record:'):
+                            val = s[len('\\nt Record:'):].strip()
+                            if val.isdigit():
+                                uploaded_id = int(val)
+                                chunk_uploaded_ids.add(uploaded_id)
+                        elif s.startswith('\\hm '):
                             v = s[len('\\hm '):].strip()
                             if v.isdigit():
                                 parsed_hm = int(v)
-                    best = None
-                    for c in candidates:
-                        if parsed_hm is not None and c.hm == parsed_hm:
-                            best = c
-                            break
-                    if best is None:
-                        best = candidates[0]
-                    suggested_record_id = best.id
-                    suggested_lx = best.lx
-                    match_type = 'exact'
+                    
+                    row_data.append({
+                        'row': row,
+                        'uploaded_id': uploaded_id,
+                        'parsed_hm': parsed_hm
+                    })
 
-                # 3. Diacritics-stripped fallback
-                if not suggested_record_id:
-                    base = _strip_diacritics(row.lx)
-                    if base in base_map:
-                        best = base_map[base][0]
+                # 2. Targeted Query for Same-Source Records
+                # Find records in the SAME source that match lx, base_lx, or id
+                # We use a broad query and filter in Python for the small chunk
+                # Optimized diacritics check: we query for exact lx matches 
+                # or we just get all records for these lx values.
+                # Since multiple records might have same lx (homonyms), we get them all.
+                same_source_candidates = (
+                    session.query(Record.id, Record.lx, Record.hm)
+                    .filter(
+                        Record.source_id == source_id,
+                        Record.is_deleted == False,
+                        (Record.lx.in_(chunk_lxs)) | (Record.id.in_(chunk_uploaded_ids))
+                    )
+                    .all()
+                )
+                
+                # If chunk_base_lxs is large, querying for all base matches might be slow,
+                # but usually it's similar to chunk_lxs.
+                # For safety, let's also fetch records matching base forms if not already fetched.
+                # In PostgreSQL we could use translate, but here we'll just expand the IN clause.
+                # Actually, base-form matching is a fallback, so let's keep it simple.
+                
+                # Build local lookup maps for this chunk only
+                chunk_exact_map = defaultdict(list)
+                chunk_id_map = {}
+                for rec in same_source_candidates:
+                    chunk_exact_map[rec.lx].append(rec)
+                    chunk_id_map[rec.id] = rec
+                
+                # 3. Targeted Query for OTHER Source existence
+                # We want to know if these LXs exist elsewhere
+                other_source_matches_raw = (
+                    session.query(Record.lx, Record.source_id)
+                    .filter(
+                        Record.source_id != source_id,
+                        Record.is_deleted == False,
+                        Record.lx.in_(chunk_lxs)
+                    )
+                    .distinct()
+                    .all()
+                )
+                other_exact_map = defaultdict(set)
+                for lx, sid in other_source_matches_raw:
+                    other_exact_map[lx].add(source_names.get(sid, str(sid)))
+
+                # Record-ID conflicts in other sources
+                other_id_conflicts_raw = (
+                    session.query(Record.id, Record.source_id)
+                    .filter(
+                        Record.source_id != source_id,
+                        Record.is_deleted == False,
+                        Record.id.in_(chunk_uploaded_ids)
+                    )
+                    .all()
+                )
+                other_id_map = defaultdict(set)
+                for rid, sid in other_id_conflicts_raw:
+                    other_id_map[rid].add(source_names.get(sid, str(sid)))
+
+                # 4. Process each row in the chunk
+                for data in row_data:
+                    row = data['row']
+                    uploaded_record_id = data['uploaded_id']
+                    parsed_hm = data['parsed_hm']
+                    
+                    suggested_record_id = None
+                    suggested_lx = None
+                    match_type = None
+
+                    # A. Try record_id match first
+                    if uploaded_record_id and uploaded_record_id in chunk_id_map:
+                        rec = chunk_id_map[uploaded_record_id]
+                        suggested_record_id = rec.id
+                        suggested_lx = rec.lx
+                        match_type = 'exact'
+
+                    # B. Exact lx match
+                    if not suggested_record_id and row.lx in chunk_exact_map:
+                        candidates = chunk_exact_map[row.lx]
+                        best = None
+                        for c in candidates:
+                            if parsed_hm is not None and c.hm == parsed_hm:
+                                best = c
+                                break
+                        if best is None:
+                            best = candidates[0]
                         suggested_record_id = best.id
                         suggested_lx = best.lx
-                        match_type = 'base_form'
+                        match_type = 'exact'
 
-                # Cross-source indicator
-                cross_sources = set()
-                if row.lx in other_exact_map:
-                    cross_sources.update(other_exact_map[row.lx])
-                base_lx = _strip_diacritics(row.lx)
-                if base_lx in other_base_map:
-                    cross_sources.update(other_base_map[base_lx])
-                cross_source_matches = sorted(cross_sources) if cross_sources else []
+                    # C. Diacritics-stripped fallback (Requires extra query if not found in exact)
+                    if not suggested_record_id:
+                        base = _strip_diacritics(row.lx)
+                        # We do a targeted query for this specific base form if it wasn't exact
+                        base_match = (
+                            session.query(Record.id, Record.lx)
+                            .filter(
+                                Record.source_id == source_id,
+                                Record.is_deleted == False,
+                                # Simple diacritics check fallback in SQL if possible, 
+                                # but for small batches we can just query for records 
+                                # and filter in Python or use a specialized query.
+                                # To keep it simple and safe:
+                                func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base.lower()
+                            )
+                            .first()
+                        )
+                        if base_match:
+                            suggested_record_id = base_match.id
+                            suggested_lx = base_match.lx
+                            match_type = 'base_form'
 
-                # Record-id conflict check
-                record_id_conflict = False
-                record_id_conflict_sources = []
-                if uploaded_record_id and uploaded_record_id in other_id_map:
-                    record_id_conflict = True
-                    record_id_conflict_sources = sorted(set(other_id_map[uploaded_record_id]))
+                    # D. Cross-source indicators
+                    cross_sources = set(other_exact_map.get(row.lx, []))
+                    # Also check base form in other sources (targeted)
+                    if not cross_sources:
+                        base_lx = _strip_diacritics(row.lx)
+                        other_base_match = (
+                             session.query(Source.id)
+                             .join(Record)
+                             .filter(
+                                 Record.source_id != source_id,
+                                 Record.is_deleted == False,
+                                 func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base_lx.lower()
+                             )
+                             .distinct()
+                             .all()
+                        )
+                        for (sid,) in other_base_match:
+                            cross_sources.add(source_names.get(sid, str(sid)))
+                    
+                    cross_source_matches = sorted(cross_sources)
 
-                # Update the queue row
-                row.suggested_record_id = suggested_record_id
-                row.match_type = match_type
+                    # E. Record-id conflict check
+                    record_id_conflict = False
+                    record_id_conflict_sources = []
+                    if uploaded_record_id and uploaded_record_id in other_id_map:
+                        record_id_conflict = True
+                        record_id_conflict_sources = sorted(other_id_map[uploaded_record_id])
 
-                results.append({
-                    'queue_id': row.id,
-                    'lx': row.lx,
-                    'suggested_record_id': suggested_record_id,
-                    'suggested_lx': suggested_lx,
-                    'match_type': match_type,
-                    'cross_source_matches': cross_source_matches,
-                    'record_id_conflict': record_id_conflict,
-                    'record_id_conflict_sources': record_id_conflict_sources,
-                })
+                    # Update the queue row
+                    row.suggested_record_id = suggested_record_id
+                    row.match_type = match_type
+
+                    results.append({
+                        'queue_id': row.id,
+                        'lx': row.lx,
+                        'suggested_record_id': suggested_record_id,
+                        'suggested_lx': suggested_lx,
+                        'match_type': match_type,
+                        'cross_source_matches': cross_source_matches,
+                        'record_id_conflict': record_id_conflict,
+                        'record_id_conflict_sources': record_id_conflict_sources,
+                    })
 
             session.commit()
             return results
@@ -396,30 +473,51 @@ class UploadService:
     def auto_remove_exact_duplicates(batch_id: str) -> dict:
         """Remove matchup_queue rows that are exact duplicates of existing records.
 
+        Uses batch processing to prevent OOM errors and N+1 query problems.
         Returns {removed_count: int, headwords: list[str]}.
         """
         session = get_session()
         try:
-            rows = (
+            # We process ALL rows for the batch, but in chunks
+            all_pending = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id)
                 .filter(MatchupQueue.suggested_record_id.isnot(None))
+                .order_by(MatchupQueue.id)
                 .all()
             )
+            
+            if not all_pending:
+                return {'removed_count': 0, 'headwords': []}
 
-            removed = []
-            for row in rows:
-                record = session.get(Record, row.suggested_record_id)
-                if not record:
-                    continue
-                uploaded_clean = UploadService._strip_nt_record_lines(row.mdf_data)
-                existing_clean = UploadService._strip_nt_record_lines(record.mdf_data)
-                if uploaded_clean == existing_clean:
-                    removed.append(row.lx)
-                    session.delete(row)
+            removed_headwords = []
+            chunk_size = 100
+            for i in range(0, len(all_pending), chunk_size):
+                chunk = all_pending[i:i + chunk_size]
+                suggested_ids = {row.suggested_record_id for row in chunk if row.suggested_record_id}
+                
+                # Bulk fetch records for this chunk
+                records = (
+                    session.query(Record.id, Record.mdf_data)
+                    .filter(Record.id.in_(suggested_ids))
+                    .all()
+                )
+                record_map = {r.id: r.mdf_data for r in records}
+                
+                for row in chunk:
+                    mdf_existing = record_map.get(row.suggested_record_id)
+                    if mdf_existing is None:
+                        continue
+                        
+                    uploaded_clean = UploadService._strip_nt_record_lines(row.mdf_data)
+                    existing_clean = UploadService._strip_nt_record_lines(mdf_existing)
+                    
+                    if uploaded_clean == existing_clean:
+                        removed_headwords.append(row.lx)
+                        session.delete(row)
 
             session.commit()
-            return {'removed_count': len(removed), 'headwords': removed}
+            return {'removed_count': len(removed_headwords), 'headwords': removed_headwords}
         except Exception:
             session.rollback()
             raise
@@ -455,37 +553,59 @@ class UploadService:
     def flag_hm_mismatches(batch_id: str) -> list[dict]:
         """Flag entries identical to existing records except for \\hm number.
 
+        Uses batch processing to prevent OOM errors and N+1 query problems.
         Returns list of flagged entries with hm_mismatch details.
         """
         session = get_session()
         try:
-            rows = (
+            all_pending = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id)
                 .filter(MatchupQueue.suggested_record_id.isnot(None))
+                .order_by(MatchupQueue.id)
                 .all()
             )
+            
+            if not all_pending:
+                return []
 
             flagged = []
-            for row in rows:
-                record = session.get(Record, row.suggested_record_id)
-                if not record:
-                    continue
-                uploaded_stripped = UploadService._strip_nt_record_and_hm_lines(row.mdf_data)
-                existing_stripped = UploadService._strip_nt_record_and_hm_lines(record.mdf_data)
-                if uploaded_stripped != existing_stripped:
-                    continue
-                # Content identical excluding \nt Record: and \hm — check if \hm differs
-                uploaded_hm = UploadService._extract_hm_from_mdf(row.mdf_data)
-                existing_hm = UploadService._extract_hm_from_mdf(record.mdf_data)
-                if uploaded_hm != existing_hm:
-                    detail = f"uploaded \\hm {uploaded_hm}, existing \\hm {existing_hm}"
-                    flagged.append({
-                        'queue_id': row.id,
-                        'lx': row.lx,
-                        'hm_mismatch': True,
-                        'hm_mismatch_detail': detail,
-                    })
+            chunk_size = 100
+            for i in range(0, len(all_pending), chunk_size):
+                chunk = all_pending[i:i + chunk_size]
+                suggested_ids = {row.suggested_record_id for row in chunk if row.suggested_record_id}
+                
+                # Bulk fetch records for this chunk
+                records = (
+                    session.query(Record.id, Record.mdf_data)
+                    .filter(Record.id.in_(suggested_ids))
+                    .all()
+                )
+                record_map = {r.id: r.mdf_data for r in records}
+
+                for row in chunk:
+                    mdf_existing = record_map.get(row.suggested_record_id)
+                    if mdf_existing is None:
+                        continue
+                        
+                    uploaded_stripped = UploadService._strip_nt_record_and_hm_lines(row.mdf_data)
+                    existing_stripped = UploadService._strip_nt_record_and_hm_lines(mdf_existing)
+                    
+                    if uploaded_stripped != existing_stripped:
+                        continue
+                        
+                    # Content identical excluding \nt Record: and \hm — check if \hm differs
+                    uploaded_hm = UploadService._extract_hm_from_mdf(row.mdf_data)
+                    existing_hm = UploadService._extract_hm_from_mdf(mdf_existing)
+                    
+                    if uploaded_hm != existing_hm:
+                        detail = f"uploaded \\hm {uploaded_hm}, existing \\hm {existing_hm}"
+                        flagged.append({
+                            'queue_id': row.id,
+                            'lx': row.lx,
+                            'hm_mismatch': True,
+                            'hm_mismatch_detail': detail,
+                        })
 
             return flagged
         finally:
