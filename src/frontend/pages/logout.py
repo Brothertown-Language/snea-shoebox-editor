@@ -1,15 +1,14 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
-from src.logging_config import get_logger
-
-logger = get_logger("snea.logout")
 
 def logout_page() -> None:
     """
     Handle the logout process: clear session, purge cookies, 
     and redirect to root with a full browser reload.
     """
+    from src.logging_config import get_logger
+    logger = get_logger("snea.logout")
     from src.frontend.ui_utils import apply_standard_layout_css
     apply_standard_layout_css()
     logger.debug("Logout page entered")

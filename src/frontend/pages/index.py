@@ -2,10 +2,10 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
 import pandas as pd
-from src.services.statistics_service import StatisticsService
-from src.frontend.ui_utils import apply_standard_layout_css
 
 def index():
+    from src.services.statistics_service import StatisticsService
+    from src.frontend.ui_utils import apply_standard_layout_css
     apply_standard_layout_css()
     # Handle logout reload if coming from logout page
     if st.session_state.get("trigger_logout_reload"):

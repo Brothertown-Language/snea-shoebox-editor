@@ -1,9 +1,9 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
-from src.logging_config import get_logger
 
-logger = get_logger("snea.login")
+# from src.logging_config import get_logger
+# logger = get_logger("snea.login")
 
 @st.dialog("Access Restricted")
 def show_unauthorized_dialog() -> None:
@@ -44,10 +44,11 @@ def login():
     import streamlit as st
     from streamlit_oauth import OAuth2Component
     import requests
+    from src.logging_config import get_logger
     from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
 
+    logger = get_logger("snea.login")
     apply_standard_layout_css()
-    logger.debug("Login page loaded")
 
     if "cookie_controller" not in st.session_state:
         # Fallback in case app.py didn't set it (shouldn't happen with updated app.py)

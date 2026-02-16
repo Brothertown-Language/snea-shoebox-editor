@@ -1,13 +1,10 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
-from src.services.linguistic_service import LinguisticService
-from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css, handle_ui_error
-from src.logging_config import get_logger
-
-logger = get_logger("snea.pages.table_maintenance")
 
 def render_sources_maintenance():
+    from src.services.linguistic_service import LinguisticService
+    from src.frontend.ui_utils import handle_ui_error
     # Load data
     sources = LinguisticService.get_sources_with_counts()
     
@@ -63,6 +60,8 @@ def render_sources_maintenance():
 
 @st.dialog("Edit Source")
 def render_edit_dialog(source):
+    from src.services.linguistic_service import LinguisticService
+    from src.frontend.ui_utils import handle_ui_error
     new_name = st.text_input("Name", value=source["name"])
     new_desc = st.text_area("Description", value=source["description"] or "")
     
@@ -81,6 +80,8 @@ def render_edit_dialog(source):
 
 @st.dialog("Reassign Records")
 def render_reassign_dialog(source, all_sources):
+    from src.services.linguistic_service import LinguisticService
+    from src.frontend.ui_utils import handle_ui_error
     st.warning(f"This will move all {source['record_count']} records from '{source['name']}' to another source.")
     
     other_sources = [s for s in all_sources if s["id"] != source["id"]]
@@ -108,6 +109,7 @@ def render_reassign_dialog(source, all_sources):
             st.rerun()
 
 def main():
+    from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css
     # Role guard — only admin
     user_role = st.session_state.get("user_role")
     if user_role != "admin":
@@ -145,6 +147,8 @@ def main():
         st.info(f"Maintenance for {table_option} is not yet implemented.")
 
 def render_deleted_records_maintenance():
+    from src.services.linguistic_service import LinguisticService
+    from src.frontend.ui_utils import handle_ui_error
     # Load deleted records
     records = LinguisticService.get_deleted_records()
     
@@ -191,6 +195,8 @@ def render_deleted_records_maintenance():
 
 @st.dialog("Confirm Permanent Deletion")
 def render_hard_delete_dialog(record):
+    from src.services.linguistic_service import LinguisticService
+    from src.frontend.ui_utils import handle_ui_error
     st.error(f"Are you sure you want to PERMANENTLY delete record #{record['id']} ({record['lx']})?")
     st.warning("This action cannot be undone and will remove all edit history for this record.")
     

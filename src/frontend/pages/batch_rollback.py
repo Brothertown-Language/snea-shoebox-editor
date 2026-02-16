@@ -1,17 +1,11 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
-from src.logging_config import get_logger
-from src.services.upload_service import UploadService
-from src.services.identity_service import IdentityService
-from src.database import get_session, UserActivityLog, EditHistory
-from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
 from sqlalchemy import desc, text
-
-logger = get_logger("snea.pages.batch_rollback")
 
 def get_recent_sessions():
     """Fetch recent upload sessions that can be rolled back using discrete steps."""
+    from src.database import get_session
     session = get_session()
     try:
         # Step 1: Discover sessions that had more than 1 record initially.
@@ -84,6 +78,8 @@ def get_recent_sessions():
 @st.dialog("Download Rollback MDF")
 def download_mdf_dialog(session_data):
     """Prompt the user to download the MDF data for a session."""
+    from src.services.upload_service import UploadService
+    from src.services.identity_service import IdentityService
     session_id = session_data.get('session_id')
     st.write(f"Preparing records from session **{session_id[:8]}** for download.")
     st.info("This will include all records that are currently eligible for rollback.")
@@ -115,6 +111,9 @@ def download_mdf_dialog(session_data):
 
 @st.dialog("Confirm Rollback")
 def confirm_rollback_dialog(session_data):
+    from src.services.upload_service import UploadService
+    from src.logging_config import get_logger
+    logger = get_logger("snea.pages.batch_rollback")
     session_id = session_data.get('session_id')
     st.warning(f"Are you sure you want to rollback session **{session_id[:8]}...**?")
     st.write(f"- **Source:** {session_data['source_name']}")
@@ -125,6 +124,7 @@ def confirm_rollback_dialog(session_data):
     st.error("This action will restore records to their previous state and delete newly created records. Superseded records will be skipped. This cannot be undone.")
     
     if st.button("Yes, Rollback Session", type="primary", use_container_width=True):
+        from src.frontend.ui_utils import handle_ui_error
         # We'll use a placeholder in the dialog for progress
         progress_container = st.container()
         with progress_container:
@@ -161,6 +161,8 @@ def main():
     UI for Phase E-2: Batch Rollback Support.
     Allows administrators to rollback upload sessions.
     """
+    from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
+    from src.services.identity_service import IdentityService
     # Role guard — only admin
     user_role = st.session_state.get("user_role")
     if user_role not in ("admin",):

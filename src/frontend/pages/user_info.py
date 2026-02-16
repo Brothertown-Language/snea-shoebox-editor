@@ -1,8 +1,10 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 
+import streamlit as st
+
 def user_info_page() -> None:
-    import streamlit as st
+    from src.services.identity_service import IdentityService
     from src.frontend.ui_utils import apply_standard_layout_css
     apply_standard_layout_css()
     
@@ -62,7 +64,6 @@ def user_info_page() -> None:
         st.warning("No profile information available.")
 
     if "user_orgs" in st.session_state and st.session_state["user_orgs"]:
-        from src.services.identity_service import IdentityService
         identity_data = IdentityService.get_user_teams_and_orgs()
         
         st.divider()
@@ -71,7 +72,6 @@ def user_info_page() -> None:
             st.write(f"- {org}")
 
     if "user_teams" in st.session_state and st.session_state["user_teams"]:
-        from src.services.identity_service import IdentityService
         identity_data = IdentityService.get_user_teams_and_orgs()
         
         st.divider()

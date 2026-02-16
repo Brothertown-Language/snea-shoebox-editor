@@ -7,17 +7,17 @@ import json
 import zipfile
 import io
 from typing import List, Dict, Any, Optional
-from src.services.linguistic_service import LinguisticService
-from src.services.upload_service import UploadService
-from src.services.identity_service import IdentityService
-from src.services.preference_service import PreferenceService
-from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error
-from src.mdf.validator import MDFValidator
-from src.logging_config import get_logger
-
-logger = get_logger("snea.pages.records")
 
 def records():
+    from src.services.linguistic_service import LinguisticService
+    from src.services.upload_service import UploadService
+    from src.services.identity_service import IdentityService
+    from src.services.preference_service import PreferenceService
+    from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error
+    from src.mdf.validator import MDFValidator
+    from src.logging_config import get_logger
+
+    logger = get_logger("snea.pages.records")
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
     apply_standard_layout_css()
