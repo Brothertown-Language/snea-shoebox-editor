@@ -88,7 +88,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **`uv run` PREFIX**: Every Python execution MUST start with `uv run`.
 - **PYTHONPATH FOR LOCAL SCRIPTS**: When using `uv run` for local scripts or tests importing `src/`, prefix with `PYTHONPATH=.`. Failure to do so results in `ModuleNotFoundError`.
 - **RAW STRINGS FOR MDF DOCSTRINGS**: When writing tests or code that include MDF tags (e.g., `\lx`, `\ln`) in docstrings or strings, ALWAYS use raw strings (e.g., `r"""..."""` or `r'...'`) to avoid `SyntaxWarning: invalid escape sequence`.
-- **STREAMLIT EXECUTION**: NEVER run Streamlit as a foreground app. You MUST run it as a background task using `nohup` and poll its log file in `tmp/` for status.
+- **STREAMLIT EXECUTION**: NEVER run Streamlit as a foreground app. You MUST run it as a background task using `nohup` and poll its log file in `tmp/` for status. **STRICTLY FORBIDDEN**: Running any `streamlit run` command without `nohup` and `&`. Any blocking execution is a CRITICAL VIOLATION.
 - **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
 - **NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
 - **CLEAN ROOT POLICY**: Redirect ALL output to `tmp/`. No log files or transient scripts in root.
