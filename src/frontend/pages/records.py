@@ -350,8 +350,7 @@ def records():
                     help=f"Download {len(all_matching_records)} records from {len(distinct_sources)} sources as a ZIP of MDF files"
                 )
             else:
-                # Single source: Direct MDF download
-                mdf_bundle = LinguisticService.bundle_records_to_mdf(all_matching_records)
+                # Single source: Direct MDF download via streaming to temp file
                 source_name = distinct_sources[0] if distinct_sources else "results"
                 
                 fname = UploadService.generate_mdf_filename(
@@ -360,15 +359,30 @@ def records():
                     timestamp=_dt.datetime.now(),
                     github_username=github_username
                 )
-                
-                st.download_button(
-                    label="Download Source (MDF)",
-                    data=mdf_bundle,
-                    file_name=fname,
-                    mime="text/plain",
-                    use_container_width=True,
-                    help=f"Download {len(all_matching_records)} records from {source_name} as MDF"
+
+                # Use streaming to temp file for better memory management
+                temp_path = LinguisticService.stream_records_to_temp_file(
+                    source_id=export_source_id,
+                    search_term=export_search_term,
+                    search_mode=st.session_state.search_mode,
+                    record_ids=export_record_ids
                 )
+                
+                try:
+                    with open(temp_path, "rb") as f:
+                        file_bytes = f.read()
+                        st.download_button(
+                            label="Download Source (MDF)",
+                            data=file_bytes,
+                            file_name=fname,
+                            mime="text/plain",
+                            use_container_width=True,
+                            help=f"Download {len(all_matching_records)} records from {source_name} as MDF (Streamed)"
+                        )
+                finally:
+                    import os
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
         else:
             st.button("Download (Empty)", disabled=True, use_container_width=True)
 

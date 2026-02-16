@@ -209,6 +209,9 @@ class TestLinguisticService(unittest.TestCase):
             self.assertGreaterEqual(len(records), 2)
             for r in records:
                 self.assertEqual(r['source_id'], self.source_id)
+                # Verify column projection: 'embedding' should not be in the dictionary
+                self.assertNotIn('embedding', r)
+                self.assertIn('mdf_data', r)
             
             # Test with search term (manually add search entry since we bypass search_records)
             from src.database.models.search import SearchEntry
@@ -224,6 +227,30 @@ class TestLinguisticService(unittest.TestCase):
             records_by_id = LinguisticService.get_all_records_for_export(record_ids=[rid])
             self.assertEqual(len(records_by_id), 1)
             self.assertEqual(records_by_id[0]['id'], rid)
+
+    def test_stream_records_to_temp_file(self):
+        """Test streaming records to a temporary file."""
+        import os
+        r1 = Record(lx='stream1', source_id=self.source_id, mdf_data='\\lx stream1')
+        r2 = Record(lx='stream2', source_id=self.source_id, mdf_data='\\lx stream2')
+        self.session.add_all([r1, r2])
+        self.session.commit()
+
+        with self._patch_session():
+            temp_path = LinguisticService.stream_records_to_temp_file(source_id=self.source_id)
+            try:
+                self.assertTrue(os.path.exists(temp_path))
+                with open(temp_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                
+                # Check that both records are present with double newline separation
+                # Note: exact match depends on other records in DB if any
+                self.assertIn('\\lx stream1', content)
+                self.assertIn('\\lx stream2', content)
+                self.assertIn('\\lx stream1\n\n\\lx stream2', content)
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
 
     def test_bundle_records_to_mdf(self):
         records = [

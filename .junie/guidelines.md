@@ -92,7 +92,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
 - **NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
 - **CLEAN ROOT POLICY**: Redirect ALL output to `tmp/`. No log files or transient scripts in root.
-- **NO INTERACTIVE COMMANDS**: Use `< /dev/null` or non-interactive flags (e.g., `psql -c "QUERY"`). **STRICTLY FORBIDDEN**: Running any command that might prompt for input or hang waiting for user interaction. These commands will be automatically cancelled by the system, yielding no output and wasting session time. Always ensure commands are fully automated and headless.
+- **NO INTERACTIVE COMMANDS**: Use `< /dev/null` or non-interactive flags. **STRICTLY FORBIDDEN**: Running any command that might prompt for input or hang waiting for user interaction (e.g., direct `psql`). direct `psql` usage is FORBIDDEN as it hangs the session. ALWAYS use a Python script for database inspection. These commands will be automatically cancelled by the system, yielding no output and wasting session time. Always ensure commands are fully automated and headless.
 - **NO .git SEARCH**: Always exclude `.git` when searching (e.g., `grep --exclude-dir=.git`).
 - **NO `sed -i`**: Never use in-place shell edits. Use `search_replace` or `multi_edit`.
 
@@ -110,7 +110,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **ENVIRONMENT PARITY MANDATE**: The local development and testing environments MUST be configured to support 100% of the features required by production. You are FORBIDDEN from wrapping migrations or production code in `try-except` blocks to "ignore" local environment deficiencies. If a production-required feature (e.g., `pg_trgm`) is missing locally, you MUST stop and ensure the local environment is fixed rather than dumbing down the code.
 - **IDENTICAL CODEBASE**: If the local development environment cannot support a feature, DO NOT USE IT IN PRODUCTION. The code must be identical and working on both platforms (dev and production) at all times.
 - **ENVELOPE AUTHORITY**: The `uv`-bundled `pgserver` defines the strict feature envelope for the entire system. Prod MUST NOT exceed local capabilities, and local dev MUST NOT exceed production capabilities. No feature (extension, operator class, contrib module) may be used unless it exists identically in both.
-    - If `pgserver` lacks `pg_trgm`, then `pg_trgm` is forbidden everywhere.
+    - **FORBIDDEN FEATURE**: PostgreSQL `pg_trgm` (Trigram search) is strictly forbidden as it is incompatible with the `pgserver` envelope.
     - If `pgserver` lacks contrib modules, then they are forbidden everywhere.
     - If `pgserver` lacks certain operator classes, they are forbidden everywhere.
     - The same applies to features available locally but missing in production.
@@ -144,9 +144,11 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
     `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`
 - **TESTING STANDARDS**:
     - **Terminal Only**: Always run tests in the terminal. Never simulate.
+    - **Schema Change Verification**: Always check the `tmp/streamlit.log` when involving schema changes (migrations, extension management) to verify successful application and catch race conditions.
     - **Reproduction First**: For bugs, write a failing test first.
     - **3-Strike Rule**: After 3 failed fix attempts, stop and ask the user.
     - **Lazy Execution**: Forbidden from pre-generating expensive data in UI loops. Use lazy loading.
+- **MIGRATION VERSIONING**: All new database migrations MUST use the `YYYYMMDDSSSSS` format (Year, Month, Day, seconds-since-midnight). This value MUST reflect the actual creation time. Incremental versioning is strictly FORBIDDEN.
 
 ---
 

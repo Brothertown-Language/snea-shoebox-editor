@@ -23,6 +23,12 @@ class MigrationManager:
     """
 
     # Ordered registry of versioned migrations: (version, method_name, description)
+    # AI AGENT DIRECTIVE: Future migration version numbers MUST follow the format:
+    # YYYYMMDDSSSSS (Year, Month, Day, and seconds-since-midnight).
+    # This number MUST reflect the actual time the migration was added to this file.
+    # Incremental values (e.g. +1, +2) are FORBIDDEN.
+    # This ensures the migration registry remains in sync with the database schema table.
+    # DO NOT renumber existing migrations.
     _MIGRATIONS = [
         (1, "_migrate_cascade_constraints", "Add ON UPDATE CASCADE / ON DELETE RESTRICT constraints"),
         (2, "_migrate_add_embedding_column", "Add embedding vector column to records"),
@@ -31,6 +37,12 @@ class MigrationManager:
         (5, "_migrate_backfill_record_languages", "Backfill record_languages from existing records"),
         (6, "_migrate_drop_records_language_id", "Drop redundant language_id from records table"),
         (8, "_migrate_add_fts_index", "Add GIN FTS index to records for full-text search"),
+        (10, "_migrate_add_sort_lx_column", "Add sort_lx column for NFD-aware sorting"),
+        (11, "_migrate_upgrade_version_to_bigint", "Upgrade schema_version.version to BigInteger"),
+        (2026021585860, "_migrate_add_search_entries_index", "Add B-tree index to search_entries(term) for prefix matching"),
+        (2026021585861, "_migrate_add_normalized_search_entries", "Add normalized_term to search_entries and index it"),
+        (2026021585862, "_migrate_renormalize_search_entries", "Re-normalize search_entries for diacritics and quotes"),
+        (2026021585863, "_migrate_renormalize_sort_lx", "Re-normalize records.sort_lx for diacritics and quotes"),
     ]
 
     def __init__(self, engine):
@@ -49,8 +61,20 @@ class MigrationManager:
     def _ensure_extensions(self):
         """Ensure required PostgreSQL extensions are enabled."""
         with self._engine.connect() as conn:
-            conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-            conn.commit()
+            # retry logic for extensions to handle startup recovery
+            import time
+            max_retries = 5
+            for attempt in range(max_retries):
+                try:
+                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                    conn.commit()
+                    break
+                except Exception as e:
+                    if "shutting down" in str(e).lower() and attempt < max_retries - 1:
+                        logger.warning("DB is shutting down/recovering. Retrying extensions... (%d/%d)", attempt+1, max_retries)
+                        time.sleep(2)
+                        continue
+                    raise
 
     # ── Version Tracking ──────────────────────────────────────────────
 
@@ -262,21 +286,145 @@ class MigrationManager:
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_fts ON records USING gin (fts_vector);"))
             conn.commit()
 
+    def _migrate_add_search_entries_index(self):
+        """Migration 2026021585860: Add index to search_entries table."""
+        with self._engine.connect() as conn:
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_search_entries_term ON search_entries (term);"))
+            conn.commit()
+
+    def _migrate_upgrade_version_to_bigint(self):
+        """Migration 11: Upgrade version column to BigInteger."""
+        with self._engine.connect() as conn:
+            conn.execute(text("ALTER TABLE schema_version ALTER COLUMN version TYPE BIGINT;"))
+            conn.commit()
+
+    def _migrate_add_normalized_search_entries(self):
+        """Migration 2026021585861: Add normalized_term to search_entries table."""
+        from .models.search import SearchEntry
+        from src.services.linguistic_service import LinguisticService
+
+        with self._engine.connect() as conn:
+            conn.execute(text("ALTER TABLE search_entries ADD COLUMN IF NOT EXISTS normalized_term VARCHAR;"))
+            conn.commit()
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            # Backfill normalized_term for all entries
+            entries = session.query(SearchEntry).filter(SearchEntry.normalized_term.is_(None)).all()
+            if entries:
+                logger.info(f"Backfilling normalized_term for {len(entries)} search entries...")
+                for entry in entries:
+                    entry.normalized_term = LinguisticService.generate_sort_lx(entry.term)
+                session.commit()
+                logger.info("Normalized_term backfill complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to backfill normalized_term: {e}")
+            raise e
+        finally:
+            session.close()
+
+        with self._engine.connect() as conn:
+            # Drop old index if it exists and create new one on normalized_term
+            conn.execute(text("DROP INDEX IF EXISTS idx_search_entries_term;"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_search_entries_normalized_term ON search_entries (normalized_term);"))
+            # Make the column NOT NULL after backfilling
+            conn.execute(text("ALTER TABLE search_entries ALTER COLUMN normalized_term SET NOT NULL;"))
+            conn.commit()
+
+    def _migrate_renormalize_search_entries(self):
+        """Migration 2026021585862: Re-normalize search_entries.normalized_term."""
+        from .models.search import SearchEntry
+        from src.services.linguistic_service import LinguisticService
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            logger.info("Re-normalizing search_entries (diacritics and quotes)...")
+            # We process in batches if there are many, but here we just do all
+            entries = session.query(SearchEntry).all()
+            for entry in entries:
+                entry.normalized_term = LinguisticService.generate_sort_lx(entry.term)
+            session.commit()
+            logger.info("search_entries re-normalization complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to re-normalize search_entries: {e}")
+            raise e
+        finally:
+            session.close()
+
+    def _migrate_renormalize_sort_lx(self):
+        """Migration 2026021585863: Re-normalize records.sort_lx."""
+        from .models.core import Record
+        from src.services.linguistic_service import LinguisticService
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            logger.info("Re-normalizing records.sort_lx (diacritics and quotes)...")
+            records = session.query(Record).all()
+            for record in records:
+                record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
+            session.commit()
+            logger.info("records.sort_lx re-normalization complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to re-normalize records.sort_lx: {e}")
+            raise e
+        finally:
+            session.close()
+
+    def _migrate_add_sort_lx_column(self):
+        """Migration 9: Add sort_lx column to records and backfill existing data."""
+        from .models.core import Record
+        from src.services.linguistic_service import LinguisticService
+        
+        with self._engine.connect() as conn:
+            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS sort_lx VARCHAR;"))
+            conn.commit()
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            # Backfill existing records
+            records = session.query(Record).filter(Record.sort_lx.is_(None)).all()
+            if records:
+                logger.info(f"Backfilling sort_lx for {len(records)} records...")
+                for record in records:
+                    record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
+                session.commit()
+                logger.info("Sort_lx backfill complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to backfill sort_lx: {e}")
+            raise e
+        finally:
+            session.close()
+
+        with self._engine.connect() as conn:
+            # Headword (\lx) -> Homonym (\hm) -> Part of Speech (\ps) -> Gloss (\ge)
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_sort_lx ON records (sort_lx);"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_sorting_composite ON records (sort_lx, hm, ps, ge);"))
+            conn.commit()
+
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""
-        from .models.core import Source
+        from .models.core import Source, Record
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
             # If table is empty, reset autoincrement value
-            if session.query(Source).count() == 0:
+            source_count = session.query(Source).count()
+            if source_count == 0:
                 logger.info("Sources table is empty, resetting autoincrement value.")
                 session.execute(text("ALTER SEQUENCE sources_id_seq RESTART WITH 1"))
                 session.commit()
 
             # Reset records autoincrement if empty
-            from .models.core import Record
-            if session.query(Record).count() == 0:
+            record_count = session.query(Record).count()
+            if record_count == 0:
                 logger.info("Records table is empty, resetting autoincrement value.")
                 session.execute(text("ALTER SEQUENCE records_id_seq RESTART WITH 1"))
                 session.commit()

@@ -23,7 +23,7 @@ def download_latest_logs(repo="Brothertown-Language/snea-shoebox-editor", workfl
     run_id = None
     while True:
         url = f"https://api.github.com/repos/{repo}/actions/runs?branch={branch}&per_page=10"
-        response = requests.get(url, headers=headers)
+        response = requests.get(url, headers=headers, timeout=10)
         if response.status_code != 200:
             print(f"ERROR: Failed to fetch runs: {response.status_code} {response.text}")
             sys.exit(1)
@@ -50,7 +50,7 @@ def download_latest_logs(repo="Brothertown-Language/snea-shoebox-editor", workfl
 
     print(f"Downloading logs for run {run_id}...")
     logs_url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}/logs"
-    log_response = requests.get(logs_url, headers=headers)
+    log_response = requests.get(logs_url, headers=headers, timeout=10)
     
     if log_response.status_code != 200:
         print(f"ERROR: Failed to download logs: {log_response.status_code}")

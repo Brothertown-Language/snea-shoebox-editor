@@ -72,6 +72,7 @@ class Record(Base):
     __tablename__ = 'records'
     id = Column(Integer, primary_key=True, autoincrement=True)  # Matches \nt Record: <id>
     lx = Column(String, nullable=False)  # Lexeme (\lx)
+    sort_lx = Column(String)  # Normalized headword for sorting
     hm = Column(Integer, default=1)  # Homonym Number (\hm)
     ps = Column(String)  # Part of Speech (\ps)
     ge = Column(String)  # English Gloss (\ge)

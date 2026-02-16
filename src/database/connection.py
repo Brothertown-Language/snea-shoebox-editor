@@ -211,6 +211,16 @@ def _enable_tcp_listening(pg_server):
 
     # Stop the socket-only instance
     _logger.debug("Stopping socket-only PostgreSQL instance…")
+    
+    # Wait for PID file to be present before attempting stop
+    pid_file = Path(pg_server.pgdata) / "postmaster.pid"
+    for i in range(10):
+        if pid_file.exists():
+            break
+        _logger.debug("Waiting for postmaster.pid... (attempt %d)", i+1)
+        import time
+        time.sleep(0.5)
+
     pg_ctl(['-w', 'stop'], pgdata=pg_server.pgdata, user=pg_server.system_user)
     _logger.debug("Socket-only instance stopped.")
 
@@ -397,26 +407,13 @@ def _auto_start_pgserver():
         db_path = _get_local_db_path()
         db_path.parent.mkdir(parents=True, exist_ok=True)
         
-        # Check if we should force-stop based on reported failure duration
+        # Check if we should force-stop if PID file exists but we don't have a handle
         pid_file = db_path / "postmaster.pid"
-        if "pg_shutdown_first_seen" in st.session_state:
-            duration = _time.time() - st.session_state["pg_shutdown_first_seen"]
-            _logger.debug("[DEV] pg_shutdown_first_seen duration: %.1fs", duration)
-            if duration > 5.0:  # If stuck for > 5 seconds
-                _logger.warning("DB stuck in 'shutting down' for %.1fs. Triggering force-stop.", duration)
-                _force_stop_stuck_db(db_path)
+        if pid_file.exists():
+            _logger.warning("[DEV] postmaster.pid exists at startup. Forcing cleanup to ensure clean state.")
+            _force_stop_stuck_db(db_path)
+            if "pg_shutdown_first_seen" in st.session_state:
                 st.session_state.pop("pg_shutdown_first_seen", None)
-        elif pid_file.exists():
-            # If PID file exists but we don't have a handle, check if it responds
-            _logger.debug("[DEV] PID file exists at startup. Checking status in postmaster.pid...")
-            try:
-                content = pid_file.read_text().splitlines()
-                if len(content) >= 8 and content[7].strip() == "stopping":
-                    _logger.warning("[DEV] DB status is 'stopping' in postmaster.pid. Setting pg_shutdown_first_seen.")
-                    if "pg_shutdown_first_seen" not in st.session_state:
-                        st.session_state["pg_shutdown_first_seen"] = _time.time()
-            except Exception as e:
-                _logger.debug("[DEV] Error reading postmaster.pid status: %s", e)
 
         _logger.debug("Starting pgserver (db_path=%s)…", db_path)
         
@@ -434,73 +431,35 @@ def _auto_start_pgserver():
                 err_msg = str(start_err)
                 _logger.debug("[DEV] pgserver.get_server() failed (%s): %s", err_type, err_msg)
                 
-                # UNGATED: Treat any failed start as a potential reason to attempt recovery
-                # if it looks like a stuck state.
-                is_stuck_err = (
-                    err_type == "AssertionError" or 
-                    any(phrase in err_msg for phrase in ["shutting down", "already running", "lock file", "starting up"])
-                )
-                
-                if is_stuck_err:
-                    _logger.debug("[DEV] Detected potential stuck state (%s): %s", err_type, err_msg)
-                    if "pg_shutdown_first_seen" not in st.session_state:
-                        st.session_state["pg_shutdown_first_seen"] = _time.time()
-                        _logger.debug("[DEV] Set pg_shutdown_first_seen in session_state")
-                    
-                    duration = _time.time() - st.session_state["pg_shutdown_first_seen"]
+                # UNGATED: Treat any failed start as a reason to attempt recovery
+                # if a PID file exists or if it's a known "stuck" error type.
+                if pid_file.exists() or err_type == "AssertionError":
                     if start_attempt < max_start_attempts:
-                        _logger.warning("pgserver failed to start. Attempt %d/%d (duration=%.1fs)…", start_attempt, max_start_attempts, duration)
-                        # Be aggressive: trigger force cleanup
-                        _logger.warning("[DEV] Triggering force-kill on attempt %d due to stuck state", start_attempt)
+                        _logger.warning("pgserver failed to start (attempt %d/%d). Forcing cleanup.", start_attempt, max_start_attempts)
                         _force_stop_stuck_db(db_path)
-                        st.session_state.pop("pg_shutdown_first_seen", None)
                         _time.sleep(1)
+                        continue
                     else:
-                        _logger.error("[DEV] Max start attempts reached for stuck state. Final attempt at force-stop.")
+                        _logger.error("[DEV] Max start attempts reached. Final attempt at force-stop.")
                         _force_stop_stuck_db(db_path)
                         raise start_err
                 else:
-                    # Even if it doesn't match a "stuck" signature, if a PID file exists,
-                    # something is clearly wrong and we should try to clear it.
-                    if pid_file.exists():
-                        _logger.warning("[DEV] Unexpected start failure but postmaster.pid exists. Attempting recovery.")
-                        _force_stop_stuck_db(db_path)
-                        if start_attempt < max_start_attempts:
-                            _time.sleep(1)
-                            continue
                     raise start_err
 
         # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
         # connect via localhost:5432.  Junie keeps the default socket-only
         # connection to avoid port conflicts.
         if not is_junie:
-            _logger.debug("Enabling TCP listening for local dev…")
-            _enable_tcp_listening(_pg_server)
-            uri = "postgresql://postgres:@localhost:5432/postgres"
+            try:
+                _logger.debug("Enabling TCP listening for local dev…")
+                _enable_tcp_listening(_pg_server)
+                uri = "postgresql://postgres:@localhost:5432/postgres"
+            except Exception as tcp_err:
+                _logger.error("Failed to enable TCP listening: %s. Falling back to socket.", tcp_err)
+                uri = _pg_server.get_uri()
         else:
             uri = _pg_server.get_uri()
         _logger.debug("Connection URI: %s", uri)
-        
-        # Ensure pgvector extension is enabled automatically for local dev.
-        # Retry with backoff — the database may still be recovering from a
-        # previous unclean shutdown ("the database system is shutting down").
-        from sqlalchemy import create_engine, text
-        engine = create_engine(uri)
-        max_retries = 10
-        for attempt in range(max_retries):
-            try:
-                _logger.debug("Verifying database connection (attempt %d/%d)…", attempt + 1, max_retries)
-                with engine.connect() as conn:
-                    conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
-                    conn.commit()
-                _logger.debug("Database connection verified; pgvector extension ready.")
-                break
-            except Exception as conn_err:
-                _logger.debug("Connection attempt %d failed: %s", attempt + 1, conn_err)
-                if attempt < max_retries - 1:
-                    _time.sleep(1 * (attempt + 1))
-                else:
-                    raise conn_err
         
         # Register cleanup on exit
         atexit.register(_stop_local_db)

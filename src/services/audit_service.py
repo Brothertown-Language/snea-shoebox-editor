@@ -17,7 +17,7 @@ class AuditService:
     """
 
     @staticmethod
-    def log_activity(user_email: str, action: str, details: Optional[str] = None, session_id: Optional[str] = None) -> None:
+    def log_activity(user_email: str, action: str, details: Optional[str] = None, session_id: Optional[str] = None, session=None) -> None:
         """
         Log a user activity to the database.
 
@@ -26,8 +26,11 @@ class AuditService:
             action: A short action identifier (e.g., 'login', 'logout', 'record_update').
             details: Optional human-readable description of the activity.
             session_id: Optional UUID linking activity to a specific edit/upload batch.
+            session: Optional existing database session. If provided, the log will be added to this session and not committed.
         """
-        session = get_session()
+        _provided_session = session is not None
+        if not _provided_session:
+            session = get_session()
         try:
             log = UserActivityLog(
                 user_email=user_email,
@@ -36,9 +39,12 @@ class AuditService:
                 details=details
             )
             session.add(log)
-            session.commit()
+            if not _provided_session:
+                session.commit()
         except Exception as e:
-            session.rollback()
+            if not _provided_session:
+                session.rollback()
             logger.error("Failed to log user activity: %s", e)
         finally:
-            session.close()
+            if not _provided_session:
+                session.close()

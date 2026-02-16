@@ -408,44 +408,7 @@ def _render_review_table(batch_id, session_deps):
     logger = get_logger("snea.upload_mdf.review")
     user_email = session_deps['user_email']
 
-    session = get_session()
-    try:
-        rows = (
-            session.query(MatchupQueue)
-            .filter_by(batch_id=batch_id)
-            .order_by(MatchupQueue.id)
-            .all()
-        )
-        if not rows:
-            st.session_state.pop("review_batch_id", None)
-            st.session_state["bulk_flash"] = ("success", "Batch complete — all entries have been applied or discarded.")
-            st.rerun()
-            return
-
-        # Determine source context for bulk buttons
-        source_id = rows[0].source_id
-        existing_record_count = (
-            session.query(Record)
-            .filter_by(source_id=source_id, is_deleted=False)
-            .count()
-        )
-        is_new_source = existing_record_count == 0
-
-        # Pre-fetch suggested records for comparison view
-        suggested_ids = [r.suggested_record_id for r in rows if r.suggested_record_id]
-        suggested_records = {}
-        if suggested_ids:
-            recs = session.query(Record).filter(Record.id.in_(suggested_ids)).all()
-            suggested_records = {r.id: r for r in recs}
-
-        # Get source name for cross-source info
-        source_obj = session.get(Source, source_id)
-        source_name = source_obj.name if source_obj else str(source_id)
-
-    finally:
-        session.close()
-
-    # ── Filtering ───────────────────────────────────────────────────
+    # ── Filtering & Query ───────────────────────────────────────────
     filter_options = {
         "All Records": (None, None),
         "Matched (Exact)": ("matched", "exact"),
@@ -455,14 +418,13 @@ def _render_review_table(batch_id, session_deps):
         "Discard Entry": ("discard", None),
         "Ignored": ("ignored", None),
     }
-    
+
+    # ── Sidebar Controls ───────────────────────────────────────────
     with st.sidebar:
         st.markdown("**Filters**")
         
-        # ── Pagination State ───────────────────────────────────────────
+        # ── Page Size ─────────────────────────────────────────────────
         page_size_options = [1, 5, 10, 25, 50]
-        
-        # Initialize review_page_size from database if not set in session
         if "review_page_size" not in st.session_state:
             saved_pref = PreferenceService.get_preference(
                 user_email, "upload_review", "page_size", str(page_size_options[1]) # Default 5
@@ -470,10 +432,13 @@ def _render_review_table(batch_id, session_deps):
             st.session_state["review_page_size"] = int(saved_pref) if saved_pref and saved_pref.isdigit() else page_size_options[1]
 
         page_size = st.session_state.get("review_page_size", page_size_options[1])
-        if page_size not in page_size_options:
-            page_size = page_size_options[1]
+        new_page_size = st.selectbox("Rows per page", page_size_options, index=page_size_options.index(page_size))
+        if new_page_size != page_size:
+            st.session_state["review_page_size"] = new_page_size
+            PreferenceService.set_preference(user_email, "upload_review", "page_size", str(new_page_size))
+            st.rerun()
 
-        # Get current selection from session state
+        # ── Status Filter ──────────────────────────────────────────────
         saved_filter = st.session_state.get("review_filter_status", "All Records")
         filter_labels = list(filter_options.keys())
         try:
@@ -487,46 +452,93 @@ def _render_review_table(batch_id, session_deps):
             index=default_ix,
             key="review_filter_status_widget"
         )
-        # Update session state for persistence
         if selected_filter != st.session_state.get("review_filter_status"):
             st.session_state["review_filter_status"] = selected_filter
-            st.session_state["review_current_page"] = 1 # Reset to page 1 on filter change
+            st.session_state["review_current_page"] = 1 # Reset on filter change
             st.rerun()
 
-    # Apply filters to rows
-    if selected_filter != "All Records":
-        filtered_rows = []
+    # ── Database Query (Server-Side Filter & Pagination) ──────────────
+    session = get_session()
+    try:
+        # Base query for this batch
+        query = session.query(MatchupQueue).filter_by(batch_id=batch_id)
+
+        # Apply SQL-side filtering
         f_status, f_match_type = filter_options[selected_filter]
-        for row in rows:
-            # Determine row's effective status/match_type pair
-            # (Matches D-1 logic used later for default status)
-            has_suggestion = row.suggested_record_id is not None
-            row_match_type = row.match_type if has_suggestion else None
-            
-            if row.status not in ('pending',):
-                eff_status = row.status
-                eff_match_type = row.match_type if eff_status == 'matched' else None
+        if f_status:
+            if f_status == 'matched':
+                # Rows explicitly marked 'matched' OR pending rows that have a suggestion
+                query = query.filter(
+                    (MatchupQueue.status == 'matched') |
+                    ((MatchupQueue.status == 'pending') & (MatchupQueue.suggested_record_id.isnot(None)))
+                )
+                if f_match_type:
+                    query = query.filter(MatchupQueue.match_type == f_match_type)
+            elif f_status == 'create_new':
+                # Rows explicitly marked 'create_new' OR pending rows that have NO suggestion
+                query = query.filter(
+                    (MatchupQueue.status == 'create_new') |
+                    ((MatchupQueue.status == 'pending') & (MatchupQueue.suggested_record_id.is_(None)))
+                )
             else:
-                # Recommendation logic (simplification for filtering)
-                # Note: record_id_conflict is not re-calculated here for performance,
-                # but it defaults to create_new anyway if not matched.
-                if has_suggestion:
-                    eff_status = 'matched'
-                    eff_match_type = row.match_type
-                else:
-                    eff_status = 'create_new'
-                    eff_match_type = None
-            
-            if eff_status == f_status:
-                if f_match_type is None or eff_match_type == f_match_type:
-                    filtered_rows.append(row)
-        rows = filtered_rows
+                # Other explicit statuses (create_homonym, discard, ignored)
+                query = query.filter(MatchupQueue.status == f_status)
+
+        # Get total count for pagination UI
+        total_rows = query.count()
+        if total_rows == 0 and selected_filter == "All Records":
+            st.session_state.pop("review_batch_id", None)
+            st.session_state["bulk_flash"] = ("success", "Batch complete — all entries have been applied or discarded.")
+            st.rerun()
+            return
+
+        # Pagination logic
+        num_pages = (total_rows + page_size - 1) // page_size
+        curr_page = st.session_state.get("review_current_page", 1)
+        if curr_page > num_pages and num_pages > 0:
+            curr_page = num_pages
+        
+        offset = (curr_page - 1) * page_size
+        rows = query.order_by(MatchupQueue.id).offset(offset).limit(page_size).all()
+
+        if not rows and total_rows > 0:
+            # Handle edge case where page might be empty due to deletions
+            st.session_state["review_current_page"] = 1
+            st.rerun()
+
+        # Determine source context for bulk buttons (from first row of BATCH, not page)
+        first_row = session.query(MatchupQueue).filter_by(batch_id=batch_id).first()
+        source_id = first_row.source_id if first_row else None
+        
+        existing_record_count = 0
+        if source_id:
+            existing_record_count = (
+                session.query(Record)
+                .filter_by(source_id=source_id, is_deleted=False)
+                .count()
+            )
+        is_new_source = existing_record_count == 0
+
+        # Pre-fetch suggested records for comparison view
+        suggested_ids = [r.suggested_record_id for r in rows if r.suggested_record_id]
+        suggested_records = {}
+        if suggested_ids:
+            recs = session.query(Record).filter(Record.id.in_(suggested_ids)).all()
+            suggested_records = {r.id: r for r in recs}
+
+        # Get source name for cross-source info
+        source_name = "Unknown"
+        if source_id:
+            source_obj = session.get(Source, source_id)
+            source_name = source_obj.name if source_obj else str(source_id)
+
+    finally:
+        session.close()
 
     # ── Compute pagination ──────────────────────────────────────────
-    total_entries = len(rows)
-    page_size = st.session_state.get("review_page_size", 1)
-    total_pages = max(1, (total_entries + page_size - 1) // page_size)
-    current_page = st.session_state.get("review_current_page", 1)
+    # Note: total_rows and num_pages are already computed from DB query above
+    total_pages = num_pages
+    current_page = curr_page
     if current_page > total_pages:
         current_page = total_pages
     if current_page < 1:
@@ -535,7 +547,7 @@ def _render_review_table(batch_id, session_deps):
     # ── Sidebar: page nav (top), bulk actions ─────────
     with st.sidebar:
         # Page navigation at top
-        st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_entries} entries)")
+        st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_rows} entries)")
         nav_col1, nav_col2 = st.columns(2)
         with nav_col1:
             if st.button("Previous", icon="◀️", key="page_prev", disabled=(current_page <= 1)):
@@ -667,12 +679,9 @@ def _render_review_table(batch_id, session_deps):
             PreferenceService.set_preference(user_email, "upload_review", "page_size", str(selected_page_size))
             st.rerun()
 
-    # Slice rows for current page
-    start_idx = (current_page - 1) * page_size
-    end_idx = start_idx + page_size
-    page_rows = rows[start_idx:end_idx]
-
     # D-1: Render each entry (paginated)
+    # Note: page_rows already contains only the current page due to SQL LIMIT/OFFSET
+    page_rows = rows
     for row in page_rows:
         # Compute default status based on D-1 logic
         # Re-run suggest_matches data from the DB row itself

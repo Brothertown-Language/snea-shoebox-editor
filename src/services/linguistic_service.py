@@ -4,11 +4,15 @@
 Linguistic Service for CRUD operations on Record, Source, and Language models.
 """
 from dataclasses import dataclass
-from typing import Optional, List, Dict, Any, Tuple
-from sqlalchemy import func, or_
-from sqlalchemy.orm import Session
+from typing import Optional, List, Dict, Any, Tuple, Generator
+import tempfile
+import os
+import re
+import unicodedata
+from sqlalchemy import func, or_, text
+from sqlalchemy.orm import Session, joinedload
 from src.database.connection import get_session
-from src.database.models.core import Source, Record, Language
+from src.database.models.core import Source, Record, Language, RecordLanguage
 from src.database.models.workflow import MatchupQueue
 from src.database.models.search import SearchEntry
 from src.logging_config import get_logger
@@ -29,6 +33,37 @@ class LinguisticService:
     """
     Service for centralizing data access to linguistic models (Record, Source, Language).
     """
+
+    @staticmethod
+    def generate_sort_lx(lx: str) -> str:
+        r"""
+        Generates a normalized sort key for a headword (\lx):
+        1. NFD Normalization (decomposes diacritics).
+        2. Strip diacritics (Combining marks).
+        3. Straighten quotes (fancy -> straight).
+        4. Lowercase (case-insensitive).
+        5. Strip leading punctuation ([*-=([])]).
+        """
+        if not lx:
+            return ""
+        # 1. NFD Normalization
+        nfd = unicodedata.normalize('NFD', lx)
+        # 2. Strip diacritics
+        stripped = "".join(c for c in nfd if not unicodedata.combining(c))
+        # 3. Straighten quotes
+        # Convert fancy quotes and various apostrophes to straight ones
+        quotes_map = {
+            '\u2018': "'", '\u2019': "'", '\u201a': "'", '\u201b': "'",
+            '\u201c': '"', '\u201d': '"', '\u201e': '"', '\u201f': '"',
+            '\u02bc': "'", '\u02b9': "'", '\u00b4': "'"
+        }
+        for fancy, straight in quotes_map.items():
+            stripped = stripped.replace(fancy, straight)
+        # 4. Lowercase
+        lowered = stripped.lower()
+        # 5. Strip leading punctuation
+        # Re-using common linguistic punctuation: *, -, =, [, ], (, )
+        return re.sub(r'^[*\-=\[\]\(\)]+', '', lowered)
 
     @staticmethod
     def get_sources_with_counts() -> List[Dict[str, Any]]:
@@ -250,7 +285,23 @@ class LinguisticService:
         If record_ids is provided, other filters are ignored except for is_deleted.
         """
         with get_session() as session:
-            query = session.query(Record).filter(Record.is_deleted == False)
+            # We explicitly join with Language to get the primary language name for sorting.
+            # We use an outer join so records without languages are still included.
+            primary_lang = (
+                session.query(
+                    RecordLanguage.record_id,
+                    Language.name.label("lang_name")
+                )
+                .join(Language, RecordLanguage.language_id == Language.id)
+                .filter(RecordLanguage.is_primary == True)
+                .subquery()
+            )
+
+            query = (
+                session.query(Record, primary_lang.c.lang_name)
+                .outerjoin(primary_lang, Record.id == primary_lang.c.record_id)
+                .filter(Record.is_deleted == False)
+            )
             
             if record_ids is not None:
                 query = query.filter(Record.id.in_(record_ids))
@@ -259,6 +310,7 @@ class LinguisticService:
                     query = query.filter(Record.source_id == source_id)
                 
                 if language_id:
+                    # If language_id filter is active, we join with RecordLanguage again for filtering
                     query = query.join(Record.language).filter(Language.id == language_id)
                 
                 if status:
@@ -266,9 +318,12 @@ class LinguisticService:
                 
                 if search_term:
                     if search_mode == "Lexeme":
+                        # Normalize search term for punctuation, case, diacritics, and quotes
+                        norm_search = LinguisticService.generate_sort_lx(search_term)
                         # Join with search_entries to find matches in lx, va, se, etc.
+                        # Prefix-only matching for scalability (anchored to B-tree index)
                         query = query.join(Record.search_entries).filter(
-                            SearchEntry.term.ilike(f"%{search_term}%")
+                            SearchEntry.normalized_term.ilike(f"{norm_search}%")
                         ).distinct()
                     else:
                         # Native Full-Text Search (Roadmap Phase 6b)
@@ -284,16 +339,21 @@ class LinguisticService:
                                 text("records.fts_vector @@ plainto_tsquery('english', :term)")
                             ).params(term=search_term)
             
-            # TODO: Sorting needs to be NFD with leading punctuation ignored.
-            # Order by lx (headword)
-            query = query.order_by(Record.lx, Record.hm)
+            # Efficient Sorting: sort_lx (NFD/No-Punct), hm, ps, primary_lang, ge
+            query = query.order_by(
+                Record.sort_lx,
+                Record.hm,
+                Record.ps,
+                primary_lang.c.lang_name,
+                Record.ge
+            )
             
             # Apply pagination
             total_count = query.count()
             results = query.offset(offset).limit(limit).all()
             
             records = []
-            for r in results:
+            for r, lang_name in results:
                 records.append({
                     "id": r.id,
                     "lx": r.lx,
@@ -303,7 +363,8 @@ class LinguisticService:
                     "status": r.status,
                     "source_id": r.source_id,
                     "source_name": r.source.name if r.source else None,
-                    "mdf_data": r.mdf_data
+                    "mdf_data": r.mdf_data,
+                    "primary_language": lang_name
                 })
             
             return RecordSearchResult(
@@ -317,9 +378,21 @@ class LinguisticService:
     def get_all_records_for_export(source_id: Optional[int] = None, search_term: Optional[str] = None, search_mode: str = "Lexeme", record_ids: Optional[List[int]] = None) -> List[Dict[str, Any]]:
         """
         Fetch all records matching the criteria for export, without pagination.
+        Uses column projection to avoid loading heavy embedding field.
         """
         with get_session() as session:
-            query = session.query(Record).filter(Record.is_deleted == False)
+            # Column projection: explicitly select required fields, excluding embedding
+            query = session.query(
+                Record.id,
+                Record.lx,
+                Record.hm,
+                Record.ps,
+                Record.ge,
+                Record.status,
+                Record.source_id,
+                Record.mdf_data,
+                Source.name.label("source_name")
+            ).outerjoin(Source, Record.source_id == Source.id).filter(Record.is_deleted == False)
             
             if record_ids is not None:
                 query = query.filter(Record.id.in_(record_ids))
@@ -329,8 +402,12 @@ class LinguisticService:
                 
                 if search_term:
                     if search_mode == "Lexeme":
+                        # Normalize search term for punctuation, case, diacritics, and quotes
+                        norm_search = LinguisticService.generate_sort_lx(search_term)
+                        # We need to join SearchEntry but we want to keep the column projection
+                        # Prefix-only matching for scalability (anchored to B-tree index)
                         query = query.join(Record.search_entries).filter(
-                            SearchEntry.term.ilike(f"%{search_term}%")
+                            SearchEntry.normalized_term.ilike(f"{norm_search}%")
                         ).distinct()
                     else:
                         from sqlalchemy import text
@@ -341,9 +418,8 @@ class LinguisticService:
                                 text("records.fts_vector @@ plainto_tsquery('english', :term)")
                             ).params(term=search_term)
             
-            # TODO: Sorting needs to be NFD with leading punctuation ignored.
-            # Order by source_id, lx (headword), hm
-            query = query.order_by(Record.source_id, Record.lx, Record.hm)
+            # Efficient Sorting: source_id, sort_lx (NFD/No-Punct), hm, ps, ge
+            query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
             
             results = query.all()
             
@@ -357,11 +433,64 @@ class LinguisticService:
                     "ge": r.ge,
                     "status": r.status,
                     "source_id": r.source_id,
-                    "source_name": r.source.name if r.source else None,
+                    "source_name": r.source_name,
                     "mdf_data": r.mdf_data
                 })
             
             return records
+
+    @staticmethod
+    def stream_records_to_temp_file(source_id: Optional[int] = None, search_term: Optional[str] = None, search_mode: str = "Lexeme", record_ids: Optional[List[int]] = None) -> str:
+        """
+        Stream all records matching criteria to a temporary file.
+        Returns the path to the temporary file.
+        The caller is responsible for deleting the file when finished.
+        """
+        fd, path = tempfile.mkstemp(suffix=".txt", prefix="mdf_export_")
+        try:
+            with os.fdopen(fd, 'w', encoding='utf-8') as tmp:
+                with get_session() as session:
+                    # Column projection: we only need mdf_data for the export file
+                    query = session.query(Record.mdf_data).filter(Record.is_deleted == False)
+                    
+                    if record_ids is not None:
+                        query = query.filter(Record.id.in_(record_ids))
+                    else:
+                        if source_id:
+                            query = query.filter(Record.source_id == source_id)
+                        
+                        if search_term:
+                            if search_mode == "Lexeme":
+                                # Normalize search term for punctuation, case, diacritics, and quotes
+                                norm_search = LinguisticService.generate_sort_lx(search_term)
+                                # Prefix-only matching for scalability (anchored to B-tree index)
+                                query = query.join(Record.search_entries).filter(
+                                    SearchEntry.normalized_term.ilike(f"{norm_search}%")
+                                ).distinct()
+                            else:
+                                from sqlalchemy import text
+                                if search_term.startswith('#') and search_term[1:].isdigit():
+                                    query = query.filter(Record.id == int(search_term[1:]))
+                                else:
+                                    query = query.filter(
+                                        text("records.fts_vector @@ plainto_tsquery('english', :term)")
+                                    ).params(term=search_term)
+                    
+                    query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
+                    
+                    # Stream results in batches of 1000
+                    first = True
+                    for (mdf_data,) in query.yield_per(1000):
+                        if not first:
+                            tmp.write("\n\n")
+                        tmp.write(mdf_data)
+                        first = False
+            return path
+        except Exception as e:
+            if os.path.exists(path):
+                os.remove(path)
+            logger.error(f"Failed to stream records to temp file: {e}")
+            raise
 
     @staticmethod
     def bundle_records_to_mdf(records: List[Dict[str, Any]]) -> str:
@@ -387,6 +516,10 @@ class LinguisticService:
         """
         Create a new record.
         """
+        # Ensure sort_lx is populated
+        if 'lx' in fields and 'sort_lx' not in fields:
+            fields['sort_lx'] = LinguisticService.generate_sort_lx(fields['lx'])
+            
         with get_session() as session:
             try:
                 record = Record(**fields)
@@ -429,6 +562,10 @@ class LinguisticService:
             for key, value in fields.items():
                 if hasattr(record, key):
                     setattr(record, key, value)
+            
+            # Update sort_lx if lx changed
+            if 'lx' in fields:
+                record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
             
             record.updated_by = user_email
             

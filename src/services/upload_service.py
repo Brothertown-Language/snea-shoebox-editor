@@ -10,6 +10,7 @@ from typing import Optional
 from sqlalchemy import func
 
 from src.database import get_session, MatchupQueue, Record, EditHistory, SearchEntry, Source
+from src.services.linguistic_service import LinguisticService
 from src.mdf.parser import parse_mdf, normalize_nt_record, format_mdf_record
 from src.logging_config import get_logger
 from src.services.audit_service import AuditService
@@ -123,7 +124,8 @@ class UploadService:
             user_email=user_email,
             action="upload_start",
             details=f"Starting MDF upload: {filename or 'unknown'} ({len(entries)} entries)",
-            session_id=batch_id
+            session_id=batch_id,
+            session=None  # Explicitly None as we haven't started the session yet
         )
 
         session = get_session()
@@ -146,7 +148,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_staged",
                 details=f"Staged {len(entries)} entries with batch_id {batch_id}",
-                session_id=batch_id
+                session_id=batch_id,
+                session=session
             )
         except Exception:
             session.rollback()
@@ -251,7 +254,7 @@ class UploadService:
 
             # Load all records for the same source (for matching)
             same_source_records = (
-                session.query(Record)
+                session.query(Record.id, Record.lx, Record.hm)
                 .filter_by(source_id=source_id, is_deleted=False)
                 .all()
             )
@@ -261,7 +264,7 @@ class UploadService:
             from collections import defaultdict
             exact_map = defaultdict(list)
             base_map = defaultdict(list)
-            id_map = {}  # record.id -> record
+            id_map = {}  # record.id -> record (actually Row object)
             for rec in same_source_records:
                 exact_map[rec.lx].append(rec)
                 base_map[_strip_diacritics(rec.lx)].append(rec)
@@ -269,7 +272,7 @@ class UploadService:
 
             # Load all records from OTHER sources for cross-source checks
             other_records = (
-                session.query(Record)
+                session.query(Record.id, Record.lx, Record.source_id)
                 .filter(Record.source_id != source_id, Record.is_deleted == False)
                 .all()
             )
@@ -693,7 +696,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {applied} records from batch {batch_id} (new source)",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             return applied
@@ -762,7 +766,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {applied} matched records from batch {batch_id}",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             logger.info(
@@ -833,7 +838,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {applied} non-matching records from batch {batch_id} as new",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             logger.info(
@@ -985,6 +991,7 @@ class UploadService:
                 record.hm = entry.get('hm', 1)
                 record.ps = entry.get('ps', '')
                 record.ge = entry.get('ge', '')
+                record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
                 record.updated_by = user_email
                 
                 UploadService._update_record_languages(session, record, entry.get('lg', []))
@@ -1014,6 +1021,7 @@ class UploadService:
                 new_hm = max_hm + 1
                 new_record = Record(
                     lx=entry['lx'],
+                    sort_lx=LinguisticService.generate_sort_lx(entry['lx']),
                     hm=new_hm,
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
@@ -1043,6 +1051,7 @@ class UploadService:
             elif row.status == 'create_new':
                 new_record = Record(
                     lx=entry['lx'],
+                    sort_lx=LinguisticService.generate_sort_lx(entry['lx']),
                     hm=entry.get('hm', 1),
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
@@ -1083,7 +1092,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_record_committed",
                 details=f"Record {action}: {entry['lx']} (record_id={record_id})",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             return {'action': action, 'record_id': record_id, 'lx': entry['lx']}
@@ -1213,7 +1223,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {count} matched records from batch {batch_id}",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             return count
@@ -1311,7 +1322,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {count} homonym records from batch {batch_id}",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             return count
@@ -1383,7 +1395,8 @@ class UploadService:
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {count} new records from batch {batch_id}",
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
 
             return count
@@ -1417,13 +1430,16 @@ class UploadService:
 
                 # Insert lx
                 if entry.get('lx'):
-                    session.add(SearchEntry(record_id=rid, term=entry['lx'], entry_type='lx'))
+                    term = entry['lx']
+                    norm = LinguisticService.generate_sort_lx(term)
+                    session.add(SearchEntry(record_id=rid, term=term, normalized_term=norm, entry_type='lx'))
                     total += 1
                 # Insert va, se, cf, ve lists
                 for field in ('va', 'se', 'cf', 've'):
                     for val in entry.get(field, []):
                         if val:
-                            session.add(SearchEntry(record_id=rid, term=val, entry_type=field))
+                            norm = LinguisticService.generate_sort_lx(val)
+                            session.add(SearchEntry(record_id=rid, term=val, normalized_term=norm, entry_type=field))
                             total += 1
 
             if not _provided_session:
@@ -1572,7 +1588,8 @@ class UploadService:
                 action="batch_rollback",
                 details=(f"Rolled back session {session_id}: {rolled_back} updated, "
                          f"{deleted} deleted, {skipped} skipped (superseded)"),
-                session_id=session_id
+                session_id=session_id,
+                session=session
             )
             
             return {

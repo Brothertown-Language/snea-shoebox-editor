@@ -14,6 +14,7 @@ class SearchEntry(Base):
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
     term = Column(String, nullable=False)  # The searchable form (\lx, \va, \se, etc.)
+    normalized_term = Column(String, nullable=False)  # Normalized for punctuation-insensitive prefix search
     entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'se', 'cf', 've'
     
     record = relationship("Record", back_populates="search_entries")

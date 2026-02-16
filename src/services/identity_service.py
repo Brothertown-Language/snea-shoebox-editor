@@ -41,7 +41,7 @@ class IdentityService:
 
         try:
             # Fetch user profile
-            user_response = requests.get(base_url, headers=headers)
+            user_response = requests.get(base_url, headers=headers, timeout=10)
             user_response.raise_for_status()
             user_info = user_response.json()
             st.session_state["user_info"] = user_info
@@ -49,18 +49,18 @@ class IdentityService:
             logger.info("Fetched GitHub user info for: %s", user_info.get('login'))
 
             # Fetch organizations
-            orgs_response = requests.get(f"{base_url}/orgs", headers=headers)
+            orgs_response = requests.get(f"{base_url}/orgs", headers=headers, timeout=10)
             orgs_response.raise_for_status()
             st.session_state["user_orgs"] = orgs_response.json()
 
             # Fetch teams
-            teams_response = requests.get(f"{base_url}/teams", headers=headers)
+            teams_response = requests.get(f"{base_url}/teams", headers=headers, timeout=10)
             teams_response.raise_for_status()
             user_teams = teams_response.json()
             st.session_state["user_teams"] = user_teams
 
             # Fetch user emails to get the primary email
-            emails_response = requests.get(f"{base_url}/emails", headers=headers)
+            emails_response = requests.get(f"{base_url}/emails", headers=headers, timeout=10)
             emails_response.raise_for_status()
             emails = emails_response.json()
             
@@ -128,27 +128,34 @@ class IdentityService:
             user = session.query(User).filter_by(github_id=github_id).first()
             
             if user:
-                # Update existing user
+                # Update existing user by GitHub ID
                 user.email = email
                 user.username = username
                 user.full_name = full_name
                 user.last_login = func.now()
             else:
-                # Check if email is already used by another account (to avoid unique constraint violation)
+                # Check if email is already used by another account.
+                # If the email matches but the GitHub ID is different, we assume the email is 
+                # authoritative (e.g., the user created a new GitHub account but kept their email).
+                # We update the existing record to match the new GitHub identity.
                 existing_email_user = session.query(User).filter_by(email=email).first()
                 if existing_email_user:
-                    st.warning(f"Email {email} is already associated with another account. Please contact admin.")
-                    return
-
-                # Create new user
-                user = User(
-                    email=email,
-                    username=username,
-                    github_id=github_id,
-                    full_name=full_name,
-                    last_login=func.now()
-                )
-                session.add(user)
+                    logger.info("Email collision detected for %s. Updating GitHub ID from %s to %s.", 
+                                email, existing_email_user.github_id, github_id)
+                    existing_email_user.github_id = github_id
+                    existing_email_user.username = username
+                    existing_email_user.full_name = full_name
+                    existing_email_user.last_login = func.now()
+                else:
+                    # Create new user if neither ID nor Email exists
+                    user = User(
+                        email=email,
+                        username=username,
+                        github_id=github_id,
+                        full_name=full_name,
+                        last_login=func.now()
+                    )
+                    session.add(user)
             
             session.commit()
         except Exception as e:
