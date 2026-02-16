@@ -125,7 +125,7 @@ class TestReviewTableRendering(unittest.TestCase):
         from src.frontend.pages.upload_mdf import _render_review_table
         _render_review_table("batch-1", session_deps={"user_email": "test@test.com"})
 
-        mock_subheader.assert_any_call("Bulk Actions")
+        mock_md.assert_any_call("**Bulk Actions**")
 
     @patch("src.database.get_session")
     @patch("streamlit.subheader")

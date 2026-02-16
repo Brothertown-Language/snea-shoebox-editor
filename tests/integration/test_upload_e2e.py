@@ -135,7 +135,6 @@ class TestUploadE2E(unittest.TestCase):
             dog_result = UploadService.apply_single(
                 queue_id=dog_entry['queue_id'],
                 user_email=self.user_email,
-                language_id=self.language_id,
                 session_id=session_id
             )
             self.assertEqual(dog_result['record_id'], rec.id)
@@ -144,7 +143,6 @@ class TestUploadE2E(unittest.TestCase):
             cat_result = UploadService.apply_single(
                 queue_id=cat_entry['queue_id'],
                 user_email=self.user_email,
-                language_id=self.language_id,
                 session_id=session_id
             )
             self.assertIsNotNone(cat_result['record_id'])
@@ -190,7 +188,6 @@ class TestUploadE2E(unittest.TestCase):
             result = UploadService.apply_single(
                 queue_id=q_id,
                 user_email=self.user_email,
-                language_id=self.language_id,
                 session_id=session_id
             )
             

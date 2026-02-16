@@ -8,9 +8,9 @@ class TestSelectorCleanup(unittest.TestCase):
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.selectbox")
-    @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.file_uploader", return_value=None)
-    def test_no_autoswitch_logic_remains(self, _fu, _header, mock_selectbox, mock_session):
+    def test_no_autoswitch_logic_remains(self, _fu, mock_sidebar, mock_selectbox, mock_session):
         # 1. Setup mock sources
         src1 = MagicMock()
         src1.name = "Alpha"
@@ -24,6 +24,8 @@ class TestSelectorCleanup(unittest.TestCase):
         # Previously, newly_created_source_name would be used to override the selection.
         st.session_state["newly_created_source_name"] = "Beta"
         st.session_state["upload_active_source_name"] = "+ Add new source…"
+        # Also need pending upload to enable selector
+        st.session_state["pending_upload_content"] = "lx test"
         
         from src.frontend.pages.upload_mdf import upload_mdf
         
@@ -35,12 +37,8 @@ class TestSelectorCleanup(unittest.TestCase):
         index = kwargs.get("index")
         options = args[1]
         
-        # Beta is NOT in options because it's not in our mock DB yet, 
-        # but the point is we want to see if it even TRIED to select it.
-        # In the new simplified logic, it should just look at upload_active_source_name.
-        
-        # Index of "+ Add new source…" in ["Select a source...", "Alpha", "+ Add new source…"] is 2.
-        self.assertEqual(index, 2, f"Should remain on current selection (+ Add new source…), got index {index}")
+        # Index of "+ Add new source…" in ["Select a source...", "+ Add new source…", "Alpha"] is 1.
+        self.assertEqual(index, 1, f"Should remain on current selection (+ Add new source…), got index {index}")
         
         # newly_created_source_name should NOT have been popped because the logic is gone
         self.assertIn("newly_created_source_name", st.session_state)

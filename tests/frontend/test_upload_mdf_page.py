@@ -31,29 +31,30 @@ class TestUploadMdfRoleGuard(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.file_uploader", return_value=None)
-    def test_editor_allowed(self, _fu, _sb, mock_header, mock_session):
+    def test_editor_allowed(self, _fu, _sb, mock_sidebar, mock_session):
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
-        mock_header.assert_any_call("Upload MDF File")
+        # Header is in sidebar now, or replaced by file_uploader label
+        mock_sidebar.__enter__.assert_called()
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "admin"})
-    @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.file_uploader", return_value=None)
-    def test_admin_allowed(self, _fu, _sb, mock_header, mock_session):
+    def test_admin_allowed(self, _fu, _sb, mock_sidebar, mock_session):
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
-        mock_header.assert_any_call("Upload MDF File")
+        mock_sidebar.__enter__.assert_called()
 
 
 class TestUploadMdfSourceSelector(unittest.TestCase):
@@ -61,10 +62,10 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.file_uploader", return_value=None)
     @patch("streamlit.selectbox")
-    def test_source_options_include_create_new(self, mock_selectbox, _fu, _title, mock_session):
+    def test_source_options_include_create_new(self, mock_selectbox, _fu, mock_sidebar, mock_session):
         src1 = MagicMock()
         src1.name = "Alpha"
         src1.id = 1
@@ -84,13 +85,13 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.file_uploader", return_value=None)
     @patch("streamlit.selectbox", return_value="+ Add new source…")
     @patch("streamlit.markdown")
     @patch("streamlit.text_input", side_effect=["New Source", "A description"])
     @patch("streamlit.button", return_value=False)
-    def test_create_new_source_shows_inputs(self, _btn, mock_input, mock_md, _sb, _fu, _title, mock_session):
+    def test_create_new_source_shows_inputs(self, _btn, mock_input, mock_md, _sb, _fu, mock_sidebar, mock_session):
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = []
         mock_session.return_value = mock_sess
@@ -107,7 +108,7 @@ class TestUploadMdfFileUploader(unittest.TestCase):
 
     @patch("src.database.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
-    @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.file_uploader")
     def test_file_uploader_accepts_txt_mdf(self, mock_uploader, _sb, _title, mock_session):
@@ -331,6 +332,7 @@ class TestStageAndMatch(unittest.TestCase):
 class TestPendingBatchSelector(unittest.TestCase):
     """C-6a: Pending upload batches shown inline on main upload view."""
 
+    @patch("src.services.identity_service.IdentityService.get_github_username", return_value="testuser")
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
@@ -346,7 +348,7 @@ class TestPendingBatchSelector(unittest.TestCase):
     @patch("streamlit.info")
     def test_batch_selector_displayed(self, _info, _divider, mock_container, _md, _btn, mock_columns,
                                        mock_subheader, _fu, _sb, _title,
-                                       mock_list_batches, mock_session):
+                                       mock_list_batches, mock_session, _mock_github):
         from datetime import datetime, timezone
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = []
@@ -382,16 +384,17 @@ class TestPendingBatchSelector(unittest.TestCase):
             # Verify list_pending_batches was called and subheader shows count
             mock_list_batches.assert_called_once_with("test@example.com")
             mock_subheader.assert_any_call("1 Pending Batch")
-            
-            # Verify columns were created for Review, Download, Discard (4 columns total with info)
+
+            # Verify columns were created for Review, Download, Discard (4 columns total)
             mock_columns.assert_any_call([4, 1, 1, 1])
             
             # Verify download button was rendered with the improved filename format
             mock_download_btn.assert_called_once()
             self.assertEqual(mock_download_btn.call_args[1]['data'], "\\lx test\n\\ge gloss")
             self.assertEqual(mock_download_btn.call_args[1]['mime'], "text/plain")
-            # 14:52 = 14*3600 + 52*60 = 50400 + 3120 = 53520
-            self.assertEqual(mock_download_btn.call_args[1]['file_name'], "pending_Natick_2026-02-08_53520.txt")
+            # Format: pending_<Source>_<GitHubUsername>_<YYYY-MM-DD>_<SSSSS>.txt
+            # 14:52:00 = 14*3600 + 52*60 = 50400 + 3120 = 53520
+            self.assertEqual(mock_download_btn.call_args[1]['file_name'], "pending_Natick_testuser_2026-02-08_53520.txt")
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
