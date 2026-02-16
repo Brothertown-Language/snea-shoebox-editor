@@ -267,7 +267,6 @@ class LinguisticService:
                 if search_term:
                     if search_mode == "Lexeme":
                         # Join with search_entries to find matches in lx, va, se, etc.
-                        # Standard ILIKE search as pg_trgm is not in the pgserver envelope.
                         query = query.join(Record.search_entries).filter(
                             SearchEntry.term.ilike(f"%{search_term}%")
                         ).distinct()

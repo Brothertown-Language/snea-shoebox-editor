@@ -52,7 +52,7 @@ CREATE TABLE record_languages (
 ```
 
 ### `search_entries`
-Consolidated lookup table for instant search across lexemes, variants, and subentries. Uses **GIN Trigram Indexing**.
+Consolidated lookup table for instant search across lexemes, variants, and subentries.
 
 ```sql
 CREATE TABLE search_entries (
@@ -63,8 +63,7 @@ CREATE TABLE search_entries (
     FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE RESTRICT
 );
 
--- Extension required: CREATE EXTENSION IF NOT EXISTS pg_trgm;
-CREATE INDEX idx_search_entries_term_trgm ON search_entries USING GIN (term gin_trgm_ops);
+CREATE INDEX idx_search_entries_term ON search_entries (term);
 ```
 
 ### `matchup_queue`
@@ -219,5 +218,5 @@ CREATE INDEX idx_records_fts ON records USING GIN (
 );
 ```
 
-### Linguistic Search (Trigram)
-Managed via the `search_entries` table for high-performance substring, prefix, and suffix matching.
+### Linguistic Search
+Managed via the `search_entries` table for high-performance matching.

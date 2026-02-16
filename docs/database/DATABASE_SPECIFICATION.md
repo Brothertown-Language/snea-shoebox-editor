@@ -79,7 +79,7 @@ To simplify UI development and maximize performance, all searchable linguistic f
 | :--- | :--- | :--- | :--- |
 | **`id`** | SERIAL | Primary Key | Standard identifier. |
 | **`record_id`** | INTEGER | FK to `records.id` | Links search term to its parent record. |
-| **`term`** | TEXT | Searchable String | **GIN Trigram Indexed** for fragment matching. |
+| **`term`** | TEXT | Searchable String | Standard B-tree Indexed for exact and prefix matching. |
 | **`entry_type`** | TEXT | Tag Origin | `lx`, `va`, `se`, `cf`, `ve`. |
 
 #### `matchup_queue` (Manual Sync Staging)

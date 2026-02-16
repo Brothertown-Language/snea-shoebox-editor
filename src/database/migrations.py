@@ -249,12 +249,6 @@ class MigrationManager:
             conn.execute(text("ALTER TABLE records DROP COLUMN IF EXISTS language_id;"))
             conn.commit()
 
-    def _migrate_add_trgm_index(self):
-        """Migration 7: Add GIN Trigram index to search_entries table."""
-        with self._engine.connect() as conn:
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_search_entries_term_trgm ON search_entries USING gin (term gin_trgm_ops);"))
-            conn.commit()
-
     def _migrate_add_fts_index(self):
         """Migration 8: Add GIN FTS index to records table."""
         with self._engine.connect() as conn:
