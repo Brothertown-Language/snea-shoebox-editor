@@ -344,7 +344,7 @@ A user session is not considered fully "authorized" or "synchronized" until all 
 - **Teams:** List of teams the user belongs to (critical for fine-grained access control).
 
 ### 2. Centralized Identity Synchronization
-To prevent race conditions and ensure identity data is available across all pages (including deep links), the fetching logic **MUST** be centralized in the main application entry point (e.g., `app.py`).
+To prevent race conditions and ensure identity data is available across all pages (including deep links), the fetching logic **MUST** be centralized in the main application entry point (e.g., `streamlit_app.py`).
 
 Do not rely on individual pages to fetch their own identity context. Instead, use a global check that triggers a re-fetch whenever an authentication token is present but the identity data is incomplete.
 
@@ -367,9 +367,9 @@ def is_identity_synchronized() -> bool:
 ### 4. The "Redirection Gate" Logic
 Never redirect a user to the home page or internal pages immediately after receiving an OAuth token. You must implement a "gate" that holds the user on the login page (or a loading state) until `is_identity_synchronized()` returns `True`.
 
-**Example Global Sync (`app.py`):**
+**Example Global Sync (`streamlit_app.py`):**
 ```python
-# In your main app.py
+# In your main streamlit_app.py
 if "auth" in st.session_state:
     from auth_utils import is_identity_synchronized, fetch_github_user_info
     

@@ -51,7 +51,7 @@ def login():
     apply_standard_layout_css()
 
     if "cookie_controller" not in st.session_state:
-        # Fallback in case app.py didn't set it (shouldn't happen with updated app.py)
+        # Fallback in case streamlit_app.py didn't set it (shouldn't happen with updated streamlit_app.py)
         from streamlit_cookies_controller import CookieController
         st.session_state["cookie_controller"] = CookieController()
 
@@ -114,7 +114,7 @@ def login():
             st.rerun()
 
     # If we have auth, ensure user identity (profile, teams, orgs) is fully synchronized.
-    # CRITICAL: Logic now resides in app.py for global coverage and to prevent 
+    # CRITICAL: Logic now resides in streamlit_app.py for global coverage and to prevent 
     # race conditions during redirection. We keep this check here as a 
     # secondary fallback to ensure a smooth transition during the login rerun.
     if "auth" in st.session_state:

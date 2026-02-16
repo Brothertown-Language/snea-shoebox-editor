@@ -96,7 +96,7 @@ def main():
     SecurityManager.rehydrate_session()
     
     # 3. Global Identity Synchronization
-    # CRITICAL: This logic must remain in app.py to prevent race conditions.
+    # CRITICAL: This logic must remain in streamlit_app.py to prevent race conditions.
     # By fetching user info (including profile, orgs, and teams) here, we ensure 
     # it's available regardless of which page the user lands on first after 
     # OAuth or cookie rehydration.

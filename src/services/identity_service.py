@@ -201,7 +201,7 @@ class IdentityService:
     def sync_identity(access_token: str) -> bool:
         """
         Orchestrate the synchronization of GitHub identity.
-        Used in app.py and login.py.
+        Used in streamlit_app.py and login.py.
         """
         if not IdentityService.is_identity_synchronized():
             logger.debug("Identity not yet synchronized, fetching from GitHub")

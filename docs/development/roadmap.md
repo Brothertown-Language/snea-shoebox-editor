@@ -135,7 +135,7 @@ Before initializing the project, you must set up the hosting and database platfo
 - **Refactor: Linguistic Service** (`src/services/linguistic_service.py`): Scaffolded data-access layer for `Record`, `Source`, and `Language` models (stubs only; full CRUD deferred). ✅
 - **Refactor: Infrastructure Service** (`src/services/infrastructure_service.py`): Consolidated Aiven API, network diagnostics, and system inspection. ✅
 - **Refactor: Database Migrations** (`src/database/migrations.py`): Centralized schema evolution, extension management, and data seeding via `MigrationManager`. ✅
-- **Cleanup**: Removed deprecated `auth_utils.py`. Simplified `app.py` to orchestration-only (~100 lines). All HTML injections standardized via `ui_utils.py`. ✅
+- **Cleanup**: Removed deprecated `auth_utils.py`. Simplified `streamlit_app.py` to orchestration-only (~100 lines). All HTML injections standardized via `ui_utils.py`. ✅
 
 ### MDF Upload Feature ✅
 - **MDF Parser Enhancements**: Extended parser for `\nt Record:`, `\va`, `\se`, `\cf`, `\ve` fields and normalization helpers. ✅

@@ -36,8 +36,8 @@ if [ -n "$PG_PIDS" ]; then
     kill $PG_PIDS
 fi
 
-# Find PIDs of streamlit processes running src/frontend/app.py
-PIDS=$(ps aux | grep "streamlit run src/frontend/app.py" | grep -v grep | awk '{print $2}')
+# Find PIDs of streamlit processes running streamlit_app.py
+PIDS=$(ps aux | grep "streamlit run streamlit_app.py" | grep -v grep | awk '{print $2}')
 
 if [ -n "$PIDS" ]; then
     echo "Killing existing Streamlit processes: $PIDS"

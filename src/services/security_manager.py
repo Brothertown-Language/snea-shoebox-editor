@@ -16,7 +16,7 @@ class SecurityManager:
     @staticmethod
     def rehydrate_session():
         """
-        Extract cookie-based rehydration logic from app.py.
+        Extract cookie-based rehydration logic from streamlit_app.py.
         """
         if "cookie_controller" not in st.session_state:
             return

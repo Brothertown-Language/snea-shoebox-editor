@@ -43,7 +43,7 @@ Start the Streamlit development server using the provided script:
 Alternatively, you can run it directly:
 
 ```bash
-uv run --extra local streamlit run src/frontend/app.py
+uv run --extra local streamlit run streamlit_app.py
 ```
 
 *Note: Always use the start script or `nohup` for background execution. For local development and testing, **ALWAYS** include `--extra local` to ensure that `pgserver` and other local dependencies are available. If no database URL is configured in secrets or environment, the app will automatically start a local PostgreSQL 16.2 instance using `pgserver` (data stored in `tmp/local_db`).*

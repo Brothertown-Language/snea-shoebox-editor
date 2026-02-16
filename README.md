@@ -94,7 +94,7 @@ uv run python scripts/<script_name>.py
 snea-shoebox-editor/
 ├── src/
 │   ├── frontend/          # Streamlit app entry point & pages
-│   │   ├── app.py         # Main application orchestrator
+│   │   ├── streamlit_app.py # Main application orchestrator
 │   │   ├── pages/         # Streamlit multi-page views
 │   │   ├── constants.py   # UI constants
 │   │   ├── ui_utils.py    # UI helper functions & dialogs

@@ -85,7 +85,7 @@ The system relies on three main components:
 4.  **Identity Synchronization**: Ensuring user info, organizations, and teams are fully loaded and verified before allowing access to protected pages.
 5.  **Database Integration**: Automatically syncing the GitHub user profile to the local `users` table upon successful login.
 
-### A. Main Entry Point (`app.py`)
+### A. Main Entry Point (`streamlit_app.py`)
 
 The main file handles session rehydration and routing.
 
@@ -205,5 +205,5 @@ def verify_user_authorization(user_teams):
 1.  **Strict Redirect URIs**: GitHub requires the `redirect_uri` to match EXACTLY what is registered in the GitHub App settings.
 2.  **Cookie Security**: `streamlit-cookies-controller` manages browser cookies. Ensure your application handles sensitive tokens securely.
 3.  **Lazy Imports**: In Streamlit, it's often better to import heavy libraries inside functions to speed up page loading.
-4.  **Session vs. Cookie**: Session state is lost on page refresh. Cookies persist. Always check the cookie at the start of `app.py` to restore the session.
+4.  **Session vs. Cookie**: Session state is lost on page refresh. Cookies persist. Always check the cookie at the start of `streamlit_app.py` to restore the session.
 5.  **Handling Logout**: When logging out, remember to remove the cookie using `controller.remove("gh_auth_token")` in addition to clearing `st.session_state`.

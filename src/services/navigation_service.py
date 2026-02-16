@@ -8,15 +8,15 @@ logger = get_logger("snea.navigation")
 
 # Central registry of pages
 # Paths are relative to src/frontend/
-PAGE_LOGIN = st.Page("pages/login.py", title="Login", icon="🔐", url_path="login")
-PAGE_STATUS = st.Page("pages/system_status.py", title="System Status", icon="📊", url_path="status")
-PAGE_HOME = st.Page("pages/index.py", title="Main Menu", icon="🏠", url_path="index", default=True)
-PAGE_USER = st.Page("pages/user_info.py", title="User Info", icon="👤", url_path="profile")
-PAGE_RECORDS = st.Page("pages/records.py", title="Records", icon="📚", url_path="records")
-PAGE_UPLOAD = st.Page("pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
-PAGE_BATCH_ROLLBACK = st.Page("pages/batch_rollback.py", title="Batch Rollback", icon="🔙", url_path="rollback")
-PAGE_TABLE_MAINTENANCE = st.Page("pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance")
-PAGE_LOGOUT = st.Page("pages/logout.py", title="Logout", icon="🚪", url_path="logout")
+PAGE_LOGIN = st.Page("src/frontend/pages/login.py", title="Login", icon="🔐", url_path="login")
+PAGE_STATUS = st.Page("src/frontend/pages/system_status.py", title="System Status", icon="📊", url_path="status")
+PAGE_HOME = st.Page("src/frontend/pages/index.py", title="Main Menu", icon="🏠", url_path="index", default=True)
+PAGE_USER = st.Page("src/frontend/pages/user_info.py", title="User Info", icon="👤", url_path="profile")
+PAGE_RECORDS = st.Page("src/frontend/pages/records.py", title="Records", icon="📚", url_path="records")
+PAGE_UPLOAD = st.Page("src/frontend/pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
+PAGE_BATCH_ROLLBACK = st.Page("src/frontend/pages/batch_rollback.py", title="Batch Rollback", icon="🔙", url_path="rollback")
+PAGE_TABLE_MAINTENANCE = st.Page("src/frontend/pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance")
+PAGE_LOGOUT = st.Page("src/frontend/pages/logout.py", title="Logout", icon="🚪", url_path="logout")
 
 class NavigationService:
     """

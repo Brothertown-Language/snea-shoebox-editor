@@ -24,14 +24,14 @@ Since this repository is part of a GitHub Organization, access must be granted a
     - If you click **Request**, an owner must approve it in the "Third-party access" section mentioned above.
 
 ### Deployment Settings
-- **Main file path**: `src/frontend/app.py` (This folder structure is a mandatory legacy artifact for Streamlit Cloud and cannot be changed).
+- **Main file path**: `streamlit_app.py`
 - **App URL**: `https://snea-edit.streamlit.app`
 
 ### Troubleshooting: "Subdomain Taken" Error
 If your deployment failed and you now see "Subdomain taken" when trying to re-create it:
 1.  **Check your Dashboard**: Go to [share.streamlit.app](https://share.streamlit.app). The failed app is likely already in your list.
 2.  **Fix or Delete**: 
-    - Click the three dots (⋮) -> **Settings** -> **Configuration** to fix the **Main file path** to `src/frontend/app.py`.
+    - Click the three dots (⋮) -> **Settings** -> **Configuration** to fix the **Main file path** to `streamlit_app.py`.
     - Alternatively, delete the failed app and wait 5 minutes before trying to use the same subdomain again.
 
 ## 2. Aiven (Database)
