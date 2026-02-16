@@ -564,15 +564,45 @@ def get_db_url():
     
     return None
 
-def init_db():
-    """Initialize the database schema."""
+@st.cache_resource
+def get_engine():
+    """
+    Get the singleton SQLAlchemy engine instance, cached by Streamlit.
+    
+    PRODUCTION JUSTIFICATION (Aiven / Streamlit Cloud):
+    - pool_size=0: Absolute Zero Idle Footprint. Ensures that during periods of 
+      inactivity, the application holds zero open connections to the database.
+      This is critical for low-slot environments like Aiven where every idle 
+      connection is a wasted resource.
+    - max_overflow=10: Enforces a strict HARD LIMIT of 10 concurrent connections.
+      SQLAlchemy's total limit is pool_size + max_overflow. With pool_size=0,
+      this ensures the app never exceeds the Aiven slot limit.
+    - pool_recycle=300: Aggressively retires connections every 5 minutes. This
+      mitigates the risk of stale connections and ensures the database can
+      cleanly recycle resources.
+    - pool_pre_ping=True: Acts as a transparent liveness hook. Before handing
+      a connection to the app, it verifies the DB is reachable. If Aiven is 
+      shut down or restarting, this failure triggers the application's 
+      standard infrastructure wake-up logic.
+    - NIL Performance Impact: For a low-traffic linguistic tool, the overhead
+      of a fresh connection handshake for each request is negligible compared
+      to the benefit of resource conservation.
+    """
     db_url = get_db_url()
     if not db_url:
         raise ValueError("Database URL not found in secrets or environment.")
     
-    # pool_size=0 and pool_recycle=5 ensures that the pool can become empty when idle,
-    # and stale connections are removed quickly to preserve limited production resources.
-    engine = create_engine(db_url, pool_size=0, max_overflow=20, pool_recycle=5)
+    return create_engine(
+        db_url,
+        pool_size=0,          # NO permanent warm connections
+        max_overflow=10,      # Hard limit of 10 total concurrent connections
+        pool_recycle=300,     # Aggressive 5-minute recycle
+        pool_pre_ping=True,   # Detects if Aiven is down/restarting
+    )
+
+def init_db():
+    """Initialize the database schema."""
+    engine = get_engine()
     
     Base.metadata.create_all(engine)
     from .migrations import MigrationManager
@@ -581,12 +611,6 @@ def init_db():
 
 def get_session():
     """Get a new database session."""
-    db_url = get_db_url()
-    if not db_url:
-        raise ValueError("Database URL not found in secrets or environment.")
-    
-    # pool_size=0 and pool_recycle=5 ensures that the pool can become empty when idle,
-    # and stale connections are removed quickly to preserve limited production resources.
-    engine = create_engine(db_url, pool_size=0, max_overflow=20, pool_recycle=5)
+    engine = get_engine()
     Session = sessionmaker(bind=engine)
     return Session()

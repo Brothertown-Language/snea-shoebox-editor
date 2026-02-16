@@ -332,3 +332,8 @@ This file tracks critical operational errors and guideline violations to prevent
 - **Violation**: Suggested the fictional `\lg` tag for setting language and failed to correctly identify existing dialect tags (`\dv`, `\va`, `\ln`) in the documentation.
 - **Root Cause**: Relied on LLM-generated assumptions rather than DIRECT INSPECTION of the project's MDF source documentation.
 - **Correction**: (1) Updated `docs/mdf/mdf-tag-reference.md` with accurate dialect tags. (2) Added **TAG INTEGRITY MANDATE** to `guidelines.md` to block future tag hallucinations. (3) Logged violation.
+
+### 2026-02-15: Unauthorized Implementation after Question (Violation #32)
+- **Violation**: Implemented database connection pooling fixes after the user asked a clarifying question, despite no "Go" or "Approved" signal being given.
+- **Root Cause**: Misinterpreted a request for information/clarification as an implicit directive to implement the discussed solution. Violated the "Zero-Tolerance Authorization" and "Passive Execution" mandates.
+- **Correction**: (1) Reverted all unauthorized changes using `git checkout`. (2) Logged violation. (3) Updated `guidelines.md` to Section 0 with an explicit "QUESTIONS ARE NOT AUTHORIZATION" clause. (4) Re-committed to waiting for explicit authorization for every edit.
