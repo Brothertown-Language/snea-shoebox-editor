@@ -53,6 +53,15 @@ def _stop_local_db():
 
 def is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
+    # 1. Check Streamlit secrets for explicit override
+    try:
+        if "runtime" in st.secrets and "mode" in st.secrets["runtime"]:
+            return st.secrets["runtime"]["mode"] == "production"
+    except Exception:
+        # st.secrets might not be initialized yet
+        pass
+
+    # 2. Fallback to existing heuristic
     # Streamlit Cloud always runs apps under the Linux user 'appuser'.
     # This is a widely used community workaround for production detection.
     try:

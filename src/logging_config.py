@@ -13,6 +13,17 @@ import sys
 
 def _is_production() -> bool:
     """Detect production environment (Streamlit Cloud runs as 'appuser')."""
+    # 1. Check Streamlit secrets for explicit override
+    try:
+        import streamlit as st
+        # Note: streamlit.secrets might not be available depending on how the app is started,
+        # but in a streamlit app it should be there.
+        if hasattr(st, "secrets") and "runtime" in st.secrets and "mode" in st.secrets["runtime"]:
+            return st.secrets["runtime"]["mode"] == "production"
+    except Exception:
+        pass
+
+    # 2. Fallback to existing heuristic
     try:
         import getpass
         return getpass.getuser() == "appuser"
