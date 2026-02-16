@@ -1,0 +1,632 @@
+{
+  "aa": {
+    "description": "Most records in this file are keyed to the two- or three-letter field marker codes, standardized by the Multi-Dictionary Formatter (MDF) program for lexical databases. To read about a particular field, if you know the marker, simply search for the letter code of that marker, e.g. for the English gloss field (\\ge), search for 'ge'. If a field is listed in a discussion, right-clicking on the field marker (option-click on the Macintosh) will jump you to that marker's topic. If you don't know the marker, read the organized grouping of markers listed in the Introduction. You can get there by searching or by dong a right click on the green word in the next line. Other pertinent topics are covered as well. Look for the green text (or the cf Cross Reference field) To read these discussions simply search for them (or jump to by doing a right-click) using the following labels: (This is draft version 1.9a, in preparation for \"version 2\" of the MDFields Helps database. The original database was constructed by David Coward. The revisions are being done by Karen Buseman. May 12, 2006)",
+    "example": "",
+    "is_legacy": false,
+    "name": "Helps Database for MDF Marker Set",
+    "tag": "aa"
+  },
+  "an": {
+    "description": "Store an antonym of the lexeme to show semantic opposites. Consider using lexical functions (\\lf) for richer linguistic data.",
+    "example": "\\an sal",
+    "is_legacy": false,
+    "name": "antonym",
+    "tag": "an"
+  },
+  "bb": {
+    "description": "Record bibliographic information to provide source citations for the lexeme.",
+    "example": "",
+    "is_legacy": false,
+    "name": "bibliographic reference",
+    "tag": "bb"
+  },
+  "bib": {
+    "description": "No detailed description found in primary help file.",
+    "example": "",
+    "is_legacy": false,
+    "name": "Marker bib",
+    "tag": "bib"
+  },
+  "bw": {
+    "description": "Indicate a borrowed word or source language to track etymological influence and linguistic origins.",
+    "example": "\\bw Arabic",
+    "is_legacy": false,
+    "name": "borrowed word",
+    "tag": "bw"
+  },
+  "ce": {
+    "description": "This gives the English gloss for the vernacular lexeme referenced by the preceding \\cf field. Identical national and regional language gloss fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "cross-reference (English gloss)",
+    "tag": "ce"
+  },
+  "cf": {
+    "description": "This is a generic reference marker used to link together any two related entries in the lexicon. For example, in Selaru, '-aswasw kaha' means 'high water mark' and needs to cross-reference 'manahma' (the entry for 'rising tide') and visa-versa. The \\cf field is bundled with the \\ce, \\cn, and \\cr gloss fields. Multiple cross reference bundles are usually concatenated with semicolons '; '.",
+    "example": "\\cf manahma\n\\ce rising tide",
+    "is_legacy": false,
+    "name": "confer/cross-reference",
+    "tag": "cf"
+  },
+  "cn": {
+    "description": "This gives the national language gloss for the vernacular lexeme referenced by the preceding \\cf field. Identical English and regional language gloss fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "cross-reference (national gloss)",
+    "tag": "cn"
+  },
+  "cr": {
+    "description": "This gives the regional language gloss for the vernacular lexeme referenced by the preceding \\cf field. MDF formats the \\cr field with quotes inside square brackets. Identical English and national language gloss fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "cross-reference (regional gloss)",
+    "tag": "cr"
+  },
+  "de": {
+    "description": "This field is used to fully express the semantic domains of each sense of a lexeme in English. If an entry has many English glosses, none of which are vitally important to differentiate while glossing texts, give only one gloss in the \\ge field (to simplify interlinearizing) and then give all of the glosses in the \\de and \\re fields. When the dictionary is formatted, the \\de field will be used and the \\ge field will be discarded. Also, because there are \\re fields, the \\ge field will be ignored for reversing the database. Identical vernacular, national and regional fields are:",
+    "example": "\\ge 3sPOS\n\\re his ; hers ; its\n\\de his, hers, its",
+    "is_legacy": false,
+    "name": "definition (English)",
+    "tag": "de"
+  },
+  "dn": {
+    "description": "Specify the national language equivalent to the English definition (\\de) to explain the semantic domains of a sense.",
+    "example": "",
+    "is_legacy": false,
+    "name": "definition (national)",
+    "tag": "dn"
+  },
+  "dr": {
+    "description": "Record regional language definitions to explain semantic domains. This field is often used when early data is collected in regional rather than national languages.",
+    "example": "",
+    "is_legacy": false,
+    "name": "definition (regional)",
+    "tag": "dr"
+  },
+  "dt": {
+    "description": "A Toolbox field to help you keep track of the last time you edited an entry. There need only be one of these in a record (usually the last field) and is usually inserted automatically by Toolbox. The field is set up under the Toolbox menu option: Database-Properties-Options tab. The field marker must be defined first before it can be selected as the datestamp field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "datestamp",
+    "tag": "dt"
+  },
+  "dv": {
+    "description": "Provide a vernacular language definition to capture concept domains from a native speaker's perspective.",
+    "example": "",
+    "is_legacy": false,
+    "name": "definition (vernacular)",
+    "tag": "dv"
+  },
+  "ec": {
+    "description": "Any comments the researcher needs to add concerning the etymology of the lexeme can be given here.",
+    "example": "",
+    "is_legacy": false,
+    "name": "etymology-comment",
+    "tag": "ec"
+  },
+  "ee": {
+    "description": "This field is intended for more verbose explanations of the lexeme. The researcher should use this field to encode any additional information needed by a non-native speaker to understand and use this lexeme properly.",
+    "example": "\\de baking form\n\\ee Often today this is replaced by a cast iron griddle.",
+    "is_legacy": false,
+    "name": "encyclopedic information (English)",
+    "tag": "ee"
+  },
+  "eg": {
+    "description": "The published gloss for the etymological reference is given here.",
+    "example": "",
+    "is_legacy": false,
+    "name": "etymology-gloss",
+    "tag": "eg"
+  },
+  "en": {
+    "description": "The national language equivalent to the \\ee field. This field should cover information that provides a more complete knowledge-base on the lexeme.",
+    "example": "",
+    "is_legacy": false,
+    "name": "encyclopedic information (national)",
+    "tag": "en"
+  },
+  "er": {
+    "description": "The regional language equivalent to the \\ee field. This field should cover information that provides a more complete knowledge-base on the lexeme. MDF adds the brackets \"[ ]\" around this field. If included in the output, it is treated as part of the national field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "encyclopedic information (regional)",
+    "tag": "er"
+  },
+  "es": {
+    "description": "The reference or source abbreviation for etymology of the lexeme is given here.",
+    "example": "",
+    "is_legacy": false,
+    "name": "etymology-source",
+    "tag": "es"
+  },
+  "et": {
+    "description": "The etymology for the lexeme is put here. This field is bundled with \\eg (gloss), \\es (source), and \\ec (comment).",
+    "example": "\\et *babuy\n\\eg pig",
+    "is_legacy": false,
+    "name": "etymology",
+    "tag": "et"
+  },
+  "ev": {
+    "description": "This field contains the vernacular description of any pertinent encyclopedic information related to the lexeme or headword, subentry, or sense. This is intended for use in a monolingual dictionary, but can be used in diglot and triglot dictionaries as well. Related fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "encyclopedic information (vernacular)",
+    "tag": "ev"
+  },
+  "ge": {
+    "description": "Provide a brief English equivalent for interlinear morpheme-level glossing. This field also serves as a fallback English definition in the dictionary if no full definition (\\de) is provided.",
+    "example": "\\lx koban\n\\ge first_singular_verb_form",
+    "is_legacy": false,
+    "name": "gloss (English)",
+    "tag": "ge"
+  },
+  "gn": {
+    "description": "This is intended for interlinear morpheme-level glossing. It is used for reversing the dictionary if an \\rn field is not present (or is present but empty). It is also used as a national language definition in the printed dictionary if there is no \\dn field (or it is present but empty). The user may enter data either with each gloss getting its own field: Or with the glosses strung together, separated by a semicolon with a space on either side of it (so as to be unlike any normal punctuation): Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. MDF will convert the ' ; ' sequence to ', ' when formatting the dictionary. (MDF will also automatically convert any underline character '_' in a gloss field to a space when formatting.)",
+    "example": "\\gn keluarkan",
+    "is_legacy": false,
+    "name": "gloss (national)",
+    "tag": "gn"
+  },
+  "gr": {
+    "description": "This helps clarify the national language gloss in the prominent regional language of the area. This is also used as a regional definition in the printed dictionary if there is no \\dr field present (or it is present but empty). The user may enter data either with each gloss getting its own field: Or with the glosses strung together, separated by a semicolon with a space on either side of it (so as to be unlike any normal punctuation): Toolbox can recognize either format and when interlinearizing will give the user the choice of both glosses in either case. The underline character '_' in the example glosses above is to force Toolbox to treat the multiple word gloss 'kasi pinda' as a single gloss. MDF will convert underline characters in gloss fields to spaces automatically. The sequence ' ; ' is also converted to ', ' by MDF when formatting a dictionary or finderlist. If this field is included in the output, MDF adds a label and brackets \"[ ]\" around it and it is treated as part of the national field.",
+    "example": "\\gr kasi_pinda",
+    "is_legacy": false,
+    "name": "gloss (regional)",
+    "tag": "gr"
+  },
+  "gv": {
+    "description": "This field is available for the development of a monolingual dictionary. And while this may seem somewhat meaningless (a vernacular gloss for a vernacular word), it actually can be a useful place to store the simple explanations the researcher is given by a language assistant concerning the meaning of the headword or lexeme. These can then be formulated into a more exact definition and transfer to the \\dv field. It could also be used for those lexemes which can actually be defined with short glosses. It could also serve as a subset to the information covered in \\dv field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "gloss (vernacular)",
+    "tag": "gv"
+  },
+  "hm": {
+    "description": "Differentiate homonym entries (lexemes with identical forms but no semantic relationship). Follow the marker with a number (e.g., 1, 2) to maintain distinct records for each homonym.",
+    "example": "\\lx asw",
+    "is_legacy": false,
+    "name": "homonym number",
+    "tag": "hm"
+  },
+  "is": {
+    "description": "\"Beyond key terms: a lexicon useful for translation\" (Rick Nivens, manuscript) discusses the use of Louw and Nida's (1988) Greek-English semantic domain categories. While Nivens proposes another way of doing this in his paper, it is also possible to use this \\is field to catalog lexical entries according to these semantic domains. Reversing on this field would then yield semantically related entries (in relation to the New Testament). One word of caution: this is an etic approach, i.e. Greek semantics will rarely line up exactly with the vernacular domains. This field is to be a tool, and no attempt should be made to \"force-fit\" lexemes into pre-defined domains. If selected for output, MDF adds the label \"Semantics: \" to this field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "index  of  semantics",
+    "tag": "is"
+  },
+  "lc": {
+    "description": "This should be added only if the lexical entry form is inappropriate for the printed dictionary, and you want to substitute another form for the printed entry, e.g. you might want the entry \"lewat\" printed as \"l\u00e9wat\" if its stress pattern were not predictable. Roots are commonly used as the lexeme form in Toolbox lexical databases, but if the language affixes prepositionally, a dictionary printed with root forms as the entry form can be very confusing to native speakers. In this case, you could choose a consistent conjugated form (e.g. 3s-verb form) for a citation form. MDF will always replace the \\lx field with the \\lc field, if present, and then resort the dictionary according to these fields. (You can choose to restrict MDF to sort the database only by the \\lx field, even for those entries with an \\lc field. This restriction will not effect the \\lc field though, an \\lc field will still print as the entry form for its record. Choosing to restrict MDF to the \\lx field may cause some citation forms to appear out of sequence.)",
+    "example": "",
+    "is_legacy": false,
+    "name": "lexical citation",
+    "tag": "lc"
+  },
+  "le": {
+    "description": "This is for giving the English gloss of the vernacular lexeme referenced by the lexical function. Related fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "lexical function (English gloss)",
+    "tag": "le"
+  },
+  "lf": {
+    "description": "For encoding the semantic networks of a language. The \\lf field bundle includes the \\lf (label), \\lv (vernacular), \\le (English gloss), \\ln (national gloss), and \\lr (regional gloss) fields. MDF supports two ways of using the \\lf bundles. Multiple lexical function bundles are concatenated with a semicolon '; '.",
+    "example": "\\lf Syn\n\\lv -dew\n\\le chop on end",
+    "is_legacy": false,
+    "name": "lexical function label",
+    "tag": "lf"
+  },
+  "ln": {
+    "description": "Specify the national language gloss for the vernacular lexeme referenced by the lexical function.",
+    "example": "",
+    "is_legacy": false,
+    "name": "lexical function (national gloss)",
+    "tag": "ln"
+  },
+  "lr": {
+    "description": "Specify the regional language gloss for the vernacular lexeme referenced by the lexical function.",
+    "example": "",
+    "is_legacy": false,
+    "name": "lexical function (regional gloss)",
+    "tag": "lr"
+  },
+  "lt": {
+    "description": "Explain the distinct meanings of components within an idiom or complex phrase for entries (\\lx) or subentries (\\se).",
+    "example": "\\lx setengah mati",
+    "is_legacy": false,
+    "name": "literal meaning",
+    "tag": "lt"
+  },
+  "lv": {
+    "description": "Record the vernacular lexeme (morpheme, word, or phrase) that shares a semantic relationship defined by the lexical function (\\lf) label.",
+    "example": "\\lx feten            <-- the headword/lexeme",
+    "is_legacy": false,
+    "name": "vernacular lexeme referenced by the lexical function",
+    "tag": "lv"
+  },
+  "lx": {
+    "description": "Define the primary lexeme or headword for the record. This field serves as the unique record marker and primary sort key in lexical databases.",
+    "example": "\\lx koban",
+    "is_legacy": false,
+    "name": "lexeme or headword",
+    "tag": "lx"
+  },
+  "mn": {
+    "description": "This is used to reference a minimal entry back to its main entry. Minimal or \"minor\" entries consist of abbreviated information, e.g.: This would typically print as: In this example, the minor entry \"tado\" has minimal information and contains a reference back to the main semantically related entry \"teduh\". This cross-referencing is done through the \\mn field: The main entry \"teduh\" would be more verbose, containing all of the information normally included in a lexical entry. The \"teduh\" entry would also have the field \"\\va tado\" to reference the variant (dialect) form.",
+    "example": "\\lx tado\n  \\ps adj\n  \\ge calm\n  \\mn teduh",
+    "is_legacy": false,
+    "name": "main entry form",
+    "tag": "mn"
+  },
+  "mr": {
+    "description": "This can be used to show the underlying morphemic structure for complex lexemes. MDF gives this field the label 'Morph:' In Buru, the lexeme 'agat' ('grain') is a complex morpheme. Its internal structure should be encoded as: This will typically print as:",
+    "example": "\\mr aga-t",
+    "is_legacy": false,
+    "name": "morphemic representation",
+    "tag": "mr"
+  },
+  "nd": {
+    "description": "This is a place for your notes on discourse/text analysis, should you wish to keep them separate. If selected for output, MDF adds the label \"Disc: \" to this field and brackets it with \"[ ]\".",
+    "example": "",
+    "is_legacy": false,
+    "name": "notes on discourse",
+    "tag": "nd"
+  },
+  "ng": {
+    "description": "This is a place for your grammar notes, should you wish to keep them separate. If selected for output, MDF adds the label \"Gram: \" to this field and brackets it with \"[ ]\".",
+    "example": "",
+    "is_legacy": false,
+    "name": "notes on grammar",
+    "tag": "ng"
+  },
+  "np": {
+    "description": "This is a place for your phonology notes, should you wish to keep them separate. If selected for output, MDF adds the label \"Phon: \" to this field and brackets it with \"[ ]\".",
+    "example": "",
+    "is_legacy": false,
+    "name": "notes on phonology",
+    "tag": "np"
+  },
+  "nq": {
+    "description": "This is a place for your questions, should you wish to keep them separate. If selected for output, MDF adds the label \"Ques: \" to this field and brackets it with \"[ ]\".",
+    "example": "",
+    "is_legacy": false,
+    "name": "questions",
+    "tag": "nq"
+  },
+  "ns": {
+    "description": "This is used for encoding sociolinguistic notes. Dialect information (i.e. which villages use this lexeme form, etc.) should be explained in the following fields: If selected for output, MDF adds the label \"Socio: \" to this field and brackets it with \"[ ]\".",
+    "example": "",
+    "is_legacy": false,
+    "name": "notes on sociolinguistics",
+    "tag": "ns"
+  },
+  "nt": {
+    "description": "This is a generic dump for all your personal notes about an entry, subentry, or sense. More specific note fields are provided for \"splitters\", i.e. those who desire a finer differentiation to their notes. These are: If selected for output, MDF adds the label \"Notes: \" to this field and brackets it with \"[ ]\".",
+    "example": "",
+    "is_legacy": false,
+    "name": "notes, etc.",
+    "tag": "nt"
+  },
+  "nwt": {
+    "description": "No detailed description found in primary help file.",
+    "example": "",
+    "is_legacy": false,
+    "name": "Marker nwt",
+    "tag": "nwt"
+  },
+  "oe": {
+    "description": "Specify semantic and/or grammatical restrictions for the lexeme (e.g., 'human only') to clarify usage constraints.",
+    "example": "\\oe Human",
+    "is_legacy": false,
+    "name": "only [restrictions] (English)",
+    "tag": "oe"
+  },
+  "on": {
+    "description": "Specify the national language equivalent to the English restriction (\\oe) to clarify semantic and grammatical constraints.",
+    "example": "",
+    "is_legacy": false,
+    "name": "only [restrictions] (national)",
+    "tag": "on"
+  },
+  "or": {
+    "description": "Record regional language restrictions to clarify semantic and grammatical constraints. This field is typically treated as part of the national field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "only [restrictions] (regional)",
+    "tag": "or"
+  },
+  "ov": {
+    "description": "Specify semantic and/or grammatical restrictions in the vernacular language for use in monolingual dictionaries.",
+    "example": "",
+    "is_legacy": false,
+    "name": "only   [restrictions]   (vernacular)",
+    "tag": "ov"
+  },
+  "pc": {
+    "description": "This contains either the book and page number reference of a relevant picture (you've either sketched in a notebook or found in a picture book), or a graphics link for a PCX file of a picture you want to include in your printed dictionary. If the field does not begin with '.G.' as in a graphics link, then the field is treated as \"free- form\". The field is output near the end of an entry paragraph, and the print tables put parentheses ( ) around the whole field (to set it off from other types of information). If the \\pc field begins with a graphics link mark (.G.), then it is NOT a \"free-form\" field and should follow the basic form below: The .G. marks this as a graphics link; next follows the filename of the picture; next is the width (here 1.5\") and then the height (1\") and finally the graphics format (PCX). Each bit of information is separated by a semicolon. When the dictionary is formatted, the graphics information is moved to the beginning of the entry, subentry, or sense in which the \\pc field is found. This will cause the text to flow around the picture. Sizes much larger than 1.5\"x1.5\" are not recommended. In double column format the picture is placed flush right in the column; in single column format the picture is flush right to the right margin.",
+    "example": "\\pc .G.sago.pcx;1.5\";1\";PCX",
+    "is_legacy": false,
+    "name": "picture",
+    "tag": "pc"
+  },
+  "pd": {
+    "description": "Specify the noun or verb class, gender, or other paradigm set associated with the headword. Use mnemonic codes (e.g., 'vt', 'n') to categorize how the word inflects.",
+    "example": "\\pd 3",
+    "is_legacy": false,
+    "name": "paradigm set",
+    "tag": "pd"
+  },
+  "pde": {
+    "description": "This is used for glossing the vernacular paradigm form in English, e.g.: This will typically print as: where the paradigm label is italic, the vernacular form is in vernacular font, and the two glosses are in their appropriate language fonts.",
+    "example": "\\pdl Pl",
+    "is_legacy": false,
+    "name": "paradigm form (English gloss)",
+    "tag": "pde"
+  },
+  "pdl": {
+    "description": "Provide a label for an irregular or specific paradigm form. This tag bundles with \\pdv and \\pde to describe specific inflectional values like person, number, or case.",
+    "example": "\\pdl 1s\n\\pdv koban",
+    "is_legacy": false,
+    "name": "paradigm label",
+    "tag": "pdl"
+  },
+  "pdn": {
+    "description": "This is used for glossing the vernacular paradigm form in the national language.",
+    "example": "",
+    "is_legacy": false,
+    "name": "paradigm form (national gloss)",
+    "tag": "pdn"
+  },
+  "pdr": {
+    "description": "This is used for glossing the vernacular paradigm form in the regional language.",
+    "example": "",
+    "is_legacy": false,
+    "name": "paradigm form (regional gloss)",
+    "tag": "pdr"
+  },
+  "pdv": {
+    "description": "Record the vernacular paradigm form specified by the label in the \\pdl field. This captures the actual irregular word form.",
+    "example": "\\pdl 1s\n\\pdv koban",
+    "is_legacy": false,
+    "name": "paradigm vernacular form",
+    "tag": "pdv"
+  },
+  "ph": {
+    "description": "Provide a phonetic or phonemic transcription to record the pronunciation of the lexeme.",
+    "example": "\\ph apa",
+    "is_legacy": false,
+    "name": "phonetic/phonemic form",
+    "tag": "ph"
+  },
+  "pl": {
+    "description": "Record the plural form of the lexeme if it inflects irregularly. For complex plural paradigms, use the \\pdv bundle.",
+    "example": "\\pl asure",
+    "is_legacy": false,
+    "name": "plural form",
+    "tag": "pl"
+  },
+  "pn": {
+    "description": "This field is used to classify the part of speech with labels found in national language dictionaries. Consistent labeling is important. Use Toolbox's Range Set feature for this field. MDF requires that the \\pn field follow the \\ps field: MDF will format the \\pn field only if you specify that the output is for a national audience. When a national audience is specified, the \\pn field will replace the \\ps field. But if there is no \\pn field or it is empty, the \\ps field will be output for the national audience as for an English audience.",
+    "example": "\\ps n   (noun)",
+    "is_legacy": false,
+    "name": "part of speech (national)",
+    "tag": "pn"
+  },
+  "ps": {
+    "description": "Categorize the part of speech for the vernacular form to ensure grammatical consistency. This classification should reflect the target language's own grammar, not necessarily that of English or the national language.",
+    "example": "\\lx koban\n\\ps v",
+    "is_legacy": false,
+    "name": "part of speech",
+    "tag": "ps"
+  },
+  "rd": {
+    "description": "A repository for reduplication forms for later study (conceivably these forms will be moved to subentries, etc. as more is learned about them). For example, the reduplicated form for 'yoban' ('hit') in Selaru is: MDF adds a \"Redup: \" label to this form. The data is formatted as vernacular text. For more flexible labeling and to allow for glossing, MDF now provides the following set of paradigm fields:",
+    "example": "\\rd ioboban",
+    "is_legacy": false,
+    "name": "reduplication form(s)",
+    "tag": "rd"
+  },
+  "re": {
+    "description": "Provide English reversal terms to include the entry in an English index or finderlist.",
+    "example": "\\re house ; hut ; shack ; dwelling ; lean-to",
+    "is_legacy": false,
+    "name": "reversal form (English)",
+    "tag": "re"
+  },
+  "rf": {
+    "description": "Store source references, such as notebook or text identifiers, for example sentence bundles.",
+    "example": "\\rf nbk1.23.12\n\\xv example1\n\\xe translation1",
+    "is_legacy": false,
+    "name": "reference to notebooks, texts, etc.",
+    "tag": "rf"
+  },
+  "rn": {
+    "description": "This gives the national language word or phrase form to be use to reverse the dictionary for a national language index. If an \\rn * is present the relevant entry, subentry, or sense will be ignored (i.e. not included in the reversed index). Like the \\gn field, the data for this field can be kept each in its own field or concatenated in one field, separated by ' ; '.",
+    "example": "",
+    "is_legacy": false,
+    "name": "reversal form (national)",
+    "tag": "rn"
+  },
+  "rr": {
+    "description": "This gives a regional language form which could be used to reverse the dictionary (to make a regional language list), or to be included in a national language list marked as the regional language (to aid recall).",
+    "example": "",
+    "is_legacy": false,
+    "name": "reversal form (regional)",
+    "tag": "rr"
+  },
+  "sc": {
+    "description": "Providing a scientific name for a lexeme can be very useful if accurate. The gloss \"a type of tree\" is nearly worthless (but often the best we can do at the time). Having the scientific name allows us to eventually find the appropriate English gloss for such a species. Getting the scientific name requires access to high quality books (color pictures help). The data given is automatically underlined and italicized by MDF; no formatting is needed.",
+    "example": "",
+    "is_legacy": false,
+    "name": "scientific name",
+    "tag": "sc"
+  },
+  "sd": {
+    "description": "This is the English version of \\th and probably the one to use first. Here you try to catalog and differentiate the semantic compartments of an entry, being careful to not let the English force or mask the vernacular relations. Moving to the vernacular terms (given in \\th field) as early as possible is best. If selected for output, MDF adds the label \"SD: \" to this field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "semantic domain",
+    "tag": "sd"
+  },
+  "se": {
+    "description": "Establish a nested subentry for forms derived from the root, such as compounds or phrases. Subentries act as mini-entries within the main record and can contain their own parts of speech, glosses, and senses.",
+    "example": "\\lx bren\n\\ps vi\n\\ge play\n\\se brenak\n\\ps vt\n\\ge play_s.t.",
+    "is_legacy": false,
+    "name": "subentry (a polymorphemic form or a phrase)",
+    "tag": "se"
+  },
+  "sg": {
+    "description": "This is a special field used to give the singular form of the lexeme, e.g. in Selaru, the singular form of the lexical entry 'asw' ('dog') is entered as: MDF adds a \"Sg: \" label to this form. The data is formatted as vernacular text. For more flexible labeling and to allow for glossing, MDF provides the following set of paradigm fields:",
+    "example": "\\sg askwe",
+    "is_legacy": false,
+    "name": "singular form",
+    "tag": "sg"
+  },
+  "sn": {
+    "description": "Define distinct meanings for an entry or subentry. Sense sections group related fields (glosses, definitions, examples) that belong to a specific semantic interpretation of the lexeme.",
+    "example": "\\lx bren\n\\ps vi\n\\sn 1\n\\ge play\n\\sn 2\n\\ge exercise",
+    "is_legacy": false,
+    "name": "sense number",
+    "tag": "sn"
+  },
+  "so": {
+    "description": "Specify the name and village of the informant who provided the linguistic data for this entry.",
+    "example": "",
+    "is_legacy": false,
+    "name": "source of data",
+    "tag": "so"
+  },
+  "st": {
+    "description": "Indicate how thoroughly checked or complete an entry is to assist in dictionary maintenance and verification.",
+    "example": "",
+    "is_legacy": false,
+    "name": "status",
+    "tag": "st"
+  },
+  "sy": {
+    "description": "Catalog synonym of the lexeme to show semantic equivalence. Consider using lexical functions (\\lf) for richer linguistic data and glossing.",
+    "example": "\\sy -tutu",
+    "is_legacy": false,
+    "name": "synonym",
+    "tag": "sy"
+  },
+  "tb": {
+    "description": "This marks the following text as unformatted. Line-breaks and hard-coded tab characters will be retained. (Multiple spaces are also be retained, but this is only useful if you define the \"Table\" font in MS-Word to be a fixed width font.) A table, or list, of \"cutting verbs\" might look like this: In Toolbox, the table field is marked as a \"No Word Wrap\" field (in the Marker-Properties dialog box). This allows you direct control over line-breaks and spacing. Note the |{tab} bar-code in the above example. This tells Toolbox to insert a Tab at each of these places, when the file is formatted by MDF or exported to an RTF file. (Currently Toolbox does not support typing the Tab character directly.) Inevitably, your tables will require some \"tweaking\" in MS-Word before you print the dictionary. To do this, first convert the file to MS-Word format using MDF, and then search for the \"Table\" style. After some tweaking, these could then be converted into a Word table (with the Word menu command: Table-Convert Text to Table).",
+    "example": "\\tb The summary of all types of cutting verbs:\n     |{tab}fv:-akrina:|{tab}split in two lengthwise\n     |{tab}fv:-boras:|{tab}cut s.t. in small pieces with a knife\n     |{tab}fv:-dew:|{tab}chop s.t. into smaller pieces while standing it on end\n     |{tab}fv:-het:|{tab}chop or hack with a machete\n     |{tab}fv:-kety:|{tab}slice open and clean an animal\n     |{tab}fv:-lary:|{tab}slice (like chilies, etc.)\n     |{tab}fv:-lilit:|{tab}shave or carve\n     |{tab}fv:-mair:|{tab}to adz wood\n     |{tab}fv:-simat:|{tab}pop out or cut out coconut meat",
+    "is_legacy": false,
+    "name": "table",
+    "tag": "tb"
+  },
+  "th": {
+    "description": "This is a field for developing a vernacular-based thesaurus. It is to be labeled with the vernacular term governing the semantic domain of the entry. Reversing on this field (within Toolbox) would yield a vernacular thesaurus. If selected for output, MDF adds the label \"Thes: \" to this field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "thesaurus",
+    "tag": "th"
+  },
+  "ue": {
+    "description": "Record usage notes, taboos, or common social constraints in English to guide non-native speakers in using the lexeme properly.",
+    "example": "\\ue Kin term of address for same-sex siblings.",
+    "is_legacy": false,
+    "name": "usage (English)",
+    "tag": "ue"
+  },
+  "un": {
+    "description": "Specify national language usage notes or social constraints for proper lexeme usage.",
+    "example": "",
+    "is_legacy": false,
+    "name": "usage (national)",
+    "tag": "un"
+  },
+  "ur": {
+    "description": "Record regional language usage notes or social constraints. This field is typically treated as part of the national field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "usage (regional)",
+    "tag": "ur"
+  },
+  "uv": {
+    "description": "Provide vernacular descriptions of common usage, taboos, or other constraints for use in monolingual dictionaries.",
+    "example": "",
+    "is_legacy": false,
+    "name": "usage (vernacular)",
+    "tag": "uv"
+  },
+  "va": {
+    "description": "Record variant forms of the lexical entry or subentry, such as dialectal variations. This tag bundles with comment fields (\\ve, \\vn, \\vr) to provide context for each variant.",
+    "example": "\\va variant_form\n\\ve dialect_comment",
+    "is_legacy": false,
+    "name": "variant forms",
+    "tag": "va"
+  },
+  "ve": {
+    "description": "Provide English comments or context for a variant form (\\va), such as naming the specific dialect or region where it is used.",
+    "example": "",
+    "is_legacy": false,
+    "name": "variant comment (English)",
+    "tag": "ve"
+  },
+  "vn": {
+    "description": "This is bundled with the \\va field and is where national language comments can be given for the variant form. MDF adds parentheses \"( )\" around this field. The related comment fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "variant comment (national)",
+    "tag": "vn"
+  },
+  "vr": {
+    "description": "This is bundled with the \\va field and is where regional language comments can be given for the variant form. If this field is included in the output, MDF adds parentheses \"( )\" around it and it is treated as part of the national field. The related comment fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "variant comment (regional)",
+    "tag": "vr"
+  },
+  "we": {
+    "description": "This gives the gloss to be used in word-level interlinear glossing. Related fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "word-level gloss (English)",
+    "tag": "we"
+  },
+  "wn": {
+    "description": "This gives the gloss to be used in word-level interlinear glossing. Related fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "word-level gloss (national)",
+    "tag": "wn"
+  },
+  "wr": {
+    "description": "This gives the gloss to be used in word-level interlinear glossing. Related fields are:",
+    "example": "",
+    "is_legacy": false,
+    "name": "word-level gloss (regional)",
+    "tag": "wr"
+  },
+  "xe": {
+    "description": "Provide an English translation of the vernacular example sentence (\\xv) for clarity and verification.",
+    "example": "\\xv example_sentence\n\\xe English_translation",
+    "is_legacy": false,
+    "name": "translation of example (English)",
+    "tag": "xe"
+  },
+  "xn": {
+    "description": "This provides the national translation of the example sentence given in the \\xv field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "translation of example (national)",
+    "tag": "xn"
+  },
+  "xr": {
+    "description": "This provides the regional translation of the example sentence given in the \\xv field. MDF adds the brackets \"[ ]\" around this field. If included in the output, it is treated as part of the national field.",
+    "example": "",
+    "is_legacy": false,
+    "name": "translation of example (regional)",
+    "tag": "xr"
+  },
+  "xv": {
+    "description": "Record a vernacular example sentence to demonstrate natural usage and grammatical context of the lexeme. Short, natural examples are best for distinguishing senses and verifying grammatical behavior.",
+    "example": "\\xv example_sentence\n\\xe English_translation",
+    "is_legacy": false,
+    "name": "example sentence (vernacular)",
+    "tag": "xv"
+  }
+}

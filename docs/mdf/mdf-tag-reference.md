@@ -84,6 +84,20 @@ MDF entries are typically structured hierarchically. The order of tags determine
 - `\ve`: **Variant Comment (English)**. Bundled with `\va`; specifies dialect name or area.
 - `\vn`: **Variant Comment (National)**. Bundled with `\va`; specifies dialect name/area.
 - `\vr`: **Variant Comment (Regional)**. Bundled with `\va`; specifies dialect name/area.
+- `\bib`: **Bibliographic Reference**. Full bibliographic citation for the source.
+- `\bb`: **Bibliographic Reference (Short)**. Short citation form.
+
+#### Paradigm and Inflectional Forms
+
+- `\1s`, `\2s`, `\3s`: **1st, 2nd, 3rd Person Singular**.
+- `\1d`, `\2d`, `\3d`: **1st, 2nd, 3rd Person Dual**.
+- `\1p`, `\2p`, `\3p`: **1st, 2nd, 3rd Person Plural**.
+- `\1i`, `\1e`: **1st Person Plural Inclusive/Exclusive**.
+- `\4s`, `\4d`, `\4p`: **Singular, Dual, Plural Non-human Forms**.
+
+#### Other Linguistic Markers
+
+- `\nwt`: **New Word/Term**. Used to mark a term as a new addition or reconstruction.
 
 ---
 

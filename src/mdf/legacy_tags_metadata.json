@@ -1,0 +1,193 @@
+{
+  "1d": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "1d"
+  },
+  "1e": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "1e"
+  },
+  "1i": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "1i"
+  },
+  "1p": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "1p"
+  },
+  "1s": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "1s"
+  },
+  "2d": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "2d"
+  },
+  "2p": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "2p"
+  },
+  "2s": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "2s"
+  },
+  "3d": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "3d"
+  },
+  "3p": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "3p"
+  },
+  "3s": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "3s"
+  },
+  "4d": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "4d"
+  },
+  "4p": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "4p"
+  },
+  "4s": {
+    "description": "Mark verb paradigm forms. Note: This tag is legacy; use \\pdv with a label in \\pdl for modern MDF compliance.",
+    "example": "\\1s yoban",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\pdv.",
+    "is_legacy": true,
+    "name": "Old verb paradigm markers",
+    "tag": "4s"
+  },
+  "cmt": {
+    "description": "Legacy marker equivalent to the modern \\nt tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\nt.",
+    "is_legacy": true,
+    "name": "Legacy tag \\cmt",
+    "tag": "cmt"
+  },
+  "ctg": {
+    "description": "Legacy marker equivalent to the modern \\ps tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\ps.",
+    "is_legacy": true,
+    "name": "Legacy tag \\ctg",
+    "tag": "ctg"
+  },
+  "drv": {
+    "description": "Legacy marker equivalent to the modern \\dr tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\dr.",
+    "is_legacy": true,
+    "name": "Legacy tag \\drv",
+    "tag": "drv"
+  },
+  "etm": {
+    "description": "Legacy marker equivalent to the modern \\et tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\et.",
+    "is_legacy": true,
+    "name": "Legacy tag \\etm",
+    "tag": "etm"
+  },
+  "gls": {
+    "description": "Legacy marker equivalent to the modern \\ge tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\ge.",
+    "is_legacy": true,
+    "name": "Legacy tag \\gls",
+    "tag": "gls"
+  },
+  "lmm": {
+    "description": "Legacy marker equivalent to the modern \\lx tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\lx.",
+    "is_legacy": true,
+    "name": "Legacy tag \\lmm",
+    "tag": "lmm"
+  },
+  "na": {
+    "description": "Record ethnographic notes pertinent to the lexeme. Note: This tag is legacy; use \\ee for modern MDF compliance.",
+    "example": "",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\ee.",
+    "is_legacy": true,
+    "name": "notes  on   anthropology",
+    "tag": "na"
+  },
+  "rmk": {
+    "description": "Legacy marker equivalent to the modern \\nt tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\nt.",
+    "is_legacy": true,
+    "name": "Legacy tag \\rmk",
+    "tag": "rmk"
+  },
+  "src": {
+    "description": "Legacy marker equivalent to the modern \\rf tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\rf.",
+    "is_legacy": true,
+    "name": "Legacy tag \\src",
+    "tag": "src"
+  },
+  "twn": {
+    "description": "Legacy marker equivalent to the modern \\cf tag.",
+    "handling_note": "Legacy tag. Update to modern MDF tag \\cf.",
+    "is_legacy": true,
+    "name": "Legacy tag \\twn",
+    "tag": "twn"
+  },
+  "xg": {
+    "description": "Discontinued field originally intended for interlinear glossing. This marker is no longer recognized in standard MDF.",
+    "example": "",
+    "handling_note": "Discontinued tag. This field is no longer recognized in standard MDF.",
+    "is_legacy": true,
+    "name": "(discontinued field)",
+    "tag": "xg"
+  }
+}

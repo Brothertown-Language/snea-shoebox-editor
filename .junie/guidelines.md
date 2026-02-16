@@ -90,6 +90,7 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **RAW STRINGS FOR MDF DOCSTRINGS**: When writing tests or code that include MDF tags (e.g., `\lx`, `\ln`) in docstrings or strings, ALWAYS use raw strings (e.g., `r"""..."""` or `r'...'`) to avoid `SyntaxWarning: invalid escape sequence`.
 - **STREAMLIT EXECUTION**: NEVER run Streamlit as a foreground app. You MUST run it as a background task using `nohup` and poll its log file in `tmp/` for status. **STRICTLY FORBIDDEN**: Running any `streamlit run` command without `nohup` and `&`. Any blocking execution is a CRITICAL VIOLATION.
 - **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`.
+- **NO CLI CODE BLOBS**: You are strictly FORBIDDEN from executing complex, multi-line logic collapsed into a single-line terminal command (e.g., long `python -c "..."` or `perl -e "..."`). These "blobs" are unreadable, bypass discrete verification, and violate the zero-trust protocol. If a task requires complex logic, you MUST create a temporary Python script in `tmp/` instead.
 - **NO ONE-LINERS**: No complex `python -c "..."`. Create a script in `tmp/` instead.
 - **CLEAN ROOT POLICY**: Redirect ALL output to `tmp/`. No log files or transient scripts in root.
 - **NO INTERACTIVE COMMANDS**: Use `< /dev/null` or non-interactive flags. **STRICTLY FORBIDDEN**: Running any command that might prompt for input or hang waiting for user interaction (e.g., direct `psql`). direct `psql` usage is FORBIDDEN as it hangs the session. ALWAYS use a Python script for database inspection. These commands will be automatically cancelled by the system, yielding no output and wasting session time. Always ensure commands are fully automated and headless.
@@ -117,6 +118,11 @@ These rules are non-negotiable. Every command and tool call MUST pass this check
 - **UV ONLY**: We are NOT using Conda. We are using `uv` for all dependency management and environment orchestration.
 - **EXCLUSIVE PGSERVER**: There is NO other PostgreSQL server to be used except for `pgserver` via `uv`! All local development and testing MUST use the `pgserver` instance managed by the application.
 - **UV BINARIES ONLY**: DO NOT attempt to ever use PostgreSQL binaries (e.g., `pg_config`, `postgres`, `psql`) that are NOT in the `uv` environment. All database-related tools and servers MUST be executed from within the `uv` virtual environment context.
+
+### 4. Discrete Execution Mandate
+- **STEP-BY-STEP DATA ASSEMBLY**: Complex data collection or implementation tasks MUST be broken into discrete, verifiable steps. The AI is FORBIDDEN from attempting to "finish" a complex task in a single large operation.
+- **MANDATORY VERIFICATION**: Each step MUST be verified by direct inspection (e.g., checking a partial output file) before proceeding to the next.
+- **DOCUMENTATION OF PROGRESS**: Maintain a clear log of completed discrete steps in the `LONG_TERM_MEMORY.md` or as part of the step-by-step plan status.
 
 ---
 

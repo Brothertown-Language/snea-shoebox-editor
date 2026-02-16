@@ -20,7 +20,14 @@ class MDFValidator:
         "rmk": "nt",
         "cmt": "nt",
         "twn": "cf",
-        "drv": "dr"
+        "drv": "dr",
+        # Paradigm legacy tags
+        "1s": "pdv", "2s": "pdv", "3s": "pdv", "4s": "pdv",
+        "1d": "pdv", "2d": "pdv", "3d": "pdv", "4d": "pdv",
+        "1p": "pdv", "1i": "pdv", "1e": "pdv", "2p": "pdv", "3p": "pdv", "4p": "pdv",
+        # Other discontinued tags
+        "xg": None,  # Discontinued field
+        "na": "ee"   # Anthropology -> Ethnology
     }
 
     @staticmethod
@@ -43,7 +50,7 @@ class MDFValidator:
         """
         diagnostics = []
         found_req_tags = []
-        tag_pattern = re.compile(r"^\s*\\([a-z]+)")
+        tag_pattern = re.compile(r"^\s*\\([a-z0-9]+)")
         valid_tags = get_valid_tags()
 
         # 1. First pass: Identify tags and check basic formatting
@@ -67,11 +74,18 @@ class MDFValidator:
             # Check for legacy tags
             if tag in MDFValidator.LEGACY_TAG_MAPPING:
                 modern = MDFValidator.LEGACY_TAG_MAPPING[tag]
-                diagnostics.append({
-                    "status": "suggestion",
-                    "message": f"Legacy tag \\{tag} detected. Consider updating to the modern MDF form \\{modern}.",
-                    "tag": tag
-                })
+                if modern:
+                    diagnostics.append({
+                        "status": "suggestion",
+                        "message": f"Legacy tag \\{tag} detected. Consider updating to the modern MDF form \\{modern}.",
+                        "tag": tag
+                    })
+                else:
+                    diagnostics.append({
+                        "status": "suggestion",
+                        "message": f"Discontinued MDF tag \\{tag} detected. This field is no longer recognized in standard MDF.",
+                        "tag": tag
+                    })
             elif tag not in valid_tags:
                 diagnostics.append({
                     "status": "note",

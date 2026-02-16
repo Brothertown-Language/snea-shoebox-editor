@@ -152,3 +152,11 @@ This file serves as a persistent memory of critical project context, user prefer
        - **Symmetric Matching**: Searching for "test" matches "tést" and vice versa.
        - **Index Utilization**: Both the database column (`normalized_term`) and the user search query are normalized, allowing prefix matches (`ILIKE 'term%'`) to utilize B-tree indexes for scalability.
        - **Preservation**: The original text (with diacritics and fancy quotes) is preserved in the `term` column of `search_entries`.
+
+- **Authoritative MDF Tags**: As of 2026-02-16, `src/mdf/tags.json` and `src/mdf/mdf_tags_metadata.json` have been established based on the authoritative source `docs/mdf/original/MDFields19a_UTF8.txt`.
+    - **Legacy Cleanup**: 16 tags identified as "no longer used" or "discontinued" were removed from the valid tags list (`src/mdf/tags.json`) and moved to legacy mapping in `src/mdf/validator.py`.
+    - **Legacy Tags**: `\1s`, `\2s`, `\3s`, `\4s`, `\1d`, `\2d`, `\3d`, `\4d`, `\1p`, `\2p`, `\3p`, `\4p`, `\1i`, `\1e` (replaced by `\pdv`), `\xg` (discontinued), `\na` (replaced by `\ee`).
+    - **Structured Metadata**: Established a dual-file metadata system in `src/mdf/`.
+        - `mdf_tags_metadata.json`: Contains 90 modern, valid MDF tags with descriptions and examples.
+        - `legacy_tags_metadata.json`: Contains 25 legacy and discontinued tags with explicit `handling_note` fields for human tooltips (e.g., "Legacy tag. Update to modern MDF tag \lx.").
+- **DISCRETE EXECUTION MANDATE**: As of 2026-02-16, complex data assembly and implementation tasks MUST be performed in discrete, verifiable steps with mandatory per-step inspection. Guidelines updated to Section I.4.
