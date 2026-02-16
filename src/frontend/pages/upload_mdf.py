@@ -7,7 +7,7 @@ def upload_mdf():
     from src.database.models.core import Source
     from src.services.upload_service import UploadService
     from src.services.identity_service import IdentityService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error, render_back_to_main_button
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf")
@@ -203,7 +203,8 @@ def upload_mdf():
         if st.button("Back to Main Menu", icon="⬅️", key="back_to_main"):
             st.session_state.pop("review_batch_id", None)
             st.session_state.pop("upload_active_source_name", None)
-            st.switch_page("pages/index.py")
+            from src.services.navigation_service import NavigationService
+            st.switch_page(NavigationService.PAGE_HOME)
 
     # ── Main panel: upload content ────────────────────────────────
     # Display flash message from batch completion or other bulk actions
@@ -341,7 +342,7 @@ def _render_review_view():
     """
     import streamlit as st
     from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error
+    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error, render_back_to_main_button
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")

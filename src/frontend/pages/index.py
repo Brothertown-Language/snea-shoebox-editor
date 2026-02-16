@@ -64,6 +64,7 @@ def index():
     if source_distribution:
         # Get source IDs to create links
         from src.services.linguistic_service import LinguisticService
+        from src.services.navigation_service import NavigationService
         sources = LinguisticService.get_sources_with_counts()
         source_id_map = {s['name']: s['id'] for s in sources}
         
@@ -79,7 +80,7 @@ def index():
                 if cols[i % 3].button(f"{source_name} ({count})", key=f"src_btn_{source_id}", use_container_width=True):
                     st.session_state.selected_source_id = str(source_id)
                     st.session_state.current_page = 1
-                    st.switch_page("pages/records.py")
+                    st.switch_page(NavigationService.PAGE_RECORDS)
     else:
         st.info("No source data available.")
 
@@ -106,7 +107,8 @@ def index():
                     st.session_state.search_query = f"#{item['record_id']}"
                     st.session_state.search_mode = "FTS"
                     st.session_state.current_page = 1
-                    st.switch_page("pages/records.py")
+                    from src.services.navigation_service import NavigationService
+                    st.switch_page(NavigationService.PAGE_RECORDS)
     else:
         st.info("No recent activity recorded.")
 

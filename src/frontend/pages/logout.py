@@ -42,7 +42,8 @@ def logout_page() -> None:
     # We set a flag and switch to index.py. In index.py, we will check this flag
     # and trigger the full browser reload to root (/).
     st.session_state.trigger_logout_reload = True
-    st.switch_page("pages/index.py")
+    from src.services.navigation_service import NavigationService
+    st.switch_page(NavigationService.PAGE_HOME)
 
 if __name__ == "__main__":
     logout_page()

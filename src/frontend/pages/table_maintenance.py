@@ -109,7 +109,7 @@ def render_reassign_dialog(source, all_sources):
             st.rerun()
 
 def main():
-    from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css
+    from src.frontend.ui_utils import hide_sidebar_nav, apply_standard_layout_css, render_back_to_main_button
     # Role guard — only admin
     user_role = st.session_state.get("user_role")
     if user_role != "admin":
@@ -136,8 +136,7 @@ def main():
         )
         
         st.divider()
-        if st.button("Back to Main Menu", use_container_width=True):
-            st.switch_page("pages/index.py")
+        render_back_to_main_button()
 
     if table_option == "Sources":
         render_sources_maintenance()

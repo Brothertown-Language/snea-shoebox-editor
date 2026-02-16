@@ -49,16 +49,16 @@ class Record(Base):
     """
     The source of truth for all linguistic entries.
     Organized for human readability in SQL viewers, prioritizing linguistic fields.
-    Linked to raw MDF data via \nt Record: <id> sync logic.
+    Linked to raw MDF data via \\nt Record: <id> sync logic.
 
     Attributes:
-        id (int): Primary key, synchronized with \nt Record: <id> in raw MDF.
-        lx (str): Lexeme headword (\lx).
-        hm (int): Homonym number (\hm), defaults to 1.
-        ps (str): Part of Speech (\ps).
-        ge (str): English Gloss (\ge).
+        id (int): Primary key, synchronized with \\nt Record: <id> in raw MDF.
+        lx (str): Lexeme headword (\\lx).
+        hm (int): Homonym number (\\hm), defaults to 1.
+        ps (str): Part of Speech (\\ps).
+        ge (str): English Gloss (\\ge).
         source_id (int): FK to sources table.
-        source_page (str): Specific citation or page number (\so).
+        source_page (str): Specific citation or page number (\\so).
         status (str): Workflow state ('draft', 'edited', 'approved').
         embedding (Vector): 1536-dim semantic vector for cross-reference lookup.
         mdf_data (str): Full raw MDF text block.

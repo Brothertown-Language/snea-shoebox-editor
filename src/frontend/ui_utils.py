@@ -306,6 +306,16 @@ def apply_standard_layout_css() -> None:
 # ── Page Utilities ─────────────────────────────────────────────────────
 
 
+def render_back_to_main_button() -> None:
+    """
+    Renders a consistent 'Back to Main Menu' button in the sidebar.
+    Uses centralized Page objects from NavigationService to prevent broken links.
+    """
+    from src.services.navigation_service import NavigationService
+    if st.button("Back to Main Menu", icon="⬅️", use_container_width=True, key="nav_back_to_main"):
+        st.switch_page(NavigationService.PAGE_HOME)
+
+
 def reload_page_at_root(delay_ms: int = 0) -> None:
     js_code = f"""
         <script>

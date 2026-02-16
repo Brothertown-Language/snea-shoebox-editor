@@ -11,7 +11,8 @@ def user_info_page() -> None:
     if not st.session_state.get("logged_in"):
         st.warning("Please login to view user information.")
         if st.button("Go to Login"):
-            st.switch_page("pages/login.py")
+            from src.services.navigation_service import NavigationService
+            st.switch_page(NavigationService.PAGE_LOGIN)
         return
 
     user = st.session_state.get("user_info")

@@ -4,8 +4,19 @@ def system_status():
     import streamlit as st
     import os
     from src.services.infrastructure_service import InfrastructureService
-    from src.frontend.ui_utils import apply_standard_layout_css
+    from src.frontend.ui_utils import apply_standard_layout_css, hide_sidebar_nav, render_back_to_main_button
+    
+    # Hide the main navigation menu — this view owns the sidebar entirely
+    hide_sidebar_nav()
+    
     apply_standard_layout_css()
+
+    # ── Sidebar ───────────────────────────────────────────────────
+    with st.sidebar:
+        st.markdown("**System Status**")
+        st.divider()
+        render_back_to_main_button()
+
     st.write("Current system status and connectivity diagnostics.")
 
     col1, col2 = st.columns(2)

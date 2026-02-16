@@ -13,7 +13,7 @@ def records():
     from src.services.upload_service import UploadService
     from src.services.identity_service import IdentityService
     from src.services.preference_service import PreferenceService
-    from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error
+    from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error, render_back_to_main_button
     from src.mdf.validator import MDFValidator
     from src.logging_config import get_logger
 
@@ -387,8 +387,7 @@ def records():
             st.button("Download (Empty)", disabled=True, use_container_width=True)
 
         st.divider()
-        if st.button("Back to Main Menu", use_container_width=True):
-            st.switch_page("pages/index.py")
+        render_back_to_main_button()
 
     # --- 4. Main Panel: Records List ---
     if not records_batch:

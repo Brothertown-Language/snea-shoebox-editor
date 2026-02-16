@@ -30,8 +30,6 @@ The **SNEA Online Shoebox Editor** is a collaborative platform for managing ling
 | Testing            | pytest                                                                    |
 | Deployment         | Automatic on push to `main` (Streamlit Community Cloud)                   |
 
-> *Note: The `src/frontend/` folder is a mandatory legacy artifact required by Streamlit Cloud's entry point configuration and cannot be changed.*
-
 ## Requirements
 
 - **Python 3.12** — exact version recommended (`requires-python = "==3.12.*"`).
@@ -92,9 +90,9 @@ uv run python scripts/<script_name>.py
 
 ```
 snea-shoebox-editor/
+├── streamlit_app.py       # Main application entry point & orchestrator
 ├── src/
-│   ├── frontend/          # Streamlit app entry point & pages
-│   │   ├── streamlit_app.py # Main application orchestrator
+│   ├── frontend/          # Streamlit pages & UI components
 │   │   ├── pages/         # Streamlit multi-page views
 │   │   ├── constants.py   # UI constants
 │   │   ├── ui_utils.py    # UI helper functions & dialogs

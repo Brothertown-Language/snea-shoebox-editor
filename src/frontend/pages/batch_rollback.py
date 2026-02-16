@@ -161,7 +161,7 @@ def main():
     UI for Phase E-2: Batch Rollback Support.
     Allows administrators to rollback upload sessions.
     """
-    from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
+    from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error, hide_sidebar_nav, render_back_to_main_button
     from src.services.identity_service import IdentityService
     # Role guard — only admin
     user_role = st.session_state.get("user_role")
@@ -169,8 +169,18 @@ def main():
         st.error("You do not have permission to access this page. Administrator role required.")
         return
 
+    # Hide the main navigation menu — this view owns the sidebar entirely
+    hide_sidebar_nav()
+
     apply_standard_layout_css()
     
+    # ── Sidebar ───────────────────────────────────────────────────
+    with st.sidebar:
+        st.markdown("**Batch Rollback**")
+        st.divider()
+        render_back_to_main_button()
+
+    # ── Main Content ──────────────────────────────────────────────
     st.write("Undo entire upload sessions. "
              "Only reversible sessions are shown below.")
     
