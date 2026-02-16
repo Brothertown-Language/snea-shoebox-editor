@@ -1,24 +1,5 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import sys
-import os
-
-# Add the project root to sys.path to ensure src imports work
-# This MUST happen before any `src.*` imports.
-#
-# MANDATORY: Lazy Imports (Inside Functions) for All Pages
-# --------------------------------------------------------
-# To prevent `ModuleNotFoundError: No module named 'src'` on streamlit.io,
-# all imports from the `src` package in files within `src/frontend/pages/`
-# MUST be placed inside their respective functions (e.g., inside `login()`,
-# `index()`). Top-level `src.*` imports in pages are strictly FORBIDDEN.
-# This ensures `app.py` has initialized `sys.path` before they are called.
-# --------------------------------------------------------
-current_dir = os.path.dirname(os.path.abspath(__file__))
-project_root = os.path.dirname(os.path.dirname(current_dir))
-if project_root not in sys.path:
-    sys.path.insert(0, project_root)
-
 import streamlit as st
 from src.logging_config import get_logger
 
