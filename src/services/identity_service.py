@@ -6,7 +6,7 @@ Identity Service for managing GitHub user identity and database synchronization.
 import streamlit as st
 import requests
 from typing import Optional, Dict, Any, List
-from src.database import get_session, User
+from src.database import get_session, User, Source
 from sqlalchemy.sql import func
 from src.services.audit_service import AuditService
 from src.logging_config import get_logger
@@ -158,6 +158,11 @@ class IdentityService:
                     session.add(user)
             
             session.commit()
+
+            # Ensure Source record exists for the user
+            SourceService.ensure_user_source(session, username, full_name, email)
+            session.commit()
+
         except Exception as e:
             session.rollback()
             st.error(f"Failed to sync user to database: {e}")
@@ -208,3 +213,44 @@ class IdentityService:
             return IdentityService.fetch_github_user_info(access_token)
         logger.debug("Identity already synchronized, skipping fetch")
         return True
+
+class SourceService:
+    """
+    Internal service for managing Source record synchronization.
+    """
+    @staticmethod
+    def ensure_user_source(session, username: str, full_name: Optional[str], email: str) -> None:
+        """
+        Create or update a Source record for the user if it doesn't already exist.
+        Follows standard email citation and description formats.
+        """
+        try:
+            # Check if source with user's name already exists
+            source = session.query(Source).filter_by(name=username).first()
+            
+            # Format display name: "Full Name" or "username"
+            display_name = full_name if full_name else username
+            description = f'"{display_name}" <{email}>'
+            citation_format = f'"{display_name}" <{email}>'
+
+            if not source:
+                logger.info("Creating new Source record for user: %s", username)
+                new_source = Source(
+                    name=username,
+                    short_name=email,
+                    description=description,
+                    citation_format=citation_format
+                )
+                session.add(new_source)
+            else:
+                # Update existing source only if it's currently empty or has old info
+                # Only updating if the short_name or description changed
+                if source.short_name != email or source.description != description:
+                    logger.debug("Updating existing Source record for user: %s", username)
+                    source.short_name = email
+                    source.description = description
+                    source.citation_format = citation_format
+                    
+        except Exception as e:
+            logger.error("Failed to ensure user Source record for %s: %s", username, e)
+            # We don't want to fail the login if Source creation fails, but we log it.

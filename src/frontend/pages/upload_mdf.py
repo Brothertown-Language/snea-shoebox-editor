@@ -66,7 +66,16 @@ def upload_mdf():
         final_options = [SELECT_SOURCE_LABEL, CREATE_NEW_LABEL] + source_options
 
         # Initialize default from session state or placeholder.
-        current_selection = st.session_state.get("upload_active_source_name", SELECT_SOURCE_LABEL)
+        # If not explicitly set in session, try to find the current user's source collection
+        if "upload_active_source_name" not in st.session_state:
+            email = st.session_state.get("user_email")
+            github_username = IdentityService.get_github_username(email)
+            if github_username and github_username in source_options:
+                current_selection = github_username
+            else:
+                current_selection = SELECT_SOURCE_LABEL
+        else:
+            current_selection = st.session_state["upload_active_source_name"]
         
         try:
             default_index = final_options.index(current_selection)
