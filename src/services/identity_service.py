@@ -5,6 +5,7 @@ Identity Service for managing GitHub user identity and database synchronization.
 """
 import streamlit as st
 import requests
+from datetime import datetime
 from typing import Optional, Dict, Any, List
 from src.database import get_session, User, Source
 from sqlalchemy.sql import func
@@ -235,21 +236,17 @@ class SourceService:
 
             if not source:
                 logger.info("Creating new Source record for user: %s", username)
+                year = datetime.now().year
+                short_name = f"{username} ({year})"
                 new_source = Source(
                     name=username,
-                    short_name=email,
+                    short_name=short_name,
                     description=description,
                     citation_format=citation_format
                 )
                 session.add(new_source)
-            else:
-                # Update existing source only if it's currently empty or has old info
-                # Only updating if the short_name or description changed
-                if source.short_name != email or source.description != description:
-                    logger.debug("Updating existing Source record for user: %s", username)
-                    source.short_name = email
-                    source.description = description
-                    source.citation_format = citation_format
+            # Automatic source addition should not change the source record or update it after it is created.
+            # No else block here.
                     
         except Exception as e:
             logger.error("Failed to ensure user Source record for %s: %s", username, e)
