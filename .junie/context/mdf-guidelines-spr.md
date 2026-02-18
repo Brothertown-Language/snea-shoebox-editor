@@ -28,6 +28,7 @@ Legacy -> Modern:
 \xv/\xe: Example/Translation
 \cf: Cross-reference
 \nt: Notes
+\ln: Language
 \dt: Date (YYYY-MM-DD)
 
 [RULES]
@@ -35,3 +36,9 @@ Legacy -> Modern:
 - Starts with backslash.
 - Hierarchy via indentation.
 - Distinct stages for transformations (Atomic).
+- **DEBUGGING TRANSFORMATIONS:**
+  1. Create a minimal test file with the single record causing the issue.
+  2. Use a "trace script" to call transformation methods sequentially.
+  3. Print the state of `record.lines` after each method call.
+  4. Pinpoint the first method that damages the data.
+  5. Verify the fix using the same trace.
