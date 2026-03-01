@@ -70,6 +70,12 @@ def _initialize_database():
                     if config:
                         r_status = InfrastructureService.get_service_status(config)
                         remote_info = f" [remote_state={r_status or 'unknown'}]"
+                        
+                        # If POWEROFF, send start command to Aiven
+                        if attempt == 1 and r_status == "POWEROFF":
+                            logger.info("Aiven service is POWEROFF. Sending start command...")
+                            InfrastructureService.start_service(config)
+                            remote_info += " [start_sent]"
                 
                 if "dns resolution failed" in err_msg:
                     remote_info += " [dns=not_ready]"
