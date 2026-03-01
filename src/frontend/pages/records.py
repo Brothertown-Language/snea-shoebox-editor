@@ -13,6 +13,7 @@ def records():
     from src.services.upload_service import UploadService
     from src.services.identity_service import IdentityService
     from src.services.preference_service import PreferenceService
+    from src.services.navigation_service import NavigationService
     from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error, render_back_to_main_button
     from src.mdf.validator import MDFValidator
     from src.logging_config import get_logger
@@ -277,6 +278,9 @@ def records():
                         st.session_state.global_edit_mode = False
                         st.success("All changes saved!")
                     st.rerun()
+            
+            if st.button("⌨️ Direct Entry", use_container_width=True, help="Switch to Direct Record Entry mode"):
+                st.switch_page(NavigationService.PAGE_DIRECT_ENTRY)
         else:
             st.info("View-only mode (Editor access required)")
 

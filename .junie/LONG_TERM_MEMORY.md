@@ -167,3 +167,7 @@ This file serves as a persistent memory of critical project context, user prefer
     - **UI Protection**: Records with `is_locked=True` can **never** enter edit mode (text area view) in the Records page, even if Global Edit Mode is active. A prominent 🔒 icon and warning banner are displayed.
     - **Audit**: Every lock/unlock action is captured in `EditHistory` and `UserActivityLog`.
     - **MDF Integration**: Matches against locked records are flagged as `locked_conflict` in the `matchup_queue`. Dedicated workflows added to "Discard All Locked Conflicts" or "Download Locked Conflicts" as an MDF fragment.
+
+- **Direct Entry Validation (v1.0)**: As of 2026-03-01, implemented validation for the Direct Entry page to ensure data integrity.
+    - **\lx Requirement**: Each entry field must start with an `\lx` marker (ignoring leading whitespace/blank lines).
+    - **\lemma Prohibition**: The `\lemma` tag is strictly forbidden in direct entry. Users are instructed to use `\se` (Subentry) or `\lx` (New Record) instead.

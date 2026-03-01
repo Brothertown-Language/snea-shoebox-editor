@@ -13,6 +13,7 @@ PAGE_STATUS = st.Page("src/frontend/pages/system_status.py", title="System Statu
 PAGE_HOME = st.Page("src/frontend/pages/index.py", title="Main Menu", icon="🏠", url_path="index", default=True)
 PAGE_USER = st.Page("src/frontend/pages/user_info.py", title="User Info", icon="👤", url_path="profile")
 PAGE_RECORDS = st.Page("src/frontend/pages/records.py", title="Records", icon="📚", url_path="records")
+PAGE_DIRECT_ENTRY = st.Page("src/frontend/pages/direct_entry.py", title="Direct Entry", icon="⌨️", url_path="direct-entry")
 PAGE_UPLOAD = st.Page("src/frontend/pages/upload_mdf.py", title="Upload MDF", icon="📤", url_path="upload")
 PAGE_BATCH_ROLLBACK = st.Page("src/frontend/pages/batch_rollback.py", title="Batch Rollback", icon="🔙", url_path="rollback")
 PAGE_TABLE_MAINTENANCE = st.Page("src/frontend/pages/table_maintenance.py", title="Table Maintenance", icon="🛠️", url_path="maintenance")
@@ -29,6 +30,7 @@ class NavigationService:
     PAGE_HOME = PAGE_HOME
     PAGE_USER = PAGE_USER
     PAGE_RECORDS = PAGE_RECORDS
+    PAGE_DIRECT_ENTRY = PAGE_DIRECT_ENTRY
     PAGE_UPLOAD = PAGE_UPLOAD
     PAGE_BATCH_ROLLBACK = PAGE_BATCH_ROLLBACK
     PAGE_TABLE_MAINTENANCE = PAGE_TABLE_MAINTENANCE
@@ -49,7 +51,7 @@ class NavigationService:
         if logged_in:
             logger.debug("Returning authenticated navigation tree for role: %s", user_role)
             nav_tree = {
-                "Main": [cls.PAGE_HOME, cls.PAGE_RECORDS, cls.PAGE_UPLOAD],
+                "Main": [cls.PAGE_HOME, cls.PAGE_RECORDS, cls.PAGE_DIRECT_ENTRY, cls.PAGE_UPLOAD],
                 "System": [cls.PAGE_STATUS],
             }
             
@@ -69,6 +71,7 @@ class NavigationService:
                 cls.PAGE_LOGIN, 
                 cls.PAGE_HOME, 
                 cls.PAGE_RECORDS,
+                cls.PAGE_DIRECT_ENTRY,
                 cls.PAGE_UPLOAD,
                 cls.PAGE_BATCH_ROLLBACK,
                 cls.PAGE_STATUS, 
