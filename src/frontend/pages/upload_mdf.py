@@ -419,6 +419,7 @@ def _render_review_table(batch_id, session_deps):
         "All Records": (None, None),
         "Matched (Exact)": ("matched", "exact"),
         "Matched (Base-form)": ("matched", "base_form"),
+        "Locked Conflict (⚠️)": ("locked_conflict", None),
         "Create New Record": ("create_new", None),
         "Create Homonym": ("create_homonym", None),
         "Discard Entry": ("discard", None),
@@ -429,6 +430,28 @@ def _render_review_table(batch_id, session_deps):
     with st.sidebar:
         st.markdown("**Filters**")
         
+        # Locked Conflict Global Warning
+        with get_session() as session:
+            locked_conflict_count = session.query(MatchupQueue).filter_by(batch_id=batch_id, status='locked_conflict').count()
+            if locked_conflict_count > 0:
+                st.error(f"⚠️ {locked_conflict_count} locked conflicts detected!")
+                if st.button("Discard All Locked Conflicts", use_container_width=True, help="Remove all entries that conflict with locked records"):
+                    discarded = UploadService.discard_locked_conflicts(batch_id)
+                    st.success(f"Discarded {discarded} entries.")
+                    st.rerun()
+                
+                fragment = UploadService.download_locked_conflicts(batch_id)
+                if fragment:
+                    st.download_button(
+                        label="Download Locked Conflicts",
+                        data=fragment,
+                        file_name=f"locked_conflicts_{batch_id[:8]}.mdf",
+                        mime="text/plain",
+                        use_container_width=True,
+                        help="Download conflicting records as an MDF fragment for manual review"
+                    )
+                st.divider()
+
         # ── Page Size ─────────────────────────────────────────────────
         page_size_options = [1, 5, 10, 25, 50]
         if "review_page_size" not in st.session_state:
@@ -782,11 +805,18 @@ def _render_review_table(batch_id, session_deps):
 
             with hdr_col4:
                 # D-1c: Per-record Apply Now button
-                actionable = selected_status in ('matched', 'create_new', 'create_homonym', 'discard')
+                # Disable Apply Now for locked conflicts
+                is_locked_conflict = (row.status == 'locked_conflict')
+                actionable = selected_status in ('matched', 'create_new', 'create_homonym', 'discard') and not is_locked_conflict
+                
+                if is_locked_conflict:
+                    st.error("🔒 Locked")
+                
                 if st.button(
                     "Apply Now",
                     key=f"apply_{row.id}",
                     disabled=not actionable,
+                    help="Record is locked and cannot be overwritten." if is_locked_conflict else None
                 ):
                     try:
                         session_id = str(_uuid.uuid4())

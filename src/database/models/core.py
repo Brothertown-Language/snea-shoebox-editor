@@ -82,6 +82,12 @@ class Record(Base):
     embedding = Column(Vector(1536))  # Semantic cross-reference
     mdf_data = Column(Text, nullable=False)  # Raw MDF body
     
+    # Locking fields
+    is_locked = Column(Boolean, nullable=False, default=False)
+    locked_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))
+    locked_at = Column(TIMESTAMP(timezone=True))
+    lock_note = Column(Text)
+    
     # Audit & Workflow fields
     current_version = Column(Integer, nullable=False, default=1)
     is_deleted = Column(Boolean, nullable=False, default=False)

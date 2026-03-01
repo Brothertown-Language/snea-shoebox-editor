@@ -303,7 +303,7 @@ class UploadService:
                 # or we just get all records for these lx values.
                 # Since multiple records might have same lx (homonyms), we get them all.
                 same_source_candidates = (
-                    session.query(Record.id, Record.lx, Record.hm)
+                    session.query(Record.id, Record.lx, Record.hm, Record.is_locked)
                     .filter(
                         Record.source_id == source_id,
                         Record.is_deleted == False,
@@ -391,7 +391,7 @@ class UploadService:
                         base = _strip_diacritics(row.lx)
                         # We do a targeted query for this specific base form if it wasn't exact
                         base_match = (
-                            session.query(Record.id, Record.lx)
+                            session.query(Record.id, Record.lx, Record.is_locked)
                             .filter(
                                 Record.source_id == source_id,
                                 Record.is_deleted == False,
@@ -407,6 +407,14 @@ class UploadService:
                             suggested_record_id = base_match.id
                             suggested_lx = base_match.lx
                             match_type = 'base_form'
+                            suggested_is_locked = base_match.is_locked
+                        else:
+                            suggested_is_locked = False
+                    else:
+                        # Find if the suggested record is locked
+                        suggested_is_locked = False
+                        if suggested_record_id in chunk_id_map:
+                            suggested_is_locked = chunk_id_map[suggested_record_id].is_locked
 
                     # D. Cross-source indicators
                     cross_sources = set(other_exact_map.get(row.lx, []))
@@ -439,6 +447,9 @@ class UploadService:
                     # Update the queue row
                     row.suggested_record_id = suggested_record_id
                     row.match_type = match_type
+                    
+                    if suggested_is_locked:
+                        row.status = 'locked_conflict'
 
                     results.append({
                         'queue_id': row.id,
@@ -446,6 +457,7 @@ class UploadService:
                         'suggested_record_id': suggested_record_id,
                         'suggested_lx': suggested_lx,
                         'match_type': match_type,
+                        'suggested_is_locked': suggested_is_locked,
                         'cross_source_matches': cross_source_matches,
                         'record_id_conflict': record_id_conflict,
                         'record_id_conflict_sources': record_id_conflict_sources,
@@ -1239,6 +1251,46 @@ class UploadService:
             return count
         except Exception:
             session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def discard_locked_conflicts(batch_id: str) -> int:
+        """Delete all locked_conflict rows for a batch. Returns count deleted."""
+        session = get_session()
+        try:
+            count = (
+                session.query(MatchupQueue)
+                .filter_by(batch_id=batch_id, status='locked_conflict')
+                .delete()
+            )
+            session.commit()
+            return count
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def download_locked_conflicts(batch_id: str) -> Optional[str]:
+        """Export all locked_conflict entries for a batch as an MDF fragment."""
+        session = get_session()
+        try:
+            conflicts = (
+                session.query(MatchupQueue)
+                .filter_by(batch_id=batch_id, status='locked_conflict')
+                .order_by(MatchupQueue.id)
+                .all()
+            )
+            if not conflicts:
+                return None
+            
+            # Combine mdf_data with double blank lines between records
+            mdf_text = "\n\n".join([c.mdf_data.strip() for c in conflicts])
+            return mdf_text
+        except Exception:
             raise
         finally:
             session.close()

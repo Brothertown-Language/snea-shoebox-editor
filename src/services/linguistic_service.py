@@ -13,7 +13,8 @@ from sqlalchemy import func, or_, text
 from sqlalchemy.orm import Session, joinedload
 from src.database.connection import get_session
 from src.database.models.core import Source, Record, Language, RecordLanguage
-from src.database.models.workflow import MatchupQueue
+from src.database.models.workflow import MatchupQueue, EditHistory
+from src.database.models.identity import UserActivityLog
 from src.database.models.search import SearchEntry
 from src.logging_config import get_logger
 
@@ -240,6 +241,10 @@ class LinguisticService:
                 "source_name": record.source.name if record.source else None,
                 "source_page": record.source_page,
                 "status": record.status,
+                "is_locked": record.is_locked,
+                "locked_by": record.locked_by,
+                "locked_at": record.locked_at,
+                "lock_note": record.lock_note,
                 "mdf_data": record.mdf_data,
                 "languages": languages,
                 "updated_at": record.updated_at,
@@ -273,6 +278,7 @@ class LinguisticService:
         source_id: Optional[int] = None,
         language_id: Optional[int] = None,
         status: Optional[str] = None,
+        is_locked: Optional[bool] = None,
         search_term: Optional[str] = None,
         search_mode: str = "Lexeme",
         record_ids: Optional[List[int]] = None,
@@ -315,6 +321,9 @@ class LinguisticService:
                 
                 if status:
                     query = query.filter(Record.status == status)
+                
+                if is_locked is not None:
+                    query = query.filter(Record.is_locked == is_locked)
                 
                 if search_term:
                     if search_mode == "Lexeme":
@@ -361,6 +370,10 @@ class LinguisticService:
                     "ps": r.ps,
                     "ge": r.ge,
                     "status": r.status,
+                    "is_locked": r.is_locked,
+                    "locked_by": r.locked_by,
+                    "locked_at": r.locked_at.strftime("%Y-%m-%d %H:%M:%S") if r.locked_at else None,
+                    "lock_note": r.lock_note,
                     "source_id": r.source_id,
                     "source_name": r.source.name if r.source else None,
                     "mdf_data": r.mdf_data,
@@ -544,11 +557,15 @@ class LinguisticService:
         """
         Update an existing record and record history.
         """
-        from src.database.models.workflow import EditHistory
-        
         with get_session() as session:
             record = session.query(Record).filter(Record.id == record_id).first()
             if not record:
+                return False
+            
+            # AUTHORIZATION CHECK: record may not switch to "edit" mode if locked.
+            # STRICT IMMUTABILITY: Reject all updates if is_locked is True.
+            if record.is_locked:
+                logger.warning(f"Rejecting update to locked record {record_id} by {user_email}")
                 return False
             
             prev_data = record.mdf_data
@@ -592,6 +609,97 @@ class LinguisticService:
             except Exception as e:
                 session.rollback()
                 logger.error(f"Failed to update record {record_id}: {e}")
+                return False
+
+    @staticmethod
+    def lock_record(record_id: int, user_email: str, note: Optional[str] = None) -> bool:
+        """
+        Lock a record to prevent further edits.
+        """
+        with get_session() as session:
+            record = session.query(Record).filter(Record.id == record_id).first()
+            if not record or record.is_locked:
+                return False
+            
+            prev_data = record.mdf_data
+            record.is_locked = True
+            record.locked_by = user_email
+            record.locked_at = func.now()
+            record.lock_note = note
+            
+            try:
+                # Audit: EditHistory snapshot
+                history = EditHistory(
+                    record_id=record.id,
+                    user_email=user_email,
+                    version=record.current_version + 1,
+                    change_summary=f"Record locked: {note}" if note else "Record locked",
+                    prev_data=prev_data,
+                    current_data=record.mdf_data
+                )
+                session.add(history)
+                
+                # Audit: user_activity_log
+                activity = UserActivityLog(
+                    user_email=user_email,
+                    action="record_lock",
+                    details=f"Locked record {record_id}. Note: {note}" if note else f"Locked record {record_id}"
+                )
+                session.add(activity)
+                
+                session.commit()
+                logger.info(f"Locked record {record_id} by {user_email}")
+                return True
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Failed to lock record {record_id}: {e}")
+                return False
+
+    @staticmethod
+    def unlock_record(record_id: int, user_email: str) -> bool:
+        """
+        Unlock a record to allow edits.
+        """
+        with get_session() as session:
+            record = session.query(Record).filter(Record.id == record_id).first()
+            if not record or not record.is_locked:
+                return False
+            
+            prev_data = record.mdf_data
+            record.is_locked = False
+            # We keep locked_by/locked_at/lock_note as-is for history until next lock?
+            # Plan says: "Unlock Record" → confirmation → set is_locked = FALSE, clear locked_by, locked_at, optionally retain lock_note
+            # Let's clear them to be clean.
+            record.locked_by = None
+            record.locked_at = None
+            record.lock_note = None
+            
+            try:
+                # Audit: EditHistory snapshot
+                history = EditHistory(
+                    record_id=record.id,
+                    user_email=user_email,
+                    version=record.current_version + 1,
+                    change_summary="Record unlocked",
+                    prev_data=prev_data,
+                    current_data=record.mdf_data
+                )
+                session.add(history)
+                
+                # Audit: user_activity_log
+                activity = UserActivityLog(
+                    user_email=user_email,
+                    action="record_unlock",
+                    details=f"Unlocked record {record_id}"
+                )
+                session.add(activity)
+                
+                session.commit()
+                logger.info(f"Unlocked record {record_id} by {user_email}")
+                return True
+            except Exception as e:
+                session.rollback()
+                logger.error(f"Failed to unlock record {record_id}: {e}")
                 return False
 
     @staticmethod

@@ -52,6 +52,8 @@ def records():
         st.session_state.selected_source_id = "All"
     if "global_edit_mode" not in st.session_state:
         st.session_state.global_edit_mode = False
+    if "is_locked_filter" not in st.session_state:
+        st.session_state.is_locked_filter = "All"
     if "pending_edits" not in st.session_state:
         st.session_state.pending_edits = {}
     if "local_edits" not in st.session_state:
@@ -104,8 +106,16 @@ def records():
     
     selection_record_ids = [r['id'] for r in st.session_state.selection] if st.session_state.view_selection_only else None
     
+    # Map is_locked_filter to boolean
+    is_locked_bool = None
+    if st.session_state.is_locked_filter == "Locked":
+        is_locked_bool = True
+    elif st.session_state.is_locked_filter == "Unlocked":
+        is_locked_bool = False
+    
     search_result = LinguisticService.search_records(
         source_id=source_filter_id,
+        is_locked=is_locked_bool,
         search_term=search_term,
         search_mode=st.session_state.search_mode,
         record_ids=selection_record_ids,
@@ -167,11 +177,19 @@ def records():
         source_name_map["All"] = "All"
 
         current_source_name = source_name_map.get(str(st.session_state.selected_source_id), "All")
-        st.selectbox("Select Source", source_options, 
+        st.radio("Select Source", source_options, 
                                             index=source_options.index(current_source_name), 
                                             key="source_select",
                                             label_visibility="collapsed",
+                                            horizontal=True,
                                             on_change=on_source_change)
+        
+        # Is Locked Filter
+        lock_options = ["All", "Locked", "Unlocked"]
+        st.radio("Status: Locked", lock_options,
+                 index=lock_options.index(st.session_state.is_locked_filter),
+                 key="is_locked_filter",
+                 horizontal=True)
 
         st.markdown("**Pagination**")
         
@@ -226,16 +244,38 @@ def records():
                     st.session_state.pending_edits = {}
                     st.rerun()
                 if col_e2.button("Save All", icon="💾", type="primary", use_container_width=True):
+                    save_errors = []
+                    skipped_locked = []
                     for rid, mdf in st.session_state.pending_edits.items():
-                        LinguisticService.update_record(
+                        # Explicit check for locked records during bulk save
+                        rec = LinguisticService.get_record(rid)
+                        if rec and rec.get('is_locked'):
+                            skipped_locked.append(rid)
+                            continue
+                            
+                        success = LinguisticService.update_record(
                             record_id=rid,
                             user_email=user_email,
                             mdf_data=mdf,
                             change_summary="Bulk update via global edit mode"
                         )
-                    st.session_state.pending_edits = {}
-                    st.session_state.global_edit_mode = False
-                    st.success("All changes saved!")
+                        if not success:
+                            save_errors.append(rid)
+                    
+                    if save_errors or skipped_locked:
+                        error_msg = ""
+                        if save_errors:
+                            error_msg += f"Failed to save {len(save_errors)} records (IDs: {save_errors}). "
+                        if skipped_locked:
+                            error_msg += f"Skipped {len(skipped_locked)} locked records (IDs: {skipped_locked})."
+                        st.error(error_msg)
+                        
+                        # Keep only failed/skipped edits in pending_edits
+                        st.session_state.pending_edits = {rid: mdf for rid, mdf in st.session_state.pending_edits.items() if rid in save_errors or rid in skipped_locked}
+                    else:
+                        st.session_state.pending_edits = {}
+                        st.session_state.global_edit_mode = False
+                        st.success("All changes saved!")
                     st.rerun()
         else:
             st.info("View-only mode (Editor access required)")
@@ -399,9 +439,16 @@ def records():
             mdf_lines = mdf_data.split('\n')
             
             with st.container(border=True):
-                st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'})")
+                is_locked = bool(record.get('is_locked', False))
+                lock_status = " 🔒" if is_locked else ""
+                st.markdown(f"**Record #{record_id}** (Source: {record['source_name'] or 'Unknown'}){lock_status}")
                 
-                is_editing = st.session_state.global_edit_mode or record_id in st.session_state.local_edits
+                # Check if it should be in edit mode (Global mode or local edit)
+                # MUST NOT enter edit mode if locked.
+                is_editing = False
+                if not is_locked:
+                    if st.session_state.global_edit_mode or record_id in st.session_state.local_edits:
+                        is_editing = True
                 
                 if is_editing:
                     # Edit Mode: Record in text area
@@ -438,7 +485,10 @@ def records():
                                 st.success(f"Record #{record_id} saved.")
                                 st.rerun()
                             else:
-                                st.error(f"Failed to save Record #{record_id}.")
+                                if is_locked:
+                                    st.error(f"Failed to save Record #{record_id}: Record is locked.")
+                                else:
+                                    st.error(f"Failed to save Record #{record_id}. It may have been modified by another user.")
                         except Exception as e:
                             handle_ui_error(e, "Error saving record", logger_name="snea.pages.records")
                     
@@ -452,6 +502,9 @@ def records():
                     
                 else:
                     # View Mode
+                    if is_locked and st.session_state.global_edit_mode:
+                        st.warning("🔒 Record is locked and cannot be edited in global edit mode.")
+                    
                     diagnostics = None
                     if st.session_state.structural_highlighting:
                         diagnostics = MDFValidator.diagnose_record(mdf_lines)
@@ -502,9 +555,33 @@ def records():
                                 st.rerun()
                         
                         if not st.session_state.global_edit_mode:
-                            if toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}"):
-                                st.session_state.local_edits.add(record_id)
-                                st.rerun()
+                            # Disable edit if locked
+                            if record.get('is_locked'):
+                                toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}", disabled=True, help="Record is locked.")
+                            else:
+                                if toolbar[2].button("Edit", use_container_width=True, icon="📝", key=f"edit_btn_{record_id}"):
+                                    st.session_state.local_edits.add(record_id)
+                                    st.rerun()
+
+                    # Record Lock Toggle (Sidebar behavior)
+                    if user_role in ["editor", "admin"]:
+                        with st.sidebar:
+                            st.divider()
+                            st.markdown(f"**Record #{record_id} Lock**")
+                            if record.get('is_locked'):
+                                st.info(f"Locked by: {record.get('locked_by')}\nAt: {record.get('locked_at')}")
+                                if record.get('lock_note'):
+                                    st.caption(f"Note: {record.get('lock_note')}")
+                                if st.button("🔓 Unlock Record", key=f"unlock_btn_{record_id}", use_container_width=True):
+                                    if LinguisticService.unlock_record(record_id, user_email):
+                                        st.success(f"Record #{record_id} unlocked.")
+                                        st.rerun()
+                            else:
+                                lock_note = st.text_input("Lock Note (optional)", key=f"lock_note_{record_id}", label_visibility="collapsed", placeholder="Reason for locking...")
+                                if st.button("🔒 Lock Record", key=f"lock_btn_{record_id}", use_container_width=True):
+                                    if LinguisticService.lock_record(record_id, user_email, lock_note):
+                                        st.success(f"Record #{record_id} locked.")
+                                        st.rerun()
 
                 # Revision History
                 with st.expander("Revision History"):

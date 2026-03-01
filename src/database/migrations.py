@@ -43,6 +43,7 @@ class MigrationManager:
         (2026021585861, "_migrate_add_normalized_search_entries", "Add normalized_term to search_entries and index it"),
         (2026021585862, "_migrate_renormalize_search_entries", "Re-normalize search_entries for diacritics and quotes"),
         (2026021585863, "_migrate_renormalize_sort_lx", "Re-normalize records.sort_lx for diacritics and quotes"),
+        (2026030145060, "_migrate_add_record_locking", "Add is_locked, locked_by, locked_at, and lock_note to records"),
     ]
 
     def __init__(self, engine):
@@ -407,6 +408,16 @@ class MigrationManager:
             # Headword (\lx) -> Homonym (\hm) -> Part of Speech (\ps) -> Gloss (\ge)
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_sort_lx ON records (sort_lx);"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_sorting_composite ON records (sort_lx, hm, ps, ge);"))
+            conn.commit()
+
+    def _migrate_add_record_locking(self):
+        """Migration 2026030145060: Add is_locked, locked_by, locked_at, and lock_note to records."""
+        with self._engine.connect() as conn:
+            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE;"))
+            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS locked_by TEXT REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS locked_at TIMESTAMP WITH TIME ZONE;"))
+            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS lock_note TEXT;"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_is_locked ON records(is_locked);"))
             conn.commit()
 
     def _seed_default_sources(self):

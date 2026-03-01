@@ -30,7 +30,7 @@ class MatchupQueue(Base):
     suggested_record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'))  # Potential match
     batch_id = Column(String, nullable=False)  # UUID identifying the upload batch
     filename = Column(String)  # Original upload filename for display
-    status = Column(String, nullable=False, default='pending')  # 'pending', 'matched', 'ignored'
+    status = Column(String, nullable=False, default='pending')  # 'pending', 'matched', 'ignored', 'locked_conflict'
     lx = Column(String)  # Uploaded Lexeme
     mdf_data = Column(Text, nullable=False)  # Raw uploaded entry
     match_type = Column(String)  # 'exact' or 'base_form'; set by suggest_matches

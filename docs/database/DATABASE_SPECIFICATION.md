@@ -52,6 +52,10 @@ The schema is organized for human readability in SQL viewers like **DBeaver**, p
 | **`source_page`** | TEXT | Source Citation | Specific page or section number. |
 | **`status`** | TEXT | Workflow State | 'draft', 'edited', 'approved'. |
 | **`embedding`** | VECTOR(1536) | Semantic Vector | Used for cross-reference lookup (not general search). |
+| **`is_locked`** | BOOLEAN | Lock Flag | Prevents accidental overwrites (strict immutability). |
+| **`locked_by`** | TEXT | Locked By | FK to `users.email`. |
+| **`locked_at`** | TIMESTAMP | Locked At | When the record was locked. |
+| **`lock_note`** | TEXT | Lock Note | Rationale for locking the record. |
 | **`mdf_data`** | TEXT | Raw MDF Body | The full, unparsed linguistic entry. |
 | **`current_version`** | INTEGER | Version Number | Optimistic locking and revision tracking. |
 | **`is_deleted`** | BOOLEAN | Soft Delete Flag | Allows restoration and maintains audit integrity. |
@@ -94,7 +98,7 @@ Enables linguists to upload MDF files and manually match them against production
 | **`suggested_record_id`** | INTEGER | FK to `records.id` | Optional link to an existing potential match. |
 | **`batch_id`** | TEXT | Batch ID | UUID identifying the upload session. |
 | **`filename`** | TEXT | Filename | Original name of the uploaded file. |
-| **`status`** | TEXT | Queue State | 'pending', 'matched', 'ignored'. |
+| **`status`** | TEXT | Queue State | 'pending', 'matched', 'ignored', 'locked_conflict'. |
 | **`lx`** | TEXT | Uploaded Lexeme | Used for automated matching suggestions. |
 | **`mdf_data`** | TEXT | Raw Uploaded MDF | Preservation of data as provided by the user. |
 | **`match_type`** | TEXT | Match Logic | 'exact' or 'base_form'. |

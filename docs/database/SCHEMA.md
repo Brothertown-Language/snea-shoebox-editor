@@ -25,6 +25,10 @@ CREATE TABLE records (
     status TEXT NOT NULL DEFAULT 'draft', -- 'draft', 'edited', 'approved'
     embedding VECTOR(1536),               -- For semantic lookup
     mdf_data TEXT NOT NULL,               -- Full raw MDF text
+    is_locked BOOLEAN NOT NULL DEFAULT FALSE, -- Lock flag
+    locked_by TEXT,                       -- email of user who locked it
+    locked_at TIMESTAMP WITH TIME ZONE,   -- timestamp of locking
+    lock_note TEXT,                       -- rationale for locking
     current_version INTEGER NOT NULL DEFAULT 1, -- Optimistic locking / versioning
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
@@ -33,7 +37,8 @@ CREATE TABLE records (
     reviewed_by TEXT,
     FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT,
     FOREIGN KEY (updated_by) REFERENCES users(email) ON DELETE RESTRICT,
-    FOREIGN KEY (reviewed_by) REFERENCES users(email) ON DELETE RESTRICT
+    FOREIGN KEY (reviewed_by) REFERENCES users(email) ON DELETE RESTRICT,
+    FOREIGN KEY (locked_by) REFERENCES users(email) ON DELETE RESTRICT
 );
 ```
 
@@ -77,7 +82,7 @@ CREATE TABLE matchup_queue (
     suggested_record_id INTEGER,          -- System potential match (FK to records.id)
     batch_id TEXT NOT NULL,               -- UUID for the upload session
     filename TEXT,                        -- Original file name
-    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'matched', 'ignored'
+    status TEXT NOT NULL DEFAULT 'pending', -- 'pending', 'matched', 'ignored', 'locked_conflict'
     lx TEXT,                              -- Uploaded Lexeme
     mdf_data TEXT NOT NULL,               -- Raw uploaded entry
     match_type TEXT,                      -- 'exact', 'base_form'
