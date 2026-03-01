@@ -21,8 +21,9 @@ def _initialize_database():
     import socket
     from urllib.parse import urlparse
 
-    max_attempts = 20
+    max_attempts = 60
     base_delay = 1.0  # seconds
+    max_delay = 10.0  # seconds cap
 
     with st.spinner("Initializing database…"):
         status = st.empty()
@@ -81,7 +82,7 @@ def _initialize_database():
                     remote_info += " [dns=not_ready]"
 
                 if is_transient and attempt < max_attempts:
-                    delay = base_delay * attempt
+                    delay = min(base_delay * attempt, max_delay)
                     # Log at WARNING as requested, including remote status
                     logger.warning(
                         "DB init transient failure %d/%d:%s %s — retrying in %.1fs",
@@ -89,7 +90,8 @@ def _initialize_database():
                     )
                     status.info(
                         f"Database is starting up or recovering (attempt {attempt}/{max_attempts}). "
-                        f"This is usually temporary. Retrying in {delay:.1f}s…"
+                        f"This is usually temporary, but can take up to 10 minutes for the database to start. "
+                        f"Retrying in {delay:.1f}s…"
                     )
                     _time.sleep(delay)
                 else:
@@ -105,6 +107,9 @@ def _initialize_database():
                             f"If the problem persists, please report the issue to "
                             f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
                         )
+
+                    if st.button("Retry initialization"):
+                        st.rerun()
 
                     with st.expander("Troubleshooting tips"):
                         st.markdown(
