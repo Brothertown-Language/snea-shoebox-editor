@@ -16,15 +16,15 @@ Language project. MDF is a standard for structuring lexical data in software lik
 
 ### Suggested Hierarchy
 
-MDF entries are typically structured hierarchically. The order of tags determines how they are bundled together. In this project, every entry SHOULD include `\ln` (Language) and `\so` (Source) markers for best compatibility.
+MDF entries are typically structured hierarchically. The order of tags determines how they are bundled together. In this project, every entry SHOULD include `\so` (Source) markers for best compatibility.
 
 #### Suggested Standard Hierarchy (Lexeme-Oriented)
 
-`\lx` (Lexeme) > `\ln` (Language) > `\so` (Source) > `\ps` (Part of Speech) > `\sn` (Sense) > `\se` (Subentry)
+`\lx` (Lexeme) > `\so` (Source) > `\ps` (Part of Speech) > `\sn` (Sense) > `\se` (Subentry)
 
 #### Alternate Hierarchy (Sense-Oriented)
 
-`\lx` (Lexeme) > `\ln` (Language) > `\so` (Source) > `\sn` (Sense) > `\se` (Subentry) > `\ps` (Part of Speech)
+`\lx` (Lexeme) > `\so` (Source) > `\sn` (Sense) > `\se` (Subentry) > `\ps` (Part of Speech)
 
 ---
 
@@ -78,8 +78,8 @@ MDF entries are typically structured hierarchically. The order of tags determine
 
 #### Source and Language Markers
 
-- `\so`: **Source**. The original source of the data (e.g., Trumbull pg3).
-- `\ln`: **Language Name**. The name of the language or dialect for this entry (e.g., `Wampanoag [wam]`).
+- `\so`: **Source**. The original source of the data (e.g., Trumbull pg3). Also used for identifying the dialect/origin of the record (e.g., Mohegan-Pequot).
+- `\ln`: **Lexical Function (National Gloss)**. Provides the national gloss for a referenced vernacular lexeme. (Legacy misuse as "Language Name" is discouraged).
 - `\pn`: **Part of Speech (National)**. The POS in the national language.
 - `\ve`: **Variant Comment (English)**. Bundled with `\va`; specifies dialect name or area.
 - `\vn`: **Variant Comment (National)**. Bundled with `\va`; specifies dialect name/area.
@@ -105,11 +105,19 @@ MDF entries are typically structured hierarchically. The order of tags determine
 
 In projects involving multiple languages or dialects (like the Brothertown project's use of Natick, Mohegan, and Narragansett data), the following conventions are used:
 
-1. **The `\ln` Tag**: Use the `\ln` tag to explicitly identify the language or dialect of a record. For consistency, use the language name followed by its ISO 639-3 code in brackets.
-   - Example: `\ln Narragansett [xnt]`
-2. **Language Abbreviations**: When citing comparative data from other languages within a note or definition, use standard abbreviations (e.g., `Abn.` for Abenaki, `Del.` for Delaware). Refer to the project guidelines for a full list of abbreviations.
-3. **Asterisk (*) Prefix**: In some source materials (like Trumbull's Natick dictionary), an asterisk `*` before a headword indicates it belongs to a related dialect (e.g., Wampanoag) rather than the primary dialect. These should be tagged with the appropriate `\ln` marker during processing.
-4. **Loanwords**: Use `\et` (Etymology) and `\eg` (Etymology Gloss) to document loanwords and their sources.
+1. **The `\so` Tag**: Use the `\so` tag to explicitly identify the source, language, or dialect of a record. For consistency, use the language name followed by its ISO 639-3 code in brackets where applicable.
+   - Example: `\so Mohegan-Pequot [mof]; Prince-Speck 1904`
+2. **Variants (`\va` + `\ve`)**: To mark a variant form from another dialect within a record, use the `\va` tag followed by `\ve` to specify the dialect name.
+   - Example: `\va appece \ve Mohegan-Pequot [mof]`
+3. **Language Abbreviations**: When citing comparative data from other languages within a note or definition, use standard abbreviations (e.g., `Abn.` for Abenaki, `Del.` for Delaware). Refer to the project guidelines for a full list of abbreviations.
+4. **Asterisk (*) Prefix**: In some source materials (like Trumbull's Natick dictionary), an asterisk `*` before a headword indicates it belongs to a related dialect (e.g., Wampanoag) rather than the primary dialect. These should be tagged with the appropriate `\so` marker during processing.
+5. **Loanwords**: Use `\et` (Etymology) and `\eg` (Etymology Gloss) to document loanwords and their sources.
+
+---
+
+### Legacy Transitions
+
+1. **Deprecated `\ln` Usage**: Previously, `\ln` was used to identify the "Language Name" for an entire record. This usage is now discouraged in favor of the official MDF `\so` (Source) marker. All legacy data should be transformed to use `\so` or `\va`+`\ve` bundles.
 
 ---
 

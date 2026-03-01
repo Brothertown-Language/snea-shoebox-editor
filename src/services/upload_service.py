@@ -230,7 +230,7 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def suggest_matches(batch_id: str) -> list[dict]:
+    def suggest_matches(batch_id: str, progress_callback: Optional[callable] = None) -> list[dict]:
         """Run match suggestions for all pending rows in a batch.
 
         Uses a batching approach with targeted SQL queries to avoid OOM
@@ -252,6 +252,7 @@ class UploadService:
             if not pending_rows:
                 return []
 
+            total = len(pending_rows)
             source_id = pending_rows[0].source_id
             
             # Cache source names (few enough that this is safe)
@@ -263,7 +264,9 @@ class UploadService:
             
             # Process in chunks to keep memory usage low and query sizes manageable
             chunk_size = 100
-            for i in range(0, len(pending_rows), chunk_size):
+            for i in range(0, total, chunk_size):
+                if progress_callback:
+                    progress_callback(i, total)
                 chunk = pending_rows[i:i + chunk_size]
                 
                 # 1. Collect all lx and potential record_ids from the chunk
@@ -464,6 +467,8 @@ class UploadService:
                     })
 
             session.commit()
+            if progress_callback:
+                progress_callback(total, total)
             return results
         except Exception:
             session.rollback()

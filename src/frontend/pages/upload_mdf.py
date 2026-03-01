@@ -65,15 +65,9 @@ def upload_mdf():
         # Build options: placeholder first, then create new, then sources
         final_options = [SELECT_SOURCE_LABEL, CREATE_NEW_LABEL] + source_options
 
-        # Initialize default from session state or placeholder.
-        # If not explicitly set in session, try to find the current user's source collection
+        # Initialize default to placeholder.
         if "upload_active_source_name" not in st.session_state:
-            email = st.session_state.get("user_email")
-            github_username = IdentityService.get_github_username(email)
-            if github_username and github_username in source_options:
-                current_selection = github_username
-            else:
-                current_selection = SELECT_SOURCE_LABEL
+            current_selection = SELECT_SOURCE_LABEL
         else:
             current_selection = st.session_state["upload_active_source_name"]
         
@@ -313,27 +307,37 @@ def upload_mdf():
                 # Use Streamlit's unique file_id to distinguish re-uploads of the same filename
                 already_staged = st.session_state.get("upload_staged_file_id") == active_file_id
                 if st.button("Stage & Match", type="primary", disabled=already_staged):
-                    try:
-                        batch_id = UploadService.stage_entries(
-                            user_email=user_email,
-                            source_id=selected_source_id,
-                            entries=entries,
-                            filename=active_name,
-                        )
-                        match_results = UploadService.suggest_matches(batch_id)
-                        st.session_state["upload_batch_id"] = batch_id
-                        st.session_state["upload_staged_file_id"] = active_file_id
-                        
-                        # Clear pending upload after successful staging
-                        st.session_state.pop("pending_upload_content", None)
-                        st.session_state.pop("pending_upload_name", None)
-                        st.session_state.pop("pending_upload_file_id", None)
-                        st.session_state.pop("upload_active_source_name", None)
-                        # Switch to dedicated review view
-                        st.session_state["review_batch_id"] = batch_id
-                        st.rerun()
-                    except Exception as e:
-                        handle_ui_error(e, "Staging and matching failed. Please verify the MDF format.", logger_name="snea.upload_mdf")
+                    with st.status("Processing upload...", expanded=True) as status:
+                        try:
+                            st.write("Staging entries...")
+                            batch_id = UploadService.stage_entries(
+                                user_email=user_email,
+                                source_id=selected_source_id,
+                                entries=entries,
+                                filename=active_name,
+                            )
+                            st.write("Suggesting matches...")
+                            progress_bar = st.progress(0.0)
+
+                            def update_progress(curr, tot):
+                                progress_bar.progress(curr / tot if tot > 0 else 1.0)
+
+                            match_results = UploadService.suggest_matches(batch_id, progress_callback=update_progress)
+                            st.session_state["upload_batch_id"] = batch_id
+                            st.session_state["upload_staged_file_id"] = active_file_id
+
+                            # Clear pending upload after successful staging
+                            st.session_state.pop("pending_upload_content", None)
+                            st.session_state.pop("pending_upload_name", None)
+                            st.session_state.pop("pending_upload_file_id", None)
+                            st.session_state.pop("upload_active_source_name", None)
+                            # Switch to dedicated review view
+                            st.session_state["review_batch_id"] = batch_id
+                            status.update(label="Processing complete!", state="complete", expanded=False)
+                            st.rerun()
+                        except Exception as e:
+                            status.update(label="Processing failed.", state="error")
+                            handle_ui_error(e, "Staging and matching failed. Please verify the MDF format.", logger_name="snea.upload_mdf")
 
         except ValueError as e:
             st.error(str(e))

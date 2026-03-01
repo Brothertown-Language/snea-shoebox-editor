@@ -217,14 +217,14 @@
     "tag": "lf"
   },
   "ln": {
-    "description": "Specify the national language gloss for the vernacular lexeme referenced by the lexical function.",
+    "description": "Specify the national language gloss for the vernacular lexeme referenced by the lexical function. (Note: Legacy misuse as 'Language Name' is deprecated; use \\so for record-level language/dialect identification).",
     "example": "",
     "is_legacy": false,
     "name": "lexical function (national gloss)",
     "tag": "ln"
   },
   "lr": {
-    "description": "Specify the regional language gloss for the vernacular lexeme referenced by the lexical function.",
+    "description": "Specify the regional language gloss for the vernacular lexeme referenced by the lexical function. (Note: Legacy misuse as 'Language Name' is deprecated; use \\so for record-level language/dialect identification).",
     "example": "",
     "is_legacy": false,
     "name": "lexical function (regional gloss)",
@@ -490,8 +490,8 @@
     "tag": "sn"
   },
   "so": {
-    "description": "Specify the name and village of the informant who provided the linguistic data for this entry.",
-    "example": "",
+    "description": "Specify the name and village of the informant who provided the linguistic data for this entry. Also used for identifying the dialect/origin of the record (e.g., Mohegan-Pequot).",
+    "example": "\\so Mohegan-Pequot [mof]; Prince-Speck 1904",
     "is_legacy": false,
     "name": "source of data",
     "tag": "so"

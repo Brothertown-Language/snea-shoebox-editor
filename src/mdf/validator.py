@@ -7,11 +7,12 @@ from .tag_loader import get_valid_tags
 class MDFValidator:
     r"""
     Validates MDF (Multi-Dictionary Form) data.
-    Hierarchy: \lx -> \ps -> \ge
+    Hierarchy: \lx -> \so -> \ps -> \ge
     """
 
-    REQUIRED_HIERARCHY = ["lx", "ps", "ge"]
+    REQUIRED_HIERARCHY = ["lx", "so", "ps", "ge"]
     LEGACY_TAG_MAPPING = {
+        "ln": "so",  # Discouraged top-level language marker
         "lmm": "lx",
         "ctg": "ps",
         "gls": "ge",
