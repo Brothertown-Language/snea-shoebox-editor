@@ -6,7 +6,7 @@ from src.logging_config import get_logger
 logger = get_logger("snea.app")
 
 # import src.frontend.pages as pages
-from src.database import init_db
+from src.database import init_db, get_db_url
 from src.frontend.ui_utils import hide_sidebar_nav
 
 @st.cache_resource
@@ -18,27 +18,46 @@ def _initialize_database():
     spinner and guidance instead of flooding the UI/logs.
     """
     import time as _time
+    import socket
+    from urllib.parse import urlparse
 
-    max_attempts = 10
+    max_attempts = 20
     base_delay = 1.0  # seconds
 
     with st.spinner("Initializing database…"):
         status = st.empty()
         for attempt in range(1, max_attempts + 1):
             try:
+                # 1. DNS Pre-connect check
+                db_url = get_db_url()
+                if db_url and "://" in db_url:
+                    try:
+                        parsed = urlparse(db_url)
+                        if parsed.hostname and parsed.hostname not in ("localhost", "127.0.0.1"):
+                            # This will raise socket.gaierror if DNS fails
+                            socket.gethostbyname(parsed.hostname)
+                    except socket.gaierror as dns_err:
+                        # Re-raise as a generic exception with a message that
+                        # matches our transient detection list below.
+                        raise Exception(f"DNS Resolution Failed: {dns_err} (Name or service not known)") from dns_err
+
+                # 2. Schema initialization
                 init_db()
                 status.empty()
                 return  # success
             except Exception as e:
-                err_msg = str(e)
+                err_msg = str(e).lower()
                 is_transient = any(phrase in err_msg for phrase in (
                     "shutting down",
                     "starting up",
                     "the database system is not yet accepting connections",
                     "could not connect to server",
                     "connection refused",
-                    "Connection refused",
-                    "Name or service not known",
+                    "name or service not known",
+                    "temporary failure in name resolution",
+                    "could not translate host name",
+                    "failed to connect to",
+                    "connection timed out",
                 ))
                 if is_transient and attempt < max_attempts:
                     delay = base_delay * attempt
@@ -58,6 +77,14 @@ def _initialize_database():
                     st.error(
                         "Database is unavailable. Please try one of the following:"
                     )
+                    
+                    mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
+                    if mastodon_url:
+                        st.info(
+                            f"If the problem persists, please report the issue to "
+                            f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
+                        )
+
                     with st.expander("Troubleshooting tips"):
                         st.markdown(
                             "- Wait a few seconds and press the R key to refresh the page.\n"
