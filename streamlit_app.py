@@ -59,12 +59,27 @@ def _initialize_database():
                     "failed to connect to",
                     "connection timed out",
                 ))
+                
+                # Fetch remote status if in production to enrich logs
+                from src.database import is_production
+                from src.services.infrastructure_service import InfrastructureService
+                
+                remote_info = ""
+                if is_production():
+                    config = InfrastructureService.get_aiven_config()
+                    if config:
+                        r_status = InfrastructureService.get_service_status(config)
+                        remote_info = f" [remote_state={r_status or 'unknown'}]"
+                
+                if "dns resolution failed" in err_msg:
+                    remote_info += " [dns=not_ready]"
+
                 if is_transient and attempt < max_attempts:
                     delay = base_delay * attempt
-                    # Keep logs concise at INFO and show user-facing hint
-                    logger.info(
-                        "DB init transient failure %d/%d: %s — retrying in %.1fs",
-                        attempt, max_attempts, e, delay,
+                    # Log at WARNING as requested, including remote status
+                    logger.warning(
+                        "DB init transient failure %d/%d:%s %s — retrying in %.1fs",
+                        attempt, max_attempts, remote_info, e, delay,
                     )
                     status.info(
                         f"Database is starting up or recovering (attempt {attempt}/{max_attempts}). "
