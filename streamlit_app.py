@@ -38,6 +38,7 @@ def _initialize_database():
                     "could not connect to server",
                     "connection refused",
                     "Connection refused",
+                    "Name or service not known",
                 ))
                 if is_transient and attempt < max_attempts:
                     delay = base_delay * attempt
