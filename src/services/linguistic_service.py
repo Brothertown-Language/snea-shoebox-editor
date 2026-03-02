@@ -404,6 +404,7 @@ class LinguisticService:
                 Record.ge,
                 Record.status,
                 Record.source_id,
+                Record.sort_lx,
                 Record.mdf_data,
                 Source.name.label("source_name")
             ).outerjoin(Source, Record.source_id == Source.id).filter(Record.is_deleted == False)
@@ -464,8 +465,13 @@ class LinguisticService:
         try:
             with os.fdopen(fd, 'w', encoding='utf-8') as tmp:
                 with get_session() as session:
-                    # Column projection: we only need mdf_data for the export file
-                    query = session.query(Record.mdf_data).filter(Record.is_deleted == False)
+                    # Column projection: we only need mdf_data and sorting columns for the export file
+                    query = session.query(
+                        Record.mdf_data,
+                        Record.source_id,
+                        Record.sort_lx,
+                        Record.hm
+                    ).filter(Record.is_deleted == False)
                     
                     if record_ids is not None:
                         query = query.filter(Record.id.in_(record_ids))
@@ -494,7 +500,7 @@ class LinguisticService:
                     
                     # Stream results in batches of 1000
                     first = True
-                    for (mdf_data,) in query.yield_per(1000):
+                    for (mdf_data, _, _, _) in query.yield_per(1000):
                         if not first:
                             tmp.write("\n\n")
                         tmp.write(mdf_data)
