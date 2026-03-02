@@ -130,7 +130,7 @@ def main():
         st.markdown("**Maintenance Tables**")
         table_option = st.radio(
             "Select a table to maintain:",
-            ["Sources", "Soft Deleted Records"],
+            ["Sources", "Soft Deleted Records", "Data Reprocessing"],
             index=0,
             label_visibility="collapsed"
         )
@@ -142,8 +142,41 @@ def main():
         render_sources_maintenance()
     elif table_option == "Soft Deleted Records":
         render_deleted_records_maintenance()
+    elif table_option == "Data Reprocessing":
+        render_data_reprocessing_maintenance()
     else:
         st.info(f"Maintenance for {table_option} is not yet implemented.")
+
+def render_data_reprocessing_maintenance():
+    from src.services.upload_service import UploadService
+    from src.frontend.ui_utils import handle_ui_error
+
+    st.header("Data Reprocessing")
+    st.info("""
+        This tool will re-scan all records in the database and:
+        1. **Reprocess Languages**: Re-extract language and dialect information from MDF tags (\\so, \\ve, \\ns) and update the record associations.
+        2. **Reprocess Search Index**: Re-build the search entry index (lx, va, se, cf, ve) for all records.
+        3. **Synchronize Metadata**: Ensure Record fields (lx, hm, ps, ge) match the current MDF data.
+    """)
+
+    st.warning("This operation may take several minutes depending on the number of records. Do not close this tab until the process is complete.")
+
+    if st.button("Start Full Reprocessing", type="primary"):
+        status_container = st.empty()
+        progress_bar = st.progress(0)
+        
+        def update_progress(current, total):
+            progress_bar.progress(current / total)
+            status_container.text(f"Reprocessing record {current} of {total}...")
+
+        try:
+            with st.status("Reprocessing data...", expanded=True) as status:
+                results = UploadService.reprocess_all_records(progress_callback=update_progress)
+                status.update(label="Reprocessing complete!", state="complete", expanded=False)
+            
+            st.success(f"Successfully reprocessed {results['reprocessed']} of {results['total']} records.")
+        except Exception as e:
+            handle_ui_error(e, "Reprocessing failed.", logger_name="snea.pages.table_maintenance")
 
 def render_deleted_records_maintenance():
     from src.services.linguistic_service import LinguisticService

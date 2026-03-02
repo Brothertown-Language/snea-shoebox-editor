@@ -45,6 +45,7 @@ class MigrationManager:
         (2026021585863, "_migrate_renormalize_sort_lx", "Re-normalize records.sort_lx for diacritics and quotes"),
         (2026030145060, "_migrate_add_record_locking", "Add is_locked, locked_by, locked_at, and lock_note to records"),
         (2026030206285, "_migrate_ignore_leading_numerals", "Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals"),
+        (2026030207140, "_migrate_reprocess_all_records", "Reprocess all records to synchronize languages, search entries, and metadata"),
     ]
 
     def __init__(self, engine):
@@ -450,6 +451,20 @@ class MigrationManager:
             raise e
         finally:
             session.close()
+
+    def _migrate_reprocess_all_records(self):
+        """Migration 2026030207140: Reprocess all records to synchronize languages, search entries, and metadata."""
+        from src.services.upload_service import UploadService
+        
+        # We call the service method which manages its own session.
+        # This is safe because migrations run sequentially.
+        try:
+            logger.info("Starting global record reprocessing migration...")
+            results = UploadService.reprocess_all_records()
+            logger.info(f"Migration reprocessed {results.get('reprocessed', 0)}/{results.get('total', 0)} records.")
+        except Exception as e:
+            logger.error(f"Migration 2026030207140 failed: {e}")
+            raise
 
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""

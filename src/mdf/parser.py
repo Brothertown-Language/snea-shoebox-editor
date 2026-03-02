@@ -77,16 +77,18 @@ def _process_block_into_record(lines_buffer):
             record['ge'] = val
             continue
 
-        val = _extract_tag(line, 'ln')
+        val = _extract_tag(line, 'so')
         if val is not None:
             import re
-            match = re.search(r'^(.*?)\[(.*?)\]', val)
+            # Extract Language-Name [code] if present, e.g. "Mohegan-Pequot [xpq]; Prince-Speck 1904"
+            match = re.search(r'^([^\[;]+)\[([a-z]{3})\]', val)
             if match:
                 name = match.group(1).strip()
                 code = match.group(2).strip()
                 record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
-            else:
-                record['lg'].append({'name': val.strip(), 'code': None, 'is_primary': in_headword})
+            # Capturing the full string for source_page field
+            if not record.get('source_page'):
+                record['source_page'] = val
             continue
 
         val = _extract_tag(line, 'va')
@@ -106,7 +108,26 @@ def _process_block_into_record(lines_buffer):
 
         val = _extract_tag(line, 've')
         if val is not None:
+            import re
+            # Extract Language-Name [code] if present, e.g. "Mohegan-Pequot [xpq]"
+            match = re.search(r'^([^\[;]+)\[([a-z]{3})\]', val)
+            if match:
+                name = match.group(1).strip()
+                code = match.group(2).strip()
+                record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
+            # Also record the original ve text
             record['ve'].append(val)
+            continue
+
+        val = _extract_tag(line, 'ns')
+        if val is not None:
+            import re
+            # Extract Language-Name [code] if present, e.g. "Mohegan-Pequot [xpq]"
+            match = re.search(r'^([^\[;]+)\[([a-z]{3})\]', val)
+            if match:
+                name = match.group(1).strip()
+                code = match.group(2).strip()
+                record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
             continue
 
         if _is_nt_record_line(line):

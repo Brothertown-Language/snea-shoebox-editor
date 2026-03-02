@@ -171,3 +171,9 @@ This file serves as a persistent memory of critical project context, user prefer
 - **Direct Entry Validation (v1.0)**: As of 2026-03-01, implemented validation for the Direct Entry page to ensure data integrity.
     - **\lx Requirement**: Each entry field must start with an `\lx` marker (ignoring leading whitespace/blank lines).
     - **\lemma Prohibition**: The `\lemma` tag is strictly forbidden in direct entry. Users are instructed to use `\se` (Subentry) or `\lx` (New Record) instead.
+
+- **Data Reprocessing (v1.0)**: As of 2026-03-02, implemented a global data reprocessing tool for admins.
+    - **Functionality**: Re-scans all non-deleted records to re-extract languages (from \so, \ve, \ns), rebuild the search index (lx, va, se, cf, ve), and synchronize Record metadata fields (lx, hm, ps, ge) with their raw MDF data.
+    - **UI**: Added a "Data Reprocessing" option to the Table Maintenance page, restricted to admin users.
+    - **Service**: Implemented `UploadService.reprocess_all_records` to handle the batch processing with progress reporting.
+    - **Automation**: Added migration `2026030207140` to automatically run reprocessing on all environments upon next application start.

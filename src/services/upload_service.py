@@ -1046,6 +1046,7 @@ class UploadService:
         languages and links them.
         """
         from src.database.models.core import RecordLanguage, Language
+        from src.database.models.iso639 import ISO639_3
         
         # 1. Clear existing
         session.query(RecordLanguage).filter_by(record_id=record.id).delete()
@@ -1056,22 +1057,25 @@ class UploadService:
                 lg_name = lg['name']
                 lg_code = lg['code']
                 
-                # Find by name first
-                lang = session.query(Language).filter_by(name=lg_name).first()
+                # MANDATORY: Validate against ISO 639-3
+                if not lg_code:
+                    continue
                 
-                # If not found by name, try to find by code if we have one
-                if not lang and lg_code:
-                    lang = session.query(Language).filter_by(code=lg_code).first()
-                    
+                iso_entry = session.query(ISO639_3).filter_by(id=lg_code).first()
+                if not iso_entry:
+                    # Ignore language identification if not in iso 639 table
+                    continue
+                
+                # Use the official reference name from the ISO table
+                final_name = iso_entry.ref_name
+                final_code = lg_code
+                
+                # Find by code first (canonical)
+                lang = session.query(Language).filter_by(code=final_code).first()
+                
                 if not lang:
-                    # Use provided code or fallback to name-based dummy code
-                    final_code = lg_code if lg_code else lg_name[:10]
-                    lang = Language(name=lg_name, code=final_code)
+                    lang = Language(name=final_name, code=final_code)
                     session.add(lang)
-                    session.flush()
-                elif lg_code and not lang.code:
-                    # Update existing language with code if it was missing
-                    lang.code = lg_code
                     session.flush()
                 
                 session.add(RecordLanguage(
@@ -1128,6 +1132,7 @@ class UploadService:
                 record.hm = entry.get('hm', 1)
                 record.ps = entry.get('ps', '')
                 record.ge = entry.get('ge', '')
+                record.source_page = entry.get('source_page', '')
                 record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
                 record.updated_by = user_email
                 
@@ -1162,6 +1167,7 @@ class UploadService:
                     hm=new_hm,
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
+                    source_page=entry.get('source_page', ''),
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
@@ -1192,6 +1198,7 @@ class UploadService:
                     hm=entry.get('hm', 1),
                     ps=entry.get('ps', ''),
                     ge=entry.get('ge', ''),
+                    source_page=entry.get('source_page', ''),
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
@@ -1629,6 +1636,66 @@ class UploadService:
         finally:
             if not _provided_session:
                 session.close()
+
+    @staticmethod
+    def reprocess_all_records(progress_callback: Optional[callable] = None) -> dict:
+        """Reprocess languages and search entries for all non-deleted records.
+        
+        This updates:
+        - Record metadata fields (lx, hm, ps, ge, source_page, sort_lx)
+        - record_languages association table
+        - search_entries table
+        """
+        _logger = get_logger("snea.reprocess")
+        session = get_session()
+        try:
+            records = session.query(Record).filter_by(is_deleted=False).all()
+            total = len(records)
+            reprocessed = 0
+            
+            _logger.info(f"Starting reprocessing of {total} records.")
+            
+            for i, record in enumerate(records):
+                # 1. Parse MDF
+                from src.mdf.parser import parse_mdf as _parse
+                parsed = _parse(record.mdf_data)
+                if not parsed:
+                    _logger.warning(f"Failed to parse MDF for record {record.id}")
+                    continue
+                entry = parsed[0]
+                
+                # 2. Update Record fields from MDF
+                record.lx = entry.get('lx', record.lx)
+                record.hm = entry.get('hm', 1)
+                record.ps = entry.get('ps', '')
+                record.ge = entry.get('ge', '')
+                record.source_page = entry.get('source_page', '')
+                record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
+                
+                # 3. Update Languages
+                UploadService._update_record_languages(session, record, entry.get('lg', []))
+                
+                # 4. Update Search Entries
+                # We pass the existing session to avoid nested transaction issues
+                UploadService.populate_search_entries([record.id], session=session)
+                
+                reprocessed += 1
+                if progress_callback and (i + 1) % 10 == 0:
+                    progress_callback(i + 1, total)
+            
+            # Final progress update
+            if progress_callback:
+                progress_callback(total, total)
+                
+            session.commit()
+            _logger.info(f"Reprocessing complete. Reprocessed {reprocessed}/{total} records.")
+            return {"total": total, "reprocessed": reprocessed}
+        except Exception as e:
+            session.rollback()
+            _logger.error(f"Reprocessing failed: {e}")
+            raise
+        finally:
+            session.close()
 
     @staticmethod
     def get_session_rollback_mdf(session_id: str) -> Optional[str]:
