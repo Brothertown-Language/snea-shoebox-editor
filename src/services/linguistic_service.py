@@ -65,7 +65,14 @@ class LinguisticService:
         # 5. Strip leading punctuation and numerals
         # Re-using common linguistic punctuation: *, -, =, [, ], (, )
         # Also strip leading digits and any resulting whitespace
-        return re.sub(r'^[0-9*\-=\[\]\(\)\s]+', '', lowered)
+        # Note: ONLY strip leading characters. Infix search handles non-leading digits.
+        result = re.sub(r'^[0-9*\-=\[\]\(\)\s]+', '', lowered)
+        
+        # 6. For search, if we are normalizing a search term that is JUST numbers/punct, 
+        # it will return empty. We return the lowered string if it's empty but original wasn't.
+        # This allows searching for things that are only "special" characters if needed,
+        # although search_records now has its own guard for this.
+        return result
 
     @staticmethod
     def get_sources_with_counts() -> List[Dict[str, Any]]:
@@ -330,11 +337,19 @@ class LinguisticService:
                     if search_mode == "Lexeme":
                         # Normalize search term for punctuation, case, diacritics, and quotes
                         norm_search = LinguisticService.generate_sort_lx(search_term)
-                        # Join with search_entries to find matches in lx, va, se, etc.
-                        # Prefix-only matching for scalability (anchored to B-tree index)
-                        query = query.join(Record.search_entries).filter(
-                            SearchEntry.normalized_term.ilike(f"{norm_search}%")
-                        ).distinct()
+                        
+                        # If search term exists but normalizes to nothing (e.g. "10"), 
+                        # we should return no results instead of matching everything.
+                        if search_term.strip() and not norm_search:
+                            # We can't easily return empty results here without modifying the whole query flow,
+                            # but we can force a filter that matches nothing.
+                            query = query.filter(Record.id == -1)
+                        else:
+                            # Join with search_entries to find matches in lx, va, se, etc.
+                            # Infix matching for better discovery (contains)
+                            query = query.join(Record.search_entries).filter(
+                                SearchEntry.normalized_term.ilike(f"%{norm_search}%")
+                            ).distinct()
                     else:
                         # Native Full-Text Search (Roadmap Phase 6b)
                         # Supported by the pgserver envelope.
@@ -419,11 +434,17 @@ class LinguisticService:
                     if search_mode == "Lexeme":
                         # Normalize search term for punctuation, case, diacritics, and quotes
                         norm_search = LinguisticService.generate_sort_lx(search_term)
-                        # We need to join SearchEntry but we want to keep the column projection
-                        # Prefix-only matching for scalability (anchored to B-tree index)
-                        query = query.join(Record.search_entries).filter(
-                            SearchEntry.normalized_term.ilike(f"{norm_search}%")
-                        ).distinct()
+                        
+                        # If search term exists but normalizes to nothing (e.g. "10"), 
+                        # we should return no results instead of matching everything.
+                        if search_term.strip() and not norm_search:
+                            query = query.filter(Record.id == -1)
+                        else:
+                            # We need to join SearchEntry but we want to keep the column projection
+                            # Infix matching for better discovery (contains)
+                            query = query.join(Record.search_entries).filter(
+                                SearchEntry.normalized_term.ilike(f"%{norm_search}%")
+                            ).distinct()
                     else:
                         from sqlalchemy import text
                         if search_term.startswith('#') and search_term[1:].isdigit():
@@ -483,10 +504,16 @@ class LinguisticService:
                             if search_mode == "Lexeme":
                                 # Normalize search term for punctuation, case, diacritics, and quotes
                                 norm_search = LinguisticService.generate_sort_lx(search_term)
-                                # Prefix-only matching for scalability (anchored to B-tree index)
-                                query = query.join(Record.search_entries).filter(
-                                    SearchEntry.normalized_term.ilike(f"{norm_search}%")
-                                ).distinct()
+                                
+                                # If search term exists but normalizes to nothing (e.g. "10"), 
+                                # we should return no results instead of matching everything.
+                                if search_term.strip() and not norm_search:
+                                    query = query.filter(Record.id == -1)
+                                else:
+                                    # Infix matching for better discovery (contains)
+                                    query = query.join(Record.search_entries).filter(
+                                        SearchEntry.normalized_term.ilike(f"%{norm_search}%")
+                                    ).distinct()
                             else:
                                 from sqlalchemy import text
                                 if search_term.startswith('#') and search_term[1:].isdigit():
