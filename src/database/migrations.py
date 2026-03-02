@@ -488,17 +488,47 @@ class MigrationManager:
 
             default_sources = [
                 {
-                    "name": "Trumbull/Natick",
+                    "name": "Trumbull 1903",
                     "short_name": "Trumbull (1903)",
-                    "description": "Comprehensive lexicon of the Massachusett language based on 17th-century colonial documents and the Eliot Bible.",
+                    "description": "Wampanoag [wam]",
                     "citation_format": "Trumbull, James Hammond. (1903). *Natick Dictionary*. Bureau of American Ethnology Bulletin 25. Washington: Government Printing Office."
                 },
                 {
-                    "name": "Fielding/Mohegan",
-                    "short_name": "Fielding (2013)",
-                    "description": "Modern reconstruction of the Mohegan-Pequot language using historical diaries and comparative Algonquian analysis.",
+                    "name": "Fielding 2012",
+                    "short_name": "Fielding (2012)",
+                    "description": "Mohegan-Pequot [xpq]",
                     "citation_format": "Fielding, Stephanie. (2013). *A Modern Mohegan Dictionary*. (D. J. Costa, Ed.). Uncasville, CT: Mohegan Council of Elders."
-                }
+                },
+                {
+                    "name": "Anonymous 1647",
+                    "short_name": None,
+                    "description": "Wampanoag [wam]",
+                    "citation_format": None
+                },
+                {
+                    "name": "Winslow 1624",
+                    "short_name": None,
+                    "description": "Wampanoag [wam]",
+                    "citation_format": None
+                },
+                {
+                    "name": "Wood 1634",
+                    "short_name": None,
+                    "description": "Wampanoag [wam]",
+                    "citation_format": None
+                },
+                {
+                    "name": "Prince-Speck 1904",
+                    "short_name": None,
+                    "description": "Mohegan-Pequot [xpq]",
+                    "citation_format": None
+                },
+                {
+                    "name": "Williams 1643",
+                    "short_name": None,
+                    "description": "Narragansett [xnt]",
+                    "citation_format": None
+                },
             ]
             
             for src_data in default_sources:
