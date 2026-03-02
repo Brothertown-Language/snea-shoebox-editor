@@ -44,6 +44,7 @@ class MigrationManager:
         (2026021585862, "_migrate_renormalize_search_entries", "Re-normalize search_entries for diacritics and quotes"),
         (2026021585863, "_migrate_renormalize_sort_lx", "Re-normalize records.sort_lx for diacritics and quotes"),
         (2026030145060, "_migrate_add_record_locking", "Add is_locked, locked_by, locked_at, and lock_note to records"),
+        (2026030206285, "_migrate_ignore_leading_numerals", "Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals"),
     ]
 
     def __init__(self, engine):
@@ -419,6 +420,36 @@ class MigrationManager:
             conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS lock_note TEXT;"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_is_locked ON records(is_locked);"))
             conn.commit()
+
+    def _migrate_ignore_leading_numerals(self):
+        """Migration 2026030206285: Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals."""
+        from .models.core import Record
+        from .models.search import SearchEntry
+        from src.services.linguistic_service import LinguisticService
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            logger.info("Re-normalizing records.sort_lx and search_entries.normalized_term (ignoring leading numerals)...")
+            
+            # 1. Update records.sort_lx
+            records = session.query(Record).all()
+            for record in records:
+                record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
+            
+            # 2. Update search_entries.normalized_term
+            entries = session.query(SearchEntry).all()
+            for entry in entries:
+                entry.normalized_term = LinguisticService.generate_sort_lx(entry.term)
+            
+            session.commit()
+            logger.info("Re-normalization for leading numerals complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to re-normalize for leading numerals: {e}")
+            raise e
+        finally:
+            session.close()
 
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""

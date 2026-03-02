@@ -62,9 +62,10 @@ class LinguisticService:
             stripped = stripped.replace(fancy, straight)
         # 4. Lowercase
         lowered = stripped.lower()
-        # 5. Strip leading punctuation
+        # 5. Strip leading punctuation and numerals
         # Re-using common linguistic punctuation: *, -, =, [, ], (, )
-        return re.sub(r'^[*\-=\[\]\(\)]+', '', lowered)
+        # Also strip leading digits and any resulting whitespace
+        return re.sub(r'^[0-9*\-=\[\]\(\)\s]+', '', lowered)
 
     @staticmethod
     def get_sources_with_counts() -> List[Dict[str, Any]]:
