@@ -559,6 +559,50 @@ def get_engine():
         pool_pre_ping=True,   # Detects if Aiven is down/restarting
     )
 
+def _reset_sequences(engine) -> None:
+    """
+    Reset all integer-PK sequences to match the current MAX(id) in each table.
+
+    Called from init_db() after migrations, before any user INSERTs, to self-heal
+    after any bulk data copy (e.g., prod→local sync) that inserts rows with explicit
+    id values without advancing PostgreSQL sequences. Without this reset, the next
+    INSERT will attempt to use a sequence value that already exists, causing a
+    UniqueViolation.
+
+    Implementation: iterates Base.metadata.sorted_tables at runtime and resets only
+    tables that have an integer 'id' column with an associated sequence. No table
+    names are hardcoded — new ORM tables are covered automatically.
+
+    Maintenance note: when tables are added, removed, or their PK column renamed away
+    from 'id', re-verify this function still covers all affected sequences. If a table
+    exists outside Base.metadata (e.g., created via raw SQL migration), it will NOT
+    be covered and must be added explicitly here.
+
+    Raises on failure — callers must handle the exception. A failed reset means the
+    DB has desynced sequences and INSERTs will fail; the app must not start silently
+    in this state.
+    """
+    from sqlalchemy import Integer
+    with engine.connect() as conn:
+        for table in Base.metadata.sorted_tables:
+            id_col = table.c.get("id")
+            if id_col is None:
+                continue
+            if not isinstance(id_col.type, Integer):
+                continue
+            seq = conn.execute(
+                text("SELECT pg_get_serial_sequence(:tbl, 'id')"),
+                {"tbl": table.name}
+            ).scalar()
+            if not seq:
+                continue
+            conn.execute(
+                text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))")
+            )
+        conn.commit()
+    _logger.debug("Sequence reset complete.")
+
+
 def init_db():
     """Initialize the database schema."""
     engine = get_engine()
@@ -566,6 +610,20 @@ def init_db():
     Base.metadata.create_all(engine)
     from .migrations import MigrationManager
     MigrationManager(engine).run_all()
+    try:
+        _reset_sequences(engine)
+    except Exception as e:
+        mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
+        contact = f" Please report this issue: {mastodon_url}" if mastodon_url else ""
+        _logger.error(
+            "Database sequence reset failed at startup — app cannot start safely: %s", e
+        )
+        st.error(
+            f"⚠️ **Database startup error**: The database sequence reset failed. "
+            f"The application cannot start safely — INSERTs would fail with duplicate key errors."
+            f"{contact}"
+        )
+        raise
     return engine
 
 def get_session():

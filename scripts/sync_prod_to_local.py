@@ -142,10 +142,52 @@ def sync_data():
                 local_session.commit()
 
         log_message("\nSync completed successfully.")
+        reset_all_sequences(local_engine)
     except Exception:
         error_trace = traceback.format_exc()
         log_message(f"CRITICAL ERROR during sync:\n{error_trace}")
         sys.exit(1)
+
+
+def reset_all_sequences(local_engine) -> None:
+    """
+    Reset all integer-PK sequences to match the current MAX(id) in each table.
+
+    This must be called after any bulk data copy (e.g., prod→local sync) that inserts
+    rows with explicit id values, because PostgreSQL sequences are not automatically
+    advanced by such inserts. Without this reset, the next INSERT will attempt to use
+    a sequence value that already exists, causing a UniqueViolation.
+
+    Implementation: iterates Base.metadata.sorted_tables at runtime and resets only
+    tables that have an integer 'id' column with an associated sequence. No table names
+    are hardcoded — new ORM tables are covered automatically.
+
+    Maintenance note: if a table is removed from the ORM, or its primary key column is
+    renamed away from 'id', verify this function still behaves correctly. If a table
+    exists outside Base.metadata (e.g., created via raw SQL), it will NOT be covered
+    and must be added explicitly.
+    """
+    from sqlalchemy import Integer, inspect as sa_inspect
+    log_message("Resetting sequences for all integer-PK tables...")
+    with local_engine.connect() as conn:
+        for table in Base.metadata.sorted_tables:
+            id_col = table.c.get("id")
+            if id_col is None:
+                continue
+            if not isinstance(id_col.type, Integer):
+                continue
+            seq = conn.execute(
+                text("SELECT pg_get_serial_sequence(:tbl, 'id')"),
+                {"tbl": table.name}
+            ).scalar()
+            if not seq:
+                continue
+            conn.execute(
+                text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))")
+            )
+            log_message(f"  Reset sequence for {table.name} ({seq})", to_console=False)
+        conn.commit()
+    log_message("Sequence reset complete.")
 
 
 if __name__ == "__main__":
