@@ -22,3 +22,4 @@ private_db: JUNIE_PRIVATE_DB=true required for all DB-interactive commands
 commit_protocol: AI forbidden from any git add/commit/push/staging actions — user-only
 memory_file: .junie/memory.md (this file); replaces LONG_TERM_MEMORY.md as of 2026-03-03
 sort_symbol_map: ∞(U+221E)→oozzz (Algonquian letter, after oo*/before op); ✔(U+2714)→"" (annotation, stripped)
+ln_remediation: docs/validator/parser/upload_service/tests all ✅ done; DB audit (Section 6) ⏳ pending

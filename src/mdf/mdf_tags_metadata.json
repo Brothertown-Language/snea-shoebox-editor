@@ -491,7 +491,7 @@
   },
   "so": {
     "description": "Specify the name and village of the informant who provided the linguistic data for this entry. Also used for identifying the dialect/origin of the record (e.g., Mohegan-Pequot).",
-    "example": "\\so Mohegan-Pequot [mof]; Prince-Speck 1904",
+    "example": "\\so Mohegan-Pequot [xpq]; Prince-Speck 1904",
     "is_legacy": false,
     "name": "source of data",
     "tag": "so"

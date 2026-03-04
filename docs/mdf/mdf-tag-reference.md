@@ -106,9 +106,9 @@ MDF entries are typically structured hierarchically. The order of tags determine
 In projects involving multiple languages or dialects (like the Brothertown project's use of Natick, Mohegan, and Narragansett data), the following conventions are used:
 
 1. **The `\so` Tag**: Use the `\so` tag to explicitly identify the source, language, or dialect of a record. For consistency, use the language name followed by its ISO 639-3 code in brackets where applicable.
-   - Example: `\so Mohegan-Pequot [mof]; Prince-Speck 1904`
+   - Example: `\so Mohegan-Pequot [xpq]; Prince-Speck 1904`
 2. **Variants (`\va` + `\ve`)**: To mark a variant form from another dialect within a record, use the `\va` tag followed by `\ve` to specify the dialect name.
-   - Example: `\va appece \ve Mohegan-Pequot [mof]`
+   - Example: `\va appece \ve Mohegan-Pequot [xpq]`
 3. **Language Abbreviations**: When citing comparative data from other languages within a note or definition, use standard abbreviations (e.g., `Abn.` for Abenaki, `Del.` for Delaware). Refer to the project guidelines for a full list of abbreviations.
 4. **Asterisk (*) Prefix**: In some source materials (like Trumbull's Natick dictionary), an asterisk `*` before a headword indicates it belongs to a related dialect (e.g., Wampanoag) rather than the primary dialect. These should be tagged with the appropriate `\so` marker during processing.
 5. **Loanwords**: Use `\et` (Etymology) and `\eg` (Etymology Gloss) to document loanwords and their sources.

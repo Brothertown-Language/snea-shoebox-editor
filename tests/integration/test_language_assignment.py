@@ -27,6 +27,20 @@ class TestLanguageAssignment(unittest.TestCase):
             
             Base.metadata.create_all(cls.engine)
             cls.Session = sessionmaker(bind=cls.engine)
+
+            # Seed ISO 639-3 data required for language validation
+            import csv
+            from pathlib import Path as _Path
+            from src.database.models.iso639 import ISO639_3
+            _data_file = _Path("src/database/data/iso-639-3.tab")
+            _Session = sessionmaker(bind=cls.engine)
+            _sess = _Session()
+            if _sess.query(ISO639_3).count() == 0:
+                with open(_data_file, encoding='utf-8') as _f:
+                    _reader = csv.DictReader(_f, delimiter='\t')
+                    _sess.add_all([ISO639_3(id=r['Id'], part2b=r.get('Part2b') or None, part2t=r.get('Part2t') or None, part1=r.get('Part1') or None, scope=r['Scope'], language_type=r['Language_Type'], ref_name=r['Ref_Name'], comment=r.get('Comment') or None) for r in _reader])
+                    _sess.commit()
+            _sess.close()
         except ImportError:
             raise unittest.SkipTest("pgserver not installed")
 
@@ -79,9 +93,9 @@ class TestLanguageAssignment(unittest.TestCase):
         
         return self.session.query(Record).filter_by(lx=lx).first()
 
-    def test_scenario_1_headword_ln_only(self):
-        r"""1) headword has \ln, sub entries do not = record has a primary language"""
-        mdf_data = "\\lx test1\n\\ln Mohegan [moh]\n\\ge test gloss\n\\se subentry\n\\ge subgloss"
+    def test_scenario_1_headword_so_only(self):
+        r"""1) headword has \so, sub entries do not = record has a primary language"""
+        mdf_data = "\\lx test1\n\\so Mohegan-Pequot [xpq]\n\\ge test gloss\n\\se subentry\n\\ge subgloss"
         record = self._commit_mdf("test1", mdf_data)
         
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
@@ -89,11 +103,11 @@ class TestLanguageAssignment(unittest.TestCase):
         self.assertTrue(record_langs[0].is_primary)
         
         lang = self.session.get(Language, record_langs[0].language_id)
-        self.assertEqual(lang.code, "moh")
+        self.assertEqual(lang.code, "xpq")
 
-    def test_scenario_2_headword_and_subentry_ln(self):
-        r"""2) headword has \ln, subentries have \ln = record has both a primary language and secondary languages"""
-        mdf_data = "\\lx test2\n\\ln Mohegan [moh]\n\\ge test gloss\n\\se subentry\n\\ln English [eng]\n\\ge subgloss"
+    def test_scenario_2_headword_and_subentry_so(self):
+        r"""2) headword has \so, subentries have \so = record has both a primary language and secondary languages"""
+        mdf_data = "\\lx test2\n\\so Mohegan-Pequot [xpq]\n\\ge test gloss\n\\se subentry\n\\so English [eng]\n\\ge subgloss"
         record = self._commit_mdf("test2", mdf_data)
         
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).order_by(RecordLanguage.id).all()
@@ -102,16 +116,16 @@ class TestLanguageAssignment(unittest.TestCase):
         # Primary
         self.assertTrue(record_langs[0].is_primary)
         lang1 = self.session.get(Language, record_langs[0].language_id)
-        self.assertEqual(lang1.code, "moh")
+        self.assertEqual(lang1.code, "xpq")
         
         # Secondary
         self.assertFalse(record_langs[1].is_primary)
         lang2 = self.session.get(Language, record_langs[1].language_id)
         self.assertEqual(lang2.code, "eng")
 
-    def test_scenario_3_subentry_ln_only(self):
-        r"""3) headwords does not have \ln, subentries have \ln = record does not have a primary language and has secondary languages"""
-        mdf_data = "\\lx test3\n\\ge test gloss\n\\se subentry\n\\ln Mohegan [moh]\n\\ge subgloss"
+    def test_scenario_3_subentry_so_only(self):
+        r"""3) headwords does not have \so, subentries have \so = record does not have a primary language and has secondary languages"""
+        mdf_data = "\\lx test3\n\\ge test gloss\n\\se subentry\n\\so Mohegan-Pequot [xpq]\n\\ge subgloss"
         record = self._commit_mdf("test3", mdf_data)
         
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
@@ -119,10 +133,10 @@ class TestLanguageAssignment(unittest.TestCase):
         self.assertFalse(record_langs[0].is_primary)
         
         lang = self.session.get(Language, record_langs[0].language_id)
-        self.assertEqual(lang.code, "moh")
+        self.assertEqual(lang.code, "xpq")
 
-    def test_scenario_4_no_ln(self):
-        r"""4) headwords does not have \ln, subentreis do not have \n = records does not have any languages"""
+    def test_scenario_4_no_so(self):
+        r"""4) headwords does not have \so, subentries do not have \so = records does not have any languages"""
         mdf_data = "\\lx test4\n\\ge test gloss\n\\se subentry\n\\ge subgloss"
         record = self._commit_mdf("test4", mdf_data)
         

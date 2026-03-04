@@ -7,7 +7,7 @@ from sqlalchemy.orm import sessionmaker
 from src.database import Base, Record, Language, RecordLanguage, MatchupQueue, Source, EditHistory, SearchEntry, User
 from src.services.upload_service import UploadService
 
-class TestLnParsing(unittest.TestCase):
+class TestSoParsing(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
@@ -28,6 +28,20 @@ class TestLnParsing(unittest.TestCase):
             
             Base.metadata.create_all(cls.engine)
             cls.Session = sessionmaker(bind=cls.engine)
+
+            # Seed ISO 639-3 data required for language validation
+            import csv, io
+            from pathlib import Path as _Path
+            from src.database.models.iso639 import ISO639_3
+            _data_file = _Path("src/database/data/iso-639-3.tab")
+            _Session = sessionmaker(bind=cls.engine)
+            _sess = _Session()
+            if _sess.query(ISO639_3).count() == 0:
+                with open(_data_file, encoding='utf-8') as _f:
+                    _reader = csv.DictReader(_f, delimiter='\t')
+                    _sess.add_all([ISO639_3(id=r['Id'], part2b=r.get('Part2b') or None, part2t=r.get('Part2t') or None, part1=r.get('Part1') or None, scope=r['Scope'], language_type=r['Language_Type'], ref_name=r['Ref_Name'], comment=r.get('Comment') or None) for r in _reader])
+                    _sess.commit()
+            _sess.close()
         except ImportError:
             raise unittest.SkipTest("pgserver not installed")
 
@@ -69,9 +83,9 @@ class TestLnParsing(unittest.TestCase):
         from unittest.mock import patch
         return patch("src.services.upload_service.get_session", return_value=self.session)
 
-    def test_ln_parsing_bulk_new(self):
-        r"""Test that \ln tag is parsed correctly in bulk approve new."""
-        mdf_data = "\\lx test\n\\ln Mohegan [moh]\n\\ge test gloss"
+    def test_so_parsing_bulk_new(self):
+        r"""Test that \so tag is parsed correctly in bulk approve new."""
+        mdf_data = "\\lx test\n\\so Mohegan-Pequot [xpq]\n\\ge test gloss"
         batch_id = str(uuid.uuid4())
         
         # Stage entry
@@ -101,8 +115,8 @@ class TestLnParsing(unittest.TestCase):
         self.assertEqual(len(record_langs), 1)
         
         lang = self.session.get(Language, record_langs[0].language_id)
-        self.assertEqual(lang.name, "Mohegan")
-        self.assertEqual(lang.code, "moh")
+        self.assertEqual(lang.name, "Mohegan-Pequot")
+        self.assertEqual(lang.code, "xpq")
 
     def test_legacy_lg_not_parsed(self):
         r"""Test that \lg tag is NO LONGER parsed and no RecordLanguage is created."""
@@ -132,11 +146,11 @@ class TestLnParsing(unittest.TestCase):
         self.assertIsNotNone(record)
         
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
-        # Should be 0 because \lg is ignored and \ln is missing
+        # Should be 0 because \lg is ignored and \so is missing
         self.assertEqual(len(record_langs), 0)
 
-    def test_no_ln_tag_no_exception_no_default(self):
-        r"""Verify that record without \ln tag causes no exception and gets no default language."""
+    def test_no_so_tag_no_exception_no_default(self):
+        r"""Verify that record without \so tag causes no exception and gets no default language."""
         mdf_data = "\\lx test_noln\n\\ps n\n\\ge gloss without ln"
         batch_id = str(uuid.uuid4())
         
@@ -163,7 +177,7 @@ class TestLnParsing(unittest.TestCase):
         
         # Verify NO RecordLanguage entries exist for this record
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
-        self.assertEqual(len(record_langs), 0, rf"Record should not have any associated languages when \ln is missing. Found: {record_langs}")
+        self.assertEqual(len(record_langs), 0, rf"Record should not have any associated languages when \so is missing. Found: {record_langs}")
 
 if __name__ == "__main__":
     unittest.main()
