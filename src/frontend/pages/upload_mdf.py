@@ -426,15 +426,10 @@ def _render_review_view():
 
         # C-6b: Re-Match button
         if st.button("Re-Match", key="rematch_btn", disabled=review_bulk_in_progress):
-            try:
-                match_results = UploadService.rematch_batch(batch_id)
-                st.session_state["upload_batch_id"] = batch_id
-                st.session_state["upload_match_results"] = match_results
-                st.success(f"Re-matched batch. "
-                           f"**{sum(1 for m in match_results if m.get('suggested_record_id') is not None)}** "
-                           f"matches found.")
-            except Exception as e:
-                handle_ui_error(e, "Re-match failed.", logger_name="snea.upload_mdf.review")
+            st.session_state["review_bulk_in_progress"] = True
+            st.session_state["review_bulk_label"] = "Re-matching entries…"
+            st.session_state["review_bulk_action"] = "rematch"
+            st.rerun()
 
         # Back button to return to upload view
         if st.button("Back to MDF Upload", icon="⬅️", key="back_to_upload", disabled=review_bulk_in_progress):
@@ -744,6 +739,12 @@ def _render_review_table(batch_id, session_deps):
                     else:
                         status.update(label="No entries marked for discard.", state="complete", expanded=False)
                         st.session_state["bulk_flash"] = ("info", "No entries marked for discard.")
+            elif bulk_action == "rematch":
+                with st.status(bulk_label, expanded=True) as status:
+                    match_results = UploadService.rematch_batch(batch_id, progress_callback=update_progress)
+                    matched_count = sum(1 for m in match_results if m.get('suggested_record_id') is not None)
+                    status.update(label=f"Re-matched. {matched_count} match(es) found.", state="complete", expanded=False)
+                    st.session_state["bulk_flash"] = ("success", f"Re-matched batch. {matched_count} match(es) found.")
         except Exception as e:
             handle_ui_error(e, "Bulk action failed.", logger_name="snea.upload_mdf.review")
         finally:

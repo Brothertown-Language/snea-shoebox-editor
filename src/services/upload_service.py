@@ -731,7 +731,7 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def rematch_batch(batch_id: str) -> list[dict]:
+    def rematch_batch(batch_id: str, progress_callback: Optional[callable] = None) -> list[dict]:
         """Re-run match suggestions for an existing batch.
 
         Clears and re-executes matching logic for all pending rows.
@@ -755,7 +755,7 @@ class UploadService:
             raise
         finally:
             session.close()
-        return UploadService.suggest_matches(batch_id)
+        return UploadService.suggest_matches(batch_id, progress_callback=progress_callback)
 
     @staticmethod
     def search_records_for_override(source_id: int, query: str, limit: int = 20) -> list[dict]:
