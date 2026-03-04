@@ -784,6 +784,8 @@ def _render_review_table(batch_id, session_deps):
             current_status = row.status
         elif record_id_conflict:
             current_status = 'create_new'
+        elif has_suggestion and match_type == 'identical':
+            current_status = 'discard'
         elif has_suggestion and match_type == 'exact':
             current_status = 'matched'
         elif has_suggestion and match_type == 'base_form':

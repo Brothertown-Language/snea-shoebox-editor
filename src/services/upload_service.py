@@ -245,7 +245,8 @@ class UploadService:
             # Get all pending rows for this batch
             pending_rows = (
                 session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='pending')
+                .filter_by(batch_id=batch_id)
+                .filter(MatchupQueue.status.in_(['pending', 'matched']))
                 .order_by(MatchupQueue.id)
                 .all()
             )
