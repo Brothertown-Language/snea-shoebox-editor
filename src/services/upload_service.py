@@ -327,6 +327,21 @@ class UploadService:
                 for rec in same_source_candidates:
                     chunk_exact_map[rec.lx].append(rec)
                     chunk_id_map[rec.id] = rec
+
+                # Bulk-fetch mdf_data for identity check
+                candidate_ids = {rec.id for rec in same_source_candidates}
+                candidate_mdf_map = {}
+                if candidate_ids:
+                    mdf_rows = (
+                        session.query(Record.id, Record.mdf_data)
+                        .filter(Record.id.in_(candidate_ids))
+                        .all()
+                    )
+                    candidate_mdf_map = {r.id: r.mdf_data for r in mdf_rows}
+
+                def _normalize(mdf_text: str) -> str:
+                    stripped = UploadService._strip_nt_record_lines(mdf_text)
+                    return '\n'.join(line for line in stripped.split('\n') if line.strip())
                 
                 # 3. Targeted Query for OTHER Source existence
                 # We want to know if these LXs exist elsewhere
@@ -447,10 +462,21 @@ class UploadService:
                         record_id_conflict = True
                         record_id_conflict_sources = sorted(other_id_map[uploaded_record_id])
 
+                    # F. Identical-content check → auto-discard
+                    is_identical = False
+                    if suggested_record_id is not None:
+                        existing_mdf = candidate_mdf_map.get(suggested_record_id)
+                        if existing_mdf is not None:
+                            if _normalize(row.mdf_data) == _normalize(existing_mdf):
+                                is_identical = True
+
                     # Update the queue row
                     row.suggested_record_id = suggested_record_id
+                    if is_identical:
+                        match_type = 'identical'
+                        row.status = 'discard'
                     row.match_type = match_type
-                    
+
                     if suggested_is_locked:
                         row.status = 'locked_conflict'
 
@@ -464,6 +490,7 @@ class UploadService:
                         'cross_source_matches': cross_source_matches,
                         'record_id_conflict': record_id_conflict,
                         'record_id_conflict_sources': record_id_conflict_sources,
+                        'is_identical': is_identical,
                     })
 
             session.commit()
@@ -1062,19 +1089,15 @@ class UploadService:
                     continue
                 
                 iso_entry = session.query(ISO639_3).filter_by(id=lg_code).first()
-                if not iso_entry:
-                    # Ignore language identification if not in iso 639 table
+                if not iso_entry or iso_entry.ref_name != lg_name:
+                    # Both code and ref name must match ISO 639-3 exactly
                     continue
                 
-                # Use the official reference name from the ISO table
-                final_name = iso_entry.ref_name
-                final_code = lg_code
-                
                 # Find by code first (canonical)
-                lang = session.query(Language).filter_by(code=final_code).first()
+                lang = session.query(Language).filter_by(code=lg_code).first()
                 
                 if not lang:
-                    lang = Language(name=final_name, code=final_code)
+                    lang = Language(name=lg_name, code=lg_code)
                     session.add(lang)
                     session.flush()
                 

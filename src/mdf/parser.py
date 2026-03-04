@@ -25,6 +25,17 @@ def _is_nt_record_line(line):
     return value.isdigit()
 
 
+_ISO_LANG_PATTERN = re.compile(r'([A-Za-z][^\[]*?)\s*\[([a-z]{3})\]')
+
+
+def _extract_iso_langs(line_value: str) -> list:
+    """Return list of {'name': ..., 'code': ...} dicts found in line_value."""
+    return [
+        {'name': m.group(1).strip(), 'code': m.group(2)}
+        for m in _ISO_LANG_PATTERN.finditer(line_value)
+    ]
+
+
 def _process_block_into_record(lines_buffer):
     """Internal helper to convert a list of lines into a structured record."""
     if not lines_buffer:
@@ -79,13 +90,6 @@ def _process_block_into_record(lines_buffer):
 
         val = _extract_tag(line, 'so')
         if val is not None:
-            import re
-            # Extract Language-Name [code] if present, e.g. "Mohegan-Pequot [xpq]; Prince-Speck 1904"
-            match = re.search(r'^([^\[;]+)\[([a-z]{3})\]', val)
-            if match:
-                name = match.group(1).strip()
-                code = match.group(2).strip()
-                record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
             # Capturing the full string for source_page field
             if not record.get('source_page'):
                 record['source_page'] = val
@@ -108,31 +112,35 @@ def _process_block_into_record(lines_buffer):
 
         val = _extract_tag(line, 've')
         if val is not None:
-            import re
-            # Extract Language-Name [code] if present, e.g. "Mohegan-Pequot [xpq]"
-            match = re.search(r'^([^\[;]+)\[([a-z]{3})\]', val)
-            if match:
-                name = match.group(1).strip()
-                code = match.group(2).strip()
-                record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
-            # Also record the original ve text
             record['ve'].append(val)
             continue
 
         val = _extract_tag(line, 'ns')
         if val is not None:
-            import re
-            # Extract Language-Name [code] if present, e.g. "Mohegan-Pequot [xpq]"
-            match = re.search(r'^([^\[;]+)\[([a-z]{3})\]', val)
-            if match:
-                name = match.group(1).strip()
-                code = match.group(2).strip()
-                record['lg'].append({'name': name, 'code': code, 'is_primary': in_headword})
             continue
 
         if _is_nt_record_line(line):
             value = line.lstrip()[len('\\nt Record:'):].strip()
             record['record_id'] = int(value)
+
+    # Second pass: scan every line for ISO 639 language patterns
+    seen_lg = set()
+    in_headword = True
+    for line in lines_buffer:
+        stripped = line.lstrip()
+        if _extract_tag(line, 'se') is not None or \
+           _extract_tag(line, 'sn') is not None or \
+           _extract_tag(line, 'va') is not None or \
+           _extract_tag(line, 'xv') is not None:
+            in_headword = False
+        # Get value portion (after tag prefix)
+        space_idx = stripped.find(' ')
+        line_value = stripped[space_idx + 1:] if space_idx != -1 else ''
+        for lg in _extract_iso_langs(line_value):
+            key = (lg['name'], lg['code'])
+            if key not in seen_lg:
+                seen_lg.add(key)
+                record['lg'].append({'name': lg['name'], 'code': lg['code'], 'is_primary': in_headword})
 
     return record
 
@@ -211,23 +219,21 @@ def format_mdf_record(mdf_text: str) -> str:
     """
     Normalize formatting of an MDF record for storage:
     - Remove all leading indentation from lines.
-    - Add one blank line before each \\se line (subentry).
-    - Add one blank line before each \\xv line (example vernacular).
+    - Normalize by stripping all existing blank lines first.
+    - Add exactly one blank line before each bundle-start tag (except the first line):
+      \\sn (sense), \\se (subentry), \\xv (example), \\et (etymology).
     - Add one blank line before the \\nt Record: line.
-    - Remove any other consecutive blank lines.
+    - Idempotent: running multiple times produces the same result.
     """
-    lines = mdf_text.split('\n')
+    _bundle_pat = re.compile(r'^\\(?:sn|se|xv|et)(?:\s+|$)')
+    # Step 1: strip indentation and remove all blank lines
+    clean_lines = [line.lstrip() for line in mdf_text.split('\n') if line.strip()]
+    # Step 2: insert blank lines before bundle-start tags and \nt Record:
     result = []
-    for line in lines:
-        stripped = line.lstrip()
-        if not stripped:
-            continue
-        is_se = stripped.startswith('\\se ')
-        is_xv = stripped.startswith('\\xv ')
-        is_nt_rec = _is_nt_record_line(stripped)
-        if (is_se or is_xv or is_nt_rec) and result and result[-1] != '':
+    for i, line in enumerate(clean_lines):
+        if i > 0 and (_bundle_pat.match(line) or _is_nt_record_line(line)):
             result.append('')
-        result.append(stripped)
+        result.append(line)
     return '\n'.join(result)
 
 

@@ -12,6 +12,7 @@ class Source(Base):
     Managed via reference data seeding and administrative UI.
     """
     __tablename__ = 'sources'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)  # Full name e.g., 'Natick/Trumbull'
     short_name = Column(String)  # Abbreviation for UI display
@@ -28,6 +29,7 @@ class Language(Base):
     Ensures consistency across entries and provides dropdown data.
     """
     __tablename__ = 'languages'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(String, unique=True, nullable=False)  # ISO or project code
     name = Column(String, nullable=False)  # Display name
@@ -40,6 +42,7 @@ class RecordLanguage(Base):
     Auxiliary join table to support 1-record-to-many-languages.
     """
     __tablename__ = 'record_languages'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey('records.id', ondelete='CASCADE'), nullable=False)
     language_id = Column(Integer, ForeignKey('languages.id', ondelete='RESTRICT'), nullable=False)
@@ -70,6 +73,7 @@ class Record(Base):
         reviewed_by (str): Email of the reviewer who approved the record.
     """
     __tablename__ = 'records'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)  # Matches \nt Record: <id>
     lx = Column(String, nullable=False)  # Lexeme (\lx)
     sort_lx = Column(String)  # Normalized headword for sorting

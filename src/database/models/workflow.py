@@ -24,6 +24,7 @@ class MatchupQueue(Base):
         created_at (datetime): Timestamp of upload.
     """
     __tablename__ = 'matchup_queue'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
     source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'), nullable=False)
@@ -46,6 +47,7 @@ class EditHistory(Base):
     Tracks snapshot-based history for rollback and accountability.
     """
     __tablename__ = 'edit_history'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
     user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)

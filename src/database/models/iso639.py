@@ -10,7 +10,8 @@ class ISO639_3(Base):
     Seeded from https://iso639-3.sil.org/sites/iso639-3/files/downloads/iso-639-3.tab
     """
     __tablename__ = 'iso_639_3'
-    
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
     # The 'Id' column in the tab file is the 3-letter code
     id = Column(String(3), primary_key=True)
     part2b = Column(String(3))

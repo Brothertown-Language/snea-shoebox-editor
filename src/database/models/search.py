@@ -11,6 +11,7 @@ class SearchEntry(Base):
     with the pgserver envelope.
     """
     __tablename__ = 'search_entries'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
     term = Column(String, nullable=False)  # The searchable form (\lx, \va, \se, etc.)

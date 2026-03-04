@@ -118,9 +118,9 @@ class TestSoParsing(unittest.TestCase):
         self.assertEqual(lang.name, "Mohegan-Pequot")
         self.assertEqual(lang.code, "xpq")
 
-    def test_legacy_lg_not_parsed(self):
-        r"""Test that \lg tag is NO LONGER parsed and no RecordLanguage is created."""
-        mdf_data = "\\lx test2\n\\ps n\n\\ge test gloss\n\\nt test note\n\\lg OldTag [old]"
+    def test_no_language_pattern_no_record_language(self):
+        r"""Test that MDF with no Name [xxx] pattern produces no RecordLanguage."""
+        mdf_data = "\\lx test2\n\\ps n\n\\ge test gloss\n\\nt test note"
         batch_id = str(uuid.uuid4())
         
         # Stage entry
@@ -141,13 +141,52 @@ class TestSoParsing(unittest.TestCase):
              patch("src.services.audit_service.get_session", return_value=self.session):
             UploadService.commit_new(batch_id, "test@example.com", str(uuid.uuid4()))
 
-        # Verify record and fallback language
+        # Verify record and no language
         record = self.session.query(Record).filter_by(lx="test2").first()
         self.assertIsNotNone(record)
         
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
-        # Should be 0 because \lg is ignored and \so is missing
+        # Should be 0 because no Name [xxx] pattern is present
         self.assertEqual(len(record_langs), 0)
+
+    def test_multi_line_language_detection(self):
+        r"""Test primary language from \lx bundle and secondary from \se sub-entry."""
+        mdf_data = (
+            "\\lx testword\n"
+            "\\so Mohegan-Pequot [xpq]\n"
+            "\\ge test gloss\n"
+            "\\se subentry\n"
+            "\\so Wampanoag [wam]\n"
+        )
+        batch_id = str(uuid.uuid4())
+
+        q_row = MatchupQueue(
+            user_email="test@example.com",
+            source_id=self.source_id,
+            batch_id=batch_id,
+            status="create_new",
+            lx="testword",
+            mdf_data=mdf_data
+        )
+        self.session.add(q_row)
+        self.session.commit()
+
+        from unittest.mock import patch
+        with patch("src.services.upload_service.get_session", return_value=self.session), \
+             patch("src.services.audit_service.get_session", return_value=self.session):
+            UploadService.commit_new(batch_id, "test@example.com", str(uuid.uuid4()))
+
+        record = self.session.query(Record).filter_by(lx="testword").first()
+        self.assertIsNotNone(record)
+
+        record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
+        self.assertEqual(len(record_langs), 2)
+
+        by_code = {self.session.get(Language, rl.language_id).code: rl for rl in record_langs}
+        self.assertIn("xpq", by_code)
+        self.assertIn("wam", by_code)
+        self.assertTrue(by_code["xpq"].is_primary)
+        self.assertFalse(by_code["wam"].is_primary)
 
     def test_no_so_tag_no_exception_no_default(self):
         r"""Verify that record without \so tag causes no exception and gets no default language."""

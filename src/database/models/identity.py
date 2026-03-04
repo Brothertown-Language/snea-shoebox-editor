@@ -23,6 +23,7 @@ class User(Base):
         extra_metadata (dict): JSON storage for flexible settings/metadata.
     """
     __tablename__ = 'users'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, unique=True, nullable=False)  # Primary logic key
     username = Column(String, unique=True, nullable=False)  # GitHub handle
@@ -53,6 +54,7 @@ class UserPreference(Base):
 
     __table_args__ = (
         UniqueConstraint('user_email', 'view_name', 'preference_key', name='uix_user_pref_view_key'),
+        {'extend_existing': True},  # Required: prevents re-import errors on Streamlit hot-reload
     )
 
     user = relationship("User", back_populates="preferences")
@@ -63,6 +65,7 @@ class UserActivityLog(Base):
     Tracks logins, sync sessions, and critical administrative actions.
     """
     __tablename__ = 'user_activity_log'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
     session_id = Column(String)  # Unique UUID linking activity to a specific edit batch
@@ -84,6 +87,7 @@ class Permission(Base):
     - 'viewer': Read-only access to records. MAY NEVER edit or modify any data (HARD BLOCK).
     """
     __tablename__ = 'permissions'
+    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'))  # NULL = all
     github_org = Column(String, nullable=False)
