@@ -1,4 +1,4 @@
-<!-- Last pruned: 2026-03-03 -->
+<!-- Last pruned: 2026-03-04 -->
 <!-- Max 40 lines. Format: key: value. Prune order: session_state → oldest persistent_notes → least-used key_symbols. -->
 <!-- No rule duplication from guidelines/. Clear session_state per new task. -->
 
