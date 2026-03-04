@@ -1,6 +1,6 @@
 # Plan: Fix FTS tsquery Syntax Error from Pipe Character
 
-## Status: PROPOSED
+## Status: DONE
 
 ## Problem
 
@@ -39,7 +39,7 @@ words = [
 
 ## Checklist
 
-- [ ] Apply sanitization at line ~388 (get_records)
-- [ ] Apply sanitization at line ~490 (get_all_records_for_export)
-- [ ] Apply sanitization at line ~570 (stream_records_to_temp_file)
-- [ ] Verify existing tests pass
+- [x] Apply sanitization at line ~388 (get_records)
+- [x] Apply sanitization at line ~490 (get_all_records_for_export)
+- [x] Apply sanitization at line ~570 (stream_records_to_temp_file)
+- [x] Verify existing tests pass (pre-existing unrelated failure in test_crud.py confirmed)

@@ -20,6 +20,8 @@ from src.logging_config import get_logger
 
 logger = get_logger("snea.linguistic_service")
 
+_TSQUERY_UNSAFE = re.compile(r'[|&!()]+')
+
 @dataclass
 class RecordSearchResult:
     """
@@ -385,7 +387,10 @@ class LinguisticService:
                             # We join words with ' & ' and add ':*' for prefix matching
                             # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
                             from sqlalchemy import or_
-                            words = [w.strip() for w in search_term.split() if w.strip()]
+                            words = [
+                                clean for w in search_term.split()
+                                if (clean := _TSQUERY_UNSAFE.sub('', w).strip())
+                            ]
                             if words:
                                 fts_query = " & ".join([f"{w}:*" for w in words])
                                 query = query.filter(
@@ -487,7 +492,10 @@ class LinguisticService:
                             # FTS support for multiple words + prefix matching for partials
                             # We join words with ' & ' and add ':*' for prefix matching
                             # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
-                            words = [w.strip() for w in search_term.split() if w.strip()]
+                            words = [
+                                clean for w in search_term.split()
+                                if (clean := _TSQUERY_UNSAFE.sub('', w).strip())
+                            ]
                             if words:
                                 fts_query = " & ".join([f"{w}:*" for w in words])
                                 query = query.filter(
