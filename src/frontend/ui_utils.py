@@ -32,13 +32,11 @@ def handle_ui_error(e: Exception, user_message: str = "An unexpected error occur
     log.error(f"{user_message} Detail: {str(e)}", exc_info=True)
 
     # 2. UI Display (Sanitized)
-    if is_production():
-        st.error(user_message)
-    else:
-        # In dev, we can be slightly more helpful but still keep the UI clean
-        with st.expander(user_message, expanded=True):
-            st.error(f"**Technical Error:** {type(e).__name__}: {e}")
-            st.info("💡 *Full stack trace available in server logs (tmp/streamlit.log).*")
+    st.error(user_message)
+    if str(e):
+        st.warning(str(e))
+    if not is_production():
+        st.info("💡 *Full stack trace available in server logs (tmp/streamlit.log).*")
 
 
 # ── Infrastructure Dialogs ─────────────────────────────────────────────

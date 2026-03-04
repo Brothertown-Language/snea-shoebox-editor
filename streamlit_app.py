@@ -198,7 +198,13 @@ def main():
     
     # Run the selected page
     logger.debug("Running page: %s", getattr(pg, 'title', pg))
-    pg.run()
+    try:
+        pg.run()
+    except Exception as e:
+        from src.frontend.ui_utils import handle_ui_error
+        mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
+        contact = f" Please report this issue on Mastodon: {mastodon_url}" if mastodon_url else ""
+        handle_ui_error(e, f"An unexpected error occurred.{contact}", logger_name="snea.app")
 
 
 if __name__ == "__main__":

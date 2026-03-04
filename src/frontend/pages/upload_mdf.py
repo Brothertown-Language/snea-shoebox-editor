@@ -30,12 +30,21 @@ def upload_mdf():
     apply_standard_layout_css()
 
     # ── Sidebar: header and controls ──────────────────────────────
+    staging_in_progress = st.session_state.get("staging_in_progress", False)
+
     with st.sidebar:
+        # Cancel button — only enabled control during staging
+        if staging_in_progress:
+            if st.button("Cancel", icon="✖️", key="staging_cancel"):
+                st.session_state.pop("staging_in_progress", None)
+                st.rerun()
+
         # C-3: File uploader
         uploaded_file = st.file_uploader(
             "Upload MDF File",
             type=["txt", "mdf"],
             help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
+            disabled=staging_in_progress,
         )
         
         # Persistence: If a file is uploaded, store it. If not, check if we have one in state.
@@ -81,7 +90,7 @@ def upload_mdf():
             final_options, 
             index=default_index,
             key="upload_active_source_name",
-            disabled=not active_content
+            disabled=(not active_content) or staging_in_progress
         )
 
         # Clear focus flag and success state if we are NOT on the create new source label
@@ -160,7 +169,7 @@ def upload_mdf():
             if success_name:
                 st.success(f"Source '{success_name}' created successfully. Please select it from the dropdown above.")
             
-            is_disabled = bool(success_name) or not active_content
+            is_disabled = bool(success_name) or not active_content or staging_in_progress
             
             new_name = st.text_input(
                 "Source name",
@@ -203,13 +212,23 @@ def upload_mdf():
         else:
             selected_source_id = source_ids.get(selected_source)
 
-        if st.button("Back to Main Menu", icon="⬅️", key="back_to_main"):
+        if st.button("Back to Main Menu", icon="⬅️", key="back_to_main", disabled=staging_in_progress):
             st.session_state.pop("review_batch_id", None)
             st.session_state.pop("upload_active_source_name", None)
             from src.services.navigation_service import NavigationService
             st.switch_page(NavigationService.PAGE_HOME)
 
     # ── Main panel: upload content ────────────────────────────────
+    # Progress indicator up top during staging
+    if staging_in_progress:
+        st.info("⏳ Staging and matching in progress…")
+        _staging_progress_bar = st.progress(st.session_state.get("_staging_progress_value", 0.0))
+        st.session_state["_staging_progress_bar_rendered"] = True
+    else:
+        _staging_progress_bar = None
+        st.session_state.pop("_staging_progress_bar_rendered", None)
+        st.session_state.pop("_staging_progress_value", None)
+
     # Display flash message from batch completion or other bulk actions
     flash = st.session_state.pop("bulk_flash", None)
     if flash:
@@ -234,7 +253,7 @@ def upload_mdf():
                         f"{b['entry_count']} entries · {ts_str}"
                     )
                 with col_review:
-                    if st.button("Review", key=f"review_{batch_id}", type="primary"):
+                    if st.button("Review", key=f"review_{batch_id}", type="primary", disabled=staging_in_progress):
                         st.session_state["review_batch_id"] = batch_id
                         st.rerun()
                 with col_download:
@@ -256,12 +275,13 @@ def upload_mdf():
                             data=mdf_blob,
                             file_name=fname,
                             mime="text/plain",
-                            key=f"download_{batch_id}"
+                            key=f"download_{batch_id}",
+                            disabled=staging_in_progress
                         )
                     except Exception as e:
                         handle_ui_error(e, "Failed to prepare download.", logger_name="snea.upload_mdf")
                 with col_discard:
-                    if st.button("Discard", key=f"discard_{batch_id}"):
+                    if st.button("Discard", key=f"discard_{batch_id}", disabled=staging_in_progress):
                         try:
                             count = UploadService.discard_all(batch_id)
                             st.toast(f"Discarded {count} entries.")
@@ -306,7 +326,12 @@ def upload_mdf():
                 # Disable after use until a new file is uploaded
                 # Use Streamlit's unique file_id to distinguish re-uploads of the same filename
                 already_staged = st.session_state.get("upload_staged_file_id") == active_file_id
-                if st.button("Stage & Match", type="primary", disabled=already_staged):
+                if st.button("Stage & Match", type="primary", disabled=already_staged or staging_in_progress):
+                    st.session_state["staging_in_progress"] = True
+                    st.session_state["_staging_progress_value"] = 0.0
+                    st.rerun()
+
+                if staging_in_progress and _staging_progress_bar is not None:
                     with st.status("Processing upload...", expanded=True) as status:
                         try:
                             st.write("Staging entries...")
@@ -317,16 +342,19 @@ def upload_mdf():
                                 filename=active_name,
                             )
                             st.write("Suggesting matches...")
-                            progress_bar = st.progress(0.0)
 
                             def update_progress(curr, tot):
-                                progress_bar.progress(curr / tot if tot > 0 else 1.0)
+                                val = curr / tot if tot > 0 else 1.0
+                                st.session_state["_staging_progress_value"] = val
+                                _staging_progress_bar.progress(val)
 
                             match_results = UploadService.suggest_matches(batch_id, progress_callback=update_progress)
                             st.session_state["upload_batch_id"] = batch_id
                             st.session_state["upload_staged_file_id"] = active_file_id
 
-                            # Clear pending upload after successful staging
+                            # Clear pending upload and staging flag after successful staging
+                            st.session_state.pop("staging_in_progress", None)
+                            st.session_state.pop("_staging_progress_value", None)
                             st.session_state.pop("pending_upload_content", None)
                             st.session_state.pop("pending_upload_name", None)
                             st.session_state.pop("pending_upload_file_id", None)
@@ -336,6 +364,8 @@ def upload_mdf():
                             status.update(label="Processing complete!", state="complete", expanded=False)
                             st.rerun()
                         except Exception as e:
+                            st.session_state.pop("staging_in_progress", None)
+                            st.session_state.pop("_staging_progress_value", None)
                             status.update(label="Processing failed.", state="error")
                             handle_ui_error(e, "Staging and matching failed. Please verify the MDF format.", logger_name="snea.upload_mdf")
 
@@ -371,9 +401,19 @@ def _render_review_view():
     # Scroll to top when page changes (triggered by rerun after page nav)
     st.html('<script>window.parent.document.querySelector(".main").scrollTo(0, 0);</script>')
 
+    review_bulk_in_progress = st.session_state.get("review_bulk_in_progress", False)
+
     # ── Sidebar: header ───────────────────────────────────────────
     with st.sidebar:
         st.markdown("**Review Staged Entries**")
+
+        # Step 5: Cancel button — only enabled control during bulk
+        if review_bulk_in_progress:
+            if st.button("Cancel", icon="✖️", key="review_bulk_cancel"):
+                st.session_state.pop("review_bulk_in_progress", None)
+                st.session_state.pop("review_bulk_label", None)
+                st.session_state.pop("review_bulk_action", None)
+                st.rerun()
 
     # ── Main panel: record comparisons only ───────────────────────
     _render_review_table(batch_id, session_deps={
@@ -385,7 +425,7 @@ def _render_review_view():
         st.divider()
 
         # C-6b: Re-Match button
-        if st.button("Re-Match", key="rematch_btn"):
+        if st.button("Re-Match", key="rematch_btn", disabled=review_bulk_in_progress):
             try:
                 match_results = UploadService.rematch_batch(batch_id)
                 st.session_state["upload_batch_id"] = batch_id
@@ -397,7 +437,7 @@ def _render_review_view():
                 handle_ui_error(e, "Re-match failed.", logger_name="snea.upload_mdf.review")
 
         # Back button to return to upload view
-        if st.button("Back to MDF Upload", icon="⬅️", key="back_to_upload"):
+        if st.button("Back to MDF Upload", icon="⬅️", key="back_to_upload", disabled=review_bulk_in_progress):
             st.session_state.pop("review_batch_id", None)
             st.rerun()
             return
@@ -417,6 +457,7 @@ def _render_review_table(batch_id, session_deps):
 
     logger = get_logger("snea.upload_mdf.review")
     user_email = session_deps['user_email']
+    review_bulk_in_progress = st.session_state.get("review_bulk_in_progress", False)
 
     # ── Filtering & Query ───────────────────────────────────────────
     filter_options = {
@@ -439,7 +480,7 @@ def _render_review_table(batch_id, session_deps):
             locked_conflict_count = session.query(MatchupQueue).filter_by(batch_id=batch_id, status='locked_conflict').count()
             if locked_conflict_count > 0:
                 st.error(f"⚠️ {locked_conflict_count} locked conflicts detected!")
-                if st.button("Discard All Locked Conflicts", use_container_width=True, help="Remove all entries that conflict with locked records"):
+                if st.button("Discard All Locked Conflicts", use_container_width=True, help="Remove all entries that conflict with locked records", disabled=review_bulk_in_progress):
                     discarded = UploadService.discard_locked_conflicts(batch_id)
                     st.success(f"Discarded {discarded} entries.")
                     st.rerun()
@@ -452,7 +493,8 @@ def _render_review_table(batch_id, session_deps):
                         file_name=f"locked_conflicts_{batch_id[:8]}.mdf",
                         mime="text/plain",
                         use_container_width=True,
-                        help="Download conflicting records as an MDF fragment for manual review"
+                        help="Download conflicting records as an MDF fragment for manual review",
+                        disabled=review_bulk_in_progress
                     )
                 st.divider()
 
@@ -465,7 +507,7 @@ def _render_review_table(batch_id, session_deps):
             st.session_state["review_page_size"] = int(saved_pref) if saved_pref and saved_pref.isdigit() else page_size_options[1]
 
         page_size = st.session_state.get("review_page_size", page_size_options[1])
-        new_page_size = st.selectbox("Rows per page", page_size_options, index=page_size_options.index(page_size))
+        new_page_size = st.selectbox("Rows per page", page_size_options, index=page_size_options.index(page_size), disabled=review_bulk_in_progress)
         if new_page_size != page_size:
             st.session_state["review_page_size"] = new_page_size
             PreferenceService.set_preference(user_email, "upload_review", "page_size", str(new_page_size))
@@ -583,11 +625,11 @@ def _render_review_table(batch_id, session_deps):
         st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_rows} entries)")
         nav_col1, nav_col2 = st.columns(2)
         with nav_col1:
-            if st.button("Previous", icon="◀️", key="page_prev", disabled=(current_page <= 1)):
+            if st.button("Previous", icon="◀️", key="page_prev", disabled=(current_page <= 1 or review_bulk_in_progress)):
                 st.session_state["review_current_page"] = current_page - 1
                 st.rerun()
         with nav_col2:
-            if st.button("Next", icon="▶️", key="page_next", disabled=(current_page >= total_pages)):
+            if st.button("Next", icon="▶️", key="page_next", disabled=(current_page >= total_pages or review_bulk_in_progress)):
                 st.session_state["review_current_page"] = current_page + 1
                 st.rerun()
 
@@ -602,96 +644,30 @@ def _render_review_table(batch_id, session_deps):
 
         # D-1a: Bulk approval action buttons
         if is_new_source:
-            if st.button("Approve All as New Records", key="bulk_approve_new"):
-                with st.status("Approving all as new...", expanded=True) as status:
-                    progress_bar = st.progress(0.0)
-                    def update_progress(curr, tot):
-                        progress_bar.progress(curr / tot if tot > 0 else 1.0)
-                    try:
-                        import uuid as _bulk_uuid_new
-                        count = UploadService.approve_all_new_source(
-                            batch_id,
-                            user_email=user_email,
-                            session_id=str(_bulk_uuid_new.uuid4()),
-                            progress_callback=update_progress
-                        )
-                        status.update(label=f"Applied {count} new records!", state="complete", expanded=False)
-                        st.session_state["bulk_flash"] = ("success", f"All {count} entries applied as new records.")
-                        import time as _time
-                        _time.sleep(0.5)
-                        st.rerun()
-                    except Exception as e:
-                        handle_ui_error(e, "Failed to bulk approve matches.", logger_name="snea.upload_mdf.review")
+            if st.button("Approve All as New Records", key="bulk_approve_new", disabled=review_bulk_in_progress):
+                st.session_state["review_bulk_in_progress"] = True
+                st.session_state["review_bulk_label"] = "Approving all as new records…"
+                st.session_state["review_bulk_action"] = "approve_new"
+                st.rerun()
         else:
-            if st.button("Approve All Matched", key="bulk_approve_matched"):
-                with st.status("Applying matched entries...", expanded=True) as status:
-                    progress_bar = st.progress(0.0)
-                    def update_progress(curr, tot):
-                        progress_bar.progress(curr / tot if tot > 0 else 1.0)
-                    try:
-                        import uuid as _bulk_uuid
-                        count = UploadService.approve_all_by_record_match(
-                            batch_id,
-                            user_email=user_email,
-                            session_id=str(_bulk_uuid.uuid4()),
-                            progress_callback=update_progress
-                        )
-                        if count:
-                            status.update(label=f"Applied {count} matched entries!", state="complete", expanded=False)
-                            st.session_state["bulk_flash"] = ("success", f"{count} matched entr{'y' if count == 1 else 'ies'} applied.")
-                            import time as _time
-                            _time.sleep(0.5)
-                            st.rerun()
-                        else:
-                            status.update(label="No matched entries found.", state="complete", expanded=False)
-                            st.info("No matched entries to apply.")
-                    except Exception as e:
-                        handle_ui_error(e, "Failed to approve matched entries.", logger_name="snea.upload_mdf.review")
+            if st.button("Approve All Matched", key="bulk_approve_matched", disabled=review_bulk_in_progress):
+                st.session_state["review_bulk_in_progress"] = True
+                st.session_state["review_bulk_label"] = "Applying matched entries…"
+                st.session_state["review_bulk_action"] = "approve_matched"
+                st.rerun()
 
-            if st.button("Approve Non-Matches as New", key="bulk_approve_nonmatch"):
-                with st.status("Approving non-matches as new records...", expanded=True) as status:
-                    progress_bar = st.progress(0.0)
-                    def update_progress(curr, tot):
-                        progress_bar.progress(curr / tot if tot > 0 else 1.0)
-                    try:
-                        import uuid as _bulk_uuid2
-                        count = UploadService.approve_non_matches_as_new(
-                            batch_id,
-                            user_email=user_email,
-                            session_id=str(_bulk_uuid2.uuid4()),
-                            progress_callback=update_progress
-                        )
-                        if count:
-                            status.update(label=f"Approved {count} new records!", state="complete", expanded=False)
-                            st.session_state["bulk_flash"] = ("success", f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.")
-                            import time as _time
-                            _time.sleep(0.5)
-                            st.rerun()
-                        else:
-                            status.update(label="No non-matching entries found.", state="complete", expanded=False)
-                            st.info("No non-matching entries to approve.")
-                    except Exception as e:
-                        handle_ui_error(e, "Failed to approve non-matching entries.", logger_name="snea.upload_mdf.review")
+            if st.button("Approve Non-Matches as New", key="bulk_approve_nonmatch", disabled=review_bulk_in_progress):
+                st.session_state["review_bulk_in_progress"] = True
+                st.session_state["review_bulk_label"] = "Approving non-matches as new records…"
+                st.session_state["review_bulk_action"] = "approve_nonmatch"
+                st.rerun()
 
         # Discard Marked — available regardless of new/existing source
-        if st.button("Discard All Marked", key="bulk_discard_marked"):
-            with st.status("Discarding marked entries...", expanded=True) as status:
-                progress_bar = st.progress(0.0)
-                def update_progress(curr, tot):
-                    progress_bar.progress(curr / tot if tot > 0 else 1.0)
-                try:
-                    count = UploadService.discard_marked(batch_id, progress_callback=update_progress)
-                    if count:
-                        status.update(label=f"Discarded {count} entries!", state="complete", expanded=False)
-                        st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
-                        import time as _time
-                        _time.sleep(0.5)
-                        st.rerun()
-                    else:
-                        status.update(label="No entries marked for discard.", state="complete", expanded=False)
-                        st.info("No entries marked for discard.")
-                except Exception as e:
-                    handle_ui_error(e, "Failed to discard ignored entries.", logger_name="snea.upload_mdf.review")
+        if st.button("Discard All Marked", key="bulk_discard_marked", disabled=review_bulk_in_progress):
+            st.session_state["review_bulk_in_progress"] = True
+            st.session_state["review_bulk_label"] = "Discarding marked entries…"
+            st.session_state["review_bulk_action"] = "discard_marked"
+            st.rerun()
 
         st.divider()
         # Records per page selector (at bottom)
@@ -699,7 +675,8 @@ def _render_review_table(batch_id, session_deps):
             "Records per page",
             options=page_size_options,
             index=page_size_options.index(page_size),
-            key="review_page_size_widget"
+            key="review_page_size_widget",
+            disabled=review_bulk_in_progress
         )
         if selected_page_size != st.session_state.get("review_page_size"):
             st.session_state["review_page_size"] = selected_page_size
@@ -707,6 +684,76 @@ def _render_review_table(batch_id, session_deps):
             # Persist to database
             PreferenceService.set_preference(user_email, "upload_review", "page_size", str(selected_page_size))
             st.rerun()
+
+    # Step 2 & 6: Progress bar up top + execute bulk action on second render
+    if review_bulk_in_progress:
+        bulk_label = st.session_state.get("review_bulk_label", "Processing…")
+        bulk_action = st.session_state.get("review_bulk_action", "")
+        st.info(bulk_label)
+        progress_bar = st.progress(0.0)
+
+        def update_progress(curr, tot):
+            progress_bar.progress(curr / tot if tot > 0 else 1.0)
+
+        try:
+            import uuid as _bulk_uuid_top
+            if bulk_action == "approve_new":
+                with st.status(bulk_label, expanded=True) as status:
+                    count = UploadService.approve_all_new_source(
+                        batch_id,
+                        user_email=user_email,
+                        session_id=str(_bulk_uuid_top.uuid4()),
+                        progress_callback=update_progress
+                    )
+                    status.update(label=f"Applied {count} new records!", state="complete", expanded=False)
+                st.session_state["bulk_flash"] = ("success", f"All {count} entries applied as new records.")
+            elif bulk_action == "approve_matched":
+                with st.status(bulk_label, expanded=True) as status:
+                    count = UploadService.approve_all_by_record_match(
+                        batch_id,
+                        user_email=user_email,
+                        session_id=str(_bulk_uuid_top.uuid4()),
+                        progress_callback=update_progress
+                    )
+                    if count:
+                        status.update(label=f"Applied {count} matched entries!", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("success", f"{count} matched entr{'y' if count == 1 else 'ies'} applied.")
+                    else:
+                        status.update(label="No matched entries found.", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("info", "No matched entries to apply.")
+            elif bulk_action == "approve_nonmatch":
+                with st.status(bulk_label, expanded=True) as status:
+                    count = UploadService.approve_non_matches_as_new(
+                        batch_id,
+                        user_email=user_email,
+                        session_id=str(_bulk_uuid_top.uuid4()),
+                        progress_callback=update_progress
+                    )
+                    if count:
+                        status.update(label=f"Approved {count} new records!", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("success", f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.")
+                    else:
+                        status.update(label="No non-matching entries found.", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("info", "No non-matching entries to approve.")
+            elif bulk_action == "discard_marked":
+                with st.status(bulk_label, expanded=True) as status:
+                    count = UploadService.discard_marked(batch_id, progress_callback=update_progress)
+                    if count:
+                        status.update(label=f"Discarded {count} entries!", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
+                    else:
+                        status.update(label="No entries marked for discard.", state="complete", expanded=False)
+                        st.session_state["bulk_flash"] = ("info", "No entries marked for discard.")
+        except Exception as e:
+            handle_ui_error(e, "Bulk action failed.", logger_name="snea.upload_mdf.review")
+        finally:
+            st.session_state.pop("review_bulk_in_progress", None)
+            st.session_state.pop("review_bulk_label", None)
+            st.session_state.pop("review_bulk_action", None)
+        import time as _time
+        _time.sleep(0.5)
+        st.rerun()
+        return
 
     # D-1: Render each entry (paginated)
     # Note: page_rows already contains only the current page due to SQL LIMIT/OFFSET
@@ -787,6 +834,7 @@ def _render_review_table(batch_id, session_deps):
                     index=default_idx,
                     key=f"status_{row.id}",
                     label_visibility="collapsed",
+                    disabled=review_bulk_in_progress,
                 )
                 selected_status = status_map[selected_label]
 
@@ -819,7 +867,7 @@ def _render_review_table(batch_id, session_deps):
                 if st.button(
                     "Apply Now",
                     key=f"apply_{row.id}",
-                    disabled=not actionable,
+                    disabled=not actionable or review_bulk_in_progress,
                     help="Record is locked and cannot be overwritten." if is_locked_conflict else None
                 ):
                     try:
@@ -859,6 +907,7 @@ def _render_review_table(batch_id, session_deps):
                     key=f"match_search_{row.id}",
                     label_visibility="collapsed",
                     placeholder="Search by headword or gloss…",
+                    disabled=review_bulk_in_progress,
                 )
                 if search_query:
                     candidates = UploadService.search_records_for_override(
@@ -874,10 +923,11 @@ def _render_review_table(batch_id, session_deps):
                             options,
                             key=f"match_select_{row.id}",
                             label_visibility="collapsed",
+                            disabled=review_bulk_in_progress,
                         )
                         chosen_idx = options.index(chosen)
                         chosen_record_id = candidates[chosen_idx]["id"]
-                        if st.button("Confirm Override", key=f"match_confirm_{row.id}"):
+                        if st.button("Confirm Override", key=f"match_confirm_{row.id}", disabled=review_bulk_in_progress):
                             try:
                                 UploadService.confirm_match(row.id, chosen_record_id)
                                 # Clear the cached selectbox value so it picks up
@@ -924,11 +974,11 @@ def _render_review_table(batch_id, session_deps):
                 if row == page_rows[-1] and total_pages > 1:
                     nav_c1, nav_c2, nav_c3 = st.columns([2, 3, 2])
                     with nav_c1:
-                        if st.button("Previous", icon="◀️", key="main_page_prev", disabled=(current_page <= 1)):
+                        if st.button("Previous", icon="◀️", key="main_page_prev", disabled=(current_page <= 1 or review_bulk_in_progress)):
                             st.session_state["review_current_page"] = current_page - 1
                             st.rerun()
                     with nav_c3:
-                        if st.button("Next", icon="▶️", key="main_page_next", disabled=(current_page >= total_pages), use_container_width=True):
+                        if st.button("Next", icon="▶️", key="main_page_next", disabled=(current_page >= total_pages or review_bulk_in_progress), use_container_width=True):
                             st.session_state["review_current_page"] = current_page + 1
                             st.rerun()
 

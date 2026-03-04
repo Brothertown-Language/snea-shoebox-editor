@@ -39,9 +39,21 @@ class LinguisticService:
     def generate_sort_lx(lx: str) -> str:
         r"""
         Generates a normalized sort key for a headword (\lx):
+
         1. NFD Normalization (decomposes diacritics).
         2. Strip diacritics (Combining marks).
-        3. Straighten quotes (fancy -> straight).
+        3. Straighten quotes (fancy → straight).
+        3b. Symbol substitution — treat linguistic symbols as letters:
+            - ∞ (U+221E) is an Algonquian letter for a long rounded vowel.
+              Mapped to "oozzz" so it sorts after "oo" and all "oo*" entries
+              (ooa…ooy) and before any "op*" entries.
+              "oozzz" is chosen because:
+                • It sorts after oo and all ooa…ooy entries in ASCII/Unicode collation.
+                • It sorts before op.
+                • The extra zzz suffix eliminates collision risk with real ooz* lemmas.
+              This pattern MUST be followed globally whenever sort keys are generated
+              for this corpus — do not map ∞ to any other value.
+            - ✔ (U+2714) is an annotation mark; stripped (→ "") for sort purposes.
         4. Lowercase (case-insensitive).
         5. Strip leading punctuation ([*-=([])]).
         """
@@ -60,6 +72,15 @@ class LinguisticService:
         }
         for fancy, straight in quotes_map.items():
             stripped = stripped.replace(fancy, straight)
+        # 3b. Symbol substitution — treat linguistic symbols as letters
+        # ∞ (U+221E) is an Algonquian letter for a long rounded vowel; sorts after oo*/before op
+        # ✔ (U+2714) is an annotation mark; stripped for sort purposes
+        symbol_map = {
+            '\u221e': 'oozzz',
+            '\u2714': '',
+        }
+        for symbol, replacement in symbol_map.items():
+            stripped = stripped.replace(symbol, replacement)
         # 4. Lowercase
         lowered = stripped.lower()
         # 5. Strip leading punctuation and numerals

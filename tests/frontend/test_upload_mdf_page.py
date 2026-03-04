@@ -241,25 +241,39 @@ class TestStageAndMatch(unittest.TestCase):
     @patch("src.services.upload_service.UploadService.stage_entries")
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
-    @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
+    @patch("streamlit.session_state", {
+        "user_role": "editor",
+        "user_email": "test@example.com",
+        "staging_in_progress": True,
+        "_staging_progress_value": 0.0,
+        "pending_upload_content": "\\lx word\n\\ps n\n\\ge thing",
+        "pending_upload_name": "test.txt",
+        "pending_upload_file_id": "file-id-1",
+        "upload_active_source_name": "TestSource",
+    })
     @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
     @patch("streamlit.dataframe")
     @patch("streamlit.success")
     @patch("streamlit.expander")
     @patch("streamlit.file_uploader")
-    @patch("streamlit.button")
+    @patch("streamlit.button", return_value=False)
     @patch("streamlit.warning")
     @patch("streamlit.divider")
     @patch("streamlit.subheader")
     @patch("streamlit.info")
+    @patch("streamlit.progress")
+    @patch("streamlit.status")
     @patch("streamlit.rerun")
     @patch("streamlit.switch_page")
-    def test_stage_and_match_called(self, _switch_page, _rerun, _info, _subheader, _divider, _warning,
+    def test_stage_and_match_called(self, _switch_page, _rerun, mock_status, mock_progress, _info, _subheader, _divider, _warning,
                                      mock_button, mock_uploader, mock_expander,
                                      mock_success, _df, _sb, _title,
                                      mock_list_batches, mock_parse, mock_stage, mock_suggest,
                                      mock_session):
+        mock_status_ctx = MagicMock()
+        mock_status.return_value.__enter__ = MagicMock(return_value=mock_status_ctx)
+        mock_status.return_value.__exit__ = MagicMock(return_value=False)
         mock_sess = MagicMock()
         src = MagicMock()
         src.name = "TestSource"
@@ -267,20 +281,18 @@ class TestStageAndMatch(unittest.TestCase):
         mock_sess.query.return_value.order_by.return_value.all.return_value = [src]
         mock_session.return_value = mock_sess
 
-        mock_file = MagicMock()
-        mock_file.getvalue.return_value = b"\\lx word\n\\ps n\n\\ge thing"
-        mock_file.name = "test.txt"
-        mock_uploader.return_value = mock_file
+        mock_uploader.return_value = None
 
         mock_expander_ctx = MagicMock()
         mock_expander.return_value.__enter__ = MagicMock(return_value=mock_expander_ctx)
         mock_expander.return_value.__exit__ = MagicMock(return_value=False)
 
+        mock_progress.return_value = MagicMock()
+
         mock_parse.return_value = [{"lx": "word", "ps": "n", "ge": "thing"}]
         mock_stage.return_value = "batch-uuid-1234"
         mock_suggest.return_value = [{"queue_id": 1, "lx": "word", "suggested_record_id": 42, "match_type": "exact"}]
         mock_list_batches.return_value = []
-        mock_button.return_value = True  # Stage & Match clicked
 
         from src.frontend.pages.upload_mdf import upload_mdf
         upload_mdf()
@@ -291,7 +303,8 @@ class TestStageAndMatch(unittest.TestCase):
             entries=[{"lx": "word", "ps": "n", "ge": "thing"}],
             filename="test.txt",
         )
-        mock_suggest.assert_called_once_with("batch-uuid-1234")
+        mock_suggest.assert_called_once()
+        self.assertEqual(mock_suggest.call_args[0][0], "batch-uuid-1234")
 
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.parse_upload")

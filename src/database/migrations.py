@@ -46,6 +46,7 @@ class MigrationManager:
         (2026030145060, "_migrate_add_record_locking", "Add is_locked, locked_by, locked_at, and lock_note to records"),
         (2026030206285, "_migrate_ignore_leading_numerals", "Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals"),
         (2026030207140, "_migrate_reprocess_all_records", "Reprocess all records to synchronize languages, search entries, and metadata"),
+        (20260303080520, "_migrate_renormalize_infinity_symbol", "Re-normalize sort_lx and normalized_term for \u221e and \u2714 symbol sort order"),
     ]
 
     def __init__(self, engine):
@@ -448,6 +449,36 @@ class MigrationManager:
         except Exception as e:
             session.rollback()
             logger.error(f"Failed to re-normalize for leading numerals: {e}")
+            raise e
+        finally:
+            session.close()
+
+    def _migrate_renormalize_infinity_symbol(self):
+        """Migration 20260303080520: Re-normalize records.sort_lx and search_entries.normalized_term for ∞ and ✔ symbol sort order."""
+        from .models.core import Record
+        from .models.search import SearchEntry
+        from src.services.linguistic_service import LinguisticService
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            logger.info("Re-normalizing records.sort_lx and search_entries.normalized_term (∞ and ✔ symbol sort order)...")
+
+            # 1. Update records.sort_lx
+            records = session.query(Record).all()
+            for record in records:
+                record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
+
+            # 2. Update search_entries.normalized_term
+            entries = session.query(SearchEntry).all()
+            for entry in entries:
+                entry.normalized_term = LinguisticService.generate_sort_lx(entry.term)
+
+            session.commit()
+            logger.info("Re-normalization for ∞ and ✔ symbol sort order complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to re-normalize for ∞ and ✔ symbol sort order: {e}")
             raise e
         finally:
             session.close()
