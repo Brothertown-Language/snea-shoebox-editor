@@ -22,7 +22,7 @@ def _get_local_db_path():
     project_root = Path.cwd()
     
     # Junie separation: Use a dedicated path if JUNIE_PRIVATE_DB is set
-    if os.getenv("JUNIE_PRIVATE_DB") == "true":
+    if os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0"):
         db_path = project_root / "tmp" / "junie_db"
         _logger.debug("Using Junie-private DB path: %s", db_path)
         return db_path
@@ -390,7 +390,7 @@ def _auto_start_pgserver():
     # to avoid re-initializing on every Streamlit rerun.
     if _pg_server is not None:
         warning_placeholder.empty()
-        is_junie = os.getenv("JUNIE_PRIVATE_DB") == "true"
+        is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
         if not is_junie:
             uri = "postgresql://postgres:@localhost:5432/postgres"
         else:
@@ -398,7 +398,7 @@ def _auto_start_pgserver():
         _logger.debug("pgserver already running, returning cached URI.")
         return uri
 
-    is_junie = os.getenv("JUNIE_PRIVATE_DB") == "true"
+    is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
 
     try:
         import pgserver
