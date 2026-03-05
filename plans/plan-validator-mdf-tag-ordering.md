@@ -1,6 +1,6 @@
 # Plan: Update Validator to Use Recommended MDF Tag Ordering
 
-**Status:** 📋 Draft  
+**Status:** ✅ Complete  
 **Created:** 2026-03-04  
 **Scope:** `src/mdf/validator.py` only
 

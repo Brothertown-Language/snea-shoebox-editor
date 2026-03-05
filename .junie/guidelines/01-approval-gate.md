@@ -35,7 +35,7 @@ Ladder sequence (do not re-enter a completed rung):
 3. **Wait** → No further messages unless user asks.
 4. **Proceed on GO** → Execute approved plan exactly once.
 5. **Report** → Summarize results and stop.
-6. **Stop** → Acknowledge completion once; wait for new directive.
+6. **Stop** → End the session via `submit`. Do not send further messages or wait for a new directive.
 
 ## Plan Delivery
 
