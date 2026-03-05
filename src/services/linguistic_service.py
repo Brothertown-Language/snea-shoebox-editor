@@ -150,9 +150,15 @@ class LinguisticService:
 
     @staticmethod
     def get_languages() -> List[Dict[str, Any]]:
-        """Retrieve all languages ordered by name."""
+        """Retrieve languages whose code exists in ISO 639-3 and whose name matches the ISO ref_name."""
+        from src.database.models.iso639 import ISO639_3
         with get_session() as session:
-            results = session.query(Language).order_by(Language.name).all()
+            results = (
+                session.query(Language)
+                .join(ISO639_3, (Language.code == ISO639_3.id) & (Language.name == ISO639_3.ref_name))
+                .order_by(Language.name)
+                .all()
+            )
             return [{"id": l.id, "name": l.name, "code": l.code} for l in results]
 
     @staticmethod

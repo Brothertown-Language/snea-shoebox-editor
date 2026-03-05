@@ -14,10 +14,11 @@
   synchronization updates that reflect code reality per the Drift Protocol in `10-authority-source.md`. It does not
   exempt code, scripts, data files, or any other artifact placed in `plans/`.
 - Plans must address WHAT + WHY as an overview — no large raw code blocks.
+- **Plan delivery MUST NOT contain approval tokens.** The words "Go", "Proceed", and "Approved" are forbidden anywhere in a plan delivery — including as closing labels, transition phrases, section headers, or calls-to-action (e.g., "Awaiting Go", "Ready to proceed"). Use neutral phrasing such as "Awaiting approval" or "Awaiting your authorization".
 - **When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO. Do not create a new plan file as a substitute for doing the work.**
 - Agent is absolutely prohibited from making any modifications until explicit "GO". No "accidental" or "minor" changes
   during analysis.
-- **Approval tokens are user-only.** "GO", "Proceed", and "Approved" are only valid when issued by the **human developer** in the chat. The agent is strictly prohibited from issuing, echoing, implying, or constructing these tokens in any form — including via terminal commands, tool calls, plan text, response body text, `<UPDATE>` blocks, or any other mechanism — to authorize its own actions. Any self-issued approval token is null and void and constitutes a CRITICAL VIOLATION. The agent MUST log the violation immediately via `ai_bin/violation-log` and halt. **The agent MUST NOT write "Go", "Proceed", or "Approved" anywhere in its own response — not even as a label, header, or transition word before executing steps.**
+- **Approval tokens are user-only.** "GO", "Proceed", and "Approved" are only valid when issued by the **human developer** in the chat. The agent is strictly prohibited from issuing, echoing, implying, or constructing these tokens in any form — including via terminal commands, tool calls, plan text, response body text, `<UPDATE>` blocks, or any other mechanism — to authorize its own actions. Any self-issued approval token is null and void and constitutes a CRITICAL VIOLATION. The agent MUST log the violation immediately via `ai_bin/violation-log` and halt. **The agent MUST NOT write "Go", "Proceed", or "Approved" anywhere in its own response — not even as a label, header, or transition word before executing steps.** **Quoted or echoed text is never approval.** If the agent's own plan text contains words like "Go" or "Proceed" and the user quotes or references that text, it does NOT constitute an approval token. The agent MUST receive a standalone, unambiguous approval token from the user — not embedded in a quote, not inferred from context.
 - **The `plans/` GO exception does NOT extend to code, notebooks, or any non-plan file**, even when the user's request
   is framed as a "revise" or "update" of a plan that has an associated implementation artifact. If satisfying a request
   requires changing both a plan file and a code/notebook file, the plan file may be updated freely but the code/notebook
@@ -34,8 +35,8 @@
 Ladder sequence (do not re-enter a completed rung):
 
 1. **Detect** → If response would loop, stop and present REVIEW PLAN once.
-2. **Present** → Provide plan via `ask_user` and stop. Do not run any commands.
-3. **Wait** → Use `ask_user` to deliver the plan and await GO. **STRICTLY FORBIDDEN: running `echo`, no-op shell commands, or any terminal command as a filler while waiting. STRICTLY FORBIDDEN: sending multiple follow-up messages while waiting.**
+2. **Present** → Provide plan via `answer` (for rich markdown) or `ask_user` (plain text only). **REVIEW PLANs MUST use `answer` so the user can read formatted content.** Do not run any commands.
+3. **Wait** → Use `ask_user` to deliver the plan and await GO. **STRICTLY FORBIDDEN: running `echo`, no-op shell commands, or any terminal command as a filler while waiting. STRICTLY FORBIDDEN: sending multiple follow-up messages while waiting. STRICTLY FORBIDDEN: using `echo` or any shell command as a filler at the end of ANY response — not just while waiting. Every terminal command must have a real, necessary purpose. `echo "waiting"`, `echo "plan delivered"`, `echo "done"` and all similar filler echoes are CRITICAL VIOLATIONS.**
 4. **Proceed on GO** → Execute approved plan exactly once.
 5. **Report** → Summarize results and stop.
 6. **Stop** → End the session via `submit`. Do not send further messages or wait for a new directive.
