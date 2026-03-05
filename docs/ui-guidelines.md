@@ -62,4 +62,13 @@ Visual elements must maintain strict consistency across all views and components
     - 📚 Show All / Records
 - **Mirror Existing Patterns**: Before implementing a new UI element, inspect the surrounding code and existing mocks to identify and replicate established visual patterns.
 
+## 6. Per-Record Controls
+
+Action controls that target a specific record (e.g., edit, delete) MUST be placed inline with that record — not in a sidebar or global toolbar.
+
+### Rules:
+- **Inline Placement**: Buttons or icons for record-level actions MUST appear within the record's own row or container.
+- **No Global Toolbars for Record Actions**: A sidebar button or page-level button that acts on "the selected record" is not acceptable for new views.
+- **All New Views**: This pattern is mandatory for any view that presents a list or set of records with per-record actions.
+
 *Note: This pattern is mandatory for all new views created after February 2026.*

@@ -519,6 +519,7 @@ def records():
                     toolbar_cols = [1, 1]
                     if user_role in ["editor", "admin"] and not st.session_state.global_edit_mode:
                         toolbar_cols.append(1)
+                        toolbar_cols.append(1)
                     
                     toolbar = st.columns(toolbar_cols)
                     
@@ -567,23 +568,15 @@ def records():
                                     st.session_state.local_edits.add(record_id)
                                     st.rerun()
 
-                    # Record Lock Toggle (Sidebar behavior)
-                    if user_role in ["editor", "admin"]:
-                        with st.sidebar:
-                            st.divider()
-                            st.markdown(f"**Record #{record_id} Lock**")
+                            # Inline lock/unlock toggle
                             if record.get('is_locked'):
-                                st.info(f"Locked by: {record.get('locked_by')}\nAt: {record.get('locked_at')}")
-                                if record.get('lock_note'):
-                                    st.caption(f"Note: {record.get('lock_note')}")
-                                if st.button("🔓 Unlock Record", key=f"unlock_btn_{record_id}", use_container_width=True):
+                                if toolbar[3].button("Unlock", icon="🔓", use_container_width=True, key=f"unlock_btn_{record_id}", help=f"Unlock (locked by {record.get('locked_by')})"):
                                     if LinguisticService.unlock_record(record_id, user_email):
                                         st.success(f"Record #{record_id} unlocked.")
                                         st.rerun()
                             else:
-                                lock_note = st.text_input("Lock Note (optional)", key=f"lock_note_{record_id}", label_visibility="collapsed", placeholder="Reason for locking...")
-                                if st.button("🔒 Lock Record", key=f"lock_btn_{record_id}", use_container_width=True):
-                                    if LinguisticService.lock_record(record_id, user_email, lock_note):
+                                if toolbar[3].button("Lock", icon="🔒", use_container_width=True, key=f"lock_btn_{record_id}", help="Lock record"):
+                                    if LinguisticService.lock_record(record_id, user_email):
                                         st.success(f"Record #{record_id} locked.")
                                         st.rerun()
 
