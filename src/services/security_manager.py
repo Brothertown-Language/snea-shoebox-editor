@@ -22,7 +22,10 @@ class SecurityManager:
             return
 
         controller = st.session_state["cookie_controller"]
-        saved_token = controller.get(GH_AUTH_TOKEN_COOKIE)
+        try:
+            saved_token = controller.get(GH_AUTH_TOKEN_COOKIE)
+        except TypeError:
+            return
         
         if saved_token and "auth" not in st.session_state:
             logger.debug("Rehydrating session from saved cookie token")
