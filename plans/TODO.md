@@ -22,3 +22,11 @@ Note for the AI Agent: interview the user for details and then develop the plan 
 - [ ] Fix bare `except: pass` → `except OSError: pass` at `src/database/connection.py:372` (pgserver lock-file cleanup).
     Date Completed:
     Completed By:
+
+- [ ] `ai_bin/guidelines-search`: Add fuzzy/difflib search mode (`--fuzzy` flag) — zero-dep typo-tolerant matching via `difflib.get_close_matches`. No external deps required.
+    Date Completed:
+    Completed By:
+
+- [ ] `ai_bin/guidelines-search`: Add semantic search mode (`--semantic` flag) — embedding-based search via `sentence-transformers` (inline `uv` script dep, ~500MB first download, slow cold start). True semantic matching without exact terms.
+    Date Completed:
+    Completed By:
