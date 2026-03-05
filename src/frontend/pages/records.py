@@ -56,6 +56,10 @@ def records():
         st.session_state.global_edit_mode = False
     if "is_locked_filter" not in st.session_state:
         st.session_state.is_locked_filter = "All"
+    if "selected_language_id" not in st.session_state:
+        st.session_state.selected_language_id = "All"
+    if "language_role_filter" not in st.session_state:
+        st.session_state.language_role_filter = "Any"
     if "pending_edits" not in st.session_state:
         st.session_state.pending_edits = {}
     if "local_edits" not in st.session_state:
@@ -98,6 +102,17 @@ def records():
         st.session_state.selected_source_id = source_id_map.get(selected_name, "All")
         st.session_state.current_page = 1
 
+    def on_language_change():
+        languages = LinguisticService.get_languages()
+        lang_id_map = {l['name']: l['id'] for l in languages}
+        selected_name = st.session_state.language_select
+        st.session_state.selected_language_id = lang_id_map.get(selected_name, "All")
+        st.session_state.current_page = 1
+
+    def on_language_role_change():
+        st.session_state.language_role_filter = st.session_state.language_role_radio
+        st.session_state.current_page = 1
+
     # --- 2. Calculate Search Results (Pre-calculate for Header Count) ---
     source_filter_id = None if st.session_state.selected_source_id == "All" else int(st.session_state.selected_source_id)
     search_term = st.session_state.search_query if st.session_state.search_query else None
@@ -115,8 +130,14 @@ def records():
     elif st.session_state.is_locked_filter == "Unlocked":
         is_locked_bool = False
     
+    language_filter_id = None if st.session_state.selected_language_id == "All" else int(st.session_state.selected_language_id)
+    language_role_map = {"Any": None, "Primary": "primary", "Secondary": "secondary"}
+    language_role_val = language_role_map.get(st.session_state.language_role_filter)
+
     search_result = LinguisticService.search_records(
         source_id=source_filter_id,
+        language_id=language_filter_id,
+        language_role=language_role_val,
         is_locked=is_locked_bool,
         search_term=search_term,
         search_mode=st.session_state.search_mode,
@@ -147,10 +168,11 @@ def records():
             </style>
         """)
         
-        header_text = f"Search ({total_count} records)" if search_term else "Search"
+        header_text = f"Search ({total_count} records)" if search_term else ""
         if st.session_state.view_selection_only:
             header_text = f"Selection Contents ({total_count} records)"
-        st.markdown(f"**{header_text}**")
+        if header_text:
+            st.markdown(f"**{header_text}**")
         
         search_query = st.text_input("Enter text...", value=st.session_state.search_query, 
                                     key="search_query_input", label_visibility="collapsed",
@@ -179,22 +201,38 @@ def records():
         source_name_map["All"] = "All"
 
         current_source_name = source_name_map.get(str(st.session_state.selected_source_id), "All")
-        st.radio("Select Source", source_options, 
-                                            index=source_options.index(current_source_name), 
-                                            key="source_select",
-                                            label_visibility="collapsed",
-                                            horizontal=True,
-                                            on_change=on_source_change)
+        st.selectbox("Select Source", source_options,
+                     index=source_options.index(current_source_name),
+                     key="source_select",
+                     label_visibility="collapsed",
+                     on_change=on_source_change)
         
+        # Language Filter
+        languages = LinguisticService.get_languages()
+        lang_options = ["All"] + [l['name'] for l in languages]
+        lang_name_map = {str(l['id']): l['name'] for l in languages}
+        current_lang_name = lang_name_map.get(str(st.session_state.selected_language_id), "All")
+        st.selectbox("Select Language", lang_options,
+                     index=lang_options.index(current_lang_name),
+                     key="language_select",
+                     label_visibility="collapsed",
+                     on_change=on_language_change)
+        role_options = ["Any", "Primary", "Secondary"]
+        st.radio("Language Role", role_options,
+                 index=role_options.index(st.session_state.language_role_filter),
+                 key="language_role_radio",
+                 horizontal=True,
+                 label_visibility="collapsed",
+                 on_change=on_language_role_change)
+
         # Is Locked Filter
         lock_options = ["All", "Locked", "Unlocked"]
         st.radio("Status: Locked", lock_options,
                  index=lock_options.index(st.session_state.is_locked_filter),
                  key="is_locked_filter",
-                 horizontal=True)
+                 horizontal=True,
+                 label_visibility="collapsed")
 
-        st.markdown("**Pagination**")
-        
         c1, c2 = st.columns(2)
         if c1.button("Prev", icon="◀️", disabled=(st.session_state.current_page <= 1), use_container_width=True):
             if st.session_state.global_edit_mode and st.session_state.pending_edits:
@@ -286,7 +324,6 @@ def records():
             st.info("View-only mode (Editor access required)")
 
         st.divider()
-        st.markdown("**Preferences**")
         structural_highlighting = st.toggle("Structural Highlighting", value=st.session_state.structural_highlighting)
         if structural_highlighting != st.session_state.structural_highlighting:
             st.session_state.structural_highlighting = structural_highlighting
@@ -358,8 +395,6 @@ def records():
         )
         
         distinct_sources = sorted(list(set(r['source_name'] for r in all_matching_records if r.get('source_name'))))
-        export_header = "Export All Sources" if len(distinct_sources) > 1 else "Export Source"
-        st.markdown(f"**{export_header}**")
         
         if all_matching_records:
             github_username = IdentityService.get_github_username(user_email)

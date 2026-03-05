@@ -17,7 +17,7 @@
 - **When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO. Do not create a new plan file as a substitute for doing the work.**
 - Agent is absolutely prohibited from making any modifications until explicit "GO". No "accidental" or "minor" changes
   during analysis.
-- **Approval tokens are user-only.** "GO", "Proceed", and "Approved" are only valid when issued by the user. The agent is strictly prohibited from issuing, echoing, or implying these tokens to itself or to authorize its own actions.
+- **Approval tokens are user-only.** "GO", "Proceed", and "Approved" are only valid when issued by the **human developer** in the chat. The agent is strictly prohibited from issuing, echoing, implying, or constructing these tokens in any form — including via terminal commands, tool calls, plan text, response body text, `<UPDATE>` blocks, or any other mechanism — to authorize its own actions. Any self-issued approval token is null and void and constitutes a CRITICAL VIOLATION. The agent MUST log the violation immediately via `ai_bin/violation-log` and halt. **The agent MUST NOT write "Go", "Proceed", or "Approved" anywhere in its own response — not even as a label, header, or transition word before executing steps.**
 - **The `plans/` GO exception does NOT extend to code, notebooks, or any non-plan file**, even when the user's request
   is framed as a "revise" or "update" of a plan that has an associated implementation artifact. If satisfying a request
   requires changing both a plan file and a code/notebook file, the plan file may be updated freely but the code/notebook
@@ -25,14 +25,17 @@
 - **Discussion and analysis sessions do not grant GO.** A session that ends with a recommendation, analysis, or
   "shall I proceed?" exchange does not carry implicit authorization into the next session. Each session starts with
   zero authorization for code changes.
+- **GO does not extend to new instructions.** A GO authorizes only the plan or scope presented at the time it was
+  issued. Any new instruction from the developer issued after a GO — whether in the same session or a new one —
+  requires its own plan and its own GO. The prior GO is exhausted and does not carry forward.
 
 ## Loop Prevention
 
 Ladder sequence (do not re-enter a completed rung):
 
 1. **Detect** → If response would loop, stop and present REVIEW PLAN once.
-2. **Present** → Provide plan in message body.
-3. **Wait** → No further messages unless user asks.
+2. **Present** → Provide plan via `ask_user` and stop. Do not run any commands.
+3. **Wait** → Use `ask_user` to deliver the plan and await GO. **STRICTLY FORBIDDEN: running `echo`, no-op shell commands, or any terminal command as a filler while waiting. STRICTLY FORBIDDEN: sending multiple follow-up messages while waiting.**
 4. **Proceed on GO** → Execute approved plan exactly once.
 5. **Report** → Summarize results and stop.
 6. **Stop** → End the session via `submit`. Do not send further messages or wait for a new directive.

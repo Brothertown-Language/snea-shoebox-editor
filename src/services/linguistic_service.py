@@ -149,6 +149,13 @@ class LinguisticService:
             return results
 
     @staticmethod
+    def get_languages() -> List[Dict[str, Any]]:
+        """Retrieve all languages ordered by name."""
+        with get_session() as session:
+            results = session.query(Language).order_by(Language.name).all()
+            return [{"id": l.id, "name": l.name, "code": l.code} for l in results]
+
+    @staticmethod
     def update_source(source_id: int, **fields: Any) -> bool:
         """
         Update an existing source.
@@ -308,6 +315,7 @@ class LinguisticService:
     def search_records(
         source_id: Optional[int] = None,
         language_id: Optional[int] = None,
+        language_role: Optional[str] = None,
         status: Optional[str] = None,
         is_locked: Optional[bool] = None,
         search_term: Optional[str] = None,
@@ -347,8 +355,15 @@ class LinguisticService:
                     query = query.filter(Record.source_id == source_id)
                 
                 if language_id:
-                    # If language_id filter is active, we join with RecordLanguage again for filtering
-                    query = query.join(Record.language).filter(Language.id == language_id)
+                    # If language_id filter is active, join with RecordLanguage for filtering
+                    rl_alias = RecordLanguage
+                    query = query.join(rl_alias, Record.id == rl_alias.record_id).join(
+                        Language, rl_alias.language_id == Language.id
+                    ).filter(Language.id == language_id)
+                    if language_role == "primary":
+                        query = query.filter(rl_alias.is_primary == True)
+                    elif language_role == "secondary":
+                        query = query.filter(rl_alias.is_primary == False)
                 
                 if status:
                     query = query.filter(Record.status == status)
