@@ -165,6 +165,8 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
     (error, warning, ok).
     """
     import html as _html
+    from src.mdf.parser import format_mdf_record
+    mdf_text = format_mdf_record(mdf_text)
     lines = mdf_text.split('\n')
     
     line_html_parts = []

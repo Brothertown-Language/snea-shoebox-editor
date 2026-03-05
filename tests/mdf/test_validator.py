@@ -81,5 +81,33 @@ class TestMDFValidator(unittest.TestCase):
         self.assertNotEqual(v_idx, -1)
         self.assertEqual(diagnostics[v_idx]["status"], "ok")
 
+    def test_nt_out_of_order_at_end_suppressed(self):
+        r"""Tests that \nt out of order at end of record is not flagged (record-number tracking use case)."""
+        record = [
+            r"\lx dog",
+            r"\ps n",
+            r"\ge dog",
+            r"\dt 2026-03-04",
+            r"\nt 42",
+        ]
+        diagnostics = MDFValidator.diagnose_record(record)
+        nt_diag = next(d for d in diagnostics if d.get("tag") == "nt")
+        self.assertNotEqual(nt_diag["status"], "suggestion")
+
+    def test_nt_out_of_order_mid_record_flagged(self):
+        r"""Tests that \nt out of order mid-record (followed by non-tail hierarchy tags) is still flagged."""
+        record = [
+            r"\lx dog",
+            r"\ps n",
+            r"\ge dog",
+            r"\dt 2026-03-04",
+            r"\nt 42",
+            r"\cf wolf",
+        ]
+        diagnostics = MDFValidator.diagnose_record(record)
+        nt_diag = next(d for d in diagnostics if d.get("tag") == "nt")
+        self.assertEqual(nt_diag["status"], "suggestion")
+        self.assertIn("is out of order", nt_diag["message"])
+
 if __name__ == "__main__":
     unittest.main()

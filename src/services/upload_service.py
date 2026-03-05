@@ -1149,9 +1149,9 @@ class UploadService:
                 if not record:
                     raise ValueError(f"Suggested record {row.suggested_record_id} not found")
                 prev_data = record.mdf_data
-                formatted = format_mdf_record(row.mdf_data)
-                normalized = normalize_nt_record(formatted, record.id)
-                record.mdf_data = normalized
+                normalized = normalize_nt_record(format_mdf_record(row.mdf_data), record.id)
+                formatted = format_mdf_record(normalized)
+                record.mdf_data = formatted
                 record.lx = entry['lx']
                 record.hm = entry.get('hm', 1)
                 record.ps = entry.get('ps', '')
@@ -1171,7 +1171,7 @@ class UploadService:
                     version=next_version,
                     change_summary="MDF upload: updated from matchup_queue",
                     prev_data=prev_data,
-                    current_data=normalized,
+                    current_data=formatted,
                 ))
                 record_id = record.id
                 action = 'updated'
@@ -1200,9 +1200,9 @@ class UploadService:
                 
                 UploadService._update_record_languages(session, new_record, entry.get('lg', []))
 
-                formatted = format_mdf_record(row.mdf_data)
-                normalized = normalize_nt_record(formatted, new_record.id)
-                new_record.mdf_data = normalized
+                normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
+                formatted = format_mdf_record(normalized)
+                new_record.mdf_data = formatted
                 session.add(EditHistory(
                     record_id=new_record.id,
                     user_email=user_email,
@@ -1210,7 +1210,7 @@ class UploadService:
                     version=1,
                     change_summary=f"MDF upload: new homonym created (hm {new_hm})",
                     prev_data=None,
-                    current_data=normalized,
+                    current_data=formatted,
                 ))
                 record_id = new_record.id
                 action = 'created_homonym'
@@ -1231,9 +1231,9 @@ class UploadService:
                 
                 UploadService._update_record_languages(session, new_record, entry.get('lg', []))
 
-                formatted = format_mdf_record(row.mdf_data)
-                normalized = normalize_nt_record(formatted, new_record.id)
-                new_record.mdf_data = normalized
+                normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
+                formatted = format_mdf_record(normalized)
+                new_record.mdf_data = formatted
                 session.add(EditHistory(
                     record_id=new_record.id,
                     user_email=user_email,
@@ -1241,7 +1241,7 @@ class UploadService:
                     version=1,
                     change_summary="MDF upload: new record created",
                     prev_data=None,
-                    current_data=normalized,
+                    current_data=formatted,
                 ))
                 record_id = new_record.id
                 action = 'created'
@@ -1391,9 +1391,9 @@ class UploadService:
                 if not record:
                     continue
                 prev_data = record.mdf_data
-                formatted = format_mdf_record(row.mdf_data)
-                normalized = normalize_nt_record(formatted, record.id)
-                record.mdf_data = normalized
+                normalized = normalize_nt_record(format_mdf_record(row.mdf_data), record.id)
+                formatted = format_mdf_record(normalized)
+                record.mdf_data = formatted
                 # Re-parse to update indexed fields
                 from src.mdf.parser import parse_mdf as _parse
                 parsed = _parse(row.mdf_data)
@@ -1413,7 +1413,7 @@ class UploadService:
                     version=next_version,
                     change_summary="MDF upload: updated from matchup_queue",
                     prev_data=prev_data,
-                    current_data=normalized,
+                    current_data=formatted,
                 ))
                 session.delete(row)
                 updated_record_ids.append(record.id)
@@ -1500,9 +1500,9 @@ class UploadService:
 
                 UploadService._update_record_languages(session, new_record, entry.get('lg', []))
 
-                formatted = format_mdf_record(row.mdf_data)
-                normalized = normalize_nt_record(formatted, new_record.id)
-                new_record.mdf_data = normalized
+                normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
+                formatted = format_mdf_record(normalized)
+                new_record.mdf_data = formatted
                 session.add(EditHistory(
                     record_id=new_record.id,
                     user_email=user_email,
@@ -1510,7 +1510,7 @@ class UploadService:
                     version=1,
                     change_summary=f"MDF upload: new homonym created (hm {new_hm})",
                     prev_data=None,
-                    current_data=normalized,
+                    current_data=formatted,
                 ))
                 session.delete(row)
                 count += 1
@@ -1573,9 +1573,9 @@ class UploadService:
 
                 UploadService._update_record_languages(session, new_record, entry.get('lg', []))
 
-                formatted = format_mdf_record(row.mdf_data)
-                normalized = normalize_nt_record(formatted, new_record.id)
-                new_record.mdf_data = normalized
+                normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
+                formatted = format_mdf_record(normalized)
+                new_record.mdf_data = formatted
                 session.add(EditHistory(
                     record_id=new_record.id,
                     user_email=user_email,
@@ -1583,7 +1583,7 @@ class UploadService:
                     version=1,
                     change_summary="MDF upload: new record created",
                     prev_data=None,
-                    current_data=normalized,
+                    current_data=formatted,
                 ))
                 session.delete(row)
                 count += 1

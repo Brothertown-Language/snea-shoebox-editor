@@ -7,12 +7,36 @@ from .tag_loader import get_valid_tags
 class MDFValidator:
     r"""
     Validates MDF (Multi-Dictionary Form) data.
-    Hierarchy: \lx -> \so -> \ps -> \ge
+    Hierarchy follows the official MDF recommended field order:
+      \lx -> \ps -> \sn -> \ge -> ... -> \nt -> \so -> \dt
+    See: docs/mdf/original/MDFields19a_UTF8.txt (Order_of_Fields)
     """
 
-    REQUIRED_HIERARCHY = ["lx", "so", "ps", "ge"]
+    REQUIRED_HIERARCHY = [
+        "lx",   # lexical entry — always first
+        "hm",   # homonym number
+        "lc",   # lexical citation
+        "ph",   # phonetic form
+        "se",   # subentry (section boundary)
+        "ps",   # part of speech (section boundary)
+        "pn",   # part of speech-national
+        "sn",   # sense number (section boundary)
+        "ge",   # gloss-English
+        "de",   # definition-English
+        "rf",   # reference
+        "xv",   # example-vernacular
+        "xe",   # example-English
+        "cf",   # cross-reference
+        "sy",   # synonyms
+        "an",   # antonyms
+        "et",   # etymology
+        "nt",   # notes
+        "so",   # source of data (near end)
+        "st",   # status
+        "dt",   # datestamp
+    ]
+    BASIC_TAGS = ["lx", "ps", "ge"]  # Minimum meaningful entry per MDF Basic set
     LEGACY_TAG_MAPPING = {
-        "ln": "so",  # Discouraged top-level language marker
         "lmm": "lx",
         "ctg": "ps",
         "gls": "ge",
@@ -99,7 +123,9 @@ class MDFValidator:
         # 2. Second pass: Check Hierarchy and Order
         last_req_idx = -1
         hierarchy_str = " -> ".join([f"\\{t}" for t in MDFValidator.REQUIRED_HIERARCHY])
-        
+        # Tags that may validly follow \nt at end of record (record-number tracking use case)
+        _NT_TAIL_TAGS = {"so", "st", "dt"}
+
         for i, diag in enumerate(diagnostics):
             if "tag" not in diag:
                 continue
@@ -116,6 +142,15 @@ class MDFValidator:
             if tag in MDFValidator.REQUIRED_HIERARCHY:
                 req_idx = MDFValidator.REQUIRED_HIERARCHY.index(tag)
                 if req_idx < last_req_idx:
+                    # \nt out of order at end of record: suppress when used for record-number tracking
+                    if tag == "nt":
+                        remaining_tags = {
+                            d["tag"] for d in diagnostics[i + 1:]
+                            if "tag" in d and d["tag"] in MDFValidator.REQUIRED_HIERARCHY
+                        }
+                        if remaining_tags <= _NT_TAIL_TAGS:
+                            last_req_idx = req_idx
+                            continue
                     diag["status"] = "suggestion"
                     diag["message"] = (
                         f"Tag \\{tag} is out of order. While not required, MDF records usually follow "
@@ -125,7 +160,7 @@ class MDFValidator:
                 last_req_idx = req_idx
 
         # 3. Global Check: Missing Tags (attach to first line for visibility)
-        missing = [t for t in MDFValidator.REQUIRED_HIERARCHY if t not in found_req_tags]
+        missing = [t for t in MDFValidator.BASIC_TAGS if t not in found_req_tags]
         if missing and diagnostics:
             # Find first line with a tag to attach the missing tags note
             target_idx = -1

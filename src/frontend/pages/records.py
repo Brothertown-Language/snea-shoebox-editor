@@ -16,6 +16,7 @@ def records():
     from src.services.navigation_service import NavigationService
     from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error, render_back_to_main_button
     from src.mdf.validator import MDFValidator
+    from src.mdf.parser import format_mdf_record
     from src.logging_config import get_logger
 
     logger = get_logger("snea.pages.records")
@@ -439,7 +440,7 @@ def records():
     else:
         for record in records_batch:
             record_id = record['id']
-            mdf_data = record['mdf_data']
+            mdf_data = format_mdf_record(record['mdf_data'])
             mdf_lines = mdf_data.split('\n')
             
             with st.container(border=True):
