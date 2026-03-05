@@ -1,0 +1,148 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Manage .junie/VIOLATION_LOG.jsonl — append, list, search, and report stats on guideline violations.
+Usage:
+  uv run python ai_bin/violation-log add --rule "file § section" --violation "..." --root-cause "..." --correction "..." [--date YYYY-MM-DD]
+  uv run python ai_bin/violation-log list [--n N]
+  uv run python ai_bin/violation-log search KEYWORD
+  uv run python ai_bin/violation-log stats
+"""
+from __future__ import annotations
+
+import argparse
+import json
+import sys
+from datetime import date
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+LOG_FILE = PROJECT_ROOT / ".junie" / "VIOLATION_LOG.jsonl"
+
+
+def load_entries() -> list[dict]:
+    if not LOG_FILE.exists():
+        return []
+    entries = []
+    for line in LOG_FILE.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line:
+            entries.append(json.loads(line))
+    return entries
+
+
+def save_entry(entry: dict) -> None:
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    with LOG_FILE.open("a", encoding="utf-8") as f:
+        f.write(json.dumps(entry, ensure_ascii=False) + "\n")
+
+
+def next_id(entries: list[dict]) -> int:
+    if not entries:
+        return 1
+    return max(e.get("id", 0) for e in entries) + 1
+
+
+def format_entry(e: dict) -> str:
+    lines = [
+        f"[#{e.get('id', '?')}] {e.get('date', '?')}",
+        f"  Rule      : {e.get('rule', '')}",
+        f"  Violation : {e.get('violation', '')}",
+        f"  Root cause: {e.get('root_cause', '')}",
+        f"  Correction: {e.get('correction', '')}",
+    ]
+    return "\n".join(lines)
+
+
+def cmd_add(args: argparse.Namespace) -> None:
+    entries = load_entries()
+    entry = {
+        "id": next_id(entries),
+        "date": args.date or date.today().isoformat(),
+        "rule": args.rule,
+        "violation": args.violation,
+        "root_cause": args.root_cause,
+        "correction": args.correction,
+    }
+    save_entry(entry)
+    print(f"Logged violation #{entry['id']} ({entry['date']})")
+
+
+def cmd_list(args: argparse.Namespace) -> None:
+    entries = load_entries()
+    if not entries:
+        print("No violations logged.")
+        return
+    n = args.n if args.n else 10
+    for e in entries[-n:]:
+        print(format_entry(e))
+        print()
+
+
+def cmd_search(args: argparse.Namespace) -> None:
+    keyword = args.keyword.lower()
+    entries = load_entries()
+    results = [
+        e for e in entries
+        if any(keyword in str(v).lower() for v in e.values())
+    ]
+    if not results:
+        print(f"No entries matching '{args.keyword}'.")
+        return
+    for e in results:
+        print(format_entry(e))
+        print()
+
+
+def cmd_stats(args: argparse.Namespace) -> None:
+    entries = load_entries()
+    if not entries:
+        print("No violations logged.")
+        return
+    total = len(entries)
+    last_date = entries[-1].get("date", "?")
+    from collections import Counter
+    rule_counts = Counter(e.get("rule", "") for e in entries)
+    top_rule, top_count = rule_counts.most_common(1)[0]
+    print(f"Violation log stats")
+    print(f"  Total entries : {total}")
+    print(f"  Last entry    : {last_date}")
+    print(f"  Most violated : {top_rule} ({top_count}x)")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Manage VIOLATION_LOG.jsonl")
+    sub = parser.add_subparsers(dest="command")
+
+    p_add = sub.add_parser("add", help="Append a new violation entry")
+    p_add.add_argument("--rule", required=True, help="Guideline file § section")
+    p_add.add_argument("--violation", required=True, help="What was done wrong")
+    p_add.add_argument("--root-cause", required=True, dest="root_cause", help="Why it happened")
+    p_add.add_argument("--correction", required=True, help="Fix or preventive measure")
+    p_add.add_argument("--date", default=None, help="YYYY-MM-DD (defaults to today)")
+
+    p_list = sub.add_parser("list", help="Show recent entries")
+    p_list.add_argument("--n", type=int, default=10, help="Number of entries to show")
+
+    p_search = sub.add_parser("search", help="Search entries by keyword")
+    p_search.add_argument("keyword", help="Keyword to search")
+
+    sub.add_parser("stats", help="Show summary statistics")
+
+    args = parser.parse_args()
+
+    if args.command == "add":
+        cmd_add(args)
+    elif args.command == "list":
+        cmd_list(args)
+    elif args.command == "search":
+        cmd_search(args)
+    elif args.command == "stats":
+        cmd_stats(args)
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

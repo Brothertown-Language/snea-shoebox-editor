@@ -5,7 +5,7 @@
 - `JUNIE_PRIVATE_DB=true` routes all DB operations to `tmp/junie_db` (Junie-private pgserver instance).
 - Without this flag, the app uses `tmp/local_db` (shared local dev instance).
 - **EVERY** DB-interactive terminal command or script executed by the agent MUST include `JUNIE_PRIVATE_DB=true`.
-  The variable is active when present with any value except `"false"` or `"0"` (case-insensitive).
+  The variable is active when present, regardless of value.
   Correct: `JUNIE_PRIVATE_DB=true uv run python tmp/my_script.py`
   Incorrect: `uv run python tmp/my_script.py`
 
@@ -13,9 +13,9 @@
 
 - All test files MUST set `os.environ["JUNIE_PRIVATE_DB"] = "true"` at module level, before any DB import or
   connection is established.
-- Scripts that interact with the DB MUST check `MARKER_JUNIE_TERMINAL` at startup (see `03-tool-usage.md`). If set,
-  the script MUST operate only against the test/private schema. If schema isolation cannot be guaranteed, the script
-  MUST abort with a clear error message.
+- Scripts that interact with the DB MUST check `MARKER_JUNIE_TERMINAL` at startup (see `03-tool-usage.md`). The
+  variable is active when present, regardless of value. If active, the script MUST operate only against the
+  test/private schema. If schema isolation cannot be guaranteed, the script MUST abort with a clear error message.
 - NEVER run test or experimental code against the production schema or the shared `tmp/local_db` instance.
 
 ## Local DB Preservation

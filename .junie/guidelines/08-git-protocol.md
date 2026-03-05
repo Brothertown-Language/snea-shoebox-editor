@@ -2,8 +2,8 @@
 
 ## Prohibited
 
-- Agent MUST NOT run `git add`, `git stage`, `git commit`, or `git push` unless the user explicitly requests it. No
-  proactive commit grouping or staging advice.
+- Agent MUST NOT run `git add`, `git stage`, `git commit`, `git push`, `git stash`, `git rebase`, `git reset`,
+  `git clean`, or `git rm` unless the user explicitly requests it. No proactive commit grouping or staging advice.
 
 ## Commit Preparation (only when user requests)
 

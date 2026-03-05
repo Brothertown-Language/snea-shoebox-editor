@@ -13,10 +13,12 @@
   source record (e.g., `discovery_date` absent from an XML record), the process MUST raise immediately — never skip,
   suppress, or continue. Missing required data is a data integrity defect, not a filter condition. A field is
   **required** for a given step if the step's logic cannot produce a valid output without it; optional fields may be
-  absent without triggering a hard fail.
+  absent without triggering a hard fail. When in doubt whether a field is required, treat it as required and hard-fail.
+  Never assume a field is optional without explicit documentation or user confirmation.
 
 ## Verify Before Recommend
 
+- **NEVER present fabricated, assumed, or unverified data as fact.** This especially applies to domain-specific claims — MDF tags, linguistic data, schema details, and any topic where authoritative source documents exist in the repository (e.g., `docs/mdf/`). When source documents are available, consult them before asserting facts. Do not rely on training-data knowledge for domain-specific claims.
 - Never recommend backfills/schema changes based on assumptions. Verify presence and distribution of source data with a
   robust sample before proposing solutions.
 - **Robust Sampling Required**: When analyzing or remediating data formats, behavior, or patterns, you MUST compare

@@ -11,9 +11,9 @@ history are secondary and potentially transient or outdated.
    non-code source (plans, docs, user prompts referencing old states), the **code wins**.
 2. **Documentation Drift Protocol**:
     * When drift is detected, you MUST NOT "fix" the code to match the documentation or plan.
-   * Instead, you MUST update the plan/documentation to reflect the reality of the code. Updating
-     plan/documentation to reflect code reality is exempt from the approval gate (treated as a synchronization
-     administrative action, not a code change).
+   * Instead, you MUST update the plan/documentation to reflect the reality of the code. Updating files in `plans/`
+     to reflect code reality is exempt from the approval gate (treated as a synchronization administrative action).
+     Updates to documentation outside `plans/` require the standard approval gate.
     * After syncing the documentation, STOP and report the synchronization.
 3. **Suppression of Reactive Remediation**:
     * Explicitly forbidden: Proposing or applying code changes solely to make the code conform to an expectation derived

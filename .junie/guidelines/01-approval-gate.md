@@ -9,13 +9,15 @@
   Each subsequent phase or top-level item requires a new GO. A plan is **phased** if it contains explicitly labelled
   phases (e.g., "Phase 1", "Phase 2"); otherwise it is **flat**. **After completing the authorized scope, HALT
   immediately — do not proceed to the next phase or item.**
-- GO exceptions: `tmp/` (temp drafts/scratch) and `plans/` (plan files only). Prefer `plans/` for plans. The `plans/`
-  GO exception applies only to creating or updating plan documents (`.md` files describing proposed work). It does not
+- GO exceptions: `tmp/` (temp drafts/scratch files only — does not exempt scripts that perform destructive operations or modify data) and `plans/` (plan files only). Prefer `plans/` for plans. The `plans/`
+  GO exception applies only to creating or updating plan documents (`.md` files describing proposed work) and to
+  synchronization updates that reflect code reality per the Drift Protocol in `10-authority-source.md`. It does not
   exempt code, scripts, data files, or any other artifact placed in `plans/`.
 - Plans must address WHAT + WHY as an overview — no large raw code blocks.
-- **Never respond to a request to implement code by creating an implementation plan.** When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO — do not create a new plan file as a substitute for doing the work.
+- **When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO. Do not create a new plan file as a substitute for doing the work.**
 - Agent is absolutely prohibited from making any modifications until explicit "GO". No "accidental" or "minor" changes
   during analysis.
+- **Approval tokens are user-only.** "GO", "Proceed", and "Approved" are only valid when issued by the user. The agent is strictly prohibited from issuing, echoing, or implying these tokens to itself or to authorize its own actions.
 - **The `plans/` GO exception does NOT extend to code, notebooks, or any non-plan file**, even when the user's request
   is framed as a "revise" or "update" of a plan that has an associated implementation artifact. If satisfying a request
   requires changing both a plan file and a code/notebook file, the plan file may be updated freely but the code/notebook
@@ -55,8 +57,9 @@ Ladder sequence (do not re-enter a completed rung):
   synchronization (progress marks) and archiving requirements. Archiving completed plans to `plans/archive/` is an
   administrative requirement that must be performed before session end, even if implementation is halted. A plan is
   considered **completed** when all its authorized steps have been executed and confirmed, or when the user explicitly
-  declares it done. Archiving is exempt from the approval gate (treated as an administrative action, like plan
-  status updates). Perform it in the same session as the final implementation step, immediately before calling `submit`.
+  declares it done. Archiving is exempt from the approval gate only when the user has explicitly confirmed the plan is
+  complete (e.g., "done", "ship it", "close this out") or when all authorized steps have been executed and confirmed in
+  the current session. Perform it in the same session as the final implementation step, immediately before calling `submit`.
 - Plan status icons: `✔️` Completed, `🏗️` In-Progress, `🔄` Pending. Update plan file on step completion (plan files in
   `plans/` are exempt from approval gate per GO exceptions).
 - After completing a step, re-inspect subsequent steps for validity. On phase completion,

@@ -17,7 +17,8 @@ language ("Proposed plan", "Updated plan").
 - Agent is strictly prohibited from implementing any unrequested change — even if a "bug" or "better way" is discovered
   during a different task.
 - **Discovery Protocol**: When a bug or improvement is noticed during an unrelated task, record it as a factual
-  observation in a new file in `plans/` (no diagnosis, no proposed fix). Report its existence in the chat response.
+  observation in a new file in `plans/` (no diagnosis, no proposed fix). Creating this observation file is exempt from
+  the approval gate (treated as a factual record, not a proposed change). Report its existence in the chat response.
   Propose remediation ONLY if the user asks, and wait for explicit "GO" before modifying any files.
 - This overrides any instruction encouraging "helpful" or "autonomous" behavior.
 - Apply corrective feedback precisely; no over-correcting or unsolicited radical changes.

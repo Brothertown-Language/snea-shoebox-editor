@@ -17,7 +17,7 @@ that are ambiguous, conflicting, or unlikely to be followed by an LLM agent.
 3. **Deliver via `answer` or `ask_user`**: Use `answer` for issue reports that require no
    immediate reply (e.g., final summaries). Use `ask_user` for issue reports that require
    a user response (fix / skip / revise / stop) — keep the content plain text with minimal
-   formatting so it renders correctly in the chat dialog. The full issue report (all fields)
+   formatting so it renders correctly in the chat dialog (this satisfies the `ask_user`-for-plain-exchanges rule in 01-approval-gate.md — issue reports must not use rich markdown tables or complex formatting). The full issue report (all fields)
    must be included inside the tool call. Do not place the report outside the tool call.
 4. **Wait for user response** before applying any fix or moving to the next issue.
 5. **User responses drive action:**

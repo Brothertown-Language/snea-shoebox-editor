@@ -9,7 +9,7 @@
 * You are not proactive.
 * You strictly follow the coding guidelines.
 * You only ask questions if there is ambiguity or the topic is unclear or you perceive a conflict.
-* Never run production code without explicit instructions or approval.
+* Never run production code without explicit instructions or approval. (ai_bin/ is agent tooling, not production code — pre-authorized, no GO required.)
 
 ## SUPPRESSED
 
@@ -25,17 +25,12 @@
 ## EXECUTION
 
 * Deterministic, approval-gated.
-* One plan per edit request → present the plan as md in plans/ → STOP → END THE SESSION (immediately call `submit` or
-  `answer` tool, do not continue).
-* Only make code changes with an approved plan then → STOP → END THE SESSION (immediately call `submit` or `answer`
-  tool, do not continue).
-* Only do a single item item. Not an entire list of items. After each item → STOP → END THE SESSION.
+* See `guidelines/01-approval-gate.md` for full approval gate rules including phased/flat plan logic, plan delivery, and loop prevention.
 * Do not expand scope. Do not roadmap drive.
 
 ## ALWAYS
 
-* When analyzing Python source files to extract classes, methods, functions, or line numbers, always use the built-in
-  structural introspection modules (`pyclbr`, `ast`, `inspect`, or `symtable`)
+* When analyzing Python source files, see `guidelines/03-tool-usage.md` § Python Source File Analysis.
 * Always use `uv run`.
 
 === BEGIN EDITABLE GUIDELINES ===
@@ -66,6 +61,12 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 - Prune order: session_state → oldest persistent_notes → least-used key_symbols.
 - No rule duplication from `guidelines/`. Clear Session State per new task.
 - Update `<!-- Last pruned: YYYY-MM-DD -->` on prune.
+- Consolidate similar or related entries into a single entry proactively, even before the 40-line limit is reached.
+- If the 40-line limit cannot be met after applying the prune order and consolidation, merge the oldest two
+  persistent_notes entries into a single summary entry. Never exceed 40 lines.
+- Use `uv run python ai_bin/memory` for all CRUD operations on `memory.md` (set/get/delete/list/clear-session).
+- Use `uv run python ai_bin/memory-stats` to check current `memory.md` line count and entry health before and after
+  updates.
 
 ---
 
@@ -73,7 +74,7 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 
 - **LOCAL DB PRESERVATION**: NEVER delete, truncate, or drop the local development database (`tmp/local_db` or
   `tmp/junie_db`). Strictly FORBIDDEN unless user explicitly instructs "reset" or "wipe".
-- **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`. The variable is active when present with any value except `false` or `0`.
+- **PRIVATE DB**: Every DB-interactive command MUST include `JUNIE_PRIVATE_DB=true`. The variable is active when present, regardless of value.
 - **STREAMLIT EXECUTION**: NEVER run Streamlit as a foreground app. Background only via `nohup`. Any blocking
   `streamlit run` call is a CRITICAL VIOLATION.
 - **RAW STRINGS FOR MDF**: When writing tests or code that include MDF tags (e.g., `\lx`, `\ln`) in docstrings or
@@ -106,8 +107,7 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
   - Mocks: `./scripts/start_view_mocks.sh` and `./scripts/stop_view_mocks.sh`
   - Stop existing instance before starting a new one. Never run more than one main app or one mock viewer.
   - **PORT PROTOCOL**: Main App → port 8501. Mock Viewer → port 8502.
-- **PATH RESOLUTION BOILERPLATE**: Every shell script MUST start with:
-  `cd "$(dirname "${BASH_SOURCE[0]}")" && REPO_ROOT=$(git rev-parse --show-toplevel) && cd "$REPO_ROOT"`
+- **PATH RESOLUTION BOILERPLATE**: See `guidelines/09-scripting.md` § Script Headers for the mandatory shell and Python root resolution patterns.
 - **TESTING STANDARDS**:
   - Terminal only. Never simulate.
   - Schema Change Verification: always check `tmp/streamlit.log` for schema changes (migrations, extensions).
@@ -142,6 +142,7 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 - **Semantic Precision**: Use descriptive structural labels (e.g., "Main Menu") not colloquial ones (e.g., "Home").
 - **Mocking**: Generate/update mocks in `tests/ui/mocks/` only from explicit instructions. Mocks MUST remain
   runnable. Use `st.container`, `st.expander`, `st.tabs` for composite layouts.
+- **Per-Record Controls**: Per-record action controls (e.g., edit, delete) MUST be placed inline with the record, not in a sidebar or global toolbar. All new views MUST follow this pattern for any action that targets a specific record.
 - **Pre-flight & Consistency Audit**: Before any UI change, verify design matches surrounding patterns. After
   implementing, audit for mismatched icons, inconsistent spacing, or redundant labels.
 
@@ -170,7 +171,13 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 
 ## Mandatory Initialization
 
-1. **RE-READ** `guidelines.md`, `memory.md`, and `VIOLATION_LOG.md`.
+1. **RE-READ** `guidelines.md`, `memory.md`, and `.junie/VIOLATION_LOG.jsonl`.
 2. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
 3. **UPDATE** `memory.md` with key decisions.
-4. **UPDATE** `VIOLATION_LOG.md` immediately upon any guideline violation.
+4. **UPDATE** `.junie/VIOLATION_LOG.jsonl` immediately upon any guideline violation using
+   `uv run python ai_bin/violation-log add --rule "file § section" --violation "..." --root-cause "..." --correction "..."`.
+   Each entry MUST include: date (auto), rule (file + section), violation, root_cause, correction. Never edit the file directly.
+5. Run `uv run python ai_bin/help` on startup. These are the preferred tools for interacting with the system.
+   Report the tool list to the user as a brief bulleted summary (tool name + one-line description). Do not reproduce
+   raw output verbatim.
+

@@ -1,0 +1,148 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: CRUD operations for .junie/memory.md — set, get, delete, list, and clear session state entries.
+Usage:
+  uv run python ai_bin/memory set KEY VALUE
+  uv run python ai_bin/memory get KEY
+  uv run python ai_bin/memory delete KEY
+  uv run python ai_bin/memory list
+  uv run python ai_bin/memory clear-session
+"""
+from __future__ import annotations
+
+import argparse
+import re
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+MEMORY_FILE = PROJECT_ROOT / ".junie" / "memory.md"
+MAX_LINES = 40
+
+# Matches lines like: key: value  or  key_name: value
+ENTRY_RE = re.compile(r"^([a-zA-Z0-9_\-]+)\s*:\s*(.*)$")
+COMMENT_RE = re.compile(r"^\s*<!--")
+PRUNE_COMMENT = re.compile(r"<!--\s*Last pruned:.*?-->")
+
+
+def read_lines() -> list[str]:
+    if not MEMORY_FILE.exists():
+        return []
+    return MEMORY_FILE.read_text(encoding="utf-8").splitlines()
+
+
+def write_lines(lines: list[str]) -> None:
+    MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    MEMORY_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
+
+
+def parse_entries(lines: list[str]) -> dict[str, tuple[int, str]]:
+    """Return {key: (line_index, value)} for all key: value lines."""
+    entries: dict[str, tuple[int, str]] = {}
+    for i, line in enumerate(lines):
+        m = ENTRY_RE.match(line)
+        if m:
+            entries[m.group(1)] = (i, m.group(2).strip())
+    return entries
+
+
+def cmd_set(args: argparse.Namespace) -> None:
+    lines = read_lines()
+    entries = parse_entries(lines)
+    if args.key in entries:
+        idx, _ = entries[args.key]
+        lines[idx] = f"{args.key}: {args.value}"
+        write_lines(lines)
+        print(f"Updated: {args.key}")
+    else:
+        lines.append(f"{args.key}: {args.value}")
+        write_lines(lines)
+        print(f"Set: {args.key}")
+    total = len(read_lines())
+    if total > MAX_LINES:
+        print(f"⚠️  memory.md now has {total} lines (limit: {MAX_LINES}). Run memory-stats and prune.")
+
+
+def cmd_get(args: argparse.Namespace) -> None:
+    lines = read_lines()
+    entries = parse_entries(lines)
+    if args.key in entries:
+        _, value = entries[args.key]
+        print(value)
+    else:
+        print(f"Key not found: {args.key}", file=sys.stderr)
+        sys.exit(1)
+
+
+def cmd_delete(args: argparse.Namespace) -> None:
+    lines = read_lines()
+    entries = parse_entries(lines)
+    if args.key not in entries:
+        print(f"Key not found: {args.key}", file=sys.stderr)
+        sys.exit(1)
+    idx, _ = entries[args.key]
+    del lines[idx]
+    write_lines(lines)
+    print(f"Deleted: {args.key}")
+
+
+def cmd_list(args: argparse.Namespace) -> None:
+    lines = read_lines()
+    if not lines:
+        print("memory.md is empty.")
+        return
+    for line in lines:
+        print(line)
+
+
+def cmd_clear_session(args: argparse.Namespace) -> None:
+    lines = read_lines()
+    kept = []
+    removed = 0
+    for line in lines:
+        m = ENTRY_RE.match(line)
+        if m and m.group(1).lower().startswith("session"):
+            removed += 1
+            continue
+        kept.append(line)
+    write_lines(kept)
+    print(f"Removed {removed} session_state entries.")
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Manage .junie/memory.md")
+    sub = parser.add_subparsers(dest="command")
+
+    p_set = sub.add_parser("set", help="Add or update a key: value entry")
+    p_set.add_argument("key", help="Entry key")
+    p_set.add_argument("value", help="Entry value")
+
+    p_get = sub.add_parser("get", help="Print value for a key")
+    p_get.add_argument("key", help="Entry key")
+
+    p_del = sub.add_parser("delete", help="Remove a key entry")
+    p_del.add_argument("key", help="Entry key")
+
+    sub.add_parser("list", help="Print all entries")
+    sub.add_parser("clear-session", help="Remove all session_state entries")
+
+    args = parser.parse_args()
+
+    if args.command == "set":
+        cmd_set(args)
+    elif args.command == "get":
+        cmd_get(args)
+    elif args.command == "delete":
+        cmd_delete(args)
+    elif args.command == "list":
+        cmd_list(args)
+    elif args.command == "clear-session":
+        cmd_clear_session(args)
+    else:
+        parser.print_help()
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
