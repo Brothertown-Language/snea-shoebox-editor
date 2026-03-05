@@ -27,6 +27,7 @@ class TestMDFValidator(unittest.TestCase):
         self.assertIn("missing suggested tags", diagnostics[0]["message"])
 
     def test_out_of_order_tags(self):
+        """Tag ordering is no longer diagnosed; all valid tags should be ok."""
         record = [
             "\\ps n",
             "\\lx dog",
@@ -36,10 +37,9 @@ class TestMDFValidator(unittest.TestCase):
         self.assertTrue(result["valid"])
         
         diagnostics = MDFValidator.diagnose_record(record)
-        # Find the out of order tag diagnostic
-        out_of_order = next(d for d in diagnostics if d.get("tag") == "lx")
-        self.assertEqual(out_of_order["status"], "suggestion")
-        self.assertIn("is out of order", out_of_order["message"])
+        # Ordering is no longer checked; lx should not be flagged as out of order
+        lx_diag = next(d for d in diagnostics if d.get("tag") == "lx")
+        self.assertNotIn("is out of order", lx_diag.get("message", ""))
 
     def test_se_hierarchy_reset(self):
         r"""Tests that \se resets the hierarchy tracking for \ps and \ge."""
@@ -95,7 +95,7 @@ class TestMDFValidator(unittest.TestCase):
         self.assertNotEqual(nt_diag["status"], "suggestion")
 
     def test_nt_out_of_order_mid_record_flagged(self):
-        r"""Tests that \nt out of order mid-record (followed by non-tail hierarchy tags) is still flagged."""
+        r"""Tag ordering is no longer diagnosed; \nt mid-record should not be flagged."""
         record = [
             r"\lx dog",
             r"\ps n",
@@ -106,8 +106,7 @@ class TestMDFValidator(unittest.TestCase):
         ]
         diagnostics = MDFValidator.diagnose_record(record)
         nt_diag = next(d for d in diagnostics if d.get("tag") == "nt")
-        self.assertEqual(nt_diag["status"], "suggestion")
-        self.assertIn("is out of order", nt_diag["message"])
+        self.assertNotIn("is out of order", nt_diag.get("message", ""))
 
 if __name__ == "__main__":
     unittest.main()

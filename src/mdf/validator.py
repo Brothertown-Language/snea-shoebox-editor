@@ -120,46 +120,7 @@ class MDFValidator:
             else:
                 diagnostics.append({"status": "ok", "message": "", "tag": tag})
 
-        # 2. Second pass: Check Hierarchy and Order
-        last_req_idx = -1
-        hierarchy_str = " -> ".join([f"\\{t}" for t in MDFValidator.REQUIRED_HIERARCHY])
-        # Tags that may validly follow \nt at end of record (record-number tracking use case)
-        _NT_TAIL_TAGS = {"so", "st", "dt"}
-
-        for i, diag in enumerate(diagnostics):
-            if "tag" not in diag:
-                continue
-                
-            tag = diag["tag"]
-            
-            # \se and \sn start new nested entries or senses, resetting hierarchy
-            if tag in ["se", "sn"]:
-                last_req_idx = -1
-                diag["status"] = "ok"
-                diag["message"] = ""
-                continue
-
-            if tag in MDFValidator.REQUIRED_HIERARCHY:
-                req_idx = MDFValidator.REQUIRED_HIERARCHY.index(tag)
-                if req_idx < last_req_idx:
-                    # \nt out of order at end of record: suppress when used for record-number tracking
-                    if tag == "nt":
-                        remaining_tags = {
-                            d["tag"] for d in diagnostics[i + 1:]
-                            if "tag" in d and d["tag"] in MDFValidator.REQUIRED_HIERARCHY
-                        }
-                        if remaining_tags <= _NT_TAIL_TAGS:
-                            last_req_idx = req_idx
-                            continue
-                    diag["status"] = "suggestion"
-                    diag["message"] = (
-                        f"Tag \\{tag} is out of order. While not required, MDF records usually follow "
-                        f"this hierarchy: {hierarchy_str}. You may reorder tags to match this "
-                        "suggested sequence."
-                    )
-                last_req_idx = req_idx
-
-        # 3. Global Check: Missing Tags (attach to first line for visibility)
+        # 2. Global Check: Missing Tags (attach to first line for visibility)
         missing = [t for t in MDFValidator.BASIC_TAGS if t not in found_req_tags]
         if missing and diagnostics:
             # Find first line with a tag to attach the missing tags note
@@ -177,7 +138,7 @@ class MDFValidator:
                     missing_str = ", ".join([f"\\{t}" for t in missing])
                     diagnostics[target_idx]["message"] = (
                         f"Note: This record is missing suggested tags ({missing_str}). "
-                        f"Including {hierarchy_str} is recommended for standard MDF compatibility."
+                        "Including \\lx, \\ps, and \\ge is recommended for standard MDF compatibility."
                     )
 
         return diagnostics
