@@ -1,0 +1,144 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Search .junie guideline files using BM25/TF-IDF ranking.
+Usage: uv run python ai_bin/guidelines-search <term> [--file <filename>] [--context <n>] [--top <n>]
+
+Arguments:
+  <term>            Search term (BM25-ranked; case-insensitive)
+  --file <filename> Restrict search to one guideline file (e.g., 03-tool-usage.md)
+  --context <n>     Lines of surrounding context to print (default: 3)
+  --top <n>         Max results to show (default: 10)
+  --help / -h       Print this help and exit
+
+Exit codes: 0 = matches found, 1 = no matches, 2 = error
+"""
+from __future__ import annotations
+
+import math
+import re
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).parent.parent
+GUIDELINES_ROOT = ROOT / ".junie"
+
+
+def load_corpus(file_filter: str | None) -> list[tuple[Path, int, str]]:
+    """Return list of (path, line_number_1based, line_text)."""
+    if file_filter:
+        candidates = [GUIDELINES_ROOT / "guidelines" / file_filter]
+        if not candidates[0].exists():
+            candidates = [GUIDELINES_ROOT / file_filter]
+    else:
+        candidates = [
+            GUIDELINES_ROOT / "guidelines.md",
+            *sorted((GUIDELINES_ROOT / "guidelines").glob("*.md")),
+        ]
+    chunks: list[tuple[Path, int, str]] = []
+    for path in candidates:
+        if not path.exists():
+            print(f"ERROR: {path} not found.", file=sys.stderr)
+            sys.exit(2)
+        for i, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            chunks.append((path, i, line))
+    return chunks
+
+
+def tokenize(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", text.lower())
+
+
+def bm25_score(
+    query_tokens: list[str],
+    doc_tokens: list[str],
+    idf: dict[str, float],
+    k1: float = 1.5,
+    b: float = 0.75,
+    avg_dl: float = 10.0,
+) -> float:
+    dl = len(doc_tokens)
+    tf_map: dict[str, int] = {}
+    for t in doc_tokens:
+        tf_map[t] = tf_map.get(t, 0) + 1
+    score = 0.0
+    for qt in query_tokens:
+        if qt not in idf:
+            continue
+        tf = tf_map.get(qt, 0)
+        numerator = tf * (k1 + 1)
+        denominator = tf + k1 * (1 - b + b * dl / avg_dl)
+        score += idf[qt] * (numerator / denominator if denominator else 0)
+    return score
+
+
+def compute_idf(corpus_tokens: list[list[str]]) -> dict[str, float]:
+    n = len(corpus_tokens)
+    df: dict[str, int] = {}
+    for tokens in corpus_tokens:
+        for t in set(tokens):
+            df[t] = df.get(t, 0) + 1
+    return {t: math.log((n - f + 0.5) / (f + 0.5) + 1) for t, f in df.items()}
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    file_filter: str | None = None
+    context_n = 3
+    top_n = 10
+    term_parts: list[str] = []
+
+    i = 0
+    while i < len(args):
+        if args[i] == "--file" and i + 1 < len(args):
+            file_filter = args[i + 1]
+            i += 2
+        elif args[i] == "--context" and i + 1 < len(args):
+            context_n = int(args[i + 1])
+            i += 2
+        elif args[i] == "--top" and i + 1 < len(args):
+            top_n = int(args[i + 1])
+            i += 2
+        else:
+            term_parts.append(args[i])
+            i += 1
+
+    term = " ".join(term_parts)
+    if not term:
+        print("ERROR: search term required.", file=sys.stderr)
+        sys.exit(2)
+
+    chunks = load_corpus(file_filter)
+    all_lines = [line for _, _, line in chunks]
+    corpus_tokens = [tokenize(line) for line in all_lines]
+    avg_dl = sum(len(t) for t in corpus_tokens) / max(len(corpus_tokens), 1)
+    idf = compute_idf(corpus_tokens)
+    query_tokens = tokenize(term)
+
+    scored = [
+        (bm25_score(query_tokens, corpus_tokens[idx], idf, avg_dl=avg_dl), idx)
+        for idx in range(len(chunks))
+    ]
+    scored.sort(key=lambda x: x[0], reverse=True)
+    top = [(s, idx) for s, idx in scored[:top_n] if s > 0]
+
+    if not top:
+        print(f"No matches for: {term!r}")
+        sys.exit(1)
+
+    for score, idx in top:
+        path, lineno, _ = chunks[idx]
+        rel = path.relative_to(GUIDELINES_ROOT)
+        start = max(0, idx - context_n)
+        end = min(len(all_lines), idx + context_n + 1)
+        print(f"\n=== {rel}:{lineno} (score={score:.2f}) ===")
+        for ci in range(start, end):
+            prefix = ">>>" if ci == idx else "   "
+            print(f"{prefix} {chunks[ci][1]:4d}: {all_lines[ci]}")
+
+
+if __name__ == "__main__":
+    main()

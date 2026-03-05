@@ -1,0 +1,52 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: List all agent tools in ai_bin/ with their descriptions.
+
+Usage: uv run python ai_bin/help
+"""
+from __future__ import annotations
+
+import ast
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+
+def get_description(script: Path) -> str:
+    """Extract DESCRIPTION from the module docstring."""
+    try:
+        text = script.read_text(encoding="utf-8")
+        tree = ast.parse(text)
+        docstring = ast.get_docstring(tree) or ""
+        for line in docstring.splitlines():
+            stripped = line.strip()
+            if stripped.startswith("DESCRIPTION:"):
+                return stripped[len("DESCRIPTION:"):].strip()
+    except Exception:
+        pass
+    return "(no description)"
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return
+
+    scripts = sorted(
+        p for p in BASE_DIR.iterdir()
+        if p.is_file() and not p.name.startswith(".")
+    )
+
+    if not scripts:
+        print("No tools found in ai_bin/.")
+        return
+
+    print(f"Agent tools in ai_bin/  (run with: uv run python ai_bin/<tool>)\n")
+    for script in scripts:
+        desc = get_description(script)
+        print(f"  {script.name:<24} — {desc}")
+
+
+if __name__ == "__main__":
+    main()

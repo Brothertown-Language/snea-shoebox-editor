@@ -1,0 +1,45 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Print all .junie guideline files (guidelines.md + guidelines/*.md) for LLM inspection.
+Usage: uv run python ai_bin/guidelines [--files file1.md file2.md ...]
+"""
+from __future__ import annotations
+import sys
+from pathlib import Path
+
+ROOT = Path(__file__).parent.parent
+GUIDELINES_ROOT = ROOT / ".junie"
+
+DEFAULT_FILES = [
+    GUIDELINES_ROOT / "guidelines.md",
+    *sorted((GUIDELINES_ROOT / "guidelines").glob("*.md")),
+]
+
+
+def print_file(path: Path) -> None:
+    print(f"=== {path.relative_to(GUIDELINES_ROOT)} ===")
+    print(path.read_text(encoding="utf-8"))
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    if "--files" in args:
+        idx = args.index("--files")
+        names = args[idx + 1:]
+        paths = [GUIDELINES_ROOT / "guidelines" / n for n in names]
+    else:
+        paths = DEFAULT_FILES
+
+    for path in paths:
+        if not path.exists():
+            print(f"ERROR: {path} not found.", file=sys.stderr)
+            sys.exit(1)
+        print_file(path)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,103 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Print all cell outputs from a notebook (stdout, stderr, errors, display).
+Usage: uv run python ai_bin/nb-outputs <notebook.ipynb> [--json] [--help]
+Primary:  Jupyter Server REST API on port 18888 (GET /api/contents/<path>).
+Fallback: nbformat.read(..., as_version=4) when server is not reachable.
+"""
+from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+import requests
+import nbformat
+BASE_DIR = Path(__file__).resolve().parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+def _fetch_via_api(rel_path: str) -> list[dict] | None:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=3)
+        r.raise_for_status()
+        cells = r.json()["content"]["cells"]
+        return cells
+    except Exception:
+        return None
+def _fetch_via_nbformat(path: Path) -> list[dict]:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    return nb.cells
+def _extract_outputs(cells: list) -> list[dict]:
+    records: list[dict] = []
+    for i, cell in enumerate(cells):
+        cell_type: str = cell["cell_type"] if isinstance(cell, dict) else cell.cell_type
+        if cell_type != "code":
+            continue
+        outputs = cell["outputs"] if isinstance(cell, dict) else cell.outputs
+        for o in outputs:
+            otype = o["output_type"] if isinstance(o, dict) else o.output_type
+            record: dict = {"cell_index": i, "output_type": otype}
+            if otype == "error":
+                record["ename"] = o.get("ename", "") if isinstance(o, dict) else o.ename
+                record["evalue"] = o.get("evalue", "") if isinstance(o, dict) else o.evalue
+                tb = o.get("traceback", []) if isinstance(o, dict) else o.traceback
+                record["traceback"] = tb
+            elif otype == "stream":
+                text = o.get("text", "") if isinstance(o, dict) else o.text
+                if isinstance(text, list):
+                    text = "".join(text)
+                record["name"] = o.get("name", "stdout") if isinstance(o, dict) else o.name
+                record["text"] = text
+            elif otype in ("display_data", "execute_result"):
+                data = o.get("data", {}) if isinstance(o, dict) else o.data
+                text = data.get("text/plain", "")
+                if isinstance(text, list):
+                    text = "".join(text)
+                record["text"] = text
+            records.append(record)
+    return records
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+    as_json = "--json" in args
+    file_args = [a for a in args if not a.startswith("--")]
+    if not file_args:
+        print("Error: no notebook path specified.", file=sys.stderr)
+        sys.exit(1)
+    path = Path(file_args[0])
+    if not path.exists():
+        print(f"Error: {path} not found.", file=sys.stderr)
+        sys.exit(1)
+    try:
+        rel_path = path.resolve().relative_to(BASE_DIR)
+    except ValueError:
+        rel_path = path
+    cells = _fetch_via_api(str(rel_path).replace("\\", "/"))
+    if cells is None:
+        print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+        cells = _fetch_via_nbformat(path)
+    records = _extract_outputs(cells)
+    if as_json:
+        print(json.dumps(records, indent=2))
+        return
+    if not records:
+        print(f"{path}: no outputs found.")
+        return
+    print(str(path))
+    for rec in records:
+        otype = rec["output_type"]
+        idx = rec["cell_index"]
+        if otype == "error":
+            print(f"  [cell {idx}] ERROR: {rec['ename']}: {rec['evalue']}")
+            for line in rec.get("traceback", []):
+                print(f"    {line}")
+        elif otype == "stream":
+            name = rec.get("name", "stdout")
+            text = rec.get("text", "").rstrip()
+            print(f"  [cell {idx}] {name}: {text}")
+        else:
+            text = rec.get("text", "").rstrip()
+            print(f"  [cell {idx}] {otype}: {text}")
+if __name__ == "__main__":
+    main()
