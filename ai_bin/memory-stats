@@ -1,0 +1,54 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Report line count and entry health for .junie/memory.md.
+Usage: uv run python ai_bin/memory-stats
+"""
+from __future__ import annotations
+import re
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+MEMORY_FILE = PROJECT_ROOT / ".junie" / "memory.md"
+MAX_LINES = 40
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return
+
+    if not MEMORY_FILE.exists():
+        print(f"NOT FOUND: {MEMORY_FILE}")
+        sys.exit(1)
+
+    lines = MEMORY_FILE.read_text(encoding="utf-8").splitlines()
+    total = len(lines)
+
+    # Count non-blank, non-comment lines as entries
+    entry_lines = [l for l in lines if l.strip() and not l.strip().startswith("<!--")]
+    entries = len(entry_lines)
+
+    # Detect duplicate keys (key: value pattern)
+    key_pattern = re.compile(r"^([a-zA-Z0-9_\-]+)\s*:")
+    keys: list[str] = []
+    for l in entry_lines:
+        m = key_pattern.match(l.strip())
+        if m:
+            keys.append(m.group(1).lower())
+
+    duplicates = {k for k in keys if keys.count(k) > 1}
+
+    print(f"memory.md stats")
+    print(f"  Total lines : {total} / {MAX_LINES}  {'⚠️  OVER LIMIT' if total > MAX_LINES else '✅ OK'}")
+    print(f"  Entry lines : {entries}")
+    print(f"  Remaining   : {max(0, MAX_LINES - total)} lines before limit")
+    if duplicates:
+        print(f"  ⚠️  Duplicate keys: {', '.join(sorted(duplicates))}")
+    else:
+        print(f"  Duplicate keys: none")
+
+
+if __name__ == "__main__":
+    main()
