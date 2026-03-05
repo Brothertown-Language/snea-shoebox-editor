@@ -165,8 +165,15 @@ def main():
                     # The dialog will be shown below
                     pass
                 else:
-                    # Generic error
+                    # Generic error — clear auth state and revert to login
                     st.error("Failed to fetch user information.")
+                    for key in ["auth", "user_info", "user_orgs", "user_teams", "user_role", "user_email"]:
+                        st.session_state.pop(key, None)
+                    st.session_state.logged_in = False
+                    if "cookie_controller" in st.session_state:
+                        from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
+                        st.session_state["cookie_controller"].remove(GH_AUTH_TOKEN_COOKIE)
+                    st.rerun()
     
     # Define navigation
     from src.services.navigation_service import NavigationService

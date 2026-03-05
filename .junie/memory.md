@@ -24,5 +24,5 @@ memory_file: .junie/memory.md (this file); replaces LONG_TERM_MEMORY.md as of 20
 sort_symbol_map: ∞(U+221E)→oozzz (Algonquian letter, after oo*/before op); ✔(U+2714)→"" (annotation, stripped)
 ln_remediation: ALL sections ✅ complete; DB audit assumed remediated; plan closed
 extend_existing: ALL model classes have __table_args__ with extend_existing=True; convention documented in models/__init__.py
-session_state: task=security_manager TypeError fix; status=complete; file=src/services/security_manager.py
+session_state: task=401 GitHub auth bug; status=complete; file=streamlit_app.py
 last_task: Fixed blank line before \nt Record: — normalize_nt_record no longer inserts blank line; format_mdf_record is now last in chain at all 6 upload_service.py call sites
