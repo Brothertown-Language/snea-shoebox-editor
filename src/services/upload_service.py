@@ -282,6 +282,7 @@ class UploadService:
                     
                     uploaded_id = None
                     parsed_hm = None
+                    parsed_ge = None
                     for line in row.mdf_data.split('\n'):
                         s = line.lstrip()
                         if s.startswith('\\nt Record:'):
@@ -293,11 +294,14 @@ class UploadService:
                             v = s[len('\\hm '):].strip()
                             if v.isdigit():
                                 parsed_hm = int(v)
+                        elif s.startswith('\\ge '):
+                            parsed_ge = s[len('\\ge '):].strip() or None
                     
                     row_data.append({
                         'row': row,
                         'uploaded_id': uploaded_id,
-                        'parsed_hm': parsed_hm
+                        'parsed_hm': parsed_hm,
+                        'parsed_ge': parsed_ge,
                     })
 
                 # 2. Targeted Query for Same-Source Records
@@ -307,7 +311,7 @@ class UploadService:
                 # or we just get all records for these lx values.
                 # Since multiple records might have same lx (homonyms), we get them all.
                 same_source_candidates = (
-                    session.query(Record.id, Record.lx, Record.hm, Record.is_locked)
+                    session.query(Record.id, Record.lx, Record.hm, Record.ge, Record.is_locked)
                     .filter(
                         Record.source_id == source_id,
                         Record.is_deleted == False,
@@ -379,6 +383,7 @@ class UploadService:
                     row = data['row']
                     uploaded_record_id = data['uploaded_id']
                     parsed_hm = data['parsed_hm']
+                    parsed_ge = data['parsed_ge']
                     
                     suggested_record_id = None
                     suggested_lx = None
@@ -395,15 +400,43 @@ class UploadService:
                     if not suggested_record_id and row.lx in chunk_exact_map:
                         candidates = chunk_exact_map[row.lx]
                         best = None
-                        for c in candidates:
-                            if parsed_hm is not None and c.hm == parsed_hm:
-                                best = c
-                                break
+                        # B1. Try \hm tiebreaker first
+                        if parsed_hm is not None:
+                            for c in candidates:
+                                if c.hm == parsed_hm:
+                                    best = c
+                                    break
+                        # B2. Try \ge tiebreaker when \hm didn't resolve
+                        if best is None and parsed_ge is not None:
+                            parsed_ge_lower = parsed_ge.lower()
+                            for c in candidates:
+                                if c.ge and c.ge.lower() == parsed_ge_lower:
+                                    best = c
+                                    break
+                        # B3. Fall back to first candidate
                         if best is None:
                             best = candidates[0]
                         suggested_record_id = best.id
                         suggested_lx = best.lx
                         match_type = 'exact'
+
+                    # B4. No lx match — try \ge-only match against same-source records
+                    if not suggested_record_id and parsed_ge is not None:
+                        ge_match = (
+                            session.query(Record.id, Record.lx, Record.is_locked)
+                            .filter(
+                                Record.source_id == source_id,
+                                Record.is_deleted == False,
+                                func.lower(Record.ge) == parsed_ge.lower()
+                            )
+                            .order_by(Record.id)
+                            .first()
+                        )
+                        if ge_match:
+                            suggested_record_id = ge_match.id
+                            suggested_lx = ge_match.lx
+                            match_type = 'ge_match'
+                            suggested_is_locked = ge_match.is_locked
 
                     # C. Diacritics-stripped fallback (Requires extra query if not found in exact)
                     if not suggested_record_id:

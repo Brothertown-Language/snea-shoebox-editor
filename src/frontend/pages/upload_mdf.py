@@ -804,6 +804,8 @@ def _render_review_table(batch_id, session_deps):
             badge = "🟢 exact"
         elif match_type == 'base_form':
             badge = "🟡 base_form"
+        elif match_type == 'ge_match':
+            badge = "🔵 ge_match"
 
         # Entry header
         with st.container(border=True):

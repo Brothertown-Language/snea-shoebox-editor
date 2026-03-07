@@ -37,11 +37,12 @@ env/
 out/
 
 # AI Guidelines Management
-# Ensure SPR documentation and guidelines are kept, 
+# Ensure SPR documentation and guidelines are kept,
 # but temporary or machine-generated files are ignored.
 .junie/tmp/
 .junie/*.bak
 .junie/cache/
+.junie/memory.md
 
 # Cloudflare / Wrangler
 .wrangler/
