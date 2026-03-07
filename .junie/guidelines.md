@@ -33,7 +33,7 @@
 
 <!-- Copyright (c) 2026 Brothertown Language -->
 
-Topic guidelines in `.junie/guidelines/` (load root always; load topics as relevant):
+Topic guidelines in `.junie/` (load root always; load topics as relevant). Paths are relative to `.junie/`:
 
 | File                                | Topic                                              |
 |-------------------------------------|----------------------------------------------------|
@@ -47,7 +47,7 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 | `guidelines/08-git-protocol.md`     | Git prohibitions, commits, lockfile policy         |
 | `guidelines/09-scripting.md`        | Script headers, root resolution                    |
 | `guidelines/10-authority-source.md` | Code as Authoritative Source, Drift Protocol       |
-| `plans/plan_standards.md`           | Plan consistency, checklists, iconography          |
+| `$project_root/plans/plan_standards.md` | Plan consistency, checklists, iconography      |
 | `personas/guideline-auditor.md`     | LLM guideline auditing persona                     |
 
 ## Memory
@@ -106,7 +106,7 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 - **TESTING STANDARDS**:
   - Terminal only. Never simulate.
   - Schema Change Verification: always check `tmp/streamlit.log` for schema changes (migrations, extensions).
-  - Reproduction First: for bugs, write a failing test first.
+  - Reproduction First: see `guidelines/04-environment.md` § Testing.
   - 3-Strike Rule: after 3 failed fix attempts, stop and ask the user.
   - Lazy Execution: forbidden from pre-generating expensive data in UI loops.
 - **MIGRATION VERSIONING**: `YYYYMMDDSSSSS` format (Year, Month, Day, seconds-since-midnight). MUST reflect actual
@@ -166,12 +166,12 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 
 ## Mandatory Initialization
 
-1. **RE-READ** `guidelines.md`, `memory.md`, and `.junie/VIOLATION_LOG.jsonl`.
+1. **LOAD**: Run `uv run python ai_bin/help` to enumerate available tools and report the tool list
+   to the user as a brief bulleted summary (tool name + one-line description — do not reproduce raw
+   output verbatim). Load guidelines via `uv run python ai_bin/guidelines`; session state via
+   `uv run python ai_bin/memory list`; and violation history via `uv run python ai_bin/violation-log`.
 2. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
 3. **UPDATE** `memory.md` with key decisions.
 4. **UPDATE** `.junie/VIOLATION_LOG.jsonl` immediately upon any guideline violation using
    `uv run python ai_bin/violation-log add --rule "file § section" --violation "..." --root-cause "..." --correction "..."`.
    Each entry MUST include: date (auto), rule (file + section), violation, root_cause, correction. Never edit the file directly.
-5. Run `uv run python ai_bin/help` on startup. These are the preferred tools for interacting with the system.
-   Report the tool list to the user as a brief bulleted summary (tool name + one-line description). Do not reproduce
-   raw output verbatim.

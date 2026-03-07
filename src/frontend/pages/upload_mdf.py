@@ -790,6 +790,8 @@ def _render_review_table(batch_id, session_deps):
             current_status = 'matched'
         elif has_suggestion and match_type == 'base_form':
             current_status = 'matched'
+        elif has_suggestion and match_type == 'ge_match':
+            current_status = 'matched'
         else:
             current_status = 'create_new'
 
