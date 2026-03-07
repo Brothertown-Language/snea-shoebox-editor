@@ -814,7 +814,7 @@ def _render_review_table(batch_id, session_deps):
                 st.markdown(f"**{row.lx}**")
             with hdr_col2:
                 if suggested_display:
-                    st.markdown(f"→ {suggested_display} {badge}")
+                    st.markdown(f"→ {suggested_display}  \n{badge}" if badge else f"→ {suggested_display}")
                 else:
                     st.markdown("→ *No match*")
             with hdr_col3:
