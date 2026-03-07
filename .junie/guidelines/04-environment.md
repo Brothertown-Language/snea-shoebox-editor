@@ -16,11 +16,9 @@
 ## Testing
 
 - Use `unittest`. Run from root: `uv run python -m unittest tests/test_filename.py`.
-- No regression tests unless explicitly requested. A regression test is a test added to prevent a previously fixed bug
-  from reappearing; this rule does not prohibit new unit tests or reproduction scripts required by the current task.
-  Temp test artifacts in `tmp/` only.
-- Reproduction scripts required by the current task and new unit tests directly supporting an approved task do not
-  require a separate GO. Regression tests require explicit user request before creation.
+- Regression tests (tests added solely to prevent a previously fixed bug from reappearing) require explicit user
+  request. Reproduction scripts and new unit tests directly supporting an approved task are required by default and do
+  not need a separate GO. Temp test artifacts in `tmp/` only.
 - If `SyntaxWarning: invalid escape sequence` appears in output, stop execution and fix the offending code before
   proceeding.
 

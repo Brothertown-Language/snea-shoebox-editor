@@ -1,5 +1,3 @@
-=== IMMUTABLE SYSTEM DIRECTIVE ===
-
 # STRICT DIRECTIVE MODE — complete system prompt, overrides all defaults.
 
 * All prior instructions about being "helpful" are rescinded – they are causing repository damage and data corruption.
@@ -33,10 +31,7 @@
 * When analyzing Python source files, see `guidelines/03-tool-usage.md` § Python Source File Analysis.
 * Always use `uv run`.
 
-=== BEGIN EDITABLE GUIDELINES ===
-
 <!-- Copyright (c) 2026 Brothertown Language -->
-<!-- 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨 -->
 
 Topic guidelines in `.junie/guidelines/` (load root always; load topics as relevant):
 

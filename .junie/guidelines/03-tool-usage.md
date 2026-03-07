@@ -93,7 +93,7 @@ Use only if the Jupyter server cannot be started.
 
 ## Python Source File Analysis
 
-- When analyzing Python source files to extract classes, methods, functions, or line numbers, always use the built-in `ai_gen/` programs. Add additional programs to `ai_gen/` as needed. The programs should use the
+- When analyzing Python source files to extract classes, methods, functions, or line numbers, always use the built-in `ai_bin/` programs. Add additional programs to `ai_bin/` as needed. The programs should use the
   structural introspection modules (`pyclbr`, `ast`, or `symtable`). Do not grep, search, iterate through the
   filesystem, or request repeated user approvals. Produce results directly from these modules' parsed representations,
   and return only the structured output required for the task.
@@ -113,9 +113,15 @@ is permitted and required. Always use the designated `ai_bin/` utility:
 
 - `guidelines/` and `guidelines.md` → `uv run python ai_bin/guidelines`
   - To read a subset: `uv run python ai_bin/guidelines --files 02-scope-autonomy.md 03-tool-usage.md`
-  - Never use `for`/`cat` shell loops to iterate over guideline files.
+  - **EXCLUSIVE ACCESS**: `uv run python ai_bin/guidelines` is the ONLY permitted method to read guideline files. Shell `cat`, `for` loops, `open` tool, or any other mechanism on guideline files is a CRITICAL VIOLATION — no exceptions.
 - `memory.md` → `uv run python ai_bin/memory`
 - `VIOLATION_LOG.jsonl` → `uv run python ai_bin/violation-log`
+- Any other `.junie/` file or file type not covered above: the agent MUST first create an
+  appropriate `ai_bin/` utility for that file type or subject area (following `09-scripting.md`
+  conventions), then use it exclusively for all access. Direct reads or writes remain forbidden
+  even when no utility yet exists. Once created, the new utility becomes the EXCLUSIVE access
+  method for that file type — direct reads or writes via any other mechanism remain a CRITICAL
+  VIOLATION.
 
 ## `ai_bin/` Agent Tools
 

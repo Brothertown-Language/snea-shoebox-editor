@@ -16,6 +16,10 @@
 - Scripts that interact with the DB MUST check `MARKER_JUNIE_TERMINAL` at startup (see `03-tool-usage.md`). The
   variable is active when present, regardless of value. If active, the script MUST operate only against the
   test/private schema. If schema isolation cannot be guaranteed, the script MUST abort with a clear error message.
+- **Env var roles**: `JUNIE_PRIVATE_DB=true` and `MARKER_JUNIE_TERMINAL` serve distinct roles: `JUNIE_PRIVATE_DB`
+  routes the DB connection to `tmp/junie_db` (set in the terminal command). `MARKER_JUNIE_TERMINAL` signals to the
+  script that it is running in an agent terminal context and must enforce schema isolation internally. Both MUST be
+  set for any DB-interactive agent terminal command.
 - NEVER run test or experimental code against the production schema or the shared `tmp/local_db` instance.
 
 ## Local DB Preservation
