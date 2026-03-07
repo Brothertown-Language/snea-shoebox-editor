@@ -831,6 +831,13 @@ def _render_review_table(batch_id, session_deps):
                 display_status = rev_status_map.get(current_status, "Create New Record")
                 default_idx = status_options.index(display_status)
 
+                # If DB status diverges from cached widget value (e.g. after
+                # "Change match" override), clear the stale session_state entry
+                # so the selectbox re-derives its value from default_idx.
+                cached_label = st.session_state.get(f"status_{row.id}")
+                if cached_label and status_map.get(cached_label) != current_status:
+                    st.session_state.pop(f"status_{row.id}", None)
+
                 selected_label = st.selectbox(
                     "Status",
                     status_options,

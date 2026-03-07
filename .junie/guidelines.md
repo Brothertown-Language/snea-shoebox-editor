@@ -180,4 +180,3 @@ Topic guidelines in `.junie/guidelines/` (load root always; load topics as relev
 5. Run `uv run python ai_bin/help` on startup. These are the preferred tools for interacting with the system.
    Report the tool list to the user as a brief bulleted summary (tool name + one-line description). Do not reproduce
    raw output verbatim.
-
