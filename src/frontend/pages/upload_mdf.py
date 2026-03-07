@@ -938,17 +938,15 @@ def _render_review_table(batch_id, session_deps):
                         chosen_idx = options.index(chosen)
                         chosen_record_id = candidates[chosen_idx]["id"]
                         if st.button("Confirm Override", key=f"match_confirm_{row.id}", disabled=review_bulk_in_progress):
+                            _override_ok = False
                             try:
                                 UploadService.confirm_match(row.id, chosen_record_id)
-                                # Clear the cached selectbox value so it picks up
-                                # the new 'matched' status from the DB on rerun.
                                 st.session_state.pop(f"status_{row.id}", None)
-                                st.success(
-                                    f"✅ Match overridden to record #{chosen_record_id}"
-                                )
-                                st.rerun()
+                                _override_ok = True
                             except Exception as e:
                                 handle_ui_error(e, "Failed to override match.", logger_name="snea.upload_mdf.review")
+                            if _override_ok:
+                                st.rerun()
                     else:
                         st.info("No matching records found.")
 
