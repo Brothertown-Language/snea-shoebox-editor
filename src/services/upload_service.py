@@ -3,6 +3,7 @@
 """
 Upload Service for MDF file upload, staging, matching, and commit operations.
 """
+import difflib
 import re
 import unicodedata
 import uuid
@@ -422,7 +423,7 @@ class UploadService:
 
                     # B4. No lx match — try \ge-only match against same-source records
                     if not suggested_record_id and parsed_ge is not None:
-                        ge_match = (
+                        ge_matches = (
                             session.query(Record.id, Record.lx, Record.is_locked)
                             .filter(
                                 Record.source_id == source_id,
@@ -430,9 +431,19 @@ class UploadService:
                                 func.lower(Record.ge) == parsed_ge.lower()
                             )
                             .order_by(Record.id)
-                            .first()
+                            .all()
                         )
-                        if ge_match:
+                        if ge_matches:
+                            if len(ge_matches) == 1:
+                                ge_match = ge_matches[0]
+                            else:
+                                upload_lx = (row.lx or '').lower()
+                                ge_match = max(
+                                    ge_matches,
+                                    key=lambda m: difflib.SequenceMatcher(
+                                        None, upload_lx, (m.lx or '').lower()
+                                    ).ratio()
+                                )
                             suggested_record_id = ge_match.id
                             suggested_lx = ge_match.lx
                             match_type = 'ge_match'
