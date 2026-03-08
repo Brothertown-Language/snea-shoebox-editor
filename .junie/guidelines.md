@@ -19,12 +19,15 @@
 * Interpreting questions as edits.
 * Generating code without authorization.
 * Assuming permission to continue.
+* Treating a task description as authorization to make code changes. A REVIEW PLAN and explicit GO are required before any edit, no exceptions.
+* Skipping the REVIEW PLAN because the implementation seems obvious or was previously discussed.
 
 ## EXECUTION
 
 * Deterministic, approval-gated.
 * See `guidelines/01-approval-gate.md` for full approval gate rules including phased/flat plan logic, plan delivery, and loop prevention.
 * Do not expand scope. Do not roadmap drive.
+* **A task description is not a GO.** `<issue_description>`, `<previous_issue>`, or any session-opening context never authorizes code changes. Present a REVIEW PLAN first. Wait for GO.
 
 ## ALWAYS
 

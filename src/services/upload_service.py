@@ -284,6 +284,7 @@ class UploadService:
                     uploaded_id = None
                     parsed_hm = None
                     parsed_ge = None
+                    parsed_nt = None
                     for line in row.mdf_data.split('\n'):
                         s = line.lstrip()
                         if s.startswith('\\nt Record:'):
@@ -297,12 +298,15 @@ class UploadService:
                                 parsed_hm = int(v)
                         elif s.startswith('\\ge '):
                             parsed_ge = s[len('\\ge '):].strip() or None
+                        elif s.startswith('\\nt ') and parsed_nt is None:
+                            parsed_nt = s[len('\\nt '):].strip() or None
                     
                     row_data.append({
                         'row': row,
                         'uploaded_id': uploaded_id,
                         'parsed_hm': parsed_hm,
                         'parsed_ge': parsed_ge,
+                        'parsed_nt': parsed_nt,
                     })
 
                 # 2. Targeted Query for Same-Source Records
@@ -348,6 +352,20 @@ class UploadService:
                 def _normalize(mdf_text: str) -> str:
                     stripped = UploadService._strip_nt_record_lines(mdf_text)
                     return '\n'.join(line for line in stripped.split('\n') if line.strip())
+
+                def _extract_first_nt(mdf_text: str) -> str | None:
+                    """Return the first \\nt value that is not a \\nt Record: line."""
+                    for line in mdf_text.split('\n'):
+                        s = line.lstrip()
+                        if s.startswith('\\nt '):
+                            val = s[len('\\nt '):].strip()
+                            # Skip \nt Record: <digits> lines
+                            if val.startswith('Record:'):
+                                remainder = val[len('Record:'):].strip()
+                                if remainder.isdigit():
+                                    continue
+                            return val or None
+                    return None
                 
                 # 3. Targeted Query for OTHER Source existence
                 # We want to know if these LXs exist elsewhere
@@ -385,6 +403,7 @@ class UploadService:
                     uploaded_record_id = data['uploaded_id']
                     parsed_hm = data['parsed_hm']
                     parsed_ge = data['parsed_ge']
+                    parsed_nt = data['parsed_nt']
                     
                     suggested_record_id = None
                     suggested_lx = None
@@ -407,13 +426,38 @@ class UploadService:
                                 if c.hm == parsed_hm:
                                     best = c
                                     break
-                        # B2. Try \ge tiebreaker when \hm didn't resolve
+                        # B2. Try fuzzy \ge tiebreaker when \hm didn't resolve
                         if best is None and parsed_ge is not None:
                             parsed_ge_lower = parsed_ge.lower()
-                            for c in candidates:
-                                if c.ge and c.ge.lower() == parsed_ge_lower:
-                                    best = c
-                                    break
+                            ge_scored = [
+                                (difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or '').lower()).ratio(), c)
+                                for c in candidates
+                            ]
+                            max_ge_score = max(score for score, _ in ge_scored)
+                            ge_top = [c for score, c in ge_scored if score == max_ge_score]
+                            if len(ge_top) == 1:
+                                best = ge_top[0]
+                            else:
+                                # B2.5. \hm then \nt tiebreaker among fuzzy \ge equals
+                                if parsed_hm is not None:
+                                    hm_match = next((c for c in ge_top if c.hm == parsed_hm), None)
+                                    if hm_match:
+                                        best = hm_match
+                                if best is None and parsed_nt is not None:
+                                    nt_scored = [
+                                        (
+                                            difflib.SequenceMatcher(
+                                                None,
+                                                parsed_nt.lower(),
+                                                (_extract_first_nt(candidate_mdf_map.get(c.id, '')) or '').lower()
+                                            ).ratio(),
+                                            c
+                                        )
+                                        for c in ge_top
+                                    ]
+                                    best = max(nt_scored, key=lambda x: x[0])[1]
+                                if best is None:
+                                    best = ge_top[0]
                         # B3. Fall back to first candidate
                         if best is None:
                             best = candidates[0]

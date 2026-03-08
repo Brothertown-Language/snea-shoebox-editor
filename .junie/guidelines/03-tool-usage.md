@@ -23,6 +23,7 @@
   prefix. This pattern is a CRITICAL VIOLATION regardless of whether it "works" — it must
   never appear in any agent-issued terminal command.
 - If you find yourself about to type a `/`-prefixed path, STOP — rewrite it as a relative path first.
+- **PRE-COMMAND SELF-CHECK (mandatory before every `bash` tool call)**: Does the command start with `cd`? Does it contain an absolute path (starting with `/`)? If yes to either — STOP immediately and rewrite. No exceptions, no "just this once."
 
 ## Command Restrictions
 

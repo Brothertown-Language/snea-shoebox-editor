@@ -30,6 +30,7 @@
   analysis, or "shall I proceed?" exchange. Each session starts with zero authorization for code changes. If a change
   was planned but not applied in the session where GO was granted, a new plan and a new GO are required in the current
   session before any edit is made. Referencing a prior GO as justification for an edit is a CRITICAL VIOLATION.
+- **A task description is not a GO.** Receiving a task in `<issue_description>`, `<previous_issue>`, or any session-opening context does NOT constitute authorization to make code changes. The agent MUST present a REVIEW PLAN and receive an explicit GO before any edit — even when the task appears unambiguous and the implementation seems obvious. Treating a task description as implicit approval is a CRITICAL VIOLATION.
 - **GO does not extend to new instructions.** A GO authorizes only the plan or scope presented at the time it was
   issued. Any new instruction from the developer issued after a GO — whether in the same session or a new one —
   requires its own plan and its own GO. The prior GO is exhausted and does not carry forward.
