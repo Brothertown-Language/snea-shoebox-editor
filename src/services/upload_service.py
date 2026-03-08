@@ -419,32 +419,38 @@ class UploadService:
                     # B. Exact lx match — combined (hm, ge, nt) scoring
                     # hm defaults to 1 in the DB, so \hm alone is not a reliable tiebreaker.
                     # Score all candidates by (hm_match, ge_score, nt_score) and pick the best.
+                    # NOTE: single-candidate bypass removed — \ge and \hm must always be checked.
+                    # A single exact-lx candidate with a low \ge similarity is rejected so that
+                    # the base-form fallback (section C) can find the correct diacritic variant.
+                    _GE_ACCEPT_THRESHOLD = 0.4
                     if not suggested_record_id and row.lx in chunk_exact_map:
                         candidates = chunk_exact_map[row.lx]
-                        if len(candidates) == 1:
-                            best = candidates[0]
-                        else:
-                            parsed_ge_lower = (parsed_ge or '').lower()
-                            parsed_nt_lower = (parsed_nt or '').lower()
-                            def _score_candidate(c):
-                                hm_match = (parsed_hm is not None and c.hm == parsed_hm)
-                                ge_score = (
-                                    difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or '').lower()).ratio()
-                                    if parsed_ge is not None else 0.0
-                                )
-                                nt_score = (
-                                    difflib.SequenceMatcher(
-                                        None,
-                                        parsed_nt_lower,
-                                        (_extract_first_nt(candidate_mdf_map.get(c.id, '')) or '').lower()
-                                    ).ratio()
-                                    if parsed_nt is not None else 0.0
-                                )
-                                return (hm_match, ge_score, nt_score)
-                            best = max(candidates, key=_score_candidate)
-                        suggested_record_id = best.id
-                        suggested_lx = best.lx
-                        match_type = 'exact'
+                        parsed_ge_lower = (parsed_ge or '').lower()
+                        parsed_nt_lower = (parsed_nt or '').lower()
+                        def _score_candidate(c):
+                            hm_match = (parsed_hm is not None and c.hm == parsed_hm)
+                            ge_score = (
+                                difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or '').lower()).ratio()
+                                if parsed_ge is not None else 0.0
+                            )
+                            nt_score = (
+                                difflib.SequenceMatcher(
+                                    None,
+                                    parsed_nt_lower,
+                                    (_extract_first_nt(candidate_mdf_map.get(c.id, '')) or '').lower()
+                                ).ratio()
+                                if parsed_nt is not None else 0.0
+                            )
+                            return (hm_match, ge_score, nt_score)
+                        best = max(candidates, key=_score_candidate)
+                        best_score = _score_candidate(best)
+                        best_ge_score = best_score[1]
+                        # Reject if \ge is available and best candidate similarity is too low.
+                        # This allows the base-form fallback to find a better diacritic match.
+                        if parsed_ge is None or best_ge_score >= _GE_ACCEPT_THRESHOLD:
+                            suggested_record_id = best.id
+                            suggested_lx = best.lx
+                            match_type = 'exact'
 
                     # B4. No lx match — try \ge-only match against same-source records
                     if not suggested_record_id and parsed_ge is not None:

@@ -369,8 +369,12 @@ class TestMatchAndCommitOperations(unittest.TestCase):
     def _patch_session(self):
         return patch('src.services.upload_service.get_session', return_value=self.Session())
 
-    def _add_record(self, lx, mdf_data, hm=1, ps='n', ge='gloss', source_id=None):
+    def _add_record(self, lx, mdf_data, hm=1, ps='n', ge=None, source_id=None):
         from src.database import Record, RecordLanguage
+        import re as _re
+        if ge is None:
+            m = _re.search(r'^\\ge (.+)$', mdf_data, _re.MULTILINE)
+            ge = m.group(1).strip() if m else 'gloss'
         rec = Record(
             lx=lx, hm=hm, ps=ps, ge=ge,
             source_id=source_id or self.source_id,
@@ -395,8 +399,69 @@ class TestMatchAndCommitOperations(unittest.TestCase):
     # --- B-5: suggest_matches ---
 
     def test_suggest_matches_exact_lx(self):
-        rec = self._add_record('esh', '\\lx esh\n\\ps n\n\\ge fire')
+        rec = self._add_record('esh', '\\lx esh\n\\ps n\n\\ge fire', ge='fire')
         batch_id = self._stage([{'lx': 'esh', 'mdf_data': '\\lx esh\n\\ps n\n\\ge flame'}])
+        with self._patch_session():
+            results = UploadService.suggest_matches(batch_id)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['suggested_record_id'], rec.id)
+        self.assertEqual(results[0]['match_type'], 'exact')
+
+    def test_suggest_matches_single_candidate_low_ge_falls_through_to_base_form(self):
+        # Regression: single exact-lx candidate with low \ge similarity must NOT be accepted.
+        # DB has Cowaúnckamish (hm=1, ge="My service to you.").
+        # Upload has Cowaúnckamish + ge="I pray your Favour." — low similarity.
+        # Correct match is Cowáunckamish (different diacritic) via base-form fallback.
+        self._add_record(
+            'Cowaúnckamish',
+            r'\lx Cowaúnckamish' + '\n'
+            r'\hm 1' + '\n'
+            r'\ge My service to you.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 962',
+            hm=1,
+            ge='My service to you.',
+        )
+        correct_rec = self._add_record(
+            'Cowáunckamish',
+            r'\lx Cowáunckamish' + '\n'
+            r'\ge I pray your Favour.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 462',
+            hm=1,
+            ge='I pray your Favour.',
+        )
+        upload_mdf = (
+            r'\lx Cowaúnckamish' + '\n'
+            r'\ge I pray your Favour.' + '\n'
+            r'\nt Section: <[A8r.]>; Context: |Cowaúnckamish| and |Cuckquénamish|, I pray your favour.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 974'
+        )
+        batch_id = self._stage([{'lx': 'Cowaúnckamish', 'mdf_data': upload_mdf}])
+        with self._patch_session():
+            results = UploadService.suggest_matches(batch_id)
+        self.assertEqual(len(results), 1)
+        # Must NOT force-match the low-ge hm=1 "My service to you." record.
+        # Falls through to ge_match or base_form — either is acceptable; correct record must be found.
+        self.assertEqual(results[0]['suggested_record_id'], correct_rec.id)
+        self.assertIn(results[0]['match_type'], ('base_form', 'ge_match'))
+
+    def test_suggest_matches_single_candidate_matching_ge_accepted_as_exact(self):
+        # Single exact-lx candidate with high \ge similarity must still be accepted as exact.
+        # Upload has a different \nt so it is not identical — but \ge matches closely.
+        rec = self._add_record(
+            'Cowaúnckamish',
+            r'\lx Cowaúnckamish' + '\n'
+            r'\ge I pray your Favour.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 974',
+            hm=1,
+            ge='I pray your Favour.',
+        )
+        upload_mdf = (
+            r'\lx Cowaúnckamish' + '\n'
+            r'\ge I pray your Favour.' + '\n'
+            r'\nt Section: <[A8r.]>; Context: updated note.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 974'
+        )
+        batch_id = self._stage([{'lx': 'Cowaúnckamish', 'mdf_data': upload_mdf}])
         with self._patch_session():
             results = UploadService.suggest_matches(batch_id)
         self.assertEqual(len(results), 1)
