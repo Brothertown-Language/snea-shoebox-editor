@@ -1,7 +1,13 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Print all .junie guideline files (guidelines.md + guidelines/*.md) for LLM inspection.
-Usage: uv run python ai_bin/guidelines [--files file1.md file2.md ...]
+Usage: uv run python ai_bin/guidelines [--files file1.md file2.md ...] [--section <name>] [--list-sections]
+Options:
+  --files file1.md ...   Print only the specified guideline files (relative to .junie/guidelines/).
+  --section <name>       Print only the named section header block (e.g. 01-approval-gate or guidelines/01-approval-gate.md).
+                         Matches the === header === banner; prints from that banner to the next banner (exclusive).
+  --list-sections        List all available section names and exit.
+  --help / -h            Print this help and exit.
 """
 from __future__ import annotations
 import sys
@@ -21,6 +27,32 @@ def print_file(path: Path) -> None:
     print(path.read_text(encoding="utf-8"))
 
 
+def all_sections(paths: list[Path]) -> list[tuple[str, str]]:
+    """Return list of (banner_key, full_text) for each === banner === block across all paths."""
+    import re
+    full_text = ""
+    for path in paths:
+        full_text += f"=== {path.relative_to(GUIDELINES_ROOT)} ===\n"
+        full_text += path.read_text(encoding="utf-8") + "\n"
+    pattern = re.compile(r"^(=== .+? ===)$", re.MULTILINE)
+    banners = list(pattern.finditer(full_text))
+    sections: list[tuple[str, str]] = []
+    for i, m in enumerate(banners):
+        banner_line = m.group(1)
+        start = m.start()
+        end = banners[i + 1].start() if i + 1 < len(banners) else len(full_text)
+        sections.append((banner_line, full_text[start:end]))
+    return sections
+
+
+def normalize_section_key(name: str) -> str:
+    """Normalize a user-supplied section name for matching against banner text."""
+    name = name.strip().lstrip("=").rstrip("=").strip()
+    if name.endswith(".md"):
+        name = name[:-3]
+    return name.lower()
+
+
 def main() -> None:
     args = sys.argv[1:]
     if "--help" in args or "-h" in args:
@@ -29,7 +61,11 @@ def main() -> None:
 
     if "--files" in args:
         idx = args.index("--files")
-        names = args[idx + 1:]
+        names: list[str] = []
+        for a in args[idx + 1:]:
+            if a.startswith("--"):
+                break
+            names.append(a)
         paths = [GUIDELINES_ROOT / "guidelines" / n for n in names]
     else:
         paths = DEFAULT_FILES
@@ -38,6 +74,31 @@ def main() -> None:
         if not path.exists():
             print(f"ERROR: {path} not found.", file=sys.stderr)
             sys.exit(1)
+
+    if "--list-sections" in args:
+        sections = all_sections(paths)
+        for banner, _ in sections:
+            print(banner)
+        sys.exit(0)
+
+    if "--section" in args:
+        idx = args.index("--section")
+        if idx + 1 >= len(args):
+            print("ERROR: --section requires a name argument.", file=sys.stderr)
+            sys.exit(1)
+        wanted = normalize_section_key(args[idx + 1])
+        sections = all_sections(paths)
+        for banner, text in sections:
+            if normalize_section_key(banner) == wanted or wanted in normalize_section_key(banner):
+                print(text, end="")
+                sys.exit(0)
+        print(f"ERROR: section {args[idx + 1]!r} not found.", file=sys.stderr)
+        print("Available sections:", file=sys.stderr)
+        for banner, _ in sections:
+            print(f"  {banner}", file=sys.stderr)
+        sys.exit(1)
+
+    for path in paths:
         print_file(path)
 
 

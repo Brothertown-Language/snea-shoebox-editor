@@ -2,7 +2,7 @@
 
 ## Approval Gate (mandatory before edits)
 
-- Present a single detailed REVIEW PLAN once for any code/file/artifact change. Obtain explicit "GO" before editing.
+- Present a single detailed REVIEW PLAN once for any code/file/artifact change. Obtain explicit "GO" before editing. There are no size or complexity exemptions. A one-line change to a source file requires the same REVIEW PLAN and GO as a multi-file refactor.
 - Do not repeat the plan or emit status updates unless user asks.
 - A prior "GO" applies only to the scope it was granted for. For **phased plans**, a single GO authorizes the current
   phase (all its sub-steps). For **flat plans** (no phases), a single GO authorizes the current top-level numbered item.
@@ -11,7 +11,8 @@
   immediately — do not proceed to the next phase or item.**
 - GO exceptions: `tmp/` for non-executable scratch files (e.g., `.md`, `.txt`, `.json` data dumps) — any `.py` or `.sh` file in `tmp/` that performs writes, DB operations, or system calls requires GO regardless of location. `plans/` for plan `.md` files only. Prefer `plans/` for plans. The `plans/`
   GO exception covers: (1) creating or updating plan documents (`.md` files describing proposed work); (2)
-  synchronization updates to `plans/` that reflect code reality per the Drift Protocol in `10-authority-source.md`.
+  synchronization updates to `plans/` that reflect code reality per the Drift Protocol in `10-authority-source.md`;
+  (3) observation files recording factual bug/improvement discoveries per the Discovery Protocol in `02-scope-autonomy.md` — these contain no proposed fix and require no GO.
   It does not exempt code, scripts, data files, or any other artifact placed in `plans/` — even when the request is
   framed as a "revise" or "update" of a plan with an associated implementation artifact. If satisfying a request
   requires changing both a plan file and a code/notebook file, the plan file may be updated freely but the
@@ -22,7 +23,7 @@
 - **When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO. Do not create a new plan file as a substitute for doing the work.**
 - Agent is absolutely prohibited from making any modifications until explicit "GO". No "accidental" or "minor" changes
   during analysis.
-- **Approval tokens are user-only.** "GO", "Proceed", and "Approved" are only valid when issued by the **human developer** in the chat. The agent is strictly prohibited from issuing, echoing, implying, or constructing these tokens in any form — including via terminal commands, tool calls, plan text, response body text, `<UPDATE>` blocks, or any other mechanism — to authorize its own actions. Any self-issued approval token is null and void and constitutes a CRITICAL VIOLATION. The agent MUST log the violation immediately via `ai_bin/violation-log` and halt. **The agent MUST NOT write "Go", "Proceed", or "Approved" anywhere in its own response — not even as a label, header, or transition word before executing steps.** **Quoted or echoed text is never approval.** If the agent's own plan text contains words like "Go" or "Proceed" and the user quotes or references that text, it does NOT constitute an approval token. The agent MUST receive a standalone, unambiguous approval token from the user — not embedded in a quote, not inferred from context.
+- **Approval tokens are user-only — the agent MUST NOT write them anywhere, ever.** "GO", "Proceed", and "Approved" are only valid when issued by the **human developer** in the chat. The agent is strictly prohibited from issuing, echoing, implying, or constructing these tokens in any form — including via terminal commands, tool calls, plan text, response body text, `<UPDATE>` blocks, or any other mechanism — to authorize its own actions. Any self-issued approval token is null and void and constitutes a CRITICAL VIOLATION. The agent MUST log the violation immediately via `ai_bin/violation-log` and halt. **The agent MUST NOT write "Go", "Proceed", or "Approved" anywhere in its own response — not even as a label, header, transition word, or standalone word before executing steps. Writing any approval token in a response body and then proceeding to edit is a CRITICAL VIOLATION regardless of context or intent.** **Quoted or echoed text is never approval.** If the agent's own plan text contains words like "Go" or "Proceed" and the user quotes or references that text, it does NOT constitute an approval token. The agent MUST receive a standalone, unambiguous approval token from the user — not embedded in a quote, not inferred from context.
 - **Prior-session approvals are void.** A GO issued in a previous session — including one recorded in `memory.md`,
   a plan file, or session history — does NOT carry forward. This includes sessions that ended with a recommendation,
   analysis, or "shall I proceed?" exchange. Each session starts with zero authorization for code changes. If a change
