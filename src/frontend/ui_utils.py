@@ -174,12 +174,22 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
         diag = diagnostics[i] if diagnostics and i < len(diagnostics) else {"status": "ok"}
         status_cls = f"status-{diag['status']}"
         msg = diag.get("message", "")
-        escaped_line = _html.escape(line) if line else "&nbsp;"
-        
+
+        # Build inner HTML: use span-level markup when intra-line spans are available
+        spans = diag.get("spans")
+        if spans:
+            inner_html = "".join(
+                f'<mark class="diff-token">{_html.escape(s["text"])}</mark>'
+                if s["changed"] else _html.escape(s["text"])
+                for s in spans
+            ) or "&nbsp;"
+        else:
+            inner_html = _html.escape(line) if line else "&nbsp;"
+
         # Build line with optional tooltip/highlight
         title_attr = f'title="{_html.escape(msg)}"' if msg else ""
         line_html_parts.append(
-            f'<div class="mdf-line {status_cls}" {title_attr}>{escaped_line}</div>'
+            f'<div class="mdf-line {status_cls}" {title_attr}>{inner_html}</div>'
         )
     
     line_divs = ''.join(line_html_parts)
@@ -237,6 +247,12 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
             background-color: rgba(220, 50, 50, 0.13);
             border-left: 3.5px solid #dc3232;
         }}
+        mark.diff-token {{
+            background-color: rgba(255, 180, 0, 0.55);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 1px;
+        }}
         /* Light theme arrow (deep orange on light bg) */
         @media (prefers-color-scheme: light) {{
             .mdf-wrap-block {{ color: #31333F; background-color: #f0f2f6; border-color: #31333F; }}
@@ -280,6 +296,56 @@ def _is_diff_ignored_line(line: str) -> bool:
     return stripped == '' or stripped.startswith(r'\nt Record:')
 
 
+def _tokenize_line(line: str) -> list[str]:
+    """Split a line into alternating non-whitespace/whitespace tokens.
+
+    Returns a list of strings whose concatenation equals ``line``.
+    """
+    import re
+    return re.split(r'(\s+)', line)
+
+
+def _intra_line_spans(old_line: str, new_line: str) -> tuple[list[dict], list[dict]]:
+    """Return (old_spans, new_spans) with word-level change markup.
+
+    Each span is ``{"text": str, "changed": bool}``.  Whitespace-only
+    differences are ignored unless there are no non-whitespace differences
+    on that line pair.
+    """
+    import difflib
+
+    old_tokens = _tokenize_line(old_line)
+    new_tokens = _tokenize_line(new_line)
+
+    # Determine whether any non-whitespace token differs
+    old_content = [t for t in old_tokens if t.strip()]
+    new_content = [t for t in new_tokens if t.strip()]
+    has_content_diff = old_content != new_content
+
+    def _build_spans(tokens: list[str], changed_indices: set[int]) -> list[dict]:
+        return [{"text": t, "changed": i in changed_indices} for i, t in enumerate(tokens)]
+
+    matcher = difflib.SequenceMatcher(None, old_tokens, new_tokens, autojunk=False)
+    old_changed: set[int] = set()
+    new_changed: set[int] = set()
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == 'equal':
+            continue
+        for idx in range(i1, i2):
+            tok = old_tokens[idx]
+            # Skip whitespace tokens when content differences exist
+            if has_content_diff and not tok.strip():
+                continue
+            old_changed.add(idx)
+        for idx in range(j1, j2):
+            tok = new_tokens[idx]
+            if has_content_diff and not tok.strip():
+                continue
+            new_changed.add(idx)
+
+    return _build_spans(old_tokens, old_changed), _build_spans(new_tokens, new_changed)
+
+
 def compute_mdf_line_diffs(
     existing_text: str,
     new_text: str,
@@ -295,7 +361,9 @@ def compute_mdf_line_diffs(
 
     Statuses used:
       - ``ok``           — line is identical on both sides
-      - ``diff-changed`` — line exists on both sides but content differs
+      - ``diff-changed`` — line exists on both sides but content differs;
+                           the dict also carries a ``spans`` key with
+                           word-level change segments
       - ``diff-added``   — line is only in the new (uploaded) record
       - ``diff-removed`` — line is only in the existing record
     """
@@ -320,10 +388,23 @@ def compute_mdf_line_diffs(
         if tag == 'equal':
             pass
         elif tag == 'replace':
+            # Pair up changed lines for intra-line span computation
+            paired = list(zip(range(i1, i2), range(j1, j2)))
+            paired_fi = {fi for fi, _ in paired}
+            paired_fj = {fj for _, fj in paired}
+            for fi, fj in paired:
+                old_line = existing_filtered[fi]
+                new_line = new_filtered[fj]
+                old_spans, new_spans = _intra_line_spans(old_line, new_line)
+                existing_diags[existing_idx[fi]] = {"status": "diff-changed", "spans": old_spans}
+                new_diags[new_idx[fj]] = {"status": "diff-changed", "spans": new_spans}
+            # Unpaired lines (when block sizes differ) get plain diff-changed
             for fi in range(i1, i2):
-                existing_diags[existing_idx[fi]] = {"status": "diff-changed"}
+                if fi not in paired_fi:
+                    existing_diags[existing_idx[fi]] = {"status": "diff-changed"}
             for fj in range(j1, j2):
-                new_diags[new_idx[fj]] = {"status": "diff-changed"}
+                if fj not in paired_fj:
+                    new_diags[new_idx[fj]] = {"status": "diff-changed"}
         elif tag == 'delete':
             for fi in range(i1, i2):
                 existing_diags[existing_idx[fi]] = {"status": "diff-removed"}
