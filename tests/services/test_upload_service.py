@@ -408,25 +408,40 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         self.assertEqual(results[0]['match_type'], 'exact')
 
     def test_suggest_matches_single_candidate_low_ge_falls_through_to_base_form(self):
-        # Regression: single exact-lx candidate with low \ge similarity must NOT be accepted.
-        # DB has Cowaúnckamish (hm=1, ge="My service to you.").
-        # Upload has Cowaúnckamish + ge="I pray your Favour." — low similarity.
-        # Correct match is Cowáunckamish (different diacritic) via base-form fallback.
+        # Regression: multiple exact-lx candidates with low/wrong \ge must NOT be accepted.
+        # DB has two Cowaúnckamish records (hm=1 "My service to you.", hm=2 "Quarter, quarter.")
+        # Upload has Cowaúnckamish + ge="I pray your Favour." — no exact-lx candidate matches ge.
+        # Correct match is Cowáunckamish (different diacritic position, line 462) via base-form fallback.
+        # Reproduces issue: upload was incorrectly matched to a same-lx record instead of the correct diacritic variant.
         self._add_record(
             'Cowaúnckamish',
             r'\lx Cowaúnckamish' + '\n'
             r'\hm 1' + '\n'
             r'\ge My service to you.' + '\n'
-            r'\so Narragansett [xnt]; Williams 1643, line 962',
+            r'\nt Section: CHAP. I.; Context: |Cowaúnckamish|, My service to you.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 962' + '\n'
+            r'\nt Record: 3153',
             hm=1,
             ge='My service to you.',
+        )
+        self._add_record(
+            'Cowaúnckamish',
+            r'\lx Cowaúnckamish' + '\n'
+            r'\hm 2' + '\n'
+            r'\ge Quarter, quarter.' + '\n'
+            r'\nt Section: CHAP. XXIX.; Context: |Cowaúnckamish|, Quarter, quarter. Kunnanaumpasúmmish' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 7344' + '\n'
+            r'\nt Record: 5137',
+            hm=2,
+            ge='Quarter, quarter.',
         )
         correct_rec = self._add_record(
             'Cowáunckamish',
             r'\lx Cowáunckamish' + '\n'
             r'\ge I pray your Favour.' + '\n'
-            r'\so Narragansett [xnt]; Williams 1643, line 462',
-            hm=1,
+            r'\nt Section: <[A8r.]>; Context: |Cowáunckamish| & |Cuckquénamish|.' + "\t" + r"'I pray your Favour.'" + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 462' + '\n'
+            r'\nt Record: 3141',
             ge='I pray your Favour.',
         )
         upload_mdf = (
@@ -439,8 +454,8 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         with self._patch_session():
             results = UploadService.suggest_matches(batch_id)
         self.assertEqual(len(results), 1)
-        # Must NOT force-match the low-ge hm=1 "My service to you." record.
-        # Falls through to ge_match or base_form — either is acceptable; correct record must be found.
+        # Must NOT match any Cowaúnckamish DB record (wrong diacritic position).
+        # Correct match is Cowáunckamish (accent on á, line 462) via base-form fallback.
         self.assertEqual(results[0]['suggested_record_id'], correct_rec.id)
         self.assertIn(results[0]['match_type'], ('base_form', 'ge_match'))
 

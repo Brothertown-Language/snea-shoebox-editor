@@ -36,6 +36,8 @@
 
 * When analyzing Python source files, see `guidelines/03-tool-usage.md` § Python Source File Analysis.
 * Always use `uv run`.
+* **Never ignore a user question.** If the answer was already given in a prior response, restate it clearly and completely in the current response. Do not deflect, redirect, or ask a clarifying question instead of answering. Answering a question with another question when the answer is known is a CRITICAL VIOLATION.
+* **Substantive answers MUST be delivered via `answer` tool.** Any answer containing structured data, records, lists, tables, code blocks, or multi-part content MUST be delivered via the `answer` tool — not buried in `ask_user`, `<UPDATE>` blocks, `submit` summaries, or inline chat text. Delivering substantive content only in chat text or `ask_user` when `answer` is available is a CRITICAL VIOLATION.
 
 <!-- Copyright (c) 2026 Brothertown Language -->
 
