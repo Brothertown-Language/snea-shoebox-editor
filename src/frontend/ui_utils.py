@@ -225,6 +225,18 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
             background-color: rgba(255, 165, 0, 0.1);
             border-left: 3px solid #ffa500;
         }}
+        .mdf-line.status-diff-changed {{
+            background-color: rgba(255, 220, 0, 0.18);
+            border-left: 3.5px solid #e6b800;
+        }}
+        .mdf-line.status-diff-added {{
+            background-color: rgba(0, 180, 80, 0.15);
+            border-left: 3.5px solid #00b450;
+        }}
+        .mdf-line.status-diff-removed {{
+            background-color: rgba(220, 50, 50, 0.13);
+            border-left: 3.5px solid #dc3232;
+        }}
         /* Light theme arrow (deep orange on light bg) */
         @media (prefers-color-scheme: light) {{
             .mdf-wrap-block {{ color: #31333F; background-color: #f0f2f6; border-color: #31333F; }}
@@ -257,6 +269,49 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
         }})();
         </script>
     """)
+
+
+def compute_mdf_line_diffs(
+    existing_text: str,
+    new_text: str,
+) -> tuple[list[dict], list[dict]]:
+    """Compute per-line diff diagnostics for two MDF texts.
+
+    Returns a tuple (existing_diags, new_diags) where each element is a list
+    of diagnostic dicts suitable for passing to render_mdf_block().
+
+    Statuses used:
+      - ``ok``           — line is identical on both sides
+      - ``diff-changed`` — line exists on both sides but content differs
+      - ``diff-added``   — line is only in the new (uploaded) record
+      - ``diff-removed`` — line is only in the existing record
+    """
+    import difflib
+    from src.mdf.parser import format_mdf_record
+
+    existing_lines = format_mdf_record(existing_text).split('\n')
+    new_lines = format_mdf_record(new_text).split('\n')
+
+    existing_diags: list[dict] = [{"status": "ok"}] * len(existing_lines)
+    new_diags: list[dict] = [{"status": "ok"}] * len(new_lines)
+
+    matcher = difflib.SequenceMatcher(None, existing_lines, new_lines, autojunk=False)
+    for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+        if tag == 'equal':
+            pass
+        elif tag == 'replace':
+            for i in range(i1, i2):
+                existing_diags[i] = {"status": "diff-changed"}
+            for j in range(j1, j2):
+                new_diags[j] = {"status": "diff-changed"}
+        elif tag == 'delete':
+            for i in range(i1, i2):
+                existing_diags[i] = {"status": "diff-removed"}
+        elif tag == 'insert':
+            for j in range(j1, j2):
+                new_diags[j] = {"status": "diff-added"}
+
+    return existing_diags, new_diags
 
 
 # ── Sidebar Utilities ──────────────────────────────────────────────────
