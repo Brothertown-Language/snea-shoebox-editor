@@ -17,6 +17,11 @@
   ❌ `ls /home/michael/git/newsrx-genai-python/plans/archive/`
 - Never issue a `cd` command. Run all commands from project root using relative paths.
   (Authored scripts/shell headers may use `cd` for root resolution per `09-scripting.md`.)
+- **CRITICAL VIOLATION — `cd <path> &&` prefix pattern**: Prefixing any terminal command with
+  `cd /…/… &&` (or any absolute-path `cd` combined with `&&`) is explicitly forbidden. The
+  terminal is always at project root. Every command must be issued directly without a `cd`
+  prefix. This pattern is a CRITICAL VIOLATION regardless of whether it "works" — it must
+  never appear in any agent-issued terminal command.
 - If you find yourself about to type a `/`-prefixed path, STOP — rewrite it as a relative path first.
 
 ## Command Restrictions
@@ -112,8 +117,12 @@ ad-hoc file-reading/writing mechanism) on any `.junie/` file. Invoking the desig
 is permitted and required. Always use the designated `ai_bin/` utility:
 
 - `guidelines/` and `guidelines.md` → `uv run python ai_bin/guidelines`
-  - To read a subset: `uv run python ai_bin/guidelines --files 02-scope-autonomy.md 03-tool-usage.md`
+  - To read all guidelines: `uv run python ai_bin/guidelines`
+  - To read a subset of files: `uv run python ai_bin/guidelines --files 02-scope-autonomy.md 03-tool-usage.md`
+  - To read a single named section: `uv run python ai_bin/guidelines --section 01-approval-gate`
+  - To list all available section names: `uv run python ai_bin/guidelines --list-sections`
   - **EXCLUSIVE ACCESS**: `uv run python ai_bin/guidelines` is the ONLY permitted method to read guideline files. Shell `cat`, `for` loops, `open` tool, or any other mechanism on guideline files is a CRITICAL VIOLATION — no exceptions.
+  - **NO SHELL PIPELINES FOR EXTRACTION**: Using shell pipelines, `python -c`, `python3 -c`, or any inline script to extract or filter guideline content is a CRITICAL VIOLATION. Use `--section <name>` directly.
 - `memory.md` → `uv run python ai_bin/memory`
 - `VIOLATION_LOG.jsonl` → `uv run python ai_bin/violation-log`
 - `personas/` → `uv run python ai_bin/persona <name>` — prints the full content of the named persona file to

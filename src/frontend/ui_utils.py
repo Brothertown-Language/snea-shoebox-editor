@@ -271,6 +271,15 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
     """)
 
 
+def _is_diff_ignored_line(line: str) -> bool:
+    """Return True for lines that should be excluded from diff comparison.
+
+    Ignored: blank lines and the ``\\nt Record:`` annotation line.
+    """
+    stripped = line.strip()
+    return stripped == '' or stripped.startswith(r'\nt Record:')
+
+
 def compute_mdf_line_diffs(
     existing_text: str,
     new_text: str,
@@ -279,6 +288,10 @@ def compute_mdf_line_diffs(
 
     Returns a tuple (existing_diags, new_diags) where each element is a list
     of diagnostic dicts suitable for passing to render_mdf_block().
+
+    Blank lines and ``\\nt Record:`` lines are excluded from the diff so that
+    added/removed blank lines and the record-id annotation do not produce
+    spurious diff highlights.
 
     Statuses used:
       - ``ok``           — line is identical on both sides
@@ -295,21 +308,28 @@ def compute_mdf_line_diffs(
     existing_diags: list[dict] = [{"status": "ok"}] * len(existing_lines)
     new_diags: list[dict] = [{"status": "ok"}] * len(new_lines)
 
-    matcher = difflib.SequenceMatcher(None, existing_lines, new_lines, autojunk=False)
+    # Build filtered index lists — skip blank lines and \nt Record: lines
+    existing_idx = [i for i, ln in enumerate(existing_lines) if not _is_diff_ignored_line(ln)]
+    new_idx = [j for j, ln in enumerate(new_lines) if not _is_diff_ignored_line(ln)]
+
+    existing_filtered = [existing_lines[i] for i in existing_idx]
+    new_filtered = [new_lines[j] for j in new_idx]
+
+    matcher = difflib.SequenceMatcher(None, existing_filtered, new_filtered, autojunk=False)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
         if tag == 'equal':
             pass
         elif tag == 'replace':
-            for i in range(i1, i2):
-                existing_diags[i] = {"status": "diff-changed"}
-            for j in range(j1, j2):
-                new_diags[j] = {"status": "diff-changed"}
+            for fi in range(i1, i2):
+                existing_diags[existing_idx[fi]] = {"status": "diff-changed"}
+            for fj in range(j1, j2):
+                new_diags[new_idx[fj]] = {"status": "diff-changed"}
         elif tag == 'delete':
-            for i in range(i1, i2):
-                existing_diags[i] = {"status": "diff-removed"}
+            for fi in range(i1, i2):
+                existing_diags[existing_idx[fi]] = {"status": "diff-removed"}
         elif tag == 'insert':
-            for j in range(j1, j2):
-                new_diags[j] = {"status": "diff-added"}
+            for fj in range(j1, j2):
+                new_diags[new_idx[fj]] = {"status": "diff-added"}
 
     return existing_diags, new_diags
 
