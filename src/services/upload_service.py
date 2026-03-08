@@ -452,8 +452,20 @@ class UploadService:
                             suggested_lx = best.lx
                             match_type = 'exact'
 
-                    # B4. No lx match — try \ge-only match against same-source records
-                    if not suggested_record_id and parsed_ge is not None:
+                    # B4. No lx match — try \ge-only match against same-source records.
+                    # Skip B4 if base-form (diacritic-stripped) candidates exist: section C
+                    # applies full (hm, ge, nt) scoring and will find the correct variant.
+                    _base_for_b4 = _strip_diacritics(row.lx)
+                    _has_base_candidates = bool(
+                        session.query(Record.id)
+                        .filter(
+                            Record.source_id == source_id,
+                            Record.is_deleted == False,
+                            func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == _base_for_b4.lower()
+                        )
+                        .first()
+                    )
+                    if not suggested_record_id and parsed_ge is not None and not _has_base_candidates:
                         ge_matches = (
                             session.query(Record.id, Record.lx, Record.is_locked)
                             .filter(
@@ -482,9 +494,9 @@ class UploadService:
 
                     # C. Diacritics-stripped fallback — fetch all candidates, score and pick best
                     if not suggested_record_id:
-                        base = _strip_diacritics(row.lx)
+                        base = _base_for_b4  # reuse already-computed base form
                         base_candidates = (
-                            session.query(Record.id, Record.lx, Record.ge, Record.hm, Record.is_locked)
+                            session.query(Record.id, Record.lx, Record.ge, Record.hm, Record.is_locked, Record.mdf_data)
                             .filter(
                                 Record.source_id == source_id,
                                 Record.is_deleted == False,
@@ -493,6 +505,11 @@ class UploadService:
                             .all()
                         )
                         if base_candidates:
+                            # Populate candidate_mdf_map for base-form candidates so that
+                            # _score_candidate can compute a real nt_score for tiebreaking.
+                            for bc in base_candidates:
+                                if bc.id not in candidate_mdf_map and bc.mdf_data:
+                                    candidate_mdf_map[bc.id] = bc.mdf_data
                             best_base = max(base_candidates, key=_score_candidate)
                             suggested_record_id = best_base.id
                             suggested_lx = best_base.lx
