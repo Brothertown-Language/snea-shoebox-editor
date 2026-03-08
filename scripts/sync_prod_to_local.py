@@ -43,6 +43,31 @@ from src.database.base import Base
 import src.database.models  # Import models to register them with Base.metadata
 
 
+def _ensure_pgserver(local_url: str) -> str:
+    """Start pgserver for local dev if needed and return the connection URI to use."""
+    # Only auto-start for local/socket connections, not remote TCP URLs
+    if local_url and "@" in local_url and not local_url.startswith("postgresql://postgres:@localhost"):
+        return local_url
+
+    try:
+        import pgserver
+        is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
+        db_dir = "junie_db" if is_junie else "local_db"
+        db_path = project_root / "tmp" / db_dir
+        db_path.mkdir(parents=True, exist_ok=True)
+        log_message(f"Starting pgserver (db_path={db_path})...")
+        server = pgserver.get_server(str(db_path))
+        uri = server.get_uri()
+        log_message(f"pgserver started: {uri.split('@')[-1]}")
+        return uri
+    except ImportError:
+        log_message("pgserver not installed — skipping auto-start.")
+        return local_url
+    except Exception as e:
+        log_message(f"Warning: pgserver auto-start failed: {e}")
+        return local_url
+
+
 def load_secrets():
     """Load database URLs from Streamlit secrets files if environment variables are not set."""
     prod_url = os.getenv("DATABASE_URL")
@@ -88,6 +113,8 @@ def sync_data():
     if not prod_url:
         log_message("Error: Production DATABASE_URL not found in environment or .streamlit/secrets.toml.production")
         sys.exit(1)
+
+    local_url = _ensure_pgserver(local_url)
 
     log_message(f"Connecting to Production: {prod_url.split('@')[-1]}")
     # Scrub local path if it's a socket-based URI for display

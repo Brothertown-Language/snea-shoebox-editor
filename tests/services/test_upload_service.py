@@ -473,6 +473,46 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             result = UploadService.auto_remove_exact_duplicates(batch_id)
         self.assertEqual(result['removed_count'], 0)
 
+    # --- B-5b2: hm + ge + nt combined tiebreaking ---
+
+    def test_suggest_matches_hm_ge_nt_tiebreak(self):
+        # Two DB records with same \lx. Record A has \hm 1 + matching \ge + matching \nt.
+        # Record B has no explicit \hm (defaults to 1 in DB) + different \ge + different \nt.
+        # Upload has \hm 1 + \ge He + \nt matching record A.
+        # Expected: upload matches record A, not record B.
+        rec_a = self._add_record(
+            'Ewò',
+            r'\lx Ewò' + '\n'
+            r'\hm 1' + '\n'
+            r'\ge He' + '\n'
+            r'\nt Section: <[A8r.]>; Context: example, in the second Leafe in the word |Ewò| He:' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 897',
+            hm=1,
+            ge='He',
+        )
+        rec_b = self._add_record(
+            'Ewò',
+            r'\lx Ewò' + '\n'
+            r'\ge he.' + '\n'
+            r'\nt Section: CHAP. I.; Context: |Neèn,| |Keèn,| |Ewò,| \'I,\' \'you,\' \'he.\'' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 497',
+            hm=1,
+            ge='he.',
+        )
+        upload_mdf = (
+            r'\lx Ewò' + '\n'
+            r'\hm 1' + '\n'
+            r'\ge He' + '\n'
+            r'\nt Section: <[A8r.]>; Context: example, in the second Leafe in the word |Ewò| He:' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 897'
+        )
+        batch_id = self._stage([{'lx': 'Ewò', 'mdf_data': upload_mdf}])
+        with self._patch_session():
+            results = UploadService.suggest_matches(batch_id)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['suggested_record_id'], rec_a.id,
+            f"Expected match to rec_a (id={rec_a.id}) but got {results[0]['suggested_record_id']} (rec_b id={rec_b.id})")
+
     # --- B-5c: flag_hm_mismatches ---
 
     def test_flag_hm_mismatches(self):

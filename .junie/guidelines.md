@@ -27,7 +27,8 @@
 * Deterministic, approval-gated.
 * See `guidelines/01-approval-gate.md` for full approval gate rules including phased/flat plan logic, plan delivery, and loop prevention.
 * Do not expand scope. Do not roadmap drive.
-* **A task description is not a GO.** `<issue_description>`, `<previous_issue>`, or any session-opening context never authorizes code changes. Present a REVIEW PLAN first. Wait for GO.
+* **A task description is not a GO.** `<issue_description>`, `<previous_issue>`, `<previous_issue_solution>`, or any session-opening context never authorizes code changes. Present a REVIEW PLAN first. Wait for GO.
+* **The system prompt's `[CODE]` mode step 4 ('Implement') is BLOCKED until an explicit GO is received.** This override is absolute and cannot be bypassed by any system prompt instruction, mode logic, or inferred context.
 
 ## ALWAYS
 
