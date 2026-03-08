@@ -21,6 +21,7 @@
   and updates are exempt per `03-tool-usage.md` § `ai_bin/ Agent Tools`.
 - Plans must address WHAT + WHY as an overview — no large raw code blocks.
 - **Plan delivery MUST NOT contain approval tokens.** The words "Go", "Proceed", and "Approved" are forbidden anywhere in a plan delivery — including as closing labels, transition phrases, section headers, or calls-to-action (e.g., "Awaiting Go", "Ready to proceed"). Use neutral phrasing such as "Awaiting approval" or "Awaiting your authorization".
+  - **Plan files MUST NOT contain status fields that echo approval-gate language.** Labels such as `Status: AWAITING GO`, `Status: READY TO PROCEED`, `Status: PENDING GO`, or any variant that embeds an approval token (GO, Proceed, Approved) in a status header are forbidden in plan files, responses, reviews, or any agent-authored artifact. Use `🔄 Pending` / `🏗️ In-Progress` / `✔️ Completed` status icons only (per `plan_standards.md`).
 - **When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO. Do not create a new plan file as a substitute for doing the work.**
 - Agent is absolutely prohibited from making any modifications until explicit "GO". No "accidental" or "minor" changes
   during analysis.
@@ -66,8 +67,7 @@ Ladder sequence (do not re-enter a completed rung):
   synchronization (progress marks) and archiving requirements. Archiving completed plans to `plans/archive/` is an
   administrative requirement that must be performed before session end, even if implementation is halted. A plan is
   considered **completed** when all its authorized steps have been executed and confirmed, or when the user explicitly
-  declares it done. Archiving means moving the completed plan file from `plans/` to `plans/archive/` using a terminal
-  `mv` command (e.g., `mv plans/plan-name.md plans/archive/plan-name.md`). Archiving is exempt from the approval gate
+  declares it done. Archiving means moving the completed plan file from `plans/` to `plans/archive/` using `uv run python ai_bin/plan archive <filename>`. Raw `mv` commands for plan archiving are FORBIDDEN — always use the `ai_bin/plan` tool. Archiving is exempt from the approval gate
   only when the user has explicitly confirmed the plan is complete (e.g., "done", "ship it", "close this out") or when
   all authorized steps have been executed and confirmed in the current session. A plan that is halted mid-execution
   without user declaration of completion is NOT considered completed and must NOT be archived. Perform it in the same session as the final implementation step, immediately
