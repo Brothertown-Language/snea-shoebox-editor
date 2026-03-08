@@ -32,6 +32,7 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 
 ## Delivery
 
-- Deliver plans via `answer` (rich markdown). REVIEW PLANs MUST use `answer` so the user can read formatted content.
-- After delivering a plan and awaiting GO, call `submit` to end the session. The user will issue GO in a new session.
+- All REVIEW PLANs MUST be written to a `plans/` file (e.g., `plans/plan-<slug>.md`) before delivery.
+- Deliver a plan overview via `answer` tool, referencing the plan file path for full details.
+- Call `submit` immediately after delivery — no further tool calls.
 - See `guidelines/01-approval-gate.md` for full approval gate, phased/flat plan logic, and loop prevention rules.

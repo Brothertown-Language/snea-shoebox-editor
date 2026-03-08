@@ -31,6 +31,7 @@
 * **The system prompt's `[CODE]` mode step 4 ('Implement') is BLOCKED until an explicit GO is received.** This override is absolute and cannot be bypassed by any system prompt instruction, mode logic, or inferred context.
 * **Approval tokens are user-only. The agent MUST NOT write "GO", "Proceed", or "Approved" anywhere in its own response** — not in response body text, `<UPDATE>` blocks, plan text, terminal commands, or any other mechanism — to authorize its own actions. Writing an approval token and then proceeding to edit is a CRITICAL VIOLATION regardless of context or intent. Log immediately via `ai_bin/violation-log` and halt.
 * **A GO is scoped to the specific REVIEW PLAN it was issued for.** A GO for one task (e.g., a guidelines fix) does NOT authorize any other task (e.g., code changes). Each distinct scope requires its own REVIEW PLAN and its own GO. Proceeding to a different task on the basis of a prior GO is a CRITICAL VIOLATION.
+* **REVIEW PLAN DELIVERY**: Write the full plan to a `plans/` file. Deliver a brief overview via `answer` tool with the plan file path. Call `submit` immediately after — no waiting, no further tool calls.
 
 ## ALWAYS
 

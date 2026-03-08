@@ -423,25 +423,25 @@ class UploadService:
                     # A single exact-lx candidate with a low \ge similarity is rejected so that
                     # the base-form fallback (section C) can find the correct diacritic variant.
                     _GE_ACCEPT_THRESHOLD = 0.4
+                    parsed_ge_lower = (parsed_ge or '').lower()
+                    parsed_nt_lower = (parsed_nt or '').lower()
+                    def _score_candidate(c):
+                        hm_match = (parsed_hm is not None and c.hm == parsed_hm)
+                        ge_score = (
+                            difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or '').lower()).ratio()
+                            if parsed_ge is not None else 0.0
+                        )
+                        nt_score = (
+                            difflib.SequenceMatcher(
+                                None,
+                                parsed_nt_lower,
+                                (_extract_first_nt(candidate_mdf_map.get(c.id, '')) or '').lower()
+                            ).ratio()
+                            if parsed_nt is not None else 0.0
+                        )
+                        return (hm_match, ge_score, nt_score)
                     if not suggested_record_id and row.lx in chunk_exact_map:
                         candidates = chunk_exact_map[row.lx]
-                        parsed_ge_lower = (parsed_ge or '').lower()
-                        parsed_nt_lower = (parsed_nt or '').lower()
-                        def _score_candidate(c):
-                            hm_match = (parsed_hm is not None and c.hm == parsed_hm)
-                            ge_score = (
-                                difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or '').lower()).ratio()
-                                if parsed_ge is not None else 0.0
-                            )
-                            nt_score = (
-                                difflib.SequenceMatcher(
-                                    None,
-                                    parsed_nt_lower,
-                                    (_extract_first_nt(candidate_mdf_map.get(c.id, '')) or '').lower()
-                                ).ratio()
-                                if parsed_nt is not None else 0.0
-                            )
-                            return (hm_match, ge_score, nt_score)
                         best = max(candidates, key=_score_candidate)
                         best_score = _score_candidate(best)
                         best_ge_score = best_score[1]
@@ -480,28 +480,24 @@ class UploadService:
                             match_type = 'ge_match'
                             suggested_is_locked = ge_match.is_locked
 
-                    # C. Diacritics-stripped fallback (Requires extra query if not found in exact)
+                    # C. Diacritics-stripped fallback — fetch all candidates, score and pick best
                     if not suggested_record_id:
                         base = _strip_diacritics(row.lx)
-                        # We do a targeted query for this specific base form if it wasn't exact
-                        base_match = (
-                            session.query(Record.id, Record.lx, Record.is_locked)
+                        base_candidates = (
+                            session.query(Record.id, Record.lx, Record.ge, Record.hm, Record.is_locked)
                             .filter(
                                 Record.source_id == source_id,
                                 Record.is_deleted == False,
-                                # Simple diacritics check fallback in SQL if possible, 
-                                # but for small batches we can just query for records 
-                                # and filter in Python or use a specialized query.
-                                # To keep it simple and safe:
                                 func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base.lower()
                             )
-                            .first()
+                            .all()
                         )
-                        if base_match:
-                            suggested_record_id = base_match.id
-                            suggested_lx = base_match.lx
+                        if base_candidates:
+                            best_base = max(base_candidates, key=_score_candidate)
+                            suggested_record_id = best_base.id
+                            suggested_lx = best_base.lx
                             match_type = 'base_form'
-                            suggested_is_locked = base_match.is_locked
+                            suggested_is_locked = best_base.is_locked
                         else:
                             suggested_is_locked = False
                     else:

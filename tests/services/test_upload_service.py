@@ -593,6 +593,49 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         self.assertEqual(results[0]['suggested_record_id'], rec_a.id,
             f"Expected match to rec_a (id={rec_a.id}) but got {results[0]['suggested_record_id']} (rec_b id={rec_b.id})")
 
+    def test_suggest_matches_base_form_hm_ge_nt_tiebreak(self):
+        # Regression: upload \lx has no diacritic (Ewo), so section B (exact-lx) finds no candidates.
+        # Section C (base-form fallback) must apply (hm, ge, nt) scoring to pick the correct candidate,
+        # not just return .first().
+        # DB record A: Ewò hm=1, line 897 — the INCORRECT match (returned by .first() without scoring).
+        # DB record B: Ewò (no hm tag), line 615 — the CORRECT match (ge=He, nt=CHAP. I. context).
+        # Upload: \lx Ewo \hm 3 \ge He \nt Section: CHAP. I.; Context: names, but |Keen|, You, |Ewo|, He &c.
+        # Expected: match to rec_b (line 615), not rec_a (line 897).
+        rec_a = self._add_record(
+            'Ewò',
+            r'\lx Ewò' + '\n'
+            r'\hm 1' + '\n'
+            r'\ge He' + '\n'
+            r'\nt Section: <[A8r.]>; Context: example, in the second Leafe in the word |Ewò| He:' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 897' + '\n'
+            r'\nt Record: 3135',
+            hm=1,
+            ge='He',
+        )
+        rec_b = self._add_record(
+            'Ewò',
+            r'\lx Ewò' + '\n'
+            r'\ge He' + '\n'
+            r'\nt Section: CHAP. I.; Context: Names, but |Keen|, \'You\', |Ewò|, \'He\', &c.' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 615',
+            hm=1,
+            ge='He',
+        )
+        upload_mdf = (
+            r'\lx Ewo' + '\n'
+            r'\hm 3' + '\n'
+            r'\ge He' + '\n'
+            r'\nt Section: CHAP. I.; Context: names, but |Keen|, You, |Ewo|, He &c. Tahéna' + '\n'
+            r'\so Narragansett [xnt]; Williams 1643, line 1088'
+        )
+        batch_id = self._stage([{'lx': 'Ewo', 'mdf_data': upload_mdf}])
+        with self._patch_session():
+            results = UploadService.suggest_matches(batch_id)
+        self.assertEqual(len(results), 1)
+        self.assertEqual(results[0]['suggested_record_id'], rec_b.id,
+            f"Expected match to rec_b (id={rec_b.id}, line 615) but got "
+            f"{results[0]['suggested_record_id']} (rec_a id={rec_a.id}, line 897)")
+
     # --- B-5c: flag_hm_mismatches ---
 
     def test_flag_hm_mismatches(self):
