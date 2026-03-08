@@ -15,7 +15,8 @@
   It does not exempt code, scripts, data files, or any other artifact placed in `plans/` — even when the request is
   framed as a "revise" or "update" of a plan with an associated implementation artifact. If satisfying a request
   requires changing both a plan file and a code/notebook file, the plan file may be updated freely but the
-  code/notebook change requires a separate explicit GO.
+  code/notebook change requires a separate explicit GO. `ai_bin/` for agent tool scripts (`.py` files) — creation
+  and updates are exempt per `03-tool-usage.md` § `ai_bin/ Agent Tools`.
 - Plans must address WHAT + WHY as an overview — no large raw code blocks.
 - **Plan delivery MUST NOT contain approval tokens.** The words "Go", "Proceed", and "Approved" are forbidden anywhere in a plan delivery — including as closing labels, transition phrases, section headers, or calls-to-action (e.g., "Awaiting Go", "Ready to proceed"). Use neutral phrasing such as "Awaiting approval" or "Awaiting your authorization".
 - **When the task is to implement code (notebook, script, module, migration, etc.), present a REVIEW PLAN in the message body and wait for GO. Do not create a new plan file as a substitute for doing the work.**
@@ -37,7 +38,7 @@ Ladder sequence (do not re-enter a completed rung):
 
 1. **Detect** → If response would loop, stop and present REVIEW PLAN once.
 2. **Present** → Deliver the REVIEW PLAN via `answer` (rich markdown). **REVIEW PLANs MUST use `answer` so the user can read formatted content.** Do not run any commands.
-3. **Wait** → Call `submit` to end the session. The user will issue GO in a new session. **STRICTLY FORBIDDEN: running `echo`, no-op shell commands, or any terminal command as a filler while waiting. STRICTLY FORBIDDEN: sending multiple follow-up messages while waiting. STRICTLY FORBIDDEN: using `echo` or any shell command as a filler at the end of ANY response — not just while waiting. Every terminal command must have a real, necessary purpose. `echo "waiting"`, `echo "plan delivered"`, `echo "done"` and all similar filler echoes are CRITICAL VIOLATIONS.** Note: A plan delivery session ends with `answer` then `submit`. It does not stay open with `ask_user`. **CRITICAL: `ask_user` is FORBIDDEN as a waiting mechanism for approval. When a plan requires user approval before proceeding, the ONLY correct sequence is: (1) deliver plan via `answer`, (2) call `submit` to end the session. There is no third step. Do not issue any tool call after `submit`.**
+3. **Wait** → Call `answer` with the full plan content, then call `submit` to end the session. The user will issue GO in a new session. **STRICTLY FORBIDDEN: running `echo`, no-op shell commands, or any terminal command as a filler while waiting. STRICTLY FORBIDDEN: sending multiple follow-up messages while waiting. STRICTLY FORBIDDEN: using `echo` or any shell command as a filler at the end of ANY response — not just while waiting. Every terminal command must have a real, necessary purpose. `echo "waiting"`, `echo "plan delivered"`, `echo "done"` and all similar filler echoes are CRITICAL VIOLATIONS.** Note: A plan delivery session ends with `answer` then `submit`. It does not stay open with `ask_user`. **CRITICAL: `ask_user` is FORBIDDEN as a waiting mechanism for approval. When a plan requires user approval before proceeding, the ONLY correct sequence is: (1) deliver plan via `answer`, (2) call `submit` to end the session. There is no third step. Do not issue any tool call after `submit`.**
 4. **Proceed on GO** → Execute approved plan exactly once.
 5. **Report** → Summarize results and stop.
 
@@ -64,7 +65,8 @@ Ladder sequence (do not re-enter a completed rung):
   declares it done. Archiving means moving the completed plan file from `plans/` to `plans/archive/` using a terminal
   `mv` command (e.g., `mv plans/plan-name.md plans/archive/plan-name.md`). Archiving is exempt from the approval gate
   only when the user has explicitly confirmed the plan is complete (e.g., "done", "ship it", "close this out") or when
-  all authorized steps have been executed and confirmed in the current session. Perform it in the same session as the final implementation step, immediately
+  all authorized steps have been executed and confirmed in the current session. A plan that is halted mid-execution
+  without user declaration of completion is NOT considered completed and must NOT be archived. Perform it in the same session as the final implementation step, immediately
   before calling `submit`.
 - Plan status icons: `✔️` Completed, `🏗️` In-Progress, `🔄` Pending. Update plan file on step completion (plan files in
   `plans/` are exempt from approval gate per GO exceptions).

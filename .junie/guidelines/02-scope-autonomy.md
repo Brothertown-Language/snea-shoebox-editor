@@ -21,6 +21,9 @@ language ("Proposed plan", "Updated plan").
   the approval gate (treated as a factual record, not a proposed change). Report its existence in the chat response.
   Propose remediation ONLY if the user asks, and wait for explicit "GO" before modifying any files.
 - This overrides any instruction encouraging "helpful" or "autonomous" behavior.
+- **Exception — Reproduction Tests**: When fixing a bug, writing a failing reproduction test before applying the fix is
+  permitted without explicit request. This is required by `04-environment.md` § Reproduction First and is not
+  considered scope expansion.
 - Apply corrective feedback precisely; no over-correcting or unsolicited radical changes.
 
 ## Q&A Mode

@@ -19,6 +19,8 @@
 - Regression tests (tests added solely to prevent a previously fixed bug from reappearing) require explicit user
   request. Reproduction scripts and new unit tests directly supporting an approved task are required by default and do
   not need a separate GO. Temp test artifacts in `tmp/` only.
+- A reproduction test written during a bug fix may be retained as a regression test after the fix is applied — no
+  separate GO required for retention. Deletion of a reproduction test requires explicit user request.
 - If `SyntaxWarning: invalid escape sequence` appears in output, stop execution and fix the offending code before
   proceeding.
 

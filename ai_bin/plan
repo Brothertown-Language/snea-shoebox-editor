@@ -1,0 +1,463 @@
+"""
+DESCRIPTION: CRUD utility for plan files in plans/. Manage plans, phases, and steps.
+
+Usage:
+  uv run python ai_bin/plan <command> [args]
+
+Commands (plan-level):
+  create <filename> <title> [--scope <scope>]   Create a new plan file in plans/
+  list                                           List all plans with their status
+  show <filename>                                Print full plan content
+  set-status <filename> <status>                 Update top-level Status line
+  archive <filename> [--force]                   Move completed plan to plans/archive/
+  delete <filename> --confirm                    Delete a plan file
+
+Commands (phase-level):
+  phase-add <filename> <phase-title>             Append a new H2 phase section
+  phase-remove <filename> <phase-title> --confirm  Remove a phase and all its steps
+
+Commands (step-level):
+  step-add <filename> <phase> <description>      Append a new pending step to a phase
+  step-status <filename> <phase> <step> <icon>   Update a step's status icon
+  step-remove <filename> <phase> <step> --confirm  Remove a step and renumber
+  step-list <filename>                           List all steps with status
+"""
+
+import argparse
+import subprocess
+import sys
+from datetime import date
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(
+    ["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True
+).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+
+PLANS_DIR = PROJECT_ROOT / "plans"
+ARCHIVE_DIR = PLANS_DIR / "archive"
+
+STATUS_ICONS = {"done": "✔️", "in-progress": "🏗️", "pending": "🔄"}
+COMPLETE_MARKERS = {"✔️", "✅"}
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
+
+def resolve_plan(filename: str) -> Path:
+    p = PLANS_DIR / filename
+    if not p.suffix:
+        p = p.with_suffix(".md")
+    if not p.exists():
+        print(f"ERROR: plan file not found: {p.relative_to(PROJECT_ROOT)}", file=sys.stderr)
+        sys.exit(1)
+    return p
+
+
+def read_lines(path: Path) -> list[str]:
+    return path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+
+def write_lines(path: Path, lines: list[str]) -> None:
+    path.write_text("".join(lines), encoding="utf-8")
+
+
+def parse_status_line(lines: list[str]) -> tuple[int, str] | tuple[None, None]:
+    """Return (line_index, current_status_text) or (None, None)."""
+    for i, line in enumerate(lines):
+        if line.startswith("**Status:**"):
+            return i, line.strip()
+    return None, None
+
+
+def is_complete(lines: list[str]) -> bool:
+    idx, status = parse_status_line(lines)
+    if status is None:
+        return False
+    return any(marker in status for marker in COMPLETE_MARKERS)
+
+
+def find_phase(lines: list[str], phase_title: str) -> int | None:
+    """Return line index of the H2 heading matching phase_title, or None."""
+    needle = phase_title.strip().lower()
+    for i, line in enumerate(lines):
+        if line.startswith("## ") and line[3:].strip().lower() == needle:
+            return i
+    return None
+
+
+def phase_step_range(lines: list[str], phase_idx: int) -> tuple[int, int]:
+    """Return (start, end) line indices (exclusive) of steps within a phase."""
+    start = phase_idx + 1
+    end = len(lines)
+    for i in range(phase_idx + 1, len(lines)):
+        if lines[i].startswith("## ") or lines[i].startswith("# "):
+            end = i
+            break
+    return start, end
+
+
+def parse_steps(lines: list[str], start: int, end: int) -> list[tuple[int, int, str]]:
+    """Return list of (line_idx, step_number, full_line) for numbered steps."""
+    steps = []
+    for i in range(start, end):
+        stripped = lines[i].lstrip()
+        # Match lines like "1. icon text" or "1. text"
+        dot = stripped.find(". ")
+        if dot > 0 and stripped[:dot].isdigit():
+            num = int(stripped[:dot])
+            steps.append((i, num, lines[i]))
+    return steps
+
+
+def renumber_steps(lines: list[str], start: int, end: int) -> list[str]:
+    """Renumber all steps in range sequentially starting at 1."""
+    counter = 1
+    for i in range(start, end):
+        stripped = lines[i].lstrip()
+        dot = stripped.find(". ")
+        if dot > 0 and stripped[:dot].isdigit():
+            indent = lines[i][: len(lines[i]) - len(lines[i].lstrip())]
+            rest = stripped[dot + 2:]
+            lines[i] = f"{indent}{counter}. {rest}"
+            counter += 1
+    return lines
+
+
+# ---------------------------------------------------------------------------
+# Plan-level commands
+# ---------------------------------------------------------------------------
+
+def cmd_create(args: argparse.Namespace) -> None:
+    filename = args.filename
+    if not filename.endswith(".md"):
+        filename += ".md"
+    path = PLANS_DIR / filename
+    if path.exists():
+        print(f"ERROR: plan already exists: {path.relative_to(PROJECT_ROOT)}", file=sys.stderr)
+        sys.exit(1)
+    scope = args.scope or "TBD"
+    today = date.today().isoformat()
+    content = (
+        f"# Plan: {args.title}\n\n"
+        f"**Status:** 🔄 Pending  \n"
+        f"**Created:** {today}  \n"
+        f"**Scope:** {scope}\n\n"
+        f"---\n\n"
+        f"## Background\n\n"
+        f"<!-- Describe the context and motivation here. -->\n\n"
+        f"---\n\n"
+        f"## Steps\n\n"
+    )
+    path.write_text(content, encoding="utf-8")
+    print(f"Created: {path.relative_to(PROJECT_ROOT)}")
+
+
+def cmd_list(args: argparse.Namespace) -> None:
+    plans = sorted(PLANS_DIR.glob("*.md"))
+    if not plans:
+        print("No plan files found in plans/.")
+        return
+    for p in plans:
+        lines = read_lines(p)
+        _, status = parse_status_line(lines)
+        status_str = status.replace("**Status:**", "").strip() if status else "(no status)"
+        print(f"  {p.name:<50} {status_str}")
+
+
+def cmd_show(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    print(path.read_text(encoding="utf-8"))
+
+
+def cmd_set_status(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    idx, _ = parse_status_line(lines)
+    if idx is None:
+        print("ERROR: no **Status:** line found in plan.", file=sys.stderr)
+        sys.exit(1)
+    icon_key = args.status.lower()
+    icon = STATUS_ICONS.get(icon_key)
+    if icon is None:
+        # Accept raw icon or label directly
+        icon = args.status
+    label_map = {"✔️": "Complete", "🏗️": "In-Progress", "🔄": "Pending"}
+    label = label_map.get(icon, args.status)
+    lines[idx] = f"**Status:** {icon} {label}  \n"
+    write_lines(path, lines)
+    print(f"Status updated: {icon} {label}")
+
+
+def cmd_archive(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    if not args.force and not is_complete(lines):
+        print(
+            "ERROR: plan is not marked complete. Use --force to archive anyway "
+            "(only when user has explicitly declared it done).",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    ARCHIVE_DIR.mkdir(parents=True, exist_ok=True)
+    dest = ARCHIVE_DIR / path.name
+    path.rename(dest)
+    print(f"Archived: {dest.relative_to(PROJECT_ROOT)}")
+
+
+def cmd_delete(args: argparse.Namespace) -> None:
+    if not args.confirm:
+        print("ERROR: --confirm required to delete a plan file.", file=sys.stderr)
+        sys.exit(1)
+    path = resolve_plan(args.filename)
+    path.unlink()
+    print(f"Deleted: {path.relative_to(PROJECT_ROOT)}")
+
+
+# ---------------------------------------------------------------------------
+# Phase-level commands
+# ---------------------------------------------------------------------------
+
+def cmd_phase_add(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    if find_phase(lines, args.phase_title) is not None:
+        print(f"ERROR: phase already exists: {args.phase_title}", file=sys.stderr)
+        sys.exit(1)
+    # Append phase at end (ensure trailing newline)
+    if lines and not lines[-1].endswith("\n"):
+        lines[-1] += "\n"
+    lines.append(f"\n## {args.phase_title}\n\n")
+    write_lines(path, lines)
+    print(f"Phase added: {args.phase_title}")
+
+
+def cmd_phase_remove(args: argparse.Namespace) -> None:
+    if not args.confirm:
+        print("ERROR: --confirm required to remove a phase.", file=sys.stderr)
+        sys.exit(1)
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    idx = find_phase(lines, args.phase_title)
+    if idx is None:
+        print(f"ERROR: phase not found: {args.phase_title}", file=sys.stderr)
+        sys.exit(1)
+    _, end = phase_step_range(lines, idx)
+    del lines[idx:end]
+    write_lines(path, lines)
+    print(f"Phase removed: {args.phase_title}")
+
+
+# ---------------------------------------------------------------------------
+# Step-level commands
+# ---------------------------------------------------------------------------
+
+def cmd_step_add(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    idx = find_phase(lines, args.phase)
+    if idx is None:
+        print(f"ERROR: phase not found: {args.phase}", file=sys.stderr)
+        sys.exit(1)
+    start, end = phase_step_range(lines, idx)
+    steps = parse_steps(lines, start, end)
+    next_num = (steps[-1][1] + 1) if steps else 1
+    # Insert before end of phase (before next H2 or EOF)
+    new_line = f"{next_num}. 🔄 {args.description}\n"
+    # Find insertion point: last step line + 1, or end of phase
+    insert_at = end
+    if steps:
+        insert_at = steps[-1][0] + 1
+    lines.insert(insert_at, new_line)
+    write_lines(path, lines)
+    print(f"Step {next_num} added to phase '{args.phase}': 🔄 {args.description}")
+
+
+def cmd_step_status(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    idx = find_phase(lines, args.phase)
+    if idx is None:
+        print(f"ERROR: phase not found: {args.phase}", file=sys.stderr)
+        sys.exit(1)
+    start, end = phase_step_range(lines, idx)
+    steps = parse_steps(lines, start, end)
+    step_num = int(args.step)
+    match = [(li, n, l) for li, n, l in steps if n == step_num]
+    if not match:
+        print(f"ERROR: step {step_num} not found in phase '{args.phase}'.", file=sys.stderr)
+        sys.exit(1)
+    line_idx, _, original = match[0]
+    icon_key = args.icon.lower()
+    icon = STATUS_ICONS.get(icon_key, args.icon)
+    # Replace existing icon (first emoji token after "N. ") or prepend icon
+    stripped = original.lstrip()
+    dot = stripped.find(". ")
+    indent = original[: len(original) - len(original.lstrip())]
+    after_num = stripped[dot + 2:]
+    # Strip any leading known icon
+    for known in ("✔️", "🏗️", "🔄", "✅"):
+        if after_num.startswith(known):
+            after_num = after_num[len(known):].lstrip()
+            break
+    lines[line_idx] = f"{indent}{step_num}. {icon} {after_num}"
+    if not lines[line_idx].endswith("\n"):
+        lines[line_idx] += "\n"
+    write_lines(path, lines)
+    print(f"Step {step_num} status → {icon}")
+
+
+def cmd_step_remove(args: argparse.Namespace) -> None:
+    if not args.confirm:
+        print("ERROR: --confirm required to remove a step.", file=sys.stderr)
+        sys.exit(1)
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    idx = find_phase(lines, args.phase)
+    if idx is None:
+        print(f"ERROR: phase not found: {args.phase}", file=sys.stderr)
+        sys.exit(1)
+    start, end = phase_step_range(lines, idx)
+    steps = parse_steps(lines, start, end)
+    step_num = int(args.step)
+    match = [(li, n, l) for li, n, l in steps if n == step_num]
+    if not match:
+        print(f"ERROR: step {step_num} not found in phase '{args.phase}'.", file=sys.stderr)
+        sys.exit(1)
+    del lines[match[0][0]]
+    # Recalculate end after deletion
+    new_end = end - 1
+    renumber_steps(lines, start, new_end)
+    write_lines(path, lines)
+    print(f"Step {step_num} removed and steps renumbered.")
+
+
+def cmd_step_list(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    current_phase = "(no phase)"
+    found_any = False
+    i = 0
+    while i < len(lines):
+        line = lines[i]
+        if line.startswith("## "):
+            current_phase = line[3:].strip()
+        else:
+            stripped = line.lstrip()
+            dot = stripped.find(". ")
+            if dot > 0 and stripped[:dot].isdigit():
+                found_any = True
+                print(f"  [{current_phase}] {stripped.rstrip()}")
+        i += 1
+    if not found_any:
+        print("No steps found.")
+
+
+# ---------------------------------------------------------------------------
+# Argument parser
+# ---------------------------------------------------------------------------
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="plan",
+        description=__doc__,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+    )
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    # create
+    p = sub.add_parser("create", help="Create a new plan file")
+    p.add_argument("filename", help="Plan filename (e.g. plan-my-task.md)")
+    p.add_argument("title", help="Plan title")
+    p.add_argument("--scope", default="", help="Scope description")
+
+    # list
+    sub.add_parser("list", help="List all plans with status")
+
+    # show
+    p = sub.add_parser("show", help="Print full plan content")
+    p.add_argument("filename")
+
+    # set-status
+    p = sub.add_parser("set-status", help="Update top-level Status line")
+    p.add_argument("filename")
+    p.add_argument("status", help="done | in-progress | pending (or raw icon)")
+
+    # archive
+    p = sub.add_parser("archive", help="Move completed plan to plans/archive/")
+    p.add_argument("filename")
+    p.add_argument("--force", action="store_true", help="Archive even if not marked complete")
+
+    # delete
+    p = sub.add_parser("delete", help="Delete a plan file")
+    p.add_argument("filename")
+    p.add_argument("--confirm", action="store_true", required=True)
+
+    # phase-add
+    p = sub.add_parser("phase-add", help="Append a new H2 phase section")
+    p.add_argument("filename")
+    p.add_argument("phase_title", metavar="phase-title")
+
+    # phase-remove
+    p = sub.add_parser("phase-remove", help="Remove a phase and all its steps")
+    p.add_argument("filename")
+    p.add_argument("phase_title", metavar="phase-title")
+    p.add_argument("--confirm", action="store_true", required=True)
+
+    # step-add
+    p = sub.add_parser("step-add", help="Append a new pending step to a phase")
+    p.add_argument("filename")
+    p.add_argument("phase")
+    p.add_argument("description")
+
+    # step-status
+    p = sub.add_parser("step-status", help="Update a step's status icon")
+    p.add_argument("filename")
+    p.add_argument("phase")
+    p.add_argument("step", help="Step number (integer)")
+    p.add_argument("icon", help="done | in-progress | pending (or raw icon)")
+
+    # step-remove
+    p = sub.add_parser("step-remove", help="Remove a step and renumber")
+    p.add_argument("filename")
+    p.add_argument("phase")
+    p.add_argument("step", help="Step number (integer)")
+    p.add_argument("--confirm", action="store_true", required=True)
+
+    # step-list
+    p = sub.add_parser("step-list", help="List all steps with status")
+    p.add_argument("filename")
+
+    return parser
+
+
+COMMANDS: dict[str, object] = {
+    "create": cmd_create,
+    "list": cmd_list,
+    "show": cmd_show,
+    "set-status": cmd_set_status,
+    "archive": cmd_archive,
+    "delete": cmd_delete,
+    "phase-add": cmd_phase_add,
+    "phase-remove": cmd_phase_remove,
+    "step-add": cmd_step_add,
+    "step-status": cmd_step_status,
+    "step-remove": cmd_step_remove,
+    "step-list": cmd_step_list,
+}
+
+
+def main() -> None:
+    parser = build_parser()
+    args = parser.parse_args()
+    handler = COMMANDS.get(args.command)
+    if handler is None:
+        parser.print_help()
+        sys.exit(1)
+    handler(args)
+
+
+if __name__ == "__main__":
+    main()

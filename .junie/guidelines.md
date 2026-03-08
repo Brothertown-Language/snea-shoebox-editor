@@ -50,6 +50,8 @@ Topic guidelines in `.junie/` (load root always; load topics as relevant). Paths
 | `$project_root/plans/plan_standards.md` | Plan consistency, checklists, iconography      |
 | `personas/guideline-auditor.md`     | LLM guideline auditing persona                     |
 
+> **Persona activation**: Personas are behavioral overrides. When a persona file is loaded, adopt its Operating Protocol for the duration of the session. Read persona files via `uv run python ai_bin/persona` (create this utility if it does not exist).
+
 ## Memory
 
 - Maintain `.junie/memory.md` for internal state. Max 40 lines; structured `key: value` only.
@@ -170,8 +172,11 @@ Topic guidelines in `.junie/` (load root always; load topics as relevant). Paths
    to the user as a brief bulleted summary (tool name + one-line description — do not reproduce raw
    output verbatim). Load guidelines via `uv run python ai_bin/guidelines`; session state via
    `uv run python ai_bin/memory list`; and violation history via `uv run python ai_bin/violation-log`.
-2. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
-3. **UPDATE** `memory.md` with key decisions.
-4. **UPDATE** `.junie/VIOLATION_LOG.jsonl` immediately upon any guideline violation using
+2. **PERSONA** (if requested): Create `ai_bin/persona` if it does not exist (per `03-tool-usage.md` §
+   `.junie/ File Access`), then load the persona via `uv run python ai_bin/persona <name>` and adopt its
+   Operating Protocol for the duration of the session.
+3. **ACKNOWLEDGE** by stating "Reviewing AI Guidelines" in your first response.
+4. **UPDATE** `memory.md` with key decisions.
+5. **UPDATE** `.junie/VIOLATION_LOG.jsonl` immediately upon any guideline violation using
    `uv run python ai_bin/violation-log add --rule "file § section" --violation "..." --root-cause "..." --correction "..."`.
    Each entry MUST include: date (auto), rule (file + section), violation, root_cause, correction. Never edit the file directly.

@@ -9,6 +9,8 @@
 
 - Agent MUST NOT proactively create commit messages, commit scripts, staging advice, or semantic commit groupings. Only
   provide these when explicitly asked.
+- **Explicit request defined**: A commit request requires the user to use the word "commit" or "stage" directly.
+  Phrases like "wrap up", "finalize", "ship it", or "close this out" are NOT commit requests.
 - When requested: may create commit message files (e.g., `commit.msg`) and identify all relevant side-effect changes (
   e.g., `uv.lock`, auto-updated configs). Flag untracked in-scope files.
 - When requested: re-run discovery (`git status`, `git diff`, `git diff --cached`) before advising — don't rely on

@@ -24,8 +24,8 @@
 - No `stty` (hangs non-interactive sessions).
 - No destructive checkouts (`git checkout` files / discard uncommitted changes).
 - No embedded scripts via heredocs — use standalone script files.
-- No multi-statement shell one-liners or inline script blobs (`python -c`, `ruby -e`). If a command exceeds a single
-  simple statement, create a script in `tmp/` and execute it.
+- No multi-statement shell one-liners or inline script blobs in any form (e.g., `python -c`, `uv run python -c`,
+  `ruby -e`, `node -e`). If a command exceeds a single simple statement, create a script in `tmp/` and execute it.
 - **One clear command per invocation.** Each terminal call must be a single, human-parseable command. A short `&&`
   guard (e.g., `mkdir -p tmp && uv run python tmp/script.py`) is acceptable when the second command depends on the
   first. No subshells, pipes-of-pipes, process substitution, or multi-stage chains. If the task requires more, create a
@@ -116,12 +116,15 @@ is permitted and required. Always use the designated `ai_bin/` utility:
   - **EXCLUSIVE ACCESS**: `uv run python ai_bin/guidelines` is the ONLY permitted method to read guideline files. Shell `cat`, `for` loops, `open` tool, or any other mechanism on guideline files is a CRITICAL VIOLATION — no exceptions.
 - `memory.md` → `uv run python ai_bin/memory`
 - `VIOLATION_LOG.jsonl` → `uv run python ai_bin/violation-log`
-- Any other `.junie/` file or file type not covered above: the agent MUST first create an
+- `personas/` → `uv run python ai_bin/persona <name>` — prints the full content of the named persona file to
+  stdout. Supports `--list` to enumerate available personas. Create this utility if it does not exist before
+  accessing any persona file.
+- Any other `.junie/` file or file type not covered above: the agent MUST immediately create an
   appropriate `ai_bin/` utility for that file type or subject area (following `09-scripting.md`
-  conventions), then use it exclusively for all access. Direct reads or writes remain forbidden
-  even when no utility yet exists. Once created, the new utility becomes the EXCLUSIVE access
-  method for that file type — direct reads or writes via any other mechanism remain a CRITICAL
-  VIOLATION.
+  conventions) before performing any access. "Immediately" means in the same session, before
+  the first read or write of that file type — not deferred to a later session. Once created,
+  the new utility becomes the EXCLUSIVE access method for that file type — direct reads or
+  writes via any other mechanism remain a CRITICAL VIOLATION.
 
 ## `ai_bin/` Agent Tools
 

@@ -14,9 +14,10 @@
 - **DRY & Modularity**: No duplicated logic. Break into discrete, focused methods — no monolithic blocks.
 - **Single Responsibility**: Every method performs exactly one task. Decompose long procedural blocks.
 - **No Re-exports**: Don't add re-exports in `__init__.py` via `__all__`. Import from concrete module paths. Existing
-  re-exports are assumed approved — do not remove them without explicit instruction. When editing an `__init__.py` for
-  another purpose, leave existing `__all__` entries untouched. If a new re-export is required, it must be explicitly
-  requested by the user before being added to `__all__`.
+  re-exports (those present in the file before the current task began) are assumed approved — do not remove them
+  without explicit instruction. Re-exports added by the agent in the current session are not "existing" and must be
+  explicitly requested. When editing an `__init__.py` for another purpose, leave existing `__all__` entries untouched.
+  If a new re-export is required, it must be explicitly requested by the user before being added to `__all__`.
 
 ## Modern Python
 

@@ -26,7 +26,7 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 ## Archiving
 
 - Completed plans MUST be moved to `plans/archive/` using `mv plans/plan-name.md plans/archive/plan-name.md`.
-- A plan is **completed** when all authorized steps have been executed and confirmed, or when the user explicitly declares it done.
+- A plan is **completed** when all authorized steps have been executed and confirmed, or when the user explicitly declares it done. A plan that is halted mid-execution without user declaration of completion is NOT considered completed and must NOT be archived.
 - Archiving is exempt from the approval gate when the user has explicitly confirmed completion or all authorized steps are done in the current session.
 - Perform archiving in the same session as the final implementation step, immediately before calling `submit`.
 
