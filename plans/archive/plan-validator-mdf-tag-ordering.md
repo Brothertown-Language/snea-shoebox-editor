@@ -1,7 +1,7 @@
 # Plan: Update Validator to Use Recommended MDF Tag Ordering
 
-**Status:** ✅ Complete  
-**Created:** 2026-03-04  
+**Status:** ✅ Complete
+**Created:** 2026-03-04
 **Scope:** `src/mdf/validator.py` only
 
 ---
@@ -192,14 +192,15 @@ Remove this entry from `LEGACY_TAG_MAPPING`:
 
 ---
 
-## Checklist
+## Steps
 
-- [ ] **Step 1**: Replace `REQUIRED_HIERARCHY` with MDF-standard structural anchors
-- [ ] **Step 2**: Update class docstring
-- [ ] **Step 3**: Introduce `BASIC_TAGS` and use it for missing-tags diagnostic
-- [ ] **Step 4**: Remove `\ln` → `\so` from `LEGACY_TAG_MAPPING` — `\ln` is the MDF lexical-function-national-gloss tag
-- [ ] **Tests**: Run existing validator tests; update or add tests to cover new hierarchy
-- [ ] **Verify**: Confirm no false-positive "out of order" suggestions for `\so` after `\ge`
+1. ✔️ Replace `REQUIRED_HIERARCHY` with MDF-standard structural anchors
+2. ✔️ Update class docstring
+3. ✔️ Introduce `BASIC_TAGS` and use it for missing-tags diagnostic
+4. ✔️ Remove `\ln` → `\so` from `LEGACY_TAG_MAPPING`
+5. ✔️ Run existing validator tests; update or add tests to cover new hierarchy
+6. ✔️ Confirm no false-positive "out of order" suggestions for `\so` after `\ge`
+7. ✔️ Plan updated to reflect actual progress — all steps complete.
 
 ---
 

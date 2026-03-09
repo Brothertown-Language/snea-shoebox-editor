@@ -8,6 +8,8 @@
   The variable is active when present, regardless of value.
   Correct: `JUNIE_PRIVATE_DB=true uv run python tmp/my_script.py`
   Incorrect: `uv run python tmp/my_script.py`
+  **Exception**: Read-only diagnostics against the local dev DB (`tmp/local_db`) must NOT set
+  `JUNIE_PRIVATE_DB`. See `03-tool-usage.md` § Database Diagnostics.
 
 ## Test Schema Isolation
 

@@ -827,15 +827,28 @@ class LinguisticService:
         Fetch revision history for a record.
         """
         from src.database.models.workflow import EditHistory
+        from sqlalchemy import func
         with get_session() as session:
-            history = session.query(EditHistory).filter(EditHistory.record_id == record_id).order_by(EditHistory.timestamp.desc()).all()
+            max_version_subq = (
+                session.query(func.max(EditHistory.version))
+                .filter(EditHistory.record_id == record_id)
+                .scalar_subquery()
+            )
+            history = (
+                session.query(EditHistory)
+                .filter(EditHistory.record_id == record_id)
+                .filter(EditHistory.version != max_version_subq)
+                .order_by(EditHistory.timestamp.desc())
+                .all()
+            )
             return [
                 {
                     "id": h.id,
                     "user_email": h.user_email,
                     "version": h.version,
                     "change_summary": h.change_summary,
-                    "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S") if h.timestamp else "N/A"
+                    "timestamp": h.timestamp.strftime("%Y-%m-%d %H:%M:%S") if h.timestamp else "N/A",
+                    "current_data": h.current_data,
                 }
                 for h in history
             ]

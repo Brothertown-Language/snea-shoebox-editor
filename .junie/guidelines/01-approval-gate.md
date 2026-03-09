@@ -11,7 +11,7 @@
   phases (e.g., "Phase 1", "Phase 2"); otherwise it is **flat**. **After completing the authorized scope, HALT
   immediately — do not proceed to the next phase or item.**
 - GO exceptions: `tmp/` for non-executable scratch files (e.g., `.md`, `.txt`, `.json` data dumps) — any `.py` or `.sh` file in `tmp/` that performs writes, DB operations, or system calls requires GO regardless of location. `plans/` for plan `.md` files only. Prefer `plans/` for plans. The `plans/`
-  GO exception covers: (1) creating or updating plan documents (`.md` files describing proposed work); (2)
+  GO exception covers: (1) creating or updating plan documents (`.md` files describing proposed work) — **no REVIEW PLAN and no explicit GO is required to create or update `.md` files in `plans/`**; (2)
   synchronization updates to `plans/` that reflect code reality per the Drift Protocol in `10-authority-source.md`;
   (3) observation files recording factual bug/improvement discoveries per the Discovery Protocol in `02-scope-autonomy.md` — these contain no proposed fix and require no GO.
   It does not exempt code, scripts, data files, or any other artifact placed in `plans/` — even when the request is

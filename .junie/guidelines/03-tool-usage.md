@@ -25,6 +25,15 @@
 - If you find yourself about to type a `/`-prefixed path, STOP — rewrite it as a relative path first.
 - **PRE-COMMAND SELF-CHECK (mandatory before every `bash` tool call)**: Does the command start with `cd`? Does it contain an absolute path (starting with `/`)? If yes to either — STOP immediately and rewrite. No exceptions, no "just this once."
 
+## Database Diagnostics
+
+- **Local Dev DB Diagnostics**: When performing read-only analysis or diagnostics against the
+  local development database (`localhost:5432/postgres`), do NOT set `JUNIE_PRIVATE_DB`.
+  Setting `JUNIE_PRIVATE_DB=true` routes connections to Junie's private isolated pgserver
+  instance (used for test isolation), which is separate from the local dev db and will appear
+  empty. Only set `JUNIE_PRIVATE_DB=true` for write operations (inserts, updates, deletes,
+  migrations) that must be isolated from the local dev db.
+
 ## Command Restrictions
 
 - No `stty` (hangs non-interactive sessions).

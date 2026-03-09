@@ -1,5 +1,7 @@
 # REVIEW PLAN: Record Match HM/NT Scoring Fix
 
+**Status:** 🔄 Pending
+
 ## Problem
 
 `_score_candidate` in `upload_service.py` returns `(hm_match, ge_score, nt_score)`.
@@ -72,7 +74,8 @@ After fix, run the full `TestMatchAndCommitOperations` suite to confirm no regre
 
 ## Steps
 
-1. Locate where `candidate_mdf_map` is built in `upload_service.py`
-2. Extend its query to cover all records in the source (not just exact-lx matches)
-3. Run `test_suggest_matches_base_form_hm_ge_nt_tiebreak` — expect PASS
-4. Run full `TestMatchAndCommitOperations` — expect all pass
+1. 🔄 Locate where `candidate_mdf_map` is built in `upload_service.py`
+2. 🔄 Extend its query to cover all records in the source (not just exact-lx matches)
+3. 🔄 Run `test_suggest_matches_base_form_hm_ge_nt_tiebreak` — expect PASS
+4. 🔄 Run full `TestMatchAndCommitOperations` — expect all pass
+5. 🔄 Update this plan to reflect actual progress and declare completion if all steps are done

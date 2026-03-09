@@ -6,7 +6,7 @@
 - `🏗️` In-Progress
 - `🔄` Pending
 
-Update the plan file on each step completion. Plan files in `plans/` are exempt from the approval gate per GO exceptions in `guidelines/01-approval-gate.md`.
+Update the plan file on each step completion. Plan files in `plans/` are exempt from the approval gate — no REVIEW PLAN and no explicit GO is required to create or update `.md` files in `plans/`. See `guidelines/01-approval-gate.md` for full GO exception rules.
 
 ## Numbering
 
@@ -17,6 +17,8 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 
 - Plans must address WHAT + WHY as an overview. No large raw code blocks.
 - End plan deliveries with declarative statements of fact. No "Please review and let me know." No framing reports as questions.
+- Plans must include a final step to update the plan to reflect actual progress using direct code inspection and tests as the measure, and declare completion if all steps are done.
+- Plans must be archived using `uv run python ai_bin/plan archive <filename>` when completed.
 
 ## Formatting
 

@@ -14,7 +14,7 @@ def records():
     from src.services.identity_service import IdentityService
     from src.services.preference_service import PreferenceService
     from src.services.navigation_service import NavigationService
-    from src.frontend.ui_utils import render_mdf_block, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error, render_back_to_main_button
+    from src.frontend.ui_utils import render_mdf_block, compute_mdf_line_diffs, apply_standard_layout_css, hide_sidebar_nav, handle_ui_error, render_back_to_main_button
     from src.mdf.validator import MDFValidator
     from src.mdf.parser import format_mdf_record
     from src.logging_config import get_logger
@@ -622,9 +622,18 @@ def records():
                     if not history:
                         st.info("No revision history available.")
                     else:
+                        is_editing = st.session_state.global_edit_mode or record_id in st.session_state.local_edits
                         for entry in history:
                             st.markdown(f"**v{entry['version']}** - {entry['user_email']} at {entry['timestamp']}")
                             st.caption(f"Summary: {entry['change_summary']}")
+                            if entry.get('current_data'):
+                                hist_diags, _ = compute_mdf_line_diffs(entry['current_data'], mdf_data)
+                                render_mdf_block(entry['current_data'], diagnostics=hist_diags, key=f"hist_{record_id}_{entry['id']}")
+                            if is_editing and entry.get('current_data'):
+                                if st.button("↩ Rollback to this version", key=f"rollback_{record_id}_{entry['id']}"):
+                                    st.session_state.pending_edits[record_id] = entry['current_data']
+                                    st.session_state.local_edits.add(record_id)
+                                    st.rerun()
                             if entry != history[-1]:
                                 st.divider()
 

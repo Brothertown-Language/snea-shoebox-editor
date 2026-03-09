@@ -16,7 +16,7 @@ def get_recent_sessions():
                    min(full_name) as full_name
             FROM (
                 SELECT eh.session_id, eh.timestamp, eh.user_email,
-                       s.name as source_name, u.full_name
+                       eh.record_id, s.name as source_name, u.full_name
                 FROM edit_history eh
                 JOIN records r ON r.id = eh.record_id
                 JOIN sources s ON s.id = r.source_id
@@ -25,8 +25,8 @@ def get_recent_sessions():
             ) AS history
             WHERE session_id IS NOT NULL
             GROUP BY session_id
-            ORDER BY earliest_ts DESC
-            LIMIT 50;
+            HAVING count(DISTINCT record_id) > 1
+            ORDER BY earliest_ts DESC;
         """)
         
         raw_sessions = session.execute(sessions_query).all()
