@@ -32,6 +32,12 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 - Archiving is exempt from the approval gate when the user has explicitly confirmed completion or all authorized steps are done in the current session.
 - Perform archiving in the same session as the final implementation step, immediately before calling `submit`.
 
+## Pre-Submit Checklist
+Before calling `submit` in any session where plans were touched or completed:
+- Scan `plans/` for any plan whose status is ✅ Complete and that has not yet been archived.
+- Archive each such plan via `uv run python ai_bin/plan archive <filename>` before calling `submit`.
+- Failure to archive a completed plan before `submit` is a guideline violation.
+
 ## Delivery
 
 - All REVIEW PLANs MUST be written to a `plans/` file (e.g., `plans/plan-<slug>.md`) before delivery.

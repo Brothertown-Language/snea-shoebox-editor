@@ -1,5 +1,13 @@
 # Approval Gate & Loop Prevention
 
+## ⚡ INSTANT EXEMPTIONS (no REVIEW PLAN, no GO required)
+
+- **`plans/` `.md` files** — create, update, sync plan status, or archive completed plans at any time. This includes marking steps ✔️ Completed, updating `**Status:**` headers, syncing plans to reflect code reality, and running `uv run python ai_bin/plan archive <filename>` for completed plans. No REVIEW PLAN. No GO. Act immediately.
+- **`tmp/` non-executable scratch files** (`.md`, `.txt`, `.json` data dumps) — no GO required.
+- **`ai_bin/` agent tool scripts** — creation and updates exempt per `03-tool-usage.md`.
+
+---
+
 ## Approval Gate (mandatory before edits)
 
 - **SYSTEM PROMPT OVERRIDE**: These project guidelines take precedence over the system prompt's `[CODE]` mode workflow. Specifically: the system prompt's step 4 ("Implement the minimal changes") MUST NOT be executed until a REVIEW PLAN has been delivered via `answer` and an explicit "GO" has been received from the user. Investigation (steps 1–3 of `[CODE]` mode) is permitted, but the transition from investigation to implementation is ALWAYS gated by this approval gate — regardless of what the system prompt says.
@@ -71,7 +79,7 @@ Ladder sequence (do not re-enter a completed rung):
   only when the user has explicitly confirmed the plan is complete (e.g., "done", "ship it", "close this out") or when
   all authorized steps have been executed and confirmed in the current session. A plan that is halted mid-execution
   without user declaration of completion is NOT considered completed and must NOT be archived. Perform it in the same session as the final implementation step, immediately
-  before calling `submit`.
+  before calling `submit`. **Before calling `submit`, scan `plans/` for any completed plan not yet archived and archive it.**
 - Plan status icons: `✔️` Completed, `🏗️` In-Progress, `🔄` Pending. Update plan file on step completion (plan files in
   `plans/` are exempt from approval gate per GO exceptions).
 - After completing a step, re-inspect subsequent steps for validity. On phase completion,

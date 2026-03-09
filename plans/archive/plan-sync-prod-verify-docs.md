@@ -1,5 +1,5 @@
 # Plan: Verify Sync Script Table Coverage + Add Pydoc/Comments
-## Status: 🔄 Pending
+## Status: ✅ Complete
 
 ## Overview
 **WHAT**: Verify `scripts/sync_prod_to_local.py` syncs ALL tables, then add module-level docstring,
@@ -25,10 +25,10 @@ No logic changes — documentation only.
 
 ## Steps
 
-1. 🔄 Add module-level docstring immediately after the copyright line: state the script's purpose, list all 13 currently-synced tables (maintenance reference snapshot), document the coverage mechanism (`Base.metadata.sorted_tables`), and state the maintenance contract (new ORM tables auto-covered; raw-SQL tables outside ORM must be added explicitly).
-2. 🔄 Add/improve function docstrings: `sync_data()` (purpose, FK-safe ordering, maintenance contract); verify `load_secrets()`, `_ensure_pgserver()`, and `log_message()` docstrings are accurate.
-3. 🔄 Add inline comments at key decision points: `tables = Base.metadata.sorted_tables` (auto-discovery + ORM registration dependency); `import src.database.models` (why critical); delete loop (reverse-order FK safety); insert loop (forward-order FK safety).
-4. 🔄 Update this plan to reflect actual progress and declare completion if all steps are done.
+1. ✅ Add module-level docstring immediately after the copyright line: state the script's purpose, list all 13 currently-synced tables (maintenance reference snapshot), document the coverage mechanism (`Base.metadata.sorted_tables`), and state the maintenance contract (new ORM tables auto-covered; raw-SQL tables outside ORM must be added explicitly).
+2. ✅ Add/improve function docstrings: `sync_data()` (purpose, FK-safe ordering, maintenance contract); verify `load_secrets()`, `_ensure_pgserver()`, and `log_message()` docstrings are accurate.
+3. ✅ Add inline comments at key decision points: `tables = Base.metadata.sorted_tables` (auto-discovery + ORM registration dependency); `import src.database.models` (why critical); delete loop (reverse-order FK safety); insert loop (forward-order FK safety).
+4. ✅ Update this plan to reflect actual progress and declare completion if all steps are done.
 
 ## Non-Scope
 - No logic changes

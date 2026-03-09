@@ -1,4 +1,36 @@
 # Copyright (c) 2026 Brothertown Language
+"""
+sync_prod_to_local.py — Production-to-local database sync script.
+
+Purpose
+-------
+Copies all data from the production PostgreSQL database (Aiven) into the local
+development database (pgserver), replacing local data entirely. Intended for
+developer onboarding and local debugging against real production data.
+
+Currently-synced tables (maintenance reference snapshot as of 2026-03-09, 13 tables)
+-------------------------------------------------------------------------------------
+  edit_history, iso_639_3, languages, matchup_queue, permissions,
+  record_languages, records, schema_version, search_entries, sources,
+  user_activity_log, user_preferences, users
+
+Coverage mechanism
+------------------
+Table discovery uses ``Base.metadata.sorted_tables``, which performs a
+topological sort of all SQLAlchemy ORM-registered tables, respecting foreign-key
+dependencies. Tables are registered automatically when their model classes are
+imported — see the ``import src.database.models`` statement below.
+
+Maintenance contract
+--------------------
+- **New ORM table**: add the model class under ``src/database/models/``; it will
+  be imported via ``src.database.models`` and covered automatically — no changes
+  to this script are required.
+- **Raw-SQL table** (created outside the ORM / Base.metadata): it will NOT be
+  discovered automatically. You MUST add explicit sync logic for it here.
+- **Removed table**: verify ``reset_all_sequences()`` still behaves correctly if
+  the table had an integer PK named ``id``.
+"""
 import os
 import sys
 import traceback
@@ -40,32 +72,33 @@ def log_message(msg, to_console=True, pbar=None):
 
 
 from src.database.base import Base
-import src.database.models  # Import models to register them with Base.metadata
+# Critical: this import triggers all ORM model class definitions, which registers
+# every table with Base.metadata. Without it, sorted_tables would be empty and
+# no data would be synced.
+import src.database.models
 
 
-def _ensure_pgserver(local_url: str) -> str:
-    """Start pgserver for local dev if needed and return the connection URI to use."""
-    # Only auto-start for local/socket connections, not remote TCP URLs
-    if local_url and "@" in local_url and not local_url.startswith("postgresql://postgres:@localhost"):
-        return local_url
+def _ensure_pgserver() -> str:
+    """Start pgserver for local dev and return the TCP connection URI.
 
+    Delegates to _start_pgserver_core() in src.database.connection — the
+    single authoritative implementation shared with the Streamlit app.
+    Always returns a TCP URI (postgresql://postgres:@localhost:5432/postgres)
+    for non-Junie contexts, which is what this script requires.
+    """
     try:
-        import pgserver
-        is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
-        db_dir = "junie_db" if is_junie else "local_db"
-        db_path = project_root / "tmp" / db_dir
-        db_path.mkdir(parents=True, exist_ok=True)
+        from src.database.connection import _get_local_db_path, _start_pgserver_core
+        db_path = _get_local_db_path()
         log_message(f"Starting pgserver (db_path={db_path})...")
-        server = pgserver.get_server(str(db_path))
-        uri = server.get_uri()
+        uri = _start_pgserver_core(db_path)
         log_message(f"pgserver started: {uri.split('@')[-1]}")
         return uri
     except ImportError:
         log_message("pgserver not installed — skipping auto-start.")
-        return local_url
+        return "postgresql://postgres:@localhost:5432/postgres"
     except Exception as e:
         log_message(f"Warning: pgserver auto-start failed: {e}")
-        return local_url
+        return "postgresql://postgres:@localhost:5432/postgres"
 
 
 def load_secrets():
@@ -103,6 +136,27 @@ def load_secrets():
 
 
 def sync_data():
+    """
+    Orchestrate a full production-to-local data sync.
+
+    Steps
+    -----
+    1. Load connection secrets (env vars → secrets files → fallback).
+    2. Ensure the local pgserver instance is running.
+    3. Create any missing local schema objects via ``Base.metadata.create_all``.
+    4. Delete all local rows in **reverse** FK-dependency order (children before
+       parents) to avoid foreign-key constraint violations.
+    5. Insert all production rows in **forward** FK-dependency order (parents
+       before children).
+    6. Reset all integer-PK sequences so subsequent local INSERTs do not collide
+       with the copied row IDs.
+
+    Maintenance contract
+    --------------------
+    Table coverage is ORM-driven (``Base.metadata.sorted_tables``). New ORM
+    tables are covered automatically. Raw-SQL tables outside the ORM must be
+    handled explicitly — see module docstring.
+    """
     # Start fresh log for each run
     if LOG_FILE.exists():
         LOG_FILE.unlink()
@@ -114,7 +168,7 @@ def sync_data():
         log_message("Error: Production DATABASE_URL not found in environment or .streamlit/secrets.toml.production")
         sys.exit(1)
 
-    local_url = _ensure_pgserver(local_url)
+    local_url = _ensure_pgserver()
 
     log_message(f"Connecting to Production: {prod_url.split('@')[-1]}")
     # Scrub local path if it's a socket-based URI for display
@@ -133,7 +187,10 @@ def sync_data():
     Base.metadata.create_all(local_engine)
 
     # 2. Determine Table Order (to respect Foreign Keys)
-    # sorted_tables uses topological sort based on ForeignKey relationships
+    # sorted_tables performs a topological sort over all ORM-registered tables
+    # using their declared ForeignKey relationships. This guarantees parents come
+    # before children on insert and children come before parents on delete.
+    # ORM registration depends on the `import src.database.models` above.
     tables = Base.metadata.sorted_tables
 
     prod_session_factory = sessionmaker(bind=prod_engine)
@@ -143,14 +200,17 @@ def sync_data():
         with prod_session_factory() as prod_session, local_session_factory() as local_session:
             log_message("Starting data sync...")
 
-            # 2. Clear local data in reverse dependency order to respect FKs
+            # 2. Clear local data in reverse dependency order to respect FKs.
+            # Reversing the topological sort deletes children before parents,
+            # preventing FK constraint violations during DELETE.
             log_message("Clearing local data (reverse order)...")
             for table in reversed(tables):
                 log_message(f"Deleting table: {table.name}", to_console=False)
                 local_session.execute(table.delete())
             local_session.commit()
 
-            # 3. Iterate in dependency order for insertion
+            # 3. Iterate in forward dependency order for insertion.
+            # Parents are inserted before children, satisfying FK constraints.
             pbar = tqdm(tables, desc="Syncing tables")
             for table in pbar:
                 pbar.set_postfix(table=table.name)

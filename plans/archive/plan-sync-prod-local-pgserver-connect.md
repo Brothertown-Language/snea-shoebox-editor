@@ -1,4 +1,5 @@
 # Plan: Fix sync_prod_to_local.py — Use Canonical pgserver DB Path
+**Status:** ✅ Complete
 
 ## Problem
 
@@ -12,7 +13,7 @@ reflected in the sync script, causing connection failures.
 
 **1 step (flat plan).**
 
-### Step 1 — Replace inline db path logic with `_get_local_db_path` import 🔄 Pending
+### Step 1 — Replace inline db path logic with `_get_local_db_path` import ✔️ Completed
 
 **File:** `scripts/sync_prod_to_local.py`
 

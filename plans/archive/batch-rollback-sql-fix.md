@@ -1,6 +1,6 @@
 # Plan: Fix record_id Undefined Column in HAVING Clause
 
-**Status:** 🔄 Pending
+**Status:** ✅ Complete
 **Created:** 2026-03-09
 
 ---
@@ -21,7 +21,7 @@
 
 ## Steps
 
-1. 🔄 Identify the exact column reference error in the HAVING clause
-2. 🔄 Fix the query so `record_id` is correctly scoped (alias or move reference into subquery)
-3. 🔄 Verify fix via `tmp/` script against local DB
-4. 🔄 Update this plan to reflect actual progress and declare completion if all steps are done
+1. ✔️ Identify the exact column reference error in the HAVING clause
+2. ✔️ Fix the query so `record_id` is correctly scoped (alias or move reference into subquery)
+3. ✔️ Verify fix via `tmp/` script against local DB
+4. ✔️ Update this plan to reflect actual progress and declare completion if all steps are done

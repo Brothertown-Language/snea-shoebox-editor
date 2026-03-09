@@ -1,6 +1,6 @@
 # Plan: Revision History — Exclude Current Live Version (v2)
 
-**Status:** 🔄 Pending
+**Status:** ✅ Complete
 
 ## Overview
 
@@ -27,12 +27,12 @@ max history version. The max-version history entry is always the current snapsho
 ## Steps
 
 ### Phase 1 — Service layer
-1. 🔄 In `get_edit_history`, replace the join+filter on `Record.current_version` with a subquery:
+1. ✔️ In `get_edit_history`, replace the join+filter on `Record.current_version` with a subquery:
    `max_version_subq = session.query(func.max(EditHistory.version)).filter(EditHistory.record_id == record_id).scalar_subquery()`
    then add `.filter(EditHistory.version != max_version_subq)`.
 
 ### Phase 2 — Completion
-1. 🔄 Update this plan to reflect actual progress and declare completion if all steps are done.
+1. ✔️ Update this plan to reflect actual progress and declare completion if all steps are done.
 
 ## Out of Scope
 - No UI changes.

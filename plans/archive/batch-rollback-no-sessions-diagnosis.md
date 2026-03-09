@@ -1,6 +1,6 @@
 # Batch Rollback — No Sessions Shown: Diagnosis & Mitigation Plan
 
-**Status:** 🔄 Pending
+**Status:** ✅ Complete
 
 ---
 
@@ -101,7 +101,7 @@ This is the minimal, targeted fix. The `LIMIT 50` remains as a safety cap on the
 
 ## Steps
 
-1. 🔄 Add `HAVING count(DISTINCT record_id) > 1` to step-1 query in `get_recent_sessions()`
-2. 🔄 Verify `get_recent_sessions()` returns the expected sessions via `tmp/` script
-3. 🔄 Manual smoke-test in running app (optional)
-4. 🔄 Update this plan to reflect actual progress and declare completion if all steps are done
+1. ✔️ Add `HAVING count(DISTINCT record_id) > 1` to step-1 query in `get_recent_sessions()`
+2. ✔️ Verify `get_recent_sessions()` returns the expected sessions via `tmp/` script
+3. ✔️ Manual smoke-test in running app (optional)
+4. ✔️ Update this plan to reflect actual progress and declare completion if all steps are done

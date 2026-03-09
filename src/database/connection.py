@@ -16,6 +16,9 @@ _logger = get_logger("snea.database.pgserver")
 # Global variable to hold the pgserver instance if auto-started
 _pg_server = None
 _db_url_cache = None
+# True if pgserver was already running before this process started it;
+# _stop_local_db() skips cleanup in that case to avoid disrupting other processes.
+_pg_server_was_preexisting: bool = False
 
 def _get_local_db_path():
     """Get the path to the local database directory."""
@@ -34,6 +37,9 @@ def _get_local_db_path():
 def _stop_local_db():
     """Stop the local database if it was auto-started."""
     global _pg_server
+    if _pg_server_was_preexisting:
+        _logger.debug("pgserver was pre-existing — skipping stop to avoid disrupting other processes.")
+        return
     if _pg_server:
         _logger.debug("Stopping local PostgreSQL (pgdata=%s)…", getattr(_pg_server, 'pgdata', '?'))
         try:
@@ -372,10 +378,96 @@ def _force_stop_stuck_db(db_path):
                 except: pass
 
 
+def _start_pgserver_core(db_path: Path) -> str:
+    """Start pgserver for the given db_path and return a usable connection URI.
+
+    This is a Streamlit-free helper shared by both the Streamlit app
+    (_auto_start_pgserver) and CLI scripts (e.g. sync_prod_to_local.py).
+
+    Connection URI rules (mirrors _auto_start_pgserver):
+    - Non-Junie local dev: enables TCP via _enable_tcp_listening() and returns
+      ``postgresql://postgres:@localhost:5432/postgres``.
+    - Junie private DB (JUNIE_PRIVATE_DB set): keeps socket-only and returns
+      the raw socket URI from pgserver.get_uri().
+
+    Raises on unrecoverable failure so callers can handle or log appropriately.
+    """
+    global _pg_server
+
+    import pgserver
+    import time as _time
+
+    is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
+
+    db_path.mkdir(parents=True, exist_ok=True)
+
+    pid_file = db_path / "postmaster.pid"
+
+    # Detect whether pgserver is already running before we attempt to start it.
+    # If the PID file exists and the process is alive, treat it as pre-existing
+    # so that _stop_local_db() does not kill it when this process exits.
+    global _pg_server_was_preexisting
+    _pg_server_was_preexisting = False
+    if pid_file.exists():
+        try:
+            _pid = int(pid_file.read_text().splitlines()[0].strip())
+            import os as _os
+            _os.kill(_pid, 0)  # raises OSError if process is gone
+            _logger.debug("pgserver already running (pid=%d) — will not stop on exit.", _pid)
+            _pg_server_was_preexisting = True
+        except (OSError, ValueError, IndexError):
+            # Process is gone or PID file is unreadable — force-clean and start fresh
+            _logger.warning("[DEV] postmaster.pid exists at startup. Forcing cleanup to ensure clean state.")
+            _force_stop_stuck_db(db_path)
+
+    _logger.debug("Starting pgserver (db_path=%s)…", db_path)
+
+    max_start_attempts = 5
+    for start_attempt in range(1, max_start_attempts + 1):
+        try:
+            _pg_server = pgserver.get_server(str(db_path))
+            _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
+            break
+        except (Exception, AssertionError) as start_err:
+            err_type = type(start_err).__name__
+            _logger.debug("[DEV] pgserver.get_server() failed (%s): %s", err_type, start_err)
+            if pid_file.exists() or err_type == "AssertionError":
+                if start_attempt < max_start_attempts:
+                    _logger.warning("pgserver failed to start (attempt %d/%d). Forcing cleanup.", start_attempt, max_start_attempts)
+                    _force_stop_stuck_db(db_path)
+                    _time.sleep(1)
+                    continue
+                else:
+                    _logger.error("[DEV] Max start attempts reached. Final attempt at force-stop.")
+                    _force_stop_stuck_db(db_path)
+                    raise start_err
+            else:
+                raise start_err
+
+    # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
+    # connect via localhost:5432.  Junie keeps the default socket-only
+    # connection to avoid port conflicts.
+    if not is_junie:
+        try:
+            _logger.debug("Enabling TCP listening for local dev…")
+            _enable_tcp_listening(_pg_server)
+            uri = "postgresql://postgres:@localhost:5432/postgres"
+        except Exception as tcp_err:
+            _logger.error("Failed to enable TCP listening: %s. Falling back to socket.", tcp_err)
+            uri = _pg_server.get_uri()
+    else:
+        uri = _pg_server.get_uri()
+
+    _logger.debug("Connection URI: %s", uri)
+    if not _pg_server_was_preexisting:
+        atexit.register(_stop_local_db)
+    return uri
+
+
 def _auto_start_pgserver():
     """Try to auto-start pgserver for local development."""
     global _pg_server
-    
+
     # Safety check: NEVER start pgserver in production
     if is_production():
         return None
@@ -391,79 +483,22 @@ def _auto_start_pgserver():
     if _pg_server is not None:
         warning_placeholder.empty()
         is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
-        if not is_junie:
-            uri = "postgresql://postgres:@localhost:5432/postgres"
-        else:
-            uri = _pg_server.get_uri()
+        uri = _pg_server.get_uri() if is_junie else "postgresql://postgres:@localhost:5432/postgres"
         _logger.debug("pgserver already running, returning cached URI.")
         return uri
 
-    is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
-
     try:
-        import pgserver
-        from pgserver import pg_ctl
-        import time as _time
         db_path = _get_local_db_path()
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        
-        # Check if we should force-stop if PID file exists but we don't have a handle
-        pid_file = db_path / "postmaster.pid"
-        if pid_file.exists():
-            _logger.warning("[DEV] postmaster.pid exists at startup. Forcing cleanup to ensure clean state.")
-            _force_stop_stuck_db(db_path)
+
+        # Clear any stale Streamlit session state for shutdown tracking
+        if (db_path / "postmaster.pid").exists():
             if "pg_shutdown_first_seen" in st.session_state:
                 st.session_state.pop("pg_shutdown_first_seen", None)
 
-        _logger.debug("Starting pgserver (db_path=%s)…", db_path)
-        
-        # Retry logic for pgserver.get_server() to handle "shutting down" states
-        # by triggering a force-stop.
-        max_start_attempts = 5
-        for start_attempt in range(1, max_start_attempts + 1):
-            try:
-                _pg_server = pgserver.get_server(str(db_path))
-                _logger.debug("pgserver started (uri=%s).", _pg_server.get_uri())
-                st.session_state.pop("pg_shutdown_first_seen", None)
-                break
-            except (Exception, AssertionError) as start_err:
-                err_type = type(start_err).__name__
-                err_msg = str(start_err)
-                _logger.debug("[DEV] pgserver.get_server() failed (%s): %s", err_type, err_msg)
-                
-                # UNGATED: Treat any failed start as a reason to attempt recovery
-                # if a PID file exists or if it's a known "stuck" error type.
-                if pid_file.exists() or err_type == "AssertionError":
-                    if start_attempt < max_start_attempts:
-                        _logger.warning("pgserver failed to start (attempt %d/%d). Forcing cleanup.", start_attempt, max_start_attempts)
-                        _force_stop_stuck_db(db_path)
-                        _time.sleep(1)
-                        continue
-                    else:
-                        _logger.error("[DEV] Max start attempts reached. Final attempt at force-stop.")
-                        _force_stop_stuck_db(db_path)
-                        raise start_err
-                else:
-                    raise start_err
+        uri = _start_pgserver_core(db_path)
 
-        # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
-        # connect via localhost:5432.  Junie keeps the default socket-only
-        # connection to avoid port conflicts.
-        if not is_junie:
-            try:
-                _logger.debug("Enabling TCP listening for local dev…")
-                _enable_tcp_listening(_pg_server)
-                uri = "postgresql://postgres:@localhost:5432/postgres"
-            except Exception as tcp_err:
-                _logger.error("Failed to enable TCP listening: %s. Falling back to socket.", tcp_err)
-                uri = _pg_server.get_uri()
-        else:
-            uri = _pg_server.get_uri()
-        _logger.debug("Connection URI: %s", uri)
-        
-        # Register cleanup on exit
-        atexit.register(_stop_local_db)
-        _logger.debug("Registered atexit cleanup handler.")
+        # Clear shutdown tracking after successful start
+        st.session_state.pop("pg_shutdown_first_seen", None)
 
         # Generate DBeaver connection file for local dev convenience
         _write_dbeaver_connection(uri)

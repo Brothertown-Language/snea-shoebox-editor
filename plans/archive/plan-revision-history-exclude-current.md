@@ -1,6 +1,6 @@
 # Plan: Revision History — Exclude Current Live Version
 
-**Status:** 🔄 Pending
+**Status:** ✅ Complete (superseded by v2; v2 implemented in commit d4de0df)
 
 ## Overview
 
@@ -20,10 +20,10 @@ The revision history expander currently includes the entry that represents the c
 ## Steps
 
 ### Phase 1 — Service layer
-1. 🔄 In `get_edit_history`, join the query with `Record` on `record_id` and add `.filter(EditHistory.version != Record.current_version)` to exclude the live-version entry.
+1. ✔️ In `get_edit_history`, join the query with `Record` on `record_id` and add `.filter(EditHistory.version != Record.current_version)` to exclude the live-version entry.
 
 ### Phase 2 — Completion
-1. 🔄 Update this plan to reflect actual progress and declare completion if all steps are done.
+1. ✔️ Update this plan to reflect actual progress and declare completion if all steps are done.
 
 ## Out of Scope
 - No UI changes.
