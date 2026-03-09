@@ -1,6 +1,6 @@
 # Plan: sync_prod_to_local — pgserver lifecycle (stop-only-if-started)
 
-**Status:** 🔄 Pending
+**Status:** ✔️ Completed
 **File:** `scripts/sync_prod_to_local.py`, `src/database/connection.py`
 
 ---
@@ -45,7 +45,7 @@ No changes needed if the flag approach is used — the atexit handler in `connec
 
 ## Steps
 
-### 1. 🔄 Add `_pg_server_was_preexisting` flag to `connection.py`
+### 1. ✔️ Add `_pg_server_was_preexisting` flag to `connection.py`
 
 - Add module-level `_pg_server_was_preexisting: bool = False` near the other globals.
 - In `_start_pgserver_core()`: before the `pgserver.get_server()` call, check if `postmaster.pid`
@@ -53,7 +53,7 @@ No changes needed if the flag approach is used — the atexit handler in `connec
   `_pg_server_was_preexisting = True`.
 - In `_stop_local_db()`: if `_pg_server_was_preexisting` is `True`, log and skip cleanup.
 
-### 2. 🔄 Verify
+### 2. ✔️ Verify
 
 - `uv run python -m py_compile src/database/connection.py` — no errors.
 - `uv run python -m py_compile scripts/sync_prod_to_local.py` — no errors.
@@ -62,7 +62,7 @@ No changes needed if the flag approach is used — the atexit handler in `connec
 
 ## Checklist
 
-- [ ] No Streamlit imports added to `_start_pgserver_core()`
-- [ ] `_stop_local_db()` respects the preexisting flag
-- [ ] Both files compile clean
-- [ ] No scope crossing into `src/` beyond `connection.py`
+- [x] No Streamlit imports added to `_start_pgserver_core()`
+- [x] `_stop_local_db()` respects the preexisting flag
+- [x] Both files compile clean
+- [x] No scope crossing into `src/` beyond `connection.py`
