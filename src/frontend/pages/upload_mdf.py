@@ -502,7 +502,7 @@ def _render_review_table(batch_id, session_deps):
             st.session_state["review_page_size"] = int(saved_pref) if saved_pref and saved_pref.isdigit() else page_size_options[1]
 
         page_size = st.session_state.get("review_page_size", page_size_options[1])
-        new_page_size = st.selectbox("Rows per page", page_size_options, index=page_size_options.index(page_size), disabled=review_bulk_in_progress)
+        new_page_size = st.selectbox("Rows per page", page_size_options, index=page_size_options.index(page_size), key="review_page_size_widget", disabled=review_bulk_in_progress)
         if new_page_size != page_size:
             st.session_state["review_page_size"] = new_page_size
             PreferenceService.set_preference(user_email, "upload_review", "page_size", str(new_page_size))
@@ -664,21 +664,6 @@ def _render_review_table(batch_id, session_deps):
             st.session_state["review_bulk_action"] = "discard_marked"
             st.rerun()
 
-        st.divider()
-        # Records per page selector (at bottom)
-        selected_page_size = st.selectbox(
-            "Records per page",
-            options=page_size_options,
-            index=page_size_options.index(page_size),
-            key="review_page_size_widget",
-            disabled=review_bulk_in_progress
-        )
-        if selected_page_size != st.session_state.get("review_page_size"):
-            st.session_state["review_page_size"] = selected_page_size
-            st.session_state["review_current_page"] = 1
-            # Persist to database
-            PreferenceService.set_preference(user_email, "upload_review", "page_size", str(selected_page_size))
-            st.rerun()
 
     # Step 2 & 6: Progress bar up top + execute bulk action on second render
     if review_bulk_in_progress:
