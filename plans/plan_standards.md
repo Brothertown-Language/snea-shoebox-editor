@@ -31,13 +31,13 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 - Completed plans MUST be archived using `uv run python ai_bin/plan archive <filename>`. Raw `mv` commands for plan archiving are FORBIDDEN.
 - A plan is **completed** when all authorized steps have been executed and confirmed, or when the user explicitly declares it done. A plan that is halted mid-execution without user declaration of completion is NOT considered completed and must NOT be archived.
 - Archiving is exempt from the approval gate when the user has explicitly confirmed completion or all authorized steps are done in the current session.
-- Perform archiving in the same session as the final implementation step, immediately before calling `submit`.
+- **IMMEDIATE ARCHIVING REQUIRED**: Archive the plan **immediately when the last step is confirmed** — in the same tool-call sequence as the final implementation step, before any other action. Do NOT defer archiving to a later step or to the pre-submit scan. Deferring archiving when a plan is complete is a CRITICAL VIOLATION.
 
 ## Pre-Submit Checklist
 Before calling `submit` in any session where plans were touched or completed:
-- Scan `plans/` for any plan whose status is ✅ Complete and that has not yet been archived.
+- Scan `plans/` for any plan whose status is ✔️ Completed and that has not yet been archived.
 - Archive each such plan via `uv run python ai_bin/plan archive <filename>` before calling `submit`.
-- Failure to archive a completed plan before `submit` is a guideline violation.
+- This scan is a **fallback safety net only** — plans should already be archived immediately upon completion (see Archiving above). Finding an unarchived completed plan here means the immediate-archiving rule was violated; log it and archive now.
 
 ## Delivery
 

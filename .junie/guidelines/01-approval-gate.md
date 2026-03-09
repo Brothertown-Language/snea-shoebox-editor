@@ -73,13 +73,12 @@ Ladder sequence (do not re-enter a completed rung):
   call is a protocol violation. **Delivering plan content only in a `submit` summary — without a prior `answer` call containing the full plan — is a CRITICAL VIOLATION.** The `submit` summary is a session-terminator changelog, not a content delivery mechanism. Any session where the user receives plan content only via `submit` and no `answer` call was made MUST be logged as a violation via `ai_bin/violation-log`.
 - **Archiving Mandate**: "HALT" or "STOP" instructions in implementation plans do NOT excuse the agent from mandatory
   synchronization (progress marks) and archiving requirements. Archiving completed plans to `plans/archive/` is an
-  administrative requirement that must be performed before session end, even if implementation is halted. A plan is
+  administrative requirement that must be performed immediately upon plan completion. A plan is
   considered **completed** when all its authorized steps have been executed and confirmed, or when the user explicitly
   declares it done. Archiving means moving the completed plan file from `plans/` to `plans/archive/` using `uv run python ai_bin/plan archive <filename>`. Raw `mv` commands for plan archiving are FORBIDDEN — always use the `ai_bin/plan` tool. Archiving is exempt from the approval gate
   only when the user has explicitly confirmed the plan is complete (e.g., "done", "ship it", "close this out") or when
   all authorized steps have been executed and confirmed in the current session. A plan that is halted mid-execution
-  without user declaration of completion is NOT considered completed and must NOT be archived. Perform it in the same session as the final implementation step, immediately
-  before calling `submit`. **Before calling `submit`, scan `plans/` for any completed plan not yet archived and archive it.**
+  without user declaration of completion is NOT considered completed and must NOT be archived. **IMMEDIATE ARCHIVING REQUIRED**: Archive the plan **immediately when the last step is confirmed** — in the same tool-call sequence as the final implementation step, before any other action. Deferring archiving when a plan is complete is a CRITICAL VIOLATION. **Before calling `submit`, scan `plans/` for any completed plan not yet archived and archive it — this is a fallback safety net only; finding an unarchived completed plan at this stage means the immediate-archiving rule was violated.**
 - Plan status icons: `✔️` Completed, `🏗️` In-Progress, `🔄` Pending. Update plan file on step completion (plan files in
   `plans/` are exempt from approval gate per GO exceptions).
 - After completing a step, re-inspect subsequent steps for validity. On phase completion,
