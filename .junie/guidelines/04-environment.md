@@ -23,6 +23,9 @@
   separate GO required for retention. Deletion of a reproduction test requires explicit user request.
 - If `SyntaxWarning: invalid escape sequence` appears in output, stop execution and fix the offending code before
   proceeding.
+- **Query Code Changes**: Any change that adds or modifies database query code (ORM queries, raw SQL, subqueries,
+  joins) MUST be followed by running the relevant test suite before submitting. Submitting query changes without a
+  test run is a CRITICAL VIOLATION. Tests must be run with `JUNIE_PRIVATE_DB=true uv run python -m pytest <test_file>`.
 
 ## Temporary Files
 

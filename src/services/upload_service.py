@@ -1960,6 +1960,423 @@ class UploadService:
             session.close()
 
     @staticmethod
+    def revert_batch_changes(session_id: str, user_email: str = "system",
+                             progress_callback: Optional[callable] = None) -> dict:
+        """Revert all non-locked post-import edits for records in a session.
+
+        For each record touched by the session, restores it to the state it was in
+        immediately after the batch was imported (the current_data of the earliest
+        edit_history entry for that session_id). Later edit_history entries are deleted.
+        Locked records are skipped. Records already at post-import state are skipped.
+        Returns {'reverted_count': N, 'skipped_locked': M, 'already_current': K}.
+        """
+        session = get_session()
+        try:
+            # 1. Find all records touched by this session, with their post-import snapshot
+            history_entries = (
+                session.query(EditHistory)
+                .filter_by(session_id=session_id)
+                .order_by(EditHistory.timestamp.asc(), EditHistory.id.asc())
+                .all()
+            )
+            if not history_entries:
+                return {'reverted_count': 0, 'skipped_locked': 0, 'already_current': 0}
+
+            # Map record_id -> post-import snapshot (current_data of earliest session entry)
+            post_import_snapshots: dict[int, str] = {}
+            for h in history_entries:
+                if h.record_id not in post_import_snapshots:
+                    post_import_snapshots[h.record_id] = h.current_data
+
+            reverted = 0
+            skipped_locked = 0
+            already_current = 0
+            total = len(post_import_snapshots)
+
+            from src.mdf.parser import parse_mdf as _parse
+
+            for i, (rid, post_import_data) in enumerate(post_import_snapshots.items(), 1):
+                record = session.get(Record, rid)
+                if not record:
+                    already_current += 1
+                    if progress_callback:
+                        progress_callback(i, total)
+                    continue
+
+                # Skip locked records
+                if record.is_locked:
+                    skipped_locked += 1
+                    if progress_callback:
+                        progress_callback(i, total)
+                    continue
+
+                # Find the earliest session history entry id for this record
+                earliest_session_entry = (
+                    session.query(EditHistory)
+                    .filter_by(session_id=session_id, record_id=rid)
+                    .order_by(EditHistory.timestamp.asc(), EditHistory.id.asc())
+                    .first()
+                )
+
+                # Check if any later history entries exist after the session entry
+                later_entries_exist = (
+                    session.query(EditHistory)
+                    .filter(
+                        EditHistory.record_id == rid,
+                        EditHistory.id > earliest_session_entry.id
+                    )
+                    .first()
+                ) is not None
+
+                if not later_entries_exist:
+                    # Record is already at post-import state
+                    already_current += 1
+                    if progress_callback:
+                        progress_callback(i, total)
+                    continue
+
+                # Restore to post-import snapshot
+                record.mdf_data = post_import_data
+                parsed = _parse(post_import_data)
+                if parsed:
+                    entry = parsed[0]
+                    record.lx = entry.get('lx')
+                    record.hm = entry.get('hm', 1)
+                    record.ps = entry.get('ps', '')
+                    record.ge = entry.get('ge', '')
+
+                # Delete all history entries after the earliest session entry
+                session.query(EditHistory).filter(
+                    EditHistory.record_id == rid,
+                    EditHistory.id > earliest_session_entry.id
+                ).delete()
+
+                UploadService.populate_search_entries([rid], session=session)
+                reverted += 1
+
+                if progress_callback:
+                    progress_callback(i, total)
+
+            session.commit()
+
+            AuditService.log_activity(
+                user_email=user_email,
+                action="batch_revert_changes",
+                details=(f"Reverted post-import changes for session {session_id}: "
+                         f"{reverted} reverted, {skipped_locked} skipped (locked), "
+                         f"{already_current} already at post-import state"),
+                session_id=session_id,
+                session=session
+            )
+
+            return {
+                'reverted_count': reverted,
+                'skipped_locked': skipped_locked,
+                'already_current': already_current,
+            }
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_revert_preview_count(session_id: str) -> dict:
+        """Read-only preview of what revert_batch_changes would do for a session.
+
+        For each record touched by the session, counts:
+        - will_revert: unlocked records with post-import edits (later history entries exist)
+        - skipped_locked: locked records
+        - already_current: records with no post-import edits
+        - total: all records in the session
+        Returns {'will_revert': N, 'skipped_locked': M, 'already_current': K, 'total': T}.
+        """
+        session = get_session()
+        try:
+            history_entries = (
+                session.query(EditHistory)
+                .filter_by(session_id=session_id)
+                .order_by(EditHistory.timestamp.asc(), EditHistory.id.asc())
+                .all()
+            )
+            if not history_entries:
+                return {'will_revert': 0, 'skipped_locked': 0, 'already_current': 0, 'total': 0}
+
+            # Map record_id -> earliest session entry id
+            earliest_entry_id: dict[int, int] = {}
+            for h in history_entries:
+                if h.record_id not in earliest_entry_id:
+                    earliest_entry_id[h.record_id] = h.id
+
+            will_revert = 0
+            skipped_locked = 0
+            already_current = 0
+            total = len(earliest_entry_id)
+
+            for rid, earliest_id in earliest_entry_id.items():
+                record = session.get(Record, rid)
+                if not record:
+                    already_current += 1
+                    continue
+                if record.is_locked:
+                    skipped_locked += 1
+                    continue
+                later_exists = (
+                    session.query(EditHistory)
+                    .filter(EditHistory.record_id == rid, EditHistory.id > earliest_id)
+                    .first()
+                ) is not None
+                if later_exists:
+                    will_revert += 1
+                else:
+                    already_current += 1
+
+            return {
+                'will_revert': will_revert,
+                'skipped_locked': skipped_locked,
+                'already_current': already_current,
+                'total': total,
+            }
+        finally:
+            session.close()
+
+    @staticmethod
+    def get_post_import_new_records_preview(session_id: str) -> dict:
+        """Read-only preview of what delete_post_import_new_records would do for a session.
+
+        Finds records in the same source that were created (prev_data IS NULL in their earliest
+        edit_history entry) after the session's import timestamp.
+        Returns {'will_delete': N, 'skipped_locked': M, 'total': T}.
+        """
+        session = get_session()
+        try:
+            # Find session import timestamp and source_id
+            earliest_session_entry = (
+                session.query(EditHistory)
+                .filter_by(session_id=session_id)
+                .order_by(EditHistory.timestamp.asc(), EditHistory.id.asc())
+                .first()
+            )
+            if not earliest_session_entry:
+                return {'will_delete': 0, 'skipped_locked': 0, 'total': 0}
+
+            import_ts = earliest_session_entry.timestamp
+            session_record = session.get(Record, earliest_session_entry.record_id)
+            if not session_record:
+                return {'will_delete': 0, 'skipped_locked': 0, 'total': 0}
+            source_id = session_record.source_id
+
+            # Find all records in this source whose earliest history entry is a creation
+            # (prev_data IS NULL) and occurred after the import timestamp
+            from sqlalchemy import func as _func
+            subq = (
+                session.query(
+                    EditHistory.record_id,
+                    _func.min(EditHistory.id).label('min_id')
+                )
+                .join(Record, Record.id == EditHistory.record_id)
+                .filter(
+                    Record.source_id == source_id,
+                    Record.is_deleted == False,
+                    EditHistory.timestamp > import_ts,
+                )
+                .group_by(EditHistory.record_id)
+                .subquery()
+            )
+            candidate_entries = (
+                session.query(EditHistory)
+                .join(subq, EditHistory.id == subq.c.min_id)
+                .filter(EditHistory.prev_data == None)  # noqa: E711
+                .all()
+            )
+
+            will_delete = 0
+            skipped_locked = 0
+            for entry in candidate_entries:
+                record = session.get(Record, entry.record_id)
+                if not record:
+                    continue
+                if record.is_locked:
+                    skipped_locked += 1
+                else:
+                    will_delete += 1
+
+            total = will_delete + skipped_locked
+            return {'will_delete': will_delete, 'skipped_locked': skipped_locked, 'total': total}
+        finally:
+            session.close()
+
+    @staticmethod
+    def has_revertible_changes(session_id: str) -> bool:
+        """Fast EXISTS check: does the session have any unlocked records with post-import edits?"""
+        from sqlalchemy import func as _func
+        session = get_session()
+        try:
+            # Find the earliest history id per record for this session
+            earliest_subq = (
+                session.query(
+                    EditHistory.record_id,
+                    _func.min(EditHistory.id).label('earliest_id'),
+                )
+                .filter(EditHistory.session_id == session_id)
+                .group_by(EditHistory.record_id)
+                .subquery()
+            )
+            # Check if any later history entry exists for an unlocked, non-deleted record
+            result = (
+                session.query(EditHistory.id)
+                .join(earliest_subq, EditHistory.record_id == earliest_subq.c.record_id)
+                .join(Record, Record.id == EditHistory.record_id)
+                .filter(
+                    EditHistory.id > earliest_subq.c.earliest_id,
+                    Record.is_locked == False,  # noqa: E712
+                    Record.is_deleted == False,  # noqa: E712
+                )
+                .first()
+            )
+            return result is not None
+        finally:
+            session.close()
+
+    @staticmethod
+    def has_post_import_new_records(session_id: str) -> bool:
+        """Fast EXISTS check: does the session's source have any unlocked records created after import?"""
+        from sqlalchemy import func as _func, exists
+        session = get_session()
+        try:
+            earliest_session_entry = (
+                session.query(EditHistory)
+                .filter_by(session_id=session_id)
+                .order_by(EditHistory.timestamp.asc(), EditHistory.id.asc())
+                .first()
+            )
+            if not earliest_session_entry:
+                return False
+            import_ts = earliest_session_entry.timestamp
+            session_record = session.get(Record, earliest_session_entry.record_id)
+            if not session_record:
+                return False
+            source_id = session_record.source_id
+
+            subq = (
+                session.query(
+                    EditHistory.record_id,
+                    _func.min(EditHistory.id).label('min_id')
+                )
+                .join(Record, Record.id == EditHistory.record_id)
+                .filter(
+                    Record.source_id == source_id,
+                    Record.is_deleted == False,  # noqa: E712
+                    EditHistory.timestamp > import_ts,
+                )
+                .group_by(EditHistory.record_id)
+                .subquery()
+            )
+            result = (
+                session.query(EditHistory)
+                .join(subq, EditHistory.id == subq.c.min_id)
+                .join(Record, Record.id == EditHistory.record_id)
+                .filter(
+                    EditHistory.prev_data == None,  # noqa: E711
+                    Record.is_locked == False,  # noqa: E712
+                )
+                .first()
+            )
+            return result is not None
+        finally:
+            session.close()
+
+    @staticmethod
+    def delete_post_import_new_records(session_id: str, user_email: str = "system",
+                                       progress_callback: Optional[callable] = None) -> dict:
+        """Delete records created as new in the same source after the session's import timestamp.
+
+        Skips locked records. Audit-logs as batch_delete_new_records.
+        Returns {'deleted_count': N, 'skipped_locked': M}.
+        """
+        session = get_session()
+        try:
+            earliest_session_entry = (
+                session.query(EditHistory)
+                .filter_by(session_id=session_id)
+                .order_by(EditHistory.timestamp.asc(), EditHistory.id.asc())
+                .first()
+            )
+            if not earliest_session_entry:
+                return {'deleted_count': 0, 'skipped_locked': 0}
+
+            import_ts = earliest_session_entry.timestamp
+            session_record = session.get(Record, earliest_session_entry.record_id)
+            if not session_record:
+                return {'deleted_count': 0, 'skipped_locked': 0}
+            source_id = session_record.source_id
+
+            from sqlalchemy import func as _func
+            subq = (
+                session.query(
+                    EditHistory.record_id,
+                    _func.min(EditHistory.id).label('min_id')
+                )
+                .join(Record, Record.id == EditHistory.record_id)
+                .filter(
+                    Record.source_id == source_id,
+                    Record.is_deleted == False,
+                    EditHistory.timestamp > import_ts,
+                )
+                .group_by(EditHistory.record_id)
+                .subquery()
+            )
+            candidate_entries = (
+                session.query(EditHistory)
+                .join(subq, EditHistory.id == subq.c.min_id)
+                .filter(EditHistory.prev_data == None)  # noqa: E711
+                .all()
+            )
+
+            deleted = 0
+            skipped_locked = 0
+            total = len(candidate_entries)
+
+            for i, entry in enumerate(candidate_entries, 1):
+                rid = entry.record_id
+                record = session.get(Record, rid)
+                if not record:
+                    if progress_callback:
+                        progress_callback(i, total)
+                    continue
+                if record.is_locked:
+                    skipped_locked += 1
+                    if progress_callback:
+                        progress_callback(i, total)
+                    continue
+
+                session.query(SearchEntry).filter_by(record_id=rid).delete()
+                session.query(EditHistory).filter_by(record_id=rid).delete()
+                session.delete(record)
+                deleted += 1
+
+                if progress_callback:
+                    progress_callback(i, total)
+
+            session.commit()
+
+            AuditService.log_activity(
+                user_email=user_email,
+                action="batch_delete_new_records",
+                details=(f"Deleted post-import new records for session {session_id}: "
+                         f"{deleted} deleted, {skipped_locked} skipped (locked)"),
+                session_id=session_id,
+                session=session
+            )
+
+            return {'deleted_count': deleted, 'skipped_locked': skipped_locked}
+        except Exception:
+            session.rollback()
+            raise
+        finally:
+            session.close()
+
+    @staticmethod
     def generate_mdf_filename(prefix: str, source_name: str, timestamp, github_username: Optional[str] = None) -> str:
         """Build cross-OS compatible filename for MDF downloads.
         Format: <prefix>_<Source>_<GitHubUsername>_<YYYY-MM-DD>_<SSSSS>.txt

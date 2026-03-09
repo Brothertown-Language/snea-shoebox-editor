@@ -132,7 +132,10 @@ is permitted and required. Always use the designated `ai_bin/` utility:
   - To read a single named section: `uv run python ai_bin/guidelines --section 01-approval-gate`
   - To list all available section names: `uv run python ai_bin/guidelines --list-sections`
   - **EXCLUSIVE ACCESS**: `uv run python ai_bin/guidelines` is the ONLY permitted method to read guideline files. Shell `cat`, `for` loops, `open` tool, or any other mechanism on guideline files is a CRITICAL VIOLATION — no exceptions.
-  - **NO SHELL PIPELINES FOR EXTRACTION**: Using shell pipelines, `python -c`, `python3 -c`, or any inline script to extract or filter guideline content is a CRITICAL VIOLATION. Use `--section <name>` directly.
+  - **NO SHELL PIPELINES FOR EXTRACTION**: Using shell pipelines, `python -c`, `python3 -c`,
+    or any inline script to extract or filter guideline content is a CRITICAL VIOLATION.
+    Use `--section <name>` or `--files <name>` directly. The agent MUST log the violation
+    immediately via `ai_bin/violation-log` and halt. No exceptions.
 - `memory.md` → `uv run python ai_bin/memory`
 - `VIOLATION_LOG.jsonl` → `uv run python ai_bin/violation-log`
 - `personas/` → `uv run python ai_bin/persona <name>` — prints the full content of the named persona file to

@@ -109,6 +109,110 @@ def download_mdf_dialog(session_data):
         if st.button("Close"):
             st.rerun()
 
+@st.dialog("Revert Post-Import Changes")
+def confirm_revert_dialog(session_data):
+    from src.services.upload_service import UploadService
+    from src.logging_config import get_logger
+    logger = get_logger("snea.pages.batch_rollback")
+    session_id = session_data.get('session_id')
+    st.warning(f"Are you sure you want to revert post-import changes for session **{session_id[:8]}...**?")
+    st.write(f"- **Source:** {session_data['source_name']}")
+    st.write(f"- **User:** {session_data['user']}")
+    st.write(f"- **Date:** {session_data['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+    preview = session_data.get('revert_preview', {})
+    st.write(f"- **Will revert:** {preview.get('will_revert', '?')} records")
+    if preview.get('skipped_locked', 0):
+        st.write(f"- **Skipped (locked):** {preview['skipped_locked']} records")
+    if preview.get('already_current', 0):
+        st.write(f"- **Already at post-import state:** {preview['already_current']} records")
+    st.write(f"- **Total in session:** {preview.get('total', '?')} records")
+
+    st.error("This will restore records to their post-import state, discarding all subsequent edits. Locked records will be skipped. This cannot be undone.")
+
+    if st.button("Yes, Revert Changes", type="primary", use_container_width=True):
+        from src.frontend.ui_utils import handle_ui_error
+        progress_container = st.container()
+        with progress_container:
+            status = st.status("Initializing revert...", expanded=True)
+            progress_bar = st.progress(0.0)
+
+            def update_progress(curr, total):
+                status.update(label=f"Reverting: {curr}/{total} records...")
+                progress_bar.progress(curr / total if total > 0 else 1.0)
+
+            try:
+                result = UploadService.revert_batch_changes(
+                    session_id,
+                    user_email=st.session_state.get("user_email", "system"),
+                    progress_callback=update_progress
+                )
+
+                msg = f"Revert successful! {result['reverted_count']} records restored to post-import state."
+                if result['skipped_locked'] > 0:
+                    msg += f" {result['skipped_locked']} skipped (locked)."
+                if result['already_current'] > 0:
+                    msg += f" {result['already_current']} already at post-import state."
+
+                status.update(label="Revert Complete", state="complete")
+                st.success(msg)
+
+                import time
+                time.sleep(1.5)
+                st.rerun()
+            except Exception as e:
+                status.update(label="Revert Failed", state="error")
+                handle_ui_error(e, "Revert failed.", logger_name="snea.pages.batch_rollback")
+
+@st.dialog("Delete Records Added After Import")
+def confirm_delete_new_dialog(session_data):
+    from src.services.upload_service import UploadService
+    from src.logging_config import get_logger
+    logger = get_logger("snea.pages.batch_rollback")
+    session_id = session_data.get('session_id')
+    st.warning(f"Are you sure you want to delete records added after session **{session_id[:8]}...**?")
+    st.write(f"- **Source:** {session_data['source_name']}")
+    st.write(f"- **User:** {session_data['user']}")
+    st.write(f"- **Date:** {session_data['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
+    preview = session_data.get('delete_new_preview', {})
+    st.write(f"- **Will delete:** {preview.get('will_delete', '?')} records")
+    if preview.get('skipped_locked', 0):
+        st.write(f"- **Skipped (locked):** {preview['skipped_locked']} records")
+    st.write(f"- **Total candidates:** {preview.get('total', '?')} records")
+
+    st.error("This will permanently delete records that were created as new entries after this batch was imported. Locked records will be skipped. This cannot be undone.")
+
+    if st.button("Yes, Delete New Records", type="primary", use_container_width=True):
+        from src.frontend.ui_utils import handle_ui_error
+        progress_container = st.container()
+        with progress_container:
+            status = st.status("Initializing delete...", expanded=True)
+            progress_bar = st.progress(0.0)
+
+            def update_progress(curr, total):
+                status.update(label=f"Deleting: {curr}/{total} records...")
+                progress_bar.progress(curr / total if total > 0 else 1.0)
+
+            try:
+                result = UploadService.delete_post_import_new_records(
+                    session_id,
+                    user_email=st.session_state.get("user_email", "system"),
+                    progress_callback=update_progress
+                )
+
+                msg = f"Done! {result['deleted_count']} records deleted."
+                if result['skipped_locked'] > 0:
+                    msg += f" {result['skipped_locked']} skipped (locked)."
+
+                status.update(label="Delete Complete", state="complete")
+                st.success(msg)
+
+                import time
+                time.sleep(1.5)
+                st.rerun()
+            except Exception as e:
+                status.update(label="Delete Failed", state="error")
+                handle_ui_error(e, "Delete failed.", logger_name="snea.pages.batch_rollback")
+
 @st.dialog("Confirm Rollback")
 def confirm_rollback_dialog(session_data):
     from src.services.upload_service import UploadService
@@ -209,7 +313,7 @@ def main():
     end_idx = min(start_idx + PAGE_SIZE, total_sessions)
     page_sessions = sessions[start_idx:end_idx]
 
-    cols = st.columns([2, 2, 3, 1, 1.5])
+    cols = st.columns([2, 2, 3, 1, 2])
     cols[0].write("**Date**")
     cols[1].write("**User**")
     cols[2].write("**Source**")
@@ -218,25 +322,44 @@ def main():
     
     st.divider()
     
+    from src.services.upload_service import UploadService
+
     for s in page_sessions:
         with st.container():
-            c1, c2, c3, c4, c5 = st.columns([2, 2, 3, 1, 1.5])
+            c1, c2, c3, c4, c5 = st.columns([2, 2, 3, 1, 2])
             c1.write(s["timestamp"].strftime("%Y-%m-%d %H:%M"))
             c2.write(s["user"])
             c3.write(s["source_name"])
             c4.write(str(s["record_count"]))
-            
+
+            # Fast EXISTS checks at render time — cheap boolean queries for disabled=
+            can_revert = UploadService.has_revertible_changes(s['session_id'])
+            can_delete_new = UploadService.has_post_import_new_records(s['session_id'])
+
             # Action buttons
-            btn_cols = c5.columns(2)
-            
+            btn_cols = c5.columns(4)
+
             # 1. Download MDF (Deferred via Dialog)
             if btn_cols[0].button("📥", key=f"dl_{s['session_id']}", help="Download MDF of records"):
-                # Use a specific key in session_state to store the full session_id for the dialog
                 st.session_state.current_dl_session = s['session_id']
                 download_mdf_dialog(s)
-            
-            # 2. Undo
-            if btn_cols[1].button("🔙", key=f"undo_{s['session_id']}", help="Rollback this session"):
+
+            # 2. Revert post-import changes
+            if btn_cols[1].button("↩️", key=f"revert_{s['session_id']}", help="Revert post-import changes to this batch",
+                                  disabled=not can_revert):
+                st.session_state.current_revert_session = s['session_id']
+                revert_preview = UploadService.get_revert_preview_count(s['session_id'])
+                confirm_revert_dialog({**s, 'revert_preview': revert_preview})
+
+            # 3. Delete records added after import
+            if btn_cols[2].button("🗑️", key=f"delnew_{s['session_id']}", help="Delete records added after this batch was imported",
+                                  disabled=not can_delete_new):
+                st.session_state.current_delnew_session = s['session_id']
+                delete_new_preview = UploadService.get_post_import_new_records_preview(s['session_id'])
+                confirm_delete_new_dialog({**s, 'delete_new_preview': delete_new_preview})
+
+            # 4. Undo (full rollback)
+            if btn_cols[3].button("🔙", key=f"undo_{s['session_id']}", help="Rollback this session"):
                 st.session_state.current_rollback_session = s['session_id']
                 confirm_rollback_dialog(s)
 

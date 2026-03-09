@@ -19,6 +19,7 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 - End plan deliveries with declarative statements of fact. No "Please review and let me know." No framing reports as questions.
 - Plans must include a final step to update the plan to reflect actual progress using direct code inspection and tests as the measure, and declare completion if all steps are done.
 - Plans must be archived using `uv run python ai_bin/plan archive <filename>` when completed.
+- **New plans MUST use `🔄 Pending` for all steps at creation time.** Marking any step `✔️ Completed` or `🏗️ In-Progress` in a newly written plan (before any work is done) is a CRITICAL VIOLATION. Status icons MUST only be updated to reflect work actually performed in the current session.
 
 ## Formatting
 
