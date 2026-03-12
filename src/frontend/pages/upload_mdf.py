@@ -669,6 +669,8 @@ def _render_review_table(batch_id, session_deps):
     if review_bulk_in_progress:
         bulk_label = st.session_state.get("review_bulk_label", "Processing…")
         bulk_action = st.session_state.get("review_bulk_action", "")
+        # Page-scoped actions store their queue IDs here; None means whole-batch
+        bulk_page_ids = st.session_state.pop("review_bulk_page_ids", None)
         st.info(bulk_label)
         progress_bar = st.progress(0.0)
 
@@ -677,13 +679,16 @@ def _render_review_table(batch_id, session_deps):
 
         try:
             import uuid as _bulk_uuid_top
+            # Single session_id per bulk invocation — all records share it for rollback
+            _bulk_session_id = str(_bulk_uuid_top.uuid4())
             if bulk_action == "approve_new":
                 with st.status(bulk_label, expanded=True) as status:
                     count = UploadService.approve_all_new_source(
                         batch_id,
                         user_email=user_email,
-                        session_id=str(_bulk_uuid_top.uuid4()),
-                        progress_callback=update_progress
+                        session_id=_bulk_session_id,
+                        progress_callback=update_progress,
+                        queue_ids=bulk_page_ids,
                     )
                     status.update(label=f"Applied {count} new records!", state="complete", expanded=False)
                 st.session_state["bulk_flash"] = ("success", f"All {count} entries applied as new records.")
@@ -692,8 +697,9 @@ def _render_review_table(batch_id, session_deps):
                     count = UploadService.approve_all_by_record_match(
                         batch_id,
                         user_email=user_email,
-                        session_id=str(_bulk_uuid_top.uuid4()),
-                        progress_callback=update_progress
+                        session_id=_bulk_session_id,
+                        progress_callback=update_progress,
+                        queue_ids=bulk_page_ids,
                     )
                     if count:
                         status.update(label=f"Applied {count} matched entries!", state="complete", expanded=False)
@@ -706,8 +712,9 @@ def _render_review_table(batch_id, session_deps):
                     count = UploadService.approve_non_matches_as_new(
                         batch_id,
                         user_email=user_email,
-                        session_id=str(_bulk_uuid_top.uuid4()),
-                        progress_callback=update_progress
+                        session_id=_bulk_session_id,
+                        progress_callback=update_progress,
+                        queue_ids=bulk_page_ids,
                     )
                     if count:
                         status.update(label=f"Approved {count} new records!", state="complete", expanded=False)
@@ -717,7 +724,11 @@ def _render_review_table(batch_id, session_deps):
                         st.session_state["bulk_flash"] = ("info", "No non-matching entries to approve.")
             elif bulk_action == "discard_marked":
                 with st.status(bulk_label, expanded=True) as status:
-                    count = UploadService.discard_marked(batch_id, progress_callback=update_progress)
+                    count = UploadService.discard_marked(
+                        batch_id,
+                        progress_callback=update_progress,
+                        queue_ids=bulk_page_ids,
+                    )
                     if count:
                         status.update(label=f"Discarded {count} entries!", state="complete", expanded=False)
                         st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
@@ -985,6 +996,38 @@ def _render_review_table(batch_id, session_deps):
                         if st.button("Next", icon="▶️", key="main_page_next", disabled=(current_page >= total_pages or review_bulk_in_progress), use_container_width=True):
                             st.session_state["review_current_page"] = current_page + 1
                             st.rerun()
+
+    # ── Bottom bulk actions (page-scoped) ─────────────────────────────────────
+    if len(page_rows) >= 2 and not review_bulk_in_progress:
+        page_queue_ids = [r.id for r in page_rows]
+        st.divider()
+        st.markdown("**Page Actions** — applies to displayed records only")
+        if is_new_source:
+            if st.button("Approve Page as New Records", key="page_bulk_approve_new", use_container_width=True):
+                st.session_state["review_bulk_page_ids"] = page_queue_ids
+                st.session_state["review_bulk_in_progress"] = True
+                st.session_state["review_bulk_label"] = "Approving page records as new…"
+                st.session_state["review_bulk_action"] = "approve_new"
+                st.rerun()
+        else:
+            if st.button("Approve Page Matched", key="page_bulk_approve_matched", use_container_width=True):
+                st.session_state["review_bulk_page_ids"] = page_queue_ids
+                st.session_state["review_bulk_in_progress"] = True
+                st.session_state["review_bulk_label"] = "Applying matched entries on page…"
+                st.session_state["review_bulk_action"] = "approve_matched"
+                st.rerun()
+            if st.button("Approve Page Non-Matches as New", key="page_bulk_approve_nonmatch", use_container_width=True):
+                st.session_state["review_bulk_page_ids"] = page_queue_ids
+                st.session_state["review_bulk_in_progress"] = True
+                st.session_state["review_bulk_label"] = "Approving page non-matches as new records…"
+                st.session_state["review_bulk_action"] = "approve_nonmatch"
+                st.rerun()
+        if st.button("Discard Page Marked", key="page_bulk_discard_marked", use_container_width=True):
+            st.session_state["review_bulk_page_ids"] = page_queue_ids
+            st.session_state["review_bulk_in_progress"] = True
+            st.session_state["review_bulk_label"] = "Discarding marked entries on page…"
+            st.session_state["review_bulk_action"] = "discard_marked"
+            st.rerun()
 
 
 def _set_queue_status(queue_id, status):
