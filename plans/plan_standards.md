@@ -33,10 +33,17 @@ Update the plan file on each step completion. Plan files in `plans/` are exempt 
 - Archiving is exempt from the approval gate when the user has explicitly confirmed completion or all authorized steps are done in the current session.
 - **IMMEDIATE ARCHIVING REQUIRED**: Archive the plan **immediately when the last step is confirmed** — in the same tool-call sequence as the final implementation step, before any other action. Do NOT defer archiving to a later step or to the pre-submit scan. Deferring archiving when a plan is complete is a CRITICAL VIOLATION.
 
+## Progress Updates
+
+- **MANDATORY**: Update the plan file after **each step** — mark the step `🏗️ In-Progress` when started and `✔️ Completed` immediately when done.
+- Do NOT defer step-icon updates to a final summary step or to pre-submit. Deferring plan progress updates is a **CRITICAL VIOLATION**.
+- The plan file must reflect actual current state at all times during execution.
+
 ## Pre-Submit Checklist
 Before calling `submit` in any session where plans were touched or completed:
-- Scan `plans/` for any plan whose status is ✔️ Completed and that has not yet been archived.
-- Archive each such plan via `uv run python ai_bin/plan archive <filename>` before calling `submit`.
+- **MANDATORY**: Scan `plans/` for any plan whose status is ✔️ Completed and that has not yet been archived.
+- **MANDATORY**: Archive each such plan via `uv run python ai_bin/plan archive <filename>` before calling `submit`. Failing to do so is a **CRITICAL VIOLATION**.
+- **MANDATORY**: Verify that all in-progress plan files have step icons updated to reflect actual current state. Any plan with stale/deferred icons must be corrected before `submit`. Submitting with stale plan progress is a **CRITICAL VIOLATION**.
 - This scan is a **fallback safety net only** — plans should already be archived immediately upon completion (see Archiving above). Finding an unarchived completed plan here means the immediate-archiving rule was violated; log it and archive now.
 
 ## Delivery
