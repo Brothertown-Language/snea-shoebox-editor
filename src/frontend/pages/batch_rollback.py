@@ -119,13 +119,6 @@ def confirm_revert_dialog(session_data):
     st.write(f"- **Source:** {session_data['source_name']}")
     st.write(f"- **User:** {session_data['user']}")
     st.write(f"- **Date:** {session_data['timestamp'].strftime('%Y-%m-%d %H:%M:%S')}")
-    preview = session_data.get('revert_preview', {})
-    st.write(f"- **Will revert:** {preview.get('will_revert', '?')} records")
-    if preview.get('skipped_locked', 0):
-        st.write(f"- **Skipped (locked):** {preview['skipped_locked']} records")
-    if preview.get('already_current', 0):
-        st.write(f"- **Already at post-import state:** {preview['already_current']} records")
-    st.write(f"- **Total in session:** {preview.get('total', '?')} records")
 
     st.error("This will restore records to their post-import state, discarding all subsequent edits. Locked records will be skipped. This cannot be undone.")
 
@@ -348,8 +341,7 @@ def main():
             if btn_cols[1].button("↩️", key=f"revert_{s['session_id']}", help="Revert post-import changes to this batch",
                                   disabled=not can_revert):
                 st.session_state.current_revert_session = s['session_id']
-                revert_preview = UploadService.get_revert_preview_count(s['session_id'])
-                confirm_revert_dialog({**s, 'revert_preview': revert_preview})
+                confirm_revert_dialog(s)
 
             # 3. Delete records added after import
             if btn_cols[2].button("🗑️", key=f"delnew_{s['session_id']}", help="Delete records added after this batch was imported",
