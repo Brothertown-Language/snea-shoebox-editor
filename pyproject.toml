@@ -56,6 +56,9 @@ line-ending = "auto"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.pytest.ini_options]
+pythonpath = ["."]
+
 [tool.uv]
 # This project uses uv for dependency management.
 # Streamlit Cloud may warn about 'pyproject.toml' being a Poetry file; this is a false positive.
