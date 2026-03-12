@@ -12,7 +12,7 @@
 
 ## Steps
 
-1. 🔄 Pending — Add `key="review_page_size_widget"` to the `st.selectbox` at line 505 in `_render_review_table`.
-2. 🔄 Pending — Remove the duplicate rows-per-page block (lines 667–681: the `st.divider()`, comment, `st.selectbox`, and `if selected_page_size != ...` block) from the second `with st.sidebar:` block.
-3. 🔄 Pending — Verify: confirm no remaining keyless rows-per-page widget exists; confirm the keyed widget at its new location correctly reads/writes `review_page_size` session state and persists to `PreferenceService`.
-4. 🔄 Pending — Update this plan to reflect actual completion status.
+1. ✔️ Completed — Added `key="review_page_size_widget"` to the `st.selectbox` at line 505 in `_render_review_table`.
+2. ✔️ Completed — Removed the duplicate rows-per-page block (the `st.divider()`, comment, `st.selectbox`, and `if selected_page_size != ...` block) from the second `with st.sidebar:` block.
+3. ✔️ Completed — Verified: no remaining keyless rows-per-page widget; lint clean; keyed widget correctly reads/writes `review_page_size` and persists to `PreferenceService`.
+4. ✔️ Completed — Plan updated to reflect completion.
