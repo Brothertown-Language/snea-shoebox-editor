@@ -455,31 +455,6 @@ def apply_standard_layout_css() -> None:
             margin-bottom: 1rem !important;
         }
 
-        /* Scrollbar accessibility — webkit (Chrome/Safari/Edge) */
-        ::-webkit-scrollbar {
-            width: 14px;
-            height: 14px;
-        }
-        ::-webkit-scrollbar-track {
-            background: #e0e0e0;
-            border-radius: 8px;
-        }
-        ::-webkit-scrollbar-thumb {
-            background: #888;
-            border-radius: 8px;
-            border: 3px solid #e0e0e0;
-            opacity: 1 !important;
-        }
-        ::-webkit-scrollbar-thumb:hover {
-            background: #555;
-            opacity: 1 !important;
-        }
-
-        /* Scrollbar accessibility — Firefox */
-        * {
-            scrollbar-width: auto;
-            scrollbar-color: #888 #e0e0e0;
-        }
         </style>
         """
     )
