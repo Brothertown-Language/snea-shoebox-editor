@@ -14,7 +14,8 @@ from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 # ── Error Handling ─────────────────────────────────────────────────────
 
 
-def handle_ui_error(e: Exception, user_message: str = "An unexpected error occurred.", logger_name: Optional[str] = None):
+def handle_ui_error(e: Exception, user_message: str = "An unexpected error occurred.",
+                    logger_name: Optional[str] = None):
     """
     Standardized error handler for UI-facing code.
     Logs the full stack trace to server logs and shows a sanitized message to the user.
@@ -90,7 +91,7 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
 
         status_placeholder.info(
             f"Current Status: **{display_status or 'Unknown'}**\n\n"
-            f"Checking again in {poll_delay}s... (Attempt {i+1}/{max_polls})"
+            f"Checking again in {poll_delay}s... (Attempt {i + 1}/{max_polls})"
         )
         progress_bar.progress((i + 1) / max_polls)
         time.sleep(poll_delay)
@@ -168,7 +169,7 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
     from src.mdf.parser import format_mdf_record
     mdf_text = format_mdf_record(mdf_text)
     lines = mdf_text.split('\n')
-    
+
     line_html_parts = []
     for i, line in enumerate(lines):
         diag = diagnostics[i] if diagnostics and i < len(diagnostics) else {"status": "ok"}
@@ -191,7 +192,7 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
         line_html_parts.append(
             f'<div class="mdf-line {status_cls}" {title_attr}>{inner_html}</div>'
         )
-    
+
     line_divs = ''.join(line_html_parts)
     # st.html() renders inside an iframe that does NOT inherit Streamlit's
     # CSS custom properties.  We must read the theme colours from the parent
@@ -347,8 +348,8 @@ def _intra_line_spans(old_line: str, new_line: str) -> tuple[list[dict], list[di
 
 
 def compute_mdf_line_diffs(
-    existing_text: str,
-    new_text: str,
+        existing_text: str,
+        new_text: str,
 ) -> tuple[list[dict], list[dict]]:
     """Compute per-line diff diagnostics for two MDF texts.
 
@@ -418,8 +419,6 @@ def compute_mdf_line_diffs(
 # ── Sidebar Utilities ──────────────────────────────────────────────────
 
 
-
-
 def hide_sidebar_nav() -> None:
     """Hide the default Streamlit sidebar navigation links."""
     st.html(
@@ -453,6 +452,50 @@ def apply_standard_layout_css() -> None:
         /* st.status widget default styling - no overlay */
         div[data-testid="stStatusWidget"] {
             margin-bottom: 1rem !important;
+        }
+
+        /* Toolbar: hidden by default, visible on hover; click-through when hidden */
+        header[data-testid="stHeader"] {
+            opacity: 0 !important;
+            transition: opacity 0.2s ease;
+            right: 14px !important;
+            pointer-events: none !important;
+        }
+        header[data-testid="stHeader"]:hover {
+            opacity: 1 !important;
+            pointer-events: auto !important;
+        }
+        header[data-testid="stHeader"] * {
+            pointer-events: none !important;
+        }
+        header[data-testid="stHeader"]:hover * {
+            pointer-events: auto !important;
+        }
+
+        /* Only modify scrollbars when hovered */
+        *::-webkit-scrollbar:hover {
+            width: 14px;
+            height: 14px;
+        }
+        
+        *::-webkit-scrollbar-thumb:hover {
+            background-color: #555 !important;
+            border-radius: 8px;
+            border: 3px solid #e0e0e0;
+        }
+        
+        *::-webkit-scrollbar-track:hover {
+            background: #e0e0e0;
+        }
+        
+        /* Firefox: only change hover behavior */
+        * {
+            scrollbar-width: thin;
+        }
+        
+        *:hover {
+            scrollbar-width: auto;
+            scrollbar-color: #555 #e0e0e0;
         }
 
         </style>
@@ -494,5 +537,3 @@ def reload_page_at_root(delay_ms: int = 0) -> None:
         </script>
     """
     components.html(js_code, height=0)
-
-

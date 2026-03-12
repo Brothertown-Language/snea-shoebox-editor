@@ -63,6 +63,7 @@ Ladder sequence (do not re-enter a completed rung):
 > a delivery mechanism. `<UPDATE>` blocks are internal state only and are never visible to
 > the user.
 
+- **Plan file required before delivery**: Every REVIEW PLAN MUST be written to a `plans/` file (e.g., `plans/plan-<slug>.md`) BEFORE being delivered to the user. Delivering a REVIEW PLAN inline in `ask_user`, `answer`, or any chat text without first creating a corresponding `plans/` file is a CRITICAL VIOLATION. The `answer` delivery MUST reference the plan file path and provide only a brief overview — no raw code blocks in the chat/answer delivery. Full code details belong in the plan file only.
 - **Tool selection for delivery**: Use `answer` for any rich markdown deliverable (reports, analyses, tables,
   structured lists) — session history is preserved and the user can resume. Use `ask_user` for plain conversational
   exchanges that require a reply and contain no complex formatting.
@@ -71,6 +72,7 @@ Ladder sequence (do not re-enter a completed rung):
   must appear inside the tool call itself — not in a `submit` summary or `<UPDATE>` block.
   A session where the user receives only a `submit` changelog and no `answer`/`ask_user`
   call is a protocol violation. **Delivering plan content only in a `submit` summary — without a prior `answer` call containing the full plan — is a CRITICAL VIOLATION.** The `submit` summary is a session-terminator changelog, not a content delivery mechanism. Any session where the user receives plan content only via `submit` and no `answer` call was made MUST be logged as a violation via `ai_bin/violation-log`.
+- **False delivery claims are forbidden.** The `submit` summary MUST NOT use language such as "Presented", "Showed", "Delivered", "Provided", or "Offered" to describe content that was not actually delivered via `answer` or `ask_user`. If the summary claims content was presented but no `answer`/`ask_user` call was made in that session, the claim is false and constitutes a CRITICAL VIOLATION. The `submit` summary may only describe content as "delivered" if a corresponding `answer` or `ask_user` call containing that content was made in the same session.
 - **Archiving Mandate**: "HALT" or "STOP" instructions in implementation plans do NOT excuse the agent from mandatory
   synchronization (progress marks) and archiving requirements. Archiving completed plans to `plans/archive/` is an
   administrative requirement that must be performed immediately upon plan completion. A plan is

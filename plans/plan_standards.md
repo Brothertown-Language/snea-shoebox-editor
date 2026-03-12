@@ -49,7 +49,7 @@ Before calling `submit` in any session where plans were touched or completed:
 ## Delivery
 
 - All REVIEW PLANs MUST be written to a `plans/` file (e.g., `plans/plan-<slug>.md`) before delivery.
-- Deliver a plan overview via `answer` tool, referencing the plan file path for full details.
+- Deliver a brief overview via `answer` tool, referencing the plan file path. **No raw code blocks in the chat/answer delivery** — full code details belong in the plan file only.
 - Call `submit` immediately after delivery — no further tool calls.
 - See `guidelines/01-approval-gate.md` for full approval gate, phased/flat plan logic, and loop prevention rules.
 - Always double check to ensure the plan is complete and accruate reflects changes needed to the codebase, etc.
