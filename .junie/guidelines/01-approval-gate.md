@@ -92,3 +92,5 @@ Ladder sequence (do not re-enter a completed rung):
   sequentially (1, 2, 3, …). Starting at 0, using repeated `1.`, or any non-sequential numbering is prohibited.
 - **No markdown tables** in chat dialog responses (`ask_user`). Tables do not render in the chat pane. Use bullet lists
   or plain text instead.
+- **No raw code blocks** in chat dialog responses (`ask_user` or inline chat text). Code blocks do not render usefully
+  in the chat pane. Use plain text, indented prose, or reference the plan file path instead.

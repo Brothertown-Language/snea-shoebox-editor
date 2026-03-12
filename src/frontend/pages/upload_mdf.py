@@ -832,7 +832,7 @@ def _render_review_table(batch_id, session_deps):
                 # "Change match" override), clear the stale session_state entry
                 # so the selectbox re-derives its value from default_idx.
                 cached_label = st.session_state.get(f"status_{row.id}")
-                if cached_label and status_map.get(cached_label) != current_status:
+                if st.session_state.pop(f"status_override_{row.id}", False):
                     st.session_state.pop(f"status_{row.id}", None)
 
                 selected_label = st.selectbox(
@@ -940,6 +940,7 @@ def _render_review_table(batch_id, session_deps):
                             try:
                                 UploadService.confirm_match(row.id, chosen_record_id)
                                 st.session_state.pop(f"status_{row.id}", None)
+                                st.session_state[f"status_override_{row.id}"] = True
                                 _override_ok = True
                             except Exception as e:
                                 handle_ui_error(e, "Failed to override match.", logger_name="snea.upload_mdf.review")
