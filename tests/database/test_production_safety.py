@@ -7,31 +7,35 @@ from src.database import is_production, _auto_start_pgserver
 class TestProductionSafety(unittest.TestCase):
     def test_production_detection(self):
         """Test that is_production correctly identifies environment based on the system user."""
-        from unittest.mock import patch
-        
-        with patch('src.database.connection.getpass.getuser') as mock_getuser:
+        from unittest.mock import patch, MagicMock
+
+        # Patch st.secrets to raise so the secrets branch is bypassed,
+        # then patch getpass module so getuser is controlled.
+        mock_getpass_module = MagicMock()
+        with patch('src.database.connection.st') as mock_st, \
+             patch('src.database.connection.getpass', mock_getpass_module):
+            mock_st.secrets.__contains__ = MagicMock(side_effect=Exception("no secrets"))
+
             # If user is 'appuser', it IS production
-            mock_getuser.return_value = "appuser"
+            mock_getpass_module.getuser.return_value = "appuser"
             self.assertTrue(is_production())
-            
+
             # If user is anything else, it's NOT production
-            mock_getuser.return_value = "muksihs"
+            mock_getpass_module.getuser.return_value = "muksihs"
             self.assertFalse(is_production())
-            
+
             # Handle exceptions
-            mock_getuser.side_effect = Exception("User not found")
+            mock_getpass_module.getuser.side_effect = Exception("User not found")
             self.assertFalse(is_production())
 
     def test_pgserver_safety(self):
         """Test that _auto_start_pgserver never attempts to start in production."""
         from unittest.mock import patch
-        
-        # Mock production environment (user is appuser)
-        with patch('src.database.connection.getpass.getuser') as mock_getuser:
-            mock_getuser.return_value = "appuser"
-            
-            # Even if pgserver is installable (which it might be in this test env),
-            # it should return None immediately because of the production check.
+
+        # Patch _pg_server to None so the cache-hit branch is bypassed,
+        # and patch is_production to return True so the safety check fires.
+        with patch('src.database.connection._pg_server', None), \
+             patch('src.database.connection.is_production', return_value=True):
             result = _auto_start_pgserver()
             self.assertIsNone(result)
 

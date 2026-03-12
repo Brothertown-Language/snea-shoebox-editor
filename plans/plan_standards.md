@@ -52,6 +52,6 @@ Before calling `submit` in any session where plans were touched or completed:
 - Deliver a brief overview via `answer` tool, referencing the plan file path. **No raw code blocks in the chat/answer delivery** — full code details belong in the plan file only.
 - Call `submit` immediately after delivery — no further tool calls.
 - See `guidelines/01-approval-gate.md` for full approval gate, phased/flat plan logic, and loop prevention rules.
-- Always double check to ensure the plan is complete and accruate reflects changes needed to the codebase, etc.
-- Always include as the final two checklist items for all plans - verify completion - archive immediately.
+- Always double check to ensure the plan is complete and accurately reflects changes needed to the codebase, etc.
+- Always include as the final two checklist items for all plans – verify completion – archive immediately.
 - 

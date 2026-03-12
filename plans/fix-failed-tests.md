@@ -65,3 +65,8 @@ No `pythonpath` configured in `pyproject.toml` pytest section. Other tests work 
 **Step 5:** 🔄 Pending — Fix record locking tests: update expected history counts (lock: 0, unlock: 1)
 
 **Step 6:** 🔄 Pending — Run full test suite and confirm all previously-failing tests now pass
+
+**Step 7:** Update this plan with the results.
+
+**Step 8:** Archive this plan when it is completed 100%.
+
