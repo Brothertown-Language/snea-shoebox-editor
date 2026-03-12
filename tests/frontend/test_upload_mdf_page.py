@@ -438,42 +438,79 @@ class TestReMatchButton(unittest.TestCase):
     @patch("src.database.get_session")
     @patch("src.services.upload_service.UploadService.rematch_batch")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
-                                        "review_batch_id": "abc-123"})
+                                        "review_batch_id": "abc-123",
+                                        "review_current_page": 1, "review_page_size": 10,
+                                        "review_filter_status": "All Records",
+                                        "review_bulk_in_progress": True,
+                                        "review_bulk_action": "rematch"})
     @patch("streamlit.header")
+    @patch("streamlit.sidebar")
     @patch("streamlit.columns")
     @patch("streamlit.button")
     @patch("streamlit.success")
     @patch("streamlit.subheader")
     @patch("streamlit.info")
     @patch("streamlit.markdown")
-    @patch("streamlit.selectbox", return_value="create_new")
+    @patch("streamlit.selectbox", return_value="All Records")
     @patch("streamlit.code")
     @patch("streamlit.container")
-    def test_rematch_calls_service(self, mock_container, _code, _selectbox, _md,
+    @patch("streamlit.status")
+    def test_rematch_calls_service(self, mock_status, mock_container, _code, _selectbox, _md,
                                     mock_info, _subheader, mock_success, mock_button,
-                                    mock_columns, _title,
+                                    mock_columns, mock_sidebar, _title,
                                     mock_rematch, mock_session):
         mock_sess = MagicMock()
-        # Empty batch so _render_review_table shows info and returns early
-        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.all.return_value = []
+        # Non-empty batch so _render_review_table doesn't trigger early rerun
+        mock_row = MagicMock()
+        mock_row.id = 1; mock_row.lx = "word"; mock_row.status = "pending"
+        mock_row.suggested_record_id = None; mock_row.match_type = None
+        mock_row.batch_id = "abc-123"; mock_row.source_id = 1
+        mock_row.mdf_data = r"\lx word"
+        mock_sess.query.return_value.filter_by.return_value.order_by.return_value.offset.return_value.limit.return_value.all.return_value = [mock_row]
+        mock_sess.query.return_value.filter_by.return_value.count.return_value = 1
+        mock_sess.query.return_value.filter_by.return_value.filter.return_value.count.return_value = 1
+        mock_sess.query.return_value.first.return_value = MagicMock(id=2)
+        mock_sess.get.return_value = MagicMock(name="TestSource")
+        # Support both plain call and context-manager usage of get_session()
+        cm_sess = MagicMock()
+        cm_sess.query.return_value.filter_by.return_value.count.return_value = 0
+        mock_sess.__enter__ = MagicMock(return_value=cm_sess)
+        mock_sess.__exit__ = MagicMock(return_value=False)
         mock_session.return_value = mock_sess
+
+        mock_sidebar.__enter__ = MagicMock(return_value=mock_sidebar)
+        mock_sidebar.__exit__ = MagicMock(return_value=False)
+
+        status_ctx = MagicMock()
+        status_ctx.__enter__ = MagicMock(return_value=status_ctx)
+        status_ctx.__exit__ = MagicMock(return_value=False)
+        mock_status.return_value = status_ctx
 
         mock_rematch.return_value = [
             {"queue_id": 1, "lx": "word", "suggested_record_id": 10, "match_type": "exact"}
         ]
 
-        col_mock = MagicMock()
-        col_mock.__enter__ = MagicMock(return_value=col_mock)
-        col_mock.__exit__ = MagicMock(return_value=False)
-        mock_columns.return_value = [col_mock, col_mock]
+        def _make_col():
+            c = MagicMock()
+            c.__enter__ = MagicMock(return_value=c)
+            c.__exit__ = MagicMock(return_value=False)
+            return c
 
-        # First button call is "Re-Match" (True), second is "Back to Upload" (False)
-        mock_button.side_effect = [True, False]
+        def _cols_effect(arg, **kw):
+            n = arg if isinstance(arg, int) else len(arg)
+            return [_make_col() for _ in range(n)]
+
+        mock_columns.side_effect = _cols_effect
+
+        # Use label-based side_effect: only "Re-Match" returns True
+        mock_button.side_effect = lambda label, **kw: label == "Re-Match"
 
         from src.frontend.pages.upload_mdf import upload_mdf
-        upload_mdf()
+        with patch("src.frontend.ui_utils.handle_ui_error", side_effect=lambda e, *a, **kw: (_ for _ in ()).throw(e)):
+            upload_mdf()
 
-        mock_rematch.assert_called_once_with("abc-123")
+        mock_rematch.assert_called_once()
+        self.assertEqual(mock_rematch.call_args[0][0], "abc-123")
 
 
 if __name__ == "__main__":

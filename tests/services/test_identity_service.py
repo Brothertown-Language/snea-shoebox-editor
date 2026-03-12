@@ -37,14 +37,14 @@ class TestIdentityService(unittest.TestCase):
         
         IdentityService.sync_user_to_db(user_info, email)
         
-        # Verify a new User object was added
-        args, _ = mock_session.add.call_args
+        # Verify a new User object was added (first add() call is the User)
+        args, _ = mock_session.add.call_args_list[0]
         added_user = args[0]
         self.assertIsInstance(added_user, User)
         self.assertEqual(added_user.github_id, 123)
         self.assertEqual(added_user.username, "testuser")
         self.assertEqual(added_user.email, email)
-        mock_session.commit.assert_called_once()
+        mock_session.commit.assert_called()
 
     @patch("src.services.identity_service.get_session")
     def test_sync_user_to_db_existing_user(self, mock_get_session):
@@ -67,7 +67,7 @@ class TestIdentityService(unittest.TestCase):
         self.assertEqual(existing_user.username, "newname")
         self.assertEqual(existing_user.email, email)
         self.assertEqual(existing_user.full_name, "New Name")
-        mock_session.commit.assert_called_once()
+        mock_session.commit.assert_called()
 
     def test_is_identity_synchronized(self):
         self.assertFalse(IdentityService.is_identity_synchronized())

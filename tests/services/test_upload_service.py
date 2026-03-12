@@ -998,7 +998,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
     def test_populate_search_entries_replaces_existing(self):
         from src.database import SearchEntry
         rec = self._add_record('esh', '\\lx esh\n\\ps n\n\\ge fire')
-        self.session.add(SearchEntry(record_id=rec.id, term='old', entry_type='lx'))
+        self.session.add(SearchEntry(record_id=rec.id, term='old', normalized_term='old', entry_type='lx'))
         self.session.commit()
         with self._patch_session():
             count = UploadService.populate_search_entries([rec.id])

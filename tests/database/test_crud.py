@@ -114,7 +114,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.commit()
 
         # Create Search Entry
-        search = SearchEntry(record_id=record.id, term="nup", entry_type="lx")
+        search = SearchEntry(record_id=record.id, term="nup", normalized_term="nup", entry_type="lx")
         self.session.add(search)
         self.session.commit()
 
@@ -236,7 +236,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.flush()
 
         # 1. Test restriction by SearchEntry
-        search = SearchEntry(record_id=record.id, term="test", entry_type="lx")
+        search = SearchEntry(record_id=record.id, term="test", normalized_term="test", entry_type="lx")
         self.session.add(search)
         self.session.commit()
 

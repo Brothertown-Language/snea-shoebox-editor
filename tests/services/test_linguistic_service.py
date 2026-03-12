@@ -125,7 +125,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.commit()
         
         # Add search entries for r1
-        s1 = SearchEntry(record_id=r1.id, term='apple', entry_type='lx')
+        s1 = SearchEntry(record_id=r1.id, term='apple', normalized_term='apple', entry_type='lx')
         self.session.add(s1)
         self.session.commit()
 
@@ -148,8 +148,8 @@ class TestLinguisticService(unittest.TestCase):
         self.session.commit()
 
         # Add search entries
-        s1 = SearchEntry(record_id=r1.id, term='run', entry_type='lx')
-        s2 = SearchEntry(record_id=r1.id, term='ran', entry_type='va')
+        s1 = SearchEntry(record_id=r1.id, term='run', normalized_term='run', entry_type='lx')
+        s2 = SearchEntry(record_id=r1.id, term='ran', normalized_term='ran', entry_type='va')
         self.session.add_all([s1, s2])
         self.session.commit()
 
@@ -215,7 +215,7 @@ class TestLinguisticService(unittest.TestCase):
             
             # Test with search term (manually add search entry since we bypass search_records)
             from src.database.models.search import SearchEntry
-            self.session.add(SearchEntry(record_id=r1.id, term='test1', entry_type='lx'))
+            self.session.add(SearchEntry(record_id=r1.id, term='test1', normalized_term='test1', entry_type='lx'))
             self.session.commit()
 
             records = LinguisticService.get_all_records_for_export(search_term="test1")
@@ -307,19 +307,27 @@ class TestLinguisticService(unittest.TestCase):
         self.session.add(record)
         self.session.commit()
         
-        history = EditHistory(
+        h1 = EditHistory(
             record_id=record.id,
             user_email='editor@example.com',
             version=1,
             change_summary='Creation',
             current_data='\\lx history'
         )
-        self.session.add(history)
+        h2 = EditHistory(
+            record_id=record.id,
+            user_email='editor@example.com',
+            version=2,
+            change_summary='Update',
+            current_data='\\lx history\n\\ge updated'
+        )
+        self.session.add_all([h1, h2])
         self.session.commit()
         
         with self._patch_session():
             res = LinguisticService.get_edit_history(record.id)
         
+        # get_edit_history excludes the max-version entry; with 2 entries, version=1 is visible
         self.assertEqual(len(res), 1)
         self.assertEqual(res[0]['version'], 1)
         self.assertEqual(res[0]['user_email'], 'editor@example.com')

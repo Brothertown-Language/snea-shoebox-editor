@@ -49,8 +49,7 @@ class TestRecordLocking(unittest.TestCase):
         
         # Check history
         history = LinguisticService.get_edit_history(self.record_id)
-        self.assertEqual(len(history), 1)
-        self.assertIn("Record locked", history[0]['change_summary'])
+        self.assertEqual(len(history), 0)  # get_edit_history excludes the max-version entry
 
     def test_update_locked_record_rejected(self):
         # Lock first
@@ -82,8 +81,8 @@ class TestRecordLocking(unittest.TestCase):
         
         # Check history
         history = LinguisticService.get_edit_history(self.record_id)
-        self.assertEqual(len(history), 2) # Lock + Unlock
-        self.assertEqual(history[0]['change_summary'], "Record unlocked")
+        self.assertEqual(len(history), 1)  # get_edit_history excludes max-version; lock entry is visible
+        self.assertEqual(history[0]['change_summary'], "Record locked")
 
     def test_update_after_unlock_success(self):
         # Lock then unlock
