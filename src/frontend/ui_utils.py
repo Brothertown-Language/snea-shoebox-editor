@@ -468,9 +468,11 @@ def apply_standard_layout_css() -> None:
             background: #888;
             border-radius: 8px;
             border: 3px solid #e0e0e0;
+            opacity: 1 !important;
         }
         ::-webkit-scrollbar-thumb:hover {
             background: #555;
+            opacity: 1 !important;
         }
 
         /* Scrollbar accessibility — Firefox */
