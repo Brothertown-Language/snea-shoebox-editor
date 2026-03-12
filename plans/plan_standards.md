@@ -45,3 +45,4 @@ Before calling `submit` in any session where plans were touched or completed:
 - Deliver a plan overview via `answer` tool, referencing the plan file path for full details.
 - Call `submit` immediately after delivery — no further tool calls.
 - See `guidelines/01-approval-gate.md` for full approval gate, phased/flat plan logic, and loop prevention rules.
+- Always double check to ensure the plan is complete and accruate reflects changes needed to the codebase, etc.

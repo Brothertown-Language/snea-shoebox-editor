@@ -405,7 +405,6 @@ def _render_review_view():
 
     # ── Sidebar: header ───────────────────────────────────────────
     with st.sidebar:
-        st.markdown("**Review Staged Entries**")
 
         # Step 5: Cancel button — only enabled control during bulk
         if review_bulk_in_progress:
@@ -468,7 +467,6 @@ def _render_review_table(batch_id, session_deps):
 
     # ── Sidebar Controls ───────────────────────────────────────────
     with st.sidebar:
-        st.markdown("**Filters**")
         
         # Locked Conflict Global Warning
         with get_session() as session:
@@ -629,7 +627,6 @@ def _render_review_table(batch_id, session_deps):
                 st.rerun()
 
         st.divider()
-        st.markdown("**Bulk Actions**")
 
         # Display flash message from previous bulk action
         flash = st.session_state.pop("bulk_flash", None)
@@ -1001,7 +998,6 @@ def _render_review_table(batch_id, session_deps):
     if len(page_rows) >= 2 and not review_bulk_in_progress:
         page_queue_ids = [r.id for r in page_rows]
         st.divider()
-        st.markdown("**Page Actions** — applies to displayed records only")
         if is_new_source:
             _pb_spacer, _pb_c1, _pb_c2 = st.columns([4, 1, 1])
             with _pb_c1:
