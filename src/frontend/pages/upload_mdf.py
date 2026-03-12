@@ -1003,31 +1003,44 @@ def _render_review_table(batch_id, session_deps):
         st.divider()
         st.markdown("**Page Actions** — applies to displayed records only")
         if is_new_source:
-            if st.button("Approve Page as New Records", key="page_bulk_approve_new", use_container_width=True):
-                st.session_state["review_bulk_page_ids"] = page_queue_ids
-                st.session_state["review_bulk_in_progress"] = True
-                st.session_state["review_bulk_label"] = "Approving page records as new…"
-                st.session_state["review_bulk_action"] = "approve_new"
-                st.rerun()
+            _pb_spacer, _pb_c1, _pb_c2 = st.columns([4, 1, 1])
+            with _pb_c1:
+                if st.button("Approve Page as New Records", key="page_bulk_approve_new", use_container_width=True):
+                    st.session_state["review_bulk_page_ids"] = page_queue_ids
+                    st.session_state["review_bulk_in_progress"] = True
+                    st.session_state["review_bulk_label"] = "Approving page records as new…"
+                    st.session_state["review_bulk_action"] = "approve_new"
+                    st.rerun()
+            with _pb_c2:
+                if st.button("Discard Page Marked", key="page_bulk_discard_marked", use_container_width=True):
+                    st.session_state["review_bulk_page_ids"] = page_queue_ids
+                    st.session_state["review_bulk_in_progress"] = True
+                    st.session_state["review_bulk_label"] = "Discarding marked entries on page…"
+                    st.session_state["review_bulk_action"] = "discard_marked"
+                    st.rerun()
         else:
-            if st.button("Approve Page Matched", key="page_bulk_approve_matched", use_container_width=True):
-                st.session_state["review_bulk_page_ids"] = page_queue_ids
-                st.session_state["review_bulk_in_progress"] = True
-                st.session_state["review_bulk_label"] = "Applying matched entries on page…"
-                st.session_state["review_bulk_action"] = "approve_matched"
-                st.rerun()
-            if st.button("Approve Page Non-Matches as New", key="page_bulk_approve_nonmatch", use_container_width=True):
-                st.session_state["review_bulk_page_ids"] = page_queue_ids
-                st.session_state["review_bulk_in_progress"] = True
-                st.session_state["review_bulk_label"] = "Approving page non-matches as new records…"
-                st.session_state["review_bulk_action"] = "approve_nonmatch"
-                st.rerun()
-        if st.button("Discard Page Marked", key="page_bulk_discard_marked", use_container_width=True):
-            st.session_state["review_bulk_page_ids"] = page_queue_ids
-            st.session_state["review_bulk_in_progress"] = True
-            st.session_state["review_bulk_label"] = "Discarding marked entries on page…"
-            st.session_state["review_bulk_action"] = "discard_marked"
-            st.rerun()
+            _pb_spacer, _pb_c1, _pb_c2, _pb_c3 = st.columns([3, 1, 1, 1])
+            with _pb_c1:
+                if st.button("Approve Page Matched", key="page_bulk_approve_matched", use_container_width=True):
+                    st.session_state["review_bulk_page_ids"] = page_queue_ids
+                    st.session_state["review_bulk_in_progress"] = True
+                    st.session_state["review_bulk_label"] = "Applying matched entries on page…"
+                    st.session_state["review_bulk_action"] = "approve_matched"
+                    st.rerun()
+            with _pb_c2:
+                if st.button("Approve Page Non-Matches as New", key="page_bulk_approve_nonmatch", use_container_width=True):
+                    st.session_state["review_bulk_page_ids"] = page_queue_ids
+                    st.session_state["review_bulk_in_progress"] = True
+                    st.session_state["review_bulk_label"] = "Approving page non-matches as new records…"
+                    st.session_state["review_bulk_action"] = "approve_nonmatch"
+                    st.rerun()
+            with _pb_c3:
+                if st.button("Discard Page Marked", key="page_bulk_discard_marked", use_container_width=True):
+                    st.session_state["review_bulk_page_ids"] = page_queue_ids
+                    st.session_state["review_bulk_in_progress"] = True
+                    st.session_state["review_bulk_label"] = "Discarding marked entries on page…"
+                    st.session_state["review_bulk_action"] = "discard_marked"
+                    st.rerun()
 
 
 def _set_queue_status(queue_id, status):
