@@ -883,6 +883,7 @@ def _render_review_table(batch_id, session_deps):
                             queue_id=row.id,
                             user_email=user_email,
                             session_id=session_id,
+                            override_status=selected_status,
                         )
                         # Populate search entries (skip for discards)
                         if result.get('record_id'):

@@ -1225,8 +1225,13 @@ class UploadService:
 
     @staticmethod
     def apply_single(queue_id: int, user_email: str,
-                     session_id: str, session=None) -> dict:
+                     session_id: str, session=None,
+                     override_status: str | None = None) -> dict:
         """Apply a single matchup_queue row immediately.
+
+        If override_status is provided it is used as the authoritative action
+        (and written to row.status in the same transaction), so the caller does
+        not need to pre-update the DB status before calling this method.
 
         Returns {action, record_id, lx}.
         """
@@ -1239,14 +1244,20 @@ class UploadService:
             if not row:
                 raise ValueError(f"Queue entry {queue_id} not found")
 
-            if row.status in ('pending', 'ignored'):
+            # Apply override before any guard checks
+            if override_status is not None:
+                row.status = override_status
+
+            effective_status = row.status
+
+            if effective_status in ('pending', 'ignored'):
                 raise ValueError(
-                    f"Cannot apply entry with status '{row.status}'. "
+                    f"Cannot apply entry with status '{effective_status}'. "
                     "Set a valid actionable status first."
                 )
 
             # Discard: just remove from queue without creating/updating records
-            if row.status == 'discard':
+            if effective_status == 'discard':
                 lx = row.lx
                 session.delete(row)
                 if not _provided_session:
@@ -1259,7 +1270,7 @@ class UploadService:
 
             from src.database.models.core import RecordLanguage, Language
 
-            if row.status == 'matched':
+            if effective_status == 'matched':
                 record = session.get(Record, row.suggested_record_id)
                 if not record:
                     raise ValueError(f"Suggested record {row.suggested_record_id} not found")
@@ -1291,7 +1302,7 @@ class UploadService:
                 record_id = record.id
                 action = 'updated'
 
-            elif row.status == 'create_homonym':
+            elif effective_status == 'create_homonym':
                 # Find highest hm for this lx in same source
                 from sqlalchemy import func as sa_func
                 max_hm = (
@@ -1330,7 +1341,7 @@ class UploadService:
                 record_id = new_record.id
                 action = 'created_homonym'
 
-            elif row.status == 'create_new':
+            elif effective_status == 'create_new':
                 new_record = Record(
                     lx=entry['lx'],
                     sort_lx=LinguisticService.generate_sort_lx(entry['lx']),
@@ -1361,7 +1372,7 @@ class UploadService:
                 record_id = new_record.id
                 action = 'created'
             else:
-                raise ValueError(f"Unexpected status '{row.status}'")
+                raise ValueError(f"Unexpected status '{effective_status}'")
 
             session.delete(row)
             if not _provided_session:
