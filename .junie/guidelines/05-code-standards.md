@@ -13,6 +13,10 @@
 - **KISS**: Simplest correct solution. No unnecessary abstraction or cleverness.
 - **DRY & Modularity**: No duplicated logic. Break into discrete, focused methods — no monolithic blocks.
 - **Single Responsibility**: Every method performs exactly one task. Decompose long procedural blocks.
+- **Lazy Imports**: Use lazy (deferred) imports — `from … import` inside a function body — as the standard guard
+  against circular imports and module initialization errors. Any cross-package import that could create a circular
+  dependency MUST be lazy. Module-level imports are reserved for stdlib, third-party packages, and intra-module
+  symbols that carry no circular risk.
 - **No Re-exports**: Don't add re-exports in `__init__.py` via `__all__`. Import from concrete module paths. Existing
   re-exports (those present in the file before the current task began) are assumed approved — do not remove them
   without explicit instruction. Re-exports added by the agent in the current session are not "existing" and must be

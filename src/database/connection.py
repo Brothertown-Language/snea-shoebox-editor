@@ -8,7 +8,8 @@ import atexit
 import getpass
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from .base import Base
+# Base is imported lazily inside functions (see _reset_sequences, init_db) to avoid
+# circular initialization errors — per project lazy-import standard (05-code-standards.md).
 from src.logging_config import get_logger
 
 _logger = get_logger("snea.database.pgserver")
@@ -617,6 +618,7 @@ def _reset_sequences(engine) -> None:
     in this state.
     """
     from sqlalchemy import Integer
+    from .base import Base  # lazy import — avoids circular init
     with engine.connect() as conn:
         for table in Base.metadata.sorted_tables:
             id_col = table.c.get("id")
@@ -639,8 +641,9 @@ def _reset_sequences(engine) -> None:
 
 def init_db():
     """Initialize the database schema."""
+    from .base import Base  # lazy import — avoids circular init
     engine = get_engine()
-    
+
     Base.metadata.create_all(engine)
     from .migrations import MigrationManager
     MigrationManager(engine).run_all()
