@@ -1,7 +1,7 @@
 # Plan: Fix Pre-Existing Test Failures
 
 **File:** `plans/fix-preexisting-failures.md`
-**Status:** ✅ Complete
+**Status:** ✔️ Completed
 
 ---
 
@@ -57,16 +57,16 @@ Test expects `handle_ui_error` to call `st.expander(user_message, expanded=True)
 
 ## Steps
 
-**Step 1:** ✅ Fix `test_production_safety.py` — both tests
+**Step 1:** ✔️ Fix `test_production_safety.py` — both tests
 - `test_production_detection`: patch `src.database.connection.st` secrets to raise, keeping `getpass.getuser` mock
 - `test_pgserver_safety`: patch `_pg_server=None` and `is_production` to return `True`
 
-**Step 2:** ✅ Fix `test_token_rehydration.py` — update expected error message assertion
+**Step 2:** ✔️ Fix `test_token_rehydration.py` — update expected error message assertion
 
-**Step 3:** ✅ Fix `test_ui_utils_errors.py` — update dev-mode assertions to match current `handle_ui_error` behavior (no expander; uses `st.warning` for exception detail)
+**Step 3:** ✔️ Fix `test_ui_utils_errors.py` — update dev-mode assertions to match current `handle_ui_error` behavior (no expander; uses `st.warning` for exception detail)
 
-**Step 4:** ✅ Run all 4 previously-failing tests and confirm green — 5 passed in 0.92s
+**Step 4:** ✔️ Run all 4 previously-failing tests and confirm green — 5 passed in 0.92s
 
-**Step 5:** ✅ Verify that all tests pass
+**Step 5:** ✔️ Verify that all tests pass
 
-**Step 6:** ✅ Updated plan — all steps complete.
+**Step 6:** ✔️ Updated plan — all steps complete.

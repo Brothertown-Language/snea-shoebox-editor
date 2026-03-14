@@ -1,14 +1,29 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: Search .junie guideline files using BM25/TF-IDF ranking.
-Usage: uv run python ai_bin/guidelines-search <term> [--file <filename>] [--context <n>] [--top <n>]
+DESCRIPTION: Search .junie guideline files using hybrid BM25 + semantic re-ranking (default),
+             or BM25-only / semantic-only via flags.
+
+Usage: uv run python ai_bin/guidelines-search <term> [options]
+       uv run python ai_bin/guidelines-search --bm25 <term> [options]  (BM25-only; no model needed)
 
 Arguments:
-  <term>            Search term (BM25-ranked; case-insensitive)
+  <term>            Search term (case-insensitive)
   --file <filename> Restrict search to one guideline file (e.g., 03-tool-usage.md)
   --context <n>     Lines of surrounding context to print (default: 3)
   --top <n>         Max results to show (default: 10)
+  --bm25            BM25-only mode (fast, no model load)
+  --semantic        Semantic-only mode (cosine similarity via sentence-transformers)
+  --alpha <float>   Hybrid weight for BM25 vs semantic (default: 0.5); ignored in single-mode
   --help / -h       Print this help and exit
+
+Modes:
+  default           Hybrid re-ranking: alpha * bm25_norm + (1 - alpha) * semantic_sim
+  --bm25            BM25 only — exact/keyword matching, no model required
+  --semantic        Semantic only — embedding cosine similarity
+  --bm25 --semantic Error: mutually exclusive
+
+Note: hybrid and --semantic modes require sentence-transformers (~500 MB first download, slow
+cold start). Model: all-MiniLM-L6-v2.
 
 Exit codes: 0 = matches found, 1 = no matches, 2 = error
 """
@@ -21,6 +36,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).parent.parent
 GUIDELINES_ROOT = ROOT / ".junie"
+DEFAULT_MODEL = "all-MiniLM-L6-v2"
 
 
 def load_corpus(file_filter: str | None) -> list[tuple[Path, int, str]]:
@@ -80,6 +96,52 @@ def compute_idf(corpus_tokens: list[list[str]]) -> dict[str, float]:
     return {t: math.log((n - f + 0.5) / (f + 0.5) + 1) for t, f in df.items()}
 
 
+def bm25_scores_raw(
+    query_tokens: list[str],
+    corpus_tokens: list[list[str]],
+    idf: dict[str, float],
+    avg_dl: float,
+) -> list[float]:
+    return [
+        bm25_score(query_tokens, doc_tokens, idf, avg_dl=avg_dl)
+        for doc_tokens in corpus_tokens
+    ]
+
+
+def semantic_scores(lines: list[str], query: str) -> list[float]:
+    """Return cosine similarity scores in [0, 1] for each line vs query."""
+    from sentence_transformers import SentenceTransformer, util  # type: ignore[import]
+
+    model = SentenceTransformer(DEFAULT_MODEL)
+    corpus_embeddings = model.encode(lines, convert_to_tensor=True, show_progress_bar=False)
+    query_embedding = model.encode(query, convert_to_tensor=True, show_progress_bar=False)
+    cosine_scores = util.cos_sim(query_embedding, corpus_embeddings)[0]
+    return cosine_scores.tolist()
+
+
+def hybrid_scores(
+    query_tokens: list[str],
+    corpus_tokens: list[list[str]],
+    idf: dict[str, float],
+    avg_dl: float,
+    lines: list[str],
+    query: str,
+    alpha: float,
+) -> list[float]:
+    """Combine normalised BM25 and semantic cosine scores."""
+    raw_bm25 = bm25_scores_raw(query_tokens, corpus_tokens, idf, avg_dl)
+    min_b, max_b = min(raw_bm25), max(raw_bm25)
+    span_b = max_b - min_b if max_b != min_b else 1.0
+    norm_bm25 = [(s - min_b) / span_b for s in raw_bm25]
+
+    sem = semantic_scores(lines, query)
+    min_s, max_s = min(sem), max(sem)
+    span_s = max_s - min_s if max_s != min_s else 1.0
+    norm_sem = [(s - min_s) / span_s for s in sem]
+
+    return [alpha * b + (1.0 - alpha) * s for b, s in zip(norm_bm25, norm_sem)]
+
+
 def main() -> None:
     args = sys.argv[1:]
     if not args or "--help" in args or "-h" in args:
@@ -89,6 +151,9 @@ def main() -> None:
     file_filter: str | None = None
     context_n = 3
     top_n = 10
+    alpha = 0.5
+    mode_bm25 = False
+    mode_semantic = False
     term_parts: list[str] = []
 
     i = 0
@@ -102,9 +167,22 @@ def main() -> None:
         elif args[i] == "--top" and i + 1 < len(args):
             top_n = int(args[i + 1])
             i += 2
+        elif args[i] == "--alpha" and i + 1 < len(args):
+            alpha = float(args[i + 1])
+            i += 2
+        elif args[i] == "--bm25":
+            mode_bm25 = True
+            i += 1
+        elif args[i] == "--semantic":
+            mode_semantic = True
+            i += 1
         else:
             term_parts.append(args[i])
             i += 1
+
+    if mode_bm25 and mode_semantic:
+        print("ERROR: --bm25 and --semantic are mutually exclusive.", file=sys.stderr)
+        sys.exit(2)
 
     term = " ".join(term_parts)
     if not term:
@@ -118,12 +196,18 @@ def main() -> None:
     idf = compute_idf(corpus_tokens)
     query_tokens = tokenize(term)
 
-    scored = [
-        (bm25_score(query_tokens, corpus_tokens[idx], idf, avg_dl=avg_dl), idx)
-        for idx in range(len(chunks))
-    ]
-    scored.sort(key=lambda x: x[0], reverse=True)
-    top = [(s, idx) for s, idx in scored[:top_n] if s > 0]
+    if mode_bm25:
+        raw = bm25_scores_raw(query_tokens, corpus_tokens, idf, avg_dl)
+        scored = sorted(enumerate(raw), key=lambda x: x[1], reverse=True)
+        top = [(s, idx) for idx, s in scored[:top_n] if s > 0]
+    elif mode_semantic:
+        sem = semantic_scores(all_lines, term)
+        scored = sorted(enumerate(sem), key=lambda x: x[1], reverse=True)
+        top = [(s, idx) for idx, s in scored[:top_n] if s > 0]
+    else:
+        hyb = hybrid_scores(query_tokens, corpus_tokens, idf, avg_dl, all_lines, term, alpha)
+        scored = sorted(enumerate(hyb), key=lambda x: x[1], reverse=True)
+        top = [(s, idx) for idx, s in scored[:top_n] if s > 0]
 
     if not top:
         print(f"No matches for: {term!r}")

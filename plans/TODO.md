@@ -23,10 +23,10 @@ Note for the AI Agent: interview the user for details and then develop the plan 
     Date Completed:
     Completed By:
 
-- [ ] `ai_bin/guidelines-search`: Add fuzzy/difflib search mode (`--fuzzy` flag) — zero-dep typo-tolerant matching via `difflib.get_close_matches`. No external deps required.
-    Date Completed:
-    Completed By:
+- [x] `ai_bin/guidelines-search`: Add fuzzy/difflib search mode (`--fuzzy` flag) — zero-dep typo-tolerant matching via `difflib.get_close_matches`. No external deps required.
+    Date Completed: 2026-03-12
+    Completed By: Will not do — superseded by hybrid BM25+semantic default (implemented 2026-03-12). Fuzzy/difflib matching is redundant.
 
-- [ ] `ai_bin/guidelines-search`: Add semantic search mode (`--semantic` flag) — embedding-based search via `sentence-transformers` (inline `uv` script dep, ~500MB first download, slow cold start). True semantic matching without exact terms.
-    Date Completed:
-    Completed By:
+- [x] `ai_bin/guidelines-search`: Add semantic search mode (`--semantic` flag) — embedding-based search via `sentence-transformers` (inline `uv` script dep, ~500MB first download, slow cold start). True semantic matching without exact terms.
+    Date Completed: 2026-03-12
+    Completed By: Junie — hybrid BM25+semantic re-ranking is now the default; `--bm25` and `--semantic` flags for single-mode. See `plan-guidelines-search-semantic.md`.

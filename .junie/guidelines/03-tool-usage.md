@@ -2,8 +2,7 @@
 
 ## Verification
 
-- Never use `sed -i`. Use IDE tools (`multi_edit`, `search_replace`) for all file modifications. Verify file/path claims
-  with a tool call (`ls`, `open`, `search_project`).
+- **`sed -i` is FORBIDDEN.** Using `sed -i` (or any `sed` in-place edit flag) to modify any file is a CRITICAL VIOLATION. The agent MUST use IDE tools (`multi_edit`, `search_replace`) for all file modifications. Any use of `sed -i` MUST be logged immediately via `ai_bin/violation-log` and halted. No exceptions. Verify file/path claims with a tool call (`ls`, `open`, `search_project`).
 - If a tool call fails or is inconclusive, state it and retry with a different tool.
 
 ## Path Rules (ZERO TOLERANCE)
@@ -156,6 +155,8 @@ is permitted and required. Always use the designated `ai_bin/` utility:
 - New helpers must follow `09-scripting.md` header conventions and expose a `--help` flag with a `DESCRIPTION:` line
   in their module docstring.
 - Invoke tools with `uv run python ai_bin/<tool-name>`.
+- **No inline PEP 723 deps**: `ai_bin/` scripts MUST NOT use `# /// script` / `# dependencies = [...]` blocks.
+  All dependencies MUST be declared in `pyproject.toml` only. Using inline script deps is a CRITICAL VIOLATION.
 
 - **Production Schema Protection**: Scripts authored or executed by the agent that interact with the database MUST check
   the `MARKER_JUNIE_TERMINAL` env var at startup. The variable is considered set if it is present in the environment

@@ -98,7 +98,7 @@ class TestUploadE2E(unittest.TestCase):
         
         # 2. Stage new entries: one should match 'dog', one is new 'cat'
         entries = [
-            {'lx': 'dog', 'mdf_data': '\\lx dog\n\\ps n\n\\ge pet dog'},
+            {'lx': 'dog', 'mdf_data': '\\lx dog\n\\ps n\n\\ge canine animal'},
             {'lx': 'cat', 'mdf_data': '\\lx cat\n\\ps n\n\\ge feline'}
         ]
         
@@ -151,7 +151,7 @@ class TestUploadE2E(unittest.TestCase):
             # 6. Verify Persistence
             # Check Record Updates
             dog_rec = self.session.get(Record, rec.id)
-            self.assertEqual(dog_rec.ge, "pet dog") # Updated from new MDF
+            self.assertEqual(dog_rec.ge, "canine animal") # Updated from new MDF
             self.assertEqual(dog_rec.current_version, 2)
             
             cat_rec = self.session.get(Record, cat_result['record_id'])

@@ -11,7 +11,7 @@ Commands (plan-level):
   set-status <filename> <status>                 Update top-level Status line
   archive <filename> [--force]                   Move completed plan to plans/archive/
   delete <filename> --confirm                    Delete a plan file
-
+  remediate <filename>                           Add missing required sections to a plan file
 Commands (phase-level):
   phase-add <filename> <phase-title>             Append a new H2 phase section
   phase-remove <filename> <phase-title> --confirm  Remove a phase and all its steps
@@ -38,7 +38,7 @@ PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 PLANS_DIR = PROJECT_ROOT / "plans"
 ARCHIVE_DIR = PLANS_DIR / "archive"
 
-STATUS_ICONS = {"done": "✔️", "in-progress": "🏗️", "pending": "🔄"}
+STATUS_ICONS = {"done": "✔️", "in-progress": "🏗️", "pending": "🔄", "pending-approval": "⏳", "blocked": "🚫"}
 COMPLETE_MARKERS = {"✔️", "✅"}
 
 
@@ -146,8 +146,16 @@ def cmd_create(args: argparse.Namespace) -> None:
         f"**Created:** {today}  \n"
         f"**Scope:** {scope}\n\n"
         f"---\n\n"
+        f"## Overview\n\n"
+        f"<!-- Describe WHAT this plan does and WHY. No large code blocks. -->\n\n"
+        f"---\n\n"
         f"## Background\n\n"
         f"<!-- Describe the context and motivation here. -->\n\n"
+        f"---\n\n"
+        f"## Checklist\n\n"
+        f"- [ ] Verify correctness with unit tests\n"
+        f"- [ ] Verify completion with a deep code dive\n"
+        f"- [ ] Automatically archive completed plans\n\n"
         f"---\n\n"
         f"## Steps\n\n"
     )
@@ -177,14 +185,19 @@ def cmd_set_status(args: argparse.Namespace) -> None:
     lines = read_lines(path)
     idx, _ = parse_status_line(lines)
     if idx is None:
-        print("ERROR: no **Status:** line found in plan.", file=sys.stderr)
-        sys.exit(1)
+        # Insert a Status line after the H1 title; add H1 if also missing
+        h1_idx = next((i for i, line in enumerate(lines) if line.startswith("# ")), None)
+        if h1_idx is None:
+            lines.insert(0, f"# Plan\n")
+            h1_idx = 0
+        lines.insert(h1_idx + 1, "**Status:** 🔄 Pending  \n")
+        idx, _ = parse_status_line(lines)
     icon_key = args.status.lower()
     icon = STATUS_ICONS.get(icon_key)
     if icon is None:
         # Accept raw icon or label directly
         icon = args.status
-    label_map = {"✔️": "Complete", "🏗️": "In-Progress", "🔄": "Pending"}
+    label_map = {"✔️": "Complete", "🏗️": "In-Progress", "🔄": "Pending", "⏳": "Pending Approval", "🚫": "Blocked"}
     label = label_map.get(icon, args.status)
     lines[idx] = f"**Status:** {icon} {label}  \n"
     write_lines(path, lines)
@@ -214,6 +227,91 @@ def cmd_delete(args: argparse.Namespace) -> None:
     path = resolve_plan(args.filename)
     path.unlink()
     print(f"Deleted: {path.relative_to(PROJECT_ROOT)}")
+
+
+# ---------------------------------------------------------------------------
+# Remediate command
+# ---------------------------------------------------------------------------
+
+CHECKLIST_ITEMS = [
+    "- [ ] Verify correctness with unit tests",
+    "- [ ] Verify completion with a deep code dive",
+    "- [ ] Automatically archive completed plans",
+]
+
+
+def cmd_remediate(args: argparse.Namespace) -> None:
+    path = resolve_plan(args.filename)
+    lines = read_lines(path)
+    text = "".join(lines)
+    added: list[str] = []
+
+    # 1. Ensure **Status:** line exists (insert after H1 title if missing)
+    if parse_status_line(lines)[0] is None:
+        for i, line in enumerate(lines):
+            if line.startswith("# "):
+                lines.insert(i + 1, "\n**Status:** 🔄 Pending  \n")
+                added.append("**Status:** line")
+                break
+
+    # 2. Ensure ## Overview section exists (insert before first ## section or before ## Steps)
+    has_overview = any(l.startswith("## Overview") for l in lines)
+    if not has_overview:
+        # Find first H2 heading
+        insert_at = None
+        for i, line in enumerate(lines):
+            if line.startswith("## "):
+                insert_at = i
+                break
+        overview_block = "## Overview\n\n<!-- Describe WHAT this plan does and WHY. No large code blocks. -->\n\n---\n\n"
+        if insert_at is not None:
+            lines.insert(insert_at, overview_block)
+        else:
+            lines.append("\n" + overview_block)
+        added.append("## Overview section")
+
+    # 3. Ensure ## Checklist section exists with all 3 mandatory items
+    has_checklist = any(l.startswith("## Checklist") for l in lines)
+    if not has_checklist:
+        # Insert before ## Steps, or append
+        insert_at = None
+        for i, line in enumerate(lines):
+            if line.startswith("## Steps"):
+                insert_at = i
+                break
+        checklist_block = (
+            "## Checklist\n\n"
+            + "\n".join(CHECKLIST_ITEMS)
+            + "\n\n---\n\n"
+        )
+        if insert_at is not None:
+            lines.insert(insert_at, checklist_block)
+        else:
+            lines.append("\n" + checklist_block)
+        added.append("## Checklist section")
+    else:
+        # Checklist exists — ensure all 3 mandatory items are present
+        checklist_idx = next(i for i, l in enumerate(lines) if l.startswith("## Checklist"))
+        # Find end of checklist section
+        end_idx = len(lines)
+        for i in range(checklist_idx + 1, len(lines)):
+            if lines[i].startswith("## ") or lines[i].startswith("# "):
+                end_idx = i
+                break
+        section_text = "".join(lines[checklist_idx:end_idx])
+        for item in CHECKLIST_ITEMS:
+            item_text = item.replace("- [ ] ", "").strip()
+            if item_text not in section_text:
+                # Insert before end of section
+                lines.insert(end_idx, item + "\n")
+                end_idx += 1
+                added.append(f"checklist item: {item_text}")
+
+    write_lines(path, lines)
+    if added:
+        print(f"Remediated {path.name}: added {', '.join(added)}")
+    else:
+        print(f"{path.name} is already compliant — nothing to add.")
 
 
 # ---------------------------------------------------------------------------
@@ -383,7 +481,7 @@ def build_parser() -> argparse.ArgumentParser:
     # set-status
     p = sub.add_parser("set-status", help="Update top-level Status line")
     p.add_argument("filename")
-    p.add_argument("status", help="done | in-progress | pending (or raw icon)")
+    p.add_argument("status", help="done | in-progress | pending | pending-approval | blocked (or raw icon)")
 
     # archive
     p = sub.add_parser("archive", help="Move completed plan to plans/archive/")
@@ -417,7 +515,7 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("filename")
     p.add_argument("phase")
     p.add_argument("step", help="Step number (integer)")
-    p.add_argument("icon", help="done | in-progress | pending (or raw icon)")
+    p.add_argument("icon", help="done | in-progress | pending | pending-approval | blocked (or raw icon)")
 
     # step-remove
     p = sub.add_parser("step-remove", help="Remove a step and renumber")
@@ -428,6 +526,10 @@ def build_parser() -> argparse.ArgumentParser:
 
     # step-list
     p = sub.add_parser("step-list", help="List all steps with status")
+    p.add_argument("filename")
+
+    # remediate
+    p = sub.add_parser("remediate", help="Add missing required sections to a plan file")
     p.add_argument("filename")
 
     return parser
@@ -446,6 +548,7 @@ COMMANDS: dict[str, object] = {
     "step-status": cmd_step_status,
     "step-remove": cmd_step_remove,
     "step-list": cmd_step_list,
+    "remediate": cmd_remediate,
 }
 
 
