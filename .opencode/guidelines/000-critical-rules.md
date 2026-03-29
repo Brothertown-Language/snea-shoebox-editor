@@ -32,9 +32,18 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 ### Required Format: Executive Summary
 
+**ALL bylines MUST include "on behalf of <HumanName>".**
+
+**Dynamic Components:**
+- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
+- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
+- `<HumanName>`: From `git config user.name` (fallback to `$USER`)
+
+**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity and human name at runtime.**
+
 **Intermediate task (multi-task spec):**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
+AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
 
 **Summary:**
 
@@ -45,7 +54,7 @@ AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
 
 **Final task or single-task spec:**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
+AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
 
 **Summary:**
 
@@ -56,7 +65,27 @@ AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
 All tasks complete from this specification.
 ```
 
-### 🚫 FORBIDDEN in Progress Comments
+### Required Byline Format Table (MANDATORY)
+
+**ALL comments AND issue body signatures MUST include "on behalf of <HumanName>".**
+
+| Type | Required Format |
+|------|-----------------|
+| Progress (task completion) | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>` |
+| Body update | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Updated: <reason>` |
+| Spec alteration | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>` |
+| Closure | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ **Closed - Implemented**` |
+| General response | `AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>` |
+| Issue body signature | `*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*` |
+
+**Dynamic Components:**
+- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
+- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
+- `<HumanName>`: From `git config user.name` (fallback to `$USER`)
+
+**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity and human name at runtime.**
+
+**See `.opencode/skills/github-comments/SKILL.md` for complete requirements.**
 
 - **File lists** — Redundant (visible in git commits)
 - **"Next" field** — Dialog prompt (violates `125-github-issue-comments.md`)
