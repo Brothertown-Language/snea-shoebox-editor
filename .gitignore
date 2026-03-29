@@ -83,3 +83,5 @@ docker.cache/
 docker.reports/
 docker.app/
 /.output.txt
+/opencode-guidelines-export/
+/opencode-guidelines-export.zip
