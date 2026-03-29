@@ -11,43 +11,75 @@ compatibility: opencode
 
 You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments on issues and PRs follow the correct format, are posted at the right time, and preserve history by preferring comments over issue body edits.
 
-## Comment Format: AI Identity Prefix
+## Comment Format: Branded AI Identity
 
 ### ✅ ALWAYS DO (MANDATORY)
 
-ALL comments on issues and PRs MUST be prefixed with AI identity.
+ALL comments on issues and PRs MUST end with AI byline.
 
 **ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
 
-**For PROGRESS COMMENTS (task completion, implementation updates):**
+**Bylines are ALWAYS at the END of content, wrapped in italics.**
+
+**Format:**
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
+*[<AgentIcon> AI: <AgentBrand>] on behalf of <HumanName> <ContextEmoji> <TypeText>*
 ```
 
-**For GENERAL COMMENTS (responses, clarifications, closures):**
+**For PROGRESS COMMENTS (task completion, implementation updates):**
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+*[🤖 AI: OpenCode/glm-5] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+```
+
+**For GENERAL COMMENTS (responses, clarifications):**
+```
+<response content>
+
+*[🤖 AI: OpenCode/glm-5] on behalf of <HumanName> 🤖*
 ```
 
 **Components (supplied dynamically at runtime):**
-- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
-- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
+- `<AgentIcon>`: Agent iconography (🤖 for OpenCode, 🟣 for Claude, 💙 for Copilot)
+- `<AgentBrand>`: Agent brand identifier (e.g., `OpenCode/glm-5`, `Claude/sonnet-4`)
 - `<HumanName>`: From `git config user.name` (fallback to `$USER`)
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
-### Emoji Guide
-- 🤖 — Standard response
-- ✅ — Approval/confirmation / task completion
-- ⚠️ — Warning or caution
-- 🔍 — Analysis/investigation
-- 📝 — Documentation or notes
-- ❌ — Rejection/closure
+### Agent Icon Registry
+
+| Agent | Icon | Brand |
+|-------|------|-------|
+| OpenCode | 🤖 | `OpenCode/<model>` |
+| Claude | 🟣 | `Claude/<model>` |
+| Copilot | 💙 | `Copilot/<model>` |
+| Generic | 🤖 | `AI/<model>` |
+
+### Context Emoji Reference
+
+| Emoji | Type Text | Use Case |
+|-------|-----------|----------|
+| ✅ | `Task Complete: <task>` | Progress comments |
+| 🤖 | *(none)* | General responses |
+| 📝 | `Updated: <reason>` | Body updates |
+| 📝 | `Spec altered: <summary>` | Spec alterations |
+| ❌ | `Closed - <reason>` | Issue closures |
+| 🔍 | `Analysis` | Investigation findings |
+| ⚠️ | `Warning` | Cautions |
+| ✨ | `Created` | Issue/PR creation |
+| 🚀 | `Launched` | PR creation |
 
 ### Signature for Issue/PR Bodies (NOT comments)
 
 ```markdown
-*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*
+<issue content>
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✨ Created*
 ```
 
 Place at END of issue bodies and PR descriptions, preceded by blank line.
@@ -101,19 +133,17 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 
 **For intermediate task (multi-task spec):**
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value of the change.>
 
 **Outcome:** <What changed for stakeholders / users / system behavior>
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
 ```
 
 **For final task or single-task spec:**
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value of the change.>
@@ -121,6 +151,8 @@ AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name
 **Outcome:** <What changed for stakeholders / users / system behavior>
 
 All tasks complete from this specification.
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
 ```
 
 ### Executive Summary Requirements
@@ -178,17 +210,19 @@ When updating textual content in an issue body:
 ### Comment Format for Body Updates
 
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Updated: <reason>
+<summary of changes>
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Updated: <reason>*
 ```
 
 ### Spec Alteration Format
 
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>
-
 - Changed: <what changed>
 - Added: <what added>
 - Removed: <what removed>
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Spec altered: <summary>*
 ```
 
 ### What Counts as "Textual Content"
@@ -218,8 +252,6 @@ AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>
 ### Closure Comment Format
 
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ **Closed - Implemented**
-
 ## Summary
 Completed all tasks from this specification:
 - ✅ <task 1>
@@ -229,6 +261,8 @@ Completed all tasks from this specification:
 Commit `<sha>`: <commit message>
 
 All success criteria met.
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ❌ Closed - Implemented*
 ```
 
 ### Closure Reasons Requiring Comments
@@ -308,8 +342,8 @@ GOOD: "The keys look correct. Ready when you are."
 
 ### ✅ ALWAYS DO
 
-- Prefix ALL comments with AI identity
-- Use signature footer for issue/PR bodies
+- Post bylines at END of ALL comments with branded AI marker
+- Use signature footer for issue/PR bodies at END
 - Comment when updating textual content
 - Comment when altering spec structure
 - Comment when closing issues
@@ -339,20 +373,18 @@ GOOD: "The keys look correct. Ready when you are."
 ### Task Completion Comment (Intermediate Task)
 
 ```
-AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ Task Complete: Create github-comments SKILL.md
-
 **Summary:**
 
 Created skill file defining comment format rules, decision tables for when to comment vs edit issue bodies, and example workflows. This establishes clear protocols for AI agents posting to GitHub.
 
 **Outcome:** Agents now have explicit guidance on comment types, timing, and format—reducing inconsistent or missing issue updates.
+
+*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ✅ Task Complete: Create github-comments SKILL.md*
 ```
 
 ### Task Completion Comment (Final Task)
 
 ```
-AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ Task Complete: Update cross-references
-
 **Summary:**
 
 Updated cross-references in all affected guideline files to point to the new skill. Ensures consistent agent behavior across the codebase.
@@ -360,13 +392,13 @@ Updated cross-references in all affected guideline files to point to the new ski
 **Outcome:** All guideline references now correctly point to github-comments skill for comment protocol.
 
 All tasks complete from this specification.
+
+*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ✅ Task Complete: Update cross-references*
 ```
 
 ### Single-Task Completion
 
 ```
-AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ Task Complete: Implement executive summary format
-
 **Summary:**
 
 Replaced technical punch-list progress comments with executive summaries focused on stakeholder value. Removed redundant file lists and dialog prompts that violated HALT protocol.
@@ -374,28 +406,30 @@ Replaced technical punch-list progress comments with executive summaries focused
 **Outcome:** Progress comments now communicate impact and outcomes rather than changelog details—improving readability for stakeholders reviewing issue history.
 
 All tasks complete from this specification.
+
+*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ✅ Task Complete: Implement executive summary format*
 ```
 
 ### Issue Body Update Comment
 
 ```
-AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad 📝 Updated: Added Phase 2 for guideline updates per discussion in comment #5
+Added Phase 2 for guideline updates per discussion in comment #5
+
+*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad 📝 Updated: Added Phase 2 for guideline updates*
 ```
 
 ### Spec Alteration Comment
 
 ```
-AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad 📝 Spec altered: Added Phase 3 for verification
-
 - Added: Phase 3: Verification (auto-progress)
 - Added: Success criteria verification steps
+
+*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad 📝 Spec altered: Added Phase 3 for verification*
 ```
 
 ### Issue Closure Comment
 
 ```
-AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ **Closed - Implemented**
-
 ## Summary
 Completed all tasks from this specification:
 - ✅ Created github-comments skill
@@ -406,4 +440,6 @@ Completed all tasks from this specification:
 Commit `abc123`: Add github-comments skill directory
 
 All success criteria met.
+
+*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ❌ Closed - Implemented*
 ```

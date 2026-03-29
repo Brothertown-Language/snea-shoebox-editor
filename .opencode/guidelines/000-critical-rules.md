@@ -35,27 +35,25 @@ Every implementation task MUST be documented with progress comments on the GitHu
 **ALL bylines MUST include "on behalf of <HumanName>".**
 
 **Dynamic Components:**
-- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
-- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
+- `<AgentIcon>`: Agent iconography (🤖 for OpenCode, 🟣 for Claude, 💙 for Copilot)
+- `<AgentBrand>`: Agent brand identifier (e.g., `OpenCode/glm-5`, `Claude/sonnet-4`)
 - `<HumanName>`: From `git config user.name` (fallback to `$USER`)
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity and human name at runtime.**
 
 **Intermediate task (multi-task spec):**
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
 ```
 
 **Final task or single-task spec:**
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
@@ -63,24 +61,63 @@ AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name
 **Outcome:** <What changed for stakeholders>
 
 All tasks complete from this specification.
+
+*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
 ```
 
 ### Required Byline Format Table (MANDATORY)
 
 **ALL comments AND issue body signatures MUST include "on behalf of <HumanName>".**
 
+**Bylines are ALWAYS at the END of content, wrapped in italics.**
+
 | Type | Required Format |
 |------|-----------------|
-| Progress (task completion) | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>` |
-| Body update | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Updated: <reason>` |
-| Spec alteration | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>` |
-| Closure | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ **Closed - Implemented**` |
-| General response | `AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>` |
-| Issue body signature | `*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*` |
+| Progress (task completion) | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*` |
+| Body update | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Updated: <reason>*` |
+| Spec alteration | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Spec altered: <summary>*` |
+| Closure | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ❌ Closed - <reason>*` |
+| General response | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 🤖*` |
+| Issue body signature | `<issue content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✨ Created*` |
+| PR body signature | `<pr content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 🚀 Launched*` |
+
+**Position Breakdown:**
+
+| Position | Component | Description |
+|----------|-----------|-------------|
+| 1 | `<AgentIcon>` | Agent iconography (🤖, 🟣, 💙) — ALWAYS before `AI:` |
+| 2 | `AI:` | Fixed AI label |
+| 3 | `<AgentBrand>` | Agent brand (OpenCode/glm-5, Claude/sonnet-4) |
+| 4 | `on behalf of <HumanName>` | Human attribution |
+| 5 | `<ContextEmoji>` | Comment type indicator — ALWAYS after human name |
+| 6 | `<TypeText>` | Context-specific text |
+
+**Agent Icon Registry:**
+
+| Agent | Icon | Brand |
+|-------|------|-------|
+| OpenCode | 🤖 | `OpenCode/<model>` |
+| Claude | 🟣 | `Claude/<model>` |
+| Copilot | 💙 | `Copilot/<model>` |
+| Generic | 🤖 | `AI/<model>` |
+
+**Context Emoji Reference:**
+
+| Emoji | Type Text | Use Case |
+|-------|-----------|----------|
+| ✅ | `Task Complete: <task>` | Progress comments |
+| 🤖 | *(none)* | General responses |
+| 📝 | `Updated: <reason>` | Body updates |
+| 📝 | `Spec altered: <summary>` | Spec alterations |
+| ❌ | `Closed - <reason>` | Issue closures |
+| 🔍 | `Analysis` | Investigation findings |
+| ⚠️ | `Warning` | Cautions |
+| ✨ | `Created` | Issue/PR creation |
+| 🚀 | `Launched` | PR creation |
 
 **Dynamic Components:**
-- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
-- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
+- `<AgentIcon>`: Agent iconography (🤖 for OpenCode)
+- `<AgentBrand>`: Agent brand (e.g., `OpenCode/glm-5`)
 - `<HumanName>`: From `git config user.name` (fallback to `$USER`)
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity and human name at runtime.**

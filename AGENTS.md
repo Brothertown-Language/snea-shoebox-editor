@@ -225,7 +225,7 @@ Key areas:
 
 **✅ ALWAYS:**
 - **Run session init script at session start** — Run `uv run python ai_bin/session_init.py` before any other operations. Store the output values (GIT_USER_NAME, GIT_USER_EMAIL, GIT_OWNER, GIT_REPO, GIT_HOOKS_PATH, GIT_REMOTE_URL) for session duration. See `000-session-init.md`.
-- **Prefix ALL comments with AI byline including 'on behalf of <HumanName>'** — Use format: `AI: <AgentName> <ModelID> on behalf of <HumanName> <emoji> <content>`. See `000-critical-rules.md` for complete format table.
+- **Post bylines at END with branded AI marker** — Use format: `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> <emoji> <type-text>*`. Agent icon (🤖) BEFORE `AI:`, context emoji AFTER human name. See `000-critical-rules.md` for complete format table.
 - Create feature branch BEFORE any filesystem change
 - Create PRs for all merges (when tooling available)
 - Reference the Authoritative Spec for planning
@@ -246,7 +246,7 @@ Key areas:
 - Proceed to next task after completing a task — HALT
 - Create plans inline in message body
 - **Implement a revised spec without fresh approval** — Spec changes revoke authorization. See `010-approval-gate.md` "Revision Revokes Approval"
-- **Post comments OR issue bodies without 'on behalf of <HumanName>'** — All comments and issue body signatures must include the human collaborator name. See `000-critical-rules.md` for complete format table.
+- **Post comments OR issue bodies without branded byline at END** — All comments and issue bodies must have byline at END with format: `*[🤖 AI: <Brand>] on behalf of <Name> <emoji> <type>*`. See `000-critical-rules.md` for complete format table.
 - **Implement a revised spec without fresh approval** — Spec changes revoke authorization. See `010-approval-gate.md` "Revision Revokes Approval"
 - **Create PRs without EXPLICIT developer instruction** — "approved" and "go" authorize implementation ONLY. PRs require explicit "create a PR" instruction. Completing implementation does NOT authorize PR creation.
 - **Create issues without assignees** — Always assign at least one stakeholder. Use requesting user from session init or default to project maintainer.
@@ -359,12 +359,12 @@ Fresh-start AI agents have no memory of previous sessions. Outputs stored locall
 
 4. **Comment Format:**
    ```
-   AI: <AgentName> <ModelID> 📝 <output-type>: <title>
-   
    ## Summary
    <brief summary>
    
    <full content or key findings>
+   
+   *[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad 📝 <output-type>: <title>*
    ```
 
 ### Skills with Built-in Attachment
