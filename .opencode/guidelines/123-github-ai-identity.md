@@ -17,10 +17,23 @@ AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity at runtime.**
 
+## Required Byline Format Table (MANDATORY)
+
+**ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
+
+| Type | Required Format |
+|------|-----------------|
+| Progress (task completion) | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>` |
+| Body update | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Updated: <reason>` |
+| Spec alteration | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>` |
+| Closure | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ **Closed - Implemented**` |
+| General response | `AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>` |
+| Issue body signature | `*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*` |
+
 ### Signature for Issue/PR Bodies (NOT comments)
 
 ```markdown
-*Created by AI: <AgentName> <ModelID>*
+*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*
 ```
 
 Place at END of issue bodies and PR descriptions, preceded by blank line.

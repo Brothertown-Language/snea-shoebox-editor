@@ -17,9 +17,11 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 
 ALL comments on issues and PRs MUST be prefixed with AI identity.
 
+**ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
+
 **For PROGRESS COMMENTS (task completion, implementation updates):**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
+AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
 ```
 
 **For GENERAL COMMENTS (responses, clarifications, closures):**
@@ -45,7 +47,7 @@ AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>
 ### Signature for Issue/PR Bodies (NOT comments)
 
 ```markdown
-*Created by AI: <AgentName> <ModelID>*
+*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*
 ```
 
 Place at END of issue bodies and PR descriptions, preceded by blank line.
@@ -99,7 +101,7 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 
 **For intermediate task (multi-task spec):**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
+AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
 
 **Summary:**
 
@@ -110,7 +112,7 @@ AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
 
 **For final task or single-task spec:**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
+AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>
 
 **Summary:**
 
@@ -176,13 +178,13 @@ When updating textual content in an issue body:
 ### Comment Format for Body Updates
 
 ```
-AI: <AgentName> <ModelID> 📝 Updated: <reason>
+AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Updated: <reason>
 ```
 
 ### Spec Alteration Format
 
 ```
-AI: <AgentName> <ModelID> 📝 Spec altered: <summary>
+AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>
 
 - Changed: <what changed>
 - Added: <what added>
@@ -216,16 +218,17 @@ AI: <AgentName> <ModelID> 📝 Spec altered: <summary>
 ### Closure Comment Format
 
 ```
-AI: <AgentName> <ModelID> ❌ **Closed**
+AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ **Closed - Implemented**
 
-## Rejection Reason (if rejected)
-<reason with evidence>
+## Summary
+Completed all tasks from this specification:
+- ✅ <task 1>
+- ✅ <task 2>
 
-## Summary (if completed)
-<what was implemented>
+## Evidence
+Commit `<sha>`: <commit message>
 
-## Alternative (if applicable)
-<suggestion for rejected proposals>
+All success criteria met.
 ```
 
 ### Closure Reasons Requiring Comments
@@ -336,7 +339,7 @@ GOOD: "The keys look correct. Ready when you are."
 ### Task Completion Comment (Intermediate Task)
 
 ```
-AI: OpenCode ollama-cloud/glm-5 ✅ Task Complete: Create github-comments SKILL.md
+AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ Task Complete: Create github-comments SKILL.md
 
 **Summary:**
 
@@ -348,7 +351,7 @@ Created skill file defining comment format rules, decision tables for when to co
 ### Task Completion Comment (Final Task)
 
 ```
-AI: OpenCode ollama-cloud/glm-5 ✅ Task Complete: Update cross-references
+AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ Task Complete: Update cross-references
 
 **Summary:**
 
@@ -362,7 +365,7 @@ All tasks complete from this specification.
 ### Single-Task Completion
 
 ```
-AI: OpenCode ollama-cloud/glm-5 ✅ Task Complete: Implement executive summary format
+AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ Task Complete: Implement executive summary format
 
 **Summary:**
 
@@ -376,13 +379,13 @@ All tasks complete from this specification.
 ### Issue Body Update Comment
 
 ```
-AI: OpenCode ollama-cloud/glm-5 📝 Updated: Added Phase 2 for guideline updates per discussion in comment #5
+AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad 📝 Updated: Added Phase 2 for guideline updates per discussion in comment #5
 ```
 
 ### Spec Alteration Comment
 
 ```
-AI: OpenCode ollama-cloud/glm-5 📝 Spec altered: Added Phase 3 for verification
+AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad 📝 Spec altered: Added Phase 3 for verification
 
 - Added: Phase 3: Verification (auto-progress)
 - Added: Success criteria verification steps
@@ -391,7 +394,7 @@ AI: OpenCode ollama-cloud/glm-5 📝 Spec altered: Added Phase 3 for verificatio
 ### Issue Closure Comment
 
 ```
-AI: OpenCode ollama-cloud/glm-5 ✅ **Closed - Implemented**
+AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad ✅ **Closed - Implemented**
 
 ## Summary
 Completed all tasks from this specification:
