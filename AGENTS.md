@@ -116,6 +116,12 @@ OpenCode loads guidelines from:
 | Data Integrity | `090-data-integrity.md` |
 | Persistence | `100-persistence.md` |
 | Authority Source | `130-authority-source.md` |
+| Planning: Spec Creation | `140-planning-spec-creation.md` |
+| Planning: Status Tracking | `141-planning-status-tracking.md` |
+| Planning: Archive | `142-planning-archive-workflow.md` |
+| Planning: Spec Templates | `143-planning-spec-templates.md` |
+| Planning: Spec Examples | `144-planning-spec-examples.md` |
+| Planning: Exec Summary | `145-planning-exec-summary.md` |
 | **SNEA-Specific** | `300-snea-specific.md` |
 
 ---
