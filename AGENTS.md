@@ -240,6 +240,7 @@ Key areas:
 - Create plans inline in message body
 - **Implement a revised spec without fresh approval** — Spec changes revoke authorization. See `010-approval-gate.md` "Revision Revokes Approval"
 - **Create PRs without EXPLICIT developer instruction** — "approved" and "go" authorize implementation ONLY. PRs require explicit "create a PR" instruction. Completing implementation does NOT authorize PR creation.
+- **Create issues without assignees** — Always assign at least one stakeholder. Use requesting user from session init or default to project maintainer.
 - **Submit unsquashed PRs** — ALL PRs must have exactly ONE commit (squashed). Multiple commits in a PR will be rejected. Always `git reset --soft origin/main && git commit` before pushing.
 - **Create PRs after implementation** — The developer must run human tests and may require adjustments BEFORE any PR. Wait for explicit "create a PR" after developer has tested.
 - Use `/tmp/` — only use `./tmp/`
