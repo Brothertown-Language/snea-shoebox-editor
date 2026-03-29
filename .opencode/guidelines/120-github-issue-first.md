@@ -118,6 +118,42 @@ All tasks complete from this specification.
 
 ---
 
+## 5.5. Assignee Requirement (MANDATORY)
+
+**All issues created or managed by AI agents MUST have assignees.**
+
+### Requirements
+
+1. **New issues**: Assign the requesting user (from session init `GIT_USER_NAME`/`GIT_USER_EMAIL`)
+2. **Spec issues**: Assign the spec author and relevant stakeholders
+3. **Bug reports**: Assign the code area owner or project maintainer
+4. **If unclear who to assign**: Use the default from session init or project maintainer
+
+### Rationale
+
+Assignees ensure:
+- Stakeholders receive notifications
+- Clear ownership for follow-up
+- Issues don't become orphaned
+
+### Implementation
+
+When using `github_issue_write method="create"`:
+```python
+github_issue_write(
+    method="create",
+    owner=owner,
+    repo=repo,
+    title="Issue Title",
+    body="Issue body",
+    assignees=["username"]  # REQUIRED - never empty
+)
+```
+
+**⚠️ FAILURE TO ASSIGN ISSUES IS A CRITICAL GUIDELINE VIOLATION.**
+
+---
+
 ## 6. Responding to Issue Comments (MANDATORY)
 
 **When a user comments on an issue, ALWAYS respond via GitHub issue comment - NOT just internal analysis.**

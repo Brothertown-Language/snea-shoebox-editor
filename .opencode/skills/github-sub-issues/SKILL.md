@@ -70,7 +70,8 @@ If multi-task: Sub-issues are MANDATORY.
 ```
 For each PHASE in spec:
   1. Create issue: github_issue_write(method="create",
-     title="[Task: #N] <phase-description>")
+     title="[Task: #N] <phase-description>",
+     assignees=["<username>"])  # REQUIRED: inherit from parent or use default
   2. Get database ID from response (.id field)
   3. Link: github_sub_issue_write(method="add",
      issue_number=N, sub_issue_id=db_id)
@@ -78,6 +79,11 @@ For each PHASE in spec:
 Post comment: "Created X sub-issues for phase tracking"
 Proceed to implement first phase
 ```
+
+**⚠️ ASSIGNMENT REQUIREMENT:**
+- Sub-issues MUST inherit assignees from parent issue
+- If parent has no assignees, use session init user or default maintainer
+- NEVER create unassigned sub-issues
 
 **⚠️ DATABASE ID REQUIREMENT:**
 - Use `.id` field from response (e.g., `4129879155`)
