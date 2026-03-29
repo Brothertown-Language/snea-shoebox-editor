@@ -88,7 +88,7 @@ OpenCode loads guidelines from:
 | 000-099 | Core | Session init, critical rules, approval |
 | 100-109 | MCP/Scope | Tool usage, scope autonomy |
 | 110-119 | Git | Branch, commit, merge, PR, cleanup |
-| 120-129 | GitHub | Issue workflow, MCP ops, AI identity, archive |
+| 120-129 | GitHub | Issue workflow, MCP ops, AI identity, archive, debugging |
 | 130-139 | Authority | Code as source |
 | 140-149 | Planning | Spec creation, approval gates, status tracking, archive |
 | 200-209 | Errors | Exception handling, missing data, domain exceptions, logging |
@@ -123,6 +123,7 @@ OpenCode loads guidelines from:
 | Planning: Spec Examples | `144-planning-spec-examples.md` |
 | Planning: Exec Summary | `145-planning-exec-summary.md` |
 | **SNEA-Specific** | `300-snea-specific.md` |
+| GitHub MCP Debugging | `126-github-mcp-debugging.md` |
 
 ---
 
@@ -237,6 +238,7 @@ Key areas:
 - **SILENTLY HALT after completing a task**
 - Use PyCharm MCP tools for all file operations when available
 - **STASH EXTERNAL CHANGES FIRST** — Before ANY branch creation, `git status`. If ANY files modified, `git stash push -m "WIP: before <branch>"`, then VERIFY with `git stash list` and clean `git status`.
+- **Document GitHub MCP errors** — When GitHub MCP operations fail with owner/repo mismatch, post a debug comment on the associated issue with full session context. See `126-github-mcp-debugging.md`.
 - **Use `uv run` for all project commands** — No bare `python`, `pip`, or `conda`
 - **Use `./tmp/` not `/tmp/`** — Relative paths only
 
@@ -247,7 +249,6 @@ Key areas:
 - Create plans inline in message body
 - **Implement a revised spec without fresh approval** — Spec changes revoke authorization. See `010-approval-gate.md` "Revision Revokes Approval"
 - **Post comments OR issue bodies without branded byline at END** — All comments and issue bodies must have byline at END with format: `🤖 *AI: <Brand>] on behalf of <Name> <emoji> <type>*`. See `000-critical-rules.md` for complete format table.
-- **Implement a revised spec without fresh approval** — Spec changes revoke authorization. See `010-approval-gate.md` "Revision Revokes Approval"
 - **Create PRs without EXPLICIT developer instruction** — "approved" and "go" authorize implementation ONLY. PRs require explicit "create a PR" instruction. Completing implementation does NOT authorize PR creation.
 - **Create issues without assignees** — Always assign at least one stakeholder. Use requesting user from session init or default to project maintainer.
 - **Submit unsquashed PRs** — ALL PRs must have exactly ONE commit (squashed). Multiple commits in a PR will be rejected. Always `git reset --soft origin/main && git commit` before pushing.
