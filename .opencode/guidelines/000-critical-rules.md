@@ -49,7 +49,7 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 **Outcome:** <What changed for stakeholders>
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
 ```
 
 **Final task or single-task spec:**
@@ -62,35 +62,49 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 All tasks complete from this specification.
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
 ```
 
 ### Required Byline Format Table (MANDATORY)
 
 **ALL comments AND issue body signatures MUST include "on behalf of <HumanName>".**
 
-**Bylines are ALWAYS at the END of content, wrapped in italics.**
+**Structure: Attribution italicized; status plain.**
 
 | Type | Required Format |
 |------|-----------------|
-| Progress (task completion) | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*` |
-| Body update | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Updated: <reason>*` |
-| Spec alteration | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Spec altered: <summary>*` |
-| Closure | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ❌ Closed - <reason>*` |
-| General response | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 🤖*` |
-| Issue body signature | `<issue content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✨ Created*` |
-| PR body signature | `<pr content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 🚀 Launched*` |
+| Progress (task completion) | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>` |
+| Body update | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Updated: <reason>` |
+| Spec alteration | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Spec altered: <summary>` |
+| Closure | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ❌ Closed - <reason>` |
+| General response | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* 🤖` |
+| Issue body signature | `<issue content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created` |
+| PR body signature | `<pr content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created` |
 
-**Position Breakdown:**
+**Structure Breakdown:**
 
-| Position | Component | Description |
-|----------|-----------|-------------|
-| 1 | `<AgentIcon>` | Agent iconography (🤖, 🟣, 💙) — ALWAYS before `AI:` |
-| 2 | `AI:` | Fixed AI label |
-| 3 | `<AgentBrand>` | Agent brand (OpenCode/glm-5, Claude/sonnet-4) |
-| 4 | `on behalf of <HumanName>` | Human attribution |
-| 5 | `<ContextEmoji>` | Comment type indicator — ALWAYS after human name |
-| 6 | `<TypeText>` | Context-specific text |
+```
+<AgentIcon> *AI: <AgentBrand> on behalf of <HumanName>* <ContextEmoji> <TypeText>
+```
+
+| Part | Content | Format |
+|------|---------|--------|
+| Agent icon | `🤖` | Plain (outside italics) |
+| Attribution | `AI: OpenCode/glm-5 on behalf of Michael Conrad` | Italicized |
+| Context emoji | `✅` | Plain (outside italics) |
+| Type text | `Task Complete: schema` | Plain (outside italics) |
+
+**Examples:**
+
+| Type | Full Byline |
+|------|-------------|
+| Task complete | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✅ Task Complete: schema` |
+| General response | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 🤖` |
+| Body update | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 📝 Updated: added field` |
+| Spec alteration | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 📝 Spec altered: Phase 2` |
+| Issue closure | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ❌ Closed - Implemented` |
+| Issue creation | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✨ Created` |
+| PR creation | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✨ Created` |
 
 **Agent Icon Registry:**
 
@@ -113,7 +127,6 @@ All tasks complete from this specification.
 | 🔍 | `Analysis` | Investigation findings |
 | ⚠️ | `Warning` | Cautions |
 | ✨ | `Created` | Issue/PR creation |
-| 🚀 | `Launched` | PR creation |
 
 **Dynamic Components:**
 - `<AgentIcon>`: Agent iconography (🤖 for OpenCode)

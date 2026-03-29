@@ -19,11 +19,11 @@ ALL comments on issues and PRs MUST end with AI byline.
 
 **ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
 
-**Bylines are ALWAYS at the END of content, wrapped in italics.**
+**Structure: Attribution italicized; status plain.**
 
 **Format:**
 ```
-*[<AgentIcon> AI: <AgentBrand>] on behalf of <HumanName> <ContextEmoji> <TypeText>*
+<AgentIcon> *AI: <AgentBrand> on behalf of <HumanName>* <ContextEmoji> <TypeText>
 ```
 
 **For PROGRESS COMMENTS (task completion, implementation updates):**
@@ -34,14 +34,14 @@ ALL comments on issues and PRs MUST end with AI byline.
 
 **Outcome:** <What changed for stakeholders>
 
-*[🤖 AI: OpenCode/glm-5] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
 ```
 
 **For GENERAL COMMENTS (responses, clarifications):**
 ```
 <response content>
 
-*[🤖 AI: OpenCode/glm-5] on behalf of <HumanName> 🤖*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* 🤖
 ```
 
 **Components (supplied dynamically at runtime):**
@@ -72,14 +72,13 @@ ALL comments on issues and PRs MUST end with AI byline.
 | 🔍 | `Analysis` | Investigation findings |
 | ⚠️ | `Warning` | Cautions |
 | ✨ | `Created` | Issue/PR creation |
-| 🚀 | `Launched` | PR creation |
 
 ### Signature for Issue/PR Bodies (NOT comments)
 
 ```markdown
 <issue content>
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✨ Created*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created
 ```
 
 Place at END of issue bodies and PR descriptions, preceded by blank line.
@@ -139,7 +138,7 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 
 **Outcome:** <What changed for stakeholders / users / system behavior>
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>*
 ```
 
 **For final task or single-task spec:**
@@ -152,7 +151,7 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 
 All tasks complete from this specification.
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>*
 ```
 
 ### Executive Summary Requirements
@@ -212,7 +211,7 @@ When updating textual content in an issue body:
 ```
 <summary of changes>
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Updated: <reason>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName> 📝 Updated: <reason>*
 ```
 
 ### Spec Alteration Format
@@ -222,7 +221,7 @@ When updating textual content in an issue body:
 - Added: <what added>
 - Removed: <what removed>
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Spec altered: <summary>*
+🤖 *AI: <AgentBrand> on behalf of <HumanName> 📝 Spec altered: <summary>*
 ```
 
 ### What Counts as "Textual Content"
@@ -262,7 +261,7 @@ Commit `<sha>`: <commit message>
 
 All success criteria met.
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ❌ Closed - Implemented*
+🤖 *AI: <AgentBrand> on behalf of <HumanName> ❌ Closed - Implemented*
 ```
 
 ### Closure Reasons Requiring Comments
@@ -379,7 +378,7 @@ Created skill file defining comment format rules, decision tables for when to co
 
 **Outcome:** Agents now have explicit guidance on comment types, timing, and format—reducing inconsistent or missing issue updates.
 
-*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ✅ Task Complete: Create github-comments SKILL.md*
+🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad ✅ Task Complete: Create github-comments SKILL.md*
 ```
 
 ### Task Completion Comment (Final Task)
@@ -393,7 +392,7 @@ Updated cross-references in all affected guideline files to point to the new ski
 
 All tasks complete from this specification.
 
-*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ✅ Task Complete: Update cross-references*
+🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad ✅ Task Complete: Update cross-references*
 ```
 
 ### Single-Task Completion
@@ -407,7 +406,7 @@ Replaced technical punch-list progress comments with executive summaries focused
 
 All tasks complete from this specification.
 
-*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ✅ Task Complete: Implement executive summary format*
+🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad ✅ Task Complete: Implement executive summary format*
 ```
 
 ### Issue Body Update Comment
@@ -415,7 +414,7 @@ All tasks complete from this specification.
 ```
 Added Phase 2 for guideline updates per discussion in comment #5
 
-*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad 📝 Updated: Added Phase 2 for guideline updates*
+🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad 📝 Updated: Added Phase 2 for guideline updates*
 ```
 
 ### Spec Alteration Comment
@@ -424,7 +423,7 @@ Added Phase 2 for guideline updates per discussion in comment #5
 - Added: Phase 3: Verification (auto-progress)
 - Added: Success criteria verification steps
 
-*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad 📝 Spec altered: Added Phase 3 for verification*
+🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad 📝 Spec altered: Added Phase 3 for verification*
 ```
 
 ### Issue Closure Comment
@@ -441,5 +440,5 @@ Commit `abc123`: Add github-comments skill directory
 
 All success criteria met.
 
-*[🤖 AI: OpenCode/glm-5] on behalf of Michael Conrad ❌ Closed - Implemented*
+🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad ❌ Closed - Implemented*
 ```
