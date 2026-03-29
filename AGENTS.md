@@ -263,6 +263,7 @@ Key areas:
 - **RUN NOTEBOOKS WITH PRODUCTION DATA** — `the-notebook-mcp_notebook_execute_cell`, `pycharm_runNotebookCell`, and ANY execution method on production notebooks (see `061-notebook-rules.md`) is FORBIDDEN without explicit per-execution user authorization
 - **IMPLEMENT SCOPE CREEP** — Only implement what the spec explicitly requests. Never refactor "nearby" code, add "helper" functions, or fix "similar issues" not in the spec
 - **USE PROPER NOTEBOOK TOOLING** — Always use `the-notebook-mcp` tools (e.g., `the-notebook-mcp_notebook_read`, `the-notebook-mcp_notebook_edit_cell`). Never use shell redirects (`sed`, `>`, `cat`) on notebook content — this causes edit failures and corrupted state.
+- **USE `sed`, `awk`, `tr`, OR SHELL REDIRECTS FOR FILE OPERATIONS** — These tools mangle line endings, corrupt binary content, and fail silently. Use `edit` tool for text files, `the-notebook-mcp` tools for notebooks, and PyCharm MCP tools when available.
 - **USE GIT RESTORE ON EXTERNAL CHANGES** — `git restore` on externally-modified files destroys changes permanently. Always `git stash` first.
 - **RUN STREAMLIT AS FOREGROUND APP** — Background only via `nohup`. Any blocking `streamlit run` call is a CRITICAL VIOLATION.
 - **DELETE/RESET LOCAL DATABASE** — NEVER delete `tmp/local_db` or `tmp/junie_db` without explicit "reset" or "wipe" instruction.

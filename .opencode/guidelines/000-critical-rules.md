@@ -284,6 +284,33 @@ See `142-planning-archive-workflow.md` → "Investigation Completion Criteria" f
 
 ---
 
+## Critical Violation: Using sed for File Operations
+
+**⚠️ Using `sed`, `awk`, `tr`, or shell redirects for file operations is a CRITICAL GUIDELINE VIOLATION.**
+
+These tools are too fragile and can corrupt files in unexpected ways:
+- `sed` mangles line endings (CRLF vs LF)
+- `sed` corrupts binary-like content
+- `sed` fails silently on edge cases
+- `sed` behaves differently across platforms (BSD vs GNU sed)
+- Shell redirects (`> file`, `>> file`) corrupt notebook files (`.ipynb`)
+
+**🚫 FORBIDDEN:**
+- Use `sed` for file content operations
+- Use `awk` or `tr` for file transformations
+- Use shell redirect patterns (`> file`, `>> file`) for notebook files
+- Use any shell text-processing tool on files
+
+**✅ REQUIRED:**
+- Use `edit` tool for targeted string replacements in text files
+- Use `write` tool for complete file rewrites
+- Use `the-notebook-mcp` tools (e.g., `the-notebook-mcp_notebook_read`, `the-notebook-mcp_notebook_edit_cell`) for `.ipynb` files
+- Use PyCharm MCP tools (`pycharm_replace_text_in_file`, `pycharm_create_new_file`) when available
+
+**See:** `060-tool-usage.md` for complete file operation guidelines.
+
+---
+
 ## Critical Violation: Implementing Stale or Superseded Specs
 
 **⚠️ Implementing a stale or superseded spec without revision is a CRITICAL GUIDELINE VIOLATION.**
