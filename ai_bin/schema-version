@@ -1,0 +1,14 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Print current UTC datetime as YYYYMMDDHHMMSS. ONLY run when explicitly instructed to create a migration. NEVER run speculatively.
+Usage: uv run python ai_bin/schema-version
+
+Use this value as the VERSION constant when writing a new migration script.
+Never copy a version number from memory or a previous migration — always run
+this script at the time you create the migration to get the correct value.
+ONLY run this script when the user has explicitly instructed you to create a new
+migration. NEVER run it for analysis, exploration, or as a side-effect of any other task.
+"""
+from datetime import datetime, timezone
+
+print(datetime.now(tz=timezone.utc).strftime("%Y%m%d%H%M%S"))

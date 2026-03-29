@@ -1,0 +1,79 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Run multiple `py find` / `nb find` queries in one call, each under a === header ===.
+
+Usage: uv run python ai_bin/multi-find <spec> [<spec> ...]
+
+Spec formats:
+  <symbol>                     uv run python ai_bin/py find <symbol>
+  <symbol>:class               uv run python ai_bin/py find <symbol> --kind class
+  <symbol>:function            uv run python ai_bin/py find <symbol> --kind function
+  <symbol>:method              uv run python ai_bin/py find <symbol> --kind method
+  <notebook_path>:<term>       uv run python ai_bin/nb find <notebook_path> <term>
+    (detected when spec contains .ipynb)
+"""
+from __future__ import annotations
+
+import subprocess
+import sys
+from pathlib import Path
+
+AI_BIN = Path(__file__).resolve().parent
+PROJECT_ROOT = AI_BIN.parent
+PY = AI_BIN / "py"
+NB = AI_BIN / "nb"
+
+KINDS = {"class", "function", "method"}
+
+
+def run(cmd: list[str]) -> str:
+    result = subprocess.run(
+        ["uv", "run", "python"] + cmd,
+        capture_output=True,
+        text=True,
+        cwd=PROJECT_ROOT,
+    )
+    out = result.stdout.strip()
+    err = result.stderr.strip()
+    parts = [p for p in [out, err] if p]
+    return "\n".join(parts) if parts else "(no output)"
+
+
+def parse_spec(spec: str) -> list[str]:
+    """Return the command list (without uv run python prefix) for a spec."""
+    if ".ipynb" in spec:
+        # nb find spec: <path>:<term>
+        idx = spec.index(".ipynb") + len(".ipynb")
+        if idx < len(spec) and spec[idx] == ":":
+            nb_path = spec[:idx]
+            term = spec[idx + 1:]
+            return [str(NB), "find", nb_path, term]
+        # no term separator — treat whole thing as nb find path with no term
+        return [str(NB), "find", spec]
+    # py find spec: <symbol> or <symbol>:<kind>
+    if ":" in spec:
+        symbol, kind = spec.rsplit(":", 1)
+        if kind in KINDS:
+            return [str(PY), "find", symbol, "--kind", kind]
+    return [str(PY), "find", spec]
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return
+
+    specs = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if not specs:
+        print("Usage: uv run python ai_bin/multi-find <spec> [<spec> ...]")
+        sys.exit(1)
+
+    for spec in specs:
+        print(f"=== {spec} ===")
+        cmd = parse_spec(spec)
+        print(run(cmd))
+        print()
+
+
+if __name__ == "__main__":
+    main()

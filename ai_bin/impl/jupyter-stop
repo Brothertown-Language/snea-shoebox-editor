@@ -1,0 +1,53 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Stop the Jupyter server running on port 18888.
+
+Usage: uv run python ai_bin/jupyter stop [--help]
+
+Sends SIGTERM to any process listening on port 18888. Waits up to 5 seconds
+to confirm the port is released, then reports success or failure.
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+PORT = 18888
+
+
+def is_port_listening(port: int) -> bool:
+    result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True)
+    return f":{port}" in result.stdout
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return
+
+    if not is_port_listening(PORT):
+        print(f"No Jupyter server found on port {PORT}.")
+        return
+
+    subprocess.run(["pkill", "-f", f"jupyter.*{PORT}"], capture_output=True)
+
+    for _ in range(10):
+        time.sleep(0.5)
+        if not is_port_listening(PORT):
+            print(f"Jupyter server on port {PORT} stopped.")
+            return
+
+    print(f"ERROR: Port {PORT} still listening after 5 seconds.", file=sys.stderr)
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,53 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Clear the Session State section of .opencode/memory.md.
+Usage: uv run python ai_bin/memory clear
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+MEMORY_FILE = PROJECT_ROOT / ".opencode" / "memory.md"
+
+SESSION_HEADER = "## Session State"
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        sys.exit(0)
+    if not MEMORY_FILE.exists():
+        print(f"Memory file not found: {MEMORY_FILE}", file=sys.stderr)
+        sys.exit(1)
+    lines = MEMORY_FILE.read_text(encoding="utf-8").splitlines(keepends=True)
+    in_session = False
+    result = []
+    for line in lines:
+        if line.strip() == SESSION_HEADER:
+            in_session = True
+            result.append(line)
+            continue
+        if in_session:
+            # Stop clearing at next ## section
+            if line.startswith("## "):
+                in_session = False
+                result.append(line)
+            # Skip bullet lines (session state entries)
+            elif line.startswith("- "):
+                continue
+            else:
+                result.append(line)
+        else:
+            result.append(line)
+    MEMORY_FILE.write_text("".join(result), encoding="utf-8")
+    print("Session State section cleared.")
+
+
+if __name__ == "__main__":
+    main()

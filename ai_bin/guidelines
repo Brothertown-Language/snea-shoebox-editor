@@ -1,105 +1,75 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: Print all .junie guideline files (guidelines.md + guidelines/*.md) for LLM inspection.
-Usage: uv run python ai_bin/guidelines [--files file1.md file2.md ...] [--section <name>] [--list-sections]
-Options:
-  --files file1.md ...   Print only the specified guideline files (relative to .junie/guidelines/).
-  --section <name>       Print only the named section header block (e.g. 01-approval-gate or guidelines/01-approval-gate.md).
-                         Matches the === header === banner; prints from that banner to the next banner (exclusive).
-  --list-sections        List all available section names and exit.
-  --help / -h            Print this help and exit.
+DESCRIPTION: Dispatcher for guideline operations. Delegates to implementation scripts.
+Usage: uv run python ai_bin/guidelines <command> [args]
+Commands:
+  read <file>     Read a guideline file (supports 3-digit shorthand)
+  show <section>  Show a specific section
+  edit <file>     Edit a guideline file
+  search <query>  Search guidelines (BM25 + semantic)
+  --list-sections List all available sections
+
+Note: This dispatcher prevents direct invocation of implementation scripts.
 """
 from __future__ import annotations
+import os
 import sys
+import subprocess
 from pathlib import Path
 
-ROOT = Path(__file__).parent.parent
-GUIDELINES_ROOT = ROOT / ".junie"
+BASE_DIR = Path(__file__).resolve().parent.parent
+GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
+IMPL_DIR = Path(__file__).resolve().parent / "impl"
 
-DEFAULT_FILES = [
-    GUIDELINES_ROOT / "guidelines.md",
-    *sorted((GUIDELINES_ROOT / "guidelines").glob("*.md")),
-]
-
-
-def print_file(path: Path) -> None:
-    print(f"=== {path.relative_to(GUIDELINES_ROOT)} ===")
-    print(path.read_text(encoding="utf-8"))
+COMMANDS = {
+    "read": IMPL_DIR / "guidelines-read",
+    "show": IMPL_DIR / "guidelines-show",
+    "edit": IMPL_DIR / "guidelines-edit",
+    "search": IMPL_DIR / "guidelines-search",
+}
 
 
-def all_sections(paths: list[Path]) -> list[tuple[str, str]]:
-    """Return list of (banner_key, full_text) for each === banner === block across all paths."""
-    import re
-    full_text = ""
-    for path in paths:
-        full_text += f"=== {path.relative_to(GUIDELINES_ROOT)} ===\n"
-        full_text += path.read_text(encoding="utf-8") + "\n"
-    pattern = re.compile(r"^(=== .+? ===)$", re.MULTILINE)
-    banners = list(pattern.finditer(full_text))
-    sections: list[tuple[str, str]] = []
-    for i, m in enumerate(banners):
-        banner_line = m.group(1)
-        start = m.start()
-        end = banners[i + 1].start() if i + 1 < len(banners) else len(full_text)
-        sections.append((banner_line, full_text[start:end]))
-    return sections
-
-
-def normalize_section_key(name: str) -> str:
-    """Normalize a user-supplied section name for matching against banner text."""
-    name = name.strip().lstrip("=").rstrip("=").strip()
-    if name.endswith(".md"):
-        name = name[:-3]
-    return name.lower()
+def print_help() -> None:
+    print(__doc__)
+    files = sorted(GUIDELINES_DIR.glob("*.md"))
+    if files:
+        print("\nAvailable guideline files:")
+        for f in files:
+            print(f"  {f.name}")
 
 
 def main() -> None:
     args = sys.argv[1:]
-    if "--help" in args or "-h" in args:
-        print(__doc__)
+    
+    if not args or args[0] in ("-h", "--help"):
+        print_help()
         sys.exit(0)
-
-    if "--files" in args:
-        idx = args.index("--files")
-        names: list[str] = []
-        for a in args[idx + 1:]:
-            if a.startswith("--"):
-                break
-            names.append(a)
-        paths = [GUIDELINES_ROOT / "guidelines" / n for n in names]
-    else:
-        paths = DEFAULT_FILES
-
-    for path in paths:
-        if not path.exists():
-            print(f"ERROR: {path} not found.", file=sys.stderr)
-            sys.exit(1)
-
+    
     if "--list-sections" in args:
-        sections = all_sections(paths)
-        for banner, _ in sections:
-            print(banner)
+        print("Listing sections is supported via the 'show' command.")
+        print("Usage: uv run python ai_bin/guidelines show <section-name>")
         sys.exit(0)
-
-    if "--section" in args:
-        idx = args.index("--section")
-        if idx + 1 >= len(args):
-            print("ERROR: --section requires a name argument.", file=sys.stderr)
-            sys.exit(1)
-        wanted = normalize_section_key(args[idx + 1])
-        sections = all_sections(paths)
-        for banner, text in sections:
-            if normalize_section_key(banner) == wanted or wanted in normalize_section_key(banner):
-                print(text, end="")
-                sys.exit(0)
-        print(f"ERROR: section {args[idx + 1]!r} not found.", file=sys.stderr)
-        print("Available sections:", file=sys.stderr)
-        for banner, _ in sections:
-            print(f"  {banner}", file=sys.stderr)
+    
+    command = args[0]
+    
+    if command not in COMMANDS:
+        print(f"Error: Unknown command '{command}'", file=sys.stderr)
+        print_help()
         sys.exit(1)
-
-    for path in paths:
-        print_file(path)
+    
+    impl_path = COMMANDS[command]
+    if not impl_path.exists():
+        print(f"Error: Implementation not found: {impl_path}", file=sys.stderr)
+        sys.exit(1)
+    
+    env = os.environ.copy()
+    env["AIBIN_DISPATCHER"] = "1"
+    
+    result = subprocess.run(
+        [sys.executable, str(impl_path)] + args[1:],
+        env=env,
+    )
+    sys.exit(result.returncode)
 
 
 if __name__ == "__main__":

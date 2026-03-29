@@ -1,0 +1,75 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: List packages and modules under a path (replaces `ls` for Python source trees).
+Usage: uv run python ai_bin/py ls [<path>] [--all]
+Example: uv run python ai_bin/py ls src/commons
+         uv run python ai_bin/py ls src/commons/persistence
+         uv run python ai_bin/py ls  (lists top-level packages in src/)
+Options:
+  --all   Include non-package directories and non-.py files too
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def is_package(p: Path) -> bool:
+    return p.is_dir() and (p / "__init__.py").exists()
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__)
+        sys.exit(0)
+
+    show_all = "--all" in args
+    positional = [a for a in args if not a.startswith("--")]
+
+    if positional:
+        target = BASE_DIR / positional[0]
+    else:
+        # default: src/
+        target = BASE_DIR / "src"
+
+    if not target.exists():
+        print(f"Error: path not found: {positional[0] if positional else 'src'}", file=sys.stderr)
+        sys.exit(1)
+
+    if not target.is_dir():
+        print(f"Error: not a directory: {target.relative_to(BASE_DIR)}", file=sys.stderr)
+        sys.exit(1)
+
+    entries = sorted(target.iterdir(), key=lambda p: (p.is_file(), p.name))
+    printed = False
+    for entry in entries:
+        if entry.name.startswith(".") or entry.name == "__pycache__":
+            continue
+        if entry.is_dir():
+            if is_package(entry):
+                print(f"{entry.name}/  [package]")
+                printed = True
+            elif show_all:
+                print(f"{entry.name}/")
+                printed = True
+        elif entry.suffix == ".py":
+            print(f"{entry.name}")
+            printed = True
+        elif show_all:
+            print(f"{entry.name}")
+            printed = True
+
+    if not printed:
+        rel = target.relative_to(BASE_DIR)
+        print(f"(no Python packages or modules found in {rel})")
+
+
+if __name__ == "__main__":
+    main()

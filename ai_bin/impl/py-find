@@ -1,0 +1,135 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Search .py files for a class, method, function, or variable by name and print file:line with scope context (wrapping class/method shown when applicable).
+Usage: uv run python ai_bin/py find <name> [--kind class|method|function|variable] [--path <dir>]
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import ast
+import sys
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent.parent
+VALID_KINDS = {"class", "method", "function", "variable"}
+EXCLUDED_DIRS: set[str] = {".git", "build", ".venv", ".gradle", ".pytest_cache", "__pycache__", ".ipynb_checkpoints"}
+def _iter_files(root: Path) -> list[Path]:
+    results: list[Path] = []
+    for p in root.rglob("*"):
+        if any(part in EXCLUDED_DIRS for part in p.parts):
+            continue
+        if p.is_file() and (p.suffix == ".py" or p.suffix == ""):
+            results.append(p)
+    return sorted(results)
+def search_file(path: Path, name: str, kind: str | None) -> list[tuple[Path, int, str, str]]:
+    try:
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text, filename=str(path))
+    except Exception:
+        return []
+    # Build parent map: id(child) -> parent node
+    parent: dict[int, ast.AST] = {}
+    for p in ast.walk(tree):
+        for child in ast.iter_child_nodes(p):
+            parent[id(child)] = p
+    def _context(node: ast.AST) -> str:
+        parts: list[str] = []
+        cur = parent.get(id(node))
+        while cur is not None:
+            if isinstance(cur, (ast.ClassDef, ast.FunctionDef, ast.AsyncFunctionDef)):
+                parts.append(cur.name)
+            cur = parent.get(id(cur))
+        return ".".join(reversed(parts))
+    matches: list[tuple[Path, int, str, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            if node.name == name and kind in (None, "class"):
+                matches.append((path, node.lineno, "class", _context(node)))
+        elif isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            if node.name == name:
+                is_method = isinstance(parent.get(id(node)), ast.ClassDef)
+                match_kind = "method" if is_method else "function"
+                if kind in (None, match_kind):
+                    matches.append((path, node.lineno, match_kind, _context(node)))
+        elif isinstance(node, ast.Assign) and kind in (None, "variable"):
+            for target in node.targets:
+                if isinstance(target, ast.Name) and target.id == name:
+                    matches.append((path, node.lineno, "variable", _context(node)))
+        elif isinstance(node, ast.AnnAssign) and kind in (None, "variable"):
+            if isinstance(node.target, ast.Name) and node.target.id == name:
+                matches.append((path, node.lineno, "variable", _context(node)))
+        elif isinstance(node, ast.NamedExpr) and kind in (None, "variable"):
+            if isinstance(node.target, ast.Name) and node.target.id == name:
+                matches.append((path, node.lineno, "variable", _context(node)))
+    return matches
+def search_text(path: Path, needle: str) -> list[tuple[Path, int, str, str]]:
+    matches: list[tuple[Path, int, str, str]] = []
+    try:
+        lines = path.read_text(encoding="utf-8").splitlines()
+        for i, line in enumerate(lines, start=1):
+            if needle in line:
+                matches.append((path, i, "text", line.strip()))
+    except Exception:
+        pass
+    return matches
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+    name: str | None = None
+    kind: str | None = None
+    root: Path = PROJECT_ROOT
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--kind":
+            i += 1
+            kind = args[i] if i < len(args) else None
+            if kind not in VALID_KINDS:
+                print(f"Error: --kind must be one of {sorted(VALID_KINDS)}", file=sys.stderr)
+                sys.exit(1)
+        elif arg in ("--path", "--root"):
+            i += 1
+            root = Path(args[i]) if i < len(args) else PROJECT_ROOT
+        elif arg == "--exclude":
+            i += 1
+            if i < len(args):
+                EXCLUDED_DIRS.update(args[i].split(","))
+        elif not arg.startswith("--"):
+            name = arg
+        i += 1
+    if not name:
+        print("Error: no name specified.", file=sys.stderr)
+        sys.exit(1)
+    if not root.exists():
+        print(f"Error: root {root} not found.", file=sys.stderr)
+        sys.exit(1)
+    found_any = False
+    for py_file in _iter_files(root):
+        # 1. AST Search (Symbols)
+        symbol_matches = search_file(py_file, name, kind)
+        for path, line, match_kind, context_str in symbol_matches:
+            if context_str:
+                print(f"{path}:{line}   {match_kind} {name}   [in {context_str}]")
+            else:
+                print(f"{path}:{line}   {match_kind} {name}")
+            found_any = True
+
+        # 2. Text Search (Literal matches) - only if no specific kind requested
+        if kind is None:
+            text_matches = search_text(py_file, name)
+            # Filter out matches that were already found by AST (simple heuristic: line match)
+            seen_lines = {m[1] for m in symbol_matches}
+            for path, line, match_kind, line_text in text_matches:
+                if line in seen_lines:
+                    continue
+                print(f"{path}:{line}   {match_kind} '{name}'   [context: {line_text}]")
+                found_any = True
+    if not found_any:
+        print(f"No matches for '{name}'.")
+if __name__ == "__main__":
+    main()

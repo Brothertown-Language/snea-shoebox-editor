@@ -1,0 +1,70 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Python source tools dispatcher. Usage: uv run python ai_bin/py <action> [args...]
+Actions: find, ls, mkpkg, structure
+Example: uv run python ai_bin/py find <name> [--root <dir>]
+         uv run python ai_bin/py ls src/commons
+         uv run python ai_bin/py mkpkg src/commons/query
+"""
+from __future__ import annotations
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+ACTIONS = {
+    "find": "py-find",
+    "ls": "py-ls",
+    "mkpkg": "py-mkpkg",
+    "structure": "py-structure",
+}
+
+
+def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
+    result = subprocess.run(
+        [sys.executable, str(script)] + forwarded_args,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "AIBIN_DISPATCHER": "1"},
+    )
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+    if result.returncode == 0 and not result.stdout and not result.stderr:
+        print(summary)
+    return result.returncode
+
+
+def _get_description(script_path: Path) -> str:
+    import re
+    try:
+        text = script_path.read_text()
+        m = re.search(r'DESCRIPTION:\s*(.+)', text)
+        return m.group(1).strip() if m else ""
+    except Exception:
+        return ""
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        print("Available actions:")
+        for action, script in ACTIONS.items():
+            desc = _get_description(BASE_DIR / "impl" / script)
+            print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → ai_bin/{script}")
+        print(f"CWD: {os.getcwd()}")
+        sys.exit(0)
+    action = args[0]
+    if action not in ACTIONS:
+        print(f"Error: unknown action {action!r}. Available: {', '.join(ACTIONS)}", file=sys.stderr)
+        sys.exit(1)
+    script = BASE_DIR / "impl" / ACTIONS[action]
+    sys.exit(_run_action(script, args[1:], f"OK: ai_bin/py {action} completed."))
+
+
+if __name__ == "__main__":
+    main()

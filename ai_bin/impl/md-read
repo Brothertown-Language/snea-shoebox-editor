@@ -1,0 +1,98 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Read a section from a markdown file by header, or list all headers.
+Usage: uv run python ai_bin/md read <file.md> (--header "Header Text" [--level N] | --list) [--help]
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import re
+import sys
+from pathlib import Path
+
+
+def _header_level(line: str) -> int | None:
+    m = re.match(r'^(#{1,6})\s', line)
+    return len(m.group(1)) if m else None
+
+
+def _header_text(line: str) -> str:
+    return re.sub(r'^#{1,6}\s+', '', line).rstrip()
+
+
+def list_headers(lines: list[str]) -> None:
+    for i, line in enumerate(lines, 1):
+        lvl = _header_level(line)
+        if lvl is not None:
+            print(f"L{lvl} line {i:>4}: {_header_text(line)}")
+
+
+def read_section(lines: list[str], header: str, level: int | None) -> str:
+    start = None
+    target_level = None
+    for i, line in enumerate(lines):
+        lvl = _header_level(line)
+        if lvl is None:
+            continue
+        text = _header_text(line)
+        if text == header and (level is None or lvl == level):
+            start = i
+            target_level = lvl
+            break
+    if start is None:
+        print(f"ERROR: Header not found: {header!r}", file=sys.stderr)
+        sys.exit(1)
+    result = [lines[start]]
+    for line in lines[start + 1:]:
+        lvl = _header_level(line)
+        if lvl is not None and lvl <= target_level:
+            break
+        result.append(line)
+    return "".join(result)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args:
+        print(__doc__.strip())
+        sys.exit(0)
+
+    file_path = Path(args[0])
+    if not file_path.exists():
+        print(f"ERROR: File not found: {file_path}", file=sys.stderr)
+        sys.exit(1)
+
+    lines = file_path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+    do_list = "--list" in args
+    header: str | None = None
+    level: int | None = None
+
+    i = 1
+    while i < len(args):
+        if args[i] == "--list":
+            i += 1
+        elif args[i] == "--header" and i + 1 < len(args):
+            header = args[i + 1]
+            i += 2
+        elif args[i] == "--level" and i + 1 < len(args):
+            level = int(args[i + 1])
+            i += 2
+        else:
+            print(f"ERROR: Unknown argument: {args[i]}", file=sys.stderr)
+            sys.exit(1)
+
+    if do_list:
+        list_headers(lines)
+    elif header:
+        print(read_section(lines, header, level), end="")
+    else:
+        print("ERROR: Provide --header or --list", file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

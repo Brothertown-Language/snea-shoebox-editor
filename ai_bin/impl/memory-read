@@ -1,0 +1,50 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Print the full contents of .opencode/memory.md.
+Usage: uv run python ai_bin/memory read
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+MEMORY_FILE = PROJECT_ROOT / ".opencode" / "memory.md"
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        sys.exit(0)
+    if not MEMORY_FILE.exists():
+        print(f"Memory file not found: {MEMORY_FILE}", file=sys.stderr)
+        sys.exit(1)
+    text = MEMORY_FILE.read_text(encoding="utf-8")
+    lines = text.splitlines()
+    filtered = []
+    in_yaml = False
+    for line in lines:
+        stripped = line.strip()
+        # Skip HTML comment lines
+        if stripped.startswith("<!--") or stripped.endswith("-->"):
+            continue
+        # Skip YAML front-matter block (``` yaml ... ```)
+        if stripped.startswith("```yaml") or stripped == "```yaml":
+            in_yaml = True
+            continue
+        if in_yaml:
+            if stripped == "```":
+                in_yaml = False
+            continue
+        filtered.append(line)
+    # Strip leading/trailing blank lines
+    output = "\n".join(filtered).strip()
+    print(output)
+
+
+if __name__ == "__main__":
+    main()

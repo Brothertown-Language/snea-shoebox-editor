@@ -1,0 +1,38 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Check whether one or more file/directory paths exist and report EXISTS or MISSING.
+
+Usage: uv run python ai_bin/file-exists <path> [<path> ...]
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return
+
+    paths = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if not paths:
+        print("Usage: uv run python ai_bin/file-exists <path> [<path> ...]")
+        sys.exit(1)
+
+    all_exist = True
+    for raw in paths:
+        p = Path(raw) if Path(raw).is_absolute() else PROJECT_ROOT / raw
+        if p.exists():
+            print(f"EXISTS   {raw}")
+        else:
+            print(f"MISSING  {raw}")
+            all_exist = False
+
+    sys.exit(0 if all_exist else 1)
+
+
+if __name__ == "__main__":
+    main()

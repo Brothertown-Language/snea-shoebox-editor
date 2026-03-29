@@ -1,0 +1,48 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Create a Python package (directory + __init__.py). Creates all intermediate packages too.
+Usage: uv run python ai_bin/py mkpkg <path> [<path2> ...]
+Example: uv run python ai_bin/py mkpkg src/commons/query
+         uv run python ai_bin/py mkpkg src/commons/query test/commons/query
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+
+def make_package(rel_path: str) -> None:
+    target = BASE_DIR / rel_path
+    # Create all intermediate directories and __init__.py files
+    parts = Path(rel_path).parts
+    for i in range(1, len(parts) + 1):
+        pkg = BASE_DIR / Path(*parts[:i])
+        pkg.mkdir(exist_ok=True)
+        init = pkg / "__init__.py"
+        if not init.exists():
+            init.write_text("")
+            print(f"created {init.relative_to(BASE_DIR)}")
+        else:
+            print(f"exists  {init.relative_to(BASE_DIR)}")
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__)
+        sys.exit(0)
+
+    for path in args:
+        if path.startswith("--"):
+            continue
+        make_package(path)
+
+
+if __name__ == "__main__":
+    main()
