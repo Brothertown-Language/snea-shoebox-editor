@@ -369,14 +369,31 @@ PRs require the developer to say one of these EXACT phrases:
 
 **⚠️ Closing issues BEFORE the PR is merged is a CRITICAL GUIDELINE VIOLATION.**
 
+**Two closure paths exist — auto-close (GitHub) and manual closure (AI agent):**
+
+### Path 1: GitHub Auto-Close (Acceptable)
+
+If the PR body contains `fixes #N`, `closes #N`, or similar closing keyword:
+- GitHub automatically closes the linked issue upon PR merge
+- **No AI action required** — this is correct GitHub behavior
+- The issue closes automatically when the PR merges
+
+### Path 2: Manual Closure (AI Agent)
+
+If the PR body does NOT contain a closing keyword:
+- Issue remains open after PR merge
+- AI agent MUST receive explicit `"pr merged"` instruction
+- AI MUST verify merge via GitHub API before closing
+- AI posts closing summary comment after closure
+
 **🚫 FORBIDDEN:**
 - Closing issues immediately after implementation
 - Closing issues when PR is created but not merged
 - Closing parent issues while child issues remain open
-- Closing issues without explicit "merge confirmed" from human
-- Closing issues based on `git pull` fast-forward alone (MUST use GitHub API)
+- Closing issues without explicit "pr merged" instruction (for manual closure path)
+- Closing issues based on `git pull` alone (MUST use GitHub API)
 
-**✅ REQUIRED SEQUENCE:**
+**✅ REQUIRED SEQUENCE (Manual Closure Path):**
 1. Complete implementation → Create PR → Report PR URL → **HALT**
 2. Wait for human to review and merge PR
 3. User confirms "pr merged" → **Call `github_pull_request_read method=get` to verify**

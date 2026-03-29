@@ -170,18 +170,40 @@ When user says "create a PR" or similar:
 
 **Issues are closed ONLY AFTER the PR is merged — NEVER before.**
 
+**Two closure paths exist — auto-close (GitHub) and manual closure (AI agent):**
+
+### Path 1: GitHub Auto-Close (Acceptable)
+
+If the PR body contains `fixes #N`, `closes #N`, or similar closing keyword:
+- GitHub automatically closes the linked issue upon PR merge
+- **No AI action required** — this is correct GitHub behavior
+- The issue closes automatically when the PR merges
+
+### Path 2: Manual Closure (AI Agent)
+
+If the PR body does NOT contain a closing keyword:
+- Issue remains open after PR merge
+- AI agent MUST receive explicit `"pr merged"` instruction
+- AI MUST verify merge via GitHub API before closing
+- AI posts closing summary comment after closure
+
 **🚫 FORBIDDEN:**
 - Closing issues when PR is created but not merged
 - Closing issues immediately after implementation
 - Closing issues based on `git pull` alone (MUST use GitHub API)
 - Closing parent issues while child issues remain open
 
-**✅ REQUIRED SEQUENCE:**
+**✅ REQUIRED SEQUENCE (Manual Closure Path):**
 1. User confirms "pr merged" or similar
 2. **VERIFY via GitHub API:** `github_pull_request_read method=get`
 3. Check `merged_at` timestamp exists
 4. **Only after API confirms merge:** Close child issues, then parent if all children done
 5. Post closing summary comment
+
+**✅ REQUIRED SEQUENCE (Auto-Close Path):**
+1. No agent action needed after PR merge
+2. GitHub automatically closes the linked issue
+3. Issue shows as closed (agent does nothing)
 
 ### Why `git pull` is Insufficient
 
