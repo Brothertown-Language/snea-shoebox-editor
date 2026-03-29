@@ -3,19 +3,20 @@
 """
 UI utilities for Streamlit components.
 """
+
 import time
-from typing import Dict, List, Optional
 
 import streamlit as st
 import streamlit.components.v1 as components
-from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
+from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
 # ── Error Handling ─────────────────────────────────────────────────────
 
 
-def handle_ui_error(e: Exception, user_message: str = "An unexpected error occurred.",
-                    logger_name: Optional[str] = None):
+def handle_ui_error(
+    e: Exception, user_message: str = "An unexpected error occurred.", logger_name: str | None = None
+):
     """
     Standardized error handler for UI-facing code.
     Logs the full stack trace to server logs and shows a sanitized message to the user.
@@ -25,8 +26,8 @@ def handle_ui_error(e: Exception, user_message: str = "An unexpected error occur
         user_message: A safe, user-friendly message to display in the UI.
         logger_name: Optional name for the logger. If None, uses the calling module's name.
     """
-    from src.logging_config import get_logger
     from src.database.connection import is_production
+    from src.logging_config import get_logger
 
     # 1. Server-side logging (Full trace)
     log = get_logger(logger_name or "ui_error_handler")
@@ -44,7 +45,7 @@ def handle_ui_error(e: Exception, user_message: str = "An unexpected error occur
 
 
 @st.dialog("Database Starting")
-def show_startup_dialog(config: Dict[str, str], initial_status: str):
+def show_startup_dialog(config: dict[str, str], initial_status: str):
     """Display a dialog with the database startup status."""
     from src.services.infrastructure_service import InfrastructureService
 
@@ -70,7 +71,9 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
         dns_ok = True
         if current_status == "RUNNING":
             from urllib.parse import urlparse
+
             from src.database import get_db_url
+
             url = get_db_url()
             if url:
                 parsed = urlparse(url)
@@ -151,14 +154,15 @@ def ensure_db_alive():
 def _arrow_svg(color: str) -> str:
     """Return a percent-encoded SVG arrow glyph for use in CSS url()."""
     from urllib.parse import quote
+
     svg = (
         '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48">'
         f'<text x="0" y="42" font-size="48" font-weight="bold" fill="{color}">➥</text></svg>'
     )
-    return quote(svg, safe='')
+    return quote(svg, safe="")
 
 
-def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Dict]] = None) -> None:
+def render_mdf_block(mdf_text: str, key: str = "", diagnostics: list[dict] | None = None) -> None:
     """Render MDF data in a soft-wrapped <pre> block with structural highlighting.
 
     Lines that wrap display a continuation marker (↩) via a hanging indent.
@@ -166,9 +170,11 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
     (error, warning, ok).
     """
     import html as _html
+
     from src.mdf.parser import format_mdf_record
+
     mdf_text = format_mdf_record(mdf_text)
-    lines = mdf_text.split('\n')
+    lines = mdf_text.split("\n")
 
     line_html_parts = []
     for i, line in enumerate(lines):
@@ -179,21 +185,23 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
         # Build inner HTML: use span-level markup when intra-line spans are available
         spans = diag.get("spans")
         if spans:
-            inner_html = "".join(
-                f'<mark class="diff-token">{_html.escape(s["text"])}</mark>'
-                if s["changed"] else _html.escape(s["text"])
-                for s in spans
-            ) or "&nbsp;"
+            inner_html = (
+                "".join(
+                    f'<mark class="diff-token">{_html.escape(s["text"])}</mark>'
+                    if s["changed"]
+                    else _html.escape(s["text"])
+                    for s in spans
+                )
+                or "&nbsp;"
+            )
         else:
             inner_html = _html.escape(line) if line else "&nbsp;"
 
         # Build line with optional tooltip/highlight
         title_attr = f'title="{_html.escape(msg)}"' if msg else ""
-        line_html_parts.append(
-            f'<div class="mdf-line {status_cls}" {title_attr}>{inner_html}</div>'
-        )
+        line_html_parts.append(f'<div class="mdf-line {status_cls}" {title_attr}>{inner_html}</div>')
 
-    line_divs = ''.join(line_html_parts)
+    line_divs = "".join(line_html_parts)
     # st.html() renders inside an iframe that does NOT inherit Streamlit's
     # CSS custom properties.  We must read the theme colours from the parent
     # frame via JavaScript and apply them to the block.
@@ -257,12 +265,12 @@ def render_mdf_block(mdf_text: str, key: str = "", diagnostics: Optional[List[Di
         /* Light theme arrow (deep orange on light bg) */
         @media (prefers-color-scheme: light) {{
             .mdf-wrap-block {{ color: #31333F; background-color: #f0f2f6; border-color: #31333F; }}
-            .mdf-line {{ background-image: url("data:image/svg+xml,{_arrow_svg('#cc6622')}"); }}
+            .mdf-line {{ background-image: url("data:image/svg+xml,{_arrow_svg("#cc6622")}"); }}
         }}
         /* Dark theme arrow (bright orange on dark bg) */
         @media (prefers-color-scheme: dark) {{
             .mdf-wrap-block {{ color: #fafafa; background-color: #262730; border-color: #fafafa; }}
-            .mdf-line {{ background-image: url("data:image/svg+xml,{_arrow_svg('#e8943a')}"); }}
+            .mdf-line {{ background-image: url("data:image/svg+xml,{_arrow_svg("#e8943a")}"); }}
         }}
         </style>
         <div class="mdf-wrap-block" id="mdf-block">{line_divs}</div>
@@ -294,7 +302,7 @@ def _is_diff_ignored_line(line: str) -> bool:
     Ignored: blank lines and the ``\\nt Record:`` annotation line.
     """
     stripped = line.strip()
-    return stripped == '' or stripped.startswith(r'\nt Record:')
+    return stripped == "" or stripped.startswith(r"\nt Record:")
 
 
 def _tokenize_line(line: str) -> list[str]:
@@ -303,7 +311,8 @@ def _tokenize_line(line: str) -> list[str]:
     Returns a list of strings whose concatenation equals ``line``.
     """
     import re
-    return re.split(r'(\s+)', line)
+
+    return re.split(r"(\s+)", line)
 
 
 def _intra_line_spans(old_line: str, new_line: str) -> tuple[list[dict], list[dict]]:
@@ -330,7 +339,7 @@ def _intra_line_spans(old_line: str, new_line: str) -> tuple[list[dict], list[di
     old_changed: set[int] = set()
     new_changed: set[int] = set()
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == 'equal':
+        if tag == "equal":
             continue
         for idx in range(i1, i2):
             tok = old_tokens[idx]
@@ -348,8 +357,8 @@ def _intra_line_spans(old_line: str, new_line: str) -> tuple[list[dict], list[di
 
 
 def compute_mdf_line_diffs(
-        existing_text: str,
-        new_text: str,
+    existing_text: str,
+    new_text: str,
 ) -> tuple[list[dict], list[dict]]:
     """Compute per-line diff diagnostics for two MDF texts.
 
@@ -369,10 +378,11 @@ def compute_mdf_line_diffs(
       - ``diff-removed`` — line is only in the existing record
     """
     import difflib
+
     from src.mdf.parser import format_mdf_record
 
-    existing_lines = format_mdf_record(existing_text).split('\n')
-    new_lines = format_mdf_record(new_text).split('\n')
+    existing_lines = format_mdf_record(existing_text).split("\n")
+    new_lines = format_mdf_record(new_text).split("\n")
 
     existing_diags: list[dict] = [{"status": "ok"}] * len(existing_lines)
     new_diags: list[dict] = [{"status": "ok"}] * len(new_lines)
@@ -386,9 +396,9 @@ def compute_mdf_line_diffs(
 
     matcher = difflib.SequenceMatcher(None, existing_filtered, new_filtered, autojunk=False)
     for tag, i1, i2, j1, j2 in matcher.get_opcodes():
-        if tag == 'equal':
+        if tag == "equal":
             pass
-        elif tag == 'replace':
+        elif tag == "replace":
             # Pair up changed lines for intra-line span computation
             paired = list(zip(range(i1, i2), range(j1, j2)))
             paired_fi = {fi for fi, _ in paired}
@@ -406,10 +416,10 @@ def compute_mdf_line_diffs(
             for fj in range(j1, j2):
                 if fj not in paired_fj:
                     new_diags[new_idx[fj]] = {"status": "diff-changed"}
-        elif tag == 'delete':
+        elif tag == "delete":
             for fi in range(i1, i2):
                 existing_diags[existing_idx[fi]] = {"status": "diff-removed"}
-        elif tag == 'insert':
+        elif tag == "insert":
             for fj in range(j1, j2):
                 new_diags[new_idx[fj]] = {"status": "diff-added"}
 
@@ -438,6 +448,7 @@ def apply_standard_layout_css() -> None:
     Reduces block container padding on large screens and fixes status widget spacing.
     """
     import streamlit as st
+
     st.html(
         """
         <style>
@@ -454,21 +465,21 @@ def apply_standard_layout_css() -> None:
             margin-bottom: 1rem !important;
         }
 
-        /* Toolbar: hidden by default, visible on hover; click-through when hidden */
+        /* Toolbar: hidden by default, visible on hover */
         header[data-testid="stHeader"] {
             opacity: 0 !important;
             transition: opacity 0.2s ease;
             right: 14px !important;
-            pointer-events: none !important;
         }
         header[data-testid="stHeader"]:hover {
             opacity: 1 !important;
-            pointer-events: auto !important;
         }
-        header[data-testid="stHeader"] * {
-            pointer-events: none !important;
-        }
-        header[data-testid="stHeader"]:hover * {
+
+        /* Sidebar collapse/expand buttons - ALWAYS visible and interactive */
+        button[kind="header"],
+        [data-testid="stSidebarCollapseButton"],
+        [data-testid="collapsedSidebar"] {
+            opacity: 1 !important;
             pointer-events: auto !important;
         }
 
@@ -512,6 +523,7 @@ def render_back_to_main_button() -> None:
     Uses centralized Page objects from NavigationService to prevent broken links.
     """
     from src.services.navigation_service import NavigationService
+
     if st.button("Back to Main Menu", icon="⬅️", use_container_width=True, key="nav_back_to_main"):
         st.switch_page(NavigationService.PAGE_HOME)
 
