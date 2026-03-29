@@ -27,22 +27,49 @@ Archive a spec **immediately** after the final phase is approved and the PR is m
 
 **Issues are closed ONLY AFTER the PR is merged — NEVER before.**
 
+### Two Closure Paths
+
+**Path 1: GitHub Auto-Close (Acceptable)**
+
+If the PR body contains `fixes #N`, `closes #N`, or similar closing keyword:
+- GitHub automatically closes the linked issue upon PR merge
+- **No AI action required** — this is correct GitHub behavior
+- The issue closes automatically when the PR merges
+
+**Path 2: Manual Closure (AI Agent)**
+
+If the PR body does NOT contain a closing keyword:
+- Issue remains open after PR merge
+- AI agent MUST receive explicit `"pr merged"` instruction
+- AI MUST verify merge via GitHub API before closing
+- AI posts closing summary comment after closure
+
 ### 🚫 PROHIBITED
 
 1. **NEVER close an issue immediately after implementation**
 2. **NEVER close an issue when PR is created but not merged**
 3. **NEVER close an issue when PR is submitted for review**
 4. **NEVER close an issue based on `git pull` alone** — MUST verify via GitHub API
+5. **NEVER close an issue manually if PR already contains closing keyword** — let GitHub handle it
 
-### ✅ REQUIRED SEQUENCE
+### ✅ REQUIRED SEQUENCE (Manual Closure Path)
 
 | Step | Action | Agent Role |
 |------|--------|------------|
-| Implementation complete | Create PR with `Fixes #123` | ✅ Agent creates PR |
+| Implementation complete | Create PR with or without `Fixes #123` | ✅ Agent creates PR |
 | PR created | Report URL, HALT | ✅ Agent waits |
 | Human merges PR | Merge happens | 🚫 Human ONLY |
 | User confirms merge | Call `github_pull_request_read method=get` | ✅ Agent verifies |
-| PR state = merged | Close issue | ✅ Agent closes |
+| PR state = merged | Close issue (if not auto-closed) | ✅ Agent closes |
+
+### ✅ REQUIRED SEQUENCE (Auto-Close Path)
+
+| Step | Action | Agent Role |
+|------|--------|------------|
+| Implementation complete | Create PR with `Fixes #123` or `Closes #123` | ✅ Agent creates PR |
+| PR created | Report URL, HALT | ✅ Agent waits |
+| Human merges PR | Merge happens, GitHub auto-closes issue | 🚫 Human ONLY |
+| Issue auto-closed | No agent action needed | ✅ None (GitHub handled it) |
 
 ### ⚠️ MANDATORY: API-Based Merge Verification
 
