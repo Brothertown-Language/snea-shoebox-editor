@@ -26,6 +26,21 @@ ALL comments on issues and PRs MUST end with AI byline.
 <AgentIcon> *AI: <AgentBrand> on behalf of <HumanName>* <ContextEmoji> <TypeText>
 ```
 
+**⚠️ CRITICAL: Icon Placement**
+
+The agent icon (🤖) must be **OUTSIDE the asterisks** — never inside them.
+
+| Incorrect (icon italicized) | Correct (icon plain) |
+|----------------------------|---------------------|
+| `*🤖 AI: OpenCode/glm-5 on behalf of Michael Conrad*` ❌ | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad*` ✓ |
+
+**Why it matters:** Markdown italicizes everything between `*` characters. When the icon is inside asterisks:
+- The icon may not render at all (some renderers fail to display emoji in italic context)
+- The icon becomes italicized along with the text (where it does render)
+- Inconsistent rendering across GitHub, IDEs, and markdown viewers
+
+The icon must remain plain to ensure consistent rendering everywhere.
+
 **For PROGRESS COMMENTS (task completion, implementation updates):**
 ```
 **Summary:**
