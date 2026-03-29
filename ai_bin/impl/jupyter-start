@@ -1,0 +1,87 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Start Jupyter server on port 18888 (XSRF disabled, no token) for notebook editing.
+
+Usage: uv run python ai_bin/jupyter start [--help]
+
+Checks if port 18888 is already listening. If not, starts the server in the
+background and logs to tmp/jupyter.log. Prints the server URL on success.
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+PORT = 18888
+LOG_FILE = BASE_DIR / "tmp" / "jupyter.log"
+
+
+def is_port_listening(port: int) -> bool:
+    result = subprocess.run(
+        ["ss", "-tlnp"],
+        capture_output=True,
+        text=True,
+    )
+    return f":{port}" in result.stdout
+
+
+def is_jupyter_available() -> bool:
+    result = subprocess.run(
+        ["uv", "run", "jupyter", "server", "--version"],
+        capture_output=True,
+        text=True,
+    )
+    return result.returncode == 0
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        return
+
+    if not is_jupyter_available():
+        print("NOT AVAILABLE")
+        return
+
+    if is_port_listening(PORT):
+        print(f"Jupyter server already running on port {PORT}: http://localhost:{PORT}")
+        return
+
+    LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
+    log_handle = open(LOG_FILE, "a")  # noqa: WPS515
+
+    subprocess.Popen(
+        [
+            "uv", "run", "jupyter", "server",
+            "--no-browser",
+            f"--port={PORT}",
+            "--IdentityProvider.token=",
+            "--ServerApp.disable_check_xsrf=True",
+        ],
+        stdout=log_handle,
+        stderr=log_handle,
+        cwd=str(BASE_DIR),
+    )
+
+    # Wait up to 8 seconds for the port to open
+    for _ in range(16):
+        time.sleep(0.5)
+        if is_port_listening(PORT):
+            print(f"Jupyter server started: http://localhost:{PORT}")
+            print(f"Log: tmp/jupyter.log")
+            return
+
+    print(f"ERROR: Jupyter server did not start within 8 seconds. Check tmp/jupyter.log.", file=sys.stderr)
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

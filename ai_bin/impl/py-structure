@@ -1,0 +1,149 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Show classes, methods, and functions with line numbers for a Python file or all .py files in a directory tree.
+Usage: uv run python ai_bin/py structure <file.py|directory> [--json] [--brief]
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import ast
+import json
+import sys
+from pathlib import Path
+
+
+def extract_top_comment(path: Path, tree: ast.Module) -> str | None:
+    """Return the top-level succinct comment: module docstring or leading # comments."""
+    # Check for module docstring first
+    docstring = ast.get_docstring(tree)
+    if docstring:
+        first_line = docstring.strip().splitlines()[0].strip()
+        return first_line
+    # Fall back to leading # comments
+    lines = path.read_text(encoding="utf-8").splitlines()
+    comment_lines: list[str] = []
+    for line in lines:
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#!"):
+            continue
+        if stripped.startswith("#"):
+            comment_lines.append(stripped.lstrip("# ").strip())
+        else:
+            break
+    if comment_lines:
+        return comment_lines[0]
+    return None
+
+
+def extract_structure(path: Path) -> tuple[list[dict], str | None]:
+    text = path.read_text(encoding="utf-8")
+    tree = ast.parse(text, filename=str(path))
+    top_comment = extract_top_comment(path, tree)
+    results: list[dict] = []
+
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            methods: list[dict] = []
+            for child in node.body:
+                if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef):
+                    methods.append({"kind": "method", "name": child.name, "line": child.lineno})
+            class_doc = ast.get_docstring(node)
+            class_comment = class_doc.strip().splitlines()[0].strip() if class_doc else None
+            entry = {"kind": "class", "name": node.name, "line": node.lineno, "methods": methods}
+            if class_comment:
+                entry["comment"] = class_comment
+            results.append(entry)
+
+    top_level_classes = {node.name for node in ast.walk(tree) if isinstance(node, ast.ClassDef)}
+    for node in ast.iter_child_nodes(tree):
+        if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef):
+            if node.name not in top_level_classes:
+                results.append({"kind": "function", "name": node.name, "line": node.lineno, "methods": []})
+
+    results.sort(key=lambda r: r["line"])
+    return results, top_comment
+
+
+def print_structure(path: Path, structure: list[dict], top_comment: str | None = None, brief: bool = False) -> None:
+    header = str(path)
+    if top_comment:
+        header += f"  — {top_comment}"
+    print(header)
+    for entry in structure:
+        if entry["kind"] == "class":
+            class_line = f"  class {entry['name']:<30} line {entry['line']}"
+            if entry.get("comment"):
+                class_line += f"  — {entry['comment']}"
+            print(class_line)
+            if not brief:
+                for method in entry["methods"]:
+                    print(f"    method {method['name']:<28} line {method['line']}")
+        elif not brief:
+            print(f"  function {entry['name']:<28} line {entry['line']}")
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    as_json = "--json" in args
+    brief = "--brief" in args
+    file_args = [a for a in args if not a.startswith("--")]
+
+    if not file_args:
+        print("Error: no file specified.", file=sys.stderr)
+        sys.exit(1)
+
+    path = Path(file_args[0])
+    if not path.exists():
+        print(f"Error: {path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if path.is_dir():
+        brief = True  # always assume --brief for directories to prevent context overflow
+        py_files = sorted(path.rglob("*.py"))
+        if not py_files:
+            print(f"No .py files found under {path}", file=sys.stderr)
+            sys.exit(1)
+        if as_json:
+            all_results = []
+            for f in py_files:
+                structure, top_comment = extract_structure(f)
+                if brief:
+                    structure = [e for e in structure if e["kind"] == "class"]
+                    for e in structure:
+                        e.pop("methods", None)
+                entry = {"file": str(f), "structure": structure}
+                if top_comment:
+                    entry["comment"] = top_comment
+                all_results.append(entry)
+            print(json.dumps(all_results, indent=2))
+        else:
+            for i, f in enumerate(py_files):
+                if i > 0:
+                    print()
+                structure, top_comment = extract_structure(f)
+                print_structure(f, structure, top_comment, brief)
+    else:
+        structure, top_comment = extract_structure(path)
+        if brief:
+            structure = [e for e in structure if e["kind"] == "class"]
+            for e in structure:
+                e.pop("methods", None)
+        if as_json:
+            result = {"file": str(path), "structure": structure}
+            if top_comment:
+                result["comment"] = top_comment
+            print(json.dumps(result, indent=2))
+        else:
+            print_structure(path, structure, top_comment, brief)
+
+
+if __name__ == "__main__":
+    main()

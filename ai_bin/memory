@@ -1,147 +1,64 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: CRUD operations for .junie/memory.md — set, get, delete, list, and clear session state entries.
-Usage:
-  uv run python ai_bin/memory set KEY VALUE
-  uv run python ai_bin/memory get KEY
-  uv run python ai_bin/memory delete KEY
-  uv run python ai_bin/memory list
-  uv run python ai_bin/memory clear-session
+DESCRIPTION: Dispatcher for memory operations. Delegates to implementation scripts.
+Usage: uv run python ai_bin/memory <command> [args]
+Commands:
+  read            Read memory contents
+  write <k> <v>   Write a key-value pair
+  update <k> <v>  Update a key-value pair
+  clear           Clear all memory
+  -h, --help      Show this help
+
+Note: This dispatcher prevents direct invocation of implementation scripts.
 """
 from __future__ import annotations
-
-import argparse
-import re
+import os
 import sys
+import subprocess
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
-PROJECT_ROOT = BASE_DIR.parent
-MEMORY_FILE = PROJECT_ROOT / ".junie" / "memory.md"
-MAX_LINES = 40
+BASE_DIR = Path(__file__).resolve().parent.parent
+IMPL_DIR = Path(__file__).resolve().parent / "impl"
 
-# Matches lines like: key: value  or  key_name: value
-ENTRY_RE = re.compile(r"^([a-zA-Z0-9_\-]+)\s*:\s*(.*)$")
-COMMENT_RE = re.compile(r"^\s*<!--")
-PRUNE_COMMENT = re.compile(r"<!--\s*Last pruned:.*?-->")
-
-
-def read_lines() -> list[str]:
-    if not MEMORY_FILE.exists():
-        return []
-    return MEMORY_FILE.read_text(encoding="utf-8").splitlines()
+COMMANDS = {
+    "read": IMPL_DIR / "memory-read",
+    "write": IMPL_DIR / "memory-write",
+    "update": IMPL_DIR / "memory-update",
+    "clear": IMPL_DIR / "memory-clear",
+}
 
 
-def write_lines(lines: list[str]) -> None:
-    MEMORY_FILE.parent.mkdir(parents=True, exist_ok=True)
-    MEMORY_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
-
-
-def parse_entries(lines: list[str]) -> dict[str, tuple[int, str]]:
-    """Return {key: (line_index, value)} for all key: value lines."""
-    entries: dict[str, tuple[int, str]] = {}
-    for i, line in enumerate(lines):
-        m = ENTRY_RE.match(line)
-        if m:
-            entries[m.group(1)] = (i, m.group(2).strip())
-    return entries
-
-
-def cmd_set(args: argparse.Namespace) -> None:
-    lines = read_lines()
-    entries = parse_entries(lines)
-    if args.key in entries:
-        idx, _ = entries[args.key]
-        lines[idx] = f"{args.key}: {args.value}"
-        write_lines(lines)
-        print(f"Updated: {args.key}")
-    else:
-        lines.append(f"{args.key}: {args.value}")
-        write_lines(lines)
-        print(f"Set: {args.key}")
-    total = len(read_lines())
-    if total > MAX_LINES:
-        print(f"⚠️  memory.md now has {total} lines (limit: {MAX_LINES}). Run memory-stats and prune.")
-
-
-def cmd_get(args: argparse.Namespace) -> None:
-    lines = read_lines()
-    entries = parse_entries(lines)
-    if args.key in entries:
-        _, value = entries[args.key]
-        print(value)
-    else:
-        print(f"Key not found: {args.key}", file=sys.stderr)
-        sys.exit(1)
-
-
-def cmd_delete(args: argparse.Namespace) -> None:
-    lines = read_lines()
-    entries = parse_entries(lines)
-    if args.key not in entries:
-        print(f"Key not found: {args.key}", file=sys.stderr)
-        sys.exit(1)
-    idx, _ = entries[args.key]
-    del lines[idx]
-    write_lines(lines)
-    print(f"Deleted: {args.key}")
-
-
-def cmd_list(args: argparse.Namespace) -> None:
-    lines = read_lines()
-    if not lines:
-        print("memory.md is empty.")
-        return
-    for line in lines:
-        print(line)
-
-
-def cmd_clear_session(args: argparse.Namespace) -> None:
-    lines = read_lines()
-    kept = []
-    removed = 0
-    for line in lines:
-        m = ENTRY_RE.match(line)
-        if m and m.group(1).lower().startswith("session"):
-            removed += 1
-            continue
-        kept.append(line)
-    write_lines(kept)
-    print(f"Removed {removed} session_state entries.")
+def print_help() -> None:
+    print(__doc__)
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Manage .junie/memory.md")
-    sub = parser.add_subparsers(dest="command")
-
-    p_set = sub.add_parser("set", help="Add or update a key: value entry")
-    p_set.add_argument("key", help="Entry key")
-    p_set.add_argument("value", help="Entry value")
-
-    p_get = sub.add_parser("get", help="Print value for a key")
-    p_get.add_argument("key", help="Entry key")
-
-    p_del = sub.add_parser("delete", help="Remove a key entry")
-    p_del.add_argument("key", help="Entry key")
-
-    sub.add_parser("list", help="Print all entries")
-    sub.add_parser("clear-session", help="Remove all session_state entries")
-
-    args = parser.parse_args()
-
-    if args.command == "set":
-        cmd_set(args)
-    elif args.command == "get":
-        cmd_get(args)
-    elif args.command == "delete":
-        cmd_delete(args)
-    elif args.command == "list":
-        cmd_list(args)
-    elif args.command == "clear-session":
-        cmd_clear_session(args)
-    else:
-        parser.print_help()
+    args = sys.argv[1:]
+    
+    if not args or args[0] in ("-h", "--help"):
+        print_help()
+        sys.exit(0)
+    
+    command = args[0]
+    
+    if command not in COMMANDS:
+        print(f"Error: Unknown command '{command}'", file=sys.stderr)
+        print_help()
         sys.exit(1)
+    
+    impl_path = COMMANDS[command]
+    if not impl_path.exists():
+        print(f"Error: Implementation not found: {impl_path}", file=sys.stderr)
+        sys.exit(1)
+    
+    env = os.environ.copy()
+    env["AIBIN_DISPATCHER"] = "1"
+    
+    result = subprocess.run(
+        [sys.executable, str(impl_path)] + args[1:],
+        env=env,
+    )
+    sys.exit(result.returncode)
 
 
 if __name__ == "__main__":

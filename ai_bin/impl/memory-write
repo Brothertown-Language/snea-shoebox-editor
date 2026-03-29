@@ -1,0 +1,60 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Overwrite .opencode/memory.md with content from stdin or a file argument.
+Usage: uv run python ai_bin/memory write [file]
+       echo "content" | uv run python ai_bin/memory write
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+MEMORY_FILE = PROJECT_ROOT / ".opencode" / "memory.md"
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        sys.exit(0)
+    args = [a for a in sys.argv[1:] if not a.startswith("-")]
+    if args:
+        source = Path(args[0])
+        if not source.exists():
+            print(f"Error: file not found: {source}", file=sys.stderr)
+            sys.exit(1)
+        content = source.read_text(encoding="utf-8")
+    else:
+        content = sys.stdin.read()
+    import re as _re
+    _content_lower = content.lower()
+    _forbidden_patterns = [
+        (r"\bpending go\b", "self-authorization marker 'pending GO'"),
+        (r"\bawaiting\b", "future/pending state reference 'awaiting'"),
+        (r"\bpending\b", "future/pending state reference 'pending'"),
+        (r"\bnext step\b", "future state reference 'next step'"),
+        (r"\bwill be\b", "future state reference 'will be'"),
+        (r"\bto be done\b", "future state reference 'to be done'"),
+        (r"\bto do\b", "future state reference 'to do'"),
+        (r"\bnot yet\b", "future state reference 'not yet'"),
+        (r"\bupcoming\b", "future state reference 'upcoming'"),
+        (r"\bscheduled\b", "future state reference 'scheduled'"),
+        (r"\bplanned\b", "future state reference 'planned'"),
+        (r"\bphase\s+\d+\b", "phase-status phrasing 'Phase N'"),
+    ]
+    for _pat, _desc in _forbidden_patterns:
+        if _re.search(_pat, _content_lower):
+            print(f"PROTOCOL VIOLATION: memory content contains {_desc}. "
+                  f"Memory must only record past events.", file=sys.stderr)
+            sys.exit(1)
+    MEMORY_FILE.write_text(content, encoding="utf-8")
+    lines = content.count("\n") + 1
+    print(f"memory.md written ({lines} lines).")
+
+
+if __name__ == "__main__":
+    main()

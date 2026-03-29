@@ -1,0 +1,132 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Insert a new section (header + body) into a markdown file.
+Usage: uv run python ai_bin/md add <file.md> --header "New Header" --level N (--content <text> | --content-file <path>) [--after "Header" | --before "Header" | --append] [--help]
+Default position: --append (add at end of file).
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import re
+import sys
+from pathlib import Path
+
+
+def _header_level(line: str) -> int | None:
+    m = re.match(r'^(#{1,6})\s', line)
+    return len(m.group(1)) if m else None
+
+
+def _header_text(line: str) -> str:
+    return re.sub(r'^#{1,6}\s+', '', line).rstrip()
+
+
+def _find_section_end(lines: list[str], start: int, target_level: int) -> int:
+    for i in range(start + 1, len(lines)):
+        lvl = _header_level(lines[i])
+        if lvl is not None and lvl <= target_level:
+            return i
+    return len(lines)
+
+
+def _find_header(lines: list[str], header: str) -> tuple[int, int] | None:
+    for i, line in enumerate(lines):
+        lvl = _header_level(line)
+        if lvl is not None and _header_text(line) == header:
+            return i, lvl
+    return None
+
+
+def build_section(header: str, level: int, body: str) -> list[str]:
+    prefix = "#" * level
+    header_line = f"{prefix} {header}\n"
+    body_lines = [(l if l.endswith("\n") else l + "\n") for l in body.splitlines()] if body else []
+    return [header_line] + body_lines
+
+
+def add_section(lines: list[str], header: str, level: int, body: str,
+                after: str | None, before: str | None) -> list[str]:
+    section = build_section(header, level, body)
+
+    if after is not None:
+        result = _find_header(lines, after)
+        if result is None:
+            print(f"ERROR: --after header not found: {after!r}", file=sys.stderr)
+            sys.exit(1)
+        idx, lvl = result
+        insert_at = _find_section_end(lines, idx, lvl)
+        return lines[:insert_at] + section + lines[insert_at:]
+
+    if before is not None:
+        result = _find_header(lines, before)
+        if result is None:
+            print(f"ERROR: --before header not found: {before!r}", file=sys.stderr)
+            sys.exit(1)
+        idx, _ = result
+        return lines[:idx] + section + lines[idx:]
+
+    # default: append
+    return lines + section
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args:
+        print(__doc__.strip())
+        sys.exit(0)
+
+    file_path = Path(args[0])
+    if not file_path.exists():
+        print(f"ERROR: File not found: {file_path}", file=sys.stderr)
+        sys.exit(1)
+
+    header: str | None = None
+    level: int | None = None
+    content: str | None = None
+    after: str | None = None
+    before: str | None = None
+
+    i = 1
+    while i < len(args):
+        if args[i] == "--header" and i + 1 < len(args):
+            header = args[i + 1]; i += 2
+        elif args[i] == "--level" and i + 1 < len(args):
+            level = int(args[i + 1]); i += 2
+        elif args[i] == "--content" and i + 1 < len(args):
+            content = args[i + 1]; i += 2
+        elif args[i] == "--content-file" and i + 1 < len(args):
+            content = Path(args[i + 1]).read_text(encoding="utf-8"); i += 2
+        elif args[i] == "--after" and i + 1 < len(args):
+            after = args[i + 1]; i += 2
+        elif args[i] == "--before" and i + 1 < len(args):
+            before = args[i + 1]; i += 2
+        elif args[i] == "--append":
+            i += 1
+        else:
+            print(f"ERROR: Unknown argument: {args[i]}", file=sys.stderr)
+            sys.exit(1)
+
+    if not header:
+        print("ERROR: --header is required", file=sys.stderr)
+        sys.exit(1)
+    if level is None:
+        print("ERROR: --level is required", file=sys.stderr)
+        sys.exit(1)
+    if content is None:
+        print("ERROR: --content or --content-file is required", file=sys.stderr)
+        sys.exit(1)
+    if after and before:
+        print("ERROR: --after and --before are mutually exclusive", file=sys.stderr)
+        sys.exit(1)
+
+    lines = file_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    updated = add_section(lines, header, level, content, after, before)
+    file_path.write_text("".join(updated), encoding="utf-8")
+    print(f"Added section: {header!r} in {file_path}")
+
+
+if __name__ == "__main__":
+    main()

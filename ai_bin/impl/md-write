@@ -1,0 +1,102 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Replace the body of a section in a markdown file, preserving the header line.
+Usage: uv run python ai_bin/md write <file.md> --header "Header Text" (--content <text> | --content-file <path>) [--level N] [--help]
+WARNING: Use --content-file <path> for any content containing newlines or special characters
+         to avoid shell escaping and literal \n issues.
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import re
+import sys
+from pathlib import Path
+
+
+def _header_level(line: str) -> int | None:
+    m = re.match(r'^(#{1,6})\s', line)
+    return len(m.group(1)) if m else None
+
+
+def _header_text(line: str) -> str:
+    return re.sub(r'^#{1,6}\s+', '', line).rstrip()
+
+
+def write_section(lines: list[str], header: str, level: int | None, new_body: str) -> list[str]:
+    start = None
+    target_level = None
+    for i, line in enumerate(lines):
+        lvl = _header_level(line)
+        if lvl is None:
+            continue
+        if _header_text(line) == header and (level is None or lvl == level):
+            start = i
+            target_level = lvl
+            break
+    if start is None:
+        print(f"ERROR: Header not found: {header!r}", file=sys.stderr)
+        sys.exit(1)
+
+    end = len(lines)
+    for i in range(start + 1, len(lines)):
+        lvl = _header_level(lines[i])
+        if lvl is not None and lvl <= target_level:
+            end = i
+            break
+
+    body_lines = [(l if l.endswith("\n") else l + "\n") for l in new_body.splitlines()] if new_body else []
+
+    return lines[:start + 1] + body_lines + lines[end:]
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args:
+        print(__doc__.strip())
+        sys.exit(0)
+
+    file_path = Path(args[0])
+    if not file_path.exists():
+        print(f"ERROR: File not found: {file_path}", file=sys.stderr)
+        sys.exit(1)
+
+    header: str | None = None
+    level: int | None = None
+    content: str | None = None
+
+    i = 1
+    while i < len(args):
+        if args[i] == "--header" and i + 1 < len(args):
+            header = args[i + 1]
+            i += 2
+        elif args[i] == "--level" and i + 1 < len(args):
+            level = int(args[i + 1])
+            i += 2
+        elif args[i] == "--content" and i + 1 < len(args):
+            content = args[i + 1]
+            i += 2
+        elif args[i] == "--content-file" and i + 1 < len(args):
+            content = Path(args[i + 1]).read_text(encoding="utf-8")
+            i += 2
+        else:
+            print(f"ERROR: Unknown argument: {args[i]}", file=sys.stderr)
+            sys.exit(1)
+
+    if not header:
+        print("ERROR: --header is required", file=sys.stderr)
+        sys.exit(1)
+    if content is None:
+        print("ERROR: --content or --content-file is required", file=sys.stderr)
+        sys.exit(1)
+
+    lines = file_path.read_text(encoding="utf-8").splitlines(keepends=True)
+    updated = write_section(lines, header, level, content)
+    file_path.write_text("".join(updated), encoding="utf-8")
+    print(f"Updated section: {header!r} in {file_path}")
+
+
+if __name__ == "__main__":
+    main()

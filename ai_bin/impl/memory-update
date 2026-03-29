@@ -1,0 +1,123 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Update a single key: value line in .opencode/memory.md.
+If the key exists, its line is replaced. If not, it is appended to the matching section.
+Usage: uv run python ai_bin/memory update <section> <key> (<value> | --value-file <path>)
+WARNING: Use --value-file <path> for complex text to avoid shell escaping issues.
+Sections: project_context, key_symbols, persistent_notes, session_state
+Example: uv run python ai_bin/memory update session_state task "refine topic seeds"
+"""
+from __future__ import annotations
+import os as _os
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+MEMORY_FILE = PROJECT_ROOT / ".opencode" / "memory.md"
+
+SECTION_HEADERS = {
+    "project_context": "## Project Context",
+    "key_symbols": "## Key Symbols",
+    "persistent_notes": "## Persistent Notes",
+    "session_state": "## Session State",
+}
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(__doc__)
+        sys.exit(0)
+    args = sys.argv[1:]
+    if len(args) < 2:
+        print("Error: usage: memory update <section> <key> (<value> | --value-file <path>)", file=sys.stderr)
+        sys.exit(1)
+
+    section, key = args[0], args[1]
+    value = ""
+    if "--value-file" in args:
+        idx = args.index("--value-file")
+        if len(args) > idx + 1:
+            value = Path(args[idx + 1]).read_text(encoding="utf-8")
+        else:
+            print("Error: --value-file requires a path", file=sys.stderr)
+            sys.exit(1)
+    else:
+        if len(args) < 3:
+            print("Error: must provide <value> or --value-file <path>", file=sys.stderr)
+            sys.exit(1)
+        value = " ".join(args[2:])
+
+    _val_lower = value.lower()
+    # Reject self-authorization markers
+    if "pending go" in _val_lower:
+        print("PROTOCOL VIOLATION: value contains 'pending GO' — self-authorization is prohibited.", file=sys.stderr)
+        sys.exit(1)
+    # Reject pending/future state references
+    import re as _re
+    _pending_patterns = [
+        r"\bawaiting\b",
+        r"\bpending\b",
+        r"\bnext step\b",
+        r"\bwill be\b",
+        r"\bto be done\b",
+        r"\bto do\b",
+        r"\bnot yet\b",
+        r"\bupcoming\b",
+        r"\bscheduled\b",
+        r"\bplanned\b",
+    ]
+    for _pat in _pending_patterns:
+        if _re.search(_pat, _val_lower):
+            print(f"PROTOCOL VIOLATION: memory value contains future/pending state reference "
+                  f"(matched: {_pat!r}). Memory must only record past events.", file=sys.stderr)
+            sys.exit(1)
+    # Reject phase-status phrasing: "Phase N complete/pending/in-progress/done/failed/skipped"
+    if _re.search(r"\bphase\s+\d+\b", _val_lower):
+        print("PROTOCOL VIOLATION: memory value contains phase-status phrasing "
+              "('Phase N ...'). Record outcomes, not phase lifecycle state.", file=sys.stderr)
+        sys.exit(1)
+    if section not in SECTION_HEADERS:
+        print(f"Error: unknown section {section!r}. Valid: {', '.join(SECTION_HEADERS)}", file=sys.stderr)
+        sys.exit(1)
+    if not MEMORY_FILE.exists():
+        print(f"Memory file not found: {MEMORY_FILE}", file=sys.stderr)
+        sys.exit(1)
+    lines = MEMORY_FILE.read_text(encoding="utf-8").splitlines(keepends=True)
+    new_line = f"- {key}: {value}\n"
+    header = SECTION_HEADERS[section]
+    # Try to replace existing key line within the target section only
+    in_section = False
+    for i, line in enumerate(lines):
+        if line.strip() == header:
+            in_section = True
+            continue
+        if in_section:
+            if line.startswith("## "):
+                break  # left the section without finding the key
+            stripped = line.lstrip("- ").strip()
+            if stripped.startswith(f"{key}:"):
+                lines[i] = new_line
+                MEMORY_FILE.write_text("".join(lines), encoding="utf-8")
+                print(f"Updated key '{key}' in section '{section}'.")
+                return
+    # Key not found — append after section header
+    for i, line in enumerate(lines):
+        if line.strip() == header:
+            # Find insertion point: after header and any comment line
+            insert_at = i + 1
+            while insert_at < len(lines) and lines[insert_at].startswith("<!--"):
+                insert_at += 1
+            lines.insert(insert_at, new_line)
+            MEMORY_FILE.write_text("".join(lines), encoding="utf-8")
+            print(f"Appended key '{key}' to section '{section}'.")
+            return
+    print(f"Error: section header '{header}' not found in memory.md.", file=sys.stderr)
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()
