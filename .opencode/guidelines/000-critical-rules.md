@@ -49,7 +49,7 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 **Outcome:** <What changed for stakeholders>
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *[AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
 ```
 
 **Final task or single-task spec:**
@@ -62,7 +62,7 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 All tasks complete from this specification.
 
-*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
+🤖 *[AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*
 ```
 
 ### Required Byline Format Table (MANDATORY)
@@ -73,13 +73,13 @@ All tasks complete from this specification.
 
 | Type | Required Format |
 |------|-----------------|
-| Progress (task completion) | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*` |
-| Body update | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Updated: <reason>*` |
-| Spec alteration | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 📝 Spec altered: <summary>*` |
-| Closure | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ❌ Closed - <reason>*` |
-| General response | `<content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 🤖*` |
-| Issue body signature | `<issue content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> ✨ Created*` |
-| PR body signature | `<pr content>\n\n*[🤖 AI: <AgentBrand>] on behalf of <HumanName> 🚀 Launched*` |
+| Progress (task completion) | `<content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> ✅ Task Complete: <task-name>*` |
+| Body update | `<content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> 📝 Updated: <reason>*` |
+| Spec alteration | `<content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> 📝 Spec altered: <summary>*` |
+| Closure | `<content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> ❌ Closed - <reason>*` |
+| General response | `<content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> 🤖*` |
+| Issue body signature | `<issue content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> ✨ Created*` |
+| PR body signature | `<pr content>\n\n🤖 *[AI: <AgentBrand>] on behalf of <HumanName> 🚀 Launched*` |
 
 **Position Breakdown:**
 
