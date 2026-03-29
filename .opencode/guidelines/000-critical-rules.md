@@ -94,6 +94,25 @@ All tasks complete from this specification.
 | Context emoji | `✅` | Plain (outside italics) |
 | Type text | `Task Complete: schema` | Plain (outside italics) |
 
+**⚠️ CRITICAL: Icon Placement (Most Common Mistake)**
+
+The agent icon (🤖) must be **OUTSIDE the asterisks** — never inside them.
+
+| Incorrect (icon italicized) | Correct (icon plain) |
+|----------------------------|---------------------|
+| `*🤖 AI: OpenCode/glm-5 on behalf of Michael Conrad*` ❌ | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad*` ✓ |
+
+**Why it matters:** Markdown italicizes everything between `*` characters. When the icon is inside asterisks:
+- The icon may not render at all (some renderers fail to display emoji in italic context)
+- The icon becomes italicized along with the text (where it does render)
+- Inconsistent rendering across GitHub, IDEs, and markdown viewers
+
+The icon must remain plain to ensure consistent rendering everywhere.
+
+**Visual rendering:**
+- ❌ Incorrect: `*🤖 AI: ...*` → *(icon may not render or is italicized)*
+- ✓ Correct: `🤖 *AI: ...*` → 🤖 followed by italicized text
+
 **Examples:**
 
 | Type | Full Byline |
