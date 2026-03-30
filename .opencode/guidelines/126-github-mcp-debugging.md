@@ -101,9 +101,9 @@ When documenting owner mismatch errors, check for:
 
 ---
 
-## Never Assume Owner Values
+## Never Assume Owner Values (Zero Tolerance)
 
-**🚫 FORBIDDEN:**
+**🚫 FORBIDDEN (Zero Tolerance — See `000-critical-rules.md`):**
 - Assuming owner from git username (e.g., `muksihs` from `$USER`)
 - Guessing owner from file paths (`/home/muksihs/...`)
 - Using hardcoded owner values from previous sessions

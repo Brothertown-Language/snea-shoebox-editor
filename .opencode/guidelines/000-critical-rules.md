@@ -598,6 +598,33 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 
 ---
 
+## Critical Violation: Inferring Owner from File Paths or Usernames
+
+**⚠️ Using file paths or usernames to infer GitHub owner is a CRITICAL GUIDELINE VIOLATION.**
+
+The session init script is the SINGLE SOURCE OF TRUTH for owner/repo values.
+
+**🚫 FORBIDDEN:**
+- Inferring `owner=muksihs` from file path `/home/muksihs/git/...`
+- Inferring owner from `$USER` environment variable
+- Inferring owner from git username (`git config user.name`)
+- Using cached/stale owner values from previous sessions
+- Making ANY GitHub MCP call without first running session init
+
+**✅ REQUIRED:**
+1. Run `uv run python ai_bin/session_init.py` FIRST (before any other operations)
+2. Store ALL output values for session duration
+3. Use `GIT_OWNER` and `GIT_REPO` for EVERY GitHub MCP call
+4. Never proceed with GitHub operations if session init fails
+
+**Why this is critical:**
+- Incorrect owner causes GitHub API 404 errors
+- Wastes tokens on failed API calls
+- Breaks workflow for issue/PR operations
+- Demonstrates failure to follow documented procedure
+
+---
+
 ## Critical: Engineering Mindset Required
 
 **⚠️ All work must be approached with proper engineering discipline.**

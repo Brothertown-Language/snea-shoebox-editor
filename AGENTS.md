@@ -243,6 +243,7 @@ Key areas:
 - **Use `./tmp/` not `/tmp/`** — Relative paths only
 
 **🚫 NEVER:**
+- **INFER GITHUB OWNER FROM FILE PATHS OR USERNAMES** — Session init output (`GIT_OWNER`, `GIT_REPO`) is the ONLY source of truth. Inferring `muksihs` from `/home/muksihs/...` is a CRITICAL VIOLATION. See `000-critical-rules.md`.
 - Write code/notebooks/configs/tests without approved spec
 - Interpret questions as authorization ("Should I do X?" = asking permission)
 - Proceed to next task after completing a task — HALT
