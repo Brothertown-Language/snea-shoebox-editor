@@ -113,6 +113,7 @@ OpenCode loads guidelines from:
 | Code Standards | `080-code-standards.md` |
 | Engineering Approach | `085-engineering-approach.md` |
 | HTTP Requests | `086-http-requests.md` |
+| AI Authorship | `088-ai-authorship.md` |
 | Data Integrity | `090-data-integrity.md` |
 | Persistence | `100-persistence.md` |
 | Authority Source | `130-authority-source.md` |

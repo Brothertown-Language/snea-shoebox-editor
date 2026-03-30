@@ -66,6 +66,20 @@ The icon must remain plain to ensure consistent rendering everywhere.
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
+### Copyright Clarification: Copied Content Does NOT Get AI Byline
+
+**Content copied from ANY source retains original copyright.** AI bylines apply ONLY to genuinely AI-generated content.
+
+| Scenario | Byline? |
+|----------|---------|
+| AI writes original comment/reply | ✅ YES - AI byline required |
+| AI copies Stack Overflow answer | ❌ NO - Cite original, no AI byline |
+| AI quotes documentation | ❌ NO - Quote with citation only |
+| AI paraphrases external content | ✅ Partial - Cite source, AI byline for creative paraphrase |
+| AI posts status update | ✅ YES - AI byline required |
+
+**See `088-ai-authorship.md` for complete attribution rules.**
+
 ### Agent Icon Registry
 
 | Agent | Icon | Brand |
@@ -379,6 +393,7 @@ GOOD: "The keys look correct. Ready when you are."
 | Guideline | Content |
 |-----------|---------|
 | `123-github-ai-identity.md` | Full AI identity requirements |
+| `088-ai-authorship.md` | AI authorship attribution rules |
 | `120-github-issue-first.md` | Issue workflow, sub-issues |
 | `000-critical-rules.md` | Critical violation enforcement |
 

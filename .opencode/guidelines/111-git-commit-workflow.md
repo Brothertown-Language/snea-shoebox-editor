@@ -19,9 +19,10 @@ The developer will say "commit" or "create a PR" when they want git operations. 
 3. **Do NOT automatically create PRs**: PR creation requires the same explicit instruction as commits
 
 ### ✅ ALWAYS DO
-- **Include co-author trailers for both AI and human collaborator.** Every implementation commit MUST include TWO trailers:
+- **Include co-author trailers for AI-GENERATED content.** For AI-generated commits, include co-author trailers for both AI and human collaborator:
   - AI author: Use the AI's actual identity dynamically (the AI knows its own name)
   - Human collaborator: Use session-cached values from `000-session-init.md` §0.1 (`GIT_USER_NAME`, `GIT_USER_EMAIL`)
+- **NO co-authorship for copied content.** Content copied from ANY source retains original copyright - see `088-ai-authorship.md`
 - Re-run discovery (`git status`, `git diff`) before any commit workflow.
 - If `pyproject.toml` changed, include `uv.lock`.
 

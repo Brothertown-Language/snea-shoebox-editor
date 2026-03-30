@@ -30,6 +30,21 @@ Every implementation task MUST be documented with progress comments on the GitHu
 - Post comment when creating PR
 - Never proceed to next task without commenting first
 
+### AI Authorship Attribution
+
+**AI bylines are MANDATORY for AI-GENERATED content.**
+
+**Content copied from ANY source does NOT get AI attribution** — the original source holds the copyright.
+
+| Scenario | Byline Required? |
+|----------|-------------------|
+| AI writes original content | ✅ YES |
+| AI copies Stack Overflow | ❌ NO (cite original) |
+| AI quotes documentation | ❌ NO (cite original) |
+| AI paraphrases external content | ✅ Partial (cite + AI byline) |
+
+**See `088-ai-authorship.md` for complete rules.**
+
 ### Required Format: Executive Summary
 
 **ALL bylines MUST include "on behalf of <HumanName>".**
