@@ -354,6 +354,7 @@ Co-authored-by: Michael Conrad <michael@example.com>
 - Delete merged branches immediately (local AND remote)
 - Report completion and HALT after each phase
 - Let user decide when/where to restore stash
+- **NO co-authorship for copied content** — Content copied from any source (Stack Overflow, documentation) retains original copyright. See `088-ai-authorship.md`
 
 ## Failure Recovery
 
@@ -400,6 +401,7 @@ This skill enforces:
 | `124-github-archive-workflow.md` | Issue closure timing |
 | `pr-creation-workflow/SKILL.md` | PR creation timing, issue closure |
 | `000-critical-rules.md` | PR without instruction violation |
+| `088-ai-authorship.md` | AI authorship attribution |
 | `AGENTS.md` | Branch Before Edit, Preserve Pending Changes |
 
 ## Example Workflows

@@ -2,38 +2,43 @@
 
 **See `.opencode/skills/github-comments/SKILL.md` for complete comment protocol.**
 
-## 🤖 MANDATORY: AI Identity Prefix
+## 🤖 MANDATORY: AI Identity for AI-Generated Content
 
-ALL comments on issues and PRs MUST be prefixed with AI identity:
+ALL AI-GENERATED comments on issues and PRs MUST end with AI byline:
 
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* <ContextEmoji> <TypeText>
 ```
 
-**Dynamic Components:**
-- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
-- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
-- `<HumanName>`: From `git config user.name` (fallback to `$USER`)
+**⚠️ Clarification: Copied content does NOT get AI byline.**
 
-**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity at runtime.**
+Content copied from ANY source (Stack Overflow, documentation, external sources) retains original copyright. AI bylines apply ONLY to genuinely AI-generated content.
+
+**See `088-ai-authorship.md` for complete attribution rules.**
+
+---
 
 ## Required Byline Format Table (MANDATORY)
 
 **ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
 
+**ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
+
 | Type | Required Format |
 |------|-----------------|
-| Progress (task completion) | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ Task Complete: <task-name>` |
-| Body update | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Updated: <reason>` |
-| Spec alteration | `AI: <AgentName> <ModelID> on behalf of <HumanName> 📝 Spec altered: <summary>` |
-| Closure | `AI: <AgentName> <ModelID> on behalf of <HumanName> ✅ **Closed - Implemented**` |
-| General response | `AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖 <response>` |
-| Issue body signature | `*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*` |
+| Progress (task completion) | `🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>` |
+| Body update | `🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Updated: <reason>` |
+| Spec alteration | `🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Spec altered: <summary>` |
+| Closure | `🤖 *AI: <AgentBrand> on behalf of <HumanName>* ❌ Closed - <reason>` |
+| General response | `🤖 *AI: <AgentBrand> on behalf of <HumanName>* 🤖` |
+| Issue body signature | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created` |
 
 ### Signature for Issue/PR Bodies (NOT comments)
 
 ```markdown
-*Created by AI: <AgentName> <ModelID> on behalf of <HumanName>*
+<issue content>
+
+🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created
 ```
 
 Place at END of issue bodies and PR descriptions, preceded by blank line.
