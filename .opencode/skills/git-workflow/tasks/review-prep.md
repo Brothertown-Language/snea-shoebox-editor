@@ -15,6 +15,32 @@ The sequence is:
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just push the branch.**
 
+### ⚠️ CRITICAL: NO EXCEPTIONS
+
+**Review prep is MANDATORY regardless of:**
+- Whether file changes were made
+- Whether "no changes needed" was determined
+- Whether branch is already up-to-date
+- Whether implementation made zero modifications
+
+**The review prep workflow provides developer visibility - it must NEVER be skipped.**
+
+**"No File Changes" Edge Case:**
+When implementation determines "no file changes needed":
+1. **STILL push branch** - git will report "up-to-date", which is acceptable
+2. **STILL generate compare URL** - developer can see branch state
+3. **STILL post completion comment** - clear signal that work is done
+4. **NEVER skip review prep** - visibility is mandatory
+
+**Why this matters:** Developer needs visibility into what was checked, even if no changes were made.
+
+### ⚠️ CRITICAL: Model ID Detection
+
+**When posting completion comment (Step 3):**
+- **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
+- **MUST detect actual runtime identity** from environment/MCP tools
+- **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
+
 ## Operating Protocol
 
 1. **After implementation:** This task runs AFTER all implementation is complete - NO EXCEPTIONS
@@ -56,13 +82,20 @@ ls ./tmp/
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
 
-### Step 1: Push Feature Branch
+### Step 1: Push Feature Branch (ALWAYS EXECUTE)
 
 ```bash
 git push -u origin <branch-name>
 ```
 
-This pushes the branch to remote WITHOUT creating a PR.
+**This pushes the branch to remote WITHOUT creating a PR.**
+
+**CRITICAL:** This step is ALWAYS executed, even if:
+- Git reports "Everything up-to-date"
+- No file changes were made during implementation
+- Branch already exists on remote
+
+The push establishes remote tracking and ensures the compare URL will work correctly.
 
 ### Step 2: Generate Compare URL
 
@@ -101,6 +134,29 @@ https://github.com/NewsRx/newsrx-genai-python/compare/main...<branch-name>
 **WAIT for:**
 - Developer reviews changes via GitHub diff viewer
 - Developer says "create a PR" to proceed
+
+### ⚠️ CRITICAL: PR Request Before Review-Prep
+
+**If user requests "create a PR" but review-prep was NOT completed:**
+
+1. **Detect skipped review-prep:**
+   - Branch not pushed to remote, OR
+   - No compare URL was provided, OR
+   - No completion comment posted
+
+2. **Inform user:** "Review step must be completed first"
+
+3. **Complete review-prep now:**
+   - Commit any uncommitted changes
+   - Push feature branch: `git push -u origin <branch-name>`
+   - Generate GitHub compare URL
+   - Post completion comment
+
+4. **HALT:** Wait for developer to review via diff URL
+
+5. **After developer reviews:** User says "create a PR" again → proceed with PR creation workflow
+
+**Why:** Developer must have visibility BEFORE PR creation decision.
 
 ## Context Required
 
