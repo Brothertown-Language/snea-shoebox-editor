@@ -30,6 +30,55 @@ The sequence is:
 
 ## Procedure
 
+### Step 0: Determine Implementation Outcome
+
+**Check if any changes were made:**
+
+```bash
+git status --porcelain
+```
+
+**If EMPTY (no file changes):**
+- Skip to "No-Changes Path" below
+- This means implementation was already complete or no changes needed
+
+**If NOT EMPTY (file changes exist):**
+- Continue to Step 1 (Push Feature Branch)
+
+---
+
+### No-Changes Path (Already Implemented)
+
+**When implementation determined no changes were needed:**
+
+1. **Close issue directly:**
+   - Post verification comment explaining what was checked
+   - Use `github_issue_write(method="update", state="closed", state_reason="completed")`
+
+2. **Comment format:**
+```markdown
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**Summary:**
+
+Verified all proposed changes were already implemented. No modifications needed.
+
+**Verification Results:**
+
+- [List what was checked with file:line references]
+- [Confirm each requirement from spec is present]
+
+**Outcome:** <What the verification confirmed>
+```
+
+3. **HALT after closing:**
+   - No branch push
+   - No compare URL
+   - No PR needed
+   - Report completion in chat
+
+---
+
 ### Step 1: Push Feature Branch
 
 ```bash
