@@ -297,7 +297,7 @@ Updated git-workflow skill to push feature branches after implementation and pro
 
 **Ready for Review:**
 
-https://github.com/NewsRx/newsrx-genai-python/compare/main...spec/my-feature
+https://github.com/<owner>/<repo>/compare/main...<branch-name>
 
 ---
 🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)

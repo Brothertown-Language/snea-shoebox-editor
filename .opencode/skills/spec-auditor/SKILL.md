@@ -455,7 +455,7 @@ AI: OpenCode ollama-cloud/glm-5 📝 Spec Update: Fixed fresh-start context viol
 - Reason: LLM agents cannot follow references to previous context
 - Standard: docs/specs/how-to-write-good-spec-ai-agents.md - Fresh-Start Context Requirements
 
-GitHub Comment: https://github.com/NewsRx/newsrx-genai-python/issues/258#issuecomment-xxxxx
+GitHub Comment: https://github.com/<owner>/<repo>/issues/258#issuecomment-xxxxx
 
 Moving to next issue...
 

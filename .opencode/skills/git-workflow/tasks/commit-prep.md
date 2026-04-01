@@ -84,7 +84,7 @@ Every implementation commit MUST include:
 Example:
 ```
 Co-authored-by: OpenCode (ollama-cloud/glm-5) <noreply@opencode.ai>
-Co-authored-by: Michael Conrad <michael@newsrx.com>
+Co-authored-by: <Human Name> <human@email.com>  # From GIT_USER_NAME and GIT_USER_EMAIL
 ```
 
 ## Why This Task Is Separate from PR Creation

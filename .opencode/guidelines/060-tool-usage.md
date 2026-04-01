@@ -33,7 +33,7 @@ Use MCP tools for ALL file, notebook, and repository operations when MCP is avai
 ### 🚫 NEVER DO
 - **ABSOLUTE PATHS ARE FORBIDDEN IN ALL AGENT TERMINAL COMMANDS.** Never pass a path beginning with `/` to any terminal command or tool parameter.
 - Never issue a `cd` command. Run all commands from project root using relative paths.
-- **NEVER prefix commands with `cd /home/michael/git/newsrx-genai-python &&` or any variant.**
+- **NEVER prefix commands with `cd /home/<user>/git/<repo> &&` or any variant.**
 
 ## 3. Temp Files & Cleanliness
 

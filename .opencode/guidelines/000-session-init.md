@@ -49,7 +49,7 @@ uv run python ai_bin/session_init.py
 
 | Forbidden Action | Why It's Wrong |
 |------------------|----------------|
-| Parsing file paths to extract `$USER` | `/home/michael/git/...` → `owner=michael` is INCORRECT |
+| Parsing file paths to extract `$USER` | `/home/<user>/git/...` → `owner=<user>` is INCORRECT |
 | Using `$USER` environment variable | Returns local username, NOT GitHub owner |
 | Using `git config user.name` | Returns human name, NOT GitHub owner |
 | Using cached values from previous sessions | Stale data, violates session-bound requirement |
@@ -81,13 +81,13 @@ uv run python ai_bin/session_init.py
 
 | Incorrect Source | Example | Result |
 |------------------|---------|--------|
-| File path parsing | `/home/michael/git/...` | Owner=`michael` (WRONG) |
-| `$USER` variable | `echo $USER` → `michael` | Owner=`michael` (WRONG) |
-| `git config user.name` | `git config user.name` → `Michael Conrad` | Owner=`Michael Conrad` (WRONG) |
-| Hardcoded value | `owner="michael"` | Wrong on different machines |
+| File path parsing | `/home/<user>/git/...` | Owner=`<user>` (WRONG) |
+| `$USER` variable | `echo $USER` → `<local-user>` | Owner=`<local-user>` (WRONG) |
+| `git config user.name` | `git config user.name` → `<human-name>` | Owner=`<human-name>` (WRONG) |
+| Hardcoded value | `owner="<hardcoded>"` | Wrong on different machines |
 | Cached from previous session | Previous session's `GIT_OWNER` | May be stale |
 
-**CORRECT:** `GIT_OWNER=NewsRx` from session init (for NewsRx/newsrx-genai-python)
+**CORRECT:** `GIT_OWNER=<owner>` from session init (for `<owner>/<repo>`)
 
 ---
 
@@ -110,8 +110,8 @@ The `ai_bin/session_init.py` script extracts owner and repo from the remote URL 
 
 **Script output:**
 ```
-GIT_OWNER=NewsRx
-GIT_REPO=newsrx-genai-python
+GIT_OWNER=<owner>
+GIT_REPO=<repo>
 ```
 
 **Error handling (handled by script):**
