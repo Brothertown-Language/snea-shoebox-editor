@@ -15,6 +15,25 @@ The sequence is:
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just push the branch.**
 
+### ⚠️ CRITICAL: NO EXCEPTIONS
+
+**Review prep is MANDATORY regardless of:**
+- Whether file changes were made
+- Whether "no changes needed" was determined
+- Whether branch is already up-to-date
+- Whether implementation made zero modifications
+
+**The review prep workflow provides developer visibility - it must NEVER be skipped.**
+
+**"No File Changes" Edge Case:**
+When implementation determines "no file changes needed":
+1. **STILL push branch** - git will report "up-to-date", which is acceptable
+2. **STILL generate compare URL** - developer can see branch state
+3. **STILL post completion comment** - clear signal that work is done
+4. **NEVER skip review prep** - visibility is mandatory
+
+**Why this matters:** Developer needs visibility into what was checked, even if no changes were made.
+
 ## Operating Protocol
 
 1. **After implementation:** This task runs AFTER all implementation is complete - NO EXCEPTIONS
@@ -56,13 +75,20 @@ ls ./tmp/
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
 
-### Step 1: Push Feature Branch
+### Step 1: Push Feature Branch (ALWAYS EXECUTE)
 
 ```bash
 git push -u origin <branch-name>
 ```
 
-This pushes the branch to remote WITHOUT creating a PR.
+**This pushes the branch to remote WITHOUT creating a PR.**
+
+**CRITICAL:** This step is ALWAYS executed, even if:
+- Git reports "Everything up-to-date"
+- No file changes were made during implementation
+- Branch already exists on remote
+
+The push establishes remote tracking and ensures the compare URL will work correctly.
 
 ### Step 2: Generate Compare URL
 
