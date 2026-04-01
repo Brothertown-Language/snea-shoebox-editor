@@ -104,6 +104,7 @@ cleanup: Verify merge via GitHub API → Close issues
 - Edit files on `main` branch
 - `git restore` on externally-modified files
 - Create PR without explicit user instruction
+- Create PR without squashing to SINGLE COMMIT first
 - Merge PRs (HUMAN-ONLY)
 - Use `--no-verify` flag
 - Ask "Ready to commit?" or "Create a PR?"
@@ -115,15 +116,37 @@ cleanup: Verify merge via GitHub API → Close issues
 - Stash ALL modifications before branch creation
 - Verify stash exists (`git stash list`)
 - Verify working tree is clean (`git status`)
+- **SQUASH TO SINGLE COMMIT BEFORE ANY PR** — See `pr-creation-workflow` skill for pre-PR checklist
 - **Commit ALL changes before pushing** (`git add -A && git commit`)
 - **Push after committing** - ensures GitHub compare works correctly
 - **Clean temp files before review** (`rm ./tmp/temp_*.py ./tmp/*.json 2>/dev/null`)
-- Squash to single commit before PR
 - Include co-author trailers in squash commit
 - **Dynamically detect model ID at runtime** - NEVER copy example IDs from skills/guidelines
 - Wait for human to merge PR
 - Delete merged branches immediately (local AND remote)
 - Report completion and HALT after each phase
+
+### ⚠️ SQUASH IS MANDATORY — NO EXCEPTIONS
+
+**Every PR must have EXACTLY ONE commit. No exceptions.**
+
+**Before creating ANY PR:**
+
+```bash
+# Step 1: Verify commit count
+git log origin/main..HEAD --oneline
+
+# Step 2: If MORE THAN ONE commit shown, SQUASH NOW
+git reset --soft origin/main
+git commit -m "<descriptive message>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+
+# Step 3: Force push the single commit
+git push --force-with-lease origin <branch>
+```
+
+**See `pr-creation-workflow` skill for the complete pre-PR checklist.**
 
 ### ⚠️ Edge Case: Already Implemented (No Changes)
 
