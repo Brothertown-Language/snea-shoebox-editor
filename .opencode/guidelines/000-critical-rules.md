@@ -441,7 +441,7 @@ Invoked with: `/skill concern-separation-auditor --issue N`
 - When creating new specs
 - Before approving spec implementation
 
-**Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/concern-audit-YYYYMMDD.md`
+**Output:** Posts findings to GitHub Issue
 
 ### Enforcement Flow
 
