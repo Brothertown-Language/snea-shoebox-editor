@@ -63,7 +63,7 @@ A file is **project-specific** if it:
 
 Examples of project-specific content:
 - `pubmed_data_3/` - project database path
-- `newsrx-genai-python` - project name
+- `<repo>` - project name (from session_init.py)
 - `project_root /` - project-specific path handling
 - Project-specific table names or schemas
 
@@ -159,17 +159,17 @@ Post comment to spec issue documenting:
 
 ## Configuration
 
-Minimal configuration file (no classification patterns):
+**Project-Local Config**: This config file should NOT be synced from other repositories. Create it per-project:
 
 ```yaml
 # .opencode/sync-config.yml
 source:
-  owner: NewsRx
-  repo: newsrx-genai-python
+  owner: <owner>   # From session_init.py output
+  repo: <repo>     # From session_init.py output
   
 target:
-  owner: NewsRx
-  repo: ai-agent-guidelines
+  owner: <owner>   # Target GitHub org/username
+  repo: <repo>     # Target repo name
 
 # Files that are explicitly project-local (never sync)
 local_only:
@@ -177,6 +177,8 @@ local_only:
   - ".opencode/sync-config.yml"
   - ".opencode/sync-state.yml"
 ```
+
+**NOTE**: Create this file only if syncing guidelines between repositories. The file is project-specific and should not be copied from other projects.
 
 ## Sync State Tracking
 

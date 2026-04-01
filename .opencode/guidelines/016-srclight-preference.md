@@ -142,7 +142,7 @@ pycharm_search_in_files_by_text(searchText="process_article")
 
 ```
 # ✅ CORRECT: Use srclight call graph
-srclight_get_callers(symbol_name="process_article", project="newsrx-genai-python")
+srclight_get_callers(symbol_name="process_article", project="<project-name>")
 
 # ❌ WRONG: Manual text search for call sites
 pycharm_search_in_files_by_text(searchText="process_article(")

@@ -66,7 +66,7 @@ This file provides critical rules that must never be violated.
 4. NEVER assume or hardcode owner/repo values
 
 ### Why This Matters
-- File paths vary across machines (`/home/michael/` vs `/home/user/`)
+- File paths vary across machines (`/home/<user>/` vs `/home/<other>/` )
 - `$USER` returns local username, NOT GitHub owner
 - `git config user.name` returns human name, NOT GitHub owner
 - Cached values become stale across sessions

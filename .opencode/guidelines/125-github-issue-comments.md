@@ -144,7 +144,7 @@ AI: OpenCode ollama-cloud/glm-5 🔍 Analysis complete: Found 3 issues in valida
 
 **Non-Substantive (No Comment Needed):**
 ```markdown
-> **Origin:** Investigated in https://github.com/NewsRx/newsrx-genai-python/issues/100
+> **Origin:** Investigated in https://github.com/<owner>/<repo>/issues/100
 > **Investigation Result:** api-agent cannot be used
 ```
 

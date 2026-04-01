@@ -108,7 +108,7 @@ Format for issue and chat:
 
 **Ready for Review:**
 
-https://github.com/NewsRx/newsrx-genai-python/compare/main...<branch-name>
+https://github.com/<owner>/<repo>/compare/main...<branch-name>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)

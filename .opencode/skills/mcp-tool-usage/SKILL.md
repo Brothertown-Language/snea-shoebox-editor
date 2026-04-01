@@ -21,7 +21,7 @@ You are an MCP Tool Usage Enforcer. Your sole focus is ensuring all file, notebo
 
 | Forbidden Action | Why It's Wrong |
 |------------------|----------------|
-| Parsing file paths to extract owner | `/home/michael/git/...` → `owner=michael` is WRONG |
+| Parsing file paths to extract owner | `/home/<user>/git/...` → `owner=<user>` is WRONG |
 | Using `$USER` environment variable | Returns local username, NOT GitHub owner |
 | Using `git config user.name` | Returns human name, NOT GitHub owner |
 | Using cached values from previous sessions | Stale, expired, or wrong repository |
@@ -57,10 +57,10 @@ github_issue_read(
 
 ```python
 # ❌ WRONG: Inferring from file path
-# File path: /home/michael/git/newsrx-genai-python
+# File path: /home/<user>/git/<repo>
 github_issue_read(
-    owner="michael",  # WRONG - inferred from path
-    repo="newsrx-genai-python",
+    owner="<user>",  # WRONG - inferred from path
+    repo="<repo>",
     issue_number=123
 )
 
@@ -70,7 +70,7 @@ user = subprocess.check_output(["git", "config", "user.name"])
 github_issue_read(owner=user, ...)  # WRONG - git config is human name
 
 # ❌ WRONG: Using cached value
-owner = "michael"  # from previous session
+owner = "<cached-value>"  # from previous session
 github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 ```
 

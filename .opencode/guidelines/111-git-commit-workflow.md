@@ -35,7 +35,7 @@ The AI must use its **own identity**, not the example name. Examples show placeh
 - The AI uses its **own actual identity** (the AI knows its own name and email)
 - **DO NOT use generic placeholders like "AI"** — use the actual AI agent name (e.g., "OpenCode Desktop", "OpenCode")
 - **Email format**: Use a noreply address associated with the AI service (e.g., `noreply@opencode.ai`, `noreply@anthropic.com`)
-- **NEVER use the project domain** (e.g., `ai@newsrx.com` is WRONG — those belong to the human collaborators)
+- **NEVER use the project domain** (e.g., `ai@<project-domain>.com` is WRONG — those belong to the human collaborators)
 - **MODEL INFO REQUIRED**: The AI MUST include the backing model name and size/provider in the co-author trailer:
   - Format: `Agent-Name (model-id) <email>`
   - Example: `Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>`
