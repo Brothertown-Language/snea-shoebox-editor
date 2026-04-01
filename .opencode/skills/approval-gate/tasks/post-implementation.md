@@ -65,7 +65,7 @@ Verified all proposed changes were already implemented. No modifications needed.
 
 **Verification Results:**
 
-- [List what was checked with file:line references]
+- [List what was checked with file references and function names]
 - [Confirm each requirement from spec is present]
 
 **Outcome:** <What the verification confirmed>

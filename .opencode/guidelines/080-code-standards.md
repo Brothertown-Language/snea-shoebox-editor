@@ -233,3 +233,47 @@ AI co-authored attribution:
 3. Enables proper credit and traceability
 4. Helps identify AI-generated content for review
 5. **Respects copyright** - only claims co-authorship on genuinely original AI work
+
+## Cross-Reference Standards
+
+**Cross-references in specs, issues, and documentation MUST use stable anchors, NOT line numbers.**
+
+### Required Format
+
+| Reference Type | Format | Example |
+|----------------|--------|---------|
+| Function | `file.py` `function_name()` | `process_data()` in `pubmed_client.py` |
+| Class | `file.py` `ClassName` | `MeshValidator` in `validator.py` |
+| Section | `file.md` `"Section Name"` | `"Cross-Reference Standards"` in `080-code-standards.md` |
+| Code snippet | Include snippet (<20 lines) | See examples below |
+
+### Forbidden Format
+
+| Reference Type | Format | Why Forbidden |
+|----------------|--------|---------------|
+| Line number | `file.py:42` | Breaks on every edit |
+| Line range | `file.py:42-48` | Breaks on every edit |
+| Bare number | "line 42" | No context, breaks on edit |
+
+### Why This Matters
+
+Line numbers shift when:
+- Lines are added above the reference
+- Lines are deleted above the reference
+- Any edit changes file length
+
+Stable anchors (function names, class names, section headers) remain valid across edits.
+
+### Examples
+
+**❌ WRONG (Line Numbers):**
+```
+See `file.py:42` for the function definition.
+See `guidelines.md:150` for the rule.
+```
+
+**✅ CORRECT (Stable Anchors):**
+```
+See `process_data()` in `file.py` for the function definition.
+See `"Cross-Reference Standards"` section in `guidelines.md` for the rule.
+```

@@ -136,18 +136,6 @@ def main() -> int:
     print(f"GIT_HOOKS_PATH={hooks_path}")
     print(f"GIT_REMOTE_URL={remote_url}")
 
-    # Verify hooks are installed
-    if hooks_path:
-        pre_commit = os.path.join(hooks_path, "pre-commit")
-        if os.path.exists(pre_commit):
-            print("# Hooks: ✅ pre-commit hook installed")
-        else:
-            print("# Hooks: ⚠️ hooks path set but pre-commit hook missing", file=sys.stderr)
-    else:
-        print("# Hooks: ⚠️ No hooks path configured", file=sys.stderr)
-        print("# Run: git config core.hooksPath .githooks", file=sys.stderr)
-        print("# Then: ./scripts/install-hooks.sh", file=sys.stderr)
-
     return 0
 
 

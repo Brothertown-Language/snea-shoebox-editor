@@ -109,7 +109,8 @@ Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be s
 
 2. **Explicit file/line references**
    - Include exact file paths: `src/module/file.py`
-   - Include line numbers or function names: `file.py:42` or `process_data()`
+   - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
+   - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
    - Include relevant code snippets (if short, <20 lines)
 
 3. **Cross-references with context**
@@ -209,7 +210,7 @@ For each GitHub Issue `[SPEC]`, verify:
 
 ### Fresh-Start Context (MANDATORY)
 - [ ] All context stated inline (no "see above", "as discussed")
-- [ ] File paths include line numbers
+- [ ] File paths use stable anchors (function names, section headers)
 - [ ] Cross-references include summaries
 - [ ] Decision rationale documented
 

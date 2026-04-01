@@ -145,7 +145,8 @@ A different AI agent (or the same agent after a context reset) may pick up this 
 
 2. **Explicit file/line references**
    - Include exact file paths: `src/module/file.py`
-   - Include line numbers or function names: `file.py:42` or `process_data()`
+   - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
+   - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
    - Include relevant code snippets (if short, <20 lines)
 
 3. **Cross-references with context**
@@ -165,7 +166,7 @@ Before submitting any spec, verify ALL of the following:
 | Element | Required Content |
 |---------|------------------|
 | **Problem Statement** | What is broken/needed and WHY (with context) |
-| **Affected Files** | List of files with line numbers and snippets |
+| **Affected Files** | List of files with function/section anchors and snippets |
 | **Related Issues** | Links + summaries + relevance explanation |
 | **Context** | Background on affected systems, prior decisions |
 | **Constraints** | Technical, resource, time, compatibility limits |
@@ -184,7 +185,7 @@ Before submitting any spec, verify ALL of the following:
 **✅ GOOD (self-contained):**
 > **Problem:** The OAuth2 token refresh fails when the refresh token expires (issue #123).
 >
-> **Location:** `src/auth/oauth_client.py:87-92` in `refresh_token()`:
+> **Location:** `src/auth/oauth_client.py` in `refresh_token()` function:
 > ```python
 > def refresh_token(self):
 >     # BUG: Does not handle expired refresh_token

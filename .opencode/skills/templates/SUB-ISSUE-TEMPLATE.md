@@ -94,7 +94,7 @@ Sub-issues should be **~60-150 lines**:
 ### ✅ REQUIRED
 
 - All context in THIS sub-issue
-- File paths with line numbers
+- File paths with stable anchors (function names, section headers)
 - Code snippets for short sections
 - Decision rationale documented
 - Success criteria testable
