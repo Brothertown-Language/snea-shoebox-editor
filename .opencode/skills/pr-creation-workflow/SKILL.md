@@ -54,6 +54,68 @@ instruction, HALTing after PR creation, and NEVER merging PRs.
 
 ### When Developer Says "create a PR"
 
+#### ⚠️ MANDATORY: Pre-PR Creation Checklist
+
+**Before creating ANY PR, you MUST verify ALL of the following:**
+
+```markdown
+## Pre-PR Creation Checklist (MANDATORY)
+
+☐ **Squash Verification**
+  - Run: `git log origin/main..HEAD --oneline`
+  - Verify: EXACTLY ONE commit on branch
+  - If multiple commits: Run `git reset --soft origin/main && git commit`
+  - NEVER proceed with multiple commits
+
+☐ **Branch State**
+  - Run: `git status`
+  - Verify: Working tree clean (no uncommitted changes)
+  - If dirty: Commit or stash before proceeding
+
+☐ **Push Verification**
+  - Run: `git log origin/<branch>..HEAD --oneline`
+  - Verify: No unpushed commits
+  - If unpushed: Run `git push --force-with-lease origin <branch>`
+
+☐ **Co-Author Trailers**
+  - Verify: Commit message includes BOTH trailers:
+    - AI Author: `Co-authored-by: <AI-Name> (<model-id>) <ai-email>`
+    - Human Collaborator: `Co-authored-by: <Human-Name> <human-email>`
+
+☐ **Issue References**
+  - For single-task: Include `Fixes #<parent>` in PR body
+  - For multi-task: Include `Fixes #<parent>` AND `Fixes #<child>` for EACH sub-issue
+```
+
+**🚫 CRITICAL VIOLATION: Creating PR with multiple commits is FORBIDDEN.**
+
+| Violation | Consequence |
+|-----------|-------------|
+| Multiple commits in PR | PR REJECTED — squash required |
+| Missing PR URL report | CRITICAL — communication failure |
+| Premature merge attempt | CRITICAL — HUMAN-ONLY operation |
+
+### Violation Warning
+
+**Creating a PR with multiple commits is a CRITICAL GUIDELINE VIOLATION.**
+
+If you accidentally create a PR with multiple commits:
+
+1. **DO NOT ask user to fix it** — Fix it yourself immediately:
+   ```bash
+   git reset --soft origin/main
+   git commit -m "<descriptive message>" \
+       --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+       --trailer "Co-authored-by: <Human-Name> <human-email>"
+   git push --force-with-lease origin <branch>
+   ```
+
+2. **Close the bad PR** and create a new one if necessary.
+
+3. **Report the violation** in the GitHub issue comment.
+
+**User intervention should NEVER be required to fix squash violations.**
+
 1. **Collect sub-issues** (for multi-task specs):
    ```python
    # Fetch all sub-issues for the parent issue
