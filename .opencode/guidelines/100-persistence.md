@@ -21,7 +21,7 @@ Applies to `pubmed_data_3` and all new persistence code.
 - **Conflict Prevention**: Don't start a separate test `pgserver` on TCP if a production instance is running. Check
   for a running production instance by verifying whether the production `pgdata` path's `postmaster.pid` exists before
   starting a test instance on TCP.
-- **Persistent/integration tests**: Use the production `pgserver` instance with a dedicated test schema (`junie_test`
+- **Persistent/integration tests**: Use the production `pgserver` instance with a dedicated test schema (`ai_test`
   schema) for schema isolation.
 - **Ephemeral tests** (short-lived instance and tables removed after test completion): Use a separate `pgserver`
   instance in socket-only mode (no TCP port).

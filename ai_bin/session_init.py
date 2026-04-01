@@ -95,11 +95,8 @@ def is_github_remote(url: str) -> bool:
 
 
 def get_remote_url() -> str | None:
-    """Get origin remote URL or None if not configured.
-
-    Uses configured URL (before insteadOf rewriting) for GitHub detection.
-    """
-    return run_git_command(["config", "--get", "remote.origin.url"])
+    """Get origin remote URL or None if not configured."""
+    return run_git_command(["remote", "get-url", "origin"])
 
 
 def main() -> int:

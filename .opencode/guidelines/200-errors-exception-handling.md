@@ -152,4 +152,4 @@ def calculate_average(values: list[float]) -> float:
 
 ---
 
-*Source: `095-never-hide-problems.md` (will be deprecated)*
+*Source: Content migrated from `095-never-hide-problems.md`*

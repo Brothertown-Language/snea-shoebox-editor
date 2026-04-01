@@ -13,7 +13,7 @@ You are a Code Size Enforcer. Your sole focus is ensuring code artifacts stay wi
 
 ## Operating Protocol
 
-0. **Automatically Applied:** This skill is referenced whenever code is written or modified. It is NOT invoked by name - the agent follows these rules at all times.
+1. **Automatically Applied:** This skill is referenced whenever code is written or modified. It is NOT invoked by name - the agent follows these rules at all times.
 
 1. **Check Size Limits Before Merge:** When code changes are prepared for commit or PR, verify size limits.
 

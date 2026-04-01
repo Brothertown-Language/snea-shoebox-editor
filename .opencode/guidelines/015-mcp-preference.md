@@ -1,8 +1,8 @@
 # MCP Tool MANDATORY Usage
 
-> **See `.opencode/skills/mcp-tool-usage/SKILL.md` for complete tool preference tables, tier boundaries, and fallback hierarchy.**
+> **See `mcp-tool-usage` skill for complete tool preference tables, tier boundaries, and fallback hierarchy.**
 
-## 0. MANDATORY: PyCharm MCP for ALL File Access
+## 1. MANDATORY: PyCharm MCP for ALL File Access
 
 This guideline is ENFORCED at the highest priority level. PyCharm MCP tools are the ONLY permitted mechanism for accessing ANY files when MCP is available.
 
@@ -12,7 +12,7 @@ This guideline is ENFORCED at the highest priority level. PyCharm MCP tools are 
 
 ## Three-Tier Boundary System
 
-For complete tier boundaries and tool selection matrix, **see `.opencode/skills/mcp-tool-usage/SKILL.md`**.
+For complete tier boundaries and tool selection matrix, **see `mcp-tool-usage` skill**.
 
 Quick reference:
 - **Tier 1 (MANDATORY)**: Always use MCP tools when available - no exceptions

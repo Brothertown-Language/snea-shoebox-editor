@@ -136,4 +136,4 @@ If a situation arises where you think bypass is necessary:
 
 ---
 
-*Source: `110-git-protocol.md` (will be deprecated)*
+*Source: Content migrated from `110-git-protocol.md`*

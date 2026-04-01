@@ -6,7 +6,7 @@
 - **NEVER run `git restore`, `git checkout`, `git reset`, `git clean`, or any other git command that discards or modifies working tree state.**
 - **NEVER discard uncommitted changes** — even if they appear to be formatting-only, unintended, or erroneous. Analysis commands are read-only.
 - **NEVER commit or merge without direct instruction.** Commits and merges may ONLY be initiated by the developer as a direct instruction to the AI agent. Autonomously committing or merging is FORBIDDEN.
-- **NEVER create a PR without direct instruction.** PRs require explicit developer request — the agent does NOT automatically create PRs after completing implementation. See `03-pr-workflow.md`.
+- **NEVER create a PR without direct instruction.** PRs require explicit developer request — the agent does NOT automatically create PRs after completing implementation. See `113-git-pr-workflow.md`.
 - Agent MUST NOT create commit messages or scripts proactively (without user request).
 - When asked to "prepare a commit" — see Section 2 for the mandatory script-based workflow.
 
@@ -19,10 +19,9 @@ The developer will say "commit" or "create a PR" when they want git operations. 
 3. **Do NOT automatically create PRs**: PR creation requires the same explicit instruction as commits
 
 ### ✅ ALWAYS DO
-- **Include co-author trailers for AI-GENERATED content.** For AI-generated commits, include co-author trailers for both AI and human collaborator:
+- **Include co-author trailers for both AI and human collaborator.** Every implementation commit MUST include TWO trailers:
   - AI author: Use the AI's actual identity dynamically (the AI knows its own name)
   - Human collaborator: Use session-cached values from `000-session-init.md` §0.1 (`GIT_USER_NAME`, `GIT_USER_EMAIL`)
-- **NO co-authorship for copied content.** Content copied from ANY source retains original copyright - see `088-ai-authorship.md`
 - Re-run discovery (`git status`, `git diff`) before any commit workflow.
 - If `pyproject.toml` changed, include `uv.lock`.
 
@@ -86,4 +85,4 @@ When asked to "prepare a commit" (or similar READ-ONLY phrase):
 
 ---
 
-*Source: `110-git-protocol.md` (will be deprecated)*
+*Source: Content migrated from `110-git-protocol.md`*

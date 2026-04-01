@@ -54,7 +54,16 @@ instruction, HALTing after PR creation, and NEVER merging PRs.
 
 ### When Developer Says "create a PR"
 
-1. **Squash commits** (MANDATORY):
+1. **Collect sub-issues** (for multi-task specs):
+   ```python
+   # Fetch all sub-issues for the parent issue
+   sub_issues = github_issue_read(method="get_sub_issues", issue_number=<parent>)
+   
+   # Build autoclose list: parent + all sub-issues
+   autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
+   ```
+
+2. **Squash commits** (MANDATORY):
    ```bash
    git reset --soft origin/main
    git commit -m "<descriptive message>" \
@@ -62,18 +71,44 @@ instruction, HALTing after PR creation, and NEVER merging PRs.
        --trailer "Co-authored-by: <Human-Name> <human-email>"
    ```
 
-2. **Force push**:
+3. **Force push**:
    ```bash
    git push --force-with-lease origin <branch>
    ```
 
-3. **Create PR via GitHub MCP**:
-    - Title: `[SPEC] <description>`
-    - Body: Must include `Fixes #<issue-number>`
-    - Head: `<branch-name>`
-    - Base: `main`
+4. **Create PR via GitHub MCP**:
+   - Title: `[SPEC] <description>`
+   - Body: Must include `Fixes #<issue-number>` for EACH issue to autoclose
+     - Single-task spec: `Fixes #<parent>`
+     - Multi-task spec: `Fixes #<parent>` AND `Fixes #<child1>` AND `Fixes #<child2>` (all sub-issues)
+   - Head: `<branch-name>`
+   - Base: `main`
 
-4. **Report PR URL and HALT** — Wait for human to merge
+5. **Report PR URL and HALT** — Wait for human to merge
+
+### Sub-Issue Collection (CRITICAL)
+
+**When creating a PR for a multi-task spec with sub-issues:**
+
+1. **Fetch sub-issues** using `github_issue_read method="get_sub_issues"`
+2. **Include ALL sub-issues** in the PR body:
+   ```
+   Fixes #446
+   Fixes #451
+   Fixes #452
+   ```
+3. **GitHub autocloses ALL issues** when PR merges
+
+**Single-task exemption:** If no sub-issues exist, include only the parent issue.
+
+**Example Multi-Task PR Body:**
+```markdown
+## Summary
+Update PR workflow skills to include sub-issue autoclose.
+
+Fixes #446
+Fixes #451
+```
 
 ## Developer Must Test Before PR
 
@@ -175,7 +210,7 @@ Wait for explicit "yes, create a PR" before proceeding.
 | `000-critical-rules.md`  | Critical violation: PRs without instruction       |
 | `020-go-prohibitions.md` | GO does not authorize PR                          |
 | `010-approval-gate.md`   | PR timing requirements                            |
-| `git-workflow/SKILL.md`  | Post-merge workflow including issue closure       |
+| `git-workflow` skill  | Post-merge workflow including issue closure       |
 
 ## Example Workflows
 

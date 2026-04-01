@@ -20,7 +20,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 
 ## Design Principles — ENFORCED UNIVERSALLY
 
-> **See `.opencode/skills/code-size-enforcement/SKILL.md` for complete size limit enforcement rules, detection methods, and violation recovery.**
+> **See `code-size-enforcement` skill for complete size limit enforcement rules, detection methods, and violation recovery.**
 
 - **KISS (Keep It Simple, Stupid)**: Simplest correct solution. No unnecessary abstraction or cleverness. Prefer straightforward, readable code over "clever" optimizations.
 - **DRY (Don't Repeat Yourself)**: No duplicated logic. Extract shared functionality into reusable functions/modules. If you copy-paste code, you're doing it wrong.
@@ -87,3 +87,149 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 ## Linting & Static Analysis
 
 - Run appropriate dev tools (linters, type checkers) listed in `ai_bin/start` on all modified Python files before submitting.
+
+## Tool Selection by File Type
+
+### 🚫 PROHIBITED Misuse
+
+**DO NOT run Python tools on non-Python files:**
+
+| Tool | Python Files | Markdown Files |
+|------|--------------|----------------|
+| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
+| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
+| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
+
+Running `ruff check` or `ruff format` on `.md` files is a **CRITICAL GUIDELINE VIOLATION**.
+
+### Correct Tool Usage
+
+**Python files (`.py`):**
+```bash
+uvx ruff check --fix src/ test/   # Lint + auto-fix
+uvx ruff format src/ test/        # Format
+uvx pyright src/                  # Type check
+uvx vulture src/                  # Dead code scan
+```
+
+**Markdown files (`.md`):**
+```bash
+uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/   # Lint
+uvx mdformat .opencode/guidelines/ docs/                # Format
+```
+
+**Rationale:** Python linters (`ruff`, `pyright`, `vulture`) are designed for Python syntax and will produce incorrect or useless results when run on markdown files. Use markdown-specific tools (`pymarkdownlnt`, `mdformat`) for markdown files.
+
+## Numbering — ENFORCED
+
+All enumeration lists, numbered sections, and step sequences in documentation MUST use **natural counting** (starting at 1).
+
+**Prohibited:**
+- Zero-indexed numbered lists (`0. First item`, `1. Second item`)
+- Step 0 in procedures (use Step 1 as the first step)
+- Phase 0 in specs (use Phase 1 as the first phase)
+
+**Exceptions:**
+- Code comments explaining 0-indexed array access
+- Technical documentation explicitly explaining zero-based indexing concepts
+
+**Rationale:** Documentation is for humans. Natural counting matches human cognition.
+
+## AI Co-Authored Attribution (MANDATORY)
+
+**AI-generated creative content MUST include co-authored attribution where the content format supports it.**
+
+### What Counts as AI-Generated Content
+
+AI co-authorship applies to **creative, original content authored by AI**:
+- Original code written by AI
+- Original documentation written by AI
+- Original designs/architectures conceived by AI
+- New modules, classes, functions created by AI
+
+### What Does NOT Require AI Attribution
+
+**Standard/boilerplate content does NOT require AI attribution:**
+- Standard licenses (MIT, Apache, GPL, etc.) - these are established legal templates
+- Auto-generated files (lock files, build artifacts, `__pycache__`)
+- Framework boilerplate (default configs, standard project structures)
+- Minor edits to existing files (typo fixes, formatting)
+- Files with no creative content (empty `__init__.py`, pure config)
+
+**Copy-pasted content from ANY external source does NOT get AI attribution:**
+- Code copied from Stack Overflow, blogs, tutorials
+- Code copied from other projects/repositories
+- Documentation copied from official sources
+- Configuration copied from templates/examples
+- **If it was copy-pasted, it's NOT AI-co-authored** - the original source holds copyright
+
+**Rationale:** AI attribution is about transparency in creative work. Copying a standard MIT license, copying code from Stack Overflow, or copy-pasting documentation from another project requires no AI creativity - those sources hold their own copyrights. Only genuinely original content created by AI deserves AI co-authorship attribution.
+
+### Files Requiring Attribution
+
+| File Type | Attribution Location | Format |
+|-----------|---------------------|--------|
+| Python files (`.py`) | Module docstring | `"""Co-authored with AI: AI-Name (model-id)"""` |
+| README files | Footer section | `## Co-Authored With AI` section |
+| New repositories | README.md | AI co-authored section (see below) |
+| Original docs | Footer | `*Co-authored with AI: AI-Name (model-id)*` |
+
+### Files NOT Requiring Attribution
+
+| File Type | Reason |
+|-----------|--------|
+| LICENSE files | Standard legal templates (MIT, Apache, etc.) |
+| `pyproject.toml`, `setup.py` | Boilerplate configuration |
+| Lock files (`uv.lock`, `package-lock.json`) | Auto-generated |
+| Empty `__init__.py` | No content |
+| Standard `.gitignore` | Established template |
+| Copy-pasted code/docs | Original source holds copyright |
+
+### Attribution Format
+
+```
+Co-authored with AI: <AI-Name> (<model-id>)
+```
+
+**Example:**
+```
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+```
+
+### Repository Creation
+
+When creating a new repository, the README MUST include:
+
+```markdown
+## Co-Authored With AI
+
+This repository was created with assistance from AI:
+
+- **AI Agent**: OpenCode
+- **Model**: ollama-cloud/glm-5
+- **Date**: YYYY-MM-DD
+```
+
+**Note:** The LICENSE file uses standard MIT license without modification. AI attribution goes in README, not LICENSE.
+
+### Python Files
+
+Every Python file with original AI-authored code MUST include attribution in the module docstring:
+
+```python
+"""Module description.
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+"""
+```
+
+### Why This Matters
+
+AI co-authored attribution:
+1. Maintains transparency about content origin
+2. Follows emerging best practices for AI-assisted work
+3. Enables proper credit and traceability
+4. Helps identify AI-generated content for review
+5. **Respects copyright** - only claims co-authorship on genuinely original AI work

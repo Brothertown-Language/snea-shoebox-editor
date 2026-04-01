@@ -1,6 +1,6 @@
 ---
 name: github-comments
-description: GitHub comment format and protocol for AI agents. Defines AI identity prefixes, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
+description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
 license: MIT
 compatibility: opencode
 ---
@@ -11,106 +11,94 @@ compatibility: opencode
 
 You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments on issues and PRs follow the correct format, are posted at the right time, and preserve history by preferring comments over issue body edits.
 
-## Comment Format: Branded AI Identity
+## AI Identity Attribution Format
 
-### ✅ ALWAYS DO (MANDATORY)
+### Single Combined Byline (CRITICAL)
 
-ALL comments on issues and PRs MUST end with AI byline.
-
-**ALL bylines AND issue body signatures MUST include "on behalf of <HumanName>".**
-
-**Structure: Attribution italicized; status plain.**
+**ALL comments MUST end with ONE byline that combines status, agent, and model.**
 
 **Format:**
 ```
-<AgentIcon> *AI: <AgentBrand> on behalf of <HumanName>* <ContextEmoji> <TypeText>
-```
-
-**⚠️ CRITICAL: Icon Placement**
-
-The agent icon (🤖) must be **OUTSIDE the asterisks** — never inside them.
-
-| Incorrect (icon italicized) | Correct (icon plain) |
-|----------------------------|---------------------|
-| `*🤖 AI: OpenCode/glm-5 on behalf of Michael Conrad*` ❌ | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad*` ✓ |
-
-**Why it matters:** Markdown italicizes everything between `*` characters. When the icon is inside asterisks:
-- The icon may not render at all (some renderers fail to display emoji in italic context)
-- The icon becomes italicized along with the text (where it does render)
-- Inconsistent rendering across GitHub, IDEs, and markdown viewers
-
-The icon must remain plain to ensure consistent rendering everywhere.
-
-**For PROGRESS COMMENTS (task completion, implementation updates):**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
-```
-
-**For GENERAL COMMENTS (responses, clarifications):**
-```
 <response content>
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* 🤖
+---
+🤖 <status-emoji> <status-text> by <AgentName> (<ModelID>)[: optional-context]
+```
+
+**For progress comments:**
+```
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**Summary:**
+
+<1-2 sentences describing stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
 ```
 
 **Components (supplied dynamically at runtime):**
-- `<AgentIcon>`: Agent iconography (🤖 for OpenCode, 🟣 for Claude, 💙 for Copilot)
-- `<AgentBrand>`: Agent brand identifier (e.g., `OpenCode/glm-5`, `Claude/sonnet-4`)
-- `<HumanName>`: From `git config user.name` (fallback to `$USER`)
+- `<status-emoji>`: Status indicator (✅ ✨ 📝 ❌ 🔄 ↻ ⚠️ 🔍 📋)
+- `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
+- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
+- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
+- `[: optional-context]`: Context ONLY when useful (issue number, replacement reference, reason)
+  - **Progress comments**: Omit (content already describes the work)
+  - **Issue creation/completion**: Include issue number if useful
+  - **Rejection/Superseded**: Include reason or replacement reference
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
-### Copyright Clarification: Copied Content Does NOT Get AI Byline
+### Status Emoji Guide
 
-**Content copied from ANY source retains original copyright.** AI bylines apply ONLY to genuinely AI-generated content.
+| Status | Emoji | Byline Format |
+|--------|-------|---------------|
+| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
+| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
+| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
+| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
+| Superseded | 🔄 | `🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>` |
+| Blocking | ⚠️ | `🤖 ⚠️ Blocking by <AgentName> (<ModelID>): <reason>` |
+| Analysis | 🔍 | `🤖 🔍 Analysis by <AgentName> (<ModelID>): <topic>` |
+| Decision | 📋 | `🤖 📋 Decision by <AgentName> (<ModelID>): <result>` |
 
-| Scenario | Byline? |
-|----------|---------|
-| AI writes original comment/reply | ✅ YES - AI byline required |
-| AI copies Stack Overflow answer | ❌ NO - Cite original, no AI byline |
-| AI quotes documentation | ❌ NO - Quote with citation only |
-| AI paraphrases external content | ✅ Partial - Cite source, AI byline for creative paraphrase |
-| AI posts status update | ✅ YES - AI byline required |
+### Issue/PR Body Attribution (Lifecycle Status)
 
-**See `088-ai-authorship.md` for complete attribution rules.**
+**🚨 CRITICAL: ALWAYS APPEND. NEVER REPLACE.**
 
-### Agent Icon Registry
+| Action | Operation | Byline |
+|--------|-----------|--------|
+| Create issue | Append | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
+| Update content | Append | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
+| Complete issue | Append | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+| Reject issue | Append | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
+| Supersede issue | Append | `🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>` |
 
-| Agent | Icon | Brand |
-|-------|------|-------|
-| OpenCode | 🤖 | `OpenCode/<model>` |
-| Claude | 🟣 | `Claude/<model>` |
-| Copilot | 💙 | `Copilot/<model>` |
-| Generic | 🤖 | `AI/<model>` |
+**When to Include Context:**
+- **Progress/Task completion**: No context needed (content already describes the work)
+- **Issue creation**: Optional — use if issue number provides useful reference
+- **Content updates**: Brief description of what changed
+- **Rejection/Superseded**: Always include reason or replacement reference
 
-### Context Emoji Reference
-
-| Emoji | Type Text | Use Case |
-|-------|-----------|----------|
-| ✅ | `Task Complete: <task>` | Progress comments |
-| 🤖 | *(none)* | General responses |
-| 📝 | `Updated: <reason>` | Body updates |
-| 📝 | `Spec altered: <summary>` | Spec alterations |
-| ❌ | `Closed - <reason>` | Issue closures |
-| 🔍 | `Analysis` | Investigation findings |
-| ⚠️ | `Warning` | Cautions |
-| ✨ | `Created` | Issue/PR creation |
-
-### Signature for Issue/PR Bodies (NOT comments)
-
+**Example lifecycle (append-only):**
 ```markdown
-<issue content>
+[Issue body content]
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created
+---
+
+> **Approval Tracking**: Approvals tracked via comments.
+
+🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
+🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added Phase 2
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```
 
-Place at END of issue bodies and PR descriptions, preceded by blank line.
+**Why append-only:**
+- Same rule everywhere (no confusion)
+- Matches comment history behavior (comments append)
+- Preserves full lifecycle visibility
+- No special cases to remember
 
 ---
 
@@ -157,7 +145,7 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 **🚫 NEVER:** Skip either location
 **🚫 NEVER:** Put full summary in chat but skip GitHub comment
 
-### ✅ REQUIRED Format: Executive Summary (POST TO GITHUB, NOT CHAT)
+### ✅ REQUIRED Format: Executive Summary
 
 **For intermediate task (multi-task spec):**
 ```
@@ -167,7 +155,8 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 
 **Outcome:** <What changed for stakeholders / users / system behavior>
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **For final task or single-task spec:**
@@ -180,7 +169,8 @@ Place at END of issue bodies and PR descriptions, preceded by blank line.
 
 All tasks complete from this specification.
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Executive Summary Requirements
@@ -193,17 +183,11 @@ The summary MUST answer:
 ### 🚫 FORBIDDEN in Progress Comments
 
 - **File lists** — Redundant (visible in git commits)
-- **"Next" field** — Dialog prompt (violates `125-github-issue-comments.md`)
+- **"Next" field** — Dialog prompt (violates the "Never Prompt in Comments" rule in `AGENTS.md`)
 - **Punch-list format** — Use executive summary paragraphs
 - **"Awaiting authorization"** — Use HALT protocol, not comments
-- **"Waiting for..."** — Use HALT protocol, not comments
-- **"Ready for review"** — Use HALT protocol, not comments
-- **"Ready for approval"** — Use HALT protocol, not comments
-- **"Please confirm..."** — Use HALT protocol, not comments
-- **"Let me know when..."** — Use HALT protocol, not comments
 - **Technical changelog** — Focus on impact, not file-by-file changes
 - **Just "I did X"** — Explain WHY it matters
-- **Any procedural status** — "HALT", "Waiting", "Ready" — Use HALT protocol silently
 
 ### Why Executive Summaries?
 
@@ -226,31 +210,44 @@ The summary MUST answer:
 
 ## Issue Body Update Rules
 
-### Two-Step Operation (MANDATORY)
+### Issue Body Attribution (MANDATORY)
+
+After creating or updating an issue body:
+
+1. **Append attribution footer** (NEVER replace existing footer)
+2. **Format:** `🤖 <status-emoji> *<status-text> by AI: <AgentName> (<ModelID>)*`
+3. **Emoji OUTSIDE italic formatting** (plain text for proper rendering)
+4. **Preceded by blank line and `---` separator**
+
+### Two-Step Operation for Content Updates
 
 When updating textual content in an issue body:
 
 1. **First**: `github_issue_write method=update` (update body)
-2. **IMMEDIATELY after**: `github_add_issue_comment` (explain change)
+2. **IMMEDIATELY after**: Append attribution footer AND `github_add_issue_comment` (explain change)
 
-**⚠️ CRITICAL**: Both calls in same function_calls block. Never update without commenting.
+**⚠️ CRITICAL**: Append attribution, never replace. Comment to explain change.
 
 ### Comment Format for Body Updates
 
 ```
-<summary of changes>
+🤖 📝 Updated: <reason>
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Updated: <reason>
+---
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 ### Spec Alteration Format
 
 ```
+🤖 📝 Spec altered: <summary>
+
 - Changed: <what changed>
 - Added: <what added>
 - Removed: <what removed>
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Spec altered: <summary>
+---
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 ### What Counts as "Textual Content"
@@ -264,6 +261,24 @@ When updating textual content in an issue body:
 | Label changes | ❌ NO |
 | Checklist markers (`☐` → `☑`) | ❌ NO |
 | Typo fixes (no meaning change) | ❌ NO |
+| Back-references/origin links at top | ❌ NO |
+| Cross-reference additions | ❌ NO |
+
+### What is "Substantive" vs "Non-Substantive"
+
+**Substantive** (Comment Required):
+- Changes to requirements, objectives, success criteria
+- Adding/removing phases or tasks
+- Altering spec scope or approach
+- Significant content changes that affect understanding
+
+**Non-Substantive** (No Comment):
+- Adding links/references at the top of issue body (origin links, cross-references)
+- STATUS field updates
+- Label changes
+- Checklist marker updates
+- Typo/formatting fixes
+- Housekeeping edits that don't change meaning
 
 ---
 
@@ -272,7 +287,7 @@ When updating textual content in an issue body:
 ### Mandatory Two-Step Operation
 
 1. **First**: `github_add_issue_comment` with detailed closure reason
-2. **Then**: `github_issue_write method=update state=closed` (state change ONLY)
+2. **Then**: Append completion attribution to issue body + `github_issue_write method=update state=closed`
 
 **🚫 NEVER**: Edit issue body to add "CLOSED" — use comments
 **🚫 NEVER**: Close without explanation comment
@@ -280,18 +295,39 @@ When updating textual content in an issue body:
 ### Closure Comment Format
 
 ```
-## Summary
-Completed all tasks from this specification:
-- ✅ <task 1>
-- ✅ <task 2>
+🤖 ❌ **Closed**
 
-## Evidence
-Commit `<sha>`: <commit message>
+## Rejection Reason (if rejected)
+<reason with evidence>
 
-All success criteria met.
+## Summary (if completed)
+<what was implemented>
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ❌ Closed - Implemented
+## Alternative (if applicable)
+<suggestion for rejected proposals>
+
+---
+🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
 ```
+
+### After Closure: Append Completion Attribution
+
+When closing as completed:
+```markdown
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+When closing as rejected:
+```markdown
+🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
+```
+
+When closing as superseded:
+```markdown
+🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>
+```
+
+**⚠️ CRITICAL: ALWAYS APPEND attribution. NEVER replace existing creation attribution.**
 
 ### Closure Reasons Requiring Comments
 
@@ -316,11 +352,13 @@ All success criteria met.
 - "Awaiting authorization to implement"
 - "Please confirm before I proceed"
 - "Ready for approval?"
+- Cross-reference link additions (origin/back-reference links)
+- Housekeeping edits (typo fixes, formatting)
 
 ### ✅ REQUIRED Comments
 
 - Closing an issue (with reason)
-- Updating textual content
+- Updating substantive textual content (requirements, objectives, phases)
 - Completing implementation task
 - Creating PR
 - Altering spec structure
@@ -370,11 +408,14 @@ GOOD: "The keys look correct. Ready when you are."
 
 ### ✅ ALWAYS DO
 
-- Post bylines at END of ALL comments with branded AI marker
-- Use signature footer for issue/PR bodies at END
+- Post ALL comments with attribution at END (not prefix)
+- Use 🤖 emoji FIRST, then status emoji
+- Use attribution footer for issue/PR bodies (appended, never replaced)
+- Ensure emoji is PLAIN TEXT (NOT inside italic/bold)
 - Comment when updating textual content
 - Comment when altering spec structure
 - Comment when closing issues
+- Append attribution for all issue body changes (created, updated, completed, rejected)
 - Comment after completing each task
 - Post progress comment IMMEDIATELY (not later)
 - Respond to user questions via GitHub comment
@@ -393,7 +434,6 @@ GOOD: "The keys look correct. Ready when you are."
 | Guideline | Content |
 |-----------|---------|
 | `123-github-ai-identity.md` | Full AI identity requirements |
-| `088-ai-authorship.md` | AI authorship attribution rules |
 | `120-github-issue-first.md` | Issue workflow, sub-issues |
 | `000-critical-rules.md` | Critical violation enforcement |
 
@@ -408,7 +448,8 @@ Created skill file defining comment format rules, decision tables for when to co
 
 **Outcome:** Agents now have explicit guidance on comment types, timing, and format—reducing inconsistent or missing issue updates.
 
-🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✅ Task Complete: Create github-comments SKILL.md
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```
 
 ### Task Completion Comment (Final Task)
@@ -422,7 +463,8 @@ Updated cross-references in all affected guideline files to point to the new ski
 
 All tasks complete from this specification.
 
-🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✅ Task Complete: Update cross-references
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```
 
 ### Single-Task Completion
@@ -436,39 +478,72 @@ Replaced technical punch-list progress comments with executive summaries focused
 
 All tasks complete from this specification.
 
-🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✅ Task Complete: Implement executive summary format
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```
 
 ### Issue Body Update Comment
 
 ```
-Added Phase 2 for guideline updates per discussion in comment #5
+🤖 📝 Updated: Added Phase 2 for guideline updates per discussion in comment #5
 
-🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 📝 Updated: Added Phase 2 for guideline updates
+---
+🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
 ```
 
 ### Spec Alteration Comment
 
 ```
+🤖 📝 Spec altered: Added Phase 3 for verification
+
 - Added: Phase 3: Verification (auto-progress)
 - Added: Success criteria verification steps
 
-🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 📝 Spec altered: Added Phase 3 for verification
+---
+🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
+```
+
+### Issue Creation (Body)
+
+```markdown
+[Issue body content]
+
+---
+
+> **Approval Tracking**: Approvals tracked via comments.
+
+🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
+```
+
+### Issue Updates as Combined Bylines List (Body)
+
+```markdown
+[Issue body content]
+
+---
+
+> **Approval Tracking**: Approvals tracked via comments.
+
+🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
+🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added Phase 2
+🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Fixed typo in success criteria
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```
 
 ### Issue Closure Comment
 
 ```
-## Summary
+**Summary:**
 Completed all tasks from this specification:
 - ✅ Created github-comments skill
 - ✅ Updated three guideline files
 - ✅ Removed duplicate content
 
-## Evidence
+**Evidence:**
 Commit `abc123`: Add github-comments skill directory
 
 All success criteria met.
 
-🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ❌ Closed - Implemented
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```

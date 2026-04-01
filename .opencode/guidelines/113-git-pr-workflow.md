@@ -1,9 +1,36 @@
 # Git Protocol: PR Workflow
 
-**See `.opencode/skills/pr-creation-workflow/SKILL.md` for PR timing requirements including:**
+**See `pr-creation-workflow` skill for PR timing requirements including:**
 - Authorization boundary (what authorizes implementation vs PR)
 - Developer must test before PR
 - HALT after PR creation
+
+---
+
+## Review Phase (Mandatory)
+
+After implementation completes and BEFORE PR creation authorization:
+
+1. **Agent pushes feature branch** to remote:
+   ```bash
+   git push -u origin <branch-name>
+   ```
+
+2. **Agent provides GitHub compare URL**:
+   ```
+   https://github.com/<owner>/<repo>/compare/main...<branch-name>
+   ```
+
+3. **Developer reviews changes** via GitHub diff viewer
+4. **Developer decides** whether to create PR or request changes
+5. **If satisfied, developer says** "create a PR"
+6. **Agent creates PR** (squash, push, create PR, HALT)
+
+**Why This Matters:**
+- Developer can review changes before PR exists
+- Clear separation between "implementation done" and "PR requested"
+- No accidental PR creation without developer visibility
+- GitHub diff viewer is superior to local review
 
 ---
 
@@ -62,4 +89,4 @@ git push origin feature/recovery
 
 ---
 
-*Source: `110-git-protocol.md` (will be deprecated)*
+*Source: Content migrated from `110-git-protocol.md`*

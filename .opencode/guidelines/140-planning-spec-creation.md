@@ -23,7 +23,7 @@ AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
 ---
 
-## 0. Listing Available Specs
+## 1. Listing Available Specs
 
 When the user issues commands `specs` or `pending`:
 
@@ -54,7 +54,7 @@ When the user issues commands `specs` or `pending`:
 
 ---
 
-## 0.1. GitHub MCP Required — No Fallback
+## 1.1. GitHub MCP Required — No Fallback
 
 **When GitHub MCP tools are NOT available, the agent MUST refuse planning work entirely.**
 
@@ -212,4 +212,4 @@ This ensures consistent workflow and prevents context fragmentation.
 
 ---
 
-*Source: `040-plan-delivery.md` (will be deprecated)*
+*Source: Content migrated from `040-plan-delivery.md`*

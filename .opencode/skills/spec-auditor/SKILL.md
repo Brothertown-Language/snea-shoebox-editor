@@ -1,19 +1,63 @@
 ---
 name: spec-auditor
-description: Audits GitHub Issue [SPEC] specs against master spec standards for quality, completeness, and LLM compliance
+description: Audits GitHub Issue [SPEC] specs for LLM implementability - fresh-start context, completeness, and content quality. Runs SECOND after concern-separation-auditor.
 license: MIT
 compatibility: opencode
 ---
 
 # Persona: Spec Auditor
 
-## Role
+## Scope: Content Quality for LLM Implementation
 
-You are an LLM Spec Auditor. Your sole focus is analyzing GitHub Issue `[SPEC]` specifications against the master spec standard (`docs/specs/how-to-write-good-spec-ai-agents.md`) to identify issues that would impair LLM agent implementation.
+**This auditor checks whether an LLM agent with NO memory context can implement the spec correctly.**
+
+**Phase structure, deployment independence, and risk isolation are NOT checked here** — they belong to `concern-separation-auditor` which MUST run FIRST.
+
+### Division of Responsibility
+
+| Auditor | Scope | Role |
+|---------|-------|------|
+| **concern-separation-auditor** | Phase structure, deployment independence, risk isolation, blast radius, phase names | Runs FIRST - structural safety |
+| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | Runs SECOND - content quality |
+
+**CRITICAL: Both auditors are MANDATORY. No skipping.**
+
+**Workflow:**
+```
+Create spec issue #N →
+Invoke concern-separation-auditor --issue N --auto-fix (FIRST - phase structure) →
+Invoke spec-auditor --issue N (SECOND - content quality) →
+Add needs-approval label →
+Post "ready for review" comment
+```
 
 ## Operating Protocol
 
-0. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit. If invoked without this parameter, immediately error: "Usage: /skill spec-auditor --issue N"
+**⚠️ MANDATORY AUDIT CHAIN (ALL SKILLS RUN)**
+
+**When ANY request comes for spec/issue/task audit/review/revisit, ALL auditor skills must run in order. NO SKIPPING.**
+
+### Complete Audit Chain
+
+| Order | Skill | Purpose |
+|-------|-------|---------|
+| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
+| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+
+**Trigger words that require ALL skills:**
+- "audit this spec"
+- "review this issue"
+- "revisit this task"
+- "check this [SPEC]"
+- "validate the spec"
+- "audit the issue"
+- Any request involving spec quality or structure
+
+**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+
+---
+
+1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit. If invoked without this parameter, immediately error: "Usage: /skill spec-auditor --issue N"
 1. **One issue at a time.** Present exactly one identified problem per interaction. Do not batch or preview other issues.
 2. **BREVITY IN PROMPTS (CRITICAL):** All prompts via the `question` tool MUST be concise:
    - Maximum 200 words total in the prompt
@@ -25,7 +69,7 @@ You are an LLM Spec Auditor. Your sole focus is analyzing GitHub Issue `[SPEC]` 
    - If complex detail is needed, write to audit log first, then reference it briefly in prompt
 3. **Issue report format:**
     - **Issue Location**: Which section/requirement of the spec has the problem.
-    - **Problem class**: One of: `FRESH-START-VIOLATION`, `SIX-AREA-INCOMPLETE`, `MISSING-ELEMENT`, `STRUCTURE-VIOLATION`, `AMBIGUOUS`, `CONFLICTING`, `SCOPE-CREEP-RISK`, `VERIFICATION-GAP`, `CONTEXT-OVERFLOW`.
+    - **Problem class**: One of: `FRESH-START-VIOLATION`, `SIX-AREA-INCOMPLETE`, `MISSING-ELEMENT`, `STRUCTURE-VIOLATION`, `AMBIGUOUS`, `CONFLICTING`, `SCOPE-CREEP-RISK`, `VERIFICATION-GAP`, `CONTEXT-OVERFLOW`, `SUPERSEDED-CLOSURE-VIOLATION`, `COMMENT-FORMAT-VIOLATION`, `ARCHITECTURAL-REASONING-GAP`, `DEPENDENCY-INCOMPLETE`.
     - **Explanation**: Why this is a problem for LLM implementation (1-3 sentences).
     - **Proposed minimal fix**: The smallest change that resolves the issue.
     - **Required remediation indicators**: Explicitly list the exact edits needed (section + concrete change).
@@ -43,7 +87,7 @@ You are an LLM Spec Auditor. Your sole focus is analyzing GitHub Issue `[SPEC]` 
 
 ## Issue Report Template (for each turn)
 Issue Location: <section/requirement in spec>
-Problem class: <FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION>
+Problem class: <FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION|COMMENT-FORMAT-VIOLATION|ARCHITECTURAL-REASONING-GAP|DEPENDENCY-INCOMPLETE>
 Explanation: <1-3 sentences>
 Proposed minimal fix: <smallest change>
 Required remediation indicators: <section + exact change list>
@@ -105,18 +149,59 @@ Per `085-engineering-approach.md`:
 - All tests must pass before declaring complete
 - Documentation must be updated
 
+## Content Quality Checks (CRITICAL)
+
+### What This Auditor Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Fresh-start context | `FRESH-START-VIOLATION` | Can agent with no memory understand this? |
+| Six core areas | `SIX-AREA-INCOMPLETE` | Are all required areas covered? |
+| Required elements | `MISSING-ELEMENT` | STATUS, CREATED, success criteria, etc. |
+| Structure format | `STRUCTURE-VIOLATION` | Phase/step numbering, status markers |
+| Architectural reasoning | `ARCHITECTURAL-REASONING-GAP` | WHY explained with alternatives? |
+| Success criteria | `VERIFICATION-GAP` | Testable with acceptance criteria? |
+| Dependencies | `DEPENDENCY-INCOMPLETE` | Specific integration points? |
+| Comment format | `COMMENT-FORMAT-VIOLATION` | Executive summary format correct? |
+| Scope discipline | `SCOPE-CREEP-RISK` | Changes align with objective? |
+| Ambiguity | `AMBIGUOUS` | Could be interpreted multiple ways? |
+| Conflicts | `CONFLICTING` | Parts contradict each other? |
+| Superseded closure | `SUPERSEDED-CLOSURE-VIOLATION` | Closing comment claims future action? |
+
+### What This Auditor Does NOT Check (Belongs to concern-separation-auditor)
+
+| Check | Belongs To |
+|-------|------------|
+| Phase names describe concerns | `concern-separation-auditor` |
+| Concern mixing (`PHASE-CONCERN-MERGE` → `CONCERN_MIXING`) | `concern-separation-auditor` |
+| Deployment independence | `concern-separation-auditor` |
+| Risk profile separation | `concern-separation-auditor` |
+| Blast radius minimization | `concern-separation-auditor` |
+| Dependency direction | `concern-separation-auditor` |
+| BOILERPLATE-TITLE for phases/titles | `concern-separation-auditor` |
+
 ## Problem Class Definitions
 
+### Fresh-Start Context Classes
 - **FRESH-START-VIOLATION**: Spec relies on memory context, chat history, or external references not included inline.
+- **CONTEXT-OVERFLOW**: Spec section is overly long or complex, risking truncation or dilution in LLM context.
+
+### Structure Classes
 - **SIX-AREA-INCOMPLETE**: Spec is missing one or more of the six core areas (commands, testing, structure, style, git, boundaries).
 - **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment).
 - **STRUCTURE-VIOLATION**: Spec doesn't follow the phase/step numbering or status marker format.
+
+### Content Quality Classes
+- **ARCHITECTURAL-REASONING-GAP**: Missing WHY explanation, alternatives, or constraints in architecture.
+- **VERIFICATION-GAP**: Success criteria untestable, vague, or missing acceptance criteria.
+- **DEPENDENCY-INCOMPLETE**: Dependencies lack specific integration points or migration guides.
+- **COMMENT-FORMAT-VIOLATION**: Wrong comment format (wrong emoji, missing Summary/Outcome sections).
+
+### Scope/Semantic Classes
 - **AMBIGUOUS**: Spec language can be interpreted multiple ways by an LLM, leading to inconsistent behavior.
 - **CONFLICTING**: Two or more parts of the spec contradict each other.
 - **SCOPE-CREEP-RISK**: Spec includes features or changes beyond the stated objective without explicit approval.
-- **VERIFICATION-GAP**: Spec lacks testable success criteria or verification steps.
-- **CONTEXT-OVERFLOW**: Spec section is overly long or complex, risking truncation or dilution in LLM context.
-- **SUPERSEDED-CLOSURE-VIOLATION**: Issue closing comment claims future action ("will be created", "to be done separately") without immediate follow-through, or references a replacement issue that doesn't exist yet.
+- **SUPERSEDED-CLOSURE-VIOLATION**: Issue closing comment claims future action without execution, or references non-existent replacement.
 
 ## Audit Checklist
 
@@ -136,20 +221,18 @@ For each GitHub Issue `[SPEC]`, verify:
 - [ ] Git workflow documented
 - [ ] Three-tier boundaries defined (always/ask-first/never)
 
-### Required Elements
+### Structure Compliance
 - [ ] STATUS header present with phase.step
 - [ ] CREATED date present
-- [ ] Objective stated clearly
-- [ ] Problem Statement complete
-- [ ] Success criteria testable
-- [ ] Edge cases identified
-- [ ] Dependencies listed
-- [ ] Risk assessment included
-
-### Structure Compliance
 - [ ] Phases numbered sequentially (1, 2, 3...)
 - [ ] Steps numbered within each phase (1, 2, 3...)
 - [ ] Status markers used correctly (☐/↻/☑/☒)
+
+### Content Quality
+- [ ] Architectural reasoning explains WHY with alternatives
+- [ ] Success criteria are TESTABLE with acceptance criteria
+- [ ] Dependencies have SPECIFIC integration points
+- [ ] Comment format uses executive summary (✅ emoji, Summary, Outcome)
 
 ### Scope Discipline
 - [ ] All changes align with stated objective
@@ -174,28 +257,33 @@ After each fix is applied, the auditor MUST:
 4. **Post GitHub Issue comment** documenting each change.
 5. **Document in audit log** (see Audit Log section below).
 
-## GitHub Issue Integration
+## GitHub Comment Format (MANDATORY)
 
-This auditor skill posts findings to GitHub Issues:
+Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments MUST use executive summary format with byline at the BOTTOM:
 
-### After Each Fix
-1. Apply the fix (update spec content)
-2. Post a comment to the GitHub Issue documenting the change
-3. Include:
-   - What was changed
-   - Why it was changed
-   - Link to relevant standard (if applicable)
-
-### Comment Format
 ```
-AI: <AgentName> <ModelID> 📝 Spec Update: <brief description>
+**Summary:**
 
-- Changed: <what changed>
-- Reason: <why it changed>
-- Standard: <reference to master spec requirement>
+<1-2 sentences describing impact and stakeholder value>
 
-<optional: code snippet or detailed change>
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
+
+**Required Elements:**
+- **Summary section** FIRST with executive summary (1-2 sentences, stakeholder value)
+- **Outcome section** describing what changed
+- **Horizontal rule** (`---`) separator
+- **Byline at BOTTOM** with ✅ emoji, agent name, and model ID
+
+**FORBIDDEN:**
+- Byline at TOP (belongs at BOTTOM)
+- 📝 emoji for completion comments (use ✅)
+- Missing Summary or Outcome sections
+- Punch-list format (bullet point lists)
+- Technical changelogs (focus on impact, not files)
 
 ### Error Handling
 - If GitHub MCP is unavailable, report error and halt
@@ -210,12 +298,12 @@ After the audit session completes (user says "stop" or no more issues found), th
 
 **Format:**
 ```markdown
-# Audit Log: Spec Quality
+# Audit Log: Spec Content Quality
 
 Date: YYYY-MM-DD
 Auditor: spec-auditor
 Issue: #N (URL to issue)
-Scope: GitHub Issue [SPEC] auditing
+Scope: GitHub Issue [SPEC] content quality auditing
 
 ## Summary
 - Issues Found: N
@@ -291,23 +379,21 @@ GitHub Comment: <URL to comment>
    - The spec issue needs the audit results for context in future sessions
    - Ensures spec quality issues are visible to anyone reviewing the spec
 
-### Example
-
-```python
-# After audit session completes:
-audit_log_path = "./tmp/audit-spec-20260328.md"
-with open(audit_log_path) as f:
-    content = f.read()
-
-github_add_issue_comment(
-    owner=owner, repo=repo, issue_number=issue_number,  # From --issue N
-    body=f"AI: OpenCode ollama-cloud/glm-5 📝 Spec Audit: #{issue_number}\n\n{content}"
-)
-
-os.remove(audit_log_path)
-```
-
 **⚠️ CRITICAL: Always attach to the spec issue being audited, then delete temp file. No exceptions.**
+
+## Mandatory Invocation (NO SKIPPING)
+
+**AI agents creating new specs MUST invoke this auditor. NO EXCEPTIONS.**
+
+When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
+1. Create the spec issue with all required content
+2. Invoke `/skill concern-separation-auditor --issue N --auto-fix` (FIRST - phase structure)
+3. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
+4. Apply any fixes identified by auditors
+5. Add `needs-approval` label
+6. Post "ready for review" comment
+
+**Skipping this auditor is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Scope Boundaries
 
@@ -319,32 +405,37 @@ os.remove(audit_log_path)
 
 ## Coordination Points
 
-This auditor skill coordinates with the project's approval gate workflow:
+### Integration with concern-separation-auditor
 
-### When to Invoke
-- **Before implementation approval**: If a spec is ready for approval, audit first.
-- **During spec review**: When reviewing a proposed spec for quality.
-- **Periodic audit**: Manual invocation to check for spec drift over time.
+**BOTH auditors are required. They check different things.**
 
-### Integration Points
-- **Approval Gate (`010-approval-gate.md`)**: Before approving implementation, verify spec quality via this auditor.
+| Auditor | Runs When | Checks |
+|---------|----------|--------|
+| `concern-separation-auditor` | FIRST | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
+| `spec-auditor` | SECOND | Fresh-start context, completeness, content quality, LLM implementability |
+
+**Order matters:** concern-separation-auditor fixes structural issues first, then spec-auditor checks content quality.
+
+### Integration with Approval Gate
+
+- **Approval Gate (`010-approval-gate.md`)**: Before approving implementation, both auditors must have been run.
 - **Critical Rules (`000-critical-rules.md`)**: References auditor skills for enforcement.
-- **Planning Guidelines (`140-planning-spec-creation.md`)**: Defines the structure requirements this auditor enforces.
+- **Planning Guidelines (`140-planning-spec-creation.md`)**: Defines the structure requirements enforced by these auditors.
 
 ### Enforcement Flow
-1. User creates or updates a [SPEC] issue.
-2. Before implementation approval, invoke `/skill spec-auditor --issue N`.
-3. Auditor checks spec quality against master standard.
-4. If issues found → fix them before approving.
-5. If no issues → proceed with approval.
-6. After fixes → optional re-scan to verify no new issues introduced.
+
+1. User creates a [SPEC] issue.
+2. concern-separation-auditor runs (phase structure fixes).
+3. spec-auditor runs (content quality fixes).
+4. After both auditors pass → Add `needs-approval` label.
+5. After approval → Implementation begins.
 
 ## Example Session
 
 ```
 User: /skill spec-auditor --issue 258
 
-AI: OpenCode ollama-cloud/glm-5 🤖 Auditing Issue #258...
+AI: OpenCode ollama-cloud/glm-5 🤖 Auditing Issue #258 for content quality...
 
 Issue Location: Problem Statement section
 Problem class: FRESH-START-VIOLATION

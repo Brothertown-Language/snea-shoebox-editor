@@ -1,10 +1,10 @@
 # STRICT DIRECTIVE MODE — startup root (condensed)
 
-## 0. MANDATORY FIRST STEP: SESSION INIT SCRIPT (BEFORE MCP)
+## 1. MANDATORY FIRST STEP: SESSION INIT SCRIPT (BEFORE MCP)
 
 **Before ANY other operations, run the session init script:**
 
-### Step 0.1: Run Session Init Script
+### Step 1.1: Run Session Init Script
 
 **ALWAYS run this script FIRST:**
 
@@ -39,7 +39,61 @@ uv run python ai_bin/session_init.py
 
 ---
 
-## 0.5. MCP AVAILABILITY PROBE
+## 1.1. OWNER INFERENCE PROHIBITION (ZERO TOLERANCE)
+
+**⚠️ DO NOT infer GitHub owner from file paths, usernames, or cached values.**
+
+### 🚫 FORBIDDEN (ZERO TOLERANCE)
+
+**These actions are CRITICAL GUIDELINE VIOLATIONS:**
+
+| Forbidden Action | Why It's Wrong |
+|------------------|----------------|
+| Parsing file paths to extract `$USER` | `/home/michael/git/...` → `owner=michael` is INCORRECT |
+| Using `$USER` environment variable | Returns local username, NOT GitHub owner |
+| Using `git config user.name` | Returns human name, NOT GitHub owner |
+| Using cached values from previous sessions | Stale data, violates session-bound requirement |
+| Making GitHub MCP calls before running session init | No owner/repo values available |
+
+### ✅ REQUIRED OWNER VALUES
+
+**ONLY use values from `ai_bin/session_init.py` output:**
+
+```bash
+# REQUIRED: Run this FIRST
+uv run python ai_bin/session_init.py
+
+# Expected output format:
+# GIT_USER_NAME=<human-name>        # For commit trailers
+# GIT_USER_EMAIL=<human-email>     # For commit trailers
+# GIT_OWNER=<github-owner>          # For GitHub MCP API calls
+# GIT_REPO=<github-repo>            # For GitHub MCP API calls
+# GIT_HOOKS_PATH=<hooks-path>        # Git hooks location
+# GIT_REMOTE_URL=<remote-url>        # Full remote URL
+```
+
+**Use these values for SESSION DURATION:**
+- `GIT_OWNER` and `GIT_REPO` for ALL `github_*` MCP calls
+- `GIT_USER_NAME` and `GIT_USER_EMAIL` for commit trailers
+- DO NOT re-run `git config` or derive values from other sources
+
+### Why This Matters
+
+| Incorrect Source | Example | Result |
+|------------------|---------|--------|
+| File path parsing | `/home/michael/git/...` | Owner=`michael` (WRONG) |
+| `$USER` variable | `echo $USER` → `michael` | Owner=`michael` (WRONG) |
+| `git config user.name` | `git config user.name` → `Michael Conrad` | Owner=`Michael Conrad` (WRONG) |
+| Hardcoded value | `owner="michael"` | Wrong on different machines |
+| Cached from previous session | Previous session's `GIT_OWNER` | May be stale |
+
+**CORRECT:** `GIT_OWNER=NewsRx` from session init (for NewsRx/newsrx-genai-python)
+
+---
+
+---
+
+## 2. MCP AVAILABILITY PROBE
 
 **After git config check, probe MCP tool availability:**
 
@@ -93,7 +147,7 @@ This probe determines workflow:
 
 ---
 
-## 0.5 HOOK VERIFICATION (MANDATORY)
+## 3. HOOK VERIFICATION (MANDATORY)
 
 Before proceeding, verify hooks are installed:
 
@@ -132,7 +186,7 @@ If hooks are not installed:
 * For Python source analysis, use `ai_bin/py structure`.
 * Use `tmp/` for temp files (`T="./tmp/"`).
 * Follow the **Spec-Driven Development** methodology (Specify -> Plan -> Tasks -> Implement).
-* **Prefer GitHub workflow when MCP tools available.** Use GitHub Issues for planning and PRs for code integration. See 020-github-workflow.md.
+* **Prefer GitHub workflow when MCP tools available.** Use GitHub Issues for planning and PRs for code integration. See `121-github-pr-workflow.md`.
 
 ### ⚠️ ASK FIRST
 * Any action that deviates from the approved plan/spec.

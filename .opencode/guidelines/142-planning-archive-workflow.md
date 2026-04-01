@@ -104,27 +104,27 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Phase 1: Implementation (Gated)
+## Phase 1: [Concern Name] (Gated)
 
 ### Steps
-1. ☐ [first implementation task]
-2. ☐ [second implementation task]
-3. ☐ [third implementation task]
+1. ☐ [first task for this concern]
+2. ☐ [second task for this concern]
+3. ☐ [third task for this concern]
 
 ### Content
 [Implementation details from planning phase]
 
 ---
 
-## Phase 2: Testing (auto-progress)
+## Phase 2: [Next Concern] (auto-progress)
 
 ### Steps
-1. ☐ [first test task]
-2. ☐ [second test task]
+1. ☐ [first task for this concern]
+2. ☐ [second task for this concern]
 
 ---
 
-## Phase 3: Review (requires approval)
+## Phase 3: [Verification Concern] (requires approval)
 
 ### Steps
 1. ☐ [first review task]
@@ -133,6 +133,10 @@ CREATED: YYYY-MM-DD
 ---
 
 > **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
+**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+- ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
+- ❌ Bad: "Implementation", "Testing", "Development", "Build"
 ```
 
 ### What NOT to Include in Specs
@@ -159,6 +163,61 @@ Every spec file MUST include:
 6. **Status Markers**: `☐`/`↻`/`☑`/`☒` for each step
 7. **Approval Tracking Note**: A footer note directing approvals to comments (not a table in the body)
 
+## 8. Phase Naming Quality (MANDATORY)
+
+**Phase names MUST represent actual separation of concerns, not generic activities.**
+
+### Boilerplate Phase Names (PROHIBITED)
+
+Phase names that describe generic activities without specifying the concern:
+
+- "Implementation" — activity, not concern boundary
+- "Testing" — activity, not concern boundary
+- "Build" / "Create" / "Develop" — activities, not concerns
+- "Verify" / "Validate" / "Check" — activities, not concerns
+- "Deploy" / "Ship" / "Release" — activities, not concerns
+
+### Meaningful Phase Names (REQUIRED)
+
+Phase names that describe specific concern boundaries:
+
+- "Database Schema Setup" — specific concern boundary
+- "API Endpoint Integration" — specific concern boundary
+- "Error Handling Layer" — specific concern boundary
+- "Configuration Migration" — specific concern boundary
+- "Unit Testing Infrastructure" — specific concern (infrastructure for testing)
+- "Integration Testing Suite" — specific concern (integration test setup)
+
+### Validation Rules
+
+| Pattern | Status | Reason |
+|---------|--------|--------|
+| Single-word activity name | BOILERPLATE-TITLE | No concern boundary specified |
+| "Testing" alone | BOILERPLATE-TITLE | Generic activity |
+| "Testing Infrastructure" | ACCEPTABLE | Specific concern (infrastructure) |
+| "Unit Testing" | ACCEPTABLE | Specific testing type |
+| "Implementation" with specific steps | REVIEW | May be acceptable if steps define concern |
+
+### Examples
+
+**❌ BOILERPLATE (Wrong):**
+```markdown
+## Phase 1: Implementation (Gated)
+### Steps
+1. ☐ Write the code
+2. ☐ Make it work
+3. ☐ Fix bugs
+```
+
+**✅ MEANINGFUL (Correct):**
+```markdown
+## Phase 1: Database Schema Setup (Gated)
+### Steps
+1. ☐ Create user table with authentication fields
+2. ☐ Add indexes for login queries
+3. ☐ Write migration script
+```
+
 ---
 
-*Source: `040-plan-delivery.md` (will be deprecated)*
+*Source: Content migrated from `040-plan-delivery.md`*

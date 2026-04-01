@@ -71,4 +71,4 @@ This guideline is foundational. When in doubt: **raise, don't return.**
 
 ---
 
-*Source: `095-never-hide-problems.md` (will be deprecated)*
+*Source: Content migrated from `095-never-hide-problems.md`*

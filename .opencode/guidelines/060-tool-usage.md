@@ -1,8 +1,8 @@
 # Tool Usage & Terminal Rules
 
-## 0. MCP Tool MANDATORY Usage
+## 1. MCP Tool MANDATORY Usage
 
-> **See `.opencode/skills/mcp-tool-usage/SKILL.md` for complete tool preference tables, tier boundaries, and fallback hierarchy.**
+> **See `mcp-tool-usage` skill for complete tool preference tables, tier boundaries, and fallback hierarchy.**
 
 ### ✅ MANDATORY (Never ask - always use)
 Use MCP tools for ALL file, notebook, and repository operations when MCP is available. See the `mcp-tool-usage` skill for the complete tool selection matrix.
