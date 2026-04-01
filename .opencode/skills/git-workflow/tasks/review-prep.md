@@ -2,18 +2,45 @@
 
 ## Purpose
 
-Push feature branch to remote and generate GitHub compare URL for developer review. This provides the developer with visibility into changes BEFORE deciding to create a PR.
+Generate GitHub compare URL for developer review AFTER the implementation task has already pushed the branch. This provides the developer with visibility into changes BEFORE deciding to create a PR.
 
 ## ⚠️ MANDATORY INVOCATION
 
 **This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
 
 The sequence is:
-1. Implementation complete → **review-prep invoked automatically**
-2. Branch pushed, compare URL generated → HALT
+1. Implementation complete → commit → push → **review-prep invoked automatically**
+2. Compare URL generated → HALT
 3. Wait for developer to say "create a PR"
 
-**DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just push the branch.**
+**DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just generate the compare URL.**
+
+### ⚠️ CRITICAL: Branch Must Be Pushed Before This Task
+
+**The `implementation` task is responsible for pushing the branch.**
+
+**Correct sequence:**
+```
+Implementation task:
+  1. Make changes
+  2. git status (verify)
+  3. git add -A (stage)
+  4. git commit (commit)
+  5. git push -u origin <branch> (push)
+  6. Report completion
+  7. Invoke review-prep
+
+Review-prep task:
+  1. Verify branch is pushed
+  2. Generate compare URL
+  3. Post completion comment
+  4. HALT
+```
+
+**If this task is invoked and branch is NOT pushed:**
+1. Inform user: "Implementation task must push before review-prep"
+2. Push the branch: `git push -u origin <branch-name>`
+3. Continue to generate compare URL
 
 ### ⚠️ CRITICAL: NO EXCEPTIONS
 
@@ -49,15 +76,14 @@ When implementation determines "no file changes needed":
 
 ## Entry Criteria
 
-- All implementation work complete
-- Feature branch exists (not main)
+- All implementation work complete AND pushed to remote
+- Feature branch pushed (done by implementation task)
 - No explicit "create a PR" instruction yet
 - Temp files cleaned up (see Step 0)
 
 ## Exit Criteria
 
-- Feature branch pushed to remote
-- GitHub compare URL generated
+- Compare URL generated and posted
 - Developer can review changes via GitHub diff viewer
 
 ## Procedure
@@ -82,20 +108,22 @@ ls ./tmp/
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
 
-### Step 1: Push Feature Branch (ALWAYS EXECUTE)
+### Step 1: Verify Branch Is Pushed
+
+**Before generating compare URL, verify branch is on remote.**
 
 ```bash
+git branch -vv
+```
+
+**If branch is NOT pushed to remote:**
+
+```bash
+# Push branch
 git push -u origin <branch-name>
 ```
 
-**This pushes the branch to remote WITHOUT creating a PR.**
-
-**CRITICAL:** This step is ALWAYS executed, even if:
-- Git reports "Everything up-to-date"
-- No file changes were made during implementation
-- Branch already exists on remote
-
-The push establishes remote tracking and ensures the compare URL will work correctly.
+**This ensures compare URL will work correctly.**
 
 ### Step 2: Generate Compare URL
 
@@ -105,7 +133,7 @@ Using session values (GIT_OWNER, GIT_REPO):
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-### Step 3: Report Completion (BOTH Issue AND Chat)
+### Step 2: Report Completion (BOTH Issue AND Chat)
 
 **⚠️ CRITICAL: Completion comment MUST be posted to BOTH the GitHub issue AND chat.**
 
@@ -129,14 +157,14 @@ Post to chat (same content):
 - Same executive summary + compare URL
 - Ensures visibility in BOTH GitHub history AND current session
 
-### Step 4: HALT (MANDATORY - NO EXCEPTIONS)
+### Step 3: HALT (MANDATORY - NO EXCEPTIONS)
 
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
 **DO NOT:**
 - Squash commits (happens at PR creation)
 - Create PR (requires explicit "create a PR" instruction)
-- Push again (push happens once)
+- Push again (already pushed in implementation)
 - Close issues (requires PR merge verification)
 - Proceed to any next step (HALT means STOP)
 
@@ -151,28 +179,16 @@ Post to chat (same content):
 - Wait for developer's next explicit instruction
 - If developer says "approved" or "go" again → STILL WAIT for "create a PR"
 
-### ⚠️ CRITICAL: PR Request Before Review-Prep
+### ⚠️ CRITICAL: Implementation Must Push Before Review-Prep
 
-**If user requests "create a PR" but review-prep was NOT completed:**
+**If review-prep is invoked but branch is NOT pushed:**
 
-1. **Detect skipped review-prep:**
-   - Branch not pushed to remote, OR
-   - No compare URL was provided, OR
-   - No completion comment posted
+1. **Detect missed push:** `git branch -vv` shows no upstream
+2. **Inform user:** "Implementation task must commit and push. Fixing now."
+3. **Fix and continue:** `git push -u origin <branch-name>`
+4. **Continue:** Generate compare URL, post completion comment
 
-2. **Inform user:** "Review step must be completed first"
-
-3. **Complete review-prep now:**
-   - Commit any uncommitted changes
-   - Push feature branch: `git push -u origin <branch-name>`
-   - Generate GitHub compare URL
-   - Post completion comment
-
-4. **HALT:** Wait for developer to review via diff URL
-
-5. **After developer reviews:** User says "create a PR" again → proceed with PR creation workflow
-
-**Why:** Developer must have visibility BEFORE PR creation decision.
+**Why:** Commit without push = empty compare URL. Push is mandatory after commit.
 
 ## Context Required
 
@@ -192,11 +208,23 @@ Post to chat (same content):
 ### ✅ CORRECT Workflow
 
 ```
-Implementation complete
+Implementation task:
+    ↓
+Make file changes
+    ↓
+git status (verify changes)
+    ↓
+git add -A (stage)
+    ↓
+git commit (commit)
+    ↓
+git push -u origin <branch> (push)
+    ↓
+Report completion
     ↓
 review-prep invoked AUTOMATICALLY
     ↓
-Push branch to remote
+Verify branch is pushed
     ↓
 Generate compare URL
     ↓
@@ -216,6 +244,9 @@ pr-creation workflow begins
 ```
 Implementation complete
     ↓
+[SKIPPED: commit]
+[SKIPPED: push]
+    ↓
 Push branch to remote
     ↓
 Close issues IMMEDIATELY (SKIPPED HALT)
@@ -230,6 +261,30 @@ NO merge verification
 - No developer visibility via compare URL
 - No review before closure
 - Lost audit trail
+
+### 🚫 CRITICAL VIOLATION: Commit Without Push
+
+```
+Implementation complete
+    ↓
+git commit (commit made)
+    ↓
+[SKIPPED: git push]
+    ↓
+review-prep invoked
+    ↓
+Generate compare URL
+    ↓
+Result: "nothing to compare"
+Result: Developer CANNOT review changes
+Result: Workflow STALLS
+```
+
+**Why this fails:**
+- Compare URL requires pushed commits
+- Unpushed commits are local only
+- Remote branch has NO commits
+- Compare URL shows empty diff
 
 ## Example
 

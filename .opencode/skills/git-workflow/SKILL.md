@@ -107,7 +107,7 @@ cleanup: Verify merge via GitHub API → Close issues
 - Merge PRs (HUMAN-ONLY)
 - Use `--no-verify` flag
 - Ask "Ready to commit?" or "Create a PR?"
-- Push without explicit "create a PR" instruction
+- Close issues without PR merge verification
 - **Use hardcoded model IDs** (e.g., `ollama-cloud/glm-5`) - MUST dynamically detect runtime identity
 
 ### ✅ ALWAYS DO
@@ -115,8 +115,9 @@ cleanup: Verify merge via GitHub API → Close issues
 - Stash ALL modifications before branch creation
 - Verify stash exists (`git stash list`)
 - Verify working tree is clean (`git status`)
+- **Commit ALL changes before pushing** (`git add -A && git commit`)
+- **Push after committing** - ensures GitHub compare works correctly
 - **Clean temp files before review** (`rm ./tmp/temp_*.py ./tmp/*.json 2>/dev/null`)
-- Push branch AFTER implementation complete
 - Squash to single commit before PR
 - Include co-author trailers in squash commit
 - **Dynamically detect model ID at runtime** - NEVER copy example IDs from skills/guidelines

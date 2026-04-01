@@ -35,6 +35,32 @@ git commit -m "WIP: <descriptive message>"
 
 **No co-author trailers required** during implementation commits - those are added during squash at PR time.
 
+### ⚠️ CRITICAL: Commit Before Push
+
+**The most common workflow failure is pushing without committing.**
+
+**Correct sequence:**
+```
+1. Make file changes (edit tool, etc.)
+2. git status (verify changes exist)
+3. git add -A (stage changes)
+4. git commit (commit changes)
+5. git push (push committed branch)
+```
+
+**Incorrect sequence (CRITICAL VIOLATION):**
+```
+1. Make file changes
+2. git push (WRONG - uncommitted changes)
+   Result: Empty branch on remote
+   Result: GitHub compare shows "nothing to compare"
+```
+
+**Verification before push:**
+- `git status` MUST show "nothing to commit, working tree clean"
+- Local branch MUST have at least one commit ahead of remote
+- If `git status` shows uncommitted changes → COMMIT FIRST
+
 ## Multiple Commits Are Acceptable
 
 | Commit Type | When | Message | Trailers |
@@ -45,8 +71,8 @@ git commit -m "WIP: <descriptive message>"
 ## Important Rules
 
 - **DO NOT squash until PR creation** - Multiple implementation commits are expected
-- **DO NOT push without explicit instruction** - Push happens at PR creation only
 - **DO NOT create PR without explicit instruction** - PR requires explicit "create a PR"
+- **ALWAYS push after committing** - Push ensures GitHub compare works correctly
 
 ## Context Required
 
@@ -64,8 +90,10 @@ Commit when:
 
 ## After Implementation Completes
 
-1. **Report completion** (executive summary to issue AND chat)
-2. **HALT** — do NOT push, do NOT create PR
-3. **WAIT** for explicit "create a PR" instruction
+1. **Commit all changes** (`git add -A && git commit`)
+2. **Push to remote** (`git push -u origin <branch-name>`)
+3. **Report completion** (executive summary to issue AND chat)
+4. **HALT** — do NOT create PR
+5. **WAIT** for explicit "create a PR" instruction
 
 **See:** `pr-creation-workflow` skill for complete PR workflow.
