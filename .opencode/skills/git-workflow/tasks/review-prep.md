@@ -105,10 +105,11 @@ Using session values (GIT_OWNER, GIT_REPO):
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-### Step 3: Report Completion
+### Step 3: Report Completion (BOTH Issue AND Chat)
 
-Format for issue and chat:
+**⚠️ CRITICAL: Completion comment MUST be posted to BOTH the GitHub issue AND chat.**
 
+Post to GitHub issue:
 ```markdown
 **Summary:**
 
@@ -118,22 +119,37 @@ Format for issue and chat:
 
 **Ready for Review:**
 
-https://github.com/NewsRx/newsrx-genai-python/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-### Step 4: HALT
+Post to chat (same content):
+- Same executive summary + compare URL
+- Ensures visibility in BOTH GitHub history AND current session
+
+### Step 4: HALT (MANDATORY - NO EXCEPTIONS)
+
+**🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
 **DO NOT:**
 - Squash commits (happens at PR creation)
 - Create PR (requires explicit "create a PR" instruction)
 - Push again (push happens once)
+- Close issues (requires PR merge verification)
+- Proceed to any next step (HALT means STOP)
 
-**WAIT for:**
+**WAIT for EXPLICIT instruction:**
 - Developer reviews changes via GitHub diff viewer
 - Developer says "create a PR" to proceed
+- NO assumptions, NO auto-progression
+
+**What HALT means:**
+- Report completion (issue + chat)
+- STOP all further action
+- Wait for developer's next explicit instruction
+- If developer says "approved" or "go" again → STILL WAIT for "create a PR"
 
 ### ⚠️ CRITICAL: PR Request Before Review-Prep
 
@@ -170,6 +186,50 @@ https://github.com/NewsRx/newsrx-genai-python/compare/main...<branch-name>
 - GitHub diff viewer is superior to local review
 - Prevents premature PR creation
 - Clear separation between "done implementing" and "create PR"
+
+## Correct vs Incorrect Workflow
+
+### ✅ CORRECT Workflow
+
+```
+Implementation complete
+    ↓
+review-prep invoked AUTOMATICALLY
+    ↓
+Push branch to remote
+    ↓
+Generate compare URL
+    ↓
+Post compare URL to issue + chat
+    ↓
+HALT - Wait for "create a PR"
+    ↓
+Developer reviews via GitHub diff
+    ↓
+Developer says "create a PR"
+    ↓
+pr-creation workflow begins
+```
+
+### 🚫 INCORRECT Workflow (CRITICAL VIOLATION)
+
+```
+Implementation complete
+    ↓
+Push branch to remote
+    ↓
+Close issues IMMEDIATELY (SKIPPED HALT)
+    ↓
+NO compare URL posted
+NO PR created
+NO merge verification
+```
+
+**This incorrect workflow VIOLATES critical rules and causes:**
+- Issues closed without PR tracking
+- No developer visibility via compare URL
+- No review before closure
+- Lost audit trail
 
 ## Example
 

@@ -25,19 +25,31 @@ Delete merged branches after PR merge, clean stale references, and verify reposi
 
 ## Procedure
 
-### Step 1: Verify PR Merge
+### Step 1: Verify PR Merge (CRITICAL - NO EXCEPTIONS)
 
-**DO NOT trust `git pull` alone.**
+**🚫 CRITICAL VIOLATION: Closing issues without PR merge verification is a CRITICAL GUIDELINE VIOLATION.**
+
+**DO NOT trust `git pull` or local fast-forward. You MUST verify via GitHub API.**
 
 ```python
 # MUST use GitHub API to verify merge
-github_pull_request_read(method="get", owner=..., repo=..., pullNumber=...)
+pr = github_pull_request_read(method="get", owner=..., repo=..., pullNumber=...)
 
 # Verify merged_at timestamp exists
-if merged_at is None:
+if pr.get("merged_at") is None:
     # PR is not merged, STOP
-    return "PR not yet merged, cannot close issue"
+    report = f"PR #{pullNumber} is not yet merged. Cannot close issues."
+    return report
+
+# ONLY after verified merge:
+proceed_to_close_issues()
 ```
+
+**Why API verification is mandatory:**
+- `git pull` shows local fast-forward success
+- Does NOT verify PR was merged (could be closed/rejected)
+- GitHub API `merged_at` field is the ONLY reliable merge indicator
+- Closing issues without merged PR loses tracking and audit trail
 
 ### Step 2: Switch to Main
 
@@ -231,3 +243,46 @@ github_list_pull_requests(state="merged", perPage=50)
 - Stale remote references clutter `git branch -a`
 - Clean repository state required for next work session
 - Prevents confusion from stale branch references
+- **Issues ONLY closed after VERIFIED PR merge**
+
+## Correct vs Incorrect Workflow
+
+### ✅ CORRECT Workflow (Issue Closure)
+
+```
+PR created
+    ↓
+Developer reviews and merges PR
+    ↓
+Developer confirms "PR merged"
+    ↓
+cleanup task invoked
+    ↓
+Verify merge via GitHub API (merged_at field)
+    ↓
+API confirms merge → Proceed
+    ↓
+Close child issues addressed by PR
+    ↓
+Check parent for remaining sub-issues
+    ↓
+If all children closed → Close parent with summary
+```
+
+### 🚫 INCORRECT Workflow (CRITICAL VIOLATION)
+
+```
+PR created (or just branch pushed)
+    ↓
+Immediately close issues (NO MERGE)
+    ↓
+NO GitHub API verification
+NO PR merge status check
+NO parent/child structure check
+```
+
+**This incorrect workflow VIOLATES critical rules and causes:**
+- Issues closed without PR tracking
+- No merge verification
+- Potential reopen of closed issues if PR rejected
+- Lost audit trail

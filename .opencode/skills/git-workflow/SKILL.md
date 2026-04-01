@@ -52,6 +52,51 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
    - Phase 5: PR Creation (user-initiated) → `pr-creation` task
    - Phase 6: Branch Cleanup (after merge) → `cleanup` task
 
+## Critical Workflow Sequence
+
+**🚫 CRITICAL: Skipping phases or HALT points is a CRITICAL GUIDELINE VIOLATION.**
+
+### Mandatory Sequence (NO EXCEPTIONS)
+
+```
+Implementation complete
+    ↓
+review-prep invoked AUTOMATICALLY (Phase 3)
+    ↓
+Push branch → Generate compare URL → HALT
+    ↓
+(DEVELOPER REVIEWS VIA GITHUB DIFF)
+    ↓
+Developer says "create a PR"
+    ↓
+pr-creation: Squash → Push → Create PR → HALT
+    ↓
+(DEVELOPER MERGES PR)
+    ↓
+Developer confirms "PR merged"
+    ↓
+cleanup: Verify merge via GitHub API → Close issues
+```
+
+### What HALT Means
+
+**HALT = Stop all further action and wait for explicit instruction.**
+
+| HALT Point | What Agent Does | What Agent WAITS For |
+|------------|----------------|----------------------|
+| After review-prep | Post compare URL + completion comment | "create a PR" instruction |
+| After pr-creation | Post PR URL | "PR merged" confirmation |
+| After PR merged | Close issues | Next explicit instruction |
+
+### 🚫 CRITICAL VIOLATIONS
+
+| Violation | Consequence |
+|-----------|-------------|
+| Skip review-prep | No developer visibility, premature PR |
+| Skip HALT after push | Issues closed without PR |
+| Close issues without PR merge | Lost tracking, audit trail broken |
+| Skip GitHub API verification | Closing issues on unmerged PRs |
+
 ## Critical Rules
 
 ### 🚫 NEVER DO
