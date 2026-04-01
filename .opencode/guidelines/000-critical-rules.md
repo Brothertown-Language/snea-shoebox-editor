@@ -12,14 +12,114 @@ This file provides critical rules that must never be violated.
 - Use OpenCode-specific instructions from `opencode.json`
 - Read `.opencode/guidelines/` for detailed guidance
 
-### Junie (MARKER_JUNIE_TERMINAL=true)
-- Requires manual MCP probe
-- Needs `ai_bin/start` for initialization
-
 ### Amazon Q / CodeWhisperer
 - Treat as unknown agent — use manual MCP probe
 
+## Critical Violation: Implementing Without Documentation Verification
+
+**⚠️ Implementing code without verifying against live documentation is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+- Implementing API calls without verifying parameter names from official docs
+- Using environment variables without confirming correct names from config files
+- Guessing function signatures from memory or similar libraries
+- Using outdated blog posts/tutorials instead of official documentation
+
+### ✅ REQUIRED
+- **ALWAYS verify API signatures before implementing**
+- Check official documentation for current API usage
+- Use `srclight_get_signature` or `pycharm_get_symbol_info` for function signatures
+- Read source code and type hints when docs unavailable
+- Confirm environment variable names from `.env.example` or config
+
+### Why This Matters
+- Assumption-based implementations lead to broken functionality
+- API changes between library versions cause silent failures
+- Incorrect parameter names waste debugging time
+- Outdated patterns accumulate technical debt
+
+---
+
 **Search guidelines:** Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant guidelines.
+
+## Critical Violation: Inferring GitHub Owner from File Paths/Usernames
+
+**⚠️ Inferring GitHub owner from file paths or usernames is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+- Inferring `owner=XXXX` from file path `/home/XXXX/git/...`
+- Inferring owner from `$USER` environment variable
+- Inferring owner from git username (`git config user.name`)
+- Using cached/stale owner values from previous sessions
+- Making ANY GitHub MCP call without first running `ai_bin/session_init.py`
+
+### ✅ REQUIRED SEQUENCE
+1. Run session init: `uv run python ai_bin/session_init.py`
+2. Store ALL output values for session duration:
+   - `GIT_USER_NAME` (human name for commit trailers)
+   - `GIT_USER_EMAIL` (human email for commit trailers)
+   - `GIT_OWNER` (repository owner for GitHub API calls)
+   - `GIT_REPO` (repository name for GitHub API calls)
+   - `GIT_HOOKS_PATH` (git hooks path)
+   - `GIT_REMOTE_URL` (full remote URL)
+3. Use `GIT_OWNER` and `GIT_REPO` for EVERY GitHub MCP call
+4. NEVER assume or hardcode owner/repo values
+
+### Why This Matters
+- File paths vary across machines (`/home/michael/` vs `/home/user/`)
+- `$USER` returns local username, NOT GitHub owner
+- `git config user.name` returns human name, NOT GitHub owner
+- Cached values become stale across sessions
+- Incorrect owner causes GitHub API failures
+
+---
+
+## Critical Violation: Missing AI Co-Authored Attribution
+
+**⚠️ Failing to include AI co-authored attribution is a CRITICAL GUIDELINE VIOLATION.**
+
+AI co-authorship applies to **original content authored by AI**, NOT copy-pasted content.
+
+### What Requires Attribution
+
+- **Python files**: Module docstring with `Co-authored with AI: AI-Name (model-id)`
+- **README files**: Footer section with `## Co-Authored With AI`
+- **New repositories**: README MUST include AI co-authored section
+- **Original docs**: Footer with `*Co-authored with AI: AI-Name (model-id)*`
+
+### What Does NOT Require Attribution
+
+- **Standard licenses** (MIT, Apache, GPL) - established legal templates
+- **Copy-pasted code/docs** - original source holds copyright, NOT AI co-authorship
+- **Auto-generated files** (lock files, `__pycache__`)
+- **Framework boilerplate** (default configs, project structures)
+- **Minor edits** (typo fixes, formatting)
+
+### Attribution Format
+
+```
+Co-authored with AI: <AI-Name> (<model-id>)
+```
+
+**Example:** `Co-authored with AI: OpenCode (ollama-cloud/glm-5)`
+
+### Repository Creation
+
+When creating a new repository, the README MUST include:
+
+```markdown
+## Co-Authored With AI
+
+This repository was created with assistance from AI:
+
+- **AI Agent**: OpenCode
+- **Model**: ollama-cloud/glm-5
+- **Date**: YYYY-MM-DD
+```
+
+**Note:** The LICENSE file uses standard MIT license without modification. AI attribution goes in README, not LICENSE.
+
+**See `.opencode/guidelines/080-code-standards.md` for complete attribution requirements.**
 
 ## Critical Violation: Missing Progress Comments
 
@@ -30,31 +130,7 @@ Every implementation task MUST be documented with progress comments on the GitHu
 - Post comment when creating PR
 - Never proceed to next task without commenting first
 
-### AI Authorship Attribution
-
-**AI bylines are MANDATORY for AI-GENERATED content.**
-
-**Content copied from ANY source does NOT get AI attribution** — the original source holds the copyright.
-
-| Scenario | Byline Required? |
-|----------|-------------------|
-| AI writes original content | ✅ YES |
-| AI copies Stack Overflow | ❌ NO (cite original) |
-| AI quotes documentation | ❌ NO (cite original) |
-| AI paraphrases external content | ✅ Partial (cite + AI byline) |
-
-**See `088-ai-authorship.md` for complete rules.**
-
 ### Required Format: Executive Summary
-
-**ALL bylines MUST include "on behalf of <HumanName>".**
-
-**Dynamic Components:**
-- `<AgentIcon>`: Agent iconography (🤖 for OpenCode, 🟣 for Claude, 💙 for Copilot)
-- `<AgentBrand>`: Agent brand identifier (e.g., `OpenCode/glm-5`, `Claude/sonnet-4`)
-- `<HumanName>`: From `git config user.name` (fallback to `$USER`)
-
-**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity and human name at runtime.**
 
 **Intermediate task (multi-task spec):**
 ```
@@ -64,7 +140,8 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 **Outcome:** <What changed for stakeholders>
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **Final task or single-task spec:**
@@ -77,112 +154,34 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 All tasks complete from this specification.
 
-🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-### Required Byline Format Table (MANDATORY)
+**⚠️ CRITICAL: Emoji must be PLAIN TEXT (not inside italic/bold formatting).**
 
-**ALL comments AND issue body signatures MUST include "on behalf of <HumanName>".**
+**Status Emoji Guide:**
+| Status | Emoji | Byline Format |
+|--------|-------|---------------|
+| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
+| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
+| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
+| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
 
-**Structure: Attribution italicized; status plain.**
+**When to include context in byline:**
+- **Progress comments**: No context (content already describes the work)
+- **Issue creation**: Optional — add issue number if useful
+- **Rejection/Superseded**: Always include reason or replacement reference
 
-| Type | Required Format |
-|------|-----------------|
-| Progress (task completion) | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✅ Task Complete: <task-name>` |
-| Body update | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Updated: <reason>` |
-| Spec alteration | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* 📝 Spec altered: <summary>` |
-| Closure | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ❌ Closed - <reason>` |
-| General response | `<content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* 🤖` |
-| Issue body signature | `<issue content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created` |
-| PR body signature | `<pr content>\n\n🤖 *AI: <AgentBrand> on behalf of <HumanName>* ✨ Created` |
-
-**Structure Breakdown:**
-
-```
-<AgentIcon> *AI: <AgentBrand> on behalf of <HumanName>* <ContextEmoji> <TypeText>
-```
-
-| Part | Content | Format |
-|------|---------|--------|
-| Agent icon | `🤖` | Plain (outside italics) |
-| Attribution | `AI: OpenCode/glm-5 on behalf of Michael Conrad` | Italicized |
-| Context emoji | `✅` | Plain (outside italics) |
-| Type text | `Task Complete: schema` | Plain (outside italics) |
-
-**⚠️ CRITICAL: Icon Placement (Most Common Mistake)**
-
-The agent icon (🤖) must be **OUTSIDE the asterisks** — never inside them.
-
-| Incorrect (icon italicized) | Correct (icon plain) |
-|----------------------------|---------------------|
-| `*🤖 AI: OpenCode/glm-5 on behalf of Michael Conrad*` ❌ | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad*` ✓ |
-
-**Why it matters:** Markdown italicizes everything between `*` characters. When the icon is inside asterisks:
-- The icon may not render at all (some renderers fail to display emoji in italic context)
-- The icon becomes italicized along with the text (where it does render)
-- Inconsistent rendering across GitHub, IDEs, and markdown viewers
-
-The icon must remain plain to ensure consistent rendering everywhere.
-
-**Visual rendering:**
-- ❌ Incorrect: `*🤖 AI: ...*` → *(icon may not render or is italicized)*
-- ✓ Correct: `🤖 *AI: ...*` → 🤖 followed by italicized text
-
-**Examples:**
-
-| Type | Full Byline |
-|------|-------------|
-| Task complete | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✅ Task Complete: schema` |
-| General response | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 🤖` |
-| Body update | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 📝 Updated: added field` |
-| Spec alteration | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* 📝 Spec altered: Phase 2` |
-| Issue closure | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ❌ Closed - Implemented` |
-| Issue creation | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✨ Created` |
-| PR creation | `🤖 *AI: OpenCode/glm-5 on behalf of Michael Conrad* ✨ Created` |
-
-**Agent Icon Registry:**
-
-| Agent | Icon | Brand |
-|-------|------|-------|
-| OpenCode | 🤖 | `OpenCode/<model>` |
-| Claude | 🟣 | `Claude/<model>` |
-| Copilot | 💙 | `Copilot/<model>` |
-| Generic | 🤖 | `AI/<model>` |
-
-**Context Emoji Reference:**
-
-| Emoji | Type Text | Use Case |
-|-------|-----------|----------|
-| ✅ | `Task Complete: <task>` | Progress comments |
-| 🤖 | *(none)* | General responses |
-| 📝 | `Updated: <reason>` | Body updates |
-| 📝 | `Spec altered: <summary>` | Spec alterations |
-| ❌ | `Closed - <reason>` | Issue closures |
-| 🔍 | `Analysis` | Investigation findings |
-| ⚠️ | `Warning` | Cautions |
-| ✨ | `Created` | Issue/PR creation |
-
-**Dynamic Components:**
-- `<AgentIcon>`: Agent iconography (🤖 for OpenCode)
-- `<AgentBrand>`: Agent brand (e.g., `OpenCode/glm-5`)
-- `<HumanName>`: From `git config user.name` (fallback to `$USER`)
-
-**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity and human name at runtime.**
-
-**See `.opencode/skills/github-comments/SKILL.md` for complete requirements.**
+### 🚫 FORBIDDEN in Progress Comments
 
 - **File lists** — Redundant (visible in git commits)
-- **"Next" field** — Dialog prompt (violates `125-github-issue-comments.md`)
+- **"Next" field** — Dialog prompt (violates `AGENTS.md` § 125)
 - **Punch-list format** — Use executive summary paragraphs
 - **"Awaiting authorization"** — Use HALT protocol, not comments
-- **"Waiting for..."** — Use HALT protocol, not comments
-- **"Ready for review"** — Use HALT protocol, not comments
-- **"Ready for approval"** — Use HALT protocol, not comments
-- **"Please confirm..."** — Use HALT protocol, not comments
-- **"Let me know when..."** — Use HALT protocol, not comments
-- **"Ready when you are"** — Use HALT protocol, not comments
 - **Technical changelog** — Focus on impact, not file-by-file changes
-- **Any procedural status** — "HALT", "Waiting", "Ready" — Use HALT protocol silently
 
 ### ⚠️ Chat Output Rule (CRITICAL)
 
@@ -199,7 +198,7 @@ The icon must remain plain to ensure consistent rendering everywhere.
 **🚫 NEVER:** Skip either location
 **🚫 NEVER:** Put full summary in chat but skip GitHub comment
 
-**See `.opencode/skills/github-comments/SKILL.md` for complete requirements.**
+**See `github-comments` skill for complete requirements.**
 
 ---
 
@@ -218,7 +217,7 @@ Users communicating via GitHub Issues:
 3. Include analysis, findings, and next steps in your response
 4. Ask for authorization if needed
 
-**See `.opencode/skills/github-comments/SKILL.md` → "Responding to User Comments (MANDATORY)" for complete requirements.**
+**See `github-comments` skill → "Responding to User Comments (MANDATORY)" section for complete requirements.**
 
 ---
 
@@ -229,7 +228,7 @@ Users communicating via GitHub Issues:
 When implementing a multi-task spec (one with multiple phases/tasks):
 
 1. **First**: Call `github_issue_read method=get_sub_issues` on the parent issue
-2. **When empty**: AUTO-CREATE sub-issues at PHASE level (see `.opencode/skills/github-sub-issues/SKILL.md`)
+2. **When empty**: AUTO-CREATE sub-issues at PHASE level (see `github-sub-issues` skill)
 3. **Then**: Verify the task being implemented is linked as a sub-issue
 
 **🚫 FORBIDDEN:**
@@ -243,7 +242,7 @@ When implementing a multi-task spec (one with multiple phases/tasks):
 - Each phase as separate GitHub Issue linked via `github_sub_issue_write method=add`
 - Single-task specs are exempt from sub-issue requirement
 
-**See `.opencode/skills/github-sub-issues/SKILL.md` for complete workflow including:**
+**See `github-sub-issues` skill for complete workflow including:**
 - Single-task vs multi-task exemption
 - Auto-create workflow
 - Database ID requirement
@@ -318,33 +317,6 @@ See `142-planning-archive-workflow.md` → "Investigation Completion Criteria" f
 
 ---
 
-## Critical Violation: Using sed for File Operations
-
-**⚠️ Using `sed`, `awk`, `tr`, or shell redirects for file operations is a CRITICAL GUIDELINE VIOLATION.**
-
-These tools are too fragile and can corrupt files in unexpected ways:
-- `sed` mangles line endings (CRLF vs LF)
-- `sed` corrupts binary-like content
-- `sed` fails silently on edge cases
-- `sed` behaves differently across platforms (BSD vs GNU sed)
-- Shell redirects (`> file`, `>> file`) corrupt notebook files (`.ipynb`)
-
-**🚫 FORBIDDEN:**
-- Use `sed` for file content operations
-- Use `awk` or `tr` for file transformations
-- Use shell redirect patterns (`> file`, `>> file`) for notebook files
-- Use any shell text-processing tool on files
-
-**✅ REQUIRED:**
-- Use `edit` tool for targeted string replacements in text files
-- Use `write` tool for complete file rewrites
-- Use `the-notebook-mcp` tools (e.g., `the-notebook-mcp_notebook_read`, `the-notebook-mcp_notebook_edit_cell`) for `.ipynb` files
-- Use PyCharm MCP tools (`pycharm_replace_text_in_file`, `pycharm_create_new_file`) when available
-
-**See:** `060-tool-usage.md` for complete file operation guidelines.
-
----
-
 ## Critical Violation: Implementing Stale or Superseded Specs
 
 **⚠️ Implementing a stale or superseded spec without revision is a CRITICAL GUIDELINE VIOLATION.**
@@ -407,7 +379,27 @@ This check is REQUIRED in these workflows:
 
 ## Auditor Skills Enforcement
 
-**⚠️ Before approving implementation, verify spec/guideline quality with auditor skills.**
+**⚠️ MANDATORY AUDIT CHAIN: ALL auditor skills must run in order. NO SKIPPING.**
+
+### When to Run Auditor Skills
+
+**Trigger words that require ALL skills in order:**
+- "audit this spec"
+- "review this issue"
+- "revisit this task"
+- "check this [SPEC]"
+- "validate the spec"
+- "audit the issue"
+- Any request involving spec quality or structure
+
+**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+
+### Complete Audit Chain
+
+| Order | Skill | Purpose |
+|-------|-------|---------|
+| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
+| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
 
 ### Guideline Auditor (`guideline-auditor`)
 
@@ -429,22 +421,37 @@ Invoked with: `/skill spec-auditor --issue N`
 **Purpose:** Audit GitHub Issue `[SPEC]` specs against master spec standards.
 
 **When to invoke:**
+- After running `concern-separation-auditor --issue N`
+- When "audit/review/revisit" keywords used
 - Before approving spec implementation
 - During spec review for quality
 - Periodic audit to check for spec drift
 
 **Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/audit-spec-YYYYMMDD.md`
 
+### Concern Separation Auditor (`concern-separation-auditor`)
+
+Invoked with: `/skill concern-separation-auditor --issue N`
+
+**Purpose:** Audit spec phase structure for concern separation, deployment independence, and risk isolation.
+
+**When to invoke:**
+- FIRST before spec-auditor (mandatory order)
+- When "audit/review/revisit" keywords used
+- When creating new specs
+- Before approving spec implementation
+
+**Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/concern-audit-YYYYMMDD.md`
+
 ### Enforcement Flow
 
-| Checkpoint | Action |
-|------------|--------|
-| Spec created | Optional: `/skill spec-auditor --issue N` |
-| Before implementation approval | **REQUIRED**: Verify spec quality (manual or via auditor) |
+| Trigger | Action |
+|---------|--------|
+| Spec created | REQUIRED: Run BOTH auditors in order (concern-separation FIRST, then spec-auditor) |
+| "Audit/review/revisit this spec" | REQUIRED: Run BOTH auditors in order |
+| Before implementation approval | REQUIRED: Verify both auditors passed |
 | Guideline change proposed | Optional: `/skill guideline-auditor` |
-| Post-implementation | Optional: Re-run auditor to verify no new issues |
-
-**See:** `010-approval-gate.md` for spec-quality checkpoint integration
+| Post-implementation | Optional: Re-run auditors to verify no new issues |
 
 ---
 
@@ -469,7 +476,7 @@ PRs require the developer to say one of these EXACT phrases:
 - Wait for EXPLICIT "create a PR" instruction
 - Only then: squash, push, create PR, report URL, STOP
 
-**See `.opencode/skills/pr-creation-workflow/SKILL.md` for the full PR timing workflow including:**
+**See `pr-creation-workflow` skill for the full PR timing workflow including:**
 - Authorization boundary (what authorizes implementation vs PR)
 - Developer must test before PR
 - HALT after PR creation
@@ -480,31 +487,14 @@ PRs require the developer to say one of these EXACT phrases:
 
 **⚠️ Closing issues BEFORE the PR is merged is a CRITICAL GUIDELINE VIOLATION.**
 
-**Two closure paths exist — auto-close (GitHub) and manual closure (AI agent):**
-
-### Path 1: GitHub Auto-Close (Acceptable)
-
-If the PR body contains `fixes #N`, `closes #N`, or similar closing keyword:
-- GitHub automatically closes the linked issue upon PR merge
-- **No AI action required** — this is correct GitHub behavior
-- The issue closes automatically when the PR merges
-
-### Path 2: Manual Closure (AI Agent)
-
-If the PR body does NOT contain a closing keyword:
-- Issue remains open after PR merge
-- AI agent MUST receive explicit `"pr merged"` instruction
-- AI MUST verify merge via GitHub API before closing
-- AI posts closing summary comment after closure
-
 **🚫 FORBIDDEN:**
 - Closing issues immediately after implementation
 - Closing issues when PR is created but not merged
 - Closing parent issues while child issues remain open
-- Closing issues without explicit "pr merged" instruction (for manual closure path)
-- Closing issues based on `git pull` alone (MUST use GitHub API)
+- Closing issues without explicit "merge confirmed" from human
+- Closing issues based on `git pull` fast-forward alone (MUST use GitHub API)
 
-**✅ REQUIRED SEQUENCE (Manual Closure Path):**
+**✅ REQUIRED SEQUENCE:**
 1. Complete implementation → Create PR → Report PR URL → **HALT**
 2. Wait for human to review and merge PR
 3. User confirms "pr merged" → **Call `github_pull_request_read method=get` to verify**
@@ -518,7 +508,7 @@ If the PR body does NOT contain a closing keyword:
 - Agent could close issue before human actually merged
 
 **See `124-github-archive-workflow.md` for complete issue closure timing.**
-**See `git-workflow/SKILL.md` Phase 4 for post-merge workflow including issue closure.**
+**See `git-workflow` skill → "Phase 4" section for post-merge workflow including issue closure.**
 
 ---
 
@@ -581,6 +571,18 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 - Stakeholders need to see open issues for incomplete work
 - GitHub sub-issue view shows which children remain
 
+### Sub-Issue Double-Check (MANDATORY)
+
+**After closing child issues addressed by PR, ALWAYS verify remaining sub-issues before closing parent.**
+
+**The Problem:**
+- Single PR may address multiple sub-issues
+- Agent may close sub-issues prematurely (before PR merge)
+- Agent may forget to close sub-issues after PR merge
+- Parent gets closed while children remain open
+
+**See `git-workflow` skill → "Sub-Issue Double-Check" section and `124-github-archive-workflow.md` → "Sub-Issue Double-Check" section for complete workflow.**
+
 ---
 
 ## Critical Violation: Deleting Branches/Stashes Improperly
@@ -610,33 +612,6 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 | Unmerged with commits | **PRESERVE** — wait for explicit delete request |
 | Stashes | **PRESERVE** — wait for explicit delete request |
 | `main` branch | **NEVER DELETE** |
-
----
-
-## Critical Violation: Inferring Owner from File Paths or Usernames
-
-**⚠️ Using file paths or usernames to infer GitHub owner is a CRITICAL GUIDELINE VIOLATION.**
-
-The session init script is the SINGLE SOURCE OF TRUTH for owner/repo values.
-
-**🚫 FORBIDDEN:**
-- Inferring `owner=muksihs` from file path `/home/muksihs/git/...`
-- Inferring owner from `$USER` environment variable
-- Inferring owner from git username (`git config user.name`)
-- Using cached/stale owner values from previous sessions
-- Making ANY GitHub MCP call without first running session init
-
-**✅ REQUIRED:**
-1. Run `uv run python ai_bin/session_init.py` FIRST (before any other operations)
-2. Store ALL output values for session duration
-3. Use `GIT_OWNER` and `GIT_REPO` for EVERY GitHub MCP call
-4. Never proceed with GitHub operations if session init fails
-
-**Why this is critical:**
-- Incorrect owner causes GitHub API 404 errors
-- Wastes tokens on failed API calls
-- Breaks workflow for issue/PR operations
-- Demonstrates failure to follow documented procedure
 
 ---
 
@@ -675,5 +650,30 @@ Every specification MUST include:
 - "Should I do X?" is a question, not authorization
 - Wait for clear "approved" or "go" before starting
 - If unclear, ask — do not assume
+
+## Critical Violation: Implementing Without Documentation Verification
+
+**⚠️ Implementing code without verifying against live documentation is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+- Implementing API calls without verifying parameter names from official docs
+- Using environment variables without confirming correct names from config files
+- Guessing function signatures from memory or similar libraries
+- Using outdated blog posts/tutorials instead of official documentation
+
+### ✅ REQUIRED
+- **ALWAYS verify API signatures before implementing**
+- Check official documentation for current API usage
+- Use `srclight_get_signature` or `pycharm_get_symbol_info` for function signatures
+- Read source code and type hints when docs unavailable
+- Confirm environment variable names from `.env.example` or config
+
+### Why This Matters
+- Assumption-based implementations lead to broken functionality
+- API changes between library versions cause silent failures
+- Incorrect parameter names waste debugging time
+- Outdated patterns accumulate technical debt
+
+---
 
 **Search guidelines:** Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant guidelines.

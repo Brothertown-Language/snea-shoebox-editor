@@ -13,7 +13,7 @@ You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook
 
 ## Operating Protocol
 
-0. **Automatically Applied:** This skill is referenced whenever any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
+1. **Automatically Applied:** This skill is referenced whenever any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 
 1. **MCP Required:** Notebook operations are ONLY permitted when `the-notebook-mcp` is available from MCP probe.
 

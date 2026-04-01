@@ -19,67 +19,6 @@ Languages: python (117 files, 1139 symbols)
 Config options: --db PATH, --embed TEXT (no include/exclude)
 ```
 
-## Embedding Model Configuration
-
-Srclight semantic search requires embeddings. The designated embedding model is:
-
-- **Model**: `qwen3-embedding:latest` via Ollama
-- **Command**: `srclight index --embed`
-- **Prerequisite**: Ollama must be running with the embedding model available
-
-### Verification
-
-Before using srclight semantic search, verify embedding status:
-
-```
-srclight embedding-status
-```
-
-If embeddings are not available, generate them:
-
-```
-srclight index --embed
-```
-
-### Ollama Setup
-
-If the embedding model is missing from Ollama:
-
-```
-ollama pull qwen3-embedding:latest
-```
-
-## Index Initialization
-
-### Automatic Index Initialization
-
-When srclight MCP tools return error messages indicating an unavailable index, the AI agent must automatically initialize the index:
-
-**Detection**: MCP tool errors indicating index unavailability include (but are not limited to):
-- "index not found"
-- "no index available"
-- "database not initialized"
-- Empty/null results from `srclight_codebase_map` or `srclight_index_status`
-
-**Required Action**:
-1. Run `srclight index` to create the basic index
-2. Run `srclight index --embed` to generate embeddings for semantic search
-3. Retry the original operation
-
-**Example Flow**:
-```
-AI agent calls srclight_codebase_map
-← Error: "index not found"
-AI agent runs: srclight index
-AI agent runs: srclight index --embed
-AI agent retries: srclight_codebase_map
-← Success: returns codebase map
-```
-
-### Proactive Indexing
-
-If `srclight_index_status` or `srclight_codebase_map` indicates the index is stale or incomplete, the agent should offer to re-index rather than proceed with potentially outdated information.
-
 ## Tool Selection Decision Tree
 
 ```

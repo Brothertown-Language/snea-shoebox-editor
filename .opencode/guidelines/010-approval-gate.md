@@ -1,6 +1,6 @@
 # Approval Gate
 
-> **See `.opencode/skills/approval-gate/SKILL.md` for complete procedural workflow including:**
+> **See `approval-gate` skill for complete procedural workflow including:**
 > - Spec + authorization requirements
 > - Sub-issue verification gate
 > - Single-task exemption
@@ -17,12 +17,32 @@
 |-------------|------|
 | **Spec before code** | NO code/guideline changes WITHOUT approved spec |
 | **Authorization required** | NO implementation WITHOUT explicit `"approved"` or `"go"` |
+| **Explicit auth overrides label** | When user says `approved`/`go`, proceed REGARDLESS of `needs-approval` label |
 | **Branch first** | Create feature branch BEFORE any file modification |
 | **Human-only merge** | Agents MUST NEVER merge PRs |
 | **MCP tools** | Use PyCharm/GitHub MCP for file operations when available |
 | **Silent halt** | HALT after completion, after PR creation — no prompts |
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
+
+### Explicit Authorization Priority (Critical)
+
+**⚠️ When user provides explicit authorization (`approved`, `go`, `#123 approved`), proceed with implementation even if the `needs-approval` label is present.**
+
+The `needs-approval` label is a **tracking tool**, not a permanent gate. Its purpose is:
+- Indicate "awaiting approval" visually
+- Remind reviewers that approval hasn't been given yet
+- Block agents from proceeding **until** explicit authorization is received
+
+**The label does NOT override explicit user authorization.**
+
+| Scenario | Action |
+|----------|--------|
+| User says `approved` AND label present | ✅ **PROCEED** - explicit auth wins |
+| User says `#123 approved` AND label present | ✅ **PROCEED** - explicit auth wins |
+| User says `go` AND label present | ✅ **PROCEED** - explicit auth wins |
+| NO user authorization AND label present | ⛔ **HALT** - wait for authorization |
+| Label removed by user | ✅ **Proceed if authorized** - no issue |
 
 ### Authorization Scope
 
@@ -60,13 +80,21 @@ When a spec is modified:
 - Progress comments added to issue
 - Bug report additions (separate from spec content changes)
 
-### Sub-Issue Verification (Multi-task Specs)
+### Label Handling
 
-**Before implementing multi-task specs:**
+**The `needs-approval` label is informational when explicit authorization is present.**
 
-1. Call `github_issue_read(method="get_sub_issues", issue_number=N)`
-2. If empty AND multi-task → AUTO-CREATE phase-level sub-issues
-3. Single-task specs are exempt from sub-issues
+| Situation | Action |
+|-----------|--------|
+| User authorizes AND label present | Proceed with implementation. Label is informational, not blocking. |
+| User authorizes AND no label | Proceed with implementation. |
+| No authorization AND label present | HALT and wait for explicit authorization. |
+| No authorization AND no label | Check for other blockers; proceed if clear. |
+
+**Workflow:**
+1. **Explicit authorization received** → Proceed (label status is informational)
+2. **No explicit authorization** → Check for `needs-approval` label
+3. **Label present without authorization** → HALT and wait for user to authorize
 
 ### Bug Report Response
 
@@ -98,5 +126,5 @@ When bug report requires code changes:
 | `020-go-prohibitions.md` | GO command restrictions |
 | `120-github-issue-first.md` | Issue-first strategy and sub-issues |
 | `124-github-archive-workflow.md` | Issue closure timing |
-| `github-sub-issues/SKILL.md` | Sub-issue creation workflow |
-| `pr-creation-workflow/SKILL.md` | PR creation timing |
+| `github-sub-issues` skill | Sub-issue creation workflow |
+| `pr-creation-workflow` skill | PR creation timing |

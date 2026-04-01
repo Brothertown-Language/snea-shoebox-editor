@@ -156,26 +156,35 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Phase 1: Implementation (Gated)
+## Phase 1: [Concern Name] (Gated)
 
 ### Steps
 
-1. ☐ [First implementation task]
-2. ☐ [Second implementation task]
-3. ☐ [Third implementation task]
+1. ☐ [First task for this concern]
+2. ☐ [Second task for this concern]
+3. ☐ [Third task for this concern]
 
 ---
 
-## Phase 2: Testing (Auto-progress)
+## Phase 2: [Next Concern] (Gated)
 
 ### Steps
 
-1. ☐ [First test task]
-2. ☐ [Second test task]
+1. ☐ [First task for this concern]
+2. ☐ [Second task for this concern]
 
 ---
 
-## Phase 3: Review (Gated)
+## Phase 3: [Verification Concern] (Auto-progress)
+
+### Steps
+
+1. ☐ Run automated tests
+2. ☐ Verify edge cases
+
+---
+
+## Phase 4: [Review Concern] (Gated)
 
 ### Steps
 
@@ -185,6 +194,10 @@ CREATED: YYYY-MM-DD
 ---
 
 > **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
+**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+- ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
+- ❌ Bad: "Implementation", "Testing", "Development", "Build"
 ```
 
 ---
@@ -292,7 +305,7 @@ def broken_function():
 
 ---
 
-## Phase 1: Implementation (Gated)
+## Phase 1: [Bug Fix Concern] (Gated)
 
 ### Steps
 
@@ -302,7 +315,7 @@ def broken_function():
 
 ---
 
-## Phase 2: Testing (Auto-progress)
+## Phase 2: [Verification Concern] (Auto-progress)
 
 ### Steps
 
@@ -312,7 +325,7 @@ def broken_function():
 
 ---
 
-## Phase 3: Review (Gated)
+## Phase 3: [Review Concern] (Gated)
 
 ### Steps
 
@@ -322,6 +335,10 @@ def broken_function():
 ---
 
 > **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
+**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+- ✅ Good: "Database Schema Fix", "Authentication Logic Fix", "Error Handling Update"
+- ❌ Bad: "Implementation", "Testing", "Bug Fix", "Development"
 ```
 
 ---
@@ -393,7 +410,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Phase 1: Implementation (Gated)
+## Phase 1: [Guideline Module Update] (Gated)
 
 ### Steps
 
@@ -402,7 +419,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Phase 2: Testing (Auto-progress)
+## Phase 2: Guideline Verification (Auto-progress)
 
 ### Steps
 
@@ -411,7 +428,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Phase 3: Review (Gated)
+## Phase 3: Human Approval (Gated)
 
 ### Steps
 

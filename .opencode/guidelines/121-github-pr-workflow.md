@@ -121,4 +121,4 @@ If you've already created a PR and need to add more changes:
 
 ---
 
-*Source: `020-github-workflow.md` (will be deprecated)*
+*Source: Content migrated from `020-github-workflow.md`*

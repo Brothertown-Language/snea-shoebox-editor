@@ -121,4 +121,4 @@ def validate_mesh_term(term: str):
 
 ---
 
-*Source: `095-never-hide-problems.md` (will be deprecated)*
+*Source: Content migrated from `095-never-hide-problems.md`*

@@ -28,6 +28,7 @@ compatibility: opencode
 4. **Communicate Changes**
    - Post comments when changes happen (PR created, task completed)
    - DO NOT post comments when creating issues
+   - DO NOT post comments for non-substantive updates (cross-references, origin links, STATUS updates)
 
 ## Scope Discipline (Critical)
 
@@ -89,6 +90,76 @@ During coding:
 - [ ] Using established patterns from codebase
 - [ ] Writing tests alongside implementation
 - [ ] Updating documentation as needed
+- [ ] **All temp files in `./tmp/` ONLY** — never `/tmp/` or project root
+
+## Pre-Implementation Verification Checklist
+
+Before writing ANY implementation code:
+
+1. **Verify API Signatures**
+   - [ ] Check official documentation for correct parameters
+   - [ ] Use `srclight_get_signature` or type hints for function signatures
+   - [ ] Confirm library version matches documentation
+
+2. **Verify Environment Variables**
+   - [ ] Check `.env.example` for correct names
+   - [ ] Confirm from config documentation
+   - [ ] Use exact names (no guessing)
+
+3. **Verify Configuration Formats**
+   - [ ] Check schema definitions
+   - [ ] Review example configs
+   - [ ] Confirm field names and types
+
+4. **Document Verification Source**
+   - [ ] Note where you verified (docs URL, source file, etc.)
+   - [ ] Include verification reference in implementation comments if helpful
+
+## During Implementation Verification
+
+When actively writing code:
+
+1. **Before EACH API Call:**
+   - [ ] Verify parameter names from official docs or source
+   - [ ] Confirm method/function exists (no invented APIs)
+   - [ ] Check return types match expected usage
+
+2. **Before EACH Environment Variable:**
+   - [ ] Confirm exact name from `.env.example` or docs
+   - [ ] Verify handling of missing values (required vs optional)
+
+3. **Before EACH Library Import:**
+   - [ ] Confirm import path matches current library version
+   - [ ] Check for deprecation warnings in migration guides
+
+4. **MCP Tool Usage:**
+   - [ ] Use PyCharm MCP for file operations (not read/write/edit tools)
+   - [ ] Use srclight for Python semantic analysis
+   - [ ] Use notebook MCP for `.ipynb` files (never raw file tools)
+
+5. **Temp File Location:**
+   - [ ] All temp files go to `./tmp/` — NEVER `/tmp/` system temp
+   - [ ] NEVER create temp files at project root
+   - [ ] Use `./tmp/` for investigation scripts, test outputs, scratch files
+
+## Post-Implementation Review
+
+After implementation, before marking complete:
+
+1. **Self-Review:**
+   - [ ] All API calls verified against docs
+   - [ ] All environment variables match config
+   - [ ] No assumed or guessed parameter names
+   - [ ] Library usage matches current version
+
+2. **Evidence of Verification:**
+   - [ ] Comments reference documentation sources where helpful
+   - [ ] Complex APIs include doc references for future maintainers
+
+3. **Temp File Cleanup:**
+   - [ ] All temp scripts removed from `./tmp/` (unless intentionally cached)
+   - [ ] No temp files left at project root
+   - [ ] `ls ./tmp/` shows only intentional persistent files
 
 ## Verification Phase Checklist
 
@@ -99,6 +170,8 @@ Before declaring complete:
 - [ ] Success criteria validated
 - [ ] Documentation updated
 - [ ] No scope creep introduced
+- [ ] **Temp files cleaned up** — no `temp_*.py` or `*.json` left in `./tmp/`
+- [ ] **No temp files at project root** — confirm with `ls *.py *.json 2>/dev/null`
 
 ## Invocation
 

@@ -78,8 +78,9 @@
 
 ## Cross-References
 
-- **095-never-hide-problems.md** — Zero-tolerance rules for exception handling and missing data
+- **200-errors-exception-handling.md** — Zero-tolerance rules for exception handling
+- **201-errors-missing-data.md** — Zero-tolerance rules for missing data
 
 ---
 
-This guideline works with 095-never-hide-problems.md. When in doubt: **raise, don't return.**
+This guideline works with the error handling series (200-203). When in doubt: **raise, don't return.**

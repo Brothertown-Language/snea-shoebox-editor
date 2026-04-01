@@ -27,49 +27,22 @@ Archive a spec **immediately** after the final phase is approved and the PR is m
 
 **Issues are closed ONLY AFTER the PR is merged — NEVER before.**
 
-### Two Closure Paths
-
-**Path 1: GitHub Auto-Close (Acceptable)**
-
-If the PR body contains `fixes #N`, `closes #N`, or similar closing keyword:
-- GitHub automatically closes the linked issue upon PR merge
-- **No AI action required** — this is correct GitHub behavior
-- The issue closes automatically when the PR merges
-
-**Path 2: Manual Closure (AI Agent)**
-
-If the PR body does NOT contain a closing keyword:
-- Issue remains open after PR merge
-- AI agent MUST receive explicit `"pr merged"` instruction
-- AI MUST verify merge via GitHub API before closing
-- AI posts closing summary comment after closure
-
 ### 🚫 PROHIBITED
 
 1. **NEVER close an issue immediately after implementation**
 2. **NEVER close an issue when PR is created but not merged**
 3. **NEVER close an issue when PR is submitted for review**
 4. **NEVER close an issue based on `git pull` alone** — MUST verify via GitHub API
-5. **NEVER close an issue manually if PR already contains closing keyword** — let GitHub handle it
 
-### ✅ REQUIRED SEQUENCE (Manual Closure Path)
+### ✅ REQUIRED SEQUENCE
 
 | Step | Action | Agent Role |
 |------|--------|------------|
-| Implementation complete | Create PR with or without `Fixes #123` | ✅ Agent creates PR |
+| Implementation complete | Create PR with `Fixes #123` | ✅ Agent creates PR |
 | PR created | Report URL, HALT | ✅ Agent waits |
 | Human merges PR | Merge happens | 🚫 Human ONLY |
 | User confirms merge | Call `github_pull_request_read method=get` | ✅ Agent verifies |
-| PR state = merged | Close issue (if not auto-closed) | ✅ Agent closes |
-
-### ✅ REQUIRED SEQUENCE (Auto-Close Path)
-
-| Step | Action | Agent Role |
-|------|--------|------------|
-| Implementation complete | Create PR with `Fixes #123` or `Closes #123` | ✅ Agent creates PR |
-| PR created | Report URL, HALT | ✅ Agent waits |
-| Human merges PR | Merge happens, GitHub auto-closes issue | 🚫 Human ONLY |
-| Issue auto-closed | No agent action needed | ✅ None (GitHub handled it) |
+| PR state = merged | Close issue | ✅ Agent closes |
 
 ### ⚠️ MANDATORY: API-Based Merge Verification
 
@@ -171,6 +144,53 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 - **Stakeholders need to see open issues** for incomplete work
 - **GitHub sub-issue view shows** which children remain
 
+### Sub-Issue Double-Check (MANDATORY)
+
+**After closing child issues addressed by PR, ALWAYS verify remaining sub-issues before closing parent.**
+
+**The Problem:**
+- Single PR may address multiple sub-issues
+- Agent may close sub-issues prematurely (before PR merge)
+- Agent may forget to close sub-issues after PR merge
+- Parent gets closed while children remain open
+
+**Required Double-Check Workflow:**
+
+```python
+# After closing child issues addressed by PR:
+# 1. Get parent issue number from PR body (Fixes #123)
+# 2. Query for remaining open sub-issues
+
+children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+open_children = [c for c in children if c.state == "open"]
+
+if open_children:
+    # Double-check: are these children addressed by this PR?
+    for child in open_children:
+        if child_was_addressed_by_pr(child, pr_number):
+            # Close child that PR addressed but wasn't closed earlier
+            close_with_summary(child, pr_number)
+        else:
+            # Orphaned child — log warning
+            comment(f"⚠️ Child issue #{child['number']} remains open after parent closed by PR #{pr_number}")
+    
+    # Re-query after closing children addressed by PR
+    children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+    open_children = [c for c in children if c.state == "open"]
+
+# Only close parent if ALL children are now closed
+if not open_children:
+    close_parent_with_summary(parent_issue, pr_number)
+else:
+    comment(f"Parent #{parent_issue} left open — {len(open_children)} child issue(s) remain")
+```
+
+**Critical Rules:**
+1. **NEVER close parent while children remain open**
+2. **Always query for sub-issues before closing parent**
+3. **Log warnings for orphaned children**
+4. **Close children BEFORE closing parent**
+
 ### After Closing a Child Issue
 
 **ALWAYS check for remaining open children:**
@@ -178,6 +198,131 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 1. Call `github_issue_read method=get_sub_issues` on the parent issue
 2. If the result is NOT empty (children remain open) → STOP, do NOT close parent
 3. If the result IS empty (all children closed) → Close parent with summary comment
+
+---
+
+## ⚠️ ENFORCED: Parent Closure Pre-Check (Agent Intelligence Required)
+
+**Before closing ANY parent issue, the agent MUST perform intelligent verification.**
+
+### Why Agent Intelligence Is Required
+
+**A script cannot determine intent from open/closed state alone.**
+
+| Scenario | Script Detection | Agent Intelligence Required |
+|----------|-----------------|----------------------------|
+| Child open, work done | Detects "open" | Check comments, verify PR linked, confirm implementation complete |
+| Child closed "not planned" | Detects "closed" | Understand intentional non-completion |
+| Child superseded | Detects "open" | Follow comment links to replacement issue |
+| Parent correctly closed | Flags violation | Determine all children actually complete via context |
+
+### Pre-Close Checklist
+
+**Before closing a parent `[SPEC]` issue, the agent MUST:**
+
+#### Step 1: Query Sub-Issues
+
+```
+Call github_issue_read(method="get_sub_issues", issue_number=<parent>)
+```
+
+If empty (no sub-issues) → Proceed to close parent (single-task issue).
+
+If non-empty → Continue to Step 2.
+
+#### Step 2: Classify Each Sub-Issue
+
+For each sub-issue, check:
+
+**Already Closed:**
+- `state: "closed"` with `state_reason: "completed"` → Done, proceed
+- `state: "closed"` with `state_reason: "not_planned"` → Intentionally not done, proceed
+
+**Open but May Be Complete:**
+- Check comments for "Superseded by #N" link → Verify replacement exists, treat as closed
+- Check body for PR link (e.g., "Fixes #N", "Closes #N") → If PR merged, work may be done
+- Check comments for "work completed" or "implemented in" → May qualify as complete
+
+**Open and Incomplete:**
+- No PR link, no superseded link, work not done → **BLOCK parent closure**
+
+#### Step 3: Decision Logic
+
+| Classification | Action |
+|----------------|--------|
+| All children closed/completed/superseded | ✅ Proceed to close parent |
+| Any child open + incomplete | 🚫 POST warning comment, DO NOT close parent |
+| Unclear status | Stop and ask user for clarification |
+
+#### Step 4: Post Warning (If Blocked)
+
+If parent cannot be closed:
+
+```markdown
+🤖 ⚠️ **Cannot Close Parent — Open Sub-Issues Detected**
+
+This parent issue cannot be closed because the following sub-issue(s) remain incomplete:
+
+- #N: [Title] — [state, labels, status]
+
+**Status Analysis:**
+- [For each open sub-issue, state why it cannot be closed]
+
+**To close this parent:**
+1. Complete the remaining sub-issue(s)
+2. Close each sub-issue when work is complete
+3. Or close sub-issue as "not planned" with explanation if intentionally skipped
+
+**Manual Override:**
+If parent should close despite open children, add a comment explaining why remaining work is no longer needed, then request manual close.
+
+---
+🤖 ⚠️ Blocked by OpenCode (ollama-cloud/glm-5)
+```
+
+### False Positive Prevention
+
+**NOT unimplemented (allow parent closure):**
+
+| Sub-Issue State | Evidence Required |
+|-----------------|-------------------|
+| Closed as "completed" | `state_reason: "completed"` |
+| Closed as "not planned" | `state_reason: "not_planned"` + explanation comment |
+| Superseded by another issue | "Superseded by #N" link in comments + verify #N exists |
+| Work done but forgot to close | PR linked in body/comments + verify PR merged |
+
+**Legitimately unimplemented (block parent closure):**
+
+| Sub-Issue State | Evidence |
+|-----------------|----------|
+| Open with "needs-approval" label | Awaiting implementation |
+| Open with "in-progress" label | Currently being worked |
+| Open, no PR, no superseded link | Work not started or incomplete |
+
+### Example Pre-Close Check
+
+```
+SPEC #100 (parent) - Ready to close
+├── Task #101: Database schema
+│   └── state: "closed", state_reason: "completed" ✅
+├── Task #102: API endpoints
+│   └── state: "closed", state_reason: "not_planned" (comment: "Moved to Phase 2") ✅
+└── Task #103: UI components
+    └── state: "open", comment: "Superseded by #150"
+        → Agent verifies #150 exists and covers UI ✅
+
+Result: All sub-issues accounted for. Proceed to close #100.
+```
+
+```
+SPEC #100 (parent) - Blocked from closing
+├── Task #101: Database schema
+│   └── state: "closed", state_reason: "completed" ✅
+├── Task #102: API endpoints
+│   └── state: "open", labels: ["needs-approval"] 🚫
+
+Result: #102 is open and awaiting approval. POST warning comment. DO NOT close #100.
+```
 
 ---
 
@@ -253,8 +398,7 @@ When a user says "close this and create a new spec":
 **When closing an issue without implementation (superseded/cancelled):**
 
 ```
-AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖
-✅ **Issue Closing Summary**
+🤖 ✅ **Issue Closing Summary**
 
 - **Reason**: Issue superseded by #<number> / cancelled / obsolete approach
 - **Replacement**: #<number> (if applicable)
@@ -263,6 +407,9 @@ AI: <AgentName> <ModelID> on behalf of <HumanName> 🤖
 - **Next Steps**: [Where to find the replacement work]
 
 **NOT IMPLEMENTED**: This issue was closed without implementation.
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Why Atomic Execution Matters
@@ -298,11 +445,14 @@ Before closing any issue (SPEC or Task), the AI agent MUST provide a final summa
 ### Example Closing Comment
 
 ```
-AI: <AgentName> <ModelID> ✅ **Issue Closing Summary**
+🤖 ✅ **Issue Closing Summary**
 - **Changes**: Implemented the new rate limiting middleware in `pubmed_client.py` and updated `110-http-workflow.md`.
 - **Test Results**: All 12 unit tests in `test_rate_limit.py` passed. Manual verification confirmed retry logic works.
 - **Impacts**: None on existing issues.
 - **Superseded/Not Implemented**: The "Phase 3: Circuit breaker" was deferred to a follow-up issue #165.
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### When to Close
@@ -313,10 +463,6 @@ AI: <AgentName> <ModelID> ✅ **Issue Closing Summary**
 2. PR has been merged by human
 3. CI/CD passed (if applicable)
 4. THEN close the issue with summary comment
-
----
-
-## Closing Summary (Required)
 
 ---
 

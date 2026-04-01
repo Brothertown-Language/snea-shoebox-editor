@@ -18,7 +18,7 @@ When GitHub MCP tools are available, **GitHub Issues** are the authoritative sou
 - **Child Task Issues**: Each implementation phase or complex task MUST be its own issue, linked to the parent via **GitHub Task Lists (Sub-issues)**.
 - **⚠️ MANDATORY SUB-ISSUES**: All implementation tasks MUST be their own GitHub Issues, linked via `github_sub_issue_write method=add`. Inline markdown checklists (e.g., `- [ ] Task description`) in the parent issue body are **PROHIBITED** for task tracking — each task MUST be a separate issue.
 
-**See `.opencode/skills/github-sub-issues/SKILL.md` for complete workflow including:**
+**See `github-sub-issues` skill for complete workflow including:**
 - Single-task vs multi-task exemption
 - Auto-create workflow
 - Database ID requirement
@@ -61,6 +61,53 @@ Every implementation task MUST be:
 
 ---
 
+## 3.1. Issue Title Quality (MANDATORY)
+
+**Issue titles and descriptions MUST be meaningful, not boilerplate placeholders.**
+
+### Boilerplate Titles (PROHIBITED)
+
+Titles that describe generic activities without specifying the concern:
+
+- `[SPEC] Feature Implementation` — describes activity, not concern
+- `[SPEC] Bug Fix` — describes activity, not specific bug
+- `[Task: #123] Phase 1` — no concern described
+- `[Task: #123] Implementation` — activity, not concern
+- `[Task: #123] Task 1` — placeholder, no meaning
+
+### Meaningful Titles (REQUIRED)
+
+Titles that describe specific concerns or features:
+
+- `[SPEC] PubMed API Rate Limiting` — specific feature
+- `[SPEC-FIX] OAuth2 Token Refresh Failure on Expiry` — specific bug
+- `[Task: #100] Create user authentication tables` — specific task
+- `[Task: #100] Implement OAuth2 client integration` — specific concern
+- `[Task: #100] Run integration test suite for API endpoints` — specific action
+
+### Title Format Requirements
+
+1. **[SPEC] titles**: Must describe the specific feature or bug, not the activity
+   - ❌ "[SPEC] Feature Implementation", "[SPEC] Bug Fix"
+   - ✅ "[SPEC] PubMed API Rate Limiting", "[SPEC-FIX] Token Refresh Failure"
+
+2. **[Task] titles**: Must describe WHAT is being done, not just the phase type
+   - ❌ "[Task: #100] Phase 1", "[Task: #100] Implementation"
+   - ✅ "[Task: #100] Create user authentication tables"
+
+3. **Issue descriptions**: Must provide specific scope, not placeholder text
+   - ❌ "Implement the feature", "Add tests", "Do the work"
+   - ✅ "Create PostgreSQL tables for user authentication per schema in spec section 2.1"
+
+### Why This Matters
+
+- Issue lists show titles at a glance — meaningful titles enable quick scanning
+- Reviewers need context from title alone — "Phase 1" provides no context
+- LLM agents use titles to understand concern boundaries — generic names obscure architecture
+- Sub-issue hierarchy already shows structure — titles should add semantic information
+
+---
+
 ## 4. Status Updates & Labels
 - **Status Updates**: Add comments to track progress: "☑ Task #123 complete".
 - **Labels**:
@@ -75,7 +122,7 @@ Every implementation task MUST be:
 
 **Every implementation step MUST be documented with a comment on the associated issue.**
 
-**See `.opencode/skills/github-comments/SKILL.md` for complete progress comment requirements.**
+**See `github-comments` skill for complete progress comment requirements.**
 
 ### Quick Reference
 
@@ -92,19 +139,18 @@ Every implementation task MUST be:
 
 **Intermediate task (multi-task spec):**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **Final task or single-task spec:**
 ```
-AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
@@ -112,45 +158,12 @@ AI: <AgentName> <ModelID> ✅ Task Complete: <task-name>
 **Outcome:** <What changed for stakeholders>
 
 All tasks complete from this specification.
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **⚠️ FAILURE TO POST PROGRESS COMMENTS IS A CRITICAL GUIDELINE VIOLATION.**
-
----
-
-## 5.5. Assignee Requirement (MANDATORY)
-
-**All issues created or managed by AI agents MUST have assignees.**
-
-### Requirements
-
-1. **New issues**: Assign the requesting user (from session init `GIT_USER_NAME`/`GIT_USER_EMAIL`)
-2. **Spec issues**: Assign the spec author and relevant stakeholders
-3. **Bug reports**: Assign the code area owner or project maintainer
-4. **If unclear who to assign**: Use the default from session init or project maintainer
-
-### Rationale
-
-Assignees ensure:
-- Stakeholders receive notifications
-- Clear ownership for follow-up
-- Issues don't become orphaned
-
-### Implementation
-
-When using `github_issue_write method="create"`:
-```python
-github_issue_write(
-    method="create",
-    owner=owner,
-    repo=repo,
-    title="Issue Title",
-    body="Issue body",
-    assignees=["username"]  # REQUIRED - never empty
-)
-```
-
-**⚠️ FAILURE TO ASSIGN ISSUES IS A CRITICAL GUIDELINE VIOLATION.**
 
 ---
 

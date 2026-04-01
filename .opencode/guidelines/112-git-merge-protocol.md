@@ -97,4 +97,4 @@ git rebase --continue
 
 ---
 
-*Source: `110-git-protocol.md` (will be deprecated)*
+*Source: Content migrated from `110-git-protocol.md`*

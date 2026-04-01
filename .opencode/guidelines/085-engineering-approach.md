@@ -10,7 +10,7 @@
 
 3. **Verify Before Declaring Complete** — Run all tests manually. Check for edge cases. Verify against all success criteria. Update documentation.
 
-4. **Communicate Changes** — Post comments when changes happen (PR created, task completed). DO NOT post comments when creating issues.
+4. **Communicate Changes** — Post comments when changes happen (PR created, task completed). DO NOT post comments when creating issues. DO NOT post comments for non-substantive updates (cross-references, origin links, STATUS updates).
 
 ## Scope Discipline (Critical)
 

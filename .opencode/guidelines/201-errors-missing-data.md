@@ -118,4 +118,4 @@ def get_user_by_id(user_id: int) -> User:
 
 ---
 
-*Source: `095-never-hide-problems.md` (will be deprecated)*
+*Source: Content migrated from `095-never-hide-problems.md`*

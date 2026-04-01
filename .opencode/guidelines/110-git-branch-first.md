@@ -1,6 +1,6 @@
 # Git Protocol: Branch Before Edit
 
-## 0. FIRST ACTION: CREATE BRANCH (MANDATORY)
+## 1. FIRST ACTION: CREATE BRANCH (MANDATORY)
 
 **🚫 ZERO TOLERANCE: The agent MUST create a feature branch BEFORE ANY filesystem change.**
 
@@ -17,7 +17,7 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - Deleting files
 - Renaming files
 - Modifying `.gitignore`, `pyproject.toml`, any config
-- Updating guidelines in `.opencode/guidelines/`
+- Updating guidelines in `.opencode/`
 - ANY filesystem modification whatsoever
 - **Using file-editing MCP tools** (`pycharm_replace_text_in_file`, `pycharm_create_new_file`, etc.) — these ARE filesystem changes
 
@@ -57,7 +57,7 @@ git checkout -b spec/my-change        # ← Too late!
 
 ---
 
-## 0.1. Preserve External Changes: Stash ALL Unrelated Changes FIRST
+## 1.1. Preserve External Changes: Stash ALL Unrelated Changes FIRST
 
 **When ANY files are modified on `main` (or current branch), the agent MUST stash them BEFORE creating a new branch.**
 
@@ -137,4 +137,4 @@ The stash preserves changes that belong to the previous context. Those changes m
 
 ---
 
-*Source: `110-git-protocol.md` (will be deprecated)*
+*Source: Content migrated from `110-git-protocol.md`*

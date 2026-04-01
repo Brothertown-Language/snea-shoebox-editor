@@ -70,8 +70,7 @@ If multi-task: Sub-issues are MANDATORY.
 ```
 For each PHASE in spec:
   1. Create issue: github_issue_write(method="create",
-     title="[Task: #N] <phase-description>",
-     assignees=["<username>"])  # REQUIRED: inherit from parent or use default
+     title="[Task: #N] <phase-description>")
   2. Get database ID from response (.id field)
   3. Link: github_sub_issue_write(method="add",
      issue_number=N, sub_issue_id=db_id)
@@ -79,11 +78,6 @@ For each PHASE in spec:
 Post comment: "Created X sub-issues for phase tracking"
 Proceed to implement first phase
 ```
-
-**⚠️ ASSIGNMENT REQUIREMENT:**
-- Sub-issues MUST inherit assignees from parent issue
-- If parent has no assignees, use session init user or default maintainer
-- NEVER create unassigned sub-issues
 
 **⚠️ DATABASE ID REQUIREMENT:**
 - Use `.id` field from response (e.g., `4129879155`)
@@ -144,7 +138,7 @@ Where `<descriptive-title>` describes WHAT the task accomplishes, not just the p
 - GitHub sub-issue view already shows hierarchy - no need for "Phase X" prefix
 - Descriptive titles improve scannability without opening issues
 
-### Extracting Title from Spec
+### Extraction Rule
 
 For multi-phase specs, extract the descriptive content from each phase:
 
@@ -160,7 +154,29 @@ For multi-phase specs, extract the descriptive content from each phase:
 2. `[Task: #100] Create user registration endpoint`
 3. `[Task: #100] Review API security changes`
 
-**Extraction rule:** Use the phase description AFTER the colon/number, not the phase type.
+Use the phase description AFTER the colon/number, not the phase type.
+
+### ⚠️ BOILERPLATE TITLE PROHIBITION (CRITICAL)
+
+Sub-issue titles that describe generic activities without specifying the concern are PROHIBITED:
+
+| Pattern | Status | Reason |
+|---------|--------|--------|
+| `[Task: #N] Phase 1` | PROHIBITED | No concern described |
+| `[Task: #N] Implementation` | PROHIBITED | Activity, not concern |
+| `[Task: #N] Task 1` | PROHIBITED | Placeholder, no meaning |
+| `[Task: #N] Do the work` | PROHIBITED | Meaningless |
+
+### Validation
+
+| Pattern | Status | Reason |
+|---------|--------|--------|
+| Single-word generic activity | BOILERPLATE-TITLE | No concern boundary |
+| "Phase N" without description | BOILERPLATE-TITLE | Placeholder, not meaningful |
+| "Implementation" alone | BOILERPLATE-TITLE | Activity, not concern |
+| Activity + specific concern | ACCEPTABLE | Describes WHAT is being done |
+
+**Enforcement:** Use the `BOILERPLATE-TITLE` problem class in spec-auditor for violations.
 
 ---
 
@@ -191,6 +207,67 @@ Each sub-issue MUST:
 | `010-approval-gate.md` | Sub-issue Verification Gate |
 | `120-github-issue-first.md` | Spec Tracking: GitHub Issues & Sub-Issues |
 | `000-critical-rules.md` | Critical Violation: Sub-issue Structure Bypass |
+
+---
+
+## Templates
+
+- **Parent Issue Orchestrator**: `.opencode/skills/templates/PARENT-ISSUE-TEMPLATE.md`
+- **Sub-Issue Task**: `.opencode/skills/templates/SUB-ISSUE-TEMPLATE.md`
+
+Use these templates when creating new parent/child issue structures.
+
+---
+
+## STATUS Gate Verification (CRITICAL)
+
+### Single Subtask at a Time
+
+**The architecture enforces sequential execution:**
+
+1. **Parent Issue orchestrates**: Parent issue tracks which subtask is "active" via STATUS field
+2. **STATUS Format**: `STATUS: X.Y` where X = phase, Y = subtask within phase
+3. **Authorization Gate**: Agent can ONLY implement subtask matching current STATUS
+4. **Sequential Completion**: After subtask completes → STATUS advances → Next subtask becomes eligible
+
+### STATUS Verification Protocol
+
+Before implementing ANY subtask:
+
+1. **Get parent STATUS:**
+   ```python
+   parent = github_issue_read(method="get", issue_number=parent_issue)
+   # Parse STATUS from body
+   # STATUS format: "STATUS: X.Y" or "STATUS: completed"
+   ```
+
+2. **Extract authorized subtask:**
+   - "approved: 1.2" → subtask 1.2
+   - "approved" (no number) → check STATUS for current phase
+
+3. **Verify match:**
+   - If authorized for X.Y and STATUS is X.Y → ✅ PROCEED
+   - If authorized for X.Y and STATUS is different → ⛔ HALT
+   - If STATUS is "completed" → ⛔ HALT (spec already complete)
+
+4. **Report mismatch:**
+   "STATUS mismatch: authorized for 1.2 but STATUS is 2.1"
+
+### Why STATUS Gate Matters
+
+| Problem | Solution |
+|---------|----------|
+| Two agents start simultaneously | Only one STATUS authorized at a time |
+| Git branch conflicts | One subtask = one branch = no race |
+| File edit races | Only one active subtask = no conflicts |
+| Stash races | Sequential = no stash collision |
+
+### Forbidden Actions
+
+- Implementing when STATUS doesn't match authorized subtask
+- Parallel execution of subtasks
+- Proceeding without STATUS verification
+- Skipping STATUS gate for "quick" subtasks
 
 ---
 

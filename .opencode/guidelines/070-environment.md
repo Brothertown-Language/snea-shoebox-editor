@@ -12,6 +12,104 @@
 - **Database Safety**: Follow production schema protection and test schema isolation in `100-persistence.md`.
   NEVER run test/experimental code against the production schema.
 
+## Isolated Tool Environments
+
+When developing local tools that need their own dependencies (separate from the main project), use isolated tool environments to keep the main project's `pyproject.toml` clean.
+
+### Directory Structure Pattern
+
+```
+project/
+├── pyproject.toml          # Main project dependencies (kept clean)
+├── src/
+├── tools/                  # Isolated tool environment
+│   ├── pyproject.toml      # Tool-specific dependencies
+│   └── my_tool.py
+```
+
+The `tools/` directory contains its own `pyproject.toml` with only the dependencies needed by that tool. This keeps heavy or tool-specific dependencies isolated from the main project.
+
+### Invocation Methods
+
+**1. Ephemeral (recommended for one-time use):**
+```bash
+# Runs in temp venv, cleaned up after execution
+uvx --from ./tools my-tool [args]
+
+# Does NOT install globally, does NOT pollute main venv
+```
+
+**2. Persistent (for frequently-used tools):**
+```bash
+# Installs tool globally (available in any directory)
+uv tool install ./tools
+
+# Run from anywhere
+my-tool [args]
+
+# Uninstall when no longer needed
+uv tool uninstall my-tool
+```
+
+### Benefits
+
+- **Clean main dependencies**: Main project's `pyproject.toml` stays focused on production dependencies
+- **Dependency isolation**: Tool conflicts don't affect the main project
+- **No version conflicts**: Tool can use different versions of shared dependencies
+- **Faster `uv sync`**: Main project re-sync is faster without tool dependencies
+- **Portable**: Tool environment is self-contained and reproducible
+
+### When to Use
+
+Use isolated tool environments when:
+- A local tool needs dependencies that are NOT useful for the main project
+- You want to try a tool without committing it to `pyproject.toml`
+- A tool requires mutually exclusive dependency versions
+- You're developing a standalone utility that could be extracted later
+
+Use direct `pyproject.toml` dependencies when:
+- The dependency is needed for production code
+- The dependency is needed by tests that run against production code
+- The dependency is already in the main dependency tree
+
+### Example: Local Analysis Tool
+
+**tools/pyproject.toml:**
+```toml
+[project]
+name = "analysis-tool"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "pandas>=2.0",
+    "matplotlib>=3.7",
+    "seaborn>=0.12",
+]
+
+[project.scripts]
+analyze = "analyze:main"
+```
+
+**tools/analyze.py:**
+```python
+def main():
+    import pandas as pd
+    import matplotlib.pyplot as plt
+    # Tool implementation
+```
+
+**Usage:**
+```bash
+# Ephemeral (no install)
+uvx --from ./tools analyze
+
+# Persistent (global install)
+uv tool install ./tools
+analyze  # Available from any directory
+```
+
+This pattern is especially useful for data science tools, analysis scripts, and one-off utilities that would otherwise clutter the main dependency list.
+
 ## Node.js Prohibition
 
 **DETESTABLE**: Installing Node.js in a Python-only or Java-only environment is absolutely prohibited. This introduces an unnecessary runtime dependency that pollutes the ecosystem and creates maintenance burden.

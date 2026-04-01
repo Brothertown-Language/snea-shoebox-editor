@@ -4,7 +4,7 @@
 
 **This is a ZERO TOLERANCE rule. Violations cause notebook corruption, data integrity issues, and broken functionality.**
 
-> **See `.opencode/skills/notebook-operations/SKILL.md` for complete tool tables, forbidden operations, execution restrictions, and cell labeling requirements.**
+> **See `notebook-operations` skill for complete tool tables, forbidden operations, execution restrictions, and cell labeling requirements.**
 
 ### Essential Rules
 
@@ -25,7 +25,7 @@
 
 ## Code Standards for Notebooks
 
-> **See `.opencode/skills/code-size-enforcement/SKILL.md` for size limit enforcement rules.**
+> **See `code-size-enforcement` skill for size limit enforcement rules.**
 
 ALL code standards in `080-code-standards.md` apply to notebook cells. Key limits:
 - Notebook cells must not exceed 50 lines
@@ -40,4 +40,4 @@ ALL code standards in `080-code-standards.md` apply to notebook cells. Key limit
 - Authorization: Required PER SESSION, PER EXECUTION — no carryover
 - When in doubt: DO NOT RUN IT
 
-**Full details in `.opencode/skills/notebook-operations/SKILL.md`**
+**Full details in `notebook-operations` skill**

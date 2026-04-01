@@ -118,5 +118,42 @@ AI: OpenCode ollama-cloud/glm-5 🔍 Analysis complete: Found 3 issues in valida
 - Prompting for authorization
 - Starting dialogs
 - Asking "ready to proceed?"
+- Cross-reference updates (origin links, back-references)
 
 **Use HALT for authorization flow.**
+
+## Non-Substantive Updates (No Comment Required)
+
+### What is "Substantive" vs "Non-Substantive"
+
+**Substantive** (Comment Required):
+- Changes to requirements, objectives, success criteria
+- Adding/removing phases or tasks
+- Altering spec scope or approach
+- Significant content changes that affect understanding
+
+**Non-Substantive** (No Comment):
+- Adding links/references at the top of issue body (origin links, cross-references)
+- STATUS field updates
+- Label changes
+- Checklist marker updates
+- Typo/formatting fixes
+- Housekeeping edits that don't change meaning
+
+### Examples
+
+**Non-Substantive (No Comment Needed):**
+```markdown
+> **Origin:** Investigated in https://github.com/NewsRx/newsrx-genai-python/issues/100
+> **Investigation Result:** api-agent cannot be used
+```
+
+This is just a reference link at the top of the issue body. No comment explaining "added cross-reference" is needed.
+
+**Substantive (Comment Required):**
+- Adding a new phase to the spec
+- Changing the requirements section
+- Modifying success criteria
+- Altering the implementation approach
+
+These require a comment explaining what changed and why.

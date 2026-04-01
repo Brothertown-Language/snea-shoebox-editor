@@ -219,7 +219,7 @@ This is BAD because:
 >
 > **Problem Statement:** Specs often assume context from prior conversations. When a new AI agent picks up a spec (or the same agent after context reset), critical information is missing, leading to incorrect implementations or repeated questions.
 >
-> **Current State:** Guidelines in `.opencode/guidelines/planning/00-spec-creation.md:69-108` describe requirements analysis but don't mandate self-containment for agent context-loss scenarios.
+> **Current State:** Guidelines in the "Mandatory Elements Checklist" section of `144-planning-spec-templates.md` describe requirements analysis but don't mandate self-containment for agent context-loss scenarios.
 >
 > **Proposed Change:** Add new section 1.2 "Fresh-Start Context Requirements" mandating that all specs include full context inline, with no reliance on "see above" or "as discussed" references.
 >

@@ -11,9 +11,72 @@ compatibility: opencode
 
 You are an MCP Tool Usage Enforcer. Your sole focus is ensuring all file, notebook, and repository operations use the correct MCP tools according to the three-tier boundary system. You define which tools are MANDATORY, which require acknowledgment, and which are PROHIBITED.
 
+## Owner Inference Prohibition (ZERO TOLERANCE)
+
+**⚠️ DO NOT infer GitHub owner from file paths, usernames, or cached values.**
+
+### 🚫 FORBIDDEN (ZERO TOLERANCE)
+
+**These actions are CRITICAL GUIDELINE VIOLATIONS:**
+
+| Forbidden Action | Why It's Wrong |
+|------------------|----------------|
+| Parsing file paths to extract owner | `/home/michael/git/...` → `owner=michael` is WRONG |
+| Using `$USER` environment variable | Returns local username, NOT GitHub owner |
+| Using `git config user.name` | Returns human name, NOT GitHub owner |
+| Using cached values from previous sessions | Stale, expired, or wrong repository |
+| Making GitHub MCP calls before session init | No owner/repo values available |
+
+### ✅ REQUIRED OWNER VALUES
+
+**ONLY use values from `ai_bin/session_init.py` output:**
+
+```bash
+# Run session init FIRST
+uv run python ai_bin/session_init.py
+
+# Use these values for SESSION DURATION:
+# - GIT_OWNER for all github_* MCP calls
+# - GIT_REPO for all github_* MCP calls
+# - GIT_USER_NAME for commit trailers
+# - GIT_USER_EMAIL for commit trailers
+```
+
+### ✅ CORRECT Usage
+
+```python
+# ✅ CORRECT: Use GIT_OWNER from session init
+github_issue_read(
+    owner=GIT_OWNER,  # From session init
+    repo=GIT_REPO,
+    issue_number=123
+)
+```
+
+### ❌ WRONG Usage
+
+```python
+# ❌ WRONG: Inferring from file path
+# File path: /home/michael/git/newsrx-genai-python
+github_issue_read(
+    owner="michael",  # WRONG - inferred from path
+    repo="newsrx-genai-python",
+    issue_number=123
+)
+
+# ❌ WRONG: Using git config
+import subprocess
+user = subprocess.check_output(["git", "config", "user.name"])
+github_issue_read(owner=user, ...)  # WRONG - git config is human name
+
+# ❌ WRONG: Using cached value
+owner = "michael"  # from previous session
+github_issue_read(owner=owner, ...)  # WRONG - stale cached value
+```
+
 ## Operating Protocol
 
-0. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
+1. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 
 1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
 
@@ -65,7 +128,7 @@ You are an MCP Tool Usage Enforcer. Your sole focus is ensuring all file, notebo
 
 #### Notebook Operations (USE the-notebook-mcp EXCLUSIVELY)
 
-> **See `.opencode/skills/notebook-operations/SKILL.md` for complete tool tables, forbidden operations, execution restrictions, and cell labeling requirements.**
+> **See `notebook-operations` skill for complete tool tables, forbidden operations, execution restrictions, and cell labeling requirements.**
 
 All notebook operations use `the-notebook-mcp_notebook_*` tools exclusively. Read, write, edit, search, and metadata operations are all handled by the MCP tool set.
 
@@ -181,13 +244,13 @@ Operation: NOTEBOOK
 
 ## Notebook MCP: Zero Tolerance
 
-> **See `.opencode/skills/notebook-operations/SKILL.md` for complete zero-tolerance rules.**
+> **See `notebook-operations` skill for complete zero-tolerance rules.**
 
 All notebook operations require `the-notebook-mcp`. Direct file access (read/write/edit/json/nbformat/shell) is FORBIDDEN and causes corruption.
 
 ## Notebook Execution: Absolute Prohibition on Production Data
 
-> **See `.opencode/skills/notebook-operations/SKILL.md` for complete execution restrictions and production data prohibition.**
+> **See `notebook-operations` skill for complete execution restrictions and production data prohibition.**
 
 All notebook execution (`the-notebook-mcp_notebook_execute_cell`, `pycharm_runNotebookCell`) requires explicit per-session user authorization. Production data execution is ABSOLUTELY FORBIDDEN.
 
@@ -233,6 +296,39 @@ uvx srclight index --embed qwen3-embedding
 | "Cannot reach Ollama" | Start Ollama: `ollama serve` |
 | "Model not found" | Pull model: `ollama pull qwen3-embedding` |
 | "No semantic results" | Reindex with embeddings: `uvx srclight index --embed qwen3-embedding` |
+
+## File-Type Tool Boundaries
+
+### 🚫 CRITICAL: Use Correct Tools for Each File Type
+
+| File Extension | Linter | Formatter |
+|----------------|--------|-----------|
+| `.py` | `ruff check` | `ruff format` |
+| `.md` | `pymarkdownlnt scan` | `mdformat` |
+
+**CRITICAL:** Never run `ruff` on `.md` files. Never run `pymarkdownlnt` on `.py` files.
+
+### Why This Matters
+
+- **Python tools (`ruff`, `pyright`, `vulture`)** are designed for Python syntax and will produce incorrect or useless results on markdown files
+- **Markdown tools (`pymarkdownlnt`, `mdformat`)** are designed for markdown CommonMark compliance and will not work on Python files
+- Running the wrong tool on the wrong file type wastes time and produces noise
+
+### Examples
+
+```bash
+# ✅ CORRECT: Lint Python files
+uvx ruff check --fix src/ test/
+
+# ✅ CORRECT: Lint Markdown files
+uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
+
+# 🚫 PROHIBITED: Python linter on markdown
+uvx ruff check --fix .opencode/guidelines/  # WRONG
+
+# 🚫 PROHIBITED: Markdown linter on Python
+uvx pymarkdownlnt scan src/  # WRONG
+```
 
 ## Violation Consequences
 
@@ -318,7 +414,7 @@ edit(filePath="src/main.py", oldString="foo", newString="bar")  # Missing commen
 # ✅ CORRECT: Use notebook MCP for all notebook operations
 the-notebook-mcp_notebook_read(notebook_path="/absolute/path/to/notebook.ipynb")
 
-# See .opencode/skills/notebook-operations/SKILL.md for complete tool reference
+# See `notebook-operations` skill for complete tool reference
 ```
 
 ### ❌ WRONG: Direct Notebook Access
@@ -328,5 +424,5 @@ the-notebook-mcp_notebook_read(notebook_path="/absolute/path/to/notebook.ipynb")
 read(filePath="notebook.ipynb")  # PROHIBITED
 json.load(open("notebook.ipynb"))  # PROHIBITED
 
-# See .opencode/skills/notebook-operations/SKILL.md for zero-tolerance rules
+# See `notebook-operations` skill for zero-tolerance rules
 ```

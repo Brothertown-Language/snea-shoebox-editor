@@ -14,9 +14,13 @@ CREATED: 2026-03-24
 
 ---
 
-## Phase 1: Implementation (Gated)
+## Phase 1: [Concern Name] (Gated)
 ...
 ```
+
+**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+- ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
+- ❌ Bad: "Implementation", "Testing", "Development", "Build"
 
 #### Status Values
 | Format | Meaning |
@@ -83,7 +87,7 @@ When updating status:
 2. **Edit STATUS field ONLY** (change `STATUS: 1.1` to `STATUS: 1.2` for example)
 3. **Never rewrite the entire body** to change status
 
-See `123-github-ai-identity.md` and `.opencode/skills/github-comments/SKILL.md` → "Issue Body Update Rules" for complete rules.
+See `123-github-ai-identity.md` and `github-comments` skill → "Issue Body Update Rules" section for complete rules.
 
 ### Missing Status Header
 If a spec file lacks a `STATUS:` header, the agent MUST:
@@ -99,17 +103,19 @@ If a spec file lacks a `STATUS:` header, the agent MUST:
 Phases are numbered sequentially starting from 1:
 
 ```markdown
-## Phase 1: Implementation (Gated)
-## Phase 2: Testing (Auto-progress)
-## Phase 3: Review (Gated)
+## Phase 1: [Concern Name] (Gated)
+## Phase 2: [Next Concern] (Auto-progress)
+## Phase 3: [Verification Concern] (Gated)
 ```
+
+**⚠️ Phase names must describe specific concerns, not generic activities.**
 
 ### Step Numbering
 
 Steps are numbered 1, 2, 3 within each phase:
 
 ```markdown
-## Phase 1: Implementation
+## Phase 1: OAuth2 Client Setup
 
 ### Steps
 1. ☐ Add OAuth2 client configuration
@@ -169,4 +175,4 @@ When spec reaches completion:
 
 ---
 
-*Source: `040-plan-delivery.md` (will be deprecated)*
+*Source: Content migrated from `040-plan-delivery.md`*
