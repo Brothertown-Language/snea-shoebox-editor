@@ -1,0 +1,26 @@
+#!/bin/bash
+# pre-commit hook: Block commits to main branch
+# This enforces the branch-first workflow from AGENTS.md
+
+set -e
+
+# Get the current branch
+branch=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+
+# Only block commits to main
+if [ "$branch" = "main" ]; then
+    echo "ERROR: Direct commits to 'main' branch are prohibited."
+    echo ""
+    echo "CRITICAL GUIDELINE VIOLATION: Branch Before Edit"
+    echo ""
+    echo "The FIRST action before ANY filesystem change is:"
+    echo "  git checkout main && git pull origin main"
+    echo "  git checkout -b feature/<description>"
+    echo ""
+    echo "Then make your changes and commit to the feature branch."
+    echo ""
+    echo "See AGENTS.md 'Branch Before Edit' section for details."
+    exit 1
+fi
+
+exit 0
