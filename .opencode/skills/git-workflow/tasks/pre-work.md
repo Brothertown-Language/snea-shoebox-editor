@@ -61,6 +61,45 @@ git checkout -b spec/<short-name>  # or feature/<description>
 
 Report: "Ready for implementation on branch: <branch-name>"
 
+## ⚠️ Edge Case: Already Implemented (No Changes Needed)
+
+**When investigation reveals spec is already implemented:**
+
+1. **Detect before branch creation:**
+   - After reading files, verify all proposed changes are already present
+   - Confirm no modifications needed
+   - Document verification in issue comment
+
+2. **Skip branch creation entirely:**
+   - Do NOT create feature branch
+   - Do NOT push anything
+   - Do NOT create PR
+
+3. **Close issue directly:**
+   - Post verification comment explaining what was checked
+   - Close issue with `state_reason: "completed"`
+   - Report completion in chat
+
+**Example Comment:**
+```markdown
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**Summary:**
+
+Verified all proposed changes were already implemented. No modifications needed.
+
+**Verification Results:**
+
+- [List what was checked and confirmed present]
+- [File:line references for existing content]
+
+**Outcome:** Spec requirements verified complete without additional changes.
+```
+
+4. **HALT after closing:**
+   - No further steps needed
+   - No branch cleanup (no branch was created)
+
 ## Context Required
 
 - Guidelines: `110-git-branch-first.md`, `114-git-branch-cleanup.md`
