@@ -25,7 +25,7 @@ compatibility: opencode
 **Workflow:**
 ```
 Create spec issue #N →
-Invoke concern-separation-auditor --issue N --auto-fix (FIRST - phase structure) →
+Invoke concern-separation-auditor --issue N (FIRST - phase structure, auto-fix) →
 Invoke spec-auditor --issue N (SECOND - content quality) →
 Add needs-approval label →
 Post "ready for review" comment
@@ -388,7 +388,7 @@ GitHub Comment: <URL to comment>
 
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. Create the spec issue with all required content
-2. Invoke `/skill concern-separation-auditor --issue N --auto-fix` (FIRST - phase structure)
+2. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
 3. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
 4. Apply any fixes identified by auditors
 5. Add `needs-approval` label
