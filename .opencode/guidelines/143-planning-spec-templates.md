@@ -12,7 +12,7 @@ Use this checklist for every spec:
 ## Fresh-Start Context Checklist
 
 - [ ] **Problem Statement** — What is broken/needed and WHY (with context)
-- [ ] **Affected Files** — List of files with line numbers and code snippets
+- [ ] **Affected Files** — List of files with anchors (function/section) and code snippets
 - [ ] **Related Issues** — Links + summaries + relevance explanation
 - [ ] **Context** — Background on affected systems, prior decisions
 - [ ] **Constraints** — Technical, resource, time, compatibility limits
@@ -34,7 +34,8 @@ Verify the spec is self-contained:
 - [ ] NO "as discussed above" — all context stated inline
 - [ ] NO "see previous comment" — information restated
 - [ ] NO "as mentioned in chat" — decisions documented
-- [ ] File paths include line numbers — `path/to/file.py:42`
+- [ ] File paths use STABLE ANCHORS — function names `process_data()` or section headers `"Section Name"`
+- [ ] ⚠️ AVOID line numbers `file.py:42` — they break on every edit
 - [ ] Code snippets included for short sections (<20 lines)
 - [ ] Issue links include URLs and summaries
 ```
@@ -99,9 +100,9 @@ CREATED: YYYY-MM-DD
 
 ## Affected Files
 
-| File | Lines | Description | Code Snippet |
-|------|-------|-------------|--------------|
-| `path/to/file.py` | 42-55 | [What this section does] | [Short snippet] |
+| File | Anchor | Description | Code Snippet |
+|------|--------|-------------|--------------|
+| `path/to/file.py` | `function_name()` or `"Section Name"` | [What this section does] | [Short snippet] |
 
 ---
 
@@ -255,7 +256,7 @@ CREATED: YYYY-MM-DD
 [Code snippets, logs, or other evidence]
 
 ```python
-# Relevant code at path/to/file.py:42-48
+# Relevant code at path/to/file.py in `function_name()` or "Section Name"
 def broken_function():
     # BUG: Off-by-one error in loop
     for i in range(len(items)):  # Should be range(len(items) - 1)
@@ -266,9 +267,9 @@ def broken_function():
 
 ## Affected Files
 
-| File | Lines | Description |
-|------|-------|-------------|
-| `path/to/file.py` | 42-48 | [Function with bug] |
+| File | Anchor | Description |
+|------|--------|-------------|
+| `path/to/file.py` | `function_name()` or `"Section Name"` | [Function with bug] |
 
 ---
 

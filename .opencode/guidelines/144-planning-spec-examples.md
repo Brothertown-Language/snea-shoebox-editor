@@ -31,7 +31,7 @@ This is BAD because:
 >
 > **Problem:** Users are unexpectedly logged out after 7 days when their OAuth2 refresh token expires. The current implementation does not handle the `TokenExpiredError` and instead propagates the exception, terminating the user session.
 >
-> **Location:** `src/auth/oauth_client.py:87-92` in `refresh_token()`:
+> **Location:** `refresh_token()` in `src/auth/oauth_client.py`:
 > ```python
 > def refresh_token(self):
 >     # BUG: Does not handle expired refresh_token
@@ -128,14 +128,14 @@ This is BAD because:
 > | In-process | No network overhead | Lost on restart | ❌ Not suitable for HA |
 >
 > **Affected Files:**
-> | File | Lines | Changes |
-> |------|-------|--------|
-> | `src/api/articles.py` | 45-62 | Add cache layer in `get_article_metadata()` |
+> | File | Anchor | Changes |
+> |------|--------|--------|
+> | `src/api/articles.py` | `get_article_metadata()` function | Add cache layer |
 > | `src/cache/__init__.py` | new file | New Redis client wrapper |
-> | `src/config.py` | 12-20 | Add Redis connection config |
+> | `src/config.py` | "Configuration" section | Add Redis connection config |
 >
 > **Code Context:**
-> Current `get_article_metadata()` at `src/api/articles.py:45-62`:
+> Current `get_article_metadata()` in `src/api/articles.py`:
 > ```python
 > def get_article_metadata(article_id: str) -> dict:
 >     """Fetch article metadata from database."""
@@ -186,7 +186,7 @@ This is GOOD because:
 - ✅ Problem statement with measurable impact
 - ✅ Context explaining current state and why change is needed
 - ✅ Decision documented with alternatives considered
-- ✅ Affected files with line numbers
+- ✅ Affected files with function/section anchors (NOT line numbers)
 - ✅ Code snippets included
 - ✅ Constraints and assumptions listed
 - ✅ Success criteria are testable and measurable
@@ -256,7 +256,7 @@ Before finalizing any spec, verify:
 | Element | Include This |
 |---------|--------------|
 | **Problem** | What and WHY (with context) |
-| **Location** | File path + line numbers + snippets |
+| **Location** | File path + function/section anchors + snippets |
 | **References** | Issue URL + summary + relevance |
 | **Context** | Background, history, affected systems |
 | **Constraints** | Technical, time, resource limits |
@@ -312,7 +312,7 @@ When a spec has ONE task, no sub-issues are required.
 >
 > **Problem:** README contains " instalation" (missing 'l')
 >
-> **Solution:** Fix the typo in line 42
+> **Solution:** Fix the typo in the installation section
 >
 > **Success Criteria:** Typo corrected
 

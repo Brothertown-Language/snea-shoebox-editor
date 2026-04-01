@@ -99,9 +99,9 @@ AI: OpenCode ollama-cloud/glm-5 🤖 Analysis complete. Should I proceed with im
 
 ```
 AI: OpenCode ollama-cloud/glm-5 🔍 Analysis complete: Found 3 issues in validation module.
-- Issue 1: Missing null check in line 45
-- Issue 2: Duplicate validation in lines 67-71
-- Issue 3: Unreachable code in line 89
+- Issue 1: Missing null check in `validate_input()`
+- Issue 2: Duplicate validation in `process_data()`
+- Issue 3: Unreachable code in `handle_error()`
 ```
 
 **Correct**: Presents findings, HALTs. Developer will authorize when ready.
