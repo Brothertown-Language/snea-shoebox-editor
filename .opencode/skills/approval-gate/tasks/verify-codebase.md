@@ -20,12 +20,14 @@ Re-evaluate codebase state before implementation to detect staleness or supersed
 ### Step 1: Check File Existence
 
 For each file mentioned in spec:
+
 - Verify file still exists at specified path
 - Document any missing files
 
 ### Step 2: Check Code Validity
 
 For each code reference:
+
 - Verify function/class still exists
 - Verify signature matches spec
 - Document any changes
@@ -45,6 +47,7 @@ for issue in issues:
 ### Step 4: Handle Staleness
 
 If staleness detected:
+
 - REVISE the spec to reflect current reality
 - HALT and wait for fresh approval
 - NEVER implement stale spec as-is

@@ -7,8 +7,8 @@ Handle work-in-progress commits during implementation. Multiple commits during i
 ## Operating Protocol
 
 1. **User-driven work:** The agent performs approved implementation tasks
-2. **Checkpoint commits allowed:** Commits during implementation serve to stage changes and prevent accidental loss
-3. **Squashing is deferred:** Squashing to single commit happens during PR creation, not during implementation
+1. **Checkpoint commits allowed:** Commits during implementation serve to stage changes and prevent accidental loss
+1. **Squashing is deferred:** Squashing to single commit happens during PR creation, not during implementation
 
 ## Entry Criteria
 
@@ -40,6 +40,7 @@ git commit -m "WIP: <descriptive message>"
 **The most common workflow failure is pushing without committing.**
 
 **Correct sequence:**
+
 ```
 1. Make file changes (edit tool, etc.)
 2. git status (verify changes exist)
@@ -49,6 +50,7 @@ git commit -m "WIP: <descriptive message>"
 ```
 
 **Incorrect sequence (CRITICAL VIOLATION):**
+
 ```
 1. Make file changes
 2. git push (WRONG - uncommitted changes)
@@ -57,6 +59,7 @@ git commit -m "WIP: <descriptive message>"
 ```
 
 **Verification before push:**
+
 - `git status` MUST show "nothing to commit, working tree clean"
 - Local branch MUST have at least one commit ahead of remote
 - If `git status` shows uncommitted changes → COMMIT FIRST
@@ -83,6 +86,7 @@ git commit -m "WIP: <descriptive message>"
 ## When to Commit During Implementation
 
 Commit when:
+
 - Completing a discrete logical unit of work
 - Reaching a checkpoint that might need rollback
 - Before attempting something risky
@@ -91,9 +95,9 @@ Commit when:
 ## After Implementation Completes
 
 1. **Commit all changes** (`git add -A && git commit`)
-2. **Push to remote** (`git push -u origin <branch-name>`)
-3. **Report completion** (executive summary to issue AND chat)
-4. **HALT** — do NOT create PR
-5. **WAIT** for explicit "create a PR" instruction
+1. **Push to remote** (`git push -u origin <branch-name>`)
+1. **Report completion** (executive summary to issue AND chat)
+1. **HALT** — do NOT create PR
+1. **WAIT** for explicit "create a PR" instruction
 
 **See:** `pr-creation-workflow` skill for complete PR workflow.

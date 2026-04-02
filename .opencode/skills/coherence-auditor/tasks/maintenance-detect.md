@@ -28,12 +28,14 @@ Detect drift between guidelines and skills during maintenance mode by comparing 
 ### Step 2: Compare Current State
 
 For each skill:
+
 - Verify file exists at `.opencode/skills/<name>/SKILL.md`
 - Verify YAML frontmatter valid
 - Check for duplicate content in guidelines
 - Test reference path from guideline to skill
 
 For each guideline:
+
 - Find all `> **See:** /skill <name>` references
 - Verify referenced skill exists
 - Verify skill content matches guideline expectation

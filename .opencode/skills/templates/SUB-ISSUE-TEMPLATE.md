@@ -2,7 +2,7 @@
 
 Use this template for individual implementation tasks that are children of a parent orchestrator issue.
 
----
+______________________________________________________________________
 
 ## Template
 
@@ -72,7 +72,7 @@ Subtask: X.Y  # Must match STATUS in parent
 🤖 ✨ Created by <AgentName> (<ModelID>)
 ```
 
----
+______________________________________________________________________
 
 ## Template Size
 
@@ -85,7 +85,7 @@ Sub-issues should be **~60-150 lines**:
 - Cross-references: 5-15 lines
 - Context: 10-30 lines
 
----
+______________________________________________________________________
 
 ## Self-Contained Requirement
 
@@ -106,7 +106,7 @@ Sub-issues should be **~60-150 lines**:
 - "Continue from subtask X"
 - "Refer to other sub-issue for details"
 
----
+______________________________________________________________________
 
 ## Subtask Number Format
 
@@ -119,7 +119,7 @@ Sub-issues should be **~60-150 lines**:
 
 **The subtask number MUST match STATUS in parent issue.**
 
----
+______________________________________________________________________
 
 ## Title Format
 
@@ -146,7 +146,7 @@ Task: Database schema                       # Missing parent reference
 [Task] Create database schema               # Missing parent number
 ```
 
----
+______________________________________________________________________
 
 ## Entry Criteria
 
@@ -160,15 +160,15 @@ Task: Database schema                       # Missing parent reference
 
 **If ANY criterion fails → HALT and report.**
 
----
+______________________________________________________________________
 
 ## Exit Criteria
 
 **Each criterion MUST be:**
 
 1. **Testable** - Can be verified programmatically or manually
-2. **Specific** - Clear pass/fail determination
-3. **Complete** - No ambiguity about what "done" means
+1. **Specific** - Clear pass/fail determination
+1. **Complete** - No ambiguity about what "done" means
 
 ### ✅ Good Exit Criteria
 
@@ -187,15 +187,15 @@ Task: Database schema                       # Missing parent reference
 - [ ] Make it work
 ```
 
----
+______________________________________________________________________
 
 ## Procedure
 
 **Each step MUST be:**
 
 1. **Concrete** - Specific action to take
-2. **Verifiable** - Can confirm completion
-3. **Atomic** - Single clear action
+1. **Verifiable** - Can confirm completion
+1. **Atomic** - Single clear action
 
 ### ✅ Good Procedure Steps
 
@@ -215,7 +215,7 @@ Task: Database schema                       # Missing parent reference
 3. ☐ Test everything
 ```
 
----
+______________________________________________________________________
 
 ## Context Required Section
 
@@ -232,7 +232,7 @@ Task: Database schema                       # Missing parent reference
 
 This ensures fresh-start agents have all references without searching.
 
----
+______________________________________________________________________
 
 ## Integration Points
 
@@ -243,7 +243,7 @@ This ensures fresh-start agents have all references without searching.
 | `git-workflow` skill | Create branch named for this subtask |
 | `github-sub-issues` skill | Sub-issue linked to parent |
 
----
+______________________________________________________________________
 
 ## Example
 
@@ -324,7 +324,7 @@ Design and implement the architecture for GitHub sub-issue sub-task tracking, en
 🤖 ✨ Created by OpenCode Desktop (ollama-cloud/glm-5)
 ```
 
----
+______________________________________________________________________
 
 ## Size Comparison
 
@@ -336,5 +336,5 @@ Design and implement the architecture for GitHub sub-issue sub-task tracking, en
 | Context | ~30 lines | ~10-30 lines |
 | Entry/Exit | ~10 lines | ~10-20 lines |
 
-**Parent = Orchestrator (~100 lines)**  
+**Parent = Orchestrator (~100 lines)**\
 **Sub-Issue = Implementation details (~60-150 lines)**

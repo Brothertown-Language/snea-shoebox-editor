@@ -7,8 +7,8 @@ Create pull request after explicit user instruction. Squash commits to single co
 ## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "create a PR" or similar
-2. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
-3. **HALT after PR creation:** Wait for human to merge
+1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
+1. **HALT after PR creation:** Wait for human to merge
 
 ## Entry Criteria
 
@@ -77,6 +77,7 @@ Fixes #<child2>
 ```
 
 **PR Body Requirements:**
+
 - Must include `Fixes #<issue-number>` for autoclose
 - Include ALL sub-issues for multi-task specs
 - Brief description of changes
@@ -90,9 +91,9 @@ Fixes #<child2>
 1. **Chat Output:**
    ```
    PR created: https://github.com/<owner>/<repo>/pull/<number>
-   
+
    <Brief implementation summary>
-   
+
    Wait for human to merge.
    ```
 
@@ -106,9 +107,9 @@ Fixes #<child2>
 
 ### Post-PR Creation Checklist
 
-- [ ] PR URL reported in chat
-- [ ] Brief implementation summary included
-- [ ] HALT — waiting for human merge
+- \[ \] PR URL reported in chat
+- \[ \] Brief implementation summary included
+- \[ \] HALT — waiting for human merge
 
 **🚫 NEVER:** Skip reporting PR URL, merge PR, or proceed without developer confirmation.
 
@@ -123,8 +124,9 @@ Fixes #<child2>
 See `commit-prep` task for trailer format.
 
 Every squash commit MUST include:
+
 1. AI Author trailer
-2. Human Collaborator trailer
+1. Human Collaborator trailer
 
 ## Sub-Issue Autoclose
 
@@ -153,5 +155,5 @@ Fixes #470
 ## After PR Creation
 
 1. Report PR URL
-2. HALT — wait for human merge
-3. Do NOT merge (human-only operation)
+1. HALT — wait for human merge
+1. Do NOT merge (human-only operation)

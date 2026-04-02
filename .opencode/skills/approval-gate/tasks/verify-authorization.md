@@ -20,6 +20,7 @@ Check for explicit authorization and needs-approval label status before implemen
 ### Step 1: Verify Authorization Is Explicit
 
 Check that authorization is:
+
 - From user (not agent)
 - Explicit ("approved", "go", "approved: N.M")
 - For the CURRENT issue (not old session)
@@ -40,6 +41,7 @@ if has_label and explicit_authorization:
 ### Step 3: Record Authorization Scope
 
 Authorization applies to:
+
 - Specific issue only
 - Current phase/task only
 - This session only (no carryover)

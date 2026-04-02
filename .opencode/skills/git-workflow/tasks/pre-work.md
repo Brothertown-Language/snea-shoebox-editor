@@ -66,21 +66,25 @@ Report: "Ready for implementation on branch: <branch-name>"
 **When investigation reveals spec is already implemented:**
 
 1. **Detect before branch creation:**
+
    - After reading files, verify all proposed changes are already present
    - Confirm no modifications needed
    - Document verification in issue comment
 
-2. **Skip branch creation entirely:**
+1. **Skip branch creation entirely:**
+
    - Do NOT create feature branch
    - Do NOT push anything
    - Do NOT create PR
 
-3. **Close issue directly:**
+1. **Close issue directly:**
+
    - Post verification comment explaining what was checked
    - Close issue with `state_reason: "completed"`
    - Report completion in chat
 
 **Example Comment:**
+
 ```markdown
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 

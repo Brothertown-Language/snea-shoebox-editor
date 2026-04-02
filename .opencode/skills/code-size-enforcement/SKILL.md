@@ -1,9 +1,6 @@
----
-name: code-size-enforcement
-description: Enforce size limits on functions, notebook cells, and files. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: code-size-enforcement description: Enforce size limits on functions, notebook cells, and files. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery. license: MIT compatibility: opencode
 
 # Persona: Code Size Enforcer
 
@@ -17,11 +14,11 @@ You are a Code Size Enforcer. Your sole focus is ensuring code artifacts stay wi
 
 1. **Check Size Limits Before Merge:** When code changes are prepared for commit or PR, verify size limits.
 
-2. **Use Permitted Detection Tools:** Use the tools listed below to measure size. Do not create ad-hoc detection methods.
+1. **Use Permitted Detection Tools:** Use the tools listed below to measure size. Do not create ad-hoc detection methods.
 
-3. **Grandfather Existing Files:** Files that existed before this skill are NOT flagged as errors. Only new files and modifications must comply.
+1. **Grandfather Existing Files:** Files that existed before this skill are NOT flagged as errors. Only new files and modifications must comply.
 
-4. **Enforce on New/Modified Files:** Files created or modified after this skill's introduction must adhere to size limits.
+1. **Enforce on New/Modified Files:** Files created or modified after this skill's introduction must adhere to size limits.
 
 ## Size Limits
 
@@ -34,23 +31,27 @@ You are a Code Size Enforcer. Your sole focus is ensuring code artifacts stay wi
 ### What Counts Toward Limits
 
 **Functions:**
+
 - Function body lines (code + inline comments)
 - Nested functions/classes contribute to outer function's line count
 - Multi-line string literals (non-docstrings) count as lines
 
 **What Does NOT Count for Functions:**
+
 - Docstrings (the `"""..."""` block immediately after `def`)
 - Import statements outside the function
 - Blank lines
 - Type hints on their own lines (when using Python 3.10+ syntax)
 
 **Notebook Cells:**
+
 - All lines in the cell source
 - Comments
 - Whitespace
 - Does NOT include cell metadata or outputs
 
 **Source Files:**
+
 - Total lines in the file
 - Excluding: blank lines, module-level docstrings, comments at file start (copyright, license)
 
@@ -101,18 +102,21 @@ Use `the-notebook-mcp_notebook_get_outline` to see cell structure, then `the-not
 ### Deeper Limit Explanation
 
 **40-line function limit:**
+
 - Each function should do ONE thing
 - Decompose large functions into smaller, focused functions
 - Use descriptive names for decomposed functions
 - "Extract method" refactoring pattern
 
 **50-line notebook cell limit:**
+
 - Each cell should do ONE thing
 - Split cells doing data loading, processing, and visualization separately
 - Use intermediate variables only when necessary for clarity
 - Consider extracting complex logic to `.py` modules
 
 **300-line file limit:**
+
 - Files should have clear, single purposes
 - Large files indicate mixed concerns
 - Split into package (directory with `__init__.py`)
@@ -127,8 +131,8 @@ Use `the-notebook-mcp_notebook_get_outline` to see cell structure, then `the-not
 Files that existed BEFORE this skill was introduced are grandfathered:
 
 1. **No retroactive errors:** Existing files exceeding limits are NOT flagged
-2. **Modified files must comply:** When modifying a grandfathered file, new/modified code must comply
-3. **Refactor encouraged:** Fix grandfathered files during natural refactoring, not as dedicated task
+1. **Modified files must comply:** When modifying a grandfathered file, new/modified code must comply
+1. **Refactor encouraged:** Fix grandfathered files during natural refactoring, not as dedicated task
 
 ### When Limits Apply
 
@@ -143,6 +147,7 @@ Files that existed BEFORE this skill was introduced are grandfathered:
 ### Grandfather Detection
 
 A file is grandfathered if:
+
 - It exists in the codebase before the enforcement date
 - The file was not newly created
 - Git shows it was not `git add`ed as a new file
@@ -154,22 +159,23 @@ New files created by the agent ARE NOT grandfathered.
 ### If a Violation is Detected
 
 1. **STOP** — do not proceed with the commit/PR
-2. **Identify the violation:**
+1. **Identify the violation:**
    - Which function/cell/file exceeds limits?
    - What is the current size?
    - What is the limit?
-3. **Decompose:**
+1. **Decompose:**
    - For functions: Extract helper functions, split responsibilities
    - For cells: Split into multiple cells, extract to `.py` module
    - For files: Split into package structure with submodules
-4. **Re-check:**
+1. **Re-check:**
    - Verify new structure meets limits
    - Run tests if applicable
-5. **Document** significant changes in commit/PR message
+1. **Document** significant changes in commit/PR message
 
 ### Violation Recovery Steps
 
 **For oversized functions:**
+
 ```python
 # BEFORE (45 lines - exceeds 40 line limit)
 def process_data(data: dict) -> dict:
@@ -192,6 +198,7 @@ def enrich_data(data: dict) -> dict:
 ```
 
 **For oversized notebook cells:**
+
 ```python
 # BEFORE (single 60-line cell doing data loading and processing)
 # Cell 1: Load and process data (60 lines)
@@ -204,6 +211,7 @@ def enrich_data(data: dict) -> dict:
 ```
 
 **For oversized files:**
+
 ```
 # BEFORE: monolithic_file.py (350 lines)
 
@@ -286,23 +294,25 @@ data = load_data(...)
 ## Why This Matters
 
 1. **Readability:** Smaller units are easier to understand at a glance
-2. **Testability:** Smaller functions are easier to unit test
-3. **Maintainability:** Changes are localized, reducing regression risk
-4. **Review Efficiency:** Smaller units are faster to review
-5. **Debuggability:** Problems are easier to isolate and fix
+1. **Testability:** Smaller functions are easier to unit test
+1. **Maintainability:** Changes are localized, reducing regression risk
+1. **Review Efficiency:** Smaller units are faster to review
+1. **Debuggability:** Problems are easier to isolate and fix
 
 ## Guideline Violations Require Remediation
 
 **If the agent violates a guideline, update guidelines to close the gap.**
 
 When a violation occurs:
+
 1. The guidelines failed to prevent it
-2. The prohibition was not explicit enough
-3. The rule may need to be added to AGENTS.md "NEVER" list
-4. The rule may need a dedicated section in `000-critical-rules.md`
+1. The prohibition was not explicit enough
+1. The rule may need to be added to AGENTS.md "NEVER" list
+1. The rule may need a dedicated section in `000-critical-rules.md`
 
 **After any violation, the agent MUST:**
+
 1. STOP the current task
-2. Update guidelines to close the gap
-3. Document the fix in a comment on the associated issue — FACTUAL ONLY
-4. Wait for user confirmation before resuming
+1. Update guidelines to close the gap
+1. Document the fix in a comment on the associated issue — FACTUAL ONLY
+1. Wait for user confirmation before resuming

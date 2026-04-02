@@ -2,7 +2,7 @@
 
 Use this template for multi-task specifications that coordinate multiple sub-issues.
 
----
+______________________________________________________________________
 
 ## Template
 
@@ -73,7 +73,7 @@ CREATED: YYYY-MM-DD
 > **Approval Tracking**: Approvals are tracked via GitHub Issue comments. Issue body edits destroy history.
 ```
 
----
+______________________________________________________________________
 
 ## STATUS Format
 
@@ -83,7 +83,7 @@ CREATED: YYYY-MM-DD
 | `X.2` | Subtask 2 of Phase X is active |
 | `completed` | All subtasks complete |
 
----
+______________________________________________________________________
 
 ## Task Table Requirements
 
@@ -103,23 +103,25 @@ CREATED: YYYY-MM-DD
 ```
 
 **Examples:**
+
 - `[Task: #469] Refactor Tier 1 Skills with Sub-Task Architecture`
 - `[Task: #469] Design sub-issue orchestrator template`
 - `[Task: #469] Update AGENTS.md with sub-issue invocation guidance`
 
 **❌ WRONG:**
+
 - `[Task: #469] Phase 1 - Implementation` (only type, no description)
 - `[Task: #469] Phase 2 - Testing` (only type, no description)
 
----
+______________________________________________________________________
 
 ## Single Subtask at a Time (CRITICAL)
 
 **The architecture enforces sequential execution:**
 
 1. **STATUS Gate**: Agent can ONLY implement subtask matching current STATUS
-2. **Sequential Advancement**: STATUS advances only after subtask completion
-3. **No Parallel Execution**: Previous subtask must complete before next starts
+1. **Sequential Advancement**: STATUS advances only after subtask completion
+1. **No Parallel Execution**: Previous subtask must complete before next starts
 
 ### Why This Matters
 
@@ -130,7 +132,7 @@ CREATED: YYYY-MM-DD
 | File edit races | Only one active subtask = no conflicts |
 | Stash conflicts | Sequential = no stash race |
 
----
+______________________________________________________________________
 
 ## Minimal Parent Content
 
@@ -145,7 +147,7 @@ Parent issues should be **~100 lines max**:
 
 **Implementation details belong in sub-issues, not parent issues.**
 
----
+______________________________________________________________________
 
 ## Integration Points
 
@@ -156,7 +158,7 @@ Parent issues should be **~100 lines max**:
 | `github-sub-issues` skill | Verify sub-issue structure exists |
 | `124-github-archive-workflow.md` | Parent closure only after all children complete |
 
----
+______________________________________________________________________
 
 ## Example
 

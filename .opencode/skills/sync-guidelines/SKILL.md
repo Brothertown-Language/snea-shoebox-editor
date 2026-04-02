@@ -1,15 +1,13 @@
----
-name: sync-guidelines
-description: Intelligently synchronize guidelines, skills, and tools between repositories through GitHub issues. Classifies files by semantic analysis and creates sync issues for human review.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: sync-guidelines description: Intelligently synchronize guidelines, skills, and tools between repositories through GitHub issues. Classifies files by semantic analysis and creates sync issues for human review. license: MIT compatibility: opencode
 
 # Skill: sync-guidelines
 
 ## When to Invoke
 
 This skill is triggered when:
+
 - User runs `/skill sync-guidelines`
 - Automated workflow detects changes in `.opencode/guidelines/`, `.opencode/skills/`, or `ai_bin/`
 
@@ -22,13 +20,13 @@ You are a Guidelines Sync Manager. Your purpose is to intelligently synchronize 
 ### Phase 0: Pre-Work Verification
 
 1. Verify on feature branch (not `main`)
-2. Check for uncommitted changes (`git status`)
-3. Stash if needed
+1. Check for uncommitted changes (`git status`)
+1. Stash if needed
 
 ### Phase 1: Discover Files to Sync
 
 1. Detect changed files since last sync
-2. For each file in `.opencode/guidelines/`, `.opencode/skills/`, `ai_bin/`:
+1. For each file in `.opencode/guidelines/`, `.opencode/skills/`, `ai_bin/`:
    - Read the **entire file content**
    - Analyze semantically what the file does
    - Determine classification: core or project-specific
@@ -40,6 +38,7 @@ You are a Guidelines Sync Manager. Your purpose is to intelligently synchronize 
 #### Core Indicators (Sync Bidirectionally)
 
 A file is **core** if it:
+
 - Defines generic workflows (git operations, github MCP usage)
 - Contains universal engineering standards
 - Describes cross-project concepts (approval gates, spec creation, error handling)
@@ -47,6 +46,7 @@ A file is **core** if it:
 - Can be dropped into ANY project and work without modification
 
 Examples of core content:
+
 - `## Operating Protocol` - workflow definition
 - `git checkout`, `github_issue_write` - generic operations
 - `## Critical Requirements` - universal standards
@@ -55,6 +55,7 @@ Examples of core content:
 #### Project-Specific Indicators (Never Sync)
 
 A file is **project-specific** if it:
+
 - References project name in imports or code
 - Contains project-specific database paths
 - Has project-specific API endpoints
@@ -62,6 +63,7 @@ A file is **project-specific** if it:
 - Would break if copied to another project
 
 Examples of project-specific content:
+
 - `pubmed_data_3/` - project database path
 - `<repo>` - project name (from session_init.py)
 - `project_root /` - project-specific path handling
@@ -70,6 +72,7 @@ Examples of project-specific content:
 #### Uncertain Classification
 
 If classification is unclear:
+
 - Note the uncertainty in the issue
 - Provide analysis of what was found
 - Let human reviewer decide
@@ -92,13 +95,14 @@ github_issue_write(
 ### Phase 4: Report Completion
 
 Post comment to spec issue documenting:
+
 - Files analyzed
 - Classification decisions with reasoning
 - Issue URL created
 
 ## Issue Content Format
 
-```markdown
+````markdown
 # [SYNC] {direction}: {count} files from {source_repo}
 
 **Source:** {source_owner}/{source_repo}
@@ -144,18 +148,20 @@ Post comment to spec issue documenting:
 
 ```{language}
 {full file content}
-```
+````
 
 ## Verification
 
-- Source commit: [{sha[:8]}](url)
+- Source commit: [{sha\[:8\]}](url)
 - All files read and analyzed: Yes
 - Pattern-based classification used: No
 
----
+______________________________________________________________________
+
 *Created by sync-guidelines skill*
 *Classification via intelligent content inspection*
-```
+
+````
 
 ## Configuration
 
@@ -176,7 +182,7 @@ local_only:
   - ".opencode/AGENTS.md"
   - ".opencode/sync-config.yml"
   - ".opencode/sync-state.yml"
-```
+````
 
 **NOTE**: Create this file only if syncing guidelines between repositories. The file is project-specific and should not be copied from other projects.
 
@@ -204,20 +210,22 @@ last_sync:
 ### Push Conflicts
 
 Before creating push issue:
+
 1. Check if file exists in target repo (`github_get_file_contents`)
-2. If both modified, note conflict in issue
-3. Recommend manual merge in issue body
+1. If both modified, note conflict in issue
+1. Recommend manual merge in issue body
 
 ### Pull Conflicts
 
 Before creating pull issue:
+
 1. Read local file content
-2. Analyze for project-specific modifications
-3. If project-specific content found:
+1. Analyze for project-specific modifications
+1. If project-specific content found:
    - SKIP this file
    - Note as "protected" in issue
    - Recommend manual review if needed
-4. If safe, proceed with pull proposal
+1. If safe, proceed with pull proposal
 
 ## Tools Required
 
@@ -231,9 +239,9 @@ Before creating pull issue:
 ## Integration with git-workflow
 
 1. Execute AFTER changes are committed to feature branch
-2. Create sync issue as proposal (not auto-merge)
-3. Human reviews and merges in target repository
-4. Update sync state after successful sync
+1. Create sync issue as proposal (not auto-merge)
+1. Human reviews and merges in target repository
+1. Update sync state after successful sync
 
 ## Example Usage
 

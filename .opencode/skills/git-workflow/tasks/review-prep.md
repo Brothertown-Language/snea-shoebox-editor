@@ -9,9 +9,10 @@ Generate GitHub compare URL for developer review AFTER the implementation task h
 **This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
 
 The sequence is:
+
 1. Implementation complete → commit → push → **review-prep invoked automatically**
-2. Compare URL generated → HALT
-3. Wait for developer to say "create a PR"
+1. Compare URL generated → HALT
+1. Wait for developer to say "create a PR"
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just generate the compare URL.**
 
@@ -20,6 +21,7 @@ The sequence is:
 **The `implementation` task is responsible for pushing the branch.**
 
 **Correct sequence:**
+
 ```
 Implementation task:
   1. Make changes
@@ -38,13 +40,15 @@ Review-prep task:
 ```
 
 **If this task is invoked and branch is NOT pushed:**
+
 1. Inform user: "Implementation task must push before review-prep"
-2. Push the branch: `git push -u origin <branch-name>`
-3. Continue to generate compare URL
+1. Push the branch: `git push -u origin <branch-name>`
+1. Continue to generate compare URL
 
 ### ⚠️ CRITICAL: NO EXCEPTIONS
 
 **Review prep is MANDATORY regardless of:**
+
 - Whether file changes were made
 - Whether "no changes needed" was determined
 - Whether branch is already up-to-date
@@ -54,16 +58,18 @@ Review-prep task:
 
 **"No File Changes" Edge Case:**
 When implementation determines "no file changes needed":
+
 1. **STILL push branch** - git will report "up-to-date", which is acceptable
-2. **STILL generate compare URL** - developer can see branch state
-3. **STILL post completion comment** - clear signal that work is done
-4. **NEVER skip review prep** - visibility is mandatory
+1. **STILL generate compare URL** - developer can see branch state
+1. **STILL post completion comment** - clear signal that work is done
+1. **NEVER skip review prep** - visibility is mandatory
 
 **Why this matters:** Developer needs visibility into what was checked, even if no changes were made.
 
 ### ⚠️ CRITICAL: Model ID Detection
 
 **When posting completion comment (Step 3):**
+
 - **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
 - **MUST detect actual runtime identity** from environment/MCP tools
 - **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
@@ -71,8 +77,8 @@ When implementation determines "no file changes needed":
 ## Operating Protocol
 
 1. **After implementation:** This task runs AFTER all implementation is complete - NO EXCEPTIONS
-2. **MANDATORY step:** Branch MUST be pushed to remote for developer review - NO ASKING
-3. **HALT after push:** Wait for developer to review and authorize PR creation
+1. **MANDATORY step:** Branch MUST be pushed to remote for developer review - NO ASKING
+1. **HALT after push:** Wait for developer to review and authorize PR creation
 
 ## Entry Criteria
 
@@ -104,6 +110,7 @@ ls ./tmp/
 ```
 
 **Preserve:**
+
 - `./tmp/*.db` (SQLite databases)
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
@@ -138,6 +145,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 **⚠️ CRITICAL: Completion comment MUST be posted to BOTH the GitHub issue AND chat.**
 
 Post to GitHub issue:
+
 ```markdown
 **Summary:**
 
@@ -154,6 +162,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
 Post to chat (same content):
+
 - Same executive summary + compare URL
 - Ensures visibility in BOTH GitHub history AND current session
 
@@ -162,6 +171,7 @@ Post to chat (same content):
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
 **DO NOT:**
+
 - Squash commits (happens at PR creation)
 - Create PR (requires explicit "create a PR" instruction)
 - Push again (already pushed in implementation)
@@ -169,11 +179,13 @@ Post to chat (same content):
 - Proceed to any next step (HALT means STOP)
 
 **WAIT for EXPLICIT instruction:**
+
 - Developer reviews changes via GitHub diff viewer
 - Developer says "create a PR" to proceed
 - NO assumptions, NO auto-progression
 
 **What HALT means:**
+
 - Report completion (issue + chat)
 - STOP all further action
 - Wait for developer's next explicit instruction
@@ -184,9 +196,9 @@ Post to chat (same content):
 **If review-prep is invoked but branch is NOT pushed:**
 
 1. **Detect missed push:** `git branch -vv` shows no upstream
-2. **Inform user:** "Implementation task must commit and push. Fixing now."
-3. **Fix and continue:** `git push -u origin <branch-name>`
-4. **Continue:** Generate compare URL, post completion comment
+1. **Inform user:** "Implementation task must commit and push. Fixing now."
+1. **Fix and continue:** `git push -u origin <branch-name>`
+1. **Continue:** Generate compare URL, post completion comment
 
 **Why:** Commit without push = empty compare URL. Push is mandatory after commit.
 
@@ -257,6 +269,7 @@ NO merge verification
 ```
 
 **This incorrect workflow VIOLATES critical rules and causes:**
+
 - Issues closed without PR tracking
 - No developer visibility via compare URL
 - No review before closure
@@ -281,6 +294,7 @@ Result: Workflow STALLS
 ```
 
 **Why this fails:**
+
 - Compare URL requires pushed commits
 - Unpushed commits are local only
 - Remote branch has NO commits
