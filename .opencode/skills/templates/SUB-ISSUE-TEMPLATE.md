@@ -1,6 +1,12 @@
 # Sub-Issue Task Template
 
-Use this template for individual implementation tasks that are children of a parent orchestrator issue.
+**Illustrative template** for individual implementation tasks that are children of a parent orchestrator issue.
+
+**AI Agent Guidance:** 
+- Use this template ONLY for multi-concern specs requiring task decomposition
+- Single-task specs do NOT need sub-issues (AI agent determines)
+- Adapt this template based on actual concern boundaries, not rigid structure
+- Templates show typical patterns - exercise subjective judgment
 
 ______________________________________________________________________
 

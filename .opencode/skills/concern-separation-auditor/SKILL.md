@@ -111,27 +111,30 @@ Present each finding to user for decision. Use when human review is needed.
 | Dependency reversal | `DEPENDENCY_REVERSAL` | YES | Reorder to fix dependencies |
 | High-risk grouping | `HIGH_RISK_GROUPING` | YES | Separate high/low risk |
 
-## Concern-Based Analysis (NOT Rigid Template)
+## Concern-Based Analysis (AI Agent Subjective Judgment)
 
-**CRITICAL: This skill analyzes ACTUAL concerns, not static templates.**
+**CRITICAL: This skill analyzes ACTUAL concerns using AI agent subjective judgment, not static templates or rigid rules.**
 
 ### What This Is NOT
 
 - NOT a rigid DB→Repo→BL→UI template
 - NOT a mandatory ordering
 - NOT applying patterns blindly
+- NOT keyword-based classification
+- NOT mechanical phase counting
 
 ### What This IS
 
-- Analyzes deployment independence for each step
-- Analyzes risk profile (HIGH/MEDIUM/LOW)
-- Analyzes blast radius
-- Groups steps by ACTUAL concern boundaries
-- Creates phases based on ACTUAL deployment needs
+- AI agent analyzes deployment independence for each step
+- AI agent analyzes risk profile (HIGH/MEDIUM/LOW)
+- AI agent analyzes blast radius
+- AI agent groups steps by ACTUAL concern boundaries
+- AI agent creates phases based on ACTUAL deployment needs
+- **Subjective judgment based on context, not rigid rules**
 
 ### Different Project Structures
 
-Different projects have different concerns:
+Different projects have different concerns. **AI agent determines** the appropriate concern structure:
 
 | Project Type | Typical Concerns | Notes |
 |--------------|------------------|-------|
@@ -141,7 +144,7 @@ Different projects have different concerns:
 | Infrastructure | Setup | Crosses all layers, ONE concern |
 | Monolith | Schema → API → UI | May not have repository layer |
 
-**The DB→Repo→BL→UI pattern is COMMON but NOT mandatory.**
+**The DB→Repo→BL→UI pattern is COMMON but NOT mandatory. AI agent exercises judgment.**
 
 ## Concern Detection
 

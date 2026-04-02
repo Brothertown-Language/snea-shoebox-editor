@@ -1,6 +1,8 @@
 # Parent Issue Orchestrator Template
 
-Use this template for multi-task specifications that coordinate multiple sub-issues.
+**Illustrative template** for multi-task specifications that coordinate multiple sub-issues.
+
+**AI Agent Guidance:** This template shows a typical structure. Adapt based on actual concern analysis. Single-task specs do NOT need this structure.
 
 ______________________________________________________________________
 

@@ -14,11 +14,14 @@ You are a Sub-Issue Workflow enforcer. Your focus is ensuring multi-task specs h
 
 **Single-task issues do NOT require sub-issues.**
 
+**AI Agent Subjective Determination:** The agent MUST exercise judgment to determine whether a spec needs sub-issues. This is NOT a rigid keyword-based classification.
+
 A spec is "single-task" if:
 
 - Exactly ONE implementation task/phase
 - No task decomposition needed
 - Entire spec implementable in one unit of work
+- No independent concerns requiring separate tracking
 
 **Example - Single-task (NO sub-issue required):**
 
@@ -32,10 +35,17 @@ SPEC #100: Fix typo in README
 
 ```
 SPEC #101: Add user authentication
-- Phase 1: Database schema
-- Phase 2: API endpoints
-- Phase 3: UI components
+- Concern 1: Database schema (independent deployment unit)
+- Concern 2: API endpoints (independent testing unit)
+- Concern 3: UI components (independent risk profile)
 ```
+
+**AI Agent Judgment Required:**
+
+- Analyze whether phases represent independent concerns (deployment independence, risk isolation, blast radius)
+- Do NOT count phases mechanically - analyze actual concern boundaries
+- When in doubt, create sub-issues for clarity (over-communication preferred)
+- Single-task specs: NO sub-issues needed (agent determines)
 
 If single-task: Proceed without sub-issue verification.
 If multi-task: Sub-issues are MANDATORY.
@@ -65,12 +75,12 @@ ______________________________________________________________________
 
 ## Auto-Create Workflow
 
-**When multi-task spec has NO sub-issues:**
+**When AI agent determines spec has multiple independent concerns requiring sub-issues:**
 
 ```
-For each PHASE in spec:
+For each INDEPENDENT CONCERN identified:
   1. Create issue: github_issue_write(method="create",
-     title="[Task: #N] <phase-description>")
+     title="[Task: #N] <concern-description>")
   2. Get database ID from response (.id field)
   3. Link: github_sub_issue_write(method="add",
      issue_number=N, sub_issue_id=db_id)
@@ -78,6 +88,12 @@ For each PHASE in spec:
 Post comment: "Created X sub-issues for phase tracking"
 Proceed to implement first phase
 ```
+
+**AI Agent Judgment Required:**
+- Analyze concern boundaries (deployment independence, risk isolation, blast radius)
+- Do NOT create sub-issues mechanically based on phase count
+- Single-concern specs: NO sub-issues needed
+- Multi-concern specs: Create sub-issues at CONCERN level, not step level
 
 **⚠️ DATABASE ID REQUIREMENT:**
 
@@ -89,10 +105,10 @@ ______________________________________________________________________
 
 ## Phase-Level vs Step-Level
 
-**Sub-issues = PHASES, not steps.**
+**Sub-issues = INDEPENDENT CONCERNS, not steps.**
 
 ```
-✅ CORRECT: Phase-level sub-issues
+✅ CORRECT: Concern-level sub-issues (each represents independent deployment/risk boundary)
 SPEC #100: Feature Name
 ├── Task #101: [Task: #100] Create database schema
 ├── Task #102: [Task: #100] Implement API endpoints
@@ -105,7 +121,9 @@ SPEC #100: Feature Name
 └── Task #103: [Task: #100] Step 1.3 - Migrate data
 ```
 
-**Rationale:** Phases are approval units. Steps are implementation details within phases.
+**Rationale:** Sub-issues track independent concerns (deployment independence, risk isolation, blast radius). Steps are implementation details within concerns.
+
+**AI Agent Judgment:** Analyze whether each phase represents a genuinely independent concern boundary - do not decompose mechanically.
 
 ______________________________________________________________________
 
@@ -142,9 +160,9 @@ Where `<descriptive-title>` describes WHAT the task accomplishes, not just the p
 - GitHub sub-issue view already shows hierarchy - no need for "Phase X" prefix
 - Descriptive titles improve scannability without opening issues
 
-### Extraction Rule
+### AI Agent Judgment for Titles
 
-For multi-phase specs, extract the descriptive content from each phase:
+The agent should extract meaningful concern descriptions from phase names. For multi-concern specs, use the descriptive content that identifies the actual concern boundary:
 
 **Spec:**
 
@@ -160,7 +178,7 @@ For multi-phase specs, extract the descriptive content from each phase:
 1. `[Task: #100] Create user registration endpoint`
 1. `[Task: #100] Review API security changes`
 
-Use the phase description AFTER the colon/number, not the phase type.
+**AI Agent Judgment:** Use the concern description (what makes this phase independent), not generic activity labels.
 
 ### ⚠️ BOILERPLATE TITLE PROHIBITION (CRITICAL)
 
@@ -295,17 +313,23 @@ ______________________________________________________________________
 ## Example Workflow
 
 ```
-User: "approved: 1" for SPEC #100 (multi-task)
+User: "approved: 1" for SPEC #100
 
 Agent:
 1. Calls github_issue_read(method="get_sub_issues", issue_number=100)
 2. Result: Empty []
-3. Spec has 3 phases → multi-task
-4. AUTO-CREATE:
-   - Issue #101: [Task: #100] Phase 1 - Database schema
-   - Issue #102: [Task: #100] Phase 2 - API endpoints
-   - Issue #103: [Task: #100] Phase 3 - UI components
+3. AI AGENT ANALYSIS: Analyzes spec for independent concerns
+   - Phase 1: Database schema (independent deployment unit) ✅
+   - Phase 2: API endpoints (independent testing unit) ✅
+   - Phase 3: UI components (independent risk profile) ✅
+   → Multi-concern spec: Sub-issues needed
+4. AUTO-CREATE (concern-based, not mechanical):
+   - Issue #101: [Task: #100] Create database schema
+   - Issue #102: [Task: #100] Implement API endpoints
+   - Issue #103: [Task: #100] Build UI components
 5. Links each to parent via github_sub_issue_write
 6. Posts comment: "Created 3 sub-issues for phase tracking"
 7. Proceeds to implement Phase 1
 ```
+
+**Key Point:** Agent exercises subjective judgment about concern boundaries - does NOT count phases mechanically.
