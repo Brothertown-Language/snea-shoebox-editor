@@ -104,9 +104,9 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added Phase 2
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
+🤖 📝 Updated by <AgentName> (<ModelID>): Added Phase 2
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **Why append-only:**
@@ -474,7 +474,7 @@ Created skill file defining comment format rules, decision tables for when to co
 **Outcome:** Agents now have explicit guidance on comment types, timing, and format—reducing inconsistent or missing issue updates.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Task Completion Comment (Final Task)
@@ -489,7 +489,7 @@ Updated cross-references in all affected guideline files to point to the new ski
 All tasks complete from this specification.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Single-Task Completion
@@ -504,7 +504,7 @@ Replaced technical punch-list progress comments with executive summaries focused
 All tasks complete from this specification.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Issue Body Update Comment
@@ -513,7 +513,7 @@ All tasks complete from this specification.
 🤖 📝 Updated: Added Phase 2 for guideline updates per discussion in comment #5
 
 ---
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 ### Spec Alteration Comment
@@ -525,7 +525,7 @@ All tasks complete from this specification.
 - Added: Success criteria verification steps
 
 ---
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 ### Issue Creation (Body)
@@ -537,7 +537,7 @@ All tasks complete from this specification.
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #462
 ```
 
 ### Issue Updates as Combined Bylines List (Body)
@@ -549,10 +549,10 @@ All tasks complete from this specification.
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added Phase 2
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Fixed typo in success criteria
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #462
+🤖 📝 Updated by <AgentName> (<ModelID>): Added Phase 2
+🤖 📝 Updated by <AgentName> (<ModelID>): Fixed typo in success criteria
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Issue Closure Comment
@@ -570,5 +570,5 @@ Commit `abc123`: Add github-comments skill directory
 All success criteria met.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```

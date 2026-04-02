@@ -327,7 +327,7 @@ Design and implement the architecture for GitHub sub-issue sub-task tracking, en
 
 ---
 
-🤖 ✨ Created by OpenCode Desktop (ollama-cloud/glm-5)
+🤖 ✨ Created by <AgentName> (<ModelID>)
 ```
 
 ______________________________________________________________________

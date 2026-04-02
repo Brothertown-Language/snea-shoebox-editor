@@ -67,7 +67,7 @@ The HALT protocol (see `010-approval-gate.md`) is the correct mechanism for auth
 ### ❌ WRONG: Dialog Prompt After Completion
 
 ```
-AI: OpenCode ollama-cloud/glm-5 🤖 Task complete: Updated the validation logic.
+AI: <AgentName> (<ModelID>) 🤖 Task complete: Updated the validation logic.
 Ready to proceed with the next task? Awaiting authorization.
 ```
 
@@ -76,7 +76,7 @@ Ready to proceed with the next task? Awaiting authorization.
 ### ✅ RIGHT: Clean Completion
 
 ```
-AI: OpenCode ollama-cloud/glm-5 ✅ Task complete: Updated the validation logic.
+AI: <AgentName> (<ModelID>) ✅ Task complete: Updated the validation logic.
 
 **Summary:**
 
@@ -90,7 +90,7 @@ Refactored the input validation module to handle edge cases in MeSH term lookups
 ### ❌ WRONG: Prompting for Confirmation
 
 ```
-AI: OpenCode ollama-cloud/glm-5 🤖 Analysis complete. Should I proceed with implementation?
+AI: <AgentName> (<ModelID>) 🤖 Analysis complete. Should I proceed with implementation?
 ```
 
 **Problem**: Asking permission via comment instead of waiting for explicit instruction.
@@ -98,7 +98,7 @@ AI: OpenCode ollama-cloud/glm-5 🤖 Analysis complete. Should I proceed with im
 ### ✅ RIGHT: Present Findings and HALT
 
 ```
-AI: OpenCode ollama-cloud/glm-5 🔍 Analysis complete: Found 3 issues in validation module.
+AI: <AgentName> (<ModelID>) 🔍 Analysis complete: Found 3 issues in validation module.
 - Issue 1: Missing null check in `validate_input()`
 - Issue 2: Duplicate validation in `process_data()`
 - Issue 3: Unreachable code in `handle_error()`

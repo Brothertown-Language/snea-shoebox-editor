@@ -101,7 +101,7 @@ AI co-authorship applies to **original content authored by AI**, NOT copy-pasted
 Co-authored with AI: <AI-Name> (<model-id>)
 ```
 
-**Example:** `Co-authored with AI: OpenCode (ollama-cloud/glm-5)`
+**Example:** `Co-authored with AI: MyAIAgent (provider/model-name)`
 
 ### Repository Creation
 
@@ -112,8 +112,8 @@ When creating a new repository, the README MUST include:
 
 This repository was created with assistance from AI:
 
-- **AI Agent**: OpenCode
-- **Model**: ollama-cloud/glm-5
+- **AI Agent**: <AI-Name>
+- **Model**: <model-id>
 - **Date**: YYYY-MM-DD
 ```
 

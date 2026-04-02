@@ -214,7 +214,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 3. Or close as "not planned" with explanation if intentionally skipped
 
 ---
-🤖 ⚠️ Blocked by OpenCode (ollama-cloud/glm-5)
+🤖 ⚠️ Blocking by <AgentName> (<ModelID>)
 ```
 
 **See Also:** `.opencode/guidelines/124-github-archive-workflow.md` → "Parent Closure Pre-Check" section for detailed logic.

@@ -324,5 +324,5 @@ Updated git-workflow skill to push feature branches after implementation and pro
 https://github.com/<owner>/<repo>/compare/main...<branch-name>
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```

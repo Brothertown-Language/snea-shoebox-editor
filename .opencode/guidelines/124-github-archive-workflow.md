@@ -277,7 +277,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 If parent should close despite open children, add a comment explaining why remaining work is no longer needed, then request manual close.
 
 ---
-🤖 ⚠️ Blocked by OpenCode (ollama-cloud/glm-5)
+🤖 ⚠️ Blocking by <AgentName> (<ModelID>)
 ```
 
 ### False Positive Prevention
@@ -377,7 +377,7 @@ When a user says "close this and create a new spec":
 1. Create new issue #363 with title "[SPEC] Guidelines: ..."
 2. Note issue number: #363
 3. Close old issue #333 with comment:
-   "AI: OpenCode ollama-cloud/glm-5 on behalf of Michael Conrad 🤖 
+   "AI: <AgentName> (<ModelID>) on behalf of Michael Conrad 🤖 
     **Replaced By:** #363
     
     This issue is superseded by #363 without implementation.
