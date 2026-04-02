@@ -84,18 +84,37 @@ Fixes #<child2>
 
 ### Step 5: Report PR URL and HALT
 
-### ⚠️ CRITICAL: PR URL Reporting is MANDATORY
+**⚠️ CRITICAL: PR URL Reporting is MANDATORY**
 
 **You MUST report the PR URL in chat:**
 
 1. **Chat Output:**
    ```
-   PR created: https://github.com/<owner>/<repo>/pull/<number>
-
-   <Brief implementation summary>
-
-   Wait for human to merge.
+   **Summary:**
+   
+   <1-2 sentences describing stakeholder value>
+   
+   **Outcome:** <What changed for stakeholders>
+   
+   ---
+   🤖 ✅ Completed by <AgentName> (<ModelID>)
+   
+   **PR Created:** https://github.com/<owner>/<repo>/pull/<number>
    ```
+
+**Format Requirements:**
+
+- Executive summary + byline footer come FIRST
+- PR URL comes AFTER byline
+- Same format in both GitHub comment and chat
+
+### ⚠️ CRITICAL: Model ID Detection
+
+**When posting completion comment:**
+
+- **MUST dynamically detect model ID** - NEVER use hardcoded values from examples
+- **MUST detect actual runtime identity** from environment/MCP tools
+- **If model ID unknown:** STOP and ask user - DO NOT use example model IDs
 
 ### What If PR Creation Fails?
 

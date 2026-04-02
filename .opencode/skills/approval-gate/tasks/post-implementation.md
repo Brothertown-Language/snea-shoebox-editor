@@ -111,12 +111,12 @@ Format for issue and chat:
 
 **Outcome:** <What changed for stakeholders>
 
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
 **Ready for Review:**
 
 https://github.com/<owner>/<repo>/compare/main...<branch-name>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Step 4: HALT

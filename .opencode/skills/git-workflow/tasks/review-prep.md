@@ -163,17 +163,17 @@ Post to GitHub issue:
 
 **Outcome:** <What changed for stakeholders>
 
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
 **Ready for Review:**
 
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 Post to chat (same content):
 
-- Same executive summary + compare URL
+- Same executive summary with byline and URL
 - Ensures visibility in BOTH GitHub history AND current session
 
 ### Step 3: HALT (MANDATORY - NO EXCEPTIONS)
@@ -319,10 +319,10 @@ Updated git-workflow skill to push feature branches after implementation and pro
 
 **Outcome:** Developers can now review changes via GitHub diff viewer before deciding to create a PR.
 
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
 **Ready for Review:**
 
 https://github.com/<owner>/<repo>/compare/main...<branch-name>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
