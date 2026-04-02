@@ -463,7 +463,7 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 ```
 User: /skill spec-auditor --issue 258
 
-AI: OpenCode ollama-cloud/glm-5 🤖 Auditing Issue #258 for content quality...
+AI: <AgentName> (<ModelID>) 🤖 Auditing Issue #258 for content quality...
 
 Issue Location: Problem Statement section
 Problem class: FRESH-START-VIOLATION
@@ -476,7 +476,7 @@ Verification signal: changed — fixed fresh-start violation
 
 AI: Applying fix...
 
-AI: OpenCode ollama-cloud/glm-5 📝 Spec Update: Fixed fresh-start context violation
+AI: <AgentName> (<ModelID>) 📝 Spec Update: Fixed fresh-start context violation
 
 - Changed: Replaced "as discussed above" with explicit inline context in Problem Statement
 - Reason: LLM agents cannot follow references to previous context

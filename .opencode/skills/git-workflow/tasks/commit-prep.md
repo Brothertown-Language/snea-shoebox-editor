@@ -78,7 +78,7 @@ Every implementation commit MUST include:
 
 1. **AI Author**: Use your actual identity dynamically
 
-   - Example: `OpenCode Desktop (glm-5) <noreply@opencode.ai>`
+   - Example: `<AgentName> (<ModelID>) <noreply@opencode.ai>`
 
 1. **Human Collaborator**: Use session values from `000-session-init.md`
 
@@ -88,7 +88,7 @@ Every implementation commit MUST include:
 Example:
 
 ```
-Co-authored-by: OpenCode (ollama-cloud/glm-5) <noreply@opencode.ai>
+Co-authored-by: <AgentName> (<ModelID>) <noreply@opencode.ai>
 Co-authored-by: <Human Name> <human@email.com>  # From DEV_NAME and DEV_EMAIL
 ```
 

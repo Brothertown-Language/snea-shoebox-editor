@@ -29,6 +29,8 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
+**⚠️ Placeholders in Examples:** Angle-bracket values like `<AgentName>` and `<ModelID>` must be replaced with your ACTUAL runtime identity. Never copy example values like "OpenCode" or "ollama-cloud/glm-5" literally — these are placeholders demonstrating the format.
+
 **Minimal Byline Principle:** Default to minimal byline format (e.g., `🤖 📝 Updated by <AgentName> (<ModelID>)`). Add suffix context only when it clarifies ambiguity or provides essential reference.
 
 **Emoji Formatting:** Emoji must be PLAIN TEXT (NOT inside italic/bold formatting) to prevent render failures.
@@ -40,7 +42,7 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 <summary content>
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **Created issue (optional context):**
@@ -51,19 +53,19 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
 ```
 
 **Updated issue (brief context):**
 ```
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added Phase 2
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
+🤖 📝 Updated by <AgentName> (<ModelID>): Added Phase 2
 ```
 
 **Rejected proposal (reason required):**
 ```
 ---
-🤖 ❌ Rejected by OpenCode (ollama-cloud/glm-5): Duplicate of #400
+🤖 ❌ Rejected by <AgentName> (<ModelID>): Duplicate of #400
 ```
 
 ---
@@ -117,9 +119,9 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #462
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added Phase 2
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
+🤖 📝 Updated by <AgentName> (<ModelID>): Added Phase 2
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ---
