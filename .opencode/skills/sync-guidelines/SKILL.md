@@ -64,7 +64,7 @@ A file is **project-specific** if it:
 
 Examples of project-specific content:
 
-- `pubmed_data_3/` - project database path
+- `<project-db>/` - project database path
 - `<repo>` - project name (from session_init.py)
 - `project_root /` - project-specific path handling
 - Project-specific table names or schemas
@@ -278,7 +278,7 @@ Classification: ✅ Core (sync bidirectionally)
 File: .opencode/guidelines/070-environment.md
 
 Analysis:
-- Contains "pubmed_data_3" (project-specific database)
+- Contains "<project-db>" (project-specific database)
 - Contains "project_root" handling (project-specific)
 - Contains project-specific configuration
 - Would break in another project

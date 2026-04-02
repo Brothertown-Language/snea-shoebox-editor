@@ -302,7 +302,7 @@ Agent:
 → Adds co-author trailers
 → Pushes to remote
 → Creates PR via GitHub MCP
-→ Reports: "PR created: https://github.com/owner/repo/pull/123"
+→ Reports: "PR created: https://github.com/<owner>/<repo>/pull/123"
 → HALTS (waits for merge)
 ```
 

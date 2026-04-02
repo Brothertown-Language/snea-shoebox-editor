@@ -153,7 +153,7 @@ This rule applies universally to:
   3. STOP — do not run the script against production to verify
   4. Ask user if they want to test/verify (they may provide a test fixture)
 - **NEVER run any script, notebook, or command that connects to, reads from, or writes to a production data path**
-  (e.g. `pubmed_data_3/db/`, any path outside `./tmp/`) without explicit user authorization in the current session.
+  (e.g. `<project-db>/db/`, any path outside `./tmp/`) without explicit user authorization in the current session.
 - This includes verification steps: do NOT run `pgserver_start.py`, `pgserver_stop.py`, or any script that starts,
   stops, or force-kills a PostgreSQL server process unless the user explicitly says to do so.
 - Verification of script correctness must use static analysis (lint, grep, code review) or a dedicated test fixture

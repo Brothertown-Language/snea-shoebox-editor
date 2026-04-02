@@ -118,7 +118,7 @@ Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be s
 1. **Cross-references with context**
 
    - When referencing other issues/specs: include issue number AND brief summary
-   - Include URLs: `https://github.com/owner/repo/issues/123`
+   - Include URLs: `https://github.com/<owner>/<repo>/issues/123`
    - State WHY the reference matters
 
 1. **Decision rationale documented**

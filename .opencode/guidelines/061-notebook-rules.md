@@ -36,7 +36,7 @@ ALL code standards in `080-code-standards.md` apply to notebook cells. Key limit
 
 **Production notebook execution is ABSOLUTELY FORBIDDEN without EXPLICIT USER INSTRUCTION.**
 
-- Production notebooks: `pubmed_data_3/`, imports from `commons/`, API calls, database connections
+- Production notebooks: `<project-db>/`, imports from `commons/`, API calls, database connections
 - Authorization: Required PER SESSION, PER EXECUTION — no carryover
 - When in doubt: DO NOT RUN IT
 
