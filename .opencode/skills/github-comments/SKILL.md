@@ -118,6 +118,102 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 
 ______________________________________________________________________
 
+## User Prompt Comment Format
+
+**When creating or revising a spec, capture the user's original prompt as a comment on the issue.**
+
+### Why This Matters
+
+The user's prompt contains nuanced context that may not be captured in the spec body:
+- WHY the change is needed
+- Specific constraints or preferences
+- Background information that informed decisions
+- Edge cases the user cares about
+
+Without the original prompt context, future agents lose critical information about intent.
+
+### Format
+
+```markdown
+**User Prompt:**
+
+> <verbatim user prompt text>
+
+[Optional: Additional context summary if multiple messages]
+
+**Why This Spec:**
+<Brief note on why the spec was created from this prompt>
+
+---
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
+```
+
+### Examples
+
+**Single Prompt:**
+
+```markdown
+**User Prompt:**
+
+> "when creating a spec or revising a spec - it is important to include the user prompt as an added comment to the spec so that context about the spec is properly maintained to prevent loss of information - especially nuance"
+
+**Why This Spec:**
+Establishes requirement to preserve user prompts for context continuity across sessions.
+
+---
+🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #113
+```
+
+**Multiple Messages:**
+
+```markdown
+**User Prompt:**
+
+> "Add rate limiting to the PubMed API client"
+
+**Additional Context:**
+- User mentioned issues with API throttling during testing
+- Concerned about retry behavior during high-load periods
+- Wants graceful degradation, not hard failures
+
+**Why This Spec:**
+Addresses production stability by implementing rate limiting with configurable thresholds.
+
+---
+🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
+```
+
+**Revision Prompt:**
+
+```markdown
+**Revision Prompt:**
+
+> "Add edge case handling for concurrent rate limit scenarios"
+
+**Context:**
+This updates the original rate limiting spec to handle concurrent requests more robustly.
+
+---
+🤖 📝 Updated by <AgentName> (<ModelID>)
+```
+
+### Edge Cases
+
+| Scenario | Action |
+|----------|--------|
+| Prompt is very long | Summarize key points, link to full conversation |
+| User provides clarifications | Add clarification comments separately |
+| Confidential/sensitive info | Allow user to redact before posting |
+
+### Integration Points
+
+| Guideline | Connection |
+|-----------|------------|
+| `140-planning-spec-creation.md` §1.2 | Full prompt preservation requirements |
+| `120-github-issue-first.md` §5 | Prompt preservation workflow |
+
+______________________________________________________________________
+
 ## Comment Type Decision Table
 
 | Action | Post Comment? | Reason |

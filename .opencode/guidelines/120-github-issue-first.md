@@ -124,6 +124,30 @@ Titles that describe specific concerns or features:
 
 **See `github-comments` skill for complete progress comment requirements.**
 
+### Prompt Preservation (MANDATORY)
+
+**When creating or revising a spec, capture the user's original prompt as a comment.**
+
+The user's prompt contains nuanced context about:
+- WHY the change is needed
+- Specific constraints or preferences
+- Background information that informed decisions
+- Edge cases the user cares about
+
+**Prompt Preservation Workflow:**
+
+1. **After creating a new spec issue:**
+   - Immediately post a comment capturing the user's original prompt
+   - Use the format specified in `github-comments` skill → "User Prompt Comment Format"
+
+2. **After revising an existing spec:**
+   - Post a comment with the revision prompt
+   - Include both the new prompt and any additional context
+
+3. **See `140-planning-spec-creation.md` §1.2 for complete requirements.**
+
+---
+
 ### Quick Reference
 
 **Post progress comments after EACH task completion:**
