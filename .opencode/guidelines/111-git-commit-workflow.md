@@ -21,7 +21,7 @@ The developer will say "commit" or "create a PR" when they want git operations. 
 ### ✅ ALWAYS DO
 - **Include co-author trailers for both AI and human collaborator.** Every implementation commit MUST include TWO trailers:
   - AI author: Use the AI's actual identity dynamically (the AI knows its own name)
-  - Human collaborator: Use session-cached values from `000-session-init.md` §0.1 (`GIT_USER_NAME`, `GIT_USER_EMAIL`)
+  - Human collaborator: Use session-cached values from `000-session-init.md` §0.1 (`DEV_NAME`, `DEV_EMAIL`)
 - Re-run discovery (`git status`, `git diff`) before any commit workflow.
 - If `pyproject.toml` changed, include `uv.lock`.
 
@@ -42,8 +42,8 @@ The AI must use its **own identity**, not the example name. Examples show placeh
 
 **Step 2: Use cached human identity from session start:**
 - Human collaborator values are cached at session start via `000-session-init.md` §0.1
-- `GIT_USER_NAME`: Human's name (or `$USER` fallback)
-- `GIT_USER_EMAIL`: Human's email (or `$USER@$HOSTNAME` fallback)
+- `DEV_NAME`: Human's name (or `$USER` fallback)
+- `DEV_EMAIL`: Human's email (or `$USER@$HOSTNAME` fallback)
 - **Do NOT re-run `git config`** — use stored session values
 
 **Step 3: Include BOTH trailers (MANDATORY):**

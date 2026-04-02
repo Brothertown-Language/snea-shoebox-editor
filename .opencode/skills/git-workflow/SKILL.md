@@ -217,4 +217,4 @@ pre-work → implementation → review-prep → [commit-prep] → pr-creation �
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing)
 - Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
-- Session init: `000-session-init.md` (for GIT_OWNER, GIT_REPO, GIT_USER_NAME, GIT_USER_EMAIL)
+- Session init: `000-session-init.md` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)

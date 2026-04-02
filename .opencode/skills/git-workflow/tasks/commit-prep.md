@@ -82,14 +82,14 @@ Every implementation commit MUST include:
 
 1. **Human Collaborator**: Use session values from `000-session-init.md`
 
-   - `GIT_USER_NAME`: Human's name
-   - `GIT_USER_EMAIL`: Human's email
+   - `DEV_NAME`: Human's name
+   - `DEV_EMAIL`: Human's email
 
 Example:
 
 ```
 Co-authored-by: OpenCode (ollama-cloud/glm-5) <noreply@opencode.ai>
-Co-authored-by: <Human Name> <human@email.com>  # From GIT_USER_NAME and GIT_USER_EMAIL
+Co-authored-by: <Human Name> <human@email.com>  # From DEV_NAME and DEV_EMAIL
 ```
 
 ## Why This Task Is Separate from PR Creation

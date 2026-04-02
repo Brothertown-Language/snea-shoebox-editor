@@ -35,8 +35,8 @@ uv run python ai_bin/session_init.py
 # Use these values for SESSION DURATION:
 # - GIT_OWNER for all github_* MCP calls
 # - GIT_REPO for all github_* MCP calls
-# - GIT_USER_NAME for commit trailers
-# - GIT_USER_EMAIL for commit trailers
+# - DEV_NAME for commit trailers
+# - DEV_EMAIL for commit trailers
 ```
 
 ### ✅ CORRECT Usage
