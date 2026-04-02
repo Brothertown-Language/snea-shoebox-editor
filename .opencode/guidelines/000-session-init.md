@@ -13,8 +13,8 @@ uv run python ai_bin/session_init.py
 ```
 
 **Script outputs:**
-- `GIT_USER_NAME`: Human collaborator name (for commit trailers)
-- `GIT_USER_EMAIL`: Human collaborator email (for commit trailers)
+- `DEV_NAME`: Human collaborator name (for commit trailers)
+- `DEV_EMAIL`: Human collaborator email (for commit trailers)
 - `GIT_OWNER`: Repository owner (for GitHub MCP API calls)
 - `GIT_REPO`: Repository name (for GitHub MCP API calls)
 - `GIT_HOOKS_PATH`: Git hooks path (to verify hooks installed)
@@ -64,8 +64,8 @@ uv run python ai_bin/session_init.py
 uv run python ai_bin/session_init.py
 
 # Expected output format:
-# GIT_USER_NAME=<human-name>        # For commit trailers
-# GIT_USER_EMAIL=<human-email>     # For commit trailers
+# DEV_NAME=<human-name>        # For commit trailers
+# DEV_EMAIL=<human-email>     # For commit trailers
 # GIT_OWNER=<github-owner>          # For GitHub MCP API calls
 # GIT_REPO=<github-repo>            # For GitHub MCP API calls
 # GIT_HOOKS_PATH=<hooks-path>        # Git hooks location
@@ -74,7 +74,7 @@ uv run python ai_bin/session_init.py
 
 **Use these values for SESSION DURATION:**
 - `GIT_OWNER` and `GIT_REPO` for ALL `github_*` MCP calls
-- `GIT_USER_NAME` and `GIT_USER_EMAIL` for commit trailers
+- `DEV_NAME` and `DEV_EMAIL` for commit trailers
 - DO NOT re-run `git config` or derive values from other sources
 
 ### Why This Matters

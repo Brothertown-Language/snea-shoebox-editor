@@ -16,9 +16,9 @@ The sequence is:
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just generate the compare URL.**
 
-### ⚠️ CRITICAL: Branch Must Be Pushed Before This Task
+### ⚠️ CRITICAL: Implementation MUST Push Branch
 
-**The `implementation` task is responsible for pushing the branch.**
+**The implementation task is responsible for committing AND pushing the branch BEFORE invoking review-prep.**
 
 **Correct sequence:**
 
@@ -28,7 +28,7 @@ Implementation task:
   2. git status (verify)
   3. git add -A (stage)
   4. git commit (commit)
-  5. git push -u origin <branch> (push)
+  5. git push -u origin <branch> (push) ← MANDATORY
   6. Report completion
   7. Invoke review-prep
 
@@ -41,9 +41,10 @@ Review-prep task:
 
 **If this task is invoked and branch is NOT pushed:**
 
-1. Inform user: "Implementation task must push before review-prep"
-1. Push the branch: `git push -u origin <branch-name>`
-1. Continue to generate compare URL
+1. **STOP and report the violation:** "Implementation task failed to push branch - fixing now"
+2. **Push the branch:** `git push -u origin <branch-name>`
+3. **Continue to generate compare URL**
+4. **Document the gap in the completion comment**
 
 ### ⚠️ CRITICAL: NO EXCEPTIONS
 
@@ -123,10 +124,19 @@ ls ./tmp/
 git branch -vv
 ```
 
+**Expected output:**
+```
+* spec/my-branch  abc123 [origin/spec/my-branch] Commit message
+```
+
+**If branch shows `[origin/<branch>]` with upstream tracking → ✅ Branch is pushed**
+
+**If branch shows NO upstream or "gone" → 🚫 Branch NOT pushed**
+
 **If branch is NOT pushed to remote:**
 
 ```bash
-# Push branch
+# Push branch immediately
 git push -u origin <branch-name>
 ```
 

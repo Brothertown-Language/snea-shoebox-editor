@@ -56,8 +56,8 @@ This file provides critical rules that must never be violated.
 ### ✅ REQUIRED SEQUENCE
 1. Run session init: `uv run python ai_bin/session_init.py`
 2. Store ALL output values for session duration:
-   - `GIT_USER_NAME` (human name for commit trailers)
-   - `GIT_USER_EMAIL` (human email for commit trailers)
+   - `DEV_NAME` (human name for commit trailers)
+   - `DEV_EMAIL` (human email for commit trailers)
    - `GIT_OWNER` (repository owner for GitHub API calls)
    - `GIT_REPO` (repository name for GitHub API calls)
    - `GIT_HOOKS_PATH` (git hooks path)

@@ -9,8 +9,8 @@ uv run python ai_bin/session_init.py
 ```
 
 **Script outputs:**
-- `GIT_USER_NAME`: Human collaborator name (for commit trailers)
-- `GIT_USER_EMAIL`: Human collaborator email (for commit trailers)
+- `DEV_NAME`: Human collaborator name (for commit trailers)
+- `DEV_EMAIL`: Human collaborator email (for commit trailers)
 - `GIT_OWNER`: Repository owner (for GitHub MCP API calls)
 - `GIT_REPO`: Repository name (for GitHub MCP API calls)
 - `GIT_HOOKS_PATH`: Git hooks path (to verify hooks installed)
@@ -206,7 +206,7 @@ ALL work must follow proper engineering methodology:
 See `.opencode/guidelines/085-engineering-approach.md` for complete requirements.
 
 **✅ ALWAYS:**
-- **Run session init script at session start** — Run `uv run python ai_bin/session_init.py` before any other operations. Store the output values (GIT_USER_NAME, GIT_USER_EMAIL, GIT_OWNER, GIT_REPO, GIT_HOOKS_PATH, GIT_REMOTE_URL) for session duration. See `000-session-init.md`.
+- **Run session init script at session start** — Run `uv run python ai_bin/session_init.py` before any other operations. Store the output values (DEV_NAME, DEV_EMAIL, GIT_OWNER, GIT_REPO, GIT_HOOKS_PATH, GIT_REMOTE_URL) for session duration. See `000-session-init.md`.
 - Create feature branch BEFORE any filesystem change
 - Create PRs for all merges (when tooling available)
 - Reference the Authoritative Spec for planning

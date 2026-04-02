@@ -2,8 +2,8 @@
 """Session initialization script for AI agents.
 
 Extracts git context needed for agent startup:
-- GIT_USER_NAME: Human collaborator name (for commit trailers)
-- GIT_USER_EMAIL: Human collaborator email (for commit trailers)
+- DEV_NAME: Human collaborator name (for commit trailers)
+- DEV_EMAIL: Human collaborator email (for commit trailers)
 - GIT_OWNER: Repository owner (for GitHub MCP API calls)
 - GIT_REPO: Repository name (for GitHub MCP API calls)
 - GIT_HOOKS_PATH: Git hooks path (to verify hooks installed)
@@ -129,8 +129,8 @@ def main() -> int:
 
     # Output in the specified format
     print("# Session Init - Git Context")
-    print(f"GIT_USER_NAME={user_name}")
-    print(f"GIT_USER_EMAIL={user_email}")
+    print(f"DEV_NAME={user_name}")
+    print(f"DEV_EMAIL={user_email}")
     print(f"GIT_OWNER={owner}")
     print(f"GIT_REPO={repo}")
     print(f"GIT_HOOKS_PATH={hooks_path}")
