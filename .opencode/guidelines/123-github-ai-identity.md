@@ -25,8 +25,11 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
   - **Progress comments**: Omit (content already describes the work)
   - **Issue creation/completion**: Include issue number if useful
   - **Rejection/Superseded**: Include reason or replacement reference
+  - **AI Agent Judgment**: Use minimal byline suffix text by default; add extra context only when it provides clear value
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
+
+**Minimal Byline Principle:** Default to minimal byline format (e.g., `🤖 📝 Updated by <AgentName> (<ModelID>)`). Add suffix context only when it clarifies ambiguity or provides essential reference.
 
 **Emoji Formatting:** Emoji must be PLAIN TEXT (NOT inside italic/bold formatting) to prevent render failures.
 
