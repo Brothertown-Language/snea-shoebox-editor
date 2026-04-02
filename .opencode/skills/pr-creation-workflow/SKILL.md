@@ -1,9 +1,6 @@
----
-name: pr-creation-workflow
-description: Handles PR creation timing requirements. Defines when PRs can be created, what authorizes PR creation, and the mandatory HALT after PR creation.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: pr-creation-workflow description: Handles PR creation timing requirements. Defines when PRs can be created, what authorizes PR creation, and the mandatory HALT after PR creation. license: MIT compatibility: opencode
 
 # PR Creation Workflow Skill
 
@@ -47,10 +44,10 @@ instruction, HALTing after PR creation, and NEVER merging PRs.
 ### After Implementation Completes
 
 1. ✅ Report completion (concise summary)
-2. ✅ HALT — do NOT ask about PRs
-3. ✅ WAIT for explicit "create a PR" instruction
-4. ❌ Do NOT ask "Ready for a PR?" or "Should I create a PR?"
-5. ❌ Do NOT create PR automatically
+1. ✅ HALT — do NOT ask about PRs
+1. ✅ WAIT for explicit "create a PR" instruction
+1. ❌ Do NOT ask "Ready for a PR?" or "Should I create a PR?"
+1. ❌ Do NOT create PR automatically
 
 ### When Developer Says "create a PR"
 
@@ -102,6 +99,7 @@ instruction, HALTing after PR creation, and NEVER merging PRs.
 If you accidentally create a PR with multiple commits:
 
 1. **DO NOT ask user to fix it** — Fix it yourself immediately:
+
    ```bash
    git reset --soft origin/main
    git commit -m "<descriptive message>" \
@@ -110,22 +108,24 @@ If you accidentally create a PR with multiple commits:
    git push --force-with-lease origin <branch>
    ```
 
-2. **Close the bad PR** and create a new one if necessary.
+1. **Close the bad PR** and create a new one if necessary.
 
-3. **Report the violation** in the GitHub issue comment.
+1. **Report the violation** in the GitHub issue comment.
 
 **User intervention should NEVER be required to fix squash violations.**
 
 1. **Collect sub-issues** (for multi-task specs):
+
    ```python
    # Fetch all sub-issues for the parent issue
    sub_issues = github_issue_read(method="get_sub_issues", issue_number=<parent>)
-   
+
    # Build autoclose list: parent + all sub-issues
    autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
    ```
 
-2. **Squash commits** (MANDATORY):
+1. **Squash commits** (MANDATORY):
+
    ```bash
    git reset --soft origin/main
    git commit -m "<descriptive message>" \
@@ -133,12 +133,14 @@ If you accidentally create a PR with multiple commits:
        --trailer "Co-authored-by: <Human-Name> <human-email>"
    ```
 
-3. **Force push**:
+1. **Force push**:
+
    ```bash
    git push --force-with-lease origin <branch>
    ```
 
-4. **Create PR via GitHub MCP**:
+1. **Create PR via GitHub MCP**:
+
    - Title: `[SPEC] <description>`
    - Body: Must include `Fixes #<issue-number>` for EACH issue to autoclose
      - Single-task spec: `Fixes #<parent>`
@@ -146,24 +148,25 @@ If you accidentally create a PR with multiple commits:
    - Head: `<branch-name>`
    - Base: `main`
 
-5. **Report PR URL and HALT** — Wait for human to merge
+1. **Report PR URL and HALT** — Wait for human to merge
 
 ### Sub-Issue Collection (CRITICAL)
 
 **When creating a PR for a multi-task spec with sub-issues:**
 
 1. **Fetch sub-issues** using `github_issue_read method="get_sub_issues"`
-2. **Include ALL sub-issues** in the PR body:
+1. **Include ALL sub-issues** in the PR body:
    ```
    Fixes #446
    Fixes #451
    Fixes #452
    ```
-3. **GitHub autocloses ALL issues** when PR merges
+1. **GitHub autocloses ALL issues** when PR merges
 
 **Single-task exemption:** If no sub-issues exist, include only the parent issue.
 
 **Example Multi-Task PR Body:**
+
 ```markdown
 ## Summary
 Update PR workflow skills to include sub-issue autoclose.
@@ -179,9 +182,9 @@ Fixes #451
 ### The Developer Needs To:
 
 1. Run human tests that agent cannot run
-2. Verify implementation works in their environment
-3. Request adjustments if something isn't right
-4. Explicitly tell agent to create a PR AFTER verification passes
+1. Verify implementation works in their environment
+1. Request adjustments if something isn't right
+1. Explicitly tell agent to create a PR AFTER verification passes
 
 ### Why Testing Matters
 
@@ -204,13 +207,15 @@ Fixes #451
 **Issues are closed ONLY AFTER the PR is merged — NEVER before.**
 
 **🚫 FORBIDDEN:**
+
 - Closing issues when PR is created but not merged
 - Closing parent issues while child issues remain open
 
 **✅ REQUIRED SEQUENCE:**
+
 1. Create PR → Report URL → HALT
-2. Wait for human to merge
-3. ONLY after merge confirmation → Close issues
+1. Wait for human to merge
+1. ONLY after merge confirmation → Close issues
 
 **Why:** PRs may be rejected. Premature closure loses visibility.
 

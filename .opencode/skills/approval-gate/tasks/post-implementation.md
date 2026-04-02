@@ -9,9 +9,10 @@ Push feature branch, generate compare URL, and report completion for developer r
 **This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
 
 The sequence is:
+
 1. Implementation complete → **post-implementation invoked automatically**
-2. Branch pushed, compare URL generated → HALT
-3. Wait for developer to say "create a PR"
+1. Branch pushed, compare URL generated → HALT
+1. Wait for developer to say "create a PR"
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just push the branch.**
 
@@ -39,23 +40,27 @@ git status --porcelain
 ```
 
 **If EMPTY (no file changes):**
+
 - Skip to "No-Changes Path" below
 - This means implementation was already complete or no changes needed
 
 **If NOT EMPTY (file changes exist):**
+
 - Continue to Step 1 (Push Feature Branch)
 
----
+______________________________________________________________________
 
 ### No-Changes Path (Already Implemented)
 
 **When implementation determined no changes were needed:**
 
 1. **Close issue directly:**
+
    - Post verification comment explaining what was checked
    - Use `github_issue_write(method="update", state="closed", state_reason="completed")`
 
-2. **Comment format:**
+1. **Comment format:**
+
 ```markdown
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
@@ -77,7 +82,7 @@ Verified all proposed changes were already implemented. No modifications needed.
    - No PR needed
    - Report completion in chat
 
----
+______________________________________________________________________
 
 ### Step 1: Push Feature Branch
 
@@ -117,11 +122,13 @@ https://github.com/<owner>/<repo>/compare/main...<branch-name>
 ### Step 4: HALT
 
 **DO NOT:**
+
 - Create PR (requires explicit "create a PR")
 - Squash commits (happens at PR creation)
 - Push again (already pushed)
 
 **WAIT for:**
+
 - Developer to review via GitHub diff viewer
 - Explicit "create a PR" instruction
 

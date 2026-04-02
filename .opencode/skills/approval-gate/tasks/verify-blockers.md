@@ -43,6 +43,7 @@ for issue in issues:
 ### Step 3: Check Dependencies
 
 For each dependency listed in spec:
+
 - Verify availability
 - Check for dependency conflicts
 - Document any issues

@@ -1,9 +1,6 @@
----
-name: git-workflow
-description: Handles pre-work git branch, git stash, work, git squash commit for PR, etc work as dictated by the guidelines. Automatically invoked when user approves implementation or requests PR creation.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: git-workflow description: Handles pre-work git branch, git stash, work, git squash commit for PR, etc work as dictated by the guidelines. Automatically invoked when user approves implementation or requests PR creation. license: MIT compatibility: opencode
 
 # Skill: git-workflow
 
@@ -39,18 +36,33 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 ## Operating Protocol
 
 1. **Automatic invocation (mandatory):** This skill is referenced when:
+
    - User says `approved`, `go`, or similar authorization
    - User says `create a PR`, `make a PR`, or similar PR request
    - Implementation completes (review-prep task invoked automatically)
    - DO NOT prompt for invocation - the skill is triggered automatically
 
-2. **Phase sequence:**
+1. **Phase sequence:**
+
    - Phase 1: Pre-Work (mandatory first) → `pre-work` task
    - Phase 2: Implementation (user-driven) → agent performs work
    - Phase 3: Review Prep (mandatory, automatic) → `review-prep` task **NO DECISION POINT**
    - Phase 4: Commit Prep (user-initiated) → `commit-prep` task
    - Phase 5: PR Creation (user-initiated) → `pr-creation` task
    - Phase 6: Branch Cleanup (after merge) → `cleanup` task
+
+## Automatic Invocation Triggers
+
+**This skill MUST be invoked automatically (no user prompt) at these enforcement points:**
+
+| Trigger Point | Action | Verification |
+|---------------|--------|--------------|
+| **After implementation completes** | Load skill → `review-prep` task | Push branch, generate compare URL, HALT |
+| **Before ANY git branch operation** | Load skill → `pre-work` task | Verify branch state, stash changes |
+| **When user says "create a PR"** | Load skill → `pr-creation` task | Squash to single commit, push, create PR, HALT |
+| **After PR merge confirmed** | Load skill → `cleanup` task | Verify merge via GitHub API, close issues, delete branches |
+
+**Enforcement:** Do NOT proceed with git operations at these trigger points without first loading this skill and verifying workflow compliance.
 
 ## Critical Workflow Sequence
 
@@ -153,30 +165,34 @@ git push --force-with-lease origin <branch>
 **When spec investigation reveals all changes are already present:**
 
 1. **Skip branch creation entirely:**
+
    - Do NOT create feature branch
    - Do NOT push anything
    - Do NOT create PR
 
-2. **Close issue directly with verification comment:**
+1. **Close issue directly with verification comment:**
+
    ```markdown
    🤖 ✅ Completed by <AgentName> (<ModelID>)
 
    **Summary:**
-   
+
    Verified all proposed changes were already implemented. No modifications needed.
-   
+
    **Verification Results:**
-   
+
    - [File:line references for existing content]
    - [Confirmation of each spec requirement]
-   
+
    **Outcome:** Spec verified complete without additional changes.
    ```
 
-3. **Use `state_reason: "completed"` when closing:**
+1. **Use `state_reason: "completed"` when closing:**
+
    - Indicates successful completion (not cancellation)
 
-4. **Report completion in chat and HALT:**
+1. **Report completion in chat and HALT:**
+
    - No further workflow steps needed
 
 ## Task Dependencies
@@ -192,6 +208,7 @@ pre-work → implementation → review-prep → [commit-prep] → pr-creation �
 ```
 
 **Dependency Notes:**
+
 - `commit-prep` is optional (user may skip by saying "create a PR" directly)
 - `cleanup` waits for human merge confirmation
 - `review-prep` is mandatory after implementation

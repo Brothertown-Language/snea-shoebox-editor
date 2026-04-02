@@ -1,9 +1,6 @@
----
-name: approval-gate
-description: Authorization gatekeeper ensuring all code changes follow spec + authorization workflow. Verifies specs exist, authorization is explicit, sub-issues structure is correct.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: approval-gate description: Authorization gatekeeper ensuring all code changes follow spec + authorization workflow. Verifies specs exist, authorization is explicit, sub-issues structure is correct. license: MIT compatibility: opencode
 
 # Skill: approval-gate
 
@@ -39,21 +36,38 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 ## Operating Protocol
 
 1. **Automatic invocation (mandatory):** This skill is referenced when:
+
    - User says `approved`, `go`, or similar authorization
    - User asks about approval workflow
    - Implementation is about to begin
    - DO NOT prompt for invocation - the skill is triggered automatically
 
-2. **Pre-Implementation Verification:**
+1. **Pre-Implementation Verification:**
+
    - Verify spec exists as GitHub Issue
    - Verify spec has received explicit authorization
    - Verify sub-issues structure (multi-task only)
    - Check for blocking issues/updates
 
-3. **Implementation Scope:**
+1. **Implementation Scope:**
+
    - Authorization grants ONLY the specified phase/task
    - HALT after completing authorized work
    - Wait for explicit authorization for next phase/task
+
+## Automatic Invocation Triggers
+
+**This skill MUST be invoked automatically (no user prompt) at these enforcement points:**
+
+| Trigger Point | Action | Verification |
+|---------------|--------|--------------|
+| **Before ANY file edit** | Load skill → `verify-authorization` task | Confirm spec + approval exist |
+| **Before implementation** | Load skill → `verify-authorization` + `verify-sub-issues` | Confirm multi-task specs have sub-issues |
+| **Before issue body edits** | Load skill → `verify-authorization` | Confirm authorization overrides `needs-approval` label |
+| **After implementation completes** | Load `git-workflow` skill → `review-prep` task | Push branch, generate compare URL, HALT |
+| **Before posting GitHub comments** | Load `github-comments` skill | Verify byline format, agent identity |
+
+**Enforcement:** Do NOT proceed with edits, implementation, or comments without first loading this skill and verifying authorization.
 
 ## Authorization Requirements
 
@@ -89,10 +103,10 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 ### After Implementation Completes
 
 1. Push feature branch to remote
-2. Generate compare URL for review
-3. Report completion with executive summary
-4. HALT — do NOT create PR without explicit instruction
-5. WAIT for "create a PR" instruction
+1. Generate compare URL for review
+1. Report completion with executive summary
+1. HALT — do NOT create PR without explicit instruction
+1. WAIT for "create a PR" instruction
 
 ## Exceptions (No Authorization Required)
 
@@ -112,6 +126,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 ## Parent Closure Pre-Check Reference
 
 Parent/child issue closure verification is handled in:
+
 - **`git-workflow` skill** → `cleanup` task → Sub-issue double-check
 - **`124-github-archive-workflow.md`** → "Parent Closure Pre-Check" section
 

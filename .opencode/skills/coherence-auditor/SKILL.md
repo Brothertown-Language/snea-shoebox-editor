@@ -1,9 +1,6 @@
----
-name: coherence-auditor
-description: Audit coherence between guidelines, skills, and AI agent behavior to ensure they work together effectively. Can be used for extraction (identifying skill candidates) and maintenance (detecting drift).
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: coherence-auditor description: Audit coherence between guidelines, skills, and AI agent behavior to ensure they work together effectively. Can be used for extraction (identifying skill candidates) and maintenance (detecting drift). license: MIT compatibility: opencode
 
 # Skill: coherence-auditor
 
@@ -40,7 +37,8 @@ You are an LLM Coherence Auditor. Your focus is auditing coherence between `.ope
 
 1. **Automatic invocation (mandatory):** This skill is invoked when auditing guideline/skill coherence or when user requests extraction/maintenance audit.
 
-2. **Mode selection:**
+1. **Mode selection:**
+
    - **Extraction mode**: Use when creating new skills from guideline content
    - **Maintenance mode**: Use for ongoing drift detection and verification
 
@@ -73,9 +71,10 @@ You are an LLM Coherence Auditor. Your focus is auditing coherence between `.ope
 **Temp files are NOT preserved between sessions.**
 
 After creating audit log:
+
 1. Write to `./tmp/coherence-audit-YYYYMMDD-<mode>.md`
-2. Attach full content as GitHub Issue comment
-3. Delete temp file
+1. Attach full content as GitHub Issue comment
+1. Delete temp file
 
 **Why:** Fresh-start AI agents cannot access `./tmp/` from previous sessions. GitHub Issue comments ARE preserved.
 

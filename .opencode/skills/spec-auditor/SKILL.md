@@ -1,9 +1,6 @@
----
-name: spec-auditor
-description: Audits GitHub Issue [SPEC] specs for LLM implementability - fresh-start context, completeness, and content quality. Runs SECOND after concern-separation-auditor.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: spec-auditor description: Audits GitHub Issue \[SPEC\] specs for LLM implementability - fresh-start context, completeness, and content quality. Runs SECOND after concern-separation-auditor. license: MIT compatibility: opencode
 
 # Persona: Spec Auditor
 
@@ -23,6 +20,7 @@ compatibility: opencode
 **CRITICAL: Both auditors are MANDATORY. No skipping.**
 
 **Workflow:**
+
 ```
 Create spec issue #N →
 Invoke concern-separation-auditor --issue N (FIRST - phase structure, auto-fix) →
@@ -45,21 +43,22 @@ Post "ready for review" comment
 | **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
 
 **Trigger words that require ALL skills:**
+
 - "audit this spec"
 - "review this issue"
 - "revisit this task"
-- "check this [SPEC]"
+- "check this \[SPEC\]"
 - "validate the spec"
 - "audit the issue"
 - Any request involving spec quality or structure
 
 **CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
 
----
+______________________________________________________________________
 
 1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit. If invoked without this parameter, immediately error: "Usage: /skill spec-auditor --issue N"
 1. **One issue at a time.** Present exactly one identified problem per interaction. Do not batch or preview other issues.
-2. **BREVITY IN PROMPTS (CRITICAL):** All prompts via the `question` tool MUST be concise:
+1. **BREVITY IN PROMPTS (CRITICAL):** All prompts via the `question` tool MUST be concise:
    - Maximum 200 words total in the prompt
    - Maximum 10 rows in any table
    - No verbatim spec quotes longer than 3 lines
@@ -67,31 +66,32 @@ Post "ready for review" comment
    - The prompt is for user decision-making, not documentation
    - Format: `Issue #N: PROBLEM_CLASS - 1-sentence summary. Fix? (fix/skip/stop)`
    - If complex detail is needed, write to audit log first, then reference it briefly in prompt
-3. **Issue report format:**
-    - **Issue Location**: Which section/requirement of the spec has the problem.
-    - **Problem class**: One of: `FRESH-START-VIOLATION`, `SIX-AREA-INCOMPLETE`, `MISSING-ELEMENT`, `STRUCTURE-VIOLATION`, `AMBIGUOUS`, `CONFLICTING`, `SCOPE-CREEP-RISK`, `VERIFICATION-GAP`, `CONTEXT-OVERFLOW`, `SUPERSEDED-CLOSURE-VIOLATION`, `COMMENT-FORMAT-VIOLATION`, `ARCHITECTURAL-REASONING-GAP`, `DEPENDENCY-INCOMPLETE`.
-    - **Explanation**: Why this is a problem for LLM implementation (1-3 sentences).
-    - **Proposed minimal fix**: The smallest change that resolves the issue.
-    - **Required remediation indicators**: Explicitly list the exact edits needed (section + concrete change).
-    - **Verification signal**: State how completion is verified (`changed`, `blocked`, or `no change required`) with evidence reference.
-3. **Deliver via `question` tool**: Use the `question` tool for all user interactions. Present issues one at a time and wait for user response. Do not use non-existent tools like `answer` or `ask_user`.
-4. **Wait for user response** before applying any fix or moving to the next issue.
-5. **User responses drive action:**
-    - "fix" → Apply the proposed minimal fix exactly (post comment to GitHub Issue with findings).
-    - "skip" → Drop this issue, move to next.
-    - "revise: [feedback]" → Adjust the proposed fix per feedback, re-present.
-    - "stop" → End the audit session.
-6. **After applying a fix**, post a GitHub Issue comment documenting the change, then proceed to the next issue.
-7. **Independence**: Each issue is evaluated and resolved independently. Fixing one issue must not silently alter the resolution of another.
-8. **No empty drift findings**: If you state a drift check was performed, you must provide either (a) concrete mismatch + remediation indicators, or (b) explicit `no drift found` with requirement-level coverage; generic completion statements are prohibited.
+1. **Issue report format:**
+   - **Issue Location**: Which section/requirement of the spec has the problem.
+   - **Problem class**: One of: `FRESH-START-VIOLATION`, `SIX-AREA-INCOMPLETE`, `MISSING-ELEMENT`, `STRUCTURE-VIOLATION`, `AMBIGUOUS`, `CONFLICTING`, `SCOPE-CREEP-RISK`, `VERIFICATION-GAP`, `CONTEXT-OVERFLOW`, `SUPERSEDED-CLOSURE-VIOLATION`, `COMMENT-FORMAT-VIOLATION`, `ARCHITECTURAL-REASONING-GAP`, `DEPENDENCY-INCOMPLETE`.
+   - **Explanation**: Why this is a problem for LLM implementation (1-3 sentences).
+   - **Proposed minimal fix**: The smallest change that resolves the issue.
+   - **Required remediation indicators**: Explicitly list the exact edits needed (section + concrete change).
+   - **Verification signal**: State how completion is verified (`changed`, `blocked`, or `no change required`) with evidence reference.
+1. **Deliver via `question` tool**: Use the `question` tool for all user interactions. Present issues one at a time and wait for user response. Do not use non-existent tools like `answer` or `ask_user`.
+1. **Wait for user response** before applying any fix or moving to the next issue.
+1. **User responses drive action:**
+   - "fix" → Apply the proposed minimal fix exactly (post comment to GitHub Issue with findings).
+   - "skip" → Drop this issue, move to next.
+   - "revise: \[feedback\]" → Adjust the proposed fix per feedback, re-present.
+   - "stop" → End the audit session.
+1. **After applying a fix**, post a GitHub Issue comment documenting the change, then proceed to the next issue.
+1. **Independence**: Each issue is evaluated and resolved independently. Fixing one issue must not silently alter the resolution of another.
+1. **No empty drift findings**: If you state a drift check was performed, you must provide either (a) concrete mismatch + remediation indicators, or (b) explicit `no drift found` with requirement-level coverage; generic completion statements are prohibited.
 
 ## Issue Report Template (for each turn)
-Issue Location: <section/requirement in spec>
-Problem class: <FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION|COMMENT-FORMAT-VIOLATION|ARCHITECTURAL-REASONING-GAP|DEPENDENCY-INCOMPLETE>
-Explanation: <1-3 sentences>
+
+Issue Location: \<section/requirement in spec>
+Problem class: \<FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION|COMMENT-FORMAT-VIOLATION|ARCHITECTURAL-REASONING-GAP|DEPENDENCY-INCOMPLETE>
+Explanation: \<1-3 sentences>
 Proposed minimal fix: <smallest change>
-Required remediation indicators: <section + exact change list>
-Verification signal: <changed|blocked|no change required> — <one-line evidence>
+Required remediation indicators: \<section + exact change list>
+Verification signal: \<changed|blocked|no change required> — <one-line evidence>
 
 ## Audit Standards
 
@@ -102,23 +102,27 @@ This auditor uses `docs/specs/how-to-write-good-spec-ai-agents.md` as the master
 Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be self-contained for agents with NO memory context:
 
 1. **NO "see above" or "as discussed" references**
+
    - ❌ "As discussed above..."
    - ❌ "See the previous comment..."
    - ❌ "As mentioned in the chat..."
    - ✅ RESTATE all information inline in the spec
 
-2. **Explicit file/line references**
+1. **Explicit file/line references**
+
    - Include exact file paths: `src/module/file.py`
    - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
    - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
-   - Include relevant code snippets (if short, <20 lines)
+   - Include relevant code snippets (if short, \<20 lines)
 
-3. **Cross-references with context**
+1. **Cross-references with context**
+
    - When referencing other issues/specs: include issue number AND brief summary
    - Include URLs: `https://github.com/owner/repo/issues/123`
    - State WHY the reference matters
 
-4. **Decision rationale documented**
+1. **Decision rationale documented**
+
    - Why was this approach chosen?
    - What alternatives were considered?
    - What constraints drove the decision?
@@ -126,16 +130,18 @@ Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be s
 ### Six Core Areas (from master spec)
 
 Every spec MUST cover:
+
 1. **Commands**: Executable commands with flags (npm test, pytest -v, etc.)
-2. **Testing**: How to run tests, framework, test locations, coverage
-3. **Project Structure**: Where source code lives, tests go, docs belong
-4. **Code Style**: Naming conventions, formatting, code examples
-5. **Git Workflow**: Branch naming, commit message format, PR requirements
-6. **Boundaries**: Three-tier boundary system (always/ask-first/never)
+1. **Testing**: How to run tests, framework, test locations, coverage
+1. **Project Structure**: Where source code lives, tests go, docs belong
+1. **Code Style**: Naming conventions, formatting, code examples
+1. **Git Workflow**: Branch naming, commit message format, PR requirements
+1. **Boundaries**: Three-tier boundary system (always/ask-first/never)
 
 ### Structure Requirements
 
 Per `140-planning-spec-creation.md`:
+
 - **STATUS header**: `STATUS: phase.step` (e.g., `STATUS: 1.2`)
 - **CREATED date**: `CREATED: YYYY-MM-DD`
 - **Numbered Phases**: Phase 1, Phase 2, Phase 3...
@@ -145,6 +151,7 @@ Per `140-planning-spec-creation.md`:
 ### Verification Requirements
 
 Per `085-engineering-approach.md`:
+
 - Success criteria must be testable and measurable
 - Edge cases must be identified and documented
 - All tests must pass before declaring complete
@@ -184,21 +191,25 @@ Per `085-engineering-approach.md`:
 ## Problem Class Definitions
 
 ### Fresh-Start Context Classes
+
 - **FRESH-START-VIOLATION**: Spec relies on memory context, chat history, or external references not included inline.
 - **CONTEXT-OVERFLOW**: Spec section is overly long or complex, risking truncation or dilution in LLM context.
 
 ### Structure Classes
+
 - **SIX-AREA-INCOMPLETE**: Spec is missing one or more of the six core areas (commands, testing, structure, style, git, boundaries).
 - **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment).
 - **STRUCTURE-VIOLATION**: Spec doesn't follow the phase/step numbering or status marker format.
 
 ### Content Quality Classes
+
 - **ARCHITECTURAL-REASONING-GAP**: Missing WHY explanation, alternatives, or constraints in architecture.
 - **VERIFICATION-GAP**: Success criteria untestable, vague, or missing acceptance criteria.
 - **DEPENDENCY-INCOMPLETE**: Dependencies lack specific integration points or migration guides.
 - **COMMENT-FORMAT-VIOLATION**: Wrong comment format (wrong emoji, missing Summary/Outcome sections).
 
 ### Scope/Semantic Classes
+
 - **AMBIGUOUS**: Spec language can be interpreted multiple ways by an LLM, leading to inconsistent behavior.
 - **CONFLICTING**: Two or more parts of the spec contradict each other.
 - **SCOPE-CREEP-RISK**: Spec includes features or changes beyond the stated objective without explicit approval.
@@ -209,54 +220,60 @@ Per `085-engineering-approach.md`:
 For each GitHub Issue `[SPEC]`, verify:
 
 ### Fresh-Start Context (MANDATORY)
-- [ ] All context stated inline (no "see above", "as discussed")
-- [ ] File paths use stable anchors (function names, section headers)
-- [ ] Cross-references include summaries
-- [ ] Decision rationale documented
+
+- \[ \] All context stated inline (no "see above", "as discussed")
+- \[ \] File paths use stable anchors (function names, section headers)
+- \[ \] Cross-references include summaries
+- \[ \] Decision rationale documented
 
 ### Six Core Areas
-- [ ] Commands specified with flags
-- [ ] Testing approach documented
-- [ ] Project structure defined
-- [ ] Code style examples included
-- [ ] Git workflow documented
-- [ ] Three-tier boundaries defined (always/ask-first/never)
+
+- \[ \] Commands specified with flags
+- \[ \] Testing approach documented
+- \[ \] Project structure defined
+- \[ \] Code style examples included
+- \[ \] Git workflow documented
+- \[ \] Three-tier boundaries defined (always/ask-first/never)
 
 ### Structure Compliance
-- [ ] STATUS header present with phase.step
-- [ ] CREATED date present
-- [ ] Phases numbered sequentially (1, 2, 3...)
-- [ ] Steps numbered within each phase (1, 2, 3...)
-- [ ] Status markers used correctly (☐/↻/☑/☒)
+
+- \[ \] STATUS header present with phase.step
+- \[ \] CREATED date present
+- \[ \] Phases numbered sequentially (1, 2, 3...)
+- \[ \] Steps numbered within each phase (1, 2, 3...)
+- \[ \] Status markers used correctly (☐/↻/☑/☒)
 
 ### Content Quality
-- [ ] Architectural reasoning explains WHY with alternatives
-- [ ] Success criteria are TESTABLE with acceptance criteria
-- [ ] Dependencies have SPECIFIC integration points
-- [ ] Comment format uses executive summary (✅ emoji, Summary, Outcome)
+
+- \[ \] Architectural reasoning explains WHY with alternatives
+- \[ \] Success criteria are TESTABLE with acceptance criteria
+- \[ \] Dependencies have SPECIFIC integration points
+- \[ \] Comment format uses executive summary (✅ emoji, Summary, Outcome)
 
 ### Scope Discipline
-- [ ] All changes align with stated objective
-- [ ] No unapproved features
-- [ ] No refactoring beyond scope
+
+- \[ \] All changes align with stated objective
+- \[ \] No unapproved features
+- \[ \] No refactoring beyond scope
 
 ### Superseded Issue Closure (When Closing Issues)
-- [ ] Closing comment does NOT claim future action without execution
-- [ ] Replacement issue exists BEFORE old issue is closed
-- [ ] No forward-looking language ("will be created", "to be done separately")
+
+- \[ \] Closing comment does NOT claim future action without execution
+- \[ \] Replacement issue exists BEFORE old issue is closed
+- \[ \] No forward-looking language ("will be created", "to be done separately")
 
 ## Post-Fix Verification (Required)
 
 After each fix is applied, the auditor MUST:
 
 1. **Re-read the modified spec** (via GitHub MCP tools) to verify the change was applied correctly.
-2. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
-3. **Report verification** in the next response before moving to the next issue:
+1. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
+1. **Report verification** in the next response before moving to the next issue:
    - **Verification signal**: `changed` — the fix was applied and the issue is resolved.
    - **Verification signal**: `blocked` — the fix could not be applied (explain why).
    - **Verification signal**: `no change required` — the requirement was reviewed and found correct as-is.
-4. **Post GitHub Issue comment** documenting each change.
-5. **Document in audit log** (see Audit Log section below).
+1. **Post GitHub Issue comment** documenting each change.
+1. **Document in audit log** (see Audit Log section below).
 
 ## GitHub Comment Format (MANDATORY)
 
@@ -274,12 +291,14 @@ Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments
 ```
 
 **Required Elements:**
+
 - **Summary section** FIRST with executive summary (1-2 sentences, stakeholder value)
 - **Outcome section** describing what changed
 - **Horizontal rule** (`---`) separator
 - **Byline at BOTTOM** with ✅ emoji, agent name, and model ID
 
 **FORBIDDEN:**
+
 - Byline at TOP (belongs at BOTTOM)
 - 📝 emoji for completion comments (use ✅)
 - Missing Summary or Outcome sections
@@ -287,6 +306,7 @@ Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments
 - Technical changelogs (focus on impact, not files)
 
 ### Error Handling
+
 - If GitHub MCP is unavailable, report error and halt
 - If issue cannot be read, report error and skip to next
 - If issue cannot be updated, document in audit log and continue
@@ -298,6 +318,7 @@ After the audit session completes (user says "stop" or no more issues found), th
 **Location:** `./tmp/audit-spec-YYYYMMDD.md` (where YYYYMMDD is today's date)
 
 **Format:**
+
 ```markdown
 # Audit Log: Spec Content Quality
 
@@ -342,6 +363,7 @@ GitHub Comment: <URL to comment>
 ```
 
 **Requirements:**
+
 - Log MUST be created after every audit session.
 - Log MUST include all issues identified (fixed, skipped, or pending).
 - Log MUST be written to `./tmp/` directory.
@@ -354,27 +376,31 @@ GitHub Comment: <URL to comment>
 ### Attachment Workflow
 
 1. **After writing audit log to `./tmp/audit-spec-YYYYMMDD.md`:**
+
    - Read the full audit log content
    - Post as comment on the GitHub Issue specified by `--issue N`
    - Delete the temp file: `rm ./tmp/audit-spec-YYYYMMDD.md`
 
-2. **Target Issue:**
+1. **Target Issue:**
+
    - ALWAYS attach to the issue specified by `--issue N` parameter
    - This is the spec being audited, so it needs the audit results
 
-3. **Comment Format:**
+1. **Comment Format:**
+
    ```
    AI: <AgentName> <ModelID> 📝 Spec Audit: <issue-number>
-   
+
    ## Summary
    - Issues Found: N
    - Issues Fixed: M
    - Issues Skipped: K
-   
+
    <full audit log content>
    ```
 
-4. **Why This Matters:**
+1. **Why This Matters:**
+
    - Temp files (`./tmp/`) are NOT preserved between sessions
    - Fresh-start agents have no memory of previous sessions
    - The spec issue needs the audit results for context in future sessions
@@ -387,12 +413,13 @@ GitHub Comment: <URL to comment>
 **AI agents creating new specs MUST invoke this auditor. NO EXCEPTIONS.**
 
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
+
 1. Create the spec issue with all required content
-2. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
-3. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
-4. Apply any fixes identified by auditors
-5. Add `needs-approval` label
-6. Post "ready for review" comment
+1. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
+1. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
+1. Apply any fixes identified by auditors
+1. Add `needs-approval` label
+1. Post "ready for review" comment
 
 **Skipping this auditor is a CRITICAL GUIDELINE VIOLATION.**
 
@@ -425,11 +452,11 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 ### Enforcement Flow
 
-1. User creates a [SPEC] issue.
-2. concern-separation-auditor runs (phase structure fixes).
-3. spec-auditor runs (content quality fixes).
-4. After both auditors pass → Add `needs-approval` label.
-5. After approval → Implementation begins.
+1. User creates a \[SPEC\] issue.
+1. concern-separation-auditor runs (phase structure fixes).
+1. spec-auditor runs (content quality fixes).
+1. After both auditors pass → Add `needs-approval` label.
+1. After approval → Implementation begins.
 
 ## Example Session
 

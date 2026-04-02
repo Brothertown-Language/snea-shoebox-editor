@@ -1,9 +1,6 @@
----
-name: mcp-tool-usage
-description: Defines mandatory MCP tool usage for all operations. Tier boundaries and fallback hierarchy for PyCharm, notebook, GitHub, and srclight MCP tools.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: mcp-tool-usage description: Defines mandatory MCP tool usage for all operations. Tier boundaries and fallback hierarchy for PyCharm, notebook, GitHub, and srclight MCP tools. license: MIT compatibility: opencode
 
 # Persona: MCP Tool Usage Enforcer
 
@@ -80,9 +77,9 @@ github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 
 1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
 
-2. **Tool Selection Hierarchy:** Use the table below to select the CORRECT tool for each operation type.
+1. **Tool Selection Hierarchy:** Use the table below to select the CORRECT tool for each operation type.
 
-3. **Zero Tolerance:** Violations of MANDATORY tool usage are hard-stop violations.
+1. **Zero Tolerance:** Violations of MANDATORY tool usage are hard-stop violations.
 
 ## Three-Tier Boundary System
 
@@ -161,8 +158,8 @@ All notebook operations use `the-notebook-mcp_notebook_*` tools exclusively. Rea
 Use `read`, `write`, `edit`, `glob`, `grep` tools ONLY when:
 
 1. **PyCharm MCP is confirmed unavailable** — must add comment: `# FALLBACK: PyCharm MCP unavailable`
-2. **Accessing files outside project root** — system files, external configs not in project
-3. **Emergency debugging** — explicitly authorized by developer in-session
+1. **Accessing files outside project root** — system files, external configs not in project
+1. **Emergency debugging** — explicitly authorized by developer in-session
 
 ### 🚫 Tier 3: PROHIBITED (Hard stop violation)
 
@@ -257,10 +254,10 @@ All notebook execution (`the-notebook-mcp_notebook_execute_cell`, `pycharm_runNo
 ## Why MCP Tools Are MANDATORY
 
 1. **Single source of truth:** PyCharm maintains consistent file views
-2. **IDE context awareness:** Symbol resolution, project structure, refactoring support
-3. **Auditability:** All operations logged through MCP layer
-4. **Error handling:** Structured errors with actionable messages
-5. **Consistency:** Same behavior across all sessions and agents
+1. **IDE context awareness:** Symbol resolution, project structure, refactoring support
+1. **Auditability:** All operations logged through MCP layer
+1. **Error handling:** Structured errors with actionable messages
+1. **Consistency:** Same behavior across all sessions and agents
 
 ## Srclight Setup and Troubleshooting
 
@@ -271,9 +268,10 @@ If srclight reports missing index or errors:
 ```
 
 This script:
+
 1. Installs git hooks for auto-reindexing
-2. Detects/installs Ollama embedding model (`qwen3-embedding`)
-3. Creates initial code index with embeddings
+1. Detects/installs Ollama embedding model (`qwen3-embedding`)
+1. Creates initial code index with embeddings
 
 ### Manual Operations
 
@@ -335,8 +333,8 @@ uvx pymarkdownlnt scan src/  # WRONG
 When MCP tools are available but not used:
 
 1. **Block code review/merge** — Hard stop until refactored using MCP tools
-2. **Guideline violation logged** — Comment in PR/issue tracking the violation
-3. **STOP and remediate** — Agent must fix the violation before proceeding
+1. **Guideline violation logged** — Comment in PR/issue tracking the violation
+1. **STOP and remediate** — Agent must fix the violation before proceeding
 
 ## Integration with Guidelines
 

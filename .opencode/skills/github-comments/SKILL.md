@@ -1,15 +1,25 @@
----
-name: github-comments
-description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: github-comments description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies. license: MIT compatibility: opencode
 
 # GitHub Comment Protocol
 
 ## Role
 
 You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments on issues and PRs follow the correct format, are posted at the right time, and preserve history by preferring comments over issue body edits.
+
+## Automatic Invocation Triggers
+
+**This skill MUST be invoked automatically (no user prompt) at these enforcement points:**
+
+| Trigger Point | Action | Verification |
+|---------------|--------|--------------|
+| **Before posting ANY GitHub comment** | Load skill | Verify format compliance, byline format |
+| **Before issue body edits** | Load skill | Verify attribution footer will be appended |
+| **After task completion** | Load skill | Verify progress comment format (executive summary) |
+| **Before closing issues** | Load skill | Verify closure comment + attribution sequence |
+
+**Enforcement:** Do NOT post comments or edit issue bodies without first loading this skill and verifying format compliance. Verify actual agent identity from system prompt at runtime — NEVER copy example model IDs from skill files.
 
 ## AI Identity Attribution Format
 
@@ -18,6 +28,7 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 **ALL comments MUST end with ONE byline that combines status, agent, and model.**
 
 **Format:**
+
 ```
 <response content>
 
@@ -26,6 +37,7 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 ```
 
 **For progress comments:**
+
 ```
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
@@ -37,6 +49,7 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 ```
 
 **Components (supplied dynamically at runtime):**
+
 - `<status-emoji>`: Status indicator (✅ ✨ 📝 ❌ 🔄 ↻ ⚠️ 🔍 📋)
 - `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
@@ -76,12 +89,14 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 | Supersede issue | Append | `🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>` |
 
 **When to Include Context:**
+
 - **Progress/Task completion**: No context needed (content already describes the work)
 - **Issue creation**: Optional — use if issue number provides useful reference
 - **Content updates**: Brief description of what changed
 - **Rejection/Superseded**: Always include reason or replacement reference
 
 **Example lifecycle (append-only):**
+
 ```markdown
 [Issue body content]
 
@@ -95,12 +110,13 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 ```
 
 **Why append-only:**
+
 - Same rule everywhere (no confusion)
 - Matches comment history behavior (comments append)
 - Preserves full lifecycle visibility
 - No special cases to remember
 
----
+______________________________________________________________________
 
 ## Comment Type Decision Table
 
@@ -117,7 +133,7 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 | Label changes | ❌ NO | GitHub auto-tracks |
 | Checklist completion (`☐` → `☑`) | ❌ NO | Status tracking |
 
----
+______________________________________________________________________
 
 ## Progress Comments (MANDATORY)
 
@@ -148,6 +164,7 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 ### ✅ REQUIRED Format: Executive Summary
 
 **For intermediate task (multi-task spec):**
+
 ```
 **Summary:**
 
@@ -160,6 +177,7 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 ```
 
 **For final task or single-task spec:**
+
 ```
 **Summary:**
 
@@ -176,9 +194,10 @@ All tasks complete from this specification.
 ### Executive Summary Requirements
 
 The summary MUST answer:
+
 1. **What changed?** — The actual implementation/fix/enhancement
-2. **Why it matters** — Impact on stakeholders (users, developers, system)
-3. **Result** — Improved behavior, new capability, fixed issue
+1. **Why it matters** — Impact on stakeholders (users, developers, system)
+1. **Result** — Improved behavior, new capability, fixed issue
 
 ### 🚫 FORBIDDEN in Progress Comments
 
@@ -192,21 +211,21 @@ The summary MUST answer:
 ### Why Executive Summaries?
 
 1. **Stakeholder value** — Focus on impact, not technical details
-2. **No redundancy** — Git shows file changes; comments explain significance
-3. **No dialog prompts** — "Next:" violates the HALT protocol
-4. **Clear completion** — Explicit "All tasks complete" when done
-5. **Chat visibility** — Format renders well in both GitHub and AI chat
+1. **No redundancy** — Git shows file changes; comments explain significance
+1. **No dialog prompts** — "Next:" violates the HALT protocol
+1. **Clear completion** — Explicit "All tasks complete" when done
+1. **Chat visibility** — Format renders well in both GitHub and AI chat
 
 ### Sequence Enforcement
 
 1. ✅ Complete the implementation
-2. ✅ Post progress comment IMMEDIATELY
-3. ✅ ONLY THEN: Move to next task or report completion
+1. ✅ Post progress comment IMMEDIATELY
+1. ✅ ONLY THEN: Move to next task or report completion
 
 **🚫 WRONG:** Complete task → Move to next → Comment later
 **✅ RIGHT:** Complete task → Comment → Then move to next
 
----
+______________________________________________________________________
 
 ## Issue Body Update Rules
 
@@ -215,16 +234,16 @@ The summary MUST answer:
 After creating or updating an issue body:
 
 1. **Append attribution footer** (NEVER replace existing footer)
-2. **Format:** `🤖 <status-emoji> *<status-text> by AI: <AgentName> (<ModelID>)*`
-3. **Emoji OUTSIDE italic formatting** (plain text for proper rendering)
-4. **Preceded by blank line and `---` separator**
+1. **Format:** `🤖 <status-emoji> *<status-text> by AI: <AgentName> (<ModelID>)*`
+1. **Emoji OUTSIDE italic formatting** (plain text for proper rendering)
+1. **Preceded by blank line and `---` separator**
 
 ### Two-Step Operation for Content Updates
 
 When updating textual content in an issue body:
 
 1. **First**: `github_issue_write method=update` (update body)
-2. **IMMEDIATELY after**: Append attribution footer AND `github_add_issue_comment` (explain change)
+1. **IMMEDIATELY after**: Append attribution footer AND `github_add_issue_comment` (explain change)
 
 **⚠️ CRITICAL**: Append attribution, never replace. Comment to explain change.
 
@@ -267,12 +286,14 @@ When updating textual content in an issue body:
 ### What is "Substantive" vs "Non-Substantive"
 
 **Substantive** (Comment Required):
+
 - Changes to requirements, objectives, success criteria
 - Adding/removing phases or tasks
 - Altering spec scope or approach
 - Significant content changes that affect understanding
 
 **Non-Substantive** (No Comment):
+
 - Adding links/references at the top of issue body (origin links, cross-references)
 - STATUS field updates
 - Label changes
@@ -280,14 +301,14 @@ When updating textual content in an issue body:
 - Typo/formatting fixes
 - Housekeeping edits that don't change meaning
 
----
+______________________________________________________________________
 
 ## Issue Closure Rules
 
 ### Mandatory Two-Step Operation
 
 1. **First**: `github_add_issue_comment` with detailed closure reason
-2. **Then**: Append completion attribution to issue body + `github_issue_write method=update state=closed`
+1. **Then**: Append completion attribution to issue body + `github_issue_write method=update state=closed`
 
 **🚫 NEVER**: Edit issue body to add "CLOSED" — use comments
 **🚫 NEVER**: Close without explanation comment
@@ -313,16 +334,19 @@ When updating textual content in an issue body:
 ### After Closure: Append Completion Attribution
 
 When closing as completed:
+
 ```markdown
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 When closing as rejected:
+
 ```markdown
 🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
 ```
 
 When closing as superseded:
+
 ```markdown
 🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>
 ```
@@ -340,7 +364,7 @@ When closing as superseded:
 | Duplicate | ✅ YES |
 | Cannot reproduce | ✅ YES |
 
----
+______________________________________________________________________
 
 ## When NOT to Comment
 
@@ -364,13 +388,14 @@ When closing as superseded:
 - Altering spec structure
 - Blocking/unblocking decision
 
----
+______________________________________________________________________
 
 ## Responding to User Comments (MANDATORY)
 
 **When a user comments on an issue, ALWAYS respond via GitHub comment — NOT just internal analysis.**
 
 Users communicating via GitHub Issues:
+
 - Cannot see your internal analysis
 - Are not mind readers
 - Expect responses where they asked the question
@@ -378,8 +403,8 @@ Users communicating via GitHub Issues:
 ### Protocol
 
 1. **Read**: `github_issue_read method=get_comments`
-2. **Respond**: `github_add_issue_comment` with answer
-3. **Be conversational**: Answer directly, ask simply
+1. **Respond**: `github_add_issue_comment` with answer
+1. **Be conversational**: Answer directly, ask simply
 
 ### Example
 
@@ -391,7 +416,7 @@ BAD: "Awaiting authorization to implement."
 GOOD: "The keys look correct. Ready when you are."
 ```
 
----
+______________________________________________________________________
 
 ## Prohibitions
 
@@ -420,7 +445,7 @@ GOOD: "The keys look correct. Ready when you are."
 - Post progress comment IMMEDIATELY (not later)
 - Respond to user questions via GitHub comment
 
----
+______________________________________________________________________
 
 ## Integration with Other Skills
 

@@ -1,9 +1,6 @@
----
-name: concern-separation-auditor
-description: Analyzes spec phase structure for concern separation quality - deployment independence, risk profile, blast radius. Auto-fixes phases by analyzing actual concerns (not rigid templates). Posts findings to GitHub.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: concern-separation-auditor description: Analyzes spec phase structure for concern separation quality - deployment independence, risk profile, blast radius. Auto-fixes phases by analyzing actual concerns (not rigid templates). Posts findings to GitHub. license: MIT compatibility: opencode
 
 # Skill: concern-separation-auditor
 
@@ -35,16 +32,20 @@ You are a Concern Separation Auditor. Your focus is analyzing GitHub Issue `[SPE
 **Beyond deployment and rollback, concern separation prevents critical anti-patterns:**
 
 ### 1. Feature Creep Prevention
+
 When a phase has clear concern boundaries, any additional work outside those boundaries is obviously out of scope. Mixing concerns blurs the boundaries, making it easier to slip in "quick fixes" or "while we're here" changes.
 
 **Example:**
+
 - Clear boundary: "Phase 1: User Schema" → adding a UI tweak is clearly out of scope
 - Mixed boundary: "Phase 1: Implementation" → adding a UI tweak seems harmless because boundaries are unclear
 
 ### 2. Vibe Coding Prevention
+
 Without clear concern boundaries, developers (and AI agents) may implement based on intuition rather than specification. The phase becomes a "bucket" for whatever feels related.
 
 ### 3. Roadmap Driving Prevention
+
 When phases mix concerns, roadmap priorities can inappropriately influence phase boundaries.
 
 **The principle: Each phase should have a SINGLE concern boundary that prevents scope expansion.**
@@ -71,11 +72,11 @@ When phases mix concerns, roadmap priorities can inappropriately influence phase
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 1. Create the spec issue with phases and steps
-2. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
-3. **Invoke `/skill spec-auditor --issue N`** (check content quality)
-4. Fixes applied automatically by both auditors
-5. Add `needs-approval` label
-6. Post "ready for review" comment
+1. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
+1. **Invoke `/skill spec-auditor --issue N`** (check content quality)
+1. Fixes applied automatically by both auditors
+1. Add `needs-approval` label
+1. Post "ready for review" comment
 
 **Skipping either auditor is a CRITICAL GUIDELINE VIOLATION.**
 
@@ -84,10 +85,11 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 ### Mode 1: Auto-fix (default, for AI agents)
 
 Run without flags. Automatically:
+
 1. Detect and fix BOILERPLATE-TITLE
-2. Analyze concerns for each phase
-3. Split phases based on actual concern analysis
-4. Post GitHub comment with changes
+1. Analyze concerns for each phase
+1. Split phases based on actual concern analysis
+1. Post GitHub comment with changes
 
 ### Mode 2: Interactive (`--interactive`)
 
@@ -148,20 +150,24 @@ Different projects have different concerns:
 For each phase, ask:
 
 1. **Can this step be deployed independently?**
+
    - Does it require other steps to be deployed first?
    - Can it be rolled back without affecting other steps?
 
-2. **What's the risk profile?**
+1. **What's the risk profile?**
+
    - HIGH: Schema changes, migrations, infrastructure
    - MEDIUM: Repository methods, data access
    - MEDIUM-LOW: API endpoints, services
    - LOW: UI components, templates, styles
 
-3. **What's the blast radius?**
+1. **What's the blast radius?**
+
    - How many files/components affected?
    - Clear rollback path?
 
-4. **What are the dependencies?**
+1. **What are the dependencies?**
+
    - Which steps MUST complete before this step?
    - Circular dependencies?
 
@@ -187,6 +193,7 @@ Check phase names against generic terms: Implementation, Testing, Development, B
 ### Step 2: Concern Analysis
 
 For each phase, analyze each step:
+
 - Deployment independence: Can it deploy independently?
 - Risk profile: HIGH/MEDIUM/LOW?
 - Blast radius: Files/components affected
@@ -195,6 +202,7 @@ For each phase, analyze each step:
 ### Step 3: Group by Concerns
 
 Group steps that share the same concern boundary:
+
 - Same deployment dependencies → same group
 - Similar risk profile → same group
 - Bounded blast radius → same group
@@ -204,6 +212,7 @@ Group steps that share the same concern boundary:
 For each concern group, create a separate phase.
 
 **Phase names reflect the CONCERN:**
+
 - Good: "User Schema", "User Data Access", "User API"
 - Bad: "Phase 1", "Data Access Layer" (static template)
 
@@ -256,7 +265,7 @@ Each phase now has:
 | Infrastructure phase | Crosses all layers by design | Keep as single phase (setup is ONE concern) |
 | Testing phase | Validates all layers | Keep as single phase (testing is ONE concern) |
 | Single-step phase | Already atomic | No split needed |
-| Phase with <3 steps | Too small to split cleanly | Keep as single phase |
+| Phase with \<3 steps | Too small to split cleanly | Keep as single phase |
 | Already separated | Analysis shows single concern | No change needed |
 
 ## Interactive Mode
@@ -264,18 +273,18 @@ Each phase now has:
 When `--interactive` flag is used:
 
 1. Present each issue found
-2. Show analysis and proposed fix
-3. Wait for user response: "fix" / "skip" / "stop"
-4. Apply fix or move to next issue
+1. Show analysis and proposed fix
+1. Wait for user response: "fix" / "skip" / "stop"
+1. Apply fix or move to next issue
 
 ## Post-Fix Verification
 
 After applying fixes:
 
 1. Re-read the modified spec
-2. Verify BOILERPLATE-TITLE fixes applied
-3. Verify phase splits are correct
-4. Post GitHub comment with all changes
+1. Verify BOILERPLATE-TITLE fixes applied
+1. Verify phase splits are correct
+1. Post GitHub comment with all changes
 
 ## Scope Boundaries
 
@@ -288,10 +297,12 @@ After applying fixes:
 ## Integration Points
 
 ### spec-auditor (spec quality)
+
 - Invoked AFTER concern-separation-auditor
 - Focuses on content quality, fresh-start context
 
 ### approval-gate (authorization)
+
 - Invoked BEFORE implementation approval
 - Verifies phase structure has been analyzed
 
@@ -345,7 +356,8 @@ All phases have clear concern boundaries. No splits needed.
 | Treat all projects same | Handle stateless services, CLIs, frontends differently |
 
 **The algorithm MUST:**
+
 1. Analyze ACTUAL concerns (not assumed patterns)
-2. Group by ACTUAL deployment dependencies
-3. Create phases based on ACTUAL blast radius
-4. NOT apply rigid templates
+1. Group by ACTUAL deployment dependencies
+1. Create phases based on ACTUAL blast radius
+1. NOT apply rigid templates

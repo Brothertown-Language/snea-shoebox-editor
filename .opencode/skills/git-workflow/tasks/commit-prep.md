@@ -7,8 +7,8 @@ Prepare commit message for squash commit during PR creation. This is a read-only
 ## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "commit" or "prepare a commit"
-2. **Read-only analysis:** Discover changes but DO NOT execute commits
-3. **HALT after analysis:** Wait for user to review and approve
+1. **Read-only analysis:** Discover changes but DO NOT execute commits
+1. **HALT after analysis:** Wait for user to review and approve
 
 ## Entry Criteria
 
@@ -36,6 +36,7 @@ git log --oneline -10  # Recent commits for context
 ### Step 2: Summarize Changes
 
 Group changes logically:
+
 - Feature changes
 - Test changes
 - Documentation changes
@@ -61,6 +62,7 @@ git commit -m "<descriptive message>" \
 **DO NOT execute the script.**
 
 Report:
+
 - Script path: `./tmp/commit-<branch>.sh`
 - Proposed commit message
 - Summary of changes being committed
@@ -75,13 +77,16 @@ Report:
 Every implementation commit MUST include:
 
 1. **AI Author**: Use your actual identity dynamically
+
    - Example: `OpenCode Desktop (glm-5) <noreply@opencode.ai>`
-   
-2. **Human Collaborator**: Use session values from `000-session-init.md`
+
+1. **Human Collaborator**: Use session values from `000-session-init.md`
+
    - `GIT_USER_NAME`: Human's name
    - `GIT_USER_EMAIL`: Human's email
 
 Example:
+
 ```
 Co-authored-by: OpenCode (ollama-cloud/glm-5) <noreply@opencode.ai>
 Co-authored-by: <Human Name> <human@email.com>  # From GIT_USER_NAME and GIT_USER_EMAIL

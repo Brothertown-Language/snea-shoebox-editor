@@ -27,11 +27,13 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent_issu
 ### Step 2: Determine Spec Type
 
 **Single-task spec (EXEMPT from sub-issues):**
+
 - Exactly ONE implementation task
 - No decomposition into phases needed
 - Can be implemented as atomic unit
 
 **Multi-task spec (REQUIRES sub-issues):**
+
 - Multiple phases (Phase 1, Phase 2, ...)
 - Multiple implementation tasks
 - Requires sequential work streams
@@ -41,23 +43,27 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent_issu
 **For multi-task specs with sub-issues:**
 
 1. Extract subtask number from authorization:
+
    - "approved: 1.2" → subtask 1.2
    - "approved: X.Y" → subtask X.Y
    - "approved" (no number) → check STATUS for current phase
 
-2. Get parent issue STATUS:
+1. Get parent issue STATUS:
+
    ```python
    parent = github_issue_read(method="get", issue_number=parent_issue)
    # Parse STATUS from body
    # STATUS format: "STATUS: X.Y" or "STATUS: completed"
    ```
 
-3. Verify STATUS matches requested subtask:
+1. Verify STATUS matches requested subtask:
+
    - If authorized for X.Y and STATUS is X.Y → PROCEED
    - If authorized for X.Y and STATUS is different → HALT
    - Report mismatch: "STATUS mismatch: authorized for 1.2 but STATUS is 2.1"
 
-4. **Why STATUS Gate Matters:**
+1. **Why STATUS Gate Matters:**
+
    - Prevents parallel execution of subtasks
    - Ensures sequential workflow
    - Avoids git branch conflicts

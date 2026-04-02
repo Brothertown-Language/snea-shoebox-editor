@@ -7,8 +7,8 @@ Delete merged branches after PR merge, clean stale references, and verify reposi
 ## Operating Protocol
 
 1. **After PR merge:** Run when human confirms "PR merged" or similar
-2. **Automatic detection:** Can also run when invoked to check for merged branches
-3. **Mandatory cleanup:** ALL merged branches must be deleted (local and remote)
+1. **Automatic detection:** Can also run when invoked to check for merged branches
+1. **Mandatory cleanup:** ALL merged branches must be deleted (local and remote)
 
 ## Entry Criteria
 
@@ -46,6 +46,7 @@ proceed_to_close_issues()
 ```
 
 **Why API verification is mandatory:**
+
 - `git pull` shows local fast-forward success
 - Does NOT verify PR was merged (could be closed/rejected)
 - GitHub API `merged_at` field is the ONLY reliable merge indicator
@@ -74,11 +75,13 @@ git fetch --prune
 ### Step 4: Clean Other Merged Branches
 
 **Find merged branches:**
+
 ```bash
 git branch --merged main
 ```
 
 **For each merged branch (except main/master):**
+
 ```bash
 git branch -d <branch>
 ```
@@ -124,10 +127,10 @@ Merged PR (other branches from previous sessions)
 Before ANY branch deletion:
 
 1. **Merged status:** `git branch --merged main` includes the branch ✓
-2. **GitHub PR status:** PR is "merged" (not "closed") ✓
-3. **Not current branch:** `git branch --show-current` ≠ branch to delete ✓
-4. **Not protected:** Branch name ≠ `main`, `master` ✓
-5. **Clean working tree:** `git status --porcelain` returns empty ✓
+1. **GitHub PR status:** PR is "merged" (not "closed") ✓
+1. **Not current branch:** `git branch --show-current` ≠ branch to delete ✓
+1. **Not protected:** Branch name ≠ `main`, `master` ✓
+1. **Clean working tree:** `git status --porcelain` returns empty ✓
 
 **If ANY check fails → SKIP that branch with warning.**
 
@@ -146,15 +149,18 @@ children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
 ### Step 2: Classify Each Sub-Issue
 
 **Already Closed:**
+
 - `state: "closed"` + `state_reason: "completed"` → Done
 - `state: "closed"` + `state_reason: "not_planned"` → Intentionally not done
 - Closed with "Superseded by #N" comment → Check replacement exists
 
 **Open but May Be Complete:**
+
 - Check comments for "Superseded by #N" → Verify new issue covers work
 - Check body for PR link ("Fixes #N") → If merged, work is done
 
 **Open and Incomplete:**
+
 - No PR, no superseded link, no completion comment → BLOCK parent closure
 
 ### Step 3: Take Action
@@ -282,6 +288,7 @@ NO parent/child structure check
 ```
 
 **This incorrect workflow VIOLATES critical rules and causes:**
+
 - Issues closed without PR tracking
 - No merge verification
 - Potential reopen of closed issues if PR rejected
