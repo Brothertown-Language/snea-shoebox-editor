@@ -153,7 +153,7 @@ The following are **STRICTLY FORBIDDEN** on notebooks that interact with product
 
 ### What Counts as Production Data
 
-- **ALL notebooks in `pubmed_data_3/`** — connects to PubMed API and production databases
+- **ALL notebooks in `<project-db>/`** — connects to PubMed API and production databases
 - **ANY notebook that imports from `commons/`** — likely uses production database connections
 - **ANY notebook with `send_html_email`, `SMTP`, or email functionality** — sends real emails
 - **ANY notebook with API calls** (`requests`, `Entrez`, `PubMedClient`) — production services

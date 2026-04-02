@@ -110,7 +110,7 @@ CREATED: YYYY-MM-DD
 
 | Issue | Summary | Relevance |
 |-------|---------|-----------|
-| [#123](https://github.com/owner/repo/issues/123) | [Brief summary] | [Why it matters to this spec] |
+| [#123](https://github.com/<owner>/<repo>/issues/123) | [Brief summary] | [Why it matters to this spec] |
 
 ---
 
@@ -277,7 +277,7 @@ def broken_function():
 
 | Issue | Summary | Relevance |
 |-------|---------|-----------|
-| [#123](https://github.com/owner/repo/issues/123) | [Related bug or feature] | [Connection to this fix] |
+| [#123](https://github.com/<owner>/<repo>/issues/123) | [Related bug or feature] | [Connection to this fix] |
 
 ---
 

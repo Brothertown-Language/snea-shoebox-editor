@@ -61,8 +61,8 @@ This is BAD because:
 > **Related Issues:**
 > | Issue | Summary | Relevance |
 > |-------|---------|-----------|
-> | [#100](https://github.com/owner/repo/issues/100) | Persistent sessions | Credential storage implementation |
-> | [#150](https://github.com/owner/repo/issues/150) | Token rotation | Future improvement for longer sessions |
+> | [#100](https://github.com/<owner>/<repo>/issues/100) | Persistent sessions | Credential storage implementation |
+> | [#150](https://github.com/<owner>/<repo>/issues/150) | Token rotation | Future improvement for longer sessions |
 >
 > **Success Criteria:**
 > 1. ✅ Users with expired refresh tokens are automatically re-authenticated
@@ -179,8 +179,8 @@ This is BAD because:
 > **Related Issues:**
 > | Issue | Summary | Relevance |
 > |-------|---------|-----------|
-> | [#50](https://github.com/owner/repo/issues/50) | Performance audit | Original performance report |
-> | [#200](https://github.com/owner/repo/pull/200) | Redis infra setup | Infrastructure PR |
+> | [#50](https://github.com/<owner>/<repo>/issues/50) | Performance audit | Original performance report |
+> | [#200](https://github.com/<owner>/<repo>/pull/200) | Redis infra setup | Infrastructure PR |
 
 This is GOOD because:
 - ✅ Problem statement with measurable impact

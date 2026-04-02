@@ -34,7 +34,7 @@
 - **Robust Sampling Required**: When analyzing or remediating data formats, behavior, or patterns, you MUST compare
   across multiple samples (minimum 5-10 distinct records) from different categories/topics. Never assume a single
   example is representative of a set or format.
-- **Exhaustive Automated Analysis**: When a large archived dataset is available (e.g., `pubmed_data_2`), you MUST
+- **Exhaustive Automated Analysis**: When a large archived dataset is available (e.g., `<archived-db>`), you MUST
   generate and run an automated script to scan the ENTIRE archive for frequency analysis of headers, fields, and
   formatting patterns. Relying on manual sampling for large datasets is strictly prohibited. A dataset is considered
   **large** for this rule if it contains more than 1,000 records or files.
@@ -42,7 +42,7 @@
   automated analysis or robust multi-sample sets.
 - **NO UNAUTHORIZED FORMAT CHANGES**: You are strictly prohibited from adding, removing, or altering data fields,
   headers, or formatting styles (e.g., Markdown structure) without explicit, documented authorization. Any deviation
-  from the established "Ground Truth" (e.g., archived datasets like `pubmed_data_2`) is a data integrity violation.
+  from the established "Ground Truth" (e.g., archived datasets like `<archived-db>`) is a data integrity violation.
   Authorization is established by an explicit user instruction in the current session (chat or approved plan). A GO on
   a plan that includes the format change constitutes documented authorization.
 - **MANDATORY AUDIT LOGGING**: Any proposed change to a data format MUST be accompanied by an automated audit report

@@ -216,7 +216,7 @@ A different AI agent (or the same agent after a context reset) may pick up this 
 
 3. **Cross-references with context**
    - When referencing other issues/specs: include issue number AND brief summary
-   - Include URLs: `https://github.com/owner/repo/issues/123`
+   - Include URLs: `https://github.com/<owner>/<repo>/issues/123`
    - State WHY the reference matters
 
 4. **Decision rationale documented**
