@@ -64,6 +64,25 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 
 **Enforcement:** Do NOT proceed with git operations at these trigger points without first loading this skill and verifying workflow compliance.
 
+### ⚠️ MANDATORY: review-prep Is Automatic (No Decision Point)
+
+**After implementation completes, the agent MUST automatically invoke review-prep — there is NO choice.**
+
+The sequence is FIXED:
+
+1. Implementation task finishes all file changes
+2. Implementation task commits AND pushes the branch
+3. Implementation task reports completion
+4. **review-prep is invoked AUTOMATICALLY** → generates compare URL → HALTs
+
+**DO NOT:**
+- Skip review-prep because "changes are trivial"
+- Skip review-prep because "developer can review via git log"
+- Skip review-prep and proceed directly to PR creation
+- Ask developer "do you want to review?" — just do it
+
+**The compare URL is MANDATORY visibility for developers before PR creation.**
+
 ## Critical Workflow Sequence
 
 **🚫 CRITICAL: Skipping phases or HALT points is a CRITICAL GUIDELINE VIOLATION.**

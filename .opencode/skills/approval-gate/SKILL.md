@@ -69,6 +69,28 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 
 **Enforcement:** Do NOT proceed with edits, implementation, or comments without first loading this skill and verifying authorization.
 
+### ⚠️ MANDATORY: Post-Implementation Review-Prep Invocation
+
+**After implementation completes, the agent MUST invoke review-prep from the git-workflow skill — this is AUTOMATIC.**
+
+The sequence is FIXED:
+
+1. `approval-gate` verifies authorization → implementation begins
+2. Implementation task finishes all file changes
+3. Implementation task commits AND pushes the branch
+4. Implementation task reports completion
+5. **git-workflow review-prep task is invoked AUTOMATICALLY**
+6. review-prep generates compare URL → HALTs
+
+**DO NOT:**
+- Return to chat after implementation without invoking review-prep
+- Report completion and HALT without pushing branch first
+- Skip compare URL generation because "no changes needed"
+
+**The review-prep task provides MANDATORY developer visibility before PR creation.**
+
+See `git-workflow` skill → `review-prep` task for the complete workflow.
+
 ## Authorization Requirements
 
 ### Mandatory Before ANY Code Change

@@ -9,6 +9,8 @@
 
 ## Review Phase (Mandatory)
 
+**⚠️ This phase is MANDATORY and AUTOMATIC — there is NO choice to skip it.**
+
 After implementation completes and BEFORE PR creation authorization:
 
 1. **Agent pushes feature branch** to remote:
@@ -86,6 +88,18 @@ git checkout feature/recovery
 # Push and create PR
 git push origin feature/recovery
 ```
+
+---
+
+## Enforcement Reference
+
+**The git-workflow skill automatically enforces the review phase.**
+
+- **After implementation completes** → `git-workflow` skill → `review-prep` task is invoked AUTOMATICALLY
+- **Mandatory actions** → Push branch, generate compare URL, HALT
+- **NO decision point** → Review-prep runs regardless of "minor changes" or "already reviewed"
+
+**See `git-workflow` skill → `review-prep` task for the complete workflow.**
 
 ---
 
