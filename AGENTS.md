@@ -361,8 +361,8 @@ Multi-task specs use parent orchestrator issues with child sub-issues:
 
 | Issue Type | Purpose | Size |
 |------------|---------|------|
-| Parent (`[SPEC]`) | Orchestrator with task table | ~100 lines |
-| Child (`[Task: #N]`) | Self-contained implementation details | ~60-150 lines |
+| Parent (`[SPEC]`) | Orchestrator with task table | ~700 words |
+| Child (`[Task: #N]`) | Self-contained implementation details | ~450-1100 words |
 
 **Single-Subtask-at-a-Time:**
 - Only ONE subtask executes at a time (enforced by STATUS gate)

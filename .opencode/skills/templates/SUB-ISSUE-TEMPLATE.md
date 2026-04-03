@@ -82,14 +82,14 @@ ______________________________________________________________________
 
 ## Template Size
 
-Sub-issues should be **~60-150 lines**:
+Sub-issues should be **~450-1100 words** (approximately 60-150 lines):
 
-- Purpose: 5-10 lines
-- Entry/Exit criteria: 10-20 lines
-- Procedure: 20-50 lines
-- Constraints: 5-15 lines
-- Cross-references: 5-15 lines
-- Context: 10-30 lines
+- Purpose: 35-70 words
+- Entry/Exit criteria: 70-140 words
+- Procedure: 140-350 words
+- Constraints: 35-105 words
+- Cross-references: 35-105 words
+- Context: 70-210 words
 
 ______________________________________________________________________
 
