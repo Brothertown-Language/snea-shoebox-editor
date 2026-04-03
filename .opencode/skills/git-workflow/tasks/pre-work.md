@@ -43,7 +43,7 @@ git status
 If ANY files modified (even one line, even external edits):
 
 ```bash
-git stash push -m "WIP: external changes before <branch-name>"
+git stash push --include-untracked -m "WIP: external changes before <branch-name>"
 git stash list  # VERIFY stash was created
 git status      # VERIFY clean working tree
 ```

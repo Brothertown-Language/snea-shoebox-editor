@@ -20,9 +20,9 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `pre-work` | Verify branch state, stash changes, create feature branch | ~640 |
-| `implementation` | Handle WIP commits during implementation | ~400 |
-| `review-prep` | Push branch, generate compare URL for review | ~560 |
+| `pre-work` | Verify branch state, stash changes (with --include-untracked), create feature branch | ~700 |
+| `implementation` | Handle grouped commits during implementation, WIP commits before HALT | ~500 |
+| `review-prep` | Push branch, generate compare URL, post to issue AND chat | ~620 |
 | `commit-prep` | Prepare squash commit message (read-only) | ~480 |
 | `pr-creation` | Squash, push, create PR with changelog via subtask | ~900 |
 | `cleanup` | Delete merged branches, clean stale refs | ~800 |

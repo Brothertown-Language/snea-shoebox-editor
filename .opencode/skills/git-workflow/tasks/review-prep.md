@@ -171,10 +171,16 @@ Post to GitHub issue:
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-Post to chat (same content):
+Post to chat (same format):
 
-- Same executive summary with byline and URL
-- Ensures visibility in BOTH GitHub history AND current session
+**✅ MANDATORY - DO NOT SKIP:**
+- **GitHub Issue Comment:** Full executive summary with byline and compare URL
+- **Chat Output:** SAME executive summary with byline and compare URL
+
+**Why both locations:**
+- GitHub preserves long-term history for future reference
+- Chat maintains session context for current discussion
+- Both must have identical content for completeness
 
 ### Step 3: HALT (MANDATORY - NO EXCEPTIONS)
 

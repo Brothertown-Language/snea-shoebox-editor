@@ -183,6 +183,47 @@ After implementation, before marking complete:
    - \[ \] No temp files left at project root
    - \[ \] `ls ./tmp/` shows only intentional persistent files
 
+## Implementation Phase Git Workflow
+
+During implementation, follow the git workflow from `git-workflow` skill:
+
+### Grouped-Step Commits
+
+Create commits per logical group (not per step):
+
+1. **Identify Commit Groups**
+   - Cohesive set of related changes
+   - Implements one logical feature/fix
+   - Can be reviewed independently
+
+2. **Commit After Each Group**
+   - Stage group changes: `git add <files...>`
+   - Commit with trailers: `git commit -m "[Phase N] description"`
+   - Post progress comment to issue
+
+3. **Executive Summary Required**
+   - Post after each commit group (intermediate)
+   - Post after implementation complete (final)
+   - Include impact and stakeholder value
+
+### WIP Commit Before HALT
+
+**CRITICAL:** Commit ALL uncommitted changes before ANY HALT:
+
+```bash
+git add -A
+git commit -m "WIP: Phase N - <brief description>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+### After Implementation
+
+1. **Commit** - `git add -A && git commit`
+2. **Push** - `git push -u origin <branch>`
+3. **Report** - Executive summary to issue AND chat
+4. **HALT** - Wait for `"create a PR"`
+
 ## Verification Phase Checklist
 
 Before declaring complete:

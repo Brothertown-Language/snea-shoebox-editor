@@ -66,8 +66,8 @@ Authorization Gatekeeper ensuring all code changes follow the spec + authorizati
 |---------------|--------|--------------|
 | **Before ANY file edit** | Load skill → `verify-authorization` task | Confirm spec + approval exist |
 | **Before implementation** | Load skill → `verify-authorization` + `verify-sub-issues` | Confirm multi-task specs have sub-issues |
-| **Before issue body edits** | Load skill → `verify-authorization` | Confirm authorization overrides `needs-approval` label |
-| **After implementation completes** | Load `git-workflow` skill → `review-prep` task | Push branch, generate compare URL, HALT |
+| **After user says "approved" or "go"** | Load `git-workflow` → `pre-work` task | Stash changes (with --include-untracked), create branch |
+| **After implementation completes** | Load `git-workflow` → `review-prep` task | Push branch, generate compare URL, HALT |
 | **Before posting GitHub comments** | Load `github-comments` skill | Verify byline format, agent identity |
 
 **Enforcement:** Do NOT proceed with edits, implementation, or comments without first loading this skill and verifying authorization.
@@ -192,6 +192,38 @@ When implementation halts (awaiting approval, awaiting clarification, error, ses
 | Updating STATUS markers | NO - tracking exempt |
 | Analyzing code (read-only) | NO - investigation exempt |
 | Modifying `.opencode/guidelines/` | **YES - requires spec + approval** |
+
+## Git Workflow Sequence
+
+**After authorization, the git workflow is automatically triggered:**
+
+1. **Pre-Work Task** (automatic via approval-gate)
+   - Check current branch
+   - Stash changes with `--include-untracked`
+   - Create feature branch
+   - Verify working tree is clean
+
+2. **Implementation Phase** (agent performs work)
+   - Grouped commits per logical concern
+   - WIP commits before any HALT
+   - Executive summary after completion
+
+3. **Review-Prep Task** (automatic)
+   - Push branch
+   - Generate compare URL
+   - Post to issue AND chat
+   - HALT for developer review
+
+4. **PR Creation** (requires explicit "create a PR")
+   - Squash to single commit
+   - Push
+   - Create PR
+   - HALT
+
+5. **Cleanup** (after PR merge confirmed)
+   - Verify merge via GitHub API
+   - Close issues
+   - Delete branches
 
 ## Cross-References
 
