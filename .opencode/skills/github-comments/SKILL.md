@@ -1,9 +1,6 @@
----
-name: github-comments
-description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: github-comments description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies. license: MIT compatibility: opencode
 
 # GitHub Comment Protocol
 
@@ -44,11 +41,13 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
 **Example Values in Guidelines are ILLUSTRATIVE:**
+
 - `OpenCode (ollama-cloud/glm-5)` → Example only
 - `AI Assistant (model-id)` → Placeholder only
 - **DETECT YOUR OWN IDENTITY** at runtime
 
 **When Identity Unknown:**
+
 - STOP and ask user for clarification
 - DO NOT use example values as defaults
 - DO NOT guess or invent identity values
@@ -75,7 +74,31 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/<owner>/<repo>/compare/main...<branch>
 ```
+
+### ⚠️ URL Placement Rule (MANDATORY)
+
+**URLs MUST appear LAST in executive summaries.**
+
+| Element | Position |
+|---------|----------|
+| Summary text | First |
+| Outcome | Middle |
+| Agent byline | Last line before URL |
+| URL | FINAL LINE (always last) |
+
+**Why URL last:**
+
+- URLs are typically long and may wrap across lines
+- Placing URLs last allows developers to quickly scan summary content first
+- Easy visual anchor: "look for the URL at the end"
+- Consistent pattern across all AI-generated summaries
+
+**Multiple URLs:** Place the primary URL (most actionable) last. Secondary URLs can appear in body with context.
+
+**No URLs:** If no URLs are relevant, executive summary ends with the summary text. No URL placeholder needed.
 
 **FORBIDDEN in Progress Comments:**
 
@@ -83,6 +106,7 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 - "Next" field (dialog prompt)
 - "Awaiting authorization" (use HALT)
 - Technical changelogs (focus on impact)
+- URLs anywhere except at the end
 
 ## When to Comment vs Edit Body
 

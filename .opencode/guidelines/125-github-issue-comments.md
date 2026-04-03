@@ -9,10 +9,11 @@ GitHub issue comments are **general comments**, NOT interactive dialogs.
 Agents are adding "awaiting authorization" prompts like:
 
 > The 5 fields can be added when you're ready to proceed.
-> 
+>
 > Awaiting authorization to implement.
 
 This is incorrect because:
+
 - Developers cannot read agent internal reasoning
 - Issue comments are public records, not chat interfaces
 - Dialog prompts create noise and confusion
@@ -49,6 +50,7 @@ This is incorrect because:
 | This guideline | Don't prompt for authorization via comments |
 
 The HALT protocol (see `010-approval-gate.md`) is the correct mechanism for authorization flow:
+
 - Complete task → report completion → **STOP and wait**
 - Do NOT post "awaiting authorization" comments
 
@@ -109,12 +111,14 @@ AI: <AgentName> (<ModelID>) 🔍 Analysis complete: Found 3 issues in validation
 ## Summary
 
 **Issue comments are for:**
+
 - Documenting progress
 - Answering questions
 - Explaining decisions
 - Providing evidence
 
 **Issue comments are NOT for:**
+
 - Prompting for authorization
 - Starting dialogs
 - Asking "ready to proceed?"
@@ -127,12 +131,14 @@ AI: <AgentName> (<ModelID>) 🔍 Analysis complete: Found 3 issues in validation
 ### What is "Substantive" vs "Non-Substantive"
 
 **Substantive** (Comment Required):
+
 - Changes to requirements, objectives, success criteria
 - Adding/removing phases or tasks
 - Altering spec scope or approach
 - Significant content changes that affect understanding
 
 **Non-Substantive** (No Comment):
+
 - Adding links/references at the top of issue body (origin links, cross-references)
 - STATUS field updates
 - Label changes
@@ -140,9 +146,76 @@ AI: <AgentName> (<ModelID>) 🔍 Analysis complete: Found 3 issues in validation
 - Typo/formatting fixes
 - Housekeeping edits that don't change meaning
 
+## URL Placement in Executive Summaries (MANDATORY)
+
+**URLs MUST appear LAST in all executive summaries and progress comments.**
+
+### Rule
+
+When a comment includes a URL (issue link, PR link, code compare link, etc.), the URL MUST be the final line of the comment.
+
+### Format
+
+```markdown
+**Summary:**
+
+<Summary content>
+
+**Outcome:** <What changed>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/<owner>/<repo>/compare/main...<branch>
+```
+
+### Why URL Last
+
+- URLs are typically long and may wrap across lines
+- Placing URLs last allows developers to quickly scan summary content first
+- Easy visual anchor: "look for the URL at the end"
+- Consistent pattern across all AI-generated summaries
+
+### Multiple URLs
+
+If multiple URLs are relevant (e.g., both issue and PR):
+
+- Place the primary URL (most actionable) last
+- Secondary URLs can appear in body with context
+
+**Example:**
+
+```markdown
+**Summary:**
+
+Skills imported from external repository. Parent issue #149 tracks overall progress.
+
+**Outcome:** 5 new skills added to repository.
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/<owner>/<repo>/compare/main...<branch>
+```
+
+### No URLs
+
+If no URLs are relevant (pure summary, no links):
+
+- Executive summary ends with the agent byline
+- No URL placeholder needed
+
+**Applicable to:**
+
+- Executive summaries in progress comments
+- Completion comments on issues
+- Review-prep completion comments
+- PR creation confirmation comments
+
 ### Examples
 
 **Non-Substantive (No Comment Needed):**
+
 ```markdown
 > **Origin:** Investigated in https://github.com/<owner>/<repo>/issues/100
 > **Investigation Result:** api-agent cannot be used
@@ -151,6 +224,7 @@ AI: <AgentName> (<ModelID>) 🔍 Analysis complete: Found 3 issues in validation
 This is just a reference link at the top of the issue body. No comment explaining "added cross-reference" is needed.
 
 **Substantive (Comment Required):**
+
 - Adding a new phase to the spec
 - Changing the requirements section
 - Modifying success criteria
