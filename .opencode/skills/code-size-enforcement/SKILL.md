@@ -1,19 +1,21 @@
 ---
 name: code-size-enforcement
-description: Enforce size limits on functions, notebook cells, and files. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery.
+description: Enforce size limits on functions, notebook cells, and files using word counts. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery.
 license: MIT
 compatibility: opencode
 ---
 
 # Skill: code-size-enforcement
 
-Enforce size limits on functions, notebook cells, and files. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery.
+Enforce size limits on functions, notebook cells, and files using word counts as the primary measure of complexity. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery.
+
+**Why Word Counts:** Word counts provide a more accurate measure of LLM context usage and cognitive load than line counts. A dense short function may have more complexity than a verbose long one.
 
 ## Available Tasks
 
-| Task | Description | Lines |
+| Task | Description | Words |
 |------|-------------|-------|
-| `--task overview` | Size limits, detection methods, grandfather policy | ~200 |
+| `--task overview` | Size limits, detection methods, grandfather policy, word count migration | ~350 |
 
 ## Quick Start
 

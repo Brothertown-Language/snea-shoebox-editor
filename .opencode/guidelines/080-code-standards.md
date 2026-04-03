@@ -31,7 +31,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
   - Notebook cells (each cell should do ONE thing)
   - LaTeX/XeLaTeX environments and macros (one purpose each)
   - Scripts and configuration files
-- **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 40 lines, decompose it. If a notebook cell exceeds 50 lines, split it into multiple cells.
+- **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 350 words, decompose it. If a notebook cell exceeds 450 words, split it into multiple cells.
 - **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named
   constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only
   acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).

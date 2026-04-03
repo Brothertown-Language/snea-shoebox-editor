@@ -28,7 +28,7 @@
 > **See `code-size-enforcement` skill for size limit enforcement rules.**
 
 ALL code standards in `080-code-standards.md` apply to notebook cells. Key limits:
-- Notebook cells must not exceed 50 lines
+- Notebook cells must not exceed 450 words (approximately 50 lines)
 - Each cell should do ONE thing
 - Functions defined in notebooks should perform ONE task
 

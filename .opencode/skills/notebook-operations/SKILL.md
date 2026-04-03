@@ -25,7 +25,7 @@ You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `overview` | Full skill content for notebook operations enforcement | ~1100 |
+| `overview` | Full skill content for notebook operations enforcement | ~800 |
 
 ## ✅ ONLY PERMITTED METHODS
 

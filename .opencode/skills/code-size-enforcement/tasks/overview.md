@@ -6,16 +6,32 @@ Code size enforcer ensuring functions, notebook cells, and files stay within mai
 
 | Artifact | Limit | Measurement |
 |----------|-------|-------------|
-| **Python functions** | 40 lines | Excluding docstrings, imports, blank lines |
-| **Notebook cells** | 50 lines | Including whitespace, excluding cell header |
-| **Source files** | 300 lines | Total file, excluding blank lines and comments at file start |
+| **Python functions** | 350 words | Excluding docstrings, imports, blank lines |
+| **Notebook cells** | 450 words | Including whitespace, excluding cell header |
+| **Source files** | 2700 words | Total file, excluding blank lines and comments at file start |
 
 ## What Counts Toward Limits
 
+### Word Count vs Line Count
+
+Word counts provide a more accurate measure of LLM context usage and cognitive load than line counts. A dense 30-line function with minimal comments may have more complexity than a verbose 40-line function with extensive documentation. Word counts capture the actual content density.
+
+**Why Words:**
+- Better proxy for LLM token consumption
+- Reflects actual complexity and information density
+- Language-agnostic measure (works across Python, Markdown, configs)
+- More granular than line counts
+
+**Conversion Guidance:**
+- Average code line has ~8-12 words (including comments)
+- Python functions: 40 lines ≈ 350 words
+- Notebook cells: 50 lines ≈ 450 words
+- Source files: 300 lines ≈ 2700 words
+
 ### Functions
-- Function body lines (code + inline comments)
-- Nested functions/classes contribute to outer function's line count
-- Multi-line string literals (non-docstrings) count as lines
+- Function body words (code + inline comments)
+- Nested functions/classes contribute to outer function's word count
+- Multi-line string literals (non-docstrings) count as words
 
 ### What Does NOT Count for Functions
 - Docstrings (the `"""..."""` block immediately after `def`)
@@ -24,32 +40,45 @@ Code size enforcer ensuring functions, notebook cells, and files stay within mai
 - Type hints on their own lines (when using Python 3.10+ syntax)
 
 ### Notebook Cells
-- All lines in the cell source
+- All words in the cell source
 - Comments
-- Whitespace
+- Whitespace is excluded from word count
 - Does NOT include cell metadata or outputs
 
 ### Source Files
-- Total lines in the file
+- Total words in the file
 - Excluding: blank lines, module-level docstrings, comments at file start
 
 ## ✅ PERMITTED DETECTION METHODS
 
+### Word Count Methods (Preferred)
+
 | Method | Purpose | Example |
 |--------|---------|---------|
-| `wc -l <file>` | File line count | `wc -l src/module.py` |
-| `ai_bin/py structure --stats` | Function sizes | Shows function line counts |
+| `wc -w <file>` | Total file word count | `wc -w src/module.py` |
+| `wc -w <<EOF` | Count words in snippet | `wc -w <<EOF` + paste text + `EOF` |
+| `ai_bin/py structure --words` | Function word counts | Shows function word counts |
 | Manual code review | All sizes | During PR review |
-| `git diff --stat` | Change size | For modified files |
+| `git diff --word-diff` | Change size | For modified files |
+
+### Line Count Methods (Legacy)
+
+| Method | Purpose | Example |
+|--------|---------|---------|
+| `wc -l <file>` | File line count (legacy) | `wc -l src/module.py` |
+| `ai_bin/py structure --stats` | Function line counts (legacy) | Shows function line counts |
+| Manual code review | All sizes | During PR review |
+
+**Note:** Word counts are the preferred measurement. Line counts are provided for backward compatibility and legacy tools.
 
 ## 🚫 FORBIDDEN PATTERNS
 
 | Pattern | Why Forbidden | Limit |
 |---------|--------------|-------|
-| **Monolithic functions** | Hard to read, test, debug | Functions > 40 lines |
-| **Monolithic cells** | Notebook cells doing multiple things | Cells > 50 lines |
-| **Monolithic files** | Files should separate concerns | Files > 300 lines |
-| **Deep nesting** | Adds complexity, increases line count | > 3 levels of nesting |
+| **Monolithic functions** | Hard to read, test, debug | Functions > 350 words |
+| **Monolithic cells** | Notebook cells doing multiple things | Cells > 450 words |
+| **Monolithic files** | Files should separate concerns | Files > 2700 words |
+| **Deep nesting** | Adds complexity, increases word count | > 3 levels of nesting |
 | **God classes/files** | Single file doing too much | Files importing many unrelated modules |
 | **"Helper" function blocks** | Multiple responsibilities hidden in one function | Any function with >1 distinct responsibility |
 
@@ -99,7 +128,7 @@ def calculate_average(values: list[float]) -> float:
         raise ValueError("Cannot calculate average of empty list")
     return sum(values) / len(values)
 
-# 38 lines, UNDER 40-line limit ✅
+# 342 words, UNDER 350-word limit ✅
 ```
 
 ### ✅ CORRECT: Decomposed Function
@@ -111,21 +140,59 @@ def process_user_data(user: User) -> ProcessedUser:
     return transform_user(enriched)
 
 def validate_user(user: User) -> ValidatedUser:
-    # ... 15 lines ...
+    # ... 130 words ...
 
 def enrich_user(user: ValidatedUser) -> EnrichedUser:
-    # ... 12 lines ...
+    # ... 105 words ...
 
 def transform_user(user: EnrichedUser) -> ProcessedUser:
-    # ... 10 lines ...
+    # ... 85 words ...
 ```
 
 ### ❌ WRONG: Oversized Function
 
 ```python
 def process_everything(data: dict) -> dict:
-    # ... 85 lines of processing ...
-    # ❌ Exceeds 40-line limit
+    # ... 850 words of processing ...
+    # ❌ Exceeds 350-word limit
+```
+
+## Migration from Line Counts to Word Counts
+
+### Why the Change
+
+Line counts were historically used as a simple measure of complexity, but they are a poor proxy for LLM context usage. A 40-line function with verbose docstrings may have fewer actual code words than a dense 30-line function. Word counts better reflect:
+
+1. **LLM context consumption** - More accurate token estimation
+2. **Cognitive load** - Actual content density matters more than line breaks
+3. **Cross-language consistency** - Works for Python, Markdown, configs alike
+
+### Conversion Factors
+
+| Artifact | Old Limit (Lines) | New Limit (Words) | Factor |
+|----------|-------------------|-------------------|--------|
+| Python functions | 40 | 350 | ~8.75 words/line |
+| Notebook cells | 50 | 450 | ~9 words/line |
+| Source files | 300 | 2700 | ~9 words/line |
+
+### Grandfather Policy (Unchanged)
+
+The grandfather policy applies to word counts exactly as it did for line counts:
+- Files created before this change are exempt
+- Modified grandfathered files must comply for new/modified code
+- Refactor grandfathered files during natural refactoring, not as dedicated tasks
+
+### Measurement Tools
+
+Word counts can be measured with:
+```bash
+# File word count
+wc -w src/module.py
+
+# Word count of code snippet
+wc -w <<EOF
+# paste code here
+EOF
 ```
 
 ## Why This Matters

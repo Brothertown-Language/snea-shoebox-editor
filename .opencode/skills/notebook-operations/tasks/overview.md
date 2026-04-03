@@ -192,7 +192,7 @@ If you accidentally execute a production notebook:
 **ALL code standards in `080-code-standards.md` apply to notebook cells.** Specifically:
 
 - **KISS/DRY**: No duplicated logic across cells. Extract shared functions into separate importable modules (`src/`).
-- **Non-Monolithic Cells**: Each cell should do ONE thing. If a cell exceeds 50 lines, split it into multiple cells.
+- **Non-Monolithic Cells**: Each cell should do ONE thing. If a cell exceeds 450 words (approximately 50 lines), split it into multiple cells.
 - **Single Function Methods**: Functions defined in notebooks should perform ONE task. Long functions should be decomposed.
 - **Modularity**: Complex logic belongs in `.py` modules, not inline in notebook cells. Notebooks are for orchestration and visualization, not implementation.
 
