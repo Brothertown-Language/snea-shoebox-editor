@@ -11,8 +11,8 @@ Generate GitHub compare URL for developer review AFTER the implementation task h
 The sequence is:
 
 1. Implementation complete → commit → push → **review-prep invoked automatically**
-1. Compare URL generated → HALT
-1. Wait for developer to say "create a PR"
+2. Compare URL generated → HALT
+3. Wait for developer to say "create a PR"
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just generate the compare URL.**
 
@@ -61,9 +61,9 @@ Review-prep task:
 When implementation determines "no file changes needed":
 
 1. **STILL push branch** - git will report "up-to-date", which is acceptable
-1. **STILL generate compare URL** - developer can see branch state
-1. **STILL post completion comment** - clear signal that work is done
-1. **NEVER skip review prep** - visibility is mandatory
+2. **STILL generate compare URL** - developer can see branch state
+3. **STILL post completion comment** - clear signal that work is done
+4. **NEVER skip review prep** - visibility is mandatory
 
 **Why this matters:** Developer needs visibility into what was checked, even if no changes were made.
 
@@ -78,8 +78,8 @@ When implementation determines "no file changes needed":
 ## Operating Protocol
 
 1. **After implementation:** This task runs AFTER all implementation is complete - NO EXCEPTIONS
-1. **MANDATORY step:** Branch MUST be pushed to remote for developer review - NO ASKING
-1. **HALT after push:** Wait for developer to review and authorize PR creation
+2. **MANDATORY step:** Branch MUST be pushed to remote for developer review - NO ASKING
+3. **HALT after push:** Wait for developer to review and authorize PR creation
 
 ## Entry Criteria
 
@@ -125,6 +125,7 @@ git branch -vv
 ```
 
 **Expected output:**
+
 ```
 * spec/my-branch  abc123 [origin/spec/my-branch] Commit message
 ```
@@ -146,7 +147,7 @@ If review-prep is invoked but branch is NOT pushed:
    git commit -m "Implementation complete" \
        --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
        --trailer "Co-authored-by: <Human-Name> <human-email>"
-   
+
    # Push branch
    git push -u origin <branch-name>
    ```
@@ -180,18 +181,20 @@ Post to GitHub issue:
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-**Ready for Review:**
-
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
+
+**⚠️ URL-LAST FORMAT (MANDATORY): Compare URL MUST be the FINAL line of the comment.**
 
 Post to chat (same format):
 
 **✅ MANDATORY - DO NOT SKIP:**
+
 - **GitHub Issue Comment:** Full executive summary with byline and compare URL
 - **Chat Output:** SAME executive summary with byline and compare URL
 
 **Why both locations:**
+
 - GitHub preserves long-term history for future reference
 - Chat maintains session context for current discussion
 - Both must have identical content for completeness
@@ -226,9 +229,9 @@ Post to chat (same format):
 **If review-prep is invoked but branch is NOT pushed:**
 
 1. **Detect missed push:** `git branch -vv` shows no upstream
-1. **Inform user:** "Implementation task must commit and push. Fixing now."
-1. **Fix and continue:** `git push -u origin <branch-name>`
-1. **Continue:** Generate compare URL, post completion comment
+2. **Inform user:** "Implementation task must commit and push. Fixing now."
+3. **Fix and continue:** `git push -u origin <branch-name>`
+4. **Continue:** Generate compare URL, post completion comment
 
 **Why:** Commit without push = empty compare URL. Push is mandatory after commit.
 
@@ -341,8 +344,6 @@ Updated git-workflow skill to push feature branches after implementation and pro
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**Ready for Review:**
 
 https://github.com/<owner>/<repo>/compare/main...<branch-name>
 ```

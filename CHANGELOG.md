@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **URL-Last Format for Executive Summaries**: Executive summaries in GitHub comments now place URLs at the end, making it easier to scan the summary content before accessing the link. This improves readability and establishes a consistent visual pattern across all AI-generated progress comments.
 - **Mandatory Push Before HALT**: AI agents now automatically push feature branches to remote before halting after implementation, eliminating a common workflow violation where developers couldn't review changes. This ensures the compare URL is always available for code review.
 - **Compound Command Recognition**: Added explicit pattern matching rules to verify that approval tokens (`approved`, `go`) must be standalone words separated by whitespace to constitute valid authorization. Compound phrases like `#196approvedcheck pr` are no longer incorrectly parsed as approvals. This prevents authorization errors when approval tokens appear adjacent to other text.
 - **AI Attribution Identity Detection**: AI agents must now detect their actual runtime identity (name, model ID, email) dynamically instead of using hardcoded placeholder values. Example values in guidelines are explicitly illustrative only. When identity is unknown, agents must stop and ask for clarification rather than guessing. This ensures AI co-authored attribution reflects the actual AI assistant that created the content, preventing misattribution from copied example values.

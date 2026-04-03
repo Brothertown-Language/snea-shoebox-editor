@@ -134,7 +134,7 @@ OpenCode loads guidelines from:
 | Coverage | `uv run coverage run -m pytest test/ && uv run coverage report` | - |
 | Dead code scan | `uvx vulture src/` | Python ONLY |
 | Markdown lint | `uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/` | Markdown ONLY |
-| Markdown format | `uvx mdformat .opencode/guidelines/ docs/` | Markdown ONLY |
+| Markdown format | `uvx mdformat --number --wrap keep --end-of-line lf .opencode/guidelines/ docs/` | Markdown ONLY |
 
 **Never** use bare `python`, `python3`, or `pip`. Always prefix with `uv run` for project commands.
 **Standalone tools** (ruff, pyright, vulture) use `uvx` or `uv tool install` — NOT `uv run`.
