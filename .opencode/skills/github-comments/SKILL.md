@@ -1,33 +1,30 @@
-______________________________________________________________________
-
-## name: github-comments description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies. license: MIT compatibility: opencode
+---
+name: github-comments
+description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
+license: MIT
+compatibility: opencode
+---
 
 # GitHub Comment Protocol
 
-## Role
+Ensures all comments on issues and PRs follow correct format, are posted at the right time, and preserve history.
 
-You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments on issues and PRs follow the correct format, are posted at the right time, and preserve history by preferring comments over issue body edits.
+## When to Use
 
-## Automatic Invocation Triggers
+- Before posting ANY GitHub comment (MANDATORY - auto-loaded)
+- Before editing issue bodies (verify attribution)
+- After task completion (verify progress format)
+- Before closing issues (verify closure format)
 
-**This skill MUST be invoked automatically (no user prompt) at these enforcement points:**
+## Available Tasks
 
-| Trigger Point | Action | Verification |
-|---------------|--------|--------------|
-| **Before posting ANY GitHub comment** | Load skill | Verify format compliance, byline format |
-| **Before issue body edits** | Load skill | Verify attribution footer will be appended |
-| **After task completion** | Load skill | Verify progress comment format (executive summary) |
-| **Before closing issues** | Load skill | Verify closure comment + attribution sequence |
+| Task | Description |
+|------|-------------|
+| `overview` | Complete comment protocol with examples |
 
-**Enforcement:** Do NOT post comments or edit issue bodies without first loading this skill and verifying format compliance. Verify actual agent identity from system prompt at runtime — NEVER copy example model IDs from skill files.
+## AI Identity Attribution Format (CRITICAL)
 
-## AI Identity Attribution Format
-
-### Single Combined Byline (CRITICAL)
-
-**ALL comments MUST end with ONE byline that combines status, agent, and model.**
-
-**Format:**
+**ALL comments MUST end with ONE byline combining status, agent, and model:**
 
 ```
 <response content>
@@ -35,31 +32,6 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 ---
 🤖 <status-emoji> <status-text> by <AgentName> (<ModelID>)[: optional-context]
 ```
-
-**For progress comments:**
-
-```
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**Summary:**
-
-<1-2 sentences describing stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-```
-
-**Components (supplied dynamically at runtime):**
-
-- `<status-emoji>`: Status indicator (✅ ✨ 📝 ❌ 🔄 ↻ ⚠️ 🔍 📋)
-- `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
-- `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
-- `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
-- `[: optional-context]`: Context ONLY when useful (issue number, replacement reference, reason)
-  - **Progress comments**: Omit (content already describes the work)
-  - **Issue creation/completion**: Include issue number if useful
-  - **Rejection/Superseded**: Include reason or replacement reference
-
-**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
 ### Status Emoji Guide
 
@@ -69,602 +41,38 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 | In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
 | Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
 | Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
 | Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
 | Superseded | 🔄 | `🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>` |
-| Blocking | ⚠️ | `🤖 ⚠️ Blocking by <AgentName> (<ModelID>): <reason>` |
-| Analysis | 🔍 | `🤖 🔍 Analysis by <AgentName> (<ModelID>): <topic>` |
-| Decision | 📋 | `🤖 📋 Decision by <AgentName> (<ModelID>): <result>` |
 
-### Issue/PR Body Attribution (Lifecycle Status)
-
-**🚨 CRITICAL: ALWAYS APPEND. NEVER REPLACE.**
-
-| Action | Operation | Byline |
-|--------|-----------|--------|
-| Create issue | Append | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
-| Update content | Append | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
-| Complete issue | Append | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Reject issue | Append | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
-| Supersede issue | Append | `🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>` |
-
-**When to Include Context:**
-
-- **Progress/Task completion**: No context needed (content already describes the work)
-- **Issue creation**: Optional — use if issue number provides useful reference
-- **Content updates**: Brief description of what changed
-- **Rejection/Superseded**: Always include reason or replacement reference
-
-**Example lifecycle (append-only):**
-
-```markdown
-[Issue body content]
-
----
-
-> **Approval Tracking**: Approvals tracked via comments.
-
-🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
-🤖 📝 Updated by <AgentName> (<ModelID>): Added Phase 2
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**Why append-only:**
-
-- Same rule everywhere (no confusion)
-- Matches comment history behavior (comments append)
-- Preserves full lifecycle visibility
-- No special cases to remember
-
-______________________________________________________________________
-
-## User Prompt Comment Format
-
-**When creating or revising a spec, capture the user's original prompt as a comment on the issue.**
-
-### Why This Matters
-
-The user's prompt contains nuanced context that may not be captured in the spec body:
-- WHY the change is needed
-- Specific constraints or preferences
-- Background information that informed decisions
-- Edge cases the user cares about
-
-Without the original prompt context, future agents lose critical information about intent.
-
-### Format
-
-```markdown
-**User Prompt:**
-
-> <verbatim user prompt text>
-
-[Optional: Additional context summary if multiple messages]
-
-**Why This Spec:**
-<Brief note on why the spec was created from this prompt>
-
----
-🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
-```
-
-### Examples
-
-**Single Prompt:**
-
-```markdown
-**User Prompt:**
-
-> "when creating a spec or revising a spec - it is important to include the user prompt as an added comment to the spec so that context about the spec is properly maintained to prevent loss of information - especially nuance"
-
-**Why This Spec:**
-Establishes requirement to preserve user prompts for context continuity across sessions.
-
----
-🤖 ✨ Created by OpenCode (ollama-cloud/glm-5): Issue #113
-```
-
-**Multiple Messages:**
-
-```markdown
-**User Prompt:**
-
-> "Add rate limiting to the PubMed API client"
-
-**Additional Context:**
-- User mentioned issues with API throttling during testing
-- Concerned about retry behavior during high-load periods
-- Wants graceful degradation, not hard failures
-
-**Why This Spec:**
-Addresses production stability by implementing rate limiting with configurable thresholds.
-
----
-🤖 ✨ Created by <AgentName> (<ModelID>): Issue #N
-```
-
-**Revision Prompt:**
-
-```markdown
-**Revision Prompt:**
-
-> "Add edge case handling for concurrent rate limit scenarios"
-
-**Context:**
-This updates the original rate limiting spec to handle concurrent requests more robustly.
-
----
-🤖 📝 Updated by <AgentName> (<ModelID>)
-```
-
-### Edge Cases
-
-| Scenario | Action |
-|----------|--------|
-| Prompt is very long | Summarize key points, link to full conversation |
-| User provides clarifications | Add clarification comments separately |
-| Confidential/sensitive info | Allow user to redact before posting |
-
-### Integration Points
-
-| Guideline | Connection |
-|-----------|------------|
-| `140-planning-spec-creation.md` §1.2 | Full prompt preservation requirements |
-| `120-github-issue-first.md` §5 | Prompt preservation workflow |
-
-______________________________________________________________________
-
-## Comment Type Decision Table
-
-| Action | Post Comment? | Reason |
-|--------|---------------|--------|
-| Create new issue | ❌ NO | Issue body is the communication |
-| Update issue body (textual content) | ✅ YES | Explain the change |
-| Update issue body (STATUS field only) | ❌ NO | Status tracking, not narrative |
-| Complete implementation task | ✅ YES | Document progress |
-| Create PR | ✅ YES | Link to issue |
-| Close issue | ✅ YES | Provide closing summary |
-| Alter spec (add/remove phases, steps) | ✅ YES | Document spec changes |
-| Review status without action | ❌ NO | No value added |
-| Label changes | ❌ NO | GitHub auto-tracks |
-| Checklist completion (`☐` → `☑`) | ❌ NO | Status tracking |
-
-______________________________________________________________________
-
-## Progress Comments (MANDATORY)
-
-**Every implementation step MUST be documented with a comment on the associated issue.**
-
-### When to Post
-
-- After completing EACH task in multi-task implementation
-- After ANY file modification
-- When creating PR
-- NEVER wait until all tasks complete — post after EACH task
-
-### Chat Output Rule
-
-**Progress executive summaries go to BOTH GitHub comments AND chat.**
-
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
-
-**Why:** Both GitHub history AND chat transcript should show progress. GitHub preserves long-term history; chat maintains session context.
-
-**✅ DO:** Post executive summary to GitHub, then provide SAME summary in chat
-**🚫 NEVER:** Skip either location
-**🚫 NEVER:** Put full summary in chat but skip GitHub comment
-
-### ✅ REQUIRED Format: Executive Summary
-
-**For intermediate task (multi-task spec):**
+## Progress Comment Format (MANDATORY)
 
 ```
 **Summary:**
 
-<1-2 sentences describing the impact and stakeholder value of the change.>
+<1-2 sentences describing impact and stakeholder value>
 
-**Outcome:** <What changed for stakeholders / users / system behavior>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**For final task or single-task spec:**
-
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value of the change.>
-
-**Outcome:** <What changed for stakeholders / users / system behavior>
-
-All tasks complete from this specification.
+**Outcome:** <What changed for stakeholders>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-### Executive Summary Requirements
+**FORBIDDEN in Progress Comments:**
 
-The summary MUST answer:
+- File lists (redundant with git)
+- "Next" field (dialog prompt)
+- "Awaiting authorization" (use HALT)
+- Technical changelogs (focus on impact)
 
-1. **What changed?** — The actual implementation/fix/enhancement
-1. **Why it matters** — Impact on stakeholders (users, developers, system)
-1. **Result** — Improved behavior, new capability, fixed issue
+## When to Comment vs Edit Body
 
-### 🚫 FORBIDDEN in Progress Comments
+| Action | Method | Use When |
+|--------|--------|----------|
+| Create issue | Body | Initial spec content |
+| Update STATUS | Body | Phase/step markers |
+| Task completion | Comment | Progress report |
+| Closure | Comment with summary | Final status |
 
-- **File lists** — Redundant (visible in git commits)
-- **"Next" field** — Dialog prompt (violates the "Never Prompt in Comments" rule in `AGENTS.md`)
-- **Punch-list format** — Use executive summary paragraphs
-- **"Awaiting authorization"** — Use HALT protocol, not comments
-- **Technical changelog** — Focus on impact, not file-by-file changes
-- **Just "I did X"** — Explain WHY it matters
+## Quick Start
 
-### Why Executive Summaries?
-
-1. **Stakeholder value** — Focus on impact, not technical details
-1. **No redundancy** — Git shows file changes; comments explain significance
-1. **No dialog prompts** — "Next:" violates the HALT protocol
-1. **Clear completion** — Explicit "All tasks complete" when done
-1. **Chat visibility** — Format renders well in both GitHub and AI chat
-
-### Sequence Enforcement
-
-1. ✅ Complete the implementation
-1. ✅ Post progress comment IMMEDIATELY
-1. ✅ ONLY THEN: Move to next task or report completion
-
-**🚫 WRONG:** Complete task → Move to next → Comment later
-**✅ RIGHT:** Complete task → Comment → Then move to next
-
-______________________________________________________________________
-
-## Issue Body Update Rules
-
-### Issue Body Attribution (MANDATORY)
-
-After creating or updating an issue body:
-
-1. **Append attribution footer** (NEVER replace existing footer)
-1. **Format:** `🤖 <status-emoji> *<status-text> by AI: <AgentName> (<ModelID>)*`
-1. **Emoji OUTSIDE italic formatting** (plain text for proper rendering)
-1. **Preceded by blank line and `---` separator**
-
-### Two-Step Operation for Content Updates
-
-When updating textual content in an issue body:
-
-1. **First**: `github_issue_write method=update` (update body)
-1. **IMMEDIATELY after**: Append attribution footer AND `github_add_issue_comment` (explain change)
-
-**⚠️ CRITICAL**: Append attribution, never replace. Comment to explain change.
-
-### Comment Format for Body Updates
-
-```
-🤖 📝 Updated: <reason>
-
----
-🤖 📝 Updated by <AgentName> (<ModelID>)
-```
-
-### Spec Alteration Format
-
-```
-🤖 📝 Spec altered: <summary>
-
-- Changed: <what changed>
-- Added: <what added>
-- Removed: <what removed>
-
----
-🤖 📝 Updated by <AgentName> (<ModelID>)
-```
-
-### What Counts as "Textual Content"
-
-| Content Type | Requires Comment? |
-|--------------|-------------------|
-| Objective, requirements, spec sections | ✅ YES |
-| Roadmap/task list additions/removals | ✅ YES |
-| Prose content changes | ✅ YES |
-| STATUS field updates | ❌ NO |
-| Label changes | ❌ NO |
-| Checklist markers (`☐` → `☑`) | ❌ NO |
-| Typo fixes (no meaning change) | ❌ NO |
-| Back-references/origin links at top | ❌ NO |
-| Cross-reference additions | ❌ NO |
-
-### What is "Substantive" vs "Non-Substantive"
-
-**Substantive** (Comment Required):
-
-- Changes to requirements, objectives, success criteria
-- Adding/removing phases or tasks
-- Altering spec scope or approach
-- Significant content changes that affect understanding
-
-**Non-Substantive** (No Comment):
-
-- Adding links/references at the top of issue body (origin links, cross-references)
-- STATUS field updates
-- Label changes
-- Checklist marker updates
-- Typo/formatting fixes
-- Housekeeping edits that don't change meaning
-
-______________________________________________________________________
-
-## Issue Closure Rules
-
-### Mandatory Two-Step Operation
-
-1. **First**: `github_add_issue_comment` with detailed closure reason
-1. **Then**: Append completion attribution to issue body + `github_issue_write method=update state=closed`
-
-**🚫 NEVER**: Edit issue body to add "CLOSED" — use comments
-**🚫 NEVER**: Close without explanation comment
-
-### Closure Comment Format
-
-```
-🤖 ❌ **Closed**
-
-## Rejection Reason (if rejected)
-<reason with evidence>
-
-## Summary (if completed)
-<what was implemented>
-
-## Alternative (if applicable)
-<suggestion for rejected proposals>
-
----
-🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
-```
-
-### After Closure: Append Completion Attribution
-
-When closing as completed:
-
-```markdown
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-When closing as rejected:
-
-```markdown
-🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
-```
-
-When closing as superseded:
-
-```markdown
-🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>
-```
-
-**⚠️ CRITICAL: ALWAYS APPEND attribution. NEVER replace existing creation attribution.**
-
-### Closure Reasons Requiring Comments
-
-| Closure Reason | Comment Required? |
-|----------------|-------------------|
-| Completed (PR merged) | ✅ YES |
-| Rejected | ✅ YES |
-| Superseded | ✅ YES |
-| Not planned | ✅ YES |
-| Duplicate | ✅ YES |
-| Cannot reproduce | ✅ YES |
-
-______________________________________________________________________
-
-## When NOT to Comment
-
-### 🚫 FORBIDDEN Comments
-
-- "Status Review" comments on correctly tracked issues
-- Restating the current STATUS field value
-- Confirming issue is waiting correctly
-- "Awaiting authorization to implement"
-- "Please confirm before I proceed"
-- "Ready for approval?"
-- Cross-reference link additions (origin/back-reference links)
-- Housekeeping edits (typo fixes, formatting)
-
-### ✅ REQUIRED Comments
-
-- Closing an issue (with reason)
-- Updating substantive textual content (requirements, objectives, phases)
-- Completing implementation task
-- Creating PR
-- Altering spec structure
-- Blocking/unblocking decision
-
-______________________________________________________________________
-
-## Responding to User Comments (MANDATORY)
-
-**When a user comments on an issue, ALWAYS respond via GitHub comment — NOT just internal analysis.**
-
-Users communicating via GitHub Issues:
-
-- Cannot see your internal analysis
-- Are not mind readers
-- Expect responses where they asked the question
-
-### Protocol
-
-1. **Read**: `github_issue_read method=get_comments`
-1. **Respond**: `github_add_issue_comment` with answer
-1. **Be conversational**: Answer directly, ask simply
-
-### Example
-
-```
-User: "how do these keys seem?"
-
-BAD: "Awaiting authorization to implement."
-
-GOOD: "The keys look correct. Ready when you are."
-```
-
-______________________________________________________________________
-
-## Prohibitions
-
-### 🚫 NEVER DO
-
-- Edit issue body to add "CLOSED" or "COMPLETED" text
-- Rewrite entire issue body to change STATUS
-- Close issue without explanation comment
-- Post "status review" comments without action
-- Use "Awaiting authorization" in comments
-- Analyze user comments without posting response
-- Create issue AND post separate comment (body is sufficient)
-- Proceed to next task without posting progress comment
-
-### ✅ ALWAYS DO
-
-- Post ALL comments with attribution at END (not prefix)
-- Use 🤖 emoji FIRST, then status emoji
-- Use attribution footer for issue/PR bodies (appended, never replaced)
-- Ensure emoji is PLAIN TEXT (NOT inside italic/bold)
-- Comment when updating textual content
-- Comment when altering spec structure
-- Comment when closing issues
-- Append attribution for all issue body changes (created, updated, completed, rejected)
-- Comment after completing each task
-- Post progress comment IMMEDIATELY (not later)
-- Respond to user questions via GitHub comment
-
-______________________________________________________________________
-
-## Integration with Other Skills
-
-| Skill | Integration Point |
-|-------|-------------------|
-| `git-workflow` | Post comment when PR created |
-| `spec-auditor` | Comment audit findings on issue |
-
-## Guideline References
-
-| Guideline | Content |
-|-----------|---------|
-| `123-github-ai-identity.md` | Full AI identity requirements |
-| `120-github-issue-first.md` | Issue workflow, sub-issues |
-| `000-critical-rules.md` | Critical violation enforcement |
-
-## Example Workflows
-
-### Task Completion Comment (Intermediate Task)
-
-```
-**Summary:**
-
-Created skill file defining comment format rules, decision tables for when to comment vs edit issue bodies, and example workflows. This establishes clear protocols for AI agents posting to GitHub.
-
-**Outcome:** Agents now have explicit guidance on comment types, timing, and format—reducing inconsistent or missing issue updates.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-### Task Completion Comment (Final Task)
-
-```
-**Summary:**
-
-Updated cross-references in all affected guideline files to point to the new skill. Ensures consistent agent behavior across the codebase.
-
-**Outcome:** All guideline references now correctly point to github-comments skill for comment protocol.
-
-All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-### Single-Task Completion
-
-```
-**Summary:**
-
-Replaced technical punch-list progress comments with executive summaries focused on stakeholder value. Removed redundant file lists and dialog prompts that violated HALT protocol.
-
-**Outcome:** Progress comments now communicate impact and outcomes rather than changelog details—improving readability for stakeholders reviewing issue history.
-
-All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-### Issue Body Update Comment
-
-```
-🤖 📝 Updated: Added Phase 2 for guideline updates per discussion in comment #5
-
----
-🤖 📝 Updated by <AgentName> (<ModelID>)
-```
-
-### Spec Alteration Comment
-
-```
-🤖 📝 Spec altered: Added Phase 3 for verification
-
-- Added: Phase 3: Verification (auto-progress)
-- Added: Success criteria verification steps
-
----
-🤖 📝 Updated by <AgentName> (<ModelID>)
-```
-
-### Issue Creation (Body)
-
-```markdown
-[Issue body content]
-
----
-
-> **Approval Tracking**: Approvals tracked via comments.
-
-🤖 ✨ Created by <AgentName> (<ModelID>): Issue #462
-```
-
-### Issue Updates as Combined Bylines List (Body)
-
-```markdown
-[Issue body content]
-
----
-
-> **Approval Tracking**: Approvals tracked via comments.
-
-🤖 ✨ Created by <AgentName> (<ModelID>): Issue #462
-🤖 📝 Updated by <AgentName> (<ModelID>): Added Phase 2
-🤖 📝 Updated by <AgentName> (<ModelID>): Fixed typo in success criteria
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-### Issue Closure Comment
-
-```
-**Summary:**
-Completed all tasks from this specification:
-- ✅ Created github-comments skill
-- ✅ Updated three guideline files
-- ✅ Removed duplicate content
-
-**Evidence:**
-Commit `abc123`: Add github-comments skill directory
-
-All success criteria met.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
+Use `/skill github-comments --task overview` for complete protocol with examples.

@@ -271,6 +271,10 @@ OpenCode skills are available in `.opencode/skills/`. Each skill has a `SKILL.md
 - `license`: License type
 - `compatibility`: opencode
 
+**⚠️ MANDATORY: All skills MUST have a `tasks/` subdirectory with at least one task file.**
+
+Skills without tasks cannot be invoked as subtasks and will fail silently. See `skill-creator` skill for complete requirements.
+
 To use a skill, the agent loads it when relevant to the current task.
 
 ### Skill Invocation Guidance

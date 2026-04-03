@@ -1,35 +1,21 @@
----
-name: changelog-generator
-description: Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes.
-license: MIT
-compatibility: opencode
----
+# Task: overview
 
-# Changelog Generator
+Changelog generator that transforms technical git commits into polished, user-friendly changelogs.
 
-Transforms technical git commits into polished, user-friendly changelogs that customers will understand and appreciate.
+## When to Invoke
 
-## When to Use
-
+Use when:
 - Preparing release notes for a new version
-- Creating weekly/monthly product updates
+- Creating product update summaries
+- Documenting changes for customers
 - Writing changelog entries for app store submissions
+- Generating update notifications
 
 ## Prerequisites
 
 - **Git**: Required for reading commit history
 - **Repository access**: Must be run from a git repository root
 - **Optional**: Custom changelog style guide (CHANGELOG_STYLE.md)
-
-## When to Use This Skill
-
-- Preparing release notes for a new version
-- Creating weekly or monthly product update summaries
-- Documenting changes for customers
-- Writing changelog entries for app store submissions
-- Generating update notifications
-- Creating internal release documentation
-- Maintaining a public changelog/product updates page
 
 ## What This Skill Does
 
@@ -43,8 +29,6 @@ Transforms technical git commits into polished, user-friendly changelogs that cu
 ## How to Use
 
 ### Basic Usage
-
-From your project repository:
 
 ```
 Create a changelog from commits since last release
@@ -71,11 +55,8 @@ Create a changelog for commits since v2.4.0, using my changelog
 guidelines from CHANGELOG_STYLE.md
 ```
 
-## Example
+## Example Output
 
-**User**: "Create a changelog for commits from the past 7 days"
-
-**Output**:
 ```markdown
 # Updates - Week of March 10, 2024
 
@@ -99,21 +80,21 @@ guidelines from CHANGELOG_STYLE.md
 - Corrected notification badge count
 ```
 
-**Inspired by:** Manik Aggarwal's use case from Lenny's Newsletter
+## Procedure
 
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for changelog generation | ~400 |
+1. **Scan commits** from specified time period or version range
+2. **Categorize** each commit into: features, improvements, fixes, breaking, security
+3. **Translate** technical language to user-friendly descriptions
+4. **Format** into structured markdown with appropriate sections
+5. **Filter** out internal-only commits (refactoring, tests, infrastructure)
+6. **Apply** custom style guide if provided (CHANGELOG_STYLE.md)
 
 ## Tips
 
 - Run from your git repository root
 - Specify date ranges for focused changelogs
-- Use your CHANGELOG_STYLE.md for consistent formatting
 - Review and adjust the generated changelog before publishing
-- Save output directly to CHANGELOG.md
+- Use your CHANGELOG_STYLE.md for consistent formatting
 
 ## Related Use Cases
 
@@ -121,3 +102,8 @@ guidelines from CHANGELOG_STYLE.md
 - Writing app store update descriptions
 - Generating email updates for users
 - Creating social media announcement posts
+
+## Cross-References
+
+- Related: `git-workflow` skill (for commit access)
+- Related: AGENTS.md (git workflow guidelines)

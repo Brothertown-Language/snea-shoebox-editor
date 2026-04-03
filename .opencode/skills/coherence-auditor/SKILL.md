@@ -1,16 +1,19 @@
-______________________________________________________________________
-
-## name: coherence-auditor description: Audit coherence between guidelines, skills, and AI agent behavior to ensure they work together effectively. Can be used for extraction (identifying skill candidates) and maintenance (detecting drift). license: MIT compatibility: opencode
+---
+name: coherence-auditor
+description: Audit coherence between guidelines, skills, and AI agent behavior to ensure they work together effectively. Can be used for extraction (identifying skill candidates) and maintenance (detecting drift).
+license: MIT
+compatibility: opencode
+---
 
 # Skill: coherence-auditor
 
-## Overview
+Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI agent behavior. Identifies procedural workflows for extraction and detects drift over time.
 
-LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work together effectively. Identifies procedural workflows for extraction and detects drift over time.
+## When to Use
 
-## Persona
-
-You are an LLM Coherence Auditor. Your focus is auditing coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI agent behavior.
+- Creating new skills from guideline content (extraction)
+- Ongoing drift detection and verification (maintenance)
+- Before approving guideline/skill changes
 
 ## Tasks
 

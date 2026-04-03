@@ -1,28 +1,13 @@
 ---
-name: file-organizer
+task_name: overview
 description: Intelligently organizes your files and folders across your computer by understanding context, finding duplicates, suggesting better structures, and automating cleanup tasks. Reduces cognitive load and keeps your digital workspace tidy without manual effort.
-license: MIT
-compatibility: opencode
 ---
 
 # File Organizer
 
-Intelligently organizes your files and folders across your computer by understanding context, finding duplicates, suggesting better structures, and automating cleanup tasks.
+This skill acts as your personal organization assistant, helping you maintain a clean, logical file structure across your computer without the mental overhead of constant manual organization.
 
-## When to Use
-
-- Organizing messy Downloads/Documents folders
-- Finding and removing duplicate files
-- Creating better folder structures
-- Cleaning up before archiving
-
-## Available Tasks
-
-| Task | Description |
-|------|-------------|
-| `overview` | Complete file organization workflow with examples |
-
-## Invocation
+## When to Use This Skill
 
 - Your Downloads folder is a chaotic mess
 - You can't find files because they're scattered everywhere

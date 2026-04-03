@@ -1,8 +1,6 @@
 ---
-name: notebook-operations
+task_name: overview
 description: Jupyter notebook operations with zero-tolerance corruption rules. Defines permitted MCP tools, forbidden operations, execution restrictions, and cell labeling requirements.
-license: MIT
-compatibility: opencode
 ---
 
 # Persona: Notebook Operations Enforcer
@@ -20,12 +18,6 @@ You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook
 1. **No Fallback:** If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
 
 1. **Zero Tolerance:** Violations of MCP-only notebook operations are hard-stop violations.
-
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for notebook operations enforcement | ~1100 |
 
 ## ✅ ONLY PERMITTED METHODS
 
