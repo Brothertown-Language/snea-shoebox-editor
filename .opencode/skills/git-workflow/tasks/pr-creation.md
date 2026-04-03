@@ -63,7 +63,86 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
-### Step 2: Generate Changelog via Subtask
+### Step 2: Version Bump via Subtask (Code Changes Only)
+
+**⚠️ CRITICAL: Only for PRs with code changes. Skip for docs/chore/refactor PRs.**
+
+**Detect code changes:**
+
+```bash
+# Get list of changed files
+CHANGED_FILES=$(git diff origin/main...HEAD --name-only)
+
+# Check if any code files changed
+echo "$CHANGED_FILES" | grep -qE '\.(py|js|ts|rs|java|go|rb)$'
+CODE_CHANGES=$?
+
+if [ $CODE_CHANGES -eq 0 ]; then
+    echo "Code changes detected - invoking version bump"
+else
+    echo "No code changes detected - skipping version bump"
+fi
+```
+
+**Skip version bump for:**
+- Documentation-only changes (*.md files)
+- CI/CD configuration (*.yml, *.yaml)
+- Build configuration (Dockerfile, docker-compose.yml)
+- Test files without production code changes
+- Refactoring PRs without public API changes
+
+**If code changes detected, invoke version-bump as subtask:**
+
+```
+task tool with:
+- subagent_type: "general"
+- description: "Version bump for PR"
+- prompt: "Use the version-bump skill to analyze changes and update version files. Steps: 1) Load skill with /skill version-bump, 2) Invoke analyze task to determine bump type, 3) Invoke bump task to update version files, 4) Return JSON with: bump_type, old_version, new_version, files_updated, success. The skill is at .opencode/skills/version-bump/SKILL.md."
+```
+
+**Subtask execution:**
+1. Loads version-bump skill in isolated context (~370 lines)
+2. Runs analyze.md to determine bump type (major/minor/patch/skip)
+3. Runs bump.md to update all version files atomically
+4. Returns results to main agent
+5. Context is discarded after return (no pollution)
+
+**Subtask returns:**
+
+```json
+{
+  "bump_type": "minor",
+  "old_version": "1.2.3",
+  "new_version": "1.3.0",
+  "files_updated": ["pyproject.toml"],
+  "success": true
+}
+```
+
+**If subtask fails or returns skip:**
+
+```json
+{
+  "bump_type": "skip",
+  "reason": "No code changes detected",
+  "success": true
+}
+```
+
+No version bump needed. Continue to changelog generation.
+
+**Stage version file changes:**
+
+```bash
+# Stage version file updates (if any)
+if [ -n "$(git status --porcelain | grep -E '(pyproject.toml|setup.py|package.json|Cargo.toml|VERSION)')" ]; then
+    git add pyproject.toml setup.py package.json Cargo.toml VERSION 2>/dev/null
+fi
+```
+
+**Note:** Version bump changes are included in the squash commit (Step 4). They are NOT a separate commit.
+
+### Step 3: Generate Changelog via Subtask
 
 **⚠️ CRITICAL: Use task tool to prevent context pollution.**
 
@@ -111,7 +190,7 @@ Use fallback format for PR body:
 - Group by: Features, Improvements, Fixes
 ```
 
-### Step 3: Stage CHANGELOG.md
+### Step 4: Stage CHANGELOG.md
 
 **After subtask completes:**
 
@@ -140,12 +219,12 @@ EOF
 git add CHANGELOG.md
 ```
 
-### Step 4: Squash to Single Commit
+### Step 5: Squash to Single Commit
 
-**MANDATORY:** All PRs must have exactly ONE commit, including CHANGELOG.md changes.
+**MANDATORY:** All PRs must have exactly ONE commit, including version bump and CHANGELOG.md changes.
 
 ```bash
-# Stage all changes including CHANGELOG.md
+# Stage all changes including version files and CHANGELOG.md
 git add -A
 
 # Squash to single commit
@@ -155,13 +234,20 @@ git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
 
-### Step 5: Push to Remote
+**Note:** The squash commit includes:
+- All implementation changes
+- Version bump (if applied in Step 2)
+- CHANGELOG.md updates
+
+These are NOT separate commits - all combined into ONE clean commit.
+
+### Step 6: Push to Remote
 
 ```bash
 git push --force-with-lease origin <branch>
 ```
 
-### Step 6: Create PR via GitHub MCP
+### Step 7: Create PR via GitHub MCP
 
 **Use the summary and changelog from subtask for PR body.**
 
