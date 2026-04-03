@@ -7,11 +7,12 @@
 This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any file, creating any file, or making ANY change to the project:
 
 1. **Check current branch**: `git branch --show-current`
-2. **If on `main`**: STOP — you MUST create a feature branch first
-3. **Create branch**: `git checkout -b spec/<short-name>` or `git checkout -b feature/<description>`
-4. **ONLY THEN**: Proceed with file changes
+1. **If on `main`**: STOP — you MUST create a feature branch first
+1. **Create branch**: `git checkout -b spec/<short-name>` or `git checkout -b feature/<description>`
+1. **ONLY THEN**: Proceed with file changes
 
 **What Counts as a "Change"?**
+
 - Editing any file (code, config, docs, tests)
 - Creating new files
 - Deleting files
@@ -22,12 +23,14 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - **Using file-editing MCP tools** (`pycharm_replace_text_in_file`, `pycharm_create_new_file`, etc.) — these ARE filesystem changes
 
 **⚠️ MCP Tools Are NOT an Exception**
+
 - `pycharm_replace_text_in_file` → edits files → MUST be on feature branch
 - `pycharm_create_new_file` → creates files → MUST be on feature branch
 - `github_issue_write` → GitHub Issues, NOT local files → NOT a filesystem change
 - `github_add_issue_comment` → GitHub comments → NOT a filesystem change
 
 **Why FIRST?**
+
 - No exceptions for "small" changes
 - No exceptions for "just one file"
 - No exceptions for docs, tests, configs, or guidelines
@@ -36,11 +39,13 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - The branch IS the safety net — without it, mistakes have no rollback
 
 **Violation = Hard Stop**
+
 - If you catch yourself about to edit files while on `main`, STOP immediately
 - Report "I need to create a branch first" and wait for the branch creation
 - Never proceed past this checkpoint without a feature branch
 
 ### ✅ ALWAYS DO
+
 ```
 # Correct order:
 git checkout main && git pull origin main
@@ -49,13 +54,14 @@ git checkout -b spec/my-change      # ← FIRST
 ```
 
 ### 🚫 NEVER DO
+
 ```
 # WRONG ORDER — VIOLATION:
 # edit files, write code...           # ← WRONG: No branch yet
 git checkout -b spec/my-change        # ← Too late!
 ```
 
----
+______________________________________________________________________
 
 ## 1.1. Preserve External Changes: Stash ALL Unrelated Changes FIRST
 
@@ -66,12 +72,12 @@ git checkout -b spec/my-change        # ← Too late!
 **Before ANY branch creation, this sequence is MANDATORY:**
 
 1. `git status` — Check for modifications
-2. **If ANY files modified (even one line, even external edits, even "unrelated" files):**
-   - `git stash push -m "WIP: external changes before <branch-name>"`
+1. **If ANY files modified (even one line, even external edits, even "unrelated" files):**
+   - `git stash push --include-untracked -m "WIP: external changes before <branch-name>"`
    - `git stash list` — **VERIFY stash was created**
    - `git status` — **VERIFY working tree is clean** (must show "nothing to commit, working tree clean")
-3. **Then and ONLY then**: Create branch
-4. **Do NOT pop the stash** on the new branch — those changes belong to the previous branch context
+1. **Then and ONLY then**: Create branch
+1. **Do NOT pop the stash** on the new branch — those changes belong to the previous branch context
 
 ### ⚠️ CRITICAL: Never Restore, Never Discard
 
@@ -113,13 +119,14 @@ If `git status` still shows modifications, **STOP** — the stash failed. Do not
 ### Do NOT Pop Stash on New Branch
 
 The stash preserves changes that belong to the previous context. Those changes may need to be:
+
 - Committed separately on a different branch
 - Reviewed by the user
 - Discarded intentionally by the user
 
 **Let the user decide when/where to restore the stash.**
 
----
+______________________________________________________________________
 
 ## Enforcement Mechanisms (NO BYPASS)
 
@@ -130,11 +137,12 @@ The stash preserves changes that belong to the previous context. Those changes m
 | **GitHub** | Branch protection rules | Requires PR | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
-1. Create a feature branch: `git checkout -b hotfix/urgent-fix`
-2. Make your changes and commit
-3. Push and create PR with `hotfix` label
-4. Request expedited review
 
----
+1. Create a feature branch: `git checkout -b hotfix/urgent-fix`
+1. Make your changes and commit
+1. Push and create PR with `hotfix` label
+1. Request expedited review
+
+______________________________________________________________________
 
 *Source: Content migrated from `110-git-protocol.md`*
