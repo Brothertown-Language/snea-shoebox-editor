@@ -27,9 +27,25 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
   - **Rejection/Superseded**: Include reason or replacement reference
   - **AI Agent Judgment**: Use minimal byline suffix text by default; add extra context only when it provides clear value
 
-**⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
+### ⚠️ MANDATORY: Dynamic Runtime Identity Detection
 
-**⚠️ Placeholders in Examples:** Angle-bracket values like `<AgentName>` and `<ModelID>` must be replaced with your ACTUAL runtime identity. Never copy example values like "OpenCode" or "ollama-cloud/glm-5" literally — these are placeholders demonstrating the format.
+**Agents MUST use their ACTUAL runtime identity — NEVER copy placeholder values from examples.**
+
+| Identity Component | How to Detect | FORBIDDEN |
+|-------------------|---------------|-----------|
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<ai-email>` | Agent's noreply email | Using project domain email |
+
+**Example Values in Guidelines are ILLUSTRATIVE:**
+- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `AI Assistant (model-id)` → Placeholder only
+- **DETECT YOUR OWN IDENTITY** at runtime
+
+**When Identity Unknown:**
+- STOP and ask user for clarification
+- DO NOT use example values as defaults
+- DO NOT guess or invent identity values
 
 **Minimal Byline Principle:** Default to minimal byline format (e.g., `🤖 📝 Updated by <AgentName> (<ModelID>)`). Add suffix context only when it clarifies ambiguity or provides essential reference.
 

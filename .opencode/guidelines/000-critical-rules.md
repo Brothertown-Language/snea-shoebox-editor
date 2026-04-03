@@ -80,6 +80,26 @@ This file provides critical rules that must never be violated.
 
 AI co-authorship applies to **original content authored by AI**, NOT copy-pasted content.
 
+### ⚠️ MANDATORY: Dynamic Runtime Identity Detection
+
+**Agents MUST use their ACTUAL runtime identity — NEVER copy placeholder values from examples.**
+
+| Identity Component | How to Detect | FORBIDDEN |
+|-------------------|---------------|-----------|
+| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
+| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<ai-email>` | Agent's noreply email | Using project domain email |
+
+**Example Values in Guidelines are ILLUSTRATIVE:**
+- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `AI Assistant (model-id)` → Placeholder only
+- **DETECT YOUR OWN IDENTITY** at runtime
+
+**When Identity Unknown:**
+- STOP and ask user for clarification
+- DO NOT use example values as defaults
+- DO NOT guess or invent identity values
+
 ### What Requires Attribution
 
 - **Python files**: Module docstring with `Co-authored with AI: AI-Name (model-id)`

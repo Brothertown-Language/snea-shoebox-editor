@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+- **AI Attribution Identity Detection**: AI agents must now detect their actual runtime identity (name, model ID, email) dynamically instead of using hardcoded placeholder values. Example values in guidelines are explicitly illustrative only. When identity is unknown, agents must stop and ask for clarification rather than guessing. This ensures AI co-authored attribution reflects the actual AI assistant that created the content, preventing misattribution from copied example values.
+
 ### Added
 - **Review Phase Enforcement**: Mandatory review phase after all implementations. Branches must be pushed and a compare URL generated before any PR can be created, ensuring all changes are visible for developer review. This prevents accidental PRs and enforces a clear boundary between "implementation complete" and "PR requested."
 

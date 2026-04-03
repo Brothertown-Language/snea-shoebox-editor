@@ -33,6 +33,26 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 🤖 <status-emoji> <status-text> by <AgentName> (<ModelID>)[: optional-context]
 ```
 
+### ⚠️ MANDATORY: Dynamic Runtime Identity Detection
+
+**Agents MUST use their ACTUAL runtime identity — NEVER copy placeholder values from examples.**
+
+| Identity Component | How to Detect | FORBIDDEN |
+|-------------------|---------------|-----------|
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<ai-email>` | Agent's noreply email | Using project domain email |
+
+**Example Values in Guidelines are ILLUSTRATIVE:**
+- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `AI Assistant (model-id)` → Placeholder only
+- **DETECT YOUR OWN IDENTITY** at runtime
+
+**When Identity Unknown:**
+- STOP and ask user for clarification
+- DO NOT use example values as defaults
+- DO NOT guess or invent identity values
+
 ### Status Emoji Guide
 
 | Status | Emoji | Byline Format |
