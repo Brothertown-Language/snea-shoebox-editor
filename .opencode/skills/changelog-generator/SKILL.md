@@ -106,14 +106,15 @@ guidelines from CHANGELOG_STYLE.md
 | Task | Purpose | Words |
 |------|---------|-------|
 | `overview` | Full skill content for changelog generation | ~400 |
+| `write` | Write generated entries to CHANGELOG.md | ~300 |
 
 ## Tips
 
 - Run from your git repository root
 - Specify date ranges for focused changelogs
 - Use your CHANGELOG_STYLE.md for consistent formatting
-- Review and adjust the generated changelog before publishing
-- Save output directly to CHANGELOG.md
+- **Write to CHANGELOG.md before creating PRs** - Use `write` task to update the file
+- Follow Keep a Changelog format for industry-standard changelogs
 
 ## Related Use Cases
 

@@ -70,6 +70,74 @@ Before creating ANY PR:
   - AI: `Co-authored-by: <AI-Name> (<model-id>) <ai-email>`
   - Human: `Co-authored-by: <Human-Name> <human-email>`
 
+☑ **Merged PR Check**
+- Run: `gh pr list --head <branch> --state merged --json number`
+- Verify: No merged PR exists on this branch
+- If merged PR exists: Create new branch before PR creation
+
+☑ **Changelog Skill Availability**
+- Verify: changelog-generator skill is available for invocation
+
+## Sub-Issue Autoclose with Changelog
+
+### Single-Task Spec PR Body
+
+```markdown
+## Summary
+
+<Executive summary from changelog skill>
+
+## Changes
+
+<Changelog content from skill invocation>
+
+Fixes #<parent>
+```
+
+### Multi-Task Spec PR Body
+
+```markdown
+## Summary
+
+<Executive summary from changelog skill>
+
+## Changes
+
+<Changelog content from skill invocation>
+
+Fixes #<parent>
+Fixes #<child1>
+Fixes #<child2>
+```
+
+## Edge Case Handling
+
+### Merged PR on Branch
+
+**Detection:**
+```bash
+gh pr list --head <branch> --state merged --json number,url,mergedAt
+```
+
+**If merged PR exists:**
+1. Report: "Branch has merged PR. Creating new PR against current main."
+2. Fetch and checkout main: `git fetch origin && git checkout main && git pull origin main`
+3. Create new branch: `git checkout -b <new-branch-name>`
+4. Cherry-pick or reapply changes
+5. Continue with PR creation workflow
+
+### No Changelog Entries
+
+**If changelog skill returns empty:**
+
+Use squash commit message as PR body:
+```markdown
+## Changes
+
+
+Fixes #
+```
+
 ## Quick Start
 
 Use `/skill pr-creation-workflow --task overview` for complete workflow.

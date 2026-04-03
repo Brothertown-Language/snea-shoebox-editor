@@ -24,24 +24,30 @@ Create pull request after explicit user instruction. Squash commits to single co
 
 ## Procedure
 
-### Step 1: Squash to Single Commit
+### Step 0: Check PR State
 
-**MANDATORY:** All PRs must have exactly ONE commit.
-
-```bash
-git reset --soft origin/main
-git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-    --trailer "Co-authored-by: <Human-Name> <human-email>"
-```
-
-### Step 2: Push to Remote
+**Before creating PR, check if branch already has a merged PR:**
 
 ```bash
-git push --force-with-lease origin <branch>
+# Get current branch name
+CURRENT_BRANCH=$(git branch --show-current)
+
+# Check for existing PRs on this branch
+gh pr list --head "$CURRENT_BRANCH" --state merged --json number,url,mergedAt
 ```
 
-### Step 3: Collect Sub-Issues (Multi-Task Specs)
+**If merged PR exists:**
+1. Get current main state: `git fetch origin && git checkout main && git pull origin main`
+2. Create new branch: `git checkout -b <new-branch-name>`
+3. Cherry-pick or reapply changes
+4. Continue with PR creation
+
+**Report to user:**
+```
+⚠️ Branch <name> has a merged PR. Creating new PR against current main.
+```
+
+### Step 1: Collect Sub-Issues (Multi-Task Specs)
 
 **For specs with sub-issues:**
 
@@ -57,14 +63,84 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
-### Step 4: Create PR via GitHub MCP
+### Step 2: Generate Changelog via Skill
+
+**⚠️ CRITICAL: Use skill invocation to prevent context contamination.**
+
+Invoke changelog-generator skill as a sub-task:
+
+```
+/skill changelog-generator --task overview
+```
+
+Then generate entries from commits since branching from main.
+
+**Skill Invocation Response:**
+- User-facing changelog with categorized changes
+- Executive summary of changes
+- Clear, professional formatting
+
+**If changelog invocation returns empty/no entries:**
+
+Skip changelog step. PR body will use fallback format.
+
+### Step 3: Write to CHANGELOG.md
+
+**⚠️ CRITICAL: Update CHANGELOG.md BEFORE squash commit.**
+
+Invoke changelog-generator write task:
+
+```
+/skill changelog-generator --task write
+```
+
+**Write task performs:**
+1. Generate changelog entries from commits
+2. Read existing CHANGELOG.md (or create if missing)
+3. Prepend entries to `[Unreleased]` section
+4. Write updated content to file
+
+**After write:**
+```bash
+git add CHANGELOG.md
+git status  # Verify CHANGELOG.md is staged
+```
+
+### Step 4: Squash to Single Commit
+
+**MANDATORY:** All PRs must have exactly ONE commit, including CHANGELOG.md changes.
+
+```bash
+# Stage all changes including CHANGELOG.md
+git add -A
+
+# Squash to single commit
+git reset --soft origin/main
+git commit -m "<descriptive message>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+### Step 5: Push to Remote
+
+```bash
+git push --force-with-lease origin <branch>
+```
+
+### Step 6: Create PR via GitHub MCP
 
 ```python
 github_create_pull_request(
     owner=<GIT_OWNER>,
     repo=<GIT_REPO>,
     title="[SPEC] <description>",
-    body="""<description>
+    body="""## Summary
+
+<Executive summary from changelog skill>
+
+## Changes
+
+<Changelog content from skill invocation>
 
 Fixes #<parent>
 Fixes #<child1>
@@ -78,11 +154,12 @@ Fixes #<child2>
 
 **PR Body Requirements:**
 
-- Must include `Fixes #<issue-number>` for autoclose
+- Executive summary section (from changelog skill)
+- Changes section with user-facing descriptions
+- `Fixes #<issue-number>` for autoclose
 - Include ALL sub-issues for multi-task specs
-- Brief description of changes
 
-### Step 5: Report PR URL and HALT
+### Step 7: Report PR URL and HALT
 
 **⚠️ CRITICAL: PR URL Reporting is MANDATORY**
 
@@ -120,6 +197,7 @@ Fixes #<child2>
 
 | Failure Reason | Response |
 |----------------|----------|
+| Merged PR exists on branch | Report: "Branch has merged PR. Creating new branch and PR." → Create new branch |
 | No commits between branches | Report: "Branch has no commits to main. Changes may already be merged. Verify and HALT." |
 | Branch conflicts | Report: "Branch conflicts with main. Rebase and push, then create PR." |
 | GitHub API error | Report error details and HALT |
