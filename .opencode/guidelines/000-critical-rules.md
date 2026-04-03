@@ -455,6 +455,70 @@ Invoked with: `/skill concern-separation-auditor --issue N`
 
 ---
 
+## Critical Violation: Skipping Review-Prep After Implementation
+
+**⚠️ Failing to invoke review-prep after implementation completes is a CRITICAL GUIDELINE VIOLATION.**
+
+After implementation completes, the agent MUST automatically:
+1. **Push the feature branch** to remote
+2. **Generate GitHub compare URL** for developer review
+3. **Post compare URL** to the issue AND chat
+4. **HALT** and wait for "create a PR" instruction
+
+**🚫 FORBIDDEN:**
+- Skipping review-prep because "changes are trivial"
+- Skipping review-prep because "developer can use git log"
+- Skipping review-prep and asking "do you want to review?"
+- Proceeding directly to PR creation without compare URL
+- Completing implementation and HALTing without pushing branch
+- Reporting completion without providing compare URL
+
+**✅ REQUIRED SEQUENCE:**
+1. Implementation completes all file changes
+2. Agent commits all changes
+3. Agent pushes branch to remote (`git push -u origin <branch>`)
+4. Agent generates compare URL (`https://github.com/<owner>/<repo>/compare/main...<branch>`)
+5. Agent posts compare URL to issue AND chat
+6. **Agent HALTs** — waits for "create a PR" instruction
+
+**Why This Matters:**
+- Developers need visibility into ALL changes before PR creation
+- GitHub diff viewer provides superior review experience
+- Prevents accidental PRs without developer review
+- Establishes clear boundary between "implementation done" and "PR requested"
+- Compare URL is the canonical way for developers to review branch changes
+
+**Executive Summary REQUIREMENT:**
+
+When posting completion after review-prep, the agent MUST include an executive summary:
+
+| Location | Content |
+|----------|---------|
+| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
+| **Chat Output** | Same executive summary (summary, outcome) |
+
+**Executive Summary Format:**
+```
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+**🚫 FORBIDDEN in Completion Comments:**
+- File lists (redundant with git diff)
+- "Next" field (dialog prompt)
+- Punch-list format
+- Technical changelog (focus on impact)
+
+**See `113-git-pr-workflow.md` → "Review Phase" and `git-workflow` skill → `review-prep` task.**
+
+---
+
 ## Critical Violation: Creating PRs Without Explicit Instruction
 
 **⚠️ Creating a PR without EXPLICIT developer instruction is a CRITICAL GUIDELINE VIOLATION.**

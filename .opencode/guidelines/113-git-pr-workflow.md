@@ -13,26 +13,64 @@
 
 After implementation completes and BEFORE PR creation authorization:
 
-1. **Agent pushes feature branch** to remote:
+### Mandatory Post-Implementation Sequence
+
+**The following sequence is MANDATORY after every implementation:**
+
+1. **Commit all changes**:
+   ```bash
+   git add -A
+   git commit -m "Descriptive message"
+   ```
+
+2. **Push feature branch to remote**:
    ```bash
    git push -u origin <branch-name>
    ```
 
-2. **Agent provides GitHub compare URL**:
+3. **Generate GitHub compare URL**:
    ```
    https://github.com/<owner>/<repo>/compare/main...<branch-name>
    ```
 
-3. **Developer reviews changes** via GitHub diff viewer
-4. **Developer decides** whether to create PR or request changes
-5. **If satisfied, developer says** "create a PR"
-6. **Agent creates PR** (squash, push, create PR, HALT)
+4. **Post compare URL to issue AND chat**:
+   - GitHub Issue Comment: Full executive summary with compare URL
+   - Chat Output: Same executive summary
 
-**Why This Matters:**
-- Developer can review changes before PR exists
+5. **HALT and wait** for "create a PR" instruction
+
+### Executive Summary Format (Mandatory)
+
+**When reporting completion after review-prep, include:**
+
+```
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+GitHub compare URL: https://github.com/<owner>/<repo>/compare/main...<branch-name>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### Why This Matters
+
+- Developers need visibility into ALL changes before PR creation
+- GitHub diff viewer provides superior review experience
 - Clear separation between "implementation done" and "PR requested"
-- No accidental PR creation without developer visibility
-- GitHub diff viewer is superior to local review
+- Compare URL is canonical way for developers to review branch changes
+- Prevents accidental PRs without developer review
+
+### Developer Review Flow
+
+1. Agent posts compare URL
+2. Developer reviews changes via GitHub diff viewer
+3. Developer decides whether to create PR or request changes
+4. If satisfied, developer says "create a PR"
+5. Agent creates PR (squash, push, create PR, HALT)
 
 ---
 

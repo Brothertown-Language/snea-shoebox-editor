@@ -19,6 +19,7 @@
 | **Authorization required** | NO implementation WITHOUT explicit `"approved"` or `"go"` |
 | **Explicit auth overrides label** | When user says `approved`/`go`, proceed REGARDLESS of `needs-approval` label |
 | **Branch first** | Create feature branch BEFORE any file modification |
+| **Review-prep after implementation** | Push branch, generate compare URL, post summary, HALT — MANDATORY after implementation |
 | **Human-only merge** | Agents MUST NEVER merge PRs |
 | **MCP tools** | Use PyCharm/GitHub MCP for file operations when available |
 | **Silent halt** | HALT after completion, after PR creation — no prompts |
