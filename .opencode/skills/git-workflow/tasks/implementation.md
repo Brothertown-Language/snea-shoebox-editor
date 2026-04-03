@@ -148,10 +148,47 @@ git log -1 --oneline
 
 ## After Implementation Completes
 
-1. **Commit all changes** (`git add -A && git commit`)
-1. **Push to remote** (`git push -u origin <branch-name>`)
-1. **Report completion** (executive summary to issue AND chat)
-1. **HALT** — do NOT create PR
-1. **WAIT** for explicit "create a PR" instruction
+### ⚠️ MANDATORY PUSH BEFORE HALT
+
+**Implementation task MUST commit AND push before ANY HALT.**
+
+**Pre-HALT Checklist:**
+
+```bash
+# Step 1: CHECK FOR UNCOMMITTED CHANGES
+git status
+
+# Step 2: COMMIT IF CHANGES EXIST
+if git status shows changes:
+    git add -A
+    git commit -m "[Phase N] Implementation complete" \
+        --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+        --trailer "Co-authored-by: <Human-Name> <human-email>"
+
+# Step 3: CHECK FOR LOCAL COMMITS
+git log origin/<branch>..HEAD --oneline
+
+# Step 4: PUSH IF COMMITS EXIST
+if output shows commits:
+    git push -u origin <branch-name>
+
+# Step 5: VERIFY PUSH
+git branch -vv
+# Must show: [origin/<branch>] tracking ref
+
+# Step 6: REPORT COMPLETION
+"Implementation complete. Branch pushed with X commits."
+```
+
+### Implementation Workflow Sequence
+
+1. **Make file changes** (edit tool, etc.)
+2. **Commit changes** (`git add -A && git commit`)
+3. **Push to remote** (`git push -u origin <branch-name>`)
+4. **Report completion** (executive summary to issue AND chat)
+5. **HALT** — do NOT create PR
+6. **WAIT** for explicit "create a PR" instruction
+
+**CRITICAL: Skipping push is a ZERO TOLERANCE violation.**
 
 **See:** `pr-creation-workflow` skill for complete PR workflow.

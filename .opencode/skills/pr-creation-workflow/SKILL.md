@@ -53,6 +53,12 @@ Defines when PRs can be created, what authorizes PR creation, and the mandatory 
 
 Before creating ANY PR:
 
+☑ **Review Workflow Verification (MANDATORY)**
+- Verify: Branch is pushed to remote (prerequisite for compare URL)
+- Verify: Compare URL was posted to chat (NOT issue)
+- Verify: Executive summary was posted to issue AND chat
+- **If NOT completed:** HALT - review workflow was skipped (CRITICAL VIOLATION)
+
 ☑ **Squash Verification**
 - Run: `git log origin/main..HEAD --oneline`
 - Verify: EXACTLY ONE commit on branch
@@ -77,6 +83,8 @@ Before creating ANY PR:
 
 ☑ **Changelog Skill Availability**
 - Verify: changelog-generator skill is available for invocation
+
+**⚠️ CRITICAL: Skipping review workflow verification is a ZERO TOLERANCE violation.**
 
 ## Sub-Issue Autoclose with Changelog
 

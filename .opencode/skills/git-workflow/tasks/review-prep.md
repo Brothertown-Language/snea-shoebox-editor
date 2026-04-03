@@ -118,7 +118,7 @@ ls ./tmp/
 
 ### Step 1: Verify Branch Is Pushed
 
-**Before generating compare URL, verify branch is on remote.**
+**MANDATORY ENFORCEMENT CHECK: Branch MUST be on remote before generating compare URL.**
 
 ```bash
 git branch -vv
@@ -131,16 +131,30 @@ git branch -vv
 
 **If branch shows `[origin/<branch>]` with upstream tracking → ✅ Branch is pushed**
 
-**If branch shows NO upstream or "gone" → 🚫 Branch NOT pushed**
+**If branch shows NO upstream or "gone" → 🚫 BRANCH NOT PUSHED - VIOLATION DETECTED**
 
-**If branch is NOT pushed to remote:**
+**VIOLATION REMEDIATION (MANDATORY):**
 
-```bash
-# Push branch immediately
-git push -u origin <branch-name>
-```
+If review-prep is invoked but branch is NOT pushed:
 
-**This ensures compare URL will work correctly.**
+1. **STOP** - Detection: Workflow violation
+2. **FIX IMMEDIATELY:**
+   ```bash
+   # Check for uncommitted changes
+   git status
+   git add -A
+   git commit -m "Implementation complete" \
+       --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+       --trailer "Co-authored-by: <Human-Name> <human-email>"
+   
+   # Push branch
+   git push -u origin <branch-name>
+   ```
+3. **REPORT VIOLATION:** "Workflow violation detected: implementation task failed to push. Remediated now."
+4. **CONTINUE:** Generate compare URL
+5. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
+
+**This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
 
 ### Step 2: Generate Compare URL
 
