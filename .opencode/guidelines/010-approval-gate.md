@@ -95,6 +95,19 @@ When a developer says `approved` or `go` **without a phase qualifier**, the agen
 2. HALT after completing that phase/step
 3. Wait for next authorization before continuing
 
+## Compound Command Recognition
+
+**Approval tokens must be STANDALONE (separated by whitespace) to constitute valid authorization.**
+
+| Message | Standalone? | Authorization? |
+|---------|-------------|----------------|
+| `"approved check pr"` | YES (space separation) | YES |
+| `"#196 approved"` | YES (space separation) | YES |
+| `"#196 approvedcheck pr"` | NO (compound text) | NO |
+| `"check pr"` | N/A (verification) | NO |
+
+See `approval-gate` skill → `verify-authorization` task for complete pattern matching algorithm.
+
 ### Revision Revokes Approval (MANDATORY)
 
 **Any modification to a spec or task document MUST immediately revoke approval.**

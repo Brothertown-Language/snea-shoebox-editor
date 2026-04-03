@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Compound Command Recognition**: Added explicit pattern matching rules to verify that approval tokens (`approved`, `go`) must be standalone words separated by whitespace to constitute valid authorization. Compound phrases like `#196approvedcheck pr` are no longer incorrectly parsed as approvals. This prevents authorization errors when approval tokens appear adjacent to other text.
 - **AI Attribution Identity Detection**: AI agents must now detect their actual runtime identity (name, model ID, email) dynamically instead of using hardcoded placeholder values. Example values in guidelines are explicitly illustrative only. When identity is unknown, agents must stop and ask for clarification rather than guessing. This ensures AI co-authored attribution reflects the actual AI assistant that created the content, preventing misattribution from copied example values.
 
 ### Added

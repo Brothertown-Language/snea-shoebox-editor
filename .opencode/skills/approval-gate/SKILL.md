@@ -159,6 +159,40 @@ When a developer says `approved` or `go` **without a phase qualifier**, the agen
 2. HALT after completing that phase/step
 3. Wait for next authorization before continuing
 
+## Compound Command Handling
+
+**Compound command:** A user message containing multiple instructions without proper separation, where approval parsing may be ambiguous.
+
+### Recognition Pattern
+
+| Message | Parsed As | Authorization? |
+|---------|-----------|----------------|
+| `"check pr"` | Verify PR status only | NO - verification command |
+| `"#196 approvedcheck pr"` | Issue reference + compound text | NO - approval not standalone |
+| `"#196 approved"` | Issue #196 approved | YES - explicit, standalone |
+| `"approved check pr"` | Approval + verification | YES - properly separated |
+| `"approved - check pr"` | Approval + verification | YES - properly separated |
+
+**Key Principle:** Authorization tokens must be **standalone** (separated by whitespace or end-of-message) to constitute valid approval.
+
+### Standalone Definition
+
+An approval word is standalone when:
+- It is separated by whitespace: `"approved check pr"` (space after "approved")
+- It is the only content: `"approved"`
+- It is separated by punctuation: `"approved - check"` (hyphen separator)
+
+An approval word is **NOT** standalone when:
+- Part of a compound word: `"approvedcheck pr"` (no space, single compound)
+- Embedded in text without separation: `"#196 approvedcheck pr"`
+
+### Pattern Matching Rules
+
+See `verify-authorization` task for complete pattern matching algorithm including:
+- Approval patterns (`approved`, `go`, `approved: N.M`)
+- Non-approval patterns (verification commands, questions)
+- Separation requirements for compound commands
+
 ## Post-Implementation Workflow
 
 ### After Implementation Completes
