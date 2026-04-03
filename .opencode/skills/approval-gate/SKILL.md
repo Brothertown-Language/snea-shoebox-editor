@@ -195,6 +195,44 @@ See `verify-authorization` task for complete pattern matching algorithm includin
 
 ## Post-Implementation Workflow
 
+### ⚠️ MANDATORY PUSH BEFORE HALT CHECKLIST
+
+**CRITICAL VIOLATION WARNING: Implementation task MUST push branch BEFORE any HALT.**
+
+**Pre-HALT Verification Checklist (MANDATORY):**
+
+Before ANY HALT (task complete, phase complete, awaiting approval, awaiting clarification, error, session ending):
+
+```bash
+# Step 1: CHECK FOR COMMITS
+git log origin/<branch>..HEAD --oneline
+
+# If output shows commits → PUSH IS REQUIRED
+# If output is empty → No push needed (skip to HALT)
+
+# Step 2: PUSH IF COMMITS EXIST
+git push -u origin <branch>
+
+# Step 3: VERIFY PUSH
+git branch -vv
+# Must show: [origin/<branch>] tracking ref
+
+# Step 4: REPORT PUSH STATUS
+"Branch pushed with X commits. Ready for review-prep."
+```
+
+**Violation Detection:**
+
+If review-prep is invoked AND branch is NOT pushed:
+
+1. **STOP** - Workflow violation detected
+2. **FIX IMMEDIATELY:** `git push -u origin <branch-name>`
+3. **REPORT:** "Implementation task failed to push - workflow violation fixed"
+4. **CONTINUE:** Generate compare URL
+5. **DOCUMENT:** Note gap in completion comment
+
+**This is NOT optional. This is ZERO TOLERANCE. Violation = CRITICAL GUIDELINE BREACH.**
+
 ### After Implementation Completes
 
 1. Push feature branch to remote
