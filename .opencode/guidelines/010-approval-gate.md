@@ -57,6 +57,43 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - Previous session authorization → NOT VALID for new issue/spec
 - Authorization is ZERO-BASED — every task needs NEW authorization
 
+### Authorization Scope for Multi-Phase Specs (CRITICAL)
+
+**⚠️ Unqualified approval authorizes ALL phases of a spec.**
+
+When a developer says `approved` or `go` **without a phase qualifier**, the agent is authorized to implement ALL phases of the spec in sequence. The agent will proceed from Phase 1 through all phases without stopping for re-approval between phases.
+
+| Command | Scope | Behavior |
+|---------|-------|----------|
+| `approved` | ALL phases | Proceed through all phases without stopping |
+| `go` | ALL phases | Proceed through all phases without stopping |
+| `approved: 1` | Phase 1 only | HALT after Phase 1, wait for next authorization |
+| `approved: 2.3` | Phase 2 Step 3 only | HALT after completing Step 3, wait for next authorization |
+
+**Rationale:**
+- Unqualified approval matches developer mental model of "approved means go ahead"
+- Phase-by-phase approval is intentional scoping (opt-in via qualifiers)
+- Prevents unnecessary back-and-forth on multi-phase implementations
+
+**Developer Workflow:**
+
+- **Approve entire spec:** Use `approved` or `go` without qualifiers
+- **Approve one phase:** Use `approved: N` where N is the phase number
+- **Approve specific step:** Use `approved: N.M` where N is phase and M is step
+
+**Agent Behavior:**
+
+**With unqualified approval (`approved` or `go`):**
+1. Proceed through Phase 1
+2. Continue to Phase 2 (no HALT)
+3. Continue through all remaining phases
+4. HALT only after completing the entire spec
+
+**With qualified approval (`approved: 1` or `approved: 2.3`):**
+1. Proceed through the authorized phase/step ONLY
+2. HALT after completing that phase/step
+3. Wait for next authorization before continuing
+
 ### Revision Revokes Approval (MANDATORY)
 
 **Any modification to a spec or task document MUST immediately revoke approval.**

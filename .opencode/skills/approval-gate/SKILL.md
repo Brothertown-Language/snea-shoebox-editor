@@ -117,21 +117,71 @@ See `git-workflow` skill → `review-prep` task for the complete workflow.
 | Rule | Scope |
 |------|-------|
 | **Issue-bound** | Authorization applies ONLY to the specific issue where it was given |
-| **Single-use** | Authorization for current phase/task only within that issue |
 | **Session-bound** | New session = new authorization required (no carryover) |
 | **Plan-bound** | Changes to plan invalidate authorization |
 | **External input invalidates** | Bug reports, PR feedback require re-authorization |
 | **Revision ≠ implementation** | Spec updates don't authorize code changes |
+
+### Authorization Scope for Multi-Phase Specs (CRITICAL)
+
+**⚠️ Unqualified approval authorizes ALL phases of a spec.**
+
+When a developer says `approved` or `go` **without a phase qualifier**, the agent is authorized to implement ALL phases of the spec in sequence. The agent will proceed from Phase 1 through all phases without stopping for re-approval between phases.
+
+| Command | Scope | Behavior |
+|---------|-------|----------|
+| `approved` | ALL phases | Proceed through all phases without stopping |
+| `go` | ALL phases | Proceed through all phases without stopping |
+| `approved: 1` | Phase 1 only | HALT after Phase 1, wait for next authorization |
+| `approved: 2.3` | Phase 2 Step 3 only | HALT after completing Step 3, wait for next authorization |
+
+**Rationale:**
+- Unqualified approval matches developer mental model of "approved means go ahead"
+- Phase-by-phase approval is intentional scoping (opt-in via qualifiers)
+- Prevents unnecessary back-and-forth on multi-phase implementations
+
+**Developer Workflow:**
+
+- **Approve entire spec:** Use `approved` or `go` without qualifiers
+- **Approve one phase:** Use `approved: N` where N is the phase number
+- **Approve specific step:** Use `approved: N.M` where N is phase and M is step
+
+**Agent Behavior:**
+
+**With unqualified approval (`approved` or `go`):**
+1. Proceed through Phase 1
+2. Continue to Phase 2 (no HALT)
+3. Continue through all remaining phases
+4. HALT only after completing the entire spec
+
+**With qualified approval (`approved: 1` or `approved: 2.3`):**
+1. Proceed through the authorized phase/step ONLY
+2. HALT after completing that phase/step
+3. Wait for next authorization before continuing
 
 ## Post-Implementation Workflow
 
 ### After Implementation Completes
 
 1. Push feature branch to remote
+1. **WIP commit if halting** (if awaiting approval, clarification, or session end)
 1. Generate compare URL for review
 1. Report completion with executive summary
 1. HALT — do NOT create PR without explicit instruction
 1. WAIT for "create a PR" instruction
+
+### WIP Commit Before HALT
+
+**CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
+
+When implementation halts (awaiting approval, awaiting clarification, error, session end):
+
+1. Check for uncommitted changes: `git status`
+1. If changes exist, commit WIP: `git commit -m "WIP: Phase N - description"`
+1. Report WIP commit made
+1. THEN HALT
+
+**See `111-git-commit-workflow.md` → "WIP Commit Before HALT" section for complete workflow.**
 
 ## Exceptions (No Authorization Required)
 

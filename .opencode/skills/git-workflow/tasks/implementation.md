@@ -91,6 +91,60 @@ Commit when:
 - Reaching a checkpoint that might need rollback
 - Before attempting something risky
 - At natural break points in the work
+- **Before ANY HALT** (awaiting approval, clarification, error, session end)
+
+## WIP Commit Before HALT (MANDATORY)
+
+**CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
+
+### What Counts as HALT
+
+| HALT Trigger | WIP Required? | Example |
+|-------------|--------------|---------|
+| Awaiting approval | ✅ YES | Mid-task, need clarifications approved |
+| Awaiting clarification | ✅ YES | Question posted, waiting for answer |
+| Mid-task pause | ✅ YES | Session ending, context exhausts |
+| Error encountered | ✅ YES | Fixable error, need to save progress |
+| Session ending | ✅ YES | Developer ending session |
+| Task complete | ❌ NO | Use full commit with proper message |
+| Phase complete | ❌ NO | Use full commit with proper message |
+
+### WIP Commit Workflow
+
+**Before ANY HALT (awaiting approval, clarification, error, session end):**
+
+```bash
+# Step 1: Check for uncommitted changes
+git status
+
+# Step 2: If changes exist, commit WIP
+if git status shows changes:
+    git add -A
+    git commit -m "WIP: Phase N - <brief description>" \
+        --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+        --trailer "Co-authored-by: <Human-Name> <human-email>"
+
+# Step 3: Verify commit was created
+git log -1 --oneline
+
+# Step 4: Report WIP commit made
+```
+
+### WIP Commit Characteristics
+
+| Characteristic | Description |
+|---------------|-------------|
+| **Prefix** | Always starts with `WIP:` for easy identification |
+| **Phase** | Includes phase number for context |
+| **Description** | Brief description of what was being worked on |
+| **Trailers** | Same co-author trailers as full commits |
+| **Squashable** | Can be squashed or amended later with subsequent work |
+
+### After WIP Commit
+
+- **Continue work**: Next commit can amend or squash the WIP commit
+- **Session resumes**: Rebase or continue from WIP commit
+- **PR creation**: Squash WIP commits with final work before PR
 
 ## After Implementation Completes
 

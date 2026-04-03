@@ -651,6 +651,41 @@ Every specification MUST include:
 - Wait for clear "approved" or "go" before starting
 - If unclear, ask — do not assume
 
+### WIP Commit Before HALT (MANDATORY)
+
+**CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
+
+When implementation halts (for ANY reason - awaiting approval, awaiting clarification, error, session end), uncommitted changes are at risk from:
+- Session crashes
+- Context window exhaustion
+- Developer needs to switch branches
+- Machine restarts
+
+**✅ REQUIRED BEFORE ANY HALT:**
+
+```bash
+git status
+# If changes exist:
+git add -A
+git commit -m "WIP: Phase N - <description>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+**🚫 FORBIDDEN:**
+- HALTing without committing uncommitted changes
+- Leaving working tree dirty before HALT
+- "Waiting" without preserving work in progress
+
+**✅ WIP Commit Characteristics:**
+- Prefix: `WIP:` for easy identification
+- Phase: Include phase number for context
+- Description: Brief description of work in progress
+- Trailers: Same co-author trailers as full commits
+- Squashable: Can be amended later with subsequent work
+
+**See `111-git-commit-workflow.md` → "WIP Commit Before HALT" section for complete workflow.**
+
 ## Critical Violation: Implementing Without Documentation Verification
 
 **⚠️ Implementing code without verifying against live documentation is a CRITICAL GUIDELINE VIOLATION.**

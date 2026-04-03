@@ -216,6 +216,7 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 - Wait for explicit authorization before writing code
 - Get individual authorization for each task in multi-task plans
 - **SILENTLY HALT after completing a task**
+- **Commit WIP before ANY HALT** — Before halting (awaiting approval, clarification, error, session end), commit all changes with WIP message. See `111-git-commit-workflow.md`.
 - Use PyCharm MCP tools for all file operations when available
 - **STASH EXTERNAL CHANGES FIRST** — Before ANY branch creation, `git status`. If ANY files modified, `git stash push -m "WIP: before <branch>"`, then VERIFY with `git stash list` and clean `git status`.
 
