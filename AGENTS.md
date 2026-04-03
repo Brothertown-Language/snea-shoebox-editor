@@ -297,6 +297,15 @@ To use a skill, the agent loads it when relevant to the current task.
 | Periodic coherence maintenance | `coherence-auditor --mode maintenance` | Detect guideline-skill drift |
 | After guideline/skill update | `coherence-auditor --mode maintenance` | Verify coherence after changes |
 | Before major release | `coherence-auditor --mode maintenance` | Verify guideline-skill coherence |
+| Designing architecture | `dev-architect` | Create architecture design plans |
+| Encountering errors/bugs | `debugger` | Analyze errors and debug issues |
+| Preparing commit messages | `commit-writer` | Generate commit messages |
+| After implementation | `code-review` | Review code quality |
+| Creating task descriptions | `task-writer` | Draft task descriptions |
+| Preparing PR descriptions | `pr-writer` | Create pull request descriptions |
+| Publishing releases | `release-notes` | Publish release notes |
+| Checking Git conventions | `git-conventions` | Reference Git convention knowledge |
+| Looking up documentation | `context7-lookup` | Look up Context7 documentation |
 
 **Automatic Invocation:**
 - `git-workflow` skill is invoked automatically when:
