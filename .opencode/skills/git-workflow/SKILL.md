@@ -13,7 +13,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 
 - User says "approved" or "go" (pre-work phase - AUTO)
 - Implementation completes (review-prep phase - AUTO)
-- User says "create a PR" (pr-creation phase)
+- User says "create a PR" or "pr" (pr-creation phase)
 - PR merge confirmed (cleanup phase - AUTO)
 
 ## Tasks
@@ -33,7 +33,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 - `/skill git-workflow --task implementation` - During implementation work
 - `/skill git-workflow --task review-prep` - **AFTER implementation done** (automatic, no decision point)
 - `/skill git-workflow --task commit-prep` - When user says "commit"
-- `/skill git-workflow --task pr-creation` - When user says "create a PR"
+- `/skill git-workflow --task pr-creation` - When user says "create a PR" or "pr"
 - `/skill git-workflow --task cleanup` - After PR merge confirmed
 - `/skill git-workflow` - Overview only
 
@@ -42,7 +42,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 1. **Automatic invocation (mandatory):** This skill is referenced when:
 
    - User says `approved`, `go`, or similar authorization
-   - User says `create a PR`, `make a PR`, or similar PR request
+   - User says `create a PR`, `pr`, or similar PR request
    - Implementation completes (review-prep task invoked automatically)
    - DO NOT prompt for invocation - the skill is triggered automatically
 

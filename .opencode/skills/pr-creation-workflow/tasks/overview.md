@@ -25,6 +25,7 @@ PR creation workflow enforcer ensuring PRs are created ONLY with explicit develo
 | Authorization           | Valid? |
 |-------------------------|--------|
 | "create a PR"           | ✅ YES  |
+| "pr"                    | ✅ YES  |
 | "make a PR"             | ✅ YES  |
 | "push and create PR"    | ✅ YES  |
 | "let's get a PR up"     | ✅ YES  |
