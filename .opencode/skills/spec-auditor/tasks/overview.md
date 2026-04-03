@@ -1,8 +1,6 @@
 ---
-name: spec-auditor
+task_name: overview
 description: Audits GitHub Issue [SPEC] specs for LLM implementability - fresh-start context, completeness, and content quality. Runs SECOND after concern-separation-auditor.
-license: MIT
-compatibility: opencode
 ---
 
 # Persona: Spec Auditor
@@ -32,12 +30,6 @@ Add needs-approval label →
 Post "ready for review" comment
 ```
 
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for spec content quality auditing | ~1800 |
-
 ## Operating Protocol
 
 **⚠️ MANDATORY AUDIT CHAIN (ALL SKILLS RUN)**
@@ -56,14 +48,14 @@ Post "ready for review" comment
 - "audit this spec"
 - "review this issue"
 - "revisit this task"
-- "check this \[SPEC\]"
+- "check this [SPEC]"
 - "validate the spec"
 - "audit the issue"
 - Any request involving spec quality or structure
 
 **CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
 
-______________________________________________________________________
+________________________________________________________________________
 
 1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit. If invoked without this parameter, immediately error: "Usage: /skill spec-auditor --issue N"
 1. **One issue at a time.** Present exactly one identified problem per interaction. Do not batch or preview other issues.
@@ -87,7 +79,7 @@ ______________________________________________________________________
 1. **User responses drive action:**
    - "fix" → Apply the proposed minimal fix exactly (post comment to GitHub Issue with findings).
    - "skip" → Drop this issue, move to next.
-   - "revise: \[feedback\]" → Adjust the proposed fix per feedback, re-present.
+   - "revise: [feedback]" → Adjust the proposed fix per feedback, re-present.
    - "stop" → End the audit session.
 1. **After applying a fix**, post a GitHub Issue comment documenting the change, then proceed to the next issue.
 1. **Independence**: Each issue is evaluated and resolved independently. Fixing one issue must not silently alter the resolution of another.
@@ -95,12 +87,12 @@ ______________________________________________________________________
 
 ## Issue Report Template (for each turn)
 
-Issue Location: \<section/requirement in spec>
-Problem class: \<FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION|COMMENT-FORMAT-VIOLATION|ARCHITECTURAL-REASONING-GAP|DEPENDENCY-INCOMPLETE>
-Explanation: \<1-3 sentences>
+Issue Location: <section/requirement in spec>
+Problem class: <FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION|COMMENT-FORMAT-VIOLATION|ARCHITECTURAL-REASONING-GAP|DEPENDENCY-INCOMPLETE>
+Explanation: <1-3 sentences>
 Proposed minimal fix: <smallest change>
-Required remediation indicators: \<section + exact change list>
-Verification signal: \<changed|blocked|no change required> — <one-line evidence>
+Required remediation indicators: <section + exact change list>
+Verification signal: <changed|blocked|no change required> — <one-line evidence>
 
 ## Audit Standards
 
@@ -122,7 +114,7 @@ Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be s
    - Include exact file paths: `src/module/file.py`
    - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
    - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
-   - Include relevant code snippets (if short, \<20 lines)
+   - Include relevant code snippets (if short, <20 lines)
 
 1. **Cross-references with context**
 
@@ -230,46 +222,46 @@ For each GitHub Issue `[SPEC]`, verify:
 
 ### Fresh-Start Context (MANDATORY)
 
-- \[ \] All context stated inline (no "see above", "as discussed")
-- \[ \] File paths use stable anchors (function names, section headers)
-- \[ \] Cross-references include summaries
-- \[ \] Decision rationale documented
+- [ ] All context stated inline (no "see above", "as discussed")
+- [ ] File paths use stable anchors (function names, section headers)
+- [ ] Cross-references include summaries
+- [ ] Decision rationale documented
 
 ### Six Core Areas
 
-- \[ \] Commands specified with flags
-- \[ \] Testing approach documented
-- \[ \] Project structure defined
-- \[ \] Code style examples included
-- \[ \] Git workflow documented
-- \[ \] Three-tier boundaries defined (always/ask-first/never)
+- [ ] Commands specified with flags
+- [ ] Testing approach documented
+- [ ] Project structure defined
+- [ ] Code style examples included
+- [ ] Git workflow documented
+- [ ] Three-tier boundaries defined (always/ask-first/never)
 
 ### Structure Compliance
 
-- \[ \] STATUS header present with phase.step
-- \[ \] CREATED date present
-- \[ \] Phases numbered sequentially (1, 2, 3...)
-- \[ \] Steps numbered within each phase (1, 2, 3...)
-- \[ \] Status markers used correctly (☐/↻/☑/☒)
+- [ ] STATUS header present with phase.step
+- [ ] CREATED date present
+- [ ] Phases numbered sequentially (1, 2, 3...)
+- [ ] Steps numbered within each phase (1, 2, 3...)
+- [ ] Status markers used correctly (☐/↻/☑/☒)
 
 ### Content Quality
 
-- \[ \] Architectural reasoning explains WHY with alternatives
-- \[ \] Success criteria are TESTABLE with acceptance criteria
-- \[ \] Dependencies have SPECIFIC integration points
-- \[ \] Comment format uses executive summary (✅ emoji, Summary, Outcome)
+- [ ] Architectural reasoning explains WHY with alternatives
+- [ ] Success criteria are TESTABLE with acceptance criteria
+- [ ] Dependencies have SPECIFIC integration points
+- [ ] Comment format uses executive summary (✅ emoji, Summary, Outcome)
 
 ### Scope Discipline
 
-- \[ \] All changes align with stated objective
-- \[ \] No unapproved features
-- \[ \] No refactoring beyond scope
+- [ ] All changes align with stated objective
+- [ ] No unapproved features
+- [ ] No refactoring beyond scope
 
 ### Superseded Issue Closure (When Closing Issues)
 
-- \[ \] Closing comment does NOT claim future action without execution
-- \[ \] Replacement issue exists BEFORE old issue is closed
-- \[ \] No forward-looking language ("will be created", "to be done separately")
+- [ ] Closing comment does NOT claim future action without execution
+- [ ] Replacement issue exists BEFORE old issue is closed
+- [ ] No forward-looking language ("will be created", "to be done separately")
 
 ## Post-Fix Verification (Required)
 
@@ -461,7 +453,7 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 ### Enforcement Flow
 
-1. User creates a \[SPEC\] issue.
+1. User creates a [SPEC] issue.
 1. concern-separation-auditor runs (phase structure fixes).
 1. spec-auditor runs (content quality fixes).
 1. After both auditors pass → Add `needs-approval` label.

@@ -1,16 +1,19 @@
-______________________________________________________________________
-
-## name: approval-gate description: Authorization gatekeeper ensuring all code changes follow spec + authorization workflow. Verifies specs exist, authorization is explicit, sub-issues structure is correct. license: MIT compatibility: opencode
+---
+name: approval-gate
+description: Authorization gatekeeper ensuring all code changes follow spec + authorization workflow. Verifies specs exist, authorization is explicit, sub-issues structure is correct.
+license: MIT
+compatibility: opencode
+---
 
 # Skill: approval-gate
 
-## Overview
-
 Authorization Gatekeeper ensuring all code changes follow the spec + authorization workflow. Invoked automatically before implementation begins.
 
-## Persona
+## When to Use
 
-You are an Authorization Gatekeeper. Your focus is ensuring all code changes follow the spec + authorization workflow.
+- Before ANY file edit (MANDATORY - auto-loaded)
+- Before implementation (verify auth + sub-issues)
+- Before issue body edits (verify authorization)
 
 ## Tasks
 

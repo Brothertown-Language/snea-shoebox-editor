@@ -1,10 +1,19 @@
-______________________________________________________________________
-
-## name: engineering-approach description: Engineering principles and checklists for proper development methodology. Invoked when implementing specs to ensure understanding, design, verification, and scope discipline. license: MIT compatibility: opencode
+---
+name: engineering-approach
+description: Engineering principles and checklists for proper development methodology. Invoked when implementing specs to ensure understanding, design, verification, and scope discipline.
+license: MIT
+compatibility: opencode
+---
 
 # Engineering Approach Checklist
 
-## Core Principles
+Engineering principles for proper development methodology: understand before solving, design before implementing, verify before declaring complete.
+
+## When to Use
+
+- Before implementing any spec (MANDATORY reference)
+- When checking scope discipline
+- During code review verification
 
 1. **Understand Before Solving**
 
@@ -185,6 +194,12 @@ Before declaring complete:
 - \[ \] No scope creep introduced
 - \[ \] **Temp files cleaned up** — no `temp_*.py` or `*.json` left in `./tmp/`
 - \[ \] **No temp files at project root** — confirm with `ls *.py *.json 2>/dev/null`
+
+## Available Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `overview` | Full skill content for engineering methodology | ~650 |
 
 ## Invocation
 

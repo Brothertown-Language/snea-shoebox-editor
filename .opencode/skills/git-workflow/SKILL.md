@@ -1,16 +1,20 @@
-______________________________________________________________________
-
-## name: git-workflow description: Handles pre-work git branch, git stash, work, git squash commit for PR, etc work as dictated by the guidelines. Automatically invoked when user approves implementation or requests PR creation. license: MIT compatibility: opencode
+---
+name: git-workflow
+description: Handles pre-work git branch, git stash, work, git squash commit for PR, etc work as dictated by the guidelines. Automatically invoked when user approves implementation or requests PR creation.
+license: MIT
+compatibility: opencode
+---
 
 # Skill: git-workflow
 
-## Overview
+Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested.
 
-Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation begins and when PR creation is requested.
+## When to Use
 
-## Persona
-
-You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow.
+- User says "approved" or "go" (pre-work phase - AUTO)
+- Implementation completes (review-prep phase - AUTO)
+- User says "create a PR" (pr-creation phase)
+- PR merge confirmed (cleanup phase - AUTO)
 
 ## Tasks
 
