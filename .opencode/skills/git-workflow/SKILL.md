@@ -238,6 +238,6 @@ pre-work → implementation → review-prep → [commit-prep] → pr-creation �
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (PR body)
-- Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
+- Related skills: `approval-gate` (authorization scope, WIP commits before HALT), `pr-creation-workflow` (PR timing)
+- Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md` (WIP commit before HALT), `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
 - Session init: `000-session-init.md` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)
