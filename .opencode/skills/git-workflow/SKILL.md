@@ -24,7 +24,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 | `implementation` | Handle WIP commits during implementation | ~400 |
 | `review-prep` | Push branch, generate compare URL for review | ~560 |
 | `commit-prep` | Prepare squash commit message (read-only) | ~480 |
-| `pr-creation` | Squash, push, create PR with changelog via GitHub MCP | ~700 |
+| `pr-creation` | Squash, push, create PR with changelog via subtask | ~900 |
 | `cleanup` | Delete merged branches, clean stale refs | ~800 |
 
 ## Invocation

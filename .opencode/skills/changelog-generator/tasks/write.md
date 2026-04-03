@@ -173,6 +173,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Git history (commits since last release or branch point)
 - Keep a Changelog format specification
 
+## Return Format (For Subtask Invocation)
+
+When invoked as a subtask (e.g., from git-workflow pr-creation), return a JSON object:
+
+```json
+{
+  "summary": "Brief executive summary (1-2 sentences describing stakeholder value)",
+  "changelog": "Full markdown changelog content\n\n## Changes\n\n### Added\n- Feature A\n\n### Fixed\n- Bug B\n\n...",
+  "success": true
+}
+```
+
+**Summary:** User-facing description focusing on value, not technical details.
+
+**Changelog:** Complete markdown content with categorized sections.
+
+**Success:** Boolean indicating if the changelog was written to CHANGELOG.md.
+
+If the subtask fails, return:
+
+```json
+{
+  "summary": "",
+  "changelog": "",
+  "success": false,
+  "error": "Description of what went wrong"
+}
+```
+
 ## Common Issues
 
 | Issue | Resolution |

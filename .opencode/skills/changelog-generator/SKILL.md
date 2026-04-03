@@ -108,6 +108,34 @@ guidelines from CHANGELOG_STYLE.md
 | `overview` | Full skill content for changelog generation | ~400 |
 | `write` | Write generated entries to CHANGELOG.md | ~300 |
 
+## When Invoked as Subtask (e.g., from git-workflow)
+
+For PR creation workflow, this skill should be invoked as a subtask to prevent context pollution:
+
+```
+task tool with:
+- subagent_type: "general"
+- description: "Generate changelog for PR"
+- prompt: "Use the changelog-generator skill... write to CHANGELOG.md... return JSON"
+```
+
+**Expected Return Format:**
+
+```json
+{
+  "summary": "Brief executive summary (1-2 sentences)",
+  "changelog": "Full markdown changelog content",
+  "success": true
+}
+```
+
+The subtask will:
+1. Load this skill in isolated context (~400 lines)
+2. Generate changelog from commits
+3. Write to CHANGELOG.md
+4. Return JSON result
+5. Discard context (no pollution to caller)
+
 ## Tips
 
 - Run from your git repository root

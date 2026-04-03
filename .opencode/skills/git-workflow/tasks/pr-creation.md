@@ -63,47 +63,81 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
-### Step 2: Generate Changelog via Skill
+### Step 2: Generate Changelog via Subtask
 
-**⚠️ CRITICAL: Use skill invocation to prevent context contamination.**
+**⚠️ CRITICAL: Use task tool to prevent context pollution.**
 
-Invoke changelog-generator skill as a sub-task:
+The changelog-generator skill loads ~400 lines into context. To avoid polluting the git-workflow execution context, invoke it as a subtask using the `task` tool.
 
-```
-/skill changelog-generator --task overview
-```
-
-Then generate entries from commits since branching from main.
-
-**Skill Invocation Response:**
-- User-facing changelog with categorized changes
-- Executive summary of changes
-- Clear, professional formatting
-
-**If changelog invocation returns empty/no entries:**
-
-Skip changelog step. PR body will use fallback format.
-
-### Step 3: Write to CHANGELOG.md
-
-**⚠️ CRITICAL: Update CHANGELOG.md BEFORE squash commit.**
-
-Invoke changelog-generator write task:
+**Invoke as subtask:**
 
 ```
-/skill changelog-generator --task write
+task tool with:
+- subagent_type: "general"
+- description: "Generate changelog for PR"
+- prompt: "Use the changelog-generator skill to generate changelog entries from commits since branching from origin/main. Write the changelog to CHANGELOG.md (prepend to [Unreleased] section if exists, or create file if missing). Return a JSON object with: 1) 'summary' - executive summary (1-2 sentences), 2) 'changelog' - full markdown changelog content, 3) 'success' - boolean indicating if changelog was written. The skill is at .opencode/skills/changelog-generator/SKILL.md. Load it with /skill changelog-generator first."
 ```
 
-**Write task performs:**
-1. Generate changelog entries from commits
-2. Read existing CHANGELOG.md (or create if missing)
-3. Prepend entries to `[Unreleased]` section
-4. Write updated content to file
+**Subtask execution:**
+1. Loads changelog-generator skill in isolated context (~400 lines)
+2. Runs `git log origin/main..HEAD --oneline` to get commits
+3. Generates user-facing changelog from technical commits
+4. Writes to CHANGELOG.md using file tools
+5. Returns results to main agent
+6. Context is discarded after return (no pollution)
 
-**After write:**
+**Subtask returns:**
+
+```json
+{
+  "summary": "Implemented feature X with improvements to Y and Z.",
+  "changelog": "## Changes\n\n### Features\n- Added X\n\n### Fixes\n- Fixed Y\n\n...",
+  "success": true
+}
+```
+
+**If subtask fails or returns empty:**
+
+Use fallback format for PR body:
+
+```markdown
+## Summary
+
+<Brief description of changes from spec>
+
+## Changes
+
+- List key changes based on spec content
+- Group by: Features, Improvements, Fixes
+```
+
+### Step 3: Stage CHANGELOG.md
+
+**After subtask completes:**
+
+The subtask has already written CHANGELOG.md. Now stage it:
+
 ```bash
 git add CHANGELOG.md
 git status  # Verify CHANGELOG.md is staged
+```
+
+**If CHANGELOG.md doesn't exist after subtask:**
+
+The subtask should have created it. If missing, create minimal fallback:
+
+```bash
+# Fallback: Create basic changelog if subtask failed
+cat > CHANGELOG.md << 'EOF'
+# Changelog
+
+## [Unreleased]
+
+### Changes
+- See PR for details
+
+EOF
+git add CHANGELOG.md
 ```
 
 ### Step 4: Squash to Single Commit
@@ -129,18 +163,20 @@ git push --force-with-lease origin <branch>
 
 ### Step 6: Create PR via GitHub MCP
 
+**Use the summary and changelog from subtask for PR body.**
+
 ```python
 github_create_pull_request(
     owner=<GIT_OWNER>,
     repo=<GIT_REPO>,
     title="[SPEC] <description>",
-    body="""## Summary
+    body=f"""## Summary
 
-<Executive summary from changelog skill>
+{subtask_result['summary']}
 
 ## Changes
 
-<Changelog content from skill invocation>
+{subtask_result['changelog']}
 
 Fixes #<parent>
 Fixes #<child1>
@@ -152,10 +188,26 @@ Fixes #<child2>
 )
 ```
 
+**PR Body from Fallback (if subtask failed):**
+
+```python
+body=f"""## Summary
+
+<Brief description from spec>
+
+## Changes
+
+- List key changes from spec content
+- Group: Features, Improvements, Fixes
+
+Fixes #<parent>
+"""
+```
+
 **PR Body Requirements:**
 
-- Executive summary section (from changelog skill)
-- Changes section with user-facing descriptions
+- Executive summary section (from subtask or fallback)
+- Changes section with user-facing descriptions (from subtask or fallback)
 - `Fixes #<issue-number>` for autoclose
 - Include ALL sub-issues for multi-task specs
 
