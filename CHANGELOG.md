@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Review Phase Enforcement**: Mandatory review phase after all implementations. Branches must be pushed and a compare URL generated before any PR can be created, ensuring all changes are visible for developer review. This prevents accidental PRs and enforces a clear boundary between "implementation complete" and "PR requested."
+
+### Added
 - **Version Bump Skill**: New AI skill for automatic semantic version management. Analyzes implementation changes to determine version bump type (major/minor/patch), updates all version files atomically (pyproject.toml, setup.py, package.json, Cargo.toml, VERSION), and integrates with the PR creation workflow.
 
 ### Changed
