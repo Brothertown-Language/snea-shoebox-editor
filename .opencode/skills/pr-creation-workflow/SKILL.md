@@ -36,6 +36,7 @@ Defines when PRs can be created, what authorizes PR creation, and the mandatory 
 | Authorization | Valid? |
 |--------------|--------|
 | "create a PR" | ✅ YES |
+| "pr" | ✅ YES |
 | "make a PR" | ✅ YES |
 | "push and create PR" | ✅ YES |
 | "let's get a PR up" | ✅ YES |

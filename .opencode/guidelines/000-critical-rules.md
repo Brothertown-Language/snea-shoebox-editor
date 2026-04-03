@@ -545,6 +545,7 @@ When posting completion after review-prep, the agent MUST include an executive s
 
 PRs require the developer to say one of these EXACT phrases:
 - "create a PR"
+- "pr"
 - "make a PR"
 - "push and create PR"
 - "let's get a PR up"
