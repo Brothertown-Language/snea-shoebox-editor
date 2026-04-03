@@ -24,7 +24,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 | `implementation` | Handle WIP commits during implementation | ~400 |
 | `review-prep` | Push branch, generate compare URL for review | ~560 |
 | `commit-prep` | Prepare squash commit message (read-only) | ~480 |
-| `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
+| `pr-creation` | Squash, push, create PR with changelog via GitHub MCP | ~700 |
 | `cleanup` | Delete merged branches, clean stale refs | ~800 |
 
 ## Invocation
@@ -238,6 +238,6 @@ pre-work → implementation → review-prep → [commit-prep] → pr-creation �
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing)
+- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (PR body)
 - Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
 - Session init: `000-session-init.md` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)
