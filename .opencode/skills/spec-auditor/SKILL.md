@@ -67,15 +67,16 @@ Post "ready for review" comment
 ______________________________________________________________________
 
 1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit. If invoked without this parameter, immediately error: "Usage: /skill spec-auditor --issue N"
+1. **AUTO-FIX BY DEFAULT:** Apply fixes automatically unless user says "don't fix" or "just report". This is the default behavior - no asking for permission.
 1. **One issue at a time.** Present exactly one identified problem per interaction. Do not batch or preview other issues.
-1. **BREVITY IN PROMPTS (CRITICAL):** All prompts via the `question` tool MUST be concise:
-   - Maximum 200 words total in the prompt
+1. **BREVITY IN COMMENTS (CRITICAL):** All GitHub Issue comments MUST be concise:
+   - Maximum 200 words total
    - Maximum 10 rows in any table
    - No verbatim spec quotes longer than 3 lines
-   - Put detailed findings in the audit log (`./tmp/audit-spec-YYYYMMDD.md`), NOT in the prompt
-   - The prompt is for user decision-making, not documentation
-   - Format: `Issue #N: PROBLEM_CLASS - 1-sentence summary. Fix? (fix/skip/stop)`
-   - If complex detail is needed, write to audit log first, then reference it briefly in prompt
+   - Put detailed findings in the audit log (`./tmp/audit-spec-YYYYMMDD.md`), NOT in the comment
+   - The comment is for stakeholder visibility, not documentation
+   - Format: `Issue #N: PROBLEM_CLASS - 1-sentence summary. Fixed: [brief description].`
+   - If complex detail is needed, write to audit log first, then reference it briefly in comment
 1. **Issue report format:**
    - **Issue Location**: Which section/requirement of the spec has the problem.
    - **Problem class**: One of: `FRESH-START-VIOLATION`, `SIX-AREA-INCOMPLETE`, `MISSING-ELEMENT`, `STRUCTURE-VIOLATION`, `AMBIGUOUS`, `CONFLICTING`, `SCOPE-CREEP-RISK`, `VERIFICATION-GAP`, `CONTEXT-OVERFLOW`, `SUPERSEDED-CLOSURE-VIOLATION`, `COMMENT-FORMAT-VIOLATION`, `ARCHITECTURAL-REASONING-GAP`, `DEPENDENCY-INCOMPLETE`.
@@ -83,14 +84,13 @@ ______________________________________________________________________
    - **Proposed minimal fix**: The smallest change that resolves the issue.
    - **Required remediation indicators**: Explicitly list the exact edits needed (section + concrete change).
    - **Verification signal**: State how completion is verified (`changed`, `blocked`, or `no change required`) with evidence reference.
-1. **Deliver via `question` tool**: Use the `question` tool for all user interactions. Present issues one at a time and wait for user response. Do not use non-existent tools like `answer` or `ask_user`.
-1. **Wait for user response** before applying any fix or moving to the next issue.
+1. **AUTO-FIX BY DEFAULT**: Apply fixes automatically unless user says "don't fix" or "just report". Post GitHub Issue comment documenting the fix with brief one-liner.
 1. **User responses drive action:**
-   - "fix" → Apply the proposed minimal fix exactly (post comment to GitHub Issue with findings).
-   - "skip" → Drop this issue, move to next.
-   - "revise: \[feedback\]" → Adjust the proposed fix per feedback, re-present.
+   - No response → AUTO-FIX immediately, post comment, proceed to next issue.
+   - "don't fix" → Skip this issue, move to next.
+   - "just report" → Skip fixing, post finding only, move to next.
    - "stop" → End the audit session.
-1. **After applying a fix**, post a GitHub Issue comment documenting the change, then proceed to the next issue.
+1. **After applying a fix**, post brief GitHub Issue comment documenting the change, then proceed to the next issue.
 1. **Independence**: Each issue is evaluated and resolved independently. Fixing one issue must not silently alter the resolution of another.
 1. **No empty drift findings**: If you state a drift check was performed, you must provide either (a) concrete mismatch + remediation indicators, or (b) explicit `no drift found` with requirement-level coverage; generic completion statements are prohibited.
 

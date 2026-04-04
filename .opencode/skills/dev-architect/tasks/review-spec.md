@@ -81,6 +81,8 @@ Automatically review specs when creating or revising, auto-revise when issues ar
 
 **⚠️ CRITICAL: Auto-revise is the DEFAULT. Prompt ONLY for catastrophic failures.**
 
+**AUTO-REVISE BY DEFAULT: Apply fixes automatically without asking for permission.**
+
 The following table maps ALL violation types to auto-revise actions. If a violation type is not listed below, treat it as format violation (auto-revise).
 
 | Violation Category | Example Violations | Auto-Revise Action |
@@ -97,7 +99,7 @@ The following table maps ALL violation types to auto-revise actions. If a violat
 
 When auto-revise conditions are found:
 1. **Fix immediately** - do NOT prompt for permission
-2. **Post comment** explaining what was changed
+2. **Post GitHub Issue comment** explaining what was changed (brief one-liner)
 3. **Continue to next check** - do NOT halt unless catastrophic
 
 ## Catastrophic Failures (REQUIRE USER PERMISSION)
