@@ -168,7 +168,7 @@ When auditors view the live spec first, their analysis is influenced by what the
 
 | Step | Task | Purpose |
 |------|------|---------|
-| 1 | `create-draft` | Generate independent temporary draft WITHOUT viewing live spec |
+| 1 | `generate-independent-spec` | Generate COMPLETE spec draft WITHOUT viewing live spec |
 | 2 | `audit` | Load live spec, compare to draft, identify gaps and conflicts |
 | 3 | `verify-codebase` | Check spec references against live codebase |
 | 4 | `audit-sub-issue` | For each sub-issue: create draft, compare, audit |
@@ -197,9 +197,24 @@ When sub-issues exist, the workflow extends:
 
 **Critical:** Sub-issue drafts are created WITHOUT viewing the live sub-issue, exactly like parent drafts.
 
+### Draft Quality Requirement
+
+**The draft must be an IMPLEMENTABLE SPEC, NOT meta-commentary.**
+
+When comparing draft to live spec, you're comparing:
+- Two specs for the same problem
+- Real problem statements
+- Concrete file references
+- Testable success criteria
+
+You're NOT comparing:
+- A checklist to a spec
+- "What makes a good spec" to a spec
+- Generic advice to actual content
+
 ### Pollution Prevention
 
-The `create-draft` task runs in a subtask to prevent ANY access to the live spec:
+The `generate-independent-spec` task runs in a subtask to prevent ANY access to the live spec:
 
 - Subtask has NO access to the live spec GitHub Issue body
 - Subtask works ONLY from the issue number and general knowledge
@@ -208,25 +223,156 @@ The `create-draft` task runs in a subtask to prevent ANY access to the live spec
 
 **This separation is MANDATORY and CANNOT be bypassed.**
 
-## Independent Draft Generation (CRITICAL)
+### Example: WRONG vs CORRECT
 
-**The draft is NOT a format checklist. It's a prose-driven analysis.**
+**WRONG (What It Did Before — Meta-Commentary):**
 
-### What the Draft Contains
+```markdown
+## What a Good Spec Should Include
 
-- **Expected Structure**: Prose description of what a good spec should include
-- **Fresh-Start Requirements**: Prose explanation of inline context requirements
-- **Six Core Areas**: Prose coverage of commands, testing, structure, style, git, boundaries
-- **Common Pitfalls**: Prose description of typical issues for this spec type
-- **Draft Checklist**: Checklist of essential elements (NOT static format checks)
+A good spec for this type of issue should include:
+1. A clear problem statement
+2. A proposed solution
+3. Affected files
 
-### What the Draft Does NOT Contain
+## Expected Structure
 
-- Static format checks (e.g., "STATUS header must exist")
-- Boilerplate requirements (e.g., "Phases must be numbered")
-- Copy-paste checks from templates
+The spec should have:
+- STATUS header
+- CREATED date
+- Phases and steps
 
-**The draft is a narrative that EXPLAINS what should be in the spec, not a checklist that ENFORCES formats.**
+## Common Pitfalls
+
+For this spec type, watch out for:
+- Missing edge cases
+- Unclear success criteria
+```
+
+This is meta-commentary — it tells you ABOUT specs, doesn't CREATE a spec.
+
+**CORRECT (What It Should Be — REAL Spec):**
+
+```markdown
+# Independent Draft: Fix spec-auditor generate-independent-spec Task
+
+## Problem
+
+The `generate-independent-spec` task was generating meta-commentary instead of implementable spec drafts. LLM agents received useless checklists instead of real specs they could implement from.
+
+## Proposed Solution
+
+Complete rewrite:
+1. Rename task from `create-draft` to `generate-independent-spec`
+2. Replace template with real spec structure
+3. Enforce implementable draft requirement with WRONG vs CORRECT examples
+
+## Affected Files
+
+| File | Anchor | Change |
+|------|--------|--------|
+| `.opencode/skills/spec-auditor/tasks/create-draft.md` | Entire file | Rename to `generate-independent-spec.md`, rewrite content |
+| `.opencode/skills/spec-auditor/SKILL.md` | Task table | Update task name and description |
+| `.opencode/skills/spec-auditor/tasks/overview.md` | Subtask section | Update task name and clarifications |
+
+## Success Criteria
+
+- Running `generate-independent-spec` produces real spec draft
+- Draft contains problem, solution, files, criteria
+- Draft is implementable without viewing live spec
+- WRONG vs CORRECT examples included in task documentation
+
+## Edge Cases
+
+- No edge cases for this task rewrite
+
+## Dependencies
+
+- None (internal skill refactoring)
+
+## Risk Assessment
+
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
+| Template misunderstood | Low | Medium | Add explicit WRONG vs CORRECT examples |
+
+## Decision Rationale
+
+**Why complete rewrite:** The original design was fundamentally flawed from conception — it generated checklists instead of specs. Minor fixes would perpetuate the wrong approach.
+```
+
+This is an IMPLEMENTABLE spec that developers could work from.
+
+**This separation is MANDATORY and CANNOT be bypassed.**
+
+## Subtask Isolation Enforcement (CRITICAL)
+
+**The independent draft MUST be generated BEFORE any GitHub API calls.**
+
+### Workflow Order
+
+| Step | Action | GitHub API Access |
+|------|--------|-------------------|
+| 1 | Generate independent draft | ❌ NO — NO API calls |
+| 2 | Write draft to `./tmp/tmp-spec-{issue}-draft.md` | ❌ NO — NO API calls |
+| 3 | THEN load live spec | ✅ YES — API call now allowed |
+| 4 | Compare draft to live spec | ✅ YES — API call already done |
+| 5 | Post findings | ✅ YES — API call already done |
+
+### Why Order Matters
+
+If you read the live spec BEFORE generating the draft:
+- Your draft will be biased by what you saw
+- You'll miss gaps because they become "normal" through exposure
+- The comparison becomes: "Does live spec have the same sections as live spec?" (useless)
+
+### Tool Enforcement
+
+The `generate-independent-spec` task runs in a subtask with:
+- NO access to `github_issue_read` (live spec body)
+- ONLY the issue number and title for context
+- General knowledge of the project structure
+
+After the draft is written to `./tmp/tmp-spec-{issue}-draft.md`, THEN you can call GitHub API to load the live spec.
+
+## Independent Draft = Real Spec (CRITICAL)
+
+**The "independent draft" created by this skill is a COMPLETE SPEC DRAFT that could be implemented from scratch — NOT a checklist, NOT meta-commentary, NOT "what makes a good spec."**
+
+### What the Draft IS
+
+- An implementable specification
+- Specific problem statement for THIS issue
+- Technical solution with architecture
+- Affected files with function/section anchors
+- Testable success criteria
+- Edge cases specific to THIS implementation
+- Dependencies and risk assessment
+
+### What the Draft IS NOT
+
+- A checklist of "what specs should include"
+- A prose description of "expected structure"
+- A template of "six core areas coverage"
+- Generic advice about spec writing
+
+### Detection: How to Know If You're Doing It Wrong
+
+**If you're writing:**
+- "A good spec should include..."
+- "Expected structure for this spec type..."
+- "What makes a good spec..."
+- "Common pitfalls for specs..."
+
+**You're generating meta-commentary, NOT a spec. STOP and write a real spec.**
+
+**If you're writing:**
+- "The problem is that users can't find the search results..."
+- "The proposed solution adds two search modes..."
+- "Affected files: `src/services/search.py`..."
+- "Success criteria: Search 'wampuw' finds record..."
+
+**You're generating a REAL spec. CORRECT.**
 
 ## Codebase Verification (CRITICAL)
 

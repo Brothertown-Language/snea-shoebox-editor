@@ -8,7 +8,7 @@ Per-sub-issue auditing with independent draft generation to prevent context poll
 
 ## Subtask Separation Requirement (CRITICAL)
 
-**MUST run create-draft for each sub-issue BEFORE viewing live sub-issue content.**
+**MUST run generate-independent-spec for each sub-issue BEFORE viewing live sub-issue content.**
 
 ## Workflow
 
