@@ -475,31 +475,83 @@ Invoked with: `/skill concern-separation-auditor --issue N`
 
 ---
 
+## Critical Violation: Bypassing Skills At Workflow Points
+
+**⚠️ Bypassing MANDATORY skill invocations is a CRITICAL GUIDELINE VIOLATION.**
+
+Skills are MANDATORY enforcement points - not optional helpers.
+
+### 🚫 FORBIDDEN - NO BYPASS
+
+| Workflow Point | Required Skill Invocation | What Agent MUST NOT Do |
+|----------------|--------------------------|------------------------|
+| Before branch creation | `/skill git-workflow --task pre-work` | Manually run `git checkout -b` |
+| After implementation | `/skill git-workflow --task review-prep` | Stop after reading files, skip workflow |
+| After "create a PR" | `/skill git-workflow --task pr-creation` | Manually squash/push/create PR |
+| After "PR merged" | `/skill git-workflow --task cleanup` | Manually close issues/delete branches |
+
+### ✅ REQUIRED WORKFLOW
+
+**Before ANY git operation:**
+
+1. **STOP** - Do NOT run git commands manually
+2. **INVOKE** the appropriate skill task
+3. **LET THE SKILL** handle all git operations
+4. **FOLLOW** what the skill does/outputs
+
+**Example - Creating a Branch:**
+
+```
+❌ WRONG: git checkout -b spec/my-feature
+✅ RIGHT: /skill git-workflow --task pre-work
+           (skill handles: stash → verify clean → create branch)
+```
+
+**Example - After Implementation:**
+
+```
+❌ WRONG: Just stop after reading files
+✅ RIGHT: /skill git-workflow --task review-prep
+           (skill handles: commit → push → compare URL → HALT)
+```
+
+### Why Skills Are Mandatory
+
+Skills enforce:
+- Correct git workflow sequence
+- Stash before branch creation
+- Squash before PR
+- GitHub API verification before issue closure
+- Consistent executive summary format
+- Co-author trailers in commits
+
+**Manual operations bypass these enforcements → CRITICAL VIOLATION.**
+
+---
+
 ## Critical Violation: Skipping Review-Prep After Implementation
 
 **⚠️ Failing to invoke review-prep after implementation completes is a CRITICAL GUIDELINE VIOLATION.**
 
 After implementation completes, the agent MUST automatically:
-1. **Push the feature branch** to remote
-2. **Generate GitHub compare URL** for developer review
-3. **Post compare URL** to the issue AND chat
-4. **HALT** and wait for "create a PR" instruction
+1. **Invoke `/skill git-workflow --task review-prep`** (MANDATORY - NO EXCEPTIONS)
+2. The skill handles: commit → push → generate compare URL → post to issue AND chat → HALT
+3. **NO silent HALT without completing the workflow**
 
 **🚫 FORBIDDEN:**
+- Completing implementation and just HALTing silently
 - Skipping review-prep because "changes are trivial"
 - Skipping review-prep because "developer can use git log"
 - Skipping review-prep and asking "do you want to review?"
 - Proceeding directly to PR creation without compare URL
-- Completing implementation and HALTing without pushing branch
 - Reporting completion without providing compare URL
+- **Stopping after reading files/loading skills without implementing**
 
 **✅ REQUIRED SEQUENCE:**
 1. Implementation completes all file changes
-2. Agent commits all changes
-3. Agent pushes branch to remote (`git push -u origin <branch>`)
-4. Agent generates compare URL (`https://github.com/<owner>/<repo>/compare/main...<branch>`)
-5. Agent posts compare URL to issue AND chat
-6. **Agent HALTs** — waits for "create a PR" instruction
+2. **AUTOMATIC:** Agent invokes `/skill git-workflow --task review-prep`
+3. Skill handles: commit → push → generate compare URL → post to issue/chat → HALT
+4. Agent reports completion with executive summary
 
 **Why This Matters:**
 - Developers need visibility into ALL changes before PR creation
@@ -507,6 +559,7 @@ After implementation completes, the agent MUST automatically:
 - Prevents accidental PRs without developer review
 - Establishes clear boundary between "implementation done" and "PR requested"
 - Compare URL is the canonical way for developers to review branch changes
+- **Silent HALT without workflow completion loses all progress tracking**
 
 **Executive Summary REQUIREMENT:**
 
