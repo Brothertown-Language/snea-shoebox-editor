@@ -74,7 +74,7 @@ Authorization Gatekeeper ensuring all code changes follow the spec + authorizati
 
 ### ⚠️ MANDATORY: Post-Implementation Review-Prep Invocation
 
-**After implementation completes, the agent MUST invoke review-prep from the git-workflow skill — this is AUTOMATIC.**
+**After implementation completes, the agent MUST invoke review-prep from the git-workflow skill — this is VERIFIED, not just stated as automatic.**
 
 The sequence is FIXED:
 
@@ -85,10 +85,38 @@ The sequence is FIXED:
 5. **git-workflow review-prep task is invoked AUTOMATICALLY**
 6. review-prep generates compare URL → HALTs
 
+**VERIFICATION ENFORCEMENT (CRITICAL):**
+
+Before reporting completion, the agent MUST verify:
+
+| Verification Step | Required Action |
+|-------------------|-----------------|
+| Branch pushed? | `git log origin/<branch>..HEAD --oneline` must show commits OR be empty (already pushed) |
+| Compare URL generated? | `https://github.com/<owner>/<repo>/compare/main...<branch>` |
+| GitHub comment posted? | Executive summary + compare URL to GitHub issue |
+| Chat output posted? | Executive summary + compare URL to chat (BOTH locations required) |
+
 **DO NOT:**
 - Return to chat after implementation without invoking review-prep
 - Report completion and HALT without pushing branch first
 - Skip compare URL generation because "no changes needed"
+- Post to GitHub without also posting to chat (BOTH are required)
+- Post to chat without executive summary and compare URL
+
+**Chat Output Format (MANDATORY):**
+
+```markdown
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/<owner>/<repo>/compare/main...<branch>
+```
 
 **The review-prep task provides MANDATORY developer visibility before PR creation.**
 
