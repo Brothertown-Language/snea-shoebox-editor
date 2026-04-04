@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Auto-Issue Creation for Workflow Violations**: When AI agents bypass critical workflow steps like review-prep or PR creation, the system now automatically creates GitHub issues to track the violations. This creates accountability for workflow compliance and enables systematic improvement of guidelines.
+- **Post-Implementation Pattern Enforcement**: A new post-implementation task in the implementation-quality skill now ensures review-prep is invoked after every implementation. This mandatory gate prevents workflow bypass and ensures all code changes are properly reviewed before PR creation.
 - **Mandatory Skill Invocation Enforcement**: AI agents must now invoke skills at critical workflow points (file creation, implementation start, command execution, data handling) via the implementation-quality skill. Automatic pattern verification prevents guideline violations before they occur, ensuring consistent code structure, file locations, and data integrity throughout all implementations.
 
 ### Changed

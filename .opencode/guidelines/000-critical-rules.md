@@ -40,6 +40,67 @@ This file provides critical rules that must never be violated.
 
 ---
 
+## Critical Violation: Auto-Issue Creation for Repeated Workflow Violations
+
+**⚠️ Repeated bypass of mandatory workflows is a CRITICAL GUIDELINE VIOLATION that MUST be tracked.**
+
+When the agent bypasses mandatory workflow steps (review-prep, PR creation, issue closure), an issue MUST be created to track the violation.
+
+### What Triggers Auto-Issue Creation
+
+| Violation | When to Create Issue |
+|-----------|----------------------|
+| Skipping review-prep | Agent HALTs without pushing branch, generating compare URL, or posting to issue/chat |
+| Bypassing PR workflow skill | Agent manually runs git commands instead of invoking skill |
+| PR creation without instruction | Agent creates PR without explicit "create a PR" from user |
+| Closing issues before PR merge | Agent closes issues without verifying merge via GitHub API |
+
+### Auto-Issue Workflow
+
+**When violation detected:**
+
+1. Create issue: `[SPEC-FIX] Review-prep workflow bypass` (or relevant violation type)
+2. Document which implementation phase was affected
+3. Add `needs-approval` label
+4. Post comment explaining:
+   - What violation occurred
+   - Which files/workflow were affected
+   - What correct workflow should have been followed
+
+### Issue Template for Violations
+
+```markdown
+# [SPEC-FIX] <Violation Type>
+
+**Violation:** <What occurred>
+
+**Affected Files:**
+- <File paths that were modified without proper workflow>
+
+**Expected Workflow:**
+1. <Step 1 of correct workflow>
+2. <Step 2 of correct workflow>
+...
+
+**What Happened:**
+<Description of how workflow was bypassed>
+
+**Correction Required:**
+- <What needs to be verified/fixed>
+
+---
+🤖 ❌ Violation detected by <AgentName> (<ModelID>)
+```
+
+### Why This Matters
+
+- Violations indicate gaps in workflow understanding or enforcement
+- Tracking violations helps identify patterns
+- Creates accountability for workflow compliance
+- Enables systematic improvement of guidelines
+
+---
+
 **Search guidelines:** Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant guidelines.
 
 ## Critical Violation: Inferring GitHub Owner from File Paths/Usernames
@@ -592,6 +653,69 @@ When posting completion after review-prep, the agent MUST include an executive s
 
 ---
 
+## Critical Violation: Skipping Review-Prep After Implementation
+
+**⚠️ Failing to invoke review-prep after implementation completes is a CRITICAL GUIDELINE VIOLATION.**
+
+After implementation completes, the agent MUST automatically:
+1. **Invoke `/skill git-workflow --task review-prep`** (MANDATORY - NO EXCEPTIONS)
+2. The skill handles: commit → push → generate compare URL → post to issue AND chat → HALT
+3. **NO silent HALT without completing the workflow**
+
+**🚫 FORBIDDEN:**
+- Completing implementation and just HALTing silently
+- Skipping review-prep because "changes are trivial"
+- Skipping review-prep because "developer can use git log"
+- Skipping review-prep and asking "do you want to review?"
+- Proceeding directly to PR creation without compare URL
+- Reporting completion without providing compare URL
+- **Stopping after reading files/loading skills without implementing**
+
+**✅ REQUIRED SEQUENCE:**
+1. Implementation completes all file changes
+2. **AUTOMATIC:** Agent invokes `/skill git-workflow --task review-prep`
+3. Skill handles: commit → push → generate compare URL → post to issue/chat → HALT
+4. Agent reports completion with executive summary
+
+**Why This Matters:**
+- Developers need visibility into ALL changes before PR creation
+- GitHub diff viewer provides superior review experience
+- Prevents accidental PRs without developer review
+- Establishes clear boundary between "implementation done" and "PR requested"
+- Compare URL is the canonical way for developers to review branch changes
+- **Silent HALT without workflow completion loses all progress tracking**
+
+**Executive Summary REQUIREMENT:**
+
+When posting completion after review-prep, the agent MUST include an executive summary:
+
+| Location | Content |
+|----------|---------|
+| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
+| **Chat Output** | Same executive summary (summary, outcome) |
+
+**Executive Summary Format:**
+```
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+**🚫 FORBIDDEN in Completion Comments:**
+- File lists (redundant with git diff)
+- "Next" field (dialog prompt)
+- Punch-list format
+- Technical changelog (focus on impact)
+
+**See `113-git-pr-workflow.md` → "Review Phase" and `git-workflow` skill → `review-prep` task.**
+
+---
+
 ## Critical Violation: Creating PRs Without Explicit Instruction
 
 **⚠️ Creating a PR without EXPLICIT developer instruction is a CRITICAL GUIDELINE VIOLATION.**
@@ -880,6 +1004,67 @@ git commit -m "WIP: Phase N - <description>" \
 - API changes between library versions cause silent failures
 - Incorrect parameter names waste debugging time
 - Outdated patterns accumulate technical debt
+
+---
+
+## Critical Violation: Auto-Issue Creation for Repeated Workflow Violations
+
+**⚠️ Repeated bypass of mandatory workflows is a CRITICAL GUIDELINE VIOLATION that MUST be tracked.**
+
+When the agent bypasses mandatory workflow steps (review-prep, PR creation, issue closure), an issue MUST be created to track the violation.
+
+### What Triggers Auto-Issue Creation
+
+| Violation | When to Create Issue |
+|-----------|----------------------|
+| Skipping review-prep | Agent HALTs without pushing branch, generating compare URL, or posting to issue/chat |
+| Bypassing PR workflow skill | Agent manually runs git commands instead of invoking skill |
+| PR creation without instruction | Agent creates PR without explicit "create a PR" from user |
+| Closing issues before PR merge | Agent closes issues without verifying merge via GitHub API |
+
+### Auto-Issue Workflow
+
+**When violation detected:**
+
+1. Create issue: `[SPEC-FIX] Review-prep workflow bypass` (or relevant violation type)
+2. Document which implementation phase was affected
+3. Add `needs-approval` label
+4. Post comment explaining:
+   - What violation occurred
+   - Which files/workflow were affected
+   - What correct workflow should have been followed
+
+### Issue Template for Violations
+
+```markdown
+# [SPEC-FIX] <Violation Type>
+
+**Violation:** <What occurred>
+
+**Affected Files:**
+- <File paths that were modified without proper workflow>
+
+**Expected Workflow:**
+1. <Step 1 of correct workflow>
+2. <Step 2 of correct workflow>
+...
+
+**What Happened:**
+<Description of how workflow was bypassed>
+
+**Correction Required:**
+- <What needs to be verified/fixed>
+
+---
+🤖 ❌ Violation detected by <AgentName> (<ModelID>)
+```
+
+### Why This Matters
+
+- Violations indicate gaps in workflow understanding or enforcement
+- Tracking violations helps identify patterns
+- Creates accountability for workflow compliance
+- Enables systematic improvement of guidelines
 
 ---
 
