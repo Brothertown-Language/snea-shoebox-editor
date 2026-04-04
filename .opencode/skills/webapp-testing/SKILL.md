@@ -25,4 +25,4 @@ Invoke the overview task for comprehensive testing guidance:
 
 ---
 
-🤖 Co-authored with AI: OpenCode Desktop (ollama-cloud/glm-5)
+🤖 Co-authored with AI: <AgentName> (<ModelID>)

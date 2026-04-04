@@ -39,4 +39,4 @@ Code Size Enforcer ensuring code artifacts stay within size limits for maintaina
 
 ---
 
-🤖 Co-authored with AI: OpenCode Desktop (ollama-cloud/glm-5)
+🤖 Co-authored with AI: <AgentName> (<ModelID>)

@@ -229,6 +229,7 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 - **Create PRs without EXPLICIT developer instruction** — "approved" and "go" authorize implementation ONLY. PRs require explicit "create a PR" instruction. Completing implementation does NOT authorize PR creation.
 - **Submit unsquashed PRs** — ALL PRs must have exactly ONE commit (squashed). Multiple commits in a PR will be rejected. Always `git reset --soft origin/main && git commit` before pushing.
 - **Create PRs after implementation** — The developer must run human tests and may require adjustments BEFORE any PR. Wait for explicit "create a PR" after developer has tested.
+- **BYPASS PR WORKFLOW SKILL** — When user says "pr", "create a PR", "update PR", or any PR-related command, MUST invoke `/skill git-workflow --task pr-creation`. NEVER manually update/create PRs. The skill handles existing PR detection (Step 0 checks for open/merged PRs).
 - Use `/tmp/` — only use `./tmp/`
 - **DELETE MERGED BRANCHES IMMEDIATELY** — After PR merge confirmation, delete the branch immediately. No asking, no waiting. Unmerged branches with work ARE preserved until explicit delete request.
 - **ANALYZE ISSUE COMMENTS SILENTLY** — Always respond to user comments via GitHub issue comment. Users cannot see your internal reasoning.
@@ -251,6 +252,42 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 3. Update relevant guideline file in `.opencode/guidelines/`
 4. Document the fix in a comment on the associated issue — FACTUAL ONLY
 5. Wait for user confirmation before resuming
+
+---
+
+## Authorization Recognition Protocol
+
+**These patterns ARE explicit authorization (agent MUST continue):**
+
+| Pattern | Example | Why It's Authorization |
+|---------|---------|----------------------|
+| Direct command | "implement #227" | Explicit instruction to implement |
+| Include in branch | "include in this feature branch" | Explicit scope expansion authorization |
+| Compound command | "implement #227 and include in #223 branch" | Authorization for both implementation AND branch inclusion |
+| Fix this too | "fix the URL order while you're at it" | Explicit authorization for additional work |
+
+**These are NOT authorization (agent must HALT):**
+
+| Pattern | Example | Why It's NOT Authorization |
+|---------|---------|---------------------------|
+| Question | "should I implement #227?" | Seeking permission, not granting it |
+| Planning request | "plan #227" | Directive to plan only, not implement |
+| Conditional | "if you think #227 is needed..." | Conditional, requires judgment |
+| Observation | "#227 looks related" | Not a command to implement |
+
+**Authorization Rules:**
+
+✅ **MUST continue immediately when:**
+- User says "implement #N and include in this branch"
+- User says "fix X while you're at it"
+- User says "also fix the typo" (unrelated fix)
+- User provides multiple explicit commands in one message
+
+🚫 **MUST HALT when:**
+- User asks a question ("should I...?", "would you like...?")
+- User uses conditionals ("if you think...", "maybe...")
+- User makes observations without commands
+- Authorization is ambiguous or unclear
 
 ---
 
@@ -294,8 +331,8 @@ To use a skill, the agent loads it when relevant to the current task.
 | Periodic guideline maintenance | `guideline-auditor` | Check for guideline drift over time |
 | Post-implementation verification | `spec-auditor --issue N` | Verify spec was implemented correctly |
 | User says "approved" or "go" | `git-workflow --task pre-work` | Pre-work: verify branch state, stash external changes, create branch |
-| **After implementation completes** | `git-workflow --task review-prep` | **Automatic: push branch, generate compare URL for review** |
-| User says "create a PR" | `git-workflow --task pr-creation` | Post-work: squash commits, push, create PR |
+| After implementation completes | `git-workflow --task review-prep` | **Automatic: push branch, generate compare URL for review** |
+| User says "create a PR", "pr", "update PR", "make a PR", "push and create PR" | `git-workflow --task pr-creation` | Post-work: squash commits, push, create/update PR |
 | PR timing questions | `pr-creation-workflow` | PR authorization boundary, when PRs can be created |
 | Before skill extraction | `coherence-auditor --mode extraction` | Identify skill candidates from guideline content |
 | Periodic coherence maintenance | `coherence-auditor --mode maintenance` | Detect guideline-skill drift |

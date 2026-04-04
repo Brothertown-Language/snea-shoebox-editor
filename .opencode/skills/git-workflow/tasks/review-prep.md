@@ -165,11 +165,62 @@ Using session values (GIT_OWNER, GIT_REPO):
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-### Step 2: Report Completion (BOTH Issue AND Chat)
+### Step 2: Pre-Post Verification (MANDATORY GATE)
 
-**⚠️ CRITICAL: Completion comment MUST be posted to BOTH the GitHub issue AND chat.**
+**⚠️ CRITICAL: You MUST verify format BEFORE generating the completion comment.**
 
-Post to GitHub issue:
+**Verification Checklist (ALL items MUST pass):**
+
+```
+✓ Will executive summary be <1-2 sentences?
+✓ Will outcome field show stakeholder value?
+✓ Will byline come AFTER `---` separator?
+✓ Will byline be LAST line before URL?
+✓ Will URL be FINAL line (after byline)?
+✓ No URL before summary?
+✓ No URL between summary and byline?
+```
+
+**Format Template (use this exact structure):**
+
+```markdown
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+```
+
+**If ANY check fails:** STOP. Fix the format BEFORE continuing to Step 3.
+
+**Why this gate exists:**
+- Prevents URL-before-summary violations
+- Prevents byline-before-separator violations
+- Catches format errors before they're posted
+- Forces procedural verification, not informational
+
+### Step 3: Report Completion (SEPARATE Formats for Issue vs Chat)
+
+**⚠️ CRITICAL: Different formats for GitHub issue vs chat.**
+
+**GitHub Issue Comment Format:**
+
+```markdown
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+```
+
+**Chat Output Format:**
 
 ```markdown
 **Summary:**
@@ -184,22 +235,22 @@ Post to GitHub issue:
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-**⚠️ URL-LAST FORMAT (MANDATORY): Compare URL MUST be the FINAL line of the comment.**
+**Key Differences:**
 
-Post to chat (same format):
+| Location | Contains | Does NOT Contain |
+|----------|----------|------------------|
+| GitHub Issue | Summary, Outcome, byline | Compare URL |
+| Chat | Summary, Outcome, byline, URL | — |
 
-**✅ MANDATORY - DO NOT SKIP:**
+**Why separate formats:**
+- GitHub issues are persistent records - no need for compare URLs (visible via PR)
+- Chat is immediate - developers need quick access to compare URL for review
+- URLs are long and clutter issue history unnecessarily
 
-- **GitHub Issue Comment:** Full executive summary with byline and compare URL
-- **Chat Output:** SAME executive summary with byline and compare URL
+**Post summary to GitHub issue.**
+**Post summary + URL to chat.**
 
-**Why both locations:**
-
-- GitHub preserves long-term history for future reference
-- Chat maintains session context for current discussion
-- Both must have identical content for completeness
-
-### Step 3: HALT (MANDATORY - NO EXCEPTIONS)
+### Step 4: HALT (MANDATORY - NO EXCEPTIONS)
 
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
