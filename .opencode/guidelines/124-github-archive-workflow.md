@@ -377,7 +377,7 @@ When a user says "close this and create a new spec":
 1. Create new issue #363 with title "[SPEC] Guidelines: ..."
 2. Note issue number: #363
 3. Close old issue #333 with comment:
-   "AI: <AgentName> (<ModelID>) on behalf of Michael Conrad 🤖 
+   "AI: <AgentName> (<ModelID>) on behalf of <HumanName> 🤖 
     **Replaced By:** #363
     
     This issue is superseded by #363 without implementation.

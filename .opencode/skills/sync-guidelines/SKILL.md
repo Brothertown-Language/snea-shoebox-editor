@@ -30,4 +30,4 @@ Invoke the overview task for synchronization workflow:
 
 ---
 
-🤖 Co-authored with AI: OpenCode Desktop (ollama-cloud/glm-5)
+🤖 Co-authored with AI: <AgentName> (<ModelID>)

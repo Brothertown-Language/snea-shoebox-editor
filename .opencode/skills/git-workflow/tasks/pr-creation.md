@@ -10,6 +10,17 @@ Create pull request after explicit user instruction. Squash commits to single co
 1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
 1. **HALT after PR creation:** Wait for human to merge
 
+## ⚠️ CRITICAL: This Skill Must Be Invoked
+
+**When user says "pr", "create a PR", "make a PR", or similar:**
+
+1. **LOAD this task** via `/skill git-workflow --task pr-creation`
+2. **DO NOT** manually decide "PR exists, update it"
+3. **DO NOT** skip steps or execute outside the task
+4. **FOLLOW** all steps in order
+
+**Bypassing this skill is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Entry Criteria
 
 - User says "create a PR", "make a PR", "push and create PR", or similar
@@ -26,25 +37,77 @@ Create pull request after explicit user instruction. Squash commits to single co
 
 ### Step 0: Check PR State
 
-**Before creating PR, check if branch already has a merged PR:**
+**Before creating PR, check if branch already has a PR (open OR merged):**
 
 ```bash
 # Get current branch name
 CURRENT_BRANCH=$(git branch --show-current)
 
-# Check for existing PRs on this branch
-gh pr list --head "$CURRENT_BRANCH" --state merged --json number,url,mergedAt
+# Check for ALL existing PRs on this branch (open, merged, closed)
+gh pr list --head "$CURRENT_BRANCH" --state all --json number,url,state,mergedAt
 ```
 
+**If open PR exists via GitHub MCP:**
+
+```python
+# Check via GitHub MCP
+prs = github_list_pull_requests(
+    owner=GIT_OWNER,
+    repo=GIT_REPO,
+    head=CURRENT_BRANCH,
+    state="all"
+)
+
+for pr in prs:
+    if pr["state"] == "open":
+        # Open PR exists - UPDATE it
+        print(f"ℹ️ Branch {CURRENT_BRANCH} has open PR #{pr['number']}. Updating existing PR instead of creating new one.")
+        # Squash, push, update PR body
+        # HALT after update
+        return
+    elif pr["state"] == "closed" and pr.get("merged_at"):
+        # Merged PR exists - CREATE NEW BRANCH
+        print(f"⚠️ Branch {CURRENT_BRANCH} has merged PR #{pr['number']}. Creating new branch and PR.")
+        # Create new branch, reapply changes
+        # Continue with PR creation
+```
+
+**Decision tree:**
+
+| PR State | Action |
+|----------|--------|
+| Open PR exists | **UPDATE existing PR** - squash, push, update PR body (do NOT create new PR) |
+| Merged PR exists | **CREATE NEW BRANCH** - branch from current main, reapply changes, create new PR |
+| Closed PR exists (not merged) | **CREATE NEW PR** - new PR against same branch |
+| No PR exists | **CREATE NEW PR** - proceed with workflow |
+
+**If open PR exists:**
+
+Proceed through Steps 3-7:
+1. Generate changelog via subtask (Step 3) - **MANDATORY**
+2. Stage CHANGELOG.md (Step 4) - **MANDATORY**
+3. Squash commits (Step 5)
+4. Push to same branch (force-with-lease, Step 6)
+5. Update PR body (Step 7, use `github_update_pull_request` instead of `github_create_pull_request`)
+6. Report PR URL and HALT
+7. **DO NOT create a new PR**
+
 **If merged PR exists:**
+
 1. Get current main state: `git fetch origin && git checkout main && git pull origin main`
 2. Create new branch: `git checkout -b <new-branch-name>`
 3. Cherry-pick or reapply changes
-4. Continue with PR creation
+4. Continue with PR creation workflow
 
 **Report to user:**
 ```
 ⚠️ Branch <name> has a merged PR. Creating new PR against current main.
+```
+
+or
+
+```
+ℹ️ Branch <name> has open PR #<number>. Updating existing PR instead of creating new one.
 ```
 
 ### Step 1: Collect Sub-Issues (Multi-Task Specs)
@@ -299,29 +362,63 @@ Fixes #<parent>
 
 ### Step 7: Report PR URL and HALT
 
-**⚠️ CRITICAL: PR URL Reporting is MANDATORY**
+**⚠️ CRITICAL: PR URL Reporting is MANDATORY (Chat Only)**
 
-**You MUST report the PR URL in chat:**
+**Chat Output (REQUIRED):**
+```markdown
+**Summary:**
 
-1. **Chat Output:**
-   ```
-   **Summary:**
-   
-   <1-2 sentences describing stakeholder value>
-   
-   **Outcome:** <What changed for stakeholders>
-   
-   ---
-   🤖 ✅ Completed by <AgentName> (<ModelID>)
-   
-   **PR Created:** https://github.com/<owner>/<repo>/pull/<number>
-   ```
+<1-2 sentences describing stakeholder value>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
+```
+
+**⚠️ CRITICAL: URL-LAST FORMAT (MANDATORY)**
+
+**PR URL MUST be the FINAL line in chat - AFTER the byline.**
+
+**✅ CORRECT:**
+```markdown
+**Summary:**
+
+<1-2 sentences describing stakeholder value>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
+```
+
+**❌ WRONG:**
+```markdown
+**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
+
+**Summary:**
+<content>
+```
 
 **Format Requirements:**
 
-- Executive summary + byline footer come FIRST
-- PR URL comes AFTER byline
-- Same format in both GitHub comment and chat
+| Location | Contains | Does NOT Contain |
+|----------|----------|------------------|
+| Chat | Summary, Outcome, byline, PR URL | — |
+| GitHub Issue | Summary, Outcome, byline | PR URL (already visible via PR) |
+| GitHub PR | Automatically linked | No comment needed |
+
+**Why URL-Last:**
+- URLs are long and may wrap across lines
+- Placing URLs last allows developers to scan summary first
+- Easy visual anchor: "look for the PR link at the end"
+- Consistent pattern across all AI-generated summaries
+
+**Report PR URL in chat only (not in GitHub issues or PR comments).**
 
 ### ⚠️ CRITICAL: Model ID Detection
 
@@ -339,6 +436,21 @@ Fixes #<parent>
 | No commits between branches | Report: "Branch has no commits to main. Changes may already be merged. Verify and HALT." |
 | Branch conflicts | Report: "Branch conflicts with main. Rebase and push, then create PR." |
 | GitHub API error | Report error details and HALT |
+
+### Pre-Post Verification (MANDATORY)
+
+**Before reporting PR URL, VERIFY:**
+
+```
+✓ Executive summary present (<1-2 sentences)
+✓ Outcome field present (stakeholder value)
+✓ Byline present (agent name + model ID)
+✓ PR URL is FINAL line (after byline)
+✓ No URL before summary
+✓ No URL between summary and byline
+```
+
+**If any check fails:** Fix the comment format BEFORE reporting.
 
 ### Post-PR Creation Checklist
 
