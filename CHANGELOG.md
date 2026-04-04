@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Sub-issue Verification Before Parent Closure**: Added mandatory pre-close checklist requiring all agents to call `get_sub_issues` before closing any issue (parent or child). This prevents violations where parent issues were closed while children remained open. The checklist includes: (1) Query sub-issues first, (2) Verify PR merge state via GitHub API, (3) Close children only after PR merge confirmed, (4) Re-query before closing parent. Step 1 is now a MUST requirement with explicit code flow and MUST Result columns in checklists.
+
 ### Changed
 - **Auto-Issue Creation for Workflow Violations**: When AI agents bypass critical workflow steps like review-prep or PR creation, the system now automatically creates GitHub issues to track the violations. This creates accountability for workflow compliance and enables systematic improvement of guidelines.
 - **Post-Implementation Pattern Enforcement**: A new post-implementation task in the implementation-quality skill now ensures review-prep is invoked after every implementation. This mandatory gate prevents workflow bypass and ensures all code changes are properly reviewed before PR creation.

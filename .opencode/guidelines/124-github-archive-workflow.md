@@ -48,6 +48,44 @@ Archive a spec **immediately** after the final phase is approved and the PR is m
 
 **Before closing ANY issue, the agent MUST call `github_pull_request_read method=get` to verify the PR is merged.**
 
+**MANDATORY Pre-Close Checklist (NO EXCEPTIONS):**
+
+Before closing ANY issue (parent OR child), the agent MUST complete this checklist in order:
+
+| Step | Action | MUST Result |
+|------|--------|-------------|
+| **1** | Query sub-issues: `github_issue_read(method="get_sub_issues", issue_number=N)` | `[]` empty or verified all closed |
+| **2** | Verify PR merge state: `github_pull_request_read(method="get", pullNumber=PR)` | `merged_at` field exists |
+| **3** | Close child issues | Only children addressed by merged PR |
+| **4** | Re-query parent sub-issues | Verify all children now closed |
+| **5** | Close parent | Only if ALL children closed |
+
+**⚠️ CRITICAL: Step 1 is MANDATORY before closing ANY issue - parent or child.**
+
+```python
+# MANDATORY: Before closing ANY issue
+def before_close_issue(issue_number: int, pr_number: int):
+    # Step 1: Query sub-issues (MANDATORY for ALL issues)
+    children = github_issue_read(method="get_sub_issues", issue_number=issue_number)
+    
+    if children:
+        # Parent with sub-issues - must verify all children closed
+        open_children = [c for c in children if c.state == "open"]
+        if open_children:
+            # BLOCK: Cannot close parent with open children
+            post_warning_comment(issue_number, open_children)
+            return  # DO NOT CLOSE
+    
+    # Step 2: Verify PR merge
+    pr = github_pull_request_read(method="get", pullNumber=pr_number)
+    if not pr.get("merged_at"):
+        report = f"PR #{pr_number} is not yet merged. Cannot close issue."
+        return  # DO NOT CLOSE
+    
+    # Step 3-5: Proceed with closure
+    close_issue_with_summary(issue_number)
+```
+
 **Why `git pull` is insufficient:**
 - Local fast-forward shows `git pull` succeeded
 - Does NOT verify the PR merge state in GitHub

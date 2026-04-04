@@ -816,14 +816,46 @@ When working with parent/child issue hierarchies (specs with sub-issues):
 - Closing a parent after PR merge if other child tasks are incomplete
 - Assuming "the PR covers everything" when sub-issues exist
 - **Assuming parent status reflects sub-issue status — ALWAYS query sub-issues**
+- **Closing ANY issue without first calling `github_issue_read(method="get_sub_issues")`**
 
-**✅ REQUIRED:**
-- Only close the child issue that corresponds to the merged PR
-- Parent issue remains open until ALL child issues are closed
-- After closing a child: **ALWAYS call `github_issue_read method=get_sub_issues` on parent**
-- If the result is NOT empty (children remain open) → STOP, do NOT close parent
-- If the result IS empty (all children closed) → Close parent with summary
-- If all children are closed, then (and only then) close the parent
+**⚠️ CRITICAL: Step 1 is MANDATORY before closing ANY issue - parent or child. No exceptions.**
+
+### MANDATORY Pre-Close Checklist (NO EXCEPTIONS)
+
+Before closing ANY issue (parent OR child), the agent MUST complete this checklist in order:
+
+| Step | Action | MUST Result |
+|------|--------|-------------|
+| **1** | Query sub-issues: `github_issue_read(method="get_sub_issues", issue_number=N)` | `[]` empty or verified all closed |
+| **2** | Verify PR merge state: `github_pull_request_read(method="get", pullNumber=PR)` | `merged_at` field exists |
+| **3** | Close child issues | Only children addressed by merged PR |
+| **4** | Re-query parent sub-issues | Verify all children now closed |
+| **5** | Close parent | Only if ALL children closed |
+
+**If ANY step fails → DO NOT CLOSE the issue.**
+
+### Example: Parent Closure Workflow
+
+```python
+# Step 1: ALWAYS query sub-issues FIRST (MANDATORY)
+children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+
+if children:
+    # Parent with sub-issues - must verify all children closed
+    open_children = [c for c in children if c.state == "open"]
+    if open_children:
+        # BLOCK: Cannot close parent with open children
+        post_warning_comment(parent_issue, open_children)
+        return  # DO NOT CLOSE
+    
+# Step 2: Verify PR merge
+pr = github_pull_request_read(method="get", pullNumber=pr_number)
+if not pr.get("merged_at"):
+    return  # DO NOT CLOSE - PR not merged
+
+# Steps 3-5: Proceed with closure only after all checks pass
+close_issue_with_summary(parent_issue)
+```
 
 ### Correct Workflow
 
@@ -866,6 +898,7 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 - Premature parent closure loses visibility into remaining work
 - Stakeholders need to see open issues for incomplete work
 - GitHub sub-issue view shows which children remain
+- **The MANDATORY sub-issue query prevents violations**
 
 ### Sub-Issue Double-Check (MANDATORY)
 
