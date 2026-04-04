@@ -11,11 +11,35 @@ Write generated changelog entries to CHANGELOG.md file.
 3. **Create if missing:** Initialize CHANGELOG.md if it doesn't exist
 4. **Atomic write:** Use file operations, not shell redirects
 
+## Dual Changelog Support
+
+This repository maintains TWO changelogs:
+
+1. **Project Changelog** (`CHANGELOG.md`): User-facing project changes
+2. **AI Agent Changelog** (`.opencode/CHANGELOG.md`): AI infrastructure changes
+
+### Determining Target Changelog
+
+| Change Type | Target Changelog |
+|-------------|------------------|
+| `.opencode/` directory | `.opencode/CHANGELOG.md` |
+| Skills (`skills/`) | `.opencode/CHANGELOG.md` |
+| Guidelines (`guidelines/`) | `.opencode/CHANGELOG.md` |
+| AGENTS.md | `.opencode/CHANGELOG.md` |
+| Project source code | `CHANGELOG.md` |
+| Documentation | `CHANGELOG.md` |
+| Dependencies | `CHANGELOG.md` |
+| Tests | `CHANGELOG.md` |
+| CI/CD (`.github/`) | `CHANGELOG.md` |
+
+**Default:** If uncertain, default to `.opencode/CHANGELOG.md` for AI-focused changes.
+
 ## Entry Criteria
 
 - Changelog entries generated from `overview` task
 - Repository has git history to analyze
 - Working directory is clean or changes are acceptable to include
+- Target changelog path determined (project or AI agent)
 
 ## Exit Criteria
 
@@ -33,7 +57,67 @@ Invoke the `overview` task to generate changelog entries from commits:
 Create a changelog from commits since branching from main
 ```
 
-### Step 2: Locate CHANGELOG.md
+### Step 2: Extract Version from pyproject.toml
+
+**CRITICAL:** Both changelogs MUST reference version numbers from `pyproject.toml`, not use `[Unreleased]` indefinitely.
+
+```bash
+# Extract current version from pyproject.toml
+version=$(grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
+```
+
+**Example:** If `pyproject.toml` has `version = "0.2.0"`, the changelog section header should be:
+
+```markdown
+## [0.2.0] - Unreleased
+```
+
+**Version Header Format:**
+
+```markdown
+## [X.Y.Z] - Unreleased
+```
+
+For released versions, use the release date:
+
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+```
+
+**Why Version Numbers Matter:**
+
+- Users can track which version introduced a change
+- Developers can correlate changelog entries with releases
+- Aligns project and AI changelogs under consistent versioning
+- Enables future automation (release notes, version history)
+
+### Step 3: Locate Target Changelog
+
+Determine which changelog to update:
+
+**Decision Tree:**
+
+```
+Changes in .opencode/? → Use .opencode/CHANGELOG.md
+Changes in skills/? → Use .opencode/CHANGELOG.md  
+Changes in guidelines/? → Use .opencode/CHANGELOG.md
+Changes in AGENTS.md → Use .opencode/CHANGELOG.md
+Project source code? → Use CHANGELOG.md
+Documentation? → Use CHANGELOG.md
+Dependencies? → Use CHANGELOG.md
+Tests? → Use CHANGELOG.md
+CI/CD (.github/)? → Use CHANGELOG.md
+Uncertain? → Default to .opencode/CHANGELOG.md for AI-focused changes
+```
+
+**Paths:**
+
+| Changelog | Path |
+|-----------|------|
+| Project | `<repo-root>/CHANGELOG.md` |
+| AI Agent | `<repo-root>/.opencode/CHANGELOG.md` |
+
+### Step 4: Read Target Changelog
 
 Check if CHANGELOG.md exists at repository root.
 
@@ -41,21 +125,22 @@ Check if CHANGELOG.md exists at repository root.
 
 **If file doesn't exist:**
 - Create with standard Keep a Changelog header
-- Include `[Unreleased]` section
+- Include `[X.Y.Z] - Unreleased` section with version from pyproject.toml
 - Include format reference links
+- Include cross-reference link (project changelogs reference AI changelog, vice versa)
 
-### Step 3: Read Existing Content
+### Step 5: Read Existing Content
 
-Read current CHANGELOG.md content:
+Read current changelog content from target file:
 
 ```python
 content = pycharm_get_file_text_by_path(
-    pathInProject="CHANGELOG.md",
+    pathInProject="<target-changelog>",
     projectPath=<project-root>
 )
 ```
 
-### Step 4: Parse Sections
+### Step 6: Parse Sections
 
 Parse existing changelog into sections:
 
@@ -70,12 +155,31 @@ Parse existing changelog into sections:
 ...
 ```
 
-### Step 5: Merge New Entries
+### Step 7: Merge New Entries
 
 For each category in generated entries:
-1. Find matching section in `[Unreleased]`
-2. Prepend new entries to that section
-3. Preserve existing entries below
+1. Find matching version section (current version from pyproject.toml)
+2. Find matching subsection (`### Added`, `### Changed`, `### Fixed`, etc.)
+3. Prepend new entries to that subsection
+4. Preserve existing entries below
+
+**Section Structure:**
+
+```markdown
+## [X.Y.Z] - Unreleased    ← Current version from pyproject.toml
+
+### Added
+- <new-entry-1>           ← Generated entries prepended here
+- <new-entry-2>
+- <existing-entry-1>      ← Existing entries preserved below
+
+### Changed
+- <new-entry>
+- <existing-entry>
+
+### Fixed
+- <new-entry>
+```
 
 **Category Mapping:**
 - `New Features` → `### Added`
@@ -84,25 +188,26 @@ For each category in generated entries:
 - `Breaking Changes` → `### Changed` (with breaking note)
 - `Security` → `### Security` (or `### Fixed` with security note)
 
-### Step 6: Write Updated Content
+### Step 8: Write Updated Content
 
-Write merged content back to CHANGELOG.md:
+Write merged content back to target changelog:
 
 ```python
 pycharm_replace_text_in_file(
-    pathInProject="CHANGELOG.md",
+    pathInProject="<target-changelog>",
     projectPath=<project-root>,
     oldText=<existing-content>,
     newText=<merged-content>
 )
 ```
 
-### Step 7: Verify Write
+### Step 9: Verify Write
 
 Read back content to verify:
 - Entries are in correct sections
 - Formatting is preserved
 - No duplicate entries
+- Version section matches pyproject.toml version
 
 ## File Format Template
 

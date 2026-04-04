@@ -7,7 +7,22 @@ compatibility: opencode
 
 # Skill: github-comments
 
-Ensures all comments on issues and PRs follow correct format, are posted at the right time, and preserve history.
+Comment format enforcement for different contexts, audiences, and locations. Defines WHEN to post comments and WHAT those comments should contain.
+
+## ⚠️ CRITICAL: Audience-First Design
+
+**Comments must match their AUDIENCE and LOCATION:**
+
+| Audience | Location | Needs | Timeframe |
+|----------|----------|-------|-----------|
+| Future maintainers | GitHub Issue | Context: WHAT/WHY changed | Historical record |
+| Developer (immediate) | Chat | Impact: stakeholder value | Immediate action |
+
+**CRITICAL VIOLATION: URLs in GitHub Issue Comments**
+
+- **URLs are for CHAT ONLY**
+- **GitHub Issue comments MUST NOT contain URLs**
+- **Chat output MUST include URL when relevant**
 
 ## When to Use
 
@@ -22,9 +37,171 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 |------|-------------|
 | `overview` | Complete comment protocol with examples |
 
-## AI Identity Attribution Format (CRITICAL)
+## GitHub Issue Comments (Future Maintainers)
 
-**ALL comments MUST end with ONE byline combining status, agent, and model:**
+**Audience:** Future maintainers reading issue history
+
+**Purpose:** Historical context for future readers
+
+**Location:** GitHub Issue comments
+
+### When to Comment on Issues
+
+| Context | Comment? | Byline Format |
+|---------|----------|---------------|
+| Issue Creation | YES | `🤖 ✨ Created by <AgentName> (<ModelID>)` |
+| Issue Update (Substantive) | YES | `🤖 📝 Updated by <AgentName> (<ModelID>)` |
+| Issue Update (Non-Substantive) | NO | (No comment needed) |
+| Issue Closure | YES | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+
+### Issue Creation Comment
+
+```markdown
+🤖 ✨ Created by <AgentName> (<ModelID>)
+```
+
+**NO summary needed** - the issue body already contains the spec.
+
+### Substantive Update Comment (Context-Based Summary)
+
+```markdown
+Added Phase 2 to spec. Phase 2 implements the API layer for the approval workflow.
+
+**Changes:**
+- Added Phase 2 implementation steps
+- Defined API endpoints: approve(), reject(), getStatus()
+- Specified error handling for invalid states
+
+---
+🤖 📝 Updated by <AgentName> (<ModelID>)
+```
+
+**Context-based summary explains WHAT changed and WHY** (technical context for future maintainers).
+
+### Non-Substantive Update (NO Comment)
+
+| Non-Substantive Updates | Substantive Updates |
+|------------------------|-------------------|
+| STATUS field updates | Adding/removing phases |
+| Label changes | Modifying requirements |
+| Checklist marker updates | Changing success criteria |
+| Typo/formatting fixes | Altering implementation approach |
+| Origin links at top of body | Significant content changes |
+
+**Rule:** If it doesn't change meaning, don't comment.
+
+### Issue Closure Comment
+
+```markdown
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+**Summary:**
+
+Implemented comment format enforcement with clear audience/location distinction.
+
+**Outcome:** All four guideline/skill files updated with correct examples.
+
+All tasks complete from this specification.
+```
+
+**NO URL** - URLs belong in Chat, not GitHub Issue comments.
+
+## Chat Output (Immediate Developer)
+
+**Audience:** Developer who needs to make decisions
+
+**Purpose:** Immediate visibility and action support
+
+**Location:** Chat output (terminal, IDE, web chat)
+
+### When to Output to Chat
+
+| Context | Output? | Byline Format |
+|---------|----------|---------------|
+| Implementation Complete | YES | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
+
+### Executive Summary (Chat Output)
+
+```markdown
+**Summary:**
+
+Implemented comment format enforcement with audience-first structure.
+
+**Outcome:** Developers can now distinguish when to use GitHub Issue comments (context-based summaries) vs Chat output (executive summaries with URLs).
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/<owner>/<repo>/compare/dev...<branch>
+```
+
+**Executive summary explains IMPACT and VALUE** (stakeholder benefit, immediate action).
+
+**URL Placement:** URL MUST be the FINAL LINE of chat output.
+
+## 🚫 CRITICAL VIOLATIONS (Zero Tolerance)
+
+| Violation | Consequence |
+|-----------|-------------|
+| URLs in GitHub Issue comments | CRITICAL - wrong location |
+| Executive summaries in issues | CRITICAL - wrong audience |
+| Comments for non-substantive updates | CRITICAL - noise |
+| Wrong content for wrong audience | CRITICAL - confusion |
+
+## Context-Based vs Executive Summaries
+
+### Context-Based Summary (GitHub Issue)
+
+**WHAT changed and WHY:**
+
+```markdown
+Added Phase 2 to spec. Phase 2 implements the API layer for the approval workflow.
+
+**Changes:**
+- Added Phase 2 implementation steps
+- Defined API endpoints: approve(), reject(), getStatus()
+- Specified error handling for invalid states
+
+---
+🤖 📝 Updated by <AgentName> (<ModelID>)
+```
+
+**Audience:** Future maintainers reading history
+
+**Location:** GitHub Issue comment
+
+**Content:** Technical context, WHAT/WHY
+
+**URLs:** FORBIDDEN
+
+### Executive Summary (Chat)
+
+**Impact and stakeholder value:**
+
+```markdown
+**Summary:**
+
+Implemented API layer for approval workflow. Developers can now use approve()/reject()/getStatus() endpoints.
+
+**Outcome:** Approval workflow is now accessible via REST API.
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+
+https://github.com/<owner>/<repo>/compare/dev...<branch>
+```
+
+**Audience:** Developer making decisions
+
+**Location:** Chat output
+
+**Content:** Impact/value, stakeholder benefit
+
+**URLs:** REQUIRED (when relevant)
+
+## AI Identity Attribution Format
+
+**ALL comments MUST end with ONE byline:**
 
 ```
 <response content>
@@ -39,7 +216,7 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 
 | Identity Component | How to Detect | FORBIDDEN |
 |-------------------|---------------|-----------|
-| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" from examples |
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
 | `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
@@ -66,59 +243,16 @@ Ensures all comments on issues and PRs follow correct format, are posted at the 
 | Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
 | Superseded | 🔄 | `🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>` |
 
-## Progress Comment Format (MANDATORY)
+### When to Include Context in Byline
 
-```
-**Summary:**
+| Context | Include Context? |
+|---------|-------------------|
+| Progress/Task completion | NO (content already describes work) |
+| Issue creation | OPTIONAL (issue number is redundant on same issue) |
+| Content updates | BRIEF description of change |
+| Rejection/Superseded | YES (reason or replacement reference required) |
 
-<1-2 sentences describing impact and stakeholder value>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-https://github.com/<owner>/<repo>/compare/main...<branch>
-```
-
-### ⚠️ URL Placement Rule (MANDATORY)
-
-**URLs MUST appear LAST in executive summaries.**
-
-| Element | Position |
-|---------|----------|
-| Summary text | First |
-| Outcome | Middle |
-| Agent byline | Last line before URL |
-| URL | FINAL LINE (always last) |
-
-**Why URL last:**
-
-- URLs are typically long and may wrap across lines
-- Placing URLs last allows developers to quickly scan summary content first
-- Easy visual anchor: "look for the URL at the end"
-- Consistent pattern across all AI-generated summaries
-
-**Multiple URLs:** Place the primary URL (most actionable) last. Secondary URLs can appear in body with context.
-
-**No URLs:** If no URLs are relevant, executive summary ends with the summary text. No URL placeholder needed.
-
-**FORBIDDEN in Progress Comments:**
-
-- File lists (redundant with git)
-- "Next" field (dialog prompt)
-- "Awaiting authorization" (use HALT)
-- Technical changelogs (focus on impact)
-- URLs anywhere except at the end
-
-## When to Comment vs Edit Body
-
-| Action | Method | Use When |
-|--------|--------|----------|
-| Create issue | Body | Initial spec content |
-| Update STATUS | Body | Phase/step markers |
-| Task completion | Comment | Progress report |
-| Closure | Comment with summary | Final status |
+**Minimal Byline Principle:** Default to minimal byline format. Add context only when it clarifies ambiguity or provides essential reference.
 
 ## Quick Start
 

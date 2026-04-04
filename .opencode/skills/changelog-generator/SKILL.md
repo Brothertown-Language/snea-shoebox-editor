@@ -31,6 +31,90 @@ Transforms technical git commits into polished, user-friendly changelogs that cu
 - Creating internal release documentation
 - Maintaining a public changelog/product updates page
 
+## Dual Changelog Workflow
+
+This project maintains TWO changelogs:
+
+1. **Project Changelog** (`CHANGELOG.md`): User-facing project changes
+   - Features, fixes, improvements visible to end users
+   - References version numbers from `pyproject.toml`
+   - Follows Keep a Changelog format
+
+2. **AI Agent Changelog** (`.opencode/CHANGELOG.md`): AI infrastructure changes
+   - Guidelines, skills, workflow updates
+   - Internal AI agent tooling changes
+   - Also references version numbers from `pyproject.toml`
+
+### Determining Target Changelog
+
+| Change Type | Target Changelog |
+|-------------|------------------|
+| `.opencode/` directory changes | `.opencode/CHANGELOG.md` |
+| Skills (`skills/`) changes | `.opencode/CHANGELOG.md` |
+| Guidelines (`guidelines/`) changes | `.opencode/CHANGELOG.md` |
+| AGENTS.md changes | `.opencode/CHANGELOG.md` |
+| Project source code changes | `CHANGELOG.md` |
+| Documentation (README, docs/) changes | `CHANGELOG.md` |
+| Dependencies (`pyproject.toml`, `requirements.txt`) | `CHANGELOG.md` |
+| Test changes | `CHANGELOG.md` |
+| CI/CD changes (`.github/`) | `CHANGELOG.md` |
+
+**Default:** If uncertain, use `.opencode/CHANGELOG.md` for AI-focused changes.
+
+### Version Reference
+
+Both changelogs reference version numbers from `pyproject.toml`:
+
+```bash
+# Extract current version
+grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2
+
+# Example output: 0.2.0
+```
+
+**Changelog Entry Format:**
+
+```markdown
+## [X.Y.Z] - YYYY-MM-DD
+
+### Added
+- Description of new feature
+
+### Changed
+- Description of change
+
+### Fixed
+- Description of fix
+```
+
+**Unreleased Changes:**
+
+```markdown
+## [X.Y.Z] - Unreleased
+
+### Added
+- Changes for next release
+```
+
+### Writing Dual Changelogs
+
+When generating a changelog that affects both:
+
+```bash
+# Example: A new skill that also changes project behavior
+# Write to both changelogs:
+# 1. .opencode/CHANGELOG.md (skill added)
+# 2. CHANGELOG.md (project behavior change)
+```
+
+Use the `write` task for each changelog separately:
+
+```
+/skill changelog-generator --task write --target .opencode/CHANGELOG.md
+/skill changelog-generator --task write --target CHANGELOG.md
+```
+- Maintaining a public changelog/product updates page
+
 ## What This Skill Does
 
 1. **Scans Git History**: Analyzes commits from a specific time period or between versions
