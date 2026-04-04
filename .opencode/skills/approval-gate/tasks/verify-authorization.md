@@ -234,3 +234,50 @@ When user provides explicit authorization, it **OVERRIDES** the needs-approval l
 
 - Guidelines: `010-approval-gate.md`
 - Related tasks: `verify-sub-issues`, `verify-codebase`
+
+## Critical: Question-Asking Detection (ZERO TOLERANCE)
+
+**CRITICAL VIOLATION: Asking questions during implementation is PROHIBITED.**
+
+### Detection Checklist
+
+**When verifying authorization, also check for question-asking behavior:**
+
+| Situation | Correct Behavior | Violation |
+|-----------|-----------------|-----------|
+| Task complete, more work? | Continue implementation autonomously | Asking "What should I do next?" |
+| Task complete, no work? | HALT silently, post progress comment | Asking "Should I continue?" |
+| Blocked by ambiguity? | Post issue comment asking for clarification, then HALT | Asking in chat instead of issue |
+| Waiting for auth? | HALT silently for explicit "approved" or "go" | Asking "Ready when you are" |
+| Multiple tasks remaining? | Continue with next task if authorized for all phases | Asking "What would you prefer?" |
+
+### Prohibited Question Patterns
+
+The agent must NEVER ask:
+- "What would you prefer I focus on first?"
+- "Should I continue?"
+- "Ready for PR?"
+- "What should I do next?"
+- "How would you like me to proceed?"
+- "Ready when you are"
+
+**These violate the silent HALT protocol defined in:**
+- `000-critical-rules.md`: HALT protocol requires SILENT halt, not questions
+- `010-approval-gate.md`: No authorization prompts after task completion
+- `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
+
+### Detection Procedure
+
+```python
+# During authorization verification, check for question-asking behavior
+if question_asking_detected:
+    # STOP immediately
+    # Report the violation
+    # HALT silently (do NOT ask questions)
+    # Wait for explicit authorization from user
+```
+
+**If detected during verification:**
+1. STOP immediately
+2. Report violation on issue (not in chat)
+3. HALT silently for explicit authorization

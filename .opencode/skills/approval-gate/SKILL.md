@@ -293,6 +293,41 @@ When implementation halts (awaiting approval, awaiting clarification, error, ses
 | Analyzing code (read-only) | NO - investigation exempt |
 | Modifying `.opencode/guidelines/` | **YES - requires spec + approval** |
 
+## Critical Violation: Unauthorized Question Asking
+
+**⚠️ CRITICAL VIOLATION (Zero Tolerance): Asking questions during implementation is PROHIBITED.**
+
+The agent must NEVER ask questions like:
+- "What would you prefer I focus on first?"
+- "Should I continue?"
+- "Ready for PR?"
+- "What should I do next?"
+- "How would you like me to proceed?"
+- "Ready when you are"
+
+**These questions violate the silent HALT protocol:**
+- `000-critical-rules.md`: HALT protocol requires SILENT halt, not questions
+- `010-approval-gate.md`: No authorization prompts after task completion
+- `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
+
+### Detection Checklist (verify-authorization task)
+
+**When verifying authorization, also check for question-asking behavior:**
+
+| Checklist Item | Detection Method |
+|----------------|------------------|
+| Task complete, more work? | Should continue implementation autonomously, NOT ask questions |
+| Task complete, no work? | Should HALT silently and post progress comment |
+| Blocked by ambiguity? | Should post issue comment asking for clarification, then HALT |
+| Waiting for auth? | Should HALT silently for explicit "approved" or "go" |
+| Multiple tasks remaining? | Should continue with next task if authorized for all phases |
+
+**If question-asking detected:**
+1. STOP immediately
+2. Report the violation
+3. HALT silently (do NOT ask questions)
+4. Wait for explicit authorization
+
 ## Git Workflow Sequence
 
 **After authorization, the git workflow is automatically triggered:**
