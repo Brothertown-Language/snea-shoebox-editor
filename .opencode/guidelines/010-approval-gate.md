@@ -26,6 +26,19 @@
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
 
+### Implementation Gates (MANDATORY)
+
+**⚠️ All implementation MUST invoke pattern verification at these gates:**
+
+| Gate | Invocation | Purpose |
+|------|------------|---------|
+| Before creating ANY file | `/skill implementation-quality --task file-locations` | Verify file location patterns |
+| At implementation start | `/skill implementation-quality --task code-structure` | Verify code structure patterns (load once, reference continuously) |
+| Before running commands | `/skill implementation-quality --task environment` | Verify environment patterns |
+| Before handling data | `/skill implementation-quality --task data-integrity` | Verify data integrity patterns |
+
+**Enforcement:** These invocations are MANDATORY. Do NOT proceed with implementation without first loading the appropriate task and verifying pattern compliance.
+
 ### Explicit Authorization Priority (Critical)
 
 **⚠️ When user provides explicit authorization (`approved`, `go`, `#123 approved`), proceed with implementation even if the `needs-approval` label is present.**

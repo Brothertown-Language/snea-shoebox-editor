@@ -283,6 +283,10 @@ To use a skill, the agent loads it when relevant to the current task.
 | When to Invoke | Skill | Purpose |
 |----------------|-------|---------|
 | When writing or modifying code | `code-size-enforcement` | Enforce size limits on functions, cells, and files |
+| Before creating ANY file | `implementation-quality --task file-locations` | Verify file location patterns |
+| At implementation start | `implementation-quality --task code-structure` | Verify code structure patterns (load once, reference continuously) |
+| Before running commands | `implementation-quality --task environment` | Verify environment patterns |
+| Before handling data | `implementation-quality --task data-integrity` | Verify data integrity patterns |
 | Before approving guideline changes | `guideline-auditor` | Verify guideline quality, find ambiguities/conflicts |
 | Before approving spec implementation | `spec-auditor --issue N` | Verify spec quality, find missing context/elements |
 | User says "approved" or "go" | `approval-gate` | Verify spec+authorization requirements, sub-issues |
@@ -297,7 +301,9 @@ To use a skill, the agent loads it when relevant to the current task.
 | Periodic coherence maintenance | `coherence-auditor --mode maintenance` | Detect guideline-skill drift |
 | After guideline/skill update | `coherence-auditor --mode maintenance` | Verify coherence after changes |
 | Before major release | `coherence-auditor --mode maintenance` | Verify guideline-skill coherence |
-| Designing architecture | `dev-architect` | Create architecture design plans |
+| Designing architecture | `dev-architect --task design-plan` | Create architecture design plans |
+| Reviewing specs for correctness | `dev-architect --task review-spec` | Review and revise specs for correctness and compliance |
+| Plan phase of spec creation | `dev-architect --task design-plan` | Auto-invoke at Plan phase |
 | Encountering errors/bugs | `debugger` | Analyze errors and debug issues |
 | Preparing commit messages | `commit-writer` | Generate commit messages |
 | After implementation | `code-review` | Review code quality |
@@ -314,6 +320,14 @@ To use a skill, the agent loads it when relevant to the current task.
   3. User requests PR creation ("create a PR", "make a PR", "push and create PR") → `pr-creation` task
 - The skill handles all git operations (branch, stash, commit, squash, push, PR creation) according to guidelines.
 - `pr-creation-workflow` skill defines when PRs can be created and what authorizes PR creation. It is NOT automatically invoked - it documents the rules.
+- `implementation-quality` skill is invoked automatically at implementation gates:
+  1. Before creating ANY file → `file-locations` task
+  2. At implementation start → `code-structure` task (load once, reference continuously)
+  3. Before running commands → `environment` task
+  4. Before handling data → `data-integrity` task
+- `dev-architect` skill is invoked automatically at Plan phase:
+  1. When creating a new spec → `design-plan` task
+  2. When reviewing specs → `review-spec` task
 
 **Sub-Task Invocation:**
 - Skills with `tasks/` subdirectory support `--task` parameter for loading specific tasks:

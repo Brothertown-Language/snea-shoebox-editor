@@ -1,6 +1,6 @@
 # Engineering Approach Mandate
 
-> **See:** `/skill engineering-approach` for detailed checklists and anti-patterns.
+> **See:** `/skill implementation-quality` for pattern verification tasks and `/skill engineering-approach` for detailed checklists.
 
 ## Core Principles
 
