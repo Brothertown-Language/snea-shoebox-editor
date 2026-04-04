@@ -205,10 +205,10 @@ cleanup: Verify merge via GitHub API → Close issues
 
 ```bash
 # Step 1: Verify commit count
-git log origin/main..HEAD --oneline
+git log origin/dev..HEAD --oneline
 
 # Step 2: If MORE THAN ONE commit shown, SQUASH NOW
-git reset --soft origin/main
+git reset --soft origin/dev
 git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"

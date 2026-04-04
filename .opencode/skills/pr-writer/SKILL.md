@@ -32,10 +32,10 @@ git branch --show-current
 git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@'
 
 # Commits in this branch
-git log origin/main..HEAD --oneline
+git log origin/dev..HEAD --oneline
 
 # Summary of changes
-git diff origin/main..HEAD --stat
+git diff origin/dev..HEAD --stat
 ```
 
 ### 3. Ask for Context
@@ -129,7 +129,7 @@ git remote get-url origin
 git branch --show-current
 # → feature/password-reset
 
-git log origin/main..HEAD --oneline
+git log origin/dev..HEAD --oneline
 # → 3 commits about password reset
 ```
 

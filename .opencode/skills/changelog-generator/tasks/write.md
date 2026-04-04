@@ -54,34 +54,54 @@ This repository maintains TWO changelogs:
 Invoke the `overview` task to generate changelog entries from commits:
 
 ```
-Create a changelog from commits since branching from main
+Create a changelog from commits since branching from dev
+```
+Create a changelog from commits since branching from dev
+```
+Create a changelog from commits since branching from dev
 ```
 
 ### Step 2: Extract Version from pyproject.toml
 
 **CRITICAL:** Both changelogs MUST reference version numbers from `pyproject.toml`, not use `[Unreleased]` indefinitely.
 
+```
+Create a changelog from commits since branching from dev
 ```bash
 # Extract current version from pyproject.toml
 version=$(grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2)
 ```
+Create a changelog from commits since branching from dev
+```
 
 **Example:** If `pyproject.toml` has `version = "0.2.0"`, the changelog section header should be:
 
+```
+Create a changelog from commits since branching from dev
 ```markdown
 ## [0.2.0] - Unreleased
+```
+Create a changelog from commits since branching from dev
 ```
 
 **Version Header Format:**
 
+```
+Create a changelog from commits since branching from dev
 ```markdown
 ## [X.Y.Z] - Unreleased
+```
+Create a changelog from commits since branching from dev
 ```
 
 For released versions, use the release date:
 
+```
+Create a changelog from commits since branching from dev
 ```markdown
 ## [X.Y.Z] - YYYY-MM-DD
+```
+Create a changelog from commits since branching from dev
 ```
 
 **Why Version Numbers Matter:**
@@ -98,6 +118,8 @@ Determine which changelog to update:
 **Decision Tree:**
 
 ```
+Create a changelog from commits since branching from dev
+```
 Changes in .opencode/? → Use .opencode/CHANGELOG.md
 Changes in skills/? → Use .opencode/CHANGELOG.md  
 Changes in guidelines/? → Use .opencode/CHANGELOG.md
@@ -108,6 +130,8 @@ Dependencies? → Use CHANGELOG.md
 Tests? → Use CHANGELOG.md
 CI/CD (.github/)? → Use CHANGELOG.md
 Uncertain? → Default to .opencode/CHANGELOG.md for AI-focused changes
+```
+Create a changelog from commits since branching from dev
 ```
 
 **Paths:**
@@ -133,17 +157,23 @@ Check if CHANGELOG.md exists at repository root.
 
 Read current changelog content from target file:
 
+```
+Create a changelog from commits since branching from dev
 ```python
 content = pycharm_get_file_text_by_path(
     pathInProject="<target-changelog>",
     projectPath=<project-root>
 )
 ```
+Create a changelog from commits since branching from dev
+```
 
 ### Step 6: Parse Sections
 
 Parse existing changelog into sections:
 
+```
+Create a changelog from commits since branching from dev
 ```
 ## [Unreleased]
 ### Added
@@ -153,6 +183,8 @@ Parse existing changelog into sections:
 
 ## [1.0.0] - YYYY-MM-DD
 ...
+```
+Create a changelog from commits since branching from dev
 ```
 
 ### Step 7: Merge New Entries
@@ -165,6 +197,8 @@ For each category in generated entries:
 
 **Section Structure:**
 
+```
+Create a changelog from commits since branching from dev
 ```markdown
 ## [X.Y.Z] - Unreleased    ← Current version from pyproject.toml
 
@@ -180,6 +214,8 @@ For each category in generated entries:
 ### Fixed
 - <new-entry>
 ```
+Create a changelog from commits since branching from dev
+```
 
 **Category Mapping:**
 - `New Features` → `### Added`
@@ -192,6 +228,8 @@ For each category in generated entries:
 
 Write merged content back to target changelog:
 
+```
+Create a changelog from commits since branching from dev
 ```python
 pycharm_replace_text_in_file(
     pathInProject="<target-changelog>",
@@ -199,6 +237,8 @@ pycharm_replace_text_in_file(
     oldText=<existing-content>,
     newText=<merged-content>
 )
+```
+Create a changelog from commits since branching from dev
 ```
 
 ### Step 9: Verify Write
@@ -211,6 +251,8 @@ Read back content to verify:
 
 ## File Format Template
 
+```
+Create a changelog from commits since branching from dev
 ```markdown
 # Changelog
 
@@ -236,21 +278,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - Initial release
 ```
+Create a changelog from commits since branching from dev
+```
 
 ## Entry Insertion Example
 
 **Generated entries:**
 ```
+Create a changelog from commits since branching from dev
+```
 ### Added
 - New feature A
 - New feature B
 
 ### Fixed
 - Bug fix for X
+```
+Create a changelog from commits since branching from dev
 ```
 
 **Existing CHANGELOG.md:**
 ```
+Create a changelog from commits since branching from dev
+```
 ## [Unreleased]
 
 ### Added
@@ -258,8 +308,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 ```
+Create a changelog from commits since branching from dev
+```
 
 **Merged result:**
+```
+Create a changelog from commits since branching from dev
 ```
 ## [Unreleased]
 
@@ -270,6 +324,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 - Bug fix for X
+```
+Create a changelog from commits since branching from dev
 ```
 
 ## Context Required
@@ -282,12 +338,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 When invoked as a subtask (e.g., from git-workflow pr-creation), return a JSON object:
 
+```
+Create a changelog from commits since branching from dev
 ```json
 {
   "summary": "Brief executive summary (1-2 sentences describing stakeholder value)",
   "changelog": "Full markdown changelog content\n\n## Changes\n\n### Added\n- Feature A\n\n### Fixed\n- Bug B\n\n...",
   "success": true
 }
+```
+Create a changelog from commits since branching from dev
 ```
 
 **Summary:** User-facing description focusing on value, not technical details.
@@ -298,6 +358,8 @@ When invoked as a subtask (e.g., from git-workflow pr-creation), return a JSON o
 
 If the subtask fails, return:
 
+```
+Create a changelog from commits since branching from dev
 ```json
 {
   "summary": "",
@@ -305,6 +367,8 @@ If the subtask fails, return:
   "success": false,
   "error": "Description of what went wrong"
 }
+```
+Create a changelog from commits since branching from dev
 ```
 
 ## Common Issues
