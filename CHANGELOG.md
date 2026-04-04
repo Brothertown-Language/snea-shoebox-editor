@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **Skill Discovery YAML Frontmatter**: Fixed missing and malformed YAML frontmatter in `git-workflow` and `github-comments` skills. Both skills now have proper YAML blocks with `name`, `description`, `license`, and `compatibility` fields, enabling correct skill discovery by the skill tool.
 - **Sub-issue Verification Before Parent Closure**: Added mandatory pre-close checklist requiring all agents to call `get_sub_issues` before closing any issue (parent or child). This prevents violations where parent issues were closed while children remained open. The checklist includes: (1) Query sub-issues first, (2) Verify PR merge state via GitHub API, (3) Close children only after PR merge confirmed, (4) Re-query before closing parent. Step 1 is now a MUST requirement with explicit code flow and MUST Result columns in checklists.
 
 ### Changed
