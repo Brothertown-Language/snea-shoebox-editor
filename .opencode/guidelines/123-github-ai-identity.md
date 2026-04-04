@@ -21,9 +21,9 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 - `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
 - `<ModelID>`: Model identifier with provider (e.g., `ollama-cloud/glm-5`)
-- `[: optional-context]`: Context ONLY when useful (issue number, replacement reference, reason)
+- `[: optional-context]`: Context ONLY when useful (replacement reference, rejection reason)
   - **Progress comments**: Omit (content already describes the work)
-  - **Issue creation/completion**: Include issue number if useful
+  - **Issue creation**: NO context (issue number is redundant on same issue)
   - **Rejection/Superseded**: Include reason or replacement reference
   - **AI Agent Judgment**: Use minimal byline suffix text by default; add extra context only when it provides clear value
 
