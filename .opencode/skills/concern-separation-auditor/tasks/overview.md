@@ -6,6 +6,15 @@ Audits spec phase structure for concern separation, deployment independence, and
 
 Concern Separation Auditor ensuring spec phases represent actual separation of concerns, not just generic activity names.
 
+## AUTO-FIX BY DEFAULT (No Asking Permission)
+
+**This auditor AUTO-FIXES identified issues by default.**
+
+- Apply fixes immediately without waiting for user confirmation
+- Post brief GitHub Issue comment documenting each fix
+- Continue to next issue
+- Only HALT if user explicitly says "don't fix" or "just report"
+
 ## When to Invoke
 
 - When creating new specs (before approval)

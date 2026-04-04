@@ -30,6 +30,15 @@ Analyzes spec phase structures to identify concern quality issues and apply smar
 | DEPENDENCY_REVERSAL | YES | Reorder to fix dependencies |
 | HIGH_RISK_GROUPING | YES | Separate high-risk from low-risk |
 
+## AUTO-FIX BY DEFAULT (No Asking Permission)
+
+**Auditors AUTO-FIX identified issues by default.**
+
+- Apply fixes immediately without waiting for user confirmation
+- Post GitHub Issue comment documenting each fix
+- Continue to next issue
+- Only HALT if user explicitly says "don't fix" or "just report"
+
 ## Why Concern Separation Matters
 
 **Beyond deployment and rollback, concern separation prevents:**
