@@ -329,6 +329,91 @@ Result: #102 is open and awaiting approval. POST warning comment. DO NOT close #
 
 ---
 
+## ⚠️ ENFORCED: Closed-Issue Remediation (Pre-Authorization Audit)
+
+**When a closed issue is targeted for implementation via `#N approved`, the agent MUST audit before proceeding.**
+
+### Why This Matters
+
+Issuing `#N approved` for a closed issue assumes closure was correct. Without audit:
+
+- Incorrectly-closed parents with open children propagate violations
+- Agent implements on top of already-broken workflow state
+- Missing work goes undetected
+
+### Pre-Authorization Audit (MANDATORY)
+
+**When `#N approved` targets a closed issue:**
+
+1. **Query sub-issues immediately**: `github_issue_read(method="get_sub_issues", issue_number=N)`
+2. **Detect violations**: Open sub-issues on closed parent = violation
+3. **If NO sub-issues or ALL sub-issues closed**: Proceed to implementation
+4. **If ANY sub-issue open**: Execute closed-issue remediation workflow (see below)
+
+### Direct Inspection Requirement (CRITICAL)
+
+**NEVER rely on comments, changelogs, or memory.**
+
+The agent MUST inspect the project directly:
+
+| Evidence Type | Inspection Method | What It Proves |
+|---------------|-------------------|----------------|
+| **Code changes** | Read actual files mentioned in spec | Implementation exists or doesn't |
+| **PR merge state** | `github_pull_request_read(method="get")` | PR was merged or wasn't |
+| **Branch state** | `git log`, `git branch` | Commits exist in history |
+| **Database state** | Query actual database/tables | Schema/data changes applied |
+| **Config state** | Read actual config files | Configuration changed |
+
+**FORBIDDEN Evidence Sources:**
+- Issue comments (indirect, unverified)
+- Memory from previous sessions
+- Changelogs/README notes
+- Issue body claims (only spec requirements are factual)
+- Project conventions/assumptions
+
+### Remediation Actions (Determined by Direct Inspection)
+
+**The agent inspects the project directly and determines action:**
+
+| Direct Inspection Result | Correct Action |
+|-------------------------|----------------|
+| Code exists in codebase as specified | Close sub-issue: `completed` |
+| PR exists and `merged_at` is set | Close sub-issue: `completed` |
+| No code, no PR, nothing implemented | **Reopen parent** (work not done) |
+| Parent closed, no merged PR | **Reopen parent** (premature closure) |
+| Superseding issue exists with completed work | Verify superseding issue is complete, then close: `not_planned` |
+
+### Remediation Comments
+
+**When agent remediates, it posts comments with direct inspection results:**
+
+```
+🤖 ✅ **Auto-Remediated: [Action]**
+
+Parent issue #N was closed while this sub-issue remained open.
+
+**Direct Inspection Results:**
+- [Actual file/code checked and result]
+- [Actual PR state from API call]
+- [Actual evidence from project]
+
+**Action:** [Close/Open] based on direct inspection
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### When to HALT
+
+**HALT only when direct inspection is impossible:**
+- Cannot access codebase (permission error)
+- Cannot call GitHub API (network/auth failure)
+- Spec is ambiguous about what deliverables to check
+
+**HALT with actionable message explaining what couldn't be inspected.**
+
+---
+
 ## ⚠️ ENFORCED: Superseded Issue Closure (Without Implementation)
 
 **Issues superseded by new issues MUST follow atomic closure workflow.**

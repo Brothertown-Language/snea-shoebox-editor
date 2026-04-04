@@ -62,6 +62,82 @@ for sub in sub_issues:
 
 **Key Point:** A parent issue marked "closed" does NOT mean all sub-issues are complete. ALWAYS verify sub-issues explicitly.
 
+### Step 2.6: Audit Closed Issues (CRITICAL)
+
+**When targeting a closed issue for implementation, MUST audit before proceeding.**
+
+**WHY THIS MATTERS:**
+- Incorrectly-closed parents with open children propagate violations
+- Closed issues may have been closed prematurely
+- Work may be incomplete despite closure
+
+**Pre-Authorization Audit Workflow:**
+
+```python
+# When issue is CLOSED, audit before proceeding
+if issue.state == "closed":
+    # Step 1: Query sub-issues
+    sub_issues = github_issue_read(method="get_sub_issues", issue_number=N)
+    
+    # Step 2: Detect violations (open sub-issues on closed parent)
+    open_children = [s for s in sub_issues if s.state == "open"]
+    
+    # Step 3: If violations found, inspect project DIRECTLY
+    if open_children:
+        for child in open_children:
+            # DIRECT INSPECTION - NEVER rely on comments/memory
+            result = inspect_project_directly(child)
+            
+            if result == "work_done":
+                # Close child with evidence
+                github_issue_write(method="update", issue_number=child.number, 
+                                   state="closed", state_reason="completed")
+                post_comment(child.number, "Auto-remediated: work complete per direct inspection")
+            
+            elif result == "not_done":
+                # Reopen parent - premature closure
+                github_issue_write(method="update", issue_number=N,
+                                   state="open", state_reason="reopened")
+                post_comment(N, "Reopened: sub-issue incomplete")
+                HALT("Parent reopened. Awaiting re-authorization.")
+            
+            elif result == "superseded":
+                # Verify superseding issue, close child as not_planned
+                github_issue_write(method="update", issue_number=child.number,
+                                   state="closed", state_reason="not_planned")
+    
+    # Step 4: If NO sub-issues or ALL closed, proceed
+    else:
+        proceed_implementation()
+```
+
+**Direct Inspection Methods (MANDATORY):**
+
+| Evidence Type | Method | What It Proves |
+|---------------|--------|----------------|
+| Code in files | Read files mentioned in spec | Implementation exists |
+| PR merged | `github_pull_request_read(method="get")` | PR was merged |
+| Commits in history | `git log --oneline --grep="#N"` | Work was committed |
+| Database state | Query DB directly | Schema/data changes applied |
+| Config changes | Read config files | Configuration changed |
+
+**FORBIDDEN Evidence Sources:**
+
+- Issue comments (indirect, unverified)
+- Memory from previous sessions
+- Changelogs/README notes
+- "I remember doing this"
+- Project conventions/assumptions
+
+**When to HALT:**
+- Cannot access codebase (permission error)
+- Cannot call GitHub API (network/auth failure)
+- Spec is ambiguous about deliverables
+
+**HALT message must explain what couldn't be inspected.**
+
+**See `124-github-archive-workflow.md` → "Closed-Issue Remediation" for complete workflow.**
+
 ### Step 3: Record Authorization Scope
 
 Authorization applies to:
