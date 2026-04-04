@@ -39,6 +39,8 @@
 
 **Enforcement:** These invocations are MANDATORY. Do NOT proceed with implementation without first loading the appropriate task and verifying pattern compliance.
 
+**Loop Prevention:** If tool invocation fails repeatedly without progress, see `150-task-loop-prevention.md` for detection heuristics and exit strategies.
+
 ### Explicit Authorization Priority (Critical)
 
 **⚠️ When user provides explicit authorization (`approved`, `go`, `#123 approved`), proceed with implementation even if the `needs-approval` label is present.**

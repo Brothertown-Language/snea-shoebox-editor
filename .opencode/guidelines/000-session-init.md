@@ -101,6 +101,7 @@ uv run python ai_bin/session_init.py
 2. **Test GitHub MCP**: Call `github_get_me` to verify GitHub tools work
 3. **Discover repository**: Run `git remote -v` to get correct owner/repo from origin. Extract owner/repo from the origin URL and store for all subsequent GitHub API calls. NEVER assume or hardcode repository owner/name.
 4. **Record results**: Note which MCP toolsets are available/unavailable and store owner/repo values
+5. **Loop Detection Check**: If MCP probe succeeds but no subsequent tool invocation occurs within 2 message turns, HALT and report potential task loop (see `150-task-loop-prevention.md`)
 
 ### Repository Discovery (MANDATORY)
 
