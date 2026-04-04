@@ -308,6 +308,79 @@ Parent issue #N was closed while this sub-issue remained open.
 
 **See the skill for complete implementation details.**
 
+## Questions Are Not Bypass Authorization (CRITICAL)
+
+**⚠️ Answering questions is NOT authorization verification. Questions are NOT a shortcut around mandatory checks.**
+
+### The Problem
+
+Agents treat question-answering as a shortcut to bypass verification:
+
+- User asks "Should I implement #123?" → Agent implements #123
+- User asks "Would #456 fix the issue?" → Agent implements #456
+- User says "approved check pr" → Agent treats "approved" as authorization AND skips verification
+
+This is WRONG. Questions require verification FIRST, then response.
+
+### 🚫 FORBIDDEN (ZERO TOLERANCE)
+
+| Forbidden Pattern | Why It's Wrong |
+|-------------------|-----------------|
+| Answering question without session init | Missing critical context |
+| Answering question without checking conflicts | Duplicate/wasted work |
+| Treating question as authorization shortcut | Questions are NOT approval |
+| Skipping verification because "user asked" | User inquiry ≠ permission to bypass |
+| Responding to "#123 approved check pr" without checking | Compound text parsing is evasion |
+
+### ✅ REQUIRED SEQUENCE
+
+**When user asks ANY question:**
+
+1. **Run verification sequence** (session init, superseding check, codebase verify)
+2. **Query sub-issues** if implementation involved
+3. **THEN respond to the question**
+4. **If question is about implementation**: Check authorization separately
+5. **If question implies implementation**: HALT and wait for explicit `approved`/`go`
+
+### Question Types and Required Responses
+
+| Question Type | Required Response |
+|----------------|-------------------|
+| "Should I implement #123?" | Verify #123 first, then answer if it's valid. Do NOT implement. |
+| "Would #456 fix the issue?" | Analyze #456, then answer. Do NOT implement. |
+| "#123 approved" | Parse as standalone token. Implement #123. |
+| "#123 approved check pr" | Parse "approved" as standalone → implement. "check pr" is additional instruction. |
+| "What's the status of #789?" | Verify #789's state, then answer. No implementation implied. |
+| "Can you fix the bug?" | Create spec, add `needs-approval`, HALT. Answer "yes, spec created." |
+
+### Authorization Token Parsing (CRITICAL)
+
+**Approval tokens must be STANDALONE (separated by whitespace) to count.**
+
+| Message | Token Parsing | Authorization? | Action |
+|---------|---------------|----------------|--------|
+| `approved check pr` | ["approved", "check", "pr"] | YES (approved standalone) | Implement, then check PR |
+| `#196 approved` | ["approved"] | YES | Implement #196 |
+| `#196 approvedcheck pr` | ["approvedcheck"] | NO (compound text) | Respond to question, do NOT implement |
+| `check pr` | No approval token | NO | Check PR, do NOT implement |
+
+**CRITICAL**: Do NOT parse compound text to extract approval. If "approved" is not surrounded by whitespace, it is NOT authorization.
+
+### Why This Matters
+
+- Questions can be answered without authorization
+- Authorization enables implementation, not shortcuts
+- Verification protects against stale/conflicting specs
+- Proper parsing prevents compound-text bypass
+
+### Integration with Verification-First Protocol
+
+This section COMPLEMENTS the Verification-First Response Protocol in `085-engineering-approach.md`:
+
+- **Verification-First**: Run checks before ANY response
+- **Questions Are Not Bypass**: Authorization is separate from question-answering
+- **Together**: Verify first, answer question, THEN check authorization if implementation implied
+
 ## Related Guidelines
 
 | Guideline | Purpose |

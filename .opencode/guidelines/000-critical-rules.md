@@ -467,6 +467,62 @@ When implementing a multi-task spec (one with multiple phases/tasks):
 - Database ID requirement
 - Phase-level structure
 
+---
+
+## Critical Violation: Bypassing Mandatory Verification Gates
+
+**⚠️ Skipping verification gates to answer questions immediately is a CRITICAL GUIDELINE VIOLATION.**
+
+### Mandatory Gates Before ANY Response
+
+**Before responding to ANY user input (question, task, request), the agent MUST:**
+
+| Gate | Check | Action |
+|------|-------|--------|
+| **Session Init** | Has session init run? | Run `ai_bin/session_init.py` FIRST |
+| **Codebase State** | Is codebase current? | Verify with `srclight_codebase_map` or `srclight_index_status` |
+| **Spec Conflicts** | Are there superseding issues? | Query all `[SPEC]` issues, check for conflicts |
+
+### 🚫 FORBIDDEN
+
+| Action | Why It's Wrong |
+|--------|----------------|
+| Answering questions without session init | Missing GIT_OWNER, DEV_NAME, MCP availability |
+| Creating specs without checking conflicts | Duplicate/superseded specs waste work |
+| Implementing without verification | Stale specs, changed codebase |
+| Using question-answering as bypass | Questions are NOT authorization to skip checks |
+
+### ✅ REQUIRED
+
+**Before responding to questions:**
+1. Run session init if not already done
+2. Check for superseding/conflicting issues
+3. Verify codebase state matches spec assumptions
+4. HALT if verification reveals conflicts
+
+**Before creating specs:**
+1. Query all open `[SPEC]` issues for conflicts
+2. Check if related PRs have been merged
+3. Verify referenced code still exists
+
+**Before implementing:**
+1. Verify sub-issues exist for multi-task specs
+2. Confirm authorization (`approved` or `go`)
+3. Check that spec is not superseded
+
+### Why This Matters
+
+- Agent skipping session init → wrong GIT_OWNER, broken GitHub MCP calls
+- Agent creating duplicate specs → wasted work, confusion
+- Agent implementing stale specs → code that doesn't match requirements
+- Agent answering questions without checks → incorrect responses based on outdated assumptions
+
+### Integration Points
+
+- `000-session-init.md` — Session init is MANDATORY first step
+- `130-authority-source.md` — Check for superseding issues before implementation
+- `010-approval-gate.md` — Verify sub-issues before implementing
+
 ## Critical Violation: Scope Creep — NEVER Do Things Outside the Spec
 
 **⚠️ Implementing changes not explicitly called for in the spec is a CRITICAL GUIDELINE VIOLATION.**
