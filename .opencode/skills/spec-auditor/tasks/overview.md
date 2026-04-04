@@ -314,7 +314,7 @@ required steps. The STATUS should be: `STATUS: 1.2` to indicate Phase 1, Step 2 
 
 ### Fresh-Start Context Classes
 
-- **FRESH-START-VIOLATION**: Spec relies on memory context, chat history, or external references not included inline.
+- **FRESH-START-VIOLATION**: Spec relies on memory context, chat history, external references not included inline, or uses unstable anchors like line numbers `file.py:42` which break on every edit.
 - **CONTEXT-OVERFLOW**: Spec section is overly long or complex, risking truncation or dilution in LLM context.
 
 ### Structure Classes

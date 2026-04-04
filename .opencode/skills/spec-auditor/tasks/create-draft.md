@@ -71,6 +71,22 @@ Generated: {timestamp}
 - [ ] Dependencies specified
 - [ ] Risk assessment included
 - [ ] Decision rationale present
+
+## Architectural Reasoning Checklist
+
+- [ ] WHY explained: Does the spec explain why this approach was chosen?
+- [ ] Alternatives considered: Does the spec describe alternatives and why they were rejected?
+- [ ] Constraints documented: Are technical/resource/time constraints specified?
+- [ ] Risky dependencies identified: Are external/system dependencies called out with their risks?
+- [ ] Implementation details: Are affected functions, modules, and patterns specified?
+
+## Fresh-Start Context Checklist
+
+- [ ] No memory references: No "see above", "as discussed", "previous comment"
+- [ ] Stable anchors: File paths use function names or section headers (NOT line numbers)
+- [ ] Inline context: All necessary context restated in spec body
+- [ ] Cross-references complete: Issue links include summaries and relevance
+- [ ] Line numbers flagged: Any line number references flagged as FRESH-START-VIOLATION
 ```
 
 ## Constraints

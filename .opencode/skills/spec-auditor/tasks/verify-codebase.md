@@ -136,6 +136,26 @@ Generated: {timestamp}
 - Superseded Specs: {count}
 ```
 
+## Tool Fallback Protocol
+
+**Per `015-mcp-preference.md`:**
+1. Use **srclight tools** for Python symbol search (semantic analysis)
+2. If srclight unavailable, **fallback to pycharm tools** for symbol search
+3. Use **pycharm tools** for file operations and content reading (not srclight)
+4. Use **GitHub MCP** for PR status checks
+
+**Fallback Chain:**
+```
+srclight_get_symbol/srclight_search_symbols
+    ↓ (unavailable)
+pycharm_get_symbol_info/pycharm_search_in_files_by_text
+```
+
+**File operations ALWAYS use pycharm:**
+- File existence: `pycharm_find_files_by_glob`
+- File reading: `pycharm_get_file_text_by_path`
+- Content search: `pycharm_search_in_files_by_text`
+
 ## Constraints
 
 - Use srclight for Python symbol search (per `016-srclight-preference.md`)
