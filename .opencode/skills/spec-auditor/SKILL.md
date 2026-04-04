@@ -37,9 +37,48 @@ Post "ready for review" comment
 | Task | Purpose | Words |
 |------|---------|-------|
 | `overview` | Full skill content for spec content quality auditing | ~1800 |
-| `create-draft` | Generate independent temporary draft BEFORE viewing live spec | ~400 |
+| `generate-independent-spec` | **Generate complete, implementable spec draft from scratch** (NOT a checklist) | ~600 |
 | `audit` | Run full audit: fresh-start context, codebase verification, content quality | ~600 |
 | `verify-codebase` | Verify spec references match live codebase (files, modules, functions) | ~400 |
+
+## Independent Draft = Real Spec (CRITICAL)
+
+**The "independent draft" created by this skill is a COMPLETE SPEC DRAFT that could be implemented from scratch — NOT a checklist, NOT meta-commentary, NOT "what makes a good spec."**
+
+### What the Draft IS
+
+- An implementable specification
+- Specific problem statement for THIS issue
+- Technical solution with architecture
+- Affected files with function/section anchors
+- Testable success criteria
+- Edge cases specific to THIS implementation
+- Dependencies and risk assessment
+
+### What the Draft IS NOT
+
+- A checklist of "what specs should include"
+- A prose description of "expected structure"
+- A template of "six core areas coverage"
+- Generic advice about spec writing
+
+### Detection: How to Know If You're Doing It Wrong
+
+**If you're writing:**
+- "A good spec should include..."
+- "Expected structure for this spec type..."
+- "What makes a good spec..."
+- "Common pitfalls for specs..."
+
+**You're generating meta-commentary, NOT a spec. STOP and write a real spec.**
+
+**If you're writing:**
+- "The problem is that users can't find the search results..."
+- "The proposed solution adds two search modes..."
+- "Affected files: `src/services/search.py`..."
+- "Success criteria: Search 'wampuw' finds record..."
+
+**You're generating a REAL spec. CORRECT.**
 
 ## Operating Protocol
 
@@ -182,16 +221,31 @@ When auditors view the live spec first, their analysis is influenced by what the
 
 | Step | Task | Purpose |
 |------|------|---------|
-| 1 | `create-draft` | Generate independent temporary draft WITHOUT viewing live spec |
+| 1 | `generate-independent-spec` | Generate COMPLETE spec draft WITHOUT viewing live spec |
 | 2 | `audit` | Load live spec, compare to draft, identify gaps and conflicts |
 | 3 | `verify-codebase` | Check spec references against live codebase |
 | 4 | Post audit log | Attach results to GitHub Issue |
 
 **CRITICAL: Step 1 MUST complete BEFORE Step 2 starts.**
 
+### Draft Quality Requirement
+
+**The draft must be an IMPLEMENTABLE SPEC, NOT meta-commentary.**
+
+When comparing draft to live spec, you're comparing:
+- Two specs for the same problem
+- Real problem statements
+- Concrete file references
+- Testable success criteria
+
+You're NOT comparing:
+- A checklist to a spec
+- "What makes a good spec" to a spec
+- Generic advice to actual content
+
 ### Pollution Prevention
 
-The `create-draft` task runs in a subtask to prevent ANY access to the live spec:
+The `generate-independent-spec` task runs in a subtask to prevent ANY access to the live spec:
 
 - Subtask has NO access to the live spec GitHub Issue body
 - Subtask works ONLY from the issue number and general knowledge
