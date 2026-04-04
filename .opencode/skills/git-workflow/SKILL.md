@@ -14,7 +14,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 - User says "approved" or "go" (pre-work phase - AUTO)
 - Implementation completes (review-prep phase - AUTO)
 - User says "create a PR" or "pr" (pr-creation phase)
-- PR merge confirmed (cleanup phase - AUTO)
+- User says "pr merged" or "merged" or similar (cleanup phase - AUTO)
 
 ## Tasks
 
@@ -34,7 +34,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 - `/skill git-workflow --task review-prep` - **AFTER implementation done** (automatic, no decision point)
 - `/skill git-workflow --task commit-prep` - When user says "commit"
 - `/skill git-workflow --task pr-creation` - When user says "create a PR" or "pr"
-- `/skill git-workflow --task cleanup` - After PR merge confirmed
+- `/skill git-workflow --task cleanup` - **When user says "pr merged" or "merged"** (automatic)
 - `/skill git-workflow` - Overview only
 
 ## Operating Protocol
@@ -64,7 +64,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 | **After implementation completes** | Load skill → `review-prep` task | Push branch, generate compare URL, HALT |
 | **Before ANY git branch operation** | Load skill → `pre-work` task | Verify branch state, stash changes |
 | **When user says "create a PR"** | Load skill → `pr-creation` task | Squash to single commit, push, create PR, HALT |
-| **After PR merge confirmed** | Load skill → `cleanup` task | Verify merge via GitHub API, close issues, delete branches |
+| **When user says "pr merged" or "merged"** | Load skill → `cleanup` task | Verify merge via GitHub API, close issues, delete branches |
 
 **Enforcement:** Do NOT proceed with git operations at these trigger points without first loading this skill and verifying workflow compliance.
 

@@ -568,6 +568,37 @@ PRs require the developer to say one of these EXACT phrases:
 
 ---
 
+## Critical Violation: Manual PR Merge Confirmation (BYPASS PR WORKFLOW SKILL)
+
+**⚠️ Manually handling PR merge confirmation without invoking the mandatory skill is a CRITICAL GUIDELINE VIOLATION.**
+
+**🚫 FORBIDDEN:**
+- Manually verifying PR merge via `git pull` or `git status`
+- Manually closing issues after seeing "merged" in chat
+- Manually deleting branches without GitHub API verification
+- Manually cleaning up stashes or branches after PR merge
+- Running ANY git commands after user says "pr merged" or "merged"
+
+**✅ REQUIRED:**
+- When user says "pr merged", "merged", or similar: **INVOKE `/skill git-workflow --task cleanup`**
+- Let the skill handle ALL post-merge operations:
+  - GitHub API verification (`github_pull_request_read method=get`)
+  - Issue closure (parent and child issues)
+  - Branch cleanup (local and remote)
+  - Stash cleanup (if applicable)
+
+**Trigger Phrases for Mandatory Skill Invocation:**
+| User Says | Skill Task |
+|-----------|-----------|
+| "pr merged" | `/skill git-workflow --task cleanup` |
+| "merged" | `/skill git-workflow --task cleanup` |
+| "PR is merged" | `/skill git-workflow --task cleanup` |
+| "merge confirmed" | `/skill git-workflow --task cleanup` |
+
+**See `git-workflow` skill → `cleanup` task for complete post-merge workflow.**
+
+---
+
 ## Critical Violation: Closing Issues Before PR Merge
 
 **⚠️ Closing issues BEFORE the PR is merged is a CRITICAL GUIDELINE VIOLATION.**
