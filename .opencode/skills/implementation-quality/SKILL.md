@@ -17,6 +17,7 @@ Pattern verification for file locations, code structure, environment, and data i
 | At implementation start | `/skill implementation-quality --task code-structure` (load once, reference continuously) |
 | Before running commands | `/skill implementation-quality --task environment` |
 | Before handling data | `/skill implementation-quality --task data-integrity` |
+| **After implementation completes** | **MANDATORY: Automatically invoke review-prep workflow** (see `post-implementation` task) |
 
 ## Blast Radius
 
@@ -35,14 +36,24 @@ Pattern verification for file locations, code structure, environment, and data i
 | `code-structure` | HOW code is organized - pattern verification | ~70 |
 | `environment` | WHAT runtime - pattern verification | ~40 |
 | `data-integrity` | HOW data is handled - pattern verification | ~50 |
+| `post-implementation` | **MANDATORY review-prep after implementation** | ~80 |
 
 ## Invocation
 
-Load specific task by blast radius:
+**MANDATORY AUTOMATIC invocation:**
+
+| Trigger | Task | Why |
+|---------|------|-----|
+| After implementation completes | `post-implementation` | **ZERO TOLERANCE** - must invoke review-prep workflow |
+
+**Selective loading by blast radius:**
+
 - `/skill implementation-quality --task file-locations` - Before creating files
 - `/skill implementation-quality --task code-structure` - Once at implementation start
 - `/skill implementation-quality --task environment` - Before running commands
 - `/skill implementation-quality --task data-integrity` - Before data operations
+
+**Note:** The `post-implementation` task is automatically invoked after every implementation. Do NOT skip it.
 
 ## Operating Protocol
 
