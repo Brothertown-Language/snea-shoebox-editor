@@ -1,4 +1,9 @@
 ---
+name: git-workflow
+description: Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested.
+license: MIT
+compatibility: opencode
+---
 
 # Skill: git-workflow
 

@@ -1,8 +1,11 @@
-______________________________________________________________________
+---
+name: github-comments
+description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
+license: MIT
+compatibility: opencode
+---
 
-## name: github-comments description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies. license: MIT compatibility: opencode
-
-# GitHub Comment Protocol
+# Skill: github-comments
 
 Ensures all comments on issues and PRs follow correct format, are posted at the right time, and preserve history.
 
