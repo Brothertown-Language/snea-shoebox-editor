@@ -217,6 +217,7 @@ Per `085-engineering-approach.md`:
 - **VERIFICATION-GAP**: Success criteria untestable, vague, or missing acceptance criteria.
 - **DEPENDENCY-INCOMPLETE**: Dependencies lack specific integration points or migration guides.
 - **COMMENT-FORMAT-VIOLATION**: Wrong comment format (wrong emoji, missing Summary/Outcome sections).
+- **QUESTION-ASKING-VIOLATION**: Spec contains agent question patterns that violate silent HALT protocol (asking for preferences, continuation, PR readiness, etc.).
 
 ### Scope/Semantic Classes
 
