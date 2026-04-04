@@ -282,17 +282,43 @@ EOF
 git add CHANGELOG.md
 ```
 
+**✅ STEP 4 COMPLETE:** CHANGELOG.md staged
+
 ### Step 5: Squash to Single Commit
 
 **MANDATORY:** All PRs must have exactly ONE commit, including version bump and CHANGELOG.md changes.
 
-```bash
-# Stage all changes including version files and CHANGELOG.md
-git add -A
+#### Pre-Squash Verification (MANDATORY)
 
-# Squash to single commit
-git reset --soft origin/dev
-git commit -m "<descriptive message>" \
+**Before running squash, VERIFY all changes are staged:**
+
+```bash
+# Check staged changes
+git status
+
+# MUST show:
+#   Changes to be committed:
+#     .opencode/CHANGELOG.md
+#     .opencode/guidelines/...
+#     (all modified files)
+```
+
+**If `git status` shows unstaged changes:**
+
+```bash
+# Stage ALL changes NOW - this is the last chance
+git add -A
+git status  # Verify again before proceeding
+```
+
+**Only proceed when `git status` shows ALL changes staged.**
+
+#### Execute Squash (Atomic Block)
+
+**Run as ONE atomic command - DO NOT split across lines:**
+
+```bash
+git add -A && git reset --soft origin/dev && git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
@@ -303,6 +329,39 @@ git commit -m "<descriptive message>" \
 - CHANGELOG.md updates
 
 These are NOT separate commits - all combined into ONE clean commit.
+
+#### Post-Squash Verification (MANDATORY)
+
+**Verify squash succeeded:**
+
+```bash
+git status
+# MUST show: "nothing to commit, working tree clean"
+
+git log --oneline origin/dev..HEAD
+# MUST show: EXACTLY ONE commit
+```
+
+**If working tree is NOT clean:**
+```bash
+# Changes were created after subtask but before squash
+# Stage and amend
+git add -A
+git commit --amend --no-edit
+git status  # Verify clean
+```
+
+**If MORE THAN ONE commit shown:**
+```bash
+# Re-run squash
+git reset --soft origin/dev
+git commit -m "<descriptive message>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+git log --oneline origin/dev..HEAD  # Verify single commit
+```
+
+**✅ STEP 5 COMPLETE:** Single commit created, working tree clean
 
 ### Step 6: Push to Remote
 
@@ -448,6 +507,8 @@ Fixes #<parent>
 ✓ PR URL is FINAL line (after byline)
 ✓ No URL before summary
 ✓ No URL between summary and byline
+✓ NO unstaged changes in working tree
+✓ EXACTLY ONE commit in branch
 ```
 
 **If any check fails:** Fix the comment format BEFORE reporting.

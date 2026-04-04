@@ -8,6 +8,24 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### spec/engineering-methodology-enforcement
+
+- **Added: Verification-First Response Protocol**: AI agents must verify
+  session init, superseding issues, codebase state, and sub-issues BEFORE
+  responding to ANY user input. Enforces mandatory MCP probes and
+  prevents incorrect responses based on outdated assumptions.
+- **Added: Critical Violation for Bypassing Verification Gates**: Added
+  enforcement rules for checking session init, MCP availability, and
+  conflict detection before any response. Violations trigger mandatory
+  checks at workflow entry points.
+- **Added: Questions Are Not Bypass Authorization**: Clarified that
+  answering questions does NOT authorize implementation. Questions
+  require verification first, then response. Authorization is a separate
+  check.
+- **Changed: Session Init is Mandatory First Step**: Agents cannot
+  respond to user input before completing session init. Stores
+  GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL for session duration.
+
 ### spec/audit-main-branch-refs
 
 - **Fixed: Branch Reference Standardization**: Updated all git workflow

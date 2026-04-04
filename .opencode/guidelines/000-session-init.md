@@ -148,7 +148,57 @@ This probe determines workflow:
 
 ---
 
-## 3. HOOK VERIFICATION (MANDATORY)
+## 3. NO RESPONSE WITHOUT INIT (MANDATORY)
+
+**⚠️ ZERO TOLERANCE: The agent MUST NOT respond to user questions or execute tasks before completing session init.**
+
+### The Problem
+
+Without session init:
+- `GIT_OWNER`/`GIT_REPO` are unknown → GitHub MCP calls fail
+- `DEV_NAME`/`DEV_EMAIL` are unknown → Commit trailers missing or wrong
+- MCP availability is unknown → Wrong tool selection
+- Hook verification is missed → Safety checks bypassed
+
+### 🚫 FORBIDDEN (ZERO TOLERANCE)
+
+| Forbidden Action | Why It's Wrong |
+|------------------|----------------|
+| Answering questions before running session init | Missing critical context |
+| Creating specs before running session init | No owner/repo for GitHub Issues |
+| Running git commands before running session init | Missing human identity for trailers |
+| Implementing before running session init | All context missing |
+| Investigating bugs before running session init | Cannot use correct tools without MCP check |
+
+### ✅ REQUIRED SEQUENCE
+
+**Before responding to ANY user input:**
+
+1. **Run session init FIRST**: `uv run python ai_bin/session_init.py`
+2. **Store ALL outputs** for session duration
+3. **Probe MCP availability** (PyCharm, GitHub)
+4. **Verify hooks installed**
+5. **THEN and ONLY THEN**: Respond to user
+
+### Mandatoy Enforcement Point
+
+**Session init is a MANDATORY enforcement point** - not an optional step.
+
+The agent MUST:
+1. Run session init script
+2. Succeed (exit code 0)
+3. Store outputs
+4. Probe MCP
+5. Verify hooks
+6. **ALL of the above BEFORE responding to ANY user message**
+
+### Loop Detection
+
+If MCP probe succeeds but no subsequent tool invocation occurs within 2 message turns, HALT and report potential task loop (see `150-task-loop-prevention.md`).
+
+---
+
+## 4. HOOK VERIFICATION (MANDATORY)
 
 Before proceeding, verify hooks are installed:
 
