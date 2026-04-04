@@ -229,7 +229,8 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 - **Create PRs without EXPLICIT developer instruction** — "approved" and "go" authorize implementation ONLY. PRs require explicit "create a PR" instruction. Completing implementation does NOT authorize PR creation.
 - **Submit unsquashed PRs** — ALL PRs must have exactly ONE commit (squashed). Multiple commits in a PR will be rejected. Always `git reset --soft origin/main && git commit` before pushing.
 - **Create PRs after implementation** — The developer must run human tests and may require adjustments BEFORE any PR. Wait for explicit "create a PR" after developer has tested.
-- **BYPASS PR WORKFLOW SKILL** — When user says "pr", "create a PR", "update PR", or any PR-related command, MUST invoke `/skill git-workflow --task pr-creation`. NEVER manually update/create PRs. The skill handles existing PR detection (Step 0 checks for open/merged PRs).
+- **BYPASS PR WORKFLOW SKILL** — When user says "pr", "create a PR", "update PR", or ANY PR-related command, MUST invoke `/skill git-workflow --task <appropriate-task>`. NEVER manually create/update/close PRs. The skill handles existing PR detection (Step 0 checks for open/merged PRs).
+- **PR MERGE CONFIRMATION REQUIRES SKILL** — When user says "pr merged", "merged", or similar, MUST invoke `/skill git-workflow --task cleanup`. NEVER manually handle PR merge confirmation, issue closure, or branch cleanup. The skill handles ALL post-merge operations including GitHub API verification and branch deletion.
 - Use `/tmp/` — only use `./tmp/`
 - **DELETE MERGED BRANCHES IMMEDIATELY** — After PR merge confirmation, delete the branch immediately. No asking, no waiting. Unmerged branches with work ARE preserved until explicit delete request.
 - **ANALYZE ISSUE COMMENTS SILENTLY** — Always respond to user comments via GitHub issue comment. Users cannot see your internal reasoning.

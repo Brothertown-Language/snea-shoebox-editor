@@ -6,14 +6,23 @@
 
 **After EVERY merged PR, cleanup is MANDATORY — no exceptions, no "I'll do it later".**
 
-### ✅ ALWAYS DO — IMMEDIATELY After Merge Confirmation
+### ⚠️ MANDATORY SKILL INVOCATION
 
-1. **Delete local feature branch** — `git branch -d <branch-name>`
-2. **Delete remote branch** — `git push origin --delete <branch-name>` (if not auto-deleted by GitHub)
-3. **Verify cleanup** — `git branch -vv` to confirm deletion
-4. **Prune remote references** — `git fetch --prune`
+**When user says "pr merged", "merged", or similar:**
+- **MUST invoke `/skill git-workflow --task cleanup`**
+- **NEVER run git commands manually**
+- The skill handles ALL post-merge operations including GitHub API verification
 
-**This is NOT optional.** Cleanup happens in the same session as merge confirmation.
+### ✅ REQUIRED: Skill Handles Everything
+
+The `git-workflow --task cleanup` skill automatically:
+1. **Verifies PR merge via GitHub API** — `github_pull_request_read method=get`
+2. **Closes issues** (parent and child issues)
+3. **Deletes local feature branch** — `git branch -d <branch-name>`
+4. **Deletes remote branch** — `git push origin --delete <branch-name>`
+5. **Prunes remote references** — `git fetch --prune`
+
+**This is NOT optional.** The skill MUST be invoked after merge confirmation.
 
 ### ✅ ALWAYS DO — When User Asks "cleanup branches"
 

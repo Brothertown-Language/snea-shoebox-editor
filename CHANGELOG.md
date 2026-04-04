@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Fixed
+- **PR Workflow Enforcement**: Added critical violation warning for bypassing the git-workflow skill during PR operations. All PR-related commands ("pr", "update PR", "push and create PR") must now invoke the skill, which handles GitHub API verification and branch cleanup automatically. This prevents manual git command errors and ensures consistent PR handling.
 - **Spec Audit Chain Enforcement**: Added mandatory architectural review as the third auditor in the spec review process. All specs must now pass concern structure, content quality, AND architectural correctness checks before approval. This prevents incomplete or poorly-architected specifications from being approved.
 
 ### Changed
