@@ -9,7 +9,7 @@ compatibility: opencode
 
 Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested.
 
-## ⚠️ CRITICAL: THIS SKILL IS MANDATORY - NO BYPASS
+## ⚠️ CRITICAL: THIS SKILL IS MANDATORY - NO BYPASS {#critical-skill}
 
 **Bypassing this skill is a CRITICAL GUIDELINE VIOLATION.**
 

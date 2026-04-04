@@ -5,7 +5,7 @@
 - Use `uv sync` for environment setup (creates venv and installs in editable mode). All Python execution via
   `uv run python`. Package ops: add dependencies by editing `pyproject.toml` then running `uv sync` — never `uv add`. `pip` prohibited. No `sys.path` hacks or manual
   path additions.
-- **Never use `python3` or `python` directly** — always `uv run python`. Never prefix commands with absolute paths or `cd /absolute/path &&`. See `060-tool-usage.md § Python Interpreter` and `§ Path Rules` for the full zero-tolerance rules.
+- **Never use `python3` or `python` directly** — always `uv run python`. Never prefix commands with absolute paths or `cd /absolute/path &&`. See `060-tool-usage.md` "Python Interpreter" and "Path Rules" for the full zero-tolerance rules.
 - Reusable agent scripts live in `ai_bin/` (project root). Invoke with `uv run python ai_bin/<script>`.
 - When `pyproject.toml` changes, purge `.venv` and run `uv sync` as a standalone command (never embedded in git hooks,
   commit scripts, or automated pipelines).

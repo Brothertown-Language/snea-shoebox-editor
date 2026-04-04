@@ -1032,7 +1032,7 @@ PRs require the developer to say one of these EXACT phrases:
 - Agent could close issue before human actually merged
 
 **See `124-github-archive-workflow.md` for complete issue closure timing.**
-**See `git-workflow` skill → "Phase 4" section for post-merge workflow including issue closure.**
+**See `git-workflow` skill "Task Dependencies" section for post-merge workflow including issue closure.**
 
 ---
 

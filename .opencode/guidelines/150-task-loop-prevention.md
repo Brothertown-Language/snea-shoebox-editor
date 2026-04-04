@@ -31,7 +31,7 @@ Agent: [Asks clarifying question]
 ```
 
 **Prevention:**
-- MCP tool invocations are MANDATORY enforcement points (see `000-session-init.md` §2)
+- MCP tool invocations are MANDATORY enforcement points (see `000-session-init.md` "MCP Availability Probe")
 - Session init MUST probe MCP availability before proceeding
 - "Execute NOW" triggers: explicit authorization commands (`approved`, `go`)
 
@@ -53,7 +53,7 @@ Agent: [Summarizes task instead of executing]
 ```
 
 **Prevention:**
-- MCP probe is MANDATORY first step (see `000-session-init.md` §2)
+- MCP probe is MANDATORY first step (see `000-session-init.md` "MCP Availability Probe")
 - Enforcement gate checks MCP availability before each operation
 - Fallback mode requires explicit acknowledgment
 
@@ -157,7 +157,7 @@ If any answer suggests loop, HALT and report.
 
 ### Session Init MCP Probe
 
-**Location:** `000-session-init.md` §2
+**Location:** `000-session-init.md` "MCP Availability Probe"
 
 **Enforcement:**
 - MCP probe is MANDATORY before ANY operations
@@ -177,7 +177,7 @@ If any answer suggests loop, HALT and report.
 
 ### Skill Invocation
 
-**Location:** `000-critical-rules.md` §543
+**Location:** `000-critical-rules.md` "Mandatory Skill Invocation"
 
 **Enforcement:**
 - Skills are MANDATORY enforcement points

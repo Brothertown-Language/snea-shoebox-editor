@@ -144,7 +144,7 @@ The user's prompt contains nuanced context about:
    - Post a comment with the revision prompt
    - Include both the new prompt and any additional context
 
-3. **See `140-planning-spec-creation.md` §1.2 for complete requirements.**
+3. **See `140-planning-spec-creation.md` "User Prompt Preservation" for complete requirements.**
 
 ---
 

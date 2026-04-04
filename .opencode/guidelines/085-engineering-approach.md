@@ -264,8 +264,8 @@ Question requires implementation?
 
 | Workflow Stage | Guideline Reference |
 |----------------|---------------------|
-| Session init verification | `000-session-init.md` §3 |
-| Superseding issue check | `130-authority-source.md` §2 |
+| Session init verification | `000-session-init.md` "Session Init Verification" |
+| Superseding issue check | `130-authority-source.md` "Code as Authoritative Source" |
 | Sub-issue verification | `010-approval-gate.md` Sub-issue Verification Gate |
 | Codebase state verification | `085-engineering-approach.md` Verify Before Declaring Complete |
 
