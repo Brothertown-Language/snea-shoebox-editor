@@ -8,6 +8,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Changed
+- **Mandatory Skill Invocation Enforcement**: AI agents must now invoke skills at critical workflow points (file creation, implementation start, command execution, data handling) via the implementation-quality skill. Automatic pattern verification prevents guideline violations before they occur, ensuring consistent code structure, file locations, and data integrity throughout all implementations.
+
+### Changed
 - **Authority Source Rule Added**: New guideline in `130-authority-source.md` enforces checking for superseding issues before implementing specs. This prevents wasted work on outdated specifications by requiring verification that no later `[SPEC]`, `[SPEC-FIX]`, or `[SPEC-ENHANCEMENT]` issues exist, and that referenced code locations haven't been modified since spec creation. Specs found to be stale must be revised before implementation proceeds.
 
 ### Fixed

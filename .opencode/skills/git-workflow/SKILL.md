@@ -1,13 +1,24 @@
 ---
-name: git-workflow
-description: Handles pre-work git branch, git stash, work, git squash commit for PR, etc work as dictated by the guidelines. Automatically invoked when user approves implementation or requests PR creation.
-license: MIT
-compatibility: opencode
----
 
 # Skill: git-workflow
 
 Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested.
+
+## ⚠️ CRITICAL: THIS SKILL IS MANDATORY - NO BYPASS
+
+**Bypassing this skill is a CRITICAL GUIDELINE VIOLATION.**
+
+At workflow trigger points, the agent MUST invoke this skill - NOT run git commands manually.
+
+**🚫 NEVER BYPASS:**
+- Run `git checkout -b` manually → MUST invoke `pre-work` task
+- Stop after reading files → MUST invoke `review-prep` task
+- Squash/push/create PR manually → MUST invoke `pr-creation` task
+- Close issues after "merged" → MUST invoke `cleanup` task
+
+**Manual operations at these points = CRITICAL VIOLATION.**
+
+---
 
 ## When to Use
 
@@ -61,12 +72,32 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 
 | Trigger Point | Action | Verification |
 |---------------|--------|--------------|
-| **After implementation completes** | Load skill → `review-prep` task | Push branch, generate compare URL, HALT |
 | **Before ANY git branch operation** | Load skill → `pre-work` task | Verify branch state, stash changes |
+| **After implementation completes** | Load skill → `review-prep` task | Push branch, generate compare URL, HALT |
 | **When user says "create a PR"** | Load skill → `pr-creation` task | Squash to single commit, push, create PR, HALT |
 | **When user says "pr merged" or "merged"** | Load skill → `cleanup` task | Verify merge via GitHub API, close issues, delete branches |
 
 **Enforcement:** Do NOT proceed with git operations at these trigger points without first loading this skill and verifying workflow compliance.
+
+### ⚠️ CRITICAL: POST-IMPLEMENTATION WORKFLOW IS MANDATORY
+
+**After implementation completes, the agent MUST invoke `/skill git-workflow --task review-prep`.**
+
+This is NOT optional. This is NOT a decision point. This is MANDATORY.
+
+**Violation = CRITICAL GUIDELINE VIOLATION:**
+
+- Silent HALT after implementation = SKIPPED WORKFLOW
+- No compare URL posted = SKIPPED WORKFLOW
+- No GitHub comment posted = SKIPPED WORKFLOW
+- Agent just "finished reading files" = SKIPPED WORKFLOW
+
+**NO EXCEPTIONS:**
+
+- Not "trivial changes"
+- Not "developer can use git log"
+- Not "I already reviewed"
+- **ALWAYS INVOKE THE SKILL**
 
 ### ⚠️ MANDATORY: review-prep Is Automatic (No Decision Point)
 
