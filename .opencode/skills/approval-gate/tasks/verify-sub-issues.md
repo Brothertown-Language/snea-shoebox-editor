@@ -109,6 +109,25 @@ github_sub_issue_write(
 - Assuming markdown checkboxes = task tracking
 - Implementing when STATUS doesn't match authorized subtask
 - Parallel execution of subtasks (enforce single-subtask flow)
+- **Assuming parent status reflects sub-issue status — ALWAYS query sub-issues explicitly**
+
+## Sub-Issue Completion Verification (CRITICAL)
+
+**Before marking ANY task or parent issue as complete, ALWAYS verify sub-issues:**
+
+```python
+# CRITICAL: Never assume parent closed = all sub-issues complete
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+
+# Check each sub-issue state
+for sub in sub_issues:
+    if sub.state == "open":
+        # DO NOT PROCEED - sub-issue still open
+        # DO NOT ASSUME parent completion covers this
+        report("Sub-issue #{} is still open. Parent cannot be marked complete.", sub.number)
+```
+
+**Key Rule:** A parent issue marked "closed" does NOT mean all sub-issues are complete. Always query sub-issues explicitly.
 
 ## Common Issues
 

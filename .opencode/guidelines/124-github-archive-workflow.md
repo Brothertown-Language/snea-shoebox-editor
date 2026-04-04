@@ -94,11 +94,14 @@ github_issue_write(method="update", issue_number=456, state="closed", state_reas
 
 **Parent issues MUST NOT be closed while ANY child issues remain open.**
 
+**CRITICAL: When checking if a task is complete, ALWAYS verify sub-issues — NEVER assume parent status reflects sub-issue completion.**
+
 ### 🚫 PROHIBITED
 
 1. **NEVER close a parent `[SPEC]` issue when ANY child `[Task]` issues are still open**
 2. **NEVER close a parent after PR merge if other child tasks are incomplete**
 3. **NEVER assume "the PR covers everything" when sub-issues exist**
+4. **NEVER assume parent status reflects sub-issue status — ALWAYS query sub-issues**
 
 ### ✅ REQUIRED WORKFLOW
 

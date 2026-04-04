@@ -683,7 +683,7 @@ PRs require the developer to say one of these EXACT phrases:
 
 ## Critical Violation: Parent/Child Issue Closure
 
-**⚠️ Closing a parent issue while child issues remain open is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Closing a parent issue while child issues remain open, or assuming parent status reflects sub-issue completion, is a CRITICAL GUIDELINE VIOLATION.**
 
 When working with parent/child issue hierarchies (specs with sub-issues):
 
@@ -691,11 +691,14 @@ When working with parent/child issue hierarchies (specs with sub-issues):
 - Closing a parent `[SPEC]` issue when ANY child `[Task]` issues are still open
 - Closing a parent after PR merge if other child tasks are incomplete
 - Assuming "the PR covers everything" when sub-issues exist
+- **Assuming parent status reflects sub-issue status — ALWAYS query sub-issues**
 
 **✅ REQUIRED:**
 - Only close the child issue that corresponds to the merged PR
 - Parent issue remains open until ALL child issues are closed
-- After closing a child: check if other children remain open
+- After closing a child: **ALWAYS call `github_issue_read method=get_sub_issues` on parent**
+- If the result is NOT empty (children remain open) → STOP, do NOT close parent
+- If the result IS empty (all children closed) → Close parent with summary
 - If all children are closed, then (and only then) close the parent
 
 ### Correct Workflow
