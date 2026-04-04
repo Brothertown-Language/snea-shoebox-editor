@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- **Spec Audit Chain Enforcement**: Added mandatory architectural review as the third auditor in the spec review process. All specs must now pass concern structure, content quality, AND architectural correctness checks before approval. This prevents incomplete or poorly-architected specifications from being approved.
+
 ### Changed
 - **Dev-Architect Review-Spec Task Rewritten**: Review-spec task now uses comprehensive violation mapping with 100% auto-revise for format violations (boilerplate phases, missing elements), incomplete context (file references, success criteria), and content quality (vague/untestable criteria). Prompt-only mode is reserved for catastrophic failures like circular dependencies and architecture conflicts. This makes spec review more predictable and thorough.
 - **Mandatory PR Skill Invocation**: Added explicit CRITICAL VIOLATION warning for bypassing the git-workflow skill when handling PR commands. Commands like "pr", "update PR", and "push and create PR" MUST invoke the pr-creation task. Manual PR updates are FORBIDDEN. The skill now handles existing PR detection automatically, checking for both open and merged PRs before proceeding.

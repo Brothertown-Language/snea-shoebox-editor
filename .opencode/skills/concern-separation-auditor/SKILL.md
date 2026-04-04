@@ -44,8 +44,9 @@ Analyzes spec phase structures to identify concern quality issues and apply smar
 |-------|-------|---------|
 | **1st** | `concern-separation-auditor` | Phase structure, BOILERPLATE-TITLE, concern analysis |
 | **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality |
+| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies |
 
-**CRITICAL: If you run ONE auditor, you MUST run BOTH in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
 
 ## Mandatory Invocation for AI Agents
 
@@ -54,7 +55,8 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. Create the spec issue with phases and steps
 1. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
 1. **Invoke `/skill spec-auditor --issue N`** (check content quality)
-1. Fixes applied automatically by both auditors
+1. **Invoke `/skill dev-architect --task review-spec`** (review architectural correctness)
+1. Fixes applied automatically by all three auditors
 1. Add `needs-approval` label
 1. Post "ready for review" comment
 
