@@ -171,9 +171,31 @@ When auditors view the live spec first, their analysis is influenced by what the
 | 1 | `create-draft` | Generate independent temporary draft WITHOUT viewing live spec |
 | 2 | `audit` | Load live spec, compare to draft, identify gaps and conflicts |
 | 3 | `verify-codebase` | Check spec references against live codebase |
-| 4 | Post audit log | Attach results to GitHub Issue |
+| 4 | `audit-sub-issue` | For each sub-issue: create draft, compare, audit |
+| 5 | Post audit log | Attach results to GitHub Issue |
 
 **CRITICAL: Step 1 MUST complete BEFORE Step 2 starts.**
+
+### Sub-Issue Draft Generation (CRITICAL)
+
+**Per-sub-issue independent draft generation prevents context pollution.**
+
+When sub-issues exist, the workflow extends:
+
+| Step | Action | Purpose |
+|------|--------|---------|
+| 1 | Create parent draft | Independent draft for parent |
+| 2 | View parent spec | Load live parent |
+| 3 | Compare parent draft vs live | Identify parent gaps |
+| 4 | Fix parent issues | Apply auto-fixes |
+| 5 | Query sub-issues | `github_issue_read(method="get_sub_issues")` |
+| 6 | For each sub-issue: create draft | Independent draft for sub-issue |
+| 7 | For each sub-issue: view live | Load live sub-issue |
+| 8 | For each sub-issue: compare | Identify sub-issue gaps |
+| 9 | For each sub-issue: fix | Apply auto-fixes |
+| 10 | Aggregate all findings | Single audit log |
+
+**Critical:** Sub-issue drafts are created WITHOUT viewing the live sub-issue, exactly like parent drafts.
 
 ### Pollution Prevention
 

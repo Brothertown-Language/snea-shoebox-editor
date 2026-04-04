@@ -329,7 +329,9 @@ To use a skill, the agent loads it when relevant to the current task.
 | Before running commands | `implementation-quality --task environment` | Verify environment patterns |
 | Before handling data | `implementation-quality --task data-integrity` | Verify data integrity patterns |
 | Before approving guideline changes | `guideline-auditor` | Verify guideline quality, find ambiguities/conflicts |
-| Before approving spec implementation | `spec-auditor --issue N` | Verify spec quality, find missing context/elements |
+| Before approving spec implementation | `concern-separation-auditor --issue N` | FIRST: phase structure, BOILERPLATE-TITLE, concern analysis |
+| After concern-separation-auditor | `spec-auditor --issue N` | SECOND: content quality, fresh-start context, sub-issue discovery |
+| After spec-auditor | `dev-architect --task review-spec` | THIRD: architectural correctness, sub-issue checks |
 | User says "approved" or "go" | `approval-gate` | Verify spec+authorization requirements, sub-issues |
 | Before implementing any task | `approval-gate` | Verify authorization, check sub-issues, re-evaluate |
 | Periodic guideline maintenance | `guideline-auditor` | Check for guideline drift over time |

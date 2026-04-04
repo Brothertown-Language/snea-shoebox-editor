@@ -41,6 +41,39 @@
 
 **Loop Prevention:** If tool invocation fails repeatedly without progress, see `150-task-loop-prevention.md` for detection heuristics and exit strategies.
 
+### Sub-Issue Verification Gate (MANDATORY)
+
+**⚠️ Before implementing ANY spec, the agent MUST verify sub-issue structure:**
+
+```python
+# MANDATORY: Before implementing spec N
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=N)
+
+if sub_issues:
+    # Multi-task spec - sub-issues exist
+    # Proceed with implementation (sub-issues track phases)
+    pass
+else:
+    # Check if single-task or missing sub-issues
+    if has_multiple_phases(spec_body):
+        # Multi-task spec without sub-issues - AUTO-CREATE THEM
+        # See github-sub-issues skill for workflow
+        create_sub_issues_for_phases(issue_number=N)
+    else:
+        # Single-task spec - no sub-issues needed
+        proceed_with_implementation()
+```
+
+**Single-Task Exemption:**
+- Specs with exactly ONE implementation task do NOT require sub-issues
+- All multi-task specs MUST have sub-issues before implementation
+
+**Why This Matters:**
+- Sub-issues provide phase-level tracking for multi-task specs
+- Each phase must be trackable as its own GitHub Issue
+- Parent-child hierarchy enables proper closure workflow
+- Prevents "orphaned" phases without issue tracking
+
 ### Explicit Authorization Priority (Critical)
 
 **⚠️ When user provides explicit authorization (`approved`, `go`, `#123 approved`), proceed with implementation even if the `needs-approval` label is present.**

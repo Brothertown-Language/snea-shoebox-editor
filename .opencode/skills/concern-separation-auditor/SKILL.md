@@ -30,6 +30,31 @@ Analyzes spec phase structures to identify concern quality issues and apply smar
 | DEPENDENCY_REVERSAL | YES | Reorder to fix dependencies |
 | HIGH_RISK_GROUPING | YES | Separate high-risk from low-risk |
 
+## ⚠️ MANDATORY: Sub-Issue Discovery and Auditing
+
+**Before auditing the parent, discover and audit ALL sub-issues.**
+
+### Sub-Issue Discovery Workflow
+
+```
+1. Query: github_issue_read(method="get_sub_issues", issue_number=N)
+2. If empty → audit parent only (current behavior)
+3. If sub-issues exist:
+   a. Audit parent first (phase structure, BOILERPLATE-TITLE)
+   b. For each sub-issue: audit phase structure
+   c. Check cross-issue consistency (parent-sub-issue consistency)
+   d. Aggregate all findings in single report
+```
+
+### Sub-Issue Phase Structure Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Phase naming | `BOILERPLATE-TITLE` | Sub-issue phase names like "Implementation" |
+| Concern separation | `CONCERN_MIXING` | Sub-issue phases mix concerns |
+| Parent-sub-issue consistency | `INCONSISTENT-HIERARCHY` | Sub-issue contradicts parent objective |
+| Sub-issue overlap | `OVERLAPPING-SUB-ISSUES` | Multiple sub-issues claim same work |
+
 ## AUTO-FIX BY DEFAULT (No Asking Permission)
 
 **Auditors AUTO-FIX identified issues by default.**
@@ -38,6 +63,31 @@ Analyzes spec phase structures to identify concern quality issues and apply smar
 - Post GitHub Issue comment documenting each fix
 - Continue to next issue
 - Only HALT if user explicitly says "don't fix" or "just report"
+
+## ⚠️ MANDATORY: Sub-Issue Discovery and Auditing
+
+**Before auditing the parent, discover and audit ALL sub-issues.**
+
+### Sub-Issue Discovery Workflow
+
+```
+1. Query: github_issue_read(method="get_sub_issues", issue_number=N)
+2. If empty → audit parent only (current behavior)
+3. If sub-issues exist:
+   a. Audit parent first (phase structure, BOILERPLATE-TITLE)
+   b. For each sub-issue: audit phase structure
+   c. Check cross-issue consistency (parent-sub-issue consistency)
+   d. Aggregate all findings in single report
+```
+
+### Sub-Issue Phase Structure Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Phase naming | `BOILERPLATE-TITLE` | Sub-issue phase names like "Implementation" |
+| Concern separation | `CONCERN_MIXING` | Sub-issue phases mix concerns |
+| Parent-sub-issue consistency | `INCONSISTENT-HIERARCHY` | Sub-issue contradicts parent objective |
+| Sub-issue overlap | `OVERLAPPING-SUB-ISSUES` | Multiple sub-issues claim same work |
 
 ## Why Concern Separation Matters
 

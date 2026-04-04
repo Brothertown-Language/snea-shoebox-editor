@@ -611,7 +611,7 @@ This check is REQUIRED in these workflows:
 - "audit the issue"
 - Any request involving spec quality or structure
 
-**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
 
 ### Complete Audit Chain
 
@@ -619,6 +619,43 @@ This check is REQUIRED in these workflows:
 |-------|-------|---------|
 | **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
 | **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies, ordering |
+
+### Sub-Issue Auditing (MANDATORY)
+
+**ALL auditors MUST discover and audit sub-issues when present.**
+
+**Sub-Issue Discovery Workflow:**
+```
+For parent issue N:
+1. Query sub-issues: github_issue_read(method="get_sub_issues", issue_number=N)
+2. If empty → audit parent only (current behavior)
+3. If sub-issues exist → audit parent first, then each sub-issue in sequence
+4. Report all findings aggregated
+```
+
+**Sub-Issue-Specific Checks:**
+- Parent-sub-issue consistency (`INCONSISTENT-HIERARCHY`)
+- Sub-issue overlap (`OVERLAPPING-SUB-ISSUES`)
+- Missing sub-issue (`INCOMPLETE-DECOMPOSITION`)
+- Stale sub-issue (`STALE-SUB-ISSUE`)
+- Orphaned sub-issue (`ORPHANED-SUB-ISSUE`)
+- Draft-live mismatch (`DRAFT-LIVE-MISMATCH`)
+
+**Per-Sub-Issue Draft Generation (CRITICAL):**
+Each sub-issue requires independent draft generation BEFORE viewing live sub-issue content to prevent context pollution.
+
+| Step | Action | Purpose |
+|------|--------|---------|
+| 1 | Create parent draft | Independent draft for parent |
+| 2 | View parent spec | Load live parent |
+| 3 | Compare parent draft vs live | Identify parent gaps |
+| 4 | Fix parent issues | Apply auto-fixes |
+| 5 | For each sub-issue: create draft | Independent draft for sub-issue |
+| 6 | For each sub-issue: view live | Load live sub-issue |
+| 7 | For each sub-issue: compare | Identify sub-issue gaps |
+| 8 | For each sub-issue: fix | Apply auto-fixes |
+| 9 | Aggregate all findings | Single audit log |
 
 ### Guideline Auditor (`guideline-auditor`)
 
