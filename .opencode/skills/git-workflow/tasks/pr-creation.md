@@ -35,7 +35,7 @@ Create pull request after explicit user instruction. Squash commits to single co
 
 ## Procedure
 
-### Step 0: Check PR State
+### Check PR State {#check-pr-state}
 
 **Before creating PR, check if branch already has a PR (open OR merged):**
 
@@ -83,13 +83,14 @@ for pr in prs:
 
 **If open PR exists:**
 
-Proceed through Steps 3-7:
-1. Generate changelog via subtask (Step 3) - **MANDATORY**
-2. Stage CHANGELOG.md (Step 4) - **MANDATORY**
-3. Squash commits (Step 5)
-4. Push to same branch (force-with-lease, Step 6)
-5. Update PR body (Step 7, use `github_update_pull_request` instead of `github_create_pull_request`)
-6. Report PR URL and HALT
+Proceed through [Generate Changelog](#generate-changelog) → [Stage Changelog](#stage-changelog) → [Squash](#squash-commit) → [Push](#push-remote) → [Create PR](#create-pr) → [Report URL](#report-url):
+
+1. Generate changelog via subtask ([Generate Changelog](#generate-changelog)) - **MANDATORY**
+2. Stage CHANGELOG.md ([Stage Changelog](#stage-changelog)) - **MANDATORY**
+3. Squash commits ([Squash](#squash-commit))
+4. Push to same branch (force-with-lease, [Push](#push-remote))
+5. Update PR body ([Create PR](#create-pr), use `github_update_pull_request` instead of `github_create_pull_request`)
+6. Report PR URL and HALT ([Report URL](#report-url))
 7. **DO NOT create a new PR**
 
 **If merged PR exists:**
@@ -110,7 +111,7 @@ or
 ℹ️ Branch <name> has open PR #<number>. Updating existing PR instead of creating new one.
 ```
 
-### Step 1: Collect Sub-Issues (Multi-Task Specs)
+### Collect Sub-Issues {#collect-sub-issues}
 
 **For specs with sub-issues:**
 
@@ -126,7 +127,7 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
-### Step 2: Version Bump via Subtask (Code Changes Only)
+### Version Bump {#version-bump}
 
 **⚠️ CRITICAL: Only for PRs with code changes. Skip for docs/chore/refactor PRs.**
 
@@ -203,9 +204,9 @@ if [ -n "$(git status --porcelain | grep -E '(pyproject.toml|setup.py|package.js
 fi
 ```
 
-**Note:** Version bump changes are included in the squash commit (Step 4). They are NOT a separate commit.
+**Note:** Version bump changes are included in the [Squash](#squash-commit) step. They are NOT a separate commit.
 
-### Step 3: Generate Changelog via Subtask
+### Generate Changelog {#generate-changelog}
 
 **⚠️ CRITICAL: Use task tool to prevent context pollution.**
 
@@ -253,7 +254,7 @@ Use fallback format for PR body:
 - Group by: Features, Improvements, Fixes
 ```
 
-### Step 4: Stage CHANGELOG.md
+### Stage Changelog {#stage-changelog}
 
 **After subtask completes:**
 
@@ -282,9 +283,24 @@ EOF
 git add CHANGELOG.md
 ```
 
-**✅ STEP 4 COMPLETE:** CHANGELOG.md staged
+**✅ STAGE CHANGELOG COMPLETE:** CHANGELOG.md staged
 
-### Step 5: Squash to Single Commit
+### Squash Commit {#squash-commit}
+
+**⚠️ CRITICAL: This step MUST run AFTER [Stage Changelog](#stage-changelog).**
+
+The squash commit combines ALL changes into ONE clean commit:
+- All implementation changes
+- Version bump (if applied in [Version Bump](#version-bump))
+- CHANGELOG.md updates (from [Generate Changelog](#generate-changelog), staged in [Stage Changelog](#stage-changelog))
+
+**Execution Order:**
+1. [Generate Changelog](#generate-changelog) → writes CHANGELOG.md
+2. [Stage Changelog](#stage-changelog) → adds to git index
+3. [Squash Commit](#squash-commit) → combines all staged changes
+4. [Push](#push-remote) → sends single commit to remote
+5. [Create PR](#create-pr) → creates PR with single commit
+6. [Report URL](#report-url) → HALT
 
 **MANDATORY:** All PRs must have exactly ONE commit, including version bump and CHANGELOG.md changes.
 
@@ -325,7 +341,7 @@ git add -A && git reset --soft origin/dev && git commit -m "<descriptive message
 
 **Note:** The squash commit includes:
 - All implementation changes
-- Version bump (if applied in Step 2)
+- Version bump (if applied in [Version Bump](#version-bump))
 - CHANGELOG.md updates
 
 These are NOT separate commits - all combined into ONE clean commit.
@@ -361,15 +377,15 @@ git commit -m "<descriptive message>" \
 git log --oneline origin/dev..HEAD  # Verify single commit
 ```
 
-**✅ STEP 5 COMPLETE:** Single commit created, working tree clean
+**✅ SQUASH COMPLETE:** Single commit created, working tree clean
 
-### Step 6: Push to Remote
+### Push Remote {#push-remote}
 
 ```bash
 git push --force-with-lease origin <branch>
 ```
 
-### Step 7: Create PR via GitHub MCP
+### Create PR {#create-pr}
 
 **Use the summary and changelog from subtask for PR body.**
 
@@ -419,7 +435,7 @@ Fixes #<parent>
 - `Fixes #<issue-number>` for autoclose
 - Include ALL sub-issues for multi-task specs
 
-### Step 7: Report PR URL and HALT
+### Report URL {#report-url}
 
 **⚠️ CRITICAL: PR URL Reporting is MANDATORY (Chat Only)**
 

@@ -8,6 +8,28 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### skill/pr-creation-changelog-fix
+
+- **Fixed: Changelog Step Order in PR Creation Workflow**: Replaced fragile
+  step number references with stable anchor names in the pr-creation task.
+  The Execute Squash section now references `[Generate Changelog](#generate-changelog)`
+  and `[Stage Changelog](#stage-changelog)` anchors instead of "Step 3" and
+  "Step 4", ensuring the documentation remains correct even if step order
+  changes. This eliminates confusion where the skill documentation stated
+  changelog should be included before squash but referenced steps that ran
+  after squash.
+
+### skill/verification-gates-enforcement
+
+- **Added: Verification Gates in All Skills**: Added mandatory
+  verification checkpoints to 29 skill SKILL.md files ensuring
+  engineering methodology is enforced at critical workflow points.
+- **Added: Question-Response Protocol**: Guidelines now require
+  verification before answering any user questions, preventing agents
+  from acting on outdated assumptions.
+- **Added: Exemption Conditions per Skill**: Each skill documents
+  specific exemption conditions for its verification gates.
+
 ### spec/engineering-methodology-enforcement
 
 - **Added: Verification-First Response Protocol**: AI agents must verify
