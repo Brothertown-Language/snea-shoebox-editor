@@ -156,6 +156,129 @@ Per `085-engineering-approach.md`:
 - All tests must pass before declaring complete
 - Documentation must be updated
 
+## Subtask Separation Requirement (CRITICAL)
+
+**⚠️ MANDATORY: Independent draft generation BEFORE viewing live spec.**
+
+### Why This Matters
+
+When auditors view the live spec first, their analysis is influenced by what they see. Spec drifts, missing elements, and conflicts may be missed because they become "normal" through exposure. Independent draft generation ensures fresh eyes.
+
+### Workflow Sequence
+
+| Step | Task | Purpose |
+|------|------|---------|
+| 1 | `create-draft` | Generate independent temporary draft WITHOUT viewing live spec |
+| 2 | `audit` | Load live spec, compare to draft, identify gaps and conflicts |
+| 3 | `verify-codebase` | Check spec references against live codebase |
+| 4 | Post audit log | Attach results to GitHub Issue |
+
+**CRITICAL: Step 1 MUST complete BEFORE Step 2 starts.**
+
+### Pollution Prevention
+
+The `create-draft` task runs in a subtask to prevent ANY access to the live spec:
+
+- Subtask has NO access to the live spec GitHub Issue body
+- Subtask works ONLY from the issue number and general knowledge
+- Draft is written to `./tmp/tmp-spec-{issue}-draft.md`
+- Live spec is loaded ONLY after draft is complete
+
+**This separation is MANDATORY and CANNOT be bypassed.**
+
+## Independent Draft Generation (CRITICAL)
+
+**The draft is NOT a format checklist. It's a prose-driven analysis.**
+
+### What the Draft Contains
+
+- **Expected Structure**: Prose description of what a good spec should include
+- **Fresh-Start Requirements**: Prose explanation of inline context requirements
+- **Six Core Areas**: Prose coverage of commands, testing, structure, style, git, boundaries
+- **Common Pitfalls**: Prose description of typical issues for this spec type
+- **Draft Checklist**: Checklist of essential elements (NOT static format checks)
+
+### What the Draft Does NOT Contain
+
+- Static format checks (e.g., "STATUS header must exist")
+- Boilerplate requirements (e.g., "Phases must be numbered")
+- Copy-paste checks from templates
+
+**The draft is a narrative that EXPLAINS what should be in the spec, not a checklist that ENFORCES formats.**
+
+## Codebase Verification (CRITICAL)
+
+**Specs MUST reference live codebase accurately. Obsolete references cause implementation failures.**
+
+### Why Codebase Verification Matters
+
+- Spec references a file that was deleted or moved → implementation fails
+- Spec references a function that was renamed → implementation fails
+- Spec references a module pattern that no longer exists → implementation fails
+- Spec references a dependency that was removed → implementation fails
+
+### Codebase Verification Process
+
+| Step | Action | Tool |
+|------|------|------|
+| 1 | Extract all file/function/module references from spec | Parse spec body |
+| 2 | Verify each file exists | `pycharm_find_files_by_glob` or `srclight_symbols_in_file` |
+| 3 | Verify each function exists | `srclight_get_symbol` |
+| 4 | Verify each module exists | `srclight_search_symbols` |
+| 5 | Identify obsolete references | Compare spec references to live codebase |
+| 6 | Identify missing context | Find codebase elements that SHOULD be referenced |
+
+### Tool Preference for Codebase Verification
+
+Per `016-srclight-preference.md`:
+
+| Task | Tool |
+|------|------|
+| Verify Python symbol exists | `srclight_get_symbol` |
+| Find Python symbols by name | `srclight_search_symbols` |
+| Find Python symbols by meaning | `srclight_semantic_search` |
+| Verify Python file exists | `srclight_symbols_in_file` |
+| Verify non-Python file exists | `pycharm_find_files_by_glob` |
+| Search text in files | `pycharm_search_in_files_by_text` |
+
+**Use srclight tools PREFERENTIALLY for Python code verification.**
+
+### New Problem Classes for Codebase Verification
+
+- **STALE-SPEC**: Spec references code that has changed, moved, or been removed.
+- **CONFLICTING-SPEC**: Spec contradicts current codebase architecture.
+- **SUPERSEDED-SPEC**: Another spec has already implemented this work.
+- **DUPLICATE-SPEC**: Multiple specs describe the same work.
+
+## Prose-Driven Analysis Requirement (CRITICAL)
+
+**Audits are prose-driven analysis, NOT static format enforcement.**
+
+### What This Means
+
+- **Analyze content quality through prose explanations**, NOT tick boxes
+- **Explain WHY something is problematic**, NOT just flag it
+- **Describe what SHOULD be there**, NOT just check if template matches
+- **Focus on LLM implementability**, NOT template compliance
+
+### Anti-Patterns (DO NOT)
+
+```markdown
+❌ WRONG: "STATUS: 1.2 header is missing. All specs must have STATUS header."
+
+✅ CORRECT: "A new LLM agent starting fresh has no way to know where this spec is in its workflow. 
+The STATUS field provides crucial context: the agent knows whether to start from Phase 1 or 
+continue from Phase 3. Without this, the agent might re-implement completed work or skip 
+required steps. The STATUS should be: `STATUS: 1.2` to indicate Phase 1, Step 2 is in progress."
+```
+
+### Why Prose-Driven Matters
+
+- **Focus on implementability**, NOT template compliance
+- **Explain reasoning**, NOT enforce rules
+- **Describe context gaps**, NOT check boxes
+- **Identify conflicts through understanding**, NOT pattern matching
+
 ## Content Quality Checks (CRITICAL)
 
 ### What This Auditor Checks
@@ -214,6 +337,13 @@ Per `085-engineering-approach.md`:
 - **SCOPE-CREEP-RISK**: Spec includes features or changes beyond the stated objective without explicit approval.
 - **SUPERSEDED-CLOSURE-VIOLATION**: Issue closing comment claims future action without execution, or references non-existent replacement.
 
+### Codebase Verification Classes
+
+- **STALE-SPEC**: Spec references code that has changed, moved, or been removed since spec creation.
+- **CONFLICTING-SPEC**: Spec contradicts current codebase architecture or patterns.
+- **SUPERSEDED-SPEC**: Another spec has already implemented this work (duplicate or conflicting).
+- **DUPLICATE-SPEC**: Multiple specs describe the same work (consolidate needed).
+
 ## Audit Checklist
 
 For each GitHub Issue `[SPEC]`, verify:
@@ -261,12 +391,22 @@ For each GitHub Issue `[SPEC]`, verify:
 - [ ] Replacement issue exists BEFORE old issue is closed
 - [ ] No forward-looking language ("will be created", "to be done separately")
 
+### Codebase Verification (CRITICAL)
+
+- [ ] All referenced files exist at specified paths
+- [ ] All referenced functions/methods exist with matching signatures
+- [ ] All referenced modules/classes exist and are importable
+- [ ] Codebase patterns mentioned still exist (no obsolete references)
+- [ ] Dependencies mentioned still exist in project
+- [ ] No STALE-SPEC, CONFLICTING-SPEC, SUPERSEDED-SPEC, or DUPLICATE-SPEC issues
+
 ## Post-Fix Verification (Required)
 
 After each fix is applied, the auditor MUST:
 
 1. **Re-read the modified spec** (via GitHub MCP tools) to verify the change was applied correctly.
 1. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
+1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools per `016-srclight-preference.md`.
 1. **Report verification** in the next response before moving to the next issue:
    - **Verification signal**: `changed` — the fix was applied and the issue is resolved.
    - **Verification signal**: `blocked` — the fix could not be applied (explain why).
@@ -359,6 +499,14 @@ GitHub Comment: <URL to comment>
 - Code Style: <PASS|FAIL|N/A>
 - Git Workflow: <PASS|FAIL|N/A>
 - Boundaries: <PASS|FAIL|N/A>
+
+## Codebase Verification Results
+- Files verified: <N/M> (<pass/fail count> / <total references>)
+- Functions verified: <N/M>
+- Modules verified: <N/M>
+- Stale references found: <list or "none">
+- Missing context: <list or "none">
+- Problem classes: <STALE-SPEC|CONFLICTING-SPEC|SUPERSEDED-SPEC|DUPLICATE-SPEC|none>
 ```
 
 **Requirements:**
