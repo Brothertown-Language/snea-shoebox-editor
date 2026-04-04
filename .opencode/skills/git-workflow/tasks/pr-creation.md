@@ -94,14 +94,14 @@ Proceed through Steps 3-7:
 
 **If merged PR exists:**
 
-1. Get current main state: `git fetch origin && git checkout main && git pull origin main`
+1. Get current dev state: `git fetch origin && git checkout dev && git pull origin dev`
 2. Create new branch: `git checkout -b <new-branch-name>`
 3. Cherry-pick or reapply changes
 4. Continue with PR creation workflow
 
 **Report to user:**
 ```
-⚠️ Branch <name> has a merged PR. Creating new PR against current main.
+⚠️ Branch <name> has a merged PR. Creating new PR against current dev.
 ```
 
 or
@@ -134,7 +134,7 @@ No sub-issues needed. Include only parent issue.
 
 ```bash
 # Get list of changed files
-CHANGED_FILES=$(git diff origin/main...HEAD --name-only)
+CHANGED_FILES=$(git diff origin/dev...HEAD --name-only)
 
 # Check if any code files changed
 echo "$CHANGED_FILES" | grep -qE '\.(py|js|ts|rs|java|go|rb)$'
@@ -217,12 +217,12 @@ The changelog-generator skill loads ~400 lines into context. To avoid polluting 
 task tool with:
 - subagent_type: "general"
 - description: "Generate changelog for PR"
-- prompt: "Use the changelog-generator skill to generate changelog entries from commits since branching from origin/main. Write the changelog to CHANGELOG.md (prepend to [Unreleased] section if exists, or create file if missing). Return a JSON object with: 1) 'summary' - executive summary (1-2 sentences), 2) 'changelog' - full markdown changelog content, 3) 'success' - boolean indicating if changelog was written. The skill is at .opencode/skills/changelog-generator/SKILL.md. Load it with /skill changelog-generator first."
+- prompt: "Use the changelog-generator skill to generate changelog entries from commits since branching from origin/dev. Write the changelog to CHANGELOG.md (prepend to [Unreleased] section if exists, or create file if missing). Return a JSON object with: 1) 'summary' - executive summary (1-2 sentences), 2) 'changelog' - full markdown changelog content, 3) 'success' - boolean indicating if changelog was written. The skill is at .opencode/skills/changelog-generator/SKILL.md. Load it with /skill changelog-generator first."
 ```
 
 **Subtask execution:**
 1. Loads changelog-generator skill in isolated context (~400 lines)
-2. Runs `git log origin/main..HEAD --oneline` to get commits
+2. Runs `git log origin/dev..HEAD --oneline` to get commits
 3. Generates user-facing changelog from technical commits
 4. Writes to CHANGELOG.md using file tools
 5. Returns results to main agent
@@ -291,7 +291,7 @@ git add CHANGELOG.md
 git add -A
 
 # Squash to single commit
-git reset --soft origin/main
+git reset --soft origin/dev
 git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
@@ -495,9 +495,9 @@ Fixes #470
 
 | Issue | Resolution |
 |-------|------------|
-| Multiple commits in PR | Run `git reset --soft origin/main` and re-commit |
+| Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
 | PR body missing Fixes | Verify sub-issues, add all to body |
-| Branch conflicts | Rebase on main: `git rebase origin/main` |
+| Branch conflicts | Rebase on dev: `git rebase origin/dev` |
 
 ## After PR Creation
 

@@ -18,7 +18,7 @@ Verify branch state, preserve changes, create feature branch BEFORE any implemen
 
 ## Exit Criteria
 
-- Feature branch created from main
+- Feature branch created from dev
 - Working tree clean (stashed if needed)
 - Verified ready for implementation
 
@@ -53,7 +53,7 @@ git status      # VERIFY clean working tree
 ### Step 4: Create Feature Branch
 
 ```bash
-git checkout main && git pull origin main
+git checkout dev && git pull origin dev
 git checkout -b spec/<short-name>  # or feature/<description>
 ```
 

@@ -61,7 +61,7 @@ Before creating ANY PR:
 - **If NOT completed:** HALT - review workflow was skipped (CRITICAL VIOLATION)
 
 ☑ **Squash Verification**
-- Run: `git log origin/main..HEAD --oneline`
+- Run: `git log origin/dev..HEAD --oneline`
 - Verify: EXACTLY ONE commit on branch
 
 ☑ **Branch State**
@@ -129,8 +129,8 @@ gh pr list --head <branch> --state merged --json number,url,mergedAt
 ```
 
 **If merged PR exists:**
-1. Report: "Branch has merged PR. Creating new PR against current main."
-2. Fetch and checkout main: `git fetch origin && git checkout main && git pull origin main`
+1. Report: "Branch has merged PR. Creating new PR against current dev."
+2. Fetch and checkout dev: `git fetch origin && git checkout dev && git pull origin dev`
 3. Create new branch: `git checkout -b <new-branch-name>`
 4. Cherry-pick or reapply changes
 5. Continue with PR creation workflow

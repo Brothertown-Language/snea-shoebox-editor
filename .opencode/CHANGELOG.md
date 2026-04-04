@@ -8,6 +8,16 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### spec/audit-main-branch-refs
+
+- **Fixed: Branch Reference Standardization**: Updated all git workflow
+  skills and guidelines to use `dev` as the base branch for feature
+  branches instead of `main`. Changes include:
+  - Replaced `origin/main` with `origin/dev` in git diff/log commands
+  - Updated branch creation workflow to start from `dev`
+  - Fixed squash operations to reset against `origin/dev`
+  - Corrected changelog generation to compare against `dev` branch
+
 ### spec/changelog-organization
 
 - Establish dual changelog workflow separating AI agent changes from
