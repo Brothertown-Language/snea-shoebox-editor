@@ -1,0 +1,26 @@
+#!/bin/bash
+# Pre-commit hook: Block direct commits to main and dev branches
+# Enforces feature branch workflow for both humans and AI agents
+
+set -e
+
+CURRENT_BRANCH=$(git branch --show-current)
+
+if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "dev" ]; then
+    echo ""
+    echo "ERROR: Direct commits to '$CURRENT_BRANCH' branch are blocked."
+    echo ""
+    echo "Branch protection policy:"
+    echo "  - main: Production branch (merge from dev only)"
+    echo "  - dev: Integration branch (feature PRs merge here)"
+    echo ""
+    echo "To commit your changes:"
+    echo "  1. Create a feature branch: git checkout -b feature/<name>"
+    echo "  2. Or create a hotfix branch: git checkout -b hotfix/<name>"
+    echo ""
+    echo "AI agent: If OPENCODE=1, relay this message to the developer."
+    echo ""
+    exit 1
+fi
+
+exit 0

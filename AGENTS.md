@@ -48,11 +48,11 @@ After session init, probe MCP availability:
 **FIRST action before ANY filesystem change:**
 
 ```
-git checkout main && git pull origin main
+git checkout dev && git pull origin dev
 git checkout -b feature/<description>
 ```
 
-🚫 **NEVER**: Edit, create, delete, or rename files while on main. No exceptions.
+🚫 **NEVER**: Edit, create, delete, or rename files while on `main` or `dev`. No exceptions.
 
 ## Preserve Pending Changes
 
@@ -180,8 +180,11 @@ See `.opencode/guidelines/080-code-standards.md` for details. Key points:
 
 ## Git Workflow
 
-See `.opencode/guidelines/110-git-branch-first.md` through `114-git-branch-cleanup.md` for full workflow. Key points:
-- Feature-branch workflow with **squash-merge to main via PR**
+See `.opencode/guidelines/110-git-branch-first.md` through `115-git-hotfix-workflow.md` for full workflow. Key points:
+- **Branch Hierarchy**: `main` (production) ← `dev` (integration) ← `feature/*` (development)
+- **Feature PRs**: Squash-merge to `dev` (one commit per PR)
+- **Release PRs**: Merge commit from `dev` to `main` (preserves PR history)
+- **Hotfixes**: Branch from `main`, merge back to both `main` and `dev`
 - PRs require explicit developer instruction — agent does NOT auto-create PRs
 - Human-only merge — agent never merges PRs
 - Delete merged branches after PR merge

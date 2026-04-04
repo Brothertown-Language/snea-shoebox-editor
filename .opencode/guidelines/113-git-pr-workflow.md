@@ -30,7 +30,7 @@ After implementation completes and BEFORE PR creation authorization:
 
 3. **Generate GitHub compare URL**:
    ```
-   https://github.com/<owner>/<repo>/compare/main...<branch-name>
+   https://github.com/<owner>/<repo>/compare/dev...<branch-name>
    ```
 
 4. **Post compare URL to issue AND chat**:
@@ -50,7 +50,7 @@ After implementation completes and BEFORE PR creation authorization:
 
 **Outcome:** <What changed for stakeholders>
 
-GitHub compare URL: https://github.com/<owner>/<repo>/compare/main...<branch-name>
+GitHub compare URL: https://github.com/<owner>/<repo>/compare/dev...<branch-name>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
@@ -98,8 +98,9 @@ GitHub compare URL: https://github.com/<owner>/<repo>/compare/main...<branch-nam
 
 | Layer | Mechanism | Scope | Bypassable? |
 |-------|-----------|-------|-------------|
-| **Local** | `.githooks/pre-commit` | Blocks commit to main | No |
-| **Local** | `.githooks/post-commit` | Warns after commit to main | N/A (post) |
+| **Local** | `.githooks/pre-commit` | Blocks commit to `main` and `dev` | No |
+| **Local** | `.githooks/post-commit` | Warns after commit to protected branches | N/A (post) |
+| **Local** | `ai_bin/session_init.py` | Warns if hooks not installed | N/A (warning only) |
 | **GitHub** | Branch protection rules | Requires PR | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
