@@ -28,9 +28,9 @@ The `git-workflow --task cleanup` skill automatically:
 
 When asked to "cleanup dead branches" or similar:
 
-1. **List merged local branches** — `git branch --merged main`
+1. **List merged local branches** — `git branch --merged dev`
 2. **Delete merged local branches** — `git branch -d <branch-name>` for each
-3. **List merged remote branches** — `git branch -r --merged main`
+3. **List merged remote branches** — `git branch -r --merged dev`
 4. **Delete merged remote branches** — `git push origin --delete <branch-name>` for each
 5. **Prune stale remote refs** — `git fetch --prune`
 6. **Verify cleanup** — `git branch -a` to confirm clean state
@@ -58,22 +58,22 @@ The `git-workflow` skill can automatically detect merged branches that need clea
    - Extract head branch names and merge status
 
 2. **Check local merge status:**
-   - Use `git branch --merged main` to identify fully merged branches
+   - Use `git branch --merged dev` to identify fully merged branches
 
 3. **Identify cleanup candidates:**
    - Local branch exists
-   - Branch is merged into main
+   - Branch is merged into dev
    - Branch is not current branch
-   - Branch is not protected (`main`, `master`)
+   - Branch is not protected (`main`, `dev`)
 
 4. **Safety checks before deletion:**
 
 | Check | Purpose | Method |
 |-------|---------|--------|
-| Branch merged | Prevent deleting unmerged work | `git branch --merged main` |
+| Branch merged | Prevent deleting unmerged work | `git branch --merged dev` |
 | PR status | Confirm merge (not just closed) | GitHub API |
 | Not current | Prevent deleting active branch | `git branch --show-current` |
-| Not protected | Block main/master deletion | Hardcoded exclusion |
+| Not protected | Block main/dev deletion | Hardcoded exclusion |
 | Clean working tree | Ensure no uncommitted changes | `git status --porcelain` |
 
 5. **Report and prompt:**
@@ -86,7 +86,7 @@ The `git-workflow` skill can automatically detect merged branches that need clea
 | Case | Handling |
 |------|----------|
 | PR closed without merge | Do NOT clean up — branch may be reopened |
-| Local has extra commits | Detect with `git log main..<branch>`, warn user |
+| Local has extra commits | Detect with `git log dev..<branch>`, warn user |
 | Multiple PRs from same branch | Only clean up after ALL PRs merged |
 | Remote branch already deleted | Skip remote deletion, clean local only |
 | Cleanup conflicts with active work | Defer cleanup, warn user |
@@ -103,8 +103,8 @@ The `git-workflow` skill can automatically detect merged branches that need clea
 ### Cleanup Commands
 
 ```bash
-# Check which branches are merged into main
-git branch --merged main
+# Check which branches are merged into dev
+git branch --merged dev
 
 # Check which branches have diverged (ahead and behind)
 git branch -vv

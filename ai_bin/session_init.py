@@ -99,6 +99,28 @@ def get_remote_url() -> str | None:
     return run_git_command(["remote", "get-url", "origin"])
 
 
+def verify_hooks_installed() -> bool:
+    """Check if git hooks are installed. Returns True if installed."""
+    hooks_path = get_hooks_path()
+    repo_root = run_git_command(["rev-parse", "--show-toplevel"])
+
+    if not repo_root:
+        return False
+
+    expected_hooks_dir = ".githooks"
+    pre_commit_hook = os.path.join(repo_root, expected_hooks_dir, "pre-commit")
+
+    # Check if hooks path is configured
+    if hooks_path != expected_hooks_dir:
+        return False
+
+    # Check if pre-commit hook exists and is executable
+    if not os.path.isfile(pre_commit_hook):
+        return False
+
+    return True
+
+
 def main() -> int:
     """Extract and output git context."""
     # Get remote URL first - this is required
@@ -135,6 +157,24 @@ def main() -> int:
     print(f"GIT_REPO={repo}")
     print(f"GIT_HOOKS_PATH={hooks_path}")
     print(f"GIT_REMOTE_URL={remote_url}")
+
+    # Verify hooks are installed (warning only, do not halt)
+    if not verify_hooks_installed():
+        print("", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        print("WARNING: Git hooks are not installed!", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Branch protection will not be enforced on commit.", file=sys.stderr)
+        print("Protected branches: main, dev", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("AI Agent: Relay this warning to the developer.", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("To install hooks:", file=sys.stderr)
+        print("    ./scripts/install-hooks.sh", file=sys.stderr)
+        print("", file=sys.stderr)
+        print("Developer: Decide whether to install hooks before proceeding.", file=sys.stderr)
+        print("=" * 70, file=sys.stderr)
 
     return 0
 

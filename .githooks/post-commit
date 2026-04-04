@@ -1,0 +1,20 @@
+#!/bin/bash
+# Post-commit hook: Warn if commit was made to main or dev
+# This is a backup warning in case pre-commit was bypassed
+
+CURRENT_BRANCH=$(git branch --show-current)
+
+if [ "$CURRENT_BRANCH" = "main" ] || [ "$CURRENT_BRANCH" = "dev" ]; then
+    echo ""
+    echo "WARNING: Commit made directly to '$CURRENT_BRANCH' branch."
+    echo "Branch protection policy recommends feature branch workflow."
+    echo ""
+    echo "If this was intentional, you may proceed."
+    echo "If unintended, consider:"
+    echo "  1. git reset --soft HEAD~1  (undo commit, keep changes staged)"
+    echo "  2. git checkout -b feature/<name>  (create feature branch)"
+    echo "  3. git commit  (commit on feature branch)"
+    echo ""
+fi
+
+exit 0

@@ -155,15 +155,20 @@ Before proceeding, verify hooks are installed:
 ```bash
 git config core.hooksPath
 # Should output: .githooks
-
-# If not, run:
-./scripts/install-hooks.sh
 ```
 
-If hooks are not installed:
-- ⚠️ WARN the user immediately
-- ⚠️ Do NOT proceed until hooks are installed
-- ⚠️ Risk: Without hooks, local commits to main are not blocked
+**Hook Verification in `ai_bin/session_init.py`:**
+
+Session init script automatically verifies hooks and warns if missing:
+
+- **Hooks installed**: Silent (no output)
+- **Hooks missing**: Warning to AI agent, includes remediation instructions
+- **Behavior**: Continue execution — developer decides remediation
+
+If hooks are missing:
+- ⚠️ AI agent relays warning to developer
+- ⚠️ Developer decides: install hooks (`./scripts/install-hooks.sh`) or proceed
+- ⚠️ Risk: Without hooks, local commits to `main` or `dev` are not blocked
 
 ---
 
@@ -179,7 +184,7 @@ If hooks are not installed:
 
 ### ✅ ALWAYS DO
 * Use `uv run python` for all commands.
-* **Create a feature branch from main BEFORE any implementation** (see 110-git-branch-first.md). This is MANDATORY — the FIRST action before any edit. NEVER edit files while on main. No exceptions for "small" changes, docs, tests, or configs.
+* **Create a feature branch from `dev` BEFORE any implementation** (see 110-git-branch-first.md). This is MANDATORY — the FIRST action before any edit. NEVER edit files while on `main` or `dev`. No exceptions for "small" changes, docs, tests, or configs.
 * **When GitHub MCP tools available**: Use the **Issue-First** strategy. Create GitHub Issues for specs. Use **Sub-issues (Task Lists)** for atomic tasks to establish parent-child hierarchy. **MANDATORY**: All implementation tasks MUST be their own issues, linked via `github_sub_issue_write` using the **Database ID** (not the issue number). See 120-github-issue-first.md.
 * **VERIFY SUB-ISSUES BEFORE IMPLEMENTING**: When authorized to implement a SPEC, first call `github_issue_read method=get_sub_issues` on the parent issue. If empty, STOP and report "Cannot implement — no sub-issues found." See 010-approval-gate.md Sub-issue Verification Gate.
 * **Always use GitHub Issues for spec tracking.** Even without GitHub MCP, use `gh` CLI for GitHub operations.
