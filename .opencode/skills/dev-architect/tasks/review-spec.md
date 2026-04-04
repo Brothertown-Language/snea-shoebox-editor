@@ -6,6 +6,29 @@ Review and revise specs for correctness, dev-architect compliance, interdependen
 
 Automatically review specs when creating or revising, auto-revise when issues are found, and only prompt the user when serious conflicts or critical issues are detected.
 
+## ⚠️ MANDATORY: Sub-Issue Discovery and Auditing
+
+**Before auditing the parent, discover and audit ALL sub-issues.**
+
+### Sub-Issue Discovery Workflow
+
+```
+For parent issue N:
+1. Query sub-issues: github_issue_read(method="get_sub_issues", issue_number=N)
+2. If empty → audit parent only (current behavior)
+3. If sub-issues exist → audit parent first, then each sub-issue in sequence
+4. Report all findings aggregated
+```
+
+### Sub-Issue Architectural Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Architectural consistency | `INCONSISTENT-HIERARCHY` | Sub-issue architecture contradicts parent |
+| Dependency ordering | `DEPENDENCY_REVERSAL` | Sub-issue depends on later sibling |
+| Implementation scope | `INCOMPLETE-DECOMPOSITION` | Parent scope not fully decomposed |
+| Cross-sub-issue conflicts | `OVERLAPPING-SUB-ISSUES` | Multiple sub-issues claim same work |
+
 ## Correctness Checks
 
 ### Fresh-Start Context
