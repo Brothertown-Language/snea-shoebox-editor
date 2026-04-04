@@ -38,6 +38,30 @@ if has_label and explicit_authorization:
     # Optionally note: "needs-approval label can be removed"
 ```
 
+### Step 2.5: Verify Sub-Issues for Multi-Task Specs (CRITICAL)
+
+**This check is MANDATORY before proceeding with implementation.**
+
+```python
+# CRITICAL: Check sub-issues to verify task completion
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+
+# NEVER assume parent status reflects sub-issue status
+for sub in sub_issues:
+    if sub.state == "open":
+        # Sub-issue is open - DO NOT ASSUME IT IS COMPLETE
+        # Check if this is the sub-issue we're implementing
+        if sub.number == current_sub_issue:
+            # This is the one we're implementing - proceed
+            continue
+        else:
+            # Other sub-issue is open and not being implemented
+            # HALT - parent cannot be considered complete
+            report("Sub-issue #{} is still open. Cannot proceed.", sub.number)
+```
+
+**Key Point:** A parent issue marked "closed" does NOT mean all sub-issues are complete. ALWAYS verify sub-issues explicitly.
+
 ### Step 3: Record Authorization Scope
 
 Authorization applies to:

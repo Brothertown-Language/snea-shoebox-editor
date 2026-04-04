@@ -211,6 +211,7 @@ If no URLs are relevant (pure summary, no links):
 - Completion comments on issues
 - Review-prep completion comments
 - PR creation confirmation comments
+- **New issue creation comments** (URL after summary, not before)
 
 ### Examples
 

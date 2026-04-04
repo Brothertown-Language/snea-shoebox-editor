@@ -330,6 +330,40 @@ When implementation halts (awaiting approval, awaiting clarification, error, ses
 - Related skills: `git-workflow` (branch operations, cleanup with parent closure check), `pr-creation-workflow` (PR timing)
 - Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md` (parent closure pre-check)
 
+## Sub-Issue Verification (CRITICAL)
+
+**Before marking ANY task as complete, ALWAYS verify sub-issues explicitly.**
+
+### Task Completion Verification
+
+When completing a task that has sub-issues:
+
+```python
+# CRITICAL: Never assume parent closed = sub-issues complete
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+
+for sub in sub_issues:
+    if sub.state == "open":
+        # DO NOT PROCEED - sub-issue still open
+        # DO NOT ASSUME parent completion covers this
+        report("Sub-issue #{} is still open. Cannot proceed.", sub.number)
+        HALT
+```
+
+### Why This Matters
+
+- Parent issues can be closed while sub-issues remain open
+- `issue.state == "closed"` does NOT mean all sub-issues are complete
+- ALWAYS query sub-issues explicitly before declaring completion
+
+### Enforcement Points
+
+| Checkpoint | Verification |
+|------------|--------------|
+| Before implementation | `verify-sub-issues` task |
+| After PR merge | `git-workflow` cleanup task |
+| Before closing parent | Sub-issue double-check |
+
 ## Parent Closure Pre-Check Reference
 
 Parent/child issue closure verification is handled in:
