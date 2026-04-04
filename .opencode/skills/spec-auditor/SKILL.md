@@ -11,23 +11,27 @@ compatibility: opencode
 
 **This auditor checks whether an LLM agent with NO memory context can implement the spec correctly.**
 
-**Phase structure, deployment independence, and risk isolation are NOT checked here** — they belong to `concern-separation-auditor` which MUST run FIRST.
+**Phase structure, deployment independence, and risk isolation are NOT checked here** — they belong to `concern-separation-auditor` which runs SECOND (after clean-room draft generation).
 
 ### Division of Responsibility
 
 | Auditor | Scope | Role |
 |---------|-------|------|
-| **concern-separation-auditor** | Phase structure, deployment independence, risk isolation, blast radius, phase names | Runs FIRST - structural safety |
-| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | Runs SECOND - content quality |
+| `spec-auditor --task generate-independent-spec` | Clean-room draft generation | FIRST - generate spec WITHOUT viewing live (pollution prevention) |
+| `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names | SECOND - structural safety |
+| `spec-auditor --task audit` | Fresh-start context, completeness, content quality, LLM implementability | THIRD - content quality |
+| `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies, ordering | FOURTH - architectural correctness |
 
-**CRITICAL: Both auditors are MANDATORY. No skipping.**
+**CRITICAL: All FOUR auditors are MANDATORY. No skipping.**
 
 **Workflow:**
 
 ```
 Create spec issue #N →
-Invoke concern-separation-auditor --issue N (FIRST - phase structure, auto-fix) →
-Invoke spec-auditor --issue N (SECOND - content quality) →
+Invoke spec-auditor --task generate-independent-spec --issue N (FIRST - clean-room draft) →
+Invoke concern-separation-auditor --issue N (SECOND - phase structure, auto-fix) →
+Invoke spec-auditor --task audit --issue N (THIRD - content quality) →
+Invoke dev-architect --task review-spec (FOURTH - architectural correctness) →
 Add needs-approval label →
 Post "ready for review" comment
 ```
@@ -90,21 +94,22 @@ Post "ready for review" comment
 
 | Order | Skill | Purpose |
 |-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
-| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies, ordering |
+| **1st** | `spec-auditor --task generate-independent-spec` | Generate complete, implementable spec draft WITHOUT viewing live spec (pollution prevention) |
+| **2nd** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
+| **3rd** | `spec-auditor --task audit` | Fresh-start context, completeness, content quality, LLM implementability |
+| **4th** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies, ordering |
 
 **Trigger words that require ALL skills:**
 
 - "audit this spec"
 - "review this issue"
 - "revisit this task"
-- "check this \[SPEC\]"
+- "check this [SPEC]"
 - "validate the spec"
 - "audit the issue"
 - Any request involving spec quality or structure
 
-**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL FOUR in order.**
 
 ______________________________________________________________________
 
@@ -631,9 +636,10 @@ GitHub Comment: <URL to comment>
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 1. Create the spec issue with all required content
-1. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
-1. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
-1. Invoke `/skill dev-architect --task review-spec` (THIRD - architectural correctness)
+1. Invoke `/skill spec-auditor --task generate-independent-spec --issue N` (FIRST - clean-room draft generation)
+1. Invoke `/skill concern-separation-auditor --issue N` (SECOND - phase structure, auto-fix by default)
+1. Invoke `/skill spec-auditor --task audit --issue N` (THIRD - content quality)
+1. Invoke `/skill dev-architect --task review-spec` (FOURTH - architectural correctness)
 1. Apply any fixes identified by auditors
 1. Add `needs-approval` label
 1. Post "ready for review" comment
@@ -652,15 +658,16 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 ### Integration with concern-separation-auditor and dev-architect
 
-**ALL THREE auditors are required. They check different things.**
+**ALL FOUR auditors are required. They check different things.**
 
 | Auditor | Runs When | Checks |
 |---------|----------|--------|
-| `concern-separation-auditor` | FIRST | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
-| `spec-auditor` | SECOND | Fresh-start context, completeness, content quality, LLM implementability |
-| `dev-architect --task review-spec` | THIRD | Architectural correctness, compliance, interdependencies, ordering |
+| `spec-auditor --task generate-independent-spec` | FIRST | Clean-room draft generation WITHOUT viewing live spec (pollution prevention) |
+| `concern-separation-auditor` | SECOND | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
+| `spec-auditor --task audit` | THIRD | Fresh-start context, completeness, content quality, LLM implementability |
+| `dev-architect --task review-spec` | FOURTH | Architectural correctness, compliance, interdependencies, ordering |
 
-**Order matters:** concern-separation-auditor fixes structural issues first, then spec-auditor checks content quality, then dev-architect reviews architectural correctness.
+**Order matters:** spec-auditor draft generation runs first to prevent pollution, then concern-separation-auditor fixes structural issues, then spec-auditor audit checks content quality, then dev-architect reviews architectural correctness.
 
 ### Integration with Approval Gate
 
@@ -670,11 +677,12 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 ### Enforcement Flow
 
-1. User creates a \[SPEC\] issue.
+1. User creates a [SPEC] issue.
+1. spec-auditor generates independent draft WITHOUT viewing live spec (pollution prevention).
 1. concern-separation-auditor runs (phase structure fixes).
-1. spec-auditor runs (content quality fixes).
+1. spec-auditor audit runs (content quality fixes).
 1. dev-architect runs (architectural correctness review).
-1. After all three auditors pass → Add `needs-approval` label.
+1. After all FOUR auditors pass → Add `needs-approval` label.
 1. After approval → Implementation begins.
 
 ## Example Session

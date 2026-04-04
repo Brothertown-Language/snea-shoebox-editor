@@ -8,6 +8,18 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### skill/audit-chain-clean-room
+
+- **Fixed: Clean-Room Draft Generation as First Auditor**: Corrected the
+  mandatory audit chain to include clean-room draft generation as the
+  FIRST step. The spec-auditor now has a `generate-independent-spec` task
+  that creates a complete, implementable spec draft WITHOUT viewing the
+  live spec. This prevents pollution where the agent's view of existing
+  content influences its draft. The audit chain now runs in this order:
+  1) clean-room draft generation, 2) concern-separation audit (phase
+  structure), 3) spec-audit (content quality), 4) dev-architect review
+  (architectural correctness).
+
 ### spec/anchor-based-references
 
 - **Added: Anchor Infrastructure for Stable References**: Created verification
