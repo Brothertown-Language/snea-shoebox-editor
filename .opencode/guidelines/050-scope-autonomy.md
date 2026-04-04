@@ -35,6 +35,73 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 - **Questions are NOT authorization to make changes.** A question like "should I do X?" or "would you like me to X?" is seeking permission, not receiving it. Answer questions directly without making code changes. Wait for explicit approval before acting.
 - Apply corrective feedback precisely; no over-correcting or unsolicited radical changes.
 
+### ⚠️ CRITICAL: Question-Response Requires Verification (ZERO TOLERANCE)
+
+**Answering questions is NOT authorization to bypass verification checks.**
+
+Questions from users MUST go through the verification sequence before being answered.
+
+#### The Problem
+
+Agents frequently respond to questions without:
+
+- Completing session init
+- Checking for superseding issues
+- Verifying codebase state
+- Running mandatory verification skills
+
+This leads to incorrect responses based on outdated information.
+
+#### 🚫 FORBIDDEN Patterns
+
+| Forbidden Action | Why It's Wrong |
+|------------------|----------------|
+| Answering questions without session init | Missing critical context (owner, repo, MCP availability) |
+| Creating specs without checking conflicts | Duplicate/superseded specs waste work |
+| Implementing without verification | Stale specs, changed codebase |
+| Using question-answering as bypass | Questions are NOT authorization to skip checks |
+
+#### ✅ REQUIRED Sequence
+
+**Before responding to ANY user input (question, task, request):**
+
+1. **Run session init if not already done**: `uv run python ai_bin/session_init.py`
+2. **Check for superseding/conflicting issues**: Query all `[SPEC]` issues
+3. **Verify codebase state matches spec assumptions**: Read files, check current state
+4. **Verify sub-issues for multi-task specs**: Call `github_issue_read(method=get_sub_issues)`
+5. **Confirm authorization**: Check for `approved`/`go` or `needs-approval` label
+6. **THEN and ONLY THEN**: Respond to user
+
+#### Question-Response Flowchart
+
+```
+User asks question
+    ↓
+Has session init run?
+    ├─ NO → Run `ai_bin/session_init.py` FIRST
+    └─ YES ↓
+Check for superseding issues?
+    ├─ Found conflict → HALT, report conflict
+    └─ No conflict ↓
+Verify codebase state?
+    ├─ Stale spec → HALT, report staleness
+    └─ Current ↓
+Question requires implementation?
+    ├─ YES → Check authorization
+    │        ├─ Not authorized → HALT, wait for "approved"/"go"
+    │        └─ Authorized → Proceed
+    └─ NO (informational) → Verify answer, then respond
+```
+
+#### Integration Points
+
+| Workflow Stage | Guideline Reference |
+|----------------|---------------------|
+| Session init verification | `000-session-init.md` §3 |
+| Superseding issue check | `130-authority-source.md` §2 |
+| Sub-issue verification | `010-approval-gate.md` Sub-issue Verification Gate |
+| Codebase state verification | `085-engineering-approach.md` Verify Before Declaring Complete |
+
 ### 🚫 CRITICAL: Unauthorized Question Asking (ZERO TOLERANCE)
 
 **CRITICAL VIOLATION: Asking questions during implementation is PROHIBITED.**

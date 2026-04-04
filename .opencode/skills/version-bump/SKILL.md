@@ -5,6 +5,31 @@ license: MIT
 compatibility: opencode
 ---
 
+## Operating Protocol
+
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill REQUIRES codebase verification (modifies version files)
+- This skill EXEMPT from issue conflict check (version update only)
+
 # Version Bump
 
 Automatically determines and applies semantic version updates based on implementation impact analysis. Follows semantic versioning (SemVer 2.0.0) rules and integrates with git-workflow skill for PR creation.
@@ -100,7 +125,32 @@ Create release for version 1.5.0
 5. Commits with implementation (squashed)
 6. Creates PR with combined changes
 
-## Version Bump Workflow
+### Operating Protocol
+
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill REQUIRES codebase verification (modifies version files)
+- This skill EXEMPT from issue conflict check (version update only)
+
+# Version Bump Workflow
 
 ### PR Workflow (Default)
 

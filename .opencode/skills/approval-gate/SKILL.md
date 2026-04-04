@@ -38,6 +38,72 @@ Authorization Gatekeeper ensuring all code changes follow the spec + authorizati
 
 ## Operating Protocol
 
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill EXEMPT from codebase verification (no file creation)
+- This skill REQUIRES issue conflict check (creates/modifies GitHub Issues)
+
+### ⚠️ MANDATORY INVOCATION ON AUTHORIZATION
+
+**CRITICAL VIOLATION PREVENTION:**
+
+When user says `approved`, `go`, or similar authorization keyword, this skill **MUST** be invoked BEFORE any other workflow skill.
+
+**Authorization Keywords Requiring Invocation:**
+
+| Keyword Pattern | Invocation Required |
+|-----------------|---------------------|
+| `approved` | ✅ MUST invoke `/skill approval-gate --task verify-authorization` |
+| `go` | ✅ MUST invoke `/skill approval-gate --task verify-authorization` |
+| `approved: N` | ✅ MUST invoke `/skill approval-gate --task verify-authorization` |
+| `approved: N.M` | ✅ MUST invoke `/skill approval-gate --task verify-authorization` |
+| `#N approved` | ✅ MUST invoke `/skill approval-gate --task verify-authorization` |
+
+**Why This is CRITICAL:**
+- Bypassing approval-gate allows implementation on stale specs
+- Bypassing approval-gate skips sub-issue verification
+- Bypassing approval-gate misses superseding issue checks
+- This is a ZERO TOLERANCE violation
+
+**Integration with git-workflow:**
+
+The `git-workflow --task pre-work` documentation states:
+
+```
+BEFORE running git-workflow --task pre-work:
+1. Invoke: /skill approval-gate --task verify-authorization
+2. Wait for verification result
+3. Only proceed to pre-work if verification PASSED
+```
+
+**Detection of Violation:**
+
+If implementation proceeds without approval-gate verification:
+1. STOP immediately
+2. Report violation
+3.HALT - do NOT proceed with implementation
+4. Document gap in completion comment
+
+### Automatic Invocation
+
 1. **Automatic invocation (mandatory):** This skill is referenced when:
 
    - User says `approved`, `go`, or similar authorization

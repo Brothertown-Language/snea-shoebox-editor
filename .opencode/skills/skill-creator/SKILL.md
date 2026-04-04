@@ -5,6 +5,31 @@ license: Complete terms in LICENSE.txt
 compatibility: opencode
 ---
 
+## Operating Protocol
+
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill REQUIRES codebase verification (creates/modifies project files)
+- This skill REQUIRES issue conflict check (creates specs)
+
 # Skill Creator
 
 Guide for creating effective skills that extend AI capabilities with specialized knowledge, workflows, and tool integrations.

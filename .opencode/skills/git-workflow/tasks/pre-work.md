@@ -4,14 +4,27 @@
 
 Verify branch state, preserve changes, create feature branch BEFORE any implementation work begins.
 
+## ⚠️ CRITICAL: This Skill Must Be Invoked for Authorization
+
+**When user says "approved", "go", or similar authorization:**
+
+1. **LOAD the approval-gate skill FIRST** via `/skill approval-gate --task verify-authorization`
+2. **AWAIT verification result** from approval-gate
+3. **DO NOT proceed to git operations** until verification passes
+4. **FOLLOW all steps in this task** only after approval-gate verification
+
+**Bypassing approval-gate verification is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Operating Protocol
 
 1. **Automatic invocation (mandatory):** This task is invoked automatically when:
    - User says `approved`, `go`, or similar authorization to begin implementation
+   - **approval-gate verification has completed successfully**
    - DO NOT prompt for invocation - the skill is triggered automatically
 
 ## Entry Criteria
 
+- **approval-gate --task verify-authorization has been invoked and passed**
 - User has authorized implementation (explicit `approved` or `go`)
 - Authorization is for the correct issue
 - Sub-issue structure verified (for multi-task specs)

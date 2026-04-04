@@ -9,9 +9,49 @@ compatibility: opencode
 
 Defines when PRs can be created, what authorizes PR creation, and the mandatory HALT after PR creation.
 
+## Operating Protocol
+
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill EXEMPT from codebase verification (timing rules)
+- This skill EXEMPT from issue conflict check (PR workflow rules)
+
 ## Core Principle
 
 **PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT automatic after implementation.**
+
+## ⚠️ CRITICAL: Authorization Gate Must Be Invoked First
+
+**BEFORE any PR workflow, verify authorization was checked:**
+
+1. **Authorization keywords** (`approved`, `go`) trigger `/skill approval-gate --task verify-authorization`
+1. **approval-gate** verifies:
+   - Spec exists and is authorized
+   - Sub-issues structure (multi-task specs)
+   - No superseding/conflicting issues
+   - Authorization scope is correct
+1. **git-workflow pre-work** runs AFTER approval-gate verification
+1. **PR creation** happens after explicit "create a PR" instruction
+
+**Bypassing approval-gate verification is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Available Tasks
 

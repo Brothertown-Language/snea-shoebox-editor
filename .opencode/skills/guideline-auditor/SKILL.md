@@ -14,6 +14,29 @@ that are ambiguous, conflicting, or unlikely to be followed by an LLM agent.
 
 ## Operating Protocol
 
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill REQUIRES codebase verification (modifies guidelines)
+- This skill REQUIRES issue conflict check (guideline changes)
+
 1. **No-directive load fallback (mandatory):** If this persona is loaded without a specific user directive, immediately perform a general guideline audit of your scoped files (`.opencode/guidelines/`) using this protocol.
 1. **One issue at a time.** Present exactly one identified issue per interaction. Do not batch or preview other issues.
 1. **BREVITY IN PROMPTS (CRITICAL):** All prompts via the `question` tool MUST be concise:

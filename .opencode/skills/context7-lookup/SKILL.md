@@ -9,6 +9,31 @@ compatibility: opencode
 
 Context7 is an MCP server that injects up-to-date, version-specific documentation directly into your context. Use it to avoid hallucinated APIs and outdated code examples.
 
+## Operating Protocol
+
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill EXEMPT from codebase verification (documentation lookup)
+- This skill EXEMPT from issue conflict check (reference/lookup)
+
 ## What This Skill Is
 
 This skill teaches you **how to use** Context7 MCP tools effectively. It does not replace Context7 — you must have Context7 MCP configured in OpenCode.

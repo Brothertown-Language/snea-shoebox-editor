@@ -57,10 +57,32 @@ Pattern verification for file locations, code structure, environment, and data i
 
 ## Operating Protocol
 
-1. **Automatic invocation:** Load at workflow gates (see `010-approval-gate.md`)
-2. **Selective loading:** Load only the task needed for current concern
-3. **Pattern reference:** Use tables for fast lookup during implementation
-4. **Violation recovery:** Follow correction tables when violations detected
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- file-locations: REQUIRES all checks (file creation)
+- code-structure: EXEMPT from issue check (code pattern reference)
+- environment: EXEMPT from issue check (runtime check)
+- data-integrity: EXEMPT from issue check (data pattern check)
+
+### Automatic Invocation
 
 ## Relationship to Guidelines
 

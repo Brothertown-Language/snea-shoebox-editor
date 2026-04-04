@@ -9,6 +9,30 @@ compatibility: opencode
 
 You are a debugging specialist. Your role is to analyze errors, understand root causes, and propose hypotheses — **without modifying any code**. You investigate, the user decides what to fix.
 
+## Operating Protocol
+
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
+
+**Before ANY skill operation, verify:**
+
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- This skill REQUIRES all checks (modifies code/files through suggestions)
+
 ## Philosophy
 
 > "Understand before you fix."

@@ -55,14 +55,33 @@ At workflow trigger points, the agent MUST invoke this skill - NOT run git comma
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is referenced when:
+### ⚠️ VERIFICATION STEPS (MANDATORY FIRST)
 
-   - User says `approved`, `go`, or similar authorization
-   - User says `create a PR`, `pr`, or similar PR request
-   - Implementation completes (review-prep task invoked automatically)
-   - DO NOT prompt for invocation - the skill is triggered automatically
+**Before ANY skill operation, verify:**
 
-1. **Phase sequence:**
+1. **Session Init Check:**
+   - Has `ai_bin/session_init.py` run?
+   - Store: `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+   - If NOT run → STOP, run session init FIRST
+
+2. **Codebase Verification:**
+   - Is codebase state current?
+   - Run: `srclight_codebase_map` or `srclight_index_status`
+   - Verify: No stale assumptions from previous sessions
+
+3. **Issue Conflict Check:**
+   - Query open `[SPEC]` issues for conflicts
+   - Check for superseding/invalidating issues
+   - If conflict found → HALT, report conflict
+
+**Exemption Conditions:**
+- pre-work: EXEMPT from issue check (git operation only)
+- implementation: EXEMPT from issue check (git operation only)
+- review-prep: EXEMPT from issue check (git operation only)
+- pr-creation: EXEMPT from issue check (git operation only)
+- cleanup: REQUIRES issue conflict check (closes GitHub Issues)
+
+### Automatic Invocation
 
    - Phase 1: Pre-Work (mandatory first) → `pre-work` task
    - Phase 2: Implementation (user-driven) → agent performs work
