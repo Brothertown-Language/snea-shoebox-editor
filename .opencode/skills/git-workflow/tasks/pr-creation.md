@@ -35,6 +35,41 @@ Create pull request after explicit user instruction. Squash commits to single co
 
 ## Procedure
 
+### ⚠️ MANDATORY EXECUTION ORDER - NO GATE SKIPPING {#mandatory-order}
+
+**CRITICAL: Every step has a verification gate. Gates MUST pass before proceeding.**
+
+```
+Step 1: [Check PR State](#check-pr-state)
+  └─ ✅ Gate: PR state determined (open/merged/closed/none)
+
+Step 2: [Collect Sub-Issues](#collect-sub-issues)
+  └─ ✅ Gate: Sub-issues collected or single-task confirmed
+
+Step 3: [Version Bump](#version-bump)
+  └─ ✅ Gate: `git diff` run AND (version-bump invoked OR skip recorded)
+
+Step 4: [Generate Changelog](#generate-changelog)
+  └─ ✅ Gate: Subtask returned `success: true` AND CHANGELOG.md created
+
+Step 5: [Stage Changelog](#stage-changelog)
+  └─ ✅ Gate: `git status` shows CHANGELOG.md staged
+
+Step 6: [Squash Commit](#squash-commit)
+  └─ ✅ Gate: `git log` shows EXACTLY ONE commit
+
+Step 7: [Push Remote](#push-remote)
+  └─ ✅ Gate: Force push succeeded
+
+Step 8: [Create PR](#create-pr)
+  └─ ✅ Gate: PR URL returned
+
+Step 9: [Report URL](#report-url)
+  └─ ✅ Gate: URL posted to chat (URL-LAST format)
+```
+
+**If ANY gate fails: STOP and fix before proceeding.**
+
 ### Check PR State {#check-pr-state}
 
 **Before creating PR, check if branch already has a PR (open OR merged):**
@@ -46,6 +81,16 @@ CURRENT_BRANCH=$(git branch --show-current)
 # Check for ALL existing PRs on this branch (open, merged, closed)
 gh pr list --head "$CURRENT_BRANCH" --state all --json number,url,state,mergedAt
 ```
+
+#### Post-PR State Verification (MANDATORY)
+
+**Gate Checklist:**
+- [ ] Current branch name retrieved
+- [ ] GitHub MCP queried for existing PRs
+- [ ] PR state determined (open/merged/closed/none)
+- [ ] Decision recorded: UPDATE | CREATE_NEW_BRANCH | CREATE_NEW_PR
+
+**✅ GATE: PR state determined. Proceed to Collect Sub-Issues.**
 
 **If open PR exists via GitHub MCP:**
 
@@ -127,26 +172,47 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
+#### Post-Sub-Issues Verification (MANDATORY)
+
+**Gate Checklist:**
+- [ ] Queried sub-issues via `github_issue_read(method="get_sub_issues")`
+- [ ] Result is either: empty array (single-task) OR list of sub-issues (multi-task)
+- [ ] If multi-task: autoclose list includes parent + ALL sub-issues
+- [ ] If single-task: autoclose list includes only parent
+
+**✅ GATE: Sub-issues collected or single-task confirmed. Proceed to Version Bump.**
+
 ### Version Bump {#version-bump}
 
 **⚠️ CRITICAL: Only for PRs with code changes. Skip for docs/chore/refactor PRs.**
 
-**Detect code changes:**
+#### Pre-Version-Bump Checklist (MANDATORY)
+
+Run these checks BEFORE deciding on version bump:
 
 ```bash
-# Get list of changed files
-CHANGED_FILES=$(git diff origin/dev...HEAD --name-only)
+# Step 1: Get list of changed files
+git diff origin/dev...HEAD --name-only
 
-# Check if any code files changed
+# Step 2: Check if any code files changed
+CHANGED_FILES=$(git diff origin/dev...HEAD --name-only)
 echo "$CHANGED_FILES" | grep -qE '\.(py|js|ts|rs|java|go|rb)$'
 CODE_CHANGES=$?
 
 if [ $CODE_CHANGES -eq 0 ]; then
-    echo "Code changes detected - invoking version bump"
+    echo "✅ Gate: Code changes detected - version bump required"
+    # Continue to invoke version-bump subtask
 else
-    echo "No code changes detected - skipping version bump"
+    echo "✅ Gate: No code changes - version bump skipped (docs/chore/refactor)"
+    # Skip version bump, proceed to changelog
 fi
 ```
+
+**Gate Checklist:**
+- [ ] Ran `git diff origin/dev...HEAD --name-only`
+- [ ] Checked file extensions for code files
+- [ ] If code changes: Invoked version-bump subtask
+- [ ] If docs only: Recorded "skip" and proceeded
 
 **Skip version bump for:**
 - Documentation-only changes (*.md files)
@@ -206,6 +272,30 @@ fi
 
 **Note:** Version bump changes are included in the [Squash](#squash-commit) step. They are NOT a separate commit.
 
+#### Post-Version-Bump Verification (MANDATORY)
+
+**After version-bump subtask completes, verify BEFORE proceeding to Generate Changelog:**
+
+```bash
+# Gate: Verify version bump was processed
+# Subtask must return: { "bump_type": "...", "success": true }
+
+# Gate: If code changes detected, version file must exist
+if [ -n "$(git diff origin/dev...HEAD --name-only | grep -E '\.(py|js|ts|rs|java|go|rb)$')" ]; then
+    # Code changes - version bump required
+    # Verify version file was updated (or subtask recorded skip)
+    git status --porcelain | grep -qE '(pyproject.toml|package.json|Cargo.toml|VERSION)' && echo "✅ Gate: Version file updated"
+fi
+```
+
+**Gate Checklist:**
+- [ ] Pre-Version-Bump checklist completed
+- [ ] version-bump subtask invoked (if code changes) OR skip recorded (if docs only)
+- [ ] Subtask returned `success: true`
+- [ ] Version file staged (if version bump applied)
+
+**✅ GATE: Version bump processed. Proceed to Generate Changelog.**
+
 ### Generate Changelog {#generate-changelog}
 
 **⚠️ CRITICAL: Use task tool to prevent context pollution.**
@@ -254,6 +344,28 @@ Use fallback format for PR body:
 - Group by: Features, Improvements, Fixes
 ```
 
+#### Post-Changelog Verification (MANDATORY)
+
+**After subtask returns, verify BEFORE proceeding to Stage Changelog:**
+
+```bash
+# Gate 1: Check subtask result
+# Subtask must return: { "summary": "...", "changelog": "...", "success": true }
+
+# Gate 2: Verify CHANGELOG.md exists
+ls -la .opencode/CHANGELOG.md && echo "✅ Gate: CHANGELOG.md created"
+
+# Gate 3: Verify file has content
+test -s .opencode/CHANGELOG.md && echo "✅ Gate: CHANGELOG.md not empty"
+```
+
+**Gate Checklist:**
+- [ ] Subtask returned `success: true`
+- [ ] CHANGELOG.md file exists
+- [ ] CHANGELOG.md has content (> 0 bytes)
+
+**If ANY gate fails: STOP and fix before proceeding to Stage Changelog.**
+
 ### Stage Changelog {#stage-changelog}
 
 **After subtask completes:**
@@ -284,6 +396,24 @@ git add CHANGELOG.md
 ```
 
 **✅ STAGE CHANGELOG COMPLETE:** CHANGELOG.md staged
+
+#### Post-Stage Verification (MANDATORY)
+
+**After staging CHANGELOG.md, verify BEFORE proceeding to Squash:**
+
+```bash
+# Gate: Verify CHANGELOG.md is staged
+git status --porcelain | grep -q "M.*CHANGELOG.md" && echo "✅ Gate: CHANGELOG.md staged"
+```
+
+**Gate Checklist:**
+- [ ] `git status` shows `modified: CHANGELOG.md` (staged)
+
+**If gate fails:**
+```bash
+git add CHANGELOG.md
+git status  # Re-verify
+```
 
 ### Squash Commit {#squash-commit}
 
