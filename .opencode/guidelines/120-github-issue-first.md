@@ -207,7 +207,8 @@ Users communicating via GitHub Issues are:
 3. **Conversational, not bureaucratic**:
    - Answer questions directly
    - State findings clearly
-   - Ask for authorization simply: "Ready when you are" or just ask the question
+   - HALT silently and wait for explicit authorization
+   - **NEVER** ask "Ready when you are?" or similar questions during implementation
    - **NEVER** use phrases like "Awaiting authorization to implement"
 
 ### Example
@@ -217,8 +218,10 @@ User asks in issue #203: "how do these keys seem?"
 
 BAD: "Awaiting authorization to implement."
 
-GOOD: "The keys look correct. Ready when you are."
+GOOD: "The keys look correct."
 ```
+
+**Note:** During implementation tasks, do NOT ask questions like "Ready when you are?" or "Should I continue?" - HALT silently and wait for explicit authorization.
 
 **⚠️ NEVER analyze issue comments silently without posting a response.**
 

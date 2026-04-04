@@ -35,6 +35,49 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 - **Questions are NOT authorization to make changes.** A question like "should I do X?" or "would you like me to X?" is seeking permission, not receiving it. Answer questions directly without making code changes. Wait for explicit approval before acting.
 - Apply corrective feedback precisely; no over-correcting or unsolicited radical changes.
 
+### 🚫 CRITICAL: Unauthorized Question Asking (ZERO TOLERANCE)
+
+**CRITICAL VIOLATION: Asking questions during implementation is PROHIBITED.**
+
+The agent must NEVER ask questions like:
+- "What would you prefer I focus on first?"
+- "Should I continue?"
+- "Ready for PR?"
+- "What should I do next?"
+- "How would you like me to proceed?"
+- "Ready when you are"
+
+**These questions violate the silent HALT protocol:**
+- `000-critical-rules.md`: HALT protocol requires SILENT halt, not questions
+- `010-approval-gate.md`: No authorization prompts after task completion
+- `050-scope-autonomy.md`: Questions are NOT authorization
+- `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
+
+### ✅ REQUIRED Behavior
+
+| Situation | Action |
+|-----------|--------|
+| Task complete but more work remains | Continue implementation autonomously |
+| Task complete and no more work | HALT silently, post progress comment |
+| Blocked by genuine ambiguity | Post comment to issue asking for clarification, then HALT |
+| Error encountered | Post error details to issue, then HALT |
+| Waiting for authorization | HALT silently, wait for explicit "approved" or "go" |
+
+### Edge Cases
+
+| Edge Case | Action |
+|-----------|--------|
+| Genuine ambiguity about requirements | Post comment to issue explaining ambiguity, ask for clarification, then HALT |
+| Blocked by external factor | Post comment explaining blocker, then HALT |
+| Error encountered | Post error details to issue, then HALT |
+| Multiple tasks remaining | Continue with next task (if authorized for all phases) |
+
+**Why This Matters:**
+- Questions break the non-interactive, autonomous execution model
+- Questions create friction and require user intervention
+- Questions signal confusion about task completion
+- Questions during implementation are NEVER appropriate
+
 ## 5. Command Rejection Protocol
 
 - A "rejected by the user" terminal result signals a directive violation. Immediately halt, re-read guidelines, and assess whether guidelines need reinforcement.
