@@ -50,6 +50,7 @@ Post "ready for review" comment
 |-------|-------|---------|
 | **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
 | **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies, ordering |
 
 **Trigger words that require ALL skills:**
 
@@ -61,7 +62,7 @@ Post "ready for review" comment
 - "audit the issue"
 - Any request involving spec quality or structure
 
-**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
 
 ______________________________________________________________________
 
@@ -426,6 +427,7 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. Create the spec issue with all required content
 1. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
 1. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
+1. Invoke `/skill dev-architect --task review-spec` (THIRD - architectural correctness)
 1. Apply any fixes identified by auditors
 1. Add `needs-approval` label
 1. Post "ready for review" comment
@@ -442,16 +444,17 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 ## Coordination Points
 
-### Integration with concern-separation-auditor
+### Integration with concern-separation-auditor and dev-architect
 
-**BOTH auditors are required. They check different things.**
+**ALL THREE auditors are required. They check different things.**
 
 | Auditor | Runs When | Checks |
 |---------|----------|--------|
 | `concern-separation-auditor` | FIRST | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
 | `spec-auditor` | SECOND | Fresh-start context, completeness, content quality, LLM implementability |
+| `dev-architect --task review-spec` | THIRD | Architectural correctness, compliance, interdependencies, ordering |
 
-**Order matters:** concern-separation-auditor fixes structural issues first, then spec-auditor checks content quality.
+**Order matters:** concern-separation-auditor fixes structural issues first, then spec-auditor checks content quality, then dev-architect reviews architectural correctness.
 
 ### Integration with Approval Gate
 
@@ -464,7 +467,8 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. User creates a \[SPEC\] issue.
 1. concern-separation-auditor runs (phase structure fixes).
 1. spec-auditor runs (content quality fixes).
-1. After both auditors pass → Add `needs-approval` label.
+1. dev-architect runs (architectural correctness review).
+1. After all three auditors pass → Add `needs-approval` label.
 1. After approval → Implementation begins.
 
 ## Example Session
