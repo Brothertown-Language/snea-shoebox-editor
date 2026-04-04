@@ -111,6 +111,6 @@ Test on real tasks → notice struggles → improve SKILL.md or resources → re
 
 ## Cross-References
 
-- Related: `engineering-approach` skill (for skill quality)
+- Related: `implementation-quality` skill (for skill quality)
 - Related: AGENTS.md (skill invocation)
 - Tools: `scripts/init_skill.py`, `scripts/package_skill.py`

@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Implementation Quality Skill**: New AI skill for verifying pattern compliance during implementation. Includes concern-based task files for file locations, code structure, environment patterns, and data integrity. Automatic invocation at workflow boundaries ensures consistent pattern verification before creating files, during implementation, and before running commands.
+
 ### Changed
 - **URL-Last Format for Executive Summaries**: Executive summaries in GitHub comments now place URLs at the end, making it easier to scan the summary content before accessing the link. This improves readability and establishes a consistent visual pattern across all AI-generated progress comments.
 - **Mandatory Push Before HALT**: AI agents now automatically push feature branches to remote before halting after implementation, eliminating a common workflow violation where developers couldn't review changes. This ensures the compare URL is always available for code review.

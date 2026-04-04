@@ -168,6 +168,6 @@ with sync_playwright() as p:
 
 ## Cross-References
 
-- Related: `engineering-approach` skill (testing verification)
+- Related: `implementation-quality` skill (testing verification)
 - Related: AGENTS.md verification requirements
 - Tools: Playwright browser automation

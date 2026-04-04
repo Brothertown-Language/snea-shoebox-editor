@@ -5,7 +5,7 @@
 AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
 1. **Specify Phase**: Define **What & Why**. Kick off with a high-level vision (product brief), then expand it into a detailed specification focusing on user journeys, experiences, and success criteria.
-2. **Plan Phase**: Define **How**. Draft the technical plan (architecture, technical stack, and constraints).
+2. **Plan Phase**: Define **How**. Draft the technical plan (architecture, technical stack, and constraints). **Auto-invoke `/skill dev-architect --task design-plan` at Plan phase.**
 3. **Tasks Phase**: Break the plan into **small, reviewable chunks** (tasks) that can be implemented and tested in isolation.
 4. **Implement Phase**: **Execute** tasks and **verify** results.
 

@@ -118,6 +118,34 @@ Create an ordered execution plan:
 3. Design the execution plan with files to touch
 4. Present approach, risks, and unknowns
 
+## When to Use
+
+| Trigger | Invocation |
+|---------|------------|
+| Plan phase of spec creation | `/skill dev-architect --task design-plan` |
+| Reviewing specs for correctness | `/skill dev-architect --task review-spec` |
+
+## Auto-Invocation
+
+**These invocations are AUTOMATIC:**
+
+1. **Plan Phase**: When creating a new spec, auto-invoke `/skill dev-architect --task design-plan` to analyze requirements and create execution plan.
+
+2. **Spec Review**: When reviewing or revising specs, auto-invoke `/skill dev-architect --task review-spec` to check for correctness, compliance, interdependencies, and ordering.
+
+## Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `design-plan` | Create detailed implementation plan before coding | ~500 |
+| `review-spec` | Review and revise specs for correctness and compliance | ~400 |
+
+## Invocation
+
+- `/skill dev-architect --task design-plan` - Create execution plan
+- `/skill dev-architect --task review-spec` - Review spec for issues
+- `/skill dev-architect` - Overview only
+
 ## Handoff
 
 Once the plan is validated, switch to the `build` agent (Tab) to execute it.
