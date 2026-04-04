@@ -8,6 +8,18 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### spec/anchor-based-references
+
+- **Added: Anchor Infrastructure for Stable References**: Created verification
+  script (`verify-anchor-refs.py`) that detects fragile references (section
+  numbers, step numbers, gate numbers, phase numbers) in guidelines and
+  skills. Added comprehensive style guide (`150-anchor-references.md`) for
+  converting fragile references to stable anchor-based format.
+- **Changed: Guidelines Use Stable Anchors**: Converted 113 fragile references
+  in 20 files to stable anchor-based references using section names and
+  anchor IDs instead of line numbers or section numbers. This prevents
+  broken cross-references when files are edited.
+
 ### skill/pr-creation-changelog-fix
 
 - **Fixed: Changelog Step Order in PR Creation Workflow**: Replaced fragile

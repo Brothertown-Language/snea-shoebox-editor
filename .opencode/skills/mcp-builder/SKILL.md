@@ -222,7 +222,7 @@ To ensure quality, review the code for:
 **Important:** MCP servers are long-running processes that wait for requests over stdio/stdin or sse/http. Running them directly in your main process (e.g., `python server.py` or `node dist/index.js`) will cause your process to hang indefinitely.
 
 **Safe ways to test the server:**
-- Use the evaluation harness (see Phase 4) - recommended approach
+- Use the evaluation harness (see "Create Evaluations" Phase in [✅ Evaluation Guide](./reference/evaluation.md)) - recommended approach
 - Run the server in tmux to keep it outside your main process
 - Use a timeout when testing: `timeout 5s python server.py`
 
