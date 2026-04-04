@@ -59,3 +59,9 @@ history are secondary and potentially transient or outdated.
 8. **Plan Audit Requires Code Deep Dive**: When auditing or updating any plan, strictly follow the mandatory code deep
    dive and verification requirements defined in `docs/specs/how-to-write-good-spec-ai-agents.md`. Ground every plan
    audit finding in the actual filesystem and source code, not in remembered or stored state.
+9. **Issue-First Workflow for Unauthorized Changes**: When instructed to make changes without an existing issue:
+   - Create the needed GitHub Issue ticket first
+   - Report the issue ticket to the user
+   - HALT and wait for approval
+   - Do NOT make any changes until the issue is approved
+   - This applies to ALL code, documentation, guideline, and configuration changes
