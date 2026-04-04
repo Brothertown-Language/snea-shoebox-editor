@@ -7,9 +7,23 @@
 This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any file, creating any file, or making ANY change to the project:
 
 1. **Check current branch**: `git branch --show-current`
-1. **If on `main`**: STOP — you MUST create a feature branch first
+1. **If on `main` or `dev`**: STOP — you MUST create a feature branch first
 1. **Create branch**: `git checkout -b spec/<short-name>` or `git checkout -b feature/<description>`
 1. **ONLY THEN**: Proceed with file changes
+
+**Branch Hierarchy:**
+
+| Branch | Purpose | Protection |
+|--------|---------|------------|
+| `main` | Production (Streamlit Cloud auto-deploys) | No direct commits |
+| `dev` | Integration testing (local dev Streamlit) | No direct commits |
+| `feature/*` | Development work | Allowed |
+
+**Workflow:**
+
+- Feature branches are created from `dev` (not `main`)
+- Feature PRs merge via **squash merge** to `dev`
+- Release PRs merge via **merge commit** from `dev` to `main`
 
 **What Counts as a "Change"?**
 
@@ -48,9 +62,19 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 
 ```
 # Correct order:
+git checkout dev && git pull origin dev
+git checkout -b feature/my-change    # ← FIRST
+# NOW edit files, write code, etc.    # ← SECOND
+```
+
+### Hotfix Workflow (Branch from main)
+
+```
+# Hotfix order:
 git checkout main && git pull origin main
-git checkout -b spec/my-change      # ← FIRST
-# NOW edit files, write code, etc.   # ← SECOND
+git checkout -b hotfix/urgent-fix     # ← FIRST
+# Make fix, commit
+# Push and create PR targeting main AND dev
 ```
 
 ### 🚫 NEVER DO
@@ -132,8 +156,9 @@ ______________________________________________________________________
 
 | Layer | Mechanism | Scope | Bypassable? |
 |-------|-----------|-------|-------------|
-| **Local** | `.githooks/pre-commit` | Blocks commit to main | No |
-| **Local** | `.githooks/post-commit` | Warns after commit to main | N/A (post) |
+| **Local** | `.githooks/pre-commit` | Blocks commit to `main` and `dev` | No |
+| **Local** | `.githooks/post-commit` | Warns after commit to protected branches | N/A (post) |
+| **Local** | `ai_bin/session_init.py` | Warns if hooks not installed | N/A (warning only) |
 | **GitHub** | Branch protection rules | Requires PR | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:

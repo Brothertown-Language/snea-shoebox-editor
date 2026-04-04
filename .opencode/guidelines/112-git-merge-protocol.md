@@ -1,63 +1,114 @@
 # Git Protocol: Merge Protocol
 
+## Branch Hierarchy
+
+| Branch | Purpose | Merge Strategy |
+|--------|---------|----------------|
+| `main` | Production (Streamlit Cloud) | Merge commit from `dev` only |
+| `dev` | Integration testing | Squash merge from `feature/*` |
+| `feature/*` | Development work | Created from `dev` |
+
 ## 5. Spec Implementation Branches
 
 ### ✅ ALWAYS DO
 
 When implementing an approved spec:
 
-1. **Branch Naming**: Derive from spec filename or issue — `spec/<short-name>` (e.g., `plans/SPEC-mesh-descriptor-lookup.md` → `spec/mesh-descriptor-lookup` or Issue #15 → `spec/project-first-strategy`)
+1. **Branch Naming**: Derive from spec filename or issue — `feature/<short-name>` (e.g., Issue #15 → `feature/git-workflow-restructure`)
 
 2. **Branch Creation**: Before any implementation, create and checkout the branch:
    ```bash
-   git checkout main
-   git pull origin main
-   git checkout -b spec/<short-name>
+   git checkout dev
+   git pull origin dev
+   git checkout -b feature/<short-name>
    ```
 
-3. **Work in Isolation**: All implementation commits go on the spec branch, never on main
+3. **Work in Isolation**: All implementation commits go on the feature branch, never on `dev` or `main`
 
-4. **Easy Rollback**: If implementation fails, simply `git checkout main && git branch -D spec/<short-name>`
+4. **Easy Rollback**: If implementation fails, simply `git checkout dev && git branch -D feature/<short-name>`
 
-### 📋 Merging Spec Branches
+### 📋 Feature PR Workflow (feature → dev)
 
 **When GitHub MCP Tools Available:**
 
-Use PR workflow instead of local merge:
-
 **Before creating PR:**
-1. **Rebase on main**: `git fetch origin && git rebase origin/main`
-2. **Squash commits**: Interactive rebase to consolidate multiple commits
+1. **Rebase on dev**: `git fetch origin && git rebase origin/dev`
+2. **Squash commits**: Combine all commits into one: `git reset --soft origin/dev && git commit`
 3. **Force push**: `git push --force-with-lease origin <branch>`
-4. **Then create PR**: Only after branch is clean and rebased
+4. **Then create PR**: Target `dev` branch, not `main`
 
 **PR Workflow Steps:**
 1. Create feature branch: `git checkout -b feature/issue-123-description`
 2. Commit changes to feature branch
 3. Push to remote: `git push origin feature/issue-123-description`
-4. Create PR: `github_create_pull_request` with `Fixes #123` in description
+4. Create PR targeting `dev`: `github_create_pull_request` with base `dev`
 5. Request review: `github_request_copilot_review`
 6. Address feedback with new commits
 7. **WAIT for human to merge** — NEVER call `github_merge_pull_request` yourself
 8. Delete branch after human merges
 
-### ⚠️ MANDATORY: SQUASH MERGE ONLY
+### ⚠️ MANDATORY: SQUASH MERGE to dev
 
-**All PRs MUST be squash-merged to `main`.**
+**All feature PRs MUST be squash-merged to `dev`.**
 
-- Never use regular merge — always squash
-- Never use rebase-merge — always squash
-- This maintains a clean commit history on `main`
-- One commit per PR, with PR number in commit message
+- One commit per PR on `dev`
+- Each PR is identifiable for cherry-picking
+- Clean history for integration testing
 
-**For humans merging PRs:**
+**For humans merging feature PRs:**
 - GitHub "Squash and merge" button is required
-- Never click "Merge" or "Rebase and merge" buttons
+- Target branch: `dev`
+- Never merge directly to `main`
 
-**When Local Merge is Acceptable (even with MCP tools):**
-- Trivial fixes (typos, whitespace, single-line changes)
-- Urgent hotfixes requiring immediate deployment
-- Docs-only changes that don't affect production code
+---
+
+## Release PR Workflow (dev → main)
+
+**When ready to release to production:**
+
+1. **Create release PR from dev to main:**
+   ```bash
+   git checkout dev
+   git pull origin dev
+   git checkout -b release/v1.2.3  # or just use dev directly
+   ```
+
+2. **PR targets `main`:**
+   - Base: `main`
+   - Head: `dev` (or release branch)
+
+3. **Merge commit (NOT squash):**
+   - Preserves all feature PR commits on `main`
+   - Each feature PR remains as separate commit
+   - Enables cherry-picking from `main`
+   - Maintains `git blame` traceability
+
+**For humans merging release PRs:**
+- Use "Merge commit" button (NOT "Squash and merge")
+- This preserves PR boundaries on `main`
+
+---
+
+## Hotfix Workflow (from main)
+
+**For urgent production fixes:**
+
+1. **Branch from main:**
+   ```bash
+   git checkout main
+   git pull origin main
+   git checkout -b hotfix/urgent-fix
+   ```
+
+2. **Make fix and create PR:**
+   - Target `main` for the fix
+   - After merge to `main`, also merge to `dev`
+
+3. **Sync back to dev:**
+   ```bash
+   git checkout dev
+   git merge main  # or create PR from main to dev
+   ```
 
 ---
 
@@ -67,26 +118,31 @@ Use PR workflow instead of local merge:
 
 ### ✅ ALWAYS DO
 
-**When merging a feature branch into main:**
+**When merging a feature branch into dev:**
 - Use **squash-merge** to create a single clean commit
 - Delete the feature branch after merge
 - Include spec reference in commit message
 
+**When merging dev into main:**
+- Use **merge commit** to preserve PR history
+- All feature PRs become separate commits on `main`
+
 **When keeping a feature branch up-to-date:**
-- Use **rebase** (not merge) to pull latest changes from main
-- `git fetch origin && git rebase origin/main`
+- Use **rebase** (not merge) to pull latest changes from `dev`
+- `git fetch origin && git rebase origin/dev`
 
 ### 🚫 NEVER DO
-- **NEVER use regular merge** (`git merge`) to merge feature branches into main — creates messy history
-- **NEVER use merge** to sync feature branch with main — use rebase instead
-- **NEVER force-push to main**
+- **NEVER use regular merge** (`git merge`) to merge feature branches into `dev` — creates messy history
+- **NEVER use merge** to sync feature branch with `dev` — use rebase instead
+- **NEVER force-push to `main` or `dev`**
+- **NEVER squash merge from `dev` to `main`** — loses PR granularity
 
 ### Rebase Workflow
 
 ```bash
 # On feature branch
 git fetch origin
-git rebase origin/main
+git rebase origin/dev
 
 # If conflicts occur, resolve them and continue
 git status  # see which files conflict

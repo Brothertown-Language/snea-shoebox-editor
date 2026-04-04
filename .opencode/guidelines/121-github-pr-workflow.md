@@ -5,31 +5,58 @@
 **When GitHub MCP tools are available, Pull Requests are MANDATORY for ALL code changes.**
 
 ### 🚫 ABSOLUTELY PROHIBITED
-- Direct commits to `main` branch
-- Local merges to `main` (including `git merge --squash`)
+- Direct commits to `main` or `dev` branches
+- Local merges to `main` or `dev` (including `git merge --squash`)
 - Skipping PR for "small" or "quick" changes
 - Skipping PR for "documentation only" changes
 - Skipping PR for "urgent" changes
 
 ### ✅ ALWAYS REQUIRED
-1. Create a feature branch BEFORE any code changes
+1. Create a feature branch from `dev` BEFORE any code changes
 2. Make commits to the feature branch
-3. Push branch and create PR
+3. Push branch and create PR targeting `dev`
 4. Wait for human review and merge
 
 ---
 
-## ⚠️ SQUASH MERGE REQUIRED
+## Branch Structure
 
-**All PRs must be squash-merged to `main`.**
+| Branch | Purpose | PR Target |
+|--------|---------|-----------|
+| `main` | Production (Streamlit Cloud) | `dev` merges here (release PR) |
+| `dev` | Integration testing | Feature PRs merge here |
+| `feature/*` | Development work | PRs target `dev` |
+
+---
+
+## ⚠️ FEATURE PR WORKFLOW (feature → dev)
+
+**Feature PRs MUST be squash-merged to `dev`.**
 
 - Never use regular merge — always squash
 - Never use rebase-merge — always squash
-- This maintains clean commit history — one commit per PR
+- This maintains clean commit history on `dev` — one commit per PR
 
-**For humans merging PRs:**
+**For humans merging feature PRs:**
 - GitHub "Squash and merge" button is required
-- Never click "Merge" or "Rebase and merge" buttons
+- Target branch: `dev`
+- Never merge directly to `main`
+
+---
+
+## ⚠️ RELEASE PR WORKFLOW (dev → main)
+
+**Release PRs MUST use MERGE COMMIT (not squash).**
+
+- Use "Merge commit" button (NOT "Squash and merge")
+- This preserves all feature PR commits on `main`
+- Enables cherry-picking from `main`
+- Maintains `git blame` traceability
+
+**For humans merging release PRs:**
+- Base: `main`
+- Head: `dev` (or release branch)
+- Use "Merge commit" button
 
 ---
 
@@ -48,23 +75,23 @@
 
 ### Before Creating PR — ALWAYS:
 
-1. **Rebase on main**: Ensure branch is up-to-date with latest main
+1. **Rebase on dev**: Ensure branch is up-to-date with latest dev
    ```bash
    git fetch origin
-   git rebase origin/main
+   git rebase origin/dev
    ```
 
 2. **Squash commits**: ALWAYS squash to single commit before pushing
    ```bash
-   git reset --soft origin/main
+   git reset --soft origin/dev
    git commit -m "<descriptive message>"
    ```
    
-   **⚠️ CRITICAL**: Every PR must have exactly ONE commit. No exceptions.
+   **⚠️ CRITICAL**: Every feature PR must have exactly ONE commit. No exceptions.
 
 3. **Force push after squash**: `git push --force-with-lease origin <branch>`
 
-4. **Then create PR**: Only after branch has single clean commit
+4. **Then create PR**: Only after branch has single clean commit. **Target `dev` branch.**
 
 ### ⚠️ When Adding Updates to Existing PR — ALWAYS RE-SQUASH:
 
@@ -73,7 +100,7 @@ If you've already created a PR and need to add more changes:
 1. **Make new commits** on the feature branch as needed
 2. **Re-squash before pushing**: Combine all commits into one
    ```bash
-   git reset --soft origin/main
+   git reset --soft origin/dev
    git commit -m "<updated descriptive message>"
    git push --force-with-lease origin <branch>
    ```
@@ -82,18 +109,19 @@ If you've already created a PR and need to add more changes:
 **Why re-squash?**
 - Each PR should represent ONE logical change
 - Multiple commits clutter history when squash-merged
-- Clean history: one PR = one commit on main
+- Clean history: one PR = one commit on dev
 
 ### PR Requirements
 - Reference issue: `Fixes #123` in PR description
+- **Target branch: `dev`** (not `main`)
 - Pass CI checks
 - **Human review required** — Copilot review is supplemental, not sufficient for merge
 
 ### PR Workflow Steps
-1. Create feature branch: `git checkout -b feature/issue-123-description`
+1. Create feature branch from `dev`: `git checkout -b feature/issue-123-description`
 2. Commit changes to feature branch
 3. Push to remote: `git push origin feature/issue-123-description`
-4. Create PR: `github_create_pull_request` with `Fixes #123` in description
+4. Create PR targeting `dev`: `github_create_pull_request` with base `dev` and `Fixes #123`
 5. Request review: `github_request_copilot_review` or mention reviewers
 6. **HALT — report PR URL to user**
 7. Address feedback with new commits on branch (when user provides feedback)
@@ -115,8 +143,9 @@ If you've already created a PR and need to add more changes:
 ## When GitHub MCP Tools Unavailable
 
 **Use local squash-merge:**
-- Follow 110-git-protocol.md Section 6
-- Script-based workflow for merges
+- Follow 112-git-merge-protocol.md
+- Feature branches squash-merge to `dev`
+- Release PRs merge-commit from `dev` to `main`
 - Wait for explicit "merge" instruction
 
 ---

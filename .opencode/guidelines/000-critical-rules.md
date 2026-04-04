@@ -202,6 +202,53 @@ This repository was created with assistance from AI:
 
 **See `.opencode/guidelines/080-code-standards.md` for complete attribution requirements.**
 
+## Critical Violation: Unauthorized Question Asking
+
+**⚠️ Asking questions during implementation is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN Question Patterns
+
+The agent must NEVER ask questions like:
+- "What would you prefer I focus on first?"
+- "Should I continue?"
+- "Ready for PR?"
+- "What should I do next?"
+- "How would you like me to proceed?"
+- "Ready when you are"
+
+**These questions violate the silent HALT protocol:**
+- `000-critical-rules.md`: HALT protocol requires SILENT halt, not questions
+- `010-approval-gate.md`: No authorization prompts after task completion
+- `050-scope-autonomy.md`: Questions are NOT authorization
+- `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
+
+### ✅ REQUIRED Behavior
+
+| Situation | Action |
+|-----------|--------|
+| Task complete but more work remains | Continue implementation autonomously |
+| Task complete and no more work | HALT silently, post progress comment |
+| Blocked by genuine ambiguity | Post comment to issue asking for clarification, then HALT |
+| Error encountered | Post error details to issue, then HALT |
+| Waiting for authorization | HALT silently, wait for explicit "approved" or "go" |
+
+### Edge Cases
+
+| Edge Case | Action |
+|-----------|--------|
+| Genuine ambiguity about requirements | Post comment to issue explaining ambiguity, ask for clarification, then HALT |
+| Blocked by external factor | Post comment explaining blocker, then HALT |
+| Error encountered | Post error details to issue, then HALT |
+| Multiple tasks remaining | Continue with next task (if authorized for all phases) |
+
+**Why This Matters:**
+- Questions break the non-interactive, autonomous execution model
+- Questions create friction and require user intervention
+- Questions signal confusion about task completion
+- Questions during implementation are NEVER appropriate
+
+---
+
 ## Critical Violation: Missing Progress Comments
 
 **⚠️ Failing to post progress comments to the associated issue is a CRITICAL GUIDELINE VIOLATION.**
@@ -299,6 +346,97 @@ Users communicating via GitHub Issues:
 4. Ask for authorization if needed
 
 **See `github-comments` skill → "Responding to User Comments (MANDATORY)" section for complete requirements.**
+
+---
+
+## Critical Violation: URLs in GitHub Issue Comments
+
+**⚠️ Putting URLs in GitHub Issue comments is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+
+**NEVER put URLs in GitHub Issue comments.**
+
+GitHub Issue comments are for **future maintainers** who need context-based summaries explaining WHAT changed and WHY — NOT for developers who need clickable links to compare diffs.
+
+| Location | Audience | Purpose | URL? |
+|----------|-----------|---------|------|
+| GitHub Issue comment | Future maintainers | Historical context (WHAT/WHY) | 🚫 NO |
+| Chat output | Immediate developer | Actionable navigation (clickable diff) | ✅ YES |
+
+### ✅ REQUIRED
+
+When URLs are needed (e.g., code compare links, PR links, issue links):
+
+1. **GitHub Issue comments**: Context-based summary **WITHOUT URL**
+2. **Chat output**: Same executive summary **WITH URL**
+
+### Why This Matters
+
+- **GitHub Issues are historical records**: Future maintainers read comments for context, not navigation
+- **URLs become outdated**: Branches get deleted, repos move, links break
+- **Context is what persists**: "The rate limiting was added to prevent API quota exhaustion" survives; `https://github.com/.../compare/main...branch` does not
+- **Chat is for immediate action**: Developers in the current session need clickable links to navigate
+
+### Examples
+
+**❌ WRONG (URL in GitHub Issue):**
+
+```markdown
+Phase 1 complete: Added rate limiting to PubMed client.
+
+https://github.com/owner/repo/compare/main...feature-branch
+```
+
+**✅ CORRECT (Context in GitHub Issue, URL in Chat):**
+
+**GitHub Issue Comment:**
+```markdown
+**Context-Based Summary:**
+
+Added rate limiting middleware to the PubMed client to prevent API quota exhaustion. The implementation uses a sliding window algorithm that tracks requests per minute and queues excess calls. This ensures we stay within PubMed's 3 requests/second limit without losing data.
+
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+```
+
+**Chat Output (same message with URL):**
+```markdown
+**Summary:**
+
+Added rate limiting middleware to PubMed client to prevent API quota exhaustion.
+
+**Outcome:** PubMed API calls now respect rate limits, preventing quota exhaustion errors.
+
+https://github.com/owner/repo/compare/main...feature-branch
+
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+```
+
+### Non-Substantive Updates (NO Comment Needed)
+
+**NO comment is required for non-substantive updates:**
+
+- Adding origin links or cross-references to issue body
+- STATUS field updates (`STATUS: 1.1` → `STATUS: 1.2`)
+- Label changes
+- Typo fixes in issue body
+
+**These are housekeeping, not substantive changes.**
+
+### Cross-Reference Links in Issue Body
+
+Origin links and cross-references belong in the **issue body**, NOT in comments:
+
+```markdown
+> **Origin:** Issue #123
+> **Investigation Result:** api-agent cannot be used
+```
+
+These are reference metadata for future readers, not actionable navigation.
+
+**See `github-comments` skill for complete requirements.**
 
 ---
 

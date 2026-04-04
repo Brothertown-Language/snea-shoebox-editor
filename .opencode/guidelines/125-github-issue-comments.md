@@ -146,6 +146,56 @@ AI: <AgentName> (<ModelID>) 🔍 Analysis complete: Found 3 issues in validation
 - Typo/formatting fixes
 - Housekeeping edits that don't change meaning
 
+### Decision Table
+
+| Update Type | Comment? | Example |
+|------------|----------|---------|
+| Adding phase to spec | YES | "Added Phase 2 with API endpoints" |
+| Changing requirements | YES | "Modified success criteria for performance" |
+| STATUS marker update | NO | `STATUS: 1.1` → `STATUS: 1.2` |
+| Adding origin link | NO | `> **Origin:** Issue #123` |
+| Typo fix in spec | NO | Fixed misspelling in title |
+| Label change | NO | Added `needs-approval` label |
+
+## Context-Based Summaries for Issue Comments
+
+**GitHub Issue comments are for FUTURE MAINTAINERS, not immediate developers.**
+
+**Purpose:** Provide historical context for future readers
+
+**Content:** WHAT changed and WHY (technical context)
+
+**NO URLs in GitHub Issue comments.**
+
+### Context-Based Summary Example (Substantive Update)
+
+```markdown
+Added Phase 2 to spec. Phase 2 implements the API layer for the approval workflow.
+
+**Changes:**
+- Added Phase 2 implementation steps
+- Defined API endpoints: approve(), reject(), getStatus()
+- Specified error handling for invalid states
+
+---
+🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
+```
+
+**Key Characteristics:**
+- Explains WHAT changed (content details)
+- Explains WHY (purpose/rationale)
+- Provides technical context for future maintainers
+- NO URL (URLs belong in Chat, not GitHub Issues)
+
+### When to Use Context-Based Summaries
+
+| Context | Location | Summary Type | Contains URL? |
+|---------|----------|--------------|---------------|
+| Issue update (substantive) | GitHub Issue | Context-based | NO |
+| Issue creation | GitHub Issue | Minimal attribution only | NO |
+| Issue closure | GitHub Issue | Closure summary | NO |
+| Implementation complete | Chat | Executive summary | YES |
+
 ## URL Placement in Executive Summaries (MANDATORY)
 
 **URLs MUST appear LAST in all executive summaries and progress comments.**
