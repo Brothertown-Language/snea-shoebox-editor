@@ -109,13 +109,19 @@ def verify_hooks_installed() -> bool:
 
     expected_hooks_dir = ".githooks"
     pre_commit_hook = os.path.join(repo_root, expected_hooks_dir, "pre-commit")
+    pre_push_hook = os.path.join(repo_root, expected_hooks_dir, "pre-push")
 
     # Check if hooks path is configured
     if hooks_path != expected_hooks_dir:
         return False
 
-    # Check if pre-commit hook exists and is executable
+    # Check if blocking hooks exist and are executable
+    # pre-commit: blocks commits to protected branches
+    # pre-push: blocks pushes to merged branches
     if not os.path.isfile(pre_commit_hook):
+        return False
+
+    if not os.path.isfile(pre_push_hook):
         return False
 
     return True

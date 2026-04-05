@@ -1085,24 +1085,37 @@ PRs require the developer to say one of these EXACT phrases:
 
 ---
 
-## Critical Violation: Manual PR Merge Confirmation (BYPASS PR WORKFLOW SKILL)
+## Critical Violation: Bypassing git-workflow Skill for Cleanup (CRITICAL)
 
-**⚠️ Manually handling PR merge confirmation without invoking the mandatory skill is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Running manual git commands instead of invoking the mandatory cleanup skill is a CRITICAL GUIDELINE VIOLATION.**
 
-**🚫 FORBIDDEN:**
-- Manually verifying PR merge via `git pull` or `git status`
-- Manually closing issues after seeing "merged" in chat
-- Manually deleting branches without GitHub API verification
-- Manually cleaning up stashes or branches after PR merge
-- Running ANY git commands after user says "pr merged" or "merged"
+The issue is NOT "manual handling" — the issue is **bypassing the mandatory skill invocation** by running git commands directly.
 
-**✅ REQUIRED:**
-- When user says "pr merged", "merged", or similar: **INVOKE `/skill git-workflow --task cleanup`**
-- Let the skill handle ALL post-merge operations:
-  - GitHub API verification (`github_pull_request_read method=get`)
-  - Issue closure (parent and child issues)
-  - Branch cleanup (local and remote)
-  - Stash cleanup (if applicable)
+### 🚫 FORBIDDEN - Bypassing Skill Invocation
+
+These actions bypass the mandatory skill and are CRITICAL VIOLATIONS:
+
+| Forbidden Action | Why It's Wrong |
+|-----------------|----------------|
+| `git branch -d <branch>` after "pr merged" | Bypasses cleanup skill workflow |
+| `git push origin --delete <branch>` after "pr merged" | Bypasses cleanup skill workflow |
+| `git pull` to verify merge state | Bypasses GitHub API verification in cleanup |
+| Manually closing issues after seeing "merged" | Bypasses issue structure verification in cleanup |
+| Running ANY git commands for cleanup | Cleanup task MUST handle all operations |
+
+### ✅ REQUIRED - Skill Invocation
+
+When user says "pr merged", "merged", or similar:
+
+1. **INVOKE `/skill git-workflow --task cleanup`** — this is MANDATORY, not optional
+2. The cleanup skill handles:
+   - GitHub API verification (`github_pull_request_read method=get`)
+   - Issue closure with proper parent/child verification
+   - Branch deletion (local AND remote)
+   - Stash cleanup (if applicable)
+   - Hotfix dev-merge ticket creation (if applicable)
+
+**The trigger phrase alone authorizes skill invocation — no additional confirmation needed.**
 
 **Trigger Phrases for Mandatory Skill Invocation:**
 | User Says | Skill Task |
