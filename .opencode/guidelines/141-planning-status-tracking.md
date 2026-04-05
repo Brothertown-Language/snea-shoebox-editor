@@ -52,6 +52,45 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 - Progress comments added to issue
 - Bug report additions to existing spec
 
+#### Authorization Received Status Transition
+
+**When authorization is received after revision, the STATUS MUST be cleared:**
+
+```
+STATUS: 1.1 (REVISED - NEEDS APPROVAL)
+    ↓ (authorization received via chat/comment)
+STATUS: 1.1
+```
+
+**Mandatory actions on authorization:**
+1. Remove `(REVISED - NEEDS APPROVAL)` suffix from STATUS
+2. Remove `needs-approval` label from the issue
+3. Clear stale todo list if workflow was interrupted
+4. Post authorization comment documenting cleanup
+5. Proceed with implementation
+
+**Timeline:**
+- Cleanup MUST happen BEFORE implementation begins
+- Cleanup is atomic: all markers removed together
+- Implementation starts only after cleanup complete
+
+**Interaction with other cleanup:**
+- **Label cleanup**: Remove `needs-approval` label (see `010-approval-gate.md`)
+- **Todo clearing**: Clear todos if workflow was interrupted (see `010-approval-gate.md`)
+- **Comment post**: Document authorization source (see `123-github-ai-identity.md`)
+
+**Workflow interruption detection:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption occurred, CLEAR the todo list before proceeding.
+
 ### Status Markers (Visual Icons)
 
 | Marker | Meaning | When to Use |

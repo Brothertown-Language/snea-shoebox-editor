@@ -195,6 +195,91 @@ When a spec is modified:
 2. **No explicit authorization** → Check for `needs-approval` label
 3. **Label present without authorization** → HALT and wait for user to authorize
 
+### Authorization Cleanup Workflow (MANDATORY)
+
+**When authorization is received, the agent MUST clean up stale approval markers before proceeding with implementation.**
+
+#### What to Clean Up
+
+| Item | Action | Why |
+|------|--------|-----|
+| `needs-approval` label | Remove from GitHub Issue | No longer awaiting approval |
+| STATUS suffix `(REVISED - NEEDS APPROVAL)` | Remove suffix, keep base status | No longer in revision-awaiting state |
+| Stale todo list | Clear if workflow was interrupted | Prevent stale context pollution |
+
+#### When to Clean Up
+
+Cleanup happens IMMEDIATELY after authorization is received:
+
+1. Developer provides explicit authorization: `approved`, `go`, `approved: N.M`
+2. **BEFORE proceeding with implementation, the agent cleans up:**
+   - Remove `needs-approval` label from issue
+   - Clear STATUS suffix if present
+   - Clear todo list if workflow was interrupted
+   - Post authorization comment documenting source
+
+#### Workflow Interruption Detection
+
+**A workflow is interrupted when ANY of these occurred since last authorization:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption occurred, CLEAR the todo list before proceeding.
+
+#### Cleanup Process
+
+```python
+# When authorization received:
+
+# Step 1: Remove needs-approval label
+if issue.has_label("needs-approval"):
+    github_issue_write(method="update", issue_number=N, labels=[...labels without needs-approval])
+
+# Step 2: Clear STATUS suffix if present
+if "REVISED - NEEDS APPROVAL" in current_status:
+    new_status = current_status.replace(" (REVISED - NEEDS APPROVAL)", "")
+    update_status(new_status)
+
+# Step 3: Clear todo list if workflow was interrupted
+if workflow_was_interrupted():
+    todowrite(todos=[])  # Clear stale context
+
+# Step 4: Proceed with implementation
+```
+
+#### Edge Cases
+
+| Edge Case | Handling |
+|-----------|----------|
+| Authorization via chat (not on issue) | Clear markers, clear todos if interrupted, post comment documenting source |
+| Authorization via issue comment | Clear markers, clear todos if interrupted, acknowledge comment |
+| `needs-approval` label never added | Proceed without label removal (no-op) |
+| STATUS has no suffix | Proceed without STATUS edit (no-op) |
+| Todo list already empty | Skip todo clearing (no-op) |
+| Workflow not interrupted | Skip todo clearing (todos still valid) |
+
+#### Why This Matters
+
+- **State Consistency**: Issue state matches authorization reality
+- **Session Continuity**: Future sessions see correct state (no false `needs-approval`)
+- **Developer Experience**: Approve once, done (no repeated approval requests)
+- **Todo Accuracy**: Todo list reflects current work, not stale context
+
+#### Integration Points
+
+| Guideline/Skill | Section |
+|----------------|---------|
+| `123-github-ai-identity.md` | Authorization cleanup comment format |
+| `141-planning-status-tracking.md` | STATUS suffix clearing |
+| `approval-gate` skill | `verify-authorization` task |
+| `todowrite` MCP | Todo list management |
+
 ### Bug Report Response
 
 When bug report requires code changes:

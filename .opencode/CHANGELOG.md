@@ -8,6 +8,23 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### feature/approval-cleanup
+
+- **Added: Authorization Cleanup Workflow**: New workflow automatically cleans
+  up stale approval markers when authorization is received. Removes
+  `needs-approval` label, clears `(REVISED - NEEDS APPROVAL)` status suffix,
+  and clears todo list if workflow was interrupted. Integrated across
+  approval-gate skill, 010-approval-gate.md, 123-github-ai-identity.md, and
+  141-planning-status-tracking.md guidelines.
+- **Added: Authorization Cleanup Comments**: Agents must post comments
+  documenting cleanup actions when authorization is received. Includes
+  checklist for removing labels, clearing status suffix, and clearing
+  todos if workflow was interrupted.
+- **Added: Authorization Status Transition Format**: New status format
+  `(REVISED - NEEDS APPROVAL)` tracks specs awaiting fresh approval after
+  revision. Automatically transitions to clean status when authorization
+  received.
+
 ### skill/wording-remediation
 
 - **Changed: Standardized Skill Trigger Format**: All 29 skills now use explicit

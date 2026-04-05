@@ -170,6 +170,7 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 |-----------|---------|
 | `120-github-issue-first.md` | Issue workflow, sub-issues |
 | `000-critical-rules.md` | Critical violation enforcement |
+| `010-approval-gate.md` | Authorization cleanup workflow (SILENT - no comments) |
 | `github-comments` skill | Complete comment protocol |
 
 ---
