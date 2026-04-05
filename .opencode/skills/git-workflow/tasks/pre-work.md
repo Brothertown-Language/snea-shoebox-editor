@@ -24,40 +24,35 @@ Verify branch state, preserve changes, create feature branch BEFORE any implemen
 
 ## Procedure
 
-### Step 1: Check Current Branch
+### Step 1: Verify Branch State and Stash (Subtask)
 
-```bash
-git branch --show-current
+Invoke the `verify-stash-branch` subtask to check current branch and preserve external changes:
+
+```
+/task subagent_type="general" description="Verify stash-branch" prompt="Use the git-workflow skill verify-stash-branch subtask to verify clean working tree and preserve external changes before branch creation."
 ```
 
-If on `main` → MUST create feature branch first.
+**Subtask returns:**
+- `success: true` → Proceed to Step 2
+- `success: false` → STOP and report failure
+- `branch_state.already_exists: true` → Skip Step 2 (already on feature branch)
+- `working_tree_state.stashed: true` → Note stash ref for later restoration
 
-### Step 2: Check for Pending Changes
+**If subtask fails:**
+- STOP immediately
+- Report failure details to user
+- Let user resolve manually
 
-```bash
-git status
-```
+### Step 2: Create Feature Branch (If Needed)
 
-### Step 3: Stash External Changes (If Any)
-
-If ANY files modified (even one line, even external edits):
-
-```bash
-git stash push --include-untracked -m "WIP: external changes before <branch-name>"
-git stash list  # VERIFY stash was created
-git status      # VERIFY clean working tree
-```
-
-**CRITICAL:** If `git status` STILL shows modifications after stash → STOP. Report the failure. Do NOT proceed.
-
-### Step 4: Create Feature Branch
+Only if `branch_state.is_main` or `branch_state.is_dev`:
 
 ```bash
 git checkout dev && git pull origin dev
 git checkout -b spec/<short-name>  # or feature/<description>
 ```
 
-### Step 5: Report Ready
+### Step 3: Report Ready
 
 Report: "Ready for implementation on branch: <branch-name>"
 

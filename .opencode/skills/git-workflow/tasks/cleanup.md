@@ -134,88 +134,34 @@ Before ANY branch deletion:
 
 **If ANY check fails → SKIP that branch with warning.**
 
-## Sub-Issue Double-Check (CRITICAL)
+## Sub-Issue Double-Check (Subtask)
 
-After closing child issues addressed by PR, ALWAYS verify remaining sub-issues before closing parent.
+After closing child issues addressed by PR, invoke the `verify-sub-issues` subtask to verify remaining sub-issues before closing parent:
 
-**This requires agent intelligence, not just script logic.**
-
-### Step 1: Query Sub-Issues
-
-```python
-children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
+```
+/task subagent_type="general" description="Verify sub-issues" prompt="Use the git-workflow skill verify-sub-issues subtask to verify all child issues are closed before closing parent issue #PARENT_ISSUE."
 ```
 
-### Step 2: Classify Each Sub-Issue
+**Subtask returns:**
+- `can_close_parent: true` → Proceed to close parent
+- `can_close_parent: false` → BLOCK parent closure
+- `open_children: [...]` → List of blocking issues with analysis
+- `action: "POST_WARNING"` → Post warning comment to parent
 
-**Already Closed:**
+**If `can_close_parent: false`:**
+- DO NOT close parent issue
+- Post warning comment from subtask response
+- Inform user that remaining sub-issues must be addressed
 
-- `state: "closed"` + `state_reason: "completed"` → Done
-- `state: "closed"` + `state_reason: "not_planned"` → Intentionally not done
-- Closed with "Superseded by #N" comment → Check replacement exists
+**If `can_close_parent: true`:**
+- Close parent issue with summary
+- Report completion
 
-**Open but May Be Complete:**
-
-- Check comments for "Superseded by #N" → Verify new issue covers work
-- Check body for PR link ("Fixes #N") → If merged, work is done
-
-**Open and Incomplete:**
-
-- No PR, no superseded link, no completion comment → BLOCK parent closure
-
-### Step 3: Take Action
-
-```python
-open_children = [c for c in children if c.state == "open"]
-
-if open_children:
-    # Classify each open child
-    truly_incomplete = []
-    
-    for child in open_children:
-        # Agent intelligence required here:
-        # - Check state_reason
-        # - Check comments for superseded links
-        # - Check for merged PR links
-        # - Determine if work is actually done
-        
-        if child_is_truly_incomplete(child):
-            truly_incomplete.append(child)
-    
-    if truly_incomplete:
-        # POST WARNING - do NOT close parent
-        post_warning_comment(parent, truly_incomplete)
-        # DO NOT close parent
-    else:
-        # All open children have justification
-        close_parent_with_summary(parent)
-else:
-    # All children closed
-    close_parent_with_summary(parent)
-```
-
-### Step 4: Warning Comment Template
-
-If parent cannot be closed:
-
-```markdown
-🤖 ⚠️ **Cannot Close Parent — Open Sub-Issues Detected**
-
-This parent issue cannot be closed because the following sub-issue(s) remain incomplete:
-
-- #N: [Title] — [status analysis]
-
-**Status Analysis:**
-- [Explain why each open child cannot be closed]
-
-**To close this parent:**
-1. Complete the remaining sub-issue(s)
-2. Close each sub-issue when work is complete
-3. Or close as "not planned" with explanation if intentionally skipped
-
----
-🤖 ⚠️ Blocking by <AgentName> (<ModelID>)
-```
+**Why this is a subtask:**
+- Sub-issue classification requires agent intelligence
+- Superseded links, PR links, state reasons require verification
+- Isolates complex logic from main cleanup flow
+- Returns structured data for decision-making
 
 **See Also:** `.opencode/guidelines/124-github-archive-workflow.md` → "Parent Closure Pre-Check" section for detailed logic.
 
