@@ -1,0 +1,5 @@
+# Node.js / Bun files (not used in this Python project)
+bun.lock
+node_modules/
+package-lock.json
+package.json
