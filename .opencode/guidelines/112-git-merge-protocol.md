@@ -136,6 +136,90 @@ When implementing an approved spec:
 
 ---
 
+## Hotfix Backport: Dev as Authoritative Source
+
+**When merging `main` → `dev` after hotfix:**
+
+**CRITICAL: `dev` is authoritative for ALL files except hotfix-specific code.**
+
+### Conflict Resolution Priority
+
+| File Type | Correct Source | Rationale |
+|-----------|---------------|-----------|
+| Hotfix-specific files | `main` | Hotfix fix location |
+| All other files | `dev` | Dev is authoritative |
+| `uv.lock` | `dev` | Dependency state authoritative in dev |
+| `.opencode/*` | `dev` | Active development, dev authoritative |
+| `CHANGELOG.md` | `dev` | Dev changelog format changes |
+| Config files | `dev` | Dev configuration state |
+
+### Hotfix-Specific File Identification
+
+Files are considered hotfix-specific if they were modified in the hotfix PR:
+
+```bash
+# Identify hotfix files from PR
+gh pr view <hotfix-pr-number> --json files --jq '.files[].path'
+
+# Or from merge commit
+git diff <hotfix-branch>^..<hotfix-branch> --name-only
+```
+
+**Hotfix-specific files MUST be limited to:**
+- Files directly affected by the hotfix fix
+- Files required for the fix to work
+- NOT configuration, dependencies, or unrelated files
+
+### Conflict Resolution Matrix
+
+**When `git merge main` produces conflicts during hotfix backport:**
+
+| Conflict Type | Resolution |
+|--------------|------------|
+| Hotfix-specific file changed | Take `main` version (hotfix fix) |
+| Non-hotfix file changed | Take `dev` version (authoritative) |
+| Both changed hotfix file | Manual resolution required |
+| Unrelated file changed | Take `dev` version |
+
+**Manual resolution process:**
+
+1. Identify hotfix-specific files from PR diff
+2. For each conflicting file:
+   - If in hotfix list → take `main` (hotfix)
+   - If NOT in hotfix list → take `dev` (authoritative)
+3. Complete merge with resolved conflicts
+
+### Example: `uv.lock` Conflict
+
+**Problem:** Hotfix PR updated `uv.lock` in `main`, but `dev` has newer dependencies.
+
+**Resolution:** Take `dev` version of `uv.lock` because:
+- `dev` is the authoritative source for dependency state
+- Hotfix changes should be code-only, not dependency changes
+- If hotfix truly requires dependency update, that's a broader hotfix scope
+
+**Command:**
+```bash
+git checkout --theirs uv.lock  # Take dev version
+git add uv.lock
+```
+
+### Automated Backport Script (Future)
+
+**When to automate:**
+
+Complex hotfixes with many conflicts may benefit from automated conflict resolution. See `scripts/hotfix_backport.py` (future implementation).
+
+**Automation logic:**
+1. Parse hotfix PR diff to identify hotfix files
+2. Configure git merge strategy for each file:
+   - `hotfix file` → `ours` (take main)
+   - `non-hotfix file` → `theirs` (take dev)
+3. Run merge with configured strategy
+4. Flag complex conflicts for manual review
+
+---
+
 ## When GitHub MCP Tools Unavailable
 
 **Use local squash-merge:**
