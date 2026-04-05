@@ -179,6 +179,54 @@ When a spec is modified:
 - Progress comments added to issue
 - Bug report additions (separate from spec content changes)
 
+### Authorization Cleanup Workflow (SILENT — No Comments)
+
+**When authorization is received AND workflow was interrupted, clean up approval markers BEFORE proceeding.**
+
+**The Problem:**
+
+When workflow is interrupted (for clarification questions, spec revisions, context switching, error recovery, or investigation), stale markers accumulate:
+
+- `needs-approval` label remains on issue
+- `STATUS: N.M (REVISED - NEEDS APPROVAL)` suffix remains in STATUS field
+- Todo list shows stale tasks from interrupted workflow
+
+**The Solution:**
+
+When authorization is received after interruption:
+
+1. **Remove `needs-approval` label** (if present)
+2. **Clear STATUS suffix** (`N.M (REVISED - NEEDS APPROVAL)` → `N.M`)
+3. **Clear todo list** (if workflow was interrupted — see detection below)
+4. **Proceed with implementation**
+
+**⚠️ CRITICAL: Cleanup is SILENT — NO comments posted.**
+
+- Authorization cleanup is administrative, not post-implementation review information
+- GitHub comments are for implementation results, not status notifications
+- The issue state (label, STATUS) IS the record — no duplicate notification needed
+
+#### Workflow Interruption Detection
+
+**Clear todos if ANY interruption occurred since last authorization:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption, CLEAR the todo list before implementation.
+
+| Edge Case | Action |
+|-----------|--------|
+| No interruption (immediate auth) | Skip todo clearing (todos still valid) |
+| Todo list already empty | Skip todo clearing (no-op) |
+| Label already removed | Skip label removal (no-op) |
+| STATUS has no suffix | Skip STATUS edit (no-op) |
+
 ### Label Handling
 
 **The `needs-approval` label is informational when explicit authorization is present.**
@@ -191,7 +239,7 @@ When a spec is modified:
 | No authorization AND no label | Check for other blockers; proceed if clear. |
 
 **Workflow:**
-1. **Explicit authorization received** → Proceed (label status is informational)
+1. **Explicit authorization received** → Clean up markers (label, STATUS, todos) → Proceed (label status is informational)
 2. **No explicit authorization** → Check for `needs-approval` label
 3. **Label present without authorization** → HALT and wait for user to authorize
 

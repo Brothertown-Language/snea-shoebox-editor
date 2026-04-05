@@ -52,6 +52,54 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 - Progress comments added to issue
 - Bug report additions to existing spec
 
+#### Authorization Received Status Transition
+
+**When authorization is received after a revision, clean up approval markers BEFORE proceeding.**
+
+**The Problem:**
+- `needs-approval` label remains on issue after authorization
+- `STATUS: N.M (REVISED - NEEDS APPROVAL)` suffix remains in STATUS field
+- Stale todo list from interrupted workflow
+
+**The Solution:**
+When authorization is received AND workflow was interrupted:
+
+1. **Remove `needs-approval` label** (if present)
+2. **Clear STATUS suffix**: `N.M (REVISED - NEEDS APPROVAL)` → `N.M`
+3. **Clear todo list** (if workflow was interrupted — see detection below)
+4. **Proceed with implementation**
+
+**⚠️ CRITICAL: Cleanup is SILENT — NO comments posted.**
+
+- Authorization cleanup is administrative, not post-implementation review information
+- GitHub comments are for implementation results, not status notifications
+- The issue state (label, STATUS) IS the record — no duplicate notification needed
+
+**Workflow Interruption Detection:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption occurred since last authorization, CLEAR the todo list before implementation.
+
+| Edge Case | Action |
+|-----------|--------|
+| No interruption (immediate auth) | Skip todo clearing (todos still valid) |
+| Todo list already empty | Skip todo clearing (no-op) |
+| Label already removed | Skip label removal (no-op) |
+| STATUS has no suffix | Skip STATUS edit (no-op) |
+
+**Timeline:** Cleanup happens BEFORE implementation begins — not during, not after.
+
+**See Also:**
+- `010-approval-gate.md` → "Authorization Cleanup Workflow" section for detailed cleanup rules
+- `todowrite` integration for clearing stale todos
+
 ### Status Markers (Visual Icons)
 
 | Marker | Meaning | When to Use |
