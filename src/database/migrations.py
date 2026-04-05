@@ -3,16 +3,58 @@
 import csv
 import io
 import json
+import time
 from pathlib import Path
 
 import streamlit as st
 from sqlalchemy import text
 from sqlalchemy.orm import sessionmaker
 
-from .connection import is_production
 from src.logging_config import get_logger
 
+from .connection import is_production
+
 logger = get_logger("snea.migrations")
+
+
+def log_migration_start(version: int, description: str) -> None:
+    """Log the start of a migration execution."""
+    logger.info("=" * 60)
+    logger.info("MIGRATION START: v%s - %s", version, description)
+    logger.info("=" * 60)
+
+
+def log_migration_skip(version: int, description: str, reason: str) -> None:
+    """Log when a migration is skipped (already applied or not needed)."""
+    logger.info("-" * 60)
+    logger.info("MIGRATION SKIP: v%s - %s", version, description)
+    logger.info("  Reason: %s", reason)
+    logger.info("-" * 60)
+
+
+def log_migration_complete(
+    version: int, description: str, duration_seconds: float | None = None
+) -> None:
+    """Log the successful completion of a migration."""
+    logger.info("=" * 60)
+    if duration_seconds is not None:
+        logger.info(
+            "MIGRATION COMPLETE: v%s - %s (took %.2fs)",
+            version,
+            description,
+            duration_seconds,
+        )
+    else:
+        logger.info("MIGRATION COMPLETE: v%s - %s", version, description)
+    logger.info("=" * 60)
+
+
+def log_migration_error(version: int, description: str, error: Exception) -> None:
+    """Log a migration failure with full context."""
+    logger.error("=" * 60)
+    logger.error("MIGRATION FAILED: v%s - %s", version, description)
+    logger.error("  Error: %s: %s", type(error).__name__, str(error))
+    logger.error("=" * 60)
 
 
 class MigrationManager:
@@ -112,12 +154,34 @@ class MigrationManager:
     def _run_migrations(self):
         """Execute all pending versioned migrations in order."""
         current = self._get_current_version()
+        logger.info("Current schema version: %d", current)
+
+        pending_migrations = [(v, m, d) for v, m, d in self._MIGRATIONS if v > current]
+        if not pending_migrations:
+            logger.info("No pending migrations to execute.")
+            return
+
+        logger.info("Found %d pending migration(s):", len(pending_migrations))
+        for version, _method_name, description in pending_migrations:
+            logger.info("  - v%s: %s", version, description)
+
         for version, method_name, description in self._MIGRATIONS:
             if version <= current:
+                log_migration_skip(version, description, f"Already applied (current version: {current})")
                 continue
-            method = getattr(self, method_name)
-            method()
-            self._record_migration(version, description)
+
+            log_migration_start(version, description)
+            start_time = time.time()
+
+            try:
+                method = getattr(self, method_name)
+                method()
+                elapsed = time.time() - start_time
+                log_migration_complete(version, description, elapsed)
+                self._record_migration(version, description)
+            except Exception as e:
+                log_migration_error(version, description, e)
+                raise
 
     # ── Versioned Migrations ──────────────────────────────────────────
 
@@ -204,9 +268,10 @@ class MigrationManager:
 
     def _migrate_backfill_record_languages(self):
         """Migration 5: Backfill record_languages from existing records' MDF data."""
-        from .models.core import Record, RecordLanguage, Language
         from src.mdf.parser import parse_mdf
-        
+
+        from .models.core import Language, Record, RecordLanguage
+
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
@@ -214,7 +279,7 @@ class MigrationManager:
             if session.query(Language).count() == 0:
                 logger.info("Languages table is empty, resetting autoincrement value.")
                 session.execute(text("ALTER SEQUENCE languages_id_seq RESTART WITH 1"))
-            
+
             if session.query(RecordLanguage).count() == 0:
                 logger.info("RecordLanguages table is empty, resetting autoincrement value.")
                 session.execute(text("ALTER SEQUENCE record_languages_id_seq RESTART WITH 1"))
@@ -226,28 +291,28 @@ class MigrationManager:
                 if not parsed:
                     continue
                 lg_entries = parsed[0].get('lg', [])
-                
+
                 # 2. If no \lg values found in MDF, fallback to existing language_id if it exists
                 # We need to peek at language_id before dropping it in next migration.
                 # Use raw SQL to avoid relying on model which no longer has this column.
                 row = session.execute(text("SELECT language_id FROM records WHERE id = :id"), {"id": rec.id}).first()
                 existing_lang_id = row[0] if row else None
-                
+
                 if not lg_entries and existing_lang_id:
                     # Create one entry from the old foreign key
                     rl = RecordLanguage(record_id=rec.id, language_id=existing_lang_id, is_primary=True)
                     session.add(rl)
                 else:
                     # Create entries for each parsed \lg
-                    for i, lg in enumerate(lg_entries):
+                    for _i, lg in enumerate(lg_entries):
                         lg_name = lg['name']
                         lg_code = lg['code']
-                        
+
                         # Find or create Language entry
                         lang = session.query(Language).filter_by(name=lg_name).first()
                         if not lang and lg_code:
                             lang = session.query(Language).filter_by(code=lg_code).first()
-                            
+
                         if not lang:
                             final_code = lg_code if lg_code else lg_name[:10]
                             lang = Language(name=lg_name, code=final_code)
@@ -256,10 +321,10 @@ class MigrationManager:
                         elif lg_code and not lang.code:
                             lang.code = lg_code
                             session.flush()
-                        
+
                         rl = RecordLanguage(
-                            record_id=rec.id, 
-                            language_id=lang.id, 
+                            record_id=rec.id,
+                            language_id=lang.id,
                             is_primary=lg.get('is_primary', False)
                         )
                         session.add(rl)
@@ -306,8 +371,9 @@ class MigrationManager:
 
     def _migrate_add_normalized_search_entries(self):
         """Migration 2026021585861: Add normalized_term to search_entries table."""
-        from .models.search import SearchEntry
         from src.services.linguistic_service import LinguisticService
+
+        from .models.search import SearchEntry
 
         with self._engine.connect() as conn:
             conn.execute(text("ALTER TABLE search_entries ADD COLUMN IF NOT EXISTS normalized_term VARCHAR;"))
@@ -341,8 +407,9 @@ class MigrationManager:
 
     def _migrate_renormalize_search_entries(self):
         """Migration 2026021585862: Re-normalize search_entries.normalized_term."""
-        from .models.search import SearchEntry
         from src.services.linguistic_service import LinguisticService
+
+        from .models.search import SearchEntry
 
         Session = sessionmaker(bind=self._engine)
         session = Session()
@@ -363,8 +430,9 @@ class MigrationManager:
 
     def _migrate_renormalize_sort_lx(self):
         """Migration 2026021585863: Re-normalize records.sort_lx."""
-        from .models.core import Record
         from src.services.linguistic_service import LinguisticService
+
+        from .models.core import Record
 
         Session = sessionmaker(bind=self._engine)
         session = Session()
@@ -384,9 +452,10 @@ class MigrationManager:
 
     def _migrate_add_sort_lx_column(self):
         """Migration 9: Add sort_lx column to records and backfill existing data."""
-        from .models.core import Record
         from src.services.linguistic_service import LinguisticService
-        
+
+        from .models.core import Record
+
         with self._engine.connect() as conn:
             conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS sort_lx VARCHAR;"))
             conn.commit()
@@ -427,25 +496,26 @@ class MigrationManager:
 
     def _migrate_ignore_leading_numerals(self):
         """Migration 2026030206285: Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals."""
+        from src.services.linguistic_service import LinguisticService
+
         from .models.core import Record
         from .models.search import SearchEntry
-        from src.services.linguistic_service import LinguisticService
 
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
             logger.info("Re-normalizing records.sort_lx and search_entries.normalized_term (ignoring leading numerals)...")
-            
+
             # 1. Update records.sort_lx
             records = session.query(Record).all()
             for record in records:
                 record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
-            
+
             # 2. Update search_entries.normalized_term
             entries = session.query(SearchEntry).all()
             for entry in entries:
                 entry.normalized_term = LinguisticService.generate_sort_lx(entry.term)
-            
+
             session.commit()
             logger.info("Re-normalization for leading numerals complete.")
         except Exception as e:
@@ -457,9 +527,10 @@ class MigrationManager:
 
     def _migrate_renormalize_infinity_symbol(self):
         """Migration 20260303080520: Re-normalize records.sort_lx and search_entries.normalized_term for ∞ and ✔ symbol sort order."""
+        from src.services.linguistic_service import LinguisticService
+
         from .models.core import Record
         from .models.search import SearchEntry
-        from src.services.linguistic_service import LinguisticService
 
         Session = sessionmaker(bind=self._engine)
         session = Session()
@@ -488,7 +559,7 @@ class MigrationManager:
     def _migrate_reprocess_all_records(self):
         """Migration 2026030207140: Reprocess all records to synchronize languages, search entries, and metadata."""
         from src.services.upload_service import UploadService
-        
+
         # We call the service method which manages its own session.
         # This is safe because migrations run sequentially.
         try:
@@ -501,7 +572,7 @@ class MigrationManager:
 
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""
-        from .models.core import Source, Record
+        from .models.core import Record, Source
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
@@ -563,14 +634,14 @@ class MigrationManager:
                     "citation_format": None
                 },
             ]
-            
+
             for src_data in default_sources:
                 existing = session.query(Source).filter_by(name=src_data["name"]).first()
                 if not existing:
                     new_source = Source(**src_data)
                     session.add(new_source)
                     logger.info(f"Seeded source: {src_data['name']}")
-            
+
             session.commit()
         except Exception as e:
             session.rollback()
