@@ -381,6 +381,34 @@ When authorization is received after interruption:
 2. **No explicit authorization** → Check for `needs-approval` label
 3. **Label present without authorization** → HALT and wait for user to authorize
 
+### Todo List Cleanup (MANDATORY)
+
+**When authorization received after workflow interruption:**
+
+Workflow interruptions include:
+- Developer conversation (clarification questions)
+- Spec revision
+- Context switch to different issue/task
+- Error recovery
+- Session boundary
+
+**Action:** Clear todo list BEFORE starting implementation:
+
+```python
+todowrite(todos=[])
+```
+
+**Edge cases:**
+
+| Scenario | Action |
+|----------|--------|
+| No interruption (immediate auth) | Skip todo clearing (todos still valid) |
+| Todo list already empty | Skip todo clearing (no-op) |
+| Clarification question answered | Clear todos (workflow restarted) |
+| Spec revised | Clear todos (scope changed) |
+
+**Rationale:** Todos track progress within a workflow. Workflow interruption invalidates that progress tracking - the new implementation starts fresh.
+
 ### Bug Report Response
 
 When bug report requires code changes:
