@@ -52,7 +52,69 @@ proceed_to_close_issues()
 - GitHub API `merged_at` field is the ONLY reliable merge indicator
 - Closing issues without merged PR loses tracking and audit trail
 
-### Step 2: Switch to Dev
+### Step 2: Hotfix Dev-Merge Ticket (Hotfix PRs ONLY)
+
+**If PR targets `main` (hotfix), create a ticket for merging `main` → `dev`:**
+
+```python
+# Detect hotfix PR
+pr_info = github_pull_request_read(method="get", owner=..., repo=..., pullNumber=...)
+
+is_hotfix = (
+    pr_info["base"]["ref"] == "main" and
+    ("hotfix" in pr_info.get("labels", []) or 
+     pr_info["head"]["ref"].startswith("hotfix/"))
+)
+
+if is_hotfix and pr_info.get("merged_at"):
+    # Create ticket for dev merge
+    ticket = github_issue_write(
+        method="create",
+        owner=...,
+        repo=...,
+        title=f"[SPEC] Merge main to dev - Hotfix: {pr_info['title']}",
+        body=f"""# Dev Merge Required for Hotfix
+
+**Hotfix PR:** #{pr_info['number']}
+**Merged to main:** {pr_info['merged_at']}
+**Hotfix description:** {pr_info['body']}
+
+## Affected Files
+
+{chr(10).join(pr_info.get('files', []))}
+
+## Action Required
+
+Merge `main` → `dev` to propagate hotfix to integration branch.
+
+```bash
+git checkout dev
+git merge main
+git push origin dev
+```
+
+---
+🤖 Auto-created by cleanup task after hotfix merge.
+""",
+        labels=["hotfix", "needs-approval"]
+    )
+    
+    # Post chat message
+    print(f"Hotfix merged to main. Ticket #{ticket['number']} created for dev merge.")
+```
+
+**Ticket Format:**
+- Title: `[SPEC] Merge main to dev - Hotfix: <hotfix title>`
+- Labels: `hotfix`, `needs-approval`
+- Body: Hotfix PR reference, commit hashes, affected files
+- Chat message: "Hotfix merged to main. Ticket #N created for dev merge."
+
+**Skip for non-hotfix PRs:**
+- PRs targeting `dev` → no ticket (normal feature workflow)
+- PRs without `hotfix` label targeting `dev` → no ticket
+- Direct commits to `main` (no PR) → no ticket (hotfix workflow requires PR)
+
+### Step 3: Switch to Dev
 
 ```bash
 git checkout dev

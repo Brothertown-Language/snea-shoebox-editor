@@ -47,7 +47,7 @@ This skill is invoked at these workflow triggers:
 | `review-prep` | Push branch, generate compare URL, post to issue AND chat | ~250 | — |
 | `commit-prep` | Prepare squash commit message (read-only) | ~480 | — |
 | `pr-creation` | Squash, push, create PR with changelog | ~220 | `check-pr-state`, `collect-sub-issues` |
-| `cleanup` | Delete merged branches, verify issue structure | ~150 | `verify-sub-issues` |
+| `cleanup` | Delete merged branches, verify issue structure, hotfix dev-merge ticket | ~240 | `verify-sub-issues` |
 
 ### Subtask Architecture
 
@@ -125,7 +125,7 @@ Subtasks may use `todowrite` tool for progress tracking, but this is internal to
 
 **`pr-creation`**: Use when user says "create a PR" or "pr". Squashes to single commit, pushes, creates PR with changelog, HALTs.
 
-**`cleanup`**: Use when user says "pr merged" or "merged" (automatic). Verifies merge via GitHub API, closes issues, deletes local and remote branches.
+**`cleanup`**: Use when user says "pr merged" or "merged" (automatic). Verifies merge via GitHub API, creates hotfix dev-merge ticket if applicable, closes issues, deletes local and remote branches.
 
 ## Workflow Context
 
