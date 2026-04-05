@@ -40,7 +40,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Entry Criteria
+## Preconditions
 
 - [ ] Authorization received for this specific subtask
 - [ ] STATUS in parent matches this subtask number
@@ -48,7 +48,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Exit Criteria
+## Postconditions
 
 - [ ] All verification steps pass
 - [ ] Subtask issue closed with summary
@@ -197,7 +197,7 @@ Skills are monolithic documents that load entirely into context. For skills with
 
 ---
 
-## Entry Criteria
+## Preconditions
 
 - [ ] Authorization received for specific subtask
 - [ ] STATUS matches subtask number
@@ -205,7 +205,7 @@ Skills are monolithic documents that load entirely into context. For skills with
 
 ---
 
-## Exit Criteria
+## Postconditions
 
 - [ ] All subtasks marked ☑
 - [ ] Context savings measured (50%+ target)

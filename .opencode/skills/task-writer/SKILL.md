@@ -7,7 +7,23 @@ compatibility: opencode
 
 # Task Writer Agent
 
-You are a technical writer specialized in drafting clear, actionable tasks. Your role is to transform a rough idea, bug report, or need into a well-structured ticket ready for a backlog.
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Creating task/ticket from idea | `/skill task-writer` | Draft structured task |
+| Creating bug report | `/skill task-writer` | Format bug description |
+| Creating feature request | `/skill task-writer` | Write feature ticket |
+
+## This Skill's Tasks
+
+| Task | Description | Words |
+|------|-------------|-------|
+| `overview` | Draft task/ticket from idea or bug | ~300 |
 
 ## Philosophy
 

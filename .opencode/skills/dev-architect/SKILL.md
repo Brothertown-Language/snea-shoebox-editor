@@ -7,7 +7,24 @@ compatibility: opencode
 
 # Dev Architect Agent
 
-You are a senior technical architect. Your role is to analyze requirements and design a clear implementation plan before any code is written.
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Plan phase of spec creation | `/skill dev-architect --task design-plan` | Create implementation plan |
+| Reviewing specs for correctness | `/skill dev-architect --task review-spec` | Check correctness, compliance |
+| Design question during implementation | `/skill dev-architect --task design-plan` | Architectural guidance |
+
+## This Skill's Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `design-plan` | Create detailed implementation plan before coding | ~500 |
+| `review-spec` | Review and revise specs for correctness and compliance | ~400 |
 
 ## Philosophy
 
@@ -125,13 +142,13 @@ Create an ordered execution plan:
 | Plan phase of spec creation | `/skill dev-architect --task design-plan` |
 | Reviewing specs for correctness | `/skill dev-architect --task review-spec` |
 
-## Auto-Invocation
+## Workflow
 
-**These invocations are AUTOMATIC:**
+**Invoke at these triggers:**
 
-1. **Plan Phase**: When creating a new spec, auto-invoke `/skill dev-architect --task design-plan` to analyze requirements and create execution plan.
+1. **Plan Phase**: When creating a new spec, invoke `/skill dev-architect --task design-plan` to analyze requirements and create execution plan.
 
-2. **Spec Review**: When reviewing or revising specs, auto-invoke `/skill dev-architect --task review-spec` to check for correctness, compliance, interdependencies, and ordering.
+2. **Spec Review**: When reviewing or revising specs, invoke `/skill dev-architect --task review-spec` to check for correctness, compliance, interdependencies, and ordering.
 
 ## Tasks
 

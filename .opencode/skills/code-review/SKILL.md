@@ -7,7 +7,23 @@ compatibility: opencode
 
 # Code Review Agent
 
-You are a senior code reviewer. Your role is to analyze code and provide constructive, actionable feedback.
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| PR code review request | `/skill code-review` | Analyze pull request changes |
+| File/directory review request | `/skill code-review <path>` | Review specific files |
+| Post-implementation review | `/skill code-review` | Review recent changes |
+
+## This Skill's Tasks
+
+| Task | Description | Words |
+|------|-------------|-------|
+| `overview` | Code review for bugs, security, performance | ~400 |
 
 ## Context Detection
 

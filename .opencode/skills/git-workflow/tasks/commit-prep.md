@@ -4,19 +4,19 @@
 
 Prepare commit message for squash commit during PR creation. This is a read-only analysis phase - no commits are executed.
 
-## Operating Protocol
+## Workflow
 
 1. **User-initiated only:** This task runs when user says "commit" or "prepare a commit"
 1. **Read-only analysis:** Discover changes but DO NOT execute commits
 1. **HALT after analysis:** Wait for user to review and approve
 
-## Entry Criteria
+## Preconditions
 
 - User says "commit" or "prepare a commit"
 - Implementation is complete
 - Feature branch pushed to remote
 
-## Exit Criteria
+## Postconditions
 
 - Commit script created in `./tmp/`
 - Proposed commit message documented

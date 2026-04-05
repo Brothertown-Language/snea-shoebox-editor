@@ -4,7 +4,7 @@
 
 Write generated changelog entries to CHANGELOG.md file.
 
-## Operating Protocol
+## Workflow
 
 1. **After generate task:** Run after `overview` task generates entries
 2. **Prepend entries:** Add new entries to `[Unreleased]` section
@@ -34,14 +34,14 @@ This repository maintains TWO changelogs:
 
 **Default:** If uncertain, default to `.opencode/CHANGELOG.md` for AI-focused changes.
 
-## Entry Criteria
+## Preconditions
 
 - Changelog entries generated from `overview` task
 - Repository has git history to analyze
 - Working directory is clean or changes are acceptable to include
 - Target changelog path determined (project or AI agent)
 
-## Exit Criteria
+## Postconditions
 
 - CHANGELOG.md updated with new entries
 - File formatted per Keep a Changelog standard

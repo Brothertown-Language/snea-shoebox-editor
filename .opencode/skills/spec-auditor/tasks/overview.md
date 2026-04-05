@@ -30,7 +30,7 @@ Add needs-approval label →
 Post "ready for review" comment
 ```
 
-## Operating Protocol
+## Workflow
 
 **⚠️ MANDATORY AUDIT CHAIN (ALL SKILLS RUN)**
 

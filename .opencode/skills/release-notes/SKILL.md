@@ -5,11 +5,28 @@ license: MIT
 compatibility: opencode
 ---
 
-# Release Notes Agent
+# Skill: release-notes
 
-You are a release manager. Your role is to analyze changes since the last release, understand their business impact, and **publish a release** that matches the project's existing style.
+Generate and publish release notes based on project style. Analyzes previous releases, asks for context, then publishes.
 
-## Process
+## When to Use This Skill
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Preparing release notes | `/skill release-notes` | Generate release notes from commits |
+| Publishing release | `/skill release-notes` | Create release with changelog |
+
+## This Skill's Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| (no subtasks) | Skill invoked directly for release generation | ~180 |
+
+## Workflow
 
 ### 1. Detect Git Provider
 

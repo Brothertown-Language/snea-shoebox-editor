@@ -4,25 +4,26 @@
 
 Push feature branch, generate compare URL, and report completion for developer review.
 
-## ⚠️ MANDATORY INVOCATION
+## Workflow Triggers
 
-**This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
+**Invoke this task at these workflow points:**
+- After implementation completes (mandatory - no decision point)
 
 The sequence is:
 
-1. Implementation complete → **post-implementation invoked automatically**
+1. Implementation complete → **invoke post-implementation**
 1. Branch pushed, compare URL generated → HALT
 1. Wait for developer to say "create a PR"
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just push the branch.**
 
-## Entry Criteria
+## Preconditions
 
 - Implementation work complete
 - All changes committed on feature branch
 - Authorization scope verified
 
-## Exit Criteria
+## Postconditions
 
 - Feature branch pushed to remote
 - GitHub compare URL generated

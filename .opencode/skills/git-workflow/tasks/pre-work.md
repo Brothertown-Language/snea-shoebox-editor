@@ -4,19 +4,19 @@
 
 Verify branch state, preserve changes, create feature branch BEFORE any implementation work begins.
 
-## Operating Protocol
+## Workflow Triggers
 
-1. **Automatic invocation (mandatory):** This task is invoked automatically when:
-   - User says `approved`, `go`, or similar authorization to begin implementation
-   - DO NOT prompt for invocation - the skill is triggered automatically
+**Invoke this task at these workflow points:**
+- User says `approved`, `go`, or similar authorization to begin implementation
+- DO NOT prompt for invocation - invoke automatically at these triggers
 
-## Entry Criteria
+## Preconditions
 
 - User has authorized implementation (explicit `approved` or `go`)
 - Authorization is for the correct issue
 - Sub-issue structure verified (for multi-task specs)
 
-## Exit Criteria
+## Postconditions
 
 - Feature branch created from dev
 - Working tree clean (stashed if needed)

@@ -4,19 +4,19 @@
 
 Handle work-in-progress commits during implementation. Multiple commits during implementation are acceptable for checkpointing.
 
-## Operating Protocol
+## Workflow
 
 1. **User-driven work:** The agent performs approved implementation tasks
 1. **Checkpoint commits allowed:** Commits during implementation serve to stage changes and prevent accidental loss
 1. **Squashing is deferred:** Squashing to single commit happens during PR creation, not during implementation
 
-## Entry Criteria
+## Preconditions
 
 - Feature branch exists and is checked out
 - Implementation authorized for this phase/task
 - Working tree clean (or stashed)
 
-## Exit Criteria
+## Postconditions
 
 - All implementation work complete for authorized phase/task
 - Changes committed (implementation commits acceptable)

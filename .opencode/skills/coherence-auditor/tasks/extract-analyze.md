@@ -4,12 +4,12 @@
 
 Calculate metrics and rank extraction candidates identified during scan phase.
 
-## Entry Criteria
+## Preconditions
 
 - Extraction candidates identified by `extract-scan`
 - Guideline files available for analysis
 
-## Exit Criteria
+## Postconditions
 
 - Each candidate has metrics (lines, tokens, duplication, complexity)
 - Candidates ranked by priority

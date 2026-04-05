@@ -9,17 +9,21 @@ compatibility: opencode
 
 Pattern verification for file locations, code structure, environment, and data integrity. Invoke at workflow gates to catch violations before they reach production.
 
-## When to Use
+## When to Invoke
 
-| Gate | Invocation |
-|------|------------|
-| Before creating ANY file | `/skill implementation-quality --task file-locations` |
-| At implementation start | `/skill implementation-quality --task code-structure` (load once, reference continuously) |
-| Before running commands | `/skill implementation-quality --task environment` |
-| Before handling data | `/skill implementation-quality --task data-integrity` |
-| **After implementation completes** | **MANDATORY: Automatically invoke review-prep workflow** (see `post-implementation` task) |
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
 
-## Blast Radius
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Before creating ANY file | `/skill implementation-quality --task file-locations` | Verify file location patterns |
+| At implementation start | `/skill implementation-quality --task code-structure` | Verify code structure patterns |
+| Before running commands | `/skill implementation-quality --task environment` | Verify environment patterns |
+| Before handling data | `/skill implementation-quality --task data-integrity` | Verify data integrity patterns |
+| After implementation completes | Automatic: review-prep workflow | Post-implementation verification |
+
+## This Skill's Tasks
 
 | Task | Blast Radius | When to Invoke |
 |------|--------------|----------------|
@@ -55,7 +59,7 @@ Pattern verification for file locations, code structure, environment, and data i
 
 **Note:** The `post-implementation` task is automatically invoked after every implementation. Do NOT skip it.
 
-## Operating Protocol
+## Workflow
 
 1. **Automatic invocation:** Load at workflow gates (see `010-approval-gate.md`)
 2. **Selective loading:** Load only the task needed for current concern

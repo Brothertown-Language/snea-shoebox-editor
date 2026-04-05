@@ -11,7 +11,7 @@ Guidelines Sync Manager that intelligently synchronizes between repositories thr
 - User runs `/skill sync-guidelines`
 - Automated workflow detects changes in `.opencode/guidelines/`, `.opencode/skills/`, or `ai_bin/`
 
-## Operating Protocol
+## Workflow
 
 ### Phase 0: Pre-Work Verification
 
@@ -41,7 +41,7 @@ A file is **core** if it:
 - Can be dropped into ANY project and work without modification
 
 Examples of core content:
-- `## Operating Protocol` - workflow definition
+- `## Workflow` - workflow definition
 - `git checkout`, `github_issue_write` - generic operations
 - `## Critical Requirements` - universal standards
 - Generic error handling, data integrity rules
@@ -94,7 +94,7 @@ Post comment to spec issue documenting:
 
 ```python
 # Core file: Defines generic workflow
-"## Operating Protocol" → core (workflow definition)
+"## Workflow" → core (workflow definition)
 "git checkout" → core (generic operation)
 "github_issue_write" → core (generic MCP usage)
 

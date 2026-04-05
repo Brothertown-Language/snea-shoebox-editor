@@ -10,7 +10,7 @@ Github Sub Issues management for effective GitHub workflow.
 
 This skill is automatically referenced when working with GitHub Issues and PRs.
 
-## Operating Protocol
+## Workflow
 
 Review the full skill content via `/skill github-sub-issues --task overview` or load the skill for detailed workflow guidance.
 

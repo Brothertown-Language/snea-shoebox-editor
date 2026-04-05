@@ -6,12 +6,12 @@ Generate and publish release notes.
 
 Analyze changes and publish release matching project style.
 
-## Entry Criteria
+## Preconditions
 
 - Changes since last release
 - User wants to publish a release
 
-## Exit Criteria
+## Postconditions
 
 - Release published with appropriate notes
 

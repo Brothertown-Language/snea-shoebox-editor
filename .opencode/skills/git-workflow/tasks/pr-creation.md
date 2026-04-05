@@ -4,7 +4,7 @@
 
 Create pull request after explicit user instruction. Squash commits to single commit, push branch, create PR via GitHub MCP.
 
-## Operating Protocol
+## Workflow
 
 1. **User-initiated only:** This task runs when user says "create a PR" or similar
 1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
@@ -21,13 +21,13 @@ Create pull request after explicit user instruction. Squash commits to single co
 
 **Bypassing this skill is a CRITICAL GUIDELINE VIOLATION.**
 
-## Entry Criteria
+## Preconditions
 
 - User says "create a PR", "make a PR", "push and create PR", or similar
 - Implementation is complete
 - Developer has reviewed changes via compare URL
 
-## Exit Criteria
+## Postconditions
 
 - PR created via GitHub MCP
 - PR URL reported to user

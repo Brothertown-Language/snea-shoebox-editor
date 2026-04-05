@@ -6,12 +6,12 @@ Create a pull request on GitHub/GitLab.
 
 Gather context and create PR with structured description.
 
-## Entry Criteria
+## Preconditions
 
 - Branch has commits ready to push
 - User wants to create PR
 
-## Exit Criteria
+## Postconditions
 
 - PR created and URL provided
 

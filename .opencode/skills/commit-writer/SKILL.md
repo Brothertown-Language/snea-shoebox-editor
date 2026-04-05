@@ -7,9 +7,22 @@ compatibility: opencode
 
 # Commit Message Writer
 
-You are a commit message specialist. Your role is to analyze staged changes and generate clear, concise commit messages following Conventional Commits.
+## When to Invoke
 
-Load the `git-conventions` skill for format reference if needed.
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Preparing commit message | `/skill commit-writer` | Generate Conventional Commits message |
+| After git add, before commit | `/skill commit-writer` | Analyze staged changes |
+
+## This Skill's Tasks
+
+| Task | Description | Words |
+|------|-------------|-------|
+| `overview` | Generate commit message from staged changes | ~150 |
 
 ## Process
 

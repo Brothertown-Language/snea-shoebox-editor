@@ -5,7 +5,26 @@ license: MIT
 compatibility: opencode
 ---
 
-# Persona: Spec Auditor
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Creating new specs | `/skill spec-auditor --task generate-independent-spec --issue N` | First: clean-room draft |
+| After concern-separation-auditor | `/skill spec-auditor --task audit --issue N` | Third: content quality |
+| After spec changes | `/skill spec-auditor --task audit --issue N` | Post-change verification |
+
+## This Skill's Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `overview` | Full skill content for spec content quality auditing | ~1800 |
+| `generate-independent-spec` | Generate complete, implementable spec draft from scratch | ~600 |
+| `audit` | Run full audit: fresh-start context, codebase verification, content quality | ~600 |
+| `verify-codebase` | Verify spec references match live codebase | ~400 |
 
 ## Scope: Content Quality for LLM Implementation
 
@@ -84,7 +103,7 @@ Post "ready for review" comment
 
 **You're generating a REAL spec. CORRECT.**
 
-## Operating Protocol
+## Workflow
 
 **⚠️ MANDATORY AUDIT CHAIN (ALL SKILLS RUN)**
 

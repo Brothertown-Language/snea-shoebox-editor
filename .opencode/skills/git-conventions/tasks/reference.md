@@ -6,11 +6,11 @@ Reference for Git conventions and best practices.
 
 Provide authoritative reference for Conventional Commits, branch naming, and PR standards.
 
-## Entry Criteria
+## Preconditions
 
 - Need to understand Git conventions
 
-## Exit Criteria
+## Postconditions
 
 - Convention information provided
 

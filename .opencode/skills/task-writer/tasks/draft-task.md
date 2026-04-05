@@ -6,11 +6,11 @@ Draft a task/ticket from an idea or bug report.
 
 Transform rough ideas into well-structured tickets.
 
-## Entry Criteria
+## Preconditions
 
 - User describes an idea, bug, or need
 
-## Exit Criteria
+## Postconditions
 
 - Task drafted in markdown format
 

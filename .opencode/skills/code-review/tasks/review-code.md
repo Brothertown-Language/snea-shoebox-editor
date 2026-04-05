@@ -6,11 +6,11 @@ Review code for bugs, security, performance, and best practices.
 
 Provide constructive feedback on code changes.
 
-## Entry Criteria
+## Preconditions
 
 - Code changes available (staged, unstaged, PR, or file)
 
-## Exit Criteria
+## Postconditions
 
 - Structured review provided
 

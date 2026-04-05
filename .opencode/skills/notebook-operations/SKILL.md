@@ -11,15 +11,14 @@ compatibility: opencode
 
 You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook operations use `the-notebook-mcp` tools exclusively. This is a ZERO TOLERANCE rule — violations cause notebook corruption, data integrity issues, and broken functionality.
 
-## Operating Protocol
+## Workflow
 
-1. **Automatically Applied:** This skill is referenced whenever any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
+**This skill is invoked when any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.**
 
-1. **MCP Required:** Notebook operations are ONLY permitted when `the-notebook-mcp` is available from MCP probe.
-
-1. **No Fallback:** If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
-
-1. **Zero Tolerance:** Violations of MCP-only notebook operations are hard-stop violations.
+**Key requirements:**
+- MCP Required: Notebook operations are ONLY permitted when `the-notebook-mcp` is available from MCP probe.
+- No Fallback: If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
+- Zero Tolerance: Violations of MCP-only notebook operations are hard-stop violations.
 
 ## Available Tasks
 
