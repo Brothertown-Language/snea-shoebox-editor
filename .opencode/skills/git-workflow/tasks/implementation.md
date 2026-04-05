@@ -4,6 +4,35 @@
 
 Handle work-in-progress commits during implementation. Multiple commits during implementation are acceptable for checkpointing.
 
+## Todo Tracking for Multi-Phase Specs
+
+**When implementing a multi-phase spec authorized with unqualified approval (`approved` or `go`):**
+
+Use `todowrite` at the START of implementation to track phase progress:
+
+```python
+todowrite([
+    {"content": "Phase 1: [description]", "status": "in_progress", "priority": "high"},
+    {"content": "Phase 2: [description]", "status": "pending", "priority": "high"},
+    # ... remaining phases
+])
+```
+
+**Update todo after each phase completion:**
+
+```python
+# After Phase 1 completes
+todowrite([
+    {"content": "Phase 1: [description]", "status": "completed", "priority": "high"},
+    {"content": "Phase 2: [description]", "status": "in_progress", "priority": "high"},
+    # ... remaining phases
+])
+```
+
+**Continue through ALL phases without HALT between phases.**
+
+See `020-go-prohibitions.md` Section 6 for unqualified approval scope.
+
 ## Workflow
 
 1. **User-driven work:** The agent performs approved implementation tasks

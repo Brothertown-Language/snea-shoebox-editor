@@ -8,6 +8,22 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### spec/ai-agent-workflow-fixes
+
+- **Added: PR Creation Skill Enforcement (015-mcp-preference.md)**: Added mandatory
+  skill invocation table for PR creation trigger patterns. Prohibits bypassing
+  git-workflow skill with direct `github_create_pull_request` calls or manual git
+  commands. All PR creation must go through `/skill git-workflow --task pr-creation`.
+- **Changed: Executive Summary URL Placement (113-git-pr-workflow.md)**: Added URL
+  placement table specifying that GitHub Issue comments must NOT contain URLs
+  while Chat output must contain URLs. URLs must appear as the last line after
+  the agent byline. Executive summaries focus on stakeholder value, not file lists.
+- **Added: Todo Tracking for Multi-Phase Specs (git-workflow/tasks/implementation.md)**:
+  Added todo cleanup section for clearing stale todos when authorization received
+  after workflow interruption. Includes detection of interruption types and
+  mandatory todo clearing before implementation.
+- **Addresses**: GitHub issues #429 and #431.
+
 ### spec/git-workflow-compare-url-fix
 
 - **Fixed: Compare URL Base Branch**: Corrected compare URL generation in

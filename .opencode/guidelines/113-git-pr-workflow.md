@@ -56,6 +56,17 @@ GitHub compare URL: https://github.com/<owner>/<repo>/compare/dev...<branch-name
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
+**⚠️ CRITICAL: URL placement**
+
+URL MUST be the final line of the comment - never in the middle and never in GitHub Issue comments (chat only).
+
+| Context | Location | Summary Type | Contains URL? |
+|---------|----------|--------------|---------------|
+| GitHub Issue update (substantive) | GitHub Issue | Context-based | NO |
+| Implementation complete | Chat | Executive summary | YES |
+| PR created | Chat | PR URL only | YES |
+| Issue closure | GitHub Issue | Closure summary | NO |
+
 ### Why This Matters
 
 - Developers need visibility into ALL changes before PR creation
