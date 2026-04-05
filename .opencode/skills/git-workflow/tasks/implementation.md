@@ -33,6 +33,24 @@ todowrite([
 
 See `020-go-prohibitions.md` Section 6 for unqualified approval scope.
 
+### Todo Clearing at Workflow Transitions
+
+**Clear todos at these transition points:**
+
+| Transition Point | Action |
+|------------------|--------|
+| Implementation → PR creation | Clear implementation todos (no todo needed for PR steps) |
+| After PR creation | Clear PR workflow todos (waiting for human merge) |
+| After cleanup | Clear all todos (workflow complete) |
+
+**Why:** Each workflow phase has explicit steps in skills. Todo lists track implementation progress, not procedural steps.
+
+**When to Clear:**
+
+- **Before PR creation workflow:** `todowrite(todos=[])`
+- **After cleanup workflow:** `todowrite(todos=[])`
+- **After authorization (if interrupted):** `todowrite(todos=[])`
+
 ## Workflow
 
 1. **User-driven work:** The agent performs approved implementation tasks

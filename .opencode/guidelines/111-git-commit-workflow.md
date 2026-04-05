@@ -186,6 +186,68 @@ git log -1 --oneline
 
 ______________________________________________________________________
 
+## 5.5. Todo Lifecycle During Workflow Transitions (MANDATORY)
+
+**Clear todos at these transition points:**
+
+| Transition Point | Action |
+|------------------|--------|
+| Implementation → PR creation | Clear implementation todos (no todo needed for PR steps) |
+| After PR creation | Clear PR workflow todos (waiting for human merge) |
+| After cleanup | Clear all todos (workflow complete) |
+
+**Why:** Each workflow phase has explicit steps in skills. Todo lists track implementation progress, not procedural steps.
+
+### When to Clear Todos
+
+**After authorization received (before implementation starts):**
+
+If workflow was interrupted by clarification, revision, context switch, or error:
+
+```python
+todowrite(todos=[])
+```
+
+**Workflow interruptions include:**
+
+- Developer conversation (clarification questions)
+- Spec revision
+- Context switch to different issue/task
+- Error recovery
+- Session boundary
+
+**Edge cases:**
+
+| Scenario | Action |
+|----------|--------|
+| No interruption (immediate auth) | Skip todo clearing (todos still valid) |
+| Todo list already empty | Skip todo clearing (no-op) |
+| Clarification question answered | Clear todos (workflow restarted) |
+| Spec revised | Clear todos (scope changed) |
+
+**Before PR creation workflow:**
+
+```python
+# See git-workflow skill pr-creation task
+todowrite(todos=[])
+```
+
+**After cleanup workflow:**
+
+```python
+# See git-workflow skill cleanup task
+todowrite(todos=[])
+```
+
+### Why Todo Clearing Matters
+
+- Implementation todos track progress within a workflow
+- PR creation has explicit procedural steps - no todo needed
+- Stale todos cause confusion about "X of Y complete"
+- Clean state on completion prevents confusion in next session
+
+______________________________________________________________________
+
 ______________________________________________________________________
 
 ## 6. Grouped-Step Commit Strategy

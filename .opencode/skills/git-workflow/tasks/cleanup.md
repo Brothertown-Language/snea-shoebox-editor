@@ -155,6 +155,21 @@ git status --porcelain  # Must be empty
 git branch -vv          # Should show minimal branches
 ```
 
+---
+
+### Step 6: Clear Workflow Todos
+
+**After cleanup complete:**
+
+```python
+# Clear any remaining workflow todos
+todowrite(todos=[])
+```
+
+**Why:** Ensures clean state for next work session. Todo lists track progress within workflows - once workflow completes, todos are no longer needed.
+
+---
+
 ## Context Required
 
 - Guidelines: `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`

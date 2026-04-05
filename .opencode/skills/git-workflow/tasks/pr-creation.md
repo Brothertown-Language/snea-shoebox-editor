@@ -38,6 +38,21 @@ Subtasks handle their own context, discarded after return.
 
 ## Procedure
 
+### Step 0: Clear Implementation Todos (MANDATORY)
+
+**Before PR creation workflow begins:**
+
+```python
+# Clear any stale implementation todos
+todowrite(todos=[])
+```
+
+**Why:** Implementation todos are for tracking work progress. PR creation has explicit procedural steps in this task - no todo list needed. Clearing prevents confusion about stale "X of Y complete" status.
+
+**CRITICAL:** This step runs BEFORE checking PR state, collecting sub-issues, or any other PR workflow steps.
+
+---
+
 ### Step 1: Check PR State (Subtask)
 
 **Invoke subtask to determine if PR already exists:**
