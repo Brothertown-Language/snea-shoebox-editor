@@ -520,6 +520,68 @@ The spec defines EXACTLY what to implement. Nothing more. Nothing less.
 
 ---
 
+## Critical Violation: Incorrect HALT After Phase Completion — Unqualified Approval
+
+**⚠️ Halting after completing a phase when unqualified approval was given is a CRITICAL GUIDELINE VIOLATION.**
+
+### The Problem
+
+When a developer says `approved` or `go` **without a phase qualifier**, this authorizes ALL phases of the spec. The agent must continue through all phases without stopping.
+
+Some agents incorrectly HALT after completing Phase 1 and mark remaining phases as `needs-approval`. This violates the principle of trust in approval tokens and creates unnecessary friction.
+
+### 🚫 FORBIDDEN
+
+| Forbidden Pattern | Why It's Wrong |
+|-------------------|-----------------|
+| HALT after Phase 1 when `approved` given | Unqualified approval = ALL phases authorized |
+| Mark remaining phases as `needs-approval` | Approval was already granted |
+| Ask for re-approval after each phase | Friction that violates developer mental model |
+| Assume phase-by-phase approval required | Only required for HIGH/MEDIUM+LARGE blast radius |
+
+### ✅ REQUIRED Behavior
+
+**With unqualified approval (`approved` or `go`):**
+1. Proceed through Phase 1
+2. Continue to Phase 2 (no HALT)
+3. Continue through ALL remaining phases
+4. HALT only after completing ENTIRE spec
+5. DO NOT mark remaining phases as `needs-approval`
+
+**With qualified approval (`approved: 1` or `approved: 2.3`):**
+1. Proceed through the authorized phase/step ONLY
+2. HALT after completing that phase/step
+3. Wait for next authorization before continuing
+
+### Exception: Risk-Aware Phases
+
+**For HIGH/MEDIUM risk + LARGE blast radius phases, recommend phase-by-phase approval:**
+
+| Phase Risk | Blast Radius | Recommendation |
+|------------|-------------|----------------|
+| HIGH + LARGE | Large | Explicit phase approval required |
+| HIGH + MEDIUM | Medium | Explicit phase approval recommended |
+| Any other combination | Any | Unqualified approval sufficient |
+
+**If developer provides unqualified approval for risky phases:**
+- PROCEED (developer accepted cumulative risk)
+- Document risk acknowledgment in implementation comment
+
+### Why This Matters
+
+- Developer mental model: "approved means go ahead"
+- Repeated authorization requests create friction
+- Trust in approval tokens is undermined by unnecessary HALTs
+- Unqualified approval is a complete authorization, not partial
+
+### Integration Points
+
+- `010-approval-gate.md` → "Authorization Scope for Multi-Phase Specs"
+- `020-go-prohibitions.md` → "Multi-Phase Authorization Scope"
+- This section adds critical violation enforcement
+
+---
+
 ## Critical Violation: Spec Without Investigation
 
 **⚠️ Creating a spec without completed investigation is a CRITICAL GUIDELINE VIOLATION.**

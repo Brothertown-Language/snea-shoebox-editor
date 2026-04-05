@@ -242,6 +242,45 @@ Proceeding with unqualified approval (developer accepts cumulative risk).
 
 **Missing risk level → `BOILERPLATE-TITLE` or `MISSING-ELEMENT` violation**
 
+### Edge Cases for Unqualified Approval
+
+**Edge Case: Conflict/Requirement Change**
+
+If a spec requirement changes mid-implementation (e.g., external feedback, new information), remaining tasks ARE marked `needs-approval`:
+
+| Scenario | Action |
+|----------|--------|
+| Spec revised during implementation | Stop immediately, mark remaining phases as `needs-approval` |
+| New requirement discovered | Post comment, mark affected phases as `needs-approval` |
+| Stakeholder changes scope | HALT, wait for explicit re-authorization |
+
+This is NOT a violation of "unqualified approval covers all phases" — it's a safety mechanism when the context changes.
+
+**Edge Case: External Input**
+
+Bug reports, critical findings, or production incidents invalidate prior approval:
+
+| Input Type | Action |
+|------------|--------|
+| Bug report on related code | HALT, mark remaining phases as `needs-approval` |
+| Production incident | HALT, wait for explicit instruction |
+| Critical finding during implementation | Post comment to issue, HALT |
+
+**Edge Case: Risk Escalation**
+
+If phase risk is elevated to HIGH/MEDIUM+LARGE during implementation:
+
+| Risk Change | Action |
+|-------------|--------|
+| Phase marked LOW → discovered HIGH | HALT, recommend phase-by-phase approval |
+| Blast radius grows | HALT, wait for explicit authorization |
+| Dependencies increase | HALT, assess impact |
+
+**Why Edge Cases Override:**
+- Changed context invalidates implicit trust
+- External input means developer may not have full information
+- Risk escalation requires explicit acknowledgment
+
 ## Compound Command Recognition
 
 **Approval tokens must be STANDALONE (separated by whitespace) to constitute valid authorization.**
