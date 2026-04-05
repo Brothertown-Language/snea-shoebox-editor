@@ -330,7 +330,7 @@ Allskill trigger definitions are in this table. SKILL.md files reference this ta
 | Before implementation | `/skill approval-gate --task verify-sub-issues` | Check sub-issue structure for multi-task specs |
 | After approval ("approved" or "go") | `/skill git-workflow --task pre-work` | Stash changes, create feature branch |
 | After implementation completes | `/skill git-workflow --task review-prep` | Push branch, generate compare URL, HALT |
-| User says "create a PR" | `/skill git-workflow --task pr-creation` | Squash to single commit, push, create PR, HALT |
+| User says "create a PR", "pr", "make a PR", or similar | `/skill git-workflow --task pr-creation` | Squash to single commit, push, create PR, HALT |
 | User says "PR merged" | `/skill git-workflow --task cleanup` | Close issues, delete branches |
 | Before creating ANY file | `/skill implementation-quality --task file-locations` | Verify file location patterns |
 | At implementation start | `/skill implementation-quality --task code-structure` | Verify code structure patterns |

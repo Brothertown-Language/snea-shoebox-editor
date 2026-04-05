@@ -12,6 +12,12 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### feature/skills-wording-unit14
+
+- Fix skill verification script to exclude CHANGELOG.md from "Automatic Invocation" check (historical documentation)
+- Fix skill verification script to exclude lines with "→ Example only" (educational markers)
+- Fix AGENTS.md to include "pr" trigger in Master Trigger Table for PR creation
+
 ### feature/git-workflow-restructure
 
 - Restructure git workflow to main/dev/feature branch strategy with

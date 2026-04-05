@@ -49,14 +49,17 @@ fi
 
 echo ""
 echo "7. Checking for 'Automatic Invocation'..."
-grep -r --include="*.md" "Automatic Invocation" .opencode/ AGENTS.md 2>/dev/null
+# Exclude CHANGELOG.md which documents historical changes (including what was removed)
+grep -r --include="*.md" "Automatic Invocation" .opencode/ AGENTS.md 2>/dev/null | grep -v "CHANGELOG.md"
 if [ $? -eq 0 ]; then
     FOUND_ISSUES=$((FOUND_ISSUES + 1))
 fi
 
 echo ""
 echo "8. Checking for hardcoded identity examples..."
-grep -r --include="*.md" "OpenCode (ollama-cloud/glm-5)" .opencode/skills/ 2>/dev/null
+# Exclude lines that explicitly mark these as examples ("→ Example only", "→ Placeholder only")
+# These are educational patterns showing agents what NOT to copy
+grep -r --include="*.md" "OpenCode (ollama-cloud/glm-5)" .opencode/skills/ 2>/dev/null | grep -v "Example only" | grep -v "Placeholder only"
 if [ $? -eq 0 ]; then
     FOUND_ISSUES=$((FOUND_ISSUES + 1))
 fi
