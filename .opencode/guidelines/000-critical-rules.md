@@ -348,7 +348,7 @@ When URLs are needed (e.g., code compare links, PR links, issue links):
 
 - **GitHub Issues are historical records**: Future maintainers read comments for context, not navigation
 - **URLs become outdated**: Branches get deleted, repos move, links break
-- **Context is what persists**: "The rate limiting was added to prevent API quota exhaustion" survives; `https://github.com/.../compare/main...branch` does not
+- **Context is what persists**: "The rate limiting was added to prevent API quota exhaustion" survives; `https://github.com/.../compare/dev...branch` does not
 - **Chat is for immediate action**: Developers in the current session need clickable links to navigate
 
 ### Examples
@@ -358,7 +358,7 @@ When URLs are needed (e.g., code compare links, PR links, issue links):
 ```markdown
 Phase 1 complete: Added rate limiting to PubMed client.
 
-https://github.com/owner/repo/compare/main...feature-branch
+https://github.com/owner/repo/compare/dev...feature-branch
 ```
 
 **✅ CORRECT (Context in GitHub Issue, URL in Chat):**
@@ -381,7 +381,7 @@ Added rate limiting middleware to PubMed client to prevent API quota exhaustion.
 
 **Outcome:** PubMed API calls now respect rate limits, preventing quota exhaustion errors.
 
-https://github.com/owner/repo/compare/main...feature-branch
+https://github.com/owner/repo/compare/dev...feature-branch
 
 ---
 🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)

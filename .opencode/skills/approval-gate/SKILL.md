@@ -117,7 +117,7 @@ Before reporting completion, the agent MUST verify:
 | Verification Step | Required Action |
 |-------------------|-----------------|
 | Branch pushed? | `git log origin/<branch>..HEAD --oneline` must show commits OR be empty (already pushed) |
-| Compare URL generated? | `https://github.com/<owner>/<repo>/compare/main...<branch>` |
+| Compare URL generated? | `https://github.com/<owner>/<repo>/compare/dev...<branch>` |
 | GitHub comment posted? | Executive summary + compare URL to GitHub issue |
 | Chat output posted? | Executive summary + compare URL to chat (BOTH locations required) |
 
@@ -140,7 +140,7 @@ Before reporting completion, the agent MUST verify:
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 **The review-prep task provides MANDATORY developer visibility before PR creation.**
