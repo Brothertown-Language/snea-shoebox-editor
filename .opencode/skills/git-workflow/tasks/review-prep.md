@@ -118,6 +118,54 @@ ls ./tmp/
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
 
+### Step 0.5: Lint Tool Verification (MANDATORY)
+
+**⚠️ CRITICAL: Verify file type BEFORE running lint commands.**
+
+**Python files ONLY for Python linters:**
+
+```bash
+# ✅ CORRECT: Lint Python files only
+uvx ruff check --fix src/ test/
+uvx ruff format src/ test/
+uvx pyright src/
+
+# 🚫 FORBIDDEN: Running Python linters on markdown files
+uvx ruff check --fix .opencode/guidelines/ docs/  # WRONG - markdown files
+uvx pyright docs/                                # WRONG - markdown files
+
+# ✅ CORRECT: Use markdown-specific tools
+uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
+uvx mdformat .opencode/guidelines/ docs/
+```
+
+**Markdown files ONLY for markdown linters:**
+
+```bash
+# ✅ CORRECT: Lint markdown files only
+uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
+uvx mdformat .opencode/guidelines/ docs/
+
+# 🚫 FORBIDDEN: Running markdown linters on Python files
+uvx pymarkdownlnt scan -r src/  # WRONG - Python files
+```
+
+**Cross-check verification:**
+
+| Linter Tool | Python Files | Markdown Files |
+|-------------|--------------|-----------------|
+| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
+| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
+| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
+
+**If lint command targets wrong file type:**
+
+1. STOP - Do not execute
+2. Report violation: "Lint tool mismatch: <tool> targets <wrong-type> files"
+3. Use correct tool for file type
+
 ### Step 1: Verify Branch Is Pushed
 
 **MANDATORY ENFORCEMENT CHECK: Branch MUST be on remote before generating compare URL.**

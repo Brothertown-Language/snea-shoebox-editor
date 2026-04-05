@@ -305,6 +305,26 @@ uvx srclight index --embed qwen3-embedding
 
 ## File-Type Tool Boundaries
 
+### ⚠️ MANDATORY: Pre-Lint File Type Verification
+
+**Running the wrong linter on the wrong file type is a CRITICAL GUIDELINE VIOLATION that causes noise and wastes time.**
+
+**Verification Before Each Lint Command:**
+
+```bash
+# STEP 1: Verify file type
+ls -la src/ | head -5  # Check what files exist
+
+# STEP 2: Select CORRECT tool for file type
+# Python files? Use Python tools
+# Markdown files? Use markdown tools
+# Mixed? Run SEPARATE commands for each type
+
+# STEP 3: Run lint command ONLY on correct file types
+uvx ruff check --fix src/ test/           # Python only
+uvx pymarkdownlnt scan -r docs/           # Markdown only
+```
+
 ### 🚫 CRITICAL: Use Correct Tools for Each File Type
 
 | File Extension | Linter | Formatter |
@@ -320,6 +340,16 @@ uvx srclight index --embed qwen3-embedding
 - **Markdown tools (`pymarkdownlnt`, `mdformat`)** are designed for markdown CommonMark compliance and will not work on Python files
 - Running the wrong tool on the wrong file type wastes time and produces noise
 
+### Cross-Check Verification Table
+
+| Linter Tool | Python Files | Markdown Files |
+|-------------|--------------|----------------|
+| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
+| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
+| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
+
 ### Examples
 
 ```bash
@@ -330,11 +360,45 @@ uvx ruff check --fix src/ test/
 uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
 
 # 🚫 PROHIBITED: Python linter on markdown
-uvx ruff check --fix .opencode/guidelines/  # WRONG
+uvx ruff check --fix .opencode/guidelines/  # WRONG - use pymarkdownlnt instead
 
 # 🚫 PROHIBITED: Markdown linter on Python
-uvx pymarkdownlnt scan src/  # WRONG
+uvx pymarkdownlnt scan src/  # WRONG - use ruff instead
 ```
+
+### Violation Pattern: Mental Model Gap
+
+**The pattern:**
+
+```
+Agent sees lint errors → Runs lint tool to fix → Runs on WRONG file type
+```
+
+**The problem:**
+
+- No checkpoint exists to verify file type BEFORE running lint
+- Documentation exists in 7+ locations but is not enforced at execution time
+
+**The solution:**
+
+Add verification step to workflow tasks that invoke linting:
+
+1. **Before running lint command, verify:**
+   ```bash
+   # Check file extension
+   file_path="src/module.py"
+   ext="${file_path##*.}"
+   
+   if [[ "$ext" == "md" ]]; then
+       echo "ERROR: Python linter on markdown file - use pymarkdownlnt"
+       exit 1
+   fi
+   ```
+
+2. **Workflow tasks with lint verification:**
+   - `.opencode/skills/implementation-quality/tasks/environment.md` ✓ (already added)
+   - `.opencode/skills/git-workflow/tasks/review-prep.md` ✓ (already added)
+   - `.opencode/skills/git-workflow/tasks/commit-prep.md` (add here)
 
 ## Violation Consequences
 

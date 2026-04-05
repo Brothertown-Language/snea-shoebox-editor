@@ -8,6 +8,25 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### spec/435-ruff-markdown-prohibition
+
+- **Fixed: Pre-Lint File Type Verification**: Added mandatory file type
+  verification before running linters to prevent running Python tools
+  (ruff, pyright, vulture) on Markdown files. This is a CRITICAL guideline
+  violation that causes noise and wastes time.
+- **Added: Enforcement in Multiple Locations**:
+  - `070-environment.md`: Added Pre-Lint File Type Verification section
+    with verification steps and cross-check table
+  - `060-tool-usage.md`: Added mandatory verification with tool selection table
+  - `080-code-standards.md`: Added linting section with file type verification
+    and prohibited misuse table
+  - `git-workflow/tasks/review-prep.md`: Added lint tool verification step
+  - `mcp-tool-usage/SKILL.md`: Added Pre-Lint File Type Verification task
+- **Changed: Tool Selection Enforcement**: Added explicit prohibitions
+  against running ruff/pyright/vulture on .md files, and pymarkdownlnt/mdformat
+  on .py files. Verification MUST happen before each lint command.
+- **Addresses**: GitHub issue #435.
+
 ### spec/ai-agent-workflow-fixes
 
 - **Added: PR Creation Skill Enforcement (015-mcp-preference.md)**: Added mandatory

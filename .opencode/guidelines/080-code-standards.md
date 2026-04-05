@@ -86,9 +86,25 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 
 ## Linting & Static Analysis
 
-- Run appropriate dev tools (linters, type checkers) listed in `ai_bin/start` on all modified Python files before submitting.
+### ⚠️ MANDATORY: Pre-Lint File Type Verification
 
-## Tool Selection by File Type
+**Running the wrong linter on the wrong file type is a CRITICAL GUIDELINE VIOLATION that causes noise and wastes time.**
+
+**Verification Before Each Lint Command:**
+
+```bash
+# STEP 1: Verify file type
+ls -la src/ | head -5  # Check what files exist
+
+# STEP 2: Select CORRECT tool for file type
+# Python files? Use Python tools
+# Markdown files? Use markdown tools
+# Mixed? Run SEPARATE commands for each type
+
+# STEP 3: Run lint command ONLY on correct file types
+uvx ruff check --fix src/ test/           # Python only
+uvx pymarkdownlnt scan -r docs/           # Markdown only
+```
 
 ### 🚫 PROHIBITED Misuse
 
@@ -121,6 +137,16 @@ uvx mdformat .opencode/guidelines/ docs/                # Format
 ```
 
 **Rationale:** Python linters (`ruff`, `pyright`, `vulture`) are designed for Python syntax and will produce incorrect or useless results when run on markdown files. Use markdown-specific tools (`pymarkdownlnt`, `mdformat`) for markdown files.
+
+### Cross-Check Verification Table
+
+| Linter Tool | Python Files | Markdown Files |
+|-------------|--------------|----------------|
+| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
+| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
+| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
 
 ## Numbering — ENFORCED
 
