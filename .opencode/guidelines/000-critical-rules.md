@@ -767,6 +767,80 @@ Invoked with: `/skill concern-separation-auditor --issue N`
 
 ---
 
+## Critical Violation: Auditor Comment Practices — Two-Channel Rule
+
+**⚠️ Posting complete audit reports to GitHub Issues when no revision was made is a CRITICAL GUIDELINE VIOLATION.**
+
+### The Problem
+
+Auditors have been posting complete audit findings as GitHub Issue comments even when no revision was made. This creates noise that:
+- Buries revision history
+- Makes it hard for future developers to find what actually changed
+- Violates the distinction between chat (developer coordination) and GitHub Issues (revision history)
+
+### 🚫 FORBIDDEN
+
+| Channel | When NOT to Post | Why |
+|---------|------------------|-----|
+| GitHub Issues | Complete audit report when no revision made | Creates noise, buries history |
+| Chat | Silence when audit finds no issues | Developer doesn't know audit ran |
+| GitHub Issues | Checklist-style pass/fail without revision | No context for future developers |
+
+### ✅ REQUIRED (Two-Channel Rule)
+
+| Channel | When to Post | Content |
+|---------|--------------|---------|
+| **Chat** | ALWAYS (success OR fixes) | Executive summary: pass/fail status, fixes applied |
+| **GitHub Issues** | ONLY on revision | WHY revision needed, WHAT changed - for future developer context |
+
+### Chat Executive Summary Format
+
+```
+**Audit Complete:** [audit type] [passed/failed]
+
+**Issues Found:** N
+**Issues Fixed:** M (if any)
+**Status:** [No concerns detected | N issues fixed]
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### GitHub Issue Revision Comment Format
+
+```
+Fixed [issue description]
+
+**Why:** [reason for revision]
+**What:** [what changed]
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### Examples
+
+**Audit passed (no issues):**
+- Chat: Post executive summary with "passed" status
+- GitHub Issues: NO COMMENT (no revision made)
+
+**Audit found issues and fixed them:**
+- Chat: Post executive summary with issues found and fixes applied
+- GitHub Issues: Post revision comment explaining WHY and WHAT changed
+
+**Audit found catastrophic issue (HALT):**
+- Chat: Post summary explaining blocker
+- GitHub Issues: NO COMMENT (issue is blocking, not fixed)
+
+### Why This Matters
+
+- Developers need confirmation audits ran (even when pass)
+- Future developers read GitHub Issues to understand WHAT changed and WHY
+- Audit reports are noise without revision context
+- Two channels serve different purposes: chat for coordination, issues for history
+
+---
+
 ## Critical Violation: Bypassing Skills At Workflow Points
 
 **⚠️ Bypassing MANDATORY skill invocations is a CRITICAL GUIDELINE VIOLATION.**
