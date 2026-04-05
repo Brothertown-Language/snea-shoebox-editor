@@ -213,6 +213,27 @@ The sequence is FIXED:
 
 **The compare URL is MANDATORY visibility for developers before PR creation.**
 
+### ⚠️ MANDATORY: cleanup Invoked After "PR merged" (No Decision Point)
+
+**When user says "pr merged", "merged", or similar confirmation, the agent MUST invoke cleanup — there is NO choice.**
+
+The sequence is FIXED:
+
+1. User confirms PR merge with "pr merged", "merged", or similar
+2. **cleanup is invoked** → verifies merge via GitHub API
+3. cleanup closes issues, deletes branches, creates hotfix tickets if needed
+4. cleanup reports completion
+
+**DO NOT:**
+- Run manual `git` commands for cleanup (branch deletion, issue closure)
+- Ask developer "should I delete the branch?" — just do it
+- Skip GitHub API verification (use `github_pull_request_read(method="get")`)
+- Close issues before verifying PR merge via API
+- Delete branches before closing issues
+- Leave merged branches undeleted after merge
+
+**The cleanup task is the ONLY authorized method for post-merge operations.**
+
 ## Critical Workflow Sequence
 
 **🚫 CRITICAL: Skipping phases or HALT points is a CRITICAL GUIDELINE VIOLATION.**
