@@ -483,8 +483,10 @@ required steps. The STATUS should be: `STATUS: 1.2` to indicate Phase 1, Step 2 
 ### Structure Classes
 
 - **SIX-AREA-INCOMPLETE**: Spec is missing one or more of the six core areas (commands, testing, structure, style, git, boundaries).
-- **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment).
+- **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment, phase risk profile).
 - **STRUCTURE-VIOLATION**: Spec doesn't follow the phase/step numbering or status marker format.
+
+**Note: Phase risk profiles are DECLARATIVE - the author declares what they are, the auditor does NOT enforce prescriptive structures or judge whether the declared risk is correct.**
 
 ### Content Quality Classes
 
@@ -493,6 +495,9 @@ required steps. The STATUS should be: `STATUS: 1.2` to indicate Phase 1, Step 2 
 - **DEPENDENCY-INCOMPLETE**: Dependencies lack specific integration points or migration guides.
 - **COMMENT-FORMAT-VIOLATION**: Wrong comment format (wrong emoji, missing Summary/Outcome sections).
 - **QUESTION-ASKING-VIOLATION**: Spec contains agent question patterns that violate silent HALT protocol (asking for preferences, continuation, PR readiness, etc.).
+- **RISK-PROFILE-MISSING**: Phase lacks risk level and blast radius declaration.
+
+**Note: Risk profiles are DECLARATIVE - the auditor validates presence and format, NOT whether the declared risk is correct.**
 
 ### Scope/Semantic Classes
 
@@ -535,6 +540,8 @@ For each GitHub Issue `[SPEC]`, verify:
 - \[ \] Phases numbered sequentially (1, 2, 3...)
 - \[ \] Steps numbered within each phase (1, 2, 3...)
 - \[ \] Status markers used correctly (☐/↻/☑/☒)
+- \[ \] Each phase declares risk level (LOW/MEDIUM/HIGH)
+- \[ \] Each phase declares blast radius (SMALL/MEDIUM/LARGE)
 
 ### Content Quality
 

@@ -109,6 +109,41 @@ When authorization is received AND workflow was interrupted:
 | `☑` | Complete | Task done and verified |
 | `☒` | Blocked | Issue found, cannot proceed |
 
+### Phase Risk and Blast Radius Notation
+
+**Each phase SHOULD include risk and blast radius information:**
+
+```markdown
+## Phase N: [Concern Name] (Risk: [LOW|MEDIUM|IGH], Blast Radius: [SMALL|MEDIUM|ARGE])
+
+**Interdependencies**: [NONE|Phase M (must exist before this phase)]
+
+**Why this order**: [Explanation]
+```
+
+**Risk Levels:**
+- **LOW**: Read-only, additive, easily reversible
+- **MEDIUM**: Modifies existing code, moderate rollback complexity
+- **HIGH**: Breaking changes, hard to rollback, production-critical
+
+**Blast Radius:**
+- **SMALL**: Single file/module, unit tests sufficient
+- **MEDIUM**: Multiple files, internal dependencies
+- **LARGE**: Cross-module, external dependencies
+
+**Example:**
+```markdown
+## Phase 1: Database Schema (Risk: LOW, Blast Radius: SMALL)
+
+**Interdependencies**: NONE
+
+**Why this order**: Foundation layer with no dependencies.
+
+### Steps
+1. ☐ Add user table schema
+2. ☐ Create migration script
+```
+
 **CRITICAL**: Update to `↻` (in progress) **during** implementation, not just after completion.
 
 #### Example During Implementation

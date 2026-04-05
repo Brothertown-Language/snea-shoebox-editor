@@ -212,6 +212,94 @@ When a developer says `approved` or `go` **without a phase qualifier**, the agen
 2. HALT after completing that phase/step
 3. Wait for next authorization before continuing
 
+## Risk-Aware Authorization (CRITICAL)
+
+**⚠️ High-risk and large-blast-radius phases may require explicit phase-by-phase approval, even with unqualified authorization.**
+
+### When Phase-by-Phase Authorization Is Required
+
+| Phase Risk Level | Blast Radius | Authorization Rule |
+|-----------------|--------------|---------------------|
+| **LOW** | SMALL | Unqualified approval sufficient |
+| **MEDIUM** | MEDIUM | Unqualified approval sufficient |
+| **HIGH** | SMALL | Unqualified approval sufficient |
+| **HIGH** | MEDIUM | **EXPLICIT phase approval recommended** |
+| **ANY** | LARGE | **EXPLICIT phase approval required** |
+
+### Risk Levels Defined
+
+| Risk | Characteristics | Examples |
+|------|-----------------|----------|
+| **LOW** | Read-only, additive, localized, easily reversible | Adding a new query, adding a test file, documentation |
+| **MEDIUM** | Modifies existing code, affects one module, moderate rollback complexity | Refactoring a service, adding API endpoint, modifying schema |
+| **HIGH** | Breaking changes, affects multiple modules, hard to rollback, production-critical | Database migration, authentication rewrite, API versioning, deployment changes |
+
+### Blast Radius Defined
+
+| Blast Radius | Scope | Rollback Difficulty |
+|--------------|-------|---------------------|
+| **SMALL** | Single file/module, no dependencies | Easy (simple revert) |
+| **MEDIUM** | Multiple files, internal dependencies | Moderate (may need data migration) |
+| **LARGE** | Cross-module, external dependencies, production systems | Difficult (may need data rollback, coordination) |
+
+### Authorization Commands for Risk-Aware Phases
+
+**For HIGH/MEDIUM risk or ANY/LARGE blast radius:**
+
+| Command | Purpose |
+|---------|---------|
+| `approved: N` | Approve only Phase N (phase-by-phase authorization) |
+| `approved: N.M` | Approve only Phase N Step M |
+| `approved` | Approve ALL phases (only if developer understands cumulative risk) |
+
+**Developer Workflow for Risky Phases:**
+
+1. Check phase risk level and blast radius in spec
+2. For HIGH/MEDIUM+LARGE phases, use `approved: N` for explicit control
+3. For cumulative risk acceptance, use unqualified `approved`
+
+**Agent Workflow for Risky Phases:**
+
+1. Before implementation, read phase risk level from spec
+2. For HIGH/MEDIUM+LARGE phases, **RECOMMEND** phase-by-phase approval
+3. If unqualified approval given for risky phase, PROCEED (developer accepted cumulative risk)
+4. Document risk acceptance in implementation comment
+
+### Example Risk-Aware Authorization
+
+**Spec with HIGH/MEDIUM risk profile:**
+
+```markdown
+## Phase 1: Database Schema (Risk: LOW, Blast Radius: SMALL)
+...
+## Phase 2: Authentication Service (Risk: MEDIUM, Blast Radius: MEDIUM)
+...
+## Phase 3: Production Deployment (Risk: HIGH, Blast Radius: LARGE)
+...
+```
+
+**Authorization Scenarios:**
+
+| Developer Command | What Gets Implemented |
+|-----------------|----------------------|
+| `approved` | All phases (developer accepts cumulative risk) |
+| `approved: 1` | Phase 1 only (safe phase, no risk concern) |
+| `approved: 2` | Phase 2 only (medium risk isolated) |
+| `approved: 3` | Phase 3 only (high risk, explicit approval) |
+
+**Agent Response to Unqualified Approval for Risky Phase:**
+
+```
+Implementing Phase 3 (HIGH risk, LARGE blast radius).
+
+⚠️ This phase has elevated risk:
+- Risk Level: HIGH
+- Blast Radius: LARGE
+- Rollback: Difficult (may need production coordination)
+
+Proceeding with unqualified approval (developer accepts cumulative risk).
+```
+
 ## Compound Command Handling
 
 **Compound command:** A user message containing multiple instructions without proper separation, where approval parsing may be ambiguous.
