@@ -4,7 +4,7 @@
 # - Table with constraints (e.g. UniqueConstraint): __table_args__ = (UniqueConstraint(...), {'extend_existing': True})
 # This prevents sqlalchemy.exc.InvalidRequestError on Streamlit hot-reload / module re-import.
 from .core import Source, Language, RecordLanguage, Record
-from .search import SearchEntry
+from .search import SearchEntry, HeadwordSearchEntry, GlossSearchEntry
 from .workflow import MatchupQueue, EditHistory
 from .identity import User, UserPreference, UserActivityLog, Permission
 from .meta import SchemaVersion
@@ -16,6 +16,8 @@ __all__ = [
     'RecordLanguage',
     'Record',
     'SearchEntry',
+    'HeadwordSearchEntry',
+    'GlossSearchEntry',
     'MatchupQueue',
     'EditHistory',
     'User',

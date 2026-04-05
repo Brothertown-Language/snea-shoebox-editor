@@ -19,3 +19,36 @@ class SearchEntry(Base):
     entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'se', 'cf', 've'
     
     record = relationship("Record", back_populates="search_entries")
+
+
+class HeadwordSearchEntry(Base):
+    """
+    Headword-level entries only: PRIMARY lx and PRIMARY va.
+    Populated during MDF parsing with state tracking.
+    """
+    __tablename__ = 'headword_search_entries'
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
+    entry_type = Column(String, nullable=False)  # 'lx' or 'va'
+    term = Column(String, nullable=False)
+    normalized_term = Column(String, nullable=False)
+
+    record = relationship("Record", back_populates="headword_entries")
+
+
+class GlossSearchEntry(Base):
+    """
+    Primary gloss entries only: PRIMARY ge.
+    Populated during MDF parsing with state tracking.
+    """
+    __tablename__ = 'gloss_search_entries'
+    __table_args__ = {'extend_existing': True}
+
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
+    term = Column(String, nullable=False)
+    normalized_term = Column(String, nullable=False)
+
+    record = relationship("Record", back_populates="gloss_entries")

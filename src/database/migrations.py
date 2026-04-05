@@ -47,6 +47,8 @@ class MigrationManager:
         (2026030206285, "_migrate_ignore_leading_numerals", "Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals"),
         (2026030207140, "_migrate_reprocess_all_records", "Reprocess all records to synchronize languages, search entries, and metadata"),
         (20260303080520, "_migrate_renormalize_infinity_symbol", "Re-normalize sort_lx and normalized_term for \u221e and \u2714 symbol sort order"),
+        (20260405140917, "_migrate_create_headword_search_entries", "Create headword_search_entries table for PRIMARY lx and va"),
+        (20260405140918, "_migrate_create_gloss_search_entries", "Create gloss_search_entries table for PRIMARY ge"),
     ]
 
     def __init__(self, engine):
@@ -681,3 +683,34 @@ class MigrationManager:
             session.rollback()
         finally:
             session.close()
+
+    def _migrate_create_headword_search_entries(self):
+        """Migration 20260405140917: Create headword_search_entries table for PRIMARY lx and va."""
+        with self._engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS headword_search_entries (
+                    id SERIAL PRIMARY KEY,
+                    record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE RESTRICT,
+                    entry_type VARCHAR NOT NULL,
+                    term VARCHAR NOT NULL,
+                    normalized_term VARCHAR NOT NULL
+                );
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_headword_search_entries_normalized_term ON headword_search_entries (normalized_term);"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_headword_search_entries_record_id ON headword_search_entries (record_id);"))
+            conn.commit()
+
+    def _migrate_create_gloss_search_entries(self):
+        """Migration 20260405140918: Create gloss_search_entries table for PRIMARY ge."""
+        with self._engine.connect() as conn:
+            conn.execute(text("""
+                CREATE TABLE IF NOT EXISTS gloss_search_entries (
+                    id SERIAL PRIMARY KEY,
+                    record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE RESTRICT,
+                    term VARCHAR NOT NULL,
+                    normalized_term VARCHAR NOT NULL
+                );
+            """))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_normalized_term ON gloss_search_entries (normalized_term);"))
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_record_id ON gloss_search_entries (record_id);"))
+            conn.commit()
