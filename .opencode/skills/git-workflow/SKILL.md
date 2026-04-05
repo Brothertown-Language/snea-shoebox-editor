@@ -40,14 +40,68 @@ This skill is invoked at these workflow triggers:
 
 ## Tasks
 
-| Task | Purpose | Words |
-|------|---------|-------|
-| `pre-work` | Verify branch state, stash changes (with --include-untracked), create feature branch | ~700 |
-| `implementation` | Handle grouped commits during implementation, WIP commits before HALT | ~500 |
-| `review-prep` | Push branch, generate compare URL, post to issue AND chat | ~620 |
-| `commit-prep` | Prepare squash commit message (read-only) | ~480 |
-| `pr-creation` | Squash, push, create PR with changelog via subtask | ~900 |
-| `cleanup` | Delete merged branches, clean stale refs | ~800 |
+| Task | Purpose | Words | Subtasks |
+|------|---------|-------|----------|
+| `pre-work` | Verify branch state, stash changes, create feature branch | ~130 | `verify-stash-branch` |
+| `implementation` | Handle grouped commits during implementation, WIP commits before HALT | ~500 | — |
+| `review-prep` | Push branch, generate compare URL, post to issue AND chat | ~250 | — |
+| `commit-prep` | Prepare squash commit message (read-only) | ~480 | — |
+| `pr-creation` | Squash, push, create PR with changelog | ~220 | `check-pr-state`, `collect-sub-issues` |
+| `cleanup` | Delete merged branches, verify issue structure | ~150 | `verify-sub-issues` |
+
+### Subtask Architecture
+
+**Context efficiency through isolation:**
+
+Complex workflow steps are isolated in focused subtasks (~70-190 lines) to:
+
+1. Keep main task files concise (~130-220 lines)
+2. Isolate complex logic (PR state verification, issue structure verification)
+3. Reduce context window usage at any given time
+4. Enable reusable verification components
+
+**Subtask invocation pattern:**
+
+```
+/task subagent_type="general" description="Subtask name" prompt="Use the git-workflow skill <subtask-name> subtask to <purpose>."
+```
+
+**Available subtasks:**
+
+| Subtask | Purpose | Invoke From |
+|---------|---------|-------------|
+| `check-pr-state` | Check if branch has existing PR (open/merged/closed) | `pr-creation` |
+| `collect-sub-issues` | Collect sub-issues for multi-task spec PR body | `pr-creation` |
+| `verify-stash-branch` | Verify clean working tree and preserve external changes | `pre-work` |
+| `verify-sub-issues` | Verify parent/child issue structure before closing parent | `cleanup` |
+
+**Return format:**
+
+Subtasks return structured JSON to calling task:
+
+```json
+{
+  "success": true,
+  "field1": "value1",
+  "field2": "value2"
+}
+```
+
+**Error handling:**
+
+Subtasks return structured error information:
+
+```json
+{
+  "success": false,
+  "error": "Error description",
+  "details": "Additional context"
+}
+```
+
+**Todo tracking (optional):**
+
+Subtasks may use `todowrite` tool for progress tracking, but this is internal to the subtask context and does not pollute the main task context.
 
 ## Invocation
 
