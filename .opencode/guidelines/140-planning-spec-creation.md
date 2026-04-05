@@ -15,6 +15,241 @@ AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
 ---
 
+## 1.4. Concern-Based Phases with Interdependencies (MANDATORY)
+
+**All specs MUST define phases based on separation of concerns, risk, blast radius, and interdependencies.**
+
+### Phase Ordering Principles
+
+**Phases MUST be ordered using these principles (in priority order):**
+
+| Priority | Principle | Description |
+|----------|-----------|-------------|
+| **1 (HIGHEST)** | **Interdependencies First** | If Phase B depends on Phase A, then A MUST be implemented before B |
+| **2** | **Smallest Blast Radius** | Data layer changes before business logic before API/UI |
+| **3** | **Low Risk Before High Risk** | Read-only changes before mutations; additive before modifications |
+| **4** | **Single Concern Per Phase** | One layer, one module, or one responsibility per phase |
+
+### Interdependency Ordering (Critical)
+
+**TOP PRIORITY: Dependencies before dependents (topological order)**
+
+The interdependency ordering principle ensures:
+- **Cherry-pick safety**: Any single commit can be cherry-picked without breaking builds (dependencies are already present)
+- **Revert safety**: Reverting a commit won't leave orphaned dependents (dependents come later)
+- **Independent units**: Each discrete unit is independently buildable at its concern-level
+- **Atomic changes**: Each phase focuses on one concern boundary
+
+**Declaration Format:**
+
+Every phase MUST declare its interdependencies:
+
+```markdown
+## Phase N: [Concern Name] (Risk: LEVEL, Blast Radius: SIZE)
+
+**Interdependencies**: [NONE | Phase M (what it requires)]
+
+**Why this order**: [Explanation of why this phase depends on previous phases]
+
+### Steps
+1. ☐ [first step]
+2. ☐ [second step]
+```
+
+**Example:**
+
+```markdown
+## Phase 3: Business Logic (Risk: MEDIUM, Blast Radius: MEDIUM)
+
+**Interdependencies**: Phase 1 (user table schema must exist)
+
+**Why this order**: AuthRepository depends on user table. Cannot implement business logic without data foundation.
+
+### Steps
+1. ☐ Create AuthRepository class
+2. ☐ Implement password hashing
+3. ☐ Add session management
+```
+
+### Topological Ordering Algorithm
+
+**When ordering phases, use this algorithm:**
+
+1. **Build dependency graph**: For each phase, identify all phases it depends on
+2. **Detect cycles**: If circular dependency found, refactor or combine phases
+3. **Topological sort**: Order phases so all dependencies come before dependents
+4. **Apply secondary principles**: Within dependency constraints, order by blast radius (smallest first), then risk (lowest first)
+
+**Conflict Resolution:**
+
+When ordering principles conflict, resolve in this order:
+1. **Interdependencies** (must be satisfied first - CYCLIC DEPENDENCIES ARE BLOCKING)
+2. **Blast Radius** (smaller scope preferred when no dependency conflict)
+3. **Risk** (lower risk preferred when blast radius is equal)
+4. **Concern Separation** (automatically satisfied if 1-3 are satisfied)
+
+### Separation of Concerns for Phases
+
+**What is a "concern" for phase definition?**
+
+A concern is a bounded area of responsibility with:
+- **Single layer**: Data, Business Logic, API, Presentation, Infrastructure
+- **Single module**: Authentication, Search, Notifications, Reporting
+- **Single responsibility**: Query optimization, Error handling, Caching
+
+**Phase should modify ONE concern:**
+
+| Phase Concern Type | Examples | What It Includes |
+|-------------------|----------|-----------------|
+| **Data Layer** | Database schema, migrations, repositories | Tables, indexes, data access code |
+| **Business Logic** | Services, domain models, validation rules | Core algorithms, business rules |
+| **API Layer** | Endpoints, request/response handling | HTTP handling, routing, serialization |
+| **Presentation** | UI components, views, templates | Frontend code, user interface |
+| **Infrastructure** | Caching, logging, monitoring | Cross-cutting concerns |
+| **Testing** | Unit tests, integration tests, E2E tests | Verification for a specific concern |
+
+**Phase isolation rules:**
+- Data layer changes should NOT touch API code
+- Business logic changes should NOT touch presentation layer
+- Each phase should be reviewable in isolation
+
+### Risk Profiles
+
+**Each phase MUST have a risk profile:**
+
+| Risk Level | Characteristics | Examples |
+|------------|-----------------|----------|
+| **LOW** | Read-only, additive, localized, easily reversible | Adding a new query, adding a new test file, documentation |
+| **MEDIUM** | Modifies existing code, affects one module, moderate rollback complexity | Refactoring a service, adding a new API endpoint, modifying schema |
+| **HIGH** | Breaking changes, affects multiple modules, hard to rollback, production-critical | Database migration, authentication rewrite, API versioning, deployment changes |
+
+### Blast Radius Assessment
+
+**Each phase MUST have a blast radius assessment:**
+
+| Blast Radius | Scope | Testing Required | Rollback Difficulty |
+|--------------|-------|------------------|---------------------|
+| **SMALL** | Single file/module, no dependencies | Unit tests only | Easy (simple revert) |
+| **MEDIUM** | Multiple files, internal dependencies | Integration tests | Moderate (may need data migration) |
+| **LARGE** | Cross-module, external dependencies | Full test suite | Difficult (may need data rollback, coordination) |
+
+### Cherry-Pick and Revert Guarantees
+
+**With interdependency ordering, the following guarantees apply:**
+
+**Cherry-Pick Guarantees:**
+- Any phase's commits can be cherry-picked independently (dependencies already present)
+- Build will not break from cherry-picking a single phase
+- Tests for that phase will pass without additional phases
+
+**Revert Guarantees:**
+- Reverting a phase won't break dependent phases (they don't exist yet)
+- No orphaned code or incomplete dependencies after revert
+- Clean rollback to previous phase boundary
+
+**Interactive Rebase Guarantees:**
+- Phases can be reordered within dependency constraints
+- Dropping a phase won't break later phases (dependency check required)
+- Squashing phases preserves interdependency ordering
+
+### Phase Template with Interdependencies
+
+**Required template for every phase:**
+
+```markdown
+## Phase N: [Concern Name] (Risk: [LOW|MEDIUM|HIGH], Blast Radius: [SMALL|MEDIUM|ARGE])
+
+**Interdependencies**: [NONE|Phase M (what must exist before this phase)]
+
+**Why this order**: [One-sentence explanation of dependency]
+
+### Steps
+1. ☐ [Specific, atomic step - one git commit]
+2. ☐ [Specific, atomic step - one git commit]
+3. ☐ [Specific, atomic step - one git commit]
+
+### Success Criteria
+1. ✅ [Measurable, testable criterion]
+2. ✅ [Measurable, testable criterion]
+```
+
+**Example - Complete Feature:**
+
+```markdown
+## Phase 1: User Table Schema (Risk: LOW, Blast Radius: SMALL)
+
+**Interdependencies**: NONE
+
+**Why this order**: Foundation - no dependencies on other phases.
+
+### Steps
+1. ☐ Add users table with authentication columns
+2. ☐ Create user repository class
+3. ☐ Write migration script
+
+---
+
+## Phase 2: Authentication Service (Risk: MEDIUM, Blast Radius: MEDIUM)
+
+**Interdependencies**: Phase 1 (user table must exist)
+
+**Why this order**: Authentication service depends on user table for credential storage.
+
+### Steps
+1. ☐ Implement password hashing with bcrypt
+2. ☐ Add session token generation
+3. ☐ Create login/logout methods
+
+---
+
+## Phase 3: API Endpoints (Risk: MEDIUM, Blast Radius: MEDIUM)
+
+**Interdependencies**: Phase 2 (authentication service must exist)
+
+**Why this order**: API endpoints expose authentication service through HTTP layer.
+
+### Steps
+1. ☐ Add /login endpoint
+2. ☐ Add /logout endpoint
+3. ☐ Add /refresh-token endpoint
+
+---
+
+## Phase 4: Integration Tests (Risk: LOW, Blast Radius: MEDIUM)
+
+**Interdependencies**: Phases 1-3 (all functionality must exist)
+
+**Why this order**: Integration tests verify all components work together end-to-end.
+
+### Steps
+1. ☐ Write login flow test
+2. ☐ Write token refresh test
+3. ☐ Write logout flow test
+```
+
+### Circular Dependency Detection
+
+**If circular dependencies are detected, resolve by:**
+
+1. **Refactoring**: Split shared responsibilities into separate phases
+2. **Combining**: Merge interdependent phases into single larger phase
+3. **Extracting**: Create shared dependency that both phases can depend on
+
+**Example - Circular Dependency:**
+
+```
+Phase A depends on Phase B
+Phase B depends on Phase C
+Phase C depends on Phase A  ← CIRCULAR
+
+Solutions:
+1. Extract shared code into Phase D that A, B, C all depend on
+2. Combine A, B, C into a single phase
+3. Redesign to break circular dependency in architecture
+```
+
+---
+
 ## Terminology: Spec vs. Guideline Files
 
 - **"Create a new spec"** = Create a GitHub Issue with `[SPEC]` prefix (Mandatory when GitHub MCP available)
