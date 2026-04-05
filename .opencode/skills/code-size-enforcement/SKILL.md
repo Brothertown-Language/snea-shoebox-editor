@@ -11,7 +11,19 @@ Enforce size limits on functions, notebook cells, and files using word counts as
 
 **Why Word Counts:** Word counts provide a more accurate measure of LLM context usage and cognitive load than line counts. A dense short function may have more complexity than a verbose long one.
 
-## Available Tasks
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Writing or modifying code | `/skill code-size-enforcement --task overview` | Check size limits |
+| Before merge/PR | `/skill code-size-enforcement --task overview` | Verify compliance |
+| Size limit violations | `/skill code-size-enforcement --task overview` | Get remediation guidance |
+
+## This Skill's Tasks
 
 | Task | Description | Words |
 |------|-------------|-------|
@@ -29,13 +41,14 @@ Invoke the overview task for complete enforcement rules:
 
 Code Size Enforcer ensuring code artifacts stay within size limits for maintainability and readability.
 
-## Operating Protocol
+## Workflow
 
-1. **Automatically Applied** - This skill is referenced whenever code is written or modified
-2. **Check Size Limits Before Merge** - Verify limits when code changes are prepared for commit/PR
-3. **Use Permitted Detection Tools** - Use documented measurement methods
-4. **Grandfather Existing Files** - Files before this skill are NOT flagged
-5. **Enforce on New/Modified Files** - Created/modified after skill introduction must comply
+**Automatic by default — no manual invocation needed.**
+
+1. Automatically enforced when code is written or modified
+2. Check limits before merge/PR
+3. Use permitted detection tools
+4. Grandfather existing files, enforce on new/modified
 
 ---
 

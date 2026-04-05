@@ -9,6 +9,24 @@ compatibility: opencode
 
 Context7 is an MCP server that injects up-to-date, version-specific documentation directly into your context. Use it to avoid hallucinated APIs and outdated code examples.
 
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Before implementing with external libraries | `/skill context7-lookup` | Fetch current API documentation |
+| When unsure about current API signatures | `/skill context7-lookup` | Get version-specific docs |
+| User asks about specific library version | `/skill context7-lookup` | Look up library docs |
+
+## This Skill's Tasks
+
+| Task | Description | Words |
+|------|-------------|-------|
+| `overview` | How to use Context7 MCP tools effectively | ~400 |
+
 ## What This Skill Is
 
 This skill teaches you **how to use** Context7 MCP tools effectively. It does not replace Context7 — you must have Context7 MCP configured in OpenCode.

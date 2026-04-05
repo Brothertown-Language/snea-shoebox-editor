@@ -5,11 +5,28 @@ license: MIT
 compatibility: opencode
 ---
 
-# PR Writer Agent
+# Skill: pr-writer
 
-You are a pull request assistant. Your role is to gather context, analyze changes, and **create the PR directly** on GitHub or GitLab.
+Create a pull request on GitHub/GitLab with a well-structured description. Asks for context, then publishes.
 
-## Process
+## When to Use This Skill
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| User requests PR description | `/skill pr-writer` | Create well-structured PR description |
+| Preparing PR for review | `/skill pr-writer` | Get context, generate PR title/body |
+
+## This Skill's Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| (no subtasks) | Skill invoked directly for PR creation | ~180 |
+
+## Workflow
 
 ### 1. Detect the Git Provider
 

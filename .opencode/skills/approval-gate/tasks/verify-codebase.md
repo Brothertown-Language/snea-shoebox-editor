@@ -4,12 +4,12 @@
 
 Re-evaluate codebase state before implementation to detect staleness or superseding issues.
 
-## Entry Criteria
+## Preconditions
 
 - Authorization verified
 - Sub-issues verified
 
-## Exit Criteria
+## Postconditions
 
 - Files mentioned in spec still exist
 - Referenced code is still valid

@@ -6,11 +6,11 @@ Fetch up-to-date library documentation.
 
 Get current API signatures and examples for external libraries.
 
-## Entry Criteria
+## Preconditions
 
 - Need documentation for an external library
 
-## Exit Criteria
+## Postconditions
 
 - Current documentation retrieved
 

@@ -5,31 +5,28 @@ license: MIT
 compatibility: opencode
 ---
 
-# Changelog Generator
+# Skill: changelog-generator
 
-Transforms technical git commits into polished, user-friendly changelogs that customers will understand and appreciate.
-
-## When to Use
-
-- Preparing release notes for a new version
-- Creating weekly/monthly product updates
-- Writing changelog entries for app store submissions
-
-## Prerequisites
-
-- **Git**: Required for reading commit history
-- **Repository access**: Must be run from a git repository root
-- **Optional**: Custom changelog style guide (CHANGELOG_STYLE.md)
+Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes.
 
 ## When to Use This Skill
 
-- Preparing release notes for a new version
-- Creating weekly or monthly product update summaries
-- Documenting changes for customers
-- Writing changelog entries for app store submissions
-- Generating update notifications
-- Creating internal release documentation
-- Maintaining a public changelog/product updates page
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Generating changelog | `/skill changelog-generator` | Create changelog from commits |
+| Updating CHANGELOG.md | `/skill changelog-generator --task write` | Write entries to changelog file |
+| PR creation workflow | Invoked as subtask by `git-workflow` | Generate commit messages for PR |
+
+## This Skill's Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `overview` | Full skill content for changelog generation | ~400 |
+| `write` | Write generated entries to CHANGELOG.md | ~300 |
 
 ## Dual Changelog Workflow
 

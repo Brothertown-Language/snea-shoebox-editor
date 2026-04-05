@@ -4,12 +4,12 @@
 
 Check for explicit authorization and needs-approval label status before implementation.
 
-## Entry Criteria
+## Preconditions
 
 - User says "approved", "go", or similar authorization
 - Spec exists as GitHub Issue
 
-## Exit Criteria
+## Postconditions
 
 - Authorization verified as explicit and for correct issue
 - needs-approval label status checked

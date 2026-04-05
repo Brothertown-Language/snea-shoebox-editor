@@ -4,13 +4,13 @@
 
 Detect drift between guidelines and skills during maintenance mode by comparing current state to baseline.
 
-## Entry Criteria
+## Preconditions
 
 - Skill invoked with `--mode maintenance`
 - Previous baseline exists (from prior audit log)
 - Current guidelines and skills available
 
-## Exit Criteria
+## Postconditions
 
 - Token drift calculated (±% from baseline)
 - Duplicate content flagged

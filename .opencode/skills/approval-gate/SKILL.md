@@ -7,13 +7,20 @@ compatibility: opencode
 
 # Skill: approval-gate
 
-Authorization Gatekeeper ensuring all code changes follow the spec + authorization workflow. Invoked automatically before implementation begins.
+Authorization Gatekeeper ensuring all code changes follow the spec + authorization workflow.
 
-## When to Use
+## When to Invoke
 
-- Before ANY file edit (MANDATORY - auto-loaded)
-- Before implementation (verify auth + sub-issues)
-- Before issue body edits (verify authorization)
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Before ANY file edit | `/skill approval-gate --task verify-authorization` | Confirm spec + approval exist |
+| Before implementation | `/skill approval-gate --task verify-sub-issues` | Check sub-issue structure for multi-task specs |
+| User says "approved" or "go" | `/skill approval-gate --task verify-authorization` | Verify auth + needs-approval label status |
+| Before implementing any task | `/skill approval-gate --task verify-sub-issues` | Verify sub-issue structure |
 
 ## Tasks
 
@@ -36,41 +43,34 @@ Authorization Gatekeeper ensuring all code changes follow the spec + authorizati
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate` - Overview only
 
-## Operating Protocol
+## This Skill's Tasks
 
-1. **Automatic invocation (mandatory):** This skill is referenced when:
+**`verify-authorization`**: Use before ANY file edit. Confirms spec exists as GitHub Issue, verifies explicit authorization received, checks needs-approval label status.
 
-   - User says `approved`, `go`, or similar authorization
-   - User asks about approval workflow
-   - Implementation is about to begin
-   - DO NOT prompt for invocation - the skill is triggered automatically
+**`verify-sub-issues`**: Use before implementing multi-task specs. Confirms parent issue has sub-issues, verifies sub-issue structure matches spec phases, ensures each phase has tracking.
 
-1. **Pre-Implementation Verification:**
+**`verify-codebase`**: Use when re-evaluating implementation against current codebase. Detects spec staleness, checks if referenced code still exists.
 
-   - Verify spec exists as GitHub Issue
-   - Verify spec has received explicit authorization
-   - Verify sub-issues structure (multi-task only)
-   - Check for blocking issues/updates
+**`verify-blockers`**: Use to check for blocking issues. Verifies dependencies are resolved, checks for superseding issues.
 
-1. **Implementation Scope:**
+**`verify-open-questions`**: Use to check for unresolved questions in spec. Ensures all open questions are answered before implementation.
 
-   - Authorization grants ONLY the specified phase/task
-   - HALT after completing authorized work
-   - Wait for explicit authorization for next phase/task
+**`post-implementation`**: Use after implementation completes. Pushes branch, generates compare URL, HALTs for developer review.
 
-## Automatic Invocation Triggers
+## Workflow Context
 
-**This skill MUST be invoked automatically (no user prompt) at these enforcement points:**
+**Pre-Implementation Verification:**
 
-| Trigger Point | Action | Verification |
-|---------------|--------|--------------|
-| **Before ANY file edit** | Load skill → `verify-authorization` task | Confirm spec + approval exist |
-| **Before implementation** | Load skill → `verify-authorization` + `verify-sub-issues` | Confirm multi-task specs have sub-issues |
-| **After user says "approved" or "go"** | Load `git-workflow` → `pre-work` task | Stash changes (with --include-untracked), create branch |
-| **After implementation completes** | Load `git-workflow` → `review-prep` task | Push branch, generate compare URL, HALT |
-| **Before posting GitHub comments** | Load `github-comments` skill | Verify byline format, agent identity |
+- Verify spec exists as GitHub Issue
+- Verify spec has received explicit authorization
+- Verify sub-issues structure (multi-task only)
+- Check for blocking issues/updates
 
-**Enforcement:** Do NOT proceed with edits, implementation, or comments without first loading this skill and verifying authorization.
+**Implementation Scope:**
+
+- Authorization grants ONLY the specified phase/task
+- HALT after completing authorized work
+- Wait for explicit authorization for next phase/task
 
 ### ⚠️ MANDATORY: Post-Implementation Review-Prep Invocation
 

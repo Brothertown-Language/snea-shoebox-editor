@@ -4,12 +4,12 @@
 
 Check for unresolved open questions in the spec before implementation.
 
-## Entry Criteria
+## Preconditions
 
 - Authorization verified
 - Blockers checked
 
-## Exit Criteria
+## Postconditions
 
 - All open questions resolved
 - Ready to proceed with implementation

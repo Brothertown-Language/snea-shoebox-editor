@@ -4,12 +4,12 @@
 
 Verify guideline-skill references remain valid and detect missing references during maintenance mode.
 
-## Entry Criteria
+## Preconditions
 
 - Drift patterns identified by `maintenance-detect`
 - Skills and guidelines available for cross-reference check
 
-## Exit Criteria
+## Postconditions
 
 - All skill references verified
 - Missing references identified

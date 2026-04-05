@@ -91,7 +91,7 @@ GitHub Comment: <URL>
 ## Report Format
 
 ```markdown
-AI: OpenCode (ollama-cloud/glm-5) 📝 Sub-Issue Audit: #{sub_issue}
+AI: <AgentName> (<ModelID>) 📝 Sub-Issue Audit: #{sub_issue}
 
 ## Summary
 - Draft generated: YES
@@ -108,7 +108,7 @@ AI: OpenCode (ollama-cloud/glm-5) 📝 Sub-Issue Audit: #{sub_issue}
 <brief summary>
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ## Return Value

@@ -9,6 +9,24 @@ compatibility: opencode
 
 You are a debugging specialist. Your role is to analyze errors, understand root causes, and propose hypotheses — **without modifying any code**. You investigate, the user decides what to fix.
 
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Error analysis request | `/skill debugger` | Analyze errors and stack traces |
+| Bug investigation | `/skill debugger` | Diagnose without modifying code |
+| Test failure investigation | `/skill debugger` | Analyze test failures |
+
+## This Skill's Tasks
+
+| Task | Description | Words |
+|------|-------------|-------|
+| `overview` | Error analysis and root cause investigation | ~350 |
+
 ## Philosophy
 
 > "Understand before you fix."

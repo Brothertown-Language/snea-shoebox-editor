@@ -7,7 +7,7 @@ compatibility: opencode
 
 # Skill: git-workflow
 
-Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested.
+Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow.
 
 ## ⚠️ CRITICAL: THIS SKILL IS MANDATORY - NO BYPASS {#critical-skill}
 
@@ -25,12 +25,18 @@ At workflow trigger points, the agent MUST invoke this skill - NOT run git comma
 
 ---
 
-## When to Use
+## When to Invoke
 
-- User says "approved" or "go" (pre-work phase - AUTO)
-- Implementation completes (review-prep phase - AUTO)
-- User says "create a PR" or "pr" (pr-creation phase)
-- User says "pr merged" or "merged" or similar (cleanup phase - AUTO)
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| After approval ("approved" or "go") | `/skill git-workflow --task pre-work` | Stash changes, create feature branch |
+| After implementation completes | `/skill git-workflow --task review-prep` | Push branch, generate compare URL, HALT |
+| User says "create a PR" | `/skill git-workflow --task pr-creation` | Squash to single commit, push, create PR, HALT |
+| User says "PR merged" | `/skill git-workflow --task cleanup` | Close issues, delete branches |
 
 ## Tasks
 
@@ -53,14 +59,44 @@ At workflow trigger points, the agent MUST invoke this skill - NOT run git comma
 - `/skill git-workflow --task cleanup` - **When user says "pr merged" or "merged"** (automatic)
 - `/skill git-workflow` - Overview only
 
-## Operating Protocol
+## This Skill's Tasks
 
-1. **Automatic invocation (mandatory):** This skill is referenced when:
+**`pre-work`**: Use after authorization. Verifies branch state, stashes external changes (with --include-untracted), creates feature branch from dev.
+
+**`implementation`**: Use during work. Handles grouped commits, WIP commits before HALT, executive summaries after completion.
+
+**`review-prep`**: Use after implementation completes (automatic). Pushes branch, generates GitHub compare URL, posts to issue AND chat, HALTs for developer review.
+
+**`commit-prep`**: Use when user says "commit". Prepares squash commit message by reading commit history (read-only, no commits).
+
+**`pr-creation`**: Use when user says "create a PR" or "pr". Squashes to single commit, pushes, creates PR with changelog, HALTs.
+
+**`cleanup`**: Use when user says "pr merged" or "merged" (automatic). Verifies merge via GitHub API, closes issues, deletes local and remote branches.
+
+## Workflow Context
+
+**Phase Sequence:**
+
+1. `pre-work` → Create branch, verify clean state
+2. `implementation` → Agent performs work, grouped commits
+3. `review-prep` (automatic) → Push, generate compare URL, HALT
+4. `commit-prep` (optional) → Prepare commit message
+5. `pr-creation` (user-initiated) → Squash, push, create PR, HALT
+6. `cleanup` (after merge) → Close issues, delete branches
+- `/skill git-workflow --task review-prep` - **AFTER implementation done** (automatic, no decision point)
+- `/skill git-workflow --task commit-prep` - When user says "commit"
+- `/skill git-workflow --task pr-creation` - When user says "create a PR" or "pr"
+- `/skill git-workflow --task cleanup` - **When user says "pr merged" or "merged"** (automatic)
+- `/skill git-workflow` - Overview only
+
+## Workflow Triggers
+
+**Invoke this skill at these triggers:**
 
    - User says `approved`, `go`, or similar authorization
    - User says `create a PR`, `pr`, or similar PR request
-   - Implementation completes (review-prep task invoked automatically)
-   - DO NOT prompt for invocation - the skill is triggered automatically
+   - Implementation completes (invoke review-prep task)
+   - DO NOT prompt for invocation - invoke at these triggers
 
 1. **Phase sequence:**
 
@@ -71,9 +107,9 @@ At workflow trigger points, the agent MUST invoke this skill - NOT run git comma
    - Phase 5: PR Creation (user-initiated) → `pr-creation` task
    - Phase 6: Branch Cleanup (after merge) → `cleanup` task
 
-## Automatic Invocation Triggers
+## Enforcement Points
 
-**This skill MUST be invoked automatically (no user prompt) at these enforcement points:**
+**Invoke this skill at these triggers (no user prompt needed):**
 
 | Trigger Point | Action | Verification |
 |---------------|--------|--------------|
@@ -104,16 +140,16 @@ This is NOT optional. This is NOT a decision point. This is MANDATORY.
 - Not "I already reviewed"
 - **ALWAYS INVOKE THE SKILL**
 
-### ⚠️ MANDATORY: review-prep Is Automatic (No Decision Point)
+### ⚠️ MANDATORY: review-prep Invoked After Implementation (No Decision Point)
 
-**After implementation completes, the agent MUST automatically invoke review-prep — there is NO choice.**
+**After implementation completes, the agent MUST invoke review-prep — there is NO choice.**
 
 The sequence is FIXED:
 
 1. Implementation task finishes all file changes
 2. Implementation task commits AND pushes the branch
 3. Implementation task reports completion
-4. **review-prep is invoked AUTOMATICALLY** → generates compare URL → HALTs
+4. **review-prep is invoked** → generates compare URL → HALTs
 
 **DO NOT:**
 - Skip review-prep because "changes are trivial"
@@ -132,7 +168,7 @@ The sequence is FIXED:
 ```
 Implementation complete
     ↓
-review-prep invoked AUTOMATICALLY (Phase 3)
+review-prep invoked (Phase 3)
     ↓
 Push branch → Generate compare URL → HALT
     ↓

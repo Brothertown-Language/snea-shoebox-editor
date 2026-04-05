@@ -4,20 +4,20 @@
 
 Analyze implementation changes to determine appropriate semantic version bump.
 
-## Operating Protocol
+## Workflow
 
 1. **On-demand invocation**: Called by `overview` task or `git-workflow` skill
 2. **Code change detection**: Scans for actual code changes (not docs/chore)
 3. **Impact analysis**: Examines public API changes, new features, bug fixes
 4. **Bump type recommendation**: Returns major/minor/patch/skip
 
-## Entry Criteria
+## Preconditions
 
 - Git repository with commits or staged changes to analyze
 - OR explicit user request with bump type specified
 - Version files present (pyproject.toml, setup.py, package.json, Cargo.toml, VERSION)
 
-## Exit Criteria
+## Postconditions
 
 - Bump type determined (major/minor/patch/skip)
 - Reasoning documented for major bumps

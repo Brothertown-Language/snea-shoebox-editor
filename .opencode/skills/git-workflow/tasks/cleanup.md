@@ -4,18 +4,18 @@
 
 Delete merged branches after PR merge, clean stale references, and verify repository state is ready for next work session.
 
-## Operating Protocol
+## Workflow
 
 1. **After PR merge:** Run when human confirms "PR merged" or similar
 1. **Automatic detection:** Can also run when invoked to check for merged branches
 1. **Mandatory cleanup:** ALL merged branches must be deleted (local and remote)
 
-## Entry Criteria
+## Preconditions
 
 - Human confirms "PR merged" or similar
 - OR skill invoked with cleanup detection enabled
 
-## Exit Criteria
+## Postconditions
 
 - Local merged branch deleted
 - Remote merged branch deleted (if applicable)

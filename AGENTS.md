@@ -321,54 +321,58 @@ To use a skill, the agent loads it when relevant to the current task.
 
 ### Skill Invocation Guidance
 
-| When to Invoke | Skill | Purpose |
-|----------------|-------|---------|
-| When writing or modifying code | `code-size-enforcement` | Enforce size limits on functions, cells, and files |
-| Before creating ANY file | `implementation-quality --task file-locations` | Verify file location patterns |
-| At implementation start | `implementation-quality --task code-structure` | Verify code structure patterns (load once, reference continuously) |
-| Before running commands | `implementation-quality --task environment` | Verify environment patterns |
-| Before handling data | `implementation-quality --task data-integrity` | Verify data integrity patterns |
-| Before approving guideline changes | `guideline-auditor` | Verify guideline quality, find ambiguities/conflicts |
-| Before approving spec implementation | `concern-separation-auditor --issue N` | FIRST: phase structure, BOILERPLATE-TITLE, concern analysis |
-| After concern-separation-auditor | `spec-auditor --issue N` | SECOND: content quality, fresh-start context, sub-issue discovery |
-| After spec-auditor | `dev-architect --task review-spec` | THIRD: architectural correctness, sub-issue checks |
-| User says "approved" or "go" | `approval-gate` | Verify spec+authorization requirements, sub-issues |
-| Before implementing any task | `approval-gate` | Verify authorization, check sub-issues, re-evaluate |
-| Periodic guideline maintenance | `guideline-auditor` | Check for guideline drift over time |
-| Post-implementation verification | `spec-auditor --issue N` | Verify spec was implemented correctly |
-| User says "approved" or "go" | `git-workflow --task pre-work` | Pre-work: verify branch state, stash external changes, create branch |
-| After implementation completes | `git-workflow --task review-prep` | **Automatic: push branch, generate compare URL for review** |
-| User says "create a PR", "pr", "update PR", "make a PR", "push and create PR" | `git-workflow --task pr-creation` | Post-work: squash commits, push, create/update PR |
-| PR timing questions | `pr-creation-workflow` | PR authorization boundary, when PRs can be created |
-| Before skill extraction | `coherence-auditor --mode extraction` | Identify skill candidates from guideline content |
-| Periodic coherence maintenance | `coherence-auditor --mode maintenance` | Detect guideline-skill drift |
-| After guideline/skill update | `coherence-auditor --mode maintenance` | Verify coherence after changes |
-| Before major release | `coherence-auditor --mode maintenance` | Verify guideline-skill coherence |
-| Designing architecture | `dev-architect --task design-plan` | Create architecture design plans |
-| Reviewing specs for correctness | `dev-architect --task review-spec` | Review and revise specs for correctness and compliance |
-| Plan phase of spec creation | `dev-architect --task design-plan` | Auto-invoke at Plan phase |
-| Encountering errors/bugs | `debugger` | Analyze errors and debug issues |
-| Preparing commit messages | `commit-writer` | Generate commit messages |
-| After implementation | `code-review` | Review code quality |
-| Creating task descriptions | `task-writer` | Draft task descriptions |
-| Preparing PR descriptions | `pr-writer` | Create pull request descriptions |
-| Publishing releases | `release-notes` | Publish release notes |
-| Checking Git conventions | `git-conventions` | Reference Git convention knowledge |
-| Looking up documentation | `context7-lookup` | Look up Context7 documentation |
+**Master Trigger Table — AGENTS.md is the single source of truth.**
+Allskill trigger definitions are in this table. SKILL.md files reference this table.
 
-**Automatic Invocation:**
-- `git-workflow` skill is invoked automatically when:
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Before ANY file edit | `/skill approval-gate --task verify-authorization` | Confirm spec + approval exist |
+| Before implementation | `/skill approval-gate --task verify-sub-issues` | Check sub-issue structure for multi-task specs |
+| After approval ("approved" or "go") | `/skill git-workflow --task pre-work` | Stash changes, create feature branch |
+| After implementation completes | `/skill git-workflow --task review-prep` | Push branch, generate compare URL, HALT |
+| User says "create a PR" | `/skill git-workflow --task pr-creation` | Squash to single commit, push, create PR, HALT |
+| User says "PR merged" | `/skill git-workflow --task cleanup` | Close issues, delete branches |
+| Before creating ANY file | `/skill implementation-quality --task file-locations` | Verify file location patterns |
+| At implementation start | `/skill implementation-quality --task code-structure` | Verify code structure patterns |
+| Before running commands | `/skill implementation-quality --task environment` | Verify environment patterns |
+| Before handling data | `/skill implementation-quality --task data-integrity` | Verify data integrity patterns |
+| Writing or modifying code | `/skill code-size-enforcement` | Enforce size limits on functions, cells, files |
+| Before approving guideline changes | `/skill guideline-auditor` | Verify guideline quality, find ambiguities/conflicts |
+| Before approving spec implementation | `/skill concern-separation-auditor --issue N` | FIRST: phase structure, concern analysis |
+| After concern-separation-auditor | `/skill spec-auditor --issue N` | SECOND: content quality, fresh-start context |
+| After spec-auditor | `/skill dev-architect --task review-spec` | THIRD: architectural correctness |
+| User says "approved" or "go" | `/skill approval-gate --task verify-authorization` | Verify auth + needs-approval label status |
+| Before implementing any task | `/skill approval-gate --task verify-sub-issues` | Verify sub-issue structure |
+| Periodic guideline maintenance | `/skill guideline-auditor` | Check for guideline drift |
+| Post-implementation verification | `/skill spec-auditor --issue N` | Verify spec was implemented correctly |
+| Before skill extraction | `/skill coherence-auditor --mode extraction` | Identify skill candidates from guidelines |
+| Periodic coherence maintenance | `/skill coherence-auditor --mode maintenance` | Detect guideline-skill drift |
+| Designing architecture | `/skill dev-architect --task design-plan` | Create architecture design plans |
+| Plan phase of spec creation | `/skill dev-architect --task design-plan` | Invoke at Plan phase |
+| Encountering errors/bugs | `/skill debugger` | Analyze errors and debug issues |
+| Preparing commit messages | `/skill commit-writer` | Generate commit messages |
+| Creating task descriptions | `/skill task-writer` | Draft task descriptions |
+| Preparing PR descriptions | `/skill pr-writer` | Create pull request descriptions |
+| Publishing releases | `/skill release-notes` | Publish release notes |
+| Checking Git conventions | `/skill git-conventions` | Reference Git convention knowledge |
+| Looking up documentation | `/skill context7-lookup` | Look up Context7 documentation |
+
+**When task names are specified:** Use `/skill <name> --task <task>` for specific workflow phases.
+**When task names are NOT specified:** Use `/skill <name>` for skill overview only.
+
+**Skill Invocation:**
+- `git-workflow` skill is invoked at these triggers:
   1. User authorizes implementation ("approved", "go", "proceed") → `pre-work` task
-  2. Implementation completes → **`review-prep` task (automatic, no decision point)**
+  2. Implementation completes → **`review-prep` task (no decision point)**
   3. User requests PR creation ("create a PR", "make a PR", "push and create PR") → `pr-creation` task
 - The skill handles all git operations (branch, stash, commit, squash, push, PR creation) according to guidelines.
 - `pr-creation-workflow` skill defines when PRs can be created and what authorizes PR creation. It is NOT automatically invoked - it documents the rules.
-- `implementation-quality` skill is invoked automatically at implementation gates:
+- `implementation-quality` skill is invoked at implementation gates:
   1. Before creating ANY file → `file-locations` task
   2. At implementation start → `code-structure` task (load once, reference continuously)
   3. Before running commands → `environment` task
   4. Before handling data → `data-integrity` task
-- `dev-architect` skill is invoked automatically at Plan phase:
+- `dev-architect` skill is invoked at Plan phase:
   1. When creating a new spec → `design-plan` task
   2. When reviewing specs → `review-spec` task
 

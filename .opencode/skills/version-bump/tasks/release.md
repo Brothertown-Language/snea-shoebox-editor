@@ -4,21 +4,21 @@
 
 Create git tags and generate changelogs during release preparation workflow.
 
-## Operating Protocol
+## Workflow
 
 1. **Release preparation only**: Not used for regular PR workflow
 2. **After PR accumulation**: All version bumps from PRs are already merged
 3. **Creates git tag**: Tags version commit
 4. **Generates changelog**: Creates release notes from commit history
 
-## Entry Criteria
+## Preconditions
 
 - All PRs for release merged
 - Version already bumped via accumulated PRs
 - Repository in clean state (no uncommitted changes)
 - Ready to create git tag
 
-## Exit Criteria
+## Postconditions
 
 - Git tag created for version
 - CHANGELOG.md generated/updated with release notes

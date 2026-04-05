@@ -4,20 +4,20 @@
 
 Apply version bump to all detected version files.
 
-## Operating Protocol
+## Workflow
 
 1. **After analyze task**: Run after `analyze.md` determines bump type
 2. **Atomic updates**: Update all version files in single operation
 3. **Semantic versioning**: Apply semver rules correctly
 4. **Commit integration**: Changes included in implementation commit (squashed)
 
-## Entry Criteria
+## Preconditions
 
 - Bump type determined (major/minor/patch)
 - Version files identified
 - Current version parsed from files
 
-## Exit Criteria
+## Postconditions
 
 - All version files updated
 - Changes staged for commit

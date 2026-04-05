@@ -9,13 +9,19 @@ compatibility: opencode
 
 Analyzes spec phase structures to identify concern quality issues and apply smart fixes. Posts findings to GitHub comments.
 
-## When to Use
+## When to Invoke
 
-- Creating new spec issues (MANDATORY - runs first)
-- Reviewing existing specs for phase quality
-- Auditing multi-phase implementations
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
 
-## Available Tasks
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Creating new spec issues | `/skill concern-separation-auditor --issue N` | First auditor in mandatory chain |
+| Reviewing spec quality | `/skill concern-separation-auditor --issue N` | Phase structure analysis |
+| Auditing multi-phase implementations | `/skill concern-separation-auditor --issue N` | Concern separation check |
+
+## This Skill's Tasks
 
 | Task | Description |
 |------|-------------|

@@ -80,15 +80,14 @@ owner = "<cached-value>"  # from previous session
 github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 ```
 
-## Operating Protocol
+## Workflow
 
-1. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
+**This skill is invoked when any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.**
 
-1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
-
-1. **Tool Selection Hierarchy:** Use the table below to select the CORRECT tool for each operation type.
-
-1. **Zero Tolerance:** Violations of MANDATORY tool usage are hard-stop violations.
+**Key requirements:**
+- MCP Probe First: Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
+- Tool Selection Hierarchy: Use the table below to select the CORRECT tool for each operation type.
+- Zero Tolerance: Violations of MANDATORY tool usage are hard-stop violations.
 
 ## Three-Tier Boundary System
 

@@ -72,7 +72,7 @@ owner = "<cached-value>"  # from previous session
 github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 ```
 
-## Operating Protocol
+## Workflow
 
 1. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 

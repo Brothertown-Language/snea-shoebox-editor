@@ -4,13 +4,14 @@
 
 Generate GitHub compare URL for developer review AFTER the implementation task has already pushed the branch. This provides the developer with visibility into changes BEFORE deciding to create a PR.
 
-## ⚠️ MANDATORY INVOCATION
+## Workflow Triggers
 
-**This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
+**Invoke this task at these workflow points:**
+- After implementation completes (mandatory - no decision point)
 
 The sequence is:
 
-1. Implementation complete → commit → push → **review-prep invoked automatically**
+1. Implementation complete → commit → push → **invoke review-prep**
 2. Compare URL generated → HALT
 3. Wait for developer to say "create a PR"
 
@@ -75,20 +76,20 @@ When implementation determines "no file changes needed":
 - **MUST detect actual runtime identity** from environment/MCP tools
 - **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
 
-## Operating Protocol
+## Workflow
 
 1. **After implementation:** This task runs AFTER all implementation is complete - NO EXCEPTIONS
 2. **MANDATORY step:** Branch MUST be pushed to remote for developer review - NO ASKING
 3. **HALT after push:** Wait for developer to review and authorize PR creation
 
-## Entry Criteria
+## Preconditions
 
 - All implementation work complete AND pushed to remote
 - Feature branch pushed (done by implementation task)
 - No explicit "create a PR" instruction yet
 - Temp files cleaned up (see Step 0)
 
-## Exit Criteria
+## Postconditions
 
 - Compare URL generated and posted
 - Developer can review changes via GitHub diff viewer

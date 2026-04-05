@@ -13,6 +13,18 @@ Defines when PRs can be created, what authorizes PR creation, and the mandatory 
 
 **PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT automatic after implementation.**
 
+## When to Invoke
+
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+
+This skill is invoked at this workflow trigger:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| User says "create a PR" | `/skill git-workflow --task pr-creation` | Squash to single commit, push, create PR, HALT |
+
+**Note:** PR creation timing is part of `git-workflow` skill. This skill (`pr-creation-workflow`) defines the RULES, not the invocation.
+
 ## Available Tasks
 
 | Task | Description |

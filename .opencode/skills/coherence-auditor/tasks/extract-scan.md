@@ -4,12 +4,12 @@
 
 Scan all `.opencode/guidelines/*.md` files to identify skill extraction candidates during extraction mode.
 
-## Entry Criteria
+## Preconditions
 
 - Skill invoked with `--mode extraction`
 - Guidelines directory exists and is readable
 
-## Exit Criteria
+## Postconditions
 
 - All guideline files scanned
 - Extraction candidates identified and ranked

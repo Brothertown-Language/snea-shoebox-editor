@@ -4,12 +4,12 @@
 
 Enforce mandatory review-prep workflow after every implementation. This is a CRITICAL verification gate with ZERO TOLERANCE for violations.
 
-## Entry Criteria
+## Preconditions
 
 - Implementation task has completed all file changes
 - Agent is about to HALT or report completion
 
-## Exit Criteria
+## Postconditions
 
 - Branch is pushed to remote (verified)
 - Compare URL is generated

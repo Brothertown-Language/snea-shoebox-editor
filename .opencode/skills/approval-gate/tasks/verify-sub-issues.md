@@ -4,13 +4,13 @@
 
 Verify sub-issue structure and STATUS gate for multi-task specs before implementation.
 
-## Entry Criteria
+## Preconditions
 
 - Spec exists as GitHub Issue
 - Authorization received for specific subtask (e.g., "approved: 1.2")
 - Subtask number provided or extracted from authorization
 
-## Exit Criteria
+## Postconditions
 
 - Sub-issues verified present (multi-task) OR exemption confirmed (single-task)
 - STATUS in parent matches requested subtask number

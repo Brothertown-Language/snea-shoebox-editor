@@ -9,7 +9,7 @@ description: Jupyter notebook operations with zero-tolerance corruption rules. D
 
 You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook operations use `the-notebook-mcp` tools exclusively. This is a ZERO TOLERANCE rule — violations cause notebook corruption, data integrity issues, and broken functionality.
 
-## Operating Protocol
+## Workflow
 
 1. **Automatically Applied:** This skill is referenced whenever any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 

@@ -8,6 +8,29 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### skill/wording-remediation
+
+- **Changed: Standardized Skill Trigger Format**: All 29 skills now use explicit
+  `/skill X --task Y` commands in master trigger table. Replaced ambiguous
+  trigger descriptions with precise invocation commands for better agent
+  clarity. All skills follow consistent workflow trigger format.
+- **Fixed: Removed Junie Language**: Replaced all "invoked automatically" and
+  similar passive construction with explicit "is invoked at these triggers"
+  format. Removed "Automatic Invocation" headings replaced with "Workflow
+  Triggers" or "Enforcement Points".
+- **Changed: Terminology Standardization**: Replaced "Entry/Exit Criteria" with
+  "Preconditions/Postconditions" across all task files and templates. Replaced
+  "Operating Protocol" with "Workflow" section to match skill convention.
+- **Fixed: Hardcoded Identity References**: Removed hardcoded "OpenCode (ollama-cloud/glm-5)"
+  example values from skill files. Guidelines now explicitly state these are
+  illustrative examples and agents must detect their own identity at runtime.
+- **Added: Verification Tool**: Moved verify-skill-wording.sh to .opencode/scripts/
+  for ongoing enforcement of linguistic standards. The tool detects Junie
+  patterns and terminology violations.
+- **Changed: Master Trigger Table**: AGENTS.md now has single source-of-truth
+  trigger table with explicit /skill invocations. All skills reference this
+  table instead of duplicating trigger information.
+
 ### skill/audit-chain-clean-room
 
 - **Fixed: Clean-Room Draft Generation as First Auditor**: Corrected the

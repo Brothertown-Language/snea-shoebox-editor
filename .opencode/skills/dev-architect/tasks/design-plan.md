@@ -6,12 +6,12 @@ Design a detailed implementation plan before coding.
 
 Analyze requirements and create a clear execution plan with files to touch, dependencies, and risks.
 
-## Entry Criteria
+## Preconditions
 
 - User requests a feature or change
 - Requirements are understood or clarified
 
-## Exit Criteria
+## Postconditions
 
 - Execution plan documented
 - Files to touch listed

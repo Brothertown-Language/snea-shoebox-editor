@@ -26,7 +26,7 @@ Subtask: X.Y  # Must match STATUS in parent
 
 ---
 
-## Entry Criteria
+## Preconditions
 
 - [ ] Authorization received for this specific subtask
 - [ ] STATUS in parent matches this subtask number
@@ -34,7 +34,7 @@ Subtask: X.Y  # Must match STATUS in parent
 
 ---
 
-## Exit Criteria
+## Postconditions
 
 - [ ] [What defines completion - testable criteria]
 - [ ] [Each criterion should be independently verifiable]
@@ -154,7 +154,7 @@ Task: Database schema                       # Missing parent reference
 
 ______________________________________________________________________
 
-## Entry Criteria
+## Preconditions
 
 **Before starting ANY work:**
 
@@ -168,7 +168,7 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Exit Criteria
+## Postconditions
 
 **Each criterion MUST be:**
 
@@ -176,7 +176,7 @@ ______________________________________________________________________
 1. **Specific** - Clear pass/fail determination
 1. **Complete** - No ambiguity about what "done" means
 
-### ✅ Good Exit Criteria
+### ✅ Good Postconditions
 
 ```
 - [ ] All Tier 1 skills refactored with tasks/ subdirectory
@@ -185,7 +185,7 @@ ______________________________________________________________________
 - [ ] Backwards compatibility maintained
 ```
 
-### ❌ Bad Exit Criteria
+### ❌ Bad Postconditions
 
 ```
 - [ ] Complete implementation
@@ -267,7 +267,7 @@ Design and implement the architecture for GitHub sub-issue sub-task tracking, en
 
 ---
 
-## Entry Criteria
+## Preconditions
 
 - [ ] Tier 1 skills refactored (Phase 1 complete)
 - [ ] Sub-task pattern validated (PR #471 merged)
@@ -275,7 +275,7 @@ Design and implement the architecture for GitHub sub-issue sub-task tracking, en
 
 ---
 
-## Exit Criteria
+## Postconditions
 
 - [ ] Parent issue orchestrator template defined
 - [ ] Sub-issue task template defined

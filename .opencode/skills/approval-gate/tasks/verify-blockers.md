@@ -4,13 +4,13 @@
 
 Check for blocking issues or dependencies that prevent implementation.
 
-## Entry Criteria
+## Preconditions
 
 - Authorization verified
 - Sub-issues verified
 - Codebase verified
 
-## Exit Criteria
+## Postconditions
 
 - No `needs-approval` label present (or explicit authorization received)
 - No blocking issues superseding spec

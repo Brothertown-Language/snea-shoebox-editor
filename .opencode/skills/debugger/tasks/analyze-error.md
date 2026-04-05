@@ -6,11 +6,11 @@ Analyze errors, stack traces, and bugs without modifying code.
 
 Investigate root causes and propose hypotheses for user to decide on fixes.
 
-## Entry Criteria
+## Preconditions
 
 - User reports an error or bug
 
-## Exit Criteria
+## Postconditions
 
 - Root cause identified or hypotheses documented
 - Suggested investigation steps provided

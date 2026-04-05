@@ -9,13 +9,19 @@ compatibility: opencode
 
 Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI agent behavior. Identifies procedural workflows for extraction and detects drift over time.
 
-## When to Use
+## When to Invoke
 
-- Creating new skills from guideline content (extraction)
-- Ongoing drift detection and verification (maintenance)
-- Before approving guideline/skill changes
+**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
 
-## Tasks
+This skill is invoked at these workflow triggers:
+
+| Workflow Trigger | Invocation | Purpose |
+|------------------|------------|---------|
+| Creating new skills | `/skill coherence-auditor --mode extraction` | Identify skill candidates |
+| Periodic maintenance | `/skill coherence-auditor --mode maintenance` | Detect drift from baseline |
+| Before approving changes | `/skill coherence-auditor --mode maintenance` | Verify coherence |
+
+## This Skill's Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
@@ -36,7 +42,7 @@ Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI ag
 - `/skill coherence-auditor --task create-report` — Load specific task
 - `/skill coherence-auditor` — Overview only
 
-## Operating Protocol
+## Workflow
 
 1. **Automatic invocation (mandatory):** This skill is invoked when auditing guideline/skill coherence or when user requests extraction/maintenance audit.
 

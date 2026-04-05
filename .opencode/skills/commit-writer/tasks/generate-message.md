@@ -6,11 +6,11 @@ Generate Conventional Commits compliant commit message.
 
 Analyze staged changes and generate appropriate commit message.
 
-## Entry Criteria
+## Preconditions
 
 - Changes are staged (`git add`)
 
-## Exit Criteria
+## Postconditions
 
 - Commit message generated following Conventional Commits format
 
