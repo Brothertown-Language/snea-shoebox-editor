@@ -24,6 +24,22 @@ Verify branch state, preserve changes, create feature branch BEFORE any implemen
 
 ## Procedure
 
+### Step 0: Initialize Progress Tracking
+
+**Before starting workflow, show progress to developer:**
+
+```python
+todowrite([
+    {"content": "Step 0: Verify branch state and stash", "status": "in_progress", "priority": "high"},
+    {"content": "Step 1: Create feature branch (if needed)", "status": "pending", "priority": "high"},
+    {"content": "Step 2: Report ready", "status": "pending", "priority": "medium"},
+])
+```
+
+**This gives developers visibility during complex git operations.**
+
+---
+
 ### Step 1: Verify Branch State and Stash (Subtask)
 
 Invoke the `verify-stash-branch` subtask to check current branch and preserve external changes:
@@ -43,6 +59,16 @@ Invoke the `verify-stash-branch` subtask to check current branch and preserve ex
 - Report failure details to user
 - Let user resolve manually
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Verify branch state and stash", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Create feature branch (if needed)", "status": "in_progress", "priority": "high"},
+    {"content": "Step 2: Report ready", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 2: Create Feature Branch (If Needed)
 
 Only if `branch_state.is_main` or `branch_state.is_dev`:
@@ -52,9 +78,29 @@ git checkout dev && git pull origin dev
 git checkout -b spec/<short-name>  # or feature/<description>
 ```
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Verify branch state and stash", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Create feature branch (if needed)", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Report ready", "status": "in_progress", "priority": "medium"},
+])
+```
+
 ### Step 3: Report Ready
 
 Report: "Ready for implementation on branch: <branch-name>"
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Verify branch state and stash", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Create feature branch (if needed)", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Report ready", "status": "completed", "priority": "medium"},
+])
+```
 
 ## ⚠️ Edge Case: Already Implemented (No Changes Needed)
 

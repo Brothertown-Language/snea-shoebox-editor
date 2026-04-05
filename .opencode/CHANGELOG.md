@@ -8,6 +8,30 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### skill/todowrite-progress-tracking
+
+- **Added: Progress Tracking to Git Workflow Tasks**: All git workflow
+  tasks now include TodoWrite progress tracking so developers can see
+  which step the agent is on during complex git operations.
+- **Changed Files**:
+  - `git-workflow/tasks/pre-work.md`: Track Steps 0-2 (verify branch,
+    create feature branch, report ready)
+  - `git-workflow/tasks/review-prep.md`: Track Steps 0-6 (temp cleanup,
+    lint verification, verify push, clear TODOs, generate URL, verify,
+    report, HALT)
+  - `git-workflow/tasks/commit-prep.md`: Track Steps 1-4 (discovery,
+    summarize, create script, HALT)
+  - `git-workflow/tasks/pr-creation.md`: Track Steps 0-9 (clear todos,
+    check PR state, collect sub-issues, version bump, changelog, stage,
+    squash, push, create PR, report)
+  - `git-workflow/tasks/cleanup.md`: Track Steps 1-7 (verify PR merge,
+    hotfix ticket, switch to dev, delete branch, clean branches, verify,
+    clear todos)
+- **Developer Experience**: Each task initializes TodoWrite at the start
+  with all steps showing pending/in_progress/completed status, updating
+  after each step completes for real-time visibility.
+- **Addresses**: GitHub issue #438 (Phase 2: Add TodoWrite to Tasks)
+
 ### spec/435-ruff-markdown-prohibition
 
 - **Fixed: Pre-Lint File Type Verification**: Added mandatory file type
