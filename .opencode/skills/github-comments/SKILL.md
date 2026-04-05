@@ -199,6 +199,77 @@ https://github.com/<owner>/<repo>/compare/dev...<branch>
 
 **URLs:** REQUIRED (when relevant)
 
+## Two-Channel Rule for Auditor Comments
+
+**CRITICAL: Auditors must distinguish between chat (developer coordination) and GitHub Issues (revision history).**
+
+### Chat (Developer Coordensation)
+
+| When to Post | Content |
+|--------------|---------|
+| ALWAYS (success OR fixes) | Executive summary: pass/fail status, fixes applied |
+
+**Chat Executive Summary Format:**
+
+```
+**Audit Complete:** [audit type] [passed/failed]
+
+**Issues Found:** N
+**Issues Fixed:** M (if any)
+**Status:** [No concerns detected | N issues fixed]
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### GitHub Issues (Revision History)
+
+| When to Post | Content |
+|--------------|---------|
+| ONLY on revision | WHY revision needed, WHAT changed - for future developer context |
+
+**GitHub Issue Revision Comment Format:**
+
+```
+Fixed [issue description]
+
+**Why:** [reason for revision]
+**What:** [what changed]
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### Examples
+
+**Audit passed (no issues):**
+
+- Chat: Post executive summary with "passed" status
+- GitHub Issues: NO COMMENT (no revision made)
+
+**Audit found issues and fixed them:**
+
+- Chat: Post executive summary with issues found and fixes applied
+- GitHub Issues: Post revision comment explaining WHY and WHAT changed
+
+**Audit found catastrophic issue (HALT):**
+
+- Chat: Post summary explaining blocker
+- GitHub Issues: NO COMMENT (issue is blocking, not fixed)
+
+### ⚠️ CRITICAL: Never Post Full Audit Reports to GitHub Issues
+
+**FORBIDDEN:**
+
+- Posting checklist-style pass/fail results as GitHub comments
+- Posting complete audit findings when no revision was made
+- Posting audit logs/scores without revision context
+
+**CORRECT:**
+
+- Chat: Always post executive summary (pass or fix)
+- GitHub Issues: Only post when revision made (WHY/WHAT context)
+
 ## AI Identity Attribution Format
 
 **ALL comments MUST end with ONE byline:**

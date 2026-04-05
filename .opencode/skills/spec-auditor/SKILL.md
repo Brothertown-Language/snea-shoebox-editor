@@ -151,6 +151,77 @@ ______________________________________________________________________
    - **Required remediation indicators**: Explicitly list the exact edits needed (section + concrete change).
    - **Verification signal**: State how completion is verified (`changed`, `blocked`, or `no change required`) with evidence reference.
 1. **AUTO-FIX BY DEFAULT**: Apply fixes automatically unless user says "don't fix" or "just report". Post GitHub Issue comment documenting the fix with brief one-liner.
+
+## Two-Channel Comment Rules
+
+**CRITICAL: Distinguish between chat (developer coordination) and GitHub Issues (revision history).**
+
+### Chat (Developer Coordination)
+
+| When to Post | Content |
+|--------------|---------|
+| ALWAYS (success OR fixes) | Executive summary: pass/fail status, fixes applied |
+
+**Chat Executive Summary Format:**
+
+```
+**Audit Complete:** [audit type] [passed/failed]
+
+**Issues Found:** N
+**Issues Fixed:** M (if any)
+**Status:** [No concerns detected | N issues fixed]
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### GitHub Issues (Revision History)
+
+| When to Post | Content |
+|--------------|---------|
+| ONLY on revision | WHY revision needed, WHAT changed - for future developer context |
+
+**GitHub Issue Revision Comment Format:**
+
+```
+Fixed [issue description]
+
+**Why:** [reason for revision]
+**What:** [what changed]
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
+```
+
+### Examples
+
+**Audit passed (no issues):**
+
+- Chat: Post executive summary with "passed" status
+- GitHub Issues: NO COMMENT (no revision made)
+
+**Audit found issues and fixed them:**
+
+- Chat: Post executive summary with issues found and fixes applied
+- GitHub Issues: Post revision comment explaining WHY and WHAT changed
+
+**Audit found catastrophic issue (HALT):**
+
+- Chat: Post summary explaining blocker
+- GitHub Issues: NO COMMENT (issue is blocking, not fixed)
+
+### ⚠️ CRITICAL: Never Post Full Audit Reports to GitHub Issues
+
+**FORBIDDEN:**
+
+- Posting checklist-style pass/fail results as GitHub comments
+- Posting complete audit findings when no revision was made
+- Posting audit logs/scores without revision context
+
+**CORRECT:**
+
+- Chat: Always post executive summary (pass or fix)
+- GitHub Issues: Only post when revision made (WHY/WHAT context)
 1. **User responses drive action:**
    - No response → AUTO-FIX immediately, post comment, proceed to next issue.
    - "don't fix" → Skip this issue, move to next.
