@@ -8,6 +8,30 @@
 | `dev` | Integration testing | Squash merge from `feature/*` |
 | `feature/*` | Development work | Created from `dev` |
 
+## Hotfix Workflow (from main)
+
+**For urgent production fixes that need to go directly to production before dev:**
+
+### Branch from main (EXCEPTION to normal workflow)
+
+```bash
+git checkout main
+git pull origin main
+git checkout -b hotfix/urgent-fix
+```
+
+**This is the ONLY time branches are created from main instead of dev.**
+
+### After hotfix merge to main
+
+Sync the fix to dev:
+
+```bash
+git checkout dev
+git merge main
+git push origin dev
+```
+
 ## 5. Spec Implementation Branches
 
 ### ✅ ALWAYS DO

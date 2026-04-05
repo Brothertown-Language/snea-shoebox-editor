@@ -45,7 +45,7 @@ PR creation workflow enforcer ensuring PRs are created ONLY with explicit develo
 
 ### When Developer Says "create a PR"
 
-1. Rebase on main
+1. Rebase on dev
 2. Squash commits to SINGLE COMMIT
 3. Force push cleaned branch
 4. Create PR with `Fixes #N` in description

@@ -119,7 +119,7 @@ git branch feature/recovery HEAD
 
 # Reset main to match remote
 git checkout main
-git reset --hard origin/main
+git reset --hard origin/dev
 
 # Switch to recovery branch
 git checkout feature/recovery
