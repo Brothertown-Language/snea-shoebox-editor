@@ -99,6 +99,20 @@ Create PR:
    ```
    
    Or create a PR from `main` to `dev` if preferred.
+   
+   **⚠️ CRITICAL: Dev is authoritative source during backport.**
+   
+   When merging `main` → `dev`, resolve conflicts using dev as authoritative:
+   - Hotfix-specific files → take from `main`
+   - All other files → take from `dev`
+   
+   **⚠️ MANDATORY: AI Agent Intelligence Required**
+   
+   ALL conflict resolution MUST be performed by AI agent intelligence:
+   - No pre-built scripts or automation that bypass AI decision-making
+   - Agent must analyze each conflict individually
+   - Agent must explain reasoning for each resolution choice
+   - See `112-git-merge-protocol.md` → "MANDATORY AI Agent Assistance"
 
 4. **Delete hotfix branch:**
    ```bash
