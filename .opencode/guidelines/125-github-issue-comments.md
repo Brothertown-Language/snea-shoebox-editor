@@ -58,11 +58,12 @@ The HALT protocol (see `010-approval-gate.md`) is the correct mechanism for auth
 
 | Situation | Action |
 |-----------|--------|
-| Completed a task | Post progress comment, then HALT |
+| Completed a task | Provide executive summary in CHAT ONLY, then HALT |
 | User asked a question | Respond via comment addressing the question |
 | Reached decision point | HALT silently, wait for user |
-| Changed files | Comment documenting the change |
+| Changed files | Provide executive summary in CHAT ONLY, then HALT |
 | Need clarification | Post question in comment, then HALT |
+| Issue closed AFTER MERGE | Post closure summary to GitHub (historical record) |
 
 ## Anti-Patterns to Avoid
 

@@ -146,18 +146,15 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 
 | Violation | Consequence |
 |-----------|--------------|
-| Missing progress comments after task completion | CRITICAL — implementation incomplete |
 | Ignoring user comments without posting response | CRITICAL — user cannot see your reasoning |
 | Closing issue without explanation comment | CRITICAL — no audit trail |
 | Editing issue body to add "CLOSED" text | CRITICAL — destroys history |
-| Proceeding to next task without posting comment | CRITICAL — breaks workflow |
 | Using PREFIX for comment attribution | CRITICAL — wrong position |
 | Replacing existing attribution (not appending) | CRITICAL — destroys history |
 | Wrapping emoji in italic/bold | CRITICAL — render failure |
 
 **See `github-comments` skill for:**
 - Complete comment format rules
-- Progress comment format and timing
 - Issue body update rules
 - Closure comment format
 - When NOT to comment

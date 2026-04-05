@@ -35,9 +35,10 @@ Implementation task:
 
 Review-prep task:
   1. Verify branch is pushed
-  2. Generate compare URL
-  3. Post completion comment
-  4. HALT
+  2. Clear TODO list
+  3. Generate compare URL
+  4. Post completion comment (chat only)
+  5. HALT
 ```
 
 **If this task is invoked and branch is NOT pushed:**
@@ -70,7 +71,7 @@ When implementation determines "no file changes needed":
 
 ### ⚠️ CRITICAL: Model ID Detection
 
-**When posting completion comment (Step 3):**
+**When posting completion comment (Step 5):**
 
 - **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
 - **MUST detect actual runtime identity** from environment/MCP tools
@@ -158,7 +159,21 @@ If review-prep is invoked but branch is NOT pushed:
 
 **This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
 
-### Step 2: Generate Compare URL
+### Step 2: Clear TODO List (MANDATORY)
+
+**Before generating compare URL, clear any active todos to ensure clean workflow state.**
+
+```bash
+# Clear todo list to prevent stale state from affecting subsequent phases
+todowrite todos=[]
+```
+
+**Why this matters:**
+- Prevents stale todos from previous phases
+- Ensures clean state before developer review
+- Removes distraction from completed work
+
+### Step 3: Generate Compare URL
 
 Using session values (GIT_OWNER, GIT_REPO):
 
@@ -166,7 +181,7 @@ Using session values (GIT_OWNER, GIT_REPO):
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-### Step 2: Pre-Post Verification (MANDATORY GATE)
+### Step 4: Pre-Post Verification (MANDATORY GATE)
 
 **⚠️ CRITICAL: You MUST verify format BEFORE generating the completion comment.**
 
@@ -205,21 +220,9 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 - Catches format errors before they're posted
 - Forces procedural verification, not informational
 
-### Step 3: Report Completion (SEPARATE Formats for Issue vs Chat)
+### Step 5: Report Completion (Chat ONLY)
 
-**⚠️ CRITICAL: Different formats for GitHub issue vs chat.**
-
-**GitHub Issue Comment Format:**
-
-```markdown
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-```
+**⚠️ CRITICAL: Progress goes to CHAT ONLY - NOT GitHub Issues.**
 
 **Chat Output Format:**
 
@@ -236,22 +239,15 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-**Key Differences:**
+**Why chat only:**
+- GitHub Issues are historical records - no need for compare URLs
+- Chat provides immediate visibility for developer review
+- URLs clutter issue history unnecessarily
 
-| Location | Contains | Does NOT Contain |
-|----------|----------|------------------|
-| GitHub Issue | Summary, Outcome, byline | Compare URL |
-| Chat | Summary, Outcome, byline, URL | — |
-
-**Why separate formats:**
-- GitHub issues are persistent records - no need for compare URLs (visible via PR)
-- Chat is immediate - developers need quick access to compare URL for review
-- URLs are long and clutter issue history unnecessarily
-
-**Post summary to GitHub issue.**
 **Post summary + URL to chat.**
+**DO NOT post to GitHub issue.**
 
-### Step 4: HALT (MANDATORY - NO EXCEPTIONS)
+### Step 6: HALT (MANDATORY - NO EXCEPTIONS)
 
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 

@@ -227,7 +227,7 @@ The agent must NEVER ask questions like:
 | Situation | Action |
 |-----------|--------|
 | Task complete but more work remains | Continue implementation autonomously |
-| Task complete and no more work | HALT silently, post progress comment |
+| Task complete and no more work | HALT silently, provide executive summary in chat |
 | Blocked by genuine ambiguity | Post comment to issue asking for clarification, then HALT |
 | Error encountered | Post error details to issue, then HALT |
 | Waiting for authorization | HALT silently, wait for explicit "approved" or "go" |
@@ -249,18 +249,34 @@ The agent must NEVER ask questions like:
 
 ---
 
-## Critical Violation: Missing Progress Comments
+## Critical Violation: GitHub Progress Comments Are NOISE — CHAT ONLY
 
-**⚠️ Failing to post progress comments to the associated issue is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Posting progress comments to GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
 
-Every implementation task MUST be documented with progress comments on the GitHub issue:
-- Post comment IMMEDIATELY after completing each task
-- Post comment when creating PR
-- Never proceed to next task without commenting first
+GitHub Issue comments are for **historical record (closure summaries)**, NOT for implementation progress.
 
-### Required Format: Executive Summary
+**The PR itself is the notification. The compare URL in chat is the progress update.**
 
-**Intermediate task (multi-task spec):**
+### ✅ REQUIRED Behavior
+
+| Event | GitHub Comment? | Chat Update? |
+|-------|-----------------|--------------|
+| Implementation done | ❌ NO | ✅ YES - executive summary |
+| Review-prep done | ❌ NO | ✅ YES - compare URL |
+| PR created | ❌ NO | ✅ YES - PR URL |
+| Issue closed AFTER MERGE | ✅ YES - closure summary | ✅ YES - completion notice |
+
+### 🚫 FORBIDDEN
+
+| Forbidden Action | Why |
+|-----------------|-----|
+| Posting progress after implementation | NOISE - compare URL in chat is sufficient |
+| Posting progress after review-prep | NOISE - developer can view GitHub diff |
+| Posting "PR created" to GitHub | NOISE - PR itself is the notification |
+| Posting status blocks | NOISE - executive summary in chat is sufficient |
+
+### ✅ Chat Output Format
+
 ```
 **Summary:**
 
@@ -268,63 +284,20 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 **Outcome:** <What changed for stakeholders>
 
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**Final task or single-task spec:**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-All tasks complete from this specification.
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-**⚠️ CRITICAL: Emoji must be PLAIN TEXT (not inside italic/bold formatting).**
+### When GitHub Comments ARE Required
 
-**Status Emoji Guide:**
-| Status | Emoji | Byline Format |
-|--------|-------|---------------|
-| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
-| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
-| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
-
-**When to include context in byline:**
-- **Progress comments**: No context (content already describes the work)
-- **Issue creation**: Optional — add issue number if useful
-- **Rejection/Superseded**: Always include reason or replacement reference
-
-### 🚫 FORBIDDEN in Progress Comments
-
-- **File lists** — Redundant (visible in git commits)
-- **"Next" field** — Dialog prompt (violates `AGENTS.md` § 125)
-- **Punch-list format** — Use executive summary paragraphs
-- **"Awaiting authorization"** — Use HALT protocol, not comments
-- **Technical changelog** — Focus on impact, not file-by-file changes
-
-### ⚠️ Chat Output Rule (CRITICAL)
-
-**Progress executive summaries go to BOTH GitHub comments AND chat.**
-
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
-
-**Why:** Both GitHub history AND chat transcript should show progress. GitHub preserves long-term history; chat maintains session context.
-
-**✅ DO:** Post executive summary to GitHub, then provide SAME summary in chat
-**🚫 NEVER:** Skip either location
-**🚫 NEVER:** Put full summary in chat but skip GitHub comment
+| Event | Why |
+|-------|-----|
+| Issue closure after merge | Historical record for future maintainers |
+| Spec revision | Document what changed and why |
+| Answering user question | User cannot see internal reasoning |
+| Blocking issue | Explain blocker and await clarification |
 
 **See `github-comments` skill for complete requirements.**
 

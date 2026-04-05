@@ -429,15 +429,6 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Phase 3: Human Approval (Gated)
-
-### Steps
-
-1. ☐ Human review of changes
-2. ☐ Approve or request revisions
-
----
-
 > **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
 ```
 
