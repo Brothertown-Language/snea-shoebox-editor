@@ -31,12 +31,6 @@ env/
 # uv
 .uv/
 
-# Node.js / Bun (not used in this Python project)
-/bun.lock
-/node_modules/
-/package-lock.json
-/package.json
-
 # PyCharm / JetBrains
 .idea/
 *.iws
