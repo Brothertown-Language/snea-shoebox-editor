@@ -51,6 +51,23 @@ todowrite(todos=[])
 
 **CRITICAL:** This step runs BEFORE checking PR state, collecting sub-issues, or any other PR workflow steps.
 
+**Update progress after clearing:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "in_progress", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "pending", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ---
 
 ### Step 1: Check PR State (Subtask)
@@ -84,6 +101,23 @@ task tool with:
 | `create_new_branch` | Report "Branch has merged PR - creating new branch", then create new branch from dev |
 
 **✅ GATE: PR state determined. Proceed to Collect Sub-Issues.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "in_progress", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 2: Collect Sub-Issues (Subtask)
 
@@ -131,6 +165,23 @@ fi
 
 **✅ GATE: Version bump processed (or skipped). Proceed to Generate Changelog.**
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 4: Generate Changelog (Subtask)
 
 **Invoke changelog-generator as subtask:**
@@ -154,6 +205,23 @@ task tool with:
 
 **✅ GATE: Changelog generated. Proceed to Stage.**
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 5: Stage Changelog
 
 ```bash
@@ -162,6 +230,23 @@ git status  # Verify CHANGELOG.md is staged
 ```
 
 **✅ GATE: CHANGELOG.md staged. Proceed to Squash.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "in_progress", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 6: Squash to Single Commit
 
@@ -196,6 +281,23 @@ git log --oneline origin/dev..HEAD
 
 **✅ GATE: Single commit. Proceed to Push.**
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "completed", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "in_progress", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 7: Push to Remote
 
 ```bash
@@ -210,6 +312,23 @@ git log --oneline origin/dev..HEAD | head -1
 ```
 
 **✅ GATE: Push succeeded. Proceed to Create PR.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "completed", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "completed", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "in_progress", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 8: Create PR
 
@@ -279,6 +398,23 @@ Fixes #<child1>
 | GitHub Issue | Summary, Outcome, byline | PR URL (already visible via PR) |
 
 **✅ REPORT COMPLETE. HALT after reporting.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "completed", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "completed", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "completed", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "completed", "priority": "medium"},
+])
+```
 
 ## Subtask Context Isolation
 

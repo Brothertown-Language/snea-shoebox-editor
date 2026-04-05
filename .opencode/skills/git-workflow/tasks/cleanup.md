@@ -10,6 +10,24 @@ Delete merged branches after PR merge, clean stale references, and verify reposi
 1. **Automatic detection:** Can also run when invoked to check for merged branches
 1. **Mandatory cleanup:** ALL merged branches must be deleted (local and remote)
 
+## TodoWrite Progress Tracking
+
+**Before starting workflow, show progress to developer:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "in_progress", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "pending", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "pending", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "pending", "priority": "medium"},
+])
+```
+
+**Update after each step completes.**
+
 ## Preconditions
 
 - Human confirms "PR merged" or similar
@@ -51,6 +69,20 @@ proceed_to_close_issues()
 - Does NOT verify PR was merged (could be closed/rejected)
 - GitHub API `merged_at` field is the ONLY reliable merge indicator
 - Closing issues without merged PR loses tracking and audit trail
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "pending", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "pending", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 2: Hotfix Dev-Merge Ticket (Hotfix PRs ONLY)
 
@@ -114,6 +146,20 @@ git push origin dev
 - PRs without `hotfix` label targeting `dev` → no ticket
 - Direct commits to `main` (no PR) → no ticket (hotfix workflow requires PR)
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "in_progress", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "pending", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 3: Switch to Dev
 
 ```bash
@@ -121,7 +167,21 @@ git checkout dev
 git pull origin dev
 ```
 
-### Step 3: Delete Current Merged Branch
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "completed", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "in_progress", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "pending", "priority": "medium"},
+])
+```
+
+### Step 4: Delete Current Merged Branch
 
 ```bash
 # Delete local branch
@@ -134,7 +194,21 @@ git push origin --delete <merged-branch-name> 2>/dev/null || echo "Remote alread
 git fetch --prune
 ```
 
-### Step 4: Clean Other Merged Branches
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "completed", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "completed", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "pending", "priority": "medium"},
+])
+```
+
+### Step 5: Clean Other Merged Branches
 
 **Find merged branches:**
 
@@ -148,16 +222,44 @@ git branch --merged dev
 git branch -d <branch>
 ```
 
-### Step 5: Verify Clean State
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "completed", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "completed", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "in_progress", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "pending", "priority": "medium"},
+])
+```
+
+### Step 6: Verify Clean State
 
 ```bash
 git status --porcelain  # Must be empty
 git branch -vv          # Should show minimal branches
 ```
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Verify PR merge", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Hotfix dev-merge ticket", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Switch to dev", "status": "completed", "priority": "high"},
+    {"content": "Step 4: Delete current branch", "status": "completed", "priority": "high"},
+    {"content": "Step 5: Clean other merged branches", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Verify clean state", "status": "completed", "priority": "high"},
+    {"content": "Step 7: Clear workflow todos", "status": "in_progress", "priority": "medium"},
+])
+```
+
 ---
 
-### Step 6: Clear Workflow Todos
+### Step 7: Clear Workflow Todos
 
 **After cleanup complete:**
 

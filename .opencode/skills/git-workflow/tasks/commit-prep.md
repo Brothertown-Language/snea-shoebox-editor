@@ -10,6 +10,21 @@ Prepare commit message for squash commit during PR creation. This is a read-only
 1. **Read-only analysis:** Discover changes but DO NOT execute commits
 1. **HALT after analysis:** Wait for user to review and approve
 
+## TodoWrite Progress Tracking
+
+**Show progress during commit message preparation:**
+
+```python
+todowrite([
+    {"content": "Step 1: Discovery (read-only)", "status": "in_progress", "priority": "high"},
+    {"content": "Step 2: Summarize changes", "status": "pending", "priority": "high"},
+    {"content": "Step 3: Create commit script", "status": "pending", "priority": "high"},
+    {"content": "Step 4: HALT for review", "status": "pending", "priority": "medium"},
+])
+```
+
+**Update after each step completes.**
+
 ## Preconditions
 
 - User says "commit" or "prepare a commit"
@@ -33,6 +48,17 @@ git diff --cached   # What's already staged?
 git log --oneline -10  # Recent commits for context
 ```
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Discovery (read-only)", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Summarize changes", "status": "in_progress", "priority": "high"},
+    {"content": "Step 3: Create commit script", "status": "pending", "priority": "high"},
+    {"content": "Step 4: HALT for review", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 2: Summarize Changes
 
 Group changes logically:
@@ -41,6 +67,17 @@ Group changes logically:
 - Test changes
 - Documentation changes
 - Configuration changes
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Discovery (read-only)", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Summarize changes", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Create commit script", "status": "in_progress", "priority": "high"},
+    {"content": "Step 4: HALT for review", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 3: Create Commit Script
 
@@ -55,6 +92,17 @@ git reset --soft origin/dev
 git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 1: Discovery (read-only)", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Summarize changes", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Create commit script", "status": "completed", "priority": "high"},
+    {"content": "Step 4: HALT for review", "status": "in_progress", "priority": "medium"},
+])
 ```
 
 ### Step 4: HALT

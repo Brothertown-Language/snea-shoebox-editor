@@ -97,7 +97,28 @@ When implementation determines "no file changes needed":
 
 ## Procedure
 
-### Step 0: Temp File Cleanup (MANDATORY)
+### Step 0: Initialize Progress Tracking
+
+**Before starting workflow, show progress to developer:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "in_progress", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "pending", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "pending", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
+**This gives developers visibility during cleanup and review preparation.**
+
+---
+
+### Step 0.1: Temp File Cleanup (MANDATORY)
 
 **Before pushing, clean up temporary files.**
 
@@ -117,6 +138,21 @@ ls ./tmp/
 - `./tmp/*.db` (SQLite databases)
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "in_progress", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "pending", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
 
 ### Step 0.5: Lint Tool Verification (MANDATORY)
 
@@ -166,6 +202,21 @@ uvx pymarkdownlnt scan -r src/  # WRONG - Python files
 2. Report violation: "Lint tool mismatch: <tool> targets <wrong-type> files"
 3. Use correct tool for file type
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "in_progress", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
 ### Step 1: Verify Branch Is Pushed
 
 **MANDATORY ENFORCEMENT CHECK: Branch MUST be on remote before generating compare URL.**
@@ -205,7 +256,24 @@ If review-prep is invoked but branch is NOT pushed:
 4. **CONTINUE:** Generate compare URL
 5. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
 
-**This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
+4. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
+
+5. **This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
 
 ### Step 2: Clear TODO List (MANDATORY)
 
@@ -221,12 +289,42 @@ todowrite todos=[]
 - Ensures clean state before developer review
 - Removes distraction from completed work
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
 ### Step 3: Generate Compare URL
 
 Using session values (GIT_OWNER, GIT_REPO):
 
 ```
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+```
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
 ```
 
 ### Step 4: Pre-Post Verification (MANDATORY GATE)
@@ -260,13 +358,26 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
-**If ANY check fails:** STOP. Fix the format BEFORE continuing to Step 3.
-
 **Why this gate exists:**
 - Prevents URL-before-summary violations
 - Prevents byline-before-separator violations
 - Catches format errors before they're posted
 - Forces procedural verification, not informational
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
 
 ### Step 5: Report Completion (Chat ONLY)
 
@@ -294,6 +405,21 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 **Post summary + URL to chat.**
 **DO NOT post to GitHub issue.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "in_progress", "priority": "critical"},
+])
+```
 
 ### Step 6: HALT (MANDATORY - NO EXCEPTIONS)
 
