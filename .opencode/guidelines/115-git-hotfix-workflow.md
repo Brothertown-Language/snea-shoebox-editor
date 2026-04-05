@@ -82,9 +82,16 @@ Create PR:
 
 ### Step 4: After Merge to main
 
-**After human merges the hotfix PR to `main`:**
+**After human merges the hotfix PR to `main`, the agent MUST:**
 
-1. **Sync to `dev`:**
+1. **Verify PR merge via GitHub API** (see `cleanup.md` Step 1)
+2. **Create dev merge ticket:**
+   - Title: `[SPEC] Merge main to dev - Hotfix: <description>`
+   - Body: Reference to hotfix PR, commit hashes, affected files
+   - Labels: `hotfix`, `needs-approval`
+   - Post chat message: "Hotfix merged to main. Ticket #N created for dev merge."
+
+3. **Sync to `dev`:**
    ```bash
    git checkout dev
    git merge main
@@ -92,12 +99,41 @@ Create PR:
    ```
    
    Or create a PR from `main` to `dev` if preferred.
+   
+   **⚠️ CRITICAL: Dev is authoritative source during backport.**
+   
+   When merging `main` → `dev`, resolve conflicts using dev as authoritative:
+   - Hotfix-specific files → take from `main`
+   - All other files → take from `dev`
+   
+   **⚠️ MANDATORY: AI Agent Intelligence Required**
+   
+   ALL conflict resolution MUST be performed by AI agent intelligence:
+   - No pre-built scripts or automation that bypass AI decision-making
+   - Agent must analyze each conflict individually
+   - Agent must explain reasoning for each resolution choice
+   - See `112-git-merge-protocol.md` → "MANDATORY AI Agent Assistance"
 
-2. **Delete hotfix branch:**
+4. **Delete hotfix branch:**
    ```bash
    git branch -d hotfix/urgent-fix
    git push origin --delete hotfix/urgent-fix
    ```
+
+**Hotfix Detection:**
+
+The cleanup task detects hotfix PRs by:
+- PR target branch is `main` (not `dev`)
+- PR has `hotfix` label (or was created from `hotfix/*` branch)
+
+**Edge Cases:**
+
+| Scenario | Action |
+|----------|--------|
+| PR rejected/abandoned | No ticket created (PR not merged) |
+| PR merged via GitHub UI (no agent) | User must manually create ticket |
+| Direct commits to main (no PR) | No ticket created (hotfix workflow requires PR) |
+| Hotfix PR targeting dev | No ticket created (wrong target branch) |
 
 ---
 

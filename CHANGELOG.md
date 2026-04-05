@@ -12,6 +12,14 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### feature/hotfix-backport-dev-authoritative-422
+
+- Add "Hotfix Backport: Dev as Authoritative Source" section to `112-git-merge-protocol.md`
+- Add conflict resolution matrix for hotfile-specific vs non-hotfix files
+- Update `115-git-hotfix-workflow.md` with reference to new conflict resolution procedure
+- Create `scripts/hotfix_backport.py` - automated backport script with intelligent conflict resolution
+- Add testing documentation for hotfix backport workflow
+
 ### feature/skills-wording-unit14
 
 - Fix skill verification script to exclude CHANGELOG.md from "Automatic Invocation" check (historical documentation)
