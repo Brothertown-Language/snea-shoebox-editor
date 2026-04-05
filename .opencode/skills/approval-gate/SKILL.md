@@ -22,6 +22,31 @@ This skill is invoked at these workflow triggers:
 | User says "approved" or "go" | `/skill approval-gate --task verify-authorization` | Verify auth + needs-approval label status |
 | Before implementing any task | `/skill approval-gate --task verify-sub-issues` | Verify sub-issue structure |
 
+## Authorization Cleanup (SILENT)
+
+**When authorization is received after workflow interruption, clean up approval markers BEFORE implementation.**
+
+**Cleanup actions:**
+1. Remove `needs-approval` label (if present)
+2. Clear STATUS suffix (`N.M (REVISED - NEEDS APPROVAL)` → `N.M`)
+3. Clear todo list (if workflow was interrupted)
+
+**Workflow Interruption Detection:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption, CLEAR the todo list before implementation.
+
+**⚠️ CRITICAL: Cleanup is SILENT — NO comments posted.**
+
+See `010-approval-gate.md` → "Authorization Cleanup Workflow" for full details.
+
 ## Tasks
 
 | Task | Purpose | Words |
