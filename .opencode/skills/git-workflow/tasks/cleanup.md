@@ -52,11 +52,11 @@ proceed_to_close_issues()
 - GitHub API `merged_at` field is the ONLY reliable merge indicator
 - Closing issues without merged PR loses tracking and audit trail
 
-### Step 2: Switch to Main
+### Step 2: Switch to Dev
 
 ```bash
-git checkout main
-git pull origin main
+git checkout dev
+git pull origin dev
 ```
 
 ### Step 3: Delete Current Merged Branch
@@ -77,7 +77,7 @@ git fetch --prune
 **Find merged branches:**
 
 ```bash
-git branch --merged main
+git branch --merged dev
 ```
 
 **For each merged branch (except main/master):**
@@ -104,9 +104,9 @@ git branch -vv          # Should show minimal branches
 ```
 Merged PR (current branch just merged)
     │
-    ├─► Switch to main: git checkout main
+    ├─► Switch to dev: git checkout dev
     │
-    ├─► Pull latest: git pull origin main
+    ├─► Pull latest: git pull origin dev
     │
     ├─► Delete local: git branch -d <branch>
     │
@@ -116,9 +116,9 @@ Merged PR (current branch just merged)
 
 Merged PR (other branches from previous sessions)
     │
-    ├─► List merged: git branch --merged main
+    ├─► List merged: git branch --merged dev
     │
-    └─► For each (except main/master):
+    └─► For each (except dev):
             git branch -d <branch>
 ```
 
@@ -126,7 +126,7 @@ Merged PR (other branches from previous sessions)
 
 Before ANY branch deletion:
 
-1. **Merged status:** `git branch --merged main` includes the branch ✓
+1. **Merged status:** `git branch --merged dev` includes the branch ✓
 1. **GitHub PR status:** PR is "merged" (not "closed") ✓
 1. **Not current branch:** `git branch --show-current` ≠ branch to delete ✓
 1. **Not protected:** Branch name ≠ `main`, `master` ✓

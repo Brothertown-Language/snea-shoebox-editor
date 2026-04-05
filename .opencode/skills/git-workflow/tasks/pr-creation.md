@@ -191,8 +191,47 @@ No sub-issues needed. Include only parent issue.
 Run these checks BEFORE deciding on version bump:
 
 ```bash
-# Step 1: Get list of changed files
-git diff origin/dev...HEAD --name-only
+#### Pre-Squash Verification (MANDATORY)
+
+**Before running squash, VERIFY all changes are staged:**
+
+```bash
+# Check staged changes
+git status
+
+# MUST show:
+#   Changes to be committed:
+#     .opencode/CHANGELOG.md
+#     .opencode/guidelines/...
+#     (all modified files)
+```
+
+**If `git status` shows unstaged changes:**
+
+```bash
+# Stage ALL changes NOW - this is the last chance
+git add -A
+git status  # Verify again before proceeding
+```
+
+**Only proceed when `git status` shows ALL changes staged.**
+
+#### Execute Squash (Atomic Block)
+
+**Run as ONE atomic command - DO NOT split across lines:**
+
+```bash
+git add -A && git reset --soft origin/dev && git commit -m "<descriptive message>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+**Note:** The squash commit includes:
+- All implementation changes
+- Version bump (if applied in [Version Bump](#version-bump))
+- CHANGELOG.md updates
+
+These are NOT separate commits - all combined into ONE clean commit.
 
 # Step 2: Check if any code files changed
 CHANGED_FILES=$(git diff origin/dev...HEAD --name-only)
