@@ -178,7 +178,7 @@ todowrite todos=[]
 Using session values (GIT_OWNER, GIT_REPO):
 
 ```
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
 ### Step 4: Pre-Post Verification (MANDATORY GATE)
@@ -209,7 +209,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
 **If ANY check fails:** STOP. Fix the format BEFORE continuing to Step 3.
@@ -236,7 +236,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
 **Why chat only:**
@@ -393,5 +393,5 @@ Updated git-workflow skill to push feature branches after implementation and pro
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch-name>
+https://github.com/<owner>/<repo>/compare/dev...<branch-name>
 ```

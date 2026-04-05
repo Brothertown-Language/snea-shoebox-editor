@@ -8,6 +8,17 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### spec/git-workflow-compare-url-fix
+
+- **Fixed: Compare URL Base Branch**: Corrected compare URL generation in
+  git-workflow skills and guidelines to use `dev` as base branch for
+  feature branches instead of `main`. Feature branches merge to `dev`
+  first, then `dev` merges to `main` via release PRs. Updated 6 files:
+  `000-critical-rules.md`, `125-github-issue-comments.md`,
+  `approval-gate/SKILL.md`, `approval-gate/tasks/post-implementation.md`,
+  `git-workflow/tasks/review-prep.md`,
+  `implementation-quality/tasks/post-implementation.md`.
+
 ### skill/wording-remediation
 
 - **Changed: Standardized Skill Trigger Format**: All 29 skills now use explicit

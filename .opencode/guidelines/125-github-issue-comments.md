@@ -217,7 +217,7 @@ When a comment includes a URL (issue link, PR link, code compare link, etc.), th
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 ### Why URL Last
@@ -246,7 +246,7 @@ Skills imported from external repository. Parent issue #149 tracks overall progr
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 ### No URLs
