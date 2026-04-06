@@ -43,6 +43,7 @@ out/
 .junie/*.bak
 .junie/cache/
 .junie/memory.md
+.opencode/package-lock.json
 
 # Cloudflare / Wrangler
 .wrangler/
