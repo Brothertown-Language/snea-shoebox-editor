@@ -34,11 +34,11 @@ ALL comments on issues and PRs MUST have a SINGLE byline at the END combining st
 | Identity Component | How to Detect | FORBIDDEN |
 |-------------------|---------------|-----------|
 | `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/*" from examples |
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
 **Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `<AgentName> (<ModelID>)` → Example only
 - `AI Assistant (model-id)` → Placeholder only
 - **DETECT YOUR OWN IDENTITY** at runtime
 

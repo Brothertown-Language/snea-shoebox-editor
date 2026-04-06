@@ -179,7 +179,7 @@ Added Phase 2 to spec. Phase 2 implements the API layer for the approval workflo
 - Specified error handling for invalid states
 
 ---
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 **Key Characteristics:**

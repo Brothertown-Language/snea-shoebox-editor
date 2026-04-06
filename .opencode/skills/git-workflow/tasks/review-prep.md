@@ -381,22 +381,57 @@ todowrite([
 
 ### Step 5: Report Completion (Chat ONLY)
 
-**⚠️ CRITICAL: Progress goes to CHAT ONLY - NOT GitHub Issues.**
+**⚠️ CRITICAL: OUTPUT FORMAT ENFORCEMENT - ZERO TOLERANCE**
 
-**Chat Output Format:**
+**The output MUST be EXACTLY the format below, displayed IN THIS ORDER, NOTHING ELSE.**
 
-```markdown
+**🚫 FORBIDDEN (CRITICAL VIOLATION):**
+- ANY output before Step 2 (Clear TODO list) is complete
+- "✅ Pre-PR Checklist Completed" or verification checklists
+- All changes staged ✓ or workflow step outputs
+- Verification results from any previous step
+- ANY content NOT in exact format below
+
+**Progress tracking (Step 0-4) goes to `todowrite` - NOT to the completion comment.**
+
+**✅ REQUIRED OUTPUT ORDER (MANDATORY SEQUENCE):**
+
+```
+1. Clear todowrite list (Step 2 - already done)
+2. Generate compare URL (Step 3 - already done)
+3. Pre-post verification (Step 4 - already done)
+4. Display in chat:
+
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
 
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+5. HALT (Step 6)
 ```
+
+**Format Requirements (CRITICAL - ENFORCED ORDER):**
+
+| Order | Content | Notes |
+|-------|---------|-------|
+| 1 | **Summary:** | Executive summary describing stakeholder value |
+| 2 | **Outcome:** | What changed for stakeholders |
+| 3 | **Compare URL** | GitHub compare URL (newline BEFORE byline) |
+| 4 | **---** | Separator |
+| 5 | **Byline** | AI agent attribution (LAST line) |
+
+**🚫 Output order violations (CRITICAL):**
+- URL BEFORE summary = WRONG
+- Byline BEFORE URL = WRONG
+- Summary AFTER URL = WRONG
+- Additional content of ANY kind = WRONG
+- ANY output before clearing TODO list = WRONG
 
 **Why chat only:**
 - GitHub Issues are historical records - no need for compare URLs
@@ -405,21 +440,6 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 **Post summary + URL to chat.**
 **DO NOT post to GitHub issue.**
-
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "completed", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "completed", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "in_progress", "priority": "critical"},
-])
-```
 
 ### Step 6: HALT (MANDATORY - NO EXCEPTIONS)
 
