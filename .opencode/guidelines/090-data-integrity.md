@@ -78,9 +78,8 @@
 
 ## Cross-References
 
-- **200-errors-exception-handling.md** — Zero-tolerance rules for exception handling
-- **201-errors-missing-data.md** — Zero-tolerance rules for missing data
+- **090-data-integrity.md** — Zero-tolerance rules for data handling (see `data-integrity` task for implementation patterns)
 
 ---
 
-This guideline works with the error handling series (200-203). When in doubt: **raise, don't return.**
+This guideline works with error handling enforcement. When in doubt: **raise, don't return.**

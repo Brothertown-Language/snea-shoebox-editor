@@ -342,7 +342,7 @@ After closing child issues addressed by PR, invoke the `verify-sub-issues` subta
 - Isolates complex logic from main cleanup flow
 - Returns structured data for decision-making
 
-**See Also:** `.opencode/guidelines/124-github-archive-workflow.md` → "Parent Closure Pre-Check" section for detailed logic.
+**Subtask has complete workflow** including superseded issue detection, PR link verification, and pre-close safety checks.
 
 ## Common Issues
 

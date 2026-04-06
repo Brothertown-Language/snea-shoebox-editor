@@ -31,7 +31,7 @@ todowrite([
 
 **Continue through ALL phases without HALT between phases.**
 
-See `020-go-prohibitions.md` Section 6 for unqualified approval scope.
+**Rationale:** Unqualified approval authorizes all phases. This matches developer mental model of "approved means go ahead" and prevents unnecessary back-and-forth on multi-phase implementations.
 
 ### Todo Clearing at Workflow Transitions
 

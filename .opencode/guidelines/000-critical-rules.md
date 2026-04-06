@@ -249,71 +249,6 @@ The agent must NEVER ask questions like:
 
 ---
 
-## Critical Violation: Non-Substantive Questions in GitHub Comments
-
-**⚠️ Asking non-substantive questions in GitHub comments is a CRITICAL GUIDELINE VIOLATION.**
-
-A non-substantive question is any question asking developers to make decisions the agent should make autonomously within its defined scope and authority.
-
-### 🚫 FORBIDDEN Question Patterns in GitHub Comments
-
-| Question Type | Prohibited Examples | Why It's Wrong |
-|---------------|---------------------|----------------|
-| **Scope expansion** | "Should I also add tests for this feature?" | Agent should follow spec, not expand scope |
-| **Prioritization** | "Which task should I work on next?" | Spec defines order, agent should follow it |
-| **Proceeding** | "Ready for me to continue?" "Should I proceed?" | Agent must HALT silently, no dialog |
-| **Code structure** | "Should I use a class or function?" | Agent should follow code standards |
-| **Naming** | "What should I name this variable?" | Agent should apply naming conventions |
-| **Implementation details** | "Should I use pattern A or B?" | Agent should make optimal choice |
-
-### ✅ REQUIRED Behavior
-
-**When faced with a decision within scope:**
-
-1. **Make the decision autonomously** using guidelines, code standards, and best practices
-2. **Document the decision** in the implementation or commit message
-3. **HALT only for genuine ambiguity** (conflicting requirements, auth errors, breaking changes)
-
-### ✅ ALLOWED: Substantive Questions (ASK FIRST)
-
-| Situation | Substantive Question? | Action |
-|-----------|------------------------|--------|
-| Conflicting requirements | ✅ YES | Post comment to issue, HALT |
-| Breaking change needed | ✅ YES | Post comment to issue, HALT |
-| External dependency unknown | ✅ YES | Post comment to issue, HALT |
-| Authorization error | ✅ YES | Post comment to issue, HALT |
-| Spec unclear | ✅ YES | Post comment to issue, HALT |
-| Feature vs bug determination | ✅ YES | Post comment to issue, HALT |
-
-### Decision Matrix: Substantive vs Non-Substantive
-
-| Decision Type | Agent Resolves | Requires HALT + Question |
-|---------------|----------------|---------------------------|
-| Order of implementation | Yes (follow spec) | No |
-| Code structure/pattern | Yes (follow standards) | No |
-| Variable/function naming | Yes (follow conventions) | No |
-| Test coverage level | Yes (follow spec) | No |
-| Conflicting requirements | No | Yes |
-| Breaking change | No | Yes |
-| External auth/dependency | No | Yes |
-
-### Why This Matters
-
-- **Autonomous execution**: Agent should make decisions within scope without asking
-- **Developer time**: Questions waste developer time on decisions agent should resolve
-- **Guideline adherence**: Guidelines define decision-making authority
-- **Workflow efficiency**: Silent HALT is correct response, not question-asking
-
-### Enforcement
-
-This violation is tracked alongside "Unauthorized Question Asking" violations:
-
-1. **Detection**: Question patterns in GitHub comments that ask developer to decide
-2. **Tracking**: Issue created per "Auto-Issue Creation for Repeated Workflow Violations"
-3. **Correction**: Guidelines reinforced, agent behavior corrected
-
----
-
 ## Critical Violation: GitHub Progress Comments Are NOISE — CHAT ONLY
 
 **⚠️ Posting progress comments to GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
@@ -647,48 +582,21 @@ Some agents incorrectly HALT after completing Phase 1 and mark remaining phases 
 
 ---
 
-## Critical Violation: Spec Without Investigation
+## Critical Violation: Spec Without Investigation (CRITICAL)
 
 **⚠️ Creating a spec without completed investigation is a CRITICAL GUIDELINE VIOLATION.**
 
 Investigation MUST be completed BEFORE finalizing a spec for review.
 
-**🚫 FORBIDDEN:**
-- Creating specs from vague requirements without exploration
-- Skipping codebase analysis before planning
-- Finalizing specs before investigating edge cases
-- Proceeding without success criteria defined
-- Running test code against production systems during investigation
+### Investigation Completion Criteria
 
-**✅ REQUIRED:**
-- Investigate codebase for existing patterns and reusable components
-- Create test scripts in `./tmp/` to validate hypotheses (isolated from production)
-- Document alternatives considered with tradeoffs
-- Identify risks and mitigation strategies
-- Define testable, measurable success criteria
-
-**✅ ALLOWED During Investigation:**
-- Read production code (exploration)
-- Read production data (analysis)
-- Create and run test scripts in `./tmp/` (isolated fixtures)
-- Create isolated test fixtures (dedicated test DB/schemas)
-- Run static analysis (lint, typecheck)
-- Document findings for the spec
-
-**Investigation Completion Criteria:**
-
-Before creating a spec, the agent MUST verify:
-
-| Requirement | Evidence |
-|-------------|----------|
-| Problem understood | Clearly stated problem, context, stakeholders |
-| Codebase explored | Existing patterns, reusable components identified |
-| Hypotheses tested | Test scripts run, results documented |
-| Alternatives considered | At least 2 approaches documented with tradeoffs |
-| Risks identified | Risk assessment with mitigation strategies |
-| Success criteria defined | Testable, measurable completion criteria |
-
-See `142-planning-archive-workflow.md` → "Investigation Completion Criteria" for complete requirements.
+Before creating a spec, verify:
+- Problem understood with context
+- Codebase explored for existing patterns
+- Hypotheses tested with isolated test scripts
+- Alternatives considered with tradeoffs
+- Risks identified with mitigation strategies
+- Success criteria defined (testable, measurable)
 
 ---
 

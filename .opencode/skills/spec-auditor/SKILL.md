@@ -246,7 +246,7 @@ This auditor uses `docs/specs/how-to-write-good-spec-ai-agents.md` as the master
 
 ### Fresh-Start Context Requirements (CRITICAL)
 
-Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be self-contained for agents with NO memory context:
+Specs MUST be self-contained for agents with NO memory context:
 
 1. **NO "see above" or "as discussed" references**
 
@@ -392,8 +392,6 @@ The `generate-independent-spec` task runs in a subtask to prevent ANY access to 
 | 6 | Identify missing context | Find codebase elements that SHOULD be referenced |
 
 ### Tool Preference for Codebase Verification
-
-Per `016-srclight-preference.md`:
 
 | Task | Tool |
 |------|------|
@@ -577,7 +575,7 @@ After each fix is applied, the auditor MUST:
 
 1. **Re-read the modified spec** (via GitHub MCP tools) to verify the change was applied correctly.
 1. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
-1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools per `016-srclight-preference.md`.
+1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools.
 1. **Report verification** in the next response before moving to the next issue:
    - **Verification signal**: `changed` — the fix was applied and the issue is resolved.
    - **Verification signal**: `blocked` — the fix could not be applied (explain why).

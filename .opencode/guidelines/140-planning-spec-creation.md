@@ -11,7 +11,7 @@ AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
 **CRITICAL**: Investigation and Planning phases are AUTO-COMPLETED before the spec is created. The spec file ONLY contains implementation and verification phases.
 
-**INVESTIGATION CHECKPOINT**: Before creating a spec, the agent MUST verify investigation is complete. See `142-planning-archive-workflow.md` for investigation completion criteria and permissible test activities.
+**INVESTIGATION CHECKPOINT**: Before creating a spec, the agent MUST verify investigation is complete. Investigation completion criteria include: problem understood, codebase explored, hypotheses tested, alternatives considered, risks identified, and success criteria defined.
 
 ---
 

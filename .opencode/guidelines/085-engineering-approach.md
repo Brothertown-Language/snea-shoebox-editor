@@ -93,9 +93,9 @@
 | Pattern | Requirement | Guideline Reference |
 |---------|-------------|---------------------|
 | Synthetic/fabricated data | FORBIDDEN | `090-data-integrity.md` |
-| Defaults for missing required data | FORBIDDEN | `201-errors-missing-data.md` |
-| Silent exception swallowing | FORBIDDEN | `200-errors-exception-handling.md` |
-| `None` return for required data | FORBIDDEN | `201-errors-missing-data.md` |
+| Defaults for missing required data | FORBIDDEN | `090-data-integrity.md` |
+| Silent exception swallowing | FORBIDDEN | `090-data-integrity.md` |
+| `None` return for required data | FORBIDDEN | `090-data-integrity.md` |
 
 | Violation | Correct Action |
 |-----------|----------------|

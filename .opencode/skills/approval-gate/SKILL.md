@@ -45,8 +45,6 @@ This skill is invoked at these workflow triggers:
 
 **⚠️ CRITICAL: Cleanup is SILENT — NO comments posted.**
 
-See `010-approval-gate.md` → "Authorization Cleanup Workflow" for full details.
-
 ## Tasks
 
 | Task | Purpose | Words |
@@ -387,14 +385,76 @@ If review-prep is invoked AND branch is NOT pushed:
 
 **CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
 
-When implementation halts (awaiting approval, awaiting clarification, error, session end):
+#### Why WIP Commits Are Required
 
-1. Check for uncommitted changes: `git status`
-1. If changes exist, commit WIP: `git commit -m "WIP: Phase N - description"`
-1. Report WIP commit made
-1. THEN HALT
+When implementation halts (for ANY reason), uncommitted changes are at risk:
 
-**See `111-git-commit-workflow.md` → "WIP Commit Before HALT" section for complete workflow.**
+- Session crashes
+- Context window exhaustion
+- Developer needs to switch branches
+- Machine restarts
+- Awaiting clarification/approval
+
+WIP commits preserve work in progress in recoverable git history.
+
+#### When to Commit WIP
+
+| Scenario | Commit Type | Message Format |
+|----------|-------------|----------------|
+| Task complete | Full commit | `[Phase N] Task description` |
+| Phase complete | Full commit | `[Phase N] Phase complete` |
+| Mid-task HALT | WIP commit | `WIP: Phase N - description` |
+| Awaiting clarification | WIP commit | `WIP: Phase N - awaiting clarification` |
+| Error encountered | WIP commit | `WIP: Phase N - error: description` |
+| Session ending | WIP commit | `WIP: Phase N - session end` |
+
+#### WIP Commit Workflow
+
+**Before ANY HALT (awaiting approval, clarification, error, session end):**
+
+```bash
+# Step 1: Check for uncommitted changes
+git status
+
+# Step 2: If changes exist, commit WIP
+git add -A
+git commit -m "WIP: Phase N - <brief description>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+
+# Step 3: Verify commit was created
+git log -1 --oneline
+
+# Step 4: Report WIP commit made
+```
+
+#### WIP Commit Characteristics
+
+| Characteristic | Description |
+|---------------|-------------|
+| **Prefix** | Always starts with `WIP:` for easy identification |
+| **Phase** | Includes phase number for context |
+| **Description** | Brief description of what was being worked on |
+| **Trailers** | Same co-author trailers as full commits |
+| **Squashable** | Can be squashed or amended later with subsequent work |
+
+#### After WIP Commit
+
+- **Continue work**: Next commit can amend or squash the WIP commit
+- **Session resumes**: Rebase or continue from WIP commit
+- **PR creation**: Squash WIP commits with final work before PR
+
+#### What Counts as HALT
+
+| HALT Trigger | WIP Required? |
+|-------------|--------------|
+| Awaiting approval | ✅ YES |
+| Awaiting clarification | ✅ YES |
+| Mid-task pause | ✅ YES |
+| Error encountered | ✅ YES |
+| Session ending | ✅ YES |
+| Task complete | ❌ NO (use full commit) |
+| Phase complete | ❌ NO (use full commit) |
 
 ## Exceptions (No Authorization Required)
 

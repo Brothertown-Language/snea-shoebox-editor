@@ -65,8 +65,6 @@ The `git-workflow` skill handles:
 
 ## Srclight MCP Server (Code Indexing)
 
-**For detailed tool selection guidance, see `016-srclight-preference.md`.**
-
 Key points:
 - Srclight indexes Python code ONLY (not markdown/docs)
 - Use srclight PREFERENTIALLY for Python semantic analysis
