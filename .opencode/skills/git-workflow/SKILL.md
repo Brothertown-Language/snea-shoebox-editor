@@ -1,9 +1,6 @@
----
-name: git-workflow
-description: Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested.
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: git-workflow description: Git Workflow Enforcer ensuring all git operations follow the repository's strict branch-first, stash-first, squash-merge workflow. Invoked automatically before implementation and when PR creation is requested. license: MIT compatibility: opencode
 
 # Skill: git-workflow
 
@@ -16,6 +13,7 @@ Git Workflow Enforcer ensuring all git operations follow the repository's strict
 At workflow trigger points, the agent MUST invoke this skill - NOT run git commands manually.
 
 **🚫 NEVER BYPASS:**
+
 - Run `git checkout -b` manually → MUST invoke `pre-work` task
 - Stop after reading files → MUST invoke `review-prep` task
 - Squash/push/create PR manually → MUST invoke `pr-creation` task
@@ -23,7 +21,7 @@ At workflow trigger points, the agent MUST invoke this skill - NOT run git comma
 
 **Manual operations at these points = CRITICAL VIOLATION.**
 
----
+______________________________________________________________________
 
 ## When to Invoke
 
@@ -137,6 +135,7 @@ Subtasks may use `todowrite` tool for progress tracking, but this is internal to
 4. `commit-prep` (optional) → Prepare commit message
 5. `pr-creation` (user-initiated) → Squash, push, create PR, HALT
 6. `cleanup` (after merge) → Close issues, delete branches
+
 - `/skill git-workflow --task review-prep` - **AFTER implementation done** (automatic, no decision point)
 - `/skill git-workflow --task commit-prep` - When user says "commit"
 - `/skill git-workflow --task pr-creation` - When user says "create a PR" or "pr"
@@ -147,10 +146,10 @@ Subtasks may use `todowrite` tool for progress tracking, but this is internal to
 
 **Invoke this skill at these triggers:**
 
-   - User says `approved`, `go`, or similar authorization
-   - User says `create a PR`, `pr`, or similar PR request
-   - Implementation completes (invoke review-prep task)
-   - DO NOT prompt for invocation - invoke at these triggers
+- User says `approved`, `go`, or similar authorization
+- User says `create a PR`, `pr`, or similar PR request
+- Implementation completes (invoke review-prep task)
+- DO NOT prompt for invocation - invoke at these triggers
 
 1. **Phase sequence:**
 
@@ -206,6 +205,7 @@ The sequence is FIXED:
 4. **review-prep is invoked** → generates compare URL → HALTs
 
 **DO NOT:**
+
 - Skip review-prep because "changes are trivial"
 - Skip review-prep because "developer can review via git log"
 - Skip review-prep and proceed directly to PR creation
@@ -225,6 +225,7 @@ The sequence is FIXED:
 4. cleanup reports completion
 
 **DO NOT:**
+
 - Run manual `git` commands for cleanup (branch deletion, issue closure)
 - Ask developer "should I delete the branch?" — just do it
 - Skip GitHub API verification (use `github_pull_request_read(method="get")`)
@@ -287,6 +288,7 @@ cleanup: Verify merge via GitHub API → Close issues
 - `git restore` on externally-modified files
 - Create PR without explicit user instruction
 - Create PR without squashing to SINGLE COMMIT first
+- Create PR without closing keyword (`Fixes #N`, `Closes #N`, or `Resolves #N`)
 - Merge PRs (HUMAN-ONLY)
 - Use `--no-verify` flag
 - Ask "Ready to commit?" or "Create a PR?"
@@ -299,6 +301,7 @@ cleanup: Verify merge via GitHub API → Close issues
 - Verify stash exists (`git stash list`)
 - Verify working tree is clean (`git status`)
 - **SQUASH TO SINGLE COMMIT BEFORE ANY PR** — See `pr-creation-workflow` skill for pre-PR checklist
+- **INCLUDE CLOSING KEYWORD IN PR BODY** — Every PR MUST have `Fixes #N`, `Closes #N`, or `Resolves #N`
 - **Commit ALL changes before pushing** (`git add -A && git commit`)
 - **Push after committing** - ensures GitHub compare works correctly
 - **Clean temp files before review** (`rm ./tmp/temp_*.py ./tmp/*.json 2>/dev/null`)
@@ -340,7 +343,7 @@ git push --force-with-lease origin <branch>
    - Do NOT push anything
    - Do NOT create PR
 
-1. **Close issue directly with verification comment:**
+2. **Close issue directly with verification comment:**
 
    ```markdown
    🤖 ✅ Completed by <AgentName> (<ModelID>)
@@ -357,11 +360,11 @@ git push --force-with-lease origin <branch>
    **Outcome:** Spec verified complete without additional changes.
    ```
 
-1. **Use `state_reason: "completed"` when closing:**
+3. **Use `state_reason: "completed"` when closing:**
 
    - Indicates successful completion (not cancellation)
 
-1. **Report completion in chat and HALT:**
+4. **Report completion in chat and HALT:**
 
    - No further workflow steps needed
 

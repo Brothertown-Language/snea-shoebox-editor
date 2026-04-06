@@ -38,20 +38,20 @@ Subtasks handle their own context, discarded after return.
 
 ## Procedure
 
- ### Step 0: Clear Implementation Todos (MANDATORY)
- 
- **Before PR creation workflow begins:**
- 
- ```python
- # Clear any stale implementation todos
- todowrite(todos=[])
- ```
- 
- **Why:** Implementation todos are for tracking work progress. PR creation has explicit procedural steps in this task - no todo list needed. Clearing prevents confusion about stale "X of Y complete" status.
- 
- **CRITICAL:** This step runs BEFORE checking PR state, collecting sub-issues, or any other PR workflow steps.
+### Step 0: Clear Implementation Todos (MANDATORY)
 
----
+**Before PR creation workflow begins:**
+
+```python
+# Clear any stale implementation todos
+todowrite(todos=[])
+```
+
+**Why:** Implementation todos are for tracking work progress. PR creation has explicit procedural steps in this task - no todo list needed. Clearing prevents confusion about stale "X of Y complete" status.
+
+**CRITICAL:** This step runs BEFORE checking PR state, collecting sub-issues, or any other PR workflow steps.
+
+______________________________________________________________________
 
 ### Step 1: Check PR State (Subtask)
 
@@ -354,7 +354,46 @@ Fixes #<child1>
 
 **CRITICAL:** Feature branches MUST target `dev`.
 
- **✅ GATE: PR created. Proceed to Clear TODO List.**
+### Step 8.5: Verify Closing Keywords (MANDATORY)
+
+**⚠️ CRITICAL: Every PR MUST include at least one closing keyword.**
+
+A PR cannot be created if its body lacks a GitHub closing keyword. This ensures linked issues are automatically closed on merge.
+
+**Closing Keywords:**
+
+- `Fixes #N` — Closes issue when PR merges (most common)
+- `Closes #N` — Alternative syntax
+- `Resolves #N` — Alternative syntax
+
+**Verification:**
+
+```python
+# Verify PR body includes closing keyword
+pr_body = f"""## Summary
+
+{subtask_result['summary']}
+
+## Changes
+
+{subtask_result['changelog']}
+
+Fixes #{parent_issue}
+"""
+
+has_closing_keyword = any(
+    keyword in pr_body
+    for keyword in ['Fixes #', 'Closes #', 'Resolves #']
+)
+
+if not has_closing_keyword:
+    # Add parent issue as Fixes reference
+    pr_body += f"\n\nFixes #{parent_issue}"
+```
+
+**✅ GATE: Closing keyword present. Proceed to Clear TODO List.**
+
+**✅ GATE: PR created. Proceed to Clear TODO List.**
 
 ### Step 9: Clear TODO List (MANDATORY - FIRST)
 
@@ -381,6 +420,7 @@ Use the `changelog-generator` subtask result from Step 4 to build the summary:
 ```
 
 **Summary content (use subtask results):**
+
 - Extract stakeholder value from `subtask_result['summary']`
 - Focus on WHAT changed and WHY it matters
 - Keep to 1-2 sentences (concise)
@@ -394,6 +434,7 @@ Use the `changelog-generator` subtask result from Step 4 to build the summary:
 **The output MUST be EXACTLY the format below, displayed IN THIS ORDER, NOTHING ELSE.**
 
 **🚫 FORBIDDEN (CRITICAL VIOLATION):**
+
 - ANY output before Step 9 (Clear TODO) is complete
 - ANY output before Step 10 (Generate Summary) is complete
 - "✅ Pre-PR Checklist Completed" or verification checklists
@@ -436,6 +477,7 @@ https://github.com/<owner>/<repo>/pull/<number>
 | 5 | **Byline** | AI agent attribution (LAST line) |
 
 **🚫 Output order violations (CRITICAL):**
+
 - URL BEFORE summary = WRONG
 - Byline BEFORE URL = WRONG
 - Summary AFTER URL = WRONG
@@ -443,6 +485,7 @@ https://github.com/<owner>/<repo>/pull/<number>
 - ANY output before clearing TODO list = WRONG
 
 **Why This Order:**
+
 - Clear TODO list FIRST (prevents stale state confusion)
 - Generate summary SECOND (ensures content is ready)
 - Display output THIRD (all components ready, clean state)
@@ -457,6 +500,7 @@ https://github.com/<owner>/<repo>/pull/<number>
 **After displaying the chat output, HALT immediately.**
 
 **DO NOT:**
+
 - Ask the developer for next steps
 - Suggest merging the PR
 - Create additional files
@@ -464,6 +508,7 @@ https://github.com/<owner>/<repo>/pull/<number>
 - Proceed with any other workflow
 
 **WAIT for:**
+
 - Developer to review PR
 - Developer to say "PR merged" (then invoke `cleanup` task)
 
