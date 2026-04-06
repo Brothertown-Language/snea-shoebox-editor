@@ -53,6 +53,35 @@ The agent must NEVER ask questions like:
 - `050-scope-autonomy.md`: Questions are NOT authorization
 - `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
 
+### 🚫 CRITICAL: Non-Substantive Questions in GitHub Comments (ZERO TOLERANCE)
+
+**CRITICAL VIOLATION: Asking non-substantive questions in GitHub comments is PROHIBITED.**
+
+A non-substantive question is any question asking developers to make decisions the agent should make autonomously within its defined scope and authority.
+
+**Prohibited Non-Substantive Questions:**
+
+| Question Type | Prohibited Examples | Why It's Wrong |
+|---------------|---------------------|----------------|
+| **Scope expansion** | "Should I also add tests for this feature?" | Agent should follow spec, not expand scope |
+| **Prioritization** | "Which task should I work on next?" | Spec defines order, agent should follow it |
+| **Proceeding** | "Ready for me to continue?" "Should I proceed?" | Agent must HALT silently, no dialog |
+| **Code structure** | "Should I use a class or function?" | Agent should follow code standards |
+| **Naming** | "What should I name this variable?" | Agent should apply naming conventions |
+| **Implementation details** | "Should I use pattern A or B?" | Agent should make optimal choice |
+
+**Allowed Substantive Questions (ASK FIRST):**
+
+When faced with genuine ambiguity, ask via comment:
+
+| Situation | Substantive Question? | Action |
+|-----------|------------------------|--------|
+| Conflicting requirements | ✅ YES | Post comment to issue, HALT |
+| Breaking change needed | ✅ YES | Post comment to issue, HALT |
+| External dependency unknown | ✅ YES | Post comment to issue, HALT |
+| Authorization error | ✅ YES | Post comment to issue, HALT |
+| Spec unclear | ✅ YES | Post comment to issue, HALT |
+
 ### ✅ REQUIRED Behavior
 
 | Situation | Action |
