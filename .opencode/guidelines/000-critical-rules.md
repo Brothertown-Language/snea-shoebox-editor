@@ -147,12 +147,12 @@ AI co-authorship applies to **original content authored by AI**, NOT copy-pasted
 
 | Identity Component | How to Detect | FORBIDDEN |
 |-------------------|---------------|-----------|
-| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/*" from examples |
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
 **Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `<AgentName> (<ModelID>)` → Example only
 - `AI Assistant (model-id)` → Placeholder only
 - **DETECT YOUR OWN IDENTITY** at runtime
 
@@ -370,7 +370,7 @@ https://github.com/owner/repo/compare/dev...feature-branch
 Added rate limiting middleware to the PubMed client to prevent API quota exhaustion. The implementation uses a sliding window algorithm that tracks requests per minute and queues excess calls. This ensures we stay within PubMed's 3 requests/second limit without losing data.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **Chat Output (same message with URL):**
@@ -384,7 +384,7 @@ Added rate limiting middleware to PubMed client to prevent API quota exhaustion.
 https://github.com/owner/repo/compare/dev...feature-branch
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Non-Substantive Updates (NO Comment Needed)

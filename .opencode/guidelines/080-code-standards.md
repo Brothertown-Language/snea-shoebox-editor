@@ -173,12 +173,12 @@ All enumeration lists, numbered sections, and step sequences in documentation MU
 
 | Identity Component | How to Detect | FORBIDDEN |
 |-------------------|---------------|-----------|
-| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/*" from examples |
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
 **Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `<AgentName> (<ModelID>)` → Example only
 - `AI Assistant (model-id)` → Placeholder only
 - **DETECT YOUR OWN IDENTITY** at runtime
 

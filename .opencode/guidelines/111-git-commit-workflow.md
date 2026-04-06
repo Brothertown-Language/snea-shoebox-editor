@@ -37,8 +37,8 @@ The AI must use its **own identity**, not the example name. Examples show placeh
 
 | Identity Component | How to Detect | FORBIDDEN |
 |-------------------|---------------|-----------|
-| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/*" from examples |
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
 - The AI uses its **own actual identity** (the AI knows its own name and email)
@@ -46,8 +46,8 @@ The AI must use its **own identity**, not the example name. Examples show placeh
 - **Email format**: Use a noreply address associated with the AI service (e.g., `noreply@opencode.ai`, `noreply@anthropic.com`)
 - **NEVER use the project domain** (e.g., `ai@<project-domain>.com` is WRONG — those belong to the human collaborators)
 - **MODEL INFO REQUIRED**: The AI MUST include the backing model name and size/provider in the co-author trailer:
-  - Format: `Agent-Name (model-id) <email>`
-  - **Example:** `Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>`
+  - Format: `<AgentName> (<ModelID>) <ai-email>`
+  - **Example:** `Co-authored-by: <AgentName> (<ModelID>) <ai-email>`
 
 **When Identity Unknown:**
 - STOP and ask user for clarification
@@ -55,7 +55,7 @@ The AI must use its **own identity**, not the example name. Examples show placeh
 - DO NOT guess or invent identity values
 
 **Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `<AgentName> (<ModelID>)` → Example only
 - `AI Assistant (model-id)` → Placeholder only
 - **DETECT YOUR OWN IDENTITY** at runtime
 
