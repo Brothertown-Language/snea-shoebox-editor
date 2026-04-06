@@ -21,17 +21,57 @@ This is incorrect because:
 
 ### 🚫 PROHIBITED Patterns
 
+**Dialog prompts (awaiting authorization):**
 - "Awaiting authorization to implement."
 - "Let me know when you're ready to proceed."
 - "Please confirm before I start."
 - "Ready when you are."
 - Any text that expects an inline response
 
+**Non-substantive questions (asking for decisions agent should make):**
+
+| Question Type | Prohibited Examples | Why It's Wrong |
+|---------------|---------------------|----------------|
+| **Scope expansion** | "Should I also add tests for this feature?" | Agent should follow spec, not expand scope |
+| **Prioritization** | "Which task should I work on next?" | Spec defines order, agent should follow it |
+| **Proceeding** | "Ready for me to continue?" "Should I proceed?" | Agent must HALT silently, no dialog |
+| **Code structure** | "Should I use a class or function?" | Agent should follow code standards |
+| **Naming** | "What should I name this variable?" | Agent should apply naming conventions |
+| **Implementation details** | "Should I use pattern A or B?" | Agent should make optimal choice |
+
 ### ✅ CORRECT Behavior
 
 1. **SILENTLY HALT** after completing a task or reaching a decision point
 2. **Wait for explicit user instruction** via new comment
 3. **Respond to user comments** by addressing the actual question/request
+4. **Make autonomous decisions** using guidelines, code standards, and best practices
+5. **Document decisions** in implementation or commit message
+6. **HALT only for genuine ambiguity** (conflicting requirements, auth errors, breaking changes)
+
+### ✅ ALLOWED: Substantive Questions (ASK FIRST)
+
+**When faced with genuine ambiguity, ask via comment:**
+
+| Situation | Substantive Question? | Action |
+|-----------|------------------------|--------|
+| Conflicting requirements | ✅ YES | Post comment to issue, HALT |
+| Breaking change needed | ✅ YES | Post comment to issue, HALT |
+| External dependency unknown | ✅ YES | Post comment to issue, HALT |
+| Authorization error | ✅ YES | Post comment to issue, HALT |
+| Spec unclear | ✅ YES | Post comment to issue, HALT |
+| Feature vs bug determination | ✅ YES | Post comment to issue, HALT |
+
+**When NOT to ask (agent should decide):**
+
+| Decision Type | Agent Resolves | Requires Question? |
+|---------------|----------------|-------------------|
+| Order of implementation | Yes (follow spec) | No |
+| Code structure/pattern | Yes (follow standards) | No |
+| Variable/function naming | Yes (follow conventions) | No |
+| Test coverage level | Yes (follow spec) | No |
+| Conflicting requirements | No | Yes |
+| Breaking change | No | Yes |
+| External auth/dependency | No | Yes |
 
 ### Rationale
 
