@@ -63,41 +63,24 @@ Attribution for AI-authored content. See `080-code-standards.md` for complete re
 
 **⚠️ Asking questions during implementation is a CRITICAL GUIDELINE VIOLATION.**
 
-The agent must NEVER ask questions like:
-- "What should I do next?"
-- "Should I continue?"
-- "Ready for PR?"
-- "How would you like me to proceed?"
-
 **✅ Required Behavior:**
 - Task complete but more work remains → Continue autonomously
 - Task complete and no more work → HALT silently, executive summary in chat
 - Blocked by genuine ambiguity → Post comment to issue asking for clarification, then HALT
 - Waiting for authorization → HALT silently
 
+> **See `050-scope-autonomy.md` → "Q&A and Feedback" section.**
+
 ---
 
 ## Critical Violation: GitHub Progress Comments Are NOISE — CHAT ONLY
 
+**⚠️ GitHub comments are for substantive content only. Progress goes to CHAT.**
+
+**🚫 FORBIDDEN:** State tracking, progress notifications, routine updates
+**✅ ACCEPTABLE:** Answering questions, closure summaries
+
 > **See `github-comments` skill for complete protocol.**
-
-GitHub Issue comments are for **substantive content** — NOT for state tracking or progress notifications.
-
-**State tracking uses LABELS. Progress notifications go to CHAT.**
-
-### 🚫 FORBIDDEN in GitHub Comments
-- State tracking (STATUS updates, progress blocks)
-- Progress notifications (implementation, review-prep, PR creation)
-- Routine updates (file changes, test results)
-
-### ✅ ALWAYS Acceptable in GitHub Comments
-- Answering questions asked via GitHub comments
-- Executive summary when issue closes (historical record)
-
-### ✅ Chat Output (with URL)
-- Implementation complete → Executive summary + compare URL
-- Review-prep complete → Executive summary + compare URL
-- PR created → PR URL
 
 ---
 
@@ -141,20 +124,14 @@ GitHub Issue comments are for **substantive content** — NOT for state tracking
 
 **⚠️ Implementing a multi-task spec without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
 
-1. **First**: Call `github_issue_read method=get_sub_issues` on the parent issue
-2. **When empty**: AUTO-CREATE sub-issues at PHASE level (see `github-sub-issues` skill)
-3. **Then**: Verify the task being implemented is linked as a sub-issue
+**Required:**
+1. Call `github_issue_read method=get_sub_issues` on parent first
+2. If empty for multi-task: AUTO-CREATE sub-issues at PHASE level
+3. Verify task being implemented is linked
 
 **🚫 FORBIDDEN:**
-- Implementing a phase that exists only as text in parent body
+- Implementing phase that exists only as text in parent body
 - Proceeding when `get_sub_issues` returns empty for multi-task specs
-- Assuming markdown checkboxes = task tracking
-- Creating step-level sub-issues instead of phase-level
-
-**✅ REQUIRED:**
-- Sub-issues at PHASE level, not step level
-- Each phase as separate GitHub Issue linked via `github_sub_issue_write method=add`
-- Single-task specs are exempt
 
 > **See `github-sub-issues` skill for complete workflow.**
 
@@ -171,8 +148,6 @@ GitHub Issue comments are for **substantive content** — NOT for state tracking
 | **Session Init** | Has session init run? | Run `ai_bin/session_init.py` FIRST |
 | **Codebase State** | Is codebase current? | Verify with `srclight_codebase_map` |
 | **Spec Conflicts** | Are there superseding issues? | Query all `[SPEC]` issues |
-
-### ✅ REQUIRED
 
 **Before responding to questions:**
 1. Run session init if not already done
@@ -206,28 +181,9 @@ The spec defines EXACTLY what to implement. Nothing more. Nothing less.
 
 **⚠️ Halting after completing a phase when unqualified approval was given is a CRITICAL GUIDELINE VIOLATION.**
 
-When a developer says `approved` or `go` **without a phase qualifier**, this authorizes ALL phases. The agent must continue through all phases without stopping.
+**Unqualified approval (`approved` or `go`) authorizes ALL phases. Proceed through all phases without stopping.**
 
-### 🚫 FORBIDDEN
-
-| Forbidden Pattern | Why It's Wrong |
-|-------------------|-----------------|
-| HALT after Phase 1 when `approved` given | Unqualified approval = ALL phases authorized |
-| Mark remaining phases as `needs-approval` | Approval was already granted |
-| Ask for re-approval after each phase | Friction that violates developer mental model |
-
-### ✅ REQUIRED Behavior
-
-**With unqualified approval (`approved` or `go`):**
-1. Proceed through Phase 1
-2. Continue to Phase 2 (no HALT between phases)
-3. Continue through ALL remaining phases
-4. HALT only after completing ENTIRE spec
-
-**With qualified approval (`approved: 1` or `approved: 2.3`):**
-1. Proceed through the authorized phase/step ONLY
-2. HALT after completing that phase/step
-3. Wait for next authorization
+**Qualified approval (`approved: 1` or `approved: 2.3`) authorizes specific phase/step only. HALT after completing that phase/step.**
 
 > **See `010-approval-gate.md` → "Authorization Scope for Multi-Phase Specs"**
 
@@ -273,8 +229,6 @@ Before implementing OR revising any spec, check for:
 
 **⚠️ MANDATORY AUDIT CHAIN: ALL auditor skills must run in order. NO SKIPPING.**
 
-### Complete Audit Chain
-
 | Order | Skill | Purpose |
 |-------|-------|---------|
 | **1st** | `concern-separation-auditor` | Phase structure, deployment independence |
@@ -291,23 +245,12 @@ Before implementing OR revising any spec, check for:
 
 **⚠️ Bypassing MANDATORY skill invocations is a CRITICAL GUIDELINE VIOLATION.**
 
-Skills are MANDATORY enforcement points - not optional helpers.
-
-### 🚫 FORBIDDEN - NO BYPASS
-
 | Workflow Point | Required Skill Invocation | What Agent MUST NOT Do |
 |----------------|--------------------------|------------------------|
 | Before branch creation | `/skill git-workflow --task pre-work` | Manually run `git checkout -b` |
 | After implementation | `/skill git-workflow --task review-prep` | Stop after reading files, skip workflow |
 | After "create a PR" | `/skill git-workflow --task pr-creation` | Manually squash/push/create PR |
 | After "PR merged" | `/skill git-workflow --task cleanup` | Manually close issues/delete branches |
-
-### ✅ REQUIRED WORKFLOW
-
-1. **STOP** - Do NOT run git commands manually
-2. **INVOKE** the appropriate skill task
-3. **LET THE SKILL** handle all operations
-4. **FOLLOW** what the skill does/outputs
 
 > **See `git-workflow` skill for complete workflow.**
 
@@ -317,21 +260,9 @@ Skills are MANDATORY enforcement points - not optional helpers.
 
 **⚠️ Failing to invoke review-prep after implementation completes is a CRITICAL GUIDELINE VIOLATION.**
 
-After implementation completes, the agent MUST automatically:
-1. **Invoke `/skill git-workflow --task review-prep`** (MANDATORY - NO EXCEPTIONS)
-2. Skill handles: commit → push → compare URL → post to chat → HALT
-3. **NO silent HALT without completing the workflow**
+After implementation completes, the agent MUST automatically invoke `/skill git-workflow --task review-prep` (MANDATORY - NO EXCEPTIONS).
 
-**🚫 FORBIDDEN:**
-- Completing implementation and just HALTing silently
-- Skipping review-prep because "changes are trivial"
-- Proceeding directly to PR creation without compare URL
-
-**✅ REQUIRED:**
-1. Implementation completes
-2. **AUTOMATIC:** Invoke `/skill git-workflow --task review-prep`
-3. Skill handles: commit → push → compare URL → HALT
-4. Report completion with executive summary
+**🚫 FORBIDDEN:** Silent HALT, skipping review-prep, proceeding to PR without compare URL
 
 > **See `git-workflow` skill → `review-prep` task.**
 
@@ -343,15 +274,8 @@ After implementation completes, the agent MUST automatically:
 
 PRs require EXPLICIT phrases: "create a PR", "pr", "make a PR", "push and create PR"
 
-**🚫 FORBIDDEN:**
-- Creating PR after "approved" or "go" — authorizes implementation ONLY
-- Creating PR after completing implementation
-- Asking "Ready for a PR?"
-
-**✅ REQUIRED:**
-- After completing implementation: report, then STOP and wait
-- Only create PR after EXPLICIT "create a PR"
-- Then: squash, push, create PR, report URL, STOP
+**🚫 FORBIDDEN:** Creating PR after "approved"/"go", creating PR after implementation, asking "Ready for a PR?"
+**✅ REQUIRED:** Report completion → HALT → Wait for explicit "create a PR"
 
 > **See `pr-creation-workflow` skill for complete workflow.**
 

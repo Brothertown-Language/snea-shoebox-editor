@@ -84,8 +84,6 @@ This rule applies universally to:
 
 ### ✅ MANDATORY WORKFLOW
 
-**Before implementing ANY multi-task spec:**
-
 ```
 1. Call github_issue_read(method="get_sub_issues", issue_number=N)
 2. If empty AND multi-task:
@@ -98,26 +96,13 @@ This rule applies universally to:
    - Proceed with implementation
 ```
 
-### 📋 CHECKLIST
+**Single-task exemption:** Specs with ONE implementation task do NOT require sub-issues.
 
-| Action | Required? |
-|--------|-----------|
-| `get_sub_issues` check | ✅ ALWAYS |
-| AUTO-CREATE if empty | ✅ YES (multi-task only) |
-| Verify task linked | ✅ ALWAYS |
-| Single-task exemption | ✅ YES (no sub-issues needed) |
-
-### ⚠️ SINGLE-TASK EXCEPTION
-
-Single-task specs (one implementation task, no decomposition needed) do NOT require sub-issues. All multi-task specs MUST have sub-issues before implementation begins.
+> **See `github-sub-issues` skill for complete workflow.**
 
 ## 6. Multi-Phase Authorization Scope (CRITICAL)
 
 **⚠️ Unqualified approval authorizes ALL phases of a spec.**
-
-When a developer says `approved` or `go` **without a phase qualifier**, the agent is authorized to implement ALL phases of the spec in sequence. The agent will proceed from Phase 1 through all phases without stopping for re-approval between phases.
-
-### Authorization Table
 
 | Command | Scope | Behavior |
 |---------|-------|----------|
@@ -126,27 +111,6 @@ When a developer says `approved` or `go` **without a phase qualifier**, the agen
 | `approved: 1` | Phase 1 only | HALT after Phase 1, wait for next authorization |
 | `approved: 2.3` | Phase 2 Step 3 only | HALT after completing Step 3, wait for next authorization |
 
-### Rationale
+**Rationale:** Unqualified approval matches developer mental model of "approved means go ahead" and prevents unnecessary back-and-forth.
 
-- Unqualified approval matches developer mental model of "approved means go ahead"
-- Phase-by-phase approval is intentional scoping (opt-in via qualifiers)
-- Prevents unnecessary back-and-forth on multi-phase implementations
-
-### Developer Workflow
-
-- **Approve entire spec:** Use `approved` or `go` without qualifiers
-- **Approve one phase:** Use `approved: N` where N is the phase number
-- **Approve specific step:** Use `approved: N.M` where N is phase and M is step
-
-### Agent Behavior
-
-**With unqualified approval (`approved` or `go`):**
-1. Proceed through Phase 1
-2. Continue to Phase 2 (no HALT)
-3. Continue through all remaining phases
-4. HALT only after completing the entire spec
-
-**With qualified approval (`approved: 1` or `approved: 2.3`):**
-1. Proceed through the authorized phase/step ONLY
-2. HALT after completing that phase/step
-3. Wait for next authorization before continuing
+> **See `010-approval-gate.md` → "Authorization Scope for Multi-Phase Specs"** before continuing
