@@ -246,7 +246,7 @@ This auditor uses `docs/specs/how-to-write-good-spec-ai-agents.md` as the master
 
 ### Fresh-Start Context Requirements (CRITICAL)
 
-Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be self-contained for agents with NO memory context:
+Specs MUST be self-contained for agents with NO memory context:
 
 1. **NO "see above" or "as discussed" references**
 
@@ -393,8 +393,6 @@ The `generate-independent-spec` task runs in a subtask to prevent ANY access to 
 
 ### Tool Preference for Codebase Verification
 
-Per `016-srclight-preference.md`:
-
 | Task | Tool |
 |------|------|
 | Verify Python symbol exists | `srclight_get_symbol` |
@@ -483,8 +481,10 @@ required steps. The STATUS should be: `STATUS: 1.2` to indicate Phase 1, Step 2 
 ### Structure Classes
 
 - **SIX-AREA-INCOMPLETE**: Spec is missing one or more of the six core areas (commands, testing, structure, style, git, boundaries).
-- **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment).
+- **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment, phase risk profile).
 - **STRUCTURE-VIOLATION**: Spec doesn't follow the phase/step numbering or status marker format.
+
+**Note: Phase risk profiles are DECLARATIVE - the author declares what they are, the auditor does NOT enforce prescriptive structures or judge whether the declared risk is correct.**
 
 ### Content Quality Classes
 
@@ -493,6 +493,9 @@ required steps. The STATUS should be: `STATUS: 1.2` to indicate Phase 1, Step 2 
 - **DEPENDENCY-INCOMPLETE**: Dependencies lack specific integration points or migration guides.
 - **COMMENT-FORMAT-VIOLATION**: Wrong comment format (wrong emoji, missing Summary/Outcome sections).
 - **QUESTION-ASKING-VIOLATION**: Spec contains agent question patterns that violate silent HALT protocol (asking for preferences, continuation, PR readiness, etc.).
+- **RISK-PROFILE-MISSING**: Phase lacks risk level and blast radius declaration.
+
+**Note: Risk profiles are DECLARATIVE - the auditor validates presence and format, NOT whether the declared risk is correct.**
 
 ### Scope/Semantic Classes
 
@@ -535,6 +538,8 @@ For each GitHub Issue `[SPEC]`, verify:
 - \[ \] Phases numbered sequentially (1, 2, 3...)
 - \[ \] Steps numbered within each phase (1, 2, 3...)
 - \[ \] Status markers used correctly (☐/↻/☑/☒)
+- \[ \] Each phase declares risk level (LOW/MEDIUM/HIGH)
+- \[ \] Each phase declares blast radius (SMALL/MEDIUM/LARGE)
 
 ### Content Quality
 
@@ -570,7 +575,7 @@ After each fix is applied, the auditor MUST:
 
 1. **Re-read the modified spec** (via GitHub MCP tools) to verify the change was applied correctly.
 1. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
-1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools per `016-srclight-preference.md`.
+1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools.
 1. **Report verification** in the next response before moving to the next issue:
    - **Verification signal**: `changed` — the fix was applied and the issue is resolved.
    - **Verification signal**: `blocked` — the fix could not be applied (explain why).

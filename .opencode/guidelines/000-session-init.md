@@ -101,7 +101,7 @@ uv run python ai_bin/session_init.py
 2. **Test GitHub MCP**: Call `github_get_me` to verify GitHub tools work
 3. **Discover repository**: Run `git remote -v` to get correct owner/repo from origin. Extract owner/repo from the origin URL and store for all subsequent GitHub API calls. NEVER assume or hardcode repository owner/name.
 4. **Record results**: Note which MCP toolsets are available/unavailable and store owner/repo values
-5. **Loop Detection Check**: If MCP probe succeeds but no subsequent tool invocation occurs within 2 message turns, HALT and report potential task loop (see `150-task-loop-prevention.md`)
+5. **Loop Detection Check**: If MCP probe succeeds but no subsequent tool invocation occurs within 2 message turns, HALT and report potential task loop (infinite retry detection)
 
 ### Repository Discovery (MANDATORY)
 
@@ -194,7 +194,7 @@ The agent MUST:
 
 ### Loop Detection
 
-If MCP probe succeeds but no subsequent tool invocation occurs within 2 message turns, HALT and report potential task loop (see `150-task-loop-prevention.md`).
+If MCP probe succeeds but no subsequent tool invocation occurs within 2 message turns, HALT and report potential task loop.
 
 ---
 
@@ -270,7 +270,7 @@ If hooks are missing:
 * Do not use `uv run python ai_bin/memory`.
 * Never deliver plans inline in the message body.
 * Never implement while open questions remain unanswered.
-* **NEVER SWALLOW EXCEPTIONS OR HIDE MISSING DATA.** See `090-data-integrity.md` and `200-errors-exception-handling.md` for zero-tolerance rules.
+* **NEVER SWALLOW EXCEPTIONS OR HIDE MISSING DATA.** See `090-data-integrity.md` for zero-tolerance rules.
 
 ## 3. Execution gates (canonical)
 
@@ -281,7 +281,7 @@ If hooks are missing:
 * Existing plans/specs do not carry authorization across sessions.
 * `revise` means update the issue or plan file ONLY — never make code changes for a `revise` command
 * Perform one approved item at a time, then stop.
-* Plans with open questions must have all questions answered before implementation (see 045-open-questions.md).
+* Plans with open questions must have all questions answered before implementation.
 * Authorization commands: `approved`, `approved: 1`, `approved: 1.2`, `go` — each authorization is per-task and revoked after use.
 * **`go` means "proceed to the next task or phase" — NOT "merge" or "create PR".** If tasks/phases remain in the spec, proceed to the next one. If all tasks are complete, report a summary of changes and HALT. Merging PRs is HUMAN-ONLY. The agent must NEVER merge, even after user says "go" or "approved".
 * Directives `specs`, `plans`, or `pending` must list all available top-level specs (GitHub Issues with `[SPEC]` prefix or local `plans/SPEC-*.md` files with STATUS not `completed`), then present a multi-choice user query for selecting which one to implement.
@@ -291,4 +291,3 @@ If hooks are missing:
 * `docs/specs/how-to-write-good-spec-ai-agents.md` — master spec methodology (essay/approach guide).
 * `docs/specs/spec-flow-control.md` — spec flow control (STATUS format, phases, markers).
 * `docs/specs/spec-flow-control-implementation.md` — spec implementation guide.
-* `.opencode/guidelines/045-open-questions.md` — open questions Q&A protocol.

@@ -52,7 +52,7 @@ owner="<GIT_OWNER>"
 repo="<GIT_REPO>"
 
 # Generate compare URL
-compare_url="https://github.com/${owner}/${repo}/compare/main...${branch}"
+compare_url="https://github.com/${owner}/${repo}/compare/dev...${branch}"
 ```
 
 ### Step 3: Post Executive Summary
@@ -76,7 +76,7 @@ compare_url="https://github.com/${owner}/${repo}/compare/main...${branch}"
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 **Critical: Emoji must be PLAIN TEXT (not inside italic/bold formatting).**
@@ -107,7 +107,7 @@ After posting to both locations:
 | Check | Command | Expected |
 |-------|---------|----------|
 | Branch pushed? | `git log origin/<branch>..HEAD --oneline` | Empty (already pushed) |
-| Compare URL? | `https://github.com/<owner>/<repo>/compare/main...<branch>` | Valid URL |
+| Compare URL? | `https://github.com/<owner>/<repo>/compare/dev...<branch>` | Valid URL |
 | Posted to issue? | Check comment exists | Executive summary visible |
 | Posted to chat? | Check chat output | Executive summary visible |
 

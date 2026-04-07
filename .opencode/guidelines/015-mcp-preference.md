@@ -19,9 +19,51 @@ Quick reference:
 - **Tier 2 (ASK FIRST)**: Use direct tools only with explicit acknowledgment and `# FALLBACK: MCP unavailable` comment
 - **Tier 3 (PROHIBITED)**: Never bypass MCP tools when available
 
-## Srclight MCP Server (Code Indexing)
+## PR Creation Skill Enforcement (MANDATORY)
 
-**For detailed tool selection guidance, see `016-srclight-preference.md`.**
+**⚠️ CRITICAL VIOLATION: Bypassing `git-workflow` skill for PR creation.**
+
+When user says `"create a PR"`, `"pr"`, `"push and create PR"`, or ANY PR-related command:
+
+| Trigger | Required Action | PROHIBITED |
+|---------|----------------|------------|
+| `"create a PR"` | Invoke `/skill git-workflow --task pr-creation` | Manual git commands, `github_create_pull_request` directly |
+| `"pr"` | Invoke `/skill git-workflow --task pr-creation` | Manual squash/push/create PR |
+| `"push and create PR"` | Invoke `/skill git-workflow --task pr-creation` | `git push && github_create_pull_request` |
+
+**Why enforcement is mandatory:**
+
+The `git-workflow` skill handles:
+1. Squash verification (commits must be squashed to single commit)
+2. Branch state verification (clean working tree)
+3. Co-author trailer verification
+4. Proper PR body format
+5. Compare URL generation workflow
+
+**Direct `github_create_pull_request` bypasses ALL of these.**
+
+### 🚫 PROHIBITED
+
+| Bypass Method | Why It's Wrong |
+|---------------|----------------|
+| `github_create_pull_request` directly | Skips squash verification, co-author trailers, PR body format |
+| Manual `git push && gh pr create` | Skips skill enforcement, workflow checks |
+| Manual squash without skill | May miss co-author trailers, wrong commit format |
+
+### ✅ REQUIRED
+
+| Situation | Correct Action |
+|-----------|---------------|
+| User says "create a PR" | Invoke `/skill git-workflow --task pr-creation` |
+| User says "pr" | Invoke `/skill git-workflow --task pr-creation` |
+| User says "push and create PR" | Invoke `/skill git-workflow --task pr-creation` |
+| After implementation completes | Invoke `/skill git-workflow --task review-prep` (automatic) |
+
+**See `git-workflow` skill for complete PR creation workflow.**
+
+---
+
+## Srclight MCP Server (Code Indexing)
 
 Key points:
 - Srclight indexes Python code ONLY (not markdown/docs)

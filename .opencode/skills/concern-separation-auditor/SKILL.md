@@ -103,6 +103,55 @@ This skill is invoked at these workflow triggers:
 2. **Vibe Coding**: Without boundaries, implementation drifts from spec
 3. **Roadmap Driving**: Phase boundaries shouldn't follow roadmap priorities
 
+## Risk Level and Blast Radius Validation
+
+**Each phase MUST declare its risk profile:**
+
+### Required Phase Structure
+
+```markdown
+## Phase N: [Concern Name] (Risk: [LOW|MEDIUM|HIGH], Blast Radius: [SMALL|MEDIUM|LARGE])
+
+**Interdependencies**: [NONE|Phase M (what it requires)]
+
+**Why this order**: [Explanation of phase ordering]
+```
+
+### Risk Level Definitions
+
+| Risk | Characteristics | Examples |
+|------|-----------------|----------|
+| **LOW** | Read-only, additive, localized, easily reversible | Adding a new query, adding a test file, documentation |
+| **MEDIUM** | Modifies existing code, affects one module, moderate rollback complexity | Refactoring a service, adding API endpoint, modifying schema |
+| **HIGH** | Breaking changes, affects multiple modules, hard to rollback, production-critical | Database migration, authentication rewrite, API versioning, deployment changes |
+
+### Blast Radius Definitions
+
+| Blast Radius | Scope | Rollback Difficulty |
+|--------------|-------|---------------------|
+| **SMALL** | Single file/module, no dependencies | Easy (simple revert) |
+| **MEDIUM** | Multiple files, internal dependencies | Moderate (may need data migration) |
+| **LARGE** | Cross-module, external dependencies, production systems | Difficult (may need data rollback, coordination) |
+
+### Validation Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Risk level missing | `MISSING-ELEMENT` | Phase lacks `(Risk: ...)` declaration |
+| Blast radius missing | `MISSING-ELEMENT` | Phase lacks `(Blast Radius: ...)` declaration |
+| Invalid format | `STRUCTURE-VIOLATION` | Risk/blast radius not in expected format (e.g., missing parentheses) |
+
+**Risk levels and blast radius are DECLARATIVE - the author declares what they are, the auditor does NOT enforce what they should be.**
+
+The auditor checks that:
+- Each phase HAS a risk level and blast radius declaration
+- The format is correct (parentheses, proper syntax)
+
+The auditor does NOT check that:
+- Risk level matches phase characteristics (author's judgment)
+- Blast radius matches scope (author's judgment)
+- Specific phases should have specific risk levels (no prescriptive structure)
+
 ## Mandatory Audit Chain (All Skills Run)
 
 | Order | Skill | Purpose |

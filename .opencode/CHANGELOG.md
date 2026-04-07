@@ -10,20 +10,87 @@ The format is based on
 
 ### feature/approval-cleanup
 
-- **Added: Authorization Cleanup Workflow**: New workflow automatically cleans
-  up stale approval markers when authorization is received. Removes
-  `needs-approval` label, clears `(REVISED - NEEDS APPROVAL)` status suffix,
-  and clears todo list if workflow was interrupted. Integrated across
-  approval-gate skill, 010-approval-gate.md, 123-github-ai-identity.md, and
-  141-planning-status-tracking.md guidelines.
-- **Added: Authorization Cleanup Comments**: Agents must post comments
-  documenting cleanup actions when authorization is received. Includes
-  checklist for removing labels, clearing status suffix, and clearing
-  todos if workflow was interrupted.
-- **Added: Authorization Status Transition Format**: New status format
-  `(REVISED - NEEDS APPROVAL)` tracks specs awaiting fresh approval after
-  revision. Automatically transitions to clean status when authorization
-  received.
+- **Fixed: Authorization Cleanup is SILENT**: Removed comment posting from authorization
+  cleanup workflow. Authorization cleanup is state management (label removal, STATUS suffix
+  clearing, todo clearing) and does not warrant GitHub comments. Cleanup is SILENT.
+- **Changed Files**:
+  - `010-approval-gate.md`: Authorization cleanup workflow marked as SILENT
+  - `123-github-ai-identity.md`: Added cross-reference to authorization cleanup
+  - `approval-gate/SKILL.md`: Cleanup workflow marked as SILENT — NO comments
+- **Key Clarification**: Authorization cleanup = NO comments (state management).
+  Implementation progress = comments go to chat only, not GitHub.
+- **Addresses**: GitHub issues #382, #384
+
+### skill/todowrite-progress-tracking
+
+- **Added: Progress Tracking to Git Workflow Tasks**: All git workflow
+  tasks now include TodoWrite progress tracking so developers can see
+  which step the agent is on during complex git operations.
+- **Changed Files**:
+  - `git-workflow/tasks/pre-work.md`: Track Steps 0-2 (verify branch,
+    create feature branch, report ready)
+  - `git-workflow/tasks/review-prep.md`: Track Steps 0-6 (temp cleanup,
+    lint verification, verify push, clear TODOs, generate URL, verify,
+    report, HALT)
+  - `git-workflow/tasks/commit-prep.md`: Track Steps 1-4 (discovery,
+    summarize, create script, HALT)
+  - `git-workflow/tasks/pr-creation.md`: Track Steps 0-9 (clear todos,
+    check PR state, collect sub-issues, version bump, changelog, stage,
+    squash, push, create PR, report)
+  - `git-workflow/tasks/cleanup.md`: Track Steps 1-7 (verify PR merge,
+    hotfix ticket, switch to dev, delete branch, clean branches, verify,
+    clear todos)
+- **Developer Experience**: Each task initializes TodoWrite at the start
+  with all steps showing pending/in_progress/completed status, updating
+  after each step completes for real-time visibility.
+- **Addresses**: GitHub issue #438 (Phase 2: Add TodoWrite to Tasks)
+
+### spec/435-ruff-markdown-prohibition
+
+- **Fixed: Pre-Lint File Type Verification**: Added mandatory file type
+  verification before running linters to prevent running Python tools
+  (ruff, pyright, vulture) on Markdown files. This is a CRITICAL guideline
+  violation that causes noise and wastes time.
+- **Added: Enforcement in Multiple Locations**:
+  - `070-environment.md`: Added Pre-Lint File Type Verification section
+    with verification steps and cross-check table
+  - `060-tool-usage.md`: Added mandatory verification with tool selection table
+  - `080-code-standards.md`: Added linting section with file type verification
+    and prohibited misuse table
+  - `git-workflow/tasks/review-prep.md`: Added lint tool verification step
+  - `mcp-tool-usage/SKILL.md`: Added Pre-Lint File Type Verification task
+- **Changed: Tool Selection Enforcement**: Added explicit prohibitions
+  against running ruff/pyright/vulture on .md files, and pymarkdownlnt/mdformat
+  on .py files. Verification MUST happen before each lint command.
+- **Addresses**: GitHub issue #435.
+
+### spec/ai-agent-workflow-fixes
+
+- **Added: PR Creation Skill Enforcement (015-mcp-preference.md)**: Added mandatory
+  skill invocation table for PR creation trigger patterns. Prohibits bypassing
+  git-workflow skill with direct `github_create_pull_request` calls or manual git
+  commands. All PR creation must go through `/skill git-workflow --task pr-creation`.
+- **Changed: Executive Summary URL Placement (113-git-pr-workflow.md)**: Added URL
+  placement table specifying that GitHub Issue comments must NOT contain URLs
+  while Chat output must contain URLs. URLs must appear as the last line after
+  the agent byline. Executive summaries focus on stakeholder value, not file lists.
+- **Added: Todo Tracking for Multi-Phase Specs (git-workflow/tasks/implementation.md)**:
+  Added todo cleanup section for clearing stale todos when authorization received
+  after workflow interruption. Includes detection of interruption types and
+  mandatory todo clearing before implementation.
+- **Addresses**: GitHub issues #429 and #431.
+
+### spec/git-workflow-compare-url-fix
+
+- **Fixed: Compare URL Base Branch**: Corrected compare URL generation in
+  git-workflow skills and guidelines to use `dev` as base branch for
+  feature branches instead of `main`. Feature branches merge to `dev`
+  first, then `dev` merges to `main` via release PRs. Updated 6 files:
+  `000-critical-rules.md`, `125-github-issue-comments.md`,
+  `approval-gate/SKILL.md`, `approval-gate/tasks/post-implementation.md`,
+  `git-workflow/tasks/review-prep.md`,
+  `implementation-quality/tasks/post-implementation.md`.
+>>>>>>> origin/dev
 
 ### skill/wording-remediation
 

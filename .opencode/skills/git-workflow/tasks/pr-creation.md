@@ -38,6 +38,21 @@ Subtasks handle their own context, discarded after return.
 
 ## Procedure
 
+### Step 0: Clear Implementation Todos (MANDATORY)
+
+**Before PR creation workflow begins:**
+
+```python
+# Clear any stale implementation todos
+todowrite(todos=[])
+```
+
+**Why:** Implementation todos are for tracking work progress. PR creation has explicit procedural steps in this task - no todo list needed. Clearing prevents confusion about stale "X of Y complete" status.
+
+**CRITICAL:** This step runs BEFORE checking PR state, collecting sub-issues, or any other PR workflow steps.
+
+______________________________________________________________________
+
 ### Step 1: Check PR State (Subtask)
 
 **Invoke subtask to determine if PR already exists:**
@@ -69,6 +84,23 @@ task tool with:
 | `create_new_branch` | Report "Branch has merged PR - creating new branch", then create new branch from dev |
 
 **✅ GATE: PR state determined. Proceed to Collect Sub-Issues.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "in_progress", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 2: Collect Sub-Issues (Subtask)
 
@@ -116,6 +148,23 @@ fi
 
 **✅ GATE: Version bump processed (or skipped). Proceed to Generate Changelog.**
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 4: Generate Changelog (Subtask)
 
 **Invoke changelog-generator as subtask:**
@@ -139,6 +188,23 @@ task tool with:
 
 **✅ GATE: Changelog generated. Proceed to Stage.**
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "pending", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 5: Stage Changelog
 
 ```bash
@@ -147,6 +213,23 @@ git status  # Verify CHANGELOG.md is staged
 ```
 
 **✅ GATE: CHANGELOG.md staged. Proceed to Squash.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "in_progress", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "pending", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 6: Squash to Single Commit
 
@@ -181,6 +264,23 @@ git log --oneline origin/dev..HEAD
 
 **✅ GATE: Single commit. Proceed to Push.**
 
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "completed", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "in_progress", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "pending", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
+
 ### Step 7: Push to Remote
 
 ```bash
@@ -195,6 +295,23 @@ git log --oneline origin/dev..HEAD | head -1
 ```
 
 **✅ GATE: Push succeeded. Proceed to Create PR.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Clear implementation todos", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Check PR state", "status": "completed", "priority": "critical"},
+    {"content": "Step 2: Collect sub-issues", "status": "completed", "priority": "high"},
+    {"content": "Step 3: Version bump", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Generate changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Stage changelog", "status": "completed", "priority": "medium"},
+    {"content": "Step 6: Squash to single commit", "status": "completed", "priority": "high"},
+    {"content": "Step 7: Push to remote", "status": "completed", "priority": "high"},
+    {"content": "Step 8: Create PR", "status": "in_progress", "priority": "high"},
+    {"content": "Step 9: Report URL and HALT", "status": "pending", "priority": "medium"},
+])
+```
 
 ### Step 8: Create PR
 
@@ -237,33 +354,165 @@ Fixes #<child1>
 
 **CRITICAL:** Feature branches MUST target `dev`.
 
-**✅ GATE: PR created. Proceed to Report URL.**
+### Step 8.5: Verify Closing Keywords (MANDATORY)
 
-### Step 9: Report URL (Chat Only)
+**⚠️ CRITICAL: Every PR MUST include at least one closing keyword.**
 
-**Chat Output (MANDATORY):**
+A PR cannot be created if its body lacks a GitHub closing keyword. This ensures linked issues are automatically closed on merge.
+
+**Closing Keywords:**
+
+- `Fixes #N` — Closes issue when PR merges (most common)
+- `Closes #N` — Alternative syntax
+- `Resolves #N` — Alternative syntax
+
+**Verification:**
+
+```python
+# Verify PR body includes closing keyword
+pr_body = f"""## Summary
+
+{subtask_result['summary']}
+
+## Changes
+
+{subtask_result['changelog']}
+
+Fixes #{parent_issue}
+"""
+
+has_closing_keyword = any(
+    keyword in pr_body
+    for keyword in ['Fixes #', 'Closes #', 'Resolves #']
+)
+
+if not has_closing_keyword:
+    # Add parent issue as Fixes reference
+    pr_body += f"\n\nFixes #{parent_issue}"
+```
+
+**✅ GATE: Closing keyword present. Proceed to Clear TODO List.**
+
+**✅ GATE: PR created. Proceed to Clear TODO List.**
+
+### Step 9: Clear TODO List (MANDATORY - FIRST)
+
+**⚠️ CRITICAL: This step MUST be done FIRST after PR creation, BEFORE any reporting.**
+
+```python
+todowrite(todos=[])
+```
+
+**Why:** PR creation workflow is complete. No todo tracking needed for the final report step. Clearing ensures clean state before HALT.
+
+**✅ GATE: TODO list cleared. Proceed to Generate Summary.**
+
+### Step 10: Generate Summary (SECOND)
+
+**⚠️ CRITICAL: Generate the executive summary BEFORE displaying anything.**
+
+Use the `changelog-generator` subtask result from Step 4 to build the summary:
 
 ```markdown
+**Summary:**
+
+<1-2 sentences describing stakeholder value>
+```
+
+**Summary content (use subtask results):**
+
+- Extract stakeholder value from `subtask_result['summary']`
+- Focus on WHAT changed and WHY it matters
+- Keep to 1-2 sentences (concise)
+
+**✅ GATE: Summary generated. Proceed to Display Output.**
+
+### Step 11: Display Output in Chat (THIRD - FINAL OUTPUT)
+
+**⚠️ CRITICAL: OUTPUT FORMAT ENFORCEMENT - ZERO TOLERANCE**
+
+**The output MUST be EXACTLY the format below, displayed IN THIS ORDER, NOTHING ELSE.**
+
+**🚫 FORBIDDEN (CRITICAL VIOLATION):**
+
+- ANY output before Step 9 (Clear TODO) is complete
+- ANY output before Step 10 (Generate Summary) is complete
+- "✅ Pre-PR Checklist Completed" or verification checklists
+- "PR state: open" or intermediate step outputs
+- "Sub-issues collected" or workflow step details
+- "Creating PR..." or progress messages
+- ANY content NOT in exact format below
+
+**✅ REQUIRED OUTPUT ORDER (MANDATORY SEQUENCE):**
+
+After PR creation completes, display IN THIS EXACT ORDER:
+
+```
+1. Clear todowrite list (Step 9 - already done)
+2. Generate summary (Step 10 - already done)
+3. Display in chat:
+
 **Summary:**
 
 <1-2 sentences describing stakeholder value>
 
 **Outcome:** <What changed for stakeholders>
 
+https://github.com/<owner>/<repo>/pull/<number>
+
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
+4. HALT (Step 12)
 ```
 
-**Format Requirements:**
+**Format Requirements (CRITICAL - ENFORCED ORDER):**
 
-| Location | Contains | Does NOT Contain |
-|----------|----------|------------------|
-| Chat | Summary, Outcome, byline, PR URL | — |
-| GitHub Issue | Summary, Outcome, byline | PR URL (already visible via PR) |
+| Order | Content | Notes |
+|-------|---------|-------|
+| 1 | **Summary:** | Executive summary describing stakeholder value |
+| 2 | **Outcome:** | What changed for stakeholders |
+| 3 | **PR URL** | The pull request URL (newline BEFORE byline) |
+| 4 | **---** | Separator |
+| 5 | **Byline** | AI agent attribution (LAST line) |
 
-**✅ REPORT COMPLETE. HALT after reporting.**
+**🚫 Output order violations (CRITICAL):**
+
+- URL BEFORE summary = WRONG
+- Byline BEFORE URL = WRONG
+- Summary AFTER URL = WRONG
+- Additional content of ANY kind = WRONG
+- ANY output before clearing TODO list = WRONG
+
+**Why This Order:**
+
+- Clear TODO list FIRST (prevents stale state confusion)
+- Generate summary SECOND (ensures content is ready)
+- Display output THIRD (all components ready, clean state)
+- URL comes AFTER summary/outcome (provides navigation AFTER context)
+- Byline comes LAST (attribution is final element)
+- HALT after display (no further action)
+
+**✅ REPORT COMPLETE. Proceed to HALT.**
+
+### Step 12: HALT (MANDATORY - NO EXCEPTIONS)
+
+**After displaying the chat output, HALT immediately.**
+
+**DO NOT:**
+
+- Ask the developer for next steps
+- Suggest merging the PR
+- Create additional files
+- Make additional commits
+- Proceed with any other workflow
+
+**WAIT for:**
+
+- Developer to review PR
+- Developer to say "PR merged" (then invoke `cleanup` task)
+
+**This is the END of the PR creation workflow. NO further action without explicit user instruction.**
 
 ## Subtask Context Isolation
 

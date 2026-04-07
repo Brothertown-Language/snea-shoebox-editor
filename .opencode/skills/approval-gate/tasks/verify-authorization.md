@@ -136,8 +136,6 @@ if issue.state == "closed":
 
 **HALT message must explain what couldn't be inspected.**
 
-**See `124-github-archive-workflow.md` → "Closed-Issue Remediation" for complete workflow.**
-
 ### Step 3: Record Authorization Scope
 
 Authorization applies to:

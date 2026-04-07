@@ -10,7 +10,7 @@
 
 3. **Verify Before Declaring Complete** — Run all tests manually. Check for edge cases. Verify against all success criteria. Update documentation.
 
-4. **Communicate Changes** — Post comments when changes happen (PR created, task completed). DO NOT post comments when creating issues. DO NOT post comments for non-substantive updates (cross-references, origin links, STATUS updates).
+4. **Communicate Changes** — Provide updates in CHAT when changes happen (PR created, task completed). DO NOT post comments to GitHub for implementation progress. DO NOT post comments for non-substantive updates (cross-references, origin links, STATUS updates).
 
 ## Scope Discipline (Critical)
 
@@ -93,9 +93,9 @@
 | Pattern | Requirement | Guideline Reference |
 |---------|-------------|---------------------|
 | Synthetic/fabricated data | FORBIDDEN | `090-data-integrity.md` |
-| Defaults for missing required data | FORBIDDEN | `201-errors-missing-data.md` |
-| Silent exception swallowing | FORBIDDEN | `200-errors-exception-handling.md` |
-| `None` return for required data | FORBIDDEN | `201-errors-missing-data.md` |
+| Defaults for missing required data | FORBIDDEN | `090-data-integrity.md` |
+| Silent exception swallowing | FORBIDDEN | `090-data-integrity.md` |
+| `None` return for required data | FORBIDDEN | `090-data-integrity.md` |
 
 | Violation | Correct Action |
 |-----------|----------------|

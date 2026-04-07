@@ -39,7 +39,7 @@
 
 **Enforcement:** These invocations are MANDATORY. Do NOT proceed with implementation without first loading the appropriate task and verifying pattern compliance.
 
-**Loop Prevention:** If tool invocation fails repeatedly without progress, see `150-task-loop-prevention.md` for detection heuristics and exit strategies.
+**Loop Prevention:** If tool invocation fails repeatedly without progress, HALT and report the loop. Check for infinite retry patterns in the calling code and add termination conditions.
 
 ### Sub-Issue Verification Gate (MANDATORY)
 
@@ -143,6 +143,144 @@ When a developer says `approved` or `go` **without a phase qualifier**, the agen
 2. HALT after completing that phase/step
 3. Wait for next authorization before continuing
 
+## Risk-Aware Authorization (CRITICAL)
+
+**⚠️ High-risk and large-blast-radius phases may require explicit phase-by-phase approval, even with unqualified authorization.**
+
+### When Phase-by-Phase Authorization Is Required
+
+| Phase Risk Level | Blast Radius | Authorization Rule |
+|-----------------|--------------|---------------------|
+| **LOW** | SMALL | Unqualified approval sufficient |
+| **MEDIUM** | MEDIUM | Unqualified approval sufficient |
+| **HIGH** | SMALL | Unqualified approval sufficient |
+| **HIGH** | MEDIUM | **EXPLICIT phase approval recommended** |
+| **ANY** | LARGE | **EXPLICIT phase approval required** |
+
+### Risk Levels Defined
+
+| Risk | Characteristics | Examples |
+|------|-----------------|----------|
+| **LOW** | Read-only, additive, localized, easily reversible | Adding a new query, adding a test file, documentation |
+| **MEDIUM** | Modifies existing code, affects one module, moderate rollback complexity | Refactoring a service, adding API endpoint, modifying schema |
+| **HIGH** | Breaking changes, affects multiple modules, hard to rollback, production-critical | Database migration, authentication rewrite, API versioning, deployment changes |
+
+### Blast Radius Defined
+
+| Blast Radius | Scope | Rollback Difficulty |
+|--------------|-------|---------------------|
+| **SMALL** | Single file/module, no dependencies | Easy (simple revert) |
+| **MEDIUM** | Multiple files, internal dependencies | Moderate (may need data migration) |
+| **LARGE** | Cross-module, external dependencies, production systems | Difficult (may need data rollback, coordination) |
+
+### Authorization Commands for Risk-Aware Phases
+
+**For HIGH/medium risk or ANY/large blast radius:**
+
+| Command | Purpose |
+|---------|---------|
+| `approved: N` | Approve only Phase N (phase-by-phase authorization) |
+| `approved: N.M` | Approve only Phase N Step M |
+| `approved` | Approve ALL phases (only if developer understands cumulative risk) |
+
+**Developer Workflow for Risky Phases:**
+
+1. Check phase risk level and blast radius in spec
+2. For HIGH/MEDIUM+LARGE phases, use `approved: N` for explicit control
+3. For cumulative risk acceptance, use unqualified `approved`
+
+**Agent Workflow for Risky Phases:**
+
+1. Before implementation, read phase risk level from spec
+2. For HIGH/MEDIUM+LARGE phases, **RECOMMEND** phase-by-phase approval
+3. If unqualified approval given for risky phase, PROCEED (developer accepted cumulative risk)
+4. Document risk acceptance in implementation comment
+
+### Example Risk-Aware Authorization
+
+**Spec with HIGH/MEDIUM risk profile:**
+
+```markdown
+## Phase 1: Database Schema (Risk: LOW, Blast Radius: SMALL)
+...
+## Phase 2: Authentication Service (Risk: MEDIUM, Blast Radius: MEDIUM)
+...
+## Phase 3: Production Deployment (Risk: HIGH, Blast Radius: LARGE)
+...
+```
+
+**Authorization Scenarios:**
+
+| Developer Command | What Gets Implemented |
+|-----------------|----------------------|
+| `approved` | All phases (developer accepts cumulative risk) |
+| `approved: 1` | Phase 1 only (safe phase, no risk concern) |
+| `approved: 2` | Phase 2 only (medium risk isolated) |
+| `approved: 3` | Phase 3 only (high risk, explicit approval) |
+
+**Agent Response to Unqualified Approval for Risky Phase:**
+
+```
+Implementing Phase 3 (HIGH risk, LARGE blast radius).
+
+⚠️ This phase has elevated risk:
+- Risk Level: HIGH
+- Blast Radius: LARGE
+- Rollback: Difficult (may need production coordination)
+
+Proceeding with unqualified approval (developer accepts cumulative risk).
+```
+
+### Integration with Auditor Skills
+
+**Both spec auditors check risk profile:**
+
+| Auditor | Risk Check |
+|---------|-----------|
+| `concern-separation-auditor` | Validates phase risk level is declared |
+| `spec-auditor` | Validates blast radius is assessed |
+
+**Missing risk level → `BOILERPLATE-TITLE` or `MISSING-ELEMENT` violation**
+
+### Edge Cases for Unqualified Approval
+
+**Edge Case: Conflict/Requirement Change**
+
+If a spec requirement changes mid-implementation (e.g., external feedback, new information), remaining tasks ARE marked `needs-approval`:
+
+| Scenario | Action |
+|----------|--------|
+| Spec revised during implementation | Stop immediately, mark remaining phases as `needs-approval` |
+| New requirement discovered | Post comment, mark affected phases as `needs-approval` |
+| Stakeholder changes scope | HALT, wait for explicit re-authorization |
+
+This is NOT a violation of "unqualified approval covers all phases" — it's a safety mechanism when the context changes.
+
+**Edge Case: External Input**
+
+Bug reports, critical findings, or production incidents invalidate prior approval:
+
+| Input Type | Action |
+|------------|--------|
+| Bug report on related code | HALT, mark remaining phases as `needs-approval` |
+| Production incident | HALT, wait for explicit instruction |
+| Critical finding during implementation | Post comment to issue, HALT |
+
+**Edge Case: Risk Escalation**
+
+If phase risk is elevated to HIGH/MEDIUM+LARGE during implementation:
+
+| Risk Change | Action |
+|-------------|--------|
+| Phase marked LOW → discovered HIGH | HALT, recommend phase-by-phase approval |
+| Blast radius grows | HALT, wait for explicit authorization |
+| Dependencies increase | HALT, assess impact |
+
+**Why Edge Cases Override:**
+- Changed context invalidates implicit trust
+- External input means developer may not have full information
+- Risk escalation requires explicit acknowledgment
+
 ## Compound Command Recognition
 
 **Approval tokens must be STANDALONE (separated by whitespace) to constitute valid authorization.**
@@ -179,6 +317,54 @@ When a spec is modified:
 - Progress comments added to issue
 - Bug report additions (separate from spec content changes)
 
+### Authorization Cleanup Workflow (SILENT — No Comments)
+
+**When authorization is received AND workflow was interrupted, clean up approval markers BEFORE proceeding.**
+
+**The Problem:**
+
+When workflow is interrupted (for clarification questions, spec revisions, context switching, error recovery, or investigation), stale markers accumulate:
+
+- `needs-approval` label remains on issue
+- `STATUS: N.M (REVISED - NEEDS APPROVAL)` suffix remains in STATUS field
+- Todo list shows stale tasks from interrupted workflow
+
+**The Solution:**
+
+When authorization is received after interruption:
+
+1. **Remove `needs-approval` label** (if present)
+2. **Clear STATUS suffix** (`N.M (REVISED - NEEDS APPROVAL)` → `N.M`)
+3. **Clear todo list** (if workflow was interrupted — see detection below)
+4. **Proceed with implementation**
+
+**⚠️ CRITICAL: Cleanup is SILENT — NO comments posted.**
+
+- Authorization cleanup is administrative, not post-implementation review information
+- GitHub comments are for implementation results, not status notifications
+- The issue state (label, STATUS) IS the record — no duplicate notification needed
+
+#### Workflow Interruption Detection
+
+**Clear todos if ANY interruption occurred since last authorization:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption, CLEAR the todo list before implementation.
+
+| Edge Case | Action |
+|-----------|--------|
+| No interruption (immediate auth) | Skip todo clearing (todos still valid) |
+| Todo list already empty | Skip todo clearing (no-op) |
+| Label already removed | Skip label removal (no-op) |
+| STATUS has no suffix | Skip STATUS edit (no-op) |
+
 ### Label Handling
 
 **The `needs-approval` label is informational when explicit authorization is present.**
@@ -191,94 +377,37 @@ When a spec is modified:
 | No authorization AND no label | Check for other blockers; proceed if clear. |
 
 **Workflow:**
-1. **Explicit authorization received** → Proceed (label status is informational)
+1. **Explicit authorization received** → Clean up markers (label, STATUS, todos) → Proceed (label status is informational)
 2. **No explicit authorization** → Check for `needs-approval` label
 3. **Label present without authorization** → HALT and wait for user to authorize
 
-### Authorization Cleanup Workflow (MANDATORY)
+### Todo List Cleanup (MANDATORY)
 
-**When authorization is received, the agent MUST clean up stale approval markers before proceeding with implementation.**
+**When authorization received after workflow interruption:**
 
-#### What to Clean Up
+Workflow interruptions include:
+- Developer conversation (clarification questions)
+- Spec revision
+- Context switch to different issue/task
+- Error recovery
+- Session boundary
 
-| Item | Action | Why |
-|------|--------|-----|
-| `needs-approval` label | Remove from GitHub Issue | No longer awaiting approval |
-| STATUS suffix `(REVISED - NEEDS APPROVAL)` | Remove suffix, keep base status | No longer in revision-awaiting state |
-| Stale todo list | Clear if workflow was interrupted | Prevent stale context pollution |
-
-#### When to Clean Up
-
-Cleanup happens IMMEDIATELY after authorization is received:
-
-1. Developer provides explicit authorization: `approved`, `go`, `approved: N.M`
-2. **BEFORE proceeding with implementation, the agent cleans up:**
-   - Remove `needs-approval` label from issue
-   - Clear STATUS suffix if present
-   - Clear todo list if workflow was interrupted
-   - Post authorization comment documenting source
-
-#### Workflow Interruption Detection
-
-**A workflow is interrupted when ANY of these occurred since last authorization:**
-
-| Interruption Type | Detection |
-|------------------|-----------|
-| Developer conversation | Agent asked clarification question and received answer |
-| Spec revision | Agent revised spec (added/changed content) |
-| Error recovery | Agent encountered error and investigated |
-| Context switch | Agent switched to different task/issue |
-| Investigation phase | Agent performed investigation before implementation |
-
-**Action:** If ANY interruption occurred, CLEAR the todo list before proceeding.
-
-#### Cleanup Process
+**Action:** Clear todo list BEFORE starting implementation:
 
 ```python
-# When authorization received:
-
-# Step 1: Remove needs-approval label
-if issue.has_label("needs-approval"):
-    github_issue_write(method="update", issue_number=N, labels=[...labels without needs-approval])
-
-# Step 2: Clear STATUS suffix if present
-if "REVISED - NEEDS APPROVAL" in current_status:
-    new_status = current_status.replace(" (REVISED - NEEDS APPROVAL)", "")
-    update_status(new_status)
-
-# Step 3: Clear todo list if workflow was interrupted
-if workflow_was_interrupted():
-    todowrite(todos=[])  # Clear stale context
-
-# Step 4: Proceed with implementation
+todowrite(todos=[])
 ```
 
-#### Edge Cases
+**Edge cases:**
 
-| Edge Case | Handling |
-|-----------|----------|
-| Authorization via chat (not on issue) | Clear markers, clear todos if interrupted, post comment documenting source |
-| Authorization via issue comment | Clear markers, clear todos if interrupted, acknowledge comment |
-| `needs-approval` label never added | Proceed without label removal (no-op) |
-| STATUS has no suffix | Proceed without STATUS edit (no-op) |
+| Scenario | Action |
+|----------|--------|
+| No interruption (immediate auth) | Skip todo clearing (todos still valid) |
 | Todo list already empty | Skip todo clearing (no-op) |
-| Workflow not interrupted | Skip todo clearing (todos still valid) |
+| Clarification question answered | Clear todos (workflow restarted) |
+| Spec revised | Clear todos (scope changed) |
 
-#### Why This Matters
-
-- **State Consistency**: Issue state matches authorization reality
-- **Session Continuity**: Future sessions see correct state (no false `needs-approval`)
-- **Developer Experience**: Approve once, done (no repeated approval requests)
-- **Todo Accuracy**: Todo list reflects current work, not stale context
-
-#### Integration Points
-
-| Guideline/Skill | Section |
-|----------------|---------|
-| `123-github-ai-identity.md` | Authorization cleanup comment format |
-| `141-planning-status-tracking.md` | STATUS suffix clearing |
-| `approval-gate` skill | `verify-authorization` task |
-| `todowrite` MCP | Todo list management |
+**Rationale:** Todos track progress within a workflow. Workflow interruption invalidates that progress tracking - the new implementation starts fresh.
 
 ### Bug Report Response
 

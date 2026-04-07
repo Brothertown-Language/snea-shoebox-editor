@@ -109,4 +109,3 @@ Phase should be independently deployable:
 
 - Related: `spec-auditor` skill (spec quality audit)
 - Related: `approval-gate` skill (spec+authorization requirements)
-- Guidelines: `142-planning-archive-workflow.md` (phase naming rules)

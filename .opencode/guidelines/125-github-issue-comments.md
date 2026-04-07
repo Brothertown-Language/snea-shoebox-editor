@@ -58,11 +58,12 @@ The HALT protocol (see `010-approval-gate.md`) is the correct mechanism for auth
 
 | Situation | Action |
 |-----------|--------|
-| Completed a task | Post progress comment, then HALT |
+| Completed a task | Provide executive summary in CHAT ONLY, then HALT |
 | User asked a question | Respond via comment addressing the question |
 | Reached decision point | HALT silently, wait for user |
-| Changed files | Comment documenting the change |
+| Changed files | Provide executive summary in CHAT ONLY, then HALT |
 | Need clarification | Post question in comment, then HALT |
+| Issue closed AFTER MERGE | Post closure summary to GitHub (historical record) |
 
 ## Anti-Patterns to Avoid
 
@@ -178,7 +179,7 @@ Added Phase 2 to spec. Phase 2 implements the API layer for the approval workflo
 - Specified error handling for invalid states
 
 ---
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5)
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 **Key Characteristics:**
@@ -216,7 +217,7 @@ When a comment includes a URL (issue link, PR link, code compare link, etc.), th
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 ### Why URL Last
@@ -245,7 +246,7 @@ Skills imported from external repository. Parent issue #149 tracks overall progr
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 ### No URLs

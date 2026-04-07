@@ -35,9 +35,10 @@ Implementation task:
 
 Review-prep task:
   1. Verify branch is pushed
-  2. Generate compare URL
-  3. Post completion comment
-  4. HALT
+  2. Clear TODO list
+  3. Generate compare URL
+  4. Post completion comment (chat only)
+  5. HALT
 ```
 
 **If this task is invoked and branch is NOT pushed:**
@@ -70,7 +71,7 @@ When implementation determines "no file changes needed":
 
 ### ⚠️ CRITICAL: Model ID Detection
 
-**When posting completion comment (Step 3):**
+**When posting completion comment (Step 5):**
 
 - **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
 - **MUST detect actual runtime identity** from environment/MCP tools
@@ -96,7 +97,28 @@ When implementation determines "no file changes needed":
 
 ## Procedure
 
-### Step 0: Temp File Cleanup (MANDATORY)
+### Step 0: Initialize Progress Tracking
+
+**Before starting workflow, show progress to developer:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "in_progress", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "pending", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "pending", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
+**This gives developers visibility during cleanup and review preparation.**
+
+---
+
+### Step 0.1: Temp File Cleanup (MANDATORY)
 
 **Before pushing, clean up temporary files.**
 
@@ -116,6 +138,84 @@ ls ./tmp/
 - `./tmp/*.db` (SQLite databases)
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "in_progress", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "pending", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
+### Step 0.5: Lint Tool Verification (MANDATORY)
+
+**⚠️ CRITICAL: Verify file type BEFORE running lint commands.**
+
+**Python files ONLY for Python linters:**
+
+```bash
+# ✅ CORRECT: Lint Python files only
+uvx ruff check --fix src/ test/
+uvx ruff format src/ test/
+uvx pyright src/
+
+# 🚫 FORBIDDEN: Running Python linters on markdown files
+uvx ruff check --fix .opencode/guidelines/ docs/  # WRONG - markdown files
+uvx pyright docs/                                # WRONG - markdown files
+
+# ✅ CORRECT: Use markdown-specific tools
+uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
+uvx mdformat .opencode/guidelines/ docs/
+```
+
+**Markdown files ONLY for markdown linters:**
+
+```bash
+# ✅ CORRECT: Lint markdown files only
+uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
+uvx mdformat .opencode/guidelines/ docs/
+
+# 🚫 FORBIDDEN: Running markdown linters on Python files
+uvx pymarkdownlnt scan -r src/  # WRONG - Python files
+```
+
+**Cross-check verification:**
+
+| Linter Tool | Python Files | Markdown Files |
+|-------------|--------------|-----------------|
+| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
+| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
+| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
+| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
+
+**If lint command targets wrong file type:**
+
+1. STOP - Do not execute
+2. Report violation: "Lint tool mismatch: <tool> targets <wrong-type> files"
+3. Use correct tool for file type
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "in_progress", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
 
 ### Step 1: Verify Branch Is Pushed
 
@@ -156,17 +256,78 @@ If review-prep is invoked but branch is NOT pushed:
 4. **CONTINUE:** Generate compare URL
 5. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
 
-**This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
+4. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
 
-### Step 2: Generate Compare URL
+5. **This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
+### Step 2: Clear TODO List (MANDATORY)
+
+**Before generating compare URL, clear any active todos to ensure clean workflow state.**
+
+```bash
+# Clear todo list to prevent stale state from affecting subsequent phases
+todowrite todos=[]
+```
+
+**Why this matters:**
+- Prevents stale todos from previous phases
+- Ensures clean state before developer review
+- Removes distraction from completed work
+
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
+### Step 3: Generate Compare URL
 
 Using session values (GIT_OWNER, GIT_REPO):
 
 ```
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
-### Step 2: Pre-Post Verification (MANDATORY GATE)
+**Update progress:**
+
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
+```
+
+### Step 4: Pre-Post Verification (MANDATORY GATE)
 
 **⚠️ CRITICAL: You MUST verify format BEFORE generating the completion comment.**
 
@@ -194,10 +355,8 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
-
-**If ANY check fails:** STOP. Fix the format BEFORE continuing to Step 3.
 
 **Why this gate exists:**
 - Prevents URL-before-summary violations
@@ -205,53 +364,84 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 - Catches format errors before they're posted
 - Forces procedural verification, not informational
 
-### Step 3: Report Completion (SEPARATE Formats for Issue vs Chat)
+**Update progress:**
 
-**⚠️ CRITICAL: Different formats for GitHub issue vs chat.**
-
-**GitHub Issue Comment Format:**
-
-```markdown
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
+```python
+todowrite([
+    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
+    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
+    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
+    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
+    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
+    {"content": "Step 4: Pre-post verification", "status": "completed", "priority": "medium"},
+    {"content": "Step 5: Report completion", "status": "in_progress", "priority": "medium"},
+    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
+])
 ```
 
-**Chat Output Format:**
+### Step 5: Report Completion (Chat ONLY)
 
-```markdown
+**⚠️ CRITICAL: OUTPUT FORMAT ENFORCEMENT - ZERO TOLERANCE**
+
+**The output MUST be EXACTLY the format below, displayed IN THIS ORDER, NOTHING ELSE.**
+
+**🚫 FORBIDDEN (CRITICAL VIOLATION):**
+- ANY output before Step 2 (Clear TODO list) is complete
+- "✅ Pre-PR Checklist Completed" or verification checklists
+- All changes staged ✓ or workflow step outputs
+- Verification results from any previous step
+- ANY content NOT in exact format below
+
+**Progress tracking (Step 0-4) goes to `todowrite` - NOT to the completion comment.**
+
+**✅ REQUIRED OUTPUT ORDER (MANDATORY SEQUENCE):**
+
+```
+1. Clear todowrite list (Step 2 - already done)
+2. Generate compare URL (Step 3 - already done)
+3. Pre-post verification (Step 4 - already done)
+4. Display in chat:
+
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
+
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+5. HALT (Step 6)
 ```
 
-**Key Differences:**
+**Format Requirements (CRITICAL - ENFORCED ORDER):**
 
-| Location | Contains | Does NOT Contain |
-|----------|----------|------------------|
-| GitHub Issue | Summary, Outcome, byline | Compare URL |
-| Chat | Summary, Outcome, byline, URL | — |
+| Order | Content | Notes |
+|-------|---------|-------|
+| 1 | **Summary:** | Executive summary describing stakeholder value |
+| 2 | **Outcome:** | What changed for stakeholders |
+| 3 | **Compare URL** | GitHub compare URL (newline BEFORE byline) |
+| 4 | **---** | Separator |
+| 5 | **Byline** | AI agent attribution (LAST line) |
 
-**Why separate formats:**
-- GitHub issues are persistent records - no need for compare URLs (visible via PR)
-- Chat is immediate - developers need quick access to compare URL for review
-- URLs are long and clutter issue history unnecessarily
+**🚫 Output order violations (CRITICAL):**
+- URL BEFORE summary = WRONG
+- Byline BEFORE URL = WRONG
+- Summary AFTER URL = WRONG
+- Additional content of ANY kind = WRONG
+- ANY output before clearing TODO list = WRONG
 
-**Post summary to GitHub issue.**
+**Why chat only:**
+- GitHub Issues are historical records - no need for compare URLs
+- Chat provides immediate visibility for developer review
+- URLs clutter issue history unnecessarily
+
 **Post summary + URL to chat.**
+**DO NOT post to GitHub issue.**
 
-### Step 4: HALT (MANDATORY - NO EXCEPTIONS)
+### Step 6: HALT (MANDATORY - NO EXCEPTIONS)
 
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
@@ -397,5 +587,5 @@ Updated git-workflow skill to push feature branches after implementation and pro
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch-name>
+https://github.com/<owner>/<repo>/compare/dev...<branch-name>
 ```

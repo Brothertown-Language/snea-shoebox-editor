@@ -158,7 +158,7 @@ pycharm_get_symbol_info/pycharm_search_in_files_by_text
 
 ## Constraints
 
-- Use srclight for Python symbol search (per `016-srclight-preference.md`)
+- Use srclight for Python symbol search
 - Use pycharm for file operations and content reading
 - Use GitHub MCP for PR status checks
 - Report errors gracefully, continue with remaining verifications

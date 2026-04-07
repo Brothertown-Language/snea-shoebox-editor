@@ -147,12 +147,12 @@ AI co-authorship applies to **original content authored by AI**, NOT copy-pasted
 
 | Identity Component | How to Detect | FORBIDDEN |
 |-------------------|---------------|-----------|
-| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
+| `<AgentName>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
+| `<ModelID>` | Backing model ID at runtime | Copying "ollama-cloud/*" from examples |
 | `<ai-email>` | Agent's noreply email | Using project domain email |
 
 **Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
+- `<AgentName> (<ModelID>)` → Example only
 - `AI Assistant (model-id)` → Placeholder only
 - **DETECT YOUR OWN IDENTITY** at runtime
 
@@ -227,7 +227,7 @@ The agent must NEVER ask questions like:
 | Situation | Action |
 |-----------|--------|
 | Task complete but more work remains | Continue implementation autonomously |
-| Task complete and no more work | HALT silently, post progress comment |
+| Task complete and no more work | HALT silently, provide executive summary in chat |
 | Blocked by genuine ambiguity | Post comment to issue asking for clarification, then HALT |
 | Error encountered | Post error details to issue, then HALT |
 | Waiting for authorization | HALT silently, wait for explicit "approved" or "go" |
@@ -249,18 +249,34 @@ The agent must NEVER ask questions like:
 
 ---
 
-## Critical Violation: Missing Progress Comments
+## Critical Violation: GitHub Progress Comments Are NOISE — CHAT ONLY
 
-**⚠️ Failing to post progress comments to the associated issue is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Posting progress comments to GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
 
-Every implementation task MUST be documented with progress comments on the GitHub issue:
-- Post comment IMMEDIATELY after completing each task
-- Post comment when creating PR
-- Never proceed to next task without commenting first
+GitHub Issue comments are for **historical record (closure summaries)**, NOT for implementation progress.
 
-### Required Format: Executive Summary
+**The PR itself is the notification. The compare URL in chat is the progress update.**
 
-**Intermediate task (multi-task spec):**
+### ✅ REQUIRED Behavior
+
+| Event | GitHub Comment? | Chat Update? |
+|-------|-----------------|--------------|
+| Implementation done | ❌ NO | ✅ YES - executive summary |
+| Review-prep done | ❌ NO | ✅ YES - compare URL |
+| PR created | ❌ NO | ✅ YES - PR URL |
+| Issue closed AFTER MERGE | ✅ YES - closure summary | ✅ YES - completion notice |
+
+### 🚫 FORBIDDEN
+
+| Forbidden Action | Why |
+|-----------------|-----|
+| Posting progress after implementation | NOISE - compare URL in chat is sufficient |
+| Posting progress after review-prep | NOISE - developer can view GitHub diff |
+| Posting "PR created" to GitHub | NOISE - PR itself is the notification |
+| Posting status blocks | NOISE - executive summary in chat is sufficient |
+
+### ✅ Chat Output Format
+
 ```
 **Summary:**
 
@@ -268,63 +284,20 @@ Every implementation task MUST be documented with progress comments on the GitHu
 
 **Outcome:** <What changed for stakeholders>
 
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**Final task or single-task spec:**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-All tasks complete from this specification.
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-**⚠️ CRITICAL: Emoji must be PLAIN TEXT (not inside italic/bold formatting).**
+### When GitHub Comments ARE Required
 
-**Status Emoji Guide:**
-| Status | Emoji | Byline Format |
-|--------|-------|---------------|
-| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
-| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
-| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
-
-**When to include context in byline:**
-- **Progress comments**: No context (content already describes the work)
-- **Issue creation**: Optional — add issue number if useful
-- **Rejection/Superseded**: Always include reason or replacement reference
-
-### 🚫 FORBIDDEN in Progress Comments
-
-- **File lists** — Redundant (visible in git commits)
-- **"Next" field** — Dialog prompt (violates `AGENTS.md` § 125)
-- **Punch-list format** — Use executive summary paragraphs
-- **"Awaiting authorization"** — Use HALT protocol, not comments
-- **Technical changelog** — Focus on impact, not file-by-file changes
-
-### ⚠️ Chat Output Rule (CRITICAL)
-
-**Progress executive summaries go to BOTH GitHub comments AND chat.**
-
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
-
-**Why:** Both GitHub history AND chat transcript should show progress. GitHub preserves long-term history; chat maintains session context.
-
-**✅ DO:** Post executive summary to GitHub, then provide SAME summary in chat
-**🚫 NEVER:** Skip either location
-**🚫 NEVER:** Put full summary in chat but skip GitHub comment
+| Event | Why |
+|-------|-----|
+| Issue closure after merge | Historical record for future maintainers |
+| Spec revision | Document what changed and why |
+| Answering user question | User cannot see internal reasoning |
+| Blocking issue | Explain blocker and await clarification |
 
 **See `github-comments` skill for complete requirements.**
 
@@ -375,7 +348,7 @@ When URLs are needed (e.g., code compare links, PR links, issue links):
 
 - **GitHub Issues are historical records**: Future maintainers read comments for context, not navigation
 - **URLs become outdated**: Branches get deleted, repos move, links break
-- **Context is what persists**: "The rate limiting was added to prevent API quota exhaustion" survives; `https://github.com/.../compare/main...branch` does not
+- **Context is what persists**: "The rate limiting was added to prevent API quota exhaustion" survives; `https://github.com/.../compare/dev...branch` does not
 - **Chat is for immediate action**: Developers in the current session need clickable links to navigate
 
 ### Examples
@@ -385,7 +358,7 @@ When URLs are needed (e.g., code compare links, PR links, issue links):
 ```markdown
 Phase 1 complete: Added rate limiting to PubMed client.
 
-https://github.com/owner/repo/compare/main...feature-branch
+https://github.com/owner/repo/compare/dev...feature-branch
 ```
 
 **✅ CORRECT (Context in GitHub Issue, URL in Chat):**
@@ -397,7 +370,7 @@ https://github.com/owner/repo/compare/main...feature-branch
 Added rate limiting middleware to the PubMed client to prevent API quota exhaustion. The implementation uses a sliding window algorithm that tracks requests per minute and queues excess calls. This ensures we stay within PubMed's 3 requests/second limit without losing data.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **Chat Output (same message with URL):**
@@ -408,10 +381,10 @@ Added rate limiting middleware to PubMed client to prevent API quota exhaustion.
 
 **Outcome:** PubMed API calls now respect rate limits, preventing quota exhaustion errors.
 
-https://github.com/owner/repo/compare/main...feature-branch
+https://github.com/owner/repo/compare/dev...feature-branch
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Non-Substantive Updates (NO Comment Needed)
@@ -547,48 +520,83 @@ The spec defines EXACTLY what to implement. Nothing more. Nothing less.
 
 ---
 
-## Critical Violation: Spec Without Investigation
+## Critical Violation: Incorrect HALT After Phase Completion — Unqualified Approval
+
+**⚠️ Halting after completing a phase when unqualified approval was given is a CRITICAL GUIDELINE VIOLATION.**
+
+### The Problem
+
+When a developer says `approved` or `go` **without a phase qualifier**, this authorizes ALL phases of the spec. The agent must continue through all phases without stopping.
+
+Some agents incorrectly HALT after completing Phase 1 and mark remaining phases as `needs-approval`. This violates the principle of trust in approval tokens and creates unnecessary friction.
+
+### 🚫 FORBIDDEN
+
+| Forbidden Pattern | Why It's Wrong |
+|-------------------|-----------------|
+| HALT after Phase 1 when `approved` given | Unqualified approval = ALL phases authorized |
+| Mark remaining phases as `needs-approval` | Approval was already granted |
+| Ask for re-approval after each phase | Friction that violates developer mental model |
+| Assume phase-by-phase approval required | Only required for HIGH/MEDIUM+LARGE blast radius |
+
+### ✅ REQUIRED Behavior
+
+**With unqualified approval (`approved` or `go`):**
+1. Proceed through Phase 1
+2. Continue to Phase 2 (no HALT)
+3. Continue through ALL remaining phases
+4. HALT only after completing ENTIRE spec
+5. DO NOT mark remaining phases as `needs-approval`
+
+**With qualified approval (`approved: 1` or `approved: 2.3`):**
+1. Proceed through the authorized phase/step ONLY
+2. HALT after completing that phase/step
+3. Wait for next authorization before continuing
+
+### Exception: Risk-Aware Phases
+
+**For HIGH/MEDIUM risk + LARGE blast radius phases, recommend phase-by-phase approval:**
+
+| Phase Risk | Blast Radius | Recommendation |
+|------------|-------------|----------------|
+| HIGH + LARGE | Large | Explicit phase approval required |
+| HIGH + MEDIUM | Medium | Explicit phase approval recommended |
+| Any other combination | Any | Unqualified approval sufficient |
+
+**If developer provides unqualified approval for risky phases:**
+- PROCEED (developer accepted cumulative risk)
+- Document risk acknowledgment in implementation comment
+
+### Why This Matters
+
+- Developer mental model: "approved means go ahead"
+- Repeated authorization requests create friction
+- Trust in approval tokens is undermined by unnecessary HALTs
+- Unqualified approval is a complete authorization, not partial
+
+### Integration Points
+
+- `010-approval-gate.md` → "Authorization Scope for Multi-Phase Specs"
+- `020-go-prohibitions.md` → "Multi-Phase Authorization Scope"
+- This section adds critical violation enforcement
+
+---
+
+## Critical Violation: Spec Without Investigation (CRITICAL)
 
 **⚠️ Creating a spec without completed investigation is a CRITICAL GUIDELINE VIOLATION.**
 
 Investigation MUST be completed BEFORE finalizing a spec for review.
 
-**🚫 FORBIDDEN:**
-- Creating specs from vague requirements without exploration
-- Skipping codebase analysis before planning
-- Finalizing specs before investigating edge cases
-- Proceeding without success criteria defined
-- Running test code against production systems during investigation
+### Investigation Completion Criteria
 
-**✅ REQUIRED:**
-- Investigate codebase for existing patterns and reusable components
-- Create test scripts in `./tmp/` to validate hypotheses (isolated from production)
-- Document alternatives considered with tradeoffs
-- Identify risks and mitigation strategies
-- Define testable, measurable success criteria
-
-**✅ ALLOWED During Investigation:**
-- Read production code (exploration)
-- Read production data (analysis)
-- Create and run test scripts in `./tmp/` (isolated fixtures)
-- Create isolated test fixtures (dedicated test DB/schemas)
-- Run static analysis (lint, typecheck)
-- Document findings for the spec
-
-**Investigation Completion Criteria:**
-
-Before creating a spec, the agent MUST verify:
-
-| Requirement | Evidence |
-|-------------|----------|
-| Problem understood | Clearly stated problem, context, stakeholders |
-| Codebase explored | Existing patterns, reusable components identified |
-| Hypotheses tested | Test scripts run, results documented |
-| Alternatives considered | At least 2 approaches documented with tradeoffs |
-| Risks identified | Risk assessment with mitigation strategies |
-| Success criteria defined | Testable, measurable completion criteria |
-
-See `142-planning-archive-workflow.md` → "Investigation Completion Criteria" for complete requirements.
+Before creating a spec, verify:
+- Problem understood with context
+- Codebase explored for existing patterns
+- Hypotheses tested with isolated test scripts
+- Alternatives considered with tradeoffs
+- Risks identified with mitigation strategies
+- Success criteria defined (testable, measurable)
 
 ---
 
@@ -1050,24 +1058,37 @@ PRs require the developer to say one of these EXACT phrases:
 
 ---
 
-## Critical Violation: Manual PR Merge Confirmation (BYPASS PR WORKFLOW SKILL)
+## Critical Violation: Bypassing git-workflow Skill for Cleanup (CRITICAL)
 
-**⚠️ Manually handling PR merge confirmation without invoking the mandatory skill is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Running manual git commands instead of invoking the mandatory cleanup skill is a CRITICAL GUIDELINE VIOLATION.**
 
-**🚫 FORBIDDEN:**
-- Manually verifying PR merge via `git pull` or `git status`
-- Manually closing issues after seeing "merged" in chat
-- Manually deleting branches without GitHub API verification
-- Manually cleaning up stashes or branches after PR merge
-- Running ANY git commands after user says "pr merged" or "merged"
+The issue is NOT "manual handling" — the issue is **bypassing the mandatory skill invocation** by running git commands directly.
 
-**✅ REQUIRED:**
-- When user says "pr merged", "merged", or similar: **INVOKE `/skill git-workflow --task cleanup`**
-- Let the skill handle ALL post-merge operations:
-  - GitHub API verification (`github_pull_request_read method=get`)
-  - Issue closure (parent and child issues)
-  - Branch cleanup (local and remote)
-  - Stash cleanup (if applicable)
+### 🚫 FORBIDDEN - Bypassing Skill Invocation
+
+These actions bypass the mandatory skill and are CRITICAL VIOLATIONS:
+
+| Forbidden Action | Why It's Wrong |
+|-----------------|----------------|
+| `git branch -d <branch>` after "pr merged" | Bypasses cleanup skill workflow |
+| `git push origin --delete <branch>` after "pr merged" | Bypasses cleanup skill workflow |
+| `git pull` to verify merge state | Bypasses GitHub API verification in cleanup |
+| Manually closing issues after seeing "merged" | Bypasses issue structure verification in cleanup |
+| Running ANY git commands for cleanup | Cleanup task MUST handle all operations |
+
+### ✅ REQUIRED - Skill Invocation
+
+When user says "pr merged", "merged", or similar:
+
+1. **INVOKE `/skill git-workflow --task cleanup`** — this is MANDATORY, not optional
+2. The cleanup skill handles:
+   - GitHub API verification (`github_pull_request_read method=get`)
+   - Issue closure with proper parent/child verification
+   - Branch deletion (local AND remote)
+   - Stash cleanup (if applicable)
+   - Hotfix dev-merge ticket creation (if applicable)
+
+**The trigger phrase alone authorizes skill invocation — no additional confirmation needed.**
 
 **Trigger Phrases for Mandatory Skill Invocation:**
 | User Says | Skill Task |

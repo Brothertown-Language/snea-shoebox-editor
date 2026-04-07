@@ -104,6 +104,8 @@ class Record(Base):
     source = relationship("Source", back_populates="records")
     history = relationship("EditHistory", back_populates="record")
     search_entries = relationship("SearchEntry", back_populates="record")
+    headword_entries = relationship("HeadwordSearchEntry", back_populates="record")
+    gloss_entries = relationship("GlossSearchEntry", back_populates="record")
     matchup_suggestions = relationship("MatchupQueue", back_populates="suggested_record")
 
     __mapper_args__ = {

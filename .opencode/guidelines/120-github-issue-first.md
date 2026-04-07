@@ -118,11 +118,15 @@ Titles that describe specific concerns or features:
 
 ---
 
-## 5. Progress Comments (MANDATORY)
+## 5. Chat Updates for Implementation Progress
 
-**Every implementation step MUST be documented with a comment on the associated issue.**
+**Implementation progress goes to CHAT ONLY — NOT GitHub Issues.**
 
-**See `github-comments` skill for complete progress comment requirements.**
+- GitHub Issue comments are for historical record (closure summaries, spec revisions, user questions)
+- The PR is the notification — no need to post "PR created" to GitHub
+- The compare URL in chat is the progress update — no need to post progress to GitHub
+
+**See `000-critical-rules.md` "GitHub Progress Comments Are NOISE" for complete requirements.**
 
 ### Prompt Preservation (MANDATORY)
 
@@ -145,49 +149,6 @@ The user's prompt contains nuanced context about:
    - Include both the new prompt and any additional context
 
 3. **See `140-planning-spec-creation.md` "User Prompt Preservation" for complete requirements.**
-
----
-
-### Quick Reference
-
-**Post progress comments after EACH task completion:**
-- Executive summary describing impact and stakeholder value
-- NO file lists (redundant with git)
-- NO "Next" field (dialog prompts prohibited)
-
-**Post progress comments after ANY file change:**
-- Brief narrative describing impact
-- Focus on why the change matters
-
-### Executive Summary Format
-
-**Intermediate task (multi-task spec):**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**Final task or single-task spec:**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**⚠️ FAILURE TO POST PROGRESS COMMENTS IS A CRITICAL GUIDELINE VIOLATION.**
 
 ---
 

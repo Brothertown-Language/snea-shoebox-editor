@@ -325,6 +325,37 @@ Fixed [issue description]
 
 **Minimal Byline Principle:** Default to minimal byline format. Add context only when it clarifies ambiguity or provides essential reference.
 
+### Copy Editing Attribution
+
+**When an AI agent copy edits a human's message without generating substantive content:**
+
+```markdown
+<Human's message content>
+
+---
+🤖 [AI: AgentName (Model)] — Copy editing on behalf of <HumanName>
+```
+
+**Key Distinction:**
+
+| Role | Attribution | Primary Author |
+|------|-------------|----------------|
+| **Content generation** | `Co-authored with AI: AgentName (Model)` | AI created substantive content |
+| **Copy editing** | `[AI: AgentName (Model)] — Copy editing on behalf of <HumanName>` | Human provided substance, AI improved presentation |
+
+**When to use copy editing attribution:**
+
+| Scenario | Attribution |
+|----------|-------------|
+| AI formats human's rough notes | Copy editing |
+| AI fixes grammar in human's message | Copy editing |
+| AI structures human's ideas into spec | Copy editing |
+| AI adjusts tone of human's feedback | Copy editing |
+| AI generates new ideas from scratch | Content generation |
+| AI expands human's brief into full spec | Content generation |
+
+**Critical distinction:** Did the human provide the core ideas? Yes → Copy editing. No → Content generation.
+
 ## Quick Start
 
 Use `/skill github-comments --task overview` for complete protocol with examples.

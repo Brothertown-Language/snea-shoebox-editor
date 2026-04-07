@@ -22,6 +22,29 @@ This skill is invoked at these workflow triggers:
 | User says "approved" or "go" | `/skill approval-gate --task verify-authorization` | Verify auth + needs-approval label status |
 | Before implementing any task | `/skill approval-gate --task verify-sub-issues` | Verify sub-issue structure |
 
+## Authorization Cleanup (SILENT)
+
+**When authorization is received after workflow interruption, clean up approval markers BEFORE implementation.**
+
+**Cleanup actions:**
+1. Remove `needs-approval` label (if present)
+2. Clear STATUS suffix (`N.M (REVISED - NEEDS APPROVAL)` → `N.M`)
+3. Clear todo list (if workflow was interrupted)
+
+**Workflow Interruption Detection:**
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption, CLEAR the todo list before implementation.
+
+**⚠️ CRITICAL: Cleanup is SILENT — NO comments posted.**
+
 ## Tasks
 
 | Task | Purpose | Words |
@@ -92,7 +115,7 @@ Before reporting completion, the agent MUST verify:
 | Verification Step | Required Action |
 |-------------------|-----------------|
 | Branch pushed? | `git log origin/<branch>..HEAD --oneline` must show commits OR be empty (already pushed) |
-| Compare URL generated? | `https://github.com/<owner>/<repo>/compare/main...<branch>` |
+| Compare URL generated? | `https://github.com/<owner>/<repo>/compare/dev...<branch>` |
 | GitHub comment posted? | Executive summary + compare URL to GitHub issue |
 | Chat output posted? | Executive summary + compare URL to chat (BOTH locations required) |
 
@@ -115,7 +138,7 @@ Before reporting completion, the agent MUST verify:
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
-https://github.com/<owner>/<repo>/compare/main...<branch>
+https://github.com/<owner>/<repo>/compare/dev...<branch>
 ```
 
 **The review-prep task provides MANDATORY developer visibility before PR creation.**
@@ -229,6 +252,94 @@ When a developer says `approved` or `go` **without a phase qualifier**, the agen
 2. HALT after completing that phase/step
 3. Wait for next authorization before continuing
 
+## Risk-Aware Authorization (CRITICAL)
+
+**⚠️ High-risk and large-blast-radius phases may require explicit phase-by-phase approval, even with unqualified authorization.**
+
+### When Phase-by-Phase Authorization Is Required
+
+| Phase Risk Level | Blast Radius | Authorization Rule |
+|-----------------|--------------|---------------------|
+| **LOW** | SMALL | Unqualified approval sufficient |
+| **MEDIUM** | MEDIUM | Unqualified approval sufficient |
+| **HIGH** | SMALL | Unqualified approval sufficient |
+| **HIGH** | MEDIUM | **EXPLICIT phase approval recommended** |
+| **ANY** | LARGE | **EXPLICIT phase approval required** |
+
+### Risk Levels Defined
+
+| Risk | Characteristics | Examples |
+|------|-----------------|----------|
+| **LOW** | Read-only, additive, localized, easily reversible | Adding a new query, adding a test file, documentation |
+| **MEDIUM** | Modifies existing code, affects one module, moderate rollback complexity | Refactoring a service, adding API endpoint, modifying schema |
+| **HIGH** | Breaking changes, affects multiple modules, hard to rollback, production-critical | Database migration, authentication rewrite, API versioning, deployment changes |
+
+### Blast Radius Defined
+
+| Blast Radius | Scope | Rollback Difficulty |
+|--------------|-------|---------------------|
+| **SMALL** | Single file/module, no dependencies | Easy (simple revert) |
+| **MEDIUM** | Multiple files, internal dependencies | Moderate (may need data migration) |
+| **LARGE** | Cross-module, external dependencies, production systems | Difficult (may need data rollback, coordination) |
+
+### Authorization Commands for Risk-Aware Phases
+
+**For HIGH/MEDIUM risk or ANY/LARGE blast radius:**
+
+| Command | Purpose |
+|---------|---------|
+| `approved: N` | Approve only Phase N (phase-by-phase authorization) |
+| `approved: N.M` | Approve only Phase N Step M |
+| `approved` | Approve ALL phases (only if developer understands cumulative risk) |
+
+**Developer Workflow for Risky Phases:**
+
+1. Check phase risk level and blast radius in spec
+2. For HIGH/MEDIUM+LARGE phases, use `approved: N` for explicit control
+3. For cumulative risk acceptance, use unqualified `approved`
+
+**Agent Workflow for Risky Phases:**
+
+1. Before implementation, read phase risk level from spec
+2. For HIGH/MEDIUM+LARGE phases, **RECOMMEND** phase-by-phase approval
+3. If unqualified approval given for risky phase, PROCEED (developer accepted cumulative risk)
+4. Document risk acceptance in implementation comment
+
+### Example Risk-Aware Authorization
+
+**Spec with HIGH/MEDIUM risk profile:**
+
+```markdown
+## Phase 1: Database Schema (Risk: LOW, Blast Radius: SMALL)
+...
+## Phase 2: Authentication Service (Risk: MEDIUM, Blast Radius: MEDIUM)
+...
+## Phase 3: Production Deployment (Risk: HIGH, Blast Radius: LARGE)
+...
+```
+
+**Authorization Scenarios:**
+
+| Developer Command | What Gets Implemented |
+|-----------------|----------------------|
+| `approved` | All phases (developer accepts cumulative risk) |
+| `approved: 1` | Phase 1 only (safe phase, no risk concern) |
+| `approved: 2` | Phase 2 only (medium risk isolated) |
+| `approved: 3` | Phase 3 only (high risk, explicit approval) |
+
+**Agent Response to Unqualified Approval for Risky Phase:**
+
+```
+Implementing Phase 3 (HIGH risk, LARGE blast radius).
+
+⚠️ This phase has elevated risk:
+- Risk Level: HIGH
+- Blast Radius: LARGE
+- Rollback: Difficult (may need production coordination)
+
+Proceeding with unqualified approval (developer accepts cumulative risk).
+```
+
 ## Compound Command Handling
 
 **Compound command:** A user message containing multiple instructions without proper separation, where approval parsing may be ambiguous.
@@ -316,14 +427,76 @@ If review-prep is invoked AND branch is NOT pushed:
 
 **CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
 
-When implementation halts (awaiting approval, awaiting clarification, error, session end):
+#### Why WIP Commits Are Required
 
-1. Check for uncommitted changes: `git status`
-1. If changes exist, commit WIP: `git commit -m "WIP: Phase N - description"`
-1. Report WIP commit made
-1. THEN HALT
+When implementation halts (for ANY reason), uncommitted changes are at risk:
 
-**See `111-git-commit-workflow.md` → "WIP Commit Before HALT" section for complete workflow.**
+- Session crashes
+- Context window exhaustion
+- Developer needs to switch branches
+- Machine restarts
+- Awaiting clarification/approval
+
+WIP commits preserve work in progress in recoverable git history.
+
+#### When to Commit WIP
+
+| Scenario | Commit Type | Message Format |
+|----------|-------------|----------------|
+| Task complete | Full commit | `[Phase N] Task description` |
+| Phase complete | Full commit | `[Phase N] Phase complete` |
+| Mid-task HALT | WIP commit | `WIP: Phase N - description` |
+| Awaiting clarification | WIP commit | `WIP: Phase N - awaiting clarification` |
+| Error encountered | WIP commit | `WIP: Phase N - error: description` |
+| Session ending | WIP commit | `WIP: Phase N - session end` |
+
+#### WIP Commit Workflow
+
+**Before ANY HALT (awaiting approval, clarification, error, session end):**
+
+```bash
+# Step 1: Check for uncommitted changes
+git status
+
+# Step 2: If changes exist, commit WIP
+git add -A
+git commit -m "WIP: Phase N - <brief description>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+
+# Step 3: Verify commit was created
+git log -1 --oneline
+
+# Step 4: Report WIP commit made
+```
+
+#### WIP Commit Characteristics
+
+| Characteristic | Description |
+|---------------|-------------|
+| **Prefix** | Always starts with `WIP:` for easy identification |
+| **Phase** | Includes phase number for context |
+| **Description** | Brief description of what was being worked on |
+| **Trailers** | Same co-author trailers as full commits |
+| **Squashable** | Can be squashed or amended later with subsequent work |
+
+#### After WIP Commit
+
+- **Continue work**: Next commit can amend or squash the WIP commit
+- **Session resumes**: Rebase or continue from WIP commit
+- **PR creation**: Squash WIP commits with final work before PR
+
+#### What Counts as HALT
+
+| HALT Trigger | WIP Required? |
+|-------------|--------------|
+| Awaiting approval | ✅ YES |
+| Awaiting clarification | ✅ YES |
+| Mid-task pause | ✅ YES |
+| Error encountered | ✅ YES |
+| Session ending | ✅ YES |
+| Task complete | ❌ NO (use full commit) |
+| Phase complete | ❌ NO (use full commit) |
 
 ## Exceptions (No Authorization Required)
 

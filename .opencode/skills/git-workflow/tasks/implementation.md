@@ -4,6 +4,53 @@
 
 Handle work-in-progress commits during implementation. Multiple commits during implementation are acceptable for checkpointing.
 
+## Todo Tracking for Multi-Phase Specs
+
+**When implementing a multi-phase spec authorized with unqualified approval (`approved` or `go`):**
+
+Use `todowrite` at the START of implementation to track phase progress:
+
+```python
+todowrite([
+    {"content": "Phase 1: [description]", "status": "in_progress", "priority": "high"},
+    {"content": "Phase 2: [description]", "status": "pending", "priority": "high"},
+    # ... remaining phases
+])
+```
+
+**Update todo after each phase completion:**
+
+```python
+# After Phase 1 completes
+todowrite([
+    {"content": "Phase 1: [description]", "status": "completed", "priority": "high"},
+    {"content": "Phase 2: [description]", "status": "in_progress", "priority": "high"},
+    # ... remaining phases
+])
+```
+
+**Continue through ALL phases without HALT between phases.**
+
+**Rationale:** Unqualified approval authorizes all phases. This matches developer mental model of "approved means go ahead" and prevents unnecessary back-and-forth on multi-phase implementations.
+
+### Todo Clearing at Workflow Transitions
+
+**Clear todos at these transition points:**
+
+| Transition Point | Action |
+|------------------|--------|
+| Implementation → PR creation | Clear implementation todos (no todo needed for PR steps) |
+| After PR creation | Clear PR workflow todos (waiting for human merge) |
+| After cleanup | Clear all todos (workflow complete) |
+
+**Why:** Each workflow phase has explicit steps in skills. Todo lists track implementation progress, not procedural steps.
+
+**When to Clear:**
+
+- **Before PR creation workflow:** `todowrite(todos=[])`
+- **After cleanup workflow:** `todowrite(todos=[])`
+- **After authorization (if interrupted):** `todowrite(todos=[])`
+
 ## Workflow
 
 1. **User-driven work:** The agent performs approved implementation tasks
