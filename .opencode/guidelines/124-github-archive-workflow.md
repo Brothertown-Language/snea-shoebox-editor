@@ -1,25 +1,16 @@
 # GitHub Workflow: Archive & Issue Closure
 
+> **See `git-workflow` skill → `cleanup` task for issue closure procedure.**
+
 ## Archive Workflow (Completion)
 
-### When to Archive
-
-Archive a spec **immediately** after the final phase is approved and the PR is merged:
-
+**Archive a spec immediately after PR merge:**
 1. All steps marked `☑`
 2. PR merged (not just created)
 3. Add closing summary comment to issue
 4. Close the GitHub Issue (state change only)
 
-### Archive Process
-
-#### When GitHub MCP Tools Available
-
-1. **All specs use GitHub Issues as the authoritative source** (no local files needed)
-2. **Archive process**: Add closing summary comment, then close the GitHub Issue
-3. **Issue reference**: Add `ISSUE: https://github.com/<owner>/<repo>/issues/<number>` to the closed issue body if needed
-
-⚠️ **CRITICAL**: NEVER edit the issue body when closing. Adding `STATUS: completed` or `COMPLETED: YYYY-MM-DD` to the body destroys history. Use comments instead.
+⚠️ **CRITICAL**: NEVER edit the issue body when closing. Use comments instead.
 
 ---
 
@@ -49,8 +40,6 @@ Archive a spec **immediately** after the final phase is approved and the PR is m
 **Before closing ANY issue, the agent MUST call `github_pull_request_read method=get` to verify the PR is merged.**
 
 **MANDATORY Pre-Close Checklist (NO EXCEPTIONS):**
-
-Before closing ANY issue (parent OR child), the agent MUST complete this checklist in order:
 
 | Step | Action | MUST Result |
 |------|--------|-------------|
@@ -189,43 +178,6 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 
 **After closing child issues addressed by PR, ALWAYS verify remaining sub-issues before closing parent.**
 
-**The Problem:**
-- Single PR may address multiple sub-issues
-- Agent may close sub-issues prematurely (before PR merge)
-- Agent may forget to close sub-issues after PR merge
-- Parent gets closed while children remain open
-
-**Required Double-Check Workflow:**
-
-```python
-# After closing child issues addressed by PR:
-# 1. Get parent issue number from PR body (Fixes #123)
-# 2. Query for remaining open sub-issues
-
-children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
-open_children = [c for c in children if c.state == "open"]
-
-if open_children:
-    # Double-check: are these children addressed by this PR?
-    for child in open_children:
-        if child_was_addressed_by_pr(child, pr_number):
-            # Close child that PR addressed but wasn't closed earlier
-            close_with_summary(child, pr_number)
-        else:
-            # Orphaned child — log warning
-            comment(f"⚠️ Child issue #{child['number']} remains open after parent closed by PR #{pr_number}")
-    
-    # Re-query after closing children addressed by PR
-    children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
-    open_children = [c for c in children if c.state == "open"]
-
-# Only close parent if ALL children are now closed
-if not open_children:
-    close_parent_with_summary(parent_issue, pr_number)
-else:
-    comment(f"Parent #{parent_issue} left open — {len(open_children)} child issue(s) remain")
-```
-
 **Critical Rules:**
 1. **NEVER close parent while children remain open**
 2. **Always query for sub-issues before closing parent**
@@ -246,58 +198,27 @@ else:
 
 **Before closing ANY parent issue, the agent MUST perform intelligent verification.**
 
-### Why Agent Intelligence Is Required
-
-**A script cannot determine intent from open/closed state alone.**
-
-| Scenario | Script Detection | Agent Intelligence Required |
-|----------|-----------------|----------------------------|
-| Child open, work done | Detects "open" | Check comments, verify PR linked, confirm implementation complete |
-| Child closed "not planned" | Detects "closed" | Understand intentional non-completion |
-| Child superseded | Detects "open" | Follow comment links to replacement issue |
-| Parent correctly closed | Flags violation | Determine all children actually complete via context |
-
 ### Pre-Close Checklist
 
 **Before closing a parent `[SPEC]` issue, the agent MUST:**
 
-#### Step 1: Query Sub-Issues
+| Step | Action |
+|------|--------|
+| **1** | Query sub-issues: `github_issue_read(method="get_sub_issues", issue_number=<parent>)` |
+| **2** | Classify each sub-issue (closed/completed/superseded/incomplete) |
+| **3** | All children closed/completed/superseded → ✅ Close parent |
+| **4** | Any child open + incomplete → 🚫 POST warning, DO NOT close |
 
-```
-Call github_issue_read(method="get_sub_issues", issue_number=<parent>)
-```
+### Classification Rules
 
-If empty (no sub-issues) → Proceed to close parent (single-task issue).
+| Sub-Issue State | Evidence Required |
+|-----------------|-------------------|
+| Closed as "completed" | `state_reason: "completed"` |
+| Closed as "not planned" | `state_reason: "not_planned"` + explanation comment |
+| Superseded by another issue | "Superseded by #N" link in comments + verify #N exists |
+| Work done but forgot to close | PR linked in body/comments + verify PR merged |
 
-If non-empty → Continue to Step 2.
-
-#### Step 2: Classify Each Sub-Issue
-
-For each sub-issue, check:
-
-**Already Closed:**
-- `state: "closed"` with `state_reason: "completed"` → Done, proceed
-- `state: "closed"` with `state_reason: "not_planned"` → Intentionally not done, proceed
-
-**Open but May Be Complete:**
-- Check comments for "Superseded by #N" link → Verify replacement exists, treat as closed
-- Check body for PR link (e.g., "Fixes #N", "Closes #N") → If PR merged, work may be done
-- Check comments for "work completed" or "implemented in" → May qualify as complete
-
-**Open and Incomplete:**
-- No PR link, no superseded link, work not done → **BLOCK parent closure**
-
-#### Step 3: Decision Logic
-
-| Classification | Action |
-|----------------|--------|
-| All children closed/completed/superseded | ✅ Proceed to close parent |
-| Any child open + incomplete | 🚫 POST warning comment, DO NOT close parent |
-| Unclear status | Stop and ask user for clarification |
-
-#### Step 4: Post Warning (If Blocked)
-
-If parent cannot be closed:
+### Warning Post (If Blocked)
 
 ```markdown
 🤖 ⚠️ **Cannot Close Parent — Open Sub-Issues Detected**
@@ -306,16 +227,10 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 
 - #N: [Title] — [state, labels, status]
 
-**Status Analysis:**
-- [For each open sub-issue, state why it cannot be closed]
-
 **To close this parent:**
 1. Complete the remaining sub-issue(s)
 2. Close each sub-issue when work is complete
 3. Or close sub-issue as "not planned" with explanation if intentionally skipped
-
-**Manual Override:**
-If parent should close despite open children, add a comment explaining why remaining work is no longer needed, then request manual close.
 
 ---
 🤖 ⚠️ Blocking by <AgentName> (<ModelID>)
@@ -340,44 +255,11 @@ If parent should close despite open children, add a comment explaining why remai
 | Open with "in-progress" label | Currently being worked |
 | Open, no PR, no superseded link | Work not started or incomplete |
 
-### Example Pre-Close Check
-
-```
-SPEC #100 (parent) - Ready to close
-├── Task #101: Database schema
-│   └── state: "closed", state_reason: "completed" ✅
-├── Task #102: API endpoints
-│   └── state: "closed", state_reason: "not_planned" (comment: "Moved to Phase 2") ✅
-└── Task #103: UI components
-    └── state: "open", comment: "Superseded by #150"
-        → Agent verifies #150 exists and covers UI ✅
-
-Result: All sub-issues accounted for. Proceed to close #100.
-```
-
-```
-SPEC #100 (parent) - Blocked from closing
-├── Task #101: Database schema
-│   └── state: "closed", state_reason: "completed" ✅
-├── Task #102: API endpoints
-│   └── state: "open", labels: ["needs-approval"] 🚫
-
-Result: #102 is open and awaiting approval. POST warning comment. DO NOT close #100.
-```
-
 ---
 
 ## ⚠️ ENFORCED: Closed-Issue Remediation (Pre-Authorization Audit)
 
 **When a closed issue is targeted for implementation via `#N approved`, the agent MUST audit before proceeding.**
-
-### Why This Matters
-
-Issuing `#N approved` for a closed issue assumes closure was correct. Without audit:
-
-- Incorrectly-closed parents with open children propagate violations
-- Agent implements on top of already-broken workflow state
-- Missing work goes undetected
 
 ### Pre-Authorization Audit (MANDATORY)
 
@@ -392,26 +274,20 @@ Issuing `#N approved` for a closed issue assumes closure was correct. Without au
 
 **NEVER rely on comments, changelogs, or memory.**
 
-The agent MUST inspect the project directly:
-
 | Evidence Type | Inspection Method | What It Proves |
 |---------------|-------------------|----------------|
 | **Code changes** | Read actual files mentioned in spec | Implementation exists or doesn't |
 | **PR merge state** | `github_pull_request_read(method="get")` | PR was merged or wasn't |
 | **Branch state** | `git log`, `git branch` | Commits exist in history |
 | **Database state** | Query actual database/tables | Schema/data changes applied |
-| **Config state** | Read actual config files | Configuration changed |
 
 **FORBIDDEN Evidence Sources:**
 - Issue comments (indirect, unverified)
 - Memory from previous sessions
 - Changelogs/README notes
 - Issue body claims (only spec requirements are factual)
-- Project conventions/assumptions
 
-### Remediation Actions (Determined by Direct Inspection)
-
-**The agent inspects the project directly and determines action:**
+### Remediation Actions
 
 | Direct Inspection Result | Correct Action |
 |-------------------------|----------------|
@@ -421,51 +297,11 @@ The agent MUST inspect the project directly:
 | Parent closed, no merged PR | **Reopen parent** (premature closure) |
 | Superseding issue exists with completed work | Verify superseding issue is complete, then close: `not_planned` |
 
-### Remediation Comments
-
-**When agent remediates, it posts comments with direct inspection results:**
-
-```
-🤖 ✅ **Auto-Remediated: [Action]**
-
-Parent issue #N was closed while this sub-issue remained open.
-
-**Direct Inspection Results:**
-- [Actual file/code checked and result]
-- [Actual PR state from API call]
-- [Actual evidence from project]
-
-**Action:** [Close/Open] based on direct inspection
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-### When to HALT
-
-**HALT only when direct inspection is impossible:**
-- Cannot access codebase (permission error)
-- Cannot call GitHub API (network/auth failure)
-- Spec is ambiguous about what deliverables to check
-
-**HALT with actionable message explaining what couldn't be inspected.**
-
 ---
 
 ## ⚠️ ENFORCED: Superseded Issue Closure (Without Implementation)
 
 **Issues superseded by new issues MUST follow atomic closure workflow.**
-
-### The Problem
-
-When a user says "close this and create a new spec":
-
-1. Agent closes the old issue
-2. Agent claims "a new spec will be created" in closing comment
-3. Agent STOPS without creating the new spec
-4. The promise "will be created" was never kept
-
-**This is a CRITICAL GUIDELINE VIOLATION.**
 
 ### 🚫 PROHIBITED
 
@@ -484,8 +320,6 @@ When a user says "close this and create a new spec":
 
 ### ✅ REQUIRED ATOMIC WORKFLOW
 
-**"Close and Create New" Workflow:**
-
 | Step | Action | Order |
 |------|--------|-------|
 | Create new issue | Create the replacement issue FIRST | Step 1 |
@@ -493,31 +327,6 @@ When a user says "close this and create a new spec":
 | Close old issue | Add closing comment WITH replacement reference | Step 3 |
 
 **Critical: New issue MUST exist BEFORE closing old issue.**
-
-### Atomic Execution Example
-
-**User request:** "Close this and create a new spec for a 'spec-quality' skill"
-
-**CORRECT WORKFLOW:**
-```
-1. Create new issue #363 with title "[SPEC] Guidelines: ..."
-2. Note issue number: #363
-3. Close old issue #333 with comment:
-   "AI: <AgentName> (<ModelID>) on behalf of <HumanName> 🤖 
-    **Replaced By:** #363
-    
-    This issue is superseded by #363 without implementation.
-    The approach (static templates) was determined to be incorrect.
-    See #363 for the replacement spec."
-```
-
-**INCORRECT WORKFLOW:**
-```
-1. Close old issue #333 with comment:
-   "AI: OpenCode ... 
-    A new spec will be created separately"  ← WRONG: forward-looking claim
-2. STOP  ← WRONG: incomplete workflow
-```
 
 ### Closing Summary for Superseded Issues
 
@@ -537,23 +346,6 @@ When a user says "close this and create a new spec":
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
-
-### Why Atomic Execution Matters
-
-1. **Trust**: Agents must not make promises they don't keep
-2. **Traceability**: GitHub issues linked immediately, no lost references
-3. **Workflow integrity**: "Close and create" is ONE action, not two separate steps
-4. **User experience**: User expects both actions completed, not just one
-
-### Enforcement
-
-**spec-auditor skill checks:**
-
-- Does closing comment claim future action without execution?
-- Does issue reference a replacement that doesn't exist?
-- Is forward-looking language used ("will be created", "to be done") in closing comments?
-
-**If audit fails:** Reopen the issue, create the replacement, then close properly.
 
 ---
 

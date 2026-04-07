@@ -12,103 +12,66 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 - **Strict Enum Mapping**: DB-stored enums use plain string values (`NEW_DISCOVERY = "new_discovery"`).
   Emojis/presentation strings handled as properties or mapping functions, never stored in DB.
 - **Parsing Logic Changes**: Changes to `src/commons/parsing/` affecting extracted metadata require a full pipeline
-  rerun from Step 100 (`0100_ingest_xml.ipynb`) — performed by the user, not the agent. A change **affects extracted
-  metadata** if it alters the values, presence, or format of any field written to the database or output files. Agent
-  MUST NOT write DB remediation, backfill, or migration code to compensate for parsing changes; the pipeline rerun
-  handles data consistency. Flag the rerun requirement to the user after making such changes. Redundant "safety-net"
-  updates in downstream notebooks prohibited.
+  rerun from Step 100 (`0100_ingest_xml.ipynb`) — performed by the user, not the agent.
 
 ## Design Principles — ENFORCED UNIVERSALLY
 
 > **See `code-size-enforcement` skill for complete size limit enforcement rules, detection methods, and violation recovery.**
 
-- **KISS (Keep It Simple, Stupid)**: Simplest correct solution. No unnecessary abstraction or cleverness. Prefer straightforward, readable code over "clever" optimizations.
-- **DRY (Don't Repeat Yourself)**: No duplicated logic. Extract shared functionality into reusable functions/modules. If you copy-paste code, you're doing it wrong.
-- **Non-Monolithic**: Break large blocks into cohesive, independent components. Notebooks should have focused cells — cells that do "one thing."
-- **Modular**: Each function, class, module, notebook cell, and document section should have a single clear purpose and minimal dependencies.
-- **Single Function Methods**: Every function/method performs exactly ONE task. If a function has multiple responsibilities, split it. Decompose ALL tasks, plans, and algorithms into discrete single-function methods. This applies to:
-  - Python functions in `.py` files
-  - Notebook cells (each cell should do ONE thing)
-  - LaTeX/XeLaTeX environments and macros (one purpose each)
-  - Scripts and configuration files
-- **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 350 words, decompose it. If a notebook cell exceeds 450 words, split it into multiple cells.
-- **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named
-  constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only
-  acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).
+- **KISS (Keep It Simple, Stupid)**: Simplest correct solution. No unnecessary abstraction or cleverness.
+- **DRY (Don't Repeat Yourself)**: No duplicated logic. Extract shared functionality into reusable functions/modules.
+- **Non-Monolithic**: Break large blocks into cohesive, independent components.
+- **Modular**: Each function, class, module, notebook cell should have a single clear purpose and minimal dependencies.
+- **Single Function Methods**: Every function/method performs exactly ONE task.
+- **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 350 words, decompose it.
+- **No Magic Strings or Numbers**: Extract domain meaning to named constants (`UPPER_SNAKE_CASE`).
 - **No Re-exports** (ABSOLUTE PROHIBITION):
   - NEVER add `from X import Y` or `__all__` to `__init__.py` files.
-  - `__init__.py` must contain ONLY a module docstring describing the package purpose.
-  - All imports must reference concrete module paths (e.g., `from commons.mesh.validator import MeshValidator`,
-    NOT `from commons.mesh import MeshValidator`).
-  - Rationale: Re-exports break IDE "Find Usages" and "Go to Definition" by creating false source locations.
-  - Existing `__all__` entries in legacy files are assumed approved — do not remove them without explicit instruction.
-  - When creating a NEW `__init__.py`, it must be docstring-only. When editing an existing `__init__.py`, do not add
-    any imports or `__all__` entries.
-- **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the
-  package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two
-  concise sentences — enough for `ai_bin/py structure` to display alongside the filename.
-- **Docstring/Comment Determinism**: Pydoc/docstrings and code comments must use deterministic wording. Avoid ambiguous hedge/alternative phrasing such as `maybe`, `if ... or ...`, `and/or`, or `A + B or C` when describing required behavior, validation paths, or implementation intent.
-- **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered
-  configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause
-  edit failures. Reference items by label, not by positional index.
+  - `__init__.py` must contain ONLY a module docstring.
+  - All imports must reference concrete module paths.
+- **Top-Level Documentation**: Every Python source file must include a brief top-level comment.
+- **Docstring/Comment Determinism**: Use deterministic wording. Avoid ambiguous phrasing.
+- **Labels Over Index Numbers**: Reference items by label, not by positional index.
 
 ## Modern Python
 
-- **Pathlib**: `pathlib.Path` exclusively for file/dir ops. No `os.path.join`, `os.mkdir`, string concatenation. Use `/`
-  operator.
+- **Pathlib**: `pathlib.Path` exclusively for file/dir ops. No `os.path.join`, `os.mkdir`, string concatenation.
 - **f-strings**: For all string interpolation. No `.format()` or `%` unless required by external libs.
-- **Metadata Integrity**: Use `shutil.copy2` (not `shutil.copy`). Never discard metadata unless explicitly instructed.
+- **Metadata Integrity**: Use `shutil.copy2` (not `shutil.copy`).
 
 ## Libraries & Packages
 
-- Use NLP packages (e.g., NLTK) for NLP tasks — no regex for NLP. NLP tasks include tokenization, stemming,
-  lemmatization, part-of-speech tagging, named entity recognition, and sentence segmentation. Simple pattern matching
-  or fixed-format extraction does not qualify and may use regex. For tasks requiring complex pattern logic beyond
-  simple fixed-format extraction, prefer FSM or LALR-type grammars (e.g., `lark`, `pyparsing`) over regex — regex is
-  brittle on live data.
+- Use NLP packages (e.g., NLTK) for NLP tasks — no regex for NLP. For complex pattern logic, prefer FSM/LALR grammars.
 - All DB/system ops use existing project libraries. Direct data file manipulation prohibited unless instructed.
 - Use `ConfigurationManager` for all data file paths — never hardcode or assume data file locations.
-  `project-config.ini` is located at project root; initialize `ConfigurationManager` with the project root path (
-  resolved via root resolution per `120-scripting.md`).
+
+---
 
 ## Print Statements & Output
 
-- **NO narration/signal prints**: Never add print statements that narrate code changes, signal feature updates, or announce implementation details. Print statements are for data output and user-facing information only.
-- **NO pedantic notes in code**: Lines like `print("Note: X now uses Y")` or `print("Feature Z implemented")` are prohibited. Code should speak for itself through documentation and version control.
-- **Valid print uses**: Progress bars, data summaries, error messages, user-facing status, diagnostic output during development/testing.
-- **Invalid print uses**: Announcing "implementation complete", narrating changes, signaling "now using X", helpful hints, tutorial-style output, any form of self-documentation via print.
-- **Examples of prohibited prints**:
-  - `print("Note: Visualizations now use dark mode")`
-  - `print("Feature X enabled")`
-  - `print("Using new algorithm for Y")`
-  - `print("Implementation complete - phase 1")`
-- **If context is needed**: Add a docstring, code comment, or update documentation — never a print statement.
+- **NO narration/signal prints**: Never add print statements that narrate code changes or announce implementation details.
+- **NO pedantic notes in code**: Lines like `print("Note: X now uses Y")` are prohibited.
+- **Valid print uses**: Progress bars, data summaries, error messages, user-facing status, diagnostic output.
+- **Invalid print uses**: Announcing "implementation complete", narrating changes, tutorial-style output.
+- **If context is needed**: Add a docstring or code comment — never a print statement.
+
+---
 
 ## Linting & Static Analysis
 
 ### ⚠️ MANDATORY: Pre-Lint File Type Verification
 
-**Running the wrong linter on the wrong file type is a CRITICAL GUIDELINE VIOLATION that causes noise and wastes time.**
+**Running the wrong linter on the wrong file type is a CRITICAL GUIDELINE VIOLATION.**
 
 **Verification Before Each Lint Command:**
 
-```bash
-# STEP 1: Verify file type
-ls -la src/ | head -5  # Check what files exist
+1. **Verify file type**: `ls -la src/ | head -5`
+2. **Select CORRECT tool for file type**:
+   - Python files? Use Python tools (`ruff`, `pyright`)
+   - Markdown files? Use markdown tools (`pymarkdownlnt`, `mdformat`)
+   - Mixed? Run SEPARATE commands for each type
 
-# STEP 2: Select CORRECT tool for file type
-# Python files? Use Python tools
-# Markdown files? Use markdown tools
-# Mixed? Run SEPARATE commands for each type
-
-# STEP 3: Run lint command ONLY on correct file types
-uvx ruff check --fix src/ test/           # Python only
-uvx pymarkdownlnt scan -r docs/           # Markdown only
-```
-
-### 🚫 PROHIBITED Misuse
-
-**DO NOT run Python tools on non-Python files:**
+### Correct Tool Usage
 
 | Tool | Python Files | Markdown Files |
 |------|--------------|----------------|
@@ -118,35 +81,9 @@ uvx pymarkdownlnt scan -r docs/           # Markdown only
 | `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
 | `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
 
-Running `ruff check` or `ruff format` on `.md` files is a **CRITICAL GUIDELINE VIOLATION**.
+**Running `ruff check` on `.md` files is a CRITICAL GUIDELINE VIOLATION.**
 
-### Correct Tool Usage
-
-**Python files (`.py`):**
-```bash
-uvx ruff check --fix src/ test/   # Lint + auto-fix
-uvx ruff format src/ test/        # Format
-uvx pyright src/                  # Type check
-uvx vulture src/                  # Dead code scan
-```
-
-**Markdown files (`.md`):**
-```bash
-uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/   # Lint
-uvx mdformat .opencode/guidelines/ docs/                # Format
-```
-
-**Rationale:** Python linters (`ruff`, `pyright`, `vulture`) are designed for Python syntax and will produce incorrect or useless results when run on markdown files. Use markdown-specific tools (`pymarkdownlnt`, `mdformat`) for markdown files.
-
-### Cross-Check Verification Table
-
-| Linter Tool | Python Files | Markdown Files |
-|-------------|--------------|----------------|
-| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
-| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
-| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
-| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
-| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
+---
 
 ## Numbering — ENFORCED
 
@@ -161,7 +98,7 @@ All enumeration lists, numbered sections, and step sequences in documentation MU
 - Code comments explaining 0-indexed array access
 - Technical documentation explicitly explaining zero-based indexing concepts
 
-**Rationale:** Documentation is for humans. Natural counting matches human cognition.
+---
 
 ## AI Co-Authored Attribution (MANDATORY)
 
@@ -198,20 +135,11 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### What Does NOT Require AI Attribution
 
 **Standard/boilerplate content does NOT require AI attribution:**
-- Standard licenses (MIT, Apache, GPL, etc.) - these are established legal templates
-- Auto-generated files (lock files, build artifacts, `__pycache__`)
-- Framework boilerplate (default configs, standard project structures)
-- Minor edits to existing files (typo fixes, formatting)
-- Files with no creative content (empty `__init__.py`, pure config)
-
-**Copy-pasted content from ANY external source does NOT get AI attribution:**
-- Code copied from Stack Overflow, blogs, tutorials
-- Code copied from other projects/repositories
-- Documentation copied from official sources
-- Configuration copied from templates/examples
-- **If it was copy-pasted, it's NOT AI-co-authored** - the original source holds copyright
-
-**Rationale:** AI attribution is about transparency in creative work. Copying a standard MIT license, copying code from Stack Overflow, or copy-pasting documentation from another project requires no AI creativity - those sources hold their own copyrights. Only genuinely original content created by AI deserves AI co-authorship attribution.
+- Standard licenses (MIT, Apache, GPL, etc.) - established legal templates
+- Auto-generated files (lock files, `__pycache__`)
+- Framework boilerplate (default configs, project structures)
+- Minor edits (typo fixes, formatting)
+- **Copy-pasted content from ANY external source** - original source holds copyright
 
 ### Files Requiring Attribution
 
@@ -226,7 +154,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 
 | File Type | Reason |
 |-----------|--------|
-| LICENSE files | Standard legal templates (MIT, Apache, etc.) |
+| LICENSE files | Standard legal templates (MIT, Apache, GPL) |
 | `pyproject.toml`, `setup.py` | Boilerplate configuration |
 | Lock files (`uv.lock`, `package-lock.json`) | Auto-generated |
 | Empty `__init__.py` | No content |
@@ -279,6 +207,8 @@ AI co-authored attribution:
 3. Enables proper credit and traceability
 4. Helps identify AI-generated content for review
 5. **Respects copyright** - only claims co-authorship on genuinely original AI work
+
+---
 
 ## Cross-Reference Standards
 
