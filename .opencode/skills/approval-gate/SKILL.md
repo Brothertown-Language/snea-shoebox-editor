@@ -156,6 +156,48 @@ See `git-workflow` skill → `review-prep` task for the complete workflow.
 | **Open questions resolved** | No unresolved items in spec |
 | **Sub-issues verified** | Multi-task specs require phase-level sub-issues |
 
+### Authorization Cleanup Workflow (MANDATORY)
+
+**When authorization is received, cleanup MUST happen BEFORE implementation begins.**
+
+#### Cleanup Steps (verify-authorization task)
+
+```python
+# Step 1: Remove needs-approval label
+if issue.has_label("needs-approval"):
+    github_issue_write(method="update", issue_number=N, labels=[...labels without needs-approval])
+
+# Step 2: Clear STATUS suffix if present
+if "REVISED - NEEDS APPROVAL" in current_status:
+    new_status = current_status.replace(" (REVISED - NEEDS APPROVAL)", "")
+    update_status(new_status)
+
+# Step 3: Clear todo list if workflow was interrupted
+if workflow_was_interrupted():
+    todowrite(todos=[])  # Clear stale context
+
+# Step 4: Proceed with implementation
+```
+
+#### Workflow Interruption Detection
+
+| Interruption Type | Detection |
+|------------------|-----------|
+| Developer conversation | Agent asked clarification question and received answer |
+| Spec revision | Agent revised spec (added/changed content) |
+| Error recovery | Agent encountered error and investigated |
+| Context switch | Agent switched to different task/issue |
+| Investigation phase | Agent performed investigation before implementation |
+
+**Action:** If ANY interruption occurred since last authorization, CLEAR the todo list before proceeding.
+
+#### Why This Matters
+
+- **State Consistency**: Issue state matches authorization reality
+- **Session Continuity**: Future sessions see correct state (no false `needs-approval`)
+- **Developer Experience**: Approve once, done
+- **Todo Accuracy**: Todo list reflects current work, not stale context
+
 ### Authorization Does NOT Authorize
 
 - Creating a spec does NOT authorize implementation

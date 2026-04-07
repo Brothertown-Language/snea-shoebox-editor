@@ -8,24 +8,18 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
-### fix/github-comments-noise
+### feature/approval-cleanup
 
-- **Clarified: GitHub Comments Only for Historical Record**: Authorization cleanup,
-  implementation progress, and PR creation are SILENT - no GitHub comments. GitHub
-  comments are only for issue closure (historical record), spec revisions, and
-  answering user questions. Implementation progress goes to CHAT ONLY with URLs.
+- **Fixed: Authorization Cleanup is SILENT**: Removed comment posting from authorization
+  cleanup workflow. Authorization cleanup is state management (label removal, STATUS suffix
+  clearing, todo clearing) and does not warrant GitHub comments. Cleanup is SILENT.
 - **Changed Files**:
-  - `CHANGELOG.md`: Added clarification entry
-  - `123-github-ai-identity.md`: Added cross-reference to 010-approval-gate for SILENT cleanup
-- **Key Distinction**:
-  - Authorization cleanup (state management) = NO GitHub comment, NO chat (not implementation)
-  - Implementation progress (review-prep) = NO GitHub comment, YES chat with compare URL
-  - PR creation = NO GitHub comment, YES chat with PR URL
-  - Issue closure after merge = YES GitHub comment (historical record), YES chat
-- **URL Placement**: URLs belong in chat output, NOT in GitHub comments. GitHub
-  comments are for future maintainers who need context, not developers who need
-  clickable links.
-- **Addresses**: GitHub issue #382, #384
+  - `010-approval-gate.md`: Authorization cleanup workflow marked as SILENT
+  - `123-github-ai-identity.md`: Added cross-reference to authorization cleanup
+  - `approval-gate/SKILL.md`: Cleanup workflow marked as SILENT — NO comments
+- **Key Clarification**: Authorization cleanup = NO comments (state management).
+  Implementation progress = comments go to chat only, not GitHub.
+- **Addresses**: GitHub issues #382, #384
 
 ### skill/todowrite-progress-tracking
 
@@ -96,6 +90,25 @@ The format is based on
   `approval-gate/SKILL.md`, `approval-gate/tasks/post-implementation.md`,
   `git-workflow/tasks/review-prep.md`,
   `implementation-quality/tasks/post-implementation.md`.
+
+### spec/github-comments-state-tracking
+
+- **Fixed: Three-Tier Principle for GitHub Comments**: Established clear rules
+  for what content goes in GitHub comments vs. labels vs. chat.
+- **Tier 1 (NEVER)**: State tracking, progress notifications, routine updates.
+  Use labels for state tracking instead.
+- **Tier 2 (ALWAYS)**: Answering questions asked via GitHub, executive summary
+  when issue closes.
+- **Tier 3 (AI INTELLIGENCE)**: Bug identification, design decisions, architectural
+  warnings, edge case documentation. AI agent determines if substantive content
+  warrants GitHub comment.
+- **Changed Files**:
+  - `000-critical-rules.md`: Added three-tier principle for GitHub comments
+  - `125-github-issue-comments.md`: Defined three tiers with examples
+  - `124-github-archive-workflow.md`: Added executive summary to closure
+- **Key Distinction**: Labels are permitted for state tracking. Comments are for
+  substantive content. PR creation/progress goes to chat only.
+- **Addresses**: GitHub issue #497
 
 ### skill/wording-remediation
 
