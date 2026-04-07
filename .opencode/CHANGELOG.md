@@ -8,6 +8,26 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### skills-first-workflow
+
+- **Changed: Skills-First Workflow Restructuring**: Major reorganization where
+  guidelines now contain ONLY essential rules, and all procedural content moved
+  to skills. This reduces guideline word count by ~60% while preserving all
+  enforcement capabilities. Skills now hold complete workflows, examples,
+  and step-by-step procedures.
+- **Pruned Guidelines**: Reduced 8 guideline files by removing duplicated
+  procedural content:
+  - `000-critical-rules.md`: 1454 → 449 lines (removed audit procedures)
+  - `140-planning-spec-creation.md`: 515 → 220 lines (removed phase templates)
+  - `111-git-commit-workflow.md`: 465 → 250 lines (removed WIP examples)
+  - `000-session-init.md`: 293 → 150 lines (condensed enforcement table)
+  - `080-code-standards.md`: Removed lint command examples
+  - `124-github-archive-workflow.md`: 594 → 386 lines (moved procedures to skill)
+- **Fixed: git-workflow Skill Frontmatter**: Corrected YAML frontmatter format
+  to ensure skill is properly detected by opencode.
+- **Key Principle**: Guidelines = rules only. Skills = procedures and workflows.
+- **Addresses**: Skills-first workflow restructuring initiative
+
 ### feature/approval-cleanup
 
 - **Fixed: Authorization Cleanup is SILENT**: Removed comment posting from authorization
