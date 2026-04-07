@@ -8,6 +8,25 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### fix/github-comments-noise
+
+- **Clarified: GitHub Comments Only for Historical Record**: Authorization cleanup,
+  implementation progress, and PR creation are SILENT - no GitHub comments. GitHub
+  comments are only for issue closure (historical record), spec revisions, and
+  answering user questions. Implementation progress goes to CHAT ONLY with URLs.
+- **Changed Files**:
+  - `CHANGELOG.md`: Added clarification entry
+  - `123-github-ai-identity.md`: Added cross-reference to 010-approval-gate for SILENT cleanup
+- **Key Distinction**:
+  - Authorization cleanup (state management) = NO GitHub comment, NO chat (not implementation)
+  - Implementation progress (review-prep) = NO GitHub comment, YES chat with compare URL
+  - PR creation = NO GitHub comment, YES chat with PR URL
+  - Issue closure after merge = YES GitHub comment (historical record), YES chat
+- **URL Placement**: URLs belong in chat output, NOT in GitHub comments. GitHub
+  comments are for future maintainers who need context, not developers who need
+  clickable links.
+- **Addresses**: GitHub issue #382, #384
+
 ### skill/todowrite-progress-tracking
 
 - **Added: Progress Tracking to Git Workflow Tasks**: All git workflow
