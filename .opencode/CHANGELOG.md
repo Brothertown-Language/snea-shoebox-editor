@@ -10,16 +10,16 @@ The format is based on
 
 ### feature/approval-cleanup
 
-- **Fixed: Authorization Cleanup is SILENT**: Removed "Post authorization comment"
-  step from cleanup workflow. Authorization cleanup is state management (label
-  removal, STATUS suffix clearing, todo clearing) and does not warrant GitHub
-  comments. Only implementation progress (review-prep, PR creation) requires
-  GitHub comments AND chat updates.
+- **Fixed: Authorization Cleanup is SILENT**: Removed comment posting from authorization
+  cleanup workflow. Authorization cleanup is state management (label removal, STATUS suffix
+  clearing, todo clearing) and does not warrant GitHub comments. Cleanup is SILENT.
 - **Changed Files**:
-  - `010-approval-gate.md`: Removed comment posting step from cleanup process
-  - `123-github-ai-identity.md`: Removed Authorization Cleanup Comments section
-  - `approval-gate/SKILL.md`: Updated cleanup workflow to remove comment posting
-- **Addresses**: GitHub issue #384
+  - `010-approval-gate.md`: Authorization cleanup workflow marked as SILENT
+  - `123-github-ai-identity.md`: Added cross-reference to authorization cleanup
+  - `approval-gate/SKILL.md`: Cleanup workflow marked as SILENT — NO comments
+- **Key Clarification**: Authorization cleanup = NO comments (state management).
+  Implementation progress = comments go to chat only, not GitHub.
+- **Addresses**: GitHub issues #382, #384
 
 ### skill/todowrite-progress-tracking
 
@@ -90,6 +90,25 @@ The format is based on
   `approval-gate/SKILL.md`, `approval-gate/tasks/post-implementation.md`,
   `git-workflow/tasks/review-prep.md`,
   `implementation-quality/tasks/post-implementation.md`.
+
+### spec/github-comments-state-tracking
+
+- **Fixed: Three-Tier Principle for GitHub Comments**: Established clear rules
+  for what content goes in GitHub comments vs. labels vs. chat.
+- **Tier 1 (NEVER)**: State tracking, progress notifications, routine updates.
+  Use labels for state tracking instead.
+- **Tier 2 (ALWAYS)**: Answering questions asked via GitHub, executive summary
+  when issue closes.
+- **Tier 3 (AI INTELLIGENCE)**: Bug identification, design decisions, architectural
+  warnings, edge case documentation. AI agent determines if substantive content
+  warrants GitHub comment.
+- **Changed Files**:
+  - `000-critical-rules.md`: Added three-tier principle for GitHub comments
+  - `125-github-issue-comments.md`: Defined three tiers with examples
+  - `124-github-archive-workflow.md`: Added executive summary to closure
+- **Key Distinction**: Labels are permitted for state tracking. Comments are for
+  substantive content. PR creation/progress goes to chat only.
+- **Addresses**: GitHub issue #497
 
 ### skill/wording-remediation
 
