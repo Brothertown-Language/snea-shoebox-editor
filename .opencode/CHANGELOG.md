@@ -21,6 +21,25 @@ The format is based on
   Implementation progress = comments go to chat only, not GitHub.
 - **Addresses**: GitHub issues #382, #384
 
+### spec/github-comments-state-tracking
+
+- **Fixed: Three-Tier Principle for GitHub Comments**: Established clear rules
+  for what content goes in GitHub comments vs. labels vs. chat.
+- **Tier 1 (NEVER)**: State tracking, progress notifications, routine updates.
+  Use labels for state tracking instead.
+- **Tier 2 (ALWAYS)**: Answering questions asked via GitHub, executive summary
+  when issue closes.
+- **Tier 3 (AI INTELLIGENCE)**: Bug identification, design decisions, architectural
+  warnings, edge case documentation. AI agent determines if substantive content
+  warrants GitHub comment.
+- **Changed Files**:
+  - `000-critical-rules.md`: Added three-tier principle for GitHub comments
+  - `125-github-issue-comments.md`: Defined three tiers with examples
+  - `124-github-archive-workflow.md`: Added executive summary to closure
+- **Key Distinction**: Labels are permitted for state tracking. Comments are for
+  substantive content. PR creation/progress goes to chat only.
+- **Addresses**: GitHub issue #497
+
 ### skill/todowrite-progress-tracking
 
 - **Added: Progress Tracking to Git Workflow Tasks**: All git workflow

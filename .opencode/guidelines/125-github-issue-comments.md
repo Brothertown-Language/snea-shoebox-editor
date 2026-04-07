@@ -1,5 +1,40 @@
 # Issue Comment Protocol
 
+## Three-Tier Principle (MANDATORY)
+
+**GitHub Issue comments are for substantive content, NOT for state tracking or progress notifications.**
+
+**State tracking uses LABELS. Progress notifications go to CHAT.**
+
+### Tier 1: NEVER Acceptable for GitHub Comments
+
+These are CRITICAL VIOLATIONS:
+
+- State tracking (STATUS updates, progress blocks)
+- Progress notifications (implementation progress, review-prep, PR creation)
+- Routine updates (file changes, test results, lint)
+
+**Use labels for state tracking:** `needs-approval`, `in-progress`, `blocked`, or custom labels.
+
+### Tier 2: ALWAYS Acceptable for GitHub Comments
+
+- Answering questions asked via GitHub comments
+- Executive summary when issue closes (historical record for future maintainers)
+
+### Tier 3: AI Agent Intelligence Determines
+
+AI agent MAY post to GitHub when substantive content warrants recording:
+
+- Bug identification that needs recording
+- Design decisions needing context for future maintainers
+- Architectural warnings about long-term implications
+- Edge case documentation for future reference
+- Security observations requiring permanent record
+- Data integrity concerns
+- Any substantive information for future readers
+
+**When in doubt:** Ask "Would a future maintainer need this context?" If yes → post to GitHub. If no → chat only.
+
 ## NEVER Use Issue Comments as Dialog Prompts
 
 GitHub issue comments are **general comments**, NOT interactive dialogs.
