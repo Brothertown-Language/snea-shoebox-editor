@@ -98,7 +98,7 @@ This auditor uses `docs/specs/how-to-write-good-spec-ai-agents.md` as the master
 
 ### Fresh-Start Context Requirements (CRITICAL)
 
-Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be self-contained for agents with NO memory context:
+Per fresh-start context requirements and `140-planning-spec-creation.md`, specs MUST be self-contained for agents with NO memory context:
 
 1. **NO "see above" or "as discussed" references**
 
@@ -398,7 +398,7 @@ After the draft is written to `./tmp/tmp-spec-{issue}-draft.md`, THEN you can ca
 
 ### Tool Preference for Codebase Verification
 
-Per `016-srclight-preference.md`:
+**Use srclight tools PREFERENTIALLY for Python code verification:**
 
 | Task | Tool |
 |------|------|
@@ -408,8 +408,6 @@ Per `016-srclight-preference.md`:
 | Verify Python file exists | `srclight_symbols_in_file` |
 | Verify non-Python file exists | `pycharm_find_files_by_glob` |
 | Search text in files | `pycharm_search_in_files_by_text` |
-
-**Use srclight tools PREFERENTIALLY for Python code verification.**
 
 ### New Problem Classes for Codebase Verification
 
@@ -574,7 +572,7 @@ After each fix is applied, the auditor MUST:
 
 1. **Re-read the modified spec** (via GitHub MCP tools) to verify the change was applied correctly.
 1. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
-1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools per `016-srclight-preference.md`.
+1. **Re-verify codebase references** (if applicable) using srclight/pycharm tools: `srclight_get_symbol` for symbols, `pycharm_find_files_by_glob` for files.
 1. **Report verification** in the next response before moving to the next issue:
    - **Verification signal**: `changed` — the fix was applied and the issue is resolved.
    - **Verification signal**: `blocked` — the fix could not be applied (explain why).

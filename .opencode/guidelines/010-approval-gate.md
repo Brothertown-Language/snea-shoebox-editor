@@ -39,7 +39,7 @@
 
 **Enforcement:** These invocations are MANDATORY. Do NOT proceed with implementation without first loading the appropriate task and verifying pattern compliance.
 
-**Loop Prevention:** If tool invocation fails repeatedly without progress, see `150-task-loop-prevention.md` for detection heuristics and exit strategies.
+**Loop Prevention:** If tool invocation fails repeatedly without progress, HALT and report the loop. Check for infinite retry patterns in the calling code and add termination conditions.
 
 ### Sub-Issue Verification Gate (MANDATORY)
 

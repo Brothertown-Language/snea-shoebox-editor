@@ -415,7 +415,6 @@ When MCP tools are available but not used:
 | `015-mcp-preference.md` | Full file — MCP tool preference |
 | `060-tool-usage.md` | Tool usage and terminal rules |
 | `061-notebook-rules.md` | Notebook MCP zero-tolerance |
-| `016-srclight-preference.md` | Srclight vs PyCharm vs ai_bin |
 | `000-session-init.md` | MCP probe at startup |
 
 ## Examples

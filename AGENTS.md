@@ -56,14 +56,13 @@ uv run python ai_bin/session_init.py
 | Notebook Operations | `061-notebook-rules.md`, `notebook-operations` skill |
 | Authorization Gate | `010-approval-gate.md`, `approval-gate` skill |
 | Spec Creation | `140-planning-spec-creation.md` |
-| Status Tracking | `141-planning-status-tracking.md` |
 | Issue Closure | `124-github-archive-workflow.md` |
 | Critical Rules | `000-critical-rules.md` |
 | Engineering Approach | `085-engineering-approach.md` |
 | Environment | `070-environment.md` |
 | Code Standards | `080-code-standards.md` |
 | Data Integrity | `090-data-integrity.md` |
-| Error Handling | `200-errors-exception-handling.md` through `203-errors-logging-vs-raising.md` |
+| Error Handling | `090-data-integrity.md` (see `implementation-quality` skill for data patterns) |
 
 ---
 
