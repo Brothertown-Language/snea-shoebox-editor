@@ -89,19 +89,6 @@ When asked to "prepare a commit" (or similar READ-ONLY phrase):
 
 **CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
 
-### When to Commit WIP
-
-| Scenario | Commit Type | Message Format |
-|----------|-------------|----------------|
-| Task complete | Full commit | `[Phase N] Task description` |
-| Phase complete | Full commit | `[Phase N] Phase complete` |
-| Mid-task HALT | WIP commit | `WIP: Phase N - description` |
-| Awaiting clarification | WIP commit | `WIP: Phase N - awaiting clarification` |
-| Error encountered | WIP commit | `WIP: Phase N - error: description` |
-| Session ending | WIP commit | `WIP: Phase N - session end` |
-
-### What Counts as HALT
-
 | HALT Trigger | WIP Required? |
 |-------------|--------------|
 | Awaiting approval | ✅ YES |
@@ -109,109 +96,26 @@ When asked to "prepare a commit" (or similar READ-ONLY phrase):
 | Mid-task pause | ✅ YES |
 | Error encountered | ✅ YES |
 | Session ending | ✅ YES |
-| Task complete | ❌ NO (use full commit) |
-| Phase complete | ❌ NO (use full commit) |
+| Task/Phase complete | ❌ NO (use full commit) |
 
-### When to Clear Todos
-
-**After authorization received (before implementation starts):**
-
-If workflow was interrupted by clarification, revision, context switch, or error:
-
-```python
-todowrite(todos=[])
-```
-
-**Workflow interruptions include:**
-- Developer conversation (clarification questions)
-- Spec revision
-- Context switch to different issue/task
-- Error recovery
-- Session boundary
+**When to Clear Todos:** After authorization received, clear todos if workflow was interrupted (clarification, revision, context switch, error).
 
 ---
 
 ## 6. Grouped-Step Commit Strategy
 
-When implementing specs with multiple steps, create commits per logical group (not per step).
+**Commit per logical group, not per step.**
 
-### What Is a Commit Group?
-
-A commit group is a cohesive set of related changes that:
-- Implements one logical feature or fix
-- Can be reviewed independently
-- Makes sense as a standalone commit
-- Could be reverted without breaking other work
-
-### Examples of Commit Groups
-
-| Scenario | Commit Strategy | Reasoning |
-|----------|-----------------|-----------|
-| Single file change | Single commit | Atomic change |
-| Multiple files, same feature | Single commit | Cohesive change |
-| Multiple concerns (DB + API) | Grouped commits | Independent review |
-| Implementation + tests | Grouped commits (impl first, then tests) | Separation of concerns |
-| Multi-phase spec with sub-phases | Grouped commits by phase | Review atomicity |
-
-### Anti-Patterns (DO NOT)
-
-- One commit per file (too granular)
-- One commit per step of multi-step spec (too granular)
-- All changes in one commit (too broad if multiple concerns)
-
----
-
-## 7. Discrete Units and Concern-Based Phases
-
-**Discrete units map to git commits at concern boundaries.**
-
-### Discrete Unit Definition
-
-A discrete unit is an atomic, concern-scoped change that:
-- Modifies files related to ONE concern (layer, module, responsibility)
-- Can be cherry-picked independently without breaking builds
-- Can be reverted without leaving orphaned dependencies
-- Maps to exactly ONE git commit
-
-### Discrete Units vs. Commit Groups
-
-| Concept | Scope | Mapping |
-|---------|-------|---------|
-| **Phase** | Entire concern boundary | Multiple commits (one per discrete unit) |
-| **Discrete Unit** | Atomic change within phase | ONE git commit |
-| **Commit Group** | Multiple discrete units (same concern) | Multiple commits (reviewed together) |
-
-### WIP Commit Positioning
+| Scenario | Commit Strategy |
+|----------|-----------------|
+| Single file change | Single commit |
+| Multiple files, same feature | Single commit |
+| Multiple concerns (DB + API) | Grouped commits |
+| Multi-phase spec | Grouped commits by phase |
 
 **WIP commits happen BETWEEN phases, NOT within phases.**
 
-```
-✅ CORRECT: WIP commits at phase boundaries
-
-Phase 1 commits:
-  Step 1.1 → Commit 1
-  Step 1.2 → Commit 2
-  Step 1.3 → Commit 3
-  [Phase 1 complete]
-
-WIP Commit (Phase 1 → Phase 2 boundary)  ← WIP HERE
-
-Phase 2 commits:
-  Step 2.1 → Commit 4
-  Step 2.2 → Commit 5
-  Step 2.3 → Commit 6
-  [Phase 2 complete]
-```
-
-```
-❌ WRONG: WIP commits within phases
-
-Phase 1 commits:
-  Step 1.1 → Commit 1
-  WIP Commit (mid-Phase 1)  ← WRONG: Not at concern boundary
-  Step 1.2 → Commit 2
-  Step 1.3 → Commit 3
-```
+> **See `git-workflow` skill → `implementation` task for grouped commit workflow.**
 
 ---
 
