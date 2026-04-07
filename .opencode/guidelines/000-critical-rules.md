@@ -253,9 +253,29 @@ The agent must NEVER ask questions like:
 
 **⚠️ Posting progress comments to GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
 
-GitHub Issue comments are for **historical record (closure summaries)**, NOT for implementation progress.
+GitHub Issue comments are for **substantive content (historic context, questions, closure summaries)**, NOT for state tracking or progress notifications.
 
-**The PR itself is the notification. The compare URL in chat is the progress update.**
+**State tracking uses LABELS. Progress notifications go to CHAT.**
+
+### Three-Tier Principle (MANDATORY)
+
+**Tier 1: NEVER acceptable for GitHub comments**
+- State tracking (STATUS updates, progress blocks)
+- Progress notifications (implementation, review-prep, PR creation)
+- Routine updates (file changes, test results, lint)
+
+**Tier 2: ALWAYS acceptable for GitHub comments**
+- Answering questions asked via GitHub comments
+- Executive summary when issue closes (historical record)
+
+**Tier 3: AI AGENT INTELLIGENCE determines**
+- Bug identification that needs recording
+- Design decisions needing context
+- Architectural warnings
+- Edge case documentation
+- Security observations
+- Data integrity concerns
+- Any substantive information for future readers
 
 ### ✅ REQUIRED Behavior
 
@@ -265,6 +285,8 @@ GitHub Issue comments are for **historical record (closure summaries)**, NOT for
 | Review-prep done | ❌ NO | ✅ YES - compare URL |
 | PR created | ❌ NO | ✅ YES - PR URL |
 | Issue closed AFTER MERGE | ✅ YES - closure summary | ✅ YES - completion notice |
+| User asked question via GitHub | ✅ YES - answer the question | ❌ NO - GitHub only |
+| AI identifies substantive bug/design | AI DETERMINES | ❌ NO - GitHub if substantive |
 
 ### 🚫 FORBIDDEN
 
@@ -274,6 +296,7 @@ GitHub Issue comments are for **historical record (closure summaries)**, NOT for
 | Posting progress after review-prep | NOISE - developer can view GitHub diff |
 | Posting "PR created" to GitHub | NOISE - PR itself is the notification |
 | Posting status blocks | NOISE - executive summary in chat is sufficient |
+| Using comments for state tracking | Labels are the proper mechanism |
 
 ### ✅ Chat Output Format
 
@@ -298,8 +321,9 @@ https://github.com/<owner>/<repo>/compare/dev...<branch>
 | Spec revision | Document what changed and why |
 | Answering user question | User cannot see internal reasoning |
 | Blocking issue | Explain blocker and await clarification |
+| Substantive bug/design issue | AI determines if content worthy of recording |
 
-**See `github-comments` skill for complete requirements.**
+**Labels are PERMITTED for state tracking.** Use labels for workflow state (`needs-approval`, `in-progress`, `blocked`) instead of comments. Custom labels are encouraged.
 
 ---
 
