@@ -2,143 +2,32 @@
 
 ## Python Environment
 
-- Use `uv sync` for environment setup (creates venv and installs in editable mode). All Python execution via
-  `uv run python`. Package ops: add dependencies by editing `pyproject.toml` then running `uv sync` — never `uv add`. `pip` prohibited. No `sys.path` hacks or manual
-  path additions.
-- **Never use `python3` or `python` directly** — always `uv run python`. Never prefix commands with absolute paths or `cd /absolute/path &&`. See `060-tool-usage.md` "Python Interpreter" and "Path Rules" for the full zero-tolerance rules.
-- Reusable agent scripts live in `ai_bin/` (project root). Invoke with `uv run python ai_bin/<script>`.
-- When `pyproject.toml` changes, purge `.venv` and run `uv sync` as a standalone command (never embedded in git hooks,
-  commit scripts, or automated pipelines).
-- **Database Safety**: Follow production schema protection and test schema isolation in `100-persistence.md`.
-  NEVER run test/experimental code against the production schema.
-
-## Isolated Tool Environments
-
-When developing local tools that need their own dependencies (separate from the main project), use isolated tool environments to keep the main project's `pyproject.toml` clean.
-
-### Directory Structure Pattern
-
-```
-project/
-├── pyproject.toml          # Main project dependencies (kept clean)
-├── src/
-├── tools/                  # Isolated tool environment
-│   ├── pyproject.toml      # Tool-specific dependencies
-│   └── my_tool.py
-```
-
-The `tools/` directory contains its own `pyproject.toml` with only the dependencies needed by that tool. This keeps heavy or tool-specific dependencies isolated from the main project.
-
-### Invocation Methods
-
-**1. Ephemeral (recommended for one-time use):**
-```bash
-# Runs in temp venv, cleaned up after execution
-uvx --from ./tools my-tool [args]
-
-# Does NOT install globally, does NOT pollute main venv
-```
-
-**2. Persistent (for frequently-used tools):**
-```bash
-# Installs tool globally (available in any directory)
-uv tool install ./tools
-
-# Run from anywhere
-my-tool [args]
-
-# Uninstall when no longer needed
-uv tool uninstall my-tool
-```
-
-### Benefits
-
-- **Clean main dependencies**: Main project's `pyproject.toml` stays focused on production dependencies
-- **Dependency isolation**: Tool conflicts don't affect the main project
-- **No version conflicts**: Tool can use different versions of shared dependencies
-- **Faster `uv sync`**: Main project re-sync is faster without tool dependencies
-- **Portable**: Tool environment is self-contained and reproducible
-
-### When to Use
-
-Use isolated tool environments when:
-- A local tool needs dependencies that are NOT useful for the main project
-- You want to try a tool without committing it to `pyproject.toml`
-- A tool requires mutually exclusive dependency versions
-- You're developing a standalone utility that could be extracted later
-
-Use direct `pyproject.toml` dependencies when:
-- The dependency is needed for production code
-- The dependency is needed by tests that run against production code
-- The dependency is already in the main dependency tree
-
-### Example: Local Analysis Tool
-
-**tools/pyproject.toml:**
-```toml
-[project]
-name = "analysis-tool"
-version = "0.1.0"
-requires-python = ">=3.12"
-dependencies = [
-    "pandas>=2.0",
-    "matplotlib>=3.7",
-    "seaborn>=0.12",
-]
-
-[project.scripts]
-analyze = "analyze:main"
-```
-
-**tools/analyze.py:**
-```python
-def main():
-    import pandas as pd
-    import matplotlib.pyplot as plt
-    # Tool implementation
-```
-
-**Usage:**
-```bash
-# Ephemeral (no install)
-uvx --from ./tools analyze
-
-# Persistent (global install)
-uv tool install ./tools
-analyze  # Available from any directory
-```
-
-This pattern is especially useful for data science tools, analysis scripts, and one-off utilities that would otherwise clutter the main dependency list.
+- Use `uv sync` for environment setup. All Python execution via `uv run python`. Package ops: edit `pyproject.toml` then `uv sync` — never `uv add`. `pip` prohibited.
+- **Never use `python3` or `python` directly** — always `uv run python`. See `060-tool-usage.md` for full rules.
+- Reusable agent scripts in `ai_bin/`. Invoke with `uv run python ai_bin/<script>`.
+- When `pyproject.toml` changes, purge `.venv` and run `uv sync` standalone (never embedded in hooks/scripts).
+- **Database Safety**: Follow `100-persistence.md`. NEVER run test/experimental code against production schema.
 
 ## Node.js Prohibition
 
-**DETESTABLE**: Installing Node.js in a Python-only or Java-only environment is absolutely prohibited. This introduces an unnecessary runtime dependency that pollutes the ecosystem and creates maintenance burden.
+**DETESTABLE**: Installing Node.js in Python-only or Java-only environments is absolutely prohibited.
 
-### 🚫 NEVER DO
-- **NEVER install Node.js globally or locally** on Python-only or Java-only projects.
-- **NEVER use NPX** to run packages — NPX requires Node.js runtime.
-- **NEVER add Node.js-based tools to project dependencies.**
-- **NEVER suggest npm packages as solutions** in Python/Java contexts.
-- **NEVER use Node.js-based formatters, linters, or tooling** when native alternatives exist.
+### 🚫 PROHIBITED (ZERO TOLERANCE)
 
-### Context
-This rule applies universally to:
-- **Python projects**: Use `uv`, `pip`, `ruff`, `pytest` — never npm/pnpm/yarn.
-- **Java projects**: Use Maven/Gradle, JVM tooling — never npm/pnpm/yarn.
-- **Projects with mixed languages**: Isolate Node.js to its designated frontend/service layer.
+| Prohibition | Why |
+|-------------|-----|
+| Install Node.js globally/locally | Unnecessary runtime dependency |
+| Use NPX for packages | NPX requires Node.js runtime |
+| Add Node.js-based tools to dependencies | Pollutes ecosystem |
+| Suggest npm packages in Python/Java | Ecosystem mismatch |
+| Use Node.js formatters/linters when native alternatives exist | Maintenance burden |
 
 ### ✅ ALLOWED
-- **Docker containers that internally use Node.js** — Node.js runs inside container, not on host.
-- **Pure Python alternatives** — `githubkit` instead of `@octokit/rest`, `httpx` instead of `axios`.
-- **Dedicated frontend repositories** where Node.js IS the correct tool for that codebase.
-- **MCP servers via Docker** — Node.js isolated in container only.
 
-### Why This Is Critical
-- **Security**: Node.js ecosystem has known supply-chain attack vectors.
-- **Dependency bloat**: Adds unnecessary runtime and package manager complexity.
-- **Maintenance burden**: Mixed language projects require additional CI/CD configuration.
-- **Ecosystem mismatch**: npm packages don't integrate with Python/Java tooling chains.
-- **Team friction**: Requires developers to install/maintain Node.js on their machines.
+- Docker containers with internal Node.js (isolated)
+- Pure Python alternatives (`githubkit`, `httpx` instead of npm packages)
+- Dedicated frontend repositories where Node.js IS the correct tool
+- MCP servers via Docker (Node.js isolated in container only)
 
 ## Production System Protection
 - **The AI agent is never permitted to run code against production data.** This is an absolute prohibition with no exceptions — not even for verification, inspection, or read-only queries. Any step that would execute code against production data requires explicit user instruction before execution.
