@@ -8,6 +8,20 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### feature/continue-skills-first-494
+
+- **Refactored: Guidelines Pruning Phase 2**: Removed duplicate procedural content
+  from guidelines, consolidating enforcement rules. Three guideline files pruned:
+  - `070-environment.md`: 2117 → 471 words (78% reduction) — removed isolated tool
+    examples, consolidated enforcement table
+  - `085-engineering-approach.md`: 1937 → 461 words (76% reduction) — moved
+    checklists to implementation-quality skill
+  - `124-github-archive-workflow.md`: 2127 → 1018 words (52% reduction) —
+    consolidated merge verification
+- **Key Principle Enforcement**: Guidelines now contain ONLY essential rules.
+  All procedural content, examples, and step-by-step procedures moved to skills.
+- **Addresses**: GitHub issue #494 (Continue Skills-First)
+
 ### skills-first-workflow
 
 - **Changed: Skills-First Workflow Restructuring**: Major reorganization where

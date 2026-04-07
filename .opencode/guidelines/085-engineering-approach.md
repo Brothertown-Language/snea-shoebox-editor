@@ -104,99 +104,20 @@
 | `return None` for required data | Raise error instead |
 | Fabricated test data in production code | Use real data sources |
 
-### Pre-Implementation Verification
+---
 
-**Before creating ANY file, verify:**
+## Verification-First Response Protocol (MANDATORY)
 
-```markdown
-## Pre-Implementation Checklist
+**⚠️ ZERO TOLERANCE: The agent MUST NOT respond to user input before completing verification steps.**
 
-### File Locations
-- [ ] New Python file in `src/`? OK if following project structure
-- [ ] New test file? Must be in `test/`
-- [ ] Migration? Must be `_Migration` entry in `schema.py`
-- [ ] Temp/output file? Must be in `./tmp/`
-- [ ] Notebook file? Must follow `061-notebook-rules.md`
+### The Problem
 
-### Code Structure
-- [ ] DB operation? Will use Repository class
-- [ ] Import in `__init__.py`? Only docstring, no re-exports
-- [ ] Notebook operation? Will use `the-notebook-mcp` tools
-- [ ] File edit with PyCharm MCP available? Will use `pycharm_*` tools
+Agents frequently respond to questions without:
 
-### Environment
-- [ ] Need Node.js? For Python projects, use Python alternatives
-- [ ] Running Python? Will use `uv run python`
-- [ ] Adding dependency? Edit `pyproject.toml`, run `uv sync`
-- [ ] Using temp directory? Will use `./tmp/`, not `/tmp/`
-
-### Data Handling
-- [ ] Missing required field? Will raise error, not use default
-- [ ] Exception handling? Will log AND re-raise
-- [ ] Returning data? Required fields never return `None`
-```
-
-### Post-Implementation Verification
-
-**Before marking task complete, verify:**
-
-```markdown
-## Post-Implementation Checklist
-
-### File Locations Verified
-- [ ] Temp files in `./tmp/`
-- [ ] Test files in `test/`
-- [ ] Migrations in `schema.py`
-- [ ] Scripts in `scripts/` or `ai_bin/`
-
-### Code Structure Verified
-- [ ] No `session.execute()` or `session.query()` in `src/`
-- [ ] No re-exports in `__init__.py`
-- [ ] Notebook operations used `the-notebook-mcp` tools
-- [ ] File edits used PyCharm MCP when available
-
-### Environment Verified
-- [ ] No Node.js installed
-- [ ] All Python commands use `uv run`
-- [ ] Dependencies added via `pyproject.toml` + `uv sync`
-- [ ] No absolute paths in commands
-- [ ] Temp files in `./tmp/`, not `/tmp/`
-
-### Data Handling Verified
-- [ ] No synthetic/fabricated data
-- [ ] Required fields validated, never default
-- [ ] Exceptions logged AND re-raised
-- [ ] Required data returns concrete types, never `Optional`
-```
-
-### Violation Detection by Spec Auditor
-
-**The `spec-auditor` skill checks for pattern violations:**
-
-When auditing a spec, the auditor verifies:
-1. New files respect location patterns
-2. No direct DB access in `src/`
-3. No re-exports in `__init__.py`
-4. Migrations follow schema system patterns
-5. Notebook operations use MCP tools
-
-**Violation Report Format:**
-
-```markdown
-## Pattern Violations Found
-
-| Category | Violation | Guideline | Remediation |
-|----------|-----------|-----------|-------------|
-| File Location | Migration file in `src/database/migrations/` | `100-persistence.md` | Move to `_Migration` entry in `schema.py` |
-| Code Structure | `session.execute()` in `src/services/` | `100-persistence.md` | Use Repository class in `src/commons/persistence/` |
-| Imports | `from X import Y` in `__init__.py` | `080-code-standards.md` | Use direct import at call site |
-```
-
-### Integration with Skills
-
-**The `engineering-approach` skill includes pattern verification:**
-
-1. **Pre-work task**: Pattern compliance checklist
+- Completing session init
+- Checking for superseding issues
+- Verifying codebase state
+- Running mandatory verification skills
 2. **Implementation workflow**: Verify files follow patterns
 3. **Review-prep task**: Post-implementation pattern verification
 
