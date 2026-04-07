@@ -1,103 +1,32 @@
 # Issue Comment Protocol
 
+> **See `github-comments` skill for complete protocol.**
+
 ## Three-Tier Principle (MANDATORY)
 
 **GitHub Issue comments are for substantive content, NOT for state tracking or progress notifications.**
 
 **State tracking uses LABELS. Progress notifications go to CHAT.**
 
-### Tier 1: NEVER Acceptable for GitHub Comments
-
-These are CRITICAL VIOLATIONS:
-
-- State tracking (STATUS updates, progress blocks)
-- Progress notifications (implementation progress, review-prep, PR creation)
-- Routine updates (file changes, test results, lint)
-
-**Use labels for state tracking:** `needs-approval`, `in-progress`, `blocked`, or custom labels.
-
-### Tier 2: ALWAYS Acceptable for GitHub Comments
-
-- Answering questions asked via GitHub comments
-- Executive summary when issue closes (historical record for future maintainers)
-
-### Tier 3: AI Agent Intelligence Determines
-
-AI agent MAY post to GitHub when substantive content warrants recording:
-
-- Bug identification that needs recording
-- Design decisions needing context for future maintainers
-- Architectural warnings about long-term implications
-- Edge case documentation for future reference
-- Security observations requiring permanent record
-- Data integrity concerns
-- Any substantive information for future readers
-
-**When in doubt:** Ask "Would a future maintainer need this context?" If yes → post to GitHub. If no → chat only.
+**🚫 FORBIDDEN:** State tracking, progress notifications, routine updates
+**✅ ACCEPTABLE:** Answering questions, closure summaries
+**🤖 DISCRETIONARY:** Substantive content for future maintainers
 
 ## NEVER Use Issue Comments as Dialog Prompts
 
-GitHub issue comments are **general comments**, NOT interactive dialogs.
-
-### Problem Statement
-
-Agents are adding "awaiting authorization" prompts like:
-
-> The 5 fields can be added when you're ready to proceed.
->
-> Awaiting authorization to implement.
-
-This is incorrect because:
-
-- Developers cannot read agent internal reasoning
-- Issue comments are public records, not chat interfaces
-- Dialog prompts create noise and confusion
-- The HALT protocol already handles authorization flow
-
-### 🚫 PROHIBITED Patterns
-
-- "Awaiting authorization to implement."
-- "Let me know when you're ready to proceed."
-- "Please confirm before I start."
-- "Ready when you are."
-- Any text that expects an inline response
-
-### ✅ CORRECT Behavior
-
-1. **SILENTLY HALT** after completing a task or reaching a decision point
-2. **Wait for explicit user instruction** via new comment
-3. **Respond to user comments** by addressing the actual question/request
-
-### Rationale
-
-- Developers cannot read agent internal reasoning
-- Issue comments are public records, not chat interfaces
-- Dialog prompts create noise and confusion
-- The HALT protocol already handles authorization flow
-
-## Relationship to Other Guidelines
-
-| Guideline | Relationship |
-|-----------|--------------|
-| `000-critical-rules.md` → "Ignoring Issue Comments" | Respond to user questions via comment |
-| `000-critical-rules.md` → "Progress Comments" | Document actual progress, not dialogs |
-| `03-ai-identity.md` → "Status Review Comments" | Don't post status without action |
-| This guideline | Don't prompt for authorization via comments |
-
-The HALT protocol (see `010-approval-gate.md`) is the correct mechanism for authorization flow:
-
-- Complete task → report completion → **STOP and wait**
-- Do NOT post "awaiting authorization" comments
+**🚫 FORBIDDEN:** "Awaiting authorization", "Ready when you are", any text expecting inline response
+**✅ CORRECT:** SILENTLY HALT after decision point, wait for explicit user instruction
 
 ## When to Comment vs. HALT
 
 | Situation | Action |
 |-----------|--------|
-| Completed a task | Provide executive summary in CHAT ONLY, then HALT |
+| Completed a task | Executive summary in CHAT ONLY, then HALT |
 | User asked a question | Respond via comment addressing the question |
 | Reached decision point | HALT silently, wait for user |
-| Changed files | Provide executive summary in CHAT ONLY, then HALT |
+| Changed files | Executive summary in CHAT ONLY, then HALT |
 | Need clarification | Post question in comment, then HALT |
+| Issue closed AFTER MERGE | Closure summary to GitHub (historical record) |
 | Issue closed AFTER MERGE | Post closure summary to GitHub (historical record) |
 
 ## Anti-Patterns to Avoid

@@ -44,17 +44,13 @@
 
 ### Sub-Issue Verification Gate (MANDATORY)
 
-**⚠️ Before implementing ANY spec, the agent MUST verify sub-issue structure:**
+**⚠️ Before implementing ANY spec, the agent MUST verify sub-issue structure.**
 
 **Single-Task Exemption:**
 - Specs with exactly ONE implementation task do NOT require sub-issues
 - All multi-task specs MUST have sub-issues before implementation
 
-**Why This Matters:**
-- Sub-issues provide phase-level tracking for multi-task specs
-- Each phase must be trackable as its own GitHub Issue
-- Parent-child hierarchy enables proper closure workflow
-- Prevents "orphaned" phases without issue tracking
+> **See `approval-gate` skill → `verify-sub-issues` task for complete workflow.**
 
 ### Explicit Authorization Priority (Critical)
 
