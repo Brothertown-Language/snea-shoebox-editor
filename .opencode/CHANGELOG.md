@@ -8,6 +8,19 @@ The format is based on
 
 ## [0.2.0] - Unreleased
 
+### feature/approval-cleanup
+
+- **Fixed: Authorization Cleanup is SILENT**: Removed "Post authorization comment"
+  step from cleanup workflow. Authorization cleanup is state management (label
+  removal, STATUS suffix clearing, todo clearing) and does not warrant GitHub
+  comments. Only implementation progress (review-prep, PR creation) requires
+  GitHub comments AND chat updates.
+- **Changed Files**:
+  - `010-approval-gate.md`: Removed comment posting step from cleanup process
+  - `123-github-ai-identity.md`: Removed Authorization Cleanup Comments section
+  - `approval-gate/SKILL.md`: Updated cleanup workflow to remove comment posting
+- **Addresses**: GitHub issue #384
+
 ### skill/todowrite-progress-tracking
 
 - **Added: Progress Tracking to Git Workflow Tasks**: All git workflow
