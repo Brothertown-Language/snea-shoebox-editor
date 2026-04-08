@@ -867,11 +867,11 @@ ______________________________________________________________________
 
 ## Auditor Skills Enforcement
 
-**⚠️ MANDATORY AUDIT CHAIN: ALL auditor skills must run in order. NO SKIPPING.**
+**⚠️ MANDATORY AUDIT: Run spec-auditor orchestrator when auditing specs. NO SKIPPING.**
 
 ### When to Run Auditor Skills
 
-**Trigger words that require ALL skills in order:**
+**Trigger words that require the auditor:**
 
 - "audit this spec"
 - "review this issue"
@@ -881,15 +881,28 @@ ______________________________________________________________________
 - "audit the issue"
 - Any request involving spec quality or structure
 
-**CRITICAL: If you run ONE auditor, you MUST run ALL auditors in order.**
+### Orchestration Model (CURRENT)
 
-### Complete Audit Chain
+**spec-auditor is the orchestrator.** It decides which subtasks to run based on scope:
 
-| Order | Skill | Purpose |
-|-------|-------|---------|
-| **1st** | `plan-fidelity-auditor` | Clean-room plan comparison, substantive gap detection, scope alignment |
-| **2nd** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
-| **3rd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+```
+spec-auditor --issue N
+    ├── Baseline (always run):
+    │   ├── fresh-start      — Self-contained context, fresh-start requirements
+    │   ├── structure        — Phase structure, concern separation, naming quality
+    │   ├── content-quality  — Completeness, clarity, LLM implementability
+    │   └── traceability     — Cross-references, anchors, no stale line numbers
+    └── Conditional (based on scope):
+        ├── operational      — Operational requirements, success criteria
+        ├── fidelity         — Plan fidelity, clean-room comparison (replaces old plan-fidelity-auditor)
+        └── concerns         — Concern separation, deployment independence (replaces old concern-separation-auditor)
+```
+
+**Why orchestration over fixed chains:**
+- Not every spec needs fidelity or concern audits
+- Spec-auditor determines scope and selects relevant subtasks
+- Eliminates rigid "run ALL three in order" requirement
+- Agent judgment replaces rote checklist execution
 
 ### Guideline Auditor (`guideline-auditor`)
 
@@ -905,61 +918,51 @@ Invoked with: `/skill guideline-auditor`
 
 **Output:** Creates audit log in `./tmp/audit-YYYYMMDD.md`
 
-### Spec Auditor (`spec-auditor`)
+### Spec Auditor (`spec-auditor`) — Orchestrator
 
 Invoked with: `/skill spec-auditor --issue N`
 
-**Purpose:** Audit GitHub Issue `[SPEC]` specs against master spec standards.
+**Purpose:** Orchestrate spec quality audit by selecting and running relevant subtasks.
 
 **When to invoke:**
 
-- After running `concern-separation-auditor --issue N`
 - When "audit/review/revisit" keywords used
+- After spec creation
 - Before approving spec implementation
-- During spec review for quality
 - Periodic audit to check for spec drift
+
+**Subtask invocation:**
+
+```
+/skill spec-auditor --task fresh-start     # Fresh-start context audit
+/skill spec-auditor --task structure       # Phase structure audit
+/skill spec-auditor --task content-quality # Content completeness audit
+/skill spec-auditor --task traceability    # Cross-reference audit
+/skill spec-auditor --task operational     # Operational requirements audit
+/skill spec-auditor --task fidelity        # Plan fidelity audit (replaces old plan-fidelity-auditor)
+/skill spec-auditor --task concerns        # Concern separation audit (replaces old concern-separation-auditor)
+```
 
 **Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/audit-spec-YYYYMMDD.md`
 
-### Plan Fidelity Auditor (`plan-fidelity-auditor`)
+### Legacy Auditors (Subtasks, Not Separate Chain Entries)
 
-Invoked with: `/skill plan-fidelity-auditor --issue N`
+**plan-fidelity-auditor** and **concern-separation-auditor** still exist as standalone skills but are invoked as subtasks by spec-auditor, not as separate chain entries:
 
-**Purpose:** Audit GitHub Issue `[SPEC]` specs for plan fidelity — clean-room plan comparison, substantive gap detection, scope alignment. Runs FIRST in the mandatory audit chain.
+- `/skill plan-fidelity-auditor` — Runs fidelity subtask internally (report-only, no auto-fix)
+- `/skill concern-separation-auditor` — Runs concerns subtask internally (report-only, no auto-fix)
 
-**When to invoke:**
-
-- FIRST in the audit chain (before concern-separation-auditor)
-- When "audit/review/revisit" keywords used
-- After spec creation (before concern-separation-auditor)
-- Before approving spec implementation
-
-**Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/audit-fidelity-YYYYMMDD.md`
-
-### Concern Separation Auditor (`concern-separation-auditor`)
-
-Invoked with: `/skill concern-separation-auditor --issue N`
-
-**Purpose:** Audit spec phase structure for concern separation, deployment independence, and risk isolation.
-
-**When to invoke:**
-
-- FIRST before spec-auditor (mandatory order)
-- When "audit/review/revisit" keywords used
-- When creating new specs
-- Before approving spec implementation
-
-**Output:** Posts findings to GitHub Issue
+**These can also be invoked directly for standalone audits when only fidelity or concern checks are needed.**
 
 ### Enforcement Flow
 
 | Trigger | Action |
 |---------|--------|
-| Spec created | REQUIRED: Run ALL auditors in order (plan-fidelity-auditor FIRST, then concern-separation-auditor, then spec-auditor) |
-| "Audit/review/revisit this spec" | REQUIRED: Run ALL auditors in order |
-| Before implementation approval | REQUIRED: Verify all auditors passed |
+| Spec created | REQUIRED: Invoke `spec-auditor --issue N` (orchestrator selects subtasks) |
+| "Audit/review/revisit this spec" | REQUIRED: Invoke `spec-auditor --issue N` |
+| Before implementation approval | REQUIRED: Verify spec-auditor found no critical issues |
 | Guideline change proposed | Optional: `/skill guideline-auditor` |
-| Post-implementation | Optional: Re-run auditors to verify no new issues |
+| Post-implementation | Optional: Re-run spec-auditor to verify no new issues |
 
 ______________________________________________________________________
 

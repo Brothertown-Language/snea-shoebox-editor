@@ -77,15 +77,13 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 ### Post-Creation Audits
 
 **Invokes:**
-- `concern-separation-auditor` for phase structure validation
-- `spec-auditor` for spec quality validation
+- `spec-auditor` as orchestrator (selects relevant subtasks: fresh-start, structure, content-quality, traceability, and optionally fidelity, concerns, operational)
 
 ## Interdependencies
 
 | Skill | Purpose | Integration Point |
 |-------|---------|-------------------|
-| `concern-separation-auditor` | Validate phase structure | Run BEFORE approval |
-| `spec-auditor` | Validate spec quality | Run BEFORE approval |
+| `spec-auditor` | Orchestrate spec quality audit (subtasks: fresh-start, structure, content-quality, traceability, fidelity, concerns, operational) | Run BEFORE approval |
 | `approval-gate` | Enforce authorization | Run AFTER issue created |
 | `github-comments` | Byline format | Use for creation comment |
 | `github-sub-issues` | Sub-issue creation | Invoke for multi-task specs |
@@ -141,5 +139,5 @@ When creating a new issue:
 
 ## Cross-References
 
-- Related skills: `concern-separation-auditor`, `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`
+- Related skills: `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`
 - Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `124-github-archive-workflow.md`

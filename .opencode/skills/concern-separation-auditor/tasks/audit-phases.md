@@ -2,136 +2,58 @@
 
 ## Purpose
 
-Analyze spec phase structure for concern separation quality - deployment independence, risk profile, and blast radius.
-
-## Entry Criteria
-
-- Spec Issue number provided
-- Phases defined in spec body
-
-## Exit Criteria
-
-- Phase concerns identified
-- Deployment independence assessed
-- Risk profile documented
-- Blast radius estimated
-- Findings posted to GitHub Issue
+Analyze spec phase structure for concern separation quality. Reports findings to the agent — does NOT auto-fix.
 
 ## Procedure
 
-### Step 1: Get Spec Content
+1. Read the spec issue via GitHub MCP
+2. Extract all phases and their steps
+3. For each phase, analyze:
+   - **Phase name**: Is it a specific concern or a generic activity (BOILERPLATE-TITLE)?
+   - **Concern boundaries**: Do all steps in this phase share the same concern?
+   - **Risk profile**: What's the risk level (HIGH/MEDIUM/LOW) for each step?
+   - **Blast radius**: How many files/components are affected?
+   - **Deployment independence**: Can this phase be deployed independently?
+4. Report findings in the standard format
 
-```python
-issue = github_issue_read(method="get", issue_number=N)
-body = issue["body"]
+## Keyword Hints (Starting Points)
+
+| Keyword Pattern | Often Indicates | Risk Level |
+|-----------------|-----------------|------------|
+| migration, schema, table | Schema changes | HIGH |
+| repository, query, ORM | Data access | MEDIUM |
+| API endpoint, service, handler | Business logic | MEDIUM-LOW |
+| UI, component, template | Presentation | LOW |
+
+**These are HINTS. Always verify with actual concern analysis.**
+
+## Finding Types
+
+| Type | Problem Class | When to Report |
+|------|---------------|----------------|
+| Generic phase name | BOILERPLATE-TITLE | Phase uses "Implementation", "Testing", "Build" |
+| Mixed concerns | CONCERN_MIXING | Steps from different concern boundaries in one phase |
+| Wrong dependency order | DEPENDENCY_REVERSAL | Phase depends on a later phase |
+| High/low risk mixing | HIGH_RISK_GROUPING | HIGH and LOW risk steps in same phase |
+
+## Report Format
+
+```
+Finding: [BOILERPLATE-TITLE|CONCERN_MIXING|DEPENDENCY_REVERSAL|HIGH_RISK_GROUPING] - [summary]
+Location: [phase name and step]
+Context: [why concern separation matters here]
+Recommendation: [suggested phase name or split]
+Severity: [HIGH|MEDIUM|LOW]
 ```
 
-### Step 2: Extract Phases
+## Edge Cases
 
-Parse spec body for phase structure:
+| Scenario | Analysis | Action |
+|----------|----------|--------|
+| Infrastructure phase | Crosses all layers by design | Report as intentional, no split needed |
+| Testing phase | Validates all layers | Report as intentional, single concern |
+| Single-step phase | Already atomic | No split needed |
+| Phase with <3 steps | Too small to split cleanly | No split needed |
+| Already separated | Analysis shows single concern | No change needed |
 
-```markdown
-## Phase 1: [Concern Name]
-## Phase 2: [Concern Name]
-```
-
-**Validation:**
-- Each phase MUST have a concern name (not "Implementation", "Testing", etc.)
-- Each phase MUST have steps
-
-### Step 3: Analyze Concern Separation
-
-**For each phase, assess:**
-
-#### Deployment Independence
-
-Can this phase be deployed independently?
-
-| Score | Criteria |
-|-------|----------|
-| HIGH | Can deploy to production standalone |
-| MEDIUM | Can deploy with minimal integration |
-| LOW | Requires other phases deployed first |
-
-#### Risk Profile
-
-What goes wrong if this phase fails?
-
-| Score | Impact |
-|-------|--------|
-| LOW | Isolated failure, easy rollback |
-| MEDIUM | Limited blast radius, moderate recovery |
-| HIGH | System-wide impact, difficult recovery |
-
-#### Blast Radius
-
-How many other components/systems affected?
-
-| Score | Scope |
-|-------|-------|
-| LOW | Single component |
-| MEDIUM | Multiple components in same boundary |
-| HIGH | Cross-cutting, affects many systems |
-
-### Step 4: Generate Report
-
-```markdown
-## Concern Separation Audit
-
-**Spec:** #N
-**Auditor:** concern-separation-auditor
-**Date:** YYYY-MM-DD
-
-### Phase Analysis
-
-#### Phase 1: [Concern Name]
-
-**Concern:** [What this phase addresses]
-
-**Deployment Independence:** HIGH/MEDIUM/LOW
-- [Reasoning]
-
-**Risk Profile:** LOW/MEDIUM/HIGH
-- [Reasoning]
-
-**Blast Radius:** LOW/MEDIUM/HIGH
-- [Reasoning]
-
-**Recommendations:**
-- [Specific improvement suggestions]
-
-[Repeat for each phase]
-
-### Cross-Phase Dependencies
-
-[Which phases depend on others]
-
-### Overall Assessment
-
-[Summary of concern separation quality]
-```
-
-### Step 5: Post to GitHub Issue
-
-```python
-github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    issue_number=N,
-    body=f"AI: {AgentName} {ModelID}\n\n{report}"
-)
-```
-
-## Common Issues
-
-| Issue | Resolution |
-|-------|------------|
-| Phase named "Implementation" | Request rename to specific concern |
-| No concern name provided | Cannot assess without clear purpose |
-| Phases highly coupled | Recommend splitting or reordering |
-| Blast radius HIGH for early phase | Flag as risky, suggest safeguards |
-
-## Context Required
-
-- Session values: GIT_OWNER, GIT_REPO
-- Related tasks: `check-independence` (detailed deployment analysis)
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)

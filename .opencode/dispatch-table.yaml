@@ -33,7 +33,12 @@ code_quality:
     
   - trigger: "Before approving spec implementation"
     skill: "spec-auditor"
-    purpose: "Verify spec quality, find missing context/elements"
+    purpose: "Orchestrate spec quality audit (determines subtasks automatically)"
+    parameters: "--issue N"
+    
+  - trigger: "After spec creation"
+    skill: "spec-auditor"
+    purpose: "Orchestrate spec quality audit (determines subtasks automatically)"
     parameters: "--issue N"
     
   - trigger: "After guideline/skill update"
@@ -41,14 +46,10 @@ code_quality:
     purpose: "Verify coherence after changes"
     parameters: "--mode maintenance"
     
-  - trigger: "After spec creation"
-    skill: "plan-fidelity-auditor"
-    purpose: "Validate plan fidelity with clean-room comparison"
-    parameters: "--issue N"
-    
-  - trigger: "After spec creation"
-    skill: "concern-separation-auditor"
-    purpose: "Validate phase structure, deployment independence"
+  - trigger: "Audit specific spec subtask"
+    skill: "spec-auditor"
+    purpose: "Run specific subtask (fresh-start, structure, content-quality, traceability, operational, fidelity, concerns)"
+    parameters: "--issue N --task <subtask>"
     
   - trigger: "Before skill extraction"
     skill: "coherence-auditor"
@@ -190,11 +191,11 @@ issue_pr_workflow:
   - trigger: "After issue created"
     skill: "github-issue-creation"
     task: "post-creation"
-    purpose: "Invoke auditors, create sub-issues for multi-task specs"
+    purpose: "Invoke spec-auditor orchestrator, create sub-issues for multi-task specs"
     
   - trigger: "Post-implementation verification"
     skill: "spec-auditor"
-    purpose: "Verify spec was implemented correctly"
+    purpose: "Orchestrate spec quality verification (determines subtasks)"
     parameters: "--issue N"
     
   - trigger: "Periodic guideline maintenance"
