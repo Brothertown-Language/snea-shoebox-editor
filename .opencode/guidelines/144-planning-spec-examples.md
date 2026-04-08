@@ -322,39 +322,9 @@ When a spec has ONE task, no sub-issues are required.
 - ✅ Single unit of work
 - ✅ Can be implemented directly
 
-### ✅ GOOD Auto-create Workflow
+### Sub-issue Auto-create
 
-When a multi-task spec has NO sub-issues, the agent AUTO-CREATES them.
-
-**Scenario:**
-- Agent starts implementing spec #100
-- Calls `github_issue_read method=get_sub_issues` on #100
-- Result: Empty array `[]`
-- Spec has 3 phases → multi-task
-
-**Agent Actions:**
-```
-1. For each PHASE in spec:
-   - Create issue: github_issue_write method=create with title "[Task: #100] <phase-description>"
-   - Get database ID from response
-   - Link: github_sub_issue_write method=add
-
-2. Post comment: "Created 3 sub-issues for phase tracking"
-
-3. Proceed to implement first phase
-```
-
-**Result:**
-- Sub-issues created: #101, #102, #103
-- Parent issue #100 now shows sub-issues
-- Progress tracking established
-- Agent can proceed with implementation
-
-**Why AUTO-CREATE instead of BLOCK:**
-- Maintains workflow momentum
-- Developer doesn't have to manually create sub-issues
-- Reduces friction in implementation
-- Sub-issues still created for proper tracking
+**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
 
 ---
 
@@ -377,25 +347,7 @@ This is BAD because:
 
 When GitHub MCP tools are available, GitHub Issues are the ONLY authoritative source.
 
-**Workflow:**
-1. Create GitHub Issue with `[SPEC]` prefix
-2. Link sub-issues via `github_sub_issue_write method=add`
-3. Track STATUS in issue body
-4. Post progress comments to issue
-5. Close issue after PR merge
-
-**Why this works:**
-- Single source of truth in GitHub
-- All agents can access
-- History preserved automatically
-- Progress visible to stakeholders
-- No sync required
-
-**When GitHub MCP Unavailable:**
-- STOP immediately
-- Report: "GitHub MCP tools unavailable. Cannot create or track specs without GitHub Issues."
-- Wait for GitHub MCP to be restored
-- NO fallback to local plan files
+**See `github-issue-creation` skill for the complete issue creation workflow, `github-sub-issues` skill for sub-issue creation, and the GitHub MCP Required — No Fallback policy.**
 
 ---
 

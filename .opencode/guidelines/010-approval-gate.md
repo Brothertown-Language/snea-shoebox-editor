@@ -61,54 +61,25 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 
 **When parent issue has sub-issues:** authorization cascades to ALL sub-issues.
 
-| Authorization | Scope | Behavior |
-|---------------|-------|----------|
-| `#34 approved` (parent with sub-issues) | ALL sub-issues authorized | Complete ALL phases in sequence, HALT once at end |
-| `#39 approved` (single sub-issue) | That sub-issue only | Complete that phase, HALT after completion |
-| `approved: 1.2` (specific phase) | That phase only | Complete that phase, HALT after completion |
+**See `approval-gate` skill → "Multi-Task Spec Authorization" for the complete authorization cascade workflow and enforcement matrix.**
 
-**⚠️ PROHIBITED (Common Misinterpretation):**
+Key rules:
 - 🚫 DO NOT halt after each phase of multi-task spec
 - 🚫 DO NOT ask for re-authorization between phases
 - 🚫 DO NOT treat sub-issues as separate authorization units
+- ✅ Complete ALL phases, then report ONCE and HALT ONCE
 
-**✅ REQUIRED Behavior:**
-1. User authorizes parent issue
-2. Verify: parent has sub-issues? → ALL sub-issues authorized (cascade)
-3. Complete Phase 2 (or resume from current phase)
-4. Continue to Phase 3, Phase 4, Phase 5, Phase 6
-5. Report ONCE at the end
-6. HALT ONCE after ALL phases complete
-
-**Exception: User explicitly names a phase**
-- If user says "Phase 2 only" or "approved: 1.2" → complete that phase ONLY, then HALT
-- The explicit phase restriction OVERRIDES the cascade
-
-**Rationale:**
-- Sub-issues exist for **tracking visibility**, not authorization gates
-- GitHub sub-issue view shows progress across all phases
-- Developer already approved the entire spec—redundant per-phase HALTs waste time
-- Sub-issue database IDs link phases to parent for GitHub's hierarchy view
+**Exception:** User explicitly names a phase (e.g., "approved: 1.2" or "Phase 2 only") → complete that phase ONLY, then HALT.
 
 ### Revision Revokes Approval (MANDATORY)
 
 **Any modification to a spec or task document MUST immediately revoke approval.**
 
-When a spec is modified:
-1. **Status transitions to pending**: `STATUS: X.Y` → `STATUS: X.Y (REVISED - NEEDS APPROVAL)`
-2. **Label applied**: Add `needs-approval` label to the issue
-3. **Agent MUST HALT**: Do NOT proceed with implementation
-4. **Fresh authorization required**: New explicit approval needed before implementation
+**See `approval-gate` skill for revision status transition rules, mandatory actions, and exemption categories.**
 
-**Note**: When using `revise` command, the agent MAY post comments explaining changes but MUST NOT proceed with implementation. `revise` commands allow only documentation updates, never code changes.
+Key rule: Revision = `STATUS: X.Y (REVISED - NEEDS APPROVAL)` + `needs-approval` label + HALT.
 
-**This applies to:**
-- Any modification to the spec body (requirements, steps, criteria)
-- Any modification to task steps or acceptance criteria
-- Typo fixes in spec content (use GitHub comments for clarifications instead)
-- Minor clarifications that affect interpretation
-
-**Exempt from approval revocation:**
+Exempt from approval revocation:
 - STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
 - Progress comments added to issue
 - Bug report additions (separate from spec content changes)
@@ -117,87 +88,25 @@ When a spec is modified:
 
 **The `needs-approval` label is informational when explicit authorization is present.**
 
-| Situation | Action |
-|-----------|--------|
-| User authorizes AND label present | Proceed with implementation. Label is informational, not blocking. |
-| User authorizes AND no label | Proceed with implementation. |
-| No authorization AND label present | HALT and wait for explicit authorization. |
-| No authorization AND no label | Check for other blockers; proceed if clear. |
+**See `approval-gate` skill for the complete label handling enforcement matrix.**
 
-**Workflow:**
-1. **Explicit authorization received** → Proceed (label status is informational)
-2. **No explicit authorization** → Check for `needs-approval` label
-3. **Label present without authorization** → HALT and wait for user to authorize
+Key rule: Explicit authorization (`approved`/`go`) OVERRIDES the `needs-approval` label.
 
 ### Bug Report Response
 
-When bug report requires code changes:
+**See `approval-gate` skill for the complete bug report response protocol.**
 
-1. Add `needs-approval` label
-2. Post additional spec comment
-3. HALT immediately
-4. Wait for explicit `go` or `approved`
+Key rule: Bug reports requiring code changes → add `needs-approval` label → HALT → wait for explicit authorization.
 
 ## Skill Enforcement (CRITICAL)
 
 **⚠️ CRITICAL: Skills MUST enforce authorization — guidelines alone are insufficient.**
 
-### Why Skills Must Enforce
-
-- **Guidelines document** what agents should do
-- **Skills contain code** that actually executes
-- Agents have proven to bypass documented guidelines
-- Enforcement in code prevents bypass
-
-**This is not theoretical. This actually happened:**
-- User said "Continue IF you have next steps"
-- Agent interpreted this as authorization
-- Agent committed, pushed, created PR
-- Both implementation and PR timing authorizations were bypassed
-
-### Which Skills MUST Enforce
-
-| Skill | Authorization Check Required |
-|-------|------------------------------|
-| `git-workflow` `--task pre-work` | ✅ YES - Check explicit "approved"/"go" before branch creation |
-| `git-workflow` `--task pr-creation` | ✅ YES - Check explicit "create a PR" before PR creation |
-| `git-workflow` `--task review-prep` | ❌ NO - Automatic after implementation |
-| `git-workflow` `--task cleanup` | ❌ NO - Automatic after PR merge confirmed |
-| All other skills | ❌ NO - Not git operation related |
-
-### Enforcement Matrix
-
-| Scenario | Action |
-|----------|--------|
-| Explicit "approved"/"go" | PROCEED - explicit auth wins |
-| Label + no auth | HALT - wait for authorization |
-| No label + no auth | HALT - wait for authorization |
-| Conditional phrase | HALT - not explicit authorization |
-| Implementation complete | HALT - wait for "create a PR" |
-
-### What Skills MUST Check
-
-**For `pre-work` task:**
-1. Get issue context from invocation
-2. Query GitHub Issue for labels (`needs-approval`)
-3. Query GitHub Issue for comments (look for "approved", "go", #"N approved")
-4. Check for conditionals ("if", "when", "continue if")
-5. Apply enforcement matrix
-
-**For `pr-creation` task:**
-1. Check conversation for "create a PR" instruction
-2. Distinguish implementation auth ("approved") from PR auth ("create a PR")
-3. Apply enforcement matrix
-
-### Conditional Phrases Are NOT Authorization
-
-| Phrase | Why NOT Authorization |
-|--------|----------------------|
-| "continue if you have next steps" | CONDITIONAL - agent must have next steps OR ask |
-| "proceed when ready" | CONDITIONAL - agent must report ready |
-| "if you have a plan, continue" | CONDITIONAL - agent must present plan |
-| "should I do X?" | QUESTION - seeking permission |
-| Implementation complete | NOT an instruction |
+**See `approval-gate` skill for the complete enforcement specification including:**
+- Which skills MUST check authorization
+- What each skill MUST check (pre-work, pr-creation)
+- Enforcement matrix (explicit auth, label + no auth, conditionals)
+- Conditional phrases that are NOT authorization
 
 ## What This Guideline Does NOT Cover
 
