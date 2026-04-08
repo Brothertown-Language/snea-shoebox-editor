@@ -1,0 +1,297 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Replace the source of a single cell by index in a .ipynb file and write it back.
+
+Usage: uv run python ai_bin/nb edit <notebook.ipynb> (--cell <index> | --label <value>) (--source <text> | --source-file <path>) [--type code|markdown] [--set-label <label>] [--metadata <json>] [--help]
+
+All cell indices are 1-based (first cell = 1).
+Primary:  Jupyter Server REST API on port 18888 (GET then PUT /api/contents/<path>).
+Fallback: nbformat.read + mutate + nbformat.write when server is not reachable.
+NOTE: Cell labels are strongly recommended. Without them, check-labels and other tools may report
+      "No labelled cells were found in the notebook". Add labels via cell metadata: {"label": "my-label"}.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import requests
+import nbformat
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _is_port_listening() -> bool:
+    result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True)
+    return f":{PORT}" in result.stdout
+
+
+def _ensure_server() -> bool:
+    if _is_port_listening():
+        return True
+    result = subprocess.run(
+        ["uv", "run", "jupyter", "server", "--version"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        return False
+    log = BASE_DIR / "tmp" / "jupyter.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(
+        ["uv", "run", "jupyter", "server", "--no-browser",
+         f"--port={PORT}", "--IdentityProvider.token=",
+         "--ServerApp.disable_check_xsrf=True"],
+        stdout=open(log, "a"), stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
+    )
+    for _ in range(16):
+        time.sleep(0.5)
+        if _is_port_listening():
+            return True
+    return False
+
+
+def _resolve_label(cells: list, label: str) -> int:
+    """Return the 0-based index of the cell whose metadata['label'] == label.
+
+    Exits 1 if the label is not found.
+    Exits 1 if the label matches more than one cell (duplicate — notebook is corrupt).
+    Error messages report 1-based indices for consistency with all other tools.
+    """
+
+    def _meta(cell):
+        return cell.get("metadata", {}) if isinstance(cell, dict) else dict(cell.get("metadata", {}))
+
+    matches = [i for i, cell in enumerate(cells) if _meta(cell).get("label") == label]
+    if len(matches) == 0:
+        print(f"Error: no cell with metadata.label={label!r}.", file=sys.stderr)
+        sys.exit(1)
+    if len(matches) > 1:
+        print(
+            f"Error: duplicate label {label!r} found at cell indices {[i + 1 for i in matches]} (1-based). "
+            "Fix the notebook before using --label.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return matches[0]  # 0-based; caller converts to 1-based as needed
+
+
+def _check_label_unique(cells: list, label: str, own_index: int) -> None:
+    """Exit 1 if any cell *other than* own_index (0-based) already carries metadata.label == label.
+
+    Error messages report 1-based indices for consistency with all other tools.
+    """
+
+    def _meta(cell):
+        return cell.get("metadata", {}) if isinstance(cell, dict) else dict(cell.get("metadata", {}))
+
+    # own_index is 0-based internally; report conflicts as 1-based
+    conflicts = [i for i, cell in enumerate(cells) if i != own_index and _meta(cell).get("label") == label]
+    if conflicts:
+        print(
+            f"Error: label {label!r} is already assigned to cell(s) {[i + 1 for i in conflicts]} (1-based). "
+            "Labels must be unique within a notebook.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _edit_via_api(
+        rel_path: str,
+        cell_index: int,  # 0-based internally
+        new_source: str | None,
+        cell_type: str | None = None,
+        metadata_patch: dict | None = None,
+        new_label: str | None = None,
+) -> bool:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        payload = r.json()
+        cells = payload["content"]["cells"]
+        if cell_index >= len(cells):
+            print(
+                f"Error: cell index {cell_index + 1} out of range (notebook has {len(cells)} cells, indices 1–{len(cells)}).",
+                file=sys.stderr)
+            sys.exit(1)
+        if new_label is not None:
+            _check_label_unique(cells, new_label, cell_index)
+        if new_source is not None:
+            cells[cell_index]["source"] = new_source
+        if cell_type is not None:
+            cells[cell_index]["cell_type"] = cell_type
+        if metadata_patch is not None:
+            cells[cell_index].setdefault("metadata", {}).update(metadata_patch)
+        put = requests.put(
+            f"{BASE_URL}/api/contents/{rel_path}",
+            json={"type": "notebook", "content": payload["content"]},
+            timeout=10,
+        )
+        put.raise_for_status()
+        return True
+    except SystemExit:
+        raise
+    except requests.exceptions.RequestException:
+        return False
+
+
+def _edit_via_nbformat(
+        path: Path,
+        cell_index: int,  # 0-based internally
+        new_source: str | None,
+        cell_type: str | None = None,
+        metadata_patch: dict | None = None,
+        new_label: str | None = None,
+) -> None:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    if cell_index >= len(nb.cells):
+        print(
+            f"Error: cell index {cell_index + 1} out of range (notebook has {len(nb.cells)} cells, indices 1–{len(nb.cells)}).",
+            file=sys.stderr)
+        sys.exit(1)
+    if new_label is not None:
+        _check_label_unique(nb.cells, new_label, cell_index)
+    if new_source is not None:
+        if cell_type is not None and nb.cells[cell_index]["cell_type"] != cell_type:
+            if cell_type == "markdown":
+                nb.cells[cell_index] = nbformat.v4.new_markdown_cell(new_source)
+            else:
+                nb.cells[cell_index] = nbformat.v4.new_code_cell(new_source)
+        else:
+            nb.cells[cell_index]["source"] = new_source
+    elif cell_type is not None:
+        nb.cells[cell_index]["cell_type"] = cell_type
+    if metadata_patch is not None:
+        nb.cells[cell_index].setdefault("metadata", {}).update(metadata_patch)
+    with path.open("w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+
+
+def main() -> None:
+    import json as _json
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    nb_path: Path | None = None
+    cell_index: int | None = None  # stored as 0-based after parsing 1-based user input
+    label: str | None = None
+    new_source: str | None = None
+    cell_type: str | None = None
+    metadata_patch: dict | None = None
+    set_label: str | None = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--cell":
+            i += 1
+            # User supplies 1-based index; convert to 0-based for internal use
+            cell_index = int(args[i]) - 1 if i < len(args) else None
+        elif arg == "--label":
+            i += 1
+            label = args[i] if i < len(args) else None
+        elif arg == "--source":
+            i += 1
+            new_source = args[i] if i < len(args) else None
+        elif arg == "--source-file":
+            i += 1
+            new_source = Path(args[i]).read_text(encoding="utf-8") if i < len(args) else None
+        elif arg == "--type":
+            i += 1
+            cell_type = args[i] if i < len(args) else None
+        elif arg == "--set-label":
+            i += 1
+            set_label = args[i] if i < len(args) else None
+        elif arg == "--metadata":
+            i += 1
+            metadata_patch = _json.loads(args[i]) if i < len(args) else None
+        elif not arg.startswith("--"):
+            nb_path = Path(arg)
+        i += 1
+
+    if nb_path is None:
+        print("Error: no notebook path specified.", file=sys.stderr)
+        sys.exit(1)
+    if not nb_path.exists():
+        print(f"Error: {nb_path} not found.", file=sys.stderr)
+        sys.exit(1)
+    if cell_index is not None and label is not None:
+        print("Error: --cell and --label are mutually exclusive.", file=sys.stderr)
+        sys.exit(1)
+    if cell_index is None and label is None:
+        print("Error: --cell <index> or --label <value> is required.", file=sys.stderr)
+        sys.exit(1)
+    if set_label is not None:
+        if metadata_patch is None:
+            metadata_patch = {}
+        metadata_patch["label"] = set_label
+    if new_source is None and metadata_patch is None and cell_type is None:
+        print("Error: --source, --source-file, --set-label, --metadata, or --type is required.", file=sys.stderr)
+        sys.exit(1)
+
+    # Determine new_label if metadata_patch sets a label
+    new_label: str | None = metadata_patch.get("label") if metadata_patch else None
+
+    rel_path = _rel(nb_path)
+
+    # For label resolution we need cells first; try API then nbformat
+    if label is not None:
+        cells_for_resolve = None
+        try:
+            r = requests.get(
+                f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=3
+            )
+            r.raise_for_status()
+            cells_for_resolve = r.json()["content"]["cells"]
+        except requests.exceptions.RequestException:
+            pass
+        if cells_for_resolve is None:
+            if _ensure_server():
+                try:
+                    r = requests.get(
+                        f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=3
+                    )
+                    r.raise_for_status()
+                    cells_for_resolve = r.json()["content"]["cells"]
+                except requests.exceptions.RequestException:
+                    pass
+        if cells_for_resolve is None:
+            with nb_path.open(encoding="utf-8") as f:
+                _nb = nbformat.read(f, as_version=4)
+            cells_for_resolve = _nb.cells
+        # _resolve_label returns 0-based index directly
+        cell_index = _resolve_label(cells_for_resolve, label)
+
+    ok = _edit_via_api(rel_path, cell_index, new_source, cell_type, metadata_patch, new_label)
+    if not ok:
+        if _ensure_server():
+            ok = _edit_via_api(rel_path, cell_index, new_source, cell_type, metadata_patch, new_label)
+        if not ok:
+            print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+            _edit_via_nbformat(nb_path, cell_index, new_source, cell_type, metadata_patch, new_label)
+
+    print(f"Updated cell {cell_index + 1} in {nb_path}")  # report 1-based to user
+
+
+if __name__ == "__main__":
+    main()

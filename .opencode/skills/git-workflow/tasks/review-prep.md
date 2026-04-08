@@ -4,54 +4,64 @@
 
 Generate GitHub compare URL for developer review AFTER the implementation task has already pushed the branch. This provides the developer with visibility into changes BEFORE deciding to create a PR.
 
-## Workflow Triggers
+## ⚠️ MANDATORY INVOCATION
 
-**Invoke this task at these workflow points:**
-- After implementation completes (mandatory - no decision point)
+**This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
 
 The sequence is:
-
-1. Implementation complete → commit → push → **invoke review-prep**
+1. Implementation complete → commit → push → **review-prep invoked automatically**
 2. Compare URL generated → HALT
 3. Wait for developer to say "create a PR"
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just generate the compare URL.**
 
-### ⚠️ CRITICAL: Implementation MUST Push Branch
+## ⚠️ CRITICAL: This Task Is NOT Optional
 
-**The implementation task is responsible for committing AND pushing the branch BEFORE invoking review-prep.**
+**Every feature branch push MUST be followed by review-prep. No exceptions.**
+
+**Why this is mandatory:**
+- Developer needs visibility into changes before deciding to create PR
+- Compare URL allows review via GitHub's superior diff viewer
+- Prevents premature PR creation
+- Ensures clear separation between "done implementing" and "create PR"
+
+**When to invoke:**
+- After ANY commit+push to a feature branch
+- After ANY file modifications are committed and pushed
+- Even if branch is "just tracking existing work"
+- Even if "no changes needed" was determined
+- Even if changes are documentation-only
+
+### ⚠️ CRITICAL: Branch Must Be Pushed Before This Task
+
+**The `implementation` task is responsible for pushing the branch.**
 
 **Correct sequence:**
-
 ```
 Implementation task:
   1. Make changes
   2. git status (verify)
   3. git add -A (stage)
   4. git commit (commit)
-  5. git push -u origin <branch> (push) ← MANDATORY
+  5. git push -u origin <branch> (push)
   6. Report completion
   7. Invoke review-prep
 
 Review-prep task:
   1. Verify branch is pushed
-  2. Clear TODO list
-  3. Generate compare URL
-  4. Post completion comment (chat only)
-  5. HALT
+  2. Generate compare URL
+  3. Post completion comment
+  4. HALT
 ```
 
 **If this task is invoked and branch is NOT pushed:**
-
-1. **STOP and report the violation:** "Implementation task failed to push branch - fixing now"
-2. **Push the branch:** `git push -u origin <branch-name>`
-3. **Continue to generate compare URL**
-4. **Document the gap in the completion comment**
+1. Inform user: "Implementation task must push before review-prep"
+2. Push the branch: `git push -u origin <branch-name>`
+3. Continue to generate compare URL
 
 ### ⚠️ CRITICAL: NO EXCEPTIONS
 
 **Review prep is MANDATORY regardless of:**
-
 - Whether file changes were made
 - Whether "no changes needed" was determined
 - Whether branch is already up-to-date
@@ -59,9 +69,25 @@ Review-prep task:
 
 **The review prep workflow provides developer visibility - it must NEVER be skipped.**
 
+**⚠️ "No File Changes" Edge Case Clarification:**
+
+The "Already Implemented" edge case in SKILL.md applies ONLY when **ZERO files were modified**.
+
+| Scenario | Workflow |
+|----------|----------|
+| Zero files modified (all changes already present) | Skip PR workflow, close with verification |
+| ANY file modified (including docs/guidelines) | FULL PR workflow REQUIRED |
+| Guideline/documentation changes | FULL PR workflow REQUIRED |
+
+**Guideline and documentation changes are NOT exempt from PR workflow.**
+
+If ANY file was created, modified, or deleted (including `.md` files in `.opencode/`):
+1. **Follow full PR workflow** - commit → push → review-prep → PR creation → merge → cleanup
+2. **Do NOT skip review-prep** - developer visibility is mandatory
+3. **Do NOT close issues directly** - requires PR merge verification
+
 **"No File Changes" Edge Case:**
 When implementation determines "no file changes needed":
-
 1. **STILL push branch** - git will report "up-to-date", which is acceptable
 2. **STILL generate compare URL** - developer can see branch state
 3. **STILL post completion comment** - clear signal that work is done
@@ -71,54 +97,32 @@ When implementation determines "no file changes needed":
 
 ### ⚠️ CRITICAL: Model ID Detection
 
-**When posting completion comment (Step 5):**
-
+**When posting completion comment (Step 3):**
 - **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
 - **MUST detect actual runtime identity** from environment/MCP tools
 - **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
 
-## Workflow
+## Operating Protocol
 
 1. **After implementation:** This task runs AFTER all implementation is complete - NO EXCEPTIONS
 2. **MANDATORY step:** Branch MUST be pushed to remote for developer review - NO ASKING
 3. **HALT after push:** Wait for developer to review and authorize PR creation
 
-## Preconditions
+## Entry Criteria
 
 - All implementation work complete AND pushed to remote
 - Feature branch pushed (done by implementation task)
 - No explicit "create a PR" instruction yet
-- Temp files cleaned up (see Step 0)
+- Temp files cleaned up (see Step 1)
 
-## Postconditions
+## Exit Criteria
 
-- Compare URL generated and posted
+- Compare URL generated and reported in CHAT ONLY
 - Developer can review changes via GitHub diff viewer
 
 ## Procedure
 
-### Step 0: Initialize Progress Tracking
-
-**Before starting workflow, show progress to developer:**
-
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "in_progress", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "pending", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "pending", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
-
-**This gives developers visibility during cleanup and review preparation.**
-
----
-
-### Step 0.1: Temp File Cleanup (MANDATORY)
+### Step 1: Temp File Cleanup (MANDATORY)
 
 **Before pushing, clean up temporary files.**
 
@@ -134,319 +138,94 @@ ls ./tmp/
 ```
 
 **Preserve:**
-
 - `./tmp/*.db` (SQLite databases)
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
 
-**Update progress:**
+### Step 2: Verify Branch Is Pushed
 
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "in_progress", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "pending", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
-
-### Step 0.5: Lint Tool Verification (MANDATORY)
-
-**⚠️ CRITICAL: Verify file type BEFORE running lint commands.**
-
-**Python files ONLY for Python linters:**
-
-```bash
-# ✅ CORRECT: Lint Python files only
-uvx ruff check --fix src/ test/
-uvx ruff format src/ test/
-uvx pyright src/
-
-# 🚫 FORBIDDEN: Running Python linters on markdown files
-uvx ruff check --fix .opencode/guidelines/ docs/  # WRONG - markdown files
-uvx pyright docs/                                # WRONG - markdown files
-
-# ✅ CORRECT: Use markdown-specific tools
-uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
-uvx mdformat .opencode/guidelines/ docs/
-```
-
-**Markdown files ONLY for markdown linters:**
-
-```bash
-# ✅ CORRECT: Lint markdown files only
-uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
-uvx mdformat .opencode/guidelines/ docs/
-
-# 🚫 FORBIDDEN: Running markdown linters on Python files
-uvx pymarkdownlnt scan -r src/  # WRONG - Python files
-```
-
-**Cross-check verification:**
-
-| Linter Tool | Python Files | Markdown Files |
-|-------------|--------------|-----------------|
-| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
-| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
-| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
-| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
-| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
-
-**If lint command targets wrong file type:**
-
-1. STOP - Do not execute
-2. Report violation: "Lint tool mismatch: <tool> targets <wrong-type> files"
-3. Use correct tool for file type
-
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "in_progress", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "pending", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
-
-### Step 1: Verify Branch Is Pushed
-
-**MANDATORY ENFORCEMENT CHECK: Branch MUST be on remote before generating compare URL.**
+**Before generating compare URL, verify branch is on remote.**
 
 ```bash
 git branch -vv
 ```
 
-**Expected output:**
-
-```
-* spec/my-branch  abc123 [origin/spec/my-branch] Commit message
-```
-
-**If branch shows `[origin/<branch>]` with upstream tracking → ✅ Branch is pushed**
-
-**If branch shows NO upstream or "gone" → 🚫 BRANCH NOT PUSHED - VIOLATION DETECTED**
-
-**VIOLATION REMEDIATION (MANDATORY):**
-
-If review-prep is invoked but branch is NOT pushed:
-
-1. **STOP** - Detection: Workflow violation
-2. **FIX IMMEDIATELY:**
-   ```bash
-   # Check for uncommitted changes
-   git status
-   git add -A
-   git commit -m "Implementation complete" \
-       --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-       --trailer "Co-authored-by: <Human-Name> <human-email>"
-
-   # Push branch
-   git push -u origin <branch-name>
-   ```
-3. **REPORT VIOLATION:** "Workflow violation detected: implementation task failed to push. Remediated now."
-4. **CONTINUE:** Generate compare URL
-5. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
-
-4. **DOCUMENT IN COMPLETION COMMENT:** Note the workflow gap was fixed
-
-5. **This violation indicates implementation task did NOT follow Pre-HALT Verification Checklist.**
-
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "in_progress", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "pending", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
-
-### Step 2: Clear TODO List (MANDATORY)
-
-**Before generating compare URL, clear any active todos to ensure clean workflow state.**
+**If branch is NOT pushed to remote:**
 
 ```bash
-# Clear todo list to prevent stale state from affecting subsequent phases
-todowrite todos=[]
+# Push branch
+git push -u origin <branch-name>
 ```
 
-**Why this matters:**
-- Prevents stale todos from previous phases
-- Ensures clean state before developer review
-- Removes distraction from completed work
-
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "in_progress", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "pending", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
+**This ensures compare URL will work correctly.**
 
 ### Step 3: Generate Compare URL
 
-Using session values (GIT_OWNER, GIT_REPO):
+**⚠️ CRITICAL: URLs must be constructed from session init values ONLY. Never hardcode domains.**
+
+Using session values (GIT_OWNER, GIT_REPO, GIT_PLATFORM, GITBUCKET_HTML_URL):
+
+**For GitBucket (GIT_PLATFORM=gitbucket):**
+
+```
+${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+```
+
+Where `GITBUCKET_HTML_URL` comes from session init (read from `.env`).
+
+**For GitHub (GIT_PLATFORM=github):**
 
 ```
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
-**Update progress:**
+**If GITBUCKET_HTML_URL is empty (not in .env):**
+1. REFUSE to generate any URL
+2. Report: "Cannot generate URL — GITBUCKET_HTML_URL not configured in .env"
+3. HALT — do not guess or fabricate a URL
 
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "in_progress", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "pending", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
+### Step 4: Report Completion (BOTH Issue AND Chat)
 
-### Step 4: Pre-Post Verification (MANDATORY GATE)
+**⚠️ CRITICAL: URLs go in CHAT ONLY - NEVER to GitHub Issues.**
 
-**⚠️ CRITICAL: You MUST verify format BEFORE generating the completion comment.**
-
-**Verification Checklist (ALL items MUST pass):**
-
-```
-✓ Will executive summary be <1-2 sentences?
-✓ Will outcome field show stakeholder value?
-✓ Will byline come AFTER `---` separator?
-✓ Will byline be LAST line before URL?
-✓ Will URL be FINAL line (after byline)?
-✓ No URL before summary?
-✓ No URL between summary and byline?
-```
-
-**Format Template (use this exact structure):**
-
+Post completion comment to GitHub issue (NO URL):
 ```markdown
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
-```
-
-**Why this gate exists:**
-- Prevents URL-before-summary violations
-- Prevents byline-before-separator violations
-- Catches format errors before they're posted
-- Forces procedural verification, not informational
-
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 0: Temp file cleanup", "status": "completed", "priority": "high"},
-    {"content": "Step 0.5: Lint tool verification", "status": "completed", "priority": "high"},
-    {"content": "Step 1: Verify branch is pushed", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Clear TODO list", "status": "completed", "priority": "medium"},
-    {"content": "Step 3: Generate compare URL", "status": "completed", "priority": "medium"},
-    {"content": "Step 4: Pre-post verification", "status": "completed", "priority": "medium"},
-    {"content": "Step 5: Report completion", "status": "in_progress", "priority": "medium"},
-    {"content": "Step 6: HALT", "status": "pending", "priority": "critical"},
-])
-```
-
-### Step 5: Report Completion (Chat ONLY)
-
-**⚠️ CRITICAL: OUTPUT FORMAT ENFORCEMENT - ZERO TOLERANCE**
-
-**The output MUST be EXACTLY the format below, displayed IN THIS ORDER, NOTHING ELSE.**
-
-**🚫 FORBIDDEN (CRITICAL VIOLATION):**
-- ANY output before Step 2 (Clear TODO list) is complete
-- "✅ Pre-PR Checklist Completed" or verification checklists
-- All changes staged ✓ or workflow step outputs
-- Verification results from any previous step
-- ANY content NOT in exact format below
-
-**Progress tracking (Step 0-4) goes to `todowrite` - NOT to the completion comment.**
-
-**✅ REQUIRED OUTPUT ORDER (MANDATORY SEQUENCE):**
-
-```
-1. Clear todowrite list (Step 2 - already done)
-2. Generate compare URL (Step 3 - already done)
-3. Pre-post verification (Step 4 - already done)
-4. Display in chat:
-
 **Summary:**
 
 <1-2 sentences describing the impact and stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
 
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+All tasks complete from this specification.
 
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-5. HALT (Step 6)
 ```
 
-**Format Requirements (CRITICAL - ENFORCED ORDER):**
+Post to chat (exec summary + URL):
+```
+**Summary:**
 
-| Order | Content | Notes |
-|-------|---------|-------|
-| 1 | **Summary:** | Executive summary describing stakeholder value |
-| 2 | **Outcome:** | What changed for stakeholders |
-| 3 | **Compare URL** | GitHub compare URL (newline BEFORE byline) |
-| 4 | **---** | Separator |
-| 5 | **Byline** | AI agent attribution (LAST line) |
+<1-2 sentences describing the impact and stakeholder value.>
 
-**🚫 Output order violations (CRITICAL):**
-- URL BEFORE summary = WRONG
-- Byline BEFORE URL = WRONG
-- Summary AFTER URL = WRONG
-- Additional content of ANY kind = WRONG
-- ANY output before clearing TODO list = WRONG
+**Outcome:** <What changed for stakeholders>
 
-**Why chat only:**
-- GitHub Issues are historical records - no need for compare URLs
-- Chat provides immediate visibility for developer review
-- URLs clutter issue history unnecessarily
+Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+```
 
-**Post summary + URL to chat.**
-**DO NOT post to GitHub issue.**
+(GitBucket example — for GitHub use `https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>`)
 
-### Step 6: HALT (MANDATORY - NO EXCEPTIONS)
+**Why This Matters:**
+- Chat gets exec summary + URL (developer needs visibility)
+- Issues get exec summary only (NO URL - keeps history clean)
+- Developer can click URL from chat to review changes
+- BOTH locations have matching summaries for context
+
+### Step 5: HALT (MANDATORY - NO EXCEPTIONS)
 
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
 **DO NOT:**
-
 - Squash commits (happens at PR creation)
 - Create PR (requires explicit "create a PR" instruction)
 - Push again (already pushed in implementation)
@@ -454,13 +233,11 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 - Proceed to any next step (HALT means STOP)
 
 **WAIT for EXPLICIT instruction:**
-
 - Developer reviews changes via GitHub diff viewer
 - Developer says "create a PR" to proceed
 - NO assumptions, NO auto-progression
 
 **What HALT means:**
-
 - Report completion (issue + chat)
 - STOP all further action
 - Wait for developer's next explicit instruction
@@ -479,9 +256,8 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 ## Context Required
 
-- Guidelines: `113-git-pr-workflow.md` (review phase)
 - Related skills: `pr-creation-workflow` (PR timing)
-- Related tasks: `commit-prep` (squash), `pr-creation` (PR)
+- Related tasks: `pr-creation` (PR)
 
 ## Why This Task Exists
 
@@ -489,6 +265,47 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 - GitHub diff viewer is superior to local review
 - Prevents premature PR creation
 - Clear separation between "done implementing" and "create PR"
+
+## Enforcement Checklist
+
+**Before invoking review-prep, verify:**
+
+- ✅ Implementation work is complete
+- ✅ All file changes are committed (`git status` shows clean)
+- ✅ Branch is pushed to remote (`git branch -vv` shows upstream)
+- ✅ Temp files are cleaned (no `./tmp/temp_*.py` or `./tmp/*.json`)
+- ✅ Compare URL generated correctly (using session init base URL + `compare/dev...branch`)
+- ✅ Chat output format correct (summary BEFORE URL)
+- ✅ Issue comment posted (NO URL in issue comment)
+
+**These checks are MANDATORY. If ANY check fails → STOP and report.**
+
+## When review-prep MUST Run
+
+**This task runs AFTER EVERY implementation. No exceptions.**
+
+| Scenario | Run review-prep? |
+|----------|------------------|
+| Code file modified | YES |
+| Documentation modified | YES |
+| Guidelines modified | YES |
+| Config file modified | YES |
+| Zero files modified | YES (still push, still generate URL) |
+| Branch already pushed | YES (verify push, generate URL) |
+| "No changes needed" determined | YES (still push, still generate URL for visibility) |
+
+**🚫 CRITICAL: Skipping this task is a CRITICAL GUIDELINE VIOLATION.**
+
+## Verification Steps
+
+**After review-prep completes, verify:**
+
+| Check | Command | Expected |
+|-------|---------|----------|
+| Branch pushed | `git branch -vv` | Shows `[origin/branch]` |
+| Compare URL works | Open URL in browser | Shows diff |
+| Chat has summary | Check chat output | Exec summary + URL |
+| Issue has comment | Check GitHub issue | Completion comment (NO URL) |
 
 ## Correct vs Incorrect Workflow
 
@@ -515,7 +332,9 @@ Verify branch is pushed
     ↓
 Generate compare URL
     ↓
-Post compare URL to issue + chat
+Report URL in CHAT ONLY (NEVER to GitHub Issues)
+    ↓
+Post completion comment to issue (NO URL)
     ↓
 HALT - Wait for "create a PR"
     ↓
@@ -538,15 +357,13 @@ Push branch to remote
     ↓
 Close issues IMMEDIATELY (SKIPPED HALT)
     ↓
-NO compare URL posted
+NO compare URL reported in chat
 NO PR created
 NO merge verification
-```
 
 **This incorrect workflow VIOLATES critical rules and causes:**
-
 - Issues closed without PR tracking
-- No developer visibility via compare URL
+- No developer visibility via compare URL in chat
 - No review before closure
 - Lost audit trail
 
@@ -569,7 +386,6 @@ Result: Workflow STALLS
 ```
 
 **Why this fails:**
-
 - Compare URL requires pushed commits
 - Unpushed commits are local only
 - Remote branch has NO commits
@@ -584,8 +400,10 @@ Updated git-workflow skill to push feature branches after implementation and pro
 
 **Outcome:** Developers can now review changes via GitHub diff viewer before deciding to create a PR.
 
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+**Ready for Review:**
 
-https://github.com/<owner>/<repo>/compare/dev...<branch-name>
+${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+
+---
+🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 ```

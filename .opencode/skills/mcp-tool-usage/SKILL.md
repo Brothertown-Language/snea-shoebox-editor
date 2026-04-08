@@ -11,12 +11,6 @@ compatibility: opencode
 
 You are an MCP Tool Usage Enforcer. Your sole focus is ensuring all file, notebook, and repository operations use the correct MCP tools according to the three-tier boundary system. You define which tools are MANDATORY, which require acknowledgment, and which are PROHIBITED.
 
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for MCP tool usage enforcement | ~1400 |
-
 ## Owner Inference Prohibition (ZERO TOLERANCE)
 
 **⚠️ DO NOT infer GitHub owner from file paths, usernames, or cached values.**
@@ -80,14 +74,15 @@ owner = "<cached-value>"  # from previous session
 github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 ```
 
-## Workflow
+## Operating Protocol
 
-**This skill is invoked when any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.**
+1. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 
-**Key requirements:**
-- MCP Probe First: Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
-- Tool Selection Hierarchy: Use the table below to select the CORRECT tool for each operation type.
-- Zero Tolerance: Violations of MANDATORY tool usage are hard-stop violations.
+1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
+
+2. **Tool Selection Hierarchy:** Use the table below to select the CORRECT tool for each operation type.
+
+3. **Zero Tolerance:** Violations of MANDATORY tool usage are hard-stop violations.
 
 ## Three-Tier Boundary System
 
@@ -166,8 +161,8 @@ All notebook operations use `the-notebook-mcp_notebook_*` tools exclusively. Rea
 Use `read`, `write`, `edit`, `glob`, `grep` tools ONLY when:
 
 1. **PyCharm MCP is confirmed unavailable** — must add comment: `# FALLBACK: PyCharm MCP unavailable`
-1. **Accessing files outside project root** — system files, external configs not in project
-1. **Emergency debugging** — explicitly authorized by developer in-session
+2. **Accessing files outside project root** — system files, external configs not in project
+3. **Emergency debugging** — explicitly authorized by developer in-session
 
 ### 🚫 Tier 3: PROHIBITED (Hard stop violation)
 
@@ -200,7 +195,6 @@ Is the task about Python code?
 │         └─ NO (edit, create, format) → Use pycharm_* tools
 │
 └─ NO (docs, configs, .md files) → Use pycharm_* tools
-                                      (or ai_bin/guidelines for .opencode/guidelines/)
 ```
 
 ### For File Operations
@@ -262,24 +256,18 @@ All notebook execution (`the-notebook-mcp_notebook_execute_cell`, `pycharm_runNo
 ## Why MCP Tools Are MANDATORY
 
 1. **Single source of truth:** PyCharm maintains consistent file views
-1. **IDE context awareness:** Symbol resolution, project structure, refactoring support
-1. **Auditability:** All operations logged through MCP layer
-1. **Error handling:** Structured errors with actionable messages
-1. **Consistency:** Same behavior across all sessions and agents
+2. **IDE context awareness:** Symbol resolution, project structure, refactoring support
+3. **Auditability:** All operations logged through MCP layer
+4. **Error handling:** Structured errors with actionable messages
+5. **Consistency:** Same behavior across all sessions and agents
 
 ## Srclight Setup and Troubleshooting
 
 If srclight reports missing index or errors:
 
 ```bash
-./scripts/setup_srclight.sh
+uvx srclight index --embed qwen3-embedding
 ```
-
-This script:
-
-1. Installs git hooks for auto-reindexing
-1. Detects/installs Ollama embedding model (`qwen3-embedding`)
-1. Creates initial code index with embeddings
 
 ### Manual Operations
 
@@ -298,32 +286,12 @@ uvx srclight index --embed qwen3-embedding
 
 | Error | Solution |
 |-------|----------|
-| "Index not found" | Run `./scripts/setup_srclight.sh` |
+| "Index not found" | Run `uvx srclight index --embed qwen3-embedding` |
 | "Cannot reach Ollama" | Start Ollama: `ollama serve` |
 | "Model not found" | Pull model: `ollama pull qwen3-embedding` |
 | "No semantic results" | Reindex with embeddings: `uvx srclight index --embed qwen3-embedding` |
 
 ## File-Type Tool Boundaries
-
-### ⚠️ MANDATORY: Pre-Lint File Type Verification
-
-**Running the wrong linter on the wrong file type is a CRITICAL GUIDELINE VIOLATION that causes noise and wastes time.**
-
-**Verification Before Each Lint Command:**
-
-```bash
-# STEP 1: Verify file type
-ls -la src/ | head -5  # Check what files exist
-
-# STEP 2: Select CORRECT tool for file type
-# Python files? Use Python tools
-# Markdown files? Use markdown tools
-# Mixed? Run SEPARATE commands for each type
-
-# STEP 3: Run lint command ONLY on correct file types
-uvx ruff check --fix src/ test/           # Python only
-uvx pymarkdownlnt scan -r docs/           # Markdown only
-```
 
 ### 🚫 CRITICAL: Use Correct Tools for Each File Type
 
@@ -340,16 +308,6 @@ uvx pymarkdownlnt scan -r docs/           # Markdown only
 - **Markdown tools (`pymarkdownlnt`, `mdformat`)** are designed for markdown CommonMark compliance and will not work on Python files
 - Running the wrong tool on the wrong file type wastes time and produces noise
 
-### Cross-Check Verification Table
-
-| Linter Tool | Python Files | Markdown Files |
-|-------------|--------------|----------------|
-| `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
-| `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
-| `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
-| `pymarkdownlnt` | 🚫 PROHIBITED | ✅ REQUIRED |
-| `mdformat` | 🚫 PROHIBITED | ✅ REQUIRED |
-
 ### Examples
 
 ```bash
@@ -357,56 +315,20 @@ uvx pymarkdownlnt scan -r docs/           # Markdown only
 uvx ruff check --fix src/ test/
 
 # ✅ CORRECT: Lint Markdown files
-uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/
 
 # 🚫 PROHIBITED: Python linter on markdown
-uvx ruff check --fix .opencode/guidelines/  # WRONG - use pymarkdownlnt instead
 
 # 🚫 PROHIBITED: Markdown linter on Python
-uvx pymarkdownlnt scan src/  # WRONG - use ruff instead
+uvx pymarkdownlnt scan src/  # WRONG
 ```
-
-### Violation Pattern: Mental Model Gap
-
-**The pattern:**
-
-```
-Agent sees lint errors → Runs lint tool to fix → Runs on WRONG file type
-```
-
-**The problem:**
-
-- No checkpoint exists to verify file type BEFORE running lint
-- Documentation exists in 7+ locations but is not enforced at execution time
-
-**The solution:**
-
-Add verification step to workflow tasks that invoke linting:
-
-1. **Before running lint command, verify:**
-   ```bash
-   # Check file extension
-   file_path="src/module.py"
-   ext="${file_path##*.}"
-   
-   if [[ "$ext" == "md" ]]; then
-       echo "ERROR: Python linter on markdown file - use pymarkdownlnt"
-       exit 1
-   fi
-   ```
-
-2. **Workflow tasks with lint verification:**
-   - `.opencode/skills/implementation-quality/tasks/environment.md` ✓ (already added)
-   - `.opencode/skills/git-workflow/tasks/review-prep.md` ✓ (already added)
-   - `.opencode/skills/git-workflow/tasks/commit-prep.md` (add here)
 
 ## Violation Consequences
 
 When MCP tools are available but not used:
 
 1. **Block code review/merge** — Hard stop until refactored using MCP tools
-1. **Guideline violation logged** — Comment in PR/issue tracking the violation
-1. **STOP and remediate** — Agent must fix the violation before proceeding
+2. **Guideline violation logged** — Comment in PR/issue tracking the violation
+3. **STOP and remediate** — Agent must fix the violation before proceeding
 
 ## Integration with Guidelines
 
@@ -415,6 +337,7 @@ When MCP tools are available but not used:
 | `015-mcp-preference.md` | Full file — MCP tool preference |
 | `060-tool-usage.md` | Tool usage and terminal rules |
 | `061-notebook-rules.md` | Notebook MCP zero-tolerance |
+| `016-srclight-preference.md` | Srclight vs PyCharm vs ai_bin |
 | `000-session-init.md` | MCP probe at startup |
 
 ## Examples

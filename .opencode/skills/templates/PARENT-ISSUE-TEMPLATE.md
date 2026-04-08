@@ -1,10 +1,8 @@
 # Parent Issue Orchestrator Template
 
-**Illustrative template** for multi-task specifications that coordinate multiple sub-issues.
+Use this template for multi-task specifications that coordinate multiple sub-issues.
 
-**AI Agent Guidance:** This template shows a typical structure. Adapt based on actual concern analysis. Single-task specs do NOT need this structure.
-
-______________________________________________________________________
+---
 
 ## Template
 
@@ -40,7 +38,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Preconditions
+## Entry Criteria
 
 - [ ] Authorization received for this specific subtask
 - [ ] STATUS in parent matches this subtask number
@@ -48,7 +46,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-## Postconditions
+## Exit Criteria
 
 - [ ] All verification steps pass
 - [ ] Subtask issue closed with summary
@@ -75,7 +73,7 @@ CREATED: YYYY-MM-DD
 > **Approval Tracking**: Approvals are tracked via GitHub Issue comments. Issue body edits destroy history.
 ```
 
-______________________________________________________________________
+---
 
 ## STATUS Format
 
@@ -85,7 +83,7 @@ ______________________________________________________________________
 | `X.2` | Subtask 2 of Phase X is active |
 | `completed` | All subtasks complete |
 
-______________________________________________________________________
+---
 
 ## Task Table Requirements
 
@@ -105,25 +103,23 @@ ______________________________________________________________________
 ```
 
 **Examples:**
-
 - `[Task: #469] Refactor Tier 1 Skills with Sub-Task Architecture`
 - `[Task: #469] Design sub-issue orchestrator template`
 - `[Task: #469] Update AGENTS.md with sub-issue invocation guidance`
 
 **❌ WRONG:**
-
 - `[Task: #469] Phase 1 - Implementation` (only type, no description)
 - `[Task: #469] Phase 2 - Testing` (only type, no description)
 
-______________________________________________________________________
+---
 
 ## Single Subtask at a Time (CRITICAL)
 
 **The architecture enforces sequential execution:**
 
 1. **STATUS Gate**: Agent can ONLY implement subtask matching current STATUS
-1. **Sequential Advancement**: STATUS advances only after subtask completion
-1. **No Parallel Execution**: Previous subtask must complete before next starts
+2. **Sequential Advancement**: STATUS advances only after subtask completion
+3. **No Parallel Execution**: Previous subtask must complete before next starts
 
 ### Why This Matters
 
@@ -134,7 +130,7 @@ ______________________________________________________________________
 | File edit races | Only one active subtask = no conflicts |
 | Stash conflicts | Sequential = no stash race |
 
-______________________________________________________________________
+---
 
 ## Minimal Parent Content
 
@@ -149,7 +145,7 @@ Parent issues should be **~100 lines max**:
 
 **Implementation details belong in sub-issues, not parent issues.**
 
-______________________________________________________________________
+---
 
 ## Integration Points
 
@@ -160,7 +156,7 @@ ______________________________________________________________________
 | `github-sub-issues` skill | Verify sub-issue structure exists |
 | `124-github-archive-workflow.md` | Parent closure only after all children complete |
 
-______________________________________________________________________
+---
 
 ## Example
 
@@ -197,7 +193,7 @@ Skills are monolithic documents that load entirely into context. For skills with
 
 ---
 
-## Preconditions
+## Entry Criteria
 
 - [ ] Authorization received for specific subtask
 - [ ] STATUS matches subtask number
@@ -205,7 +201,7 @@ Skills are monolithic documents that load entirely into context. For skills with
 
 ---
 
-## Postconditions
+## Exit Criteria
 
 - [ ] All subtasks marked ☑
 - [ ] Context savings measured (50%+ target)

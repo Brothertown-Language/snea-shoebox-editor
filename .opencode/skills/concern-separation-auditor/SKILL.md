@@ -1,252 +1,351 @@
 ---
 name: concern-separation-auditor
-description: Analyzes spec phase structure for concern separation quality - deployment independence, risk profile, blast radius. Auto-fixes phases by analyzing actual concerns. Posts findings to GitHub.
+description: Analyzes spec phase structure for concern separation quality - deployment independence, risk profile, blast radius. Auto-fixes phases by analyzing actual concerns (not rigid templates). Posts findings to GitHub.
 license: MIT
 compatibility: opencode
 ---
 
-# Concern Separation Auditor
+# Skill: concern-separation-auditor
 
-Analyzes spec phase structures to identify concern quality issues and apply smart fixes. Posts findings to GitHub comments.
+## Overview
 
-## When to Invoke
+Concern Separation Auditor analyzing spec phase structures to identify deployment independence, risk profiles, and blast radius. Auto-fixes BOILERPLATE-TITLE (objective) and phase structure (based on actual concern analysis). Posts findings to GitHub comments.
 
-**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+## Persona
 
-This skill is invoked at these workflow triggers:
+You are a Concern Separation Auditor. Your focus is analyzing GitHub Issue `[SPEC]` phase structures to identify concern quality issues and apply smart fixes.
 
-| Workflow Trigger | Invocation | Purpose |
-|------------------|------------|---------|
-| Creating new spec issues | `/skill concern-separation-auditor --issue N` | First auditor in mandatory chain |
-| Reviewing spec quality | `/skill concern-separation-auditor --issue N` | Phase structure analysis |
-| Auditing multi-phase implementations | `/skill concern-separation-auditor --issue N` | Concern separation check |
+## Invocation
 
-## This Skill's Tasks
-
-| Task | Description |
-|------|-------------|
-| `overview` | Complete audit workflow with auto-fix |
+- `/skill concern-separation-auditor --issue N` — Audit a specific spec issue (auto-fix mode for AI agents)
+- `/skill concern-separation-auditor --issue N --interactive` — Interactive mode, present findings for human decision
+- `/skill concern-separation-auditor` — Overview only
 
 ## What Gets Auto-Fixed
 
 | Issue Type | Auto-Fix? | Why |
 |------------|-----------|-----|
-| BOILERPLATE-TITLE | YES | 100% objective - generic vs concern names |
-| CONCERN_MIXING | YES | Smart split based on concern analysis |
+| BOILERPLATE-TITLE | YES | 100% objective - generic names vs concern names |
+| CONCERN_MIXING | YES | Smart split based on actual concern analysis |
 | DEPENDENCY_REVERSAL | YES | Reorder to fix dependencies |
 | HIGH_RISK_GROUPING | YES | Separate high-risk from low-risk |
 
-## ⚠️ MANDATORY: Sub-Issue Discovery and Auditing
-
-**Before auditing the parent, discover and audit ALL sub-issues.**
-
-### Sub-Issue Discovery Workflow
-
-```
-1. Query: github_issue_read(method="get_sub_issues", issue_number=N)
-2. If empty → audit parent only (current behavior)
-3. If sub-issues exist:
-   a. Audit parent first (phase structure, BOILERPLATE-TITLE)
-   b. For each sub-issue: audit phase structure
-   c. Check cross-issue consistency (parent-sub-issue consistency)
-   d. Aggregate all findings in single report
-```
-
-### Sub-Issue Phase Structure Checks
-
-| Check | Problem Class | Description |
-|-------|---------------|-------------|
-| Phase naming | `BOILERPLATE-TITLE` | Sub-issue phase names like "Implementation" |
-| Concern separation | `CONCERN_MIXING` | Sub-issue phases mix concerns |
-| Parent-sub-issue consistency | `INCONSISTENT-HIERARCHY` | Sub-issue contradicts parent objective |
-| Sub-issue overlap | `OVERLAPPING-SUB-ISSUES` | Multiple sub-issues claim same work |
-
-## AUTO-FIX BY DEFAULT (No Asking Permission)
-
-**Auditors AUTO-FIX identified issues by default.**
-
-- Apply fixes immediately without waiting for user confirmation
-- Post GitHub Issue comment documenting each fix
-- Continue to next issue
-- Only HALT if user explicitly says "don't fix" or "just report"
-
-## ⚠️ MANDATORY: Sub-Issue Discovery and Auditing
-
-**Before auditing the parent, discover and audit ALL sub-issues.**
-
-### Sub-Issue Discovery Workflow
-
-```
-1. Query: github_issue_read(method="get_sub_issues", issue_number=N)
-2. If empty → audit parent only (current behavior)
-3. If sub-issues exist:
-   a. Audit parent first (phase structure, BOILERPLATE-TITLE)
-   b. For each sub-issue: audit phase structure
-   c. Check cross-issue consistency (parent-sub-issue consistency)
-   d. Aggregate all findings in single report
-```
-
-### Sub-Issue Phase Structure Checks
-
-| Check | Problem Class | Description |
-|-------|---------------|-------------|
-| Phase naming | `BOILERPLATE-TITLE` | Sub-issue phase names like "Implementation" |
-| Concern separation | `CONCERN_MIXING` | Sub-issue phases mix concerns |
-| Parent-sub-issue consistency | `INCONSISTENT-HIERARCHY` | Sub-issue contradicts parent objective |
-| Sub-issue overlap | `OVERLAPPING-SUB-ISSUES` | Multiple sub-issues claim same work |
-
 ## Why Concern Separation Matters
 
-**Beyond deployment and rollback, concern separation prevents:**
+**Beyond deployment and rollback, concern separation prevents critical anti-patterns:**
 
-1. **Feature Creep**: Clear boundaries prevent "while we're here" additions
-2. **Vibe Coding**: Without boundaries, implementation drifts from spec
-3. **Roadmap Driving**: Phase boundaries shouldn't follow roadmap priorities
+### 1. Feature Creep Prevention
+When a phase has clear concern boundaries, any additional work outside those boundaries is obviously out of scope. Mixing concerns blurs the boundaries, making it easier to slip in "quick fixes" or "while we're here" changes.
 
-## Risk Level and Blast Radius Validation
+**Example:**
+- Clear boundary: "Phase 1: User Schema" → adding a UI tweak is clearly out of scope
+- Mixed boundary: "Phase 1: Implementation" → adding a UI tweak seems harmless because boundaries are unclear
 
-**Each phase MUST declare its risk profile:**
+### 2. Vibe Coding Prevention
+Without clear concern boundaries, developers (and AI agents) may implement based on intuition rather than specification. The phase becomes a "bucket" for whatever feels related.
 
-### Required Phase Structure
+### 3. Roadmap Driving Prevention
+When phases mix concerns, roadmap priorities can inappropriately influence phase boundaries.
 
-```markdown
-## Phase N: [Concern Name] (Risk: [LOW|MEDIUM|HIGH], Blast Radius: [SMALL|MEDIUM|LARGE])
+**The principle: Each phase should have a SINGLE concern boundary that prevents scope expansion.**
 
-**Interdependencies**: [NONE|Phase M (what it requires)]
+## ⚠️ MANDATORY AUDIT CHAIN (ALL SKILLS RUN)
 
-**Why this order**: [Explanation of phase ordering]
-```
+**When ANY request comes for spec/issue/task audit/review/revisit, ALL auditor skills must run in order. NO SKIPPING.**
 
-### Risk Level Definitions
-
-| Risk | Characteristics | Examples |
-|------|-----------------|----------|
-| **LOW** | Read-only, additive, localized, easily reversible | Adding a new query, adding a test file, documentation |
-| **MEDIUM** | Modifies existing code, affects one module, moderate rollback complexity | Refactoring a service, adding API endpoint, modifying schema |
-| **HIGH** | Breaking changes, affects multiple modules, hard to rollback, production-critical | Database migration, authentication rewrite, API versioning, deployment changes |
-
-### Blast Radius Definitions
-
-| Blast Radius | Scope | Rollback Difficulty |
-|--------------|-------|---------------------|
-| **SMALL** | Single file/module, no dependencies | Easy (simple revert) |
-| **MEDIUM** | Multiple files, internal dependencies | Moderate (may need data migration) |
-| **LARGE** | Cross-module, external dependencies, production systems | Difficult (may need data rollback, coordination) |
-
-### Validation Checks
-
-| Check | Problem Class | Description |
-|-------|---------------|-------------|
-| Risk level missing | `MISSING-ELEMENT` | Phase lacks `(Risk: ...)` declaration |
-| Blast radius missing | `MISSING-ELEMENT` | Phase lacks `(Blast Radius: ...)` declaration |
-| Invalid format | `STRUCTURE-VIOLATION` | Risk/blast radius not in expected format (e.g., missing parentheses) |
-
-**Risk levels and blast radius are DECLARATIVE - the author declares what they are, the auditor does NOT enforce what they should be.**
-
-The auditor checks that:
-- Each phase HAS a risk level and blast radius declaration
-- The format is correct (parentheses, proper syntax)
-
-The auditor does NOT check that:
-- Risk level matches phase characteristics (author's judgment)
-- Blast radius matches scope (author's judgment)
-- Specific phases should have specific risk levels (no prescriptive structure)
-
-## Mandatory Audit Chain (All Skills Run)
+### Complete Audit Chain
 
 | Order | Skill | Purpose |
 |-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, BOILERPLATE-TITLE, concern analysis |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality |
-| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies |
+| **1st** | `concern-separation-auditor` | Phase structure, BOILERPLATE-TITLE, concern analysis, smart splits |
+| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
 
-**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
+**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
 
 ## Mandatory Invocation for AI Agents
+
+**CRITICAL: AI agents MUST invoke this skill when creating new specs. NO EXCEPTIONS. NO SKIPPING.**
+
+### Mandatory Workflow (NO SKIPPING)
 
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 1. Create the spec issue with phases and steps
-1. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
-1. **Invoke `/skill spec-auditor --issue N`** (check content quality)
-1. **Invoke `/skill dev-architect --task review-spec`** (review architectural correctness)
-1. Fixes applied automatically by all three auditors
-1. Add `needs-approval` label
-1. Post "ready for review" comment
+2. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
+3. **Invoke `/skill spec-auditor --issue N`** (check content quality)
+4. Fixes applied automatically by both auditors
+5. Add `needs-approval` label
+6. Post "ready for review" comment
 
-**Skipping this auditor is a CRITICAL GUIDELINE VIOLATION.**
+**Skipping either auditor is a CRITICAL GUIDELINE VIOLATION.**
 
-## Two-Channel Comment Rules
+## Operating Modes
 
-**CRITICAL: Distinguish between chat (developer coordination) and GitHub Issues (revision history).**
+### Mode 1: Auto-fix (default, for AI agents)
 
-### Chat (Developer Coordination)
+Run without flags. Automatically:
+1. Detect and fix BOILERPLATE-TITLE
+2. Analyze concerns for each phase
+3. Split phases based on actual concern analysis
+4. Post GitHub comment with changes
 
-| When to Post | Content |
-|--------------|---------|
-| ALWAYS (success OR fixes) | Executive summary: pass/fail status, fixes applied |
+### Mode 2: Interactive (`--interactive`)
 
-**Chat Executive Summary Format:**
+Present each finding to user for decision. Use when human review is needed.
+
+## Division of Responsibility
+
+| Auditor | Scope | Runs When |
+|---------|-------|----------|
+| **concern-separation-auditor** | Phase structure, BOILERPLATE-TITLE, concern analysis, smart splits | **FIRST** - before content quality |
+| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | **SECOND** - after structure passes |
+
+## What This Auditor Owns
+
+| Check | Problem Class | Auto-Fix? | Description |
+|-------|---------------|-----------|-------------|
+| Phase names describe concerns | `BOILERPLATE-TITLE` | YES | Generic names → concern names |
+| Concern mixing | `CONCERN_MIXING` | YES | Smart split by actual concerns |
+| Dependency reversal | `DEPENDENCY_REVERSAL` | YES | Reorder to fix dependencies |
+| High-risk grouping | `HIGH_RISK_GROUPING` | YES | Separate high/low risk |
+
+## Concern-Based Analysis (NOT Rigid Template)
+
+**CRITICAL: This skill analyzes ACTUAL concerns, not static templates.**
+
+### What This Is NOT
+
+- NOT a rigid DB→Repo→BL→UI template
+- NOT a mandatory ordering
+- NOT applying patterns blindly
+
+### What This IS
+
+- Analyzes deployment independence for each step
+- Analyzes risk profile (HIGH/MEDIUM/LOW)
+- Analyzes blast radius
+- Groups steps by ACTUAL concern boundaries
+- Creates phases based on ACTUAL deployment needs
+
+### Different Project Structures
+
+Different projects have different concerns:
+
+| Project Type | Typical Concerns | Notes |
+|--------------|------------------|-------|
+| Stateless service | Config → API → Tests | No DB, no UI |
+| CLI tool | Args → Core → Output | Deployment is reinstall |
+| Frontend-only | Components → State → Tests | No backend |
+| Infrastructure | Setup | Crosses all layers, ONE concern |
+| Monolith | Schema → API → UI | May not have repository layer |
+
+**The DB→Repo→BL→UI pattern is COMMON but NOT mandatory.**
+
+## Concern Detection
+
+### Analysis Questions
+
+For each phase, ask:
+
+1. **Can this step be deployed independently?**
+   - Does it require other steps to be deployed first?
+   - Can it be rolled back without affecting other steps?
+
+2. **What's the risk profile?**
+   - HIGH: Schema changes, migrations, infrastructure
+   - MEDIUM: Repository methods, data access
+   - MEDIUM-LOW: API endpoints, services
+   - LOW: UI components, templates, styles
+
+3. **What's the blast radius?**
+   - How many files/components affected?
+   - Clear rollback path?
+
+4. **What are the dependencies?**
+   - Which steps MUST complete before this step?
+   - Circular dependencies?
+
+### Keyword Hints (Use as Starting Point)
+
+| Keyword Pattern | Often Indicates | Risk Level |
+|----------------|-----------------|------------|
+| migration, schema, table | Schema changes | HIGH |
+| repository, query, ORM | Data access | MEDIUM |
+| API endpoint, service, handler | Business logic | MEDIUM-LOW |
+| UI, component, template | Presentation | LOW |
+
+**These are HINTS. Always verify with actual concern analysis.**
+
+## Auto-Fix Algorithm
+
+### Step 1: BOILERPLATE-TITLE Detection
+
+Check phase names against generic terms: Implementation, Testing, Development, Build, Deploy, Verification
+
+**Auto-fix:** Generate specific name from phase content (e.g., "User Schema")
+
+### Step 2: Concern Analysis
+
+For each phase, analyze each step:
+- Deployment independence: Can it deploy independently?
+- Risk profile: HIGH/MEDIUM/LOW?
+- Blast radius: Files/components affected
+- Dependencies: What it needs first
+
+### Step 3: Group by Concerns
+
+Group steps that share the same concern boundary:
+- Same deployment dependencies → same group
+- Similar risk profile → same group
+- Bounded blast radius → same group
+
+### Step 4: Create Phases Based on Concerns
+
+For each concern group, create a separate phase.
+
+**Phase names reflect the CONCERN:**
+- Good: "User Schema", "User Data Access", "User API"
+- Bad: "Phase 1", "Data Access Layer" (static template)
+
+### Step 5: Post Changes
+
+Post GitHub comment documenting all changes made.
+
+## GitHub Comment Format
 
 ```
-**Audit Complete:** [audit type] [passed/failed]
+## Concern Separation Analysis
 
-**Issues Found:** N
-**Issues Fixed:** M (if any)
-**Status:** [No concerns detected | N issues fixed]
+### BOILERPLATE-TITLE Fixes
+
+- "Implementation" → "User Schema" (generic name replaced with concern name)
+- "Testing" → "User API Tests" (generic name replaced with concern name)
+
+### Concern Analysis
+
+**Phase 1: User Implementation (before)**
+- Step 1: Add user tables → HIGH risk (schema)
+- Step 2: Create repository → MEDIUM risk (data access)
+- Step 3: Implement API → MEDIUM-LOW risk (business logic)
+- Step 4: Build UI → LOW risk (presentation)
+
+**Concern boundaries detected:** Schema + Data Access + API + UI (mixed concerns)
+
+**Split applied:**
+- Phase 1: User Schema (HIGH risk)
+- Phase 2: User Data Access (MEDIUM risk)
+- Phase 3: User API (MEDIUM-LOW risk)
+- Phase 4: User Interface (LOW risk)
+
+### Why This Split
+
+Each phase now has:
+- Bounded blast radius
+- Clear deployment boundary
+- Single risk profile
+- Independent rollback path
 
 ---
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 📝 Updated by <AgentName> (<ModelID>): Concern Separation Auto-Fix
 ```
 
-### GitHub Issues (Revision History)
+## Edge Cases
 
-| When to Post | Content |
-|--------------|---------|
-| ONLY on revision | WHY revision needed, WHAT changed - for future developer context |
+| Scenario | Analysis | Action |
+|----------|----------|--------|
+| Infrastructure phase | Crosses all layers by design | Keep as single phase (setup is ONE concern) |
+| Testing phase | Validates all layers | Keep as single phase (testing is ONE concern) |
+| Single-step phase | Already atomic | No split needed |
+| Phase with <3 steps | Too small to split cleanly | Keep as single phase |
+| Already separated | Analysis shows single concern | No change needed |
 
-**GitHub Issue Revision Comment Format:**
+## Interactive Mode
+
+When `--interactive` flag is used:
+
+1. Present each issue found
+2. Show analysis and proposed fix
+3. Wait for user response: "fix" / "skip" / "stop"
+4. Apply fix or move to next issue
+
+## Post-Fix Verification
+
+After applying fixes:
+
+1. Re-read the modified spec
+2. Verify BOILERPLATE-TITLE fixes applied
+3. Verify phase splits are correct
+4. Post GitHub comment with all changes
+
+## Scope Boundaries
+
+- Read-only analysis of GitHub Issue `[SPEC]` specs
+- Edits limited to spec content via GitHub Issue updates
+- No changes to project source code
+- No new specs or expansions beyond what the fix requires
+- Must use GitHub MCP tools for all issue operations
+
+## Integration Points
+
+### spec-auditor (spec quality)
+- Invoked AFTER concern-separation-auditor
+- Focuses on content quality, fresh-start context
+
+### approval-gate (authorization)
+- Invoked BEFORE implementation approval
+- Verifies phase structure has been analyzed
+
+## Example Auto-Fix Session
 
 ```
-Fixed [issue description]
+User: /skill concern-separation-auditor --issue 483
 
-**Why:** [reason for revision]
-**What:** [what changed]
+AI: OpenCode (ollama-cloud/glm-5) 🤖 Auditing Issue #483...
 
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+Analyzing phases...
+
+Phase 1: "Implementation" ← BOILERPLATE-TITLE detected
+Analysis: Generic name does not describe concern.
+Auto-fix: Renaming to "User Schema" based on phase content.
+
+Phase 2: "User Data Access" ← Analyzing...
+Step 1: Create repository → MEDIUM risk, depends on schema
+Step 2: Add tests → LOW risk, validates repository
+Analysis: Both steps share data access concern. No split needed.
+
+Phase 3: "User API Methods" ← Analyzing...
+Step 1: Implement endpoints → MEDIUM-LOW risk, depends on repository
+Step 2: Add validation → MEDIUM-LOW risk, part of API concern
+Analysis: Both steps share API concern. No split needed.
+
+Phase 4: "Login UI" ← Analyzing...
+Step 1: Build component → LOW risk, depends on API
+Analysis: Single UI concern. No split needed.
+
+Posting changes to GitHub...
+
+AI: 📝 Concern Separation Auto-Fix: #483
+
+## BOILERPLATE-TITLE Fixes
+- Phase 1: "Implementation" → "User Schema"
+
+## Concern Analysis
+All phases have clear concern boundaries. No splits needed.
+
+✅ Auto-fix complete. Spec ready for review.
 ```
 
-### Examples
+## Key Differences from Rigid Template Approach
 
-**Audit passed (no issues):**
+| Old Approach | Smart Approach |
+|--------------|----------------|
+| Apply DB→Repo→BL→UI pattern | Analyze actual concerns for each step |
+| Always split by layers | Split by ACTUAL deployment boundaries |
+| Ignore project architecture | Adapt to project-specific concerns |
+| Treat all projects same | Handle stateless services, CLIs, frontends differently |
 
-- Chat: Post executive summary with "passed" status
-- GitHub Issues: NO COMMENT (no revision made)
-
-**Audit found issues and fixed them:**
-
-- Chat: Post executive summary with issues found and fixes applied
-- GitHub Issues: Post revision comment explaining WHY and WHAT changed
-
-**Audit found catastrophic issue (HALT):**
-
-- Chat: Post summary explaining blocker
-- GitHub Issues: NO COMMENT (issue is blocking, not fixed)
-
-### ⚠️ CRITICAL: Never Post Full Audit Reports to GitHub Issues
-
-**FORBIDDEN:**
-
-- Posting checklist-style pass/fail results as GitHub comments
-- Posting complete audit findings when no revision was made
-- Posting audit logs/scores without revision context
-
-**CORRECT:**
-
-- Chat: Always post executive summary (pass or fix)
-- GitHub Issues: Only post when revision made (WHY/WHAT context)
-
-## Quick Start
-
-Use `/skill concern-separation-auditor --task overview` for complete workflow.
+**The algorithm MUST:**
+1. Analyze ACTUAL concerns (not assumed patterns)
+2. Group by ACTUAL deployment dependencies
+3. Create phases based on ACTUAL blast radius
+4. NOT apply rigid templates

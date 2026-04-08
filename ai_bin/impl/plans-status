@@ -1,0 +1,92 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Show a single plan's full progress: phases, steps, and completion %.
+Usage: uv run python ai_bin/plans status <plan-file>
+  <plan-file>  Filename only — just the filename, not the path (e.g. plan_0210_foo.md).
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import re
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PLANS_DIR = PROJECT_ROOT / "plans"
+
+CHECKED_RE = re.compile(r"^\s*-\s*\[x\]", re.IGNORECASE)
+UNCHECKED_RE = re.compile(r"^\s*-\s*\[ \]")
+PHASE_RE = re.compile(r"^#{2,4}\s+Phase\s+", re.IGNORECASE)
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv or "help" in sys.argv or len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(0)
+
+    plan_arg = sys.argv[1]
+    path = Path(plan_arg)
+    if not path.is_absolute():
+        path = PLANS_DIR / plan_arg
+
+    if not path.exists():
+        print(f"ERROR: {path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    lines = path.read_text(encoding="utf-8").splitlines()
+
+    total_checked = 0
+    total_steps = 0
+    current_phase: str | None = None
+
+    for line in lines:
+        if PHASE_RE.match(line):
+            current_phase = line.strip().lstrip("#").strip()
+        is_checked = bool(CHECKED_RE.match(line))
+        is_unchecked = bool(UNCHECKED_RE.match(line))
+        if is_checked or is_unchecked:
+            if current_phase:
+                pass  # phase context tracked below via grouped output
+            total_steps += 1
+            if is_checked:
+                total_checked += 1
+
+    # Second pass: grouped output by phase
+    current_phase = None
+    phase_checked = 0
+    phase_total = 0
+
+    def print_phase_summary() -> None:
+        if current_phase is not None:
+            pct = f"{int(phase_checked / phase_total * 100)}%" if phase_total else "n/a"
+            print(f"  → {phase_checked}/{phase_total} steps done ({pct})")
+
+    for line in lines:
+        if PHASE_RE.match(line):
+            print_phase_summary()
+            current_phase = line.strip().lstrip("#").strip()
+            phase_checked = 0
+            phase_total = 0
+            print(f"\n{current_phase}")
+        is_checked = bool(CHECKED_RE.match(line))
+        is_unchecked = bool(UNCHECKED_RE.match(line))
+        if is_checked or is_unchecked:
+            phase_total += 1
+            status = "✔️ " if is_checked else "🔄 "
+            print(f"  {status}{line.strip()}")
+            if is_checked:
+                phase_checked += 1
+
+    print_phase_summary()
+
+    overall_pct = f"{int(total_checked / total_steps * 100)}%" if total_steps else "n/a"
+    print(f"\nOverall: {total_checked}/{total_steps} steps complete ({overall_pct})")
+
+
+if __name__ == "__main__":
+    main()

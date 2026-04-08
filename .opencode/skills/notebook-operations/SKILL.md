@@ -11,20 +11,15 @@ compatibility: opencode
 
 You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook operations use `the-notebook-mcp` tools exclusively. This is a ZERO TOLERANCE rule — violations cause notebook corruption, data integrity issues, and broken functionality.
 
-## Workflow
+## Operating Protocol
 
-**This skill is invoked when any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.**
+1. **Automatically Applied:** This skill is referenced whenever any notebook operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 
-**Key requirements:**
-- MCP Required: Notebook operations are ONLY permitted when `the-notebook-mcp` is available from MCP probe.
-- No Fallback: If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
-- Zero Tolerance: Violations of MCP-only notebook operations are hard-stop violations.
+1. **MCP Required:** Notebook operations are ONLY permitted when `the-notebook-mcp` is available from MCP probe.
 
-## Available Tasks
+2. **No Fallback:** If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
 
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for notebook operations enforcement | ~800 |
+3. **Zero Tolerance:** Violations of MCP-only notebook operations are hard-stop violations.
 
 ## ✅ ONLY PERMITTED METHODS
 
@@ -89,9 +84,9 @@ For ALL notebook operations, use `the-notebook-mcp_notebook_*` tools exclusively
 ### When MCP is Unavailable
 
 1. **STOP immediately** — do not attempt any notebook operation
-1. **REFUSE the task** — explain that the-notebook-mcp is required
-1. **Report the issue** — inform user that MCP must be resolved before proceeding
-1. **No fallback exists** — there is NO alternative tool for notebook operations
+2. **REFUSE the task** — explain that the-notebook-mcp is required
+3. **Report the issue** — inform user that MCP must be resolved before proceeding
+4. **No fallback exists** — there is NO alternative tool for notebook operations
 
 ### Example Response When MCP Unavailable
 
@@ -121,8 +116,8 @@ Once the MCP server shows "connected", I can proceed with notebook operations.
 ### Why Labels Are Recommended
 
 1. **Prevents index confusion**: Cell indices shift when cells are added/deleted. Labels are stable references.
-1. **Self-documenting**: Labels describe cell purpose (e.g., `email-report`, `validation-summary`).
-1. **Enables label-based edits**: Future tooling may support label-based cell operations.
+2. **Self-documenting**: Labels describe cell purpose (e.g., `email-report`, `validation-summary`).
+3. **Enables label-based edits**: Future tooling may support label-based cell operations.
 
 ### Label Naming Convention
 
@@ -161,7 +156,7 @@ The following are **STRICTLY FORBIDDEN** on notebooks that interact with product
 
 ### What Counts as Production Data
 
-- **ALL notebooks in `<project-db>/`** — connects to PubMed API and production databases
+- **ALL notebooks in `pubmed_data_3/`** — connects to PubMed API and production databases
 - **ANY notebook that imports from `commons/`** — likely uses production database connections
 - **ANY notebook with `send_html_email`, `SMTP`, or email functionality** — sends real emails
 - **ANY notebook with API calls** (`requests`, `Entrez`, `PubMedClient`) — production services
@@ -188,11 +183,10 @@ The following are **STRICTLY FORBIDDEN** on notebooks that interact with product
 ### Violation Recovery
 
 If you accidentally execute a production notebook:
-
 1. STOP immediately
-1. Document the violation in a comment on the associated issue
-1. Notify the user of what was executed
-1. Wait for user guidance before proceeding
+2. Document the violation in a comment on the associated issue
+3. Notify the user of what was executed
+4. Wait for user guidance before proceeding
 
 ## Code Standards for Notebooks
 
@@ -208,18 +202,16 @@ If you accidentally execute a production notebook:
 **If the agent violates a guideline, update guidelines to close the gap.**
 
 When a violation occurs:
-
 1. The guidelines failed to prevent it
-1. The prohibition was not explicit enough
-1. The rule needs to be added to AGENTS.md "NEVER" list
-1. The rule may need a dedicated section in `000-critical-rules.md`
+2. The prohibition was not explicit enough
+3. The rule needs to be added to AGENTS.md "NEVER" list
+4. The rule may need a dedicated section in `000-critical-rules.md`
 
 **After any violation, the agent MUST:**
-
 1. STOP the current task
-1. Update guidelines to close the gap
-1. Document the fix in a comment on the associated issue — FACTUAL ONLY
-1. Wait for user confirmation before resuming
+2. Update guidelines to close the gap
+3. Document the fix in a comment on the associated issue — FACTUAL ONLY
+4. Wait for user confirmation before resuming
 
 ## Integration with Guidelines
 
@@ -286,8 +278,8 @@ grep "pattern" notebook.ipynb  # PROHIBITED
 
 1. **Corruption Prevention**: The `.ipynb` format is complex JSON with cell metadata, execution counts, outputs. Direct manipulation corrupts the structure.
 
-1. **Data Integrity**: Production notebooks often connect to databases and APIs. Inconsistent state can cause data issues.
+2. **Data Integrity**: Production notebooks often connect to databases and APIs. Inconsistent state can cause data issues.
 
-1. **Auditability**: MCP operations are logged and can be audited. Direct file access bypasses all controls.
+3. **Auditability**: MCP operations are logged and can be audited. Direct file access bypasses all controls.
 
-1. **Consistency**: All agents follow the same rules, ensuring consistent notebook handling across sessions.
+4. **Consistency**: All agents follow the same rules, ensuring consistent notebook handling across sessions.

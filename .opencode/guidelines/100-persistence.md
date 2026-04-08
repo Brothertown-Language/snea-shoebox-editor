@@ -1,6 +1,6 @@
 # PostgreSQL & SQLAlchemy Standards
 
-Applies to `<project-db>` and all new persistence code.
+Applies to `pubmed_data_3` and all new persistence code.
 
 ## Repository Usage (MANDATORY)
 
@@ -99,5 +99,5 @@ def initialize_schema(engine: Engine) -> None:
 
 ## Backward Compatibility
 
-- `sqlbind` and existing SQLite repository classes remain untouched until the `<project-db>` migration to `pgserver` is
+- `sqlbind` and existing SQLite repository classes remain untouched until the `pubmed_data_3` migration to `pgserver` is
   complete. Do not refactor, remove, or replace SQLite-based repositories without explicit instruction.

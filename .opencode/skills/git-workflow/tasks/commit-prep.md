@@ -4,34 +4,45 @@
 
 Prepare commit message for squash commit during PR creation. This is a read-only analysis phase - no commits are executed.
 
-## Workflow
+## Commit Policy (User-Initiated Only)
+
+### 🚫 NEVER DO
+
+- **NEVER run `git restore`, `git checkout`, `git reset`, `git clean`** — these discard or modify working tree state
+- **NEVER discard uncommitted changes** — even if they appear to be formatting-only, unintended, or erroneous
+- **Analysis commands are read-only** — no modifications to working tree
+- **NEVER commit or merge without direct instruction** — commits may ONLY be initiated by the developer
+- **NEVER create a PR without direct instruction** — PRs require explicit developer request
+
+### STOP ASKING FOR COMMITS AND PRS
+
+The developer will say "commit" or "create a PR" when they want git operations. Until then, do nothing:
+
+1. **After completing implementation**: Report completion concisely, then STOP and wait silently
+2. **Do NOT ask**: "Commit?", "Ready to commit?", "Should I commit?", "Ready for a PR?", "Create a PR?", "Push and PR?"
+3. **Do NOT automatically create PRs**: PR creation requires the same explicit instruction as commits
+
+### ✅ ALWAYS DO
+
+- **Include co-author trailers for both AI and human collaborator** — every implementation commit MUST include TWO trailers
+- **Re-run discovery** (`git status`, `git diff`) before any commit workflow
+- **If `pyproject.toml` changed, include `uv.lock`** — this is an application/CI repo
+- **Use dynamic AI identity** — the AI knows its own name and email
+- **Use cached human identity** — from session start values (`DEV_NAME`, `DEV_EMAIL`)
+
+## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "commit" or "prepare a commit"
-1. **Read-only analysis:** Discover changes but DO NOT execute commits
-1. **HALT after analysis:** Wait for user to review and approve
+2. **Read-only analysis:** Discover changes but DO NOT execute commits
+3. **HALT after analysis:** Wait for user to review and approve
 
-## TodoWrite Progress Tracking
-
-**Show progress during commit message preparation:**
-
-```python
-todowrite([
-    {"content": "Step 1: Discovery (read-only)", "status": "in_progress", "priority": "high"},
-    {"content": "Step 2: Summarize changes", "status": "pending", "priority": "high"},
-    {"content": "Step 3: Create commit script", "status": "pending", "priority": "high"},
-    {"content": "Step 4: HALT for review", "status": "pending", "priority": "medium"},
-])
-```
-
-**Update after each step completes.**
-
-## Preconditions
+## Entry Criteria
 
 - User says "commit" or "prepare a commit"
 - Implementation is complete
 - Feature branch pushed to remote
 
-## Postconditions
+## Exit Criteria
 
 - Commit script created in `./tmp/`
 - Proposed commit message documented
@@ -48,36 +59,13 @@ git diff --cached   # What's already staged?
 git log --oneline -10  # Recent commits for context
 ```
 
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 1: Discovery (read-only)", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Summarize changes", "status": "in_progress", "priority": "high"},
-    {"content": "Step 3: Create commit script", "status": "pending", "priority": "high"},
-    {"content": "Step 4: HALT for review", "status": "pending", "priority": "medium"},
-])
-```
-
 ### Step 2: Summarize Changes
 
 Group changes logically:
-
 - Feature changes
 - Test changes
 - Documentation changes
 - Configuration changes
-
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 1: Discovery (read-only)", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Summarize changes", "status": "completed", "priority": "high"},
-    {"content": "Step 3: Create commit script", "status": "in_progress", "priority": "high"},
-    {"content": "Step 4: HALT for review", "status": "pending", "priority": "medium"},
-])
-```
 
 ### Step 3: Create Commit Script
 
@@ -94,51 +82,74 @@ git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
 
-**Update progress:**
-
-```python
-todowrite([
-    {"content": "Step 1: Discovery (read-only)", "status": "completed", "priority": "high"},
-    {"content": "Step 2: Summarize changes", "status": "completed", "priority": "high"},
-    {"content": "Step 3: Create commit script", "status": "completed", "priority": "high"},
-    {"content": "Step 4: HALT for review", "status": "in_progress", "priority": "medium"},
-])
-```
-
 ### Step 4: HALT
 
 **DO NOT execute the script.**
 
 Report:
-
 - Script path: `./tmp/commit-<branch>.sh`
 - Proposed commit message
 - Summary of changes being committed
 
-## Context Required
-
-- Guidelines: `111-git-commit-workflow.md`
-- Related tasks: `pr-creation` (squash and push)
-
-## Co-Author Trailer Requirements
+## Co-Author Trailer Requirements (MANDATORY)
 
 Every implementation commit MUST include:
 
-1. **AI Author**: Use your actual identity dynamically
+### AI Author Trailer
 
-   - Example: `<AgentName> (<ModelID>) <noreply@opencode.ai>`
+- **Use your actual identity dynamically** — the AI knows its own name and email
+- **DO NOT use generic placeholders like "AI"** — use the actual AI agent name (e.g., "OpenCode Desktop", "OpenCode")
+- **Email format**: Use a noreply address associated with the AI service (e.g., `noreply@opencode.ai`, `noreply@anthropic.com`)
+- **NEVER use the project domain** — those belong to the human collaborators
+- **Include model info**: Format is `Agent-Name (model-id) <email>`
 
-1. **Human Collaborator**: Use session values from `000-session-init.md`
-
-   - `DEV_NAME`: Human's name
-   - `DEV_EMAIL`: Human's email
-
-Example:
-
+**Example:**
 ```
-Co-authored-by: <AgentName> (<ModelID>) <noreply@opencode.ai>
-Co-authored-by: <Human Name> <human@email.com>  # From DEV_NAME and DEV_EMAIL
+Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>
 ```
+
+### Human Collaborator Trailer
+
+- **Use cached values from session start** — `DEV_NAME` and `DEV_EMAIL`
+- **Do NOT re-run `git config`** — use stored session values
+
+**Example:**
+```
+Co-authored-by: Michael Conrad <michael@newsrx.com>
+```
+
+### Complete Example
+
+```bash
+git commit -m "feat: Add user authentication" \
+    --trailer "Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>" \
+    --trailer "Co-authored-by: Michael Conrad <michael@newsrx.com>"
+```
+
+## When Commits Happen
+
+Commits occur during the PR creation workflow, not as a separate step:
+
+1. **Implementation completes** → review-prep task pushes branch
+2. **Developer reviews** → Developer says "create a PR"
+3. **PR creation** → Squash commit is executed as part of PR creation
+4. **No intermediate scripts** → No `./tmp/commit.sh` or manual steps
+
+## Reading Historical Content
+
+### ✅ ALWAYS DO
+
+- To inspect a file at a historical commit: `git show <ref>:<path> > ./tmp/historical_file.ext`
+- Process the saved file with appropriate `ai_bin/` or IDE tool
+
+### 🚫 NEVER DO
+
+- Using `python3`, `python -c`, `json.tool`, `grep`, or `sed` to process `git show` output is a critical violation
+
+## Lockfile Policy
+
+- This repository is an application/CI repo — **commit `uv.lock`**
+- If `pyproject.toml` changed, ensure `uv.lock` is staged
 
 ## Why This Task Is Separate from PR Creation
 

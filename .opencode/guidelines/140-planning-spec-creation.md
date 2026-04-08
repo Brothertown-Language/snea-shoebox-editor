@@ -1,63 +1,94 @@
 # Planning: Spec Creation
 
-> **See `dev-architect` skill for complete spec design workflow.**
-
 ## Spec-Driven Development Workflow
 
 AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
-1. **Specify Phase**: Define **What & Why**. High-level vision → detailed specification.
-2. **Plan Phase**: Define **How**. Technical plan with architecture and constraints. **Invoke `/skill dev-architect --task design-plan` at Plan phase.**
-3. **Tasks Phase**: Break plan into **small, reviewable chunks**.
+1. **Specify Phase**: Define **What & Why**. Kick off with a high-level vision (product brief), then expand it into a detailed specification focusing on user journeys, experiences, and success criteria.
+2. **Plan Phase**: Define **How**. Draft the technical plan (architecture, technical stack, and constraints).
+3. **Tasks Phase**: Break the plan into **small, reviewable chunks** (tasks) that can be implemented and tested in isolation.
 4. **Implement Phase**: **Execute** tasks and **verify** results.
 
-**CRITICAL**: Investigation and Planning phases are AUTO-COMPLETED before spec creation.
+**CRITICAL**: Investigation and Planning phases are AUTO-COMPLETED before the spec is created. The spec file ONLY contains implementation and verification phases.
 
-**INVESTIGATION CHECKPOINT**: Before creating a spec, verify investigation is complete:
-- Problem understood with context
-- Codebase explored for existing patterns
-- Hypotheses tested with isolated test scripts
-- Alternatives considered with tradeoffs
-- Risks identified with mitigation strategies
-- Success criteria defined (testable, measurable)
+**INVESTIGATION CHECKPOINT**: Before creating a spec, the agent MUST verify investigation is complete. See `142-planning-archive-workflow.md` for investigation completion criteria and permissible test activities.
 
 ---
 
-## Concern-Based Phases with Interdependencies (MANDATORY)
+## Terminology: Spec vs. Guideline Files
 
-**All specs MUST define phases based on separation of concerns, risk, blast radius, and interdependencies.**
-
-### Phase Ordering Principles
-
-| Priority | Principle | Description |
-|----------|-----------|-------------|
-| **1 (HIGHEST)** | **Interdependencies First** | If Phase B depends on Phase A, A MUST be implemented first |
-| **2** | **Smallest Blast Radius** | Data layer before business logic before API/UI |
-| **3** | **Low Risk Before High Risk** | Read-only before mutations; additive before modifications |
-| **4** | **Single Concern Per Phase** | One layer, one module, or one responsibility per phase |
-
-### Interdependency Declaration (Required)
-
-Every phase MUST declare its interdependencies:
-
-```markdown
-## Phase N: [Concern Name] (Risk: LEVEL, Blast Radius: SIZE)
-
-**Interdependencies**: [NONE | Phase M (what it requires)]
-
-**Why this order**: [One-sentence explanation]
-
-### Steps
-1. ☐ [Specific, atomic step - one git commit]
-```
-
-> **See `concern-separation-auditor` skill for complete phase structure validation.**
+- **"Create a new spec"** = Create a GitHub Issue with `[SPEC]` prefix (Mandatory when GitHub MCP available)
+- **"Create a guideline file"** = Create/modify files in `.opencode/guidelines/` (Implementation task)
+- **SPEC = GitHub Issue** — Specs are planning/tracking artifacts, not file system artifacts
 
 ---
 
-## Spec Requirements (MANDATORY)
+## 1. Listing Available Specs
 
-**Every specification MUST include:**
+When the user issues commands `specs` or `pending`:
+
+1. **Gather all top-level specs**:
+   - Query open GitHub Issues with `[SPEC]` prefix in title
+ 2. **Check for superseding issues AND staleness**:
+    - Before implementing OR revising a spec, query for later `[SPEC]` or `[SPEC-FIX]` or `[SPEC-ENHANCEMENT]` issues
+    - If a later issue supersedes, invalidates, or contradicts the active spec, HALT and report
+    - Implementation of a superseded spec is wasted work
+    - Check if other specs were implemented while this spec was pending (staleness)
+    - If stale, REVISE the spec to reflect current reality before proceeding
+    - Report the revision and HALT — wait for approval before proceeding
+3. **Present a multi-choice user query**:
+   - Use the `question` tool with a list of available specs
+   - Include spec title/name and current STATUS for each option
+   - Add a "Type your own answer" option for creating a new spec
+4. **Response format**:
+   ```
+   Available Specs:
+   - [SPEC] Feature A (STATUS: 1.2)
+   - [SPEC] Feature B (STATUS: 2.1)
+   - [SPEC] Bug Fix C (STATUS: 1.1)
+   ```
+5. **After user selection**:
+   - Load the selected spec content
+   - Show the spec details and current status
+   - Report that the spec is ready and HALT. Do NOT prompt for approval or "GO".
+
+---
+
+## 1.1. GitHub MCP Required — No Fallback
+
+**When GitHub MCP tools are NOT available, the agent MUST refuse planning work entirely.**
+
+### 🚫 NO FALLBACK TO LOCAL FILES
+- **PROHIBITED**: Using `plans/SPEC-*.md` files as fallback when GitHub MCP is unavailable
+- **PROHIBITED**: Creating local plan files when GitHub MCP is unavailable
+- **PROHIBITED**: Proceeding with implementation without GitHub Issue tracking
+
+### ✅ REQUIRED ACTION
+- If GitHub MCP is unavailable, STOP immediately
+- Report: "GitHub MCP tools unavailable. Cannot create or track specs without GitHub Issues."
+- Wait for GitHub MCP to be restored before proceeding
+
+---
+
+## 1. Spec Reality Sync
+
+**Specs must reflect current code/implementation state.** If drift is detected between a spec and the actual code:
+
+1. **Code is authoritative** — the spec is secondary
+2. **Update the spec to match reality** — this is administrative sync, not implementation
+3. **Report the synchronization and HALT**
+4. **This exemption applies ONLY to spec files in GitHub Issues**
+5. **`.opencode/guidelines/` modifications require full spec-first workflow**
+
+---
+
+## 1.1. Engineering Requirements for Specs
+
+**Every specification MUST include thorough requirements analysis.**
+
+### Full Requirements Analysis Required
+
+Before any implementation, every spec must document:
 
 | Requirement | Description |
 |-------------|-------------|
@@ -71,6 +102,17 @@ Every phase MUST declare its interdependencies:
 | **Integrations** | How does this integrate with existing code? |
 | **Risk Assessment** | What could go wrong? Mitigation strategies? |
 
+### Design Phase Required
+
+**No direct-to-implementation.** Before coding:
+
+1. **Explore codebase** for existing patterns and reusable components
+2. **Document design decisions** in the spec
+3. **Consider alternatives** and their tradeoffs
+4. **Get approval on approach** before starting implementation
+
+### Anti-Patterns in Specifications
+
 **🚫 FORBIDDEN in Specs:**
 - Vague requirements ("make it better")
 - Missing success criteria
@@ -82,58 +124,34 @@ Every phase MUST declare its interdependencies:
 
 ---
 
-## User Prompt Preservation (MANDATORY)
+## 1.2. Fresh-Start Context Requirements
 
-**When creating or revising a spec, the agent MUST preserve the user's original prompt as context.**
+**All specs, bug reports, and issues MUST be self-contained for agents with NO memory context.**
 
-### Prompt Capture Requirement
-
-1. **When creating a new spec:**
-   - After creating the GitHub Issue, immediately post a comment with the user prompt
-   - Format: See "User Prompt Comment Format" in `github-comments` skill
-
-2. **When revising an existing spec:**
-   - After updating the issue body, post a comment with the revision prompt
-
-3. **Multiple prompts:**
-   - Capture the triggering prompt
-   - Optionally capture key context messages as separate comments
-
-### What to Capture
-
-| Prompt Element | Capture? |
-|----------------|----------|
-| Exact user prompt text | ✅ YES |
-| Key context from conversation | ✅ YES |
-| Decision to create spec | ✅ YES |
-| Code snippets in prompt | ✅ YES |
-
-> **See `github-comments` skill → "User Prompt Comment Format" section.**
-
----
-
-## Fresh-Start Context Requirements (MANDATORY)
-
-**All specs MUST be self-contained for agents with NO memory context.**
-
-A different AI agent may pick up this spec without:
+A different AI agent (or the same agent after a context reset) may pick up this spec without:
 - Prior conversation history
 - Mental context from discovery phases
 - Background knowledge of why decisions were made
 
 ### Mandatory Self-Containment Rules
 
+**Specs MUST include ALL context inline:**
+
 1. **No "see above" or "as discussed" references**
+   - ❌ "As discussed above..."
+   - ❌ "See the previous comment..."
+   - ❌ "As mentioned in the chat..."
    - ✅ RESTATE all information inline in the spec
 
 2. **Explicit file/line references**
    - Include exact file paths: `src/module/file.py`
-   - Use STABLE ANCHORS: function names, class names, section headers
+   - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
    - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
+   - Include relevant code snippets (if short, <20 lines)
 
 3. **Cross-references with context**
-   - Include issue number AND brief summary
-   - Include URLs: `https://github.com/<owner>/<repo>/issues/123`
+   - When referencing other issues/specs: include issue number AND brief summary
+   - Include URLs: `https://github.com/owner/repo/issues/123`
    - State WHY the reference matters
 
 4. **Decision rationale documented**
@@ -143,10 +161,12 @@ A different AI agent may pick up this spec without:
 
 ### Fresh-Start Context Checklist
 
+Before submitting any spec, verify ALL of the following:
+
 | Element | Required Content |
 |---------|------------------|
 | **Problem Statement** | What is broken/needed and WHY (with context) |
-| **Affected Files** | List of files with function/section anchors |
+| **Affected Files** | List of files with function/section anchors and snippets |
 | **Related Issues** | Links + summaries + relevance explanation |
 | **Context** | Background on affected systems, prior decisions |
 | **Constraints** | Technical, resource, time, compatibility limits |
@@ -157,56 +177,40 @@ A different AI agent may pick up this spec without:
 | **Risk Assessment** | What could go wrong and mitigations |
 | **Decision Rationale** | Why this approach was chosen |
 
----
+### Example: Bad vs Good Spec Context
 
-## Spec Reality Sync
+**❌ BAD (assumes memory context):**
+> Fix the bug in the authentication module as discussed.
 
-**Specs must reflect current code/implementation state.** If drift is detected:
-
-1. **Code is authoritative** — the spec is secondary
-2. **Update the spec to match reality** — this is administrative sync, not implementation
-3. **Report the synchronization and HALT**
-4. **This exemption applies ONLY to spec files in GitHub Issues**
-5. **`.opencode/guidelines/` modifications require full spec-first workflow**
-
----
-
-## GitHub MCP Required — No Fallback
-
-**When GitHub MCP tools are NOT available, the agent MUST refuse planning work entirely.**
-
-### 🚫 NO FALLBACK TO LOCAL FILES
-- **PROHIBITED**: Using `plans/SPEC-*.md` files as fallback
-- **PROHIBITED**: Creating local plan files when GitHub MCP unavailable
-- **PROHIBITED**: Proceeding with implementation without GitHub Issue tracking
-
-### ✅ REQUIRED ACTION
-- If GitHub MCP is unavailable, STOP immediately
-- Report: "GitHub MCP tools unavailable. Cannot create or track specs without GitHub Issues."
-- Wait for GitHub MCP to be restored before proceeding
+**✅ GOOD (self-contained):**
+> **Problem:** The OAuth2 token refresh fails when the refresh token expires (issue #123).
+>
+> **Location:** `src/auth/oauth_client.py` in `refresh_token()` function:
+> ```python
+> def refresh_token(self):
+>     # BUG: Does not handle expired refresh_token
+>     response = self._request_token(...)
+>     # Raises TokenExpiredError instead of re-authenticating
+> ```
+>
+> **Context:** Users reported being logged out after 7 days (token expiry). Related to #100 (persistent sessions).
+>
+> **Decision:** Re-authenticate using stored credentials rather than failing.
 
 ---
 
-## Terminology: Spec vs. Guideline Files
+## 2. Spec Persistence
 
-- **"Create a new spec"** = Create a GitHub Issue with `[SPEC]` prefix
-- **"Create a guideline file"** = Create/modify files in `.opencode/guidelines/`
-- **SPEC = GitHub Issue** — Specs are planning/tracking artifacts, not file system artifacts
+### GitHub Issues Are the Authoritative Source
+
+**GitHub Issues are ALWAYS the spec tracking mechanism, regardless of MCP availability:**
+
+- **When GitHub MCP tools available**: Use GitHub MCP tools for all GitHub operations
+- **When GitHub MCP unavailable**: Use `gh` CLI for GitHub operations
+- **NO LOCAL PLAN FILES**: There is no fallback to `plans/SPEC-*.md` files
+
+This ensures consistent workflow and prevents context fragmentation.
 
 ---
 
-## Listing Available Specs
-
-When the user issues commands `specs` or `pending`:
-
-1. **Gather all top-level specs**: Query open GitHub Issues with `[SPEC]` prefix in title
-2. **Check for superseding issues AND staleness**: Query for later `[SPEC]`/`[SPEC-FIX]`/`[SPEC-ENHANCEMENT]` issues
-3. **Present a multi-choice user query**: Use `question` tool with spec titles and STATUS
-4. **After user selection**: Load spec content, show current status, HALT
-
-**Response format:**
-```
-Available Specs:
-- [SPEC] Feature A (STATUS: 1.2)
-- [SPEC] Feature B (STATUS: 2.1)
-```
+*Source: Content migrated from `040-plan-delivery.md`*

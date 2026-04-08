@@ -1,0 +1,92 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Create a new empty .ipynb notebook with a specified number of cells (code or markdown).
+Usage: uv run python ai_bin/nb-create <notebook.ipynb> [--cells <N>] [--help]
+Primary:  Jupyter Server REST API on port 18888 (PUT /api/contents/<path>).
+Fallback: nbformat.write when server is not reachable.
+
+Creates a notebook with N empty code cells (default 1). Use nb-edit to populate cell sources.
+"""
+from __future__ import annotations
+
+import argparse
+import sys
+from pathlib import Path
+
+import nbformat
+import requests
+
+BASE_DIR = Path(__file__).resolve().parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _make_nb(num_cells: int) -> nbformat.NotebookNode:
+    nb = nbformat.v4.new_notebook()
+    nb.metadata["kernelspec"] = {
+        "display_name": "Python 3",
+        "language": "python",
+        "name": "python3",
+    }
+    nb.metadata["language_info"] = {"name": "python", "version": "3.12.0"}
+    nb.cells = [nbformat.v4.new_code_cell("") for _ in range(num_cells)]
+    return nb
+
+
+def _create_via_api(rel_path: str, nb: nbformat.NotebookNode) -> bool:
+    import json as _json
+    nb_dict = _json.loads(nbformat.writes(nb))
+    try:
+        r = requests.put(
+            f"{BASE_URL}/api/contents/{rel_path}",
+            json={"type": "notebook", "content": nb_dict},
+            timeout=10,
+        )
+        r.raise_for_status()
+        return True
+    except Exception:
+        return False
+
+
+def _create_via_nbformat(path: Path, nb: nbformat.NotebookNode) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    with path.open("w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(
+        description="Create a new empty Jupyter notebook.",
+        add_help=False,
+    )
+    parser.add_argument("notebook", nargs="?")
+    parser.add_argument("--cells", type=int, default=1)
+    parser.add_argument("--help", action="store_true")
+    args = parser.parse_args()
+
+    if args.help or not args.notebook:
+        parser.print_help()
+        sys.exit(0)
+
+    path = Path(args.notebook)
+    if not path.is_absolute():
+        path = BASE_DIR / path
+
+    rel = _rel(path)
+    nb = _make_nb(args.cells)
+
+    if not _create_via_api(rel, nb):
+        _create_via_nbformat(path, nb)
+
+    print(f"Created {rel} with {args.cells} empty code cell(s).")
+
+
+if __name__ == "__main__":
+    main()

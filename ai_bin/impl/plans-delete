@@ -1,0 +1,55 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Permanently delete a plan file from plans/ (requires --yes to confirm).
+Usage: uv run python ai_bin/plans delete <plan-file> --yes
+  <plan-file>  Filename only — just the filename, not the path (e.g. plan_0210_foo.md).
+  --yes        Required confirmation flag to perform the deletion.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PLANS_DIR = PROJECT_ROOT / "plans"
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv or "help" in sys.argv or len(sys.argv) < 2:
+        print(__doc__)
+        sys.exit(0)
+
+    args = sys.argv[1:]
+    confirmed = "--yes" in args
+    positional = [a for a in args if not a.startswith("--")]
+
+    if not positional:
+        print("ERROR: <plan-file> argument is required.", file=sys.stderr)
+        print(__doc__)
+        sys.exit(1)
+
+    plan_arg = positional[0]
+    path = Path(plan_arg)
+    if not path.is_absolute():
+        path = PLANS_DIR / plan_arg
+
+    if not path.exists():
+        print(f"ERROR: {path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if not confirmed:
+        print(f"ERROR: --yes flag is required to confirm deletion of {path.name}.", file=sys.stderr)
+        sys.exit(1)
+
+    path.unlink()
+    print(f"Deleted: plans/{path.name}")
+
+
+if __name__ == "__main__":
+    main()

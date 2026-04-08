@@ -2,12 +2,17 @@
 """Session initialization script for AI agents.
 
 Extracts git context needed for agent startup:
-- DEV_NAME: Human collaborator name (for commit trailers)
-- DEV_EMAIL: Human collaborator email (for commit trailers)
-- GIT_OWNER: Repository owner (for GitHub MCP API calls)
-- GIT_REPO: Repository name (for GitHub MCP API calls)
+- DEV_NAME: Developer's git config name (for commit trailers)
+- DEV_EMAIL: Developer's git config email (for commit trailers)
+- GIT_OWNER: Repository owner (for GitHub/GitBucket API calls)
+- GIT_REPO: Repository name (for GitHub/GitBucket API calls)
 - GIT_HOOKS_PATH: Git hooks path (to verify hooks installed)
 - GIT_REMOTE_URL: Full remote URL (for reference)
+- GITHUB_HTML_URL: GitHub web UI base URL (for GitHub remotes)
+- GITBUCKET_HTML_URL: GitBucket web UI base URL (from .env, NEVER fabricated)
+- GITBUCKET_SSH_URL: GitBucket SSH base URL (host+port, no path, for SSH remotes)
+- GITBUCKET_HAS_CREDENTIALS: Whether .env has token configured
+- SRCLEIGHT_STATUS: Srclight index health (ok/empty/unavailable)
 
 Usage:
     uv run python ai_bin/session_init.py
@@ -94,37 +99,161 @@ def is_github_remote(url: str) -> bool:
     return "github.com" in url
 
 
+def is_gitbucket_remote(url: str) -> bool:
+    """Check if remote URL is a GitBucket remote (non-github.com)."""
+    return not is_github_remote(url)
+
+
+def parse_gitbucket_url(
+    url: str,
+) -> tuple[str | None, str, str] | tuple[None, None, None]:
+    """Parse owner and repo from GitBucket remote URL. Base URL comes from .env ONLY.
+
+    Supports:
+    - SSH: ssh://git@hostname:port/owner/repo.git
+    - SSH: git@hostname:owner/repo.git (no port)
+    - HTTPS: https://hostname/owner/repo.git
+
+    Returns:
+        (base_url, owner, repo) on success, (None, None, None) on failure
+
+    CRITICAL: base_url is read from .env GITBUCKET_URL, NEVER constructed from
+    the remote URL hostname. The SSH host may differ from the web UI host.
+    """
+    owner: str | None = None
+    repo: str | None = None
+
+    # SSH format: ssh://git@hostname:port/owner/repo.git
+    ssh_url_pattern = r"^ssh://git@([^:/]+):(\d+)/([^/]+)/([^/]+?)(?:\.git)?$"
+    match = re.match(ssh_url_pattern, url)
+    if match:
+        owner = match.group(3)
+        repo = match.group(4)
+
+    if not owner:
+        # SSH format: git@hostname:owner/repo.git (no port, colon separator)
+        ssh_short_pattern = r"^git@([^:]+):([^/]+)/([^/]+?)(?:\.git)?$"
+        match = re.match(ssh_short_pattern, url)
+        if match:
+            owner = match.group(2)
+            repo = match.group(3)
+
+    if not owner:
+        # HTTPS format: https://hostname/owner/repo.git
+        https_pattern = r"^https://([^/]+)/([^/]+)/([^/]+?)(?:\.git)?$"
+        match = re.match(https_pattern, url)
+        if match:
+            owner = match.group(2)
+            repo = match.group(3)
+
+    if not owner or not repo:
+        return None, None, None
+
+    # Read base URL from .env ONLY — never construct from remote hostname
+    base_url = _read_gitbucket_url_from_env()
+
+    return base_url, owner, repo
+
+
+def _read_gitbucket_url_from_env() -> str | None:
+    """Read GITBUCKET_HTML_URL (preferred) or GITBUCKET_URL (legacy) from .env file.
+
+    Returns None if neither found.
+    """
+    try:
+        env_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+        )
+        if os.path.exists(env_path):
+            html_url = None
+            legacy_url = None
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line.startswith("GITBUCKET_HTML_URL="):
+                        html_url = line.split("=", 1)[1].strip()
+                    elif line.startswith("GITBUCKET_URL="):
+                        legacy_url = line.split("=", 1)[1].strip()
+            return html_url or legacy_url
+    except (IOError, OSError):
+        pass
+    return None
+
+
+def extract_ssh_url(url: str) -> str | None:
+    """Extract SSH base URL (host + port, no path) from a GitBucket SSH remote.
+
+    For ssh://git@tomcat-0002.newsrx.com:29418/org/repo.git
+    returns ssh://git@tomcat-0002.newsrx.com:29418
+
+    Returns None if the URL is not an SSH format remote.
+    """
+    ssh_url_pattern = r"^(ssh://git@[^:/]+:\d+)"
+    match = re.match(ssh_url_pattern, url)
+    if match:
+        return match.group(1)
+    return None
+
+
 def get_remote_url() -> str | None:
     """Get origin remote URL or None if not configured."""
     return run_git_command(["remote", "get-url", "origin"])
 
 
-def verify_hooks_installed() -> bool:
-    """Check if git hooks are installed. Returns True if installed."""
-    hooks_path = get_hooks_path()
-    repo_root = run_git_command(["rev-parse", "--show-toplevel"])
+def check_srclight() -> None:
+    """Check srclight index health and report status.
 
-    if not repo_root:
-        return False
+    Outputs SRCLEIGHT_STATUS=<status> line if srclight is available.
+    Reports warnings to stderr if index is missing or unhealthy.
+    """
+    try:
+        result = subprocess.run(
+            ["uvx", "srclight", "status"],
+            capture_output=True,
+            text=True,
+            check=False,
+            timeout=30,
+        )
+        if result.returncode != 0:
+            print("SRCLEIGHT_STATUS=unavailable")
+            print(
+                "# ⚠️ Srclight index not found. Run: uvx srclight index --embed qwen3-embedding",
+                file=sys.stderr,
+            )
+            return
 
-    expected_hooks_dir = ".githooks"
-    pre_commit_hook = os.path.join(repo_root, expected_hooks_dir, "pre-commit")
-    pre_push_hook = os.path.join(repo_root, expected_hooks_dir, "pre-push")
+        output = result.stdout
+        file_count = 0
+        symbol_count = 0
+        for line in output.splitlines():
+            line = line.strip()
+            if line.startswith("Files:"):
+                try:
+                    file_count = int(line.split(":")[1].strip())
+                except (ValueError, IndexError):
+                    pass
+            elif line.startswith("Symbols:"):
+                try:
+                    symbol_count = int(line.split(":")[1].strip())
+                except (ValueError, IndexError):
+                    pass
 
-    # Check if hooks path is configured
-    if hooks_path != expected_hooks_dir:
-        return False
+        if file_count == 0 or symbol_count == 0:
+            print("SRCLEIGHT_STATUS=empty")
+            print(
+                "# ⚠️ Srclight index is empty. Run: uvx srclight index --embed qwen3-embedding",
+                file=sys.stderr,
+            )
+        else:
+            print("SRCLEIGHT_STATUS=ok")
+            print(f"# Srclight: {file_count} files, {symbol_count} symbols indexed")
 
-    # Check if blocking hooks exist and are executable
-    # pre-commit: blocks commits to protected branches
-    # pre-push: blocks pushes to merged branches
-    if not os.path.isfile(pre_commit_hook):
-        return False
-
-    if not os.path.isfile(pre_push_hook):
-        return False
-
-    return True
+    except (subprocess.TimeoutExpired, FileNotFoundError):
+        print("SRCLEIGHT_STATUS=unavailable")
+        print(
+            "# ⚠️ Srclight not available. Install with: uvx srclight index",
+            file=sys.stderr,
+        )
 
 
 def main() -> int:
@@ -136,20 +265,6 @@ def main() -> int:
         print("Run: git remote add origin <url>", file=sys.stderr)
         return 1
 
-    # Check if GitHub remote
-    if not is_github_remote(remote_url):
-        print("WARNING: Non-GitHub remote detected", file=sys.stderr)
-        print(f"Remote URL: {remote_url}", file=sys.stderr)
-        print("GitHub MCP operations will not work", file=sys.stderr)
-        return 2
-
-    # Parse owner/repo from remote
-    owner, repo = parse_git_remote_url(remote_url)
-    if not owner or not repo:
-        print("ERROR: Failed to parse owner/repo from remote URL", file=sys.stderr)
-        print(f"Remote URL: {remote_url}", file=sys.stderr)
-        return 1
-
     # Get git config values with fallbacks
     user_name = get_user_name()
     user_email = get_user_email()
@@ -159,30 +274,97 @@ def main() -> int:
     print("# Session Init - Git Context")
     print(f"DEV_NAME={user_name}")
     print(f"DEV_EMAIL={user_email}")
-    print(f"GIT_OWNER={owner}")
-    print(f"GIT_REPO={repo}")
     print(f"GIT_HOOKS_PATH={hooks_path}")
     print(f"GIT_REMOTE_URL={remote_url}")
 
-    # Verify hooks are installed (warning only, do not halt)
-    if not verify_hooks_installed():
-        print("", file=sys.stderr)
-        print("=" * 70, file=sys.stderr)
-        print("WARNING: Git hooks are not installed!", file=sys.stderr)
-        print("=" * 70, file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Branch protection will not be enforced on commit.", file=sys.stderr)
-        print("Protected branches: main, dev", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("AI Agent: Relay this warning to the developer.", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("To install hooks:", file=sys.stderr)
-        print("    ./scripts/install-hooks.sh", file=sys.stderr)
-        print("", file=sys.stderr)
-        print("Developer: Decide whether to install hooks before proceeding.", file=sys.stderr)
-        print("=" * 70, file=sys.stderr)
+    # Check if GitHub remote
+    if is_github_remote(remote_url):
+        # Parse owner/repo from remote
+        owner, repo = parse_git_remote_url(remote_url)
+        if not owner or not repo:
+            print("ERROR: Failed to parse owner/repo from remote URL", file=sys.stderr)
+            print(f"Remote URL: {remote_url}", file=sys.stderr)
+            return 1
 
-    return 0
+        print(f"GIT_OWNER={owner}")
+        print(f"GIT_REPO={repo}")
+        print("GIT_PLATFORM=github")
+        print("GITHUB_HTML_URL=https://github.com/")
+        print("")
+        print("# GitHub Repository Detected")
+        print("# 📋 Invoke: /skill github-issue-creation before creating issues")
+        print("# 📋 See: .opencode/skills/github-issue-creation/SKILL.md")
+        check_srclight()
+        return 0
+
+    # GitBucket remote detected
+    if is_gitbucket_remote(remote_url):
+        result = parse_gitbucket_url(remote_url)
+        base_url, owner, repo = result
+        if not owner or not repo:
+            print(
+                "WARNING: Failed to parse owner/repo from remote URL", file=sys.stderr
+            )
+            print(f"Remote URL: {remote_url}", file=sys.stderr)
+            print("GIT_PLATFORM=gitbucket")
+            print("GITBUCKET_URL=")
+            print("GITBUCKET_HAS_CREDENTIALS=false")
+            print("")
+            print("# GitBucket Repository Detected (URL Parse Failed)")
+            print("# 📋 Invoke: /skill gitbucket-api before using GitBucket Python API")
+            print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
+            return 0
+
+        if not base_url:
+            print(
+                "WARNING: GITBUCKET_HTML_URL not found in .env — URL generation unavailable",
+                file=sys.stderr,
+            )
+            print(
+                "Add GITBUCKET_HTML_URL=<web-ui-base-url> to .env to enable URL generation",
+                file=sys.stderr,
+            )
+
+        # Check if credentials exist in .env
+        has_credentials = False
+        try:
+            env_path = os.path.join(
+                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
+            )
+            if os.path.exists(env_path):
+                with open(env_path) as f:
+                    content = f.read()
+                    has_credentials = (
+                        "GITBUCKET_TOKEN=" in content
+                        and (
+                            "GITBUCKET_HTML_URL=" in content
+                            or "GITBUCKET_URL=" in content
+                        )
+                    )
+        except (IOError, OSError):
+            pass
+
+        print(f"GIT_OWNER={owner}")
+        print(f"GIT_REPO={repo}")
+        print("GIT_PLATFORM=gitbucket")
+        print(f"GITBUCKET_HTML_URL={base_url or ''}")
+        ssh_url = extract_ssh_url(remote_url)
+        if ssh_url:
+            print(f"GITBUCKET_SSH_URL={ssh_url}")
+        print(f"GITBUCKET_HAS_CREDENTIALS={'true' if has_credentials else 'false'}")
+        print("")
+        print("# GitBucket Repository Detected")
+        print("# 📋 Invoke: /skill gitbucket-api before using GitBucket Python API")
+        print("# 📋 GitBucket API has specific authentication patterns and limitations")
+        print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
+        check_srclight()
+        return 0
+
+    # Unknown remote type
+    print("WARNING: Unknown remote type", file=sys.stderr)
+    print(f"Remote URL: {remote_url}", file=sys.stderr)
+    print("GIT_PLATFORM=unknown")
+    return 2
 
 
 if __name__ == "__main__":
