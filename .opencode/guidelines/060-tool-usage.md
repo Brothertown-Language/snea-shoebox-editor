@@ -1,18 +1,25 @@
 # Tool Usage & Terminal Rules
 
-## 1. MCP Tool MANDATORY Usage
+## 1. Tool Priority Hierarchy
 
-> **See `mcp-tool-usage` skill for complete tool preference tables, tier boundaries, and fallback hierarchy.**
+> **See `mcp-tool-usage` skill for the complete five-tier hierarchy with tool selection tables.**
 
-### ✅ MANDATORY (Never ask - always use)
-Use MCP tools for ALL file, notebook, and repository operations when MCP is available. See the `mcp-tool-usage` skill for the complete tool selection matrix.
+### Tier Summary
+
+```
+TIER 1 — PRIMARY: opencode built-in tools (read/write/edit/glob/grep)
+TIER 2 — PRIMARY: Domain MCP (srclight, the-notebook-mcp, GitHub MCP)
+TIER 3 — PRIMARY: ai_bin/ (guidelines, md, memory, py ls/mkpkg)
+TIER 4 — FALLBACK: JetBrains MCP (pycharm_*) — only for unique capabilities
+TIER 5 — LAST RESORT: Direct CLI (bash)
+
+ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance, no fallback)
+```
 
 ### 🚫 PROHIBITED (Hard stop violation)
-- `edit` tool on project files when PyCharm MCP available
-- `read` tool on project files when PyCharm MCP available
-- `glob`/`grep` on project files when PyCharm MCP available
-- `write` tool on project files when PyCharm MCP available
+
 - ANY direct access to `.ipynb` files (use `the-notebook-mcp` exclusively)
+- JetBrains MCP for basic file operations that opencode built-in tools handle (TIER 1 covers read/write/edit/glob/grep for all non-notebook files)
 
 ## 1. Guidelines Lookup
 

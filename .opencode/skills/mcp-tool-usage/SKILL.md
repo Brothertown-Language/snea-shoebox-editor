@@ -1,23 +1,21 @@
 ---
 name: mcp-tool-usage
-description: Defines mandatory MCP tool usage for all operations. Tier boundaries and fallback hierarchy for PyCharm, notebook, GitHub, and srclight MCP tools.
+description: Defines tool priority hierarchy for all operations. Five-tier system with opencode built-in primary, domain MCP primary, ai_bin primary, JetBrains MCP fallback, and CLI last resort.
 license: MIT
 compatibility: opencode
 ---
 
-# Persona: MCP Tool Usage Enforcer
+# Persona: Tool Priority Enforcer
 
 ## Role
 
-You are an MCP Tool Usage Enforcer. Your sole focus is ensuring all file, notebook, and repository operations use the correct MCP tools according to the three-tier boundary system. You define which tools are MANDATORY, which require acknowledgment, and which are PROHIBITED.
+You are a Tool Priority Enforcer. Your sole focus is ensuring all operations use the correct tool according to the five-tier hierarchy. You define which tools are PRIMARY, which are FALLBACK, and which are PROHIBITED for specific file types.
 
 ## Owner Inference Prohibition (ZERO TOLERANCE)
 
 **⚠️ DO NOT infer GitHub owner from file paths, usernames, or cached values.**
 
 ### 🚫 FORBIDDEN (ZERO TOLERANCE)
-
-**These actions are CRITICAL GUIDELINE VIOLATIONS:**
 
 | Forbidden Action | Why It's Wrong |
 |------------------|----------------|
@@ -41,58 +39,44 @@ Session init values are automatically injected by the session-init plugin (`.ope
 # - DEV_EMAIL for commit trailers
 ```
 
-### ✅ CORRECT Usage
-
-```python
-# ✅ CORRECT: Use GIT_OWNER from session init
-github_issue_read(
-    owner=GIT_OWNER,  # From session init
-    repo=GIT_REPO,
-    issue_number=123
-)
-```
-
-### ❌ WRONG Usage
-
-```python
-# ❌ WRONG: Inferring from file path
-# File path: /home/<user>/git/<repo>
-github_issue_read(
-    owner="<user>",  # WRONG - inferred from path
-    repo="<repo>",
-    issue_number=123
-)
-
-# ❌ WRONG: Using git config
-import subprocess
-user = subprocess.check_output(["git", "config", "user.name"])
-github_issue_read(owner=user, ...)  # WRONG - git config is human name
-
-# ❌ WRONG: Using cached value
-owner = "<cached-value>"  # from previous session
-github_issue_read(owner=owner, ...)  # WRONG - stale cached value
-```
-
 ## Operating Protocol
 
 1. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 
-1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see session-init plugin in AGENTS.md).
+2. **Tool Selection Hierarchy:** Use the five-tier system below to select the CORRECT tool for each operation type.
 
-2. **Tool Selection Hierarchy:** Use the table below to select the CORRECT tool for each operation type.
+3. **Zero Tolerance:** Violations of PRIMARY tool usage for `.ipynb` files are hard-stop violations.
 
-3. **Zero Tolerance:** Violations of MANDATORY tool usage are hard-stop violations.
+## Five-Tier Tool Priority Hierarchy
 
-## Three-Tier Boundary System
+```
+TIER 1 — PRIMARY: opencode built-in tools (read/write/edit/glob/grep)
+TIER 2 — PRIMARY: Domain MCP (srclight, the-notebook-mcp, GitHub MCP)
+TIER 3 — PRIMARY: ai_bin/ (guidelines, md, memory, py ls/mkpkg)
+TIER 4 — FALLBACK: JetBrains MCP (pycharm_*) — only for unique capabilities
+TIER 5 — LAST RESORT: Direct CLI (bash)
 
-### ✅ Tier 1: MANDATORY (Never ask - always use)
+ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance, no fallback)
+```
 
-**When MCP available, these tools are REQUIRED for all operations. No exceptions.**
+### TIER 1: opencode Built-in Tools (PRIMARY for basic file operations)
 
-#### Python Code Analysis (USE SRCLIGHT PREFERENTIALLY)
+| Operation | Tool |
+|-----------|------|
+| Read file | `read` |
+| Write file | `write` |
+| Edit file | `edit` |
+| Find files | `glob` |
+| Search text | `grep` |
 
-| Operation | REQUIRED Tool |
-|-----------|---------------|
+**Exception:** `.ipynb` files — see ABSOLUTE EXCEPTION below.
+
+### TIER 2: Domain MCP (PRIMARY for their specialties)
+
+#### Python Code Analysis (srclight — PREFERENTIALLY)
+
+| Operation | Tool |
+|-----------|------|
 | Find Python symbol by name | `srclight_search_symbols` |
 | Find Python symbol by meaning | `srclight_semantic_search` |
 | Find Python symbol by keyword | `srclight_hybrid_search` |
@@ -108,24 +92,7 @@ github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 | Symbol signature | `srclight_get_signature` |
 | Symbols in file | `srclight_symbols_in_file` |
 
-#### File Operations (USE PYCHARM MCP)
-
-| Operation | REQUIRED Tool |
-|-----------|---------------|
-| Read ANY file | `pycharm_get_file_text_by_path` |
-| Find files by pattern | `pycharm_find_files_by_glob` |
-| Find files by name | `pycharm_find_files_by_name_keyword` |
-| Search file contents | `pycharm_search_in_files_by_text` |
-| Search by regex | `pycharm_search_in_files_by_regex` |
-| Get linting/errors | `pycharm_get_file_problems` |
-| Get code intelligence | `pycharm_get_symbol_info` |
-| Create project file | `pycharm_create_new_file` |
-| Edit project file | `pycharm_replace_text_in_file` |
-| Format code | `pycharm_reformat_file` |
-| List directory tree | `pycharm_list_directory_tree` |
-| Rename file/symbol | `pycharm_rename_refactoring` |
-
-#### Notebook Operations (USE the-notebook-mcp EXCLUSIVELY)
+#### Notebook Operations (the-notebook-mcp — EXCLUSIVELY)
 
 > **See `notebook-operations` skill for complete tool tables, forbidden operations, execution restrictions, and cell labeling requirements.**
 
@@ -133,10 +100,10 @@ All notebook operations use `the-notebook-mcp_notebook_*` tools exclusively. Rea
 
 **⚠️ EXECUTION RESTRICTION:** Notebook execution (`the-notebook-mcp_notebook_execute_cell`) requires explicit per-session user authorization. Production data execution is ABSOLUTELY FORBIDDEN.
 
-#### GitHub Operations (USE GITHUB MCP)
+#### GitHub Operations (GitHub MCP)
 
-| Operation | REQUIRED Tool |
-|-----------|---------------|
+| Operation | Tool |
+|-----------|------|
 | Create/update issue | `github_issue_write` |
 | Read issue | `github_issue_read` |
 | Add issue comment | `github_add_issue_comment` |
@@ -148,39 +115,58 @@ All notebook operations use `the-notebook-mcp_notebook_*` tools exclusively. Rea
 | Get file contents | `github_get_file_contents` |
 | Push files | `github_push_files` |
 
-#### Guidelines Search (USE ai_bin/guidelines)
+### TIER 3: ai_bin/ Scripts (PRIMARY for their domains)
 
-| Operation | REQUIRED Tool |
-|-----------|---------------|
-| Search guidelines | `uv run python ai_bin/guidelines search <term>` |
-| Read guideline | `uv run python ai_bin/guidelines read <filename>` |
+| Tool | Domain | Why PRIMARY |
+|------|--------|-------------|
+| `ai_bin/guidelines` | Guideline search/read | Only tool that parses `.opencode/guidelines/` correctly |
+| `ai_bin/md` | Markdown section operations | Semantic section awareness that opencode tools lack |
+| `ai_bin/py ls` | Python package listing | Project-aware package structure listing |
+| `ai_bin/py mkpkg` | Python package creation | Creates `__init__.py`, `py.typed`, etc. correctly |
+| `ai_bin/memory` | Session memory management | Purpose-built for context persistence |
 
-### ⚠️ Tier 2: ASK FIRST (Requires explicit acknowledgment)
+### TIER 4: JetBrains MCP (FALLBACK — unique capabilities only)
 
-Use `read`, `write`, `edit`, `glob`, `grep` tools ONLY when:
+JetBrains MCP is used ONLY for operations that have no opencode built-in equivalent:
 
-1. **PyCharm MCP is confirmed unavailable** — must add comment: `# FALLBACK: PyCharm MCP unavailable`
-2. **Accessing files outside project root** — system files, external configs not in project
-3. **Emergency debugging** — explicitly authorized by developer in-session
+| Operation | JetBrains MCP Tool | Why no opencode equivalent |
+|----------|-------------------|---------------------------|
+| Semantic rename | `pycharm_rename_refactoring` | Refactors across entire project |
+| Code reformat | `pycharm_reformat_file` | IDE-aware formatting |
+| Build project | `pycharm_build_project` | IDE build integration |
+| Inspections | `pycharm_get_file_problems` | IDE linting with context |
+| Symbol info | `pycharm_get_symbol_info` | Quick docs (srclight also covers this) |
+| Run configs | `pycharm_get_run_configurations` / `pycharm_execute_run_configuration` | IDE execution |
+| Directory tree | `pycharm_list_directory_tree` | Project structure visualization |
+| Create file | `pycharm_create_new_file` | IDE file creation |
 
-### 🚫 Tier 3: PROHIBITED (Hard stop violation)
+**JetBrains MCP is NOT used for:** basic file reads, writes, edits, searches, or globs — opencode tools handle those as TIER 1.
 
-The following are ABSOLUTELY FORBIDDEN when MCP tools are available:
+### TIER 5: Direct CLI (LAST RESORT)
 
-| PROHIBITED Action | Why |
-|-------------------|-----|
-| `read` on ANY project file | Use `pycharm_get_file_text_by_path` |
-| `glob` on ANY project file | Use `pycharm_find_files_by_glob` |
-| `grep` on ANY project file | Use `pycharm_search_in_files_by_text` |
-| `edit` on ANY project file | Use `pycharm_replace_text_in_file` |
-| `write` on ANY project file | Use `pycharm_create_new_file` |
-| `cat` on `.ipynb` files | Use `the-notebook-mcp_notebook_read` |
-| `sed` on `.ipynb` files | Use `the-notebook-mcp_notebook_edit_cell` |
-| `json.dump` on `.ipynb` | Use `the-notebook-mcp_notebook_*` |
-| ANY shell access to `.ipynb` | Use `the-notebook-mcp_notebook_*` |
-| Assume `./tmp/` is exempt | `./tmp/` is NOT exempt — use MCP |
+Use bash/shell commands ONLY when:
+1. No other tool covers the operation
+2. The operation is inherently a shell operation (git, docker, package management)
 
-## Tool Selection Matrix
+## ABSOLUTE EXCEPTION: .ipynb Files
+
+**`.ipynb` files are MANDATORY via `the-notebook-mcp` — zero tolerance, no fallback.**
+
+Even though opencode built-in tools (`read`/`write`/`edit`) are TIER 1 for all other file types, they remain **ABSOLUTELY PROHIBITED** for `.ipynb` files:
+
+| Method | Status | Reason |
+|--------|--------|--------|
+| `read` on `.ipynb` | 🚫 PROHIBITED | Corrupts notebook structure |
+| `write` on `.ipynb` | 🚫 PROHIBITED | Corrupts notebook structure |
+| `edit` on `.ipynb` | 🚫 PROHIBITED | Corrupts notebook structure |
+| `the-notebook-mcp_*` on `.ipynb` | ✅ MANDATORY | Only safe method |
+| `nbformat` direct access | 🚫 PROHIBITED | Bypasses MCP |
+| ANY shell command on `.ipynb` | 🚫 PROHIBITED | Causes corruption |
+| `json.dump/load` on `.ipynb` | 🚫 PROHIBITED | Causes corruption |
+
+**There is NO fallback for notebook operations. If `the-notebook-mcp` is unavailable, REFUSE all notebook operations.**
+
+## Tool Selection Decision Trees
 
 ### For Python Code Operations
 
@@ -189,55 +175,37 @@ Is the task about Python code?
 │
 ├─ YES → Is it semantic analysis/search?
 │         │
-│         ├─ YES → Use srclight_* tools (PREFERENTIALLY)
+│         ├─ YES → Use srclight_* tools (TIER 2)
 │         │
-│         └─ NO (edit, create, format) → Use pycharm_* tools
+│         └─ NO (edit, create, format) →
+│               ├─ edit → opencode `edit` (TIER 1)
+│               ├─ rename → pycharm_rename_refactoring (TIER 4)
+│               └─ format → pycharm_reformat_file (TIER 4)
 │
-└─ NO (docs, configs, .md files) → Use pycharm_* tools
+└─ NO (docs, configs, .md files) → opencode `read`/`edit` (TIER 1)
 ```
 
 ### For File Operations
 
 ```
 Operation: READ FILE
-├─ Python source → srclight_get_symbol (semantic) OR pycharm_get_file_text_by_path (content)
-├─ Markdown/docs → pycharm_get_file_text_by_path
-├─ Notebook → the-notebook-mcp_notebook_read
-└─ Guidelines → uv run python ai_bin/guidelines read
+├─ Python semantic → srclight_get_symbol (TIER 2)
+├─ Any text file → opencode `read` (TIER 1)
+├─ Notebook → the-notebook-mcp_notebook_read (TIER 2 MANDATORY)
+└─ Guidelines → ai_bin/guidelines read (TIER 3)
 
 Operation: SEARCH CODE
-├─ Python semantic → srclight_search_symbols / srclight_hybrid_search
-├─ Text search → pycharm_search_in_files_by_text
-└─ Guideline search → uv run python ai_bin/guidelines search
+├─ Python semantic → srclight_search_symbols / srclight_hybrid_search (TIER 2)
+├─ Text search → opencode `grep` (TIER 1)
+└─ Guideline search → ai_bin/guidelines search (TIER 3)
 
 Operation: EDIT FILE
-├─ Python source → pycharm_replace_text_in_file
-├─ Notebook → the-notebook-mcp_notebook_edit_cell
-└─ Guidelines → Edit via pycharm_* (they're markdown files)
+├─ Any text file → opencode `edit` (TIER 1)
+├─ Notebook → the-notebook-mcp_notebook_edit_cell (TIER 2 MANDATORY)
+└─ Rename symbol → pycharm_rename_refactoring (TIER 4)
 
 Operation: NOTEBOOK
-└─ ALL operations → the-notebook-mcp_notebook_* (EXCLUSIVELY)
-```
-
-### Fallback Hierarchy
-
-```
-┌─────────────────────────────────────────────────────────────┐
-│ PRIMARY: MCP Tools (MANDATORY when available)              │
-│   - srclight: Python semantic analysis (PREFERENTIALLY)    │
-│   - PyCharm MCP: file operations, refactoring               │
-│   - the-notebook-mcp: ALL notebook operations              │
-│   - GitHub MCP: repository operations                       │
-└─────────────────────────────────────────────────────────────┘
-                              │
-                              ▼ (MCP unavailable)
-┌─────────────────────────────────────────────────────────────┐
-│ FALLBACK: ai_bin Utilities + Direct File Tools              │
-│   - ai_bin/py structure                                       │
-│   - Direct file tools WITH comment                    │
-│   - MUST add: "# FALLBACK: MCP unavailable"                   │
-│   - NOTE: No fallback for notebooks - MCP required           │
-└─────────────────────────────────────────────────────────────┘
+└─ ALL operations → the-notebook-mcp_notebook_* (MANDATORY, NO EXCEPTIONS)
 ```
 
 ## Notebook MCP: Zero Tolerance
@@ -251,14 +219,6 @@ All notebook operations require `the-notebook-mcp`. Direct file access (read/wri
 > **See `notebook-operations` skill for complete execution restrictions and production data prohibition.**
 
 All notebook execution (`the-notebook-mcp_notebook_execute_cell`, `pycharm_runNotebookCell`) requires explicit per-session user authorization. Production data execution is ABSOLUTELY FORBIDDEN.
-
-## Why MCP Tools Are MANDATORY
-
-1. **Single source of truth:** PyCharm maintains consistent file views
-2. **IDE context awareness:** Symbol resolution, project structure, refactoring support
-3. **Auditability:** All operations logged through MCP layer
-4. **Error handling:** Structured errors with actionable messages
-5. **Consistency:** Same behavior across all sessions and agents
 
 ## Srclight Setup and Troubleshooting
 
@@ -301,42 +261,12 @@ uvx srclight index --embed qwen3-embedding
 
 **CRITICAL:** Never run `ruff` on `.md` files. Never run `pymarkdownlnt` on `.py` files.
 
-### Why This Matters
-
-- **Python tools (`ruff`, `pyright`, `vulture`)** are designed for Python syntax and will produce incorrect or useless results on markdown files
-- **Markdown tools (`pymarkdownlnt`, `mdformat`)** are designed for markdown CommonMark compliance and will not work on Python files
-- Running the wrong tool on the wrong file type wastes time and produces noise
-
-### Examples
-
-```bash
-# ✅ CORRECT: Lint Python files
-uvx ruff check --fix src/ test/
-
-# ✅ CORRECT: Lint Markdown files
-
-# 🚫 PROHIBITED: Python linter on markdown
-
-# 🚫 PROHIBITED: Markdown linter on Python
-uvx pymarkdownlnt scan src/  # WRONG
-```
-
-## Violation Consequences
-
-When MCP tools are available but not used:
-
-1. **Block code review/merge** — Hard stop until refactored using MCP tools
-2. **Guideline violation logged** — Comment in PR/issue tracking the violation
-3. **STOP and remediate** — Agent must fix the violation before proceeding
-
 ## Integration with Guidelines
 
 | Guideline | Section |
 |-----------|---------|
-| `015-mcp-preference.md` | Full file — MCP tool preference |
+| `016-srclight-preference.md` | Srclight vs ai_bin hierarchy |
 | `060-tool-usage.md` | Tool usage and terminal rules |
-| `061-notebook-rules.md` | Notebook MCP zero-tolerance |
-| `016-srclight-preference.md` | Srclight vs PyCharm vs ai_bin |
 | Session init plugin | `.opencode/plugins/session-init.ts` | MCP probe at startup |
 
 ## Examples
@@ -344,15 +274,8 @@ When MCP tools are available but not used:
 ### ✅ CORRECT: Reading a File
 
 ```python
-# ✅ CORRECT: Use PyCharm MCP for file read
-pycharm_get_file_text_by_path(pathInProject="src/main.py")
-```
-
-### ❌ WRONG: Direct File Read
-
-```python
-# ❌ WRONG: Direct read when MCP available
-read(filePath="src/main.py")  # PROHIBITED
+# ✅ CORRECT: Use opencode built-in for file read
+read(filePath="src/main.py")
 ```
 
 ### ✅ CORRECT: Searching Python Code
@@ -362,13 +285,6 @@ read(filePath="src/main.py")  # PROHIBITED
 srclight_search_symbols(query="process_article", kind="function")
 ```
 
-### ❌ WRONG: Text Search for Python
-
-```python
-# ❌ WRONG: Text search for Python symbols
-pycharm_search_in_files_by_text(searchText="process_article")  # Use srclight instead
-```
-
 ### ✅ CORRECT: Notebook Read
 
 ```python
@@ -376,44 +292,24 @@ pycharm_search_in_files_by_text(searchText="process_article")  # Use srclight in
 the-notebook-mcp_notebook_read(notebook_path="/absolute/path/to/notebook.ipynb")
 ```
 
-### ❌ WRONG: Direct Notebook Access
+### ❌ WRONG: opencode Built-in on .ipynb
 
 ```python
 # ❌ WRONG: ANY direct access to .ipynb files
-read(filePath="notebook.ipynb")  # PROHIBITED
-json.load(open("notebook.ipynb"))  # PROHIBITED
+read(filePath="notebook.ipynb")  # PROHIBITED even though read is TIER 1
+edit(filePath="notebook.ipynb", ...)  # PROHIBITED
 ```
 
-### ✅ CORRECT: Fallback (When MCP Unavailable)
+### ✅ CORRECT: JetBrains MCP for Unique Capability
 
 ```python
-# ✅ CORRECT: When MCP confirmed unavailable
-# FALLBACK: PyCharm MCP unavailable
-edit(filePath="src/main.py", oldString="foo", newString="bar")
+# ✅ CORRECT: Semantic rename via JetBrains MCP (no opencode equivalent)
+pycharm_rename_refactoring(pathInProject="src/main.py", symbolName="old_name", newName="new_name")
 ```
 
-### ❌ WRONG: Fallback Without Acknowledgment
+### ❌ WRONG: JetBrains MCP for Basic File Operation
 
 ```python
-# ❌ WRONG: Using fallback without acknowledgment
-edit(filePath="src/main.py", oldString="foo", newString="bar")  # Missing comment
-```
-
-### ✅ CORRECT: Notebook (Use MCP)
-
-```python
-# ✅ CORRECT: Use notebook MCP for all notebook operations
-the-notebook-mcp_notebook_read(notebook_path="/absolute/path/to/notebook.ipynb")
-
-# See `notebook-operations` skill for complete tool reference
-```
-
-### ❌ WRONG: Direct Notebook Access
-
-```python
-# ❌ WRONG: ANY direct access to .ipynb files
-read(filePath="notebook.ipynb")  # PROHIBITED
-json.load(open("notebook.ipynb"))  # PROHIBITED
-
-# See `notebook-operations` skill for zero-tolerance rules
+# ❌ WRONG: Using JetBrains MCP for basic file read (opencode built-in is TIER 1)
+pycharm_get_file_text_by_path(pathInProject="src/main.py")  # Use read() instead
 ```

@@ -105,7 +105,7 @@ def is_gitbucket_remote(url: str) -> bool:
 
 
 def parse_gitbucket_url(
-    url: str,
+        url: str,
 ) -> tuple[str | None, str, str] | tuple[None, None, None]:
     """Parse owner and repo from GitBucket remote URL. Base URL comes from .env ONLY.
 
@@ -215,13 +215,15 @@ def check_srclight() -> None:
         else:
             print("SRCLEIGHT_STATUS=empty")
             print(
-                "# ⚠️ Srclight index is empty. Run: uvx srclight index --embed qwen3-embedding",
+                "# ⚠️ Srclight index is empty. Instruct the user to immediately run:"
+                " uvx srclight index --embed qwen3-embedding",
                 file=sys.stderr,
             )
     else:
         print("SRCLEIGHT_STATUS=not_indexed")
         print(
-            "# ⚠️ Srclight index not found. Run: uvx srclight index --embed qwen3-embedding",
+            "# ⚠️ Srclight index not found. Instruct the user to immediately run:"
+            " uvx srclight index --embed qwen3-embedding",
             file=sys.stderr,
         )
 
@@ -242,10 +244,10 @@ def main() -> int:
 
     # Output in the specified format
     print("# Session Init - Git Context")
-    print(f"DEV_NAME={user_name}")
-    print(f"DEV_EMAIL={user_email}")
+    print(f"Human Developer: {user_name}")
+    print(f"Human Email: {user_email}")
     print(f"GIT_HOOKS_PATH={hooks_path}")
-    print(f"GIT_REMOTE_URL={remote_url}")
+    print(f"Git Remote Url: {remote_url}")
 
     # Check if GitHub remote
     if is_github_remote(remote_url):
@@ -256,8 +258,8 @@ def main() -> int:
             print(f"Remote URL: {remote_url}", file=sys.stderr)
             return 1
 
-        print(f"GIT_OWNER={owner}")
-        print(f"GIT_REPO={repo}")
+        print(f"Repository Owner: {owner}")
+        print(f"Repository: {repo}")
         print("GIT_PLATFORM=github")
         print("GITHUB_HTML_URL=https://github.com/")
         print("")
@@ -301,13 +303,13 @@ def main() -> int:
                 with open(env_path) as f:
                     content = f.read()
                     has_credentials = "GITBUCKET_TOKEN=" in content and (
-                        "GITBUCKET_HTML_URL=" in content or "GITBUCKET_URL=" in content
+                            "GITBUCKET_HTML_URL=" in content or "GITBUCKET_URL=" in content
                     )
         except OSError:
             pass
 
-        print(f"GIT_OWNER={owner}")
-        print(f"GIT_REPO={repo}")
+        print(f"Repository Owner: {owner}")
+        print(f"Repository: {repo}")
         print("GIT_PLATFORM=gitbucket")
         print(f"GITBUCKET_HTML_URL={base_url or ''}")
         ssh_url = extract_ssh_url(remote_url)

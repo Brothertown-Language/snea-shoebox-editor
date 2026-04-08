@@ -20,7 +20,7 @@
 | **Explicit auth overrides label** | When user says `approved`/`go`, proceed REGARDLESS of `needs-approval` label |
 | **Branch first** | Create feature branch BEFORE any file modification |
 | **Human-only merge** | Agents MUST NEVER merge PRs |
-| **MCP tools** | Use PyCharm/GitHub MCP for file operations when available |
+| **MCP tools** | Use appropriate tools per five-tier hierarchy (see `mcp-tool-usage` skill) |
 | **Silent halt** | HALT after completion, after PR creation — no prompts |
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
