@@ -207,6 +207,47 @@ User said 'approved' which authorizes implementation ONLY, not PR creation.
 To create PR: Say 'create a PR' explicitly.
 ```
 
+## Analysis → Implementation Authorization Boundary
+
+**Finding a bug during analysis does NOT authorize fixing it.**
+
+| Request Type | Authorized Actions |
+|-------------|---------------------|
+| "check logs" | Read logs, report findings, HALT |
+| "analyze error" | Analyze, report root cause, HALT |
+| "why is this failing" | Investigate, report findings, HALT |
+| "check X" | Analyze X, report findings, HALT |
+| "fix this" | Create spec issue, get approval, implement |
+
+**See `approval-gate` guideline `010-approval-gate.md` → "Analysis → Implementation Without Authorization" for the zero-tolerance rule.**
+
+## Revision Revokes Approval
+
+**Any modification to a spec or task document MUST immediately revoke approval.**
+
+### Status Transition
+
+When a spec is modified:
+1. **Status transitions to pending**: `STATUS: X.Y` → `STATUS: X.Y (REVISED - NEEDS APPROVAL)`
+2. **Label applied**: Add `needs-approval` label to the issue
+3. **Agent MUST HALT**: Do NOT proceed with implementation
+4. **Fresh authorization required**: New explicit approval needed before implementation
+
+### Exempt from Approval Revocation
+
+- STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
+- Progress comments added to issue
+- Bug report additions (separate from spec content changes)
+
+## Bug Report Response Protocol
+
+When a bug report requires code changes:
+
+1. Add `needs-approval` label to the issue
+2. Post additional spec comment documenting the bug
+3. HALT immediately — do NOT implement
+4. Wait for explicit `go` or `approved`
+
 ## Cross-References
 
 - Related skills: `git-workflow` (branch operations, cleanup with parent closure check), `pr-creation-workflow` (PR timing)

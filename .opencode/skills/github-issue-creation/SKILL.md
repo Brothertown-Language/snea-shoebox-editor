@@ -137,6 +137,25 @@ When creating a new issue:
 4. Invoke `/skill github-issue-creation --task creation`
 5. Invoke `/skill github-issue-creation --task post-creation`
 
+## GitHub MCP Required — No Fallback
+
+**When GitHub MCP tools are NOT available, the agent MUST refuse planning work entirely.**
+
+### NO FALLBACK TO LOCAL FILES
+
+- **PROHIBITED**: Using `plans/SPEC-*.md` files as fallback when GitHub MCP is unavailable
+- **PROHIBITED**: Creating local plan files when GitHub MCP is unavailable
+- **PROHIBITED**: Proceeding with implementation without GitHub Issue tracking
+
+### REQUIRED ACTION
+
+If GitHub MCP is unavailable:
+1. STOP immediately
+2. Report: "GitHub MCP tools unavailable. Cannot create or track specs without GitHub Issues."
+3. Wait for GitHub MCP to be restored before proceeding
+
+**See `140-planning-spec-creation.md` → "GitHub MCP Required — No Fallback" for the complete rule.**
+
 ## Cross-References
 
 - Related skills: `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`

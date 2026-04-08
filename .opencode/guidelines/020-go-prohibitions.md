@@ -87,31 +87,11 @@ This rule applies universally to:
 - **NEVER proceed when `get_sub_issues` returns empty array for multi-task specs**
 - **NEVER assume markdown checkboxes = task tracking**
 
-### ✅ MANDATORY WORKFLOW
+### ✅ MANDATORY
 
-**Before implementing ANY multi-task spec:**
+**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
 
-```
-1. Call github_issue_read(method="get_sub_issues", issue_number=N)
-2. If empty AND multi-task:
-   a. AUTO-CREATE sub-issues at PHASE level
-   b. Link each via github_sub_issue_write(method="add")
-   c. Post comment: "Created X sub-issues for phase tracking"
-   d. THEN proceed to implementation
-3. If sub-issues exist:
-   - Verify phase being implemented is among them
-   - Proceed with implementation
-```
-
-### 📋 CHECKLIST
-
-| Action | Required? |
-|--------|-----------|
-| `get_sub_issues` check | ✅ ALWAYS |
-| AUTO-CREATE if empty | ✅ YES (multi-task only) |
-| Verify task linked | ✅ ALWAYS |
-| Single-task exemption | ✅ YES (no sub-issues needed) |
-
-### ⚠️ SINGLE-TASK EXCEPTION
-
-Single-task specs (one implementation task, no decomposition needed) do NOT require sub-issues. All multi-task specs MUST have sub-issues before implementation begins.
+Key points:
+- Sub-issues at PHASE level, not step level
+- Single-task specs are exempt from sub-issue requirement
+- All multi-task specs MUST have sub-issues before implementation begins

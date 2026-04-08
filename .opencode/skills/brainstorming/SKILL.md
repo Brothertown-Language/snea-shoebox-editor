@@ -169,6 +169,46 @@ brainstorming (mandatory) → spec creation → approval-gate → git-workflow
 - Approval gate checks for spec existence AFTER exploration
 - Exploration does NOT require approval (exploration phase)
 
+## Investigation Completion Criteria
+
+**Before creating a spec, investigation MUST be complete.** This is a hard gate, not optional.
+
+### Completion Requirements
+
+| Requirement | Evidence |
+|-------------|----------|
+| Problem understood | Clearly stated problem, context, stakeholders |
+| Codebase explored | Existing patterns, reusable components identified |
+| Hypotheses tested | Test scripts run, results documented |
+| Alternatives considered | At least 2 approaches documented with tradeoffs |
+| Risks identified | Risk assessment with mitigation strategies |
+| Success criteria defined | Testable, measurable completion criteria |
+
+### Permissible Investigation Activities
+
+| Activity | Allowed? | Notes |
+|----------|----------|-------|
+| Read production code | YES | Read-only exploration |
+| Read production data | YES | Read-only analysis |
+| Create test scripts in `./tmp/` | YES | Isolated from production |
+| Run test scripts in `./tmp/` | YES | No production impact |
+| Create isolated test fixtures | YES | Dedicated test databases/schemas |
+| Run static analysis | YES | Code verification |
+| Modify production code | NO | Requires approved spec |
+| Modify production data | NO | Requires approved spec |
+| Run code against production DB | NO | Requires explicit user authorization |
+
+### CRITICAL VIOLATION: Spec Without Investigation
+
+Creating a spec without completed investigation is a CRITICAL GUIDELINE VIOLATION:
+- PROHIBITED: Creating specs from vague requirements without exploration
+- PROHIBITED: Skipping codebase analysis before planning
+- PROHIBITED: Finalizing specs before investigating edge cases
+- PROHIBITED: Proceeding without success criteria defined
+- PROHIBITED: Running test code against production systems
+
+**See `142-planning-archive-workflow.md` → "Investigation Completion Criteria" and `000-critical-rules.md` → "Spec Without Investigation" for the zero-tolerance rules.**
+
 ## Cross-References
 
 - Related skills: `approval-gate` (authorization), `writing-plans` (plan creation)
