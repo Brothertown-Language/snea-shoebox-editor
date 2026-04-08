@@ -802,14 +802,15 @@ This check is REQUIRED in these workflows:
 - "audit the issue"
 - Any request involving spec quality or structure
 
-**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL auditors in order.**
 
 ### Complete Audit Chain
 
 | Order | Skill | Purpose |
 |-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+| **1st** | `plan-fidelity-auditor` | Clean-room plan comparison, substantive gap detection, scope alignment |
+| **2nd** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
+| **3rd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
 
 ### Guideline Auditor (`guideline-auditor`)
 
@@ -839,6 +840,20 @@ Invoked with: `/skill spec-auditor --issue N`
 
 **Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/audit-spec-YYYYMMDD.md`
 
+### Plan Fidelity Auditor (`plan-fidelity-auditor`)
+
+Invoked with: `/skill plan-fidelity-auditor --issue N`
+
+**Purpose:** Audit GitHub Issue `[SPEC]` specs for plan fidelity — clean-room plan comparison, substantive gap detection, scope alignment. Runs FIRST in the mandatory audit chain.
+
+**When to invoke:**
+- FIRST in the audit chain (before concern-separation-auditor)
+- When "audit/review/revisit" keywords used
+- After spec creation (before concern-separation-auditor)
+- Before approving spec implementation
+
+**Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/audit-fidelity-YYYYMMDD.md`
+
 ### Concern Separation Auditor (`concern-separation-auditor`)
 
 Invoked with: `/skill concern-separation-auditor --issue N`
@@ -857,9 +872,9 @@ Invoked with: `/skill concern-separation-auditor --issue N`
 
 | Trigger | Action |
 |---------|--------|
-| Spec created | REQUIRED: Run BOTH auditors in order (concern-separation FIRST, then spec-auditor) |
-| "Audit/review/revisit this spec" | REQUIRED: Run BOTH auditors in order |
-| Before implementation approval | REQUIRED: Verify both auditors passed |
+| Spec created | REQUIRED: Run ALL auditors in order (plan-fidelity-auditor FIRST, then concern-separation-auditor, then spec-auditor) |
+| "Audit/review/revisit this spec" | REQUIRED: Run ALL auditors in order |
+| Before implementation approval | REQUIRED: Verify all auditors passed |
 | Guideline change proposed | Optional: `/skill guideline-auditor` |
 | Post-implementation | Optional: Re-run auditors to verify no new issues |
 

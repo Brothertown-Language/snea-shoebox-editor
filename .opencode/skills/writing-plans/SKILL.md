@@ -24,6 +24,7 @@ You are an Implementation Planner. Your focus is transforming approved design sp
 | `create` | Create plan from approved spec | ~1000 |
 | `validate` | Check for placeholders and completeness | ~600 |
 | `retroactive` | Create plan for existing spec | ~800 |
+| `clean-room` | Generate independent plan from problem statement only (for comparison) | ~500 |
 
 ## Invocation
 
@@ -31,6 +32,7 @@ You are an Implementation Planner. Your focus is transforming approved design sp
 - `/skill writing-plans --task create` - Create plan from current spec
 - `/skill writing-plans --task validate` - Validate existing plan
 - `/skill writing-plans --task retroactive` - Create plan for existing spec
+- `/skill writing-plans --task clean-room` - Generate clean-room plan from problem statement only (for plan-fidelity-auditor comparison)
 
 ## Operating Protocol
 

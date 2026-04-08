@@ -57,10 +57,11 @@ When phases mix concerns, roadmap priorities can inappropriately influence phase
 
 | Order | Skill | Purpose |
 |-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, BOILERPLATE-TITLE, concern analysis, smart splits |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+| **1st** | `plan-fidelity-auditor` | Clean-room plan comparison, substantive gap detection, scope alignment |
+| **2nd** | `concern-separation-auditor` | Phase structure, BOILERPLATE-TITLE, concern analysis, smart splits |
+| **3rd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
 
-**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL auditors in order.**
 
 ## Mandatory Invocation for AI Agents
 
@@ -71,13 +72,14 @@ When phases mix concerns, roadmap priorities can inappropriately influence phase
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 1. Create the spec issue with phases and steps
-2. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
-3. **Invoke `/skill spec-auditor --issue N`** (check content quality)
-4. Fixes applied automatically by both auditors
-5. Add `needs-approval` label
-6. Post "ready for review" comment
+2. **Invoke `/skill plan-fidelity-auditor --issue N`** (clean-room plan comparison)
+3. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
+4. **Invoke `/skill spec-auditor --issue N`** (check content quality)
+5. Fixes applied automatically by all auditors
+6. Add `needs-approval` label
+7. Post "ready for review" comment
 
-**Skipping either auditor is a CRITICAL GUIDELINE VIOLATION.**
+**Skipping any auditor is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Operating Modes
 
@@ -97,8 +99,9 @@ Present each finding to user for decision. Use when human review is needed.
 
 | Auditor | Scope | Runs When |
 |---------|-------|----------|
-| **concern-separation-auditor** | Phase structure, BOILERPLATE-TITLE, concern analysis, smart splits | **FIRST** - before content quality |
-| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | **SECOND** - after structure passes |
+| **plan-fidelity-auditor** | Clean-room plan comparison, substantive gap detection, scope alignment | **FIRST** - before structure and content |
+| **concern-separation-auditor** | Phase structure, BOILERPLATE-TITLE, concern analysis, smart splits | **SECOND** - after fidelity passes |
+| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | **THIRD** - after structure passes |
 
 ## What This Auditor Owns
 
