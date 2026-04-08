@@ -64,12 +64,12 @@ For GitBucket repositories, invoke `gitbucket-api` skill BEFORE using GitBucket 
 
 | Scenario | Spec Tracking | File Operations | API Operations |
 |----------|---------------|-----------------|----------------|
-| PyCharm + GitHub MCP + GitHub repo | GitHub Issues | PyCharm MCP ONLY | GitHub MCP ONLY |
-| PyCharm + GitHub MCP + GitBucket repo | GitBucket API via `.env` | PyCharm MCP ONLY | Direct API calls |
-| PyCharm only | GitBucket API via `.env` | PyCharm MCP ONLY | N/A |
-| Neither available | Issues via API | Direct tools + `# FALLBACK` | Direct API calls |
+| PyCharm + GitHub MCP + GitHub repo | GitHub Issues | opencode built-in PRIMARY, PyCharm FALLBACK | GitHub MCP ONLY |
+| PyCharm + GitHub MCP + GitBucket repo | GitBucket API via `.env` | opencode built-in PRIMARY, PyCharm FALLBACK | Direct API calls |
+| PyCharm only | GitBucket API via `.env` | opencode built-in PRIMARY, PyCharm FALLBACK | N/A |
+| Neither available | Issues via API | opencode built-in tools | Direct API calls |
 
-🚫 **PROHIBITED**: Using `read`/`write`/`edit`/`glob`/`grep` on ANY files when PyCharm MCP is available.
+> **See `mcp-tool-usage` skill for the complete five-tier hierarchy with tool selection tables.**
 
 ---
 
@@ -234,7 +234,7 @@ See `git-workflow` skill for complete workflow including:
 - Create feature branch BEFORE any filesystem change
 - Wait for explicit authorization ("approved" or "go") before implementing
 - SILENTLY HALT after completing a task
-- Use PyCharm MCP tools for all file operations when available
+- Use appropriate tools per five-tier hierarchy (see `mcp-tool-usage` skill)
 
 **✅ Multi-Task Spec Workflow (CRITICAL):**
 When parent issue has sub-issues, authorization cascades to ALL sub-issues:

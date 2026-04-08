@@ -86,3 +86,4 @@ docker.app/
 /.output.txt
 /opencode-guidelines-export/
 /opencode-guidelines-export.zip
+.srclight/

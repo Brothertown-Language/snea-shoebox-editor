@@ -12,6 +12,15 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/adjust-tool-priorities
+
+- Remove 36 superseded ai_bin scripts (nb, plans, py-find, py-structure, start, multi-find)
+- Rewrite mcp-tool-usage skill with five-tier tool priority hierarchy (opencode built-in primary, JetBrains MCP fallback)
+- Update 10+ guideline/skill/config files to reference new hierarchy and removed tools
+- Add notebook swap/reorder workflows to notebook-operations skill
+- Add .ipynb zero-tolerance exception table to notebook-operations skill
+- Update AGENTS.md MCP Enforcement Gate and Boundaries sections
+
 ### spec/prevent-redundant-audit-comments-521
 
 - Remove spec-auditor mandate to post audit findings as GitHub issue comments

@@ -59,18 +59,18 @@ You are a Code Size Enforcer. Your sole focus is ensuring code artifacts stay wi
 | Method | Purpose | Example |
 |--------|---------|---------|
 | `wc -l <file>` | File line count | `wc -l src/module.py` |
-| `ai_bin/py structure --stats` | Function sizes | Shows function line counts |
+| `srclight_symbols_in_file` | Function/class listing | Shows symbol structure and line ranges |
 | Manual code review | All sizes | During PR review |
 | `git diff --stat` | Change size | For modified files |
 
 ### Function Size Detection
 
 ```bash
-# Get function sizes via ai_bin/py
-uv run python ai_bin/py structure --stats src/module.py
+# Get function sizes via srclight
+srclight_symbols_in_file(path="src/module.py")
 
-# Output includes function line counts
-# Example: function_name: 35 lines
+# Output includes function names and line ranges
+# For line counts, use wc -l on specific function ranges
 ```
 
 ### File Size Detection

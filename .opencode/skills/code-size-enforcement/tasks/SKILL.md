@@ -42,16 +42,12 @@ git log --oneline --follow -- <file> | wc -l
 
 ### Step 3: Check Function Sizes
 
-**Using ai_bin/py structure:**
+**Using srclight:**
 ```bash
-uv run python ai_bin/py structure --stats <file>
+srclight_symbols_in_file(path="<file>")
 ```
 
-**Output includes:**
-```
-function_name: 35 lines
-another_function: 45 lines  # ← EXCEEDS 40-line limit
-```
+**Output includes function names and line ranges.**
 
 **For each function > 40 lines:**
 1. Flag as violation

@@ -607,4 +607,4 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 
 ______________________________________________________________________
 
-**Search guidelines:** Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant guidelines.
+**Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.

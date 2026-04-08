@@ -46,7 +46,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
     any imports or `__all__` entries.
 - **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the
   package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two
-  concise sentences — enough for `ai_bin/py structure` to display alongside the filename.
+  concise sentences — enough for `ai_bin/py ls` to display alongside the filename.
 - **Docstring/Comment Determinism**: Pydoc/docstrings and code comments must use deterministic wording. Avoid ambiguous hedge/alternative phrasing such as `maybe`, `if ... or ...`, `and/or`, or `A + B or C` when describing required behavior, validation paths, or implementation intent.
 - **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered
   configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause
@@ -86,7 +86,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 
 ## Linting & Static Analysis
 
-- Run appropriate dev tools (linters, type checkers) listed in `ai_bin/start` on all modified Python files before submitting.
+- Run appropriate dev tools (linters, type checkers) listed in AGENTS.md "Build / Lint / Test Commands" on all modified Python files before submitting.
 
 ## Tool Selection by File Type
 

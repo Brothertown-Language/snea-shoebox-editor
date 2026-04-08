@@ -1,9 +1,8 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Python source tools dispatcher. Usage: uv run python ai_bin/py <action> [args...]
-Actions: find, ls, mkpkg, structure
-Example: uv run python ai_bin/py find <name> [--root <dir>]
-         uv run python ai_bin/py ls src/commons
+Actions: ls, mkpkg
+Example: uv run python ai_bin/py ls src/commons
          uv run python ai_bin/py mkpkg src/commons/query
 """
 from __future__ import annotations
@@ -15,10 +14,8 @@ from pathlib import Path
 BASE_DIR = Path(__file__).resolve().parent
 
 ACTIONS = {
-    "find": "py-find",
     "ls": "py-ls",
     "mkpkg": "py-mkpkg",
-    "structure": "py-structure",
 }
 
 

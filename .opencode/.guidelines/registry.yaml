@@ -150,25 +150,6 @@ fragments:
     last_sync: 2026-04-06T10:00:00Z
     notes: "Never edit .ipynb directly - use the-notebook-mcp only"
 
-  - id: mcp-preference
-    master:
-      path: .opencode/.guidelines/mcp-preference.md
-      hash: sha256: TBD
-      last_modified: 2026-04-06T10:00:00Z
-    content:
-      type: text-block
-      estimated_tokens: 200
-      description: "MCP tool hierarchy and preference"
-    destinations:
-      - path: .opencode/skills/mcp-tool-usage/SKILL.md
-        hash: sha256: TBD
-        line_range:
-          start: 50
-          end: 150
-    sync_status: synchronized
-    last_sync: 2026-04-06T10:00:00Z
-    notes: "PyCharm MCP > GitHub MCP > direct file tools"
-
   - id: engineering-approach
     master:
       path: .opencode/.guidelines/engineering-approach.md

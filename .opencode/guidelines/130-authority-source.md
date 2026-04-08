@@ -53,7 +53,7 @@ history are secondary and potentially transient or outdated.
    the Drift Protocol. This does not apply when merely discussing or quoting a filename from a document.
 7. **Deep Dive Before Declaring Missing**: When analysis identifies a seemingly missing component (e.g., email delivery,
    a utility class, a service integration), do NOT assume it is absent. Perform a thorough search of the codebase —
-   using `search_project`, `uv run python ai_bin/py find`, and directory exploration — before concluding the component
+   using `srclight_search_symbols`, `grep`, and directory exploration — before concluding the component
    is missing. The component may already exist under a different name, module, or abstraction. Only after a genuine deep
    dive may you declare it missing and propose adding it.
 8. **Plan Audit Requires Code Deep Dive**: When auditing or updating any plan, strictly follow the mandatory code deep
