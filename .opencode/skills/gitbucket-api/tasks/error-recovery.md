@@ -72,7 +72,7 @@ json=["bug", "enhancement"]  # ✅
 
 ## Session Init Detection
 
-Session init script (`ai_bin/session_init.py`) detects GitBucket from remote URL and outputs:
+Session init script (`.opencode/scripts/session_init.py`) detects GitBucket from remote URL and outputs:
 
 ```
 GIT_PLATFORM=gitbucket

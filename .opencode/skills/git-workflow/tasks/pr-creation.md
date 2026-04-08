@@ -810,7 +810,7 @@ Every squash commit MUST include:
 
 **Human Trailer:**
 
-- Use session values from `000-session-init.md`
+- Use session values from the session-init plugin
 - `DEV_NAME`: Human's name
 - `DEV_EMAIL`: Human's email
 - Format: `Co-authored-by: <Human-Name> <human-email>`

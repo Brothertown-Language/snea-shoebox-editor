@@ -65,7 +65,7 @@ When reviewing code, check:
 - **090-data-integrity.md** - Data quality and validation rules
 - **070-environment.md** - Production data protection
 - **080-code-standards.md** - Code quality standards
-- **000-session-init.md** - Agent initialization and boundaries
+- **Session Init Plugin**: Agent initialization and boundaries
 
 This guideline is foundational. When in doubt: **raise, don't return.**
 

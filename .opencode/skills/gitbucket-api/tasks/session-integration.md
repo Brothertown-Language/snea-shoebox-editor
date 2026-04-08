@@ -2,7 +2,7 @@
 
 ## Overview
 
-Session init script (`ai_bin/session_init.py`) provides GitBucket credentials from environment and git remote.
+Session init script (`.opencode/scripts/session_init.py`) provides GitBucket credentials from environment and git remote.
 
 ## Credential Sources (Priority Order)
 
@@ -204,5 +204,5 @@ except NotFoundError:
 
 - `tools/auth.py` - Credential loading, platform-specific paths
 - `tools/session.py` - Session integration
-- `ai_bin/session_init.py` - Session init script
+- `.opencode/scripts/session_init.py` - Session init script
 

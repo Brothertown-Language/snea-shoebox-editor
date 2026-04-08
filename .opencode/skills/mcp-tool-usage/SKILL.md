@@ -29,13 +29,12 @@ You are an MCP Tool Usage Enforcer. Your sole focus is ensuring all file, notebo
 
 ### ✅ REQUIRED OWNER VALUES
 
-**ONLY use values from `ai_bin/session_init.py` output:**
+**ONLY use values from the session-init plugin output:**
+
+Session init values are automatically injected by the session-init plugin (`.opencode/plugins/session-init.ts`) — no manual script execution needed.
 
 ```bash
-# Run session init FIRST
-uv run python ai_bin/session_init.py
-
-# Use these values for SESSION DURATION:
+# Values are available automatically from the plugin:
 # - GIT_OWNER for all github_* MCP calls
 # - GIT_REPO for all github_* MCP calls
 # - DEV_NAME for commit trailers
@@ -78,7 +77,7 @@ github_issue_read(owner=owner, ...)  # WRONG - stale cached value
 
 1. **Automatically Applied:** This skill is referenced whenever any file operation is needed. It is NOT invoked by name - the agent follows these rules at all times.
 
-1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see `000-session-init.md`).
+1. **MCP Probe First:** Before any file operation, the agent MUST have probed MCP availability (see session-init plugin in AGENTS.md).
 
 2. **Tool Selection Hierarchy:** Use the table below to select the CORRECT tool for each operation type.
 
@@ -338,7 +337,7 @@ When MCP tools are available but not used:
 | `060-tool-usage.md` | Tool usage and terminal rules |
 | `061-notebook-rules.md` | Notebook MCP zero-tolerance |
 | `016-srclight-preference.md` | Srclight vs PyCharm vs ai_bin |
-| `000-session-init.md` | MCP probe at startup |
+| Session init plugin | `.opencode/plugins/session-init.ts` | MCP probe at startup |
 
 ## Examples
 

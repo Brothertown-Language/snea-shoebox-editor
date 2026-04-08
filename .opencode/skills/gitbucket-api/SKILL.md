@@ -417,7 +417,7 @@ See `tasks/error-recovery.md` for detailed procedures.
 
 ## Session Init Integration
 
-Session init (`ai_bin/session_init.py`) detects GitBucket and outputs:
+Session init (`.opencode/scripts/session_init.py`) detects GitBucket and outputs:
 
 ```
 GIT_PLATFORM=gitbucket
@@ -459,4 +459,4 @@ This skill is based on analysis of GitBucket source code:
 
 | Guideline | Section |
 |-----------|---------|
-| `000-session-init.md` | GitBucket detection and credentials |
+| Session init plugin | GitBucket detection and credentials |
