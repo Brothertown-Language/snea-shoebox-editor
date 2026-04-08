@@ -23,7 +23,7 @@ Use MCP tools for ALL file, notebook, and repository operations when MCP is avai
 - `uv run python ai_bin/guidelines search <term> --file <filename>` — search within one file.
 
 ### ⚠️ ASK FIRST
-- Significant edits to core guideline files (000-session-init, etc.).
+- Significant edits to core guideline files.
 
 ### 🚫 NEVER DO
 - Use `open`, `cat`, or `grep` on `.opencode/guidelines/` files directly.

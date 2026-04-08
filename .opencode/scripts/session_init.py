@@ -12,10 +12,10 @@ Extracts git context needed for agent startup:
 - GITBUCKET_HTML_URL: GitBucket web UI base URL (from .env, NEVER fabricated)
 - GITBUCKET_SSH_URL: GitBucket SSH base URL (host+port, no path, for SSH remotes)
 - GITBUCKET_HAS_CREDENTIALS: Whether .env has token configured
-- SRCLEIGHT_STATUS: Srclight index health (ok/empty/unavailable)
+- SRCLEIGHT_STATUS: Srclight index health (ok/empty/not_indexed)
 
 Usage:
-    uv run python ai_bin/session_init.py
+    uv run python .opencode/scripts/session_init.py
 
 Exit codes:
     0: Success
@@ -161,9 +161,7 @@ def _read_gitbucket_url_from_env() -> str | None:
     Returns None if neither found.
     """
     try:
-        env_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
-        )
+        env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
         if os.path.exists(env_path):
             html_url = None
             legacy_url = None
@@ -175,7 +173,7 @@ def _read_gitbucket_url_from_env() -> str | None:
                     elif line.startswith("GITBUCKET_URL="):
                         legacy_url = line.split("=", 1)[1].strip()
             return html_url or legacy_url
-    except (IOError, OSError):
+    except OSError:
         pass
     return None
 
@@ -201,57 +199,29 @@ def get_remote_url() -> str | None:
 
 
 def check_srclight() -> None:
-    """Check srclight index health and report status.
+    """Check srclight index health via filesystem probe.
 
-    Outputs SRCLEIGHT_STATUS=<status> line if srclight is available.
+    Fast check: looks for the srclight DB file instead of running
+    uvx srclight status (which takes ~30 seconds).
+
+    Outputs SRCLEIGHT_STATUS=<status> line.
     Reports warnings to stderr if index is missing or unhealthy.
     """
-    try:
-        result = subprocess.run(
-            ["uvx", "srclight", "status"],
-            capture_output=True,
-            text=True,
-            check=False,
-            timeout=30,
-        )
-        if result.returncode != 0:
-            print("SRCLEIGHT_STATUS=unavailable")
-            print(
-                "# ⚠️ Srclight index not found. Run: uvx srclight index --embed qwen3-embedding",
-                file=sys.stderr,
-            )
-            return
-
-        output = result.stdout
-        file_count = 0
-        symbol_count = 0
-        for line in output.splitlines():
-            line = line.strip()
-            if line.startswith("Files:"):
-                try:
-                    file_count = int(line.split(":")[1].strip())
-                except (ValueError, IndexError):
-                    pass
-            elif line.startswith("Symbols:"):
-                try:
-                    symbol_count = int(line.split(":")[1].strip())
-                except (ValueError, IndexError):
-                    pass
-
-        if file_count == 0 or symbol_count == 0:
+    db_path = os.path.join(os.getcwd(), ".srclight", "index.db")
+    if os.path.exists(db_path):
+        file_size = os.path.getsize(db_path)
+        if file_size > 0:
+            print("SRCLEIGHT_STATUS=ok")
+        else:
             print("SRCLEIGHT_STATUS=empty")
             print(
                 "# ⚠️ Srclight index is empty. Run: uvx srclight index --embed qwen3-embedding",
                 file=sys.stderr,
             )
-        else:
-            print("SRCLEIGHT_STATUS=ok")
-            print(f"# Srclight: {file_count} files, {symbol_count} symbols indexed")
-
-    except (subprocess.TimeoutExpired, FileNotFoundError):
-        print("SRCLEIGHT_STATUS=unavailable")
+    else:
+        print("SRCLEIGHT_STATUS=not_indexed")
         print(
-            "# ⚠️ Srclight not available. Install with: uvx srclight index",
+            "# ⚠️ Srclight index not found. Run: uvx srclight index --embed qwen3-embedding",
             file=sys.stderr,
         )
 
@@ -302,9 +272,7 @@ def main() -> int:
         result = parse_gitbucket_url(remote_url)
         base_url, owner, repo = result
         if not owner or not repo:
-            print(
-                "WARNING: Failed to parse owner/repo from remote URL", file=sys.stderr
-            )
+            print("WARNING: Failed to parse owner/repo from remote URL", file=sys.stderr)
             print(f"Remote URL: {remote_url}", file=sys.stderr)
             print("GIT_PLATFORM=gitbucket")
             print("GITBUCKET_URL=")
@@ -328,20 +296,14 @@ def main() -> int:
         # Check if credentials exist in .env
         has_credentials = False
         try:
-            env_path = os.path.join(
-                os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"
-            )
+            env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
             if os.path.exists(env_path):
                 with open(env_path) as f:
                     content = f.read()
-                    has_credentials = (
-                        "GITBUCKET_TOKEN=" in content
-                        and (
-                            "GITBUCKET_HTML_URL=" in content
-                            or "GITBUCKET_URL=" in content
-                        )
+                    has_credentials = "GITBUCKET_TOKEN=" in content and (
+                        "GITBUCKET_HTML_URL=" in content or "GITBUCKET_URL=" in content
                     )
-        except (IOError, OSError):
+        except OSError:
             pass
 
         print(f"GIT_OWNER={owner}")

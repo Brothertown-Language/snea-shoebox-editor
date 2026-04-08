@@ -5,13 +5,12 @@ Extracts GitBucket credentials from session init script output.
 """
 
 import subprocess
-from typing import Dict
 
 
-def get_session_values() -> Dict[str, str]:
+def get_session_values() -> dict[str, str]:
     """Extract values from session init script.
 
-    Runs `uv run python ai_bin/session_init.py` and parses output.
+    Runs `uv run python .opencode/scripts/session_init.py` and parses output.
 
     Returns:
         Dict with GITBUCKET_URL, GITBUCKET_TOKEN, GIT_OWNER, GIT_REPO, etc.
@@ -30,7 +29,7 @@ def get_session_values() -> Dict[str, str]:
         ValueError: Expected variable not found in output
     """
     result = subprocess.run(
-        ["uv", "run", "python", "ai_bin/session_init.py"],
+        ["uv", "run", "python", ".opencode/scripts/session_init.py"],
         capture_output=True,
         text=True,
         check=True,
@@ -57,9 +56,7 @@ def get_gitbucket_url() -> str:
     values = get_session_values()
     url = values.get("GITBUCKET_HTML_URL") or values.get("GITBUCKET_URL")
     if not url:
-        raise ValueError(
-            "Neither GITBUCKET_HTML_URL nor GITBUCKET_URL found in session init output"
-        )
+        raise ValueError("Neither GITBUCKET_HTML_URL nor GITBUCKET_URL found in session init output")
     return url
 
 
@@ -76,10 +73,7 @@ def get_gitbucket_token() -> str:
 
     token = os.environ.get("GITBUCKET_TOKEN")
     if not token:
-        raise ValueError(
-            "GITBUCKET_TOKEN not found in environment. "
-            "Add GITBUCKET_TOKEN=your-token to .env file"
-        )
+        raise ValueError("GITBUCKET_TOKEN not found in environment. Add GITBUCKET_TOKEN=your-token to .env file")
     return token
 
 
@@ -103,7 +97,7 @@ def is_github() -> bool:
     return values.get("GIT_PLATFORM") == "github"
 
 
-def get_repo_context() -> Dict[str, str]:
+def get_repo_context() -> dict[str, str]:
     """Get repository context from session init.
 
     Returns:

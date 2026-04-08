@@ -12,15 +12,16 @@ The AI agent must determine its identity from the system prompt on EVERY session
 
 ---
 
-## Session Init (MANDATORY)
+## Session Init (Automatic)
 
-**Run BEFORE any other operations:**
+Session initialization is handled automatically by the `session-init` OpenCode plugin (`.opencode/plugins/session-init.ts`). The plugin:
 
-```bash
-uv run python ai_bin/session_init.py
-```
+1. Runs `.opencode/scripts/session_init.py` once per session (cached for 5 minutes)
+2. Injects the output into the LLM system context via `experimental.chat.system.transform`
+3. Sets key-value pairs as shell environment variables via `shell.env`
 
-**Script outputs:**
+**No manual step is required.** The following values are available automatically:
+
 - `DEV_NAME`: Human collaborator name (for commit trailers)
 - `DEV_EMAIL`: Human collaborator email (for commit trailers)
 - `GIT_OWNER`: Repository owner (for API calls)
@@ -30,8 +31,6 @@ uv run python ai_bin/session_init.py
 - `GIT_PLATFORM`: Platform type (`github` or `gitbucket`)
 - `GITBUCKET_HTML_URL`: GitBucket web UI base URL (if GitBucket, non-secret)
 - `GITBUCKET_HAS_CREDENTIALS`: `true` if credentials configured in `.env`
-
-**Store these values for session duration.**
 
 ---
 

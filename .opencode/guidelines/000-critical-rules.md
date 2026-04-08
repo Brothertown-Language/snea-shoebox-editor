@@ -280,7 +280,7 @@ ______________________________________________________________________
 
 **⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.**
 
-All URLs must be constructed exclusively from values provided by `ai_bin/session_init.py` output. No exceptions.
+All URLs must be constructed exclusively from values provided by the session-init plugin output. No exceptions.
 
 ### 🚫 FORBIDDEN
 
@@ -293,7 +293,7 @@ All URLs must be constructed exclusively from values provided by `ai_bin/session
 
 ### ✅ REQUIRED
 
-1. Run session init: `uv run python ai_bin/session_init.py`
+1. Values are automatically injected by the session-init plugin (`.opencode/scripts/session_init.py`)
 1. Extract `GITBUCKET_HTML_URL` (preferred) or `GITBUCKET_URL` (legacy) from session init output
 1. Construct ALL URLs using that base URL + `GIT_OWNER` + `GIT_REPO`
 1. If session init does not provide a required URL component → HALT and report
@@ -350,11 +350,11 @@ ______________________________________________________________________
 - Inferring owner from `$USER` environment variable
 - Inferring owner from git username (`git config user.name`)
 - Using cached/stale owner values from previous sessions
-- Making ANY GitHub MCP call without first running `ai_bin/session_init.py`
+- Making ANY GitHub MCP call without session init values being available
 
 ### ✅ REQUIRED SEQUENCE
 
-1. Run session init: `uv run python ai_bin/session_init.py`
+1. Values are automatically injected by the session-init plugin (`.opencode/scripts/session_init.py`)
 1. Store ALL output values for session duration:
    - `DEV_NAME` (human name for commit trailers)
    - `DEV_EMAIL` (human email for commit trailers)

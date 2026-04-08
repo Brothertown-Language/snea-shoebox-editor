@@ -315,7 +315,7 @@ This auditor skill coordinates with the project's approval gate workflow:
 ### Coordination Points
 - **Approval Gate (`010-approval-gate.md`)**: Before approving implementation for guideline changes, verify via this auditor.
 - **Critical Rules (`000-critical-rules.md`)**: References auditor skills for enforcement.
-- **Session Init (`000-session-init.md`)**: Documents when to invoke auditor skills.
+- **Session Init Plugin (`.opencode/plugins/session-init.ts`)**: Documents when to invoke auditor skills.
 
 ### Enforcement Flow
 1. User approves a guideline-related change in implementation.
