@@ -128,32 +128,41 @@ issue_pr_workflow:
     task: "verify"
     purpose: "Verify all success criteria have evidence"
     automatic: true
-    note: "Prevents premature completion claims without evidence"
+    note: "MANDATORY - prevents premature completion claims without evidence"
+    enforcement: "CRITICAL VIOLATION to skip - see 000-critical-rules.md"
     
   - trigger: "Agent marks step as ☑ in plan"
     skill: "verification-before-completion"
     task: "verify"
     purpose: "Verify step completion has evidence"
     automatic: true
+    enforcement: "CRITICAL VIOLATION to skip - see 000-critical-rules.md"
     
   - trigger: "Agent attempts to close issue or create PR"
     skill: "verification-before-completion"
     task: "verify"
     purpose: "Final verification before closure"
     automatic: true
+    enforcement: "CRITICAL VIOLATION to skip - see 000-critical-rules.md"
 
   - trigger: "Missing evidence detected"
     skill: "verification-before-completion"
     task: "collect"
     purpose: "Collect missing evidence for incomplete criteria"
 
-  # THIRD CHECK - Implementation workflow orchestration
-  - trigger: "After approval-gate confirms authorization"
-    skill: "implementation-workflow"
-    task: "orchestrate"
-    purpose: "Orchestrate implementation workflow with yield-back context passing"
+  # BRANCH COMPLETION GATE - Before review-prep (after verification)
+  - trigger: "Implementation completes on feature branch"
+    skill: "finishing-a-development-branch"
+    task: "checklist"
+    purpose: "Verify branch is ready for PR creation (committed, tested, pushed)"
     automatic: true
-    note: "Sequences pre-work → implementation subagent → review-prep with context"
+    note: "MANDATORY - must pass AFTER verification-before-completion, BEFORE review-prep"
+    enforcement: "CRITICAL VIOLATION to skip - see 000-critical-rules.md"
+    
+  - trigger: "User says 'done' or 'finished' or 'ready for PR'"
+    skill: "finishing-a-development-branch"
+    task: "checklist"
+    purpose: "Run completion checklist before PR"
     
   # Git workflow tasks (called by implementation-workflow orchestration)
   - trigger: "Implementation-workflow calls pre-work"
@@ -226,8 +235,9 @@ quality_gates:
 
   - trigger: "Implementation completes on feature branch"
     skill: "finishing-a-development-branch"
-    task: "prepare"
-    purpose: "Verify branch is ready for PR creation"
+    task: "checklist"
+    purpose: "Verify branch is ready for PR creation (MUST come before review-prep)"
+    enforcement: "CRITICAL VIOLATION to skip - see 000-critical-rules.md"
 
   - trigger: "User says 'done' or 'finished' or 'ready for PR'"
     skill: "finishing-a-development-branch"
@@ -320,16 +330,23 @@ automatic_invocation:
     task: "start"
     note: "Automatic execution start after plan approval"
   
-  # VERIFICATION GATE - Before completion claims
+  # VERIFICATION GATE - Before completion claims (MANDATORY, no decision point)
   - skill: "verification-before-completion"
     trigger: "Agent claims 'task complete' or 'step complete'"
     task: "verify"
-    note: "Mandatory evidence verification before completion claims"
+    note: "MANDATORY evidence verification before completion claims. CRITICAL VIOLATION to skip."
+
+  # BRANCH COMPLETION GATE - After verification, before review-prep (MANDATORY, no decision point)
+  - skill: "finishing-a-development-branch"
+    trigger: "Verification-before-completion passes"
+    task: "checklist"
+    note: "MANDATORY branch readiness check. CRITICAL VIOLATION to skip. Must come BEFORE review-prep."
   
+  # REVIEW-PREP - After verification and branch completion gates pass
   - skill: "git-workflow"
     trigger: "Implementation completes"
     task: "review-prep"
-    note: "Automatic, no decision point"
+    note: "Automatic, no decision point. Must ONLY run after verification and finishing gates pass."
     
   - skill: "git-workflow"
     trigger: "User requests PR creation ('create a PR', 'make a PR', 'push and create PR')"

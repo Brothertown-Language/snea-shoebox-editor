@@ -56,6 +56,14 @@ implementation-workflow/orchestrate (receives auth context)
     [invokes implementation subagent]
     YIELDS: {files_changed: [...], commit_status: {...}}
     ↓
+    [invokes verification-before-completion --task verify]  ← MANDATORY GATE
+    YIELDS: {verification: "pass" | "fail"}
+    ↓ (if FAIL → HALT and report)
+    ↓ (if PASS → continue)
+    [invokes finishing-a-development-branch --task checklist]  ← MANDATORY GATE
+    YIELDS: {checklist: "pass" | "fail"}
+    ↓ (if FAIL → HALT and report)
+    ↓ (if PASS → continue)
     [calls git-workflow --task review-prep]
     YIELDS: {compare_url: "...", exec_summary: "..."}
     ↓
@@ -134,6 +142,76 @@ ready_for: "review"
 ```
 
 **Intelligence note:** Format provides what review-prep needs (files changed, commit summary).
+
+### Step 3.5: Verification Gate (MANDATORY, NO DECISION POINT)
+
+**⚠️ CRITICAL: This step is MANDATORY and has NO decision point. Skipping it is a CRITICAL GUIDELINE VIOLATION.**
+
+After implementation completes, BEFORE proceeding to review-prep, invoke verification skills in strict sequence:
+
+**Step 3.5a: Invoke verification-before-completion**
+```
+/skill verification-before-completion --task verify
+```
+
+**Context:**
+```yaml
+issue: 77
+phase: "Phase 1 implementation"
+success_criteria: [from spec issue]
+files_changed: [...]
+```
+
+**Expected yield:**
+```yaml
+status: pass | fail
+verified_criteria:
+  - criterion: "..."
+    evidence: "..."
+    verified: true
+unverified_criteria: []  # Must be empty to pass
+missing_evidence: []      # Must be empty to pass
+```
+
+**If verification FAILS → HALT and report.** Do NOT proceed to Step 4.
+
+**Step 3.5b: Invoke finishing-a-development-branch**
+```
+/skill finishing-a-development-branch --task checklist
+```
+
+**Context:**
+```yaml
+branch: "spec/workflow-skills-integration"
+implementation_complete: true
+verification_passed: true
+```
+
+**Expected yield:**
+```yaml
+status: pass | fail
+checklist_results:
+  - item: "All changes committed"
+    passed: true
+  - item: "Lint checks pass"
+    passed: true
+  - item: "Tests pass"
+    passed: true
+  - item: "Branch pushed"
+    passed: true
+failed_items: []  # Must be empty to pass
+```
+
+**If checklist FAILS → HALT and report.** Do NOT proceed to Step 4.
+
+**Why This Gate Exists:**
+
+| Without Gate | With Gate |
+|-------------|-----------|
+| Agent skips verification | Success criteria checked with evidence |
+| Agent skips branch checklist | Uncommitted changes, failing tests caught |
+| Agent manually executes steps | Full skill context loaded with enforcement |
+| "Changes look correct" justification | Required evidence for each criterion |
 
 ### Step 4: Call Review-Prep (Git Ops Only)
 
@@ -218,6 +296,23 @@ commit_summary: string
 implementation_status: success | failure
 ```
 
+### What Verification Gate Needs FROM Implementation
+
+```yaml
+issue_number: int
+phase: string
+success_criteria: list
+files_changed: list
+```
+
+### What Finishing Checklist Needs FROM Verification
+
+```yaml
+branch: string
+verification_passed: true
+implementation_complete: true
+```
+
 ### What Chat Needs FROM Review-Prep
 
 ```yaml
@@ -261,6 +356,20 @@ exec_summary: string (markdown, human-readable)
 ```
 
 ## Enforcement Mechanisms
+
+### ⚠️ CRITICAL: Verification Gate (Step 3.5)
+
+**This gate is MANDATORY and has NO decision point.** It cannot be skipped, bypassed, or manually executed.
+
+| Step | Skill | Required? | Decision Point? |
+|------|-------|-----------|-----------------|
+| 3.5a | verification-before-completion --task verify | YES | NO |
+| 3.5b | finishing-a-development-branch --task checklist | YES | NO |
+| 4 | git-workflow --task review-prep | YES | NO |
+
+**Skipping any step in this sequence is a CRITICAL GUIDELINE VIOLATION.**
+
+See `000-critical-rules.md` → "Skipping Post-Implementation Verification Skills" for the enforcement rule.
 
 ### ⚠️ CRITICAL: No Implementation Logic in Git-Workflow
 
@@ -321,6 +430,8 @@ implementation-workflow (receives context)
 | Authorization context lost | approval-gate passes context to implementation-workflow |
 | Pre-work asks for auth again | Pre-work receives context from orchestrator, no re-check |
 | Implementation doesn't commit | Implementation calls git-workflow commit-prep directly |
+| Verification fails | HALT and report missing evidence; do NOT proceed to review-prep |
+| Finishing checklist fails | HALT and report issues (lint, tests, uncommitted); do NOT proceed to review-prep |
 | Review-prep HALTs prematurely | Correct behavior - wait for "create a PR" |
 
 ## Migration from Old Architecture
@@ -355,6 +466,12 @@ implementation-workflow/orchestrate:
         → Subagent edits files
         → Subagent calls commit-prep directly
         → Subagent yields: "4 files changed, 2 commits"
+    → Invokes verification-before-completion --task verify
+        → All success criteria verified with evidence
+        → Verification PASSES
+    → Invokes finishing-a-development-branch --task checklist
+        → All changes committed, tests pass, branch pushed
+        → Checklist PASSES
     → Calls review-prep: "URL: https://..., summary: ..."
     → HALT with URL in chat
 ```
@@ -371,7 +488,37 @@ implementation-workflow/orchestrate:
     → Wait for user instruction
 ```
 
-### Example 3: Working Tree Dirty
+### Example 3: Verification Fails
+
+```
+implementation-workflow/orchestrate:
+    → Calls pre-work: "Branch: spec/X, ready"
+    → Invokes implementation subagent
+        → Subagent yields: {status: "success", files_changed: [...]}
+    → Invokes verification-before-completion --task verify
+        → Success criterion missing evidence
+        → Verification FAILS
+    → HALT: "Verification failed. Missing evidence for: [criterion]"
+    → Wait for user to provide evidence or fix
+```
+
+### Example 4: Branch Checklist Fails
+
+```
+implementation-workflow/orchestrate:
+    → Calls pre-work: "Branch: spec/X, ready"
+    → Invokes implementation subagent
+        → Subagent yields: {status: "success"}
+    → Invokes verification-before-completion --task verify
+        → Verification PASSES
+    → Invokes finishing-a-development-branch --task checklist
+        → Lint errors found, uncommitted changes
+        → Checklist FAILS
+    → HALT: "Branch not ready. Fix: [lint errors, commit changes]"
+    → Wait for user to fix issues
+```
+
+### Example 5: Working Tree Dirty
 
 ```
 implementation-workflow/orchestrate:

@@ -113,6 +113,72 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## Critical Violation: Skipping Post-Implementation Verification Skills
+
+**⚠️ Failing to invoke `verification-before-completion` and `finishing-a-development-branch` after implementation is a CRITICAL GUIDELINE VIOLATION.**
+
+This is the same class of failure as skipping `review-prep`: skills exist, dispatch triggers are documented, but the agent skips them because there is no enforcement mechanism blocking progression.
+
+### 🚫 FORBIDDEN
+
+- Claiming "task complete" without invoking `verification-before-completion --task verify`
+- Claiming "implementation complete" without invoking `finishing-a-development-branch --task checklist`
+- Manually executing skill steps instead of formally invoking the skill
+- Skipping verification because "the changes look correct"
+- Proceeding to `review-prep` before verification skills pass
+
+### ✅ REQUIRED SEQUENCE (MANDATORY, NO DECISION POINT)
+
+After every implementation, the following skills MUST be invoked in this exact order:
+
+```
+Implementation completes
+    ↓
+1. verification-before-completion --task verify
+    ↓ (if verification FAILS → HALT and report)
+    ↓ (if verification PASSES → continue)
+2. finishing-a-development-branch --task checklist
+    ↓ (if checklist FAILS → HALT and report)
+    ↓ (if checklist PASSES → continue)
+3. git-workflow --task review-prep
+    ↓
+HALT with compare URL
+```
+
+**The order matters:**
+1. `verification-before-completion` checks SUCCESS CRITERIA (evidence required)
+2. `finishing-a-development-branch` checks BRANCH READINESS (committed, tested, pushed)
+3. `git-workflow --task review-prep` generates compare URL
+
+### Why Manual Execution Is NOT Sufficient
+
+Manual execution of skill steps is PROHIBITED because:
+
+| Manual Execution | Formal Skill Invocation |
+|-------------------|------------------------|
+| Skips enforcement checklists | Loads and follows enforcement checklist |
+| Agent may skip "obvious" steps | Every step is explicit and mandatory |
+| No CRITICAL VIOLATION warnings in context | Skill content includes enforcement warnings |
+| Error-prone, agent decides what to skip | No decision points — all steps required |
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| Skip verification | Success criteria not checked, bugs shipped |
+| Skip finishing checklist | Uncommitted changes, failing tests, broken PRs |
+| Skip both | No evidence of completion, no quality gate |
+| Manual execution only | Agent bypasses enforcement, misses steps |
+
+### Implementation-Workflow Integration
+
+The `implementation-workflow` skill orchestrates this sequence in Step 3.5 (Verification Gate). See `implementation-workflow/SKILL.md` for the orchestration protocol.
+
+**See `verification-before-completion` skill for evidence requirements.**
+**See `finishing-a-development-branch` skill for branch readiness checklist.**
+
+______________________________________________________________________
+
 ## Critical Violation: Skipping review-prep After Implementation
 
 **⚠️ Failing to invoke `review-prep` after implementation is a CRITICAL GUIDELINE VIOLATION.**
@@ -1343,6 +1409,72 @@ Every specification MUST include:
 - API changes between library versions cause silent failures
 - Incorrect parameter names waste debugging time
 - Outdated patterns accumulate technical debt
+
+______________________________________________________________________
+
+## Critical Violation: Skipping Post-Implementation Verification Skills
+
+**⚠️ Failing to invoke `verification-before-completion` and `finishing-a-development-branch` after implementation is a CRITICAL GUIDELINE VIOLATION.**
+
+This is the same class of failure as skipping `review-prep`: skills exist, dispatch triggers are documented, but the agent skips them because there is no enforcement mechanism blocking progression.
+
+### 🚫 FORBIDDEN
+
+- Claiming "task complete" without invoking `verification-before-completion --task verify`
+- Claiming "implementation complete" without invoking `finishing-a-development-branch --task checklist`
+- Manually executing skill steps instead of formally invoking the skill
+- Skipping verification because "the changes look correct"
+- Proceeding to `review-prep` before verification skills pass
+
+### ✅ REQUIRED SEQUENCE (MANDATORY, NO DECISION POINT)
+
+After every implementation, the following skills MUST be invoked in this exact order:
+
+```
+Implementation completes
+    ↓
+1. verification-before-completion --task verify
+    ↓ (if verification FAILS → HALT and report)
+    ↓ (if verification PASSES → continue)
+2. finishing-a-development-branch --task checklist
+    ↓ (if checklist FAILS → HALT and report)
+    ↓ (if checklist PASSES → continue)
+3. git-workflow --task review-prep
+    ↓
+HALT with compare URL
+```
+
+**The order matters:**
+1. `verification-before-completion` checks SUCCESS CRITERIA (evidence required)
+2. `finishing-a-development-branch` checks BRANCH READINESS (committed, tested, pushed)
+3. `git-workflow --task review-prep` generates compare URL
+
+### Why Manual Execution Is NOT Sufficient
+
+Manual execution of skill steps is PROHIBITED because:
+
+| Manual Execution | Formal Skill Invocation |
+|-------------------|------------------------|
+| Skips enforcement checklists | Loads and follows enforcement checklist |
+| Agent may skip "obvious" steps | Every step is explicit and mandatory |
+| No CRITICAL VIOLATION warnings in context | Skill content includes enforcement warnings |
+| Error-prone, agent decides what to skip | No decision points — all steps required |
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| Skip verification | Success criteria not checked, bugs shipped |
+| Skip finishing checklist | Uncommitted changes, failing tests, broken PRs |
+| Skip both | No evidence of completion, no quality gate |
+| Manual execution only | Agent bypasses enforcement, misses steps |
+
+### Implementation-Workflow Integration
+
+The `implementation-workflow` skill orchestrates this sequence in Step 3.5 (Verification Gate). See `implementation-workflow/SKILL.md` for the orchestration protocol.
+
+**See `verification-before-completion` skill for evidence requirements.**
+**See `finishing-a-development-branch` skill for branch readiness checklist.**
 
 ______________________________________________________________________
 
