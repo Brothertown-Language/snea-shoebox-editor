@@ -2,7 +2,10 @@
   "$schema": "https://opencode.ai/config.json",
   "instructions": [
     "AGENTS.md",
-    ".opencode/guidelines/*.md"
+    ".opencode/guidelines/000-critical-rules.md",
+    ".opencode/guidelines/010-approval-gate.md",
+    ".opencode/guidelines/020-go-prohibitions.md",
+    ".opencode/guidelines/060-tool-usage.md"
   ],
   "mcp": {
     "the-notebook-mcp": {
