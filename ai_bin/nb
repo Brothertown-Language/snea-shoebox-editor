@@ -1,0 +1,108 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Notebook tools dispatcher. Usage: uv run python ai_bin/nb <action> [args...]
+Actions: cell, inspect, edit, create, run
+  cell    — cell manipulation: add, insert, swap, move, reorder, delete
+  inspect — read-only inspection: show, outputs, find, labels
+  edit    — replace source of a single cell
+  create  — create a new empty notebook
+  run     — execute all code cells via Jupyter Server
+Example: uv run python ai_bin/nb cell add <notebook.ipynb> --source "print('hi')"
+         uv run python ai_bin/nb inspect show <notebook.ipynb>
+NOTE: Cell labels are strongly recommended. Without them, inspect labels and other tools may report
+      "No labelled cells were found in the notebook". Add labels via cell metadata: {"label": "my-label"}.
+"""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+# Two-level dispatch: top-level action -> subcommand -> impl script name
+SUBCOMMANDS: dict[str, dict[str, str]] = {
+    "cell": {
+        "add": "nb-cell-add",
+        "insert": "nb-cell-insert",
+        "swap": "nb-cell-swap",
+        "move": "nb-cell-move",
+        "reorder": "nb-cell-reorder",
+        "delete": "nb-cell-delete",
+    },
+    "inspect": {
+        "show": "nb-inspect-show",
+        "outputs": "nb-inspect-outputs",
+        "find": "nb-inspect-find",
+        "labels": "nb-inspect-labels",
+    },
+}
+
+# Single-level actions (no subcommand)
+ACTIONS: dict[str, str] = {
+    "edit": "nb-edit",
+    "create": "nb-create",
+    "run": "nb-run",
+}
+
+
+def _get_description(script_path: Path) -> str:
+    import re
+    try:
+        text = script_path.read_text()
+        m = re.search(r'DESCRIPTION:\s*(.+)', text)
+        return m.group(1).strip() if m else ""
+    except Exception:
+        return ""
+
+
+def _print_help() -> None:
+    print(__doc__)
+    print("Available actions:")
+    for group, subs in SUBCOMMANDS.items():
+        print(f"  {group}")
+        for sub, script in subs.items():
+            desc = _get_description(BASE_DIR / "impl" / script)
+            print(f"    {sub:<12} — {desc}" if desc else f"    {sub:<12} → ai_bin/impl/{script}")
+    for action, script in ACTIONS.items():
+        desc = _get_description(BASE_DIR / "impl" / script)
+        print(f"  {action:<16} — {desc}" if desc else f"  {action:<16} → ai_bin/impl/{script}")
+    print(f"CWD: {os.getcwd()}")
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help", "help"):
+        _print_help()
+        sys.exit(0)
+
+    action = args[0]
+
+    if action in SUBCOMMANDS:
+        subs = SUBCOMMANDS[action]
+        if len(args) < 2 or args[1] in ("-h", "--help", "help"):
+            print(f"Usage: uv run python ai_bin/nb {action} <subcommand> [args...]")
+            print(f"Subcommands: {', '.join(subs)}")
+            print(f"CWD: {os.getcwd()}")
+            sys.exit(0)
+        sub = args[1]
+        if sub not in subs:
+            print(f"Error: unknown subcommand {sub!r} for {action!r}. Available: {', '.join(subs)}", file=sys.stderr)
+            sys.exit(1)
+        script = BASE_DIR / "impl" / subs[sub]
+        result = subprocess.run([sys.executable, str(script)] + args[2:], env={**os.environ, "AIBIN_DISPATCHER": "1"})
+        sys.exit(result.returncode)
+
+    if action in ACTIONS:
+        script = BASE_DIR / "impl" / ACTIONS[action]
+        result = subprocess.run([sys.executable, str(script)] + args[1:], env={**os.environ, "AIBIN_DISPATCHER": "1"})
+        sys.exit(result.returncode)
+
+    all_actions = list(SUBCOMMANDS) + list(ACTIONS)
+    print(f"Error: unknown action {action!r}. Available: {', '.join(all_actions)}", file=sys.stderr)
+    sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

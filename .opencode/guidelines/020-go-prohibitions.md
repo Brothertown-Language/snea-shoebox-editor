@@ -18,6 +18,11 @@
   - "Shall I begin implementation?"
   - "Waiting for approval to continue."
   - "Let me know when you're ready for me to start."
+  - "Say 'approved' or 'go' when ready."
+  - "Awaiting authorization to implement."
+  - "**Awaiting authorization to begin Phase X.** Say 'approved' or 'go' when ready."
+  - "Awaiting your approval."
+  - "Ready when you are."
 - **Questions are NOT authorization.** "Should I do X?" and "Would you like me to X?" are questions seeking permission, not receiving it. Never act on a question — wait for explicit authorization.
 - **SILENTLY HALT after every task/report.** Factual reporting is permitted, but it must NEVER be followed by a prompt for next steps.
 - **Never name the next phase or action in a halt message.** Halt messages must be factual statements about what was completed — never forward-looking references to what comes next.
@@ -84,6 +89,8 @@ This rule applies universally to:
 
 ### ✅ MANDATORY WORKFLOW
 
+**Before implementing ANY multi-task spec:**
+
 ```
 1. Call github_issue_read(method="get_sub_issues", issue_number=N)
 2. If empty AND multi-task:
@@ -96,21 +103,15 @@ This rule applies universally to:
    - Proceed with implementation
 ```
 
-**Single-task exemption:** Specs with ONE implementation task do NOT require sub-issues.
+### 📋 CHECKLIST
 
-> **See `github-sub-issues` skill for complete workflow.**
+| Action | Required? |
+|--------|-----------|
+| `get_sub_issues` check | ✅ ALWAYS |
+| AUTO-CREATE if empty | ✅ YES (multi-task only) |
+| Verify task linked | ✅ ALWAYS |
+| Single-task exemption | ✅ YES (no sub-issues needed) |
 
-## 6. Multi-Phase Authorization Scope (CRITICAL)
+### ⚠️ SINGLE-TASK EXCEPTION
 
-**⚠️ Unqualified approval authorizes ALL phases of a spec.**
-
-| Command | Scope | Behavior |
-|---------|-------|----------|
-| `approved` | ALL phases | Proceed through all phases without stopping |
-| `go` | ALL phases | Proceed through all phases without stopping |
-| `approved: 1` | Phase 1 only | HALT after Phase 1, wait for next authorization |
-| `approved: 2.3` | Phase 2 Step 3 only | HALT after completing Step 3, wait for next authorization |
-
-**Rationale:** Unqualified approval matches developer mental model of "approved means go ahead" and prevents unnecessary back-and-forth.
-
-> **See `010-approval-gate.md` → "Authorization Scope for Multi-Phase Specs"** before continuing
+Single-task specs (one implementation task, no decomposition needed) do NOT require sub-issues. All multi-task specs MUST have sub-issues before implementation begins.

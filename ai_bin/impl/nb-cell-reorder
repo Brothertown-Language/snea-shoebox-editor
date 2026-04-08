@@ -1,0 +1,144 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Reorder cells in a .ipynb notebook by specifying the desired cell order.
+Usage: uv run python ai_bin/nb cell reorder <notebook.ipynb> <order> [--help]
+  <order> — comma-separated list of current 1-based cell indices in the desired output order.
+            Every cell index must appear exactly once. Example: 1,2,4,3,5,6
+Primary:  Jupyter Server REST API on port 18888 (GET then PUT /api/contents/<path>).
+Fallback: nbformat.read + mutate + nbformat.write when server is not reachable.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import nbformat
+import requests
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _is_port_listening() -> bool:
+    result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True)
+    return f":{PORT}" in result.stdout
+
+
+def _ensure_server() -> bool:
+    if _is_port_listening():
+        return True
+    result = subprocess.run(["uv", "run", "jupyter", "server", "--version"], capture_output=True, text=True)
+    if result.returncode != 0:
+        return False
+    log = BASE_DIR / "tmp" / "jupyter.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(
+        ["uv", "run", "jupyter", "server", "--no-browser",
+         f"--port={PORT}", "--IdentityProvider.token=",
+         "--ServerApp.disable_check_xsrf=True"],
+        stdout=open(log, "a"), stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
+    )
+    for _ in range(16):
+        time.sleep(0.5)
+        if _is_port_listening():
+            return True
+    return False
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _apply_order(cells: list, order: list[int]) -> list:
+    """Return new cell list reordered by 0-based indices in order."""
+    return [cells[i] for i in order]
+
+
+def _reorder_via_api(rel_path: str, order: list[int]) -> bool:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        payload = r.json()
+        payload["content"]["cells"] = _apply_order(payload["content"]["cells"], order)
+        put = requests.put(
+            f"{BASE_URL}/api/contents/{rel_path}",
+            json={"type": "notebook", "content": payload["content"]},
+            timeout=10,
+        )
+        put.raise_for_status()
+        return True
+    except SystemExit:
+        raise
+    except requests.exceptions.RequestException:
+        return False
+
+
+def _reorder_via_nbformat(path: Path, order: list[int]) -> None:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    nb.cells = _apply_order(nb.cells, order)
+    with path.open("w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    positional = [a for a in args if not a.startswith("--")]
+    if len(positional) < 2:
+        print("Error: expected <notebook.ipynb> <order>", file=sys.stderr)
+        sys.exit(1)
+
+    nb_path = Path(positional[0])
+    if not nb_path.exists():
+        print(f"Error: {nb_path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    try:
+        order_1based = [int(x.strip()) for x in positional[1].split(",")]
+    except ValueError:
+        print("Error: <order> must be comma-separated integers.", file=sys.stderr)
+        sys.exit(1)
+
+    # Validate
+    with nb_path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    n = len(nb.cells)
+    order_0based = [i - 1 for i in order_1based]
+    if sorted(order_0based) != list(range(n)):
+        print(
+            f"Error: order must contain every cell index exactly once (1–{n}). Got: {order_1based}",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    rel_path = _rel(nb_path)
+    ok = _reorder_via_api(rel_path, order_0based)
+    if not ok:
+        if _ensure_server():
+            ok = _reorder_via_api(rel_path, order_0based)
+        if not ok:
+            print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+            _reorder_via_nbformat(nb_path, order_0based)
+
+    print(f"Reordered {n} cells in {nb_path}")
+
+
+if __name__ == "__main__":
+    main()

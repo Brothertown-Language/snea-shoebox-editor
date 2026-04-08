@@ -1,0 +1,232 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Search .ipynb files for a literal string; print notebook path, cell index, and line number.
+
+Usage: uv run python ai_bin/nb inspect find <string> [--notebook <path>] [--label <value>] [--root <dir>] [--json] [--help]
+
+Primary:  Jupyter Server REST API on port 18888 (GET /api/contents/<path>).
+Fallback: nbformat.read(..., as_version=4) when server is not reachable.
+NOTE: Cell labels are strongly recommended. Without them, check-labels and other tools may report
+      "No labelled cells were found in the notebook". Add labels via cell metadata: {"label": "my-label"}.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import json
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import requests
+import nbformat
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _is_port_listening() -> bool:
+    result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True)
+    return f":{PORT}" in result.stdout
+
+
+def _server_reachable() -> bool:
+    try:
+        requests.get(f"{BASE_URL}/api", timeout=2)
+        return True
+    except Exception:
+        return False
+
+
+def _ensure_server() -> bool:
+    if _is_port_listening():
+        return True
+    result = subprocess.run(
+        ["uv", "run", "jupyter", "server", "--version"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        return False
+    log = BASE_DIR / "tmp" / "jupyter.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(
+        ["uv", "run", "jupyter", "server", "--no-browser",
+         f"--port={PORT}", "--IdentityProvider.token=",
+         "--ServerApp.disable_check_xsrf=True"],
+        stdout=open(log, "a"), stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
+    )
+    for _ in range(16):
+        time.sleep(0.5)
+        if _is_port_listening():
+            return True
+    return False
+
+
+def _fetch_cells_via_api(rel_path: str) -> list | None:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        return r.json()["content"]["cells"]
+    except SystemExit:
+        raise
+    except requests.exceptions.RequestException:
+        return None
+
+
+def _fetch_cells_via_nbformat(path: Path) -> list:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    return nb.cells
+
+
+def _resolve_label(cells: list, label: str) -> int:
+    """Return the single cell index whose metadata['label'] == label.
+
+    Exits 1 if the label is not found.
+    Exits 1 if the label matches more than one cell (duplicate — notebook is corrupt).
+    The error message includes ALL matching cell indices so an AI agent can take corrective action.
+    """
+
+    def _meta(cell):
+        return cell.get("metadata", {}) if isinstance(cell, dict) else dict(cell.get("metadata", {}))
+
+    matches = [i for i, cell in enumerate(cells) if _meta(cell).get("label") == label]
+    if len(matches) == 0:
+        print(f"Error: no cell with metadata.label={label!r}.", file=sys.stderr)
+        sys.exit(1)
+    if len(matches) > 1:
+        print(
+            f"Error: duplicate label {label!r} found at cell indices {matches}. "
+            "Fix the notebook before using --label.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+    return matches[0]
+
+
+def _search_cells(cells: list, needle: str, index_offset: int = 0) -> list[dict]:
+    """Search cells for needle. index_offset is added to each cell's position to produce
+    the correct 1-based cell index in the output (pass the 0-based position of cells[0]
+    in the full notebook so callers can slice without losing position information)."""
+    matches: list[dict] = []
+    for i, cell in enumerate(cells):
+        source: str = cell["source"] if isinstance(cell, dict) else cell.source
+        cell_type: str = cell["cell_type"] if isinstance(cell, dict) else cell.cell_type
+        for lineno, line in enumerate(source.splitlines(), start=1):
+            if needle in line:
+                matches.append({
+                    "cell_index": index_offset + i + 1,  # 1-based
+                    "cell_type": cell_type,
+                    "line": lineno,
+                    "text": line,
+                })
+    return matches
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    as_json = "--json" in args
+    root: Path = BASE_DIR
+    needle: str | None = None
+    label: str | None = None
+    notebook: Path | None = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--root":
+            i += 1
+            root = Path(args[i]) if i < len(args) else BASE_DIR
+        elif arg == "--label":
+            i += 1
+            label = args[i] if i < len(args) else None
+        elif arg == "--notebook":
+            i += 1
+            notebook = Path(args[i]) if i < len(args) else None
+        elif arg == "--json":
+            pass
+        elif not arg.startswith("--"):
+            needle = arg
+        i += 1
+
+    if not needle:
+        print("Error: no search string specified.", file=sys.stderr)
+        sys.exit(1)
+
+    if label is not None and notebook is None:
+        print("Error: --label requires --notebook <path>.", file=sys.stderr)
+        sys.exit(1)
+
+    if notebook is not None and not notebook.exists():
+        print(f"Error: {notebook} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    if not root.exists():
+        print(f"Error: root {root} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    use_api = _server_reachable()
+    if not use_api:
+        use_api = _ensure_server()
+    if not use_api:
+        print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+
+    all_results: list[dict] = []
+
+    # If --label given, restrict to that single notebook and cell
+    if label is not None:
+        if use_api:
+            try:
+                rel = notebook.resolve().relative_to(BASE_DIR)
+            except ValueError:
+                rel = notebook
+            cells = _fetch_cells_via_api(str(rel).replace("\\", "/"))
+            if cells is None:
+                cells = _fetch_cells_via_nbformat(notebook)
+        else:
+            cells = _fetch_cells_via_nbformat(notebook)
+        cell_index_0 = _resolve_label(cells, label)  # 0-based
+        for match in _search_cells([cells[cell_index_0]], needle, index_offset=cell_index_0):
+            all_results.append({"notebook": str(notebook), **match})
+    else:
+        nb_paths = [notebook] if notebook is not None else sorted(root.rglob("*.ipynb"))
+        for nb_path in nb_paths:
+            if ".ipynb_checkpoints" in nb_path.parts:
+                continue
+
+            if use_api:
+                try:
+                    rel = nb_path.resolve().relative_to(BASE_DIR)
+                except ValueError:
+                    rel = nb_path
+                cells = _fetch_cells_via_api(str(rel).replace("\\", "/"))
+                if cells is None:
+                    cells = _fetch_cells_via_nbformat(nb_path)
+            else:
+                cells = _fetch_cells_via_nbformat(nb_path)
+
+            for match in _search_cells(cells, needle):
+                all_results.append({"notebook": str(nb_path), **match})
+
+    if as_json:
+        print(json.dumps(all_results, indent=2))
+    else:
+        for m in all_results:
+            print(f"{m['notebook']}  cell={m['cell_index']}  line={m['line']}  {m['text']}")
+        if not all_results:
+            print(f"No matches for '{needle}'.")
+
+
+if __name__ == "__main__":
+    main()

@@ -4,12 +4,12 @@
 
 Calculate metrics and rank extraction candidates identified during scan phase.
 
-## Preconditions
+## Entry Criteria
 
 - Extraction candidates identified by `extract-scan`
 - Guideline files available for analysis
 
-## Postconditions
+## Exit Criteria
 
 - Each candidate has metrics (lines, tokens, duplication, complexity)
 - Candidates ranked by priority
@@ -20,7 +20,6 @@ Calculate metrics and rank extraction candidates identified during scan phase.
 ### Step 1: Calculate Token Counts
 
 For each candidate:
-
 - Count lines (excluding headers/blank lines)
 - Estimate tokens: ≈4 tokens per line
 - Code blocks: ≈1.5 tokens per code token

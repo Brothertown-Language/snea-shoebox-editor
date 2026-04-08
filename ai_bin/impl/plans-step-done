@@ -1,0 +1,81 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Mark a specific step in a plan as complete (- [ ] → - [x]) by plan file + step number or text.
+Usage: uv run python ai_bin/plans step-done <plan-file> <step-number-or-text>
+  <plan-file>           Filename only — just the filename, not the path (e.g. plan_0210_foo.md).
+  <step-number-or-text> 1-based index of unchecked checkbox, or substring of the step text.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+import re
+import sys
+from pathlib import Path
+
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PLANS_DIR = PROJECT_ROOT / "plans"
+
+CHECKBOX_RE = re.compile(r"^(\s*-\s*\[) \](.*)$")
+
+
+def main() -> None:
+    if "--help" in sys.argv or "-h" in sys.argv or "help" in sys.argv or len(sys.argv) < 3:
+        print(__doc__)
+        sys.exit(0)
+
+    plan_arg = sys.argv[1]
+    step_arg = sys.argv[2]
+
+    path = Path(plan_arg)
+    if not path.is_absolute():
+        path = PLANS_DIR / plan_arg
+
+    if not path.exists():
+        print(f"ERROR: {path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    lines = path.read_text(encoding="utf-8").splitlines(keepends=True)
+
+    # Collect indices of unchecked checkboxes
+    unchecked = [(i, line) for i, line in enumerate(lines) if CHECKBOX_RE.match(line)]
+
+    if not unchecked:
+        print("No unchecked steps found.")
+        return
+
+    target_idx: int | None = None
+
+    # Try numeric index first
+    if step_arg.isdigit():
+        n = int(step_arg)
+        if 1 <= n <= len(unchecked):
+            target_idx = unchecked[n - 1][0]
+        else:
+            print(f"ERROR: Step {n} out of range (1–{len(unchecked)}).", file=sys.stderr)
+            sys.exit(1)
+    else:
+        # Text substring match
+        matches = [(i, line) for i, line in unchecked if step_arg.lower() in line.lower()]
+        if not matches:
+            print(f"ERROR: No unchecked step matching '{step_arg}'.", file=sys.stderr)
+            sys.exit(1)
+        if len(matches) > 1:
+            print(f"ERROR: Ambiguous match — {len(matches)} steps match '{step_arg}':", file=sys.stderr)
+            for _, line in matches:
+                print(f"  {line.rstrip()}", file=sys.stderr)
+            sys.exit(1)
+        target_idx = matches[0][0]
+
+    original = lines[target_idx]
+    lines[target_idx] = CHECKBOX_RE.sub(r"\1x]\2", original)
+    path.write_text("".join(lines), encoding="utf-8")
+    print(f"Marked done: {lines[target_idx].rstrip()}")
+
+
+if __name__ == "__main__":
+    main()

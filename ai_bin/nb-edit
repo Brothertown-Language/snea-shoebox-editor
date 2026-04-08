@@ -1,0 +1,112 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Replace the source of a single cell by index in a .ipynb file and write it back.
+
+Usage: uv run python ai_bin/nb-edit <notebook.ipynb> --cell <index> (--source <text> | --source-file <path>) [--help]
+
+Primary:  Jupyter Server REST API on port 18888 (GET then PUT /api/contents/<path>).
+Fallback: nbformat.read + mutate + nbformat.write when server is not reachable.
+"""
+from __future__ import annotations
+
+import sys
+from pathlib import Path
+
+import requests
+import nbformat
+
+BASE_DIR = Path(__file__).resolve().parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _edit_via_api(rel_path: str, cell_index: int, new_source: str) -> bool:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        payload = r.json()
+        cells = payload["content"]["cells"]
+        if cell_index >= len(cells):
+            print(f"Error: cell index {cell_index} out of range (notebook has {len(cells)} cells).", file=sys.stderr)
+            sys.exit(1)
+        cells[cell_index]["source"] = new_source
+        put = requests.put(
+            f"{BASE_URL}/api/contents/{rel_path}",
+            json={"type": "notebook", "content": payload["content"]},
+            timeout=10,
+        )
+        put.raise_for_status()
+        return True
+    except Exception:
+        return False
+
+
+def _edit_via_nbformat(path: Path, cell_index: int, new_source: str) -> None:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    if cell_index >= len(nb.cells):
+        print(f"Error: cell index {cell_index} out of range (notebook has {len(nb.cells)} cells).", file=sys.stderr)
+        sys.exit(1)
+    nb.cells[cell_index]["source"] = new_source
+    with path.open("w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    nb_path: Path | None = None
+    cell_index: int | None = None
+    new_source: str | None = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--cell":
+            i += 1
+            cell_index = int(args[i]) if i < len(args) else None
+        elif arg == "--source":
+            i += 1
+            new_source = args[i] if i < len(args) else None
+        elif arg == "--source-file":
+            i += 1
+            new_source = Path(args[i]).read_text(encoding="utf-8") if i < len(args) else None
+        elif not arg.startswith("--"):
+            nb_path = Path(arg)
+        i += 1
+
+    if nb_path is None:
+        print("Error: no notebook path specified.", file=sys.stderr)
+        sys.exit(1)
+    if not nb_path.exists():
+        print(f"Error: {nb_path} not found.", file=sys.stderr)
+        sys.exit(1)
+    if cell_index is None:
+        print("Error: --cell <index> is required.", file=sys.stderr)
+        sys.exit(1)
+    if new_source is None:
+        print("Error: --source or --source-file is required.", file=sys.stderr)
+        sys.exit(1)
+
+    rel_path = _rel(nb_path)
+
+    ok = _edit_via_api(rel_path, cell_index, new_source)
+    if not ok:
+        print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+        _edit_via_nbformat(nb_path, cell_index, new_source)
+
+    print(f"Updated cell {cell_index} in {nb_path}")
+
+
+if __name__ == "__main__":
+    main()

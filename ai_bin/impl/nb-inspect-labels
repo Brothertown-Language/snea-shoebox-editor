@@ -1,0 +1,95 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: List all labelled cells (index + label) and check for duplicates. Reports every duplicate with all matching cell indices.
+
+Usage: uv run python ai_bin/nb inspect labels <notebook.ipynb> [--help]
+
+Exits 0 if all labels are unique (or no labelled cells exist); prints each label as [index] label then a summary count.
+Exits 1 if any duplicate labels are found; prints one line per duplicate to stderr.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import sys
+from collections import defaultdict
+from pathlib import Path
+
+import nbformat
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+
+
+def _report_duplicate_labels(cells: list) -> dict[str, list[int]]:
+    """Scan all cells and return a mapping of label -> [cell indices] for every label
+    that appears more than once.  Returns an empty dict if no duplicates exist.
+
+    Prints a structured report to stderr so an AI agent can identify every duplicate
+    label and all cell numbers that carry it, enabling targeted corrective action.
+
+    Example stderr output (one line per duplicate label):
+        Duplicate label 'foo' at cell indices [2, 7]
+        Duplicate label 'bar' at cell indices [0, 3, 11]
+    """
+
+    def _meta(cell):
+        return cell.get("metadata", {}) if isinstance(cell, dict) else dict(cell.get("metadata", {}))
+
+    label_map: dict[str, list[int]] = defaultdict(list)
+    for i, cell in enumerate(cells):
+        lbl = _meta(cell).get("label")
+        if lbl is not None:
+            label_map[lbl].append(i)
+
+    duplicates = {lbl: idxs for lbl, idxs in label_map.items() if len(idxs) > 1}
+    for lbl, idxs in sorted(duplicates.items()):
+        print(f"Duplicate label {lbl!r} at cell indices {idxs}", file=sys.stderr)
+    return duplicates
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    nb_path = Path(args[0])
+    if not nb_path.exists():
+        print(f"Error: {nb_path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    with nb_path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+
+    cells = nb.cells
+
+    def _meta(cell):
+        return cell.get("metadata", {}) if isinstance(cell, dict) else dict(cell.get("metadata", {}))
+
+    label_index: dict[str, int] = {}
+    for i, cell in enumerate(cells):
+        lbl = _meta(cell).get("label")
+        if lbl is not None:
+            label_index[lbl] = i
+
+    if not label_index:
+        print("No labelled cells found.")
+        sys.exit(0)
+
+    duplicates = _report_duplicate_labels(cells)
+    if duplicates:
+        sys.exit(1)
+
+    for lbl, idx in sorted(label_index.items(), key=lambda kv: kv[1]):
+        print(f"  [{idx + 1}] {lbl}")
+    print(f"All {len(label_index)} labels are unique.")
+    sys.exit(0)
+
+
+if __name__ == "__main__":
+    main()

@@ -1,115 +1,43 @@
 ---
 name: changelog-generator
-description: Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes.
+description: Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes. Turns hours of manual changelog writing into minutes of automated generation.
 license: MIT
 compatibility: opencode
 ---
 
 # Skill: changelog-generator
 
-Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes.
+This skill transforms technical git commits into polished, user-friendly changelogs that your customers and users will actually understand and appreciate.
 
-## When to Use This Skill
+## Prerequisites
 
-**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+- **Git**: Required for reading commit history
+- **Repository access**: Must be run from a git repository root
+- **Optional**: Custom changelog style guide (CHANGELOG_STYLE.md)
 
-This skill is invoked at these workflow triggers:
-
-| Workflow Trigger | Invocation | Purpose |
-|------------------|------------|---------|
-| Generating changelog | `/skill changelog-generator` | Create changelog from commits |
-| Updating CHANGELOG.md | `/skill changelog-generator --task write` | Write entries to changelog file |
-| PR creation workflow | Invoked as subtask by `git-workflow` | Generate commit messages for PR |
-
-## This Skill's Tasks
+## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `overview` | Full skill content for changelog generation | ~400 |
-| `write` | Write generated entries to CHANGELOG.md | ~300 |
+| `since-last-release` | Generate changelog for commits since last CHANGELOG.md update | ~170 |
+| `date-range` | Generate changelog for commits within specific date range | ~90 |
+| `backfill` | One-time historical backfill of missing changelog entries | ~120 |
 
-## Dual Changelog Workflow
+## Invocation
 
-This project maintains TWO changelogs:
+- `/skill changelog-generator --task since-last-release` - Normal PR workflow (after PR creation)
+- `/skill changelog-generator --task date-range --from DATE --to DATE` - Weekly/monthly updates
+- `/skill changelog-generator --task backfill` - One-time historical catchup
+- `/skill changelog-generator` - Overview only
 
-1. **Project Changelog** (`CHANGELOG.md`): User-facing project changes
-   - Features, fixes, improvements visible to end users
-   - References version numbers from `pyproject.toml`
-   - Follows Keep a Changelog format
+## When to Use This Skill
 
-2. **AI Agent Changelog** (`.opencode/CHANGELOG.md`): AI infrastructure changes
-   - Guidelines, skills, workflow updates
-   - Internal AI agent tooling changes
-   - Also references version numbers from `pyproject.toml`
-
-### Determining Target Changelog
-
-| Change Type | Target Changelog |
-|-------------|------------------|
-| `.opencode/` directory changes | `.opencode/CHANGELOG.md` |
-| Skills (`skills/`) changes | `.opencode/CHANGELOG.md` |
-| Guidelines (`guidelines/`) changes | `.opencode/CHANGELOG.md` |
-| AGENTS.md changes | `.opencode/CHANGELOG.md` |
-| Project source code changes | `CHANGELOG.md` |
-| Documentation (README, docs/) changes | `CHANGELOG.md` |
-| Dependencies (`pyproject.toml`, `requirements.txt`) | `CHANGELOG.md` |
-| Test changes | `CHANGELOG.md` |
-| CI/CD changes (`.github/`) | `CHANGELOG.md` |
-
-**Default:** If uncertain, use `.opencode/CHANGELOG.md` for AI-focused changes.
-
-### Version Reference
-
-Both changelogs reference version numbers from `pyproject.toml`:
-
-```bash
-# Extract current version
-grep '^version = ' pyproject.toml | head -1 | cut -d'"' -f2
-
-# Example output: 0.2.0
-```
-
-**Changelog Entry Format:**
-
-```markdown
-## [X.Y.Z] - YYYY-MM-DD
-
-### Added
-- Description of new feature
-
-### Changed
-- Description of change
-
-### Fixed
-- Description of fix
-```
-
-**Unreleased Changes:**
-
-```markdown
-## [X.Y.Z] - Unreleased
-
-### Added
-- Changes for next release
-```
-
-### Writing Dual Changelogs
-
-When generating a changelog that affects both:
-
-```bash
-# Example: A new skill that also changes project behavior
-# Write to both changelogs:
-# 1. .opencode/CHANGELOG.md (skill added)
-# 2. CHANGELOG.md (project behavior change)
-```
-
-Use the `write` task for each changelog separately:
-
-```
-/skill changelog-generator --task write --target .opencode/CHANGELOG.md
-/skill changelog-generator --task write --target CHANGELOG.md
-```
+- Preparing release notes for a new version
+- Creating weekly or monthly product update summaries
+- Documenting changes for customers
+- Writing changelog entries for app store submissions
+- Generating update notifications
+- Creating internal release documentation
 - Maintaining a public changelog/product updates page
 
 ## What This Skill Does
@@ -182,48 +110,13 @@ guidelines from CHANGELOG_STYLE.md
 
 **Inspired by:** Manik Aggarwal's use case from Lenny's Newsletter
 
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for changelog generation | ~400 |
-| `write` | Write generated entries to CHANGELOG.md | ~300 |
-
-## When Invoked as Subtask (e.g., from git-workflow)
-
-For PR creation workflow, this skill should be invoked as a subtask to prevent context pollution:
-
-```
-task tool with:
-- subagent_type: "general"
-- description: "Generate changelog for PR"
-- prompt: "Use the changelog-generator skill... write to CHANGELOG.md... return JSON"
-```
-
-**Expected Return Format:**
-
-```json
-{
-  "summary": "Brief executive summary (1-2 sentences)",
-  "changelog": "Full markdown changelog content",
-  "success": true
-}
-```
-
-The subtask will:
-1. Load this skill in isolated context (~400 lines)
-2. Generate changelog from commits
-3. Write to CHANGELOG.md
-4. Return JSON result
-5. Discard context (no pollution to caller)
-
 ## Tips
 
 - Run from your git repository root
 - Specify date ranges for focused changelogs
 - Use your CHANGELOG_STYLE.md for consistent formatting
-- **Write to CHANGELOG.md before creating PRs** - Use `write` task to update the file
-- Follow Keep a Changelog format for industry-standard changelogs
+- Review and adjust the generated changelog before publishing
+- Save output directly to CHANGELOG.md
 
 ## Related Use Cases
 

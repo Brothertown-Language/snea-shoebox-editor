@@ -4,13 +4,13 @@
 
 Detect drift between guidelines and skills during maintenance mode by comparing current state to baseline.
 
-## Preconditions
+## Entry Criteria
 
 - Skill invoked with `--mode maintenance`
 - Previous baseline exists (from prior audit log)
 - Current guidelines and skills available
 
-## Postconditions
+## Exit Criteria
 
 - Token drift calculated (±% from baseline)
 - Duplicate content flagged
@@ -28,14 +28,12 @@ Detect drift between guidelines and skills during maintenance mode by comparing 
 ### Step 2: Compare Current State
 
 For each skill:
-
 - Verify file exists at `.opencode/skills/<name>/SKILL.md`
 - Verify YAML frontmatter valid
 - Check for duplicate content in guidelines
 - Test reference path from guideline to skill
 
 For each guideline:
-
 - Find all `> **See:** /skill <name>` references
 - Verify referenced skill exists
 - Verify skill content matches guideline expectation
@@ -58,6 +56,5 @@ For each guideline:
 
 ## Context Required
 
-- Guidelines: `.opencode/guidelines/*.md`
 - Skills: `.opencode/skills/*/SKILL.md`
 - Related tasks: `maintenance-verify` (verify references), `create-report` (output)

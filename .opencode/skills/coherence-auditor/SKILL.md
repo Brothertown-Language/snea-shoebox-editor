@@ -7,21 +7,14 @@ compatibility: opencode
 
 # Skill: coherence-auditor
 
-Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI agent behavior. Identifies procedural workflows for extraction and detects drift over time.
+## Overview
 
-## When to Invoke
+LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work together effectively. Identifies procedural workflows for extraction and detects drift over time.
 
-**See `AGENTS.md` → "Skill Invocation Guidance" for the complete trigger table.**
+## Persona
 
-This skill is invoked at these workflow triggers:
 
-| Workflow Trigger | Invocation | Purpose |
-|------------------|------------|---------|
-| Creating new skills | `/skill coherence-auditor --mode extraction` | Identify skill candidates |
-| Periodic maintenance | `/skill coherence-auditor --mode maintenance` | Detect drift from baseline |
-| Before approving changes | `/skill coherence-auditor --mode maintenance` | Verify coherence |
-
-## This Skill's Tasks
+## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
@@ -42,12 +35,11 @@ This skill is invoked at these workflow triggers:
 - `/skill coherence-auditor --task create-report` — Load specific task
 - `/skill coherence-auditor` — Overview only
 
-## Workflow
+## Operating Protocol
 
 1. **Automatic invocation (mandatory):** This skill is invoked when auditing guideline/skill coherence or when user requests extraction/maintenance audit.
 
-1. **Mode selection:**
-
+2. **Mode selection:**
    - **Extraction mode**: Use when creating new skills from guideline content
    - **Maintenance mode**: Use for ongoing drift detection and verification
 
@@ -80,17 +72,15 @@ This skill is invoked at these workflow triggers:
 **Temp files are NOT preserved between sessions.**
 
 After creating audit log:
-
 1. Write to `./tmp/coherence-audit-YYYYMMDD-<mode>.md`
-1. Attach full content as GitHub Issue comment
-1. Delete temp file
+2. Attach full content as GitHub Issue comment
+3. Delete temp file
 
 **Why:** Fresh-start AI agents cannot access `./tmp/` from previous sessions. GitHub Issue comments ARE preserved.
 
 ## Cross-References
 
 - Related skills: `git-workflow` (PR with changes), `guideline-auditor` (verify guideline quality)
-- Related guidelines: `.opencode/guidelines/*.md`
 
 ## Parent Spec
 

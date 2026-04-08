@@ -1,0 +1,164 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Append a new cell (code or markdown) to a .ipynb notebook.
+Usage: uv run python ai_bin/nb cell add <notebook.ipynb> [--type code|markdown] (--source <text> | --source-file <path>) [--label <name>] [--help]
+Primary:  Jupyter Server REST API on port 18888 (GET then PUT /api/contents/<path>).
+Fallback: nbformat.read + mutate + nbformat.write when server is not reachable.
+
+Appends the new cell at the end of the notebook. Prints the index of the new cell.
+NOTE: Cell labels are strongly recommended. Without them, check-labels and other tools may report
+      "No labelled cells were found in the notebook". Add labels via cell metadata: {"label": "my-label"}.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import nbformat
+import requests
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _is_port_listening() -> bool:
+    result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True)
+    return f":{PORT}" in result.stdout
+
+
+def _ensure_server() -> bool:
+    if _is_port_listening():
+        return True
+    result = subprocess.run(
+        ["uv", "run", "jupyter", "server", "--version"],
+        capture_output=True, text=True,
+    )
+    if result.returncode != 0:
+        return False
+    log = BASE_DIR / "tmp" / "jupyter.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(
+        ["uv", "run", "jupyter", "server", "--no-browser",
+         f"--port={PORT}", "--IdentityProvider.token=",
+         "--ServerApp.disable_check_xsrf=True"],
+        stdout=open(log, "a"), stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
+    )
+    for _ in range(16):
+        time.sleep(0.5)
+        if _is_port_listening():
+            return True
+    return False
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _make_cell(cell_type: str, source: str, label: str | None = None) -> dict:
+    if cell_type == "markdown":
+        cell = nbformat.v4.new_markdown_cell(source)
+    else:
+        cell = nbformat.v4.new_code_cell(source)
+    if label is not None:
+        cell["metadata"]["name"] = label
+    return cell
+
+
+def _add_via_api(rel_path: str, cell_type: str, source: str, label: str | None = None) -> int | None:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        payload = r.json()
+        cells = payload["content"]["cells"]
+        cells.append(_make_cell(cell_type, source, label))
+        put = requests.put(
+            f"{BASE_URL}/api/contents/{rel_path}",
+            json={"type": "notebook", "content": payload["content"]},
+            timeout=10,
+        )
+        put.raise_for_status()
+        return len(cells)  # 1-based: new cell is at position len(cells)
+    except SystemExit:
+        raise
+    except requests.exceptions.RequestException:
+        return None
+
+
+def _add_via_nbformat(path: Path, cell_type: str, source: str, label: str | None = None) -> int:
+    """Append a cell and return its 1-based index."""
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    nb.cells.append(_make_cell(cell_type, source, label))
+    with path.open("w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+    return len(nb.cells)  # 1-based: new cell is at position len(nb.cells)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    nb_path: Path | None = None
+    cell_type: str = "code"
+    source: str | None = None
+    label: str | None = None
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--type":
+            i += 1
+            cell_type = args[i] if i < len(args) else "code"
+        elif arg == "--source":
+            i += 1
+            source = args[i] if i < len(args) else None
+        elif arg == "--source-file":
+            i += 1
+            source = Path(args[i]).read_text(encoding="utf-8") if i < len(args) else None
+        elif arg == "--label":
+            i += 1
+            label = args[i] if i < len(args) else None
+        elif not arg.startswith("--"):
+            nb_path = Path(arg)
+        i += 1
+
+    if nb_path is None:
+        print("Error: no notebook path specified.", file=sys.stderr)
+        sys.exit(1)
+    if not nb_path.exists():
+        print(f"Error: {nb_path} not found.", file=sys.stderr)
+        sys.exit(1)
+    if source is None:
+        print("Error: --source or --source-file is required.", file=sys.stderr)
+        sys.exit(1)
+    if cell_type not in ("code", "markdown"):
+        print("Error: --type must be 'code' or 'markdown'.", file=sys.stderr)
+        sys.exit(1)
+
+    rel_path = _rel(nb_path)
+    idx = _add_via_api(rel_path, cell_type, source, label)
+    if idx is None:
+        if _ensure_server():
+            idx = _add_via_api(rel_path, cell_type, source, label)
+        if idx is None:
+            print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+            idx = _add_via_nbformat(nb_path, cell_type, source, label)
+    print(f"Added {cell_type} cell at index {idx} in {nb_path}")
+
+
+if __name__ == "__main__":
+    main()

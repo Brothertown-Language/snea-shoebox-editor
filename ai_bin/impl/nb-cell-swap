@@ -1,0 +1,151 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Swap two cells in a .ipynb notebook by index or label.
+Usage: uv run python ai_bin/nb cell swap <notebook.ipynb> <cell-a> <cell-b> [--help]
+  <cell-a> and <cell-b> may be 1-based integer indices or label strings.
+Primary:  Jupyter Server REST API on port 18888 (GET then PUT /api/contents/<path>).
+Fallback: nbformat.read + mutate + nbformat.write when server is not reachable.
+NOTE: Cell labels are strongly recommended. Without them, check-labels and other tools may report
+      "No labelled cells were found in the notebook". Add labels via cell metadata: {"label": "my-label"}.
+"""
+from __future__ import annotations
+
+import os as _os
+
+if _os.environ.get("AIBIN_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+          "Direct invocation is not permitted.", file=__import__('sys').stderr)
+    __import__('sys').exit(1)
+
+import subprocess
+import sys
+import time
+from pathlib import Path
+
+import nbformat
+import requests
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _is_port_listening() -> bool:
+    result = subprocess.run(["ss", "-tlnp"], capture_output=True, text=True)
+    return f":{PORT}" in result.stdout
+
+
+def _ensure_server() -> bool:
+    if _is_port_listening():
+        return True
+    result = subprocess.run(["uv", "run", "jupyter", "server", "--version"], capture_output=True, text=True)
+    if result.returncode != 0:
+        return False
+    log = BASE_DIR / "tmp" / "jupyter.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.Popen(
+        ["uv", "run", "jupyter", "server", "--no-browser",
+         f"--port={PORT}", "--IdentityProvider.token=",
+         "--ServerApp.disable_check_xsrf=True"],
+        stdout=open(log, "a"), stderr=subprocess.STDOUT, cwd=str(BASE_DIR),
+    )
+    for _ in range(16):
+        time.sleep(0.5)
+        if _is_port_listening():
+            return True
+    return False
+
+
+def _rel(path: Path) -> str:
+    try:
+        return str(path.resolve().relative_to(BASE_DIR)).replace("\\", "/")
+    except ValueError:
+        return str(path).replace("\\", "/")
+
+
+def _resolve_cell(cells: list, ref: str) -> int:
+    """Return 0-based index for a 1-based integer ref or label string."""
+    try:
+        return int(ref) - 1
+    except ValueError:
+        for i, cell in enumerate(cells):
+            label = cell.get("metadata", {}).get("label", "")
+            if label == ref:
+                return i
+    raise ValueError(f"Cell not found: {ref!r}")
+
+
+def _swap(cells: list, a: int, b: int) -> None:
+    cells[a], cells[b] = cells[b], cells[a]
+
+
+def _swap_via_api(rel_path: str, a: int, b: int) -> bool:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        payload = r.json()
+        cells = payload["content"]["cells"]
+        _swap(cells, a, b)
+        put = requests.put(
+            f"{BASE_URL}/api/contents/{rel_path}",
+            json={"type": "notebook", "content": payload["content"]},
+            timeout=10,
+        )
+        put.raise_for_status()
+        return True
+    except SystemExit:
+        raise
+    except requests.exceptions.RequestException:
+        return False
+
+
+def _swap_via_nbformat(path: Path, a: int, b: int) -> None:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    _swap(nb.cells, a, b)
+    with path.open("w", encoding="utf-8") as f:
+        nbformat.write(nb, f)
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    positional = [a for a in args if not a.startswith("--")]
+    if len(positional) < 3:
+        print("Error: expected <notebook.ipynb> <cell-a> <cell-b>", file=sys.stderr)
+        sys.exit(1)
+
+    nb_path = Path(positional[0])
+    ref_a, ref_b = positional[1], positional[2]
+
+    if not nb_path.exists():
+        print(f"Error: {nb_path} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    # Resolve indices using nbformat (read-only peek)
+    with nb_path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    try:
+        idx_a = _resolve_cell(nb.cells, ref_a)
+        idx_b = _resolve_cell(nb.cells, ref_b)
+    except ValueError as e:
+        print(f"Error: {e}", file=sys.stderr)
+        sys.exit(1)
+
+    rel_path = _rel(nb_path)
+    ok = _swap_via_api(rel_path, idx_a, idx_b)
+    if not ok:
+        if _ensure_server():
+            ok = _swap_via_api(rel_path, idx_a, idx_b)
+        if not ok:
+            print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+            _swap_via_nbformat(nb_path, idx_a, idx_b)
+
+    print(f"Swapped cells {ref_a} and {ref_b} in {nb_path}")
+
+
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,60 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Plans tools dispatcher. Usage: uv run python ai_bin/plans <action> [args...]
+Actions: list, read, status, new, dump, archive, delete, validate, step-done
+Example: uv run python ai_bin/plans list
+Note: Commands that take a <plan-file> argument use just the filename, not the path (e.g. plan_0210_foo.md).
+"""
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+
+ACTIONS = {
+    "list": "plans-list",
+    "read": "plans-read",
+    "status": "plans-status",
+    "new": "plans-new",
+    "dump": "plans-dump",
+    "archive": "plans-archive",
+    "delete": "plans-delete",
+    "validate": "plans-validate",
+    "step-done": "plans-step-done",
+}
+
+
+def _get_description(script_path: Path) -> str:
+    import re
+    try:
+        text = script_path.read_text()
+        m = re.search(r'DESCRIPTION:\s*(.+)', text)
+        return m.group(1).strip() if m else ""
+    except Exception:
+        return ""
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        print("Available actions:")
+        for action, script in ACTIONS.items():
+            desc = _get_description(BASE_DIR / "impl" / script)
+            print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → ai_bin/{script}")
+        print(f"CWD: {os.getcwd()}")
+        sys.exit(0)
+    action = args[0]
+    if action not in ACTIONS:
+        print(f"Error: unknown action {action!r}. Available: {', '.join(ACTIONS)}", file=sys.stderr)
+        sys.exit(1)
+    script = BASE_DIR / "impl" / ACTIONS[action]
+    result = subprocess.run([sys.executable, str(script)] + args[1:], env={**os.environ, "AIBIN_DISPATCHER": "1"})
+    sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()

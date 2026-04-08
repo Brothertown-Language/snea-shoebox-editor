@@ -1,0 +1,127 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Search .ipynb files for a literal string; print notebook path, cell index, and line number.
+
+Usage: uv run python ai_bin/nb-find <string> [--root <dir>] [--json] [--help]
+
+Primary:  Jupyter Server REST API on port 18888 (GET /api/contents/<path>).
+Fallback: nbformat.read(..., as_version=4) when server is not reachable.
+"""
+from __future__ import annotations
+
+import json
+import sys
+from pathlib import Path
+
+import requests
+import nbformat
+
+BASE_DIR = Path(__file__).resolve().parent.parent  # project root
+PORT = 18888
+BASE_URL = f"http://localhost:{PORT}"
+
+
+def _server_reachable() -> bool:
+    try:
+        requests.get(f"{BASE_URL}/api", timeout=2)
+        return True
+    except Exception:
+        return False
+
+
+def _fetch_cells_via_api(rel_path: str) -> list | None:
+    try:
+        r = requests.get(f"{BASE_URL}/api/contents/{rel_path}?type=notebook", timeout=5)
+        r.raise_for_status()
+        return r.json()["content"]["cells"]
+    except Exception:
+        return None
+
+
+def _fetch_cells_via_nbformat(path: Path) -> list:
+    with path.open(encoding="utf-8") as f:
+        nb = nbformat.read(f, as_version=4)
+    return nb.cells
+
+
+def _search_cells(cells: list, needle: str) -> list[dict]:
+    matches: list[dict] = []
+    for i, cell in enumerate(cells):
+        source: str = cell["source"] if isinstance(cell, dict) else cell.source
+        cell_type: str = cell["cell_type"] if isinstance(cell, dict) else cell.cell_type
+        for lineno, line in enumerate(source.splitlines(), start=1):
+            if needle in line:
+                matches.append({
+                    "cell_index": i,
+                    "cell_type": cell_type,
+                    "line": lineno,
+                    "text": line,
+                })
+    return matches
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+
+    as_json = "--json" in args
+    root: Path = BASE_DIR
+    needle: str | None = None
+
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--root":
+            i += 1
+            root = Path(args[i]) if i < len(args) else BASE_DIR
+        elif arg == "--json":
+            pass
+        elif not arg.startswith("--"):
+            needle = arg
+        i += 1
+
+    if not needle:
+        print("Error: no search string specified.", file=sys.stderr)
+        sys.exit(1)
+
+    if not root.exists():
+        print(f"Error: root {root} not found.", file=sys.stderr)
+        sys.exit(1)
+
+    use_api = _server_reachable()
+    if not use_api:
+        print("Warning: Jupyter server not reachable — falling back to nbformat.", file=sys.stderr)
+
+    all_results: list[dict] = []
+
+    for nb_path in sorted(root.rglob("*.ipynb")):
+        if ".ipynb_checkpoints" in nb_path.parts:
+            continue
+
+        if use_api:
+            try:
+                rel = nb_path.resolve().relative_to(BASE_DIR)
+            except ValueError:
+                rel = nb_path
+            cells = _fetch_cells_via_api(str(rel).replace("\\", "/"))
+            if cells is None:
+                cells = _fetch_cells_via_nbformat(nb_path)
+        else:
+            cells = _fetch_cells_via_nbformat(nb_path)
+
+        for match in _search_cells(cells, needle):
+            all_results.append({"notebook": str(nb_path), **match})
+
+    if as_json:
+        print(json.dumps(all_results, indent=2))
+    else:
+        for m in all_results:
+            print(f"{m['notebook']}  cell={m['cell_index']}  line={m['line']}  {m['text']}")
+        if not all_results:
+            print(f"No matches for '{needle}'.")
+
+
+if __name__ == "__main__":
+    main()

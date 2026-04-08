@@ -4,12 +4,12 @@
 
 Generate and attach audit report to GitHub Issue for fresh-start context preservation.
 
-## Preconditions
+## Entry Criteria
 
 - Audit completed (extraction or maintenance mode)
 - Findings documented in memory
 
-## Postconditions
+## Exit Criteria
 
 - Audit report created in `./tmp/coherence-audit-YYYYMMDD-<mode>.md`
 - Report attached as GitHub Issue comment

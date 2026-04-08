@@ -1,0 +1,80 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Search .py files for a class, method, or function by name and print file:line.
+Usage: uv run python ai_bin/py-find <name> [--kind class|method|function] [--path <dir>]
+"""
+from __future__ import annotations
+import ast
+import sys
+from pathlib import Path
+BASE_DIR = Path(__file__).resolve().parent
+PROJECT_ROOT = BASE_DIR.parent
+VALID_KINDS = {"class", "method", "function"}
+EXCLUDED_DIRS: set[str] = {".git", "build", ".venv", ".gradle"}
+def _iter_files(root: Path) -> list[Path]:
+    results: list[Path] = []
+    for p in root.rglob("*"):
+        if any(part in EXCLUDED_DIRS for part in p.parts):
+            continue
+        if p.is_file() and (p.suffix == ".py" or p.suffix == ""):
+            results.append(p)
+    return sorted(results)
+def search_file(path: Path, name: str, kind: str | None) -> list[tuple[Path, int, str]]:
+    try:
+        text = path.read_text(encoding="utf-8")
+        tree = ast.parse(text, filename=str(path))
+    except Exception:
+        return []
+    matches: list[tuple[Path, int, str]] = []
+    for node in ast.walk(tree):
+        if isinstance(node, ast.ClassDef):
+            if node.name == name and kind in (None, "class"):
+                matches.append((path, node.lineno, "class"))
+            if kind in (None, "method"):
+                for child in node.body:
+                    if isinstance(child, ast.FunctionDef | ast.AsyncFunctionDef) and child.name == name:
+                        matches.append((path, child.lineno, "method"))
+    if kind in (None, "function"):
+        for node in ast.iter_child_nodes(tree):
+            if isinstance(node, ast.FunctionDef | ast.AsyncFunctionDef) and node.name == name:
+                matches.append((path, node.lineno, "function"))
+    return matches
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or "--help" in args or "-h" in args:
+        print(__doc__)
+        sys.exit(0)
+    name: str | None = None
+    kind: str | None = None
+    root: Path = PROJECT_ROOT
+    i = 0
+    while i < len(args):
+        arg = args[i]
+        if arg == "--kind":
+            i += 1
+            kind = args[i] if i < len(args) else None
+            if kind not in VALID_KINDS:
+                print(f"Error: --kind must be one of {sorted(VALID_KINDS)}", file=sys.stderr)
+                sys.exit(1)
+        elif arg in ("--path", "--root"):
+            i += 1
+            root = Path(args[i]) if i < len(args) else PROJECT_ROOT
+        elif not arg.startswith("--"):
+            name = arg
+        i += 1
+    if not name:
+        print("Error: no name specified.", file=sys.stderr)
+        sys.exit(1)
+    if not root.exists():
+        print(f"Error: root {root} not found.", file=sys.stderr)
+        sys.exit(1)
+    found_any = False
+    for py_file in _iter_files(root):
+        matches = search_file(py_file, name, kind)
+        for path, line, match_kind in matches:
+            print(f"{path}:{line}   {match_kind} {name}")
+            found_any = True
+    if not found_any:
+        print(f"No matches for '{name}'.")
+if __name__ == "__main__":
+    main()
