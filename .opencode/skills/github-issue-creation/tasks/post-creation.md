@@ -17,7 +17,7 @@ Invoke auditors and create sub-issues after issue creation, ensuring spec qualit
 
 ## Exit Criteria
 
-- Auditors invoked (concern-separation, spec-auditor)
+- Auditors invoked (plan-fidelity-auditor, concern-separation-auditor, and spec-auditor)
 - Sub-issues created (if multi-task)
 - Issue ready for approval workflow
 
@@ -64,12 +64,18 @@ github_sub_issue_write(
 **Run auditors in order:**
 
 ```
-1. concern-separation-auditor --issue <number>
+1. plan-fidelity-auditor --issue <number>
+   - Generates clean-room plan from problem statement
+   - Compares against existing plan
+   - Auto-fixes simple discrepancies, flags substantive ones
+   - Reports findings to issue
+
+2. concern-separation-auditor --issue <number>
    - Validates phase structure
    - Checks concern separation
    - Reports findings to issue
 
-2. spec-auditor --issue <number>
+3. spec-auditor --issue <number>
    - Validates spec completeness
    - Checks fresh-start context
    - Reports findings to issue
@@ -111,7 +117,7 @@ github_sub_issue_write(
 
 Before proceeding, verify ALL:
 
-- Auditors invoked (both concern-separation and spec-auditor)
+- Auditors invoked (plan-fidelity-auditor, concern-separation-auditor, and spec-auditor)
 - Sub-issues created (if multi-task)
 - Completion comment posted
 

@@ -11,22 +11,24 @@ compatibility: opencode
 
 **This auditor checks whether an LLM agent with NO memory context can implement the spec correctly.**
 
-**Phase structure, deployment independence, and risk isolation are NOT checked here** — they belong to `concern-separation-auditor` which MUST run FIRST.
+**Phase structure, deployment independence, and risk isolation are NOT checked here** — they belong to `concern-separation-auditor` which runs SECOND (after `plan-fidelity-auditor`).
 
 ### Division of Responsibility
 
 | Auditor | Scope | Role |
 |---------|-------|------|
-| **concern-separation-auditor** | Phase structure, deployment independence, risk isolation, blast radius, phase names | Runs FIRST - structural safety |
-| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | Runs SECOND - content quality |
+| **plan-fidelity-auditor** | Clean-room plan comparison, substantive gap detection, scope alignment | Runs FIRST - plan fidelity |
+| **concern-separation-auditor** | Phase structure, deployment independence, risk isolation, blast radius, phase names | Runs SECOND - structural safety |
+| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | Runs THIRD - content quality |
 
-**CRITICAL: Both auditors are MANDATORY. No skipping.**
+**CRITICAL: All auditors are MANDATORY. No skipping.**
 
 **Workflow:**
 ```
 Create spec issue #N →
-Invoke concern-separation-auditor --issue N (FIRST - phase structure, auto-fix) →
-Invoke spec-auditor --issue N (SECOND - content quality) →
+Invoke plan-fidelity-auditor --issue N (FIRST - plan fidelity, clean-room comparison) →
+Invoke concern-separation-auditor --issue N (SECOND - phase structure, auto-fix) →
+Invoke spec-auditor --issue N (THIRD - content quality) →
 Add needs-approval label →
 Post "ready for review" comment
 ```
@@ -41,8 +43,9 @@ Post "ready for review" comment
 
 | Order | Skill | Purpose |
 |-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+| **1st** | `plan-fidelity-auditor` | Clean-room plan comparison, substantive gap detection, scope alignment |
+| **2nd** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
+| **3rd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
 
 **Trigger words that require ALL skills:**
 - "audit this spec"
@@ -53,7 +56,7 @@ Post "ready for review" comment
 - "audit the issue"
 - Any request involving spec quality or structure
 
-**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
+**CRITICAL: If you run ONE auditor, you MUST run ALL auditors in order.**
 
 ---
 
@@ -169,16 +172,20 @@ Per `085-engineering-approach.md`:
 | Conflicts | `CONFLICTING` | Parts contradict each other? |
 | Superseded closure | `SUPERSEDED-CLOSURE-VIOLATION` | Closing comment claims future action? |
 
-### What This Auditor Does NOT Check (Belongs to concern-separation-auditor)
+### What This Auditor Does NOT Check (Belongs to Other Auditors)
 
 | Check | Belongs To |
 |-------|------------|
+| Clean-room plan comparison, substantive gaps | `plan-fidelity-auditor` |
 | Phase names describe concerns | `concern-separation-auditor` |
 | Concern mixing (`PHASE-CONCERN-MERGE` → `CONCERN_MIXING`) | `concern-separation-auditor` |
 | Deployment independence | `concern-separation-auditor` |
 | Risk profile separation | `concern-separation-auditor` |
 | Blast radius minimization | `concern-separation-auditor` |
 | Dependency direction | `concern-separation-auditor` |
+| BOILERPLATE-TITLE for phases/titles | `concern-separation-auditor` |
+| Missing phases, steps, or content from clean-room analysis | `plan-fidelity-auditor` |
+| Scope alignment with problem statement | `plan-fidelity-auditor` |
 | BOILERPLATE-TITLE for phases/titles | `concern-separation-auditor` |
 
 ## Problem Class Definitions
@@ -388,8 +395,9 @@ GitHub Comment: <URL to comment>
 
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. Create the spec issue with all required content
-2. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
-3. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
+2. Invoke `/skill plan-fidelity-auditor --issue N` (FIRST - plan fidelity, clean-room comparison)
+3. Invoke `/skill concern-separation-auditor --issue N` (SECOND - phase structure, auto-fix by default)
+4. Invoke `/skill spec-auditor --issue N` (THIRD - content quality)
 4. Apply any fixes identified by auditors
 5. Add `needs-approval` label
 6. Post "ready for review" comment
@@ -406,30 +414,32 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 
 ## Coordination Points
 
-### Integration with concern-separation-auditor
+### Integration with Other Auditors
 
-**BOTH auditors are required. They check different things.**
+**ALL three auditors are required. They check different things.**
 
 | Auditor | Runs When | Checks |
 |---------|----------|--------|
-| `concern-separation-auditor` | FIRST | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
-| `spec-auditor` | SECOND | Fresh-start context, completeness, content quality, LLM implementability |
+| `plan-fidelity-auditor` | FIRST | Clean-room plan comparison, substantive gap detection, scope alignment |
+| `concern-separation-auditor` | SECOND | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
+| `spec-auditor` | THIRD | Fresh-start context, completeness, content quality, LLM implementability |
 
-**Order matters:** concern-separation-auditor fixes structural issues first, then spec-auditor checks content quality.
+**Order matters:** plan-fidelity-auditor validates content fidelity first, then concern-separation-auditor fixes structural issues, then spec-auditor checks content quality.
 
 ### Integration with Approval Gate
 
-- **Approval Gate (`010-approval-gate.md`)**: Before approving implementation, both auditors must have been run.
+- **Approval Gate (`010-approval-gate.md`)**: Before approving implementation, all auditors must have been run.
 - **Critical Rules (`000-critical-rules.md`)**: References auditor skills for enforcement.
 - **Planning Guidelines (`140-planning-spec-creation.md`)**: Defines the structure requirements enforced by these auditors.
 
 ### Enforcement Flow
 
 1. User creates a [SPEC] issue.
-2. concern-separation-auditor runs (phase structure fixes).
-3. spec-auditor runs (content quality fixes).
-4. After both auditors pass → Add `needs-approval` label.
-5. After approval → Implementation begins.
+2. plan-fidelity-auditor runs (plan fidelity check).
+3. concern-separation-auditor runs (phase structure fixes).
+4. spec-auditor runs (content quality fixes).
+5. After all auditors pass → Add `needs-approval` label.
+6. After approval → Implementation begins.
 
 ## Example Session
 

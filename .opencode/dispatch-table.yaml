@@ -42,6 +42,11 @@ code_quality:
     parameters: "--mode maintenance"
     
   - trigger: "After spec creation"
+    skill: "plan-fidelity-auditor"
+    purpose: "Validate plan fidelity with clean-room comparison"
+    parameters: "--issue N"
+    
+  - trigger: "After spec creation"
     skill: "concern-separation-auditor"
     purpose: "Validate phase structure, deployment independence"
     
