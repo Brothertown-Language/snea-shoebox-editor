@@ -7,9 +7,9 @@ Create pull request after explicit user instruction. Squash commits to single co
 ## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "create a PR" or similar
-2. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
-3. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
-4. **HALT after PR creation:** Wait for human to merge
+1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
+1. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
+1. **HALT after PR creation:** Wait for human to merge
 
 ## Entry Criteria
 
@@ -48,8 +48,9 @@ If ANY condition NOT satisfied → STOP and report.
 #### PR Instruction Verification
 
 1. **Check for PR instruction:**
-   
+
    **Valid PR instructions (PROCEED):**
+
    - "create a PR"
    - "make a PR"
    - "push and create PR"
@@ -57,9 +58,9 @@ If ANY condition NOT satisfied → STOP and report.
    - "open a PR"
    - "create pull request"
    - "pr" (shorthand)
-   
+
    **What does NOT authorize PR creation (HALT):**
-   
+
    | Phrase | Reason |
    |--------|--------|
    | "approved" | Authorizes implementation ONLY, NOT PR creation |
@@ -69,7 +70,7 @@ If ANY condition NOT satisfied → STOP and report.
    | "proceed" | Ambiguous - could mean next task |
    | "fix the skill and guideline" | Implementation instruction, NOT PR instruction |
 
-2. **Authorization scope table:**
+1. **Authorization scope table:**
 
    | Authorization | What It Authorizes |
    |--------------|---------------------|
@@ -79,7 +80,7 @@ If ANY condition NOT satisfied → STOP and report.
    | `create a PR` | PR creation workflow |
    | `create pull request` | PR creation workflow |
 
-3. **Enforcement matrix:**
+1. **Enforcement matrix:**
 
    | Scenario | Action |
    |----------|--------|
@@ -128,10 +129,12 @@ prs = github_list_pull_requests(
 ```
 
 **If NO existing PR found:**
+
 - Proceed to Step 2 (Changelog Generation)
 - This is a new PR
 
 **If PR EXISTS:**
+
 - Continue to Step 1.5b to check PR state
 
 #### Step 1.5b: Check PR State (open/merged/closed)
@@ -156,26 +159,29 @@ merged_at = pr.get("merged_at")  # Timestamp if merged, None otherwise
 **If PR is already merged:**
 
 1. **Rebase branch on main:**
+
    ```bash
    git fetch origin
    git rebase origin/dev
    ```
 
-2. **Check for remaining changes:**
+1. **Check for remaining changes:**
+
    ```bash
    git diff origin/dev
    ```
 
-3. **Decision:**
-   
+1. **Decision:**
+
    | Remaining Changes | Action |
    |-------------------|--------|
    | Has differences | Create NEW PR for additional work |
    | No differences | HALT - branch already merged, no new PR needed |
 
-4. **HALT with appropriate message:**
+1. **HALT with appropriate message:**
 
 **If branch has remaining changes:**
+
 ```
 🔄 MERGED PR DETECTED - Creating New PR
 
@@ -189,6 +195,7 @@ Proceeding with new PR creation...
 ```
 
 **If branch is already merged (no remaining changes):**
+
 ```
 ✅ BRANCH ALREADY MERGED
 
@@ -208,15 +215,18 @@ No new PR needed. The work from this branch was already incorporated.
 #### ⚠️ Edge Cases
 
 **Branch ahead of main after merge:**
+
 - Developer added commits after PR merged
 - Create new PR for continuation work
 - New PR title should reflect continuation
 
 **Branch behind main after merge:**
+
 - Rebase will fast-forward
 - Check for remaining changes after rebase
 
 **Conflicts during rebase:**
+
 - HALT and report conflicts
 - Provide guidance on resolution
 - Suggest manual intervention
@@ -254,12 +264,14 @@ if pr_state == "open":
 **If PR has merge conflicts (mergeable=False, mergeable_state="dirty"):**
 
 1. **Fetch conflict files:**
+
    ```bash
    git fetch origin
    git log --oneline origin/dev..HEAD  # See commits to be merged
    ```
 
-2. **Get conflict files from GitHub API:**
+1. **Get conflict files from GitHub API:**
+
    ```python
    # GitHub doesn't provide conflict files directly via API
    # Local check required:
@@ -272,7 +284,7 @@ if pr_state == "open":
        ).strip().split('\n')
    ```
 
-3. **Classify conflicts (AI-objective vs AI-subjective):**
+1. **Classify conflicts (AI-objective vs AI-subjective):**
 
 **AI-Objective Conflicts (Auto-Resolve):**
 | Conflict Type | Auto-Resolution Strategy |
@@ -294,6 +306,7 @@ if pr_state == "open":
 4. **Resolution Flow:**
 
 **For AI-objective conflicts:**
+
 ```bash
 # Auto-resolve
 git checkout --ours <file>   # or --theirs, or merge manually
@@ -301,7 +314,8 @@ git add <resolved_files>
 ```
 
 **For AI-subjective conflicts:**
-```
+
+````
 🚫 MERGE CONFLICTS DETECTED - User Input Required
 
 The following conflicts need your decision:
@@ -315,26 +329,30 @@ The following conflicts need your decision:
 ```python
 def authenticate(user):
     return validate_token(user.token)
-```
+````
 
 **Main branch:**
+
 ```python
 def authenticate(user):
     return check_session(user.session_id)
 ```
 
 **Please specify which approach to use:**
+
 1. Keep your branch's version: `git checkout --ours src/file.py`
-2. Use main's version: `git checkout --theirs src/file.py`
-3. Provide custom resolution
+1. Use main's version: `git checkout --theirs src/file.py`
+1. Provide custom resolution
 
 **Files with conflicts:**
+
 - src/file.py (AI-subjective)
 - src/other.py (AI-objective - auto-resolved)
 
 Resolution command: `git checkout --{ours|theirs} src/file.py`
 Then: `git add src/file.py src/other.py`
-```
+
+````
 
 5. **After resolution:**
 ```bash
@@ -342,26 +360,30 @@ Then: `git add src/file.py src/other.py`
 git rebase --continue
 # Or abort if unrecoverable
 git rebase --abort
-```
+````
 
 #### ⚠️ Edge Cases
 
 **All conflicts AI-objective:**
+
 - Auto-resolve all
 - Continue with PR creation
 - Post comment noting resolution
 
 **All conflicts AI-subjective:**
+
 - HALT with full conflict list
 - Request user decision for each
 - Do NOT proceed without resolution
 
 **Mixed objective/subjective:**
+
 - Auto-resolve objective conflicts
 - List subjective conflicts
 - HALT for subjective decisions
 
 **Unable to classify:**
+
 - HALT with conflict details
 - Request user inspection
 - Do NOT assume subjective/objective
@@ -379,6 +401,7 @@ The skill MUST run as a sub-task to ensure context isolation - the main session 
 #### Step 2.1: Check Skip Directive
 
 Before invoking the skill, check for `[skip changelog]` in:
+
 - Last commit message (if squashing multiple commits)
 - PR title
 
@@ -393,12 +416,14 @@ If `[skip changelog]` is present, proceed directly to Step 3 (skip changelog gen
 ```
 
 **Why This Is Critical:**
+
 - Sub-task execution isolates the skill's thinking from main context
 - Prevents skill output from consuming main session tokens
 - Skill runs in its own context and writes CHANGELOG.md
 - Main context receives minimal confirmation only
 
 **Expected Result:**
+
 - Skill analyzes commits since last release
 - Skill categorizes changes (added, changed, deprecated, fixed, security)
 - Skill generates user-facing changelog entries
@@ -425,6 +450,7 @@ git status --porcelain CHANGELOG.md
 ```
 
 **Expected Result:**
+
 - `M CHANGELOG.md` OR `A CHANGELOG.md` (staged for commit)
 - OR `[skip changelog]` directive was present (proceed to Step 3)
 
@@ -455,9 +481,10 @@ If skipping changelog, ensure [skip changelog] is in commit message or PR title.
 PRs #109, #114, #118, #119, #120 merged without changelog updates because Step 1 Enforcement Gate passed, Step 2 documented the changelog generation, but nothing verified the changelog was actually staged before squash.
 
 This checkpoint ensures:
+
 1. Skill invocation (Step 2.2) actually happened
-2. Staging (Step 2.3) actually happened
-3. Changelog changes ARE in the squash commit
+1. Staging (Step 2.3) actually happened
+1. Changelog changes ARE in the squash commit
 
 #### Context Isolation Benefits
 
@@ -519,6 +546,7 @@ No sub-issues needed. Include only parent issue.
 **Detect platform from session init (`GIT_PLATFORM`) and use appropriate tool:**
 
 **Three-Branch Workflow Target:**
+
 - Feature branches PR to `dev` (staging/integration)
 - Releases PR from `dev` to `main` (human-triggered, not by AI)
 - Hotfixes PR to both `dev` and `main` (paired issues)
@@ -530,7 +558,11 @@ github_create_pull_request(
     owner=GIT_OWNER,
     repo=GIT_REPO,
     title="[SPEC] <description>",
-    body="""<description>
+    body="""**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value>
+
+**Outcome:** <What changed for stakeholders>
 
 Fixes #<parent>
 Fixes #<child1>
@@ -552,7 +584,11 @@ pr = api.create_pull_request(
     owner=GIT_OWNER,
     repo=GIT_REPO,
     title="[SPEC] <description>",
-    body="""<description>
+    body="""**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value>
+
+**Outcome:** <What changed for stakeholders>
 
 Fixes #<parent>
 Fixes #<child1>
@@ -565,10 +601,48 @@ Fixes #<child2>
 ```
 
 **PR Body Requirements:**
+
 - Must include `Fixes #<issue-number>` for autoclose
 - Include ALL sub-issues for multi-task specs
-- Brief description of changes
+- **MUST use executive summary format** (see Critical Violation: Wrong PR Body Format in `000-critical-rules.md`)
+- `Summary:` section — 1-2 sentences describing stakeholder value and business impact (NOT implementation details)
+- `Outcome:` section — what changed for stakeholders
+- `Fixes #N` annotations at the bottom
 - Target branch is `dev` for feature work
+
+**⚠️ CRITICAL: PR Body Must Use Executive Summary Format**
+
+The PR body MUST follow the executive summary format, matching the chat output and issue comment format:
+
+```
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value — NOT implementation details.>
+
+**Outcome:** <What changed for stakeholders>
+
+Fixes #<parent>
+Fixes #<child1>
+...
+```
+
+**❌ WRONG (Implementation Details):**
+
+```
+Add plan-fidelity-auditor skill as the first auditor in the mandatory audit chain. It generates independent clean-room plans from problem statements and compares them against existing spec plans to identify substantive gaps.
+```
+
+**✅ CORRECT (Executive Summary):**
+
+```
+**Summary:**
+
+Ensures specs are audited for plan fidelity before implementation, catching missing phases and scope misalignment early.
+
+**Outcome:** Developers will catch spec quality issues before code changes begin.
+
+Fixes #505
+```
 
 ### Step 7: Report PR URL and HALT
 
@@ -589,6 +663,7 @@ Wait for human to merge.
 ```
 
 **Format Requirements:**
+
 - Executive summary FIRST (provides context)
 - PR URL LAST (clickable link)
 - MUST include "Wait for human to merge"
@@ -603,9 +678,9 @@ Wait for human to merge.
 
 ### Post-PR Creation Checklist
 
-- [ ] Exec summary posted in chat
-- [ ] PR URL posted in chat
-- [ ] HALT — waiting for human merge
+- \[ \] Exec summary posted in chat
+- \[ \] PR URL posted in chat
+- \[ \] HALT — waiting for human merge
 
 **🚫 NEVER:** Skip reporting PR URL, merge PR, or proceed without developer confirmation.
 
@@ -614,20 +689,26 @@ Wait for human to merge.
 After implementation completes and BEFORE PR creation authorization:
 
 1. **Agent pushes feature branch** to remote:
+
    ```bash
    git push -u origin <branch-name>
    ```
 
-2. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
+1. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
+
    - URLs go in chat dialog ONLY
    - GitHub Issues receive completion comment WITHOUT URL
 
-3. **Developer reviews changes** via GitHub diff viewer
-4. **Developer decides** whether to create PR or request changes
-5. **If satisfied, developer says** "create a PR"
-6. **Agent creates PR** (squash, push, create PR, HALT)
+1. **Developer reviews changes** via GitHub diff viewer
+
+1. **Developer decides** whether to create PR or request changes
+
+1. **If satisfied, developer says** "create a PR"
+
+1. **Agent creates PR** (squash, push, create PR, HALT)
 
 **Why This Matters:**
+
 - URLs in chat keep conversations clean
 - Issues remain focused on task tracking, not URLs
 - Developer can review changes before PR exists
@@ -655,6 +736,7 @@ After implementation completes and BEFORE PR creation authorization:
 User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES cleanup task → HALT
 
 **Why This Matters:**
+
 - Skills encapsulate procedural knowledge
 - Loading ≠ Executing
 - The workflow must be followed, not just understood
@@ -679,10 +761,11 @@ User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES c
 | **GitBucket** | Branch protection rules | Requires PR for dev/main | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
+
 1. Create a feature branch from `dev`: `git checkout dev && git pull origin dev && git checkout -b hotfix/urgent-fix`
-2. Make your changes and commit
-3. Push and create PR with `hotfix` label (targeting `dev`)
-4. Request expedited review
+1. Make your changes and commit
+1. Push and create PR with `hotfix` label (targeting `dev`)
+1. Request expedited review
 
 ## Recovery from Accidental Protected Branch Commit
 
@@ -715,15 +798,18 @@ git push origin feature/recovery
 ## Co-Author Trailers (MANDATORY)
 
 Every squash commit MUST include:
+
 1. AI Author trailer
-2. Human Collaborator trailer
+1. Human Collaborator trailer
 
 **AI Trailer Format:**
+
 - Use dynamic model detection at runtime
 - Format: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
 - Example: `Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>`
 
 **Human Trailer:**
+
 - Use session values from `000-session-init.md`
 - `DEV_NAME`: Human's name
 - `DEV_EMAIL`: Human's email
@@ -733,13 +819,17 @@ Every squash commit MUST include:
 
 | Spec Type | PR Body Format |
 |-----------|---------------|
-| Single-task | `Fixes #<parent>` |
-| Multi-task | `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue |
+| Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
+| Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
 
 **Example Multi-Task PR Body:**
 
 ```markdown
-Implemented sub-task architecture for skills.
+**Summary:**
+
+Ensures specs are audited for plan fidelity before implementation, catching missing phases and scope misalignment early.
+
+**Outcome:** Developers will catch spec quality issues before code changes begin.
 
 Fixes #469
 Fixes #470
@@ -757,5 +847,5 @@ Fixes #470
 ## After PR Creation
 
 1. Report PR URL
-2. HALT — wait for human merge
-3. Do NOT merge (human-only operation)
+1. HALT — wait for human merge
+1. Do NOT merge (human-only operation)
