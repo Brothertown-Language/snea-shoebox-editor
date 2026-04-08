@@ -17,7 +17,7 @@ Invoke auditors and create sub-issues after issue creation, ensuring spec qualit
 
 ## Exit Criteria
 
-- Auditors invoked (plan-fidelity-auditor, concern-separation-auditor, and spec-auditor)
+- Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
 - Sub-issues created (if multi-task)
 - Issue ready for approval workflow
 
@@ -59,26 +59,30 @@ github_sub_issue_write(
 - NOT one per step
 - Use database ID (not issue number) for linking
 
-### Step 3: Invoke Auditors
+### Step 3: Invoke Spec-Auditor Orchestrator
 
-**Run auditors in order:**
+**Run spec-auditor as the single audit entry point:**
 
 ```
+1. spec-auditor --issue <number>
+   - Orchestrator determines which subtasks to run
+   - Baseline always runs: fresh-start, structure, fidelity
+   - Agent decides conditional subtasks based on issue nature
+   - All findings are reported (not auto-applied)
+```
+
+**The orchestrator replaces the old three-auditor chain.**
+Previous workflow (DEPRECATED):
+~~~
 1. plan-fidelity-auditor --issue <number>
-   - Generates clean-room plan from problem statement
-   - Compares against existing plan
-   - Auto-fixes simple discrepancies, flags substantive ones
-   - Reports findings to issue
-
 2. concern-separation-auditor --issue <number>
-   - Validates phase structure
-   - Checks concern separation
-   - Reports findings to issue
-
 3. spec-auditor --issue <number>
-   - Validates spec completeness
-   - Checks fresh-start context
-   - Reports findings to issue
+~~~
+
+**New workflow:**
+```
+1. spec-auditor --issue <number>
+   (internally runs baseline + conditional subtasks)
 ```
 
 **Auditors MUST run BEFORE approval.**
@@ -117,7 +121,7 @@ github_sub_issue_write(
 
 Before proceeding, verify ALL:
 
-- Auditors invoked (plan-fidelity-auditor, concern-separation-auditor, and spec-auditor)
+- Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
 - Sub-issues created (if multi-task)
 - Completion comment posted
 

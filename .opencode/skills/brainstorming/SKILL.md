@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Mandatory pre-spec brainstorming workflow ensuring thorough requirements exploration and alternatives analysis before spec creation.
+description: Mandatory pre-spec brainstorming workflow with agent-driven exploration instead of rigid templates. Dimensions are chosen by judgment, not mandated.
 license: MIT
 compatibility: opencode
 ---
@@ -9,155 +9,150 @@ compatibility: opencode
 
 ## Overview
 
-Mandatory pre-spec brainstorming workflow that ensures thorough requirements exploration and alternatives analysis before any spec creation. This skill is adapted from the NewsRx/opencode-gitbucket-superpowers workflow and enforces systematic thinking before implementation planning.
+Mandatory pre-spec exploration workflow. The agent explores dimensions relevant to the problem — choosing what to investigate based on judgment, not a fixed checklist. Output is prose, not a filled template.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Core shift from v1:** Dimensions are starting points for thinking, not sections to fill. The agent decides which dimensions matter and which to drop or add.
 
 ## Persona
 
-You are a Requirements Explorer and Design Thinker. Your focus is ensuring comprehensive brainstorming happens before any spec is created.
+You are a Requirements Explorer. Your focus is ensuring thorough exploration before any spec is created — but exploration driven by the problem's nature, not by a mandatory checklist.
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `mandatory` | Full brainstorming workflow (default) | ~1200 |
+| `explore` | Full exploration workflow (default) | ~800 |
 
 ## Invocation
 
-- `/skill brainstorming` - Complete brainstorming workflow
-- `/skill brainstorming --task mandatory` - Same as above
+- `/skill brainstorming` — Start exploration workflow
+- `/skill brainstorming --task explore` — Same as above
 
 ## Operating Protocol
 
 1. **Automatic invocation (mandatory):** This skill is auto-invoked by dispatch-table.yaml when:
    - User says `spec` or `plan` or similar planning terms
-   - User asks about spec creation workflow
-   - User provides feature description for planning
-   - DO NOT proceed to spec creation until brainstorming completes
+   - User provides a feature description for planning
+   - DO NOT proceed to spec creation until exploration completes
 
-2. **Manual invocation:** User can invoke explicitly:
-   - `/skill brainstorming` to start fresh brainstorming session
-   - Brainstorming can be restarted if new requirements emerge
-
-3. **Exit conditions:** Brainstorming is COMPLETE when:
-   - All five dimensions explored
-   - Alternatives documented with tradeoffs
+2. **Exit conditions:** Exploration is COMPLETE when:
+   - All relevant dimensions explored (agent decides which)
    - User confirms requirements are complete
    - HALT and wait for explicit approval to proceed to spec creation
 
-## Mandatory Brainstorming Dimensions
+## Baseline Dimensions (Reference, Not Required)
 
-Before ANY spec creation, explore these five dimensions:
+These are starting points the agent can use when stuck. They are NOT mandatory sections.
 
-### 1. Problem Understanding
-- What is the problem?
-- Why does it need solving?
-- Who is affected?
-- What is the context?
-- What constraints exist?
+| Dimension | When Relevant | When to Drop |
+|-----------|--------------|--------------|
+| Problem Understanding | Always | Never — this is always needed |
+| User Requirements | When there are end users | Bug fixes with no user-facing change |
+| Alternatives Analysis | When multiple approaches exist | Bug fixes with one obvious fix |
+| Success Criteria | When outcomes are measurable | Exploratory research |
+| Impact Assessment | When change affects other systems | Isolated changes with no blast radius |
+| Operational Requirements | Non-trivial systems | Simple scripts or one-off changes |
+| Interface Investigation | When APIs/UIs are involved | Internal-only refactors |
+| Regulatory/Compliance | When domain has regulations | Internal tooling |
+| Data Migration | When schema changes | New features with no existing data |
 
-### 2. User Requirements
-- What are the user stories?
-- What are the acceptance criteria?
-- What are the edge cases?
-- What are the performance requirements?
-- What are the security requirements?
+**Agent judgment governs all dimension selection.** A bug fix may only need Problem Understanding and Success Criteria. An infrastructure change may need Operational Requirements plus Impact Assessment.
 
-### 3. Alternatives Analysis
-- What are the possible solutions?
-- What are the tradeoffs of each?
-- Which alternative is chosen and why?
-- What alternatives were rejected and why?
+## Operational Requirements Dimension
 
-### 4. Success Criteria
-- How will we know it's done?
-- What are the testable outcomes?
-- How will it be validated?
-- What evidence proves completion?
+For non-trivial systems, the agent should consider:
 
-### 5. Impact Assessment
-- What else does this affect?
-- What are the dependencies?
-- What are the risks?
-- What is the blast radius?
+- Logging: What events to log, at what level, with what context
+- Metrics: What to measure, alert thresholds
+- Alerts: Failure notifications, escalation paths
+- Deployment constraints: Blue/green, canary, rollback strategy
+- Data migration: Schema changes, backfills, zero-downtime requirements
 
-## Brainstorming Output Format
+These are discovered through Q&A with the user, not assumed.
 
-After exploration, present structured output:
+## Exploration Output
 
-```markdown
-## Brainstorming Summary
+The agent produces a **prose exploration summary** — not a filled template. The summary documents:
 
-### Problem Understanding
-[Problem statement with context]
+1. **What was explored** — Which dimensions were investigated and why
+2. **What was discovered** — Key findings per dimension
+3. **What was dropped** — Which baseline dimensions were skipped and why
+4. **What was added** — Any non-baseline dimensions the agent identified
+5. **Open questions** — Unresolved items requiring user input
 
-### User Requirements
-[User stories and acceptance criteria]
+The reference template below provides structural hints for agents who are stuck, but it is NEVER the output format.
+
+### Reference Template (For Structure Hints Only)
+
+When exploration is complete, the agent may use this structure as guidance for what a good summary covers — but the agent should reorganize, drop, or add sections based on what the problem demands:
+
+```
+## Exploration Summary: [Feature Name]
+
+### Dimensions Explored
+[List of dimensions explored and why each was relevant]
+
+### Dimensions Skipped
+[List of baseline dimensions skipped and why]
+
+### Key Findings
+
+[Prose summary organized by relevant dimensions, not by template order]
 
 ### Alternatives Considered
+[Only if alternatives analysis was relevant]
+
 | Alternative | Pros | Cons | Decision |
 |-------------|------|------|----------|
-| Option 1 | ... | ... | ✅/❌ |
-| Option 2 | ... | ... | ✅/❌ |
+| Option 1 | ... | ... | Chosen/Rejected |
+| Option 2 | ... | ... | Chosen/Rejected |
 
 ### Success Criteria
-1. ✅ [Testable criterion 1]
-2. ✅ [Testable criterion 2]
+[Testable outcomes — only what's measurable]
 
-### Impact Assessment
-- Affected: [systems, teams, users]
-- Dependencies: [external systems]
-- Risks: [identified risks]
+### Open Questions
+[Unresolved items requiring user input before spec creation]
 
 ### Ready for Spec Creation?
-- [ ] All dimensions explored
-- [ ] Alternatives documented
-- [ ] Success criteria defined
-- [ ] User confirmed requirements complete
+- [ ] All relevant dimensions explored
+- [ ] User confirmed requirements complete (or explicitly deferred)
 ```
 
 ## Enforcement Mechanism
 
-**⚠️ CRITICAL: Skills MUST enforce brainstorming — guidelines alone are insufficient.**
+**Skills MUST enforce brainstorming — guidelines alone are insufficient.**
 
 ### What Skills MUST Check
 
 1. **Before spec creation:**
-   - Has brainstorming been invoked?
-   - Is brainstorming output present?
-   - Are all dimensions explored?
+   - Has exploration been invoked?
+   - Is exploration output present?
+   - Has problem understanding been explored?
 
 2. **Enforcement matrix:**
-   - Brainstorming NOT invoked → INVOKE brainstorming
-   - Brainstorming invoked but incomplete → COMPLETE brainstorming
-   - Brainstorming complete → PROCEED to spec creation
+   - Exploration NOT invoked → INVOKE brainstorming
+   - Exploration invoked but incomplete (missing problem understanding) → COMPLETE exploration
+   - Exploration complete → PROCEED to spec creation
 
-3. **What does NOT bypass brainstorming:**
+3. **What does NOT bypass exploration:**
    - "skip brainstorming" → NOT allowed
-   - "I already know what I want" → Still require brief exploration
+   - "I already know what I want" → Still require brief exploration (problem understanding at minimum)
    - User impatience → Document partial exploration, ask to proceed
 
 ### Enforcement Messages
 
-**Missing brainstorming:**
+**Missing exploration:**
 ```
-Brainstorming required before spec creation.
+Exploration required before spec creation.
 
-This ensures thorough requirements exploration and alternatives analysis.
+This ensures thorough requirements investigation before planning.
 
-To invoke: Say '/skill brainstorming' or describe your feature to start brainstorming.
+To invoke: Say '/skill brainstorming' or describe your feature to start exploration.
 ```
 
-**Incomplete brainstorming:**
+**Incomplete exploration:**
 ```
-Brainstorming incomplete. The following dimensions need exploration:
-
-- [ ] Problem Understanding
-- [ ] User Requirements
-- [ ] Alternatives Analysis
-- [ ] Success Criteria
-- [ ] Impact Assessment
+Exploration incomplete. Problem understanding must be explored at minimum.
 
 Please complete exploration before proceeding to spec creation.
 ```
@@ -169,33 +164,25 @@ Please complete exploration before proceeding to spec creation.
 brainstorming (mandatory) → spec creation → approval-gate → git-workflow
 ```
 
-### GitBucket Platform Adaptations
-- Use GitBucket API for issue creation (already supported)
-- Use Python client from gitbucket-api skill for issue operations (MCP tools removed)
-- Platform detection via `GIT_PLATFORM=gitbucket`
-
 ### Approval Gate Integration
-- Brainstorming is a PRE-REQUISITE to spec creation
-- Approval gate checks for spec existence AFTER brainstorming
-- Brainstorming does NOT require approval (exploration phase)
+- Exploration is a PRE-REQUISITE to spec creation
+- Approval gate checks for spec existence AFTER exploration
+- Exploration does NOT require approval (exploration phase)
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization verification), `writing-plans` (plan creation)
-- Related guidelines: `140-planning-spec-creation.md` (spec creation workflow), `045-open-questions.md` (open questions protocol)
+- Related skills: `approval-gate` (authorization), `writing-plans` (plan creation)
+- Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol)
 
-## Platform Compatibility
+## Key Differences from v1
 
-- **GitHub:** Not applicable (this repository uses GitBucket)
-- **GitBucket:** Use Python client from gitbucket-api skill (MCP tools removed)
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+| v1 (Template-Driven) | v2 (Agent-Driven) |
+|----------------------|-------------------|
+| Five mandatory dimensions | Baseline dimensions as reference |
+| Must fill all five sections | Agent chooses relevant dimensions |
+| Template output format | Prose exploration summary |
+| Operational requirements not mentioned | Operational requirements as a dimension |
+| No dimension additions | Agent can add dimensions |
+| Fixed section order | Agent organizes by relevance |
 
-## Source Attribution
-
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces mandatory brainstorming before any creative work to prevent incomplete specs and missing requirements.
-
-**Key adaptations for OpenCode:**
-- Integration with existing approval-gate and git-workflow skills
-- GitBucket platform support (not GitHub-specific)
-- Dispatch table integration for automatic invocation
-- Simplified to five core brainstorming dimensions
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)

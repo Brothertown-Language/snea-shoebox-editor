@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Generate a clean-room implementation plan from a problem statement only, with no knowledge of any existing plan. Used by the plan-fidelity-auditor to create an independent plan for comparison against the existing spec.
+Generate a clean-room implementation plan from a problem statement only, using prose-driven exploration rather than template structure. Used by the spec-auditor's fidelity subtask to create an independent plan for comparison against the existing spec.
 
 ## Operating Protocol
 
-1. **Invoked by:** `plan-fidelity-auditor` via subtask invocation (not by users directly)
-2. **Bypasses:** Approval gate (clean-room plans don't need approval — they're comparison artifacts, not implementation plans)
+1. **Invoked by:** `spec-auditor` fidelity subtask (not by users directly)
+2. **Bypasses:** Approval gate (clean-room plans don't need approval — they're comparison artifacts)
 3. **Does NOT reference:** Any existing plan, spec phases, or spec steps
 
 ## Entry Criteria
@@ -18,7 +18,7 @@ Generate a clean-room implementation plan from a problem statement only, with no
 
 ## Exit Criteria
 
-- Clean-room plan generated as structured markdown
+- Clean-room plan generated as prose structured markdown
 - Plan returned to the invoking subtask context
 - No issue created (clean-room plans are comparison artifacts, not tracked in GitHub)
 
@@ -31,6 +31,7 @@ Generate a clean-room implementation plan from a problem statement only, with no
 | Creates GitHub issue | Yes | **No** — returned as markdown only |
 | Requires approval | Yes (`needs-approval` label) | **No** — comparison artifact |
 | Skip approval gate | No | **Yes** — not an implementation plan |
+| Structure | Agent-chosen prose | Agent-chosen prose (no template) |
 | Persists after comparison | Yes (tracked) | **No** — deleted after comparison |
 
 ## Procedure
@@ -42,16 +43,18 @@ Generate a clean-room implementation plan from a problem statement only, with no
 Read: ./tmp/clean-room-input-N.md
 ```
 
-**Extract sections:**
+**Extract what's available:**
 - Objective
 - Problem Statement
 - Context
 - Constraints
-- Assumptions
+- Assumptions (if present)
 - Success Criteria
-- Edge Cases
-- Dependencies
-- Risk Assessment
+- Edge Cases (if present)
+- Dependencies (if present)
+- Risk Assessment (if present)
+
+**Note:** Not all sections will be present. Work with what's available.
 
 ### Step 2: Explore Codebase (If Applicable)
 
@@ -62,65 +65,21 @@ Read: ./tmp/clean-room-input-N.md
 
 **Important:** This exploration uses ONLY the problem statement, not the existing spec's phases or steps.
 
-### Step 3: Generate Independent Plan
+### Step 3: Generate Independent Plan (Prose-Driven)
 
 **Generate a plan based solely on the problem statement and codebase exploration.**
 
-**Plan template:**
-```markdown
-# Clean-Room Plan: [Feature Name]
-
-GENERATED: YYYY-MM-DD
-SOURCE: Problem statement only (no reference to existing plan)
-
----
-
-## Phase 1: [Specific Concern Name]
-
-### Steps
-1. ☐ [Specific actionable step]
-2. ☐ [Specific actionable step]
-3. ☐ Verification: [How to verify]
-
----
-
-## Phase 2: [Specific Concern Name]
-
-### Steps
-1. ☐ [Specific actionable step]
-2. ☐ [Specific actionable step]
-3. ☐ Verification: [How to verify]
-
----
-
-## Affected Files
-
-| File | Change Type | Description |
-|------|-------------|-------------|
-| `path/to/file` | [New/Modified/Deleted] | [What changes] |
-
----
-
-## Edge Cases Addressed
-
-1. [Edge case from problem statement]
-2. [Edge case discovered during analysis]
-
----
-
-## Success Criteria (from problem statement)
-
-1. ✅ [Criterion from problem statement]
-2. ✅ [Criterion from problem statement]
-```
+**Prose-driven approach:** The agent writes the plan naturally, deciding what sections and what structure makes sense for this specific problem. No template is imposed.
 
 **Quality requirements:**
 - Phase names describe **specific concerns**, NOT generic activities
 - Each step is **actionable** (not abstract goals)
-- Verification methods included for each phase
+- Verification methods included where appropriate
 - Affected files listed based on codebase exploration
 - Edge cases from problem statement are addressed
 - **No TBD, TODO, or placeholder content**
+
+**When significant gaps emerge:** Recommend brainstorming rather than just flagging the gap. A gap in understanding means the problem statement needs more exploration, not that the clean-room plan should have a placeholder.
 
 ### Step 4: Validate Plan
 
@@ -153,16 +112,23 @@ affected_files_count: K
 - Do NOT create a partial plan
 - Do NOT create a GitHub Issue
 
+**If significant gaps found:**
+- Include recommendation for brainstorming in the yield-back context
+- The fidelity subtask can use this recommendation when reporting findings
+
 ## Scope Boundaries
 
 - **NO** GitHub Issue creation — plan is returned as markdown only
 - **NO** approval gate — clean-room plans are comparison artifacts
 - **NO** reference to existing plan — independent generation only
 - **YES** codebase exploration — to identify affected files and patterns
-- **YES** structured markdown output — for comparison by `compare` task
+- **YES** prose-driven output — agent decides structure, not template
+- **YES** brainstorming recommendation — when gaps are significant
 
 ## Cross-References
 
-- Invoked by: `plan-fidelity-auditor` (audit task)
+- Invoked by: `spec-auditor` fidelity subtask
 - Related tasks: `create` (standard plan creation), `validate` (plan validation)
-- Related skills: `plan-fidelity-auditor` (invoker)
+- Related skills: `spec-auditor` (orchestrator), `brainstorming` (recommended when gaps found)
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)

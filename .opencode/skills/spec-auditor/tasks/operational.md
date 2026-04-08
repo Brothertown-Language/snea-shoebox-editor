@@ -1,0 +1,54 @@
+# Task: operational
+
+## Purpose
+
+Check for completeness of operational requirements: logging, metrics, alerts, deployment constraints, and data migration. New in v2.
+
+## Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Logging | OPERATIONAL-REQUIREMENTS-INCOMPLETE | Are logging requirements specified for the feature? |
+| Metrics | OPERATIONAL-REQUIREMENTS-INCOMPLETE | Are measurable metrics defined? |
+| Alerts | OPERATIONAL-REQUIREMENTS-INCOMPLETE | Are failure notification paths specified? |
+| Deployment constraints | OPERATIONAL-REQUIREMENTS-INCOMPLETE | Are deployment strategy and rollback specified? |
+| Data migration | OPERATIONAL-REQUIREMENTS-INCOMPLETE | For schema changes, are migration plans specified? |
+
+## Procedure
+
+1. Read the spec issue via GitHub MCP
+2. Determine if the spec involves non-trivial system changes (new endpoints, schema changes, infrastructure)
+3. If trivial (simple bug fix, text change), report as N/A and skip
+4. For non-trivial specs, check for:
+   - Logging: What events to log, at what level, with what context
+   - Metrics: What to measure, alert thresholds
+   - Alerts: Failure notifications, escalation paths
+   - Deployment: Strategy (blue/green, canary, rollback)
+   - Data migration: Schema changes, backfills, zero-downtime requirements
+5. Flag any missing operational requirements as findings
+
+## When to Run
+
+- Infrastructure-heavy specs (database changes, API changes)
+- Specs that affect deployment (new services, configuration changes)
+- Specs with schema changes (requiring migration plans)
+- Multi-phase specs where deployment order matters
+
+## When to Skip
+
+- Simple bug fixes with no deployment implications
+- Text/content changes
+- Refactoring that doesn't change behavior
+
+## Report Format
+
+```
+Subtask: operational
+Finding: OPERATIONAL-REQUIREMENTS-INCOMPLETE - [what's missing]
+Location: [section of spec or "absent from spec"]
+Context: [why operational readiness matters for this spec]
+Recommendation: [add logging/metrics/deployment section]
+Severity: [HIGH|MEDIUM|LOW]
+```
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)

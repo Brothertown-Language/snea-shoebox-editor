@@ -2,82 +2,52 @@
 
 ## Purpose
 
-Validate deployment independence between phases - can each phase be deployed independently?
-
-## Entry Criteria
-
-- Phase analysis completed (audit-phases)
-- Phase dependencies identified
-
-## Exit Criteria
-
-- Each phase's deployment independence verified
-- Dependency graph created
-- Integration points documented
-- Recommendations posted to GitHub Issue
+Validate deployment independence between phases. Reports findings — does NOT auto-fix.
 
 ## Procedure
 
-### Step 1: Build Dependency Graph
+1. Read the spec issue via GitHub MCP
+2. For each pair of phases, check:
+   - **Can Phase A be deployed without Phase B?**
+   - **Can Phase B be deployed without Phase A?**
+   - **If Phase A fails, does Phase B still function?**
+3. Build a dependency matrix
+4. Identify coupled phases that should potentially be merged or uncoupled
+5. Report findings in the standard format
 
-For each phase, identify:
+## Dependency Matrix
 
-```python
-dependencies = {
-    "Phase 1": [],  # No dependencies
-    "Phase 2": ["Phase 1"],  # Depends on Phase 1
-    "Phase 3": ["Phase 1", "Phase 2"],  # Depends on both
-}
+| | Phase 1 | Phase 2 | Phase 3 |
+|---|---------|---------|---------|
+| Phase 1 | — | depends on | — |
+| Phase 2 | — | — | depends on |
+| Phase 3 | — | — | — |
+
+## Finding Types
+
+| Type | Problem Class | When to Report |
+|------|---------------|----------------|
+| Coupled deployment | CONCERN_MIXING | Two phases must deploy together |
+| Circular dependency | DEPENDENCY_REVERSAL | Phases depend on each other |
+| Implicit dependency | CONCERN_MIXING | Dependency not stated in spec |
+
+## Standalone Deployment Test
+
+For each phase, ask:
+1. Can this phase be deployed to production on its own?
+2. After deployment, does the system still function (possibly with reduced features)?
+3. Can this phase be rolled back independently?
+
+If the answer to any question is "no" and the phase isn't explicitly marked as requiring another, flag it.
+
+## Report Format
+
+```
+Finding: [CONCERN_MIXING|DEPENDENCY_REVERSAL] - [summary]
+Location: [phases involved]
+Context: [why independence matters here]
+Recommendation: [merge phases OR make dependency explicit OR uncouple]
+Severity: [HIGH|MEDIUM|LOW]
 ```
 
-### Step 2: Test Independence Assumptions
-
-**For each phase, verify:**
-
-1. **Can deploy standalone?**
-   - No database migration required from other phases
-   - No config changes required from other phases
-   - No service dependencies on other phases
-
-2. **If standalone deployment fails:**
-   - Can rollback cleanly?
-   - Does not affect other deployed phases?
-
-3. **Integration points:**
-   - Where does this phase integrate with others?
-   - Are integration points backward compatible?
-
-### Step 3: Generate Dependency Matrix
-
-```
-| Phase | Depends On | Deployable Alone? | Notes |
-|-------|------------|-------------------|-------|
-| 1 | - | YES | Initial setup |
-| 2 | 1 | NO | Uses DB from Phase 1 |
-| 3 | 1, 2 | NO | API depends on both |
-```
-
-### Step 4: Post Findings
-
-```python
-github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    issue_number=N,
-    body=f"AI: {AgentName} {ModelID}\n\n{independence_report}"
-)
-```
-
-## Common Issues
-
-| Issue | Resolution |
-|-------|------------|
-| Circular dependencies detected | Flag CRITICAL - must restructure |
-| Phase 2 depends on Phase 5 | Flag - dependency order wrong |
-| Cannot deploy standalone | Document integration requirements |
-| Rollback unclear | Add rollback plan to phase |
-
-## Context Required
-
-- Session values: GIT_OWNER, GIT_REPO
-- Related tasks: `audit-phases` (provides phase structure)
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)
