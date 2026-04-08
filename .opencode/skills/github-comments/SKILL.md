@@ -411,6 +411,7 @@ When closing as superseded:
 - "Ready for approval?"
 - Cross-reference link additions (origin/back-reference links)
 - Housekeeping edits (typo fixes, formatting)
+- **Audit findings reports** — spec-auditor findings are internal agent guidance, not stakeholder communication. Act on findings by revising the spec; don't post the audit report as a comment.
 
 ### ✅ REQUIRED Comments
 
@@ -420,6 +421,23 @@ When closing as superseded:
 - Creating PR
 - Altering spec structure
 - Blocking/unblocking decision
+
+### Audit Findings Are NOT Comments
+
+Audit findings from `spec-auditor` are internal agent guidance — equivalent to linter output. They inform the agent what to fix, not what to announce.
+
+**Workflow:**
+1. Audit → collect findings
+2. Act → revise the spec to address findings
+3. Comment → ONLY if the revision is substantive (changes to requirements, phases, success criteria, scope)
+
+| Action | Post Comment? |
+|--------|---------------|
+| Audit finds issues, agent revises spec substantively | ✅ YES — one revision comment |
+| Audit finds issues, agent makes only non-substantive changes (STATUS, typos, cross-refs) | ❌ NO |
+| Audit finds zero issues | ❌ NO |
+| Agent posts audit findings report as a comment | 🚫 FORBIDDEN |
+| Stakeholder explicitly asks for audit results | ✅ YES — direct request override |
 
 ---
 
@@ -484,7 +502,7 @@ GOOD: "The keys look correct. Ready when you are."
 | Skill | Integration Point |
 |-------|-------------------|
 | `git-workflow` | Post comment when PR created |
-| `spec-auditor` | Comment audit findings on issue |
+| `spec-auditor` | Findings are internal guidance — act on them, don't post; comment only for substantive revisions |
 
 ## Example Workflows
 

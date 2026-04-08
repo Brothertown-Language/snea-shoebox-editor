@@ -488,6 +488,21 @@ All tasks complete from this specification.
 - **"Awaiting authorization"** — Use HALT protocol, not comments
 - **Technical changelog** — Focus on impact, not file-by-file changes
 
+### Audit Findings Are NOT Progress Comments
+
+**⚠️ Posting spec-audit findings as GitHub comments is FORBIDDEN.**
+
+Audit findings from `spec-auditor` are internal agent guidance — equivalent to linter output. They inform the agent what to fix, not what to announce to stakeholders.
+
+| Action | Post Comment? |
+|--------|---------------|
+| Agent completes implementation task | ✅ YES — progress comment with executive summary |
+| Agent revises spec substantively after audit | ✅ YES — one revision comment per `github-comments` skill |
+| Agent makes non-substantive spec changes (STATUS, typos, cross-refs) after audit | ❌ NO |
+| Agent posts audit findings report | 🚫 FORBIDDEN — act on findings, don't post the report |
+
+**Correct workflow:** Audit → Act on findings (revise spec) → Post comment ONLY for substantive revisions (changes to requirements, phases, success criteria, scope).
+
 ### ⚠️ Chat Output Rule (CRITICAL)
 
 **Progress executive summaries go to BOTH GitHub comments AND chat.**

@@ -127,15 +127,25 @@ Existing classes remain, plus two new ones:
 | **MISSING-TRACEABILITY** | Requirements/features without trace links (NEW) |
 | **OPERATIONAL-REQUIREMENTS-INCOMPLETE** | Missing logging/metrics/deployment (NEW) |
 
-## Audit Log Requirement
+## Audit Findings Handling
 
-After the audit session completes, create an audit log:
+After the audit session completes, findings are **internal agent guidance** — they inform action, not communication.
 
-**Location:** `./tmp/audit-spec-YYYYMMDD.md`
+**Findings are NOT posted as GitHub comments.** Audit findings are analogous to linter output: they tell the agent what to fix, not what to announce. The correct workflow is:
 
-**Post findings to the spec issue as a GitHub comment, then delete the temp file.**
+1. **Audit** → run subtasks, collect findings
+2. **Act** → revise the spec to address findings (if any)
+3. **Comment ONLY for substantive revisions** → if the spec revision changes requirements, phases, success criteria, or scope, post one revision comment following `github-comments` skill format. Non-substantive changes (STATUS markers, checklist updates, cross-reference additions, typo fixes) get NO comment.
 
-**Fresh-start context preservation:** Audit logs in `./tmp/` are NOT preserved between sessions. Always attach to the spec issue, then delete temp.
+**When NO comment is posted:**
+- Audit finds zero issues (all PASS) — move on, no comment
+- Agent only makes non-substantive changes (STATUS updates, typos, cross-refs) — no comment
+- Agent revises the spec but all changes are non-substantive — no comment
+
+**When a comment IS posted:**
+- Agent makes substantive spec changes (adding/removing phases, changing requirements, altering approach) — post one revision comment per `github-comments` skill
+
+**Session scratch space:** Findings may be written to `./tmp/audit-spec-YYYYMMDD.md` for session-level reference. This file is NOT posted anywhere and is deleted after the session ends.
 
 ## Mandatory Invocation
 
@@ -144,9 +154,9 @@ After the audit session completes, create an audit log:
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. Create the spec issue with all required content
 2. Invoke `/skill spec-auditor --issue N` (orchestrator determines subtasks)
-3. Apply any findings the agent decides to act on
+3. Apply any findings the agent decides to act on (revise the spec if substantive changes needed)
 4. Add `needs-approval` label
-5. Post "ready for review" comment
+5. Post "ready for review" comment ONLY if substantive spec changes were made during step 3
 
 **Skipping the orchestrator is a CRITICAL GUIDELINE VIOLATION.**
 
