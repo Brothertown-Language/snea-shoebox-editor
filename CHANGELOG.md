@@ -12,6 +12,13 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/prevent-redundant-audit-comments-521
+
+- Remove spec-auditor mandate to post audit findings as GitHub issue comments
+- Add audit findings prohibition to github-comments skill decision table
+- Clarify in critical-rules that audit findings are internal agent guidance, not progress comments
+- Establish workflow: audit → act on findings → comment only for substantive spec revisions
+
 ### feature/overwrite-skills-503
 
 - Restructure guidelines to rules-only: delete 15 procedural guideline files, move content to skills
