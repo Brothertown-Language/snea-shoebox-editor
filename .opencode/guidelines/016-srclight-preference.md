@@ -1,6 +1,6 @@
 # Srclight Preference Guideline for Python Code Analysis
 
-This guideline defines when to prefer srclight MCP tools vs PyCharm MCP vs `ai_bin/guidelines` for search/analysis tasks.
+This guideline defines when to prefer srclight MCP tools vs opencode built-in tools vs `.opencode/tools/guidelines` for search/analysis tasks.
 
 ## Critical: Srclight Limitations
 
@@ -28,10 +28,11 @@ Is the task about Python code?
 │         │
 │         ├─ YES → Use srclight_* tools
 │         │
-│         └─ NO (edit, create, format) → Use pycharm_* tools
+│         └─ NO (edit, create, format) → Use opencode built-in tools
+│              (or pycharm_* for unique capabilities like rename)
 │
-└─ NO (docs, configs, .md files) → Use pycharm_* tools
-                                      (or ai_bin/guidelines for .opencode/guidelines/)
+└─ NO (docs, configs, .md files) → Use opencode built-in tools
+                                       (or .opencode/tools/guidelines for .opencode/guidelines/)
 ```
 
 ## Tier 1: Srclight MCP (Python Code Analysis ONLY)
@@ -55,33 +56,41 @@ Use srclight tools PREFERENTIALLY for all Python semantic/code analysis tasks:
 | Symbol signature | `srclight_get_signature` | Lightweight API lookup |
 | Symbols in file | `srclight_symbols_in_file` | File table of contents |
 
-## Tier 2: PyCharm MCP (All File Types)
+## Tier 2: opencode Built-in Tools (All File Types)
 
-Use PyCharm MCP for file operations, text search, and non-Python files:
+Use opencode built-in tools for basic file operations:
 
 | Task | Tool |
 |------|------|
-| Read any file | `pycharm_get_file_text_by_path` |
-| Find files by glob | `pycharm_find_files_by_glob` |
-| Find files by name | `pycharm_find_files_by_name_keyword` |
-| Search text in files | `pycharm_search_in_files_by_text` |
-| Search by regex | `pycharm_search_in_files_by_regex` |
-| Create file | `pycharm_create_new_file` |
-| Edit file | `pycharm_replace_text_in_file` |
-| Format code | `pycharm_reformat_file` |
-| Get symbol info | `pycharm_get_symbol_info` |
+| Read file | `read` |
+| Write file | `write` |
+| Edit file | `edit` |
+| Find files | `glob` |
+| Search text | `grep` |
+
+## Tier 3: JetBrains MCP (Unique Capabilities Only)
+
+Use JetBrains MCP only for operations with no opencode equivalent:
+
+| Task | Tool |
+|------|------|
+| Semantic rename | `pycharm_rename_refactoring` |
+| Code reformat | `pycharm_reformat_file` |
+| Build project | `pycharm_build_project` |
+| Inspections | `pycharm_get_file_problems` |
+| Symbol info | `pycharm_get_symbol_info` |
 | Get file problems | `pycharm_get_file_problems` |
 | Rename refactoring | `pycharm_rename_refactoring` |
 
-## Tier 3: ai_bin/guidelines (Guidelines ONLY)
+## Tier 4: .opencode/tools/guidelines (Guidelines ONLY)
 
-Use `ai_bin/guidelines` commands for searching developer guidelines:
+Use `.opencode/tools/guidelines` commands for searching developer guidelines:
 
 | Task | Command |
 |------|---------|
-| Search guidelines | `uv run python ai_bin/guidelines search <term>` |
-| Read guideline | `uv run python ai_bin/guidelines read <filename>` |
-| List guidelines | `uv run python ai_bin/guidelines read --list` |
+| Search guidelines | `uv run python .opencode/tools/guidelines search <term>` |
+| Read guideline | `uv run python .opencode/tools/guidelines read <filename>` |
+| List guidelines | `uv run python .opencode/tools/guidelines read --list` |
 
 ## Tool Selection Matrix
 
@@ -89,7 +98,7 @@ Use `ai_bin/guidelines` commands for searching developer guidelines:
 |------|--------------|-------------|
 | Find Python symbol by name | `srclight_search_symbols` | `pycharm_get_symbol_info` |
 | Find Python symbol by meaning | `srclight_semantic_search` | — |
-| Find Python symbol by keyword | `srclight_hybrid_search` | `pycharm_search_in_files_by_text` |
+| Find Python symbol by keyword | `srclight_hybrid_search` | `grep` |
 | Who calls this function? | `srclight_get_callers` | Manual search |
 | What does this call? | `srclight_get_callees` | Manual search |
 | Refactoring impact | `srclight_get_dependents` | Manual search |
@@ -98,11 +107,10 @@ Use `ai_bin/guidelines` commands for searching developer guidelines:
 | Recent commits | `srclight_recent_changes` | `git log` |
 | Code hotspots | `srclight_git_hotspots` | Manual analysis |
 | Project overview | `srclight_codebase_map` | — |
-| **Search .md files/guidelines** | `pycharm_search_in_files_by_text` | `ai_bin/guidelines search` |
-| Find files by glob | `pycharm_find_files_by_glob` | — |
-| Find files by name | `pycharm_find_files_by_name_keyword` | — |
-| Read file content | `pycharm_get_file_text_by_path` | — |
-| Edit file | `pycharm_replace_text_in_file` | — |
+| **Search .md files/guidelines** | `grep` | `.opencode/tools/guidelines search` |
+| Find files by glob | `glob` | — |
+| Read file content | `read` | — |
+| Edit file | `edit` | — |
 
 ## Embeddings and Semantic Search
 
@@ -123,7 +131,7 @@ srclight_search_symbols
     ↓ (no results)
 srclight_hybrid_search
     ↓ (no results)
-pycharm_search_in_files_by_text
+grep
 ```
 
 ## Examples
@@ -161,11 +169,11 @@ pycharm_search_in_files_by_text(searchText="article parsing")
 ### Example 4: Search Guidelines/Documentation
 
 ```
-# ✅ CORRECT: Use PyCharm text search for .md files
-pycharm_search_in_files_by_text(searchText="MCP", fileMask="*.md")
+# ✅ CORRECT: Use grep for .md files
+grep(pattern="MCP", glob="**/*.md")
 
-# ✅ ALSO CORRECT: Use ai_bin/guidelines for .opencode/guidelines/
-# Run: uv run python ai_bin/guidelines search MCP
+# ✅ ALSO CORRECT: Use .opencode/tools/guidelines for .opencode/guidelines/
+# Run: uv run python .opencode/tools/guidelines search MCP
 
 # ❌ WRONG: Srclight does not index .md files
 srclight_search_symbols(query="MCP")  # Returns no results for .md files
@@ -174,8 +182,8 @@ srclight_search_symbols(query="MCP")  # Returns no results for .md files
 ### Example 5: Find Files by Name Pattern
 
 ```
-# ✅ CORRECT: Use PyCharm file finder
-pycharm_find_files_by_name_keyword(nameKeyword="guidelines")
+# ✅ CORRECT: Use glob to find files
+glob(pattern="**/test_*.py")
 
 # ❌ WRONG: Srclight does not search filenames
 srclight_search_symbols(query="guidelines")  # Only searches symbol names
@@ -184,8 +192,11 @@ srclight_search_symbols(query="guidelines")  # Only searches symbol names
 ### Example 6: Edit a Python File
 
 ```
-# ✅ CORRECT: Use PyCharm for file editing
-pycharm_replace_text_in_file(pathInProject="src/main.py", oldText="foo", newText="bar")
+# ✅ CORRECT: Use opencode built-in edit for simple edits
+edit(filePath="src/main.py", oldString="foo", newString="bar")
+
+# ✅ ALSO CORRECT: Use JetBrains MCP rename for symbol refactoring
+pycharm_rename_refactoring(pathInProject="src/main.py", symbolName="foo", newName="bar")
 
 # ❌ WRONG: Using srclight for editing
 # Srclight has NO edit capability
@@ -196,12 +207,6 @@ pycharm_replace_text_in_file(pathInProject="src/main.py", oldText="foo", newText
 ### Srclight Index Unavailable
 
 If srclight reports missing index or errors:
-
-```bash
-./scripts/setup_srclight.sh
-```
-
-Or manually:
 
 ```bash
 uvx srclight index --embed qwen3-embedding
@@ -220,36 +225,33 @@ Srclight does not support filename search.
 
 ### Guidelines and .md Files
 
-**Use PyCharm MCP text search or `ai_bin/guidelines`:**
+**Use `.opencode/tools/guidelines` or opencode `grep`:**
 
 ```
 # For .opencode/guidelines/*.md files:
-# Run: uv run python ai_bin/guidelines search <term>
+# Run: uv run python .opencode/tools/guidelines search <term>
 
 # For other .md files:
-pycharm_search_in_files_by_text(searchText="...", fileMask="*.md")
+grep(pattern="<term>", glob="**/*.md")
 ```
 
-### Other Languages
+### Finding Files by Name
 
-Srclight can index JavaScript, TypeScript, Rust, Go, etc. if tree-sitter grammar exists. This repository is Python-only. For other language projects, check with:
+**Use opencode `glob` to find files:**
 
 ```
-srclight_index_status()
+glob(pattern="**/test_*.py")
 ```
-
-## Reference
-
-See also:
-- `015-mcp-preference.md` - MCP tool mandatory usage (tier 0)
-- This guideline (`016-srclight-preference.md`) - Srclight vs PyCharm vs ai_bin hierarchy
 
 ## Summary
 
 | Category | Tool |
 |----------|------|
 | Python semantic analysis | `srclight_*` (PREFERENTIALLY) |
-| Python file operations | `pycharm_*` |
-| Non-Python files | `pycharm_*` |
-| Guidelines search | `ai_bin/guidelines` or `pycharm_search_in_files_by_text` |
-| Filename search | `pycharm_find_files_by_*` |
+| Basic file operations | opencode `read`/`write`/`edit`/`glob`/`grep` (PRIMARY) |
+| Notebook operations | `the-notebook-mcp_*` (MANDATORY for .ipynb) |
+| Guidelines search | `.opencode/tools/guidelines` or `grep` |
+| Filename search | `glob` |
+| Semantic rename | `pycharm_rename_refactoring` (FALLBACK) |
+| Code reformat | `pycharm_reformat_file` (FALLBACK) |
+| Build/inspections | `pycharm_build_project`/`pycharm_get_file_problems` (FALLBACK) |

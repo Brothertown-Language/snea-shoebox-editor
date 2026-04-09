@@ -1,122 +1,174 @@
 # AGENTS.md — Repository Guidelines for Coding Agents
 
-## Session Init (MANDATORY FIRST)
+## Identity Detection (MANDATORY FIRST)
 
-**Run BEFORE any other operations:**
+The AI agent must determine its identity from the system prompt on EVERY session:
 
-```bash
-uv run python ai_bin/session_init.py
-```
+1. **Detect AI agent and model** from your system context
+2. **Report identity** in byline format: `<AgentName> (<ModelID>)`
+3. **Examples**: `OpenCode (ollama-cloud/glm-5)`, `OpenCode Desktop (ollama-cloud/glm-5)`, `Claude (claude-3-5-sonnet)`
 
-**Script outputs:**
-- `DEV_NAME`: Human collaborator name (for commit trailers)
-- `DEV_EMAIL`: Human collaborator email (for commit trailers)
-- `GIT_OWNER`: Repository owner (for GitHub MCP API calls)
-- `GIT_REPO`: Repository name (for GitHub MCP API calls)
-- `GIT_HOOKS_PATH`: Git hooks path (to verify hooks installed)
-- `GIT_REMOTE_URL`: Full remote URL (for reference)
-
-**Store these values for session duration.**
-
-**Exit codes:**
-- 0: Success — proceed with session
-- 1: No remote configured — cannot proceed with GitHub operations
-- 2: Non-GitHub remote — GitHub MCP operations unavailable
+**WHY**: Different agents/loaders provide different context. System prompt tells you what you are.
 
 ---
 
-## MCP Capability Testing (Universal)
+## Session Init (Automatic)
 
-After session init, probe MCP availability:
+Session initialization and skill enforcement are handled automatically by the `session-enforcement` OpenCode plugin (`.opencode/plugins/session-enforcement.ts`). The plugin:
 
-1. **PyCharm MCP**: Call `pycharm_get_project_modules` — if works, use PyCharm tools for file ops
-2. **GitHub MCP**: Call `github_get_me` — if works, use GitHub Issues for specs
-3. **Owner/Repo**: Use values from session init script (already extracted from remote)
+1. Runs `.opencode/scripts/session_init.py` once per session (cached for 5 minutes)
+2. Injects session context into the LLM system prompt via `experimental.chat.system.transform`
+3. Sets key-value pairs as shell environment variables via `shell.env`
+4. Loads skill descriptions from YAML frontmatter in each SKILL.md file at startup (via `loadSkillDescriptions()`)
+5. Injects skill enforcement content (1% rule, red-flags table, skill list with "Use when..." descriptions) into the first user message via `experimental.chat.messages.transform`, ensuring agents invoke mandatory workflow skills
 
-### MCP Enforcement Gate
+**No manual step is required.** The script outputs all values as `KEY=value` pairs — extract them directly, no mapping or interpretation needed. Use `GIT_OWNER` and `GIT_REPO` for EVERY API call.
 
-| Scenario | Spec Tracking | File Operations | GitHub Operations |
-|----------|---------------|-----------------|-------------------|
-| Both available | GitHub Issues | PyCharm MCP tools ONLY | GitHub MCP tools ONLY |
-| PyCharm only | GitHub Issues | PyCharm MCP tools ONLY | N/A (no GitHub MCP) |
-| Neither available | GitHub Issues via `gh` CLI | Direct file tools + `# FALLBACK: PyCharm MCP unavailable` comment | `gh` CLI or web UI |
+- `DEV_NAME`: Human collaborator name (for commit trailers)
+- `DEV_EMAIL`: Human collaborator email (for commit trailers)
+- `GIT_OWNER`: Repository owner (for API calls)
+- `GIT_REPO`: Repository name (for API calls)
+- `GIT_HOOKS_PATH`: Git hooks path (to verify hooks installed)
+- `GIT_REMOTE_URL`: Full remote URL (for reference)
+- `GIT_PLATFORM`: Platform type (`github` or `gitbucket`)
+- `GITHUB_HTML_URL`: GitHub web UI base URL (if GitHub)
+- `GITBUCKET_HTML_URL`: GitBucket web UI base URL (if GitBucket, non-secret)
+- `GITBUCKET_HAS_CREDENTIALS`: `true` if credentials configured in `.env`
 
-🚫 **PROHIBITED**: Using `read`/`write`/`edit`/`glob`/`grep` on **ANY files** when PyCharm MCP is available.
+The output includes a prominent platform banner (`# GITHUB REPOSITORY DETECTED` or `# GITBUCKET REPOSITORY DETECTED`) that makes the platform type unambiguous.
 
-## Branch Before Edit
+---
 
-**FIRST action before ANY filesystem change:**
+## Platform Detection and API Access
+
+The session init script detects git platform from remote URL:
+
+| Platform | Detection | API Access |
+|----------|-----------|-----------| 
+| GitHub | `github.com` in URL | GitHub MCP tools or `gh` CLI |
+| GitBucket | Any other SSH/HTTPS remote | Direct API via `.env` credentials |
+
+### GitBucket API Access
+
+For GitBucket repositories, invoke `gitbucket-api` skill BEFORE using GitBucket Python API.
+
+**GitBucket-specific patterns:**
+- Token authentication only (no basic auth)
+- Auto-create labels when adding to issues
+- GitHub-compatible API v3
+
+---
+
+## MCP Enforcement Gate
+
+**After session init, probe MCP availability:**
+
+1. **PyCharm MCP**: Call `pycharm_get_project_modules`
+2. **GitHub MCP**: Call `github_get_me` (if GitHub platform)
+3. **Record results**: Note which toolsets are available
+
+| Scenario | Spec Tracking | File Operations | API Operations |
+|----------|---------------|-----------------|----------------|
+| PyCharm + GitHub MCP + GitHub repo | GitHub Issues | opencode built-in PRIMARY, PyCharm FALLBACK | GitHub MCP ONLY |
+| PyCharm + GitHub MCP + GitBucket repo | GitBucket API via `.env` | opencode built-in PRIMARY, PyCharm FALLBACK | Direct API calls |
+| PyCharm only | GitBucket API via `.env` | opencode built-in PRIMARY, PyCharm FALLBACK | N/A |
+| Neither available | Issues via API | opencode built-in tools | Direct API calls |
+
+> **See `mcp-tool-usage` skill for the complete five-tier hierarchy with tool selection tables.**
+
+---
+
+## Skill Self-Discovery (Automatic)
+
+Skills are discovered automatically via YAML frontmatter in each `SKILL.md` file. The `session-enforcement` plugin reads each skill's `description` field at startup and injects them into the first user message.
+
+**Each skill description uses "Use when..." format** with triggering conditions and keyword coverage, NOT workflow summaries. This ensures the agent can self-discover which skill to invoke based on the current task context.
+
+**The plugin handles:**
+- Loading skill descriptions from YAML frontmatter at session start
+- Sorting process skills before implementation skills
+- Injecting enforcement content (1% rule, red-flags table, skill list) into the first user message
+
+**The dispatch table is deprecated** — see `.opencode/dispatch-table.yaml` for historical reference only. Skill invocation is now driven by self-discovery via frontmatter descriptions.
+
+**DO NOT embed skill invocation rules in AGENTS.md. They are discovered dynamically from SKILL.md frontmatter.**
+
+---
+
+## Skills
+
+OpenCode skills are available in `.opencode/skills/`. Each skill has a `SKILL.md` file.
+
+**To use a skill**, invoke it when relevant to the current task:
 
 ```
-git checkout dev && git pull origin dev
-git checkout -b feature/<description>
+/skill <skill-name>
+/skill <skill-name> --task <task-name>
 ```
 
-🚫 **NEVER**: Edit, create, delete, or rename files while on `main` or `dev`. No exceptions.
+**Skill invocation is driven by self-discovery** — see "Skill Self-Discovery" section above. Each SKILL.md frontmatter `description` field uses "Use when..." format with triggering conditions for automatic discovery.
 
-## Preserve Pending Changes
+### Sub-Task Architecture
 
-**Before ANY branch operation, check for pending changes:**
+Skills with `tasks/` subdirectory support `--task` parameter for loading specific workflow phases:
 
 ```
-git status
+.opencode/skills/git-workflow/
+├── SKILL.md              (~100 lines - overview + task table)
+└── tasks/
+    ├── pre-work.md       (~80 lines - Phase 0)
+    ├── implementation.md (~80 lines - Phase 1)
+    ├── review-prep.md    (~70 lines - Phase 2)
+    ├── commit-prep.md    (~90 lines - Phase 3)
+    ├── pr-creation.md    (~80 lines - Phase 4)
+    └── cleanup.md        (~120 lines - Phase 5)
 ```
 
-If ANY files modified, staged, or untracked:
-```
-git stash push -m "WIP: before <branch-name>"
-git stash list  # VERIFY the stash exists
-git status      # VERIFY clean working tree
-```
+**Context Savings:** 75%+ reduction (load ~100 lines instead of ~500 lines)
 
-🚫 **NEVER**: `git branch -D <branch>` or `git push --delete` without explicit developer request.
-🚫 **NEVER**: Delete stashes without explicit developer request.
-🚫 **NEVER**: Assume branches are "disposable" — always preserve until explicitly asked to delete.
+**Usage:**
+- `/skill git-workflow --task pre-work` - Load only pre-work task
+- `/skill git-workflow --task pr-creation` - Load only PR creation task
+- `/skill git-workflow` (no --task) - Skill overview only
+
+### Integration with Approval Gates
+
+- `approval-gate` skill: spec + authorization workflow
+- `010-approval-gate.md`: critical rules (zero tolerance violations)
+- `000-critical-rules.md`: auditor skill references
+- Both auditors create audit logs in `./tmp/` for tracking
+
+### Workflow Skills
+
+Skill invocation is driven by self-discovery from SKILL.md frontmatter (see "Skill Self-Discovery" section). Key workflow skills:
+
+| Skill | Purpose | Dispatch Trigger |
+|-------|---------|------------------|
+| `brainstorming` | Pre-spec requirements exploration | Before any spec creation |
+| `writing-plans` | Transform approved specs into action plans | After spec approval |
+| `executing-plans` | Step-by-step plan execution | After plan approval |
+| `verification-before-completion` | Evidence gates before completion claims | Before marking tasks complete |
+| `implementation-workflow` | Orchestration layer with yield-back context | After approval-gate confirms auth |
+| `systematic-debugging` | Root cause analysis before bug fixes | Bug or error encountered |
+| `finishing-a-development-branch` | Branch completion checklist | Implementation completes |
+| `test-driven-development` | TDD red-green-refactor workflow | User requests TDD approach |
+| `receiving-code-review` | Address review feedback precisely | PR receives review comments |
+| `requesting-code-review` | Prepare and submit review requests | User says "request review" |
+
+**Implementation-workflow** coordinates git-workflow tasks (pre-work, review-prep, pr-creation) and yields structured context between stages. Authorization is checked once by `approval-gate`, then passed through the orchestration chain — no redundant re-checks.
 
 ---
 
 ## Guidelines Structure
 
-OpenCode loads guidelines from:
-- `AGENTS.md` (this file)
-- `.opencode/guidelines/*.md` (all guideline files)
+Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 
-**Guideline file numbering:**
+| Series | Category | Files |
+|--------|----------|-------|
+| 000-099 | Core Rules | critical-rules, session-enforcement, approval-gate, go-prohibitions, scope-autonomy, tool-usage, environment |
+| 200-209 | Error Handling | exception-handling, missing-data, logging-vs-raising |
 
-| Series | Range | Category |
-|--------|-------|----------|
-| 000-099 | Core | Session init, critical rules, approval |
-| 100-109 | MCP/Scope | Tool usage, scope autonomy |
-| 110-119 | Git | Branch, commit, merge, PR, cleanup |
-| 120-129 | GitHub | Issue workflow, MCP ops, AI identity, archive |
-| 130-139 | Authority | Code as source |
-| 140-149 | Planning | Spec creation, approval gates, status tracking, archive |
-| 200-209 | Errors | Exception handling, missing data, domain exceptions, logging |
-| 210-219 | Standards | Code standards, HTTP, engineering |
-
-**Key guidelines:**
-
-| Topic | File |
-|-------|------|
-| Critical Rules | `000-critical-rules.md` |
-| Docs Verification | `075-docs-verification.md` |
-| Session Init | `000-session-init.md` |
-| Approval Gate | `010-approval-gate.md` |
-| MCP Preference | `015-mcp-preference.md` |
-| Srclight Preference | `016-srclight-preference.md` |
-| GO Prohibitions | `020-go-prohibitions.md` |
-| Open Questions | `045-open-questions.md` |
-| Scope Autonomy | `050-scope-autonomy.md` |
-| Tool Usage | `060-tool-usage.md` |
-| Notebook Rules | `061-notebook-rules.md` |
-| Environment | `070-environment.md` |
-| Code Standards | `080-code-standards.md` |
-| Engineering Approach | `085-engineering-approach.md` |
-| HTTP Requests | `086-http-requests.md` |
-| Data Integrity | `090-data-integrity.md` |
-| Persistence | `100-persistence.md` |
-| Scripting | `120-scripting.md` |
-| Authority Source | `130-authority-source.md` |
+**Registry of migrated content**: `.opencode/.guidelines/registry.yaml` tracks content moved from guidelines to skills.
 
 ---
 
@@ -134,382 +186,107 @@ OpenCode loads guidelines from:
 | Coverage | `uv run coverage run -m pytest test/ && uv run coverage report` | - |
 | Dead code scan | `uvx vulture src/` | Python ONLY |
 | Markdown lint | `uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/` | Markdown ONLY |
-| Markdown format | `uvx mdformat --number --wrap keep --end-of-line lf .opencode/guidelines/ docs/` | Markdown ONLY |
+| Markdown format | `uvx mdformat .opencode/guidelines/ docs/` | Markdown ONLY |
+| Skill enforcement test | `bash .opencode/tests/test-enforcement.sh` | opencode-cli |
+| Isolated opencode-cli run | `bash .opencode/tests/with-test-home opencode-cli run '<message>'` | opencode-cli |
+| Clean test artifacts | `bash .opencode/tests/with-test-home --clean` | opencode-cli |
 
 **Never** use bare `python`, `python3`, or `pip`. Always prefix with `uv run` for project commands.
-**Standalone tools** (ruff, pyright, vulture) use `uvx` or `uv tool install` — NOT `uv run`.
-**Never** use `ruff`, `pyright`, or `vulture` on markdown files — use `pymarkdownlnt` and `mdformat` instead.
 
-## Tool Installation (Optional)
+**Isolated test environment:** The `with-test-home` wrapper isolates opencode-cli XDG state into a project-relative temporary home (`./opencode/tmp/test-home-<timestamp>`), eliminating SQLite session conflicts with the desktop app. This allows skill enforcement tests to run from within an active opencode session.
 
-For frequently-used tools, developers can install them persistently:
-
-```bash
-uv tool install ruff pyright vulture pymarkdownlnt mdformat
-```
-
-This allows direct invocation without `uvx` prefix:
-
-```bash
-ruff check --fix src/ test/
-pyright src/
-pymarkdownlnt scan -r .opencode/guidelines/ docs/
-mdformat .opencode/guidelines/ docs/
-```
-
-To upgrade installed tools:
-
-```bash
-uv tool upgrade --all
-```
-**Never** use `uv add`; edit `pyproject.toml` directly, then `uv sync`.
+---
 
 ## Project Structure
 
 - `src/`: Application source code
 - `test/`: Unit and integration tests
 - `docs/`: Documentation and specifications
-- `ai_bin/`: Agent utility scripts
+- `.opencode/`: Skills, guidelines, and agent tools
+  - `tools/`: Agent utility scripts (guidelines, md, memory, py, jupyter, etc.)
+  - `skills/`: Self-contained skills (no guideline dependencies)
+  - `guidelines/`: Core zero-tolerance rules only
+  - `.guidelines/registry.yaml`: Registry of migrated content
+
+---
 
 ## Code Style
 
-See `.opencode/guidelines/080-code-standards.md` for details. Key points:
-- Follow PEP 8 for Python
-- Use `ruff` for linting and formatting
-- Mirror existing patterns in the codebase
+See `.opencode/guidelines/080-code-standards.md` for details.
+
+---
 
 ## Git Workflow
 
-See `.opencode/guidelines/110-git-branch-first.md` through `115-git-hotfix-workflow.md` for full workflow. Key points:
-- **Branch Hierarchy**: `main` (production) ← `dev` (integration) ← `feature/*` (development)
-- **Feature PRs**: Squash-merge to `dev` (one commit per PR)
-- **Release PRs**: Merge commit from `dev` to `main` (preserves PR history)
-- **Hotfixes**: Branch from `main`, merge back to both `main` and `dev`
-- PRs require explicit developer instruction — agent does NOT auto-create PRs
-- Human-only merge — agent never merges PRs
-- Delete merged branches after PR merge
+See `git-workflow` skill for complete workflow including:
+- **Three-branch architecture:**
+  - Feature branches (`spec/*` or `feature/*`) → Dev branch (`dev`)
+  - Dev branch (`dev`) → Main branch (`main` or `master`)
+  - AI commits blocked on `main`/`master`/`dev` by git hooks
+- Branch before edit (MANDATORY)
+- Branch from `dev` for features (sync first)
+- Stash before branch creation
+- Squash before PR (target `dev`, not `main`)
+- Human-only merge
+- Cleanup after merge
+
+**Branch naming:** `spec/<short-name>` or `feature/<description>`
+
+---
 
 ## Boundaries (Critical)
 
-See `.opencode/guidelines/000-critical-rules.md` for complete list.
-
-## Engineering Approach (Critical)
-
-ALL work must follow proper engineering methodology:
-
-1. **Understand** → Read and analyze before proposing
-2. **Design** → Document approach before implementing  
-3. **Implement** → Execute with attention to quality
-4. **Verify** → Test thoroughly before declaring complete
-
-**Scope Discipline:**
-- No feature creep - implement ONLY what is specified
-- No unapproved work - wait for explicit authorization
-
-See `.opencode/guidelines/085-engineering-approach.md` for complete requirements.
-
 **✅ ALWAYS:**
-- **Run session init script at session start** — Run `uv run python ai_bin/session_init.py` before any other operations. Store the output values (DEV_NAME, DEV_EMAIL, GIT_OWNER, GIT_REPO, GIT_HOOKS_PATH, GIT_REMOTE_URL) for session duration. See `000-session-init.md`.
+- Run session init script at session start
 - Create feature branch BEFORE any filesystem change
-- Create PRs for all merges (when tooling available)
-- Reference the Authoritative Spec for planning
-- Create specs in GitHub Issues BEFORE implementing
-- **Check all comments and subissues BEFORE implementation** (see `010-approval-gate.md`)
-- **Respond to GitHub issue comments via GitHub issue comments** — users cannot read your mind (see `000-critical-rules.md`)
-- Wait for explicit authorization before writing code
-- Get individual authorization for each task in multi-task plans
-- **SILENTLY HALT after completing a task**
-- **Commit WIP before ANY HALT** — Before halting (awaiting approval, clarification, error, session end), commit all changes with WIP message. See `111-git-commit-workflow.md`.
-- Use PyCharm MCP tools for all file operations when available
-- **STASH EXTERNAL CHANGES FIRST** — Before ANY branch creation, `git status`. If ANY files modified, `git stash push -m "WIP: before <branch>"`, then VERIFY with `git stash list` and clean `git status`.
+- Wait for explicit authorization ("approved" or "go") before implementing
+- SILENTLY HALT after completing a task
+- Use appropriate tools per five-tier hierarchy (see `mcp-tool-usage` skill)
+
+**✅ Multi-Task Spec Workflow (CRITICAL):**
+When parent issue has sub-issues, authorization cascades to ALL sub-issues:
+
+- [ ] User authorizes parent issue
+- [ ] Verify parent has sub-issues
+- [ ] Authorization cascades to ALL sub-issues
+- [ ] Complete ALL phases in sequence (NO HALT between phases)
+- [ ] Report ONCE after ALL phases complete
+- [ ] HALT ONCE at the end
+
+**Exception:** User explicitly names a phase (e.g., "approved: Phase 2 only") → complete that phase ONLY, then HALT
 
 **🚫 NEVER:**
 - Write code/notebooks/configs/tests without approved spec
-- Interpret questions as authorization ("Should I do X?" = asking permission)
+- Interpret questions as authorization
 - Proceed to next task after completing a task — HALT
-- Create plans inline in message body
-- **Implement a revised spec without fresh approval** — Spec changes revoke authorization. See `010-approval-gate.md` "Revision Revokes Approval"
-- **Create PRs without EXPLICIT developer instruction** — "approved" and "go" authorize implementation ONLY. PRs require explicit "create a PR" instruction. Completing implementation does NOT authorize PR creation.
-- **Submit unsquashed PRs** — ALL PRs must have exactly ONE commit (squashed). Multiple commits in a PR will be rejected. Always `git reset --soft origin/main && git commit` before pushing.
-- **Create PRs after implementation** — The developer must run human tests and may require adjustments BEFORE any PR. Wait for explicit "create a PR" after developer has tested.
-- **BYPASS PR WORKFLOW SKILL** — When user says "pr", "create a PR", "update PR", or ANY PR-related command, MUST invoke `/skill git-workflow --task <appropriate-task>`. NEVER manually create/update/close PRs. The skill handles existing PR detection (Step 0 checks for open/merged PRs).
-- **PR MERGE CONFIRMATION REQUIRES SKILL** — When user says "pr merged", "merged", or similar, MUST invoke `/skill git-workflow --task cleanup`. NEVER manually handle PR merge confirmation, issue closure, or branch cleanup. The skill handles ALL post-merge operations including GitHub API verification and branch deletion.
+- Create PRs without explicit "create a PR" instruction
 - Use `/tmp/` — only use `./tmp/`
-- **DELETE MERGED BRANCHES IMMEDIATELY** — After PR merge confirmation, delete the branch immediately. No asking, no waiting. Unmerged branches with work ARE preserved until explicit delete request.
-- **ANALYZE ISSUE COMMENTS SILENTLY** — Always respond to user comments via GitHub issue comment. Users cannot see your internal reasoning.
-- **PROMPT VIA ISSUE COMMENTS** — Never add "awaiting authorization", "let me know when ready", or any dialog prompts to GitHub issue comments. Comments are record-keeping, not chat.
-- **USE MCP TOOLS FOR NOTEBOOKS** — Always use `the-notebook-mcp` tools for ALL notebook operations (read, edit, create, delete). Never use `read`/`edit`/`write` tools on `.ipynb` files.
-- Install Node.js/NPX in Python-only environments — Node.js is detestable in Python/Java projects; use native alternatives (`uv`, `ruff`, `pytest` for Python; Maven/Gradle for Java)
-- Ask to run production code without explicit authorization
-- Use direct file tools when PyCharm MCP available
-- **RUN NOTEBOOKS WITH PRODUCTION DATA** — `the-notebook-mcp_notebook_execute_cell`, `pycharm_runNotebookCell`, and ANY execution method on production notebooks (see `061-notebook-rules.md`) is FORBIDDEN without explicit per-execution user authorization
-- **IMPLEMENT SCOPE CREEP** — Only implement what the spec explicitly requests. Never refactor "nearby" code, add "helper" functions, or fix "similar issues" not in the spec
-- **USE PROPER NOTEBOOK TOOLING** — Always use `the-notebook-mcp` tools (e.g., `the-notebook-mcp_notebook_read`, `the-notebook-mcp_notebook_edit_cell`). Never use shell redirects (`sed`, `>`, `cat`) on notebook content — this causes edit failures and corrupted state.
-- **USE GIT RESTORE ON EXTERNAL CHANGES** — `git restore` on externally-modified files destroys changes permanently. Always `git stash` first.
-
-## Guideline Violations
-
-**If the agent violates a guideline, update guidelines to close the gap.**
-
-1. STOP the current task
-2. Update AGENTS.md "NEVER" list
-3. Update relevant guideline file in `.opencode/guidelines/`
-4. Document the fix in a comment on the associated issue — FACTUAL ONLY
-5. Wait for user confirmation before resuming
+- Assume cached values from previous sessions
+- HALT after each phase of multi-task spec (see Multi-Task Spec Workflow above)
 
 ---
 
-## Authorization Recognition Protocol
+## Q/A Mode
 
-**These patterns ARE explicit authorization (agent MUST continue):**
+After session init and skill discovery, switch to Q/A mode:
 
-| Pattern | Example | Why It's Authorization |
-|---------|---------|----------------------|
-| Direct command | "implement #227" | Explicit instruction to implement |
-| Include in branch | "include in this feature branch" | Explicit scope expansion authorization |
-| Compound command | "implement #227 and include in #223 branch" | Authorization for both implementation AND branch inclusion |
-| Fix this too | "fix the URL order while you're at it" | Explicit authorization for additional work |
+1. **Report identity**: `<AgentName> (<ModelID>)`
+2. **Report init results**: Platform, MCP availability
+3. **Switch to Q/A**: "Ready. What would you like me to do?"
+4. **Wait for user input**
 
-**These are NOT authorization (agent must HALT):**
-
-| Pattern | Example | Why It's NOT Authorization |
-|---------|---------|---------------------------|
-| Question | "should I implement #227?" | Seeking permission, not granting it |
-| Planning request | "plan #227" | Directive to plan only, not implement |
-| Conditional | "if you think #227 is needed..." | Conditional, requires judgment |
-| Observation | "#227 looks related" | Not a command to implement |
-
-**Authorization Rules:**
-
-✅ **MUST continue immediately when:**
-- User says "implement #N and include in this branch"
-- User says "fix X while you're at it"
-- User says "also fix the typo" (unrelated fix)
-- User provides multiple explicit commands in one message
-
-🚫 **MUST HALT when:**
-- User asks a question ("should I...?", "would you like...?")
-- User uses conditionals ("if you think...", "maybe...")
-- User makes observations without commands
-- Authorization is ambiguous or unclear
+**DO NOT proactively suggest tasks or ask leading questions.**
 
 ---
 
-## Guidelines Access
+## Reference Files
 
-| Command | Purpose |
-|---------|---------|
-| `srclight_search_symbols` or `pycharm_search_in_files_by_text` | Search guidelines for topic |
-| `pycharm_get_file_text_by_path` | Read specific guideline file |
-| `pycharm_list_directory_tree` | List guideline directory structure |
-
----
-
-## Skills
-
-OpenCode skills are available in `.opencode/skills/`. Each skill has a `SKILL.md` file with:
-- `name`: Skill identifier
-- `description`: What the skill does
-- `license`: License type
-- `compatibility`: opencode
-
-**⚠️ MANDATORY: All skills MUST have a `tasks/` subdirectory with at least one task file.**
-
-Skills without tasks cannot be invoked as subtasks and will fail silently. See `skill-creator` skill for complete requirements.
-
-To use a skill, the agent loads it when relevant to the current task.
-
-### Skill Invocation Guidance
-
-| When to Invoke | Skill | Purpose |
-|----------------|-------|---------|
-| When writing or modifying code | `code-size-enforcement` | Enforce size limits on functions, cells, and files |
-| Before creating ANY file | `implementation-quality --task file-locations` | Verify file location patterns |
-| At implementation start | `implementation-quality --task code-structure` | Verify code structure patterns (load once, reference continuously) |
-| Before running commands | `implementation-quality --task environment` | Verify environment patterns |
-| Before handling data | `implementation-quality --task data-integrity` | Verify data integrity patterns |
-| Before approving guideline changes | `guideline-auditor` | Verify guideline quality, find ambiguities/conflicts |
-| Before approving spec implementation | `spec-auditor --issue N` | Verify spec quality, find missing context/elements |
-| User says "approved" or "go" | `approval-gate` | Verify spec+authorization requirements, sub-issues |
-| Before implementing any task | `approval-gate` | Verify authorization, check sub-issues, re-evaluate |
-| Periodic guideline maintenance | `guideline-auditor` | Check for guideline drift over time |
-| Post-implementation verification | `spec-auditor --issue N` | Verify spec was implemented correctly |
-| User says "approved" or "go" | `git-workflow --task pre-work` | Pre-work: verify branch state, stash external changes, create branch |
-| After implementation completes | `git-workflow --task review-prep` | **Automatic: push branch, generate compare URL for review** |
-| User says "create a PR", "pr", "update PR", "make a PR", "push and create PR" | `git-workflow --task pr-creation` | Post-work: squash commits, push, create/update PR |
-| PR timing questions | `pr-creation-workflow` | PR authorization boundary, when PRs can be created |
-| Before skill extraction | `coherence-auditor --mode extraction` | Identify skill candidates from guideline content |
-| Periodic coherence maintenance | `coherence-auditor --mode maintenance` | Detect guideline-skill drift |
-| After guideline/skill update | `coherence-auditor --mode maintenance` | Verify coherence after changes |
-| Before major release | `coherence-auditor --mode maintenance` | Verify guideline-skill coherence |
-| Designing architecture | `dev-architect --task design-plan` | Create architecture design plans |
-| Reviewing specs for correctness | `dev-architect --task review-spec` | Review and revise specs for correctness and compliance |
-| Plan phase of spec creation | `dev-architect --task design-plan` | Auto-invoke at Plan phase |
-| Encountering errors/bugs | `debugger` | Analyze errors and debug issues |
-| Preparing commit messages | `commit-writer` | Generate commit messages |
-| After implementation | `code-review` | Review code quality |
-| Creating task descriptions | `task-writer` | Draft task descriptions |
-| Preparing PR descriptions | `pr-writer` | Create pull request descriptions |
-| Publishing releases | `release-notes` | Publish release notes |
-| Checking Git conventions | `git-conventions` | Reference Git convention knowledge |
-| Looking up documentation | `context7-lookup` | Look up Context7 documentation |
-
-**Automatic Invocation:**
-- `git-workflow` skill is invoked automatically when:
-  1. User authorizes implementation ("approved", "go", "proceed") → `pre-work` task
-  2. Implementation completes → **`review-prep` task (automatic, no decision point)**
-  3. User requests PR creation ("create a PR", "make a PR", "push and create PR") → `pr-creation` task
-- The skill handles all git operations (branch, stash, commit, squash, push, PR creation) according to guidelines.
-- `pr-creation-workflow` skill defines when PRs can be created and what authorizes PR creation. It is NOT automatically invoked - it documents the rules.
-- `implementation-quality` skill is invoked automatically at implementation gates:
-  1. Before creating ANY file → `file-locations` task
-  2. At implementation start → `code-structure` task (load once, reference continuously)
-  3. Before running commands → `environment` task
-  4. Before handling data → `data-integrity` task
-- `dev-architect` skill is invoked automatically at Plan phase:
-  1. When creating a new spec → `design-plan` task
-  2. When reviewing specs → `review-spec` task
-
-**Sub-Task Invocation:**
-- Skills with `tasks/` subdirectory support `--task` parameter for loading specific tasks:
-  - `/skill git-workflow --task pre-work` - Load only pre-work task (~80 lines)
-  - `/skill git-workflow --task pr-creation` - Load only PR creation task (~80 lines)
-- This reduces context window pollution by loading only relevant workflow phases.
-- Use `/skill <skill-name> --task <task-name>` for sub-task invocation.
-- Use `/skill <skill-name>` (no `--task`) for skill overview only.
-
-**Integration with Approval Gates:**
-- See `.opencode/skills/approval-gate/SKILL.md` for spec+authorization workflow
-- See `010-approval-gate.md` for critical rules (zero tolerance violations)
-- See `000-critical-rules.md` for auditor skill references
-- Both auditors create audit logs in `./tmp/` for tracking
-
-### Sub-Task Architecture for Context Efficiency
-
-**Problem:** Monolithic skills load 500+ lines into context when only 50-100 lines are needed for a specific workflow phase.
-
-**Solution:** Skills with lengthy procedural workflows use sub-task architecture:
-
-```
-.opencode/skills/git-workflow/
-├── SKILL.md              (~100 lines - overview + task table)
-└── tasks/
-    ├── pre-work.md       (~80 lines - Phase 0)
-    ├── implementation.md (~80 lines - Phase 1)
-    ├── review-prep.md    (~70 lines - Phase 2)
-    ├── commit-prep.md    (~90 lines - Phase 3)
-    ├── pr-creation.md    (~80 lines - Phase 4)
-    └── cleanup.md        (~120 lines - Phase 5)
-```
-
-**Context Savings:** 75%+ reduction (load ~100 lines instead of ~500 lines)
-
-**When to Use Sub-Task Invocation:**
-
-| Situation | Invocation | Lines Loaded |
-|-----------|------------|---------------|
-| Need overview only | `/skill git-workflow` | ~100 |
-| Before implementation starts | `/skill git-workflow --task pre-work` | ~80 |
-| **After implementation completes** | `/skill git-workflow --task review-prep` | ~70 |
-| Creating a PR | `/skill git-workflow --task pr-creation` | ~80 |
-| After PR merged | `/skill git-workflow --task cleanup` | ~120 |
-
-**Sub-Task Skill Detection:**
-- Check if skill directory has `tasks/` subdirectory
-- If yes, prefer `--task` invocation for specific workflow phases
-- If no, load full skill
-
-**Parent Issue / Sub-Issue Architecture:**
-
-Multi-task specs use parent orchestrator issues with child sub-issues:
-
-| Issue Type | Purpose | Size |
-|------------|---------|------|
-| Parent (`[SPEC]`) | Orchestrator with task table | ~700 words |
-| Child (`[Task: #N]`) | Self-contained implementation details | ~450-1100 words |
-
-**Single-Subtask-at-a-Time:**
-- Only ONE subtask executes at a time (enforced by STATUS gate)
-- STATUS in parent matches active subtask number
-- Prevents git conflicts, file races, and stash collisions
-- Sequential advancement: STATUS advances only after subtask completion
-
-**Templates:**
-- Parent Issue: `.opencode/skills/templates/PARENT-ISSUE-TEMPLATE.md`
-- Sub-Issue: `.opencode/skills/templates/SUB-ISSUE-TEMPLATE.md`
-
-## Session Output Attachment (MANDATORY)
-
-**All session outputs (audit logs, reports, investigation artifacts) MUST be attached to GitHub Issues.**
-
-### Why This Matters
-
-Fresh-start AI agents have no memory of previous sessions. Outputs stored locally in `./tmp/` are NOT preserved between sessions. GitHub Issues are the persistent tracking mechanism.
-
-### Workflow
-
-1. **Generate output in `./tmp/`:**
-   - Audit logs: `./tmp/audit-YYYYMMDD.md`, `./tmp/audit-spec-YYYYMMDD.md`, `./tmp/coherence-audit-YYYYMMDD-*.md`
-   - Investigation reports: `./tmp/investigation-*.md`
-   - Tool outputs: Any files created during session work
-
-2. **After creating output:**
-   - Read the full content
-   - Attach to appropriate GitHub Issue via `github_add_issue_comment`
-   - Delete the temp file
-
-3. **Target Issue Selection:**
-   - Attach to the issue that NEEDS the outputs for context
-   - NOT necessarily the issue that created the outputs
-   - If working on #100 but audit is needed for #200 → attach to #200
-
-4. **Comment Format:**
-   ```
-   AI: <AgentName> <ModelID> 📝 <output-type>: <title>
-   
-   ## Summary
-   <brief summary>
-   
-   <full content or key findings>
-   ```
-
-### Skills with Built-in Attachment
-
-These skills automatically attach outputs to issues:
-
-| Skill | Attachment Target |
-|-------|-------------------|
-| `guideline-auditor` | Issue being discussed or summary issue |
-| `coherence-auditor` | Issue being discussed or summary issue |
-| `spec-auditor` | Issue specified by `--issue N` |
-
-### Manual Attachment
-
-For investigation reports, test results, or other session artifacts:
-
-```python
-# Read the output
-output_path = "./tmp/investigation-20260328.md"
-with open(output_path) as f:
-    content = f.read()
-
-# Attach to target issue
-github_add_issue_comment(
-    owner=owner, repo=repo, issue_number=target_issue,
-    body=f"AI: OpenCode ollama-cloud/glm-5 📝 Investigation: <title>\n\n{content}"
-)
-
-# Delete temp file
-os.remove(output_path)
-```
-
-### Examples
-
-| Scenario | Output Location | Attachment Target |
-|----------|-----------------|-------------------|
-| Guideline audit for spec #200 | `./tmp/audit-20260328.md` | Spec #200 |
-| Coherence audit for guideline changes | `./tmp/coherence-audit-20260328-*.md` | Guideline change issue |
-| Spec audit | `./tmp/audit-spec-20260328.md` | Spec being audited (`--issue N`) |
-| Investigation for issue #50 | `./tmp/investigation-*.md` | Issue #50 |
-
-**⚠️ CRITICAL: Always attach to GitHub Issue, then delete temp file. No exceptions.**
+| File | Purpose |
+|------|---------|
+| `.opencode/dispatch-table.yaml` | Skill invocation rules (DEPRECATED — kept for reference only) |
+| `.opencode/.guidelines/registry.yaml` | Registry of migrated content blocks |
+| `000-critical-rules.md` | Zero-tolerance violations |
+| `010-approval-gate.md` | Authorization workflow |
+| `020-go-prohibitions.md` | GO command restrictions |
+| `git-workflow` skill | Complete git workflow |
+| `approval-gate` skill | Authorization verification |

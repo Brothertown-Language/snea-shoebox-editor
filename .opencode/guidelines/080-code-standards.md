@@ -31,7 +31,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
   - Notebook cells (each cell should do ONE thing)
   - LaTeX/XeLaTeX environments and macros (one purpose each)
   - Scripts and configuration files
-- **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 350 words, decompose it. If a notebook cell exceeds 450 words, split it into multiple cells.
+- **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 40 lines, decompose it. If a notebook cell exceeds 50 lines, split it into multiple cells.
 - **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named
   constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only
   acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).
@@ -46,7 +46,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
     any imports or `__all__` entries.
 - **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the
   package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two
-  concise sentences — enough for `ai_bin/py structure` to display alongside the filename.
+  concise sentences — enough for `.opencode/tools/py ls` to display alongside the filename.
 - **Docstring/Comment Determinism**: Pydoc/docstrings and code comments must use deterministic wording. Avoid ambiguous hedge/alternative phrasing such as `maybe`, `if ... or ...`, `and/or`, or `A + B or C` when describing required behavior, validation paths, or implementation intent.
 - **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered
   configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause
@@ -86,7 +86,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 
 ## Linting & Static Analysis
 
-- Run appropriate dev tools (linters, type checkers) listed in `ai_bin/start` on all modified Python files before submitting.
+- Run appropriate dev tools (linters, type checkers) listed in AGENTS.md "Build / Lint / Test Commands" on all modified Python files before submitting.
 
 ## Tool Selection by File Type
 
@@ -140,26 +140,6 @@ All enumeration lists, numbered sections, and step sequences in documentation MU
 ## AI Co-Authored Attribution (MANDATORY)
 
 **AI-generated creative content MUST include co-authored attribution where the content format supports it.**
-
-### ⚠️ MANDATORY: Dynamic Runtime Identity Detection
-
-**Agents MUST use their ACTUAL runtime identity — NEVER copy placeholder values from examples.**
-
-| Identity Component | How to Detect | FORBIDDEN |
-|-------------------|---------------|-----------|
-| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
-| `<ai-email>` | Agent's noreply email | Using project domain email |
-
-**Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
-- `AI Assistant (model-id)` → Placeholder only
-- **DETECT YOUR OWN IDENTITY** at runtime
-
-**When Identity Unknown:**
-- STOP and ask user for clarification
-- DO NOT use example values as defaults
-- DO NOT guess or invent identity values
 
 ### What Counts as AI-Generated Content
 
@@ -215,7 +195,7 @@ Co-authored with AI: <AI-Name> (<model-id>)
 
 **Example:**
 ```
-Co-authored with AI: MyAIAgent (provider/model-name)
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)
 ```
 
 ### Repository Creation
@@ -227,8 +207,8 @@ When creating a new repository, the README MUST include:
 
 This repository was created with assistance from AI:
 
-- **AI Agent**: <AI-Name>
-- **Model**: <model-id>
+- **AI Agent**: OpenCode
+- **Model**: ollama-cloud/glm-5
 - **Date**: YYYY-MM-DD
 ```
 
@@ -241,7 +221,7 @@ Every Python file with original AI-authored code MUST include attribution in the
 ```python
 """Module description.
 
-Co-authored with AI: MyAIAgent (provider/model-name)
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)
 """
 ```
 

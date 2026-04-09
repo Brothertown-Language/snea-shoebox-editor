@@ -5,7 +5,7 @@
 AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
 1. **Specify Phase**: Define **What & Why**. Kick off with a high-level vision (product brief), then expand it into a detailed specification focusing on user journeys, experiences, and success criteria.
-2. **Plan Phase**: Define **How**. Draft the technical plan (architecture, technical stack, and constraints). **Auto-invoke `/skill dev-architect --task design-plan` at Plan phase.**
+2. **Plan Phase**: Define **How**. Draft the technical plan (architecture, technical stack, and constraints).
 3. **Tasks Phase**: Break the plan into **small, reviewable chunks** (tasks) that can be implemented and tested in isolation.
 4. **Implement Phase**: **Execute** tasks and **verify** results.
 
@@ -124,72 +124,7 @@ Before any implementation, every spec must document:
 
 ---
 
-## 1.2. User Prompt Preservation (MANDATORY)
-
-**When creating or revising a spec, the agent MUST preserve the user's original prompt as context.**
-
-### Why Prompt Preservation Matters
-
-The user's original prompt contains:
-- The initial intent and motivation behind the request
-- Nuanced context that may not be captured in the spec body
-- Specific constraints, preferences, or edge cases the user mentioned
-- Background information that informed the decision
-
-Without the original prompt context:
-- Future agents lose critical information about the user's intent
-- Decision rationale may be unclear
-- Subtle requirements may be missed in implementation
-
-### Prompt Capture Requirement
-
-**ALWAYS capture the user prompt as a comment on the spec issue:**
-
-1. **When creating a new spec:**
-   - After creating the GitHub Issue, immediately post a comment with the user prompt
-   - Format: See "User Prompt Comment Format" in `github-comments` skill
-
-2. **When revising an existing spec:**
-   - After updating the issue body, post a comment with the revision prompt
-   - Include both the new prompt and any additional context provided
-
-3. **Multiple prompts:**
-   - If the user provides multiple messages before spec creation, capture the triggering prompt
-   - Optionally capture key context messages as separate comments
-
-### What to Capture
-
-| Prompt Element | Capture? | Format |
-|----------------|----------|--------|
-| Exact user prompt text | ✅ YES | Verbatim or minimal editing |
-| Key context from conversation | ✅ YES | Summarized in separate section |
-| Decision to create spec | ✅ YES | Brief note on why spec was created |
-| Code snippets in prompt | ✅ YES | Include verbatim |
-
-### Edge Cases
-
-| Scenario | Action |
-|----------|--------|
-| Prompt is very long | Summarize key points, link to full conversation if available |
-| User provides clarifications | Add clarification comments separately |
-| Confidential/sensitive info | Allow user to redact before posting |
-
-### Integration with Fresh-Start Context
-
-User prompt preservation COMPLEMENTS the fresh-start context rules:
-
-| Context Type | Location |
-|--------------|----------|
-| User's original prompt | First comment on issue |
-| Detailed analysis | Issue body (Problem Statement, Context, etc.) |
-| Related issues | Issue body (Related Issues section) |
-| User clarifications | Follow-up comments |
-
-**The prompt comment provides the "WHY" — the issue body provides the "WHAT" and "HOW".**
-
----
-
-## 1.3. Fresh-Start Context Requirements
+## 1.2. Fresh-Start Context Requirements
 
 **All specs, bug reports, and issues MUST be self-contained for agents with NO memory context.**
 
@@ -216,7 +151,7 @@ A different AI agent (or the same agent after a context reset) may pick up this 
 
 3. **Cross-references with context**
    - When referencing other issues/specs: include issue number AND brief summary
-   - Include URLs: `https://github.com/<owner>/<repo>/issues/123`
+   - Include URLs: `https://github.com/owner/repo/issues/123`
    - State WHY the reference matters
 
 4. **Decision rationale documented**

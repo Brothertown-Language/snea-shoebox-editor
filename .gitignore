@@ -43,6 +43,7 @@ out/
 .junie/*.bak
 .junie/cache/
 .junie/memory.md
+.opencode/package-lock.json
 
 # Cloudflare / Wrangler
 .wrangler/
@@ -54,6 +55,9 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Git worktrees
+.worktrees/
 
 # Project temporary files
 tmp/
@@ -85,3 +89,4 @@ docker.app/
 /.output.txt
 /opencode-guidelines-export/
 /opencode-guidelines-export.zip
+.srclight/

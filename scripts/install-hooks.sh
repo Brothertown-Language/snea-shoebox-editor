@@ -21,6 +21,7 @@ git config core.hooksPath .githooks
 # Set executable permissions on hook scripts
 chmod +x "$HOOKS_SRC/pre-commit"
 chmod +x "$HOOKS_SRC/post-commit"
+chmod +x "$HOOKS_SRC/pre-push"
 
 echo ""
 echo "✅ Git hooks installed successfully!"
@@ -32,6 +33,7 @@ echo ""
 echo "Hooks installed:"
 echo "  - pre-commit: Blocks commits to protected branches"
 echo "  - post-commit: Warns if commit made to protected branch"
+echo "  - pre-push: Blocks pushes to merged branches"
 echo ""
 echo "To verify installation:"
 echo "  git config core.hooksPath  (should output: .githooks)"

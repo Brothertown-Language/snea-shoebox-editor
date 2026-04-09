@@ -1,14 +1,8 @@
 # Sub-Issue Task Template
 
-**Illustrative template** for individual implementation tasks that are children of a parent orchestrator issue.
+Use this template for individual implementation tasks that are children of a parent orchestrator issue.
 
-**AI Agent Guidance:** 
-- Use this template ONLY for multi-concern specs requiring task decomposition
-- Single-task specs do NOT need sub-issues (AI agent determines)
-- Adapt this template based on actual concern boundaries, not rigid structure
-- Templates show typical patterns - exercise subjective judgment
-
-______________________________________________________________________
+---
 
 ## Template
 
@@ -78,20 +72,20 @@ Subtask: X.Y  # Must match STATUS in parent
 🤖 ✨ Created by <AgentName> (<ModelID>)
 ```
 
-______________________________________________________________________
+---
 
 ## Template Size
 
-Sub-issues should be **~450-1100 words** (approximately 60-150 lines):
+Sub-issues should be **~60-150 lines**:
 
-- Purpose: 35-70 words
-- Entry/Exit criteria: 70-140 words
-- Procedure: 140-350 words
-- Constraints: 35-105 words
-- Cross-references: 35-105 words
-- Context: 70-210 words
+- Purpose: 5-10 lines
+- Entry/Exit criteria: 10-20 lines
+- Procedure: 20-50 lines
+- Constraints: 5-15 lines
+- Cross-references: 5-15 lines
+- Context: 10-30 lines
 
-______________________________________________________________________
+---
 
 ## Self-Contained Requirement
 
@@ -112,7 +106,7 @@ ______________________________________________________________________
 - "Continue from subtask X"
 - "Refer to other sub-issue for details"
 
-______________________________________________________________________
+---
 
 ## Subtask Number Format
 
@@ -125,7 +119,7 @@ ______________________________________________________________________
 
 **The subtask number MUST match STATUS in parent issue.**
 
-______________________________________________________________________
+---
 
 ## Title Format
 
@@ -152,7 +146,7 @@ Task: Database schema                       # Missing parent reference
 [Task] Create database schema               # Missing parent number
 ```
 
-______________________________________________________________________
+---
 
 ## Entry Criteria
 
@@ -166,15 +160,15 @@ ______________________________________________________________________
 
 **If ANY criterion fails → HALT and report.**
 
-______________________________________________________________________
+---
 
 ## Exit Criteria
 
 **Each criterion MUST be:**
 
 1. **Testable** - Can be verified programmatically or manually
-1. **Specific** - Clear pass/fail determination
-1. **Complete** - No ambiguity about what "done" means
+2. **Specific** - Clear pass/fail determination
+3. **Complete** - No ambiguity about what "done" means
 
 ### ✅ Good Exit Criteria
 
@@ -193,15 +187,15 @@ ______________________________________________________________________
 - [ ] Make it work
 ```
 
-______________________________________________________________________
+---
 
 ## Procedure
 
 **Each step MUST be:**
 
 1. **Concrete** - Specific action to take
-1. **Verifiable** - Can confirm completion
-1. **Atomic** - Single clear action
+2. **Verifiable** - Can confirm completion
+3. **Atomic** - Single clear action
 
 ### ✅ Good Procedure Steps
 
@@ -221,7 +215,7 @@ ______________________________________________________________________
 3. ☐ Test everything
 ```
 
-______________________________________________________________________
+---
 
 ## Context Required Section
 
@@ -238,7 +232,7 @@ ______________________________________________________________________
 
 This ensures fresh-start agents have all references without searching.
 
-______________________________________________________________________
+---
 
 ## Integration Points
 
@@ -249,7 +243,7 @@ ______________________________________________________________________
 | `git-workflow` skill | Create branch named for this subtask |
 | `github-sub-issues` skill | Sub-issue linked to parent |
 
-______________________________________________________________________
+---
 
 ## Example
 
@@ -327,10 +321,10 @@ Design and implement the architecture for GitHub sub-issue sub-task tracking, en
 
 ---
 
-🤖 ✨ Created by <AgentName> (<ModelID>)
+🤖 ✨ Created by OpenCode Desktop (ollama-cloud/glm-5)
 ```
 
-______________________________________________________________________
+---
 
 ## Size Comparison
 
@@ -342,5 +336,5 @@ ______________________________________________________________________
 | Context | ~30 lines | ~10-30 lines |
 | Entry/Exit | ~10 lines | ~10-20 lines |
 
-**Parent = Orchestrator (~100 lines)**\
+**Parent = Orchestrator (~100 lines)**  
 **Sub-Issue = Implementation details (~60-150 lines)**

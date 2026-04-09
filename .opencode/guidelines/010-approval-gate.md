@@ -19,27 +19,11 @@
 | **Authorization required** | NO implementation WITHOUT explicit `"approved"` or `"go"` |
 | **Explicit auth overrides label** | When user says `approved`/`go`, proceed REGARDLESS of `needs-approval` label |
 | **Branch first** | Create feature branch BEFORE any file modification |
-| **Review-prep after implementation** | Push branch, generate compare URL, post summary, HALT — MANDATORY after implementation |
 | **Human-only merge** | Agents MUST NEVER merge PRs |
-| **MCP tools** | Use PyCharm/GitHub MCP for file operations when available |
+| **MCP tools** | Use appropriate tools per five-tier hierarchy (see `mcp-tool-usage` skill) |
 | **Silent halt** | HALT after completion, after PR creation — no prompts |
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
-
-### Implementation Gates (MANDATORY)
-
-**⚠️ All implementation MUST invoke pattern verification at these gates:**
-
-| Gate | Invocation | Purpose |
-|------|------------|---------|
-| Before creating ANY file | `/skill implementation-quality --task file-locations` | Verify file location patterns |
-| At implementation start | `/skill implementation-quality --task code-structure` | Verify code structure patterns (load once, reference continuously) |
-| Before running commands | `/skill implementation-quality --task environment` | Verify environment patterns |
-| Before handling data | `/skill implementation-quality --task data-integrity` | Verify data integrity patterns |
-
-**Enforcement:** These invocations are MANDATORY. Do NOT proceed with implementation without first loading the appropriate task and verifying pattern compliance.
-
-**Loop Prevention:** If tool invocation fails repeatedly without progress, see `150-task-loop-prevention.md` for detection heuristics and exit strategies.
 
 ### Explicit Authorization Priority (Critical)
 
@@ -73,75 +57,29 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - Previous session authorization → NOT VALID for new issue/spec
 - Authorization is ZERO-BASED — every task needs NEW authorization
 
-### Authorization Scope for Multi-Phase Specs (CRITICAL)
+### Multi-Task Spec Authorization (CRITICAL)
 
-**⚠️ Unqualified approval authorizes ALL phases of a spec.**
+**When parent issue has sub-issues:** authorization cascades to ALL sub-issues.
 
-When a developer says `approved` or `go` **without a phase qualifier**, the agent is authorized to implement ALL phases of the spec in sequence. The agent will proceed from Phase 1 through all phases without stopping for re-approval between phases.
+**See `approval-gate` skill → "Multi-Task Spec Authorization" for the complete authorization cascade workflow and enforcement matrix.**
 
-| Command | Scope | Behavior |
-|---------|-------|----------|
-| `approved` | ALL phases | Proceed through all phases without stopping |
-| `go` | ALL phases | Proceed through all phases without stopping |
-| `approved: 1` | Phase 1 only | HALT after Phase 1, wait for next authorization |
-| `approved: 2.3` | Phase 2 Step 3 only | HALT after completing Step 3, wait for next authorization |
+Key rules:
+- 🚫 DO NOT halt after each phase of multi-task spec
+- 🚫 DO NOT ask for re-authorization between phases
+- 🚫 DO NOT treat sub-issues as separate authorization units
+- ✅ Complete ALL phases, then report ONCE and HALT ONCE
 
-**Rationale:**
-- Unqualified approval matches developer mental model of "approved means go ahead"
-- Phase-by-phase approval is intentional scoping (opt-in via qualifiers)
-- Prevents unnecessary back-and-forth on multi-phase implementations
-
-**Developer Workflow:**
-
-- **Approve entire spec:** Use `approved` or `go` without qualifiers
-- **Approve one phase:** Use `approved: N` where N is the phase number
-- **Approve specific step:** Use `approved: N.M` where N is phase and M is step
-
-**Agent Behavior:**
-
-**With unqualified approval (`approved` or `go`):**
-1. Proceed through Phase 1
-2. Continue to Phase 2 (no HALT)
-3. Continue through all remaining phases
-4. HALT only after completing the entire spec
-
-**With qualified approval (`approved: 1` or `approved: 2.3`):**
-1. Proceed through the authorized phase/step ONLY
-2. HALT after completing that phase/step
-3. Wait for next authorization before continuing
-
-## Compound Command Recognition
-
-**Approval tokens must be STANDALONE (separated by whitespace) to constitute valid authorization.**
-
-| Message | Standalone? | Authorization? |
-|---------|-------------|----------------|
-| `"approved check pr"` | YES (space separation) | YES |
-| `"#196 approved"` | YES (space separation) | YES |
-| `"#196 approvedcheck pr"` | NO (compound text) | NO |
-| `"check pr"` | N/A (verification) | NO |
-
-See `approval-gate` skill → `verify-authorization` task for complete pattern matching algorithm.
+**Exception:** User explicitly names a phase (e.g., "approved: 1.2" or "Phase 2 only") → complete that phase ONLY, then HALT.
 
 ### Revision Revokes Approval (MANDATORY)
 
 **Any modification to a spec or task document MUST immediately revoke approval.**
 
-When a spec is modified:
-1. **Status transitions to pending**: `STATUS: X.Y` → `STATUS: X.Y (REVISED - NEEDS APPROVAL)`
-2. **Label applied**: Add `needs-approval` label to the issue
-3. **Agent MUST HALT**: Do NOT proceed with implementation
-4. **Fresh authorization required**: New explicit approval needed before implementation
+**See `approval-gate` skill for revision status transition rules, mandatory actions, and exemption categories.**
 
-**Note**: When using `revise` command, the agent MAY post comments explaining changes but MUST NOT proceed with implementation. `revise` commands allow only documentation updates, never code changes.
+Key rule: Revision = `STATUS: X.Y (REVISED - NEEDS APPROVAL)` + `needs-approval` label + HALT.
 
-**This applies to:**
-- Any modification to the spec body (requirements, steps, criteria)
-- Any modification to task steps or acceptance criteria
-- Typo fixes in spec content (use GitHub comments for clarifications instead)
-- Minor clarifications that affect interpretation
-
-**Exempt from approval revocation:**
+Exempt from approval revocation:
 - STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
 - Progress comments added to issue
 - Bug report additions (separate from spec content changes)
@@ -150,117 +88,41 @@ When a spec is modified:
 
 **The `needs-approval` label is informational when explicit authorization is present.**
 
-| Situation | Action |
-|-----------|--------|
-| User authorizes AND label present | Proceed with implementation. Label is informational, not blocking. |
-| User authorizes AND no label | Proceed with implementation. |
-| No authorization AND label present | HALT and wait for explicit authorization. |
-| No authorization AND no label | Check for other blockers; proceed if clear. |
+**See `approval-gate` skill for the complete label handling enforcement matrix.**
 
-**Workflow:**
-1. **Explicit authorization received** → Proceed (label status is informational)
-2. **No explicit authorization** → Check for `needs-approval` label
-3. **Label present without authorization** → HALT and wait for user to authorize
+Key rule: Explicit authorization (`approved`/`go`) OVERRIDES the `needs-approval` label.
 
 ### Bug Report Response
 
-When bug report requires code changes:
+**See `approval-gate` skill for the complete bug report response protocol.**
 
-1. Add `needs-approval` label
-2. Post additional spec comment
-3. HALT immediately
-4. Wait for explicit `go` or `approved`
+Key rule: Bug reports requiring code changes → add `needs-approval` label → HALT → wait for explicit authorization.
 
-## Closed-Issue Audit (CRITICAL)
+### Bug Discovery Protocol (CRITICAL)
 
-**When a closed issue is targeted for implementation via `#N approved`, the agent MUST audit before proceeding.**
+**⚠️ Finding a bug during analysis or any other activity does NOT authorize fixing it.**
 
-### Why This Matters
+**See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete authorization matrix, self-correction protocol, and enforcement details.**
 
-Issuing `#N approved` for a closed issue assumes closure was correct. Without audit:
+Key rules:
+- 🚫 NEVER edit source code after discovering a bug without an approved spec
+- 🚫 NEVER create a branch for a bug fix without authorization
+- ✅ ALWAYS create a bug report issue (permitted without authorization)
+- ✅ ALWAYS perform read-only analysis (permitted without authorization)
+- ✅ ALWAYS HALT and wait for explicit authorization before any code changes
+- ✅ If you catch yourself editing code without a spec, immediately `git checkout` and HALT
 
-- Incorrectly-closed parents with open children propagate violations
-- Agent implements on top of already-broken workflow state
-- Missing work goes undetected
+**Bug discovery is a reporting action, NOT an implementation authorization.**
 
-### Pre-Authorization Audit (MANDATORY)
+## Skill Enforcement (CRITICAL)
 
-**When `#N approved` targets a closed issue:**
+**⚠️ CRITICAL: Skills MUST enforce authorization — guidelines alone are insufficient.**
 
-1. **Query sub-issues immediately**: `github_issue_read(method="get_sub_issues", issue_number=N)`
-2. **Detect violations**: Open sub-issues on closed parent = violation
-3. **If NO sub-issues or ALL sub-issues closed**: Proceed to implementation
-4. **If ANY sub-issue open**: Execute closed-issue remediation workflow (see `124-github-archive-workflow.md`)
-
-### Direct Inspection Requirement (CRITICAL)
-
-**NEVER rely on comments, changelogs, or memory.**
-
-The agent MUST inspect the project directly:
-
-| Evidence Type | Inspection Method | What It Proves |
-|---------------|-------------------|----------------|
-| **Code changes** | Read actual files mentioned in spec | Implementation exists or doesn't |
-| **PR merge state** | `github_pull_request_read(method="get")` | PR was merged or wasn't |
-| **Branch state** | `git log`, `git branch` | Commits exist in history |
-| **Database state** | Query actual database/tables | Schema/data changes applied |
-| **Config state** | Read actual config files | Configuration changed |
-
-**FORBIDDEN Evidence Sources:**
-- Issue comments (indirect, unverified)
-- Memory from previous sessions
-- Changelogs/README notes
-- Issue body claims (only spec requirements are factual)
-- Project conventions/assumptions
-
-### Remediation Decision Tree
-
-**Based on direct inspection results:**
-
-| Inspection Result | Correct Action |
-|------------------|----------------|
-| Code exists in codebase as specified | Close sub-issue: `completed` |
-| PR exists and `merged_at` is set | Close sub-issue: `completed` |
-| No code, no PR, nothing implemented | **Reopen parent** (work not done) |
-| Parent closed, no merged PR | **Reopen parent** (premature closure) |
-| Superseding issue exists with completed work | Verify superseding issue complete, close: `not_planned` |
-
-### Remediation Comments
-
-**When agent remediates, it posts comments with direct inspection results:**
-
-```
-🤖 ✅ **Auto-Remediated: [Action]**
-
-Parent issue #N was closed while this sub-issue remained open.
-
-**Direct Inspection Results:**
-- [Actual file/code checked and result]
-- [Actual PR state from API call]
-- [Actual evidence from project]
-
-**Action:** [Close/Open] based on direct inspection
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-### When to HALT During Audit
-
-**HALT only when direct inspection is impossible:**
-- Cannot access codebase (permission error)
-- Cannot call GitHub API (network/auth failure)
-- Spec is ambiguous about what deliverables to check
-
-**HALT with actionable message explaining what couldn't be inspected.**
-
-### Integration Points
-
-| Workflow Stage | Guideline Reference |
-|----------------|---------------------|
-| Pre-authorization audit | This section |
-| Post-merge cleanup | `124-github-archive-workflow.md` → "Parent Closure Pre-Check" |
-| Skill enforcement | `approval-gate` skill → `verify-authorization` task |
+**See `approval-gate` skill for the complete enforcement specification including:**
+- Which skills MUST check authorization
+- What each skill MUST check (pre-work, pr-creation)
+- Enforcement matrix (explicit auth, label + no auth, conditionals)
+- Conditional phrases that are NOT authorization
 
 ## What This Guideline Does NOT Cover
 

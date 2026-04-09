@@ -24,7 +24,6 @@ Use `pycharm_get_file_text_by_path` to read each guideline file.
 ### Step 2: Identify Candidates
 
 Scan for:
-
 - Numbered procedural steps (≥4 steps in sequence)
 - Directive blocks (✅ ALWAYS / 🚫 NEVER / ⚠️ ASK FIRST / CRITICAL)
 - Multi-phase workflows (Phase 1, Phase 2, etc.)
@@ -35,7 +34,6 @@ Scan for:
 ### Step 3: Calculate Metrics
 
 For each candidate:
-
 - Lines of content (excluding headers)
 - Estimated token count (≈4 tokens per line)
 - Duplication factor (1=single-file, 2=cross-referenced, 3+=multi-file)
@@ -50,7 +48,6 @@ For each candidate:
 ### Step 5: Output Audit Report
 
 Write to `./tmp/coherence-audit-YYYYMMDD-extraction.md` with:
-
 - Total candidates found
 - Priority breakdown (HIGH/MEDIUM/LOW)
 - Estimated token savings
@@ -58,5 +55,4 @@ Write to `./tmp/coherence-audit-YYYYMMDD-extraction.md` with:
 
 ## Context Required
 
-- Guidelines: `.opencode/guidelines/*.md`
 - Related tasks: `extract-analyze` (calculate metrics), `create-report` (attach to issue)

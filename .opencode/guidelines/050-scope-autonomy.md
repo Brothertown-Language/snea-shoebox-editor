@@ -29,89 +29,42 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 
 ### 🚫 NEVER DO
 - Implementing any unrequested change — even if a "bug" or "better way" is discovered.
+- **NEVER implement during analysis.** Finding a bug authorizes REPORTING, not FIXING.
+- When a bug is discovered during analysis, STOP and report. Do not:
+  - Create branches
+  - Edit files
+  - Commit changes
+  - Create PRs
+  - Implement fixes
+- **NEVER treat analysis as authorization.** "Check X" = analyze and report, NOT "fix X".
+- **NEVER fix bugs discovered during other work without an approved spec.** This is a CRITICAL violation regardless of how trivial the fix seems. See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing".
+
+### Analysis vs Implementation Table
+
+| Request Type | Authorized Actions |
+|-------------|---------------------|
+| "check logs" | Read logs, report findings, HALT |
+| "analyze error" | Analyze, report root cause, HALT |
+| "why is this failing" | Investigate, report findings, HALT |
+| "fix this" | Create spec, get approval, implement |
+| "can you check X" | Analyze X, report findings, HALT |
+
+### Bug Discovery Self-Correction
+
+If you catch yourself about to edit code to fix a bug discovered during other work:
+
+1. **STOP** — do not proceed with the edit
+2. **REVERT** — `git checkout -- <affected-files>` to undo any unauthorized changes
+3. **REPORT** — create a GitHub/GitBucket issue for the bug
+4. **HALT** — wait for explicit authorization before any code changes
+
+**This applies even when the fix seems trivial or obvious. No exceptions.**
 
 ## 4. Q&A and Feedback
 
 - **Questions are NOT authorization to make changes.** A question like "should I do X?" or "would you like me to X?" is seeking permission, not receiving it. Answer questions directly without making code changes. Wait for explicit approval before acting.
 - Apply corrective feedback precisely; no over-correcting or unsolicited radical changes.
 
-### 🚫 CRITICAL: Unauthorized Question Asking (ZERO TOLERANCE)
-
-**CRITICAL VIOLATION: Asking questions during implementation is PROHIBITED.**
-
-The agent must NEVER ask questions like:
-- "What would you prefer I focus on first?"
-- "Should I continue?"
-- "Ready for PR?"
-- "What should I do next?"
-- "How would you like me to proceed?"
-- "Ready when you are"
-
-**These questions violate the silent HALT protocol:**
-- `000-critical-rules.md`: HALT protocol requires SILENT halt, not questions
-- `010-approval-gate.md`: No authorization prompts after task completion
-- `050-scope-autonomy.md`: Questions are NOT authorization
-- `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
-
-### ✅ REQUIRED Behavior
-
-| Situation | Action |
-|-----------|--------|
-| Task complete but more work remains | Continue implementation autonomously |
-| Task complete and no more work | HALT silently, post progress comment |
-| Blocked by genuine ambiguity | Post comment to issue asking for clarification, then HALT |
-| Error encountered | Post error details to issue, then HALT |
-| Waiting for authorization | HALT silently, wait for explicit "approved" or "go" |
-
-### Edge Cases
-
-| Edge Case | Action |
-|-----------|--------|
-| Genuine ambiguity about requirements | Post comment to issue explaining ambiguity, ask for clarification, then HALT |
-| Blocked by external factor | Post comment explaining blocker, then HALT |
-| Error encountered | Post error details to issue, then HALT |
-| Multiple tasks remaining | Continue with next task (if authorized for all phases) |
-
-**Why This Matters:**
-- Questions break the non-interactive, autonomous execution model
-- Questions create friction and require user intervention
-- Questions signal confusion about task completion
-- Questions during implementation are NEVER appropriate
-
 ## 5. Command Rejection Protocol
 
 - A "rejected by the user" terminal result signals a directive violation. Immediately halt, re-read guidelines, and assess whether guidelines need reinforcement.
-
-## 6. Authorization Recognition Protocol
-
-**These patterns ARE explicit authorization (agent MUST continue):**
-
-| Pattern | Example | Why It's Authorization |
-|---------|---------|----------------------|
-| Direct command | "implement #227" | Explicit instruction to implement |
-| Include in branch | "include in this feature branch" | Explicit scope expansion authorization |
-| Compound command | "implement #227 and include in #223 branch" | Authorization for both implementation AND branch inclusion |
-| Fix this too | "fix the URL order while you're at it" | Explicit authorization for additional work |
-
-**These are NOT authorization (agent must HALT):**
-
-| Pattern | Example | Why It's NOT Authorization |
-|---------|---------|---------------------------|
-| Question | "should I implement #227?" | Seeking permission, not granting it |
-| Planning request | "plan #227" | Directive to plan only, not implement |
-| Conditional | "if you think #227 is needed..." | Conditional, requires judgment |
-| Observation | "#227 looks related" | Not a command to implement |
-
-**Authorization Rules:**
-
-✅ **MUST continue immediately when:**
-- User says "implement #N and include in this branch"
-- User says "fix X while you're at it"
-- User says "also fix the typo" (unrelated fix)
-- User provides multiple explicit commands in one message
-
-🚫 **MUST HALT when:**
-- User asks a question ("should I...?", "would you like...?")
-- User uses conditionals ("if you think...", "maybe...")
-- User makes observations without commands
-- Authorization is ambiguous or unclear

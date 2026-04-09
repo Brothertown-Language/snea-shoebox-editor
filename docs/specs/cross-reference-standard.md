@@ -120,7 +120,7 @@ See `filename.md` → "Section Name" section.
 ### Examples
 
 ```markdown
-See the "Mandatory First Step" section of `000-session-init.md`.
+See AGENTS.md section "Session Init (Automatic)".
 See the "Missing Progress Comments" section in `000-critical-rules.md`.
 ```
 

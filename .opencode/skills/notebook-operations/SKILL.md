@@ -1,6 +1,7 @@
 ---
 name: notebook-operations
-description: Jupyter notebook operations with zero-tolerance corruption rules. Defines permitted MCP tools, forbidden operations, execution restrictions, and cell labeling requirements.
+description: Use when working with .ipynb Jupyter notebook files for reading, writing, or executing cells. Triggers on: notebook, ipynb, Jupyter, cell, execute cell, kernel, zero tolerance, forbidden operations.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---
@@ -17,15 +18,9 @@ You are a Notebook Operations Enforcer. Your sole focus is ensuring ALL notebook
 
 1. **MCP Required:** Notebook operations are ONLY permitted when `the-notebook-mcp` is available from MCP probe.
 
-1. **No Fallback:** If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
+2. **No Fallback:** If `the-notebook-mcp` is unavailable, ALL notebook operations are FORBIDDEN.
 
-1. **Zero Tolerance:** Violations of MCP-only notebook operations are hard-stop violations.
-
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for notebook operations enforcement | ~800 |
+3. **Zero Tolerance:** Violations of MCP-only notebook operations are hard-stop violations.
 
 ## ✅ ONLY PERMITTED METHODS
 
@@ -90,9 +85,9 @@ For ALL notebook operations, use `the-notebook-mcp_notebook_*` tools exclusively
 ### When MCP is Unavailable
 
 1. **STOP immediately** — do not attempt any notebook operation
-1. **REFUSE the task** — explain that the-notebook-mcp is required
-1. **Report the issue** — inform user that MCP must be resolved before proceeding
-1. **No fallback exists** — there is NO alternative tool for notebook operations
+2. **REFUSE the task** — explain that the-notebook-mcp is required
+3. **Report the issue** — inform user that MCP must be resolved before proceeding
+4. **No fallback exists** — there is NO alternative tool for notebook operations
 
 ### Example Response When MCP Unavailable
 
@@ -122,8 +117,8 @@ Once the MCP server shows "connected", I can proceed with notebook operations.
 ### Why Labels Are Recommended
 
 1. **Prevents index confusion**: Cell indices shift when cells are added/deleted. Labels are stable references.
-1. **Self-documenting**: Labels describe cell purpose (e.g., `email-report`, `validation-summary`).
-1. **Enables label-based edits**: Future tooling may support label-based cell operations.
+2. **Self-documenting**: Labels describe cell purpose (e.g., `email-report`, `validation-summary`).
+3. **Enables label-based edits**: Future tooling may support label-based cell operations.
 
 ### Label Naming Convention
 
@@ -162,7 +157,7 @@ The following are **STRICTLY FORBIDDEN** on notebooks that interact with product
 
 ### What Counts as Production Data
 
-- **ALL notebooks in `<project-db>/`** — connects to PubMed API and production databases
+- **ALL notebooks in `pubmed_data_3/`** — connects to PubMed API and production databases
 - **ANY notebook that imports from `commons/`** — likely uses production database connections
 - **ANY notebook with `send_html_email`, `SMTP`, or email functionality** — sends real emails
 - **ANY notebook with API calls** (`requests`, `Entrez`, `PubMedClient`) — production services
@@ -189,11 +184,56 @@ The following are **STRICTLY FORBIDDEN** on notebooks that interact with product
 ### Violation Recovery
 
 If you accidentally execute a production notebook:
-
 1. STOP immediately
-1. Document the violation in a comment on the associated issue
-1. Notify the user of what was executed
-1. Wait for user guidance before proceeding
+2. Document the violation in a comment on the associated issue
+3. Notify the user of what was executed
+4. Wait for user guidance before proceeding
+
+## Composed Workflows: Swap and Reorder
+
+These operations are not single MCP calls — they compose multiple `move_cell` invocations.
+
+### Swap Two Cells
+
+To swap cells at indices `i` and `j` (where `i < j`):
+
+1. Move cell `i` to position `j`: `the-notebook-mcp_notebook_move_cell(notebook_path=..., from_index=i, to_index=j)`
+2. Move cell `j` (now at `j-1` after step 1) to position `i`: `the-notebook-mcp_notebook_move_cell(notebook_path=..., from_index=j-1, to_index=i)`
+
+**Example:** Swap cells at index 2 and index 5:
+```
+Step 1: move_cell(from_index=2, to_index=5)   → cell at 2 moves to 5, cells 3-5 shift left
+Step 2: move_cell(from_index=4, to_index=2)   → the former cell 5 (now at 4) moves to 2
+```
+
+### Reorder Multiple Cells
+
+Reordering is a sequence of `move_cell` operations. Process from the target layout backward to avoid index shifts:
+
+1. Define the desired target order (e.g., `[3, 1, 0, 2]` means original cell 3 goes first, then 1, 0, 2).
+2. Starting from the last position, move each cell to its target location.
+
+**Example:** Reorder cells `[A, B, C, D]` to `[C, A, D, B]`:
+```
+Step 1: move_cell(from_index=2, to_index=0)   → [C, A, B, D]
+Step 2: move_cell(from_index=3, to_index=1)   → [C, D, A, B]  (adjust indices after step 1 shifts)
+```
+
+**Tip:** Use `the-notebook-mcp_notebook_get_outline` before and after to verify cell order.
+
+## .ipynb Zero-Tolerance Exception
+
+Even though opencode built-in tools (`read`/`write`/`edit`) are TIER 1 for all other file types, they remain **ABSOLUTELY PROHIBITED** for `.ipynb` files. This is an unqualified exception — no relaxation, no fallback, no override.
+
+| Tool | For `.py`, `.md`, `.yaml`, etc. | For `.ipynb` |
+|------|----------------------------------|--------------|
+| `read` | ✅ PRIMARY (Tier 1) | 🚫 PROHIBITED |
+| `write` | ✅ PRIMARY (Tier 1) | 🚫 PROHIBITED |
+| `edit` | ✅ PRIMARY (Tier 1) | 🚫 PROHIBITED |
+| `glob` | ✅ PRIMARY (Tier 1) | ⚠️ Use only to find paths |
+| `grep` | ✅ PRIMARY (Tier 1) | ⚠️ Use only to find paths |
+
+Once a `.ipynb` path is identified, ALL content access MUST use `the-notebook-mcp_*` tools.
 
 ## Code Standards for Notebooks
 
@@ -209,25 +249,22 @@ If you accidentally execute a production notebook:
 **If the agent violates a guideline, update guidelines to close the gap.**
 
 When a violation occurs:
-
 1. The guidelines failed to prevent it
-1. The prohibition was not explicit enough
-1. The rule needs to be added to AGENTS.md "NEVER" list
-1. The rule may need a dedicated section in `000-critical-rules.md`
+2. The prohibition was not explicit enough
+3. The rule needs to be added to AGENTS.md "NEVER" list
+4. The rule may need a dedicated section in `000-critical-rules.md`
 
 **After any violation, the agent MUST:**
-
 1. STOP the current task
-1. Update guidelines to close the gap
-1. Document the fix in a comment on the associated issue — FACTUAL ONLY
-1. Wait for user confirmation before resuming
+2. Update guidelines to close the gap
+3. Document the fix in a comment on the associated issue — FACTUAL ONLY
+4. Wait for user confirmation before resuming
 
 ## Integration with Guidelines
 
 | Guideline | Section |
 |-----------|---------|
 | `061-notebook-rules.md` | Essential directive references this skill |
-| `015-mcp-preference.md` | MCP tool preference |
 | `060-tool-usage.md` | Tool usage and terminal rules |
 | `000-critical-rules.md` | Violation enforcement |
 
@@ -287,8 +324,8 @@ grep "pattern" notebook.ipynb  # PROHIBITED
 
 1. **Corruption Prevention**: The `.ipynb` format is complex JSON with cell metadata, execution counts, outputs. Direct manipulation corrupts the structure.
 
-1. **Data Integrity**: Production notebooks often connect to databases and APIs. Inconsistent state can cause data issues.
+2. **Data Integrity**: Production notebooks often connect to databases and APIs. Inconsistent state can cause data issues.
 
-1. **Auditability**: MCP operations are logged and can be audited. Direct file access bypasses all controls.
+3. **Auditability**: MCP operations are logged and can be audited. Direct file access bypasses all controls.
 
-1. **Consistency**: All agents follow the same rules, ensuring consistent notebook handling across sessions.
+4. **Consistency**: All agents follow the same rules, ensuring consistent notebook handling across sessions.

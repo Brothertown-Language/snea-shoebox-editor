@@ -110,7 +110,7 @@ CREATED: YYYY-MM-DD
 
 | Issue | Summary | Relevance |
 |-------|---------|-----------|
-| [#123](https://github.com/<owner>/<repo>/issues/123) | [Brief summary] | [Why it matters to this spec] |
+| [#123](https://github.com/owner/repo/issues/123) | [Brief summary] | [Why it matters to this spec] |
 
 ---
 
@@ -277,7 +277,7 @@ def broken_function():
 
 | Issue | Summary | Relevance |
 |-------|---------|-----------|
-| [#123](https://github.com/<owner>/<repo>/issues/123) | [Related bug or feature] | [Connection to this fix] |
+| [#123](https://github.com/owner/repo/issues/123) | [Related bug or feature] | [Connection to this fix] |
 
 ---
 
@@ -406,7 +406,7 @@ CREATED: YYYY-MM-DD
 ## Success Criteria
 
 1. ✅ Guideline documentation updated
-2. ✅ Changes load correctly in `ai_bin/guidelines`
+2. ✅ Changes load correctly in `.opencode/tools/guidelines`
 3. ✅ All files pass linting
 
 ---
@@ -416,7 +416,7 @@ CREATED: YYYY-MM-DD
 ### Steps
 
 1. ☐ [Update guideline file]
-2. ☐ [Verify with ai_bin tools]
+2. ☐ [Verify with .opencode/tools tools]
 
 ---
 

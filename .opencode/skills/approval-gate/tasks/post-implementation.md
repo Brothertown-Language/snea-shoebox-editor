@@ -9,10 +9,9 @@ Push feature branch, generate compare URL, and report completion for developer r
 **This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
 
 The sequence is:
-
 1. Implementation complete → **post-implementation invoked automatically**
-1. Branch pushed, compare URL generated → HALT
-1. Wait for developer to say "create a PR"
+2. Branch pushed, compare URL generated → HALT
+3. Wait for developer to say "create a PR"
 
 **DO NOT skip this task after implementation. DO NOT ask the developer if they want review. Just push the branch.**
 
@@ -26,12 +25,12 @@ The sequence is:
 
 - Feature branch pushed to remote
 - GitHub compare URL generated
-- Completion reported to issue and chat
+- Completion reported to issue (NO URL) and chat (with URL)
 - HALT for developer review
 
 ## Procedure
 
-### Step 0: Determine Implementation Outcome
+### Step 1: Determine Implementation Outcome
 
 **Check if any changes were made:**
 
@@ -40,51 +39,33 @@ git status --porcelain
 ```
 
 **If EMPTY (no file changes):**
-
 - Skip to "No-Changes Path" below
 - This means implementation was already complete or no changes needed
 
 **If NOT EMPTY (file changes exist):**
+- Continue to Step 2 (Push Feature Branch)
 
-- Continue to Step 1 (Push Feature Branch)
-
-______________________________________________________________________
+---
 
 ### No-Changes Path (Already Implemented)
 
 **When implementation determined no changes were needed:**
 
-1. **Close issue directly:**
+1. **Post completion comment to issue (NO URL):**
+   - Summarize what was completed
+   - No compare URL in GitHub issue
 
-   - Post verification comment explaining what was checked
-   - Use `github_issue_write(method="update", state="closed", state_reason="completed")`
+2. **Report compare URL in chat only:**
+   - URL goes in chat dialog only
+   - NEVER post URLs to GitHub issues
 
-1. **Comment format:**
+3. **HALT after reporting:**
+   - No branch push (already pushed)
+   - No PR creation
 
-```markdown
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+---
 
-**Summary:**
-
-Verified all proposed changes were already implemented. No modifications needed.
-
-**Verification Results:**
-
-- [List what was checked with file references and function names]
-- [Confirm each requirement from spec is present]
-
-**Outcome:** <What the verification confirmed>
-```
-
-3. **HALT after closing:**
-   - No branch push
-   - No compare URL
-   - No PR needed
-   - Report completion in chat
-
-______________________________________________________________________
-
-### Step 1: Push Feature Branch
+### Step 2: Push Feature Branch
 
 ```bash
 git push -u origin <branch-name>
@@ -92,7 +73,7 @@ git push -u origin <branch-name>
 
 This pushes the branch WITHOUT creating a PR.
 
-### Step 2: Generate Compare URL
+### Step 3: Generate Compare URL
 
 Using session values (GIT_OWNER, GIT_REPO):
 
@@ -100,9 +81,9 @@ Using session values (GIT_OWNER, GIT_REPO):
 https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
 ```
 
-### Step 3: Report Completion
+### Step 4: Report Completion
 
-Format for issue and chat:
+Format for issue (NO URL):
 
 ```markdown
 **Summary:**
@@ -111,32 +92,38 @@ Format for issue and chat:
 
 **Outcome:** <What changed for stakeholders>
 
+All tasks complete from this specification.
+
 ---
 🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**Ready for Review:**
-
-https://github.com/<owner>/<repo>/compare/main...<branch-name>
 ```
 
-### Step 4: HALT
+Post to chat (exec summary + URL):
+```
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+Compare URL: https://github.com/<owner>/<repo>/compare/main...<branch-name>
+```
+
+### Step 5: HALT
 
 **DO NOT:**
-
 - Create PR (requires explicit "create a PR")
 - Squash commits (happens at PR creation)
 - Push again (already pushed)
 
 **WAIT for:**
-
 - Developer to review via GitHub diff viewer
 - Explicit "create a PR" instruction
 
 ## Context Required
 
 - Session values: GIT_OWNER, GIT_REPO, branch name
-- Guidelines: `113-git-pr-workflow.md` (review phase)
-- Related tasks: `commit-prep` (squash), `pr-creation` (PR)
+- Related tasks: `pr-creation` (PR)
 
 ## Why This Task Is Critical
 

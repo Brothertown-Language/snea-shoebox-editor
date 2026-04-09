@@ -6,7 +6,7 @@
 - **ABSOLUTE PROHIBITION: The agent must never write the word "GO" as a standalone token, line, or heading in any response.** This includes standalone lines (`GO`), Markdown headings (`## GO`), phase labels (`GO - Phase 2`), acknowledgements, transition markers, or narrative labels. Any use of "GO" in agent output (including `<UPDATE>` blocks, tool parameters, or chat text) is a protocol violation and does NOT constitute authorization. The only permitted use is inside a quoted/code-fenced example illustrating a prohibited pattern. To acknowledge authorization, use a full sentence (e.g., "Authorization received.") — never a bare "GO".
 - **No `echo` or `printf` commands — ever.** The agent is absolutely prohibited from running `echo`, `printf`, or any equivalent shell output command for any purpose. This includes:
   - **Output for Narration**: Signalling waiting states, confirming completion, or self-narration.
-  - **File Operations**: Bypassing `ai_bin` tools via `printf "..." > file.md` or `echo "..." >> file.md`.
+  - **File Operations**: Bypassing `.opencode/tools` tools via `printf "..." > file.md` or `echo "..." >> file.md`.
   - **Script Injection**: Writing logic into temp scripts via shell redirection.
 - **No "awaiting GO" or pending-state markers — anywhere, ever.** The agent is absolutely prohibited from using the phrase "awaiting GO", "waiting for GO", "pending GO", "awaiting explicit phase approval", "awaiting approval", "pending approval", or any equivalent pending-state marker.
 - **NEVER prompt or solicitation for authorization.** The agent is absolutely prohibited from asking, prompting, nudging, or inviting the user to issue "GO", "approved", or any other approval token in any form.
@@ -18,6 +18,11 @@
   - "Shall I begin implementation?"
   - "Waiting for approval to continue."
   - "Let me know when you're ready for me to start."
+  - "Say 'approved' or 'go' when ready."
+  - "Awaiting authorization to implement."
+  - "**Awaiting authorization to begin Phase X.** Say 'approved' or 'go' when ready."
+  - "Awaiting your approval."
+  - "Ready when you are."
 - **Questions are NOT authorization.** "Should I do X?" and "Would you like me to X?" are questions seeking permission, not receiving it. Never act on a question — wait for explicit authorization.
 - **SILENTLY HALT after every task/report.** Factual reporting is permitted, but it must NEVER be followed by a prompt for next steps.
 - **Never name the next phase or action in a halt message.** Halt messages must be factual statements about what was completed — never forward-looking references to what comes next.
@@ -79,74 +84,16 @@ This rule applies universally to:
 
 ### 🚫 ABSOLUTE PROHIBITION
 - **NEVER implement a multi-task spec without verified sub-issue structure**
-- **NEVER proceed when `get_sub_issues` returns empty array for multi-task specs**
+- **NEVER proceed **to implementation** when `get_sub_issues` returns empty array for multi-task specs **without auto-creating sub-issues first****
 - **NEVER assume markdown checkboxes = task tracking**
 
-### ✅ MANDATORY WORKFLOW
+### ✅ MANDATORY
 
-**Before implementing ANY multi-task spec:**
+**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
 
-```
-1. Call github_issue_read(method="get_sub_issues", issue_number=N)
-2. If empty AND multi-task:
-   a. AUTO-CREATE sub-issues at PHASE level
-   b. Link each via github_sub_issue_write(method="add")
-   c. Post comment: "Created X sub-issues for phase tracking"
-   d. THEN proceed to implementation
-3. If sub-issues exist:
-   - Verify phase being implemented is among them
-   - Proceed with implementation
-```
-
-### 📋 CHECKLIST
-
-| Action | Required? |
-|--------|-----------|
-| `get_sub_issues` check | ✅ ALWAYS |
-| AUTO-CREATE if empty | ✅ YES (multi-task only) |
-| Verify task linked | ✅ ALWAYS |
-| Single-task exemption | ✅ YES (no sub-issues needed) |
-
-### ⚠️ SINGLE-TASK EXCEPTION
-
-Single-task specs (one implementation task, no decomposition needed) do NOT require sub-issues. All multi-task specs MUST have sub-issues before implementation begins.
-
-## 6. Multi-Phase Authorization Scope (CRITICAL)
-
-**⚠️ Unqualified approval authorizes ALL phases of a spec.**
-
-When a developer says `approved` or `go` **without a phase qualifier**, the agent is authorized to implement ALL phases of the spec in sequence. The agent will proceed from Phase 1 through all phases without stopping for re-approval between phases.
-
-### Authorization Table
-
-| Command | Scope | Behavior |
-|---------|-------|----------|
-| `approved` | ALL phases | Proceed through all phases without stopping |
-| `go` | ALL phases | Proceed through all phases without stopping |
-| `approved: 1` | Phase 1 only | HALT after Phase 1, wait for next authorization |
-| `approved: 2.3` | Phase 2 Step 3 only | HALT after completing Step 3, wait for next authorization |
-
-### Rationale
-
-- Unqualified approval matches developer mental model of "approved means go ahead"
-- Phase-by-phase approval is intentional scoping (opt-in via qualifiers)
-- Prevents unnecessary back-and-forth on multi-phase implementations
-
-### Developer Workflow
-
-- **Approve entire spec:** Use `approved` or `go` without qualifiers
-- **Approve one phase:** Use `approved: N` where N is the phase number
-- **Approve specific step:** Use `approved: N.M` where N is phase and M is step
-
-### Agent Behavior
-
-**With unqualified approval (`approved` or `go`):**
-1. Proceed through Phase 1
-2. Continue to Phase 2 (no HALT)
-3. Continue through all remaining phases
-4. HALT only after completing the entire spec
-
-**With qualified approval (`approved: 1` or `approved: 2.3`):**
-1. Proceed through the authorized phase/step ONLY
-2. HALT after completing that phase/step
-3. Wait for next authorization before continuing
+Key points:
+- Sub-issues at PHASE level, not step level
+- Single-task specs are exempt from sub-issue requirement
+- All multi-task specs MUST have sub-issues before implementation begins
+- Auto-creating sub-issues for an approved multi-task spec is a pre-implementation setup step covered by the parent's authorization. No separate authorization is required.
+- After auto-creating sub-issues, the agent proceeds with implementation immediately (no re-authorization needed).

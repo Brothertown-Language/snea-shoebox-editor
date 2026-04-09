@@ -7,8 +7,8 @@ Handle work-in-progress commits during implementation. Multiple commits during i
 ## Operating Protocol
 
 1. **User-driven work:** The agent performs approved implementation tasks
-1. **Checkpoint commits allowed:** Commits during implementation serve to stage changes and prevent accidental loss
-1. **Squashing is deferred:** Squashing to single commit happens during PR creation, not during implementation
+2. **Checkpoint commits allowed:** Commits during implementation serve to stage changes and prevent accidental loss
+3. **Squashing is deferred:** Squashing to single commit happens during PR creation, not during implementation
 
 ## Entry Criteria
 
@@ -40,7 +40,6 @@ git commit -m "WIP: <descriptive message>"
 **The most common workflow failure is pushing without committing.**
 
 **Correct sequence:**
-
 ```
 1. Make file changes (edit tool, etc.)
 2. git status (verify changes exist)
@@ -50,7 +49,6 @@ git commit -m "WIP: <descriptive message>"
 ```
 
 **Incorrect sequence (CRITICAL VIOLATION):**
-
 ```
 1. Make file changes
 2. git push (WRONG - uncommitted changes)
@@ -59,7 +57,6 @@ git commit -m "WIP: <descriptive message>"
 ```
 
 **Verification before push:**
-
 - `git status` MUST show "nothing to commit, working tree clean"
 - Local branch MUST have at least one commit ahead of remote
 - If `git status` shows uncommitted changes → COMMIT FIRST
@@ -73,122 +70,30 @@ git commit -m "WIP: <descriptive message>"
 
 ## Important Rules
 
-- **DO NOT squash until PR creation** - Multiple implementation commits are expected
+- **DO NOT squash during implementation** - Multiple implementation commits on feature branches are normal and acceptable
+- **Squashing is ONLY at PR creation time** - The `squash` in "squash-merge to main via PR" refers to PR merge, not feature branch development
 - **DO NOT create PR without explicit instruction** - PR requires explicit "create a PR"
 - **ALWAYS push after committing** - Push ensures GitHub compare works correctly
 
 ## Context Required
 
-- Guidelines: `111-git-commit-workflow.md`
 - Related skills: `approval-gate` (authorization scope)
-- Related tasks: `commit-prep` (squash for PR), `pr-creation` (push and PR)
+- Related tasks: `pr-creation` (push and PR)
 
 ## When to Commit During Implementation
 
 Commit when:
-
 - Completing a discrete logical unit of work
 - Reaching a checkpoint that might need rollback
 - Before attempting something risky
 - At natural break points in the work
-- **Before ANY HALT** (awaiting approval, clarification, error, session end)
-
-## WIP Commit Before HALT (MANDATORY)
-
-**CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
-
-### What Counts as HALT
-
-| HALT Trigger | WIP Required? | Example |
-|-------------|--------------|---------|
-| Awaiting approval | ✅ YES | Mid-task, need clarifications approved |
-| Awaiting clarification | ✅ YES | Question posted, waiting for answer |
-| Mid-task pause | ✅ YES | Session ending, context exhausts |
-| Error encountered | ✅ YES | Fixable error, need to save progress |
-| Session ending | ✅ YES | Developer ending session |
-| Task complete | ❌ NO | Use full commit with proper message |
-| Phase complete | ❌ NO | Use full commit with proper message |
-
-### WIP Commit Workflow
-
-**Before ANY HALT (awaiting approval, clarification, error, session end):**
-
-```bash
-# Step 1: Check for uncommitted changes
-git status
-
-# Step 2: If changes exist, commit WIP
-if git status shows changes:
-    git add -A
-    git commit -m "WIP: Phase N - <brief description>" \
-        --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-        --trailer "Co-authored-by: <Human-Name> <human-email>"
-
-# Step 3: Verify commit was created
-git log -1 --oneline
-
-# Step 4: Report WIP commit made
-```
-
-### WIP Commit Characteristics
-
-| Characteristic | Description |
-|---------------|-------------|
-| **Prefix** | Always starts with `WIP:` for easy identification |
-| **Phase** | Includes phase number for context |
-| **Description** | Brief description of what was being worked on |
-| **Trailers** | Same co-author trailers as full commits |
-| **Squashable** | Can be squashed or amended later with subsequent work |
-
-### After WIP Commit
-
-- **Continue work**: Next commit can amend or squash the WIP commit
-- **Session resumes**: Rebase or continue from WIP commit
-- **PR creation**: Squash WIP commits with final work before PR
 
 ## After Implementation Completes
 
-### ⚠️ MANDATORY PUSH BEFORE HALT
-
-**Implementation task MUST commit AND push before ANY HALT.**
-
-**Pre-HALT Checklist:**
-
-```bash
-# Step 1: CHECK FOR UNCOMMITTED CHANGES
-git status
-
-# Step 2: COMMIT IF CHANGES EXIST
-if git status shows changes:
-    git add -A
-    git commit -m "[Phase N] Implementation complete" \
-        --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-        --trailer "Co-authored-by: <Human-Name> <human-email>"
-
-# Step 3: CHECK FOR LOCAL COMMITS
-git log origin/<branch>..HEAD --oneline
-
-# Step 4: PUSH IF COMMITS EXIST
-if output shows commits:
-    git push -u origin <branch-name>
-
-# Step 5: VERIFY PUSH
-git branch -vv
-# Must show: [origin/<branch>] tracking ref
-
-# Step 6: REPORT COMPLETION
-"Implementation complete. Branch pushed with X commits."
-```
-
-### Implementation Workflow Sequence
-
-1. **Make file changes** (edit tool, etc.)
-2. **Commit changes** (`git add -A && git commit`)
-3. **Push to remote** (`git push -u origin <branch-name>`)
-4. **Report completion** (executive summary to issue AND chat)
-5. **HALT** — do NOT create PR
-6. **WAIT** for explicit "create a PR" instruction
-
-**CRITICAL: Skipping push is a ZERO TOLERANCE violation.**
+1. **Commit all changes** (`git add -A && git commit`)
+2. **Push to remote** (`git push -u origin <branch-name>`)
+3. **Report completion** (executive summary to issue AND chat)
+4. **HALT** — do NOT create PR
+5. **WAIT** for explicit "create a PR" instruction
 
 **See:** `pr-creation-workflow` skill for complete PR workflow.

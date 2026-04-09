@@ -1,76 +1,91 @@
 ---
 name: concern-separation-auditor
-description: Analyzes spec phase structure for concern separation quality - deployment independence, risk profile, blast radius. Auto-fixes phases by analyzing actual concerns. Posts findings to GitHub.
+description: Use when auditing a spec for phase structure quality or concern separation. Triggers on: concern separation, phase structure, spec audit, mixed concerns.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---
 
-# Concern Separation Auditor
+# Skill: concern-separation-auditor
 
-Analyzes spec phase structures to identify concern quality issues and apply smart fixes. Posts findings to GitHub comments.
+## Overview
 
-## When to Use
+Concern Separation Auditor analyzes spec phase structures to identify deployment independence, risk profile, and blast radius issues. Reports findings to the agent for decision-making — does NOT auto-fix.
 
-- Creating new spec issues (MANDATORY - runs first)
-- Reviewing existing specs for phase quality
-- Auditing multi-phase implementations
+**Core v2 shift:** Report-only. Findings are presented to the agent, who decides whether to apply them given the context. No longer invoked directly — called by spec-auditor orchestrator when relevant.
 
-## Available Tasks
+## Tasks
 
-| Task | Description |
-|------|-------------|
-| `overview` | Complete audit workflow with auto-fix |
+| Task | Purpose | Words |
+|------|---------|-------|
+| `audit-phases` | Analyze phase structure for concern quality | ~400 |
+| `check-independence` | Validate deployment independence between phases | ~300 |
 
-## What Gets Auto-Fixed
+## Invocation
 
-| Issue Type | Auto-Fix? | Why |
-|------------|-----------|-----|
-| BOILERPLATE-TITLE | YES | 100% objective - generic vs concern names |
-| CONCERN_MIXING | YES | Smart split based on concern analysis |
-| DEPENDENCY_REVERSAL | YES | Reorder to fix dependencies |
-| HIGH_RISK_GROUPING | YES | Separate high-risk from low-risk |
+**This skill is NOT invoked directly.** It is called by the spec-auditor orchestrator via `/skill spec-auditor --issue N --task concerns`.
 
-## AUTO-FIX BY DEFAULT (No Asking Permission)
+If invoked directly (deprecated, but still works):
+- `/skill concern-separation-auditor --issue N` — Audit (report-only mode)
 
-**Auditors AUTO-FIX identified issues by default.**
+## Report-Only Model
 
-- Apply fixes immediately without waiting for user confirmation
-- Post GitHub Issue comment documenting each fix
-- Continue to next issue
-- Only HALT if user explicitly says "don't fix" or "just report"
+**All findings are reported, NOT auto-applied.**
 
-## Why Concern Separation Matters
+Previous versions auto-fixed BOILERPLATE-TITLE and phase splits. v2 reports findings and lets the agent decide:
 
-**Beyond deployment and rollback, concern separation prevents:**
+- A BOILERPLATE-TITLE rename might be wrong for the specific spec
+- A concern split might break an intentionally grouped phase
+- The agent has full context; this subtask doesn't
 
-1. **Feature Creep**: Clear boundaries prevent "while we're here" additions
-2. **Vibe Coding**: Without boundaries, implementation drifts from spec
-3. **Roadmap Driving**: Phase boundaries shouldn't follow roadmap priorities
+**Report format:**
+```
+Finding: [BOILERPLATE-TITLE|CONCERN_MIXING|DEPENDENCY_REVERSAL|HIGH_RISK_GROUPING] - [summary]
+Location: [phase/step]
+Context: [why this matters for this spec]
+Recommendation: [suggested change, if obvious]
+Severity: [HIGH|MEDIUM|LOW]
+```
 
-## Mandatory Audit Chain (All Skills Run)
+## Concern-Based Analysis (NOT Rigid Template)
 
-| Order | Skill | Purpose |
-|-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, BOILERPLATE-TITLE, concern analysis |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality |
-| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies |
+This skill analyzes ACTUAL concerns, not static templates.
 
-**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
+**What this is NOT:**
+- NOT a rigid DB→Repo→BL→UI template
+- NOT a mandatory ordering
+- NOT applying patterns blindly
 
-## Mandatory Invocation for AI Agents
+**What this IS:**
+- Analyzes deployment independence for each step
+- Analyzes risk profile (HIGH/MEDIUM/LOW)
+- Analyzes blast radius
+- Groups steps by ACTUAL concern boundaries
 
-When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
+**Different project structures:**
 
-1. Create the spec issue with phases and steps
-1. **Invoke `/skill concern-separation-auditor --issue N`** (auto-fix phase structure)
-1. **Invoke `/skill spec-auditor --issue N`** (check content quality)
-1. **Invoke `/skill dev-architect --task review-spec`** (review architectural correctness)
-1. Fixes applied automatically by all three auditors
-1. Add `needs-approval` label
-1. Post "ready for review" comment
+| Project Type | Typical Concerns | Notes |
+|--------------|------------------|-------|
+| Stateless service | Config → API → Tests | No DB, no UI |
+| CLI tool | Args → Core → Output | Deployment is reinstall |
+| Frontend-only | Components → State → Tests | No backend |
+| Infrastructure | Setup | Crosses all layers, ONE concern |
+| Monolith | Schema → API → UI | May not have repository layer |
 
-**Skipping this auditor is a CRITICAL GUIDELINE VIOLATION.**
+## Key Differences from v1
 
-## Quick Start
+| v1 (Auto-Fix) | v2 (Report-Only) |
+|----------------|-------------------|
+| Auto-fixes BOILERPLATE-TITLE | Reports BOILERPLATE-TITLE finding |
+| Auto-splits phases | Reports concern mixing recommendation |
+| Invoked directly via `/skill concern-separation-auditor` | Invoked via spec-auditor `--task concerns` |
+| Standalone skill | Subtask within orchestrator |
+| `--interactive` mode for human review | Always report-only |
 
-Use `/skill concern-separation-auditor --task overview` for complete workflow.
+## Cross-References
+
+- Orchestrated by: `spec-auditor` (via `concerns` subtask)
+- Related skills: `spec-auditor` (orchestrator), `writing-plans` (clean-room for fidelity)
+- Related guidelines: `000-critical-rules.md` (auditor enforcement), `142-planning-archive-workflow.md`
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5)

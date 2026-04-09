@@ -2,24 +2,14 @@
 
 ## Purpose
 
-Create pull request after explicit user instruction. Squash commits to single commit, push branch, create PR via GitHub MCP.
+Create pull request after explicit user instruction. Squash commits to single commit, push branch, create PR targeting `dev` branch (three-branch workflow: feature → dev → main).
 
 ## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "create a PR" or similar
 1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
+1. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
 1. **HALT after PR creation:** Wait for human to merge
-
-## ⚠️ CRITICAL: This Skill Must Be Invoked
-
-**When user says "pr", "create a PR", "make a PR", or similar:**
-
-1. **LOAD this task** via `/skill git-workflow --task pr-creation`
-2. **DO NOT** manually decide "PR exists, update it"
-3. **DO NOT** skip steps or execute outside the task
-4. **FOLLOW** all steps in order
-
-**Bypassing this skill is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Entry Criteria
 
@@ -27,90 +17,507 @@ Create pull request after explicit user instruction. Squash commits to single co
 - Implementation is complete
 - Developer has reviewed changes via compare URL
 
-## Exit Criteria
-
-- PR created via GitHub MCP
-- PR URL reported to user
-- Waiting for human merge
-
 ## Procedure
 
-### Step 0: Check PR State
+### Step 1: Verify PR Instruction (MANDATORY FIRST)
 
-**Before creating PR, check if branch already has a PR (open OR merged):**
+**🚫 CRITICAL: This is an ENFORCEMENT GATE, not just documentation.**
 
-```bash
-# Get current branch name
-CURRENT_BRANCH=$(git branch --show-current)
+**If ANY check fails → STOP and report. DO NOT proceed.**
 
-# Check for ALL existing PRs on this branch (open, merged, closed)
-gh pr list --head "$CURRENT_BRANCH" --state all --json number,url,state,mergedAt
+#### Enforcement Gate (MUST PASS ALL)
+
+**Before creating ANY PR, verify ALL conditions:**
+
+```
+□ Condition 1: Explicit PR instruction detected
+  - "create a PR", "make a PR", "push and create PR", "let's get a PR up"
+  - Implementation complete alone does NOT satisfy this check
+  
+□ Condition 2: review-prep was completed
+  - Compare URL was generated and reported in chat
+  - Developer had opportunity to review via GitHub diff
+  
+□ Condition 3: Branch was pushed to remote
+  - git branch -vv shows [origin/branch]
+  - Compare URL will work correctly
+  
+If ANY condition NOT satisfied → STOP and report.
 ```
 
-**If open PR exists via GitHub MCP:**
+#### PR Instruction Verification
+
+1. **Check for PR instruction:**
+
+   **Valid PR instructions (PROCEED):**
+
+   - "create a PR"
+   - "make a PR"
+   - "push and create PR"
+   - "let's get a PR up"
+   - "open a PR"
+   - "create pull request"
+   - "pr" (shorthand)
+
+   **What does NOT authorize PR creation (HALT):**
+
+   | Phrase | Reason |
+   |--------|--------|
+   | "approved" | Authorizes implementation ONLY, NOT PR creation |
+   | "go" | Authorizes implementation ONLY, NOT PR creation |
+   | Implementation complete | Does NOT authorize PR - wait for explicit instruction |
+   | "continue" | Ambiguous - could mean next phase |
+   | "proceed" | Ambiguous - could mean next task |
+   | "fix the skill and guideline" | Implementation instruction, NOT PR instruction |
+
+1. **Authorization scope table:**
+
+   | Authorization | What It Authorizes |
+   |--------------|---------------------|
+   | `approved` / `go` | Implementation ONLY |
+   | `approved: X.Y` | Phase X.Y ONLY |
+   | Implementation complete | NOTHING - wait for "create a PR" |
+   | `create a PR` | PR creation workflow |
+   | `create pull request` | PR creation workflow |
+
+1. **Enforcement matrix:**
+
+   | Scenario | Action |
+   |----------|--------|
+   | User says "create a PR" | ✅ PROCEED with PR creation |
+   | User says "approved" only | ⛔ HALT - "approved authorizes implementation, not PR. Wait for 'create a PR' instruction." |
+   | Implementation complete, no PR instruction | ⛔ HALT - report completion, wait for PR instruction |
+   | User asks "ready for PR?" | ⛔ HALT - question, not instruction |
+   | User says "fix X" (implementation only) | ⛔ HALT - implementation instruction, not PR instruction |
+
+#### Verification Checklist
+
+**BEFORE creating PR, confirm:**
+
+```
+✅ Explicit "create a PR" instruction present
+✅ review-prep completed (compare URL reported)
+✅ Developer had chance to review
+✅ Branch pushed to remote
+✅ Changelog generated OR [skip changelog] directive present
+✅ Ready to squash and create PR
+```
+
+**If ANY checkbox unchecked → STOP and report what's missing.**
+
+### Step 1.5: Check Existing PR State (MERGED PR HANDLING)
+
+**🚫 CRITICAL: This check MUST happen BEFORE squashing or creating PR.**
+
+This step handles the edge case where a PR already exists for the branch.
+
+#### Step 1.5a: Check for Existing PR
+
+Query GitHub API to check if a PR already exists for this branch:
 
 ```python
-# Check via GitHub MCP
+# Get current branch name
+branch_name = subprocess.check_output(['git', 'branch', '--show-current'], text=True).strip()
+
+# List PRs for this branch
 prs = github_list_pull_requests(
     owner=GIT_OWNER,
     repo=GIT_REPO,
-    head=CURRENT_BRANCH,
-    state="all"
+    state="all",  # Include open, closed, merged
+    head=f"{GIT_OWNER}:{branch_name}"
 )
-
-for pr in prs:
-    if pr["state"] == "open":
-        # Open PR exists - UPDATE it
-        print(f"ℹ️ Branch {CURRENT_BRANCH} has open PR #{pr['number']}. Updating existing PR instead of creating new one.")
-        # Squash, push, update PR body
-        # HALT after update
-        return
-    elif pr["state"] == "closed" and pr.get("merged_at"):
-        # Merged PR exists - CREATE NEW BRANCH
-        print(f"⚠️ Branch {CURRENT_BRANCH} has merged PR #{pr['number']}. Creating new branch and PR.")
-        # Create new branch, reapply changes
-        # Continue with PR creation
 ```
 
-**Decision tree:**
+**If NO existing PR found:**
 
-| PR State | Action |
-|----------|--------|
-| Open PR exists | **UPDATE existing PR** - squash, push, update PR body (do NOT create new PR) |
-| Merged PR exists | **CREATE NEW BRANCH** - branch from current main, reapply changes, create new PR |
-| Closed PR exists (not merged) | **CREATE NEW PR** - new PR against same branch |
-| No PR exists | **CREATE NEW PR** - proceed with workflow |
+- Proceed to Step 2 (Changelog Generation)
+- This is a new PR
 
-**If open PR exists:**
+**If PR EXISTS:**
 
-Proceed through Steps 3-7:
-1. Generate changelog via subtask (Step 3) - **MANDATORY**
-2. Stage CHANGELOG.md (Step 4) - **MANDATORY**
-3. Squash commits (Step 5)
-4. Push to same branch (force-with-lease, Step 6)
-5. Update PR body (Step 7, use `github_update_pull_request` instead of `github_create_pull_request`)
-6. Report PR URL and HALT
-7. **DO NOT create a new PR**
+- Continue to Step 1.5b to check PR state
 
-**If merged PR exists:**
+#### Step 1.5b: Check PR State (open/merged/closed)
 
-1. Get current main state: `git fetch origin && git checkout main && git pull origin main`
-2. Create new branch: `git checkout -b <new-branch-name>`
-3. Cherry-pick or reapply changes
-4. Continue with PR creation workflow
-
-**Report to user:**
-```
-⚠️ Branch <name> has a merged PR. Creating new PR against current main.
+```python
+pr = prs[0]  # Take first (most recent) PR
+pr_state = pr.get("state")  # "open", "closed"
+merged_at = pr.get("merged_at")  # Timestamp if merged, None otherwise
 ```
 
-or
+**PR State Decision Matrix:**
+
+| State | merged_at | Action |
+|-------|-----------|--------|
+| open | None | ✅ **UPDATE EXISTING PR** - Push new commits, existing PR updates automatically |
+| closed | None | ⚠️ **Check close reason** - May be draft closed, proceed with caution |
+| closed | timestamp | 🔄 **MERGED PR DETECTED** - Go to Step 1.5c |
+| open | timestamp | ❌ **INVALID STATE** - Report error, HALT |
+
+#### Step 1.5c: Handle Merged PR (MANDATORY HALT POINT)
+
+**If PR is already merged:**
+
+1. **Rebase branch on main:**
+
+   ```bash
+   git fetch origin
+   git rebase origin/dev
+   ```
+
+1. **Check for remaining changes:**
+
+   ```bash
+   git diff origin/dev
+   ```
+
+1. **Decision:**
+
+   | Remaining Changes | Action |
+   |-------------------|--------|
+   | Has differences | Create NEW PR for additional work |
+   | No differences | HALT - branch already merged, no new PR needed |
+
+1. **HALT with appropriate message:**
+
+**If branch has remaining changes:**
 
 ```
-ℹ️ Branch <name> has open PR #<number>. Updating existing PR instead of creating new one.
+🔄 MERGED PR DETECTED - Creating New PR
+
+The existing PR #{pr_number} was merged to main.
+
+Branch has been rebased on dev and contains new changes:
+- Rebased commits: {commit_count}
+- New PR will be created for additional work
+
+Proceeding with new PR creation...
 ```
 
-### Step 1: Collect Sub-Issues (Multi-Task Specs)
+**If branch is already merged (no remaining changes):**
+
+```
+✅ BRANCH ALREADY MERGED
+
+The branch '{branch_name}' has already been merged via PR #{pr_number}.
+
+Current state:
+- Branch is up-to-date with origin/dev
+- No additional changes to merge
+
+No new PR needed. The work from this branch was already incorporated.
+
+**Action:** Consider deleting the local branch if no further work is needed.
+  git checkout dev
+  git branch -d {branch_name}
+```
+
+#### ⚠️ Edge Cases
+
+**Branch ahead of main after merge:**
+
+- Developer added commits after PR merged
+- Create new PR for continuation work
+- New PR title should reflect continuation
+
+**Branch behind main after merge:**
+
+- Rebase will fast-forward
+- Check for remaining changes after rebase
+
+**Conflicts during rebase:**
+
+- HALT and report conflicts
+- Provide guidance on resolution
+- Suggest manual intervention
+
+### Step 1.5d: Check for Merge Conflicts (CONFLICT DETECTION)
+
+**🚫 CRITICAL: This check MUST happen BEFORE squashing or creating PR.**
+
+This step detects merge conflicts in the PR and handles them appropriately.
+
+#### Step 1.5d.1: Check GitHub PR Mergeable State
+
+For OPEN PRs, check the `mergeable` attribute from GitHub API:
+
+```python
+# For existing open PRs
+if pr_state == "open":
+    pr_details = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr_number)
+    mergeable = pr_details.get("mergeable")  # True, False, or None
+    mergeable_state = pr_details.get("mergeable_state")  # "clean", "dirty", "unknown", etc.
+```
+
+**Mergeable State Matrix:**
+
+| mergeable | mergeable_state | Meaning | Action |
+|-----------|-----------------|---------|--------|
+| True | "clean" | No conflicts | ✅ Proceed with PR creation |
+| True | "has_hooks" | No conflicts + hooks | ✅ Proceed (hooks run on merge) |
+| False | "dirty" | Merge conflicts | 🔄 **CONFLICTS DETECTED** - Go to Step 1.5d.2 |
+| None | "unknown" | GitHub checking | ⏳ Wait and retry, or check locally |
+| False | "blocked" | Blocked by branch protection | ⚠️ Report blocker, HALT |
+
+#### Step 1.5d.2: Handle Merge Conflicts (MERGED PR HANDLING)
+
+**If PR has merge conflicts (mergeable=False, mergeable_state="dirty"):**
+
+1. **Fetch conflict files:**
+
+   ```bash
+   git fetch origin
+   git log --oneline origin/dev..HEAD  # See commits to be merged
+   ```
+
+1. **Get conflict files from GitHub API:**
+
+   ```python
+   # GitHub doesn't provide conflict files directly via API
+   # Local check required:
+   result = subprocess.run(['git', 'merge', '--no-commit', '--no-ff', 'origin/dev'], capture_output=True)
+   if result.returncode != 0 and "CONFLICT" in result.stderr:
+       # Conflicts detected
+       conflict_files = subprocess.check_output(
+           ['git', 'diff', '--name-only', '--diff-filter=U'],
+           text=True
+       ).strip().split('\n')
+   ```
+
+1. **Classify conflicts (AI-objective vs AI-subjective):**
+
+**AI-Objective Conflicts (Auto-Resolve):**
+| Conflict Type | Auto-Resolution Strategy |
+|----------------|--------------------------|
+| Import statement changes | Take both import sets |
+| Whitespace/formatting | Apply consistent formatting |
+| Same function moved to different location | Use new location |
+| Additive changes (both sides add, no overlap) | Take both additions |
+| Configuration file additions | Merge sections |
+
+**AI-Subjective Conflicts (Request User Input):**
+| Conflict Type | Why Subjective | HALT Action |
+|----------------|----------------|-------------|
+| Logical/behavioral conflicts | Different implementations | Request clarification |
+| Deleted file vs modified file | Need design decision | Request decision |
+| Architectural changes | Multiple valid approaches | Request approach choice |
+| Unclear intent | Both sides modify same logic | Request which version |
+
+4. **Resolution Flow:**
+
+**For AI-objective conflicts:**
+
+```bash
+# Auto-resolve
+git checkout --ours <file>   # or --theirs, or merge manually
+git add <resolved_files>
+```
+
+**For AI-subjective conflicts:**
+
+````
+🚫 MERGE CONFLICTS DETECTED - User Input Required
+
+The following conflicts need your decision:
+
+**File:** src/file.py
+**Conflict:** Lines 42-50
+**Type:** AI-subjective (behavioral conflict)
+**Description:** Both branches modified the authentication logic differently
+
+**Your branch:**
+```python
+def authenticate(user):
+    return validate_token(user.token)
+````
+
+**Main branch:**
+
+```python
+def authenticate(user):
+    return check_session(user.session_id)
+```
+
+**Please specify which approach to use:**
+
+1. Keep your branch's version: `git checkout --ours src/file.py`
+1. Use main's version: `git checkout --theirs src/file.py`
+1. Provide custom resolution
+
+**Files with conflicts:**
+
+- src/file.py (AI-subjective)
+- src/other.py (AI-objective - auto-resolved)
+
+Resolution command: `git checkout --{ours|theirs} src/file.py`
+Then: `git add src/file.py src/other.py`
+
+````
+
+5. **After resolution:**
+```bash
+# Continue with rebase
+git rebase --continue
+# Or abort if unrecoverable
+git rebase --abort
+````
+
+#### ⚠️ Edge Cases
+
+**All conflicts AI-objective:**
+
+- Auto-resolve all
+- Continue with PR creation
+- Post comment noting resolution
+
+**All conflicts AI-subjective:**
+
+- HALT with full conflict list
+- Request user decision for each
+- Do NOT proceed without resolution
+
+**Mixed objective/subjective:**
+
+- Auto-resolve objective conflicts
+- List subjective conflicts
+- HALT for subjective decisions
+
+**Unable to classify:**
+
+- HALT with conflict details
+- Request user inspection
+- Do NOT assume subjective/objective
+
+### Step 2: Changelog Generation (MANDATORY FOR ALL PLATFORMS)
+
+**⚠️ CRITICAL: This step EXECUTES the changelog-generator skill as a sub-task.**
+
+**Platform-Agnostic Requirement:**
+
+Changelog generation is MANDATORY for ALL PRs - GitHub, GitBucket, or any other platform. There are NO platform-specific exemptions.
+
+The skill MUST run as a sub-task to ensure context isolation - the main session will only see the final result, not the intermediate analysis.
+
+#### Step 2.1: Check Skip Directive
+
+Before invoking the skill, check for `[skip changelog]` in:
+
+- Last commit message (if squashing multiple commits)
+- PR title
+
+If `[skip changelog]` is present, proceed directly to Step 3 (skip changelog generation).
+
+#### Step 2.2: Execute Changelog Sub-Task (MANDATORY EXECUTION)
+
+**EXECUTE THIS COMMAND AS A SUB-TASK:**
+
+```
+/skill changelog-generator --since-last-release
+```
+
+**Why This Is Critical:**
+
+- Sub-task execution isolates the skill's thinking from main context
+- Prevents skill output from consuming main session tokens
+- Skill runs in its own context and writes CHANGELOG.md
+- Main context receives minimal confirmation only
+
+**Expected Result:**
+
+- Skill analyzes commits since last release
+- Skill categorizes changes (added, changed, deprecated, fixed, security)
+- Skill generates user-facing changelog entries
+- Skill writes CHANGELOG.md to filesystem
+- Main context sees: "Changelog generated successfully" or similar confirmation
+
+#### Step 2.3: Stage Changelog Changes (MANDATORY)
+
+After the sub-task completes, stage the changelog:
+
+```bash
+git add CHANGELOG.md
+```
+
+**CRITICAL:** This happens BEFORE the squash in Step 3, ensuring changelog changes are included in the single commit.
+
+#### Step 2.4: Verify Changelog Staged (ENFORCEMENT GATE)
+
+**BEFORE proceeding to Step 3, verify changelog was actually staged:**
+
+```bash
+# Check if CHANGELOG.md is staged (M = modified in index)
+git status --porcelain CHANGELOG.md
+```
+
+**Expected Result:**
+
+- `M CHANGELOG.md` OR `A CHANGELOG.md` (staged for commit)
+- OR `[skip changelog]` directive was present (proceed to Step 3)
+
+**If changelog NOT staged and NO skip directive:**
+
+```
+⛔ ENFORCEMENT GATE FAILED: Changelog not staged
+
+The changelog-generator skill was invoked but CHANGELOG.md is not staged.
+
+Diagnostic checklist:
+□ Did Step 2.2 execute the skill?
+□ Did Step 2.3 stage the result?
+□ Is [skip changelog] directive present?
+
+Resolution:
+1. Run: /skill changelog-generator --since-last-release
+2. Run: git add CHANGELOG.md
+3. Verify: git status --porcelain CHANGELOG.md
+4. Expected: "M CHANGELOG.md" appears
+5. Continue to Step 3
+
+If skipping changelog, ensure [skip changelog] is in commit message or PR title.
+```
+
+**Why This Check Exists:**
+
+PRs #109, #114, #118, #119, #120 merged without changelog updates because Step 1 Enforcement Gate passed, Step 2 documented the changelog generation, but nothing verified the changelog was actually staged before squash.
+
+This checkpoint ensures:
+
+1. Skill invocation (Step 2.2) actually happened
+1. Staging (Step 2.3) actually happened
+1. Changelog changes ARE in the squash commit
+
+#### Context Isolation Benefits
+
+| What Happens in Sub-Task | What Returns to Main Context |
+|--------------------------|------------------------------|
+| Git commit analysis | Minimal confirmation only |
+| Commit categorization | NOT: intermediate reasoning |
+| Technical → User-friendly translation | NOT: commit details analyzed |
+| Noise filtering | NOT: generated text |
+| Thinking tokens consumed | Minimal result token only |
+
+Then continue to Step 3 (squash).
+
+### Step 3: Squash to Single Commit
+
+**MANDATORY:** All PRs must have exactly ONE commit.
+
+**Three-Branch Workflow:** Squash against `origin/dev` (the integration branch).
+
+```bash
+git reset --soft origin/dev
+git commit -m "<descriptive message>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+### Step 4: Push to Remote
+
+```bash
+git push --force-with-lease origin <branch>
+```
+
+### Step 5: Collect Sub-Issues (Multi-Task Specs)
 
 **For specs with sub-issues:**
 
@@ -126,366 +533,303 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
-### Step 2: Version Bump via Subtask (Code Changes Only)
+**⚠️ CRITICAL: Sub-issues are closed by the platform, NOT by the agent.**
 
-**⚠️ CRITICAL: Only for PRs with code changes. Skip for docs/chore/refactor PRs.**
+- The "Fixes #N" annotation in PR body triggers automatic closure
+- Agent does NOT manually close sub-issues after implementation
+- Agent does NOT close sub-issues after PR creation
+- Agent verifies closure AFTER PR merge via GitHub API
+- Only in edge case (platform fails) does agent manually close
 
-**Detect code changes:**
+### Step 6: Create PR (Platform-Agnostic)
 
-```bash
-# Get list of changed files
-CHANGED_FILES=$(git diff origin/main...HEAD --name-only)
+**Detect platform from session init (`GIT_PLATFORM`) and use appropriate tool:**
 
-# Check if any code files changed
-echo "$CHANGED_FILES" | grep -qE '\.(py|js|ts|rs|java|go|rb)$'
-CODE_CHANGES=$?
+**Three-Branch Workflow Target:**
 
-if [ $CODE_CHANGES -eq 0 ]; then
-    echo "Code changes detected - invoking version bump"
-else
-    echo "No code changes detected - skipping version bump"
-fi
-```
+- Feature branches PR to `dev` (staging/integration)
+- Releases PR from `dev` to `main` (human-triggered, not by AI)
+- Hotfixes PR to both `dev` and `main` (paired issues)
 
-**Skip version bump for:**
-- Documentation-only changes (*.md files)
-- CI/CD configuration (*.yml, *.yaml)
-- Build configuration (Dockerfile, docker-compose.yml)
-- Test files without production code changes
-- Refactoring PRs without public API changes
-
-**If code changes detected, invoke version-bump as subtask:**
-
-```
-task tool with:
-- subagent_type: "general"
-- description: "Version bump for PR"
-- prompt: "Use the version-bump skill to analyze changes and update version files. Steps: 1) Load skill with /skill version-bump, 2) Invoke analyze task to determine bump type, 3) Invoke bump task to update version files, 4) Return JSON with: bump_type, old_version, new_version, files_updated, success. The skill is at .opencode/skills/version-bump/SKILL.md."
-```
-
-**Subtask execution:**
-1. Loads version-bump skill in isolated context (~370 lines)
-2. Runs analyze.md to determine bump type (major/minor/patch/skip)
-3. Runs bump.md to update all version files atomically
-4. Returns results to main agent
-5. Context is discarded after return (no pollution)
-
-**Subtask returns:**
-
-```json
-{
-  "bump_type": "minor",
-  "old_version": "1.2.3",
-  "new_version": "1.3.0",
-  "files_updated": ["pyproject.toml"],
-  "success": true
-}
-```
-
-**If subtask fails or returns skip:**
-
-```json
-{
-  "bump_type": "skip",
-  "reason": "No code changes detected",
-  "success": true
-}
-```
-
-No version bump needed. Continue to changelog generation.
-
-**Stage version file changes:**
-
-```bash
-# Stage version file updates (if any)
-if [ -n "$(git status --porcelain | grep -E '(pyproject.toml|setup.py|package.json|Cargo.toml|VERSION)')" ]; then
-    git add pyproject.toml setup.py package.json Cargo.toml VERSION 2>/dev/null
-fi
-```
-
-**Note:** Version bump changes are included in the squash commit (Step 4). They are NOT a separate commit.
-
-### Step 3: Generate Changelog via Subtask
-
-**⚠️ CRITICAL: Use task tool to prevent context pollution.**
-
-The changelog-generator skill loads ~400 lines into context. To avoid polluting the git-workflow execution context, invoke it as a subtask using the `task` tool.
-
-**Invoke as subtask:**
-
-```
-task tool with:
-- subagent_type: "general"
-- description: "Generate changelog for PR"
-- prompt: "Use the changelog-generator skill to generate changelog entries from commits since branching from origin/main. Write the changelog to CHANGELOG.md (prepend to [Unreleased] section if exists, or create file if missing). Return a JSON object with: 1) 'summary' - executive summary (1-2 sentences), 2) 'changelog' - full markdown changelog content, 3) 'success' - boolean indicating if changelog was written. The skill is at .opencode/skills/changelog-generator/SKILL.md. Load it with /skill changelog-generator first."
-```
-
-**Subtask execution:**
-1. Loads changelog-generator skill in isolated context (~400 lines)
-2. Runs `git log origin/main..HEAD --oneline` to get commits
-3. Generates user-facing changelog from technical commits
-4. Writes to CHANGELOG.md using file tools
-5. Returns results to main agent
-6. Context is discarded after return (no pollution)
-
-**Subtask returns:**
-
-```json
-{
-  "summary": "Implemented feature X with improvements to Y and Z.",
-  "changelog": "## Changes\n\n### Features\n- Added X\n\n### Fixes\n- Fixed Y\n\n...",
-  "success": true
-}
-```
-
-**If subtask fails or returns empty:**
-
-Use fallback format for PR body:
-
-```markdown
-## Summary
-
-<Brief description of changes from spec>
-
-## Changes
-
-- List key changes based on spec content
-- Group by: Features, Improvements, Fixes
-```
-
-### Step 4: Stage CHANGELOG.md
-
-**After subtask completes:**
-
-The subtask has already written CHANGELOG.md. Now stage it:
-
-```bash
-git add CHANGELOG.md
-git status  # Verify CHANGELOG.md is staged
-```
-
-**If CHANGELOG.md doesn't exist after subtask:**
-
-The subtask should have created it. If missing, create minimal fallback:
-
-```bash
-# Fallback: Create basic changelog if subtask failed
-cat > CHANGELOG.md << 'EOF'
-# Changelog
-
-## [Unreleased]
-
-### Changes
-- See PR for details
-
-EOF
-git add CHANGELOG.md
-```
-
-### Step 5: Squash to Single Commit
-
-**MANDATORY:** All PRs must have exactly ONE commit, including version bump and CHANGELOG.md changes.
-
-```bash
-# Stage all changes including version files and CHANGELOG.md
-git add -A
-
-# Squash to single commit
-git reset --soft origin/main
-git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-    --trailer "Co-authored-by: <Human-Name> <human-email>"
-```
-
-**Note:** The squash commit includes:
-- All implementation changes
-- Version bump (if applied in Step 2)
-- CHANGELOG.md updates
-
-These are NOT separate commits - all combined into ONE clean commit.
-
-### Step 6: Push to Remote
-
-```bash
-git push --force-with-lease origin <branch>
-```
-
-### Step 7: Create PR via GitHub MCP
-
-**Use the summary and changelog from subtask for PR body.**
+#### GitHub (GIT_PLATFORM=github)
 
 ```python
 github_create_pull_request(
-    owner=<GIT_OWNER>,
-    repo=<GIT_REPO>,
+    owner=GIT_OWNER,
+    repo=GIT_REPO,
     title="[SPEC] <description>",
-    body=f"""## Summary
+    body="""**Summary:**
 
-{subtask_result['summary']}
+<1-2 sentences describing the impact and stakeholder value>
 
-## Changes
-
-{subtask_result['changelog']}
+**Outcome:** <What changed for stakeholders>
 
 Fixes #<parent>
 Fixes #<child1>
 Fixes #<child2>
 ...
 """,
-    head=<branch-name>,
-    base="main"
+    head=branch_name,
+    base="dev"  # Three-branch workflow: feature → dev
 )
 ```
 
-**PR Body from Fallback (if subtask failed):**
+#### GitBucket (GIT_PLATFORM=gitbucket)
 
 ```python
-body=f"""## Summary
+from skills.gitbucket_api.tools import GitBucketAPI
 
-<Brief description from spec>
+api = GitBucketAPI()
+pr = api.create_pull_request(
+    owner=GIT_OWNER,
+    repo=GIT_REPO,
+    title="[SPEC] <description>",
+    body="""**Summary:**
 
-## Changes
+<1-2 sentences describing the impact and stakeholder value>
 
-- List key changes from spec content
-- Group: Features, Improvements, Fixes
+**Outcome:** <What changed for stakeholders>
 
 Fixes #<parent>
-"""
+Fixes #<child1>
+Fixes #<child2>
+...
+""",
+    head=branch_name,
+    base="dev"
+)
 ```
 
 **PR Body Requirements:**
 
-- Executive summary section (from subtask or fallback)
-- Changes section with user-facing descriptions (from subtask or fallback)
-- `Fixes #<issue-number>` for autoclose
+- Must include `Fixes #<issue-number>` for autoclose
 - Include ALL sub-issues for multi-task specs
+- **MUST use executive summary format** (see Critical Violation: Wrong PR Body Format in `000-critical-rules.md`)
+- `Summary:` section — 1-2 sentences describing stakeholder value and business impact (NOT implementation details)
+- `Outcome:` section — what changed for stakeholders
+- `Fixes #N` annotations at the bottom
+- Target branch is `dev` for feature work
+
+**⚠️ CRITICAL: PR Body Must Use Executive Summary Format**
+
+The PR body MUST follow the executive summary format, matching the chat output and issue comment format:
+
+```
+**Summary:**
+
+<1-2 sentences describing the impact and stakeholder value — NOT implementation details.>
+
+**Outcome:** <What changed for stakeholders>
+
+Fixes #<parent>
+Fixes #<child1>
+...
+```
+
+**❌ WRONG (Implementation Details):**
+
+```
+Add plan-fidelity-auditor skill as the first auditor in the mandatory audit chain. It generates independent clean-room plans from problem statements and compares them against existing spec plans to identify substantive gaps.
+```
+
+**✅ CORRECT (Executive Summary):**
+
+```
+**Summary:**
+
+Ensures specs are audited for plan fidelity before implementation, catching missing phases and scope misalignment early.
+
+**Outcome:** Developers will catch spec quality issues before code changes begin.
+
+Fixes #505
+```
 
 ### Step 7: Report PR URL and HALT
 
-**⚠️ CRITICAL: PR URL Reporting is MANDATORY (Chat Only)**
+### ⚠️ CRITICAL: PR URL Reporting is MANDATORY
 
-**Chat Output (REQUIRED):**
-```markdown
+**You MUST report exec summary + PR URL in chat:**
+
+```
 **Summary:**
 
-<1-2 sentences describing stakeholder value>
+<1-2 sentences describing the impact and stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
 
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+**PR URL:** ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/pull/<number>
 
-**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
-```
-
-**⚠️ CRITICAL: URL-LAST FORMAT (MANDATORY)**
-
-**PR URL MUST be the FINAL line in chat - AFTER the byline.**
-
-**✅ CORRECT:**
-```markdown
-**Summary:**
-
-<1-2 sentences describing stakeholder value>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
-```
-
-**❌ WRONG:**
-```markdown
-**PR Created:** https://github.com/<owner>/<repo>/pull/<number>
-
-**Summary:**
-<content>
+Wait for human to merge.
 ```
 
 **Format Requirements:**
 
-| Location | Contains | Does NOT Contain |
-|----------|----------|------------------|
-| Chat | Summary, Outcome, byline, PR URL | — |
-| GitHub Issue | Summary, Outcome, byline | PR URL (already visible via PR) |
-| GitHub PR | Automatically linked | No comment needed |
-
-**Why URL-Last:**
-- URLs are long and may wrap across lines
-- Placing URLs last allows developers to scan summary first
-- Easy visual anchor: "look for the PR link at the end"
-- Consistent pattern across all AI-generated summaries
-
-**Report PR URL in chat only (not in GitHub issues or PR comments).**
-
-### ⚠️ CRITICAL: Model ID Detection
-
-**When posting completion comment:**
-
-- **MUST dynamically detect model ID** - NEVER use hardcoded values from examples
-- **MUST detect actual runtime identity** from environment/MCP tools
-- **If model ID unknown:** STOP and ask user - DO NOT use example model IDs
+- Executive summary FIRST (provides context)
+- PR URL LAST (clickable link)
+- MUST include "Wait for human to merge"
 
 ### What If PR Creation Fails?
 
 | Failure Reason | Response |
 |----------------|----------|
-| Merged PR exists on branch | Report: "Branch has merged PR. Creating new branch and PR." → Create new branch |
 | No commits between branches | Report: "Branch has no commits to main. Changes may already be merged. Verify and HALT." |
 | Branch conflicts | Report: "Branch conflicts with main. Rebase and push, then create PR." |
 | GitHub API error | Report error details and HALT |
 
-### Pre-Post Verification (MANDATORY)
-
-**Before reporting PR URL, VERIFY:**
-
-```
-✓ Executive summary present (<1-2 sentences)
-✓ Outcome field present (stakeholder value)
-✓ Byline present (agent name + model ID)
-✓ PR URL is FINAL line (after byline)
-✓ No URL before summary
-✓ No URL between summary and byline
-```
-
-**If any check fails:** Fix the comment format BEFORE reporting.
-
 ### Post-PR Creation Checklist
 
-- \[ \] PR URL reported in chat
-- \[ \] Brief implementation summary included
+- \[ \] Exec summary posted in chat
+- \[ \] PR URL posted in chat
 - \[ \] HALT — waiting for human merge
 
 **🚫 NEVER:** Skip reporting PR URL, merge PR, or proceed without developer confirmation.
 
-## Context Required
+## Review Phase (Mandatory)
 
-- Guidelines: `113-git-pr-workflow.md`
-- Related skills: `pr-creation-workflow` (PR timing)
-- Related tasks: `review-prep` (push before), `cleanup` (after merge)
+After implementation completes and BEFORE PR creation authorization:
+
+1. **Agent pushes feature branch** to remote:
+
+   ```bash
+   git push -u origin <branch-name>
+   ```
+
+1. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
+
+   - URLs go in chat dialog ONLY
+   - GitHub Issues receive completion comment WITHOUT URL
+
+1. **Developer reviews changes** via GitHub diff viewer
+
+1. **Developer decides** whether to create PR or request changes
+
+1. **If satisfied, developer says** "create a PR"
+
+1. **Agent creates PR** (squash, push, create PR, HALT)
+
+**Why This Matters:**
+
+- URLs in chat keep conversations clean
+- Issues remain focused on task tracking, not URLs
+- Developer can review changes before PR exists
+- Clear separation between "implementation done" and "PR requested"
+
+## PR Requirements
+
+- Reference issue: `Fixes #123` in PR description
+- Pass CI checks
+- **Human review required** — Copilot review is supplemental, not sufficient for merge
+
+## Automatic Skill Invocation
+
+**When a skill is invoked, EXECUTE it, not just read it.**
+
+| Wrong Behavior | Correct Behavior |
+|----------------|------------------|
+| Load skill content | Load skill content |
+| Read the content | READ AND EXECUTE each step |
+| Halt without action | Follow procedural steps |
+| Report completion without doing work | Complete workflow then report |
+
+**Correct Behavior:**
+
+User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES cleanup task → HALT
+
+**Why This Matters:**
+
+- Skills encapsulate procedural knowledge
+- Loading ≠ Executing
+- The workflow must be followed, not just understood
+- Halt happens AFTER execution, not during
+
+## Agent Merge Prohibition
+
+**🚫 ABSOLUTE PROHIBITION: AGENTS MUST NEVER MERGE PRs**
+
+- **PR merging is HUMAN-ONLY.** The agent MUST NOT call `github_merge_pull_request` at any time.
+- **ALL PRs require human review before merge** — no exceptions, no self-merging.
+- **"go" does NOT authorize merging.** "go" means "proceed to the next task or phase" — NOT "merge the PR".
+- After PR creation, the agent MUST report the PR URL and HALT.
+- If PR is open and user says "go", the agent must clarify that merging requires explicit "merge" instruction.
+
+## Enforcement Mechanisms
+
+| Layer | Mechanism | Scope | Bypassable? |
+|-------|-----------|-------|-------------|
+| **Local** | `.githooks/pre-commit` | Blocks commit to main/master/dev | No |
+| **Local** | `.githooks/post-commit` | Warns after commit to main/master/dev | N/A (post) |
+| **GitBucket** | Branch protection rules | Requires PR for dev/main | No |
+
+**There is NO emergency bypass.** If you need to make an urgent fix:
+
+1. Create a feature branch from `dev`: `git checkout dev && git pull origin dev && git checkout -b hotfix/urgent-fix`
+1. Make your changes and commit
+1. Push and create PR with `hotfix` label (targeting `dev`)
+1. Request expedited review
+
+## Recovery from Accidental Protected Branch Commit
+
+If you somehow committed to `main`, `master`, or `dev` locally (hooks not installed):
+
+```bash
+# Create recovery branch from the commit
+git branch feature/recovery HEAD
+
+# Reset protected branch to match remote
+git checkout dev  # or main/master
+git reset --hard origin/dev  # or origin/main/origin.master
+
+# Switch to recovery branch
+git checkout feature/recovery
+
+# Push and create PR (targeting dev)
+git push origin feature/recovery
+```
+
+## Common Issues
+
+| Issue | Resolution |
+|-------|------------|
+| Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
+| PR body missing Fixes | Verify sub-issues, add all to body |
+| Branch conflicts | Rebase on dev: `git rebase origin/dev` |
+| Wrong base branch | Close PR, create new one with `base="dev"` |
 
 ## Co-Author Trailers (MANDATORY)
-
-See `commit-prep` task for trailer format.
 
 Every squash commit MUST include:
 
 1. AI Author trailer
 1. Human Collaborator trailer
 
+**AI Trailer Format:**
+
+- Use dynamic model detection at runtime
+- Format: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
+- Example: `Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>`
+
+**Human Trailer:**
+
+- Use session values from the session-enforcement plugin
+- `DEV_NAME`: Human's name
+- `DEV_EMAIL`: Human's email
+- Format: `Co-authored-by: <Human-Name> <human-email>`
+
 ## Sub-Issue Autoclose
 
 | Spec Type | PR Body Format |
 |-----------|---------------|
-| Single-task | `Fixes #<parent>` |
-| Multi-task | `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue |
+| Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
+| Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
 
 **Example Multi-Task PR Body:**
 
 ```markdown
-Implemented sub-task architecture for skills.
+**Summary:**
+
+Ensures specs are audited for plan fidelity before implementation, catching missing phases and scope misalignment early.
+
+**Outcome:** Developers will catch spec quality issues before code changes begin.
 
 Fixes #469
 Fixes #470
@@ -495,9 +839,10 @@ Fixes #470
 
 | Issue | Resolution |
 |-------|------------|
-| Multiple commits in PR | Run `git reset --soft origin/main` and re-commit |
+| Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
 | PR body missing Fixes | Verify sub-issues, add all to body |
-| Branch conflicts | Rebase on main: `git rebase origin/main` |
+| Branch conflicts | Rebase on dev: `git rebase origin/dev` |
+| Wrong base branch | Close PR, create new one with `base="dev"` |
 
 ## After PR Creation
 

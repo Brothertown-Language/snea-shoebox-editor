@@ -1,19 +1,19 @@
 ---
 name: coherence-auditor
-description: Audit coherence between guidelines, skills, and AI agent behavior to ensure they work together effectively. Can be used for extraction (identifying skill candidates) and maintenance (detecting drift).
+description: Use when guidelines or skills are updated, to check consistency between rules and behavior. Triggers on: coherence, consistency, audit guidelines, skill extraction, drift detection, guideline update, skill update.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---
 
 # Skill: coherence-auditor
 
-Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI agent behavior. Identifies procedural workflows for extraction and detects drift over time.
+## Overview
 
-## When to Use
+LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work together effectively. Identifies procedural workflows for extraction and detects drift over time.
 
-- Creating new skills from guideline content (extraction)
-- Ongoing drift detection and verification (maintenance)
-- Before approving guideline/skill changes
+## Persona
+
 
 ## Tasks
 
@@ -40,8 +40,7 @@ Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI ag
 
 1. **Automatic invocation (mandatory):** This skill is invoked when auditing guideline/skill coherence or when user requests extraction/maintenance audit.
 
-1. **Mode selection:**
-
+2. **Mode selection:**
    - **Extraction mode**: Use when creating new skills from guideline content
    - **Maintenance mode**: Use for ongoing drift detection and verification
 
@@ -74,17 +73,15 @@ Audits coherence between `.opencode/guidelines/`, `.opencode/skills/`, and AI ag
 **Temp files are NOT preserved between sessions.**
 
 After creating audit log:
-
 1. Write to `./tmp/coherence-audit-YYYYMMDD-<mode>.md`
-1. Attach full content as GitHub Issue comment
-1. Delete temp file
+2. Attach full content as GitHub Issue comment
+3. Delete temp file
 
 **Why:** Fresh-start AI agents cannot access `./tmp/` from previous sessions. GitHub Issue comments ARE preserved.
 
 ## Cross-References
 
 - Related skills: `git-workflow` (PR with changes), `guideline-auditor` (verify guideline quality)
-- Related guidelines: `.opencode/guidelines/*.md`
 
 ## Parent Spec
 

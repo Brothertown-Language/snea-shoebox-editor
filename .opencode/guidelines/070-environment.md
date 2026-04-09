@@ -6,7 +6,7 @@
   `uv run python`. Package ops: add dependencies by editing `pyproject.toml` then running `uv sync` — never `uv add`. `pip` prohibited. No `sys.path` hacks or manual
   path additions.
 - **Never use `python3` or `python` directly** — always `uv run python`. Never prefix commands with absolute paths or `cd /absolute/path &&`. See `060-tool-usage.md § Python Interpreter` and `§ Path Rules` for the full zero-tolerance rules.
-- Reusable agent scripts live in `ai_bin/` (project root). Invoke with `uv run python ai_bin/<script>`.
+- Reusable agent scripts live in `.opencode/tools/` (project root). Invoke with `uv run python .opencode/tools/<script>`.
 - When `pyproject.toml` changes, purge `.venv` and run `uv sync` as a standalone command (never embedded in git hooks,
   commit scripts, or automated pipelines).
 - **Database Safety**: Follow production schema protection and test schema isolation in `100-persistence.md`.
@@ -153,13 +153,13 @@ This rule applies universally to:
   3. STOP — do not run the script against production to verify
   4. Ask user if they want to test/verify (they may provide a test fixture)
 - **NEVER run any script, notebook, or command that connects to, reads from, or writes to a production data path**
-  (e.g. `<project-db>/db/`, any path outside `./tmp/`) without explicit user authorization in the current session.
+  (e.g. `pubmed_data_3/db/`, any path outside `./tmp/`) without explicit user authorization in the current session.
 - This includes verification steps: do NOT run `pgserver_start.py`, `pgserver_stop.py`, or any script that starts,
   stops, or force-kills a PostgreSQL server process unless the user explicitly says to do so.
 - Verification of script correctness must use static analysis (lint, grep, code review) or a dedicated test fixture
   with an isolated `./tmp/` path — never the live production instance.
 - **NEVER use production spec files (GitHub Issues) as smoke-test or verification targets.** Spec issues are authoritative tracking artifacts — they are never modified for testing purposes.
-- **This applies to `ai_bin/` tool verification too.** When fixing or verifying any tool that mutates plan files,
+- **This applies to `.opencode/tools/` tool verification too.** When fixing or verifying any tool that mutates plan files,
   always create a throwaway plan copy in `./tmp/` and run the tool against that copy. Never invoke a mutating tool
   against a live plan file as a "test" or "verification" step.
   To create a throwaway copy: `cp plans/SPEC-some-plan.md ./tmp/spec_test.md`, then pass
@@ -182,12 +182,12 @@ This rule applies universally to:
 
 - All temp scripts/data/artifacts in `./tmp/` ONLY. NO OTHER FOLDERS PERMITTED. **Never use `/tmp/` (system temp) or any other folder.** This includes any diagnostic or exploratory Python scripts — files named `temp_*.py`, `test_*.py` (outside `test/`), or similar one-off scripts must be placed in `./tmp/`, never at the project root.
 - **NO BOGUS PATHS**: Using relative paths that exit the current directory (e.g., `../tmp/`) in scripts or notebooks is **absolutely forbidden**. This creates brittle, non-portable code. All file system operations MUST use paths derived from `project_root` or `base_dir` (e.g., `project_root / 'tmp' / 'index.html'`) as provided by the project's standard utilities (e.g., `notebook_utils.py`).
-- **Mandatory for CLI text updates:** Use `./tmp/` to store input files for `ai_bin` text update tools to avoid shell escaping and newline issues.
+- **Mandatory for CLI text updates:** Use `./tmp/` to store input files for `.opencode/tools` text update tools to avoid shell escaping and newline issues.
 - Project root must stay clean — no root-level temp files.
 - **`.output.txt` files must be placed in `./tmp/` (e.g., `./tmp/.output.txt`), never at the project root (`.output.txt` is a violation).**
 - **Mandatory pre-submit root cleanliness check:** Before calling `submit`, confirm the project root is clean:
   (1) Never create `.output.txt`, `temp_*.py`, or any other temp/diagnostic file at the project root — always use `./tmp/` at time of creation.
-  (2) Run `uv run python ai_bin/file-exists .output.txt` — if it exists, move it to `./tmp/.output.txt` immediately (`mv .output.txt ./tmp/.output.txt`).
+  (2) Run `uv run python .opencode/tools/file-exists .output.txt` — if it exists, move it to `./tmp/.output.txt` immediately (`mv .output.txt ./tmp/.output.txt`).
   (3) Check for any `temp_*.py` files at the project root (`ls temp_*.py 2>/dev/null`) — if any exist, move them to `./tmp/` before submitting.
 
 ### ⚠️ MANDATORY: Temp Files Cleanup After Task Completion

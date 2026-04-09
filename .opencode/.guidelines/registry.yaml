@@ -1,0 +1,206 @@
+# Registry of duplicate text blocks within skills
+# Tracks fragment masters and their destinations
+
+version: 2
+schema_version: "2.0.0"
+last_updated: 2026-04-06
+
+fragments:
+  - id: branch-first-protocol
+    master:
+      path: .opencode/.guidelines/branch-first-protocol.md
+      hash: sha256:2c61c49fcf3c9bef0469b8ccc9da958fa1d04a6c3bacbfee60f07fdedc2f5a62
+      last_modified: 2026-04-06T21:15:00Z
+      lines: 78
+    content:
+      type: text-block
+      estimated_tokens: 425
+      description: "Branch-before-edit protocol and stash workflow critical rule"
+    destinations:
+      - path: .opencode/skills/git-workflow/tasks/pre-work.md
+        hash: sha256:2c61c49fcf3c9bef0469b8ccc9da958fa1d04a6c3bacbfee60f07fdedc2f5a62
+        line_range:
+          start: 7
+          end: 84
+        verified_date: 2026-04-06T21:15:00Z
+    sync_status: synchronized
+    last_sync: 2026-04-06T21:15:00Z
+    notes: "Critical rule: create branch BEFORE any file modification"
+
+  - id: commit-workflow
+    master:
+      path: .opencode/.guidelines/commit-workflow.md
+      hash: sha256:ecfe3f399f161502ebb75e38130b5e3acb663af37e91dd264005222675b78c4a
+      last_modified: 2026-04-06T21:15:00Z
+      lines: 33
+    content:
+      type: text-block
+      estimated_tokens: 225
+      description: "Commit policy and co-author trailers"
+    destinations:
+      - path: .opencode/skills/git-workflow/tasks/commit-prep.md
+        hash: sha256:ecfe3f399f161502ebb75e38130b5e3acb663af37e91dd264005222675b78c4a
+        line_range:
+          start: 7
+          end: 39
+        verified_date: 2026-04-06T21:15:00Z
+    sync_status: synchronized
+    last_sync: 2026-04-06T21:15:00Z
+    notes: "Commit message format and AI co-authored trailers"
+
+  - id: pr-workflow
+    master:
+      path: .opencode/.guidelines/pr-workflow.md
+      hash: sha256: TBD
+      last_modified: 2026-04-06T10:00:00Z
+    content:
+      type: text-block
+      estimated_tokens: 180
+      description: "PR creation authorization and timing"
+    destinations:
+      - path: .opencode/skills/git-workflow/tasks/pr-creation.md
+        hash: sha256: TBD
+        line_range:
+          start: 1
+          end: 80
+      - path: .opencode/skills/pr-creation-workflow/SKILL.md
+        hash: sha256: TBD
+        line_range:
+          start: 50
+          end: 100
+    sync_status: synchronized
+    last_sync: 2026-04-06T10:00:00Z
+    notes: "PR must wait for explicit 'create a PR' instruction"
+
+  - id: branch-cleanup
+    master:
+      path: .opencode/.guidelines/branch-cleanup.md
+      hash: sha256: TBD
+      last_modified: 2026-04-06T10:00:00Z
+    content:
+      type: text-block
+      estimated_tokens: 120
+      description: "Branch deletion protocol after merge"
+    destinations:
+      - path: .opencode/skills/git-workflow/tasks/cleanup.md
+        hash: sha256: TBD
+        line_range:
+          start: 1
+          end: 60
+    sync_status: synchronized
+    last_sync: 2026-04-06T10:00:00Z
+    notes: "Delete branches immediately after merge confirmation"
+
+  - id: archive-workflow
+    master:
+      path: .opencode/.guidelines/archive-workflow.md
+      hash: sha256: TBD
+      last_modified: 2026-04-06T10:00:00Z
+    content:
+      type: text-block
+      estimated_tokens: 160
+      description: "Issue closure protocol and timing"
+    destinations:
+      - path: .opencode/skills/git-workflow/tasks/cleanup.md
+        hash: sha256: TBD
+        line_range:
+          start: 80
+          end: 150
+    sync_status: synchronized
+    last_sync: 2026-04-06T10:00:00Z
+    notes: "Close issues only after PR merge confirmed via API"
+
+  - id: ai-identity
+    master:
+      path: .opencode/.guidelines/ai-identity.md
+      hash: sha256:f70d14a0d3f9ddd1b4861b2028326448d8644b247413a3670f6334ae9d6f5699
+      last_modified: 2026-04-06T21:20:00Z
+      lines: 94
+    content:
+      type: text-block
+      estimated_tokens: 470
+      description: "AI byline format for comments with status emoji and model attribution"
+    destinations:
+      - path: .opencode/skills/github-comments/SKILL.md
+        hash: sha256:f70d14a0d3f9ddd1b4861b2028326448d8644b247413a3670f6334ae9d6f5699
+        line_range:
+          start: 14
+          end: 99
+        verified_date: 2026-04-06T21:20:00Z
+    sync_status: synchronized
+    last_sync: 2026-04-06T21:20:00Z
+    notes: "Agent identity attribution with emoji status indicators"
+
+  - id: notebook-rules
+    master:
+      path: .opencode/.guidelines/notebook-rules.md
+      hash: sha256: TBD
+      last_modified: 2026-04-06T10:00:00Z
+    content:
+      type: text-block
+      estimated_tokens: 250
+      description: "Zero-tolerance notebook manipulation rules"
+    destinations:
+      - path: .opencode/skills/notebook-operations/SKILL.md
+        hash: sha256: TBD
+        line_range:
+          start: 40
+          end: 200
+    sync_status: synchronized
+    last_sync: 2026-04-06T10:00:00Z
+    notes: "Never edit .ipynb directly - use the-notebook-mcp only"
+
+  - id: engineering-approach
+    master:
+      path: .opencode/.guidelines/engineering-approach.md
+      hash: sha256: TBD
+      last_modified: 2026-04-06T10:00:00Z
+    content:
+      type: text-block
+      estimated_tokens: 300
+      description: "Engineering principles and checklists"
+    destinations:
+      - path: .opencode/skills/engineering-approach/SKILL.md
+        hash: sha256: TBD
+        line_range:
+          start: 50
+          end: 250
+    sync_status: synchronized
+    last_sync: 2026-04-06T10:00:00Z
+    notes: "Understand, design, verify principles"
+
+  - id: issue-first
+    master:
+      path: .opencode/.guidelines/issue-first.md
+      hash: sha256: TBD
+      last_modified: 2026-04-06T10:00:00Z
+    content:
+      type: text-block
+      estimated_tokens: 220
+      description: "Issue-first strategy and sub-issues"
+    destinations:
+      - path: .opencode/skills/github-issue-creation/SKILL.md
+        hash: sha256: TBD
+        line_range:
+          start: 60
+          end: 180
+    sync_status: synchronized
+    last_sync: 2026-04-06T10:00:00Z
+    notes: "GitHub Issues for all specs, sub-issues for multi-task"
+
+purged:
+  - id: github-pr-workflow-duplicate
+    source: .opencode/guidelines/121-github-pr-workflow.md
+    purged_date: 2026-04-06
+    notes: "Complete duplicate of git-workflow skill - DELETED"
+
+  - id: gitbucket-temp-file
+    source: .opencode/guidelines/.gitbucket-skill-temp.md
+    purged_date: 2026-04-06
+    notes: "Temporary file - DELETED"
+
+metadata:
+  total_fragments: 9
+  total_purged: 2
+  schema_version: "2.0.0"
+  last_migration: 2026-04-06

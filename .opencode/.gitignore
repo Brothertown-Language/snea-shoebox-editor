@@ -1,5 +1,6 @@
-# Node.js / Bun files (not used in this Python project)
-bun.lock
-node_modules/
-package-lock.json
+node_modules
 package.json
+package-lock.json
+bun.lock
+tmp/
+.gitignore

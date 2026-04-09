@@ -1,0 +1,97 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Memory tools dispatcher. Usage: uv run python .opencode/tools/memory <action> [args...]
+Actions: read, write, update (alias: set), clear
+Example: uv run python .opencode/tools/memory read
+"""
+from __future__ import annotations
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+
+ACTIONS = {
+    "read": "memory-read",
+    "write": "memory-write",
+    "update": "memory-update",
+    "set": "memory-update",
+    "clear": "memory-clear",
+}
+
+
+def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
+    result = subprocess.run(
+        [sys.executable, str(script)] + forwarded_args,
+        capture_output=True,
+        text=True,
+        env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
+    )
+    if result.stdout:
+        sys.stdout.write(result.stdout)
+    if result.stderr:
+        sys.stderr.write(result.stderr)
+    if result.returncode == 0 and not result.stdout and not result.stderr:
+        print(summary)
+    return result.returncode
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        print("Available actions:")
+        seen_scripts: set[str] = set()
+        for action, script in ACTIONS.items():
+            script_path = BASE_DIR / ".opencode" / "tools" / "impl" / script
+            print(f"  {action:<20} → .opencode/tools/impl/{script}")
+            if script not in seen_scripts:
+                seen_scripts.add(script)
+                try:
+                    result = subprocess.run(
+                        [sys.executable, str(script_path), "--help"],
+                        capture_output=True, text=True,
+                        env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
+                    )
+                    for line in (result.stdout or result.stderr).splitlines():
+                        stripped = line.strip()
+                        if stripped.startswith(("Usage:", "Example:", "Sections:")):
+                            print(f"    {stripped}")
+                except Exception:
+                    pass
+        print(f"CWD: {os.getcwd()}")
+        sys.exit(0)
+    action = args[0]
+    if action not in ACTIONS:
+        print(f"Error: unknown action {action!r}. Available: {', '.join(ACTIONS)}", file=sys.stderr)
+        sys.exit(1)
+    WRITE_ACTIONS = {"write", "update", "set"}
+    if action in WRITE_ACTIONS:
+        content = " ".join(args[1:])
+        if "awaiting go" in content.lower():
+            print(
+                "PROTOCOL VIOLATION: content contains forbidden phrase 'awaiting GO'. "
+                "IMMEDIATE ACTION REQUIRED: (1) Record this violation in memory using a neutral phrase, "
+                "(2) HALT — do not continue, do not retry, do not rephrase and resubmit. "
+                "The agent is absolutely prohibited from using pending-state markers in any output. "
+                "See guideline 020-go-prohibitions.md.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        # Block any attempt to set session_state status
+        remaining = args[1:]
+        if len(remaining) >= 2 and remaining[0] == "session_state" and remaining[1] == "status":
+            print(
+                "Error: setting 'session_state status' is prohibited. "
+                "This sub-command has been removed due to self-authorization abuse. "
+                "Do not attempt to set session_state status via the memory dispatcher.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+    script = BASE_DIR / ".opencode" / "tools" / "impl" / ACTIONS[action]
+    sys.exit(_run_action(script, args[1:], f"OK: .opencode/tools/memory {action} completed."))
+
+
+if __name__ == "__main__":
+    main()

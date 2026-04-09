@@ -1,25 +1,35 @@
 ---
 name: changelog-generator
-description: Automatically creates user-facing changelogs from git commits by analyzing commit history, categorizing changes, and transforming technical commits into clear, customer-friendly release notes.
+description: Use when creating release notes, documenting changes between versions, or preparing a changelog. Triggers on: changelog, release notes, what changed, version history, commit summary, release.
+type: technique
 license: MIT
 compatibility: opencode
 ---
 
-# Changelog Generator
+# Skill: changelog-generator
 
-Transforms technical git commits into polished, user-friendly changelogs that customers will understand and appreciate.
-
-## When to Use
-
-- Preparing release notes for a new version
-- Creating weekly/monthly product updates
-- Writing changelog entries for app store submissions
+This skill transforms technical git commits into polished, user-friendly changelogs that your customers and users will actually understand and appreciate.
 
 ## Prerequisites
 
 - **Git**: Required for reading commit history
 - **Repository access**: Must be run from a git repository root
 - **Optional**: Custom changelog style guide (CHANGELOG_STYLE.md)
+
+## Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `since-last-release` | Generate changelog for commits since last CHANGELOG.md update | ~170 |
+| `date-range` | Generate changelog for commits within specific date range | ~90 |
+| `backfill` | One-time historical backfill of missing changelog entries | ~120 |
+
+## Invocation
+
+- `/skill changelog-generator --task since-last-release` - Normal PR workflow (after PR creation)
+- `/skill changelog-generator --task date-range --from DATE --to DATE` - Weekly/monthly updates
+- `/skill changelog-generator --task backfill` - One-time historical catchup
+- `/skill changelog-generator` - Overview only
 
 ## When to Use This Skill
 
@@ -101,48 +111,13 @@ guidelines from CHANGELOG_STYLE.md
 
 **Inspired by:** Manik Aggarwal's use case from Lenny's Newsletter
 
-## Available Tasks
-
-| Task | Purpose | Words |
-|------|---------|-------|
-| `overview` | Full skill content for changelog generation | ~400 |
-| `write` | Write generated entries to CHANGELOG.md | ~300 |
-
-## When Invoked as Subtask (e.g., from git-workflow)
-
-For PR creation workflow, this skill should be invoked as a subtask to prevent context pollution:
-
-```
-task tool with:
-- subagent_type: "general"
-- description: "Generate changelog for PR"
-- prompt: "Use the changelog-generator skill... write to CHANGELOG.md... return JSON"
-```
-
-**Expected Return Format:**
-
-```json
-{
-  "summary": "Brief executive summary (1-2 sentences)",
-  "changelog": "Full markdown changelog content",
-  "success": true
-}
-```
-
-The subtask will:
-1. Load this skill in isolated context (~400 lines)
-2. Generate changelog from commits
-3. Write to CHANGELOG.md
-4. Return JSON result
-5. Discard context (no pollution to caller)
-
 ## Tips
 
 - Run from your git repository root
 - Specify date ranges for focused changelogs
 - Use your CHANGELOG_STYLE.md for consistent formatting
-- **Write to CHANGELOG.md before creating PRs** - Use `write` task to update the file
-- Follow Keep a Changelog format for industry-standard changelogs
+- Review and adjust the generated changelog before publishing
+- Save output directly to CHANGELOG.md
 
 ## Related Use Cases
 

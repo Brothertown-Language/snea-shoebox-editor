@@ -43,7 +43,6 @@ for issue in issues:
 ### Step 3: Check Dependencies
 
 For each dependency listed in spec:
-
 - Verify availability
 - Check for dependency conflicts
 - Document any issues
@@ -59,5 +58,4 @@ For each dependency listed in spec:
 
 ## Context Required
 
-- Guidelines: `010-approval-gate.md`
 - Related tasks: `verify-authorization`, `verify-open-questions`

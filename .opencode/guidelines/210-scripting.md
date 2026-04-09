@@ -20,7 +20,7 @@ Every script/notebook MUST include root resolution:
 
 ## Notebook Operations — MANDATORY MCP
 
-**ALL notebook operations MUST use `the-notebook-mcp` tools.** See `061-notebook-rules.md` for the complete tool reference.
+**ALL notebook operations MUST use `the-notebook-mcp` tools.** See `notebook-operations` skill for the complete tool reference.
 
 ### ✅ MANDATORY
 - Use `the-notebook-mcp_notebook_read` to read notebook content
@@ -35,6 +35,7 @@ Every script/notebook MUST include root resolution:
 - `nbformat` direct access
 - Jupyter Server REST API
 - Any file tool (`read`/`edit`/`write`) on `.ipynb` files
+- `.opencode/tools/nb` (removed — use `the-notebook-mcp` exclusively)
 
 ### Notebook Cell Edit Workflow
 
@@ -50,7 +51,13 @@ To retire a notebook:
 2. Move notebook to archive directory using `git mv`
 3. Or delete entirely using `the-notebook-mcp_notebook_delete`
 
-**If `the-notebook-mcp` is unavailable, REFUSE all notebook operations.** See `061-notebook-rules.md` for the no-fallback policy.
+### Swap and Reorder Workflows
+
+**Swap two cells** (indices `i < j`): Move cell `i` to `j`, then move cell `j-1` to `i`.
+
+**Reorder cells**: Sequence of `move_cell` operations from target layout backward.
+
+**If `the-notebook-mcp` is unavailable, REFUSE all notebook operations.** See `notebook-operations` skill for the no-fallback policy and detailed workflows.
 
 ## Command Restrictions
 - Strictly follow all command and path restrictions defined in `060-tool-usage.md`.

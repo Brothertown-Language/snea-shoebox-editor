@@ -1,0 +1,187 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Edit a guideline file by replacing a section or appending content.
+Usage: uv run python .opencode/tools/guidelines edit <filename> --find-file <path> --replace-file <path>
+       uv run python .opencode/tools/guidelines edit <filename> --append-file <path>
+       uv run python .opencode/tools/guidelines edit <filename> --find-regex-file <path> --replace-file <path>
+WARNING: Use file-based options (--find-file, --replace-file, --append-file, --find-regex-file) exclusively.
+         Direct text on CLI (--find, --replace, --append, --find-regex) is FORBIDDEN.
+Options:
+  --find-file <path>     Read exact text to find from a file.
+  --find-regex-file <path> Read regex pattern to find from a file.
+  --replace-file <path>  Read replacement text from a file.
+  --append-file <path>   Append text read from a file to the end of the file.
+
+WARNING: For large blocks of text, shell quoting and whitespace variations often
+cause exact --find to fail. Use --find-file and --replace-file for better reliability.
+Line endings are normalized (LF/CRLF) during matching to improve robustness.
+"""
+
+from __future__ import annotations
+import os as _os
+
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print(
+        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/guidelines ...). "
+        "Direct invocation is not permitted.",
+        file=__import__("sys").stderr,
+    )
+    __import__("sys").exit(1)
+import re
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
+
+
+def _resolve_path(name: str) -> Path:
+    opencode_dir = BASE_DIR / ".opencode"
+    if len(name) == 3 and name.isdigit():
+        matches = sorted(
+            path for path in GUIDELINES_DIR.glob(f"{name}*.md") if path.is_file()
+        )
+        if len(matches) == 1:
+            return matches[0]
+        if len(matches) > 1:
+            print(
+                f"Error: multiple guideline files found for prefix '{name}':",
+                file=sys.stderr,
+            )
+            for path in matches:
+                print(f"  {path.name}", file=sys.stderr)
+            sys.exit(1)
+
+    path = GUIDELINES_DIR / name
+    if not path.exists():
+        alt = opencode_dir / name
+        if alt.exists():
+            return alt
+        print(f"Error: guideline file not found: {name}", file=sys.stderr)
+        sys.exit(1)
+    return path
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help"):
+        print(__doc__)
+        sys.exit(0)
+
+    name = args[0]
+    rest = args[1:]
+
+    # Parse flags
+    find_text: str | None = None
+    find_regex: str | None = None
+    replace_text: str | None = None
+    append_text: str | None = None
+
+    forbidden_flags = ["--find", "--find-regex", "--replace", "--append"]
+
+    i = 0
+    while i < len(rest):
+        flag = rest[i]
+        if flag in forbidden_flags:
+            print(
+                f"ERROR: Flag {flag!r} is forbidden. Use file-based equivalent (e.g., {flag}-file).",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        if flag == "--find-regex-file":
+            i += 1
+            find_regex = Path(rest[i]).read_text()
+        elif flag == "--find-file":
+            i += 1
+            find_text = Path(rest[i]).read_text()
+        elif flag == "--replace-file":
+            i += 1
+            replace_text = Path(rest[i]).read_text()
+        elif flag == "--append-file":
+            i += 1
+            append_text = Path(rest[i]).read_text()
+        else:
+            print(f"Error: unknown flag {flag!r}", file=sys.stderr)
+            sys.exit(1)
+        i += 1
+
+    path = _resolve_path(name)
+    original = path.read_text(encoding="utf-8")
+
+    if append_text is not None:
+        if find_text is not None or find_regex is not None or replace_text is not None:
+            print(
+                "Error: --append/--append-file cannot be combined with --find/--replace.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        sep = "" if original.endswith("\n") else "\n"
+        path.write_text(original + sep + append_text, encoding="utf-8")
+        print(f"Appended content to {name}.")
+        return
+
+    if (find_text is None and find_regex is None) or replace_text is None:
+        print(
+            "Error: must provide --find/--find-regex and --replace (or --replace-file), or --append/--append-file.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    if find_text is not None and find_regex is not None:
+        print(
+            "Error: --find and --find-regex cannot be used together.", file=sys.stderr
+        )
+        sys.exit(1)
+
+    # Normalize line endings for the match
+    content_norm = original.replace("\r\n", "\n")
+
+    if find_regex:
+        matches = list(
+            re.finditer(find_regex, content_norm, flags=re.MULTILINE | re.DOTALL)
+        )
+        count = len(matches)
+        if count == 0:
+            print(
+                f"Error: regex pattern {find_regex!r} not found in {name}.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+        if count > 1:
+            print(
+                f"Error: regex pattern {find_regex!r} matches {count} times in {name} — must match exactly once.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        m = matches[0]
+        updated = content_norm[: m.start()] + replace_text + content_norm[m.end() :]
+    else:
+        # find_text must be set
+        find_norm = find_text.replace("\r\n", "\n")
+        count = content_norm.count(find_norm)
+        if count == 0:
+            print(f"Error: search text not found in {name}.", file=sys.stderr)
+            # Help user find why it didn't match
+            if find_norm.strip() in content_norm.strip():
+                print(
+                    "HINT: A near match was found (possibly differing only in leading/trailing whitespace).",
+                    file=sys.stderr,
+                )
+            sys.exit(1)
+        if count > 1:
+            print(
+                f"Error: search text matches {count} times in {name} — must match exactly once.",
+                file=sys.stderr,
+            )
+            sys.exit(1)
+
+        updated = content_norm.replace(find_norm, replace_text, 1)
+
+    path.write_text(updated, encoding="utf-8")
+    print(f"Updated {name}.")
+
+
+if __name__ == "__main__":
+    main()

@@ -23,7 +23,6 @@ Read spec body for "Open Questions" section or `?` markers indicating unresolved
 ### Step 2: Verify Resolution
 
 For each open question found:
-
 - Verify answer is documented in spec
 - Verify answer is not "TBD" or placeholder
 - Document any unresolved questions
@@ -31,7 +30,6 @@ For each open question found:
 ### Step 3: HALT if Unresolved
 
 If ANY open questions remain unresolved:
-
 - Post comment listing unresolved questions
 - HALT and wait for answers
 
@@ -45,5 +43,4 @@ If ANY open questions remain unresolved:
 
 ## Context Required
 
-- Guidelines: `045-open-questions.md`
 - Related tasks: `verify-authorization`, `verify-codebase`

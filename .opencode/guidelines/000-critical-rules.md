@@ -5,27 +5,46 @@
 
 This file provides critical rules that must never be violated.
 
-## Agent-Specific Notes
+## Critical Violation: Skipping Git Pre-Check Before ANY Work
 
-### OpenCode Desktop (OPENCODE=1)
-- MCP tools auto-probe on startup
-- Use OpenCode-specific instructions from `opencode.json`
-- Read `.opencode/guidelines/` for detailed guidance
+**⚠️ Working on files without checking git state is a CRITICAL GUIDELINE VIOLATION.**
 
-### Amazon Q / CodeWhisperer
-- Treat as unknown agent — use manual MCP probe
+### 🚫 FORBIDDEN
+
+- Starting ANY work (implementation, verification, editing) WITHOUT checking git state first
+- Assuming working tree is clean without `git status` verification
+- Creating files while on `main` or `dev` branch
+- Editing files while on `main` or `dev` branch
+- Skipping stash when pending changes exist
+
+### ✅ MANDATORY
+
+**See `git-workflow` skill `--task pre-work` for the mandatory pre-check sequence, stash verification, and branch creation steps.**
+
+### Why This Matters
+
+| Scenario | Consequence |
+|----------|-------------|
+| Edit files on `main` | Cannot create branch, changes stuck on `main` |
+| Skip git status check | Untracked files lost when switching branches |
+| Forget `-u` flag | Untracked files NOT stashed, lost forever |
+| Skip stash verification | Modifications silently lost |
+
+______________________________________________________________________
 
 ## Critical Violation: Implementing Without Documentation Verification
 
 **⚠️ Implementing code without verifying against live documentation is a CRITICAL GUIDELINE VIOLATION.**
 
 ### 🚫 FORBIDDEN
+
 - Implementing API calls without verifying parameter names from official docs
 - Using environment variables without confirming correct names from config files
 - Guessing function signatures from memory or similar libraries
 - Using outdated blog posts/tutorials instead of official documentation
 
 ### ✅ REQUIRED
+
 - **ALWAYS verify API signatures before implementing**
 - Check official documentation for current API usage
 - Use `srclight_get_signature` or `pycharm_get_symbol_info` for function signatures
@@ -33,133 +52,232 @@ This file provides critical rules that must never be violated.
 - Confirm environment variable names from `.env.example` or config
 
 ### Why This Matters
+
 - Assumption-based implementations lead to broken functionality
 - API changes between library versions cause silent failures
 - Incorrect parameter names waste debugging time
 - Outdated patterns accumulate technical debt
 
----
+______________________________________________________________________
 
-## Critical Violation: Auto-Issue Creation for Repeated Workflow Violations
+## Critical Violation: Verification Dishonesty — Reporting Memory as Verified
 
-**⚠️ Repeated bypass of mandatory workflows is a CRITICAL GUIDELINE VIOLATION that MUST be tracked.**
+**⚠️ Reporting unverified information as verified, or using memory recall instead of actual verification, is a CRITICAL GUIDELINE VIOLATION.**
 
-When the agent bypasses mandatory workflow steps (review-prep, PR creation, issue closure), an issue MUST be created to track the violation.
+### 🚫 FORBIDDEN
 
-### What Triggers Auto-Issue Creation
+- Reporting values from memory without re-running the verification
+- Claiming "I checked earlier" without showing the current tool call
+- Using training knowledge as a substitute for actual tool calls
+- Assuming state hasn't changed since a previous check
+- Omitting tool calls when claiming verification was performed
+- Acting on an issue without reading comments (per `067-context-completeness.md`)
 
-| Violation | When to Create Issue |
-|-----------|----------------------|
-| Skipping review-prep | Agent HALTs without pushing branch, generating compare URL, or posting to issue/chat |
-| Bypassing PR workflow skill | Agent manually runs git commands instead of invoking skill |
-| PR creation without instruction | Agent creates PR without explicit "create a PR" from user |
-| Closing issues before PR merge | Agent closes issues without verifying merge via GitHub API |
+### ✅ REQUIRED
 
-### Auto-Issue Workflow
-
-**When violation detected:**
-
-1. Create issue: `[SPEC-FIX] Review-prep workflow bypass` (or relevant violation type)
-2. Document which implementation phase was affected
-3. Add `needs-approval` label
-4. Post comment explaining:
-   - What violation occurred
-   - Which files/workflow were affected
-   - What correct workflow should have been followed
-
-### Issue Template for Violations
-
-```markdown
-# [SPEC-FIX] <Violation Type>
-
-**Violation:** <What occurred>
-
-**Affected Files:**
-- <File paths that were modified without proper workflow>
-
-**Expected Workflow:**
-1. <Step 1 of correct workflow>
-2. <Step 2 of correct workflow>
-...
-
-**What Happened:**
-<Description of how workflow was bypassed>
-
-**Correction Required:**
-- <What needs to be verified/fixed>
-
----
-🤖 ❌ Violation detected by <AgentName> (<ModelID>)
-```
+- Always use a tool or command when instructed to check, verify, confirm, look up, or ensure
+- Show the tool call and relevant output as evidence
+- Re-verify before significant actions even if previously checked
+- Tag unverified recollections explicitly as "(unverified)"
+- Treat verification as mandatory work, not optional confirmation
+- Read ALL comments before acting on any GitHub/GitBucket resource (per `067-context-completeness.md`)
 
 ### Why This Matters
 
-- Violations indicate gaps in workflow understanding or enforcement
-- Tracking violations helps identify patterns
-- Creates accountability for workflow compliance
-- Enables systematic improvement of guidelines
+| Pattern | Consequence |
+|---------|-------------|
+| Memory recall as verification | Incorrect assertions about codebase state |
+| Stale session references | Changes since last check are missed |
+| Training knowledge used as fact | Hallucinated APIs, wrong parameters, broken code |
+| Missing tool call evidence | No audit trail for verification claims |
+| Assuming state unchanged | Conflicts, lost work, incorrect decisions |
 
----
+**See `.opencode/guidelines/065-verification-honesty.md` for the complete rule, evidence requirements, and single exchange window exception.**
 
-**Search guidelines:** Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant guidelines.
+______________________________________________________________________
+
+## Critical Violation: Skipping Post-Implementation Verification Skills
+
+**⚠️ Failing to invoke `verification-before-completion` and `finishing-a-development-branch` after implementation is a CRITICAL GUIDELINE VIOLATION.**
+
+This is the same class of failure as skipping `review-prep`: skills exist, dispatch triggers are documented, but the agent skips them because there is no enforcement mechanism blocking progression.
+
+### 🚫 FORBIDDEN
+
+- Claiming "task complete" without invoking `verification-before-completion --task verify`
+- Claiming "implementation complete" without invoking `finishing-a-development-branch --task checklist`
+- Manually executing skill steps instead of formally invoking the skill
+- Skipping verification because "the changes look correct"
+- Proceeding to `review-prep` before verification skills pass
+
+### ✅ REQUIRED
+
+**See `verification-before-completion` skill `--task verify` for evidence requirements.**
+**See `finishing-a-development-branch` skill `--task checklist` for branch readiness enforcement.**
+**See `git-workflow` skill `--task review-prep` for the mandatory post-implementation workflow.**
+
+### Why Manual Execution Is NOT Sufficient
+
+Manual execution of skill steps is PROHIBITED because skills contain enforcement checklists, CRITICAL VIOLATION warnings, and mandatory decision points that inline steps lack.
+
+| Manual Execution | Formal Skill Invocation |
+|-------------------|------------------------|
+| Skips enforcement checklists | Loads and follows enforcement checklist |
+| Agent may skip "obvious" steps | Every step is explicit and mandatory |
+| No CRITICAL VIOLATION warnings in context | Skill content includes enforcement warnings |
+| Error-prone, agent decides what to skip | No decision points — all steps required |
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| Skip verification | Success criteria not checked, bugs shipped |
+| Skip finishing checklist | Uncommitted changes, failing tests, broken PRs |
+| Skip both | No evidence of completion, no quality gate |
+| Manual execution only | Agent bypasses enforcement, misses steps |
+
+______________________________________________________________________
+
+## Critical Violation: Skipping review-prep After Implementation
+
+**⚠️ Failing to invoke `review-prep` after implementation is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+
+- Marking implementation complete WITHOUT committing, pushing, and generating URL
+- Skipping `review-prep` because "no changes were made"
+- Skipping `review-prep` because "already pushed"
+- Skipping `review-prep` for documentation/guideline changes
+- Proceeding to next phase without URL in chat
+
+### ✅ REQUIRED
+
+**See `git-workflow` skill `--task review-prep` for the mandatory post-implementation workflow including commit, push, compare URL generation, and HALT protocol.**
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| No commit | Changes lost, no tracking |
+| No push | Remote has no branch, compare URL fails |
+| No URL | Developer cannot review changes |
+| No HALT | Premature PR creation or issue closure |
+| Wrong format | Developer lacks context before URL |
+
+______________________________________________________________________
+
+## Critical Violation: Wrong Chat Output Format
+
+**⚠️ Posting URL before executive summary in chat is a CRITICAL GUIDELINE VIOLATION.**
+
+The executive summary MUST appear BEFORE the URL in chat output. URL must be LAST.
+
+**See `git-workflow` skill → "Chat Output Format (CRITICAL)" section for complete format requirements and examples.**
+
+______________________________________________________________________
+
+## Critical Violation: Wrong PR Body Format
+
+**⚠️ Writing implementation details instead of executive summary in PR bodies is a CRITICAL GUIDELINE VIOLATION.**
+
+PR bodies MUST use the executive summary format (Summary/Outcome/Fixes). Implementation details do NOT belong in PR bodies.
+
+**See `git-workflow` skill → `pr-creation` task → "PR Body Requirements" section for complete format specification and examples.**
+
+______________________________________________________________________
+
+## Critical Violation: Uncommitted/Unpushed Changes After Implementation
+
+**⚠️ Marking implementation complete WITHOUT committing and pushing is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+
+- Marking task complete when `git status` shows uncommitted changes
+- Skipping `git commit` because "changes are small"
+- Skipping `git push` because "branch exists"
+- Proceeding to review-prep without push verification
+
+### ✅ REQUIRED
+
+**See `finishing-a-development-branch` skill `--task checklist` for the complete commit/push verification procedure and enforcement checklist.**
+
+______________________________________________________________________
+
+## Critical Violation: Fabricating URLs — ZERO TOLERANCE
+
+**⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.**
+
+All URLs must be constructed exclusively from values provided by the session-enforcement plugin output. No exceptions.
+
+### 🚫 FORBIDDEN
+
+- Hard-coding domain names, hostnames, or URL paths in any output
+- Using "known correct" URLs from previous sessions, specs, or documentation as source
+- Guessing URL patterns from git remote URLs or other indirect sources
+- Caching URL base values across sessions
+- Including example URLs in guidelines/skills that might be copied as fact
+- **Constructing URLs from the git remote hostname** (e.g., `tomcat-0002.newsrx.com` ≠ `gitbucket.newsrx.com`)
+
+### ✅ REQUIRED
+
+1. Values are automatically injected by the session-enforcement plugin (`.opencode/plugins/session-enforcement.ts` via `.opencode/scripts/session_init.py`)
+1. Extract `GITBUCKET_HTML_URL` (preferred) or `GITBUCKET_URL` (legacy) from session init output
+1. Construct ALL URLs using that base URL + `GIT_OWNER` + `GIT_REPO`
+1. If session init does not provide a required URL component → HALT and report
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| Hardcoded domain | Wrong server, broken links, eroded trust |
+| Cached from prior session | Stale after infrastructure changes |
+| Guessed from remote URL | Fragile, often incorrect |
+| Example URL copied as fact | Propagates errors across specs/docs |
+
+### Session Init Unavailable
+
+If session init has not been run or does not provide URL components:
+
+1. **REFUSE** to generate any URL
+1. Report: "Cannot generate URLs — session init not run or missing URL components"
+1. HALT and wait for user to run session init
+
+______________________________________________________________________
 
 ## Critical Violation: Inferring GitHub Owner from File Paths/Usernames
 
 **⚠️ Inferring GitHub owner from file paths or usernames is a CRITICAL GUIDELINE VIOLATION.**
 
 ### 🚫 FORBIDDEN
+
 - Inferring `owner=XXXX` from file path `/home/XXXX/git/...`
 - Inferring owner from `$USER` environment variable
 - Inferring owner from git username (`git config user.name`)
 - Using cached/stale owner values from previous sessions
-- Making ANY GitHub MCP call without first running `ai_bin/session_init.py`
+- Making ANY GitHub MCP call without session init values being available
 
-### ✅ REQUIRED SEQUENCE
-1. Run session init: `uv run python ai_bin/session_init.py`
-2. Store ALL output values for session duration:
-   - `DEV_NAME` (human name for commit trailers)
-   - `DEV_EMAIL` (human email for commit trailers)
-   - `GIT_OWNER` (repository owner for GitHub API calls)
-   - `GIT_REPO` (repository name for GitHub API calls)
-   - `GIT_HOOKS_PATH` (git hooks path)
-   - `GIT_REMOTE_URL` (full remote URL)
-3. Use `GIT_OWNER` and `GIT_REPO` for EVERY GitHub MCP call
-4. NEVER assume or hardcode owner/repo values
+### ✅ REQUIRED
+
+1. Values are automatically injected by the session-enforcement plugin (`.opencode/plugins/session-enforcement.ts` via `.opencode/scripts/session_init.py`)
+1. Store ALL output values (`DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO`, `GIT_HOOKS_PATH`, `GIT_REMOTE_URL`) for session duration
+1. Use `GIT_OWNER` and `GIT_REPO` for EVERY GitHub MCP call
+1. NEVER assume or hardcode owner/repo values
 
 ### Why This Matters
+
 - File paths vary across machines (`/home/<user>/` vs `/home/<other>/` )
 - `$USER` returns local username, NOT GitHub owner
 - `git config user.name` returns human name, NOT GitHub owner
 - Cached values become stale across sessions
 - Incorrect owner causes GitHub API failures
 
----
+______________________________________________________________________
 
 ## Critical Violation: Missing AI Co-Authored Attribution
 
 **⚠️ Failing to include AI co-authored attribution is a CRITICAL GUIDELINE VIOLATION.**
 
 AI co-authorship applies to **original content authored by AI**, NOT copy-pasted content.
-
-### ⚠️ MANDATORY: Dynamic Runtime Identity Detection
-
-**Agents MUST use their ACTUAL runtime identity — NEVER copy placeholder values from examples.**
-
-| Identity Component | How to Detect | FORBIDDEN |
-|-------------------|---------------|-----------|
-| `<AI-Name>` | Agent's actual name at runtime | Copying "OpenCode" or "AI Assistant" from examples |
-| `<model-id>` | Backing model ID at runtime | Copying "ollama-cloud/glm-5" from examples |
-| `<ai-email>` | Agent's noreply email | Using project domain email |
-
-**Example Values in Guidelines are ILLUSTRATIVE:**
-- `OpenCode (ollama-cloud/glm-5)` → Example only
-- `AI Assistant (model-id)` → Placeholder only
-- **DETECT YOUR OWN IDENTITY** at runtime
-
-**When Identity Unknown:**
-- STOP and ask user for clarification
-- DO NOT use example values as defaults
-- DO NOT guess or invent identity values
 
 ### What Requires Attribution
 
@@ -178,294 +296,142 @@ AI co-authorship applies to **original content authored by AI**, NOT copy-pasted
 
 ### Attribution Format
 
-```
-Co-authored with AI: <AI-Name> (<model-id>)
-```
+`Co-authored with AI: <AI-Name> (<model-id>)`
 
-**Example:** `Co-authored with AI: MyAIAgent (provider/model-name)`
+Example: `Co-authored with AI: OpenCode (ollama-cloud/glm-5)`
 
-### Repository Creation
-
-When creating a new repository, the README MUST include:
-
-```markdown
-## Co-Authored With AI
-
-This repository was created with assistance from AI:
-
-- **AI Agent**: <AI-Name>
-- **Model**: <model-id>
-- **Date**: YYYY-MM-DD
-```
-
-**Note:** The LICENSE file uses standard MIT license without modification. AI attribution goes in README, not LICENSE.
-
-**See `.opencode/guidelines/080-code-standards.md` for complete attribution requirements.**
-
-## Critical Violation: Unauthorized Question Asking
-
-**⚠️ Asking questions during implementation is a CRITICAL GUIDELINE VIOLATION.**
-
-### 🚫 FORBIDDEN Question Patterns
-
-The agent must NEVER ask questions like:
-- "What would you prefer I focus on first?"
-- "Should I continue?"
-- "Ready for PR?"
-- "What should I do next?"
-- "How would you like me to proceed?"
-- "Ready when you are"
-
-**These questions violate the silent HALT protocol:**
-- `000-critical-rules.md`: HALT protocol requires SILENT halt, not questions
-- `010-approval-gate.md`: No authorization prompts after task completion
-- `050-scope-autonomy.md`: Questions are NOT authorization
-- `125-github-issue-comments.md`: No "awaiting authorization" or dialog prompts
-
-### ✅ REQUIRED Behavior
-
-| Situation | Action |
-|-----------|--------|
-| Task complete but more work remains | Continue implementation autonomously |
-| Task complete and no more work | HALT silently, post progress comment |
-| Blocked by genuine ambiguity | Post comment to issue asking for clarification, then HALT |
-| Error encountered | Post error details to issue, then HALT |
-| Waiting for authorization | HALT silently, wait for explicit "approved" or "go" |
-
-### Edge Cases
-
-| Edge Case | Action |
-|-----------|--------|
-| Genuine ambiguity about requirements | Post comment to issue explaining ambiguity, ask for clarification, then HALT |
-| Blocked by external factor | Post comment explaining blocker, then HALT |
-| Error encountered | Post error details to issue, then HALT |
-| Multiple tasks remaining | Continue with next task (if authorized for all phases) |
-
-**Why This Matters:**
-- Questions break the non-interactive, autonomous execution model
-- Questions create friction and require user intervention
-- Questions signal confusion about task completion
-- Questions during implementation are NEVER appropriate
-
----
+**See `.opencode/guidelines/080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).**
 
 ## Critical Violation: Missing Progress Comments
 
 **⚠️ Failing to post progress comments to the associated issue is a CRITICAL GUIDELINE VIOLATION.**
 
-Every implementation task MUST be documented with progress comments on the GitHub issue:
-- Post comment IMMEDIATELY after completing each task
-- Post comment when creating PR
-- Never proceed to next task without commenting first
+Every implementation task MUST be documented with progress comments on the GitHub issue.
 
-### Required Format: Executive Summary
-
-**Intermediate task (multi-task spec):**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**Final task or single-task spec:**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**⚠️ CRITICAL: Emoji must be PLAIN TEXT (not inside italic/bold formatting).**
-
-**Status Emoji Guide:**
-| Status | Emoji | Byline Format |
-|--------|-------|---------------|
-| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
-| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]` |
-| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)[: description]` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>` |
-
-**When to include context in byline:**
-- **Progress comments**: No context (content already describes the work)
-- **Issue creation**: Optional — add issue number if useful
-- **Rejection/Superseded**: Always include reason or replacement reference
+**See `github-comments` skill for complete progress comment format, emoji guide, and byline requirements.**
 
 ### 🚫 FORBIDDEN in Progress Comments
 
 - **File lists** — Redundant (visible in git commits)
-- **"Next" field** — Dialog prompt (violates `AGENTS.md` § 125)
+- **"Next" field** — Dialog prompt (violates AGENTS.md)
 - **Punch-list format** — Use executive summary paragraphs
 - **"Awaiting authorization"** — Use HALT protocol, not comments
 - **Technical changelog** — Focus on impact, not file-by-file changes
+
+### Audit Findings Are NOT Progress Comments
+
+**⚠️ Posting spec-audit findings as GitHub comments is FORBIDDEN.**
+
+Audit findings from `spec-auditor` are internal agent guidance — equivalent to linter output. They inform the agent what to fix, not what to announce to stakeholders.
+
+| Action | Post Comment? |
+|--------|---------------|
+| Agent completes implementation task | ✅ YES — progress comment with executive summary |
+| Agent revises spec substantively after audit | ✅ YES — one revision comment per `github-comments` skill |
+| Agent makes non-substantive spec changes (STATUS, typos, cross-refs) after audit | ❌ NO |
+| Agent posts audit findings report | 🚫 FORBIDDEN — act on findings, don't post the report |
 
 ### ⚠️ Chat Output Rule (CRITICAL)
 
 **Progress executive summaries go to BOTH GitHub comments AND chat.**
 
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
-
-**Why:** Both GitHub history AND chat transcript should show progress. GitHub preserves long-term history; chat maintains session context.
-
-**✅ DO:** Post executive summary to GitHub, then provide SAME summary in chat
-**🚫 NEVER:** Skip either location
-**🚫 NEVER:** Put full summary in chat but skip GitHub comment
-
 **See `github-comments` skill for complete requirements.**
 
----
+______________________________________________________________________
 
 ## Critical Violation: Ignoring Issue Comments
 
 **⚠️ Failing to respond to user comments on GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
 
-Users communicating via GitHub Issues:
-- Cannot see your internal analysis
-- Are not mind readers
-- Expect responses where they asked the question
+Users communicating via GitHub Issues cannot see your internal analysis, are not mind readers, and expect responses where they asked the question.
 
-**MANDATORY RESPONSE PROTOCOL:**
-1. Read issue comments via `github_issue_read method=get_comments`
-2. Respond PUBLICLY via `github_add_issue_comment`
-3. Include analysis, findings, and next steps in your response
-4. Ask for authorization if needed
+**MANDATORY: Read issue comments and respond publicly. See `github-comments` skill → "Responding to User Comments (MANDATORY)" section for complete protocol.**
 
-**See `github-comments` skill → "Responding to User Comments (MANDATORY)" section for complete requirements.**
+______________________________________________________________________
 
----
+## Critical Violation: Acting on Resources Without Reading All Comments
 
-## Critical Violation: URLs in GitHub Issue Comments
+**⚠️ Acting on a GitHub/GitBucket resource without reading ALL comments is a CRITICAL GUIDELINE VIOLATION.**
 
-**⚠️ Putting URLs in GitHub Issue comments is a CRITICAL GUIDELINE VIOLATION.**
+The issue body or PR description alone is NEVER sufficient context. Comments may contain authorizations, direction changes, clarifications, blockers, or scope changes that alter the correct action.
 
 ### 🚫 FORBIDDEN
 
-**NEVER put URLs in GitHub Issue comments.**
-
-GitHub Issue comments are for **future maintainers** who need context-based summaries explaining WHAT changed and WHY — NOT for developers who need clickable links to compare diffs.
-
-| Location | Audience | Purpose | URL? |
-|----------|-----------|---------|------|
-| GitHub Issue comment | Future maintainers | Historical context (WHAT/WHY) | 🚫 NO |
-| Chat output | Immediate developer | Actionable navigation (clickable diff) | ✅ YES |
+- Acting on an issue after reading only the issue body
+- Reviewing a PR without reading review comments
+- Checking authorization without reading recent comments
+- Assuming "no new comments" without actually checking
+- Caching comment state from a previous session
+- Skipping comment reads because "I checked earlier"
 
 ### ✅ REQUIRED
 
-When URLs are needed (e.g., code compare links, PR links, issue links):
+- Read ALL comments before ANY action on a resource (issue, PR, discussion)
+- Show evidence of having read comments (count, summarize, or cite specific comments)
+- Re-read before significant actions even if recently read
+- Use `github_issue_read` with `method=get_comments` to fetch comments
 
-1. **GitHub Issue comments**: Context-based summary **WITHOUT URL**
-2. **Chat output**: Same executive summary **WITH URL**
+**See `067-context-completeness.md` for the complete rule, evidence requirements, staleness rule, and single exchange window exception.**
 
-### Why This Matters
-
-- **GitHub Issues are historical records**: Future maintainers read comments for context, not navigation
-- **URLs become outdated**: Branches get deleted, repos move, links break
-- **Context is what persists**: "The rate limiting was added to prevent API quota exhaustion" survives; `https://github.com/.../compare/main...branch` does not
-- **Chat is for immediate action**: Developers in the current session need clickable links to navigate
-
-### Examples
-
-**❌ WRONG (URL in GitHub Issue):**
-
-```markdown
-Phase 1 complete: Added rate limiting to PubMed client.
-
-https://github.com/owner/repo/compare/main...feature-branch
-```
-
-**✅ CORRECT (Context in GitHub Issue, URL in Chat):**
-
-**GitHub Issue Comment:**
-```markdown
-**Context-Based Summary:**
-
-Added rate limiting middleware to the PubMed client to prevent API quota exhaustion. The implementation uses a sliding window algorithm that tracks requests per minute and queues excess calls. This ensures we stay within PubMed's 3 requests/second limit without losing data.
-
----
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
-```
-
-**Chat Output (same message with URL):**
-```markdown
-**Summary:**
-
-Added rate limiting middleware to PubMed client to prevent API quota exhaustion.
-
-**Outcome:** PubMed API calls now respect rate limits, preventing quota exhaustion errors.
-
-https://github.com/owner/repo/compare/main...feature-branch
-
----
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
-```
-
-### Non-Substantive Updates (NO Comment Needed)
-
-**NO comment is required for non-substantive updates:**
-
-- Adding origin links or cross-references to issue body
-- STATUS field updates (`STATUS: 1.1` → `STATUS: 1.2`)
-- Label changes
-- Typo fixes in issue body
-
-**These are housekeeping, not substantive changes.**
-
-### Cross-Reference Links in Issue Body
-
-Origin links and cross-references belong in the **issue body**, NOT in comments:
-
-```markdown
-> **Origin:** Issue #123
-> **Investigation Result:** api-agent cannot be used
-```
-
-These are reference metadata for future readers, not actionable navigation.
-
-**See `github-comments` skill for complete requirements.**
-
----
+______________________________________________________________________
 
 ## Critical Violation: Sub-issue Structure Bypass — Multi-task Specs
 
 **⚠️ Implementing a multi-task spec without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
 
-When implementing a multi-task spec (one with multiple phases/tasks):
-
-1. **First**: Call `github_issue_read method=get_sub_issues` on the parent issue
-2. **When empty**: AUTO-CREATE sub-issues at PHASE level (see `github-sub-issues` skill)
-3. **Then**: Verify the task being implemented is linked as a sub-issue
-
 **🚫 FORBIDDEN:**
+
 - Implementing a phase that exists only as text in the parent issue body
-- Proceeding when `get_sub_issues` returns empty array for multi-task specs
+- Proceeding **to implementation** when `get_sub_issues` returns empty array for multi-task specs **without creating sub-issues first**
 - Assuming markdown checkboxes = task tracking
 - Creating step-level sub-issues instead of phase-level
 
 **✅ REQUIRED:**
+
 - Sub-issues at PHASE level, not step level
 - Each phase as separate GitHub Issue linked via `github_sub_issue_write method=add`
 - Single-task specs are exempt from sub-issue requirement
+- Auto-create sub-issues as a pre-implementation setup step when `get_sub_issues` returns empty for an approved multi-task spec
 
-**See `github-sub-issues` skill for complete workflow including:**
-- Single-task vs multi-task exemption
-- Auto-create workflow
-- Database ID requirement
-- Phase-level structure
+**The prohibition is against implementing phases without sub-issue structure, NOT against auto-creating sub-issues as a setup step.** Sub-issue creation is a tracking/setup action covered by the parent spec's authorization — no separate authorization is required.
+
+**See `github-sub-issues` skill for complete workflow including single-task vs multi-task exemption, auto-create workflow, database ID requirement, and phase-level structure.**
+
+**Note:** Sub-issue auto-creation is NOT a violation of this prohibition. Auto-creating sub-issues and then proceeding to implementation is the CORRECT workflow. The prohibition is against implementing phases while sub-issues are still missing, NOT against the auto-creation step itself.
+
+______________________________________________________________________
+
+## Critical Violation: Stopping After Single Phase in Multi-Task Spec
+
+**⚠️ Halting after completing a single phase of a multi-task spec is a CRITICAL GUIDELINE VIOLATION.**
+
+When a parent issue has sub-issues, authorization cascades to ALL sub-issues. The agent must complete ALL phases before HALTing.
+
+### 🚫 FORBIDDEN
+
+- Completing Phase 2, then HALTing expecting re-authorization for Phase 3
+- Treating sub-issues as separate authorization units
+- Asking for "approved" between phases of multi-task spec
+- Reporting completion after each phase instead of after ALL phases
+
+**See `approval-gate` skill → "Multi-Task Spec Authorization" for the complete authorization cascade workflow and enforcement matrix.**
+
+Authorization cascades to ALL sub-issues. Complete ALL phases, then report ONCE and HALT ONCE.
+
+**Exception:** User explicitly restricts authorization (e.g., "approved: Phase 2 only") → complete that phase ONLY, then HALT.
+
+## Critical Violation: Sub-issue Closure Timing — ZERO TOLERANCE
+
+**⚠️ Closing sub-issues before PR merge is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+
+- **Closing sub-issues after implementation but BEFORE PR merge**
+- **Closing sub-issues when PR is created but not merged**
+- **Manually closing sub-issues that have "Fixes #N" in PR description**
+- **Closing sub-issues without verifying PR merge via GitHub API**
+
+**See `git-workflow` skill `--task cleanup` for the complete post-merge verification workflow, sub-issue closure, and parent issue closure.**
 
 ## Critical Violation: Scope Creep — NEVER Do Things Outside the Spec
 
@@ -474,6 +440,7 @@ When implementing a multi-task spec (one with multiple phases/tasks):
 The spec defines EXACTLY what to implement. Nothing more. Nothing less.
 
 **🚫 FORBIDDEN:**
+
 - Adding "helper" functions not requested
 - Improving "nearby" code while you're there
 - Refactoring things adjacent to the change
@@ -483,574 +450,218 @@ The spec defines EXACTLY what to implement. Nothing more. Nothing less.
 - Any change not explicitly stated in the issue/PR description
 
 **If you think something ELSE should be changed:**
+
 1. STOP — do not implement it
-2. Comment on the issue noting the additional concern
-3. Wait for explicit approval before implementing anything outside the spec
+1. Comment on the issue noting the additional concern
+1. Wait for explicit approval before implementing anything outside the spec
 
 **When in doubt: ASK, don't assume.**
 
----
+______________________________________________________________________
 
 ## Critical Violation: Spec Without Investigation
 
 **⚠️ Creating a spec without completed investigation is a CRITICAL GUIDELINE VIOLATION.**
 
-Investigation MUST be completed BEFORE finalizing a spec for review.
-
 **🚫 FORBIDDEN:**
+
 - Creating specs from vague requirements without exploration
 - Skipping codebase analysis before planning
 - Finalizing specs before investigating edge cases
 - Proceeding without success criteria defined
 - Running test code against production systems during investigation
 
-**✅ REQUIRED:**
-- Investigate codebase for existing patterns and reusable components
-- Create test scripts in `./tmp/` to validate hypotheses (isolated from production)
-- Document alternatives considered with tradeoffs
-- Identify risks and mitigation strategies
-- Define testable, measurable success criteria
+**See `brainstorming` skill for investigation requirements and completion criteria.**
 
-**✅ ALLOWED During Investigation:**
-- Read production code (exploration)
-- Read production data (analysis)
-- Create and run test scripts in `./tmp/` (isolated fixtures)
-- Create isolated test fixtures (dedicated test DB/schemas)
-- Run static analysis (lint, typecheck)
-- Document findings for the spec
-
-**Investigation Completion Criteria:**
-
-Before creating a spec, the agent MUST verify:
-
-| Requirement | Evidence |
-|-------------|----------|
-| Problem understood | Clearly stated problem, context, stakeholders |
-| Codebase explored | Existing patterns, reusable components identified |
-| Hypotheses tested | Test scripts run, results documented |
-| Alternatives considered | At least 2 approaches documented with tradeoffs |
-| Risks identified | Risk assessment with mitigation strategies |
-| Success criteria defined | Testable, measurable completion criteria |
-
-See `142-planning-archive-workflow.md` → "Investigation Completion Criteria" for complete requirements.
-
----
+______________________________________________________________________
 
 ## Critical Violation: Implementing Stale or Superseded Specs
 
 **⚠️ Implementing a stale or superseded spec without revision is a CRITICAL GUIDELINE VIOLATION.**
 
-Before implementing OR revising any spec, the agent MUST check for:
+**See `github-issue-creation` skill `--task pre-creation` for the complete superseded/stale spec check procedure.**
 
-### Superseding Issues
+### If Superseding Issue Exists
 
-**When to check:** Before any implementation or revision of a spec.
+- SILENTLY HALT and report the conflict to the issue
+- Do NOT proceed with the superseded spec
+- Wait for user direction
 
-**What to check:**
-- Query all open `[SPEC]`, `[SPEC-FIX]`, and `[SPEC-ENHANCEMENT]` issues
-- Identify conflicting/overlapping objectives
-- Look for later issues that may render the active spec obsolete
-
-**If superseding issue exists:**
-1. SILENTLY HALT
-2. Report the conflict to the issue
-3. Do NOT proceed with the superseded spec
-4. Wait for user direction
-
-### Staleness from Implemented Specs
-
-**When to check:** Before any implementation or revision of a spec.
-
-**What to check:**
-- Check for merged PRs that implemented related functionality
-- Check if referenced code locations have been modified since spec creation
-- Check if referenced dependencies/libraries have changed
-- Check if the problem statement still applies (may have been fixed by another implementation)
-
-**If staleness detected:**
+### If Staleness Detected
 
 **🚫 FORBIDDEN:**
+
 - Implementing a stale spec as-is
 - Assuming "the spec is still valid" without verification
 - Skipping revision to "save time"
 
 **✅ REQUIRED:**
-1. REVISE the spec to reflect current reality:
-   - Update problem statement if context changed
-   - Update affected files/lines if code locations changed
-   - Update success criteria if requirements shifted
-   - Update dependencies if integration points changed
-2. Report the revision via comment on the issue
-3. HALT — wait for user approval before proceeding
-4. Never implement a stale spec without revision
 
-### Where to Check
+- REVISE the spec to reflect current reality
+- Report the revision via comment on the issue
+- HALT — wait for user approval before proceeding
+- Never implement a stale spec without revision
 
-This check is REQUIRED in these workflows:
-
-| Workflow | Guideline |
-|----------|-----------|
-| Before implementing any spec | `010-approval-gate.md` |
-| When listing available specs | `140-planning-spec-creation.md` |
-| Before revising a spec | `130-authority-source.md` |
-
----
+______________________________________________________________________
 
 ## Auditor Skills Enforcement
 
-**⚠️ MANDATORY AUDIT CHAIN: ALL auditor skills must run in order. NO SKIPPING.**
+**⚠️ MANDATORY AUDIT: Run `spec-auditor` orchestrator when auditing specs. NO SKIPPING.**
 
-### When to Run Auditor Skills
+**Trigger words that require the auditor:** "audit this spec", "review this issue", "revisit this task", "check this [SPEC]", "validate the spec", "audit the issue", or any request involving spec quality or structure.
 
-**Trigger words that require ALL skills in order:**
-- "audit this spec"
-- "review this issue"
-- "revisit this task"
-- "check this [SPEC]"
-- "validate the spec"
-- "audit the issue"
-- Any request involving spec quality or structure
-
-**CRITICAL: If you run ONE auditor, you MUST run BOTH auditors in order.**
-
-### Complete Audit Chain
-
-| Order | Skill | Purpose |
-|-------|-------|---------|
-| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
-| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
-
-### Guideline Auditor (`guideline-auditor`)
-
-Invoked with: `/skill guideline-auditor`
-
-**Purpose:** Audit `.opencode/guidelines/` for gaps, conflicts, and LLM compliance.
-
-**When to invoke:**
-- Before approving guideline changes
-- Periodic maintenance to check for guideline drift
-- Post-implementation verification for guideline changes
-
-**Output:** Creates audit log in `./tmp/audit-YYYYMMDD.md`
-
-### Spec Auditor (`spec-auditor`)
-
-Invoked with: `/skill spec-auditor --issue N`
-
-**Purpose:** Audit GitHub Issue `[SPEC]` specs against master spec standards.
-
-**When to invoke:**
-- After running `concern-separation-auditor --issue N`
-- When "audit/review/revisit" keywords used
-- Before approving spec implementation
-- During spec review for quality
-- Periodic audit to check for spec drift
-
-**Output:** Posts findings to GitHub Issue, creates audit log in `./tmp/audit-spec-YYYYMMDD.md`
-
-### Concern Separation Auditor (`concern-separation-auditor`)
-
-Invoked with: `/skill concern-separation-auditor --issue N`
-
-**Purpose:** Audit spec phase structure for concern separation, deployment independence, and risk isolation.
-
-**When to invoke:**
-- FIRST before spec-auditor (mandatory order)
-- When "audit/review/revisit" keywords used
-- When creating new specs
-- Before approving spec implementation
-
-**Output:** Posts findings to GitHub Issue
+**See `spec-auditor` skill for the complete orchestration model, baseline subtasks, conditional subtasks, and invocation commands.**
 
 ### Enforcement Flow
 
 | Trigger | Action |
 |---------|--------|
-| Spec created | REQUIRED: Run BOTH auditors in order (concern-separation FIRST, then spec-auditor) |
-| "Audit/review/revisit this spec" | REQUIRED: Run BOTH auditors in order |
-| Before implementation approval | REQUIRED: Verify both auditors passed |
+| Spec created | REQUIRED: Invoke `spec-auditor --issue N` |
+| "Audit/review/revisit this spec" | REQUIRED: Invoke `spec-auditor --issue N` |
+| Before implementation approval | REQUIRED: Verify spec-auditor found no critical issues |
 | Guideline change proposed | Optional: `/skill guideline-auditor` |
-| Post-implementation | Optional: Re-run auditors to verify no new issues |
+| Post-implementation | Optional: Re-run spec-auditor to verify no new issues |
 
----
-
-## Critical Violation: Bypassing Skills At Workflow Points
-
-**⚠️ Bypassing MANDATORY skill invocations is a CRITICAL GUIDELINE VIOLATION.**
-
-Skills are MANDATORY enforcement points - not optional helpers.
-
-### 🚫 FORBIDDEN - NO BYPASS
-
-| Workflow Point | Required Skill Invocation | What Agent MUST NOT Do |
-|----------------|--------------------------|------------------------|
-| Before branch creation | `/skill git-workflow --task pre-work` | Manually run `git checkout -b` |
-| After implementation | `/skill git-workflow --task review-prep` | Stop after reading files, skip workflow |
-| After "create a PR" | `/skill git-workflow --task pr-creation` | Manually squash/push/create PR |
-| After "PR merged" | `/skill git-workflow --task cleanup` | Manually close issues/delete branches |
-
-### ✅ REQUIRED WORKFLOW
-
-**Before ANY git operation:**
-
-1. **STOP** - Do NOT run git commands manually
-2. **INVOKE** the appropriate skill task
-3. **LET THE SKILL** handle all git operations
-4. **FOLLOW** what the skill does/outputs
-
-**Example - Creating a Branch:**
-
-```
-❌ WRONG: git checkout -b spec/my-feature
-✅ RIGHT: /skill git-workflow --task pre-work
-           (skill handles: stash → verify clean → create branch)
-```
-
-**Example - After Implementation:**
-
-```
-❌ WRONG: Just stop after reading files
-✅ RIGHT: /skill git-workflow --task review-prep
-           (skill handles: commit → push → compare URL → HALT)
-```
-
-### Why Skills Are Mandatory
-
-Skills enforce:
-- Correct git workflow sequence
-- Stash before branch creation
-- Squash before PR
-- GitHub API verification before issue closure
-- Consistent executive summary format
-- Co-author trailers in commits
-
-**Manual operations bypass these enforcements → CRITICAL VIOLATION.**
-
----
-
-## Critical Violation: Skipping Review-Prep After Implementation
-
-**⚠️ Failing to invoke review-prep after implementation completes is a CRITICAL GUIDELINE VIOLATION.**
-
-After implementation completes, the agent MUST automatically:
-1. **Invoke `/skill git-workflow --task review-prep`** (MANDATORY - NO EXCEPTIONS)
-2. The skill handles: commit → push → generate compare URL → post to issue AND chat → HALT
-3. **NO silent HALT without completing the workflow**
-
-**🚫 FORBIDDEN:**
-- Completing implementation and just HALTing silently
-- Skipping review-prep because "changes are trivial"
-- Skipping review-prep because "developer can use git log"
-- Skipping review-prep and asking "do you want to review?"
-- Proceeding directly to PR creation without compare URL
-- Reporting completion without providing compare URL
-- **Stopping after reading files/loading skills without implementing**
-
-**✅ REQUIRED SEQUENCE:**
-1. Implementation completes all file changes
-2. **AUTOMATIC:** Agent invokes `/skill git-workflow --task review-prep`
-3. Skill handles: commit → push → generate compare URL → post to issue/chat → HALT
-4. Agent reports completion with executive summary
-
-**Why This Matters:**
-- Developers need visibility into ALL changes before PR creation
-- GitHub diff viewer provides superior review experience
-- Prevents accidental PRs without developer review
-- Establishes clear boundary between "implementation done" and "PR requested"
-- Compare URL is the canonical way for developers to review branch changes
-- **Silent HALT without workflow completion loses all progress tracking**
-
-**Executive Summary REQUIREMENT:**
-
-When posting completion after review-prep, the agent MUST include an executive summary:
-
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
-
-**Executive Summary Format:**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**🚫 FORBIDDEN in Completion Comments:**
-- File lists (redundant with git diff)
-- "Next" field (dialog prompt)
-- Punch-list format
-- Technical changelog (focus on impact)
-
-**See `113-git-pr-workflow.md` → "Review Phase" and `git-workflow` skill → `review-prep` task.**
-
----
-
-## Critical Violation: Skipping Review-Prep After Implementation
-
-**⚠️ Failing to invoke review-prep after implementation completes is a CRITICAL GUIDELINE VIOLATION.**
-
-After implementation completes, the agent MUST automatically:
-1. **Invoke `/skill git-workflow --task review-prep`** (MANDATORY - NO EXCEPTIONS)
-2. The skill handles: commit → push → generate compare URL → post to issue AND chat → HALT
-3. **NO silent HALT without completing the workflow**
-
-**🚫 FORBIDDEN:**
-- Completing implementation and just HALTing silently
-- Skipping review-prep because "changes are trivial"
-- Skipping review-prep because "developer can use git log"
-- Skipping review-prep and asking "do you want to review?"
-- Proceeding directly to PR creation without compare URL
-- Reporting completion without providing compare URL
-- **Stopping after reading files/loading skills without implementing**
-
-**✅ REQUIRED SEQUENCE:**
-1. Implementation completes all file changes
-2. **AUTOMATIC:** Agent invokes `/skill git-workflow --task review-prep`
-3. Skill handles: commit → push → generate compare URL → post to issue/chat → HALT
-4. Agent reports completion with executive summary
-
-**Why This Matters:**
-- Developers need visibility into ALL changes before PR creation
-- GitHub diff viewer provides superior review experience
-- Prevents accidental PRs without developer review
-- Establishes clear boundary between "implementation done" and "PR requested"
-- Compare URL is the canonical way for developers to review branch changes
-- **Silent HALT without workflow completion loses all progress tracking**
-
-**Executive Summary REQUIREMENT:**
-
-When posting completion after review-prep, the agent MUST include an executive summary:
-
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
-
-**Executive Summary Format:**
-```
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-**🚫 FORBIDDEN in Completion Comments:**
-- File lists (redundant with git diff)
-- "Next" field (dialog prompt)
-- Punch-list format
-- Technical changelog (focus on impact)
-
-**See `113-git-pr-workflow.md` → "Review Phase" and `git-workflow` skill → `review-prep` task.**
-
----
+______________________________________________________________________
 
 ## Critical Violation: Creating PRs Without Explicit Instruction
 
 **⚠️ Creating a PR without EXPLICIT developer instruction is a CRITICAL GUIDELINE VIOLATION.**
 
-PRs require the developer to say one of these EXACT phrases:
-- "create a PR"
-- "pr"
-- "make a PR"
-- "push and create PR"
-- "let's get a PR up"
+PRs require the developer to say one of these EXACT phrases: "create a PR", "make a PR", "push and create PR", "let's get a PR up".
 
 **🚫 FORBIDDEN:**
+
 - Creating a PR after "approved" or "go" — these authorize implementation ONLY
 - Creating a PR after completing implementation — completion does NOT authorize PR creation
 - Asking "Ready for a PR?" or "Should I create a PR?" — just STOP and report completion
 - **Pushing branch to remote without "create a PR" instruction** — pushing is part of PR creation, NOT implementation
 
-**✅ REQUIRED:**
-- After completing implementation: report completion concisely, then STOP
-- Wait for EXPLICIT "create a PR" instruction
-- Only then: squash, push, create PR, report URL, STOP
+**See `pr-creation-workflow` skill for the full PR timing workflow including authorization boundary, developer testing, and HALT after PR creation.**
 
-**See `pr-creation-workflow` skill for the full PR timing workflow including:**
-- Authorization boundary (what authorizes implementation vs PR)
-- Developer must test before PR
-- HALT after PR creation
+______________________________________________________________________
 
----
+## Critical Violation: Bug Discovery Does NOT Authorize Bug Fixing
 
-## Critical Violation: Manual PR Merge Confirmation (BYPASS PR WORKFLOW SKILL)
+**⚠️ Finding a bug during analysis or any other activity does NOT authorize fixing it. This is a systemic behavioral violation, not a one-off mistake.**
 
-**⚠️ Manually handling PR merge confirmation without invoking the mandatory skill is a CRITICAL GUIDELINE VIOLATION.**
+### 🚫 FORBIDDEN
 
-**🚫 FORBIDDEN:**
-- Manually verifying PR merge via `git pull` or `git status`
-- Manually closing issues after seeing "merged" in chat
-- Manually deleting branches without GitHub API verification
-- Manually cleaning up stashes or branches after PR merge
-- Running ANY git commands after user says "pr merged" or "merged"
+- Editing source code after discovering a bug — even if the fix seems trivial
+- Creating branches for bug fixes without an approved spec
+- Treating bug discovery as implicit authorization to modify code
+- Implementing "quick fixes" or "obvious corrections" discovered during other work
+- Starting implementation after reporting a bug (reporting ≠ authorization)
+- Conflating bug reporting (always appropriate) with bug fixing (requires spec + auth)
 
-**✅ REQUIRED:**
-- When user says "pr merged", "merged", or similar: **INVOKE `/skill git-workflow --task cleanup`**
-- Let the skill handle ALL post-merge operations:
-  - GitHub API verification (`github_pull_request_read method=get`)
-  - Issue closure (parent and child issues)
-  - Branch cleanup (local and remote)
-  - Stash cleanup (if applicable)
+### ✅ REQUIRED — Bug Discovery Protocol
 
-**Trigger Phrases for Mandatory Skill Invocation:**
-| User Says | Skill Task |
-|-----------|-----------|
-| "pr merged" | `/skill git-workflow --task cleanup` |
-| "merged" | `/skill git-workflow --task cleanup` |
-| "PR is merged" | `/skill git-workflow --task cleanup` |
-| "merge confirmed" | `/skill git-workflow --task cleanup` |
+1. **STOP all code changes immediately** upon discovering a bug during unrelated work
+2. **Report the bug** — create a GitHub/GitBucket issue documenting the bug
+3. **HALT** — wait for explicit `approved` or `go` before any code changes
+4. **If the bug blocks current work**: document the blocker, report it, and HALT — do not fix it
+5. **Self-correction**: If you catch yourself editing code without a spec, immediately `git checkout` the affected files and HALT
 
-**See `git-workflow` skill → `cleanup` task for complete post-merge workflow.**
+### Bug Discovery Authorization Matrix
 
----
+| Action | Requires Spec? | Requires Auth? | Permitted Without Auth? |
+|--------|---------------|----------------|--------------------------|
+| Create bug report issue | NO | NO | ✅ YES — always permitted |
+| Analyze bug (read-only) | NO | NO | ✅ YES — read-only only |
+| Edit source code to fix bug | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+| Create branch for bug fix | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+| Commit bug fix code | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+| Create PR for bug fix | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+
+### Self-Correction Protocol
+
+When the agent catches itself about to edit code without an approved spec:
+
+1. **STOP** — do not proceed with the edit
+2. **REVERT** — `git checkout -- <affected-files>` to undo any unauthorized changes
+3. **REPORT** — document what happened as a factual observation
+4. **HALT** — wait for explicit authorization before proceeding
+
+### Why This Matters
+
+| Scenario | Consequence |
+|----------|-------------|
+| Fix bug without spec | Unauthorized code changes pollute branch |
+| "Quick fix" during other work | Scope creep, introduces new bugs |
+| Treat reporting as authorization | Wastes human time reverting changes |
+| Skip spec for "obvious" fixes | No documentation, no review, no traceability |
+| Continue after bug discovery | Branch contamination, lost work |
+
+**See `approval-gate` skill for the complete discovery protocol and authorization boundaries, including the analysis → implementation authorization decision table.**
+
+______________________________________________________________________
 
 ## Critical Violation: Closing Issues Before PR Merge
 
 **⚠️ Closing issues BEFORE the PR is merged is a CRITICAL GUIDELINE VIOLATION.**
 
 **🚫 FORBIDDEN:**
+
 - Closing issues immediately after implementation
 - Closing issues when PR is created but not merged
 - Closing parent issues while child issues remain open
 - Closing issues without explicit "merge confirmed" from human
 - Closing issues based on `git pull` fast-forward alone (MUST use GitHub API)
 
-**✅ REQUIRED SEQUENCE:**
-1. Complete implementation → Create PR → Report PR URL → **HALT**
-2. Wait for human to review and merge PR
-3. User confirms "pr merged" → **Call `github_pull_request_read method=get` to verify**
-4. Verify `merged_at` timestamp or `state: "closed"` with merge
-5. ONLY after API confirms merge → Close issues
-6. Post closing summary comment
+**See `git-workflow` skill `--task cleanup` for complete post-merge verification.**
 
-**Why `git pull` is insufficient:**
-- Local fast-forward shows `git pull` succeeded
-- Does NOT verify the PR merge state in GitHub
-- Agent could close issue before human actually merged
+______________________________________________________________________
 
-**See `124-github-archive-workflow.md` for complete issue closure timing.**
-**See `git-workflow` skill → "Phase 4" section for post-merge workflow including issue closure.**
+## Critical Violation: Skipping PR for Documentation/Guideline Changes
 
----
+**⚠️ Documentation and guideline changes are NOT exempt from the PR workflow.**
+
+**🚫 FORBIDDEN:**
+
+- Treating documentation changes as "minor" and closing issues directly
+- Skipping review-prep for `.md` file changes
+- Closing issues without PR when guidelines, docs, or configs were modified
+- Assuming "no code changes" allows skipping PR workflow
+
+**✅ REQUIRED:**
+
+- **ALL file modifications** (code, docs, guidelines, configs) require full PR workflow
+- Branch-first rule applies to ALL file types
+- review-prep is MANDATORY before any issue closure
+- PR merge verification is required before closing ANY issue
+
+| File Type | PR Required? | Reason |
+|-----------|--------------|--------|
+| Code (`.py`, `.java`, etc.) | ✅ YES | Code changes |
+| Guidelines (`.opencode/`) | ✅ YES | Changes to rules |
+| Documentation (`docs/`, `*.md`) | ✅ YES | Changes to docs |
+| Config (`*.toml`, `*.yaml`) | ✅ YES | Config changes |
+| **NO files modified** | ❌ NO | Already implemented |
+
+**The only exception is when ZERO files were modified.**
+
+______________________________________________________________________
 
 ## Critical Violation: Parent/Child Issue Closure
 
-**⚠️ Closing a parent issue while child issues remain open, or assuming parent status reflects sub-issue completion, is a CRITICAL GUIDELINE VIOLATION.**
-
-When working with parent/child issue hierarchies (specs with sub-issues):
+**⚠️ Closing a parent issue while child issues remain open is a CRITICAL GUIDELINE VIOLATION.**
 
 **🚫 FORBIDDEN:**
+
 - Closing a parent `[SPEC]` issue when ANY child `[Task]` issues are still open
 - Closing a parent after PR merge if other child tasks are incomplete
 - Assuming "the PR covers everything" when sub-issues exist
-- **Assuming parent status reflects sub-issue status — ALWAYS query sub-issues**
-- **Closing ANY issue without first calling `github_issue_read(method="get_sub_issues")`**
 
-**⚠️ CRITICAL: Step 1 is MANDATORY before closing ANY issue - parent or child. No exceptions.**
+**✅ REQUIRED:**
 
-### MANDATORY Pre-Close Checklist (NO EXCEPTIONS)
+- Only close the child issue that corresponds to the merged PR
+- Parent issue remains open until ALL child issues are closed
+- After closing a child: check if other children remain open
+- If all children are closed, then (and only then) close the parent
 
-Before closing ANY issue (parent OR child), the agent MUST complete this checklist in order:
+**See `git-workflow` skill `--task cleanup` for the complete parent/child closure workflow and sub-issue double-check procedure.**
 
-| Step | Action | MUST Result |
-|------|--------|-------------|
-| **1** | Query sub-issues: `github_issue_read(method="get_sub_issues", issue_number=N)` | `[]` empty or verified all closed |
-| **2** | Verify PR merge state: `github_pull_request_read(method="get", pullNumber=PR)` | `merged_at` field exists |
-| **3** | Close child issues | Only children addressed by merged PR |
-| **4** | Re-query parent sub-issues | Verify all children now closed |
-| **5** | Close parent | Only if ALL children closed |
-
-**If ANY step fails → DO NOT CLOSE the issue.**
-
-### Example: Parent Closure Workflow
-
-```python
-# Step 1: ALWAYS query sub-issues FIRST (MANDATORY)
-children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
-
-if children:
-    # Parent with sub-issues - must verify all children closed
-    open_children = [c for c in children if c.state == "open"]
-    if open_children:
-        # BLOCK: Cannot close parent with open children
-        post_warning_comment(parent_issue, open_children)
-        return  # DO NOT CLOSE
-    
-# Step 2: Verify PR merge
-pr = github_pull_request_read(method="get", pullNumber=pr_number)
-if not pr.get("merged_at"):
-    return  # DO NOT CLOSE - PR not merged
-
-# Steps 3-5: Proceed with closure only after all checks pass
-close_issue_with_summary(parent_issue)
-```
-
-### Correct Workflow
-
-| Step | Action | Issues Affected |
-|------|--------|-----------------|
-| PR merged for child task | Close corresponding child issue | Child issue only |
-| Check remaining children | Verify all children closed | No action yet |
-| All children closed? | Close parent with summary | Parent issue |
-
-### Example
-
-```
-SPEC #100 (parent)
-├── Task #101: Phase 1 - Database schema
-├── Task #102: Phase 2 - API endpoints
-└── Task #103: Phase 3 - UI components
-
-PR merges for Phase 1 → Close #101 ONLY
-#100 remains open (children #102, #103 pending)
-
-Later, PR merges for Phase 2 → Close #102 ONLY
-#100 remains open (child #103 pending)
-
-Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
-```
-
-### Exception: All Children Completed
-
-**When ALL child issues are completed by a single PR merge:**
-
-1. Close the child issue corresponding to the PR
-2. **ALSO close the parent issue** (all children are now complete)
-3. Add summary comment to the parent explaining all work is complete
-
-**Example:** If PR #150 fixes both #102 and #103 (the last remaining children), close BOTH child issues AND the parent #100 after merge.
-
-### Why This Matters
-
-- Parent issues track overall progress across all phases
-- Premature parent closure loses visibility into remaining work
-- Stakeholders need to see open issues for incomplete work
-- GitHub sub-issue view shows which children remain
-- **The MANDATORY sub-issue query prevents violations**
-
-### Sub-Issue Double-Check (MANDATORY)
-
-**After closing child issues addressed by PR, ALWAYS verify remaining sub-issues before closing parent.**
-
-**The Problem:**
-- Single PR may address multiple sub-issues
-- Agent may close sub-issues prematurely (before PR merge)
-- Agent may forget to close sub-issues after PR merge
-- Parent gets closed while children remain open
-
-**See `git-workflow` skill → "Sub-Issue Double-Check" section and `124-github-archive-workflow.md` → "Sub-Issue Double-Check" section for complete workflow.**
-
----
+______________________________________________________________________
 
 ## Critical Violation: Deleting Branches/Stashes Improperly
 
@@ -1059,6 +670,7 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 **MERGED branches must be deleted IMMEDIATELY after merge confirmation.**
 
 **🚫 FORBIDDEN:**
+
 - `git branch -D <branch>` on unmerged branches without explicit request
 - `git stash drop` without explicit request
 - Preserving merged branches "just in case"
@@ -1066,12 +678,10 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 - Deleting `main` or other protected branches
 
 **✅ REQUIRED:**
+
 - **MERGED branches**: Delete IMMEDIATELY after merge confirmation — no asking, no waiting
 - **UNMERGED branches with work**: Preserve until explicitly asked to delete
 - **Stashes**: Preserve until explicitly asked to delete
-- After PR creation: report URL, wait for merge confirmation, then DELETE the branch
-
-### Quick Reference
 
 | Branch Status | Action |
 |---------------|--------|
@@ -1080,7 +690,7 @@ Later, PR merges for Phase 3 → Close #103 AND #100 (all children done)
 | Stashes | **PRESERVE** — wait for explicit delete request |
 | `main` branch | **NEVER DELETE** |
 
----
+______________________________________________________________________
 
 ## Critical: Engineering Mindset Required
 
@@ -1094,15 +704,6 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 2. **Design Before Implementing** — Document approach and obtain approval before coding
 3. **Verify Before Declaring Complete** — Run tests, check edge cases, validate success criteria
 4. **Communicate Changes** — Post comments when changes occur (NOT when creating issues)
-
-### Requirements Analysis Mandatory
-
-Every specification MUST include:
-- Problem definition with context and stakeholders
-- Constraints, assumptions, and success criteria
-- Edge cases identified
-- Dependencies and integrations affected
-- Risk assessment
 
 ### No Feature Creep
 
@@ -1118,125 +719,6 @@ Every specification MUST include:
 - Wait for clear "approved" or "go" before starting
 - If unclear, ask — do not assume
 
-### WIP Commit Before HALT (MANDATORY)
+______________________________________________________________________
 
-**CRITICAL: Work-in-progress commits MUST be made before ANY HALT to prevent data loss.**
-
-When implementation halts (for ANY reason - awaiting approval, awaiting clarification, error, session end), uncommitted changes are at risk from:
-- Session crashes
-- Context window exhaustion
-- Developer needs to switch branches
-- Machine restarts
-
-**✅ REQUIRED BEFORE ANY HALT:**
-
-```bash
-git status
-# If changes exist:
-git add -A
-git commit -m "WIP: Phase N - <description>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-    --trailer "Co-authored-by: <Human-Name> <human-email>"
-```
-
-**🚫 FORBIDDEN:**
-- HALTing without committing uncommitted changes
-- Leaving working tree dirty before HALT
-- "Waiting" without preserving work in progress
-
-**✅ WIP Commit Characteristics:**
-- Prefix: `WIP:` for easy identification
-- Phase: Include phase number for context
-- Description: Brief description of work in progress
-- Trailers: Same co-author trailers as full commits
-- Squashable: Can be amended later with subsequent work
-
-**See `111-git-commit-workflow.md` → "WIP Commit Before HALT" section for complete workflow.**
-
-## Critical Violation: Implementing Without Documentation Verification
-
-**⚠️ Implementing code without verifying against live documentation is a CRITICAL GUIDELINE VIOLATION.**
-
-### 🚫 FORBIDDEN
-- Implementing API calls without verifying parameter names from official docs
-- Using environment variables without confirming correct names from config files
-- Guessing function signatures from memory or similar libraries
-- Using outdated blog posts/tutorials instead of official documentation
-
-### ✅ REQUIRED
-- **ALWAYS verify API signatures before implementing**
-- Check official documentation for current API usage
-- Use `srclight_get_signature` or `pycharm_get_symbol_info` for function signatures
-- Read source code and type hints when docs unavailable
-- Confirm environment variable names from `.env.example` or config
-
-### Why This Matters
-- Assumption-based implementations lead to broken functionality
-- API changes between library versions cause silent failures
-- Incorrect parameter names waste debugging time
-- Outdated patterns accumulate technical debt
-
----
-
-## Critical Violation: Auto-Issue Creation for Repeated Workflow Violations
-
-**⚠️ Repeated bypass of mandatory workflows is a CRITICAL GUIDELINE VIOLATION that MUST be tracked.**
-
-When the agent bypasses mandatory workflow steps (review-prep, PR creation, issue closure), an issue MUST be created to track the violation.
-
-### What Triggers Auto-Issue Creation
-
-| Violation | When to Create Issue |
-|-----------|----------------------|
-| Skipping review-prep | Agent HALTs without pushing branch, generating compare URL, or posting to issue/chat |
-| Bypassing PR workflow skill | Agent manually runs git commands instead of invoking skill |
-| PR creation without instruction | Agent creates PR without explicit "create a PR" from user |
-| Closing issues before PR merge | Agent closes issues without verifying merge via GitHub API |
-
-### Auto-Issue Workflow
-
-**When violation detected:**
-
-1. Create issue: `[SPEC-FIX] Review-prep workflow bypass` (or relevant violation type)
-2. Document which implementation phase was affected
-3. Add `needs-approval` label
-4. Post comment explaining:
-   - What violation occurred
-   - Which files/workflow were affected
-   - What correct workflow should have been followed
-
-### Issue Template for Violations
-
-```markdown
-# [SPEC-FIX] <Violation Type>
-
-**Violation:** <What occurred>
-
-**Affected Files:**
-- <File paths that were modified without proper workflow>
-
-**Expected Workflow:**
-1. <Step 1 of correct workflow>
-2. <Step 2 of correct workflow>
-...
-
-**What Happened:**
-<Description of how workflow was bypassed>
-
-**Correction Required:**
-- <What needs to be verified/fixed>
-
----
-🤖 ❌ Violation detected by <AgentName> (<ModelID>)
-```
-
-### Why This Matters
-
-- Violations indicate gaps in workflow understanding or enforcement
-- Tracking violations helps identify patterns
-- Creates accountability for workflow compliance
-- Enables systematic improvement of guidelines
-
----
-
-**Search guidelines:** Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant guidelines.
+**Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.
