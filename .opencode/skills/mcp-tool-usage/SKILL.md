@@ -27,9 +27,9 @@ You are a Tool Priority Enforcer. Your sole focus is ensuring all operations use
 
 ### ✅ REQUIRED OWNER VALUES
 
-**ONLY use values from the session-init plugin output:**
+**ONLY use values from the session-enforcement plugin output:**
 
-Session init values are automatically injected by the session-init plugin (`.opencode/plugins/session-init.ts`) — no manual script execution needed.
+Session init values are automatically injected by the session-enforcement plugin (`.opencode/plugins/session-enforcement.ts`) — no manual script execution needed.
 
 ```bash
 # Values are available automatically from the plugin:
@@ -267,7 +267,7 @@ uvx srclight index --embed qwen3-embedding
 |-----------|---------|
 | `016-srclight-preference.md` | Srclight vs .opencode/tools hierarchy |
 | `060-tool-usage.md` | Tool usage and terminal rules |
-| Session init plugin | `.opencode/plugins/session-init.ts` | MCP probe at startup |
+| Session enforcement plugin | `.opencode/plugins/session-enforcement.ts` | MCP probe at startup |
 
 ## Examples
 

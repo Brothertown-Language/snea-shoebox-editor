@@ -14,11 +14,12 @@ The AI agent must determine its identity from the system prompt on EVERY session
 
 ## Session Init (Automatic)
 
-Session initialization is handled automatically by the `session-init` OpenCode plugin (`.opencode/plugins/session-init.ts`). The plugin:
+Session initialization and skill enforcement are handled automatically by the `session-enforcement` OpenCode plugin (`.opencode/plugins/session-enforcement.ts`). The plugin:
 
 1. Runs `.opencode/scripts/session_init.py` once per session (cached for 5 minutes)
-2. Injects the output into the LLM system context via `experimental.chat.system.transform`
+2. Injects session context into the LLM system prompt via `experimental.chat.system.transform`
 3. Sets key-value pairs as shell environment variables via `shell.env`
+4. Injects skill enforcement content into the first user message via `experimental.chat.messages.transform`, ensuring agents invoke mandatory workflow skills
 
 **No manual step is required.** The script outputs all values as `KEY=value` pairs — extract them directly, no mapping or interpretation needed. Use `GIT_OWNER` and `GIT_REPO` for EVERY API call.
 
@@ -166,7 +167,7 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 
 | Series | Category | Files |
 |--------|----------|-------|
-| 000-099 | Core Rules | critical-rules, session-init, approval-gate, go-prohibitions, scope-autonomy, tool-usage, environment |
+| 000-099 | Core Rules | critical-rules, session-enforcement, approval-gate, go-prohibitions, scope-autonomy, tool-usage, environment |
 | 200-209 | Error Handling | exception-handling, missing-data, logging-vs-raising |
 
 **Registry of migrated content**: `.opencode/.guidelines/registry.yaml` tracks content moved from guidelines to skills.

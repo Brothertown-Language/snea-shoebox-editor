@@ -663,7 +663,7 @@ pre-work → implementation → review-prep → pr-creation → cleanup
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation)
 - Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
-- Session init: `.opencode/plugins/session-init.ts` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)
+- Session init: `.opencode/plugins/session-enforcement.ts` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)
 
 ## Changelog Generation (Sub-Task Integration)
 
