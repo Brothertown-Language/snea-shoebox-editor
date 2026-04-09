@@ -12,6 +12,13 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/573-isolated-test-env
+
+- Add `.opencode/tests/with-test-home` wrapper script for isolated XDG state during opencode-cli testing
+- Refactor `.opencode/tests/test-enforcement.sh` to use with-test-home, removing PREREQUISITE session limitation
+- Add `tmp/` to `.opencode/.gitignore` to exclude test artifacts
+- Add skill enforcement test commands to AGENTS.md Build/Lint/Test table
+
 ### spec/570-context-completeness
 
 - Add `067-context-completeness.md` guideline requiring agents to read ALL comments before acting on any resource (issue, PR, discussion)

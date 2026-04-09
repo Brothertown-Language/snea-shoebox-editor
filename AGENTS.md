@@ -187,8 +187,13 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 | Dead code scan | `uvx vulture src/` | Python ONLY |
 | Markdown lint | `uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/` | Markdown ONLY |
 | Markdown format | `uvx mdformat .opencode/guidelines/ docs/` | Markdown ONLY |
+| Skill enforcement test | `bash .opencode/tests/test-enforcement.sh` | opencode-cli |
+| Isolated opencode-cli run | `bash .opencode/tests/with-test-home opencode-cli run '<message>'` | opencode-cli |
+| Clean test artifacts | `bash .opencode/tests/with-test-home --clean` | opencode-cli |
 
 **Never** use bare `python`, `python3`, or `pip`. Always prefix with `uv run` for project commands.
+
+**Isolated test environment:** The `with-test-home` wrapper isolates opencode-cli XDG state into a project-relative temporary home (`./opencode/tmp/test-home-<timestamp>`), eliminating SQLite session conflicts with the desktop app. This allows skill enforcement tests to run from within an active opencode session.
 
 ---
 
