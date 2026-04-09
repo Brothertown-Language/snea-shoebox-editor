@@ -12,6 +12,20 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/562-brainstorming-conversational-first
+
+- Redesign brainstorming skill from dimension-based exploration to conversational-first approach
+- Enforce strictly one question per message during brainstorming
+- Replace dimension-based structured output with internal mental checklist
+- Add scope decomposition before diving in for multi-subsystem requests
+- Add alternatives analysis for significant decisions only (simple fixes skip to design)
+- Make visual companion conditional (offered only when topic involves visual decisions)
+- Add spec self-review checklist before user review (placeholder scan, consistency, scope, ambiguity)
+- Add source attribution to obra/superpowers brainstorming skill
+- Add process flow diagram (Graphviz dot)
+- Add change comparison table from previous version
+- Update terminal state to invoke writing-plans
+
 ### spec/573-isolated-test-env
 
 - Add `.opencode/tests/with-test-home` wrapper script for isolated XDG state during opencode-cli testing
