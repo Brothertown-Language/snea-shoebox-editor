@@ -7,35 +7,27 @@
 # Runs opencode-cli run sequentially for each test scenario.
 # No server needed - uses standalone mode.
 #
-# PREREQUISITE: Run from a terminal with NO active opencode session.
-# Running from inside an opencode session will fail with "Session not found"
-# due to SQLite database lock contention.
+# Uses with-test-home wrapper to isolate XDG state, allowing tests to
+# run from within an active opencode desktop session without conflicts.
 #
 # Usage:  bash .opencode/tests/test-enforcement.sh
-# Output: tmp/enforcement-test-<timestamp>/results.md
+# Output: .opencode/tmp/enforcement-test-<timestamp>/results.md
 
 set -euo pipefail
 
-PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-LOGDIR="$PROJECT_DIR/tmp/enforcement-test-$(date +%Y%m%d-%H%M%S)"
+PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+LOGDIR="$PROJECT_DIR/.opencode/tmp/enforcement-test-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$LOGDIR"
 
 TIMEOUT=120
 MODEL="${ENFORCEMENT_TEST_MODEL:-ollama-cloud/glm-5.1}"
+WITH_TEST_HOME="$PROJECT_DIR/.opencode/tests/with-test-home"
 
 echo "=== Enforcement Integration Test ==="
 echo "Log dir: $LOGDIR"
 echo "Model: $MODEL"
-echo "Mode: standalone (no server)"
+echo "Mode: isolated (with-test-home wrapper)"
 echo ""
-
-# Check no active opencode session is locking the DB
-if fuser "$HOME/.local/share/opencode/opencode.db" > /dev/null 2>&1; then
-    echo "WARNING: opencode database appears locked by another process."
-    echo "         This test may fail with 'Session not found'."
-    echo "         Close any active opencode sessions and re-run."
-    echo ""
-fi
 
 # Test scenarios: name -> "prompt message"
 declare -A SCENARIOS
@@ -57,7 +49,7 @@ echo "# Enforcement Integration Test Results" > "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
 echo "Date: $(date -Iseconds)" >> "$RESULTS_FILE"
 echo "Model: $MODEL" >> "$RESULTS_FILE"
-echo "Mode: standalone" >> "$RESULTS_FILE"
+echo "Mode: isolated (with-test-home)" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
@@ -79,9 +71,9 @@ for scenario_name in bug-report create-spec simple-question implement-request; d
     echo "**Expected skill:** ${EXPECTED:-none}" >> "$RESULTS_FILE"
     echo "" >> "$RESULTS_FILE"
 
-    # Run opencode-cli in standalone mode
+    # Run opencode-cli in isolated mode via with-test-home wrapper
     # --print-logs goes to stderr, formatted output to stdout
-    timeout $TIMEOUT opencode-cli run "$MESSAGE" \
+    timeout $TIMEOUT bash "$WITH_TEST_HOME" opencode-cli run "$MESSAGE" \
         --model "$MODEL" \
         --print-logs \
         > "$SCENARIO_OUT" 2> "$SCENARIO_LOG" \
