@@ -429,7 +429,7 @@ implementation-workflow (receives context)
 
 ## Cross-References
 
-- Related skills: `git-workflow` (git ops), `approval-gate` (authorization)
+- Related skills: `git-workflow` (git ops), `approval-gate` (authorization), `subagent-driven-development` (alternative orchestration for independent tasks)
 - Related guidelines: `010-approval-gate.md`, `110-git-branch-first.md`
 - Related dispatch: `dispatch-table.yaml` (approval-gate → implementation-workflow sequence)
 
