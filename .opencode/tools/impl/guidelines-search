@@ -1,29 +1,29 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Search guideline files using BM25 ranking with optional section blocks and context lines.
-Usage: uv run python ai_bin/guidelines search <query> [--file <filename>] [--top N] [--section-names] [--section-blocks] [--context-lines N] [--minimal] [--surrounding N]
-       uv run python ai_bin/guidelines search <filename.md> <query>
+Usage: uv run python .opencode/tools/guidelines search <query> [--file <filename>] [--top N] [--section-names] [--section-blocks] [--context-lines N] [--minimal] [--surrounding N]
+       uv run python .opencode/tools/guidelines search <filename.md> <query>
 Note: Prefer 3-digit guideline filename shorthand when available (for example `041`).
       Searches recursively in subdirectories (git/, planning/, errors/, github/).
 Flags:
   --minimal          Output match line only (no context)
   --surrounding N    Alias for --context-lines N
   --context-lines N  Set context lines (default: 1)
-Examples: uv run python ai_bin/guidelines search "pyclbr"
-          uv run python ai_bin/guidelines search "grep" --file 041
-          uv run python ai_bin/guidelines search 041 "grep"
-          uv run python ai_bin/guidelines search "notebook editing" --top 10
-          uv run python ai_bin/guidelines search "pre-plan" --section-blocks
-          uv run python ai_bin/guidelines search "branch" --minimal
-          uv run python ai_bin/guidelines search "error" --surrounding 3
+Examples: uv run python .opencode/tools/guidelines search "pyclbr"
+          uv run python .opencode/tools/guidelines search "grep" --file 041
+          uv run python .opencode/tools/guidelines search 041 "grep"
+          uv run python .opencode/tools/guidelines search "notebook editing" --top 10
+          uv run python .opencode/tools/guidelines search "pre-plan" --section-blocks
+          uv run python .opencode/tools/guidelines search "branch" --minimal
+          uv run python .opencode/tools/guidelines search "error" --surrounding 3
 """
 
 from __future__ import annotations
 import os as _os
 
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     print(
-        "ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
         "Direct invocation is not permitted.",
         file=__import__("sys").stderr,
     )
@@ -33,7 +33,7 @@ import re
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
 
 DEFAULT_TOP = 15

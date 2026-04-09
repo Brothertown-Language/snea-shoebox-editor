@@ -1,17 +1,17 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Print the contents of a guideline file from .opencode/guidelines/.
-Usage: uv run python ai_bin/guidelines read <filename>
-Example: uv run python ai_bin/guidelines read 041
+Usage: uv run python .opencode/tools/guidelines read <filename>
+Example: uv run python .opencode/tools/guidelines read 041
 Note: Prefer 3-digit shorthand when available (for example `041` instead of full filename).
 """
 
 from __future__ import annotations
 import os as _os
 
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     print(
-        "ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
         "Direct invocation is not permitted.",
         file=__import__("sys").stderr,
     )
@@ -19,7 +19,7 @@ if _os.environ.get("AIBIN_DISPATCHER") != "1":
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
 SKILLS_DIR = BASE_DIR / ".opencode" / "skills"
 

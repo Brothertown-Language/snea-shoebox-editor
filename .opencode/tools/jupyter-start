@@ -2,7 +2,7 @@
 """
 DESCRIPTION: Start Jupyter server on port 18888 (XSRF disabled, no token) for notebook editing.
 
-Usage: uv run python ai_bin/jupyter-start [--help]
+Usage: uv run python .opencode/tools/jupyter-start [--help]
 
 Checks if port 18888 is already listening. If not, starts the server in the
 background and logs to tmp/jupyter.log. Prints the server URL on success.
@@ -14,7 +14,7 @@ import sys
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent  # project root
+BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
 PORT = 18888
 LOG_FILE = BASE_DIR / "tmp" / "jupyter.log"
 

@@ -283,7 +283,7 @@ optional_skills:
 development_maintenance:
   - trigger: "When tool selection matters"
     skill: "mcp-tool-usage"
-    purpose: "Five-tier tool hierarchy (opencode built-in primary, domain MCP primary, ai_bin primary, JetBrains MCP fallback, CLI last resort)"
+    purpose: "Five-tier tool hierarchy (opencode built-in primary, domain MCP primary, .opencode/tools primary, JetBrains MCP fallback, CLI last resort)"
     
   - trigger: "Working with Jupyter notebooks"
     skill: "notebook-operations"

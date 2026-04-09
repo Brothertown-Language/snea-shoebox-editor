@@ -406,7 +406,7 @@ CREATED: YYYY-MM-DD
 ## Success Criteria
 
 1. ✅ Guideline documentation updated
-2. ✅ Changes load correctly in `ai_bin/guidelines`
+2. ✅ Changes load correctly in `.opencode/tools/guidelines`
 3. ✅ All files pass linting
 
 ---
@@ -416,7 +416,7 @@ CREATED: YYYY-MM-DD
 ### Steps
 
 1. ☐ [Update guideline file]
-2. ☐ [Verify with ai_bin tools]
+2. ☐ [Verify with .opencode/tools tools]
 
 ---
 

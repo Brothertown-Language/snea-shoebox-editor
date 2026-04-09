@@ -2,14 +2,14 @@
 """
 DESCRIPTION: Check whether one or more file/directory paths exist and report EXISTS or MISSING.
 
-Usage: uv run python ai_bin/file-exists <path> [<path> ...]
+Usage: uv run python .opencode/tools/file-exists <path> [<path> ...]
 """
 from __future__ import annotations
 
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 
 
 def main() -> None:
@@ -19,7 +19,7 @@ def main() -> None:
 
     paths = [a for a in sys.argv[1:] if not a.startswith("-")]
     if not paths:
-        print("Usage: uv run python ai_bin/file-exists <path> [<path> ...]")
+        print("Usage: uv run python .opencode/tools/file-exists <path> [<path> ...]")
         sys.exit(1)
 
     all_exist = True

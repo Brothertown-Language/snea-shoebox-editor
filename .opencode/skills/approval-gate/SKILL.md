@@ -211,15 +211,24 @@ To create PR: Say 'create a PR' explicitly.
 
 **Finding a bug during analysis does NOT authorize fixing it.**
 
-| Request Type | Authorized Actions |
-|-------------|---------------------|
-| "check logs" | Read logs, report findings, HALT |
-| "analyze error" | Analyze, report root cause, HALT |
-| "why is this failing" | Investigate, report findings, HALT |
-| "check X" | Analyze X, report findings, HALT |
-| "fix this" | Create spec issue, get approval, implement |
+**This is a CRITICAL behavioral violation, not a one-off mistake. See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete rule, authorization matrix, and self-correction protocol.**
 
-**See `approval-gate` guideline `010-approval-gate.md` → "Analysis → Implementation Without Authorization" for the zero-tolerance rule.**
+### Bug Discovery ≠ Bug Fixing Authorization
+
+| Discovery Action | Authorized? | Action Required |
+|-----------------|-------------|-----------------|
+| Found a bug during analysis | ✅ YES | Create bug report issue |
+| Read-only analysis of bug | ✅ YES | Report findings |
+| Edit code to fix the bug | 🚫 NO | STOP, create spec, wait for authorization |
+| Create branch for fix | 🚫 NO | STOP, wait for authorization |
+| Commit fix code | 🚫 NO | STOP, wait for authorization |
+
+### Self-Correction When Catching Unauthorized Edits
+
+1. **STOP** — do not proceed
+2. **REVERT** — `git checkout -- <affected-files>`
+3. **REPORT** — document as factual observation
+4. **HALT** — wait for explicit authorization
 
 ## Revision Revokes Approval
 

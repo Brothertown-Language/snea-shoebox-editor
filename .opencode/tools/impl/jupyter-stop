@@ -2,15 +2,15 @@
 """
 DESCRIPTION: Stop the Jupyter server running on port 18888.
 
-Usage: uv run python ai_bin/jupyter stop [--help]
+Usage: uv run python .opencode/tools/jupyter stop [--help]
 
 Sends SIGTERM to any process listening on port 18888. Waits up to 5 seconds
 to confirm the port is released, then reports success or failure.
 """
 from __future__ import annotations
 import os as _os
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 
@@ -19,7 +19,7 @@ import sys
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # project root
 PORT = 18888
 
 

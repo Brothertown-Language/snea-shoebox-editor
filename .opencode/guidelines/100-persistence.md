@@ -50,7 +50,7 @@ Applies to `pubmed_data_3` and all new persistence code.
 - Migration versions: date-based `yyyymmddhhmmss` format in UTC. Simple increments prohibited.
 - **Migration location**: ALL schema migrations are defined inline in `src/commons/persistence/pg/schema.py` as
   `_Migration` entries in the `_MIGRATIONS` list. There is no external migrations directory. Do not search elsewhere.
-  To add a migration, generate a version timestamp with `uv run python ai_bin/schema-version` — **immediately before
+  To add a migration, generate a version timestamp with `uv run python .opencode/tools/schema-version` — **immediately before
   adding a migration, not earlier. NEVER run `schema-version` speculatively (analysis, exploration, curiosity, or as
   a side-effect of any other task that does not need a timestamp).** Then append a
   `_Migration(version=..., description=..., statements=[...])` entry to

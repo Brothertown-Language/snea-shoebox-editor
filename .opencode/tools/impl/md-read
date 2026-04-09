@@ -1,12 +1,12 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Read a section from a markdown file by header, or list all headers.
-Usage: uv run python ai_bin/md read <file.md> (--header "Header Text" [--level N] | --list) [--help]
+Usage: uv run python .opencode/tools/md read <file.md> (--header "Header Text" [--level N] | --list) [--help]
 """
 from __future__ import annotations
 import os as _os
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import re

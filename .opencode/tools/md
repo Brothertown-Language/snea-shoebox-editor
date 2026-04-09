@@ -1,8 +1,8 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: Jupyter server tools dispatcher. Usage: uv run python ai_bin/jupyter <action> [args...]
-Actions: start, stop
-Example: uv run python ai_bin/jupyter start
+DESCRIPTION: Markdown tools dispatcher. Usage: uv run python .opencode/tools/md <action> [args...]
+Actions: read, write, add, delete, new
+Example: uv run python .opencode/tools/md read <file.md> [--section <header>]
 """
 from __future__ import annotations
 import os
@@ -10,11 +10,14 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 ACTIONS = {
-    "start": "jupyter-start",
-    "stop": "jupyter-stop",
+    "read": "md-read",
+    "write": "md-write",
+    "add": "md-add",
+    "delete": "md-delete",
+    "new": "md-new",
 }
 
 
@@ -23,7 +26,7 @@ def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
         [sys.executable, str(script)] + forwarded_args,
         capture_output=True,
         text=True,
-        env={**os.environ, "AIBIN_DISPATCHER": "1"},
+        env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
     )
     if result.stdout:
         sys.stdout.write(result.stdout)
@@ -38,8 +41,14 @@ def _get_description(script_path: Path) -> str:
     import re
     try:
         text = script_path.read_text()
-        m = re.search(r'DESCRIPTION:\s*(.+)', text)
-        return m.group(1).strip() if m else ""
+        # Find all lines between the first and last triple quotes
+        m = re.search(r'"""(.*?)"""', text, re.DOTALL)
+        if m:
+            docstring = m.group(1).strip()
+            # Extract only the DESCRIPTION line
+            dm = re.search(r'DESCRIPTION:\s*(.+)', docstring)
+            return dm.group(1).strip() if dm else ""
+        return ""
     except Exception:
         return ""
 
@@ -50,16 +59,16 @@ def main() -> None:
         print(__doc__)
         print("Available actions:")
         for action, script in ACTIONS.items():
-            desc = _get_description(BASE_DIR / "impl" / script)
-            print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → ai_bin/{script}")
+            desc = _get_description(BASE_DIR / ".opencode" / "tools" / "impl" / script)
+            print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → .opencode/tools/{script}")
         print(f"CWD: {os.getcwd()}")
         sys.exit(0)
     action = args[0]
     if action not in ACTIONS:
         print(f"Error: unknown action {action!r}. Available: {', '.join(ACTIONS)}", file=sys.stderr)
         sys.exit(1)
-    script = BASE_DIR / "impl" / ACTIONS[action]
-    sys.exit(_run_action(script, args[1:], f"OK: ai_bin/jupyter {action} completed."))
+    script = BASE_DIR / ".opencode" / "tools" / "impl" / ACTIONS[action]
+    sys.exit(_run_action(script, args[1:], f"OK: .opencode/tools/md {action} completed."))
 
 
 if __name__ == "__main__":

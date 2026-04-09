@@ -1,12 +1,14 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: Delete a section (header line + body) from a markdown file by header.
-Usage: uv run python ai_bin/md delete <file.md> --header "Header Text" [--level N] [--help]
+DESCRIPTION: Replace the body of a section in a markdown file, preserving the header line.
+Usage: uv run python .opencode/tools/md write <file.md> --header "Header Text" (--content <text> | --content-file <path>) [--level N] [--help]
+WARNING: Use --content-file <path> for any content containing newlines or special characters
+         to avoid shell escaping and literal \n issues.
 """
 from __future__ import annotations
 import os as _os
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import re
@@ -23,7 +25,7 @@ def _header_text(line: str) -> str:
     return re.sub(r'^#{1,6}\s+', '', line).rstrip()
 
 
-def delete_section(lines: list[str], header: str, level: int | None) -> list[str]:
+def write_section(lines: list[str], header: str, level: int | None, new_body: str) -> list[str]:
     start = None
     target_level = None
     for i, line in enumerate(lines):
@@ -45,7 +47,9 @@ def delete_section(lines: list[str], header: str, level: int | None) -> list[str
             end = i
             break
 
-    return lines[:start] + lines[end:]
+    body_lines = [(l if l.endswith("\n") else l + "\n") for l in new_body.splitlines()] if new_body else []
+
+    return lines[:start + 1] + body_lines + lines[end:]
 
 
 def main() -> None:
@@ -61,6 +65,7 @@ def main() -> None:
 
     header: str | None = None
     level: int | None = None
+    content: str | None = None
 
     i = 1
     while i < len(args):
@@ -70,6 +75,12 @@ def main() -> None:
         elif args[i] == "--level" and i + 1 < len(args):
             level = int(args[i + 1])
             i += 2
+        elif args[i] == "--content" and i + 1 < len(args):
+            content = args[i + 1]
+            i += 2
+        elif args[i] == "--content-file" and i + 1 < len(args):
+            content = Path(args[i + 1]).read_text(encoding="utf-8")
+            i += 2
         else:
             print(f"ERROR: Unknown argument: {args[i]}", file=sys.stderr)
             sys.exit(1)
@@ -77,11 +88,14 @@ def main() -> None:
     if not header:
         print("ERROR: --header is required", file=sys.stderr)
         sys.exit(1)
+    if content is None:
+        print("ERROR: --content or --content-file is required", file=sys.stderr)
+        sys.exit(1)
 
     lines = file_path.read_text(encoding="utf-8").splitlines(keepends=True)
-    updated = delete_section(lines, header, level)
+    updated = write_section(lines, header, level, content)
     file_path.write_text("".join(updated), encoding="utf-8")
-    print(f"Deleted section: {header!r} from {file_path}")
+    print(f"Updated section: {header!r} in {file_path}")
 
 
 if __name__ == "__main__":
