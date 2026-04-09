@@ -1,6 +1,7 @@
 ---
 name: engineering-approach
-description: Use when implementing a spec to ensure understanding, design, verification, and scope discipline are followed. Triggers on: implement, build, develop, engineering checklist, design before code, verify before complete.
+description: Use when implementing a spec, or when design, verification, and scope discipline are needed. Triggers on: implement, build, develop, engineering checklist, design before code, verify before complete.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

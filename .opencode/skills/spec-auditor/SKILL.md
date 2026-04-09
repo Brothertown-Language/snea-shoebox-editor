@@ -1,6 +1,7 @@
 ---
 name: spec-auditor
-description: Use when auditing a spec for quality, structure, and completeness. The single entry point for spec auditing. Triggers on: audit spec, review spec, spec quality, validate spec, check spec, audit issue, revisit spec.
+description: Use when auditing a spec for quality, structure, or completeness. Triggers on: audit spec, review spec, spec quality, validate spec, check spec, audit issue, revisit spec.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

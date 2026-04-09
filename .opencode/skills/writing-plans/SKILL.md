@@ -1,6 +1,7 @@
 ---
 name: writing-plans
-description: Use when creating an implementation plan from an approved spec. Produces prose plans with zero placeholders. Triggers on: write plan, create plan, implementation plan, plan spec, approved plan, plan creation.
+description: Use when creating an implementation plan from an approved spec. Triggers on: write plan, create plan, implementation plan, plan spec, approved plan, plan creation.
+type: technique
 license: MIT
 compatibility: opencode
 ---

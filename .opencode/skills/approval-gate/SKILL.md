@@ -1,6 +1,7 @@
 ---
 name: approval-gate
-description: Use when user says "approved", "go", or any implementation instruction. Verifies specs exist, authorization is explicit, sub-issues structure is correct. Prevents unauthorized code changes. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label.
+description: Use when user says "approved", "go", or any implementation instruction, or when authorization needs verification. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

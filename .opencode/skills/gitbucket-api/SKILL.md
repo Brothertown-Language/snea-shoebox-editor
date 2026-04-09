@@ -1,6 +1,7 @@
 ---
 name: gitbucket-api
 description: Use when working with a GitBucket repository for API operations, issue management, or label handling. Triggers on: GitBucket, gitbucket, API call, issue creation, label, token authentication, error recovery, non-GitHub platform.
+type: reference
 license: MIT
 compatibility: opencode
 ---

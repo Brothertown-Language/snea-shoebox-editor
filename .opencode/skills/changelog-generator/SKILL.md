@@ -1,6 +1,7 @@
 ---
 name: changelog-generator
 description: Use when creating release notes, documenting changes between versions, or preparing a changelog. Triggers on: changelog, release notes, what changed, version history, commit summary, release.
+type: technique
 license: MIT
 compatibility: opencode
 ---

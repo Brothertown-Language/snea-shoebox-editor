@@ -1,6 +1,7 @@
 ---
 name: coherence-auditor
 description: Use when guidelines or skills are updated, to check consistency between rules and behavior. Triggers on: coherence, consistency, audit guidelines, skill extraction, drift detection, guideline update, skill update.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

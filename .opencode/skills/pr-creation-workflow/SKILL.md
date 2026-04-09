@@ -1,6 +1,7 @@
 ---
 name: pr-creation-workflow
-description: Use when asking about when to create a PR or whether PR creation is authorized. Defines PR timing rules and mandatory HALT. Triggers on: create PR, make PR, pull request, PR timing, when to PR, PR authorized.
+description: Use when asking about when to create a PR or whether PR creation is authorized. Triggers on: create PR, make PR, pull request, PR timing, when to PR, PR authorized.
+type: technique
 license: MIT
 compatibility: opencode
 ---

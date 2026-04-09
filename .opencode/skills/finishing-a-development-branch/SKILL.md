@@ -1,6 +1,7 @@
 ---
 name: finishing-a-development-branch
 description: Use when implementation is complete and branch needs final checks before PR. Triggers on: done, finished, ready for PR, implementation complete, branch ready, push changes, final check.
+type: technique
 license: MIT
 compatibility: opencode
 ---

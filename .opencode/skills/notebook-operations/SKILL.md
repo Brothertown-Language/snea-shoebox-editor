@@ -1,6 +1,7 @@
 ---
 name: notebook-operations
 description: Use when working with .ipynb Jupyter notebook files for reading, writing, or executing cells. Triggers on: notebook, ipynb, Jupyter, cell, execute cell, kernel, zero tolerance, forbidden operations.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

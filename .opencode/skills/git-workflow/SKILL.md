@@ -1,6 +1,7 @@
 ---
 name: git-workflow
-description: Use when creating a branch, committing changes, pushing work, or creating a PR. Automatically invoked when user approves implementation or says "create a PR". Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash.
+description: Use when creating a branch, committing changes, pushing work, or creating a PR. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

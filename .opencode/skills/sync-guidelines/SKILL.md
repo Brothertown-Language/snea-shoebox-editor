@@ -1,6 +1,7 @@
 ---
 name: sync-guidelines
 description: Use when synchronizing guidelines, skills, or tools between repositories. Triggers on: sync guidelines, cross-repo sync, guideline update, skill update, multi-repo, consistency between repos.
+type: technique
 license: MIT
 compatibility: opencode
 ---

@@ -1,6 +1,7 @@
 ---
 name: implementation-workflow
-description: Use when orchestrating implementation of an approved spec or plan. Sequences git-workflow tasks and implementation agents. Triggers on: implement, build, execute plan, start work, orchestrate, yield-back context.
+description: Use when orchestrating implementation of an approved spec or plan, or when sequencing work across multiple phases. Triggers on: implement, build, execute plan, start work, orchestrate, yield-back context.
+type: technique
 license: MIT
 compatibility: opencode
 ---

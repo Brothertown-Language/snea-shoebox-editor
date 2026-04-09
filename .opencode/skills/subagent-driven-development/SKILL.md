@@ -1,6 +1,7 @@
 ---
 name: subagent-driven-development
-description: Use when executing an approved implementation plan by dispatching fresh subagents per task with two-stage review (spec compliance then code quality). Triggers on: subagent, dispatch task, implement plan tasks, task-by-task implementation, subagent development, parallel implementation.
+description: Use when executing an approved implementation plan that benefits from task-level isolation or parallel work. Triggers on: subagent, dispatch task, implement plan tasks, task-by-task implementation, subagent development, parallel implementation.
+type: technique
 license: MIT
 compatibility: opencode
 ---
