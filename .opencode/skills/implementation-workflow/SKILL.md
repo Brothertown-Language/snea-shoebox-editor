@@ -112,6 +112,16 @@ ready_for: "implementation"
 
 ### Step 3: Invoke Implementation Subagent
 
+**⚠️ PRE-IMPLEMENTATION CHECK (CRITICAL):**
+
+Before invoking the implementation subagent, verify:
+
+1. **Bug-discovery guardrail**: Is this implementation for a bug discovered during other work? If yes, HALT — bug discovery does NOT authorize implementation. Create an issue and wait for explicit authorization.
+2. **Spec exists**: Verify the issue has a spec that was explicitly approved.
+3. **Authorization confirmed**: Verify the user said "approved" or "go" for this specific issue.
+
+If ANY check fails → HALT and report. Do NOT invoke the implementation subagent.
+
 **Context passed to subagent:**
 ```yaml
 branch: "spec/workflow-skills-integration"

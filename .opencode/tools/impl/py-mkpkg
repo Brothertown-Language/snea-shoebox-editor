@@ -1,20 +1,20 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Create a Python package (directory + __init__.py). Creates all intermediate packages too.
-Usage: uv run python ai_bin/py mkpkg <path> [<path2> ...]
-Example: uv run python ai_bin/py mkpkg src/commons/query
-         uv run python ai_bin/py mkpkg src/commons/query test/commons/query
+Usage: uv run python .opencode/tools/py mkpkg <path> [<path2> ...]
+Example: uv run python .opencode/tools/py mkpkg src/commons/query
+         uv run python .opencode/tools/py mkpkg src/commons/query test/commons/query
 """
 from __future__ import annotations
 import os as _os
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 
 def make_package(rel_path: str) -> None:

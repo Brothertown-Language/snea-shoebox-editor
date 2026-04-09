@@ -2,15 +2,15 @@
 """
 DESCRIPTION: Start Jupyter server on port 18888 (XSRF disabled, no token) for notebook editing.
 
-Usage: uv run python ai_bin/jupyter start [--help]
+Usage: uv run python .opencode/tools/jupyter start [--help]
 
 Checks if port 18888 is already listening. If not, starts the server in the
 background and logs to tmp/jupyter.log. Prints the server URL on success.
 """
 from __future__ import annotations
 import os as _os
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 
@@ -19,7 +19,7 @@ import sys
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # project root
 PORT = 18888
 LOG_FILE = BASE_DIR / "tmp" / "jupyter.log"
 

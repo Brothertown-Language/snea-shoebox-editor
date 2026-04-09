@@ -474,9 +474,56 @@ PRs require the developer to say one of these EXACT phrases: "create a PR", "mak
 
 ______________________________________________________________________
 
-## Critical Violation: Analysis → Implementation Without Authorization
+## Critical Violation: Bug Discovery Does NOT Authorize Bug Fixing
 
-**⚠️ Finding a bug during analysis does NOT authorize fixing it.**
+**⚠️ Finding a bug during analysis or any other activity does NOT authorize fixing it. This is a systemic behavioral violation, not a one-off mistake.**
+
+### 🚫 FORBIDDEN
+
+- Editing source code after discovering a bug — even if the fix seems trivial
+- Creating branches for bug fixes without an approved spec
+- Treating bug discovery as implicit authorization to modify code
+- Implementing "quick fixes" or "obvious corrections" discovered during other work
+- Starting implementation after reporting a bug (reporting ≠ authorization)
+- Conflating bug reporting (always appropriate) with bug fixing (requires spec + auth)
+
+### ✅ REQUIRED — Bug Discovery Protocol
+
+1. **STOP all code changes immediately** upon discovering a bug during unrelated work
+2. **Report the bug** — create a GitHub/GitBucket issue documenting the bug
+3. **HALT** — wait for explicit `approved` or `go` before any code changes
+4. **If the bug blocks current work**: document the blocker, report it, and HALT — do not fix it
+5. **Self-correction**: If you catch yourself editing code without a spec, immediately `git checkout` the affected files and HALT
+
+### Bug Discovery Authorization Matrix
+
+| Action | Requires Spec? | Requires Auth? | Permitted Without Auth? |
+|--------|---------------|----------------|--------------------------|
+| Create bug report issue | NO | NO | ✅ YES — always permitted |
+| Analyze bug (read-only) | NO | NO | ✅ YES — read-only only |
+| Edit source code to fix bug | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+| Create branch for bug fix | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+| Commit bug fix code | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+| Create PR for bug fix | ✅ YES | ✅ YES | 🚫 NO — NEVER |
+
+### Self-Correction Protocol
+
+When the agent catches itself about to edit code without an approved spec:
+
+1. **STOP** — do not proceed with the edit
+2. **REVERT** — `git checkout -- <affected-files>` to undo any unauthorized changes
+3. **REPORT** — document what happened as a factual observation
+4. **HALT** — wait for explicit authorization before proceeding
+
+### Why This Matters
+
+| Scenario | Consequence |
+|----------|-------------|
+| Fix bug without spec | Unauthorized code changes pollute branch |
+| "Quick fix" during other work | Scope creep, introduces new bugs |
+| Treat reporting as authorization | Wastes human time reverting changes |
+| Skip spec for "obvious" fixes | No documentation, no review, no traceability |
+| Continue after bug discovery | Branch contamination, lost work |
 
 **See `approval-gate` skill for the complete discovery protocol and authorization boundaries, including the analysis → implementation authorization decision table.**
 

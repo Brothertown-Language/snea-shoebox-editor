@@ -195,8 +195,8 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 - `src/`: Application source code
 - `test/`: Unit and integration tests
 - `docs/`: Documentation and specifications
-- `ai_bin/`: Agent utility scripts
-- `.opencode/`: Skills and guidelines
+- `.opencode/`: Skills, guidelines, and agent tools
+  - `tools/`: Agent utility scripts (guidelines, md, memory, py, jupyter, etc.)
   - `skills/`: Self-contained skills (no guideline dependencies)
   - `guidelines/`: Core zero-tolerance rules only
   - `.guidelines/registry.yaml`: Registry of migrated content

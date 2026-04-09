@@ -1,8 +1,8 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: List all agent tools in ai_bin/ with their descriptions.
+DESCRIPTION: List all agent tools in .opencode/tools/ with their descriptions.
 
-Usage: uv run python ai_bin/help
+Usage: uv run python .opencode/tools/help
 """
 from __future__ import annotations
 
@@ -11,7 +11,8 @@ import os
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
+TOOLS_DIR = Path(__file__).resolve().parent
 
 
 def get_description(script: Path) -> str:
@@ -35,15 +36,15 @@ def main() -> None:
         return
 
     scripts = sorted(
-        p for p in BASE_DIR.iterdir()
+        p for p in TOOLS_DIR.iterdir()
         if p.is_file() and not p.name.startswith(".")
     )
 
     if not scripts:
-        print("No tools found in ai_bin/.")
+        print("No tools found in .opencode/tools/.")
         return
 
-    print(f"Agent tools in ai_bin/  (run with: uv run python ai_bin/<tool>)\n")
+    print(f"Agent tools in .opencode/tools/  (run with: uv run python .opencode/tools/<tool>)\n")
     for script in scripts:
         desc = get_description(script)
         print(f"  {script.name:<24} — {desc}")

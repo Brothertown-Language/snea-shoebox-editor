@@ -122,6 +122,44 @@ After diagnosis confirms the root cause:
 - Run existing tests → confirm no regression
 - Check edge cases → confirm they're handled
 
+## Bug Discovery Guardrail (CRITICAL)
+
+**⚠️ Finding a bug during diagnosis does NOT authorize fixing it.**
+
+This skill handles diagnosis (read-only). Fixing requires separate authorization.
+
+### Authorization Check Before Fix
+
+Before applying ANY fix (`--task fix`):
+
+1. **Check authorization**: Was this bug explicitly authorized for fixing?
+   - Does an approved spec issue exist for this fix?
+   - Did the user explicitly say "approved" or "go" for this fix?
+2. **If NO authorization**: HALT immediately after diagnosis
+   - Report findings to the bug issue
+   - Do NOT apply any code changes
+   - Wait for explicit authorization
+
+### Bug Discovery During Other Work
+
+When the `diagnose` task is triggered as a side-effect of other work (not an explicit "debug this" request):
+
+1. **STOP all code changes** — diagnosis is read-only
+2. **Complete diagnosis** — identify root cause
+3. **Create bug report** — file a GitHub/GitBucket issue
+4. **HALT** — do NOT proceed to `--task fix` without explicit authorization
+
+### Self-Correction Protocol
+
+If the agent catches itself about to edit code without an approved spec:
+
+1. **STOP** — do not proceed with the edit
+2. **REVERT** — `git checkout -- <affected-files>` to undo unauthorized changes
+3. **REPORT** — document what happened as a factual observation
+4. **HALT** — wait for explicit authorization
+
+**See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete authorization matrix.**
+
 ## Enforcement Mechanism
 
 **⚠️ CRITICAL: Debugging MUST be systematic — no random code changes.**

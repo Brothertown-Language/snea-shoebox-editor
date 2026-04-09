@@ -9,7 +9,7 @@
 ```
 TIER 1 — PRIMARY: opencode built-in tools (read/write/edit/glob/grep)
 TIER 2 — PRIMARY: Domain MCP (srclight, the-notebook-mcp, GitHub MCP)
-TIER 3 — PRIMARY: ai_bin/ (guidelines, md, memory, py ls/mkpkg)
+TIER 3 — PRIMARY: .opencode/tools/ (guidelines, md, memory, py ls/mkpkg)
 TIER 4 — FALLBACK: JetBrains MCP (pycharm_*) — only for unique capabilities
 TIER 5 — LAST RESORT: Direct CLI (bash)
 
@@ -24,10 +24,10 @@ ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance,
 ## 1. Guidelines Lookup
 
 ### ✅ ALWAYS DO
-- **Reading or searching guideline files MUST use `uv run python ai_bin/guidelines`** — never raw `open`, `cat`, or `grep` on `.opencode/guidelines/` files.
-- `uv run python ai_bin/guidelines read <filename>` — print a single guideline file.
-- `uv run python ai_bin/guidelines search <term>` — search all guideline files for a term.
-- `uv run python ai_bin/guidelines search <term> --file <filename>` — search within one file.
+- **Reading or searching guideline files MUST use `uv run python .opencode/tools/guidelines`** — never raw `open`, `cat`, or `grep` on `.opencode/guidelines/` files.
+- `uv run python .opencode/tools/guidelines read <filename>` — print a single guideline file.
+- `uv run python .opencode/tools/guidelines search <term>` — search all guideline files for a term.
+- `uv run python .opencode/tools/guidelines search <term> --file <filename>` — search within one file.
 
 ### ⚠️ ASK FIRST
 - Significant edits to core guideline files.
@@ -47,7 +47,7 @@ ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance,
 ### ✅ ALWAYS DO
 - All temporary scripts and output files MUST be written ONLY to `./tmp/` (project root). NO OTHER FOLDERS OR PATHS ARE PERMITTED.
 - Create the directory if needed: `mkdir -p ./tmp`.
-- **Mandatory pre-submit root cleanliness check:** Before calling `submit`, run `uv run python ai_bin/file-exists .output.txt` and confirm it is MISSING. If it exists, move it to `./tmp/.output.txt` immediately.
+- **Mandatory pre-submit root cleanliness check:** Before calling `submit`, run `uv run python .opencode/tools/file-exists .output.txt` and confirm it is MISSING. If it exists, move it to `./tmp/.output.txt` immediately.
 - **ALWAYS clean up temp files after modification tasks are complete.**
 ### 🚫 NEVER DO
 - **ZERO TOLERANCE — NEVER use or access any other folder (e.g., `/tmp/`, `.tmp/`, etc.) for any reason.** Only `./tmp/` is permitted.

@@ -1,7 +1,7 @@
 #!/usr/bin/env -S uv run python
 """
 DESCRIPTION: Print current UTC datetime as YYYYMMDDHHMMSS. ONLY run when explicitly instructed to create a migration. NEVER run speculatively.
-Usage: uv run python ai_bin/schema-version
+Usage: uv run python .opencode/tools/schema-version
 
 Use this value as the VERSION constant when writing a new migration script.
 Never copy a version number from memory or a previous migration — always run

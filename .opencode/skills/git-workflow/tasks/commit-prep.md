@@ -140,7 +140,7 @@ Commits occur during the PR creation workflow, not as a separate step:
 ### ✅ ALWAYS DO
 
 - To inspect a file at a historical commit: `git show <ref>:<path> > ./tmp/historical_file.ext`
-- Process the saved file with appropriate `ai_bin/` or IDE tool
+- Process the saved file with appropriate `.opencode/tools/` or IDE tool
 
 ### 🚫 NEVER DO
 

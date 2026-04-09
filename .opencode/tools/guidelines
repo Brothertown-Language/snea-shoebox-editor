@@ -1,8 +1,8 @@
 #!/usr/bin/env -S uv run python
 """
-DESCRIPTION: Guidelines tools dispatcher. Usage: uv run python ai_bin/guidelines <action> [args...]
+DESCRIPTION: Guidelines tools dispatcher. Usage: uv run python .opencode/tools/guidelines <action> [args...]
 Actions: read, load, list, show, search, edit
-Example: uv run python ai_bin/guidelines search <term>
+Example: uv run python .opencode/tools/guidelines search <term>
 """
 from __future__ import annotations
 import os
@@ -10,7 +10,7 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 ACTIONS = {
     "read": "guidelines-read",
@@ -31,7 +31,7 @@ def _suggest_search_for_unknown_action(action: str, rest: list[str]) -> str | No
     query = " ".join(query_parts).strip()
     if not query:
         return None
-    return f'Hint: did you mean `uv run python ai_bin/guidelines search "{query}"`?'
+    return f'Hint: did you mean `uv run python .opencode/tools/guidelines search "{query}"`?'
 
 
 def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
@@ -39,7 +39,7 @@ def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
         [sys.executable, str(script)] + forwarded_args,
         capture_output=True,
         text=True,
-        env={**os.environ, "AIBIN_DISPATCHER": "1"},
+        env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
     )
     if result.stdout:
         sys.stdout.write(result.stdout)
@@ -66,8 +66,8 @@ def main() -> None:
         print(__doc__)
         print("Available actions:")
         for action, script in ACTIONS.items():
-            desc = _get_description(BASE_DIR / "impl" / script)
-            print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → ai_bin/{script}")
+            desc = _get_description(BASE_DIR / ".opencode" / "tools" / "impl" / script)
+            print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → .opencode/tools/{script}")
         print(f"CWD: {os.getcwd()}")
         sys.exit(0)
     action = args[0]
@@ -77,8 +77,8 @@ def main() -> None:
         if suggestion:
             print(suggestion, file=sys.stderr)
         sys.exit(1)
-    script = BASE_DIR / "impl" / ACTIONS[action]
-    sys.exit(_run_action(script, args[1:], f"OK: ai_bin/guidelines {action} completed."))
+    script = BASE_DIR / ".opencode" / "tools" / "impl" / ACTIONS[action]
+    sys.exit(_run_action(script, args[1:], f"OK: .opencode/tools/guidelines {action} completed."))
 
 
 if __name__ == "__main__":

@@ -2,21 +2,21 @@
 """
 DESCRIPTION: Update a single key: value line in .opencode/memory.md.
 If the key exists, its line is replaced. If not, it is appended to the matching section.
-Usage: uv run python ai_bin/memory update <section> <key> (<value> | --value-file <path>)
+Usage: uv run python .opencode/tools/memory update <section> <key> (<value> | --value-file <path>)
 WARNING: Use --value-file <path> for complex text to avoid shell escaping issues.
 Sections: project_context, key_symbols, persistent_notes, session_state
-Example: uv run python ai_bin/memory update session_state task "refine topic seeds"
+Example: uv run python .opencode/tools/memory update session_state task "refine topic seeds"
 """
 from __future__ import annotations
 import os as _os
-if _os.environ.get("AIBIN_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python ai_bin/nb ...). "
+if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import sys
 from pathlib import Path
 
-PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
+PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 MEMORY_FILE = PROJECT_ROOT / ".opencode" / "memory.md"
 
 SECTION_HEADERS = {

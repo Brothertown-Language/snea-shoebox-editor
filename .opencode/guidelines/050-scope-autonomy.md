@@ -37,6 +37,7 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
   - Create PRs
   - Implement fixes
 - **NEVER treat analysis as authorization.** "Check X" = analyze and report, NOT "fix X".
+- **NEVER fix bugs discovered during other work without an approved spec.** This is a CRITICAL violation regardless of how trivial the fix seems. See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing".
 
 ### Analysis vs Implementation Table
 
@@ -48,11 +49,16 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 | "fix this" | Create spec, get approval, implement |
 | "can you check X" | Analyze X, report findings, HALT |
 
-**Discovery Protocol:**
-1. User requests analysis → Perform analysis ONLY
-2. Report findings (bugs, errors, issues) as factual observations
-3. HALT and wait for explicit authorization
-4. If user wants fix → Create spec issue, get approval, then implement
+### Bug Discovery Self-Correction
+
+If you catch yourself about to edit code to fix a bug discovered during other work:
+
+1. **STOP** — do not proceed with the edit
+2. **REVERT** — `git checkout -- <affected-files>` to undo any unauthorized changes
+3. **REPORT** — create a GitHub/GitBucket issue for the bug
+4. **HALT** — wait for explicit authorization before any code changes
+
+**This applies even when the fix seems trivial or obvious. No exceptions.**
 
 ## 4. Q&A and Feedback
 

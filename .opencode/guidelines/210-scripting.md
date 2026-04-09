@@ -35,7 +35,7 @@ Every script/notebook MUST include root resolution:
 - `nbformat` direct access
 - Jupyter Server REST API
 - Any file tool (`read`/`edit`/`write`) on `.ipynb` files
-- `ai_bin/nb` (removed — use `the-notebook-mcp` exclusively)
+- `.opencode/tools/nb` (removed — use `the-notebook-mcp` exclusively)
 
 ### Notebook Cell Edit Workflow
 

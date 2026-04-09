@@ -98,6 +98,22 @@ Key rule: Explicit authorization (`approved`/`go`) OVERRIDES the `needs-approval
 
 Key rule: Bug reports requiring code changes → add `needs-approval` label → HALT → wait for explicit authorization.
 
+### Bug Discovery Protocol (CRITICAL)
+
+**⚠️ Finding a bug during analysis or any other activity does NOT authorize fixing it.**
+
+**See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete authorization matrix, self-correction protocol, and enforcement details.**
+
+Key rules:
+- 🚫 NEVER edit source code after discovering a bug without an approved spec
+- 🚫 NEVER create a branch for a bug fix without authorization
+- ✅ ALWAYS create a bug report issue (permitted without authorization)
+- ✅ ALWAYS perform read-only analysis (permitted without authorization)
+- ✅ ALWAYS HALT and wait for explicit authorization before any code changes
+- ✅ If you catch yourself editing code without a spec, immediately `git checkout` and HALT
+
+**Bug discovery is a reporting action, NOT an implementation authorization.**
+
 ## Skill Enforcement (CRITICAL)
 
 **⚠️ CRITICAL: Skills MUST enforce authorization — guidelines alone are insufficient.**

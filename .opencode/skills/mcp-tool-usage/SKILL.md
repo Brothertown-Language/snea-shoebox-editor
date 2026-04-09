@@ -1,6 +1,6 @@
 ---
 name: mcp-tool-usage
-description: Defines tool priority hierarchy for all operations. Five-tier system with opencode built-in primary, domain MCP primary, ai_bin primary, JetBrains MCP fallback, and CLI last resort.
+description: Defines tool priority hierarchy for all operations. Five-tier system with opencode built-in primary, domain MCP primary, .opencode/tools primary, JetBrains MCP fallback, and CLI last resort.
 license: MIT
 compatibility: opencode
 ---
@@ -52,7 +52,7 @@ Session init values are automatically injected by the session-init plugin (`.ope
 ```
 TIER 1 — PRIMARY: opencode built-in tools (read/write/edit/glob/grep)
 TIER 2 — PRIMARY: Domain MCP (srclight, the-notebook-mcp, GitHub MCP)
-TIER 3 — PRIMARY: ai_bin/ (guidelines, md, memory, py ls/mkpkg)
+TIER 3 — PRIMARY: .opencode/tools/ (guidelines, md, memory, py ls/mkpkg)
 TIER 4 — FALLBACK: JetBrains MCP (pycharm_*) — only for unique capabilities
 TIER 5 — LAST RESORT: Direct CLI (bash)
 
@@ -115,15 +115,15 @@ All notebook operations use `the-notebook-mcp_notebook_*` tools exclusively. Rea
 | Get file contents | `github_get_file_contents` |
 | Push files | `github_push_files` |
 
-### TIER 3: ai_bin/ Scripts (PRIMARY for their domains)
+### TIER 3: .opencode/tools/ Scripts (PRIMARY for their domains)
 
 | Tool | Domain | Why PRIMARY |
 |------|--------|-------------|
-| `ai_bin/guidelines` | Guideline search/read | Only tool that parses `.opencode/guidelines/` correctly |
-| `ai_bin/md` | Markdown section operations | Semantic section awareness that opencode tools lack |
-| `ai_bin/py ls` | Python package listing | Project-aware package structure listing |
-| `ai_bin/py mkpkg` | Python package creation | Creates `__init__.py`, `py.typed`, etc. correctly |
-| `ai_bin/memory` | Session memory management | Purpose-built for context persistence |
+| `.opencode/tools/guidelines` | Guideline search/read | Only tool that parses `.opencode/guidelines/` correctly |
+| `.opencode/tools/md` | Markdown section operations | Semantic section awareness that opencode tools lack |
+| `.opencode/tools/py ls` | Python package listing | Project-aware package structure listing |
+| `.opencode/tools/py mkpkg` | Python package creation | Creates `__init__.py`, `py.typed`, etc. correctly |
+| `.opencode/tools/memory` | Session memory management | Purpose-built for context persistence |
 
 ### TIER 4: JetBrains MCP (FALLBACK — unique capabilities only)
 
@@ -192,12 +192,12 @@ Operation: READ FILE
 ├─ Python semantic → srclight_get_symbol (TIER 2)
 ├─ Any text file → opencode `read` (TIER 1)
 ├─ Notebook → the-notebook-mcp_notebook_read (TIER 2 MANDATORY)
-└─ Guidelines → ai_bin/guidelines read (TIER 3)
+└─ Guidelines → .opencode/tools/guidelines read (TIER 3)
 
 Operation: SEARCH CODE
 ├─ Python semantic → srclight_search_symbols / srclight_hybrid_search (TIER 2)
 ├─ Text search → opencode `grep` (TIER 1)
-└─ Guideline search → ai_bin/guidelines search (TIER 3)
+└─ Guideline search → .opencode/tools/guidelines search (TIER 3)
 
 Operation: EDIT FILE
 ├─ Any text file → opencode `edit` (TIER 1)
@@ -265,7 +265,7 @@ uvx srclight index --embed qwen3-embedding
 
 | Guideline | Section |
 |-----------|---------|
-| `016-srclight-preference.md` | Srclight vs ai_bin hierarchy |
+| `016-srclight-preference.md` | Srclight vs .opencode/tools hierarchy |
 | `060-tool-usage.md` | Tool usage and terminal rules |
 | Session init plugin | `.opencode/plugins/session-init.ts` | MCP probe at startup |
 
