@@ -1,6 +1,6 @@
 ---
 name: sync-guidelines
-description: Intelligently synchronize guidelines, skills, and tools between repositories through GitHub issues. Classifies files by semantic analysis and creates sync issues for human review.
+description: Use when synchronizing guidelines, skills, or tools between repositories. Triggers on: sync guidelines, cross-repo sync, guideline update, skill update, multi-repo, consistency between repos.
 license: MIT
 compatibility: opencode
 ---

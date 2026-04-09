@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Handles pre-work git branch, git stash, work, git commit, and PR creation as dictated by the guidelines. Automatically invoked when user approves implementation or requests PR creation. Enforces three-branch workflow (feature → dev → main).
+description: Use when creating a branch, committing changes, pushing work, or creating a PR. Automatically invoked when user approves implementation or says "create a PR". Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash.
 license: MIT
 compatibility: opencode
 ---

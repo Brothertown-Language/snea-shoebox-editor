@@ -1,6 +1,6 @@
 ---
 name: mcp-tool-usage
-description: Defines tool priority hierarchy for all operations. Five-tier system with opencode built-in primary, domain MCP primary, .opencode/tools primary, JetBrains MCP fallback, and CLI last resort.
+description: Use when selecting tools for file operations, code search, or any task that could use multiple tool options. Triggers on: which tool, tool priority, MCP, PyCharm, JetBrains, read file, write file, search code, tool selection.
 license: MIT
 compatibility: opencode
 ---

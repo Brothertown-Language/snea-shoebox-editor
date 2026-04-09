@@ -1,6 +1,6 @@
 ---
 name: engineering-approach
-description: Engineering principles and checklists for proper development methodology. Invoked when implementing specs to ensure understanding, design, verification, and scope discipline.
+description: Use when implementing a spec to ensure understanding, design, verification, and scope discipline are followed. Triggers on: implement, build, develop, engineering checklist, design before code, verify before complete.
 license: MIT
 compatibility: opencode
 ---

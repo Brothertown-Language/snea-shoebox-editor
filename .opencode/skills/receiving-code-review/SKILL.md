@@ -1,6 +1,6 @@
 ---
 name: receiving-code-review
-description: Workflow for responding to code review feedback systematically, addressing all comments without scope creep.
+description: Use when receiving code review feedback on a PR to address all comments without scope creep. Triggers on: code review, PR feedback, review comment, address feedback, fix review, respond to review.
 license: MIT
 compatibility: opencode
 ---

@@ -1,6 +1,6 @@
 ---
 name: test-driven-development
-description: Test-driven development workflow writing tests before implementation to ensure correctness and prevent regression.
+description: Use when writing tests before implementation following TDD red-green-refactor workflow. Triggers on: TDD, test first, red green refactor, write test, test-driven, unit test, regression.
 license: MIT
 compatibility: opencode
 ---

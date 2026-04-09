@@ -1,6 +1,6 @@
 ---
 name: code-size-enforcement
-description: Enforce size limits on functions, notebook cells, and files. Defines detection methods, prohibited patterns, grandfather policy, and violation recovery.
+description: Use when writing or modifying code to check function length, file size, or notebook cell size limits. Triggers on: long function, big file, too many lines, size limit, code size, function length, cell size.
 license: MIT
 compatibility: opencode
 ---

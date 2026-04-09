@@ -1,6 +1,6 @@
 ---
 name: executing-plans
-description: Plan execution workflow that implements approved plans step-by-step with verification evidence collection and quality gates.
+description: Use when executing an approved plan step-by-step, collecting verification evidence at each gate. Triggers on: execute plan, next step, continue implementation, plan approved, start implementation.
 license: MIT
 compatibility: opencode
 ---

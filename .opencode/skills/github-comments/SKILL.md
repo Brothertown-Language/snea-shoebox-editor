@@ -1,6 +1,6 @@
 ---
 name: github-comments
-description: GitHub comment format and protocol for AI agents. Defines AI identity attribution, lifecycle status indicators, comment types, progress comments, closure summaries, and when to comment vs edit issue bodies.
+description: Use when posting comments to GitHub Issues or PRs. Defines format, byline, progress format, closure summaries. Triggers on: comment, progress update, issue comment, PR comment, post to GitHub, byline, status indicator.
 license: MIT
 compatibility: opencode
 ---

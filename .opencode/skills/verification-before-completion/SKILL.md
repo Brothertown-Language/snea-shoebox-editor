@@ -1,6 +1,6 @@
 ---
 name: verification-before-completion
-description: Evidence-based verification workflow that prevents premature completion claims by ensuring success criteria have actual evidence.
+description: Use when claiming a task is complete, marking a step done, or closing an issue. Prevents premature completion by requiring evidence. Triggers on: task complete, done, finished, step complete, mark done, verify completion, success criteria.
 license: MIT
 compatibility: opencode
 ---

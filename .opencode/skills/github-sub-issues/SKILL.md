@@ -1,6 +1,6 @@
 ---
 name: github-sub-issues
-description: Multi-task spec sub-issue creation and management workflow. Defines single-task exemption, auto-create workflow, database ID requirement, and phase-level structure for GitHub Issue sub-issues.
+description: Use when a multi-task spec needs phase-level sub-issues created or linked. Triggers on: sub-issue, phase issue, multi-task, create sub issue, link issue, task breakdown, subtask, parent issue.
 license: MIT
 compatibility: opencode
 ---

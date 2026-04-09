@@ -1,6 +1,6 @@
 ---
 name: brainstorming
-description: Mandatory pre-spec brainstorming workflow with agent-driven exploration instead of rigid templates. Dimensions are chosen by judgment, not mandated.
+description: Use when creating a spec, planning a feature, or exploring requirements before implementation. Mandatory before any spec creation. Triggers on: spec, plan, feature, brainstorm, explore, requirements, ideate, think through, what should.
 license: MIT
 compatibility: opencode
 ---

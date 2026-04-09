@@ -1,6 +1,6 @@
 ---
 name: finishing-a-development-branch
-description: Branch completion workflow ensuring all changes are committed, verified, pushed, and ready for PR creation.
+description: Use when implementation is complete and branch needs final checks before PR. Triggers on: done, finished, ready for PR, implementation complete, branch ready, push changes, final check.
 license: MIT
 compatibility: opencode
 ---
