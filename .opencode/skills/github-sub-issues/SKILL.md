@@ -1,6 +1,7 @@
 ---
 name: github-sub-issues
 description: Use when a multi-task spec needs phase-level sub-issues created or linked. Triggers on: sub-issue, phase issue, multi-task, create sub issue, link issue, task breakdown, subtask, parent issue.
+type: technique
 license: MIT
 compatibility: opencode
 ---

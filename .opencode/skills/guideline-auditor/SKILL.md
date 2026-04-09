@@ -1,6 +1,7 @@
 ---
 name: guideline-auditor
 description: Use when checking guideline files for ambiguity, conflicts, or LLM compliance issues. Triggers on: audit guidelines, guideline quality, guideline conflict, ambiguous rule, LLM compliance.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

@@ -1,6 +1,7 @@
 ---
 name: executing-plans
-description: Use when executing an approved plan step-by-step, collecting verification evidence at each gate. Triggers on: execute plan, next step, continue implementation, plan approved, start implementation.
+description: Use when executing an approved plan step-by-step or moving through implementation gates sequentially. Triggers on: execute plan, next step, continue implementation, plan approved, start implementation.
+type: technique
 license: MIT
 compatibility: opencode
 ---

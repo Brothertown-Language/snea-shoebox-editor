@@ -1,6 +1,7 @@
 ---
 name: mcp-tool-usage
 description: Use when selecting tools for file operations, code search, or any task that could use multiple tool options. Triggers on: which tool, tool priority, MCP, PyCharm, JetBrains, read file, write file, search code, tool selection.
+type: reference
 license: MIT
 compatibility: opencode
 ---

@@ -1,6 +1,7 @@
 ---
 name: systematic-debugging
-description: Use when encountering a bug, error, or unexpected behavior to ensure root cause analysis before any code changes. Triggers on: bug, error, fix, debug, diagnose, crash, failure, unexpected behavior, vibe debugging.
+description: Use when encountering a bug, error, or unexpected behavior, or before making code changes to fix an issue. Triggers on: bug, error, fix, debug, diagnose, crash, failure, unexpected behavior, vibe debugging.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

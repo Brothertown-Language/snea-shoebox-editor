@@ -1,6 +1,7 @@
 ---
 name: github-comments
-description: Use when posting comments to GitHub Issues or PRs. Defines format, byline, progress format, closure summaries. Triggers on: comment, progress update, issue comment, PR comment, post to GitHub, byline, status indicator.
+description: Use when posting comments to GitHub Issues or PRs. Triggers on: comment, progress update, issue comment, PR comment, post to GitHub, byline, status indicator.
+type: technique
 license: MIT
 compatibility: opencode
 ---

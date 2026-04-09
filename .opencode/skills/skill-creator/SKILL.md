@@ -3,24 +3,224 @@ name: skill-creator
 description: Use when creating a new skill or updating an existing skill that extends AI capabilities with specialized knowledge, workflows, or tool integrations. Triggers on: new skill, update skill, create skill, skill template, skill structure, SKILL.md.
 license: Apache-2.0
 compatibility: opencode
+type: technique
 ---
 
 # Skill Creator
 
 ## Overview
 
-This skill provides guidance for creating effective skills.
+**Creating skills IS Test-Driven Development applied to process documentation.**
+
+Write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
+
+**Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
+
+**Source attribution:** TDD skill creation methodology, CSO principles, rationalization resistance tables, red flags lists, skill type taxonomy, bulletproofing patterns, and anti-patterns adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md). Pressure scenario testing methodology adapted from [obra/superpowers `writing-skills/anthropic-best-practices.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/anthropic-best-practices.md) and [persuasion-principles.md](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md).
 
 ## Persona
 
 You are a Skill Design Expert. Your focus is helping users create well-structured skills that extend AI capabilities with specialized knowledge, workflows, and tools.
 
+## Skill Type Taxonomy
+
+Every skill falls into one of four types. Type determines how the skill should be written and tested.
+
+| Type | Description | Follow Rigidity | Test Approach |
+|------|-------------|-----------------|---------------|
+| **Discipline-enforcing** | Rules that must be followed exactly (TDD, debugging, verification) | Follow exactly, don't adapt away discipline | Pressure scenarios with combined stresses |
+| **Technique** | Concrete method with steps (condition-based-waiting, root-cause-tracing) | Follow steps, adapt details | Application scenarios, edge cases |
+| **Pattern** | Way of thinking about problems (flatten-with-flags, information-hiding) | Apply principles flexibly | Recognition + application scenarios |
+| **Reference** | Lookup tables, API docs, command guides | Find and apply | Retrieval + application scenarios |
+
+**Why type matters:** Discipline-enforcing skills need rationalization resistance tables and red flags lists. Reference skills don't. Applying discipline-level rigor to a reference skill is overengineering; applying reference-level flexibility to a discipline skill invites failure.
+
+**Frontmatter `type` field:** Add `type` to YAML frontmatter to declare the skill type:
+
+```yaml
+---
+name: my-tdd-skill
+description: Use when...
+type: discipline-enforcing
+---
+```
+
+Valid values: `discipline-enforcing`, `technique`, `pattern`, `reference`. Default: `technique`.
+
+## The Iron Law
+
+```
+NO SKILL WITHOUT A FAILING TEST FIRST
+```
+
+This applies to NEW skills AND EDITS to existing skills.
+
+Write skill before testing? Delete it. Start over.
+Edit skill without testing? Same violation.
+
+**No exceptions:**
+- Not for "simple additions"
+- Not for "just adding a section"
+- Not for "documentation updates"
+- Don't keep untested changes as "reference"
+- Don't "adapt" while running tests
+- Delete means delete
+
+## TDD Cycle for Skills (RED-GREEN-REFACTOR)
+
+### RED: Write Failing Test (Baseline)
+
+Run pressure scenario with subagent WITHOUT the skill. Document exact behavior:
+- What choices did they make?
+- What rationalizations did they use (verbatim)?
+- Which pressures triggered violations?
+
+This is "watch the test fail" — you MUST see what agents naturally do before writing the skill.
+
+### GREEN: Write Minimal Skill
+
+Write skill that addresses those specific rationalizations. Don't add extra content for hypothetical cases.
+
+Run same scenarios WITH skill. Agent should now comply.
+
+### REFACTOR: Close Loopholes
+
+Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
+
+## Rationalization Resistance
+
+Skills that enforce discipline need to resist rationalization. Agents are smart and will find loopholes when under pressure.
+
+### Close Every Loophole Explicitly
+
+**Source:** Adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md) and [`using-superpowers`](https://github.com/obra/superpowers/blob/main/skills/using-superpowers/SKILL.md).
+
+Don't just state the rule — forbid specific workarounds:
+
+```markdown
+# ❌ BAD: States rule only
+Write code before test? Delete it.
+
+# ✅ GOOD: Closes loopholes explicitly
+Write code before test? Delete it. Start over.
+
+No exceptions:
+- Don't keep it as "reference"
+- Don't "adapt" it while writing tests
+- Don't look at it
+- Delete means delete
+```
+
+### Address "Spirit vs Letter" Arguments
+
+Add foundational principle early:
+
+```markdown
+Violating the letter of the rules IS violating the spirit of the rules.
+```
+
+This cuts off the entire class of "I'm following the spirit" rationalizations.
+
+### Build Rationalization Table
+
+Capture rationalizations from baseline testing. Every excuse agents make goes in the table:
+
+```markdown
+| Excuse | Reality |
+|--------|---------|
+| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
+| "It's just a reference" | References can have gaps. Test retrieval. |
+| "Testing is overkill" | Untested skills have issues. Always. |
+| "I'll test if problems emerge" | Problems = agents can't use skill. Test BEFORE deploying. |
+| "Too tedious to test" | Less tedious than debugging bad skill in production. |
+| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
+| "No time to test" | Deploying untested skill wastes more time fixing it later. |
+```
+
+### Create Red Flags List
+
+Self-check for agents rationalizing:
+
+```markdown
+## Red Flags — STOP and Invoke the Skill
+
+| Thought | Reality |
+|---------|---------|
+| "This is just a simple question" | Questions are tasks. Check for skills. |
+| "I need more context first" | Skill check comes BEFORE clarifying questions. |
+| "This doesn't need a formal skill" | If a skill exists, use it. |
+| "I remember this skill" | Skills evolve. Read current version. |
+```
+
+### Persuasion Principles for Skill Design
+
+**Source:** Adapted from [obra/superpowers `persuasion-principles.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md). Research foundation: Meincke et al. (2025), N=28,000 AI conversations. Persuasion techniques more than doubled compliance rates (33% → 72%, p < .001).
+
+| Principle | Use For | Example |
+|-----------|---------|---------|
+| **Authority** | Discipline-enforcing | "YOU MUST", "Never", "Always", "No exceptions" |
+| **Commitment** | Multi-step processes | Require announcements, force explicit choices, use tracking |
+| **Scarcity** | Immediate verification | "Before proceeding", "Immediately after X" |
+| **Social Proof** | Universal practices | "Every time", "Always", failure patterns |
+| **Unity** | Collaborative workflows | "our codebase", "we're colleagues" |
+| **Reciprocity** | Rarely needed | Use sparingly — can feel manipulative |
+| **Liking** | Never for discipline | Conflicts with honest feedback culture |
+
+**Principle combinations by skill type:**
+
+| Skill Type | Use | Avoid |
+|------------|-----|-------|
+| Discipline-enforcing | Authority + Commitment + Social Proof | Liking, Reciprocity |
+| Technique | Moderate Authority + Unity | Heavy authority |
+| Pattern | Unity + Clarity | Authority |
+| Reference | Clarity only | All persuasion |
+
+## Claude Search Optimization (CSO)
+
+**Source:** Adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md).
+
+### The Description Trap (CRITICAL)
+
+**Description that summarizes workflow causes agents to follow the description instead of reading the full skill.**
+
+When a description says "dispatches subagent per task with code review between tasks," agents follow that shortcut instead of reading the full skill with its flowchart showing two-stage review.
+
+**Description must contain ONLY triggering conditions.**
+
+```yaml
+# ❌ BAD: Summarizes workflow — agents follow description, skip skill body
+description: Use when executing plans - dispatches subagent per task with code review between tasks
+
+# ❌ BAD: Too much process detail
+description: Use for TDD - write test first, watch it fail, write minimal code, refactor
+
+# ✅ GOOD: Just triggering conditions, no workflow summary
+description: Use when executing implementation plans with independent tasks in the current session
+
+# ✅ GOOD: Triggering conditions only
+description: Use when implementing any feature or bugfix, before writing implementation code
+```
+
+### CSO Checklist
+
+1. **Description field:** "Use when..." format, triggering conditions only, NO workflow summaries
+2. **Keyword coverage:** Include error messages, symptoms, synonyms, tool names
+3. **Descriptive naming:** Active voice, verb-first (`creating-skills` not `skill-creation`)
+4. **Gerund convention:** Use gerunds for processes (`creating-skills`, `testing-skills`)
+5. **Third person:** Write descriptions in third person (injected into system prompt)
+6. **Token efficiency:** Move details to references, use cross-references, compress examples
+7. **Target word counts:** getting-started <150, frequently-loaded <200, other skills <500
+
+### What Keywords to Include
+
+- Error messages: "Hook timed out", "ENOTEMPTY", "race condition"
+- Symptoms: "flaky", "hanging", "zombie", "pollution"
+- Synonyms: "timeout/hang/freeze", "cleanup/teardown/afterEach"
+- Tool names: Actual commands, library names, file types
+
 ## About Skills
 
-Skills are modular, self-contained packages that extend AI capabilities by providing
-specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific
-domains or tasks—they transform OpenCode from a general-purpose agent into a specialized agent
-equipped with procedural knowledge that no model can fully possess.
+Skills are modular, self-contained packages that extend AI capabilities by providing specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific domains or tasks — they transform OpenCode from a general-purpose agent into a specialized agent equipped with procedural knowledge that no model can fully possess.
 
 ### What Skills Provide
 
@@ -38,7 +238,8 @@ skill-name/
 ├── SKILL.md (required)
 │   ├── YAML frontmatter metadata (required)
 │   │   ├── name: (required)
-│   │   └── description: (required)
+│   │   ├── description: (required, max 1024 chars)
+│   │   └── type: (optional, default: technique)
 │   └── Markdown instructions (required)
 └── Bundled Resources (optional)
     ├── scripts/          - Executable code (Python/Bash/etc.)
@@ -48,7 +249,7 @@ skill-name/
 
 #### SKILL.md (required)
 
-**Metadata Quality:** The `name` and `description` in YAML frontmatter determine when OpenCode will use the skill. Be specific about what the skill does and when to use it. Use the third-person (e.g. "This skill should be used when..." instead of "Use this skill when...").
+**Metadata Quality:** The `name` and `description` in YAML frontmatter determine when OpenCode will use the skill. Be specific about triggering conditions. Write in third person. Description MUST start with "Use when..." and contain ONLY triggering conditions — NO workflow summaries (see CSO section above).
 
 #### Bundled Resources (optional)
 
@@ -66,20 +267,16 @@ Executable code (Python/Bash/etc.) for tasks that require deterministic reliabil
 Documentation and reference material intended to be loaded as needed into context to inform OpenCode's process and thinking.
 
 - **When to include**: For documentation that OpenCode should reference while working
-- **Examples**: `references/finance.md` for financial schemas, `references/mnda.md` for company NDA template, `references/policies.md` for company policies, `references/api_docs.md` for API specifications
 - **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
-- **Benefits**: Keeps SKILL.md lean, loaded only when OpenCode determines it's needed
 - **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both. Prefer references files for detailed information unless it's truly core to the skill—this keeps SKILL.md lean while making information discoverable without hogging the context window. Keep only essential procedural instructions and workflow guidance in SKILL.md; move detailed reference material, schemas, and examples to references files.
+- **Avoid duplication**: Information should live in either SKILL.md or references files, not both
 
 ##### Assets (`assets/`)
 
 Files not intended to be loaded into context, but rather used within the output OpenCode produces.
 
 - **When to include**: When the skill needs files that will be used in the final output
-- **Examples**: `assets/logo.png` for brand assets, `assets/slides.pptx` for PowerPoint templates, `assets/frontend-template/` for HTML/React boilerplate, `assets/font.ttf` for typography
-- **Use cases**: Templates, images, icons, boilerplate code, fonts, sample documents that get copied or modified
-- **Benefits**: Separates output resources from documentation, enables OpenCode to use files without loading them into context
+- **Use cases**: Templates, images, icons, boilerplate code, fonts, sample documents
 
 ### Progressive Disclosure Design Principle
 
@@ -93,144 +290,123 @@ Skills use a three-level loading system to manage context efficiently:
 
 ## Skill Creation Process
 
-To create a skill, follow the "Skill Creation Process" in order, skipping steps only if there is a clear reason why they are not applicable.
-
 ### Step 1: Understanding the Skill with Concrete Examples
 
-Skip this step only when the skill's usage patterns are already clearly understood. It remains valuable even when working with an existing skill.
+Skip this step only when the skill's usage patterns are already clearly understood.
 
 To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.
 
 For example, when building an image-editor skill, relevant questions include:
 
-- "What functionality should the image-editor skill support? Editing, rotating, anything else?"
+- "What functionality should the image-editor skill support?"
 - "Can you give some examples of how this skill would be used?"
-- "I can imagine users asking for things like 'Remove the red-eye from this image' or 'Rotate this image'. Are there other ways you imagine this skill being used?"
 - "What would a user say that should trigger this skill?"
 
-To avoid overwhelming users, avoid asking too many questions in a single message. Start with the most important questions and follow up as needed for better effectiveness.
-
-Conclude this step when there is a clear sense of the functionality the skill should support.
+To avoid overwhelming users, avoid asking too many questions in a single message.
 
 ### Step 2: Planning the Reusable Skill Contents
 
-To turn concrete examples into an effective skill, analyze each example by:
-
+Analyze each example by:
 1. Considering how to execute on the example from scratch
 2. Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
 
-Example: When building a `pdf-editor` skill to handle queries like "Help me rotate this PDF," the analysis shows:
-
-1. Rotating a PDF requires re-writing the same code each time
-2. A `scripts/rotate_pdf.py` script would be helpful to store in the skill
-
-Example: When designing a `frontend-webapp-builder` skill for queries like "Build me a todo app" or "Build me a dashboard to track my steps," the analysis shows:
-
-1. Writing a frontend webapp requires the same boilerplate HTML/React each time
-2. An `assets/hello-world/` template containing the boilerplate HTML/React project files would be helpful to store in the skill
-
-Example: When building a `big-query` skill to handle queries like "How many users have logged in today?" the analysis shows:
-
-1. Querying BigQuery requires re-discovering the table schemas and relationships each time
-2. A `references/schema.md` file documenting the table schemas would be helpful to store in the skill
-
-To establish the skill's contents, analyze each concrete example to create a list of the reusable resources to include: scripts, references, and assets.
-
 ### Step 3: Initializing the Skill
 
-At this point, it is time to actually create the skill.
-
-Skip this step only if the skill being developed already exists, and iteration or packaging is needed. In this case, continue to the next step.
-
-When creating a new skill from scratch, always run the `init_skill.py` script. The script conveniently generates a new template skill directory that automatically includes everything a skill requires, making the skill creation process much more efficient and reliable.
-
-Usage:
+When creating a new skill from scratch, always run the `init_skill.py` script.
 
 ```bash
 scripts/init_skill.py <skill-name> --path <output-directory>
 ```
 
-The script:
-
-- Creates the skill directory at the specified path
-- Generates a SKILL.md template with proper frontmatter and TODO placeholders
-- Creates example resource directories: `scripts/`, `references/`, and `assets/`
-- Adds example files in each directory that can be customized or deleted
-
-After initialization, customize or remove the generated SKILL.md and example files as needed.
+The script creates the skill directory, generates a SKILL.md template with proper frontmatter and TODO placeholders, creates example resource directories, and adds example files.
 
 ### Step 4: Edit the Skill
 
-When editing the (newly-generated or existing) skill, remember that the skill is being created for another instance of OpenCode to use. Focus on including information that would be beneficial and non-obvious to OpenCode. Consider what procedural knowledge, domain-specific details, or reusable assets would help another OpenCode instance execute these tasks more effectively.
+**Writing Style:** Write the entire skill using **imperative/infinitive form** (verb-first instructions), not second person. Use objective, instructional language.
 
-#### Start with Reusable Skill Contents
-
-To begin implementation, start with the reusable resources identified above: `scripts/`, `references/`, and `assets/` files. Note that this step may require user input. For example, when implementing a `brand-guidelines` skill, the user may need to provide brand assets or templates to store in `assets/`, or documentation to store in `references/`.
-
-Also, delete any example files and directories not needed for the skill. The initialization script creates example files in `scripts/`, `references/`, and `assets/` to demonstrate structure, but most skills won't need all of them.
-
-#### Update SKILL.md
-
-**Writing Style:** Write the entire skill using **imperative/infinitive form** (verb-first instructions), not second person. Use objective, instructional language (e.g., "To accomplish X, do Y" rather than "You should do X" or "If you need to do X"). This maintains consistency and clarity for AI consumption.
-
-To complete SKILL.md, answer the following questions:
-
+To complete SKILL.md, answer:
 1. What is the purpose of the skill, in a few sentences?
 2. When should the skill be used?
-3. In practice, how should OpenCode use the skill? All reusable skill contents developed above should be referenced so that OpenCode knows how to use them.
+3. How should OpenCode use the skill? Reference all reusable skill contents.
 
-### Step 5: Packaging a Skill
+### Step 5: TDD Testing (MANDATORY for Discipline-Enforcing Skills)
 
-Once the skill is ready, it should be packaged into a distributable zip file that gets shared with the user. The packaging process automatically validates the skill first to ensure it meets all requirements:
+**Source:** Adapted from [obra/superpowers `testing-skills-with-subagents.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/testing-skills-with-subagents.md).
+
+For discipline-enforcing skills, follow the RED-GREEN-REFACTOR cycle documented above. For other skill types, test with:
+
+| Skill Type | Test Approach |
+|------------|---------------|
+| Discipline-enforcing | Pressure scenarios (3+ combined stresses) |
+| Technique | Application scenarios, edge cases |
+| Pattern | Recognition + application scenarios |
+| Reference | Retrieval scenarios, gap testing |
+
+#### Pressure Scenarios for Discipline Skills
+
+Create scenarios combining 3+ pressure types:
+
+| Pressure | Example |
+|----------|---------|
+| **Time** | Emergency, deadline, deploy window closing |
+| **Sunk cost** | Hours of work, "waste" to delete |
+| **Authority** | Senior says skip it, manager overrides |
+| **Economic** | Job, promotion, company survival at stake |
+| **Exhaustion** | End of day, already tired, want to go home |
+| **Social** | Looking dogmatic, seeming inflexible |
+| **Pragmatic** | "Being pragmatic vs dogmatic" |
+
+**Best tests combine 3+ pressures.** Force explicit A/B/C choice, not open-ended questions. Make agent act, not hypothesize.
+
+#### Testing Checklist (TDD Adapted)
+
+**RED Phase - Write Failing Test:**
+- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
+- [ ] Run scenarios WITHOUT skill - document baseline behavior verbatim
+- [ ] Identify patterns in rationalizations/failures
+
+**GREEN Phase - Write Minimal Skill:**
+- [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
+- [ ] YAML frontmatter with required `name` and `description` fields (max 1024 chars)
+- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
+- [ ] Description written in third person
+- [ ] Description contains ONLY triggering conditions (NO workflow summaries)
+- [ ] Keywords throughout for search (errors, symptoms, tools)
+- [ ] Clear overview with core principle
+- [ ] Address specific baseline failures identified in RED phase
+- [ ] One excellent example (not multi-language)
+- [ ] Run scenarios WITH skill - verify agents now comply
+
+**REFACTOR Phase - Close Loopholes:**
+- [ ] Identify NEW rationalizations from testing
+- [ ] Add explicit counters (if discipline skill)
+- [ ] Build rationalization table from all test iterations
+- [ ] Create red flags list
+- [ ] Re-test until bulletproof
+
+**Quality Checks:**
+- [ ] Small flowchart only if decision non-obvious
+- [ ] Quick reference table
+- [ ] Common mistakes section
+- [ ] No narrative storytelling
+- [ ] Supporting files only for tools or heavy reference
+
+### Step 6: Packaging a Skill
 
 ```bash
 scripts/package_skill.py <path/to/skill-folder>
 ```
 
-Optional output directory specification:
+The packaging script validates then creates a distributable zip.
 
-```bash
-scripts/package_skill.py <path/to/skill-folder> ./dist
-```
+### Step 7: Iterate
 
-The packaging script will:
+After testing the skill, users may request improvements.
 
-1. **Validate** the skill automatically, checking:
-   - YAML frontmatter format and required fields
-   - Skill naming conventions and directory structure
-   - Description completeness and quality
-   - File organization and resource references
-
-2. **Package** the skill if validation passes, creating a zip file named after the skill (e.g., `my-skill.zip`) that includes all files and maintains the proper directory structure for distribution.
-
-If validation fails, the script will report the errors and exit without creating a package. Fix any validation errors and run the packaging command again.
-
-### Step 6: Iterate
-
-After testing the skill, users may request improvements. Often this happens right after using the skill, with fresh context of how the skill performed.
-
-**Iteration workflow:**
-1. Use the skill on real tasks
-2. Notice struggles or inefficiencies
-3. Identify how SKILL.md or bundled resources should be updated
-4. Implement changes and test again
-
-### Step 7: Register Fragments (If Applicable)
+### Step 8: Register Fragments (If Applicable)
 
 If the skill contains duplicate content that appears in multiple skills, register fragments using the fragment-manager skill.
 
-**When to register fragments:**
-- Same content block appears in multiple skills
-- Content needs to stay synchronized across skills
-- Content is a reusable protocol/pattern (e.g., branch-first protocol)
-
-**Fragment registration workflow:**
-1. Use `/skill fragment-manager --task create-fragment` to create fragment master
-2. Extract duplicate content to `.opencode/.guidelines/fragment-id.md`
-3. Update `.opencode/.guidelines/registry.yaml` with fragment entry
-4. Document fragment ID in both source and destination skills
-
-**Example:**
 ```yaml
 # In registry.yaml
 fragments:
@@ -240,13 +416,50 @@ fragments:
       - .opencode/skills/git-workflow/tasks/pre-work.md
 ```
 
-**Fragment marker in skills:**
-```markdown
-<!-- 
-Fragment ID: branch-first-protocol
-Sync status: synchronized
--->
-```
+## Anti-Patterns
+
+**Source:** Adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md).
+
+| Anti-Pattern | Why Bad | Better |
+|-------------|---------|--------|
+| Narrative example ("In session 2025-10-03, we found...") | Too specific, not reusable | Generalized pattern |
+| Multi-language dilution (example-js, example-py, example-go) | Mediocre quality, maintenance burden | One excellent example |
+| Code in flowcharts | Can't copy-paste, hard to read | Markdown code blocks |
+| Generic labels (helper1, helper2, step3) | Labels lack semantic meaning | Descriptive names |
+| Workflow in description | Agents follow description, skip skill body | Triggering conditions only |
+
+## Skill Creation Checklist (TDD Adapted)
+
+**IMPORTANT:** Use todo tracking for EACH checklist item.
+
+**RED Phase - Write Failing Test:**
+- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
+- [ ] Run scenarios WITHOUT skill - document baseline behavior verbatim
+- [ ] Identify patterns in rationalizations/failures
+
+**GREEN Phase - Write Minimal Skill:**
+- [ ] Name uses only letters, numbers, hyphens
+- [ ] YAML frontmatter with `name` and `description` (max 1024 chars)
+- [ ] `type` field in frontmatter (discipline-enforcing, technique, pattern, reference)
+- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
+- [ ] Description written in third person
+- [ ] Description contains ONLY triggering conditions (NO workflow summaries)
+- [ ] Keywords throughout for search (errors, symptoms, tools)
+- [ ] Clear overview with core principle
+- [ ] Address specific baseline failures identified in RED phase
+- [ ] One excellent example (not multi-language)
+- [ ] Run scenarios WITH skill - verify agents now comply
+
+**REFACTOR Phase - Close Loopholes:**
+- [ ] Identify NEW rationalizations from testing
+- [ ] Add explicit counters (if discipline skill)
+- [ ] Build rationalization table (Excuse | Reality format)
+- [ ] Create red flags list for self-checking
+- [ ] Re-test until bulletproof
+
+**Deployment:**
+- [ ] Commit skill to git and push
+- [ ] Consider contributing back via PR (if broadly useful)
 
 ## Tasks
 
@@ -265,12 +478,15 @@ Sync status: synchronized
 
 ## Operating Protocol
 
-1. **Understand skill's purpose:** Help users clarify concrete examples of how the skill will be used through questions
-2. **Plan reusable contents:** Identify scripts, references, and assets that would be helpful
-3. **Initialize skill:** Run `init_skill.py` to create skill directory structure from template
-4. **Edit skill:** Customize SKILL.md and bundled resources for the specific use case
-5. **Validate skill:** Run `quick_validate.py` to ensure structure is correct
-6. **Package skill:** Run `package_skill.py` to create distributable zip
+1. **Understand skill's purpose:** Help users clarify concrete examples of how the skill will be used
+2. **Determine skill type:** Classify as discipline-enforcing, technique, pattern, or reference
+3. **Plan reusable contents:** Identify scripts, references, and assets
+4. **Initialize skill:** Run `init_skill.py` to create skill directory structure
+5. **RED: Write failing test (baseline):** Run pressure scenarios WITHOUT skill, document failures
+6. **GREEN: Write minimal skill:** Address baseline failures, verify compliance WITH skill
+7. **REFACTOR: Close loopholes:** Add rationalization tables and red flags, re-test
+8. **Validate skill:** Run `quick_validate.py` to ensure structure is correct
+9. **Package skill:** Run `package_skill.py` to create distributable zip
 
 ## Cross-References
 
@@ -278,3 +494,10 @@ Sync status: synchronized
 |-----------|---------|
 | `080-code-standards.md` | Code quality standards |
 | `000-critical-rules.md` | Critical violation enforcement |
+
+| External Source | Content Adapted |
+|----------------|-----------------|
+| [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md) | TDD methodology, CSO principles, rationalization resistance, skill types, anti-patterns |
+| [obra/superpowers `testing-skills-with-subagents.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/testing-skills-with-subagents.md) | Pressure scenario testing methodology |
+| [obra/superpowers `persuasion-principles.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md) | Persuasion principles for skill design |
+| [obra/superpowers `using-superpowers`](https://github.com/obra/superpowers/blob/main/skills/using-superpowers/SKILL.md) | Red flags table pattern |

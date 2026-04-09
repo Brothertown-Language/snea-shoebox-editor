@@ -1,6 +1,7 @@
 ---
 name: code-size-enforcement
-description: Use when writing or modifying code to check function length, file size, or notebook cell size limits. Triggers on: long function, big file, too many lines, size limit, code size, function length, cell size.
+description: Use when writing or modifying code and function length, file size, or cell size may exceed limits. Triggers on: long function, big file, too many lines, size limit, code size, function length, cell size.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

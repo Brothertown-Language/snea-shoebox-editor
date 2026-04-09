@@ -1,6 +1,7 @@
 ---
 name: verification-before-completion
-description: Use when claiming a task is complete, marking a step done, or closing an issue. Prevents premature completion by requiring evidence. Triggers on: task complete, done, finished, step complete, mark done, verify completion, success criteria.
+description: Use when claiming a task is complete, marking a step done, or closing an issue. Triggers on: task complete, done, finished, step complete, mark done, verify completion, success criteria.
+type: discipline-enforcing
 license: MIT
 compatibility: opencode
 ---

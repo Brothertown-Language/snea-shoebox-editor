@@ -1,6 +1,7 @@
 ---
 name: github-issue-creation
-description: Use when creating a GitHub Issue or before any issue creation attempt. Validates spec, labels, auditor integration. Triggers on: create issue, new issue, spec creation, submit issue, GitHub issue, file issue, bug report.
+description: Use when creating a GitHub Issue or before any issue creation attempt. Triggers on: create issue, new issue, spec creation, submit issue, GitHub issue, file issue, bug report.
+type: technique
 license: MIT
 compatibility: opencode
 ---

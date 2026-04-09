@@ -1,6 +1,7 @@
 ---
 name: using-git-worktrees
 description: Use when starting feature work that needs isolation from current workspace, before executing implementation plans, or when working with multiple agents in parallel. Triggers on: worktree, isolated workspace, parallel agent, worktree setup, branch isolation, concurrent work, set up worktree.
+type: technique
 license: MIT
 compatibility: opencode
 ---
