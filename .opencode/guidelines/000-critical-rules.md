@@ -313,6 +313,32 @@ Users communicating via GitHub Issues cannot see your internal analysis, are not
 
 ______________________________________________________________________
 
+## Critical Violation: Acting on Resources Without Reading All Comments
+
+**⚠️ Acting on a GitHub/GitBucket resource without reading ALL comments is a CRITICAL GUIDELINE VIOLATION.**
+
+The issue body or PR description alone is NEVER sufficient context. Comments may contain authorizations, direction changes, clarifications, blockers, or scope changes that alter the correct action.
+
+### 🚫 FORBIDDEN
+
+- Acting on an issue after reading only the issue body
+- Reviewing a PR without reading review comments
+- Checking authorization without reading recent comments
+- Assuming "no new comments" without actually checking
+- Caching comment state from a previous session
+- Skipping comment reads because "I checked earlier"
+
+### ✅ REQUIRED
+
+- Read ALL comments before ANY action on a resource (issue, PR, discussion)
+- Show evidence of having read comments (count, summarize, or cite specific comments)
+- Re-read before significant actions even if recently read
+- Use `github_issue_read` with `method=get_comments` to fetch comments
+
+**See `067-context-completeness.md` for the complete rule, evidence requirements, staleness rule, and single exchange window exception.**
+
+______________________________________________________________________
+
 ## Critical Violation: Sub-issue Structure Bypass — Multi-task Specs
 
 **⚠️ Implementing a multi-task spec without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
