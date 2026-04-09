@@ -56,6 +56,9 @@ Thumbs.db
 # Logs
 *.log
 
+# Git worktrees
+.worktrees/
+
 # Project temporary files
 tmp/
 
