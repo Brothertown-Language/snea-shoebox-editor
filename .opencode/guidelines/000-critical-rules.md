@@ -346,7 +346,7 @@ ______________________________________________________________________
 **🚫 FORBIDDEN:**
 
 - Implementing a phase that exists only as text in the parent issue body
-- Proceeding when `get_sub_issues` returns empty array for multi-task specs
+- Proceeding **to implementation** when `get_sub_issues` returns empty array for multi-task specs **without creating sub-issues first**
 - Assuming markdown checkboxes = task tracking
 - Creating step-level sub-issues instead of phase-level
 
@@ -355,8 +355,13 @@ ______________________________________________________________________
 - Sub-issues at PHASE level, not step level
 - Each phase as separate GitHub Issue linked via `github_sub_issue_write method=add`
 - Single-task specs are exempt from sub-issue requirement
+- Auto-create sub-issues as a pre-implementation setup step when `get_sub_issues` returns empty for an approved multi-task spec
+
+**The prohibition is against implementing phases without sub-issue structure, NOT against auto-creating sub-issues as a setup step.** Sub-issue creation is a tracking/setup action covered by the parent spec's authorization — no separate authorization is required.
 
 **See `github-sub-issues` skill for complete workflow including single-task vs multi-task exemption, auto-create workflow, database ID requirement, and phase-level structure.**
+
+**Note:** Sub-issue auto-creation is NOT a violation of this prohibition. Auto-creating sub-issues and then proceeding to implementation is the CORRECT workflow. The prohibition is against implementing phases while sub-issues are still missing, NOT against the auto-creation step itself.
 
 ______________________________________________________________________
 

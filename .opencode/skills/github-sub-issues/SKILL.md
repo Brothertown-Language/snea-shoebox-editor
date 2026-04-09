@@ -54,10 +54,12 @@ If multi-task: Sub-issues are MANDATORY.
    - Verify phase being implemented is among them
    - Proceed with implementation
 
+**Authorization for the parent spec covers sub-issue creation.** When `get_sub_issues` returns empty for an approved multi-task spec, auto-create sub-issues immediately and proceed — no separate authorization needed.
+
 ### 🚫 FORBIDDEN
 
 - Implementing phase that exists only as text in parent issue body
-- Proceeding when `get_sub_issues` returns empty (for multi-task specs) without creating sub-issues
+- Proceeding **to implementation** when `get_sub_issues` returns empty (for multi-task specs) **without creating sub-issues first**
 - Assuming markdown checkboxes = task tracking
 - Creating step-level sub-issues (create PHASE-level only)
 
@@ -66,6 +68,8 @@ If multi-task: Sub-issues are MANDATORY.
 ## Auto-Create Workflow
 
 **When multi-task spec has NO sub-issues:**
+
+**This step is covered by the parent spec's authorization. No separate 'approved' or 'go' is needed.**
 
 ```
 For each PHASE in spec:
@@ -83,6 +87,12 @@ Proceed to implement first phase
 - Use `.id` field from response (e.g., `4129879155`)
 - NOT the issue number (e.g., `10`)
 - Get via `github_issue_read method=get` response
+
+### Prohibited Halts
+
+- 🚫 PROHIBITED: Halting to ask 'should I create sub-issues?' when the parent spec is already approved. Sub-issue creation is automatic.
+- 🚫 PROHIBITED: Treating sub-issue creation as a separate implementation phase requiring its own authorization cycle.
+- ✅ REQUIRED: Auto-create sub-issues immediately upon finding empty sub-issues on an approved multi-task spec, then proceed to implementation.
 
 ---
 
