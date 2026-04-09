@@ -12,6 +12,17 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/556-writing-plans-enhancement
+
+- Add TDD step granularity within phases (failing test → verify fail → implement → verify pass → commit)
+- Add plan document header with Goal, Architecture, and Tech Stack sections
+- Add file structure section for decomposition before tasks
+- Enhance no-placeholders rule with 6 additional prohibited patterns from obra/superpowers
+- Add self-review checklist (spec coverage, placeholder scan, type consistency)
+- Add step granularity rules (2-5 min per step, exact code/commands)
+- Add source attribution to obra/superpowers writing-plans skill
+- Update enforcement to validate TDD structure, file structure, and header
+
 ### spec/fix-session-init-output-format
 
 - Convert session_init.py output from inconsistent `Label: value` / `KEY=value` mix to consistent `KEY=value` format
