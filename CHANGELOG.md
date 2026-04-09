@@ -12,6 +12,13 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/fix-session-init-output-format
+
+- Convert session_init.py output from inconsistent `Label: value` / `KEY=value` mix to consistent `KEY=value` format
+- Change `Human Developer:` → `DEV_NAME=`, `Human Email:` → `DEV_EMAIL=`, `Git Remote Url:` → `GIT_REMOTE_URL=`, `Repository Owner:` → `GIT_OWNER=`, `Repository:` → `GIT_REPO=`
+- Add prominent platform banners with horizontal rules (`# GITHUB REPOSITORY DETECTED` / `# GITBUCKET REPOSITORY DETECTED`)
+- Update AGENTS.md to document KEY=value format and add missing `GITHUB_HTML_URL` variable
+
 ### spec/adjust-tool-priorities
 
 - Remove 36 superseded ai_bin scripts (nb, plans, py-find, py-structure, start, multi-find)
