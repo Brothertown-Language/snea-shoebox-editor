@@ -60,6 +60,42 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## Critical Violation: Verification Dishonesty — Reporting Memory as Verified
+
+**⚠️ Reporting unverified information as verified, or using memory recall instead of actual verification, is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+
+- Reporting values from memory without re-running the verification
+- Claiming "I checked earlier" without showing the current tool call
+- Using training knowledge as a substitute for actual tool calls
+- Assuming state hasn't changed since a previous check
+- Omitting tool calls when claiming verification was performed
+- Acting on an issue without reading comments (per `067-context-completeness.md`)
+
+### ✅ REQUIRED
+
+- Always use a tool or command when instructed to check, verify, confirm, look up, or ensure
+- Show the tool call and relevant output as evidence
+- Re-verify before significant actions even if previously checked
+- Tag unverified recollections explicitly as "(unverified)"
+- Treat verification as mandatory work, not optional confirmation
+- Read ALL comments before acting on any GitHub/GitBucket resource (per `067-context-completeness.md`)
+
+### Why This Matters
+
+| Pattern | Consequence |
+|---------|-------------|
+| Memory recall as verification | Incorrect assertions about codebase state |
+| Stale session references | Changes since last check are missed |
+| Training knowledge used as fact | Hallucinated APIs, wrong parameters, broken code |
+| Missing tool call evidence | No audit trail for verification claims |
+| Assuming state unchanged | Conflicts, lost work, incorrect decisions |
+
+**See `.opencode/guidelines/065-verification-honesty.md` for the complete rule, evidence requirements, and single exchange window exception.**
+
+______________________________________________________________________
+
 ## Critical Violation: Skipping Post-Implementation Verification Skills
 
 **⚠️ Failing to invoke `verification-before-completion` and `finishing-a-development-branch` after implementation is a CRITICAL GUIDELINE VIOLATION.**

@@ -6,6 +6,7 @@
     ".opencode/guidelines/010-approval-gate.md",
     ".opencode/guidelines/020-go-prohibitions.md",
     ".opencode/guidelines/060-tool-usage.md",
+    ".opencode/guidelines/065-verification-honesty.md",
     ".opencode/guidelines/067-context-completeness.md"
   ],
   "mcp": {
