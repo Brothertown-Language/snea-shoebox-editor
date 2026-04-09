@@ -171,7 +171,7 @@ ______________________________________________________________________
 
 **⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.**
 
-All URLs must be constructed exclusively from values provided by the session-init plugin output. No exceptions.
+All URLs must be constructed exclusively from values provided by the session-enforcement plugin output. No exceptions.
 
 ### 🚫 FORBIDDEN
 
@@ -184,7 +184,7 @@ All URLs must be constructed exclusively from values provided by the session-ini
 
 ### ✅ REQUIRED
 
-1. Values are automatically injected by the session-init plugin (`.opencode/scripts/session_init.py`)
+1. Values are automatically injected by the session-enforcement plugin (`.opencode/plugins/session-enforcement.ts` via `.opencode/scripts/session_init.py`)
 1. Extract `GITBUCKET_HTML_URL` (preferred) or `GITBUCKET_URL` (legacy) from session init output
 1. Construct ALL URLs using that base URL + `GIT_OWNER` + `GIT_REPO`
 1. If session init does not provide a required URL component → HALT and report
@@ -222,7 +222,7 @@ ______________________________________________________________________
 
 ### ✅ REQUIRED
 
-1. Values are automatically injected by the session-init plugin (`.opencode/scripts/session_init.py`)
+1. Values are automatically injected by the session-enforcement plugin (`.opencode/plugins/session-enforcement.ts` via `.opencode/scripts/session_init.py`)
 1. Store ALL output values (`DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO`, `GIT_HOOKS_PATH`, `GIT_REMOTE_URL`) for session duration
 1. Use `GIT_OWNER` and `GIT_REPO` for EVERY GitHub MCP call
 1. NEVER assume or hardcode owner/repo values
