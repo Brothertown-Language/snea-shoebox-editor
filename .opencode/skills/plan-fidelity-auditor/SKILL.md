@@ -1,6 +1,6 @@
 ---
 name: plan-fidelity-auditor
-description: Generates a clean-room plan and compares it against the existing spec plan to identify discrepancies. Reports findings — does NOT auto-fix. Invoked via spec-auditor orchestrator, not directly.
+description: Use when auditing a plan for fidelity against a spec, checking that implementation matches spec requirements. Invoked via spec-auditor. Triggers on: plan fidelity, plan audit, spec vs plan, discrepancy, clean-room plan.
 license: MIT
 compatibility: opencode
 ---

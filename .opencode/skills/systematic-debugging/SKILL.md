@@ -1,6 +1,6 @@
 ---
 name: systematic-debugging
-description: Systematic bug diagnosis and fix process that ensures root cause analysis before any code changes.
+description: Use when encountering a bug, error, or unexpected behavior to ensure root cause analysis before any code changes. Triggers on: bug, error, fix, debug, diagnose, crash, failure, unexpected behavior, vibe debugging.
 license: MIT
 compatibility: opencode
 ---

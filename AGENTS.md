@@ -19,7 +19,8 @@ Session initialization and skill enforcement are handled automatically by the `s
 1. Runs `.opencode/scripts/session_init.py` once per session (cached for 5 minutes)
 2. Injects session context into the LLM system prompt via `experimental.chat.system.transform`
 3. Sets key-value pairs as shell environment variables via `shell.env`
-4. Injects skill enforcement content into the first user message via `experimental.chat.messages.transform`, ensuring agents invoke mandatory workflow skills
+4. Loads skill descriptions from YAML frontmatter in each SKILL.md file at startup (via `loadSkillDescriptions()`)
+5. Injects skill enforcement content (1% rule, red-flags table, skill list with "Use when..." descriptions) into the first user message via `experimental.chat.messages.transform`, ensuring agents invoke mandatory workflow skills
 
 **No manual step is required.** The script outputs all values as `KEY=value` pairs — extract them directly, no mapping or interpretation needed. Use `GIT_OWNER` and `GIT_REPO` for EVERY API call.
 
@@ -77,23 +78,20 @@ For GitBucket repositories, invoke `gitbucket-api` skill BEFORE using GitBucket 
 
 ---
 
-## Dispatch Table Loading (MANDATORY)
+## Skill Self-Discovery (Automatic)
 
-**On EVERY session, load the dispatch table dynamically:**
+Skills are discovered automatically via YAML frontmatter in each `SKILL.md` file. The `session-enforcement` plugin reads each skill's `description` field at startup and injects them into the first user message.
 
-```yaml
-# File: .opencode/dispatch-table.yaml
-# This file tells the AI agent when to invoke which skills
-```
+**Each skill description uses "Use when..." format** with triggering conditions and keyword coverage, NOT workflow summaries. This ensures the agent can self-discover which skill to invoke based on the current task context.
 
-**The dispatch table defines:**
-- When to invoke platform skills (`gitbucket-api`, `github-issue-creation`)
-- When to invoke code quality skills (`code-size-enforcement`, `spec-auditor`)
-- When to invoke workflow skills (`git-workflow`, `approval-gate`, `pr-creation-workflow`)
-- Automatic invocation rules
-- Sub-task invocation patterns
+**The plugin handles:**
+- Loading skill descriptions from YAML frontmatter at session start
+- Sorting process skills before implementation skills
+- Injecting enforcement content (1% rule, red-flags table, skill list) into the first user message
 
-**DO NOT embed the dispatch table in AGENTS.md. LOAD IT DYNAMICALLY.**
+**The dispatch table is deprecated** — see `.opencode/dispatch-table.yaml` for historical reference only. Skill invocation is now driven by self-discovery via frontmatter descriptions.
+
+**DO NOT embed skill invocation rules in AGENTS.md. They are discovered dynamically from SKILL.md frontmatter.**
 
 ---
 
@@ -108,7 +106,7 @@ OpenCode skills are available in `.opencode/skills/`. Each skill has a `SKILL.md
 /skill <skill-name> --task <task-name>
 ```
 
-**For dispatch rules**, see `.opencode/dispatch-table.yaml` which defines when each skill is invoked.
+**Skill invocation is driven by self-discovery** — see "Skill Self-Discovery" section above. Each SKILL.md frontmatter `description` field uses "Use when..." format with triggering conditions for automatic discovery.
 
 ### Sub-Task Architecture
 
@@ -142,7 +140,7 @@ Skills with `tasks/` subdirectory support `--task` parameter for loading specifi
 
 ### Workflow Skills
 
-The dispatch table (`dispatch-table.yaml`) orchestrates workflow skills in sequence:
+Skill invocation is driven by self-discovery from SKILL.md frontmatter (see "Skill Self-Discovery" section). Key workflow skills:
 
 | Skill | Purpose | Dispatch Trigger |
 |-------|---------|------------------|
@@ -265,7 +263,7 @@ When parent issue has sub-issues, authorization cascades to ALL sub-issues:
 
 ## Q/A Mode
 
-After session init and dispatch table load, switch to Q/A mode:
+After session init and skill discovery, switch to Q/A mode:
 
 1. **Report identity**: `<AgentName> (<ModelID>)`
 2. **Report init results**: Platform, MCP availability
@@ -280,7 +278,7 @@ After session init and dispatch table load, switch to Q/A mode:
 
 | File | Purpose |
 |------|---------|
-| `.opencode/dispatch-table.yaml` | Skill invocation rules (LOAD DYNAMICALLY) |
+| `.opencode/dispatch-table.yaml` | Skill invocation rules (DEPRECATED — kept for reference only) |
 | `.opencode/.guidelines/registry.yaml` | Registry of migrated content blocks |
 | `000-critical-rules.md` | Zero-tolerance violations |
 | `010-approval-gate.md` | Authorization workflow |

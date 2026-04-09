@@ -1,6 +1,6 @@
 ---
 name: spec-auditor
-description: Audit orchestrator that determines which subtasks to run and reports all findings. The single entry point for spec quality auditing.
+description: Use when auditing a spec for quality, structure, and completeness. The single entry point for spec auditing. Triggers on: audit spec, review spec, spec quality, validate spec, check spec, audit issue, revisit spec.
 license: MIT
 compatibility: opencode
 ---

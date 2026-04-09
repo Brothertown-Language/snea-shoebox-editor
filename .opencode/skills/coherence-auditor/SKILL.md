@@ -1,6 +1,6 @@
 ---
 name: coherence-auditor
-description: Audit coherence between guidelines, skills, and AI agent behavior to ensure they work together effectively. Can be used for extraction (identifying skill candidates) and maintenance (detecting drift).
+description: Use when guidelines or skills are updated, to check consistency between rules and behavior. Triggers on: coherence, consistency, audit guidelines, skill extraction, drift detection, guideline update, skill update.
 license: MIT
 compatibility: opencode
 ---

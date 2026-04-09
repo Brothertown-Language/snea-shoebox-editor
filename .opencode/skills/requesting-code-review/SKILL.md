@@ -1,6 +1,6 @@
 ---
 name: requesting-code-review
-description: Workflow for preparing and requesting code reviews with proper context and documentation.
+description: Use when preparing a PR for code review with proper context and documentation. Triggers on: request review, code review, review request, ready for review, review preparation.
 license: MIT
 compatibility: opencode
 ---

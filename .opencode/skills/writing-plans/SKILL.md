@@ -1,6 +1,6 @@
 ---
 name: writing-plans
-description: Plan creation workflow producing prose plans structured by agent judgment, not templates. Plans must have zero placeholders before implementation.
+description: Use when creating an implementation plan from an approved spec. Produces prose plans with zero placeholders. Triggers on: write plan, create plan, implementation plan, plan spec, approved plan, plan creation.
 license: MIT
 compatibility: opencode
 ---

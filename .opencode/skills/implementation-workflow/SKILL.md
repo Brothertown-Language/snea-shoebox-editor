@@ -1,6 +1,6 @@
 ---
 name: implementation-workflow
-description: Orchestration layer that sequences subtasks with yield-back context passing. Calls git-workflow tasks for git ops, runs implementation agents for actual work, and yields structured results between stages.
+description: Use when orchestrating implementation of an approved spec or plan. Sequences git-workflow tasks and implementation agents. Triggers on: implement, build, execute plan, start work, orchestrate, yield-back context.
 license: MIT
 compatibility: opencode
 ---
@@ -79,7 +79,7 @@ implementation-workflow/orchestrate (receives auth context)
 issue: 77
 authorized: true
 context:
-  title: "[SPEC] Integrate Superpowers workflow"
+  title: "[SPEC] Integrate skill enforcement plugin"
   phases: [Core Skills, Dispatch Table, Quality Gates, ...]
   current_phase: 1
   authorization_comment: "approved"
@@ -239,7 +239,7 @@ compare_url: "https://github.com/owner/repo/compare/main...branch"
 exec_summary: |
   **Summary:**
   
-  Integrated workflow skills from Superpowers repository.
+  Integrated workflow skills into the enforcement plugin.
   
   **Outcome:**
   

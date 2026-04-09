@@ -1,6 +1,6 @@
 ---
 name: concern-separation-auditor
-description: Analyzes spec phase structure for concern separation quality. Reports findings to the agent — does NOT auto-fix. Invoked via spec-auditor orchestrator, not directly.
+description: Use when auditing a spec for phase structure quality and concern separation. Invoked via spec-auditor, not directly. Triggers on: concern separation, phase structure, spec audit, mixed concerns.
 license: MIT
 compatibility: opencode
 ---

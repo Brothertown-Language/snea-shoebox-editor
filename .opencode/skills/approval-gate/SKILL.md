@@ -1,6 +1,6 @@
 ---
 name: approval-gate
-description: Authorization gatekeeper ensuring all code changes follow spec + authorization workflow. Verifies specs exist, authorization is explicit, sub-issues structure is correct.
+description: Use when user says "approved", "go", or any implementation instruction. Verifies specs exist, authorization is explicit, sub-issues structure is correct. Prevents unauthorized code changes. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label.
 license: MIT
 compatibility: opencode
 ---

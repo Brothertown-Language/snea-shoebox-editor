@@ -1,6 +1,6 @@
 ---
 name: fragment-manager
-description: Manages duplicate content blocks (fragments) within the repository. Provides CRUD operations for fragment masters and synchronization from masters to destination copies in skills.
+description: Use when managing duplicate content blocks (fragments) across guidelines or skills. Triggers on: fragment, duplicate content, sync content, content block, shared content, master copy, synchronize.
 license: MIT
 compatibility: opencode
 ---

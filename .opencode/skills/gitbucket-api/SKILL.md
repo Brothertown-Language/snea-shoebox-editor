@@ -1,6 +1,6 @@
 ---
 name: gitbucket-api
-description: GitBucket API patterns and capabilities using OpenAPI specification and Python client. Documents actual API responses, authentication patterns, and error recovery.
+description: Use when working with a GitBucket repository for API operations, issue management, or label handling. Triggers on: GitBucket, gitbucket, API call, issue creation, label, token authentication, error recovery, non-GitHub platform.
 license: MIT
 compatibility: opencode
 ---
