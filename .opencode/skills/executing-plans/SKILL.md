@@ -269,7 +269,7 @@ writing-plans (approved) → approval-gate (plan) → executing-plans → verifi
 
 ## Cross-References
 
-- Related skills: `writing-plans` (plan creation), `verification-before-completion` (final verification), `git-workflow` (branch/PR)
+- Related skills: `writing-plans` (plan creation), `verification-before-completion` (final verification), `git-workflow` (branch/PR), `subagent-driven-development` (alternative: dispatch fresh subagents per task with two-stage review)
 - Related guidelines: `142-planning-archive-workflow.md` (plan structure), `000-critical-rules.md` (evidence requirements)
 
 ## Platform Compatibility

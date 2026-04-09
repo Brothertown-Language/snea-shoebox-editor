@@ -12,6 +12,18 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/subagent-driven-development
+
+- Add `subagent-driven-development` skill adapted from obra/superpowers
+- Create implementer, spec-reviewer, and code-quality-reviewer prompt templates
+- Implement two-stage review per task (spec compliance then code quality)
+- Document model selection guidance for cheap/standard/capable models
+- Add implementer status handling (DONE, DONE_WITH_CONCERNS, NEEDS_CONTEXT, BLOCKED)
+- Integrate with approval-gate, git-workflow, verification-before-completion, finishing-a-development-branch
+- Document when to use subagent-driven-development vs implementation-workflow
+- Add cross-references to implementation-workflow, executing-plans, and dispatch-table
+- Include source attribution to obra/superpowers in all adapted files
+
 ### spec/556-writing-plans-enhancement
 
 - Add TDD step granularity within phases (failing test → verify fail → implement → verify pass → commit)
