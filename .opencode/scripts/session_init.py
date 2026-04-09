@@ -105,7 +105,7 @@ def is_gitbucket_remote(url: str) -> bool:
 
 
 def parse_gitbucket_url(
-        url: str,
+    url: str,
 ) -> tuple[str | None, str, str] | tuple[None, None, None]:
     """Parse owner and repo from GitBucket remote URL. Base URL comes from .env ONLY.
 
@@ -244,10 +244,10 @@ def main() -> int:
 
     # Output in the specified format
     print("# Session Init - Git Context")
-    print(f"Human Developer: {user_name}")
-    print(f"Human Email: {user_email}")
+    print(f"DEV_NAME={user_name}")
+    print(f"DEV_EMAIL={user_email}")
     print(f"GIT_HOOKS_PATH={hooks_path}")
-    print(f"Git Remote Url: {remote_url}")
+    print(f"GIT_REMOTE_URL={remote_url}")
 
     # Check if GitHub remote
     if is_github_remote(remote_url):
@@ -258,12 +258,14 @@ def main() -> int:
             print(f"Remote URL: {remote_url}", file=sys.stderr)
             return 1
 
-        print(f"Repository Owner: {owner}")
-        print(f"Repository: {repo}")
+        print(f"GIT_OWNER={owner}")
+        print(f"GIT_REPO={repo}")
         print("GIT_PLATFORM=github")
         print("GITHUB_HTML_URL=https://github.com/")
         print("")
-        print("# GitHub Repository Detected")
+        print("# ============================")
+        print("# GITHUB REPOSITORY DETECTED")
+        print("# ============================")
         print("# 📋 Invoke: /skill github-issue-creation before creating issues")
         print("# 📋 See: .opencode/skills/github-issue-creation/SKILL.md")
         check_srclight()
@@ -280,7 +282,9 @@ def main() -> int:
             print("GITBUCKET_URL=")
             print("GITBUCKET_HAS_CREDENTIALS=false")
             print("")
-            print("# GitBucket Repository Detected (URL Parse Failed)")
+            print("# ==============================")
+            print("# GITBUCKET REPOSITORY DETECTED")
+            print("# ==============================")
             print("# 📋 Invoke: /skill gitbucket-api before using GitBucket Python API")
             print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
             return 0
@@ -303,13 +307,13 @@ def main() -> int:
                 with open(env_path) as f:
                     content = f.read()
                     has_credentials = "GITBUCKET_TOKEN=" in content and (
-                            "GITBUCKET_HTML_URL=" in content or "GITBUCKET_URL=" in content
+                        "GITBUCKET_HTML_URL=" in content or "GITBUCKET_URL=" in content
                     )
         except OSError:
             pass
 
-        print(f"Repository Owner: {owner}")
-        print(f"Repository: {repo}")
+        print(f"GIT_OWNER={owner}")
+        print(f"GIT_REPO={repo}")
         print("GIT_PLATFORM=gitbucket")
         print(f"GITBUCKET_HTML_URL={base_url or ''}")
         ssh_url = extract_ssh_url(remote_url)
@@ -317,7 +321,9 @@ def main() -> int:
             print(f"GITBUCKET_SSH_URL={ssh_url}")
         print(f"GITBUCKET_HAS_CREDENTIALS={'true' if has_credentials else 'false'}")
         print("")
-        print("# GitBucket Repository Detected")
+        print("# ============================")
+        print("# GITBUCKET REPOSITORY DETECTED")
+        print("# ============================")
         print("# 📋 Invoke: /skill gitbucket-api before using GitBucket Python API")
         print("# 📋 GitBucket API has specific authentication patterns and limitations")
         print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")

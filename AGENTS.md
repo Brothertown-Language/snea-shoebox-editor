@@ -20,7 +20,7 @@ Session initialization is handled automatically by the `session-init` OpenCode p
 2. Injects the output into the LLM system context via `experimental.chat.system.transform`
 3. Sets key-value pairs as shell environment variables via `shell.env`
 
-**No manual step is required.** The following values are available automatically:
+**No manual step is required.** The script outputs all values as `KEY=value` pairs — extract them directly, no mapping or interpretation needed. Use `GIT_OWNER` and `GIT_REPO` for EVERY API call.
 
 - `DEV_NAME`: Human collaborator name (for commit trailers)
 - `DEV_EMAIL`: Human collaborator email (for commit trailers)
@@ -29,8 +29,11 @@ Session initialization is handled automatically by the `session-init` OpenCode p
 - `GIT_HOOKS_PATH`: Git hooks path (to verify hooks installed)
 - `GIT_REMOTE_URL`: Full remote URL (for reference)
 - `GIT_PLATFORM`: Platform type (`github` or `gitbucket`)
+- `GITHUB_HTML_URL`: GitHub web UI base URL (if GitHub)
 - `GITBUCKET_HTML_URL`: GitBucket web UI base URL (if GitBucket, non-secret)
 - `GITBUCKET_HAS_CREDENTIALS`: `true` if credentials configured in `.env`
+
+The output includes a prominent platform banner (`# GITHUB REPOSITORY DETECTED` or `# GITBUCKET REPOSITORY DETECTED`) that makes the platform type unambiguous.
 
 ---
 
