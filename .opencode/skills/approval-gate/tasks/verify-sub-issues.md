@@ -9,6 +9,7 @@ Verify sub-issue structure and STATUS gate for multi-task specs before implement
 - Spec exists as GitHub Issue
 - Authorization received for specific subtask (e.g., "approved: 1.2")
 - Subtask number provided or extracted from authorization
+- Authorization received for parent spec (covers sub-issue creation)
 
 ## Exit Criteria
 
@@ -84,6 +85,8 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent_issu
 
 If empty AND multi-task:
 
+**No separate authorization required.** Parent approval covers sub-issue creation as a setup step.
+
 ```python
 # For each PHASE in spec:
 issue = github_issue_write(
@@ -99,9 +102,21 @@ github_sub_issue_write(
 )
 ```
 
+Auto-creating sub-issues for an approved multi-task spec does NOT require separate authorization. The parent's authorization covers this setup step.
+
 ### Step 5: Post Comment
 
 "Created N sub-issues for phase tracking."
+
+## Auto-Create Authorization
+
+**Auto-creating sub-issues for an approved multi-task spec does NOT require separate authorization.** The parent's authorization covers this setup step.
+
+| Action | Requires Separate Auth? | Why |
+|--------|------------------------|-----|
+| Auto-creating sub-issues | ❌ NO | Tracking/setup action, covered by parent authorization |
+| Linking sub-issues to parent | ❌ NO | Part of sub-issue creation workflow |
+| Proceeding to implementation after auto-creation | ❌ NO | Parent authorization continues to implementation |
 
 ## STATUS Gate Rules
 
@@ -137,7 +152,7 @@ github_sub_issue_write(
 ## Forbidden Actions
 
 - Implementing phase without verified sub-issue structure
-- Proceeding when `get_sub_issues` returns empty for multi-task specs
+- Proceeding **to implementation** when `get_sub_issues` returns empty for multi-task specs **without creating sub-issues first**
 - Creating step-level sub-issues (use PHASE level)
 - Assuming markdown checkboxes = task tracking
 - Implementing when STATUS doesn't match authorized subtask

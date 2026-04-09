@@ -84,7 +84,7 @@ This rule applies universally to:
 
 ### 🚫 ABSOLUTE PROHIBITION
 - **NEVER implement a multi-task spec without verified sub-issue structure**
-- **NEVER proceed when `get_sub_issues` returns empty array for multi-task specs**
+- **NEVER proceed **to implementation** when `get_sub_issues` returns empty array for multi-task specs **without auto-creating sub-issues first****
 - **NEVER assume markdown checkboxes = task tracking**
 
 ### ✅ MANDATORY
@@ -95,3 +95,5 @@ Key points:
 - Sub-issues at PHASE level, not step level
 - Single-task specs are exempt from sub-issue requirement
 - All multi-task specs MUST have sub-issues before implementation begins
+- Auto-creating sub-issues for an approved multi-task spec is a pre-implementation setup step covered by the parent's authorization. No separate authorization is required.
+- After auto-creating sub-issues, the agent proceeds with implementation immediately (no re-authorization needed).
