@@ -12,6 +12,15 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/570-context-completeness
+
+- Add `067-context-completeness.md` guideline requiring agents to read ALL comments before acting on any resource (issue, PR, discussion)
+- Add critical violation section to `000-critical-rules.md` for acting on resources without reading all comments
+- Add `067-context-completeness.md` to `opencode.jsonc` instructions list for session context injection
+- Define evidence requirement (cite, count, or summarize comments read)
+- Define staleness rule using action-significance (not time estimation)
+- Define single exchange window exception consistent with verification honesty (#568)
+
 ### spec/subagent-driven-development
 
 - Add `subagent-driven-development` skill adapted from obra/superpowers
