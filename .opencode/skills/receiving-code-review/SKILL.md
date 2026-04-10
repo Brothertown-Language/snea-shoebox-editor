@@ -10,9 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Workflow for responding to code review feedback on pull requests. This skill ensures all reviewer comments are addressed systematically, changes are minimal and targeted, and no scope creep occurs during review response. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Workflow for responding to code review feedback on pull requests. This skill ensures all reviewer comments are addressed systematically, changes are minimal and targeted, and no scope creep occurs during review response. It is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -152,7 +152,7 @@ PR review received → receiving-code-review (address) → push changes → (rev
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow ensures review feedback is addressed precisely without scope expansion.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow ensures review feedback is addressed precisely without scope expansion.
 
 **Key adaptations for OpenCode:**
 - Integration with existing git-workflow skill

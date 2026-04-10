@@ -12,7 +12,7 @@ compatibility: opencode
 
 Systematic debugging process that enforces root cause analysis, hypothesis testing, and minimal fixes. This skill prevents "vibe debugging" — making random changes without understanding the problem. All bugs must be diagnosed before fixing, and fixes must be minimal and targeted.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -247,7 +247,7 @@ Bug reported → systematic-debugging (diagnose) → systematic-debugging (fix) 
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces systematic debugging to prevent random code changes and ensure root cause fixes.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces systematic debugging to prevent random code changes and ensure root cause fixes.
 
 **Key adaptations for OpenCode:**
 - Integration with existing approval-gate and git-workflow skills

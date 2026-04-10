@@ -10,9 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Workflow for preparing and requesting code reviews. This skill ensures PR descriptions have proper context, reviewers can understand changes quickly, and review requests are targeted and informative. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Workflow for preparing and requesting code reviews. This skill ensures PR descriptions have proper context, reviewers can understand changes quickly, and review requests are targeted and informative. It is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -228,7 +228,7 @@ finishing-a-development-branch → PR created by user → requesting-code-review
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow ensures review requests are comprehensive and targeted.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow ensures review requests are comprehensive and targeted.
 
 **Key adaptations for OpenCode:**
 - Integration with existing git-workflow skill for branch management

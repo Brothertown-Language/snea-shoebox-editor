@@ -112,7 +112,7 @@ Use standard bylines (Created, Completed, Updated) for:
 **Recommendation:** Update regex to allow hyphens in username patterns.
 
 ---
-🤖 ✎ on behalf of Michael Conrad
+🤖 ✎ on behalf of <DEV_NAME>
 ```
 
 **Issue Comment Posted for User:**
@@ -122,7 +122,7 @@ Use standard bylines (Created, Completed, Updated) for:
 Based on the investigation, the feature is ready for implementation. The API endpoints are designed and the database schema is finalized.
 
 ---
-🤖 ✎ on behalf of Michael Conrad
+🤖 ✎ on behalf of <DEV_NAME>
 ```
 
 ### Issue/PR Body Attribution (Lifecycle Status)

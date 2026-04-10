@@ -126,7 +126,7 @@ Look for conventional commit prefixes:
 
 For merge commits like:
 ```
-Merge pull request #120 from NewsRx/spec/cleanup-succinct-output
+Merge pull request #120 from <GIT_OWNER>/spec/example-branch-name
 Fix cleanup task to use succinct confirmation output
 ```
 

@@ -12,7 +12,7 @@ compatibility: opencode
 
 Test-driven development (TDD) workflow that enforces writing tests before implementation code. Tests define the contract, implementation satisfies the contract, and refactoring maintains quality. This is an optional quality gate skill invoked contextually when the development approach benefits from TDD.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -210,7 +210,7 @@ This is an **optional** quality gate skill. It is not automatically enforced.
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces test-driven development to ensure correctness and prevent regression.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces test-driven development to ensure correctness and prevent regression.
 
 **Key adaptations for OpenCode:**
 - Integrated with existing test framework (`pytest`)

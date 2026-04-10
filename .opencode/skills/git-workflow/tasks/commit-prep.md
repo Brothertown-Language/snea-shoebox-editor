@@ -115,7 +115,7 @@ Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>
 
 **Example:**
 ```
-Co-authored-by: Michael Conrad <michael@newsrx.com>
+Co-authored-by: <DEV_NAME> <DEV_EMAIL>
 ```
 
 ### Complete Example
@@ -123,7 +123,7 @@ Co-authored-by: Michael Conrad <michael@newsrx.com>
 ```bash
 git commit -m "feat: Add user authentication" \
     --trailer "Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>" \
-    --trailer "Co-authored-by: Michael Conrad <michael@newsrx.com>"
+    --trailer "Co-authored-by: <DEV_NAME> <DEV_EMAIL>"
 ```
 
 ## When Commits Happen
