@@ -10,9 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Plan execution workflow that implements approved plans step-by-step with verification at each stage. This skill ensures systematic implementation, evidence collection, and quality gates. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Plan execution workflow that implements approved plans step-by-step with verification at each stage. This skill ensures systematic implementation, evidence collection, and quality gates. It is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -281,7 +281,7 @@ writing-plans (approved) → approval-gate (plan) → executing-plans → verifi
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces systematic step-by-step execution with evidence collection.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces systematic step-by-step execution with evidence collection.
 
 **Key adaptations for OpenCode:**
 - Integration with existing git-workflow skill for branch management

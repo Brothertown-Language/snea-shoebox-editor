@@ -10,9 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Branch completion workflow that ensures a feature branch is fully ready for PR creation. This skill verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Branch completion workflow that ensures a feature branch is fully ready for PR creation. This skill verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. It is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -210,7 +210,7 @@ executing-plans → verification-before-completion → finishing-a-development-b
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow ensures branches are fully verified before PR creation.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow ensures branches are fully verified before PR creation.
 
 **Key adaptations for OpenCode:**
 - Integration with existing git-workflow skill

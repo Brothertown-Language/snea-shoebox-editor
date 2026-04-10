@@ -10,9 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Evidence-based verification workflow that prevents premature completion claims. This skill ensures ALL success criteria are verified with actual evidence before ANY task or phase is marked complete. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Evidence-based verification workflow that prevents premature completion claims. This skill ensures ALL success criteria are verified with actual evidence before ANY task or phase is marked complete. It is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -289,7 +289,7 @@ md5sum path/to/file
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces evidence-based verification to prevent premature completion claims.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces evidence-based verification to prevent premature completion claims.
 
 **Key adaptations for OpenCode:**
 - Integration with existing executing-plans and git-workflow skills
