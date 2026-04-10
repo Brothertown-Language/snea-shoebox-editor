@@ -23,8 +23,11 @@ Exit codes:
     2: Non-GitHub remote detected
 """
 
+from __future__ import annotations
+
 import os
 import re
+import shutil
 import subprocess
 import sys
 
@@ -228,6 +231,154 @@ def check_srclight() -> None:
         )
 
 
+def get_submodule_dirs() -> list[str]:
+    """Get list of submodule directory paths using git config.
+
+    Uses git's own config parser instead of manual .gitmodules parsing.
+    Handles all format variations (special chars, whitespace, etc.) correctly.
+
+    Returns:
+        List of submodule path strings (e.g., ['test-submodule-1', 'submodules/lib'])
+        Empty list if no submodules configured or .gitmodules missing.
+    """
+    result = run_git_command(["config", "--file", ".gitmodules", "--get-regexp", "path"])
+    if not result:
+        return []
+
+    paths: list[str] = []
+    for line in result.splitlines():
+        parts = line.strip().split()
+        if len(parts) >= 2:
+            paths.append(parts[-1])
+
+    return paths
+
+
+def get_source_hooks_dir() -> str | None:
+    """Get the source hooks directory from .opencode/hooks/.
+
+    Returns None if the directory doesn't exist.
+    """
+    candidate = os.path.join(os.getcwd(), ".opencode", "hooks")
+    if os.path.isdir(candidate):
+        return candidate
+    return None
+
+
+def _copy_hook(src: str, dst: str) -> bool:
+    """Copy a single hook file, making it executable. Returns True on success."""
+    try:
+        shutil.copy2(src, dst)
+        os.chmod(dst, 0o755)
+        return True
+    except OSError:
+        return False
+
+
+def _hooks_match(src: str, dst: str) -> bool:
+    """Check if two hook files have identical content."""
+    if not os.path.isfile(dst):
+        return False
+    try:
+        with open(src) as a, open(dst) as b:
+            return a.read() == b.read()
+    except OSError:
+        return False
+
+
+def install_hooks() -> None:
+    """Install git hooks from .opencode/hooks/ to .git/hooks/ and submodule hooks dirs.
+
+    Source of truth: .opencode/hooks/ (tracked in git)
+    Deployment targets:
+      - .git/hooks/ (parent repo)
+      - .git/modules/<name>/hooks/ (submodules)
+
+    Copies hooks that are missing or outdated. Skips hooks that match.
+    Reports failures to stderr but does not halt the session.
+    Also unsets core.hooksPath if set (legacy cleanup).
+    """
+    source_dir = get_source_hooks_dir()
+    if not source_dir:
+        return
+
+    source_hooks = [
+        f for f in os.listdir(source_dir) if os.path.isfile(os.path.join(source_dir, f)) and not f.endswith(".sample")
+    ]
+    if not source_hooks:
+        return
+
+    installed_count = 0
+    skipped_count = 0
+    failed_count = 0
+
+    parent_hooks_dir = os.path.join(os.getcwd(), ".git", "hooks")
+    if os.path.isdir(parent_hooks_dir):
+        for hook_name in source_hooks:
+            src = os.path.join(source_dir, hook_name)
+            dst = os.path.join(parent_hooks_dir, hook_name)
+            if _hooks_match(src, dst):
+                skipped_count += 1
+                continue
+            if _copy_hook(src, dst):
+                installed_count += 1
+            else:
+                print(f"# ⚠️ Failed to install hook {hook_name} into parent repo", file=sys.stderr)
+                failed_count += 1
+
+    submodules = get_submodule_dirs()
+    for submod_path in submodules:
+        if not os.path.isdir(submod_path):
+            continue
+
+        hooks_target = os.path.join(os.getcwd(), ".git", "modules", submod_path, "hooks")
+
+        if not os.path.isdir(hooks_target):
+            submod_git_file = os.path.join(os.getcwd(), submod_path, ".git")
+            if os.path.isfile(submod_git_file):
+                try:
+                    with open(submod_git_file) as f:
+                        gitdir_ref = f.read().strip()
+                    if gitdir_ref.startswith("gitdir: "):
+                        resolved = gitdir_ref[8:]
+                        if not os.path.isabs(resolved):
+                            resolved = os.path.join(os.getcwd(), submod_path, resolved)
+                        hooks_target = os.path.join(resolved, "hooks")
+                except OSError:
+                    pass
+
+        if not os.path.isdir(hooks_target):
+            print(f"# ⚠️ Could not resolve hooks dir for submodule: {submod_path}", file=sys.stderr)
+            failed_count += 1
+            continue
+
+        for hook_name in source_hooks:
+            src = os.path.join(source_dir, hook_name)
+            dst = os.path.join(hooks_target, hook_name)
+            if _hooks_match(src, dst):
+                skipped_count += 1
+                continue
+            if _copy_hook(src, dst):
+                installed_count += 1
+            else:
+                print(f"# ⚠️ Failed to install hook {hook_name} into {submod_path}", file=sys.stderr)
+                failed_count += 1
+
+    if installed_count > 0 or skipped_count > 0 or failed_count > 0:
+        print("")
+        print("# --- Hook Installation ---")
+        if installed_count > 0:
+            print(f"# ✅ Installed {installed_count} hook(s)")
+        if skipped_count > 0:
+            print(f"# ℹ️ {skipped_count} hook(s) already current (skipped)")
+        if failed_count > 0:
+            print(f"# ❌ Failed to install {failed_count} hook(s) — see stderr", file=sys.stderr)
+
+    if get_hooks_path():
+        run_git_command(["config", "--unset", "core.hooksPath"])
+        print("# 🧹 Removed legacy core.hooksPath config (hooks now in .git/hooks/)")
+
+
 def main() -> int:
     """Extract and output git context."""
     # Get remote URL first - this is required
@@ -269,6 +420,7 @@ def main() -> int:
         print("# 📋 Invoke: /skill github-issue-creation before creating issues")
         print("# 📋 See: .opencode/skills/github-issue-creation/SKILL.md")
         check_srclight()
+        install_hooks()
         return 0
 
     # GitBucket remote detected
@@ -328,6 +480,7 @@ def main() -> int:
         print("# 📋 GitBucket API has specific authentication patterns and limitations")
         print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
         check_srclight()
+        install_hooks()
         return 0
 
     # Unknown remote type
