@@ -12,6 +12,14 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/668-batch-approval
+
+- **Batch Approval Orchestration** - Add interdependency analysis for multiple approved issues, classifying them as must-precede, independent, conflict-risk, or meta/non-code, and producing a dependency graph with parallel-safe group identification before implementation begins
+- Add `batch-approval-analysis` task to approval-gate skill with classification heuristics and dependency graph output format
+- Add `batch-execution` task to subagent-driven-development skill for dispatching subagents according to batch execution plans
+- Add critical violation entry for skipping interdependency analysis when multiple issues are approved together
+- Update approval-gate and subagent-driven-development SKILL.md frontmatter with batch-related trigger keywords
+
 ### spec/664-cleanup-sync
 
 - **Cleanup Local Sync Fix** - Add mandatory dev sync verification (git log check after pull) and make git remote prune origin mandatory in cleanup task, preventing stale local branches and ghost remote-tracking references after PR merges
