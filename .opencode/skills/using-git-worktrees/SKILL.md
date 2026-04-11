@@ -47,17 +47,17 @@ After work is complete and PR is merged, the worktree cleanup is handled by the 
 
 ## Directory Selection Process
 
-Worktrees are ALWAYS created in `worktrees/` (per #604 worktree-integrated three-branch model). There is NO fallback to stash+checkout.
+Worktrees are ALWAYS created in `.worktrees/`. There is NO fallback to stash+checkout.
 
 **If `WORKTREE_FATAL=1` appears in session init output:** HALT immediately and report the fatal error to the developer. Do NOT proceed with any implementation.
 
-### Directory: `worktrees/`
+### Directory: `.worktrees/`
 
-The project uses `worktrees/` as the worktree directory (per #604 spec). The `session_init.py` script bootstraps `worktrees/main/` automatically. All feature worktrees are created under `worktrees/`.
+The project uses `.worktrees/` as the worktree directory. The `session_init.py` script bootstraps `.worktrees/main/` automatically. All feature worktrees are created under `.worktrees/`.
 
 ## Safety Verification
 
-### For Project-Local Directories (.worktrees or worktrees)
+### For `.worktrees/` Directory
 
 **MUST verify directory is ignored before creating worktree:**
 
@@ -98,7 +98,7 @@ project=$(basename "$(git rev-parse --show-toplevel)")
 
 ```bash
 # Determine branch name (spec/<name> or feature/<name>)
-BRANCH_NAME="spec/554-git-worktrees-skill"
+BRANCH_NAME="spec/<short-name>"
 
 # Create worktree with new branch from dev
 git worktree add .worktrees/$BRANCH_NAME -b $BRANCH_NAME dev
@@ -138,9 +138,9 @@ uv run pytest test/ -x
 ### 8. Report Location
 
 ```
-Worktree ready at .worktrees/spec/554-git-worktrees-skill
+Worktree ready at .worktrees/spec-<short-name>
 Tests passing (<N> tests, 0 failures)
-Branch: spec/554-git-worktrees-skill (from dev)
+Branch: spec/<short-name> (from dev)
 Ready to implement <feature-name>
 All commands use workdir=".worktrees/$BRANCH_NAME" — never cd
 ```
@@ -175,8 +175,9 @@ git worktree list
 
 | Situation | Action |
 |-----------|--------|
-| `worktrees/` exists (expected) | Use it |
-| `worktrees/` not ignored | Add to `.gitignore` |
+| `.worktrees/` exists | Use it |
+| `.worktrees/` not ignored | Add to `.gitignore` |
+| `.worktrees/` missing | Create it and add to `.gitignore` |
 | `WORKTREE_FATAL=1` in session init | HALT and report to developer |
 | Tests fail during baseline | Report failures + ask |
 | No `pyproject.toml` | Skip dependency install |
@@ -259,7 +260,7 @@ This cleanup happens as part of the standard `git-workflow --task cleanup` seque
 - Handle worktree cleanup in this skill (delegated to `finishing-a-development-branch`)
 
 **Always:**
-- Use `worktrees/` directory (per #604 spec, no fallback)
+- Use `.worktrees/` directory (no fallback)
 - Verify directory is ignored for project-local
 - Auto-detect and run `uv sync` for project setup
 - Announce worktree creation at start
