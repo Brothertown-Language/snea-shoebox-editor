@@ -33,7 +33,7 @@ Fresh subagent per task = no context pollution between tasks. You precisely craf
 **Before dispatching any subagent, these gates MUST be satisfied:**
 
 1. **approval-gate** — Authorization verified (`approved` or `go` received)
-2. **git-workflow --task pre-work** — Branch created, working tree clean (includes Worktree Gate: when worktree layout is active, feature branches MUST use `using-git-worktrees`)
+2. **git-workflow --task pre-work** — Branch created, working tree clean (includes Worktree Gate: feature branches MUST use `using-git-worktrees`)
 3. **Plan exists** — Writing-plans output available with TDD tasks
 
 **After all tasks complete, these gates are MANDATORY:**
@@ -128,7 +128,7 @@ This project uses the `feature→dev→main` three-branch workflow:
 | Phase | Skill | Purpose |
 |-------|-------|---------|
 | Pre-implementation | `approval-gate` | Verify authorization |
-| Branch creation | `git-workflow --task pre-work` (includes Worktree Gate) | Create feature branch (worktree when layout active) |
+| Branch creation | `git-workflow --task pre-work` (includes Worktree Gate) | Create feature branch (ALWAYS via worktree) |
 | Per-task | Implementer → spec review → code quality review loop | Execute tasks |
 | Post-implementation | `verification-before-completion --task verify` | Evidence collection |
 | Completion | `finishing-a-development-branch --task checklist` | Branch readiness |

@@ -218,44 +218,19 @@ git checkout -b spec/<short-name>  # or feature/<description>
 - Ensure working tree is clean after sync
 - If `dev` doesn't exist locally, create it from `main`: `git checkout -b dev origin/dev`
 
-### Step 4a: Worktree Gate (MANDATORY when layout is active)
+### Step 4a: Worktree Gate (MANDATORY — ALWAYS)
 
-**When the worktree layout is active, feature branch creation MUST create a worktree — not just a branch in the main folder. Bypassing this gate when the layout is active is a CRITICAL VIOLATION (see `000-critical-rules.md`).**
+**Feature branch creation MUST use worktrees — no exceptions, no conditions. Bypassing this gate is a CRITICAL VIOLATION (see `000-critical-rules.md`).**
 
-**Detection (primary = env var, fallback = filesystem):**
-```bash
-# Primary: Use WORKTREE_STATUS from session-init
-# WORKTREE_STATUS values: "ready", "bootstrapped", "skipped", "failed"
-# If WORKTREE_STATUS is empty/unset, fall back to filesystem check
+1. Invoke `using-git-worktrees` skill (ALWAYS, for ANY feature branch)
+2. If worktree creation fails or `WORKTREE_FATAL=1` is detected in session init output, HALT and report the fatal error to the developer — do NOT proceed with any implementation
 
-# Filesystem fallback:
-ls -d worktrees/main .worktrees/main 2>/dev/null
-```
+**There is NO fallback to stash+checkout.** If worktree setup fails, the infrastructure is broken and must be fixed before any work can proceed.
 
-**Decision matrix:**
-
-| Condition | Action |
-|-----------|--------|
-| `WORKTREE_STATUS=ready` or `WORKTREE_STATUS=bootstrapped` + feature branch | **MANDATORY:** Use `using-git-worktrees` skill |
-| Filesystem detects `worktrees/main/` or `.worktrees/main/` + feature branch | **MANDATORY:** Use `using-git-worktrees` skill |
-| `WORKTREE_STATUS=skipped` or `WORKTREE_STATUS=failed` | Use standard stash+checkout workflow |
-| No `WORKTREE_STATUS` env var AND no filesystem worktree dirs | Use standard stash+checkout workflow |
-| Worktree layout active + dev-only work | Work in main folder (no worktree needed) |
-
-**If worktree layout is active and creating a feature branch:**
-1. Invoke `using-git-worktrees` skill — it is MANDATORY, not optional
-2. The worktree skill handles branch creation, isolation, and setup
-3. Do NOT fall back to stash+checkout workflow when layout is active
-
-**Why mandatory:** The OR escape hatch (worktree OR stash+checkout) gives agents a path of least resistance. When the layout is active, worktree isolation is the correct default — it prevents conflicting work between parallel agents.
-
-**Why session-init variable:** `WORKTREE_STATUS` is emitted by `session_init.py` during every session. It reflects the actual state of the worktree layout at session start. Using it avoids redundant filesystem checks and ensures agents consume session-init output rather than ignoring it.
-
-**If no worktree layout is active**, proceed with standard branch creation:
-
-```bash
-git checkout -b spec/<short-name>
-```
+**If `WORKTREE_FATAL=1` appears in session init output:**
+- HALT immediately
+- Report the fatal error to the developer
+- Do NOT attempt any implementation until the worktree infrastructure is fixed
 
 ### Step 5: Verify Clean Working Tree
 
@@ -351,7 +326,7 @@ Verified all proposed changes were already implemented. No modifications needed.
 
 ### Feature Worktree Creation
 
-When the worktree layout is active (`worktrees/main/` or `.worktrees/main/` exists), feature branches MUST use worktrees instead of stash+checkout. This is enforced by the Worktree Gate in Step 4a.
+Feature branches MUST use worktrees instead of stash+checkout. This is ALWAYS enforced by the Worktree Gate in Step 4a.
 
 **Before (stash-based):**
 1. `git stash -u` → 2. `git checkout -b feature/xyz dev` → 3. Work in same folder
@@ -376,7 +351,7 @@ Branch names containing `/` must be sanitized for the worktree directory name:
 
 - **Dev-only work** (no feature branch): Work in main folder directly, no worktree needed
 - **Worktree already exists**: Skip creation, use existing worktree directory
-- **Worktree layout not active**: Fall back to stash+checkout workflow
+- **`WORKTREE_FATAL=1` detected**: HALT immediately, report fatal error to developer, do NOT proceed
 
 ### Worktree Already Exists Check
 

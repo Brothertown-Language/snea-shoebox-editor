@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace, before executing implementation plans, or when working with multiple agents in parallel. Triggers on: worktree, isolated workspace, parallel agent, worktree setup, branch isolation, concurrent work, set up worktree.
+description: Use when creating any feature branch. Always invoke before git-workflow pre-work. Triggers on: branch, feature branch, pre-work, worktree, new branch, checkout.
 type: technique
 license: MIT
 compatibility: opencode
@@ -47,29 +47,13 @@ After work is complete and PR is merged, the worktree cleanup is handled by the 
 
 ## Directory Selection Process
 
-Follow this priority order:
+Worktrees are ALWAYS created in `worktrees/` (per #604 worktree-integrated three-branch model). There is NO fallback to stash+checkout.
 
-### 1. Check Existing Directories
+**If `WORKTREE_FATAL=1` appears in session init output:** HALT immediately and report the fatal error to the developer. Do NOT proceed with any implementation.
 
-```bash
-ls -d worktrees 2>/dev/null       # Preferred (from #604 worktree model)
-ls -d .worktrees 2>/dev/null      # Legacy (hidden)
-```
+### Directory: `worktrees/`
 
-**If found:** Use that directory. If both exist, `worktrees` wins (per #604 spec).
-
-### 2. Check AGENTS.md / Project Config
-
-```bash
-# Check for worktree directory preference in project files
-grep -i "worktree" AGENTS.md .opencode/AGENTS.md 2>/dev/null
-```
-
-**If preference specified:** Use it without asking.
-
-### 3. Default to Project-Local
-
-If no directory exists and no preference found, default to `worktrees/` (per #604 worktree-integrated three-branch model).
+The project uses `worktrees/` as the worktree directory (per #604 spec). The `session_init.py` script bootstraps `worktrees/main/` automatically. All feature worktrees are created under `worktrees/`.
 
 ## Safety Verification
 
@@ -191,11 +175,9 @@ git worktree list
 
 | Situation | Action |
 |-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Create `.worktrees/` and add to `.gitignore` |
-| Directory not ignored | Add to `.gitignore` + commit |
+| `worktrees/` exists (expected) | Use it |
+| `worktrees/` not ignored | Add to `.gitignore` |
+| `WORKTREE_FATAL=1` in session init | HALT and report to developer |
 | Tests fail during baseline | Report failures + ask |
 | No `pyproject.toml` | Skip dependency install |
 
@@ -220,6 +202,23 @@ git worktree list
 
 - **Problem:** Other agents unaware of parallel workspace
 - **Fix:** Always announce "Using the using-git-worktrees skill to set up an isolated workspace" at start
+
+## Fatal Error Protocol
+
+**If `WORKTREE_FATAL=1` appears in session init output or worktree creation fails:**
+
+1. HALT immediately — do NOT proceed with any implementation
+2. Report the fatal error to the developer
+3. Do NOT fall back to stash+checkout — worktrees are MANDATORY, not optional
+4. The developer must fix the worktree infrastructure before any work can proceed
+
+**Worktree setup failure means the repository infrastructure is broken.** Proceeding without worktrees risks:
+- Parallel agent conflicts
+- Dirty working trees
+- Lost changes
+- Branch contamination
+
+There is NO fallback to stash+checkout. Fix the infrastructure, then proceed.
 
 ## Integration
 
@@ -260,9 +259,10 @@ This cleanup happens as part of the standard `git-workflow --task cleanup` seque
 - Handle worktree cleanup in this skill (delegated to `finishing-a-development-branch`)
 
 **Always:**
-- Follow directory priority: existing > AGENTS.md > default `.worktrees/`
+- Use `worktrees/` directory (per #604 spec, no fallback)
 - Verify directory is ignored for project-local
 - Auto-detect and run `uv sync` for project setup
 - Announce worktree creation at start
 - Create branch from `dev` (not `main`)
 - Verify clean test baseline
+- HALT immediately if `WORKTREE_FATAL=1` appears in session init
