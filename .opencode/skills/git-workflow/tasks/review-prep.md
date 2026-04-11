@@ -172,6 +172,23 @@ git rebase origin/dev
 
 **For worktree-based branches:** The rebase runs inside the worktree directory. The `origin/dev` reference is shared across all worktrees, so `git fetch origin` and `git rebase origin/dev` work correctly from any worktree.
 
+## Worktree Mode (MANDATORY — NO EXCEPTIONS)
+
+All feature branches operate in worktrees. There is no alternative — worktree is the only method.
+
+If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+
+1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
+2. Before any push/squash/rebase operation, verify:
+   ```bash
+   git branch --show-current
+   # MUST match BRANCH_NAME
+   ```
+3. `git rev-parse --show-toplevel` MUST return the worktree path
+4. NEVER operate in the main working directory during implementation
+5. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
+6. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
+
 ### Step 2: Verify Branch Is Pushed
 
 **Before generating compare URL, verify branch is on remote.**

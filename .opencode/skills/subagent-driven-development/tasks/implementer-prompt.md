@@ -40,6 +40,26 @@ Task tool (general-purpose):
 
     Work from: [directory]
 
+    ## Worktree Mode (MANDATORY — NO EXCEPTIONS)
+
+    All feature branches operate in worktrees. There is no alternative — worktree is the only method.
+
+    If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+
+    1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
+    2. Before any push/squash/rebase operation, verify:
+       ```
+       git branch --show-current
+       # MUST match BRANCH_NAME
+       ```
+    3. `git rev-parse --show-toplevel` MUST return the worktree path
+    4. NEVER operate in the main working directory during implementation
+
+    **Environment variables available:**
+    - `WORKTREE_PATH`: Path to worktree directory (e.g., `.worktrees/spec-feature`)
+    - `BRANCH_NAME`: Name of feature branch (e.g., `spec/feature`)
+    - `DEV_BASE_HASH`: Hash of dev branch at dispatch time
+
     **While you work:** If you encounter something unexpected or unclear, **ask questions**.
     It's always OK to pause and clarify. Don't guess or make assumptions.
 

@@ -88,7 +88,7 @@ Feature worktrees must be cleaned up after PR merge.
 # feature/<name> → .worktrees/feature-<name>
 # Rule: Replace / with - in the worktree directory name
 
-SANITIZED=$(echo "<merged-branch-name>" | tr '/' '-')
+SANITIZED=$(echo "<merged-branch-name>" | tr '/')
 WT_PATH=".worktrees/${SANITIZED}"
 
 # Check if worktree exists for this branch
@@ -96,10 +96,42 @@ if [ -d ".worktrees" ] && git worktree list | grep -q "$WT_PATH"; then
     git worktree remove "$WT_PATH"
     echo "Removed worktree: $WT_PATH"
 fi
-
-# Prune stale worktree references
-git worktree prune
 ```
+
+### Step 4.5: Check for Active Parallel Worktrees
+
+After removing the specific worktree, check if other agents may still be active:
+
+```bash
+# Check for remaining feature worktrees
+REMAINING=$(git worktree list | grep -c ".worktrees/spec-\|.worktrees/feature-")
+if [ "$REMAINING" -gt 0 ]; then
+    echo "Other feature worktrees still active: $REMAINING remaining"
+    echo "Skipping git worktree prune — other agents may still be working"
+    # Do NOT run git worktree prune
+    # Do NOT run git checkout dev in main tree during parallel work
+else
+    echo "No other feature worktrees remaining"
+    git worktree prune
+fi
+```
+
+**Why this check matters:**
+- In parallel sub-agent mode, other agents may still be working in their worktrees
+- Premature `git worktree prune` could corrupt active worktrees
+- Only prune when ALL parallel work is confirmed complete
+- The orchestrator (per `subagent-driven-development` skill) runs `git worktree prune` after ALL sub-agents complete
+
+**Individual agent (during parallel work):**
+1. Remove only YOUR specific worktree: `git worktree remove .worktrees/<your-branch-name>`
+2. Do NOT run `git worktree prune` — other agents may still be active
+3. Do NOT run `git checkout dev` in main working tree during parallel work
+
+**Orchestrator (after ALL parallel work completes):**
+1. Verify no feature worktrees remain: `git worktree list`
+2. If only `.worktrees/main` remains: safe to prune
+3. Run: `git worktree prune`
+4. Run: `git checkout dev && git pull origin dev` (sync main working tree)
 
 ### Step 5: Delete Current Merged Branch
 
@@ -501,7 +533,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 | Remote branch already deleted | Skip remote deletion, clean local |
 | Local has extra commits | Warn user, ask before deleting |
 | Multiple PRs from same branch | Wait until ALL PRs merged |
-| Stash exists from pre-work | Preserve stash, inform user |
+| Stash exists from pre-work | N/A — worktrees eliminate need for stash |
 
 ## Automatic Cleanup Detection
 
@@ -614,14 +646,13 @@ When implementing an approved spec:
 
 1. **Branch Naming**: Derive from spec filename or issue — `spec/<short-name>` (e.g., `plans/SPEC-mesh-descriptor-lookup.md` → `spec/mesh-descriptor-lookup` or Issue #15 → `spec/project-first-strategy`)
 
-2. **Branch Creation**: Before any implementation, create and checkout the branch:
+2. **Branch Creation**: Before any implementation, create a worktree:
    ```bash
-   git checkout dev
-   git pull origin main
-   git checkout -b spec/<short-name>
+   git checkout dev && git pull origin dev
+   git worktree add .worktrees/spec-<short-name> -b spec/<short-name> dev
    ```
 
-3. **Work in Isolation**: All implementation commits go on the spec branch, never on main
+3. **Work in Isolation**: All implementation commits go in the worktree, never in the main working directory
 
 4. **Easy Rollback**: If implementation fails, simply `git checkout dev && git branch -D spec/<short-name>`
 
@@ -638,7 +669,7 @@ Use PR workflow instead of local merge:
 4. **Then create PR**: Only after branch is clean and rebased
 
 **PR Workflow Steps:**
-1. Create feature branch: `git checkout -b feature/issue-123-description`
+1. Create feature worktree: `git worktree add .worktrees/feature-issue-123 -b feature/issue-123-description dev`
 2. Commit changes to feature branch
 3. Push to remote: `git push origin feature/issue-123-description`
 4. Create PR: `github_create_pull_request` with `Fixes #123` in description

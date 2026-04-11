@@ -112,8 +112,10 @@ Format:
 1. #630 — must precede #621
 
 **Phase 2 (Parallel-safe):**
-- #662 (`.opencode/skills/`)
-- #614 (`src/`)
+
+Each parallel issue includes dispatch context:
+- #662 (`.opencode/skills/`) → `worktree_path: .worktrees/spec-662`
+- #614 (`src/`) → `worktree_path: .worktrees/spec-614`
 
 **Phase 3 (After #630):**
 - #621 (`.opencode/guidelines/`)
@@ -131,6 +133,41 @@ After presenting the plan, execute according to the dependency order:
 1. **Sequential issues**: Execute one at a time in dependency order
 2. **Parallel-safe groups**: Use `subagent-driven-development` skill
 3. **Report completion**: After ALL issues complete, report ONCE and HALT ONCE
+
+### Step 6.5: Capture Dev Base Hash (Before Dispatch)
+
+Before dispatching any parallel worktrees, the orchestrating agent MUST capture the current dev branch hash:
+
+```bash
+git rev-parse origin/dev
+```
+
+This `dev_base_hash` MUST be included in the dispatch context for each parallel issue. See Step 7 for the complete dispatch context schema.
+
+### Step 7: Dispatch Context for Parallel Issues
+
+For each issue in a parallel-safe group, the dispatch context MUST include worktree information:
+
+```yaml
+# Dispatch Context Per Issue
+issue: <number>
+branch: "spec/<short-name>"
+worktree_path: ".worktrees/spec-<short-name>"
+dev_base_hash: "<7-char-sha>"
+env_vars:
+  WORKTREE_PATH: ".worktrees/spec-<short-name>"
+  BRANCH_NAME: "spec/<short-name>"
+  GIT_OWNER: "<from-session>"
+  GIT_REPO: "<from-session>"
+  DEV_NAME: "<from-session>"
+  DEV_EMAIL: "<from-session>"
+```
+
+The `worktree_path` is derived from the branch name by replacing `/` with `-`:
+- Branch `spec/foo` → Worktree path `.worktrees/spec-foo`
+- Branch `feature/bar` → Worktree path `.worktrees/feature-bar`
+
+The `dev_base_hash` ensures all parallel worktrees start from the same base commit on `dev`.
 
 ## Single-Issue Shortcut
 
