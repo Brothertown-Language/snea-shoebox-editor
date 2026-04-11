@@ -174,6 +174,14 @@ Before declaring complete:
 - [ ] **Temp files cleaned up** — no `temp_*.py` or `*.json` left in `./tmp/`
 - [ ] **No temp files at project root** — confirm with `ls *.py *.json 2>/dev/null`
 
+## Cross-References
+
+| Reference | Relationship |
+|-----------|-------------|
+| `programming-principles` skill | Design judgment for 20 engineering principles — this skill owns *when* to verify, that skill owns *what* principles to apply |
+| `code-size-enforcement` skill | Size limit enforcement — SRP and "No Monoliths" have hard limits there |
+| `080-code-standards.md` | Project-specific conventions (typing, modern Python, libraries, linting) |
+
 ## Invocation
 
 Use this skill when:

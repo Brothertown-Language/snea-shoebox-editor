@@ -18,39 +18,30 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
   handles data consistency. Flag the rerun requirement to the user after making such changes. Redundant "safety-net"
   updates in downstream notebooks prohibited.
 
-## Design Principles — ENFORCED UNIVERSALLY
+## Design Principles
 
-> **See `code-size-enforcement` skill for complete size limit enforcement rules, detection methods, and violation recovery.**
+> **For design principles (KISS, DRY, SRP, SoC, cohesion, YAGNI, Fail Fast, Defensive Programming, and all 20 programming principles), see the `programming-principles` skill.** That skill is the single authoritative source for both enforcement rules and design judgment (apply strongly when / relax when). This guideline retains only project-specific conventions below.
 
-- **KISS (Keep It Simple, Stupid)**: Simplest correct solution. No unnecessary abstraction or cleverness. Prefer straightforward, readable code over "clever" optimizations.
-- **DRY (Don't Repeat Yourself)**: No duplicated logic. Extract shared functionality into reusable functions/modules. If you copy-paste code, you're doing it wrong.
+The following project-specific code structure rules are enforced in this repository:
+
 - **Non-Monolithic**: Break large blocks into cohesive, independent components. Notebooks should have focused cells — cells that do "one thing."
-- **Modular**: Each function, class, module, notebook cell, and document section should have a single clear purpose and minimal dependencies.
 - **Single Function Methods**: Every function/method performs exactly ONE task. If a function has multiple responsibilities, split it. Decompose ALL tasks, plans, and algorithms into discrete single-function methods. This applies to:
   - Python functions in `.py` files
   - Notebook cells (each cell should do ONE thing)
   - LaTeX/XeLaTeX environments and macros (one purpose each)
   - Scripts and configuration files
 - **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 40 lines, decompose it. If a notebook cell exceeds 50 lines, split it into multiple cells.
-- **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named
-  constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only
-  acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).
+- **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).
 - **No Re-exports** (ABSOLUTE PROHIBITION):
   - NEVER add `from X import Y` or `__all__` to `__init__.py` files.
   - `__init__.py` must contain ONLY a module docstring describing the package purpose.
-  - All imports must reference concrete module paths (e.g., `from commons.mesh.validator import MeshValidator`,
-    NOT `from commons.mesh import MeshValidator`).
+  - All imports must reference concrete module paths (e.g., `from commons.mesh.validator import MeshValidator`, NOT `from commons.mesh import MeshValidator`).
   - Rationale: Re-exports break IDE "Find Usages" and "Go to Definition" by creating false source locations.
   - Existing `__all__` entries in legacy files are assumed approved — do not remove them without explicit instruction.
-  - When creating a NEW `__init__.py`, it must be docstring-only. When editing an existing `__init__.py`, do not add
-    any imports or `__all__` entries.
-- **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the
-  package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two
-  concise sentences — enough for `.opencode/tools/py ls` to display alongside the filename.
+  - When creating a NEW `__init__.py`, it must be docstring-only. When editing an existing `__init__.py`, do not add any imports or `__all__` entries.
+- **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two concise sentences — enough for `.opencode/tools/py ls` to display alongside the filename.
 - **Docstring/Comment Determinism**: Pydoc/docstrings and code comments must use deterministic wording. Avoid ambiguous hedge/alternative phrasing such as `maybe`, `if ... or ...`, `and/or`, or `A + B or C` when describing required behavior, validation paths, or implementation intent.
-- **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered
-  configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause
-  edit failures. Reference items by label, not by positional index.
+- **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause edit failures. Reference items by label, not by positional index.
 
 ## Modern Python
 
