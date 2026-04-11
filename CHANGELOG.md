@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/659-worktrees-standardization
+
+- **Worktrees Directory Standardization** - Standardize all references from `worktrees/` to `.worktrees/` in session_init.py, removing outdated bare directory references and updating .gitignore to remove the redundant bare `worktrees/` entry
+
 ### spec/613-worktree-enforcement
 
 - **Worktree Enforcement Gate** - Make worktree usage mandatory when layout is active instead of advisory, remove OR escape hatch from subagent-driven-development, fix cd command violations in using-git-worktrees skill
