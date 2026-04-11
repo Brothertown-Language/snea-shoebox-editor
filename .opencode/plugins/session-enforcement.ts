@@ -106,6 +106,11 @@ function extractFrontmatter(content: string): {
   return { frontmatter, body };
 }
 
+interface FrontmatterError {
+  skillDir: string;
+  issues: string[];
+}
+
 /**
  * Load skill descriptions from YAML frontmatter in SKILL.md files.
  * Adapted from obra/superpowers/plugins/superpowers.js skill discovery pattern.
@@ -113,12 +118,16 @@ function extractFrontmatter(content: string): {
  * Source attribution: CSO (Content Search Optimization) principles from
  * https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md
  * Description format: "Use when..." with triggering conditions, NOT workflow summaries.
+ *
+ * Returns { skills, errors } where errors collects frontmatter validation issues.
+ * See #601 for the original bug that motivated frontmatter validation.
  */
-function loadSkillDescriptions(skillsDir: string): Array<{
-  name: string;
-  description: string;
-}> {
+function loadSkillDescriptions(skillsDir: string): {
+  skills: Array<{ name: string; description: string }>;
+  errors: FrontmatterError[];
+} {
   const skills: Array<{ name: string; description: string }> = [];
+  const errors: FrontmatterError[] = [];
 
   try {
     const entries = fs.readdirSync(skillsDir, { withFileTypes: true });
@@ -129,7 +138,31 @@ function loadSkillDescriptions(skillsDir: string): Array<{
 
       try {
         const content = fs.readFileSync(skillPath, "utf8");
+        const validationIssues: string[] = [];
+
+        const hasOpeningDelimiter = /^---\s*\n/m.test(content);
         const { frontmatter } = extractFrontmatter(content);
+
+        if (!hasOpeningDelimiter) {
+          validationIssues.push("Missing `---` opening delimiter");
+        } else if (Object.keys(frontmatter).length === 0) {
+          validationIssues.push("Delimiters present but no key:value pairs parsed (format error)");
+        }
+
+        if (hasOpeningDelimiter && !frontmatter.name) {
+          validationIssues.push("Missing `name` field");
+        }
+
+        if (hasOpeningDelimiter && !frontmatter.description) {
+          validationIssues.push("Missing `description` field — skill will be invisible to enforcement");
+        } else if (frontmatter.description && !frontmatter.description.startsWith("Use when")) {
+          validationIssues.push("Description does not start with \"Use when\" — CSO requirement for trigger discovery");
+        }
+
+        if (validationIssues.length > 0) {
+          errors.push({ skillDir: entry.name, issues: validationIssues });
+        }
+
         const name = frontmatter.name || entry.name;
         const description = frontmatter.description || "";
         if (description) {
@@ -143,7 +176,70 @@ function loadSkillDescriptions(skillsDir: string): Array<{
     // Skills directory may not exist in all contexts
   }
 
-  return skills;
+  return { skills, errors };
+}
+
+/**
+ * Build a structured warning string for frontmatter validation errors.
+ * Returns empty string if no errors, so the caller can skip injection.
+ * References #601 as the example bug that motivated this validation.
+ */
+function buildFrontmatterWarning(errors: FrontmatterError[]): string {
+  if (errors.length === 0) return "";
+
+  const perSkillListing = errors
+    .map(e => `- **${e.skillDir}**: ${e.issues.join("; ")}`)
+    .join("\n");
+
+  return `<FRONTMATTER_VALIDATION_WARNING>
+⚠️ The following SKILL.md files have frontmatter issues that may make skills invisible to enforcement:
+
+${perSkillListing}
+
+**Fix template** — every SKILL.md MUST start with this YAML frontmatter block:
+
+\`\`\`yaml
+---
+name: skill-name
+description: Use when [triggering conditions]. Triggers on: [keywords].
+type: discipline-enforcing
+license: MIT
+---
+\`\`\`
+
+See #601 for the original bug that motivated this validation.
+</FRONTMATTER_VALIDATION_WARNING>`;
+}
+
+/**
+ * Regex matching a bare issue reference: input that is solely an issue number
+ * like `#591`. Does NOT match `fix #591`, `see #591 and #592`, or any
+ * message with additional context.
+ */
+const BARE_ISSUE_RE = /^\s*#(\d+)\s*$/;
+
+/**
+ * Build a pipeline directive for bare issue references.
+ * When a user sends just `#N`, the agent should follow a deterministic
+ * audit→brainstorm→plan→HALT pipeline rather than guessing.
+ */
+function buildIssuePipelineDirective(issueNumber: string): string {
+  return `<ISSUE_PIPELINE_TRIGGER>
+The user provided a bare issue reference #${issueNumber}. Follow this mandatory pipeline:
+
+1. **Read the issue**: Use github_issue_read with method=get AND method=get_comments for #${issueNumber}
+2. **Audit the spec**: Invoke /skill spec-auditor --issue ${issueNumber}
+3. **Brainstorm refinements**: Invoke /skill brainstorming
+4. **Write a plan**: Invoke /skill writing-plans --task create
+5. **HALT** — Never auto-execute. Wait for explicit authorization.
+
+Critical rules:
+- Never auto-execute any plan
+- Follow each skill's own protocol
+- Adapt for bug reports (audit still runs, brainstorming explores the bug)
+- Fix audit findings before brainstorming
+- Read ALL comments on the issue before acting
+</ISSUE_PIPELINE_TRIGGER>`;
 }
 
 /**
@@ -223,8 +319,8 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
   const projectDir = input?.directory || process.cwd();
   const skillsDir = path.join(projectDir, ".opencode", "skills");
 
-  // Pre-load skill descriptions at plugin startup for discovery
-  const skillDescriptions = loadSkillDescriptions(skillsDir);
+  // Pre-load skill descriptions and frontmatter validation at plugin startup
+  const { skills: skillDescriptions, errors: frontmatterErrors } = loadSkillDescriptions(skillsDir);
 
   return {
     // Inject session context into system prompt (absorbed from session-init.ts)
@@ -232,6 +328,12 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       const { output: scriptOutput } = await runSessionInit(input.$);
       if (scriptOutput) {
         output.system.push(scriptOutput);
+      }
+
+      // Inject frontmatter validation warning if any skills have broken frontmatter
+      const warning = buildFrontmatterWarning(frontmatterErrors);
+      if (warning) {
+        output.system.push(warning);
       }
     },
 
@@ -244,21 +346,38 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
     },
 
     // Inject enforcement content into first user message (adapted from obra/superpowers)
+    // AND detect bare #N issue references in last user message
     "experimental.chat.messages.transform": async (_input, output) => {
       if (!output.messages || !output.messages.length) return;
 
+      const userMessages = output.messages.filter(m => m.info?.role === "user");
+      if (!userMessages.length) return;
+
+      const firstUser = userMessages[0];
+
+      // --- Enforcement injection into FIRST user message ---
       const enforcementContent = buildEnforcementContent(skillDescriptions);
-      if (!enforcementContent) return;
+      if (enforcementContent && firstUser.parts?.length) {
+        if (!firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) {
+          const ref = firstUser.parts[0];
+          firstUser.parts.unshift({ ...ref, type: "text", text: enforcementContent });
+        }
+      }
 
-      const firstUser = output.messages.find(m => m.info?.role === "user");
-      if (!firstUser || !firstUser.parts || !firstUser.parts.length) return;
-
-      // Only inject once per session
-      if (firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) return;
-
-      // Prepend enforcement content to first user message (adapted from superpowers.js)
-      const ref = firstUser.parts[0];
-      firstUser.parts.unshift({ ...ref, type: "text", text: enforcementContent });
+      // --- Bare issue pipeline detection on LAST user message ---
+      const lastUser = userMessages[userMessages.length - 1];
+      if (lastUser?.parts?.length) {
+        for (const part of lastUser.parts) {
+          if (part.type === "text" && part.text) {
+            const match = part.text.match(BARE_ISSUE_RE);
+            if (match) {
+              const directive = buildIssuePipelineDirective(match[1]);
+              lastUser.parts.push({ type: "text", text: directive });
+              break; // Only inject pipeline directive once per message
+            }
+          }
+        }
+      }
     },
   };
 }
