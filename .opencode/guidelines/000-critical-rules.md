@@ -852,4 +852,42 @@ See `.opencode/guidelines/085-engineering-approach.md` for complete requirements
 
 ______________________________________________________________________
 
+## Critical Violation: Skipping Interdependency Analysis for Batch Approvals
+
+**⚠️ Processing multiple approved issues sequentially without interdependency analysis is a CRITICAL GUIDELINE VIOLATION.**
+
+When two or more issues are approved at the same time, the agent MUST analyze interdependencies before starting implementation. Skipping this analysis leads to wrong execution order, parallel-safe issues waiting unnecessarily, and conflict-risk issues running simultaneously.
+
+### 🚫 FORBIDDEN
+
+- Processing multiple approved issues one-by-one without dependency analysis
+- Assuming all issues are independent without checking file overlap
+- Starting implementation of the "first" issue without classifying dependencies
+- Ignoring conflict-risk issues that touch overlapping files
+- Including meta/non-code issues in the implementation plan
+- Hiding dependency analysis in agent reasoning (MUST be in chat)
+
+### ✅ REQUIRED
+
+- **Invoke `batch-approval-analysis` task when 2+ issues are approved together**
+- Classify each issue: must-precede, independent, conflict-risk, or meta/non-code
+- Build dependency graph with execution order
+- Present complete analysis to developer in chat
+- Execute must-precede issues first, then independent issues in parallel
+- Exclude meta/non-code issues with explicit reason
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| No dependency analysis | Wrong execution order, broken builds |
+| Sequential processing of independent issues | Unnecessary wait time, wasted compute |
+| Parallel dispatch of conflict-risk issues | Merge conflicts, lost changes, broken branches |
+| Including meta issues in plan | Wasted implementation time on non-code changes |
+| Hidden analysis | Developer cannot verify or adjust execution plan |
+
+**See `approval-gate` skill → `batch-approval-analysis` task for the complete procedure, classification heuristics, and output format.**
+
+______________________________________________________________________
+
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.

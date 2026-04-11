@@ -1,6 +1,6 @@
 ---
 name: approval-gate
-description: Use when user says "approved", "go", or any implementation instruction, or when authorization needs verification. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label.
+description: Use when user says "approved", "go", or any implementation instruction, or when authorization needs verification. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label, batch approval, multiple issues approved, interdependency analysis.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -27,6 +27,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ~400 |
 | `verify-blockers` | Check for blocking issues/dependencies | ~320 |
 | `verify-open-questions` | Check for unresolved questions in spec | ~370 |
+| `batch-approval-analysis` | Analyze interdependencies when multiple issues are approved simultaneously; produce dependency graph and execution plan | ~500 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
 
 ## Invocation
@@ -37,6 +38,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-already-implemented` - Check if spec already implemented
 - `/skill approval-gate --task verify-blockers` - Check for blockers
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
+- `/skill approval-gate --task batch-approval-analysis` - Analyze interdependencies for multiple approved issues
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate` - Overview only
 
@@ -53,6 +55,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
    - Verify spec has received explicit authorization
    - Verify sub-issues structure (multi-task only)
    - Check for blocking issues/updates
+   - **When multiple issues are approved together:** Invoke `batch-approval-analysis` task
 
 3. **Implementation Scope:**
    - Authorization grants ONLY the specified phase/task
@@ -149,6 +152,43 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - 🚫 PROHIBITED: Halting after authorization to ask for separate permission to create sub-issues. Sub-issue creation is a setup step, not an implementation action requiring separate authorization.
 - 🚫 PROHIBITED: Treating 'empty sub-issues' as a blocking gate that requires human intervention. The auto-create workflow resolves empty sub-issues without human involvement.
 - ✅ REQUIRED: When `get_sub_issues` returns empty for an approved multi-task spec, auto-create sub-issues and proceed to implementation in the same session.
+
+## Batch Approval Analysis (CRITICAL)
+
+**⚠️ When multiple issues are approved simultaneously, dependency analysis is MANDATORY. Skipping it is a CRITICAL GUIDELINE VIOLATION.**
+
+### When to Invoke
+
+This analysis MUST be performed whenever TWO OR MORE issues are approved at the same time. Single-issue approvals proceed directly to the standard workflow.
+
+### Dependency Categories
+
+| Category | Description | Action |
+|----------|-------------|--------|
+| **Must-precede** | Issue A MUST complete before B can start | Execute A before B (serial) |
+| **Independent** | A and B can run in parallel | Group for parallel dispatch |
+| **Conflict-risk** | A and B touch overlapping files | Serialize or coordinate |
+| **Meta/Non-code** | Issue describes behavior, not code changes | Exclude from implementation |
+
+### Analysis Procedure
+
+1. Read all approved issues (body + comments)
+2. Classify each issue by dependency category
+3. Build dependency graph with execution order
+4. Identify parallel-safe groups for sub-agent dispatch
+5. Present the complete analysis to the developer in chat (MANDATORY — not hidden in reasoning)
+6. Execute according to the dependency order
+
+### Execution Strategy
+
+| Strategy | When | How |
+|----------|------|-----|
+| **Sequential** | Must-precede chain exists | Execute in dependency order |
+| **Parallel** | Independent issues | Use `subagent-driven-development` |
+| **Hybrid** | Mix of both | Serial for must-precede, parallel for independent groups |
+| **Exclude** | Meta/non-code issues | Report exclusion with reason |
+
+**See `batch-approval-analysis` task for the complete procedure, classification heuristics, and output format.**
 
 ## Post-Implementation Workflow
 

@@ -1,6 +1,6 @@
 ---
 name: subagent-driven-development
-description: Use when executing an approved implementation plan that benefits from task-level isolation or parallel work. Triggers on: subagent, dispatch task, implement plan tasks, task-by-task implementation, subagent development, parallel implementation.
+description: Use when executing an approved implementation plan that benefits from task-level isolation or parallel work. Triggers on: subagent, dispatch task, implement plan tasks, task-by-task implementation, subagent development, parallel implementation, batch execution plan.
 type: technique
 license: MIT
 compatibility: opencode
@@ -28,6 +28,75 @@ Fresh subagent per task = no context pollution between tasks. You precisely craf
 | Need fresh context per task | `subagent-driven-development` |
 | Small single-task implementation | `implementation-workflow` |
 
+## Batch Execution Plans
+
+When `approval-gate --task batch-approval-analysis` produces a dependency analysis for multiple approved issues, this skill accepts the resulting execution plan and dispatches subagents accordingly.
+
+### Execution Plan Input Format
+
+The batch execution plan from `batch-approval-analysis` provides:
+
+```markdown
+## Batch Approval — Dependency Analysis
+
+### Classification
+
+| Issue | Category | Files | Dependencies |
+|-------|----------|-------|-------------|
+| #NNN | Must-precede/Independent/Conflict-risk/Meta | path(s) | Depends on #MMM |
+
+### Execution Plan
+
+**Phase 1 (Serial):**
+1. #MMM — must precede #NNN
+
+**Phase 2 (Parallel-safe):**
+- #AAA (files/path/)
+- #BBB (other/files/)
+
+**Excluded:**
+- #CCC — meta/behavioral issue, no code changes required
+```
+
+### How Batch Plans Drive Dispatch
+
+| Plan Element | Dispatch Strategy |
+|--------------|-------------------|
+| **Serial phases** | Execute one issue at a time using standard subagent loop |
+| **Parallel-safe groups** | Dispatch independent subagents simultaneously via `task` tool |
+| **Must-precede chain** | Execute sequentially, each waiting for completion before next |
+| **Conflict-risk issues** | Serialize to prevent merge conflicts |
+| **Excluded issues** | Skip — report exclusion in chat |
+
+### Batch Dispatch Process
+
+```
+1. Receive execution plan from batch-approval-analysis
+2. For each serial phase:
+   a. Dispatch implementer subagent for that issue
+   b. Run spec review → code quality review loop
+   c. Mark complete
+   d. Proceed to next serial phase
+3. For each parallel-safe group:
+   a. Dispatch all implementer subagents in the group simultaneously
+   b. Each subagent works in its own worktree
+   c. Wait for all subagents in group to complete
+   d. Run spec review → code quality review for each
+   e. Mark all group issues complete
+4. After all phases complete:
+   a. verification-before-completion --task verify (MANDATORY)
+   b. finishing-a-development-branch --task checklist (MANDATORY)
+   c. git-workflow --task review-prep (MANDATORY)
+   d. Report completion + HALT
+```
+
+### Batch Execution Constraints
+
+- Each issue in a parallel group MUST use its own worktree (no shared working directories)
+- Conflict-risk issues are NEVER dispatched in parallel, even with worktrees
+- The agent reports progress on ALL issues ONCE at the end (not per issue)
+- Meta/non-code issues are excluded from implementation but noted in the final report
+
 ## Pre-Implementation Gates (MANDATORY)
 
 **Before dispatching any subagent, these gates MUST be satisfied:**
@@ -51,6 +120,7 @@ Fresh subagent per task = no context pollution between tasks. You precisely craf
 | `implementer-prompt.md` | Dispatch implementer subagent |
 | `spec-reviewer-prompt.md` | Dispatch spec compliance reviewer subagent |
 | `code-quality-reviewer-prompt.md` | Dispatch code quality reviewer subagent |
+| `batch-execution.md` | Accept batch execution plans from `approval-gate batch-approval-analysis` |
 
 ## The Process
 
