@@ -46,7 +46,7 @@ git status       # VERIFY clean working tree
 
 **🚫 CRITICAL: Do NOT create branches directly in verify-authorization.**
 
-Branch creation is DELEGATED to `git-workflow --task pre-work`, which includes the Worktree Gate (Step 4a). Creating branches here bypasses that gate — a CRITICAL VIOLATION when the worktree layout is active.
+Branch creation is DELEGATED to `git-workflow --task pre-work`, which includes the Worktree Gate (Step 4a). Creating branches here bypasses that gate — a CRITICAL VIOLATION.
 
 **After git state verification:**
 1. Record that git state is verified and clean

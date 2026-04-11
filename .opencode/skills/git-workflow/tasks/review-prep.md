@@ -142,6 +142,30 @@ ls ./tmp/
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
 
+### Step 1.5: Rebase on Current Dev (MANDATORY)
+
+Before pushing for review, sync the feature branch with the current state of `dev`:
+
+```bash
+git fetch origin
+git rebase origin/dev
+```
+
+**Why this matters:**
+- Other agents may have merged work into `dev` since branch creation
+- The compare URL must reflect an accurate diff against current `dev`
+- Merge conflicts surfacing at review time are better than at PR creation time
+- The developer reviews the actual changes that will be in the PR
+
+**If conflicts occur during rebase:**
+1. HALT and report conflicts to the developer
+2. List the conflicting files
+3. Request resolution before proceeding
+
+**This step is MANDATORY even if no other agents are known to be working.** Dev may have been updated by human merges, other agents, or CI.
+
+**For worktree-based branches:** The rebase runs inside the worktree directory. The `origin/dev` reference is shared across all worktrees, so `git fetch origin` and `git rebase origin/dev` work correctly from any worktree.
+
 ### Step 2: Verify Branch Is Pushed
 
 **Before generating compare URL, verify branch is on remote.**

@@ -5,37 +5,39 @@
 
 This file provides critical rules that must never be violated.
 
-## Critical Violation: Worktree Bypass When Layout Is Active
+## Critical Violation: Worktree Bypass — Using stash+checkout Instead of Worktrees
 
-**⚠️ Using `stash + checkout -b` instead of worktrees when the worktree layout is active is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Using `stash + checkout -b` instead of worktrees for ANY feature branch creation is a CRITICAL GUIDELINE VIOLATION.**
 
-When `WORKTREE_STATUS=ready` or `WORKTREE_STATUS=bootstrapped` (or when `worktrees/main/` or `.worktrees/main/` exists), the agent MUST use the `using-git-worktrees` skill for feature branch creation — NEVER fall back to `stash + checkout -b`.
+Worktrees are ALWAYS mandatory for feature branch creation. There is no conditional — no "when the layout is active," no fallback to `stash + checkout -b`, no `WORKTREE_STATUS` check. The agent MUST use the `using-git-worktrees` skill for every feature branch, period.
 
 ### 🚫 FORBIDDEN
 
-- Using `git checkout -b` to create feature branches when the worktree layout is active
+- Using `git checkout -b` to create feature branches — ALWAYS use worktrees instead
 - Using `git stash push -u` then `git checkout -b` as a substitute for worktree-based branch creation
 - Bypassing the Worktree Gate in `git-workflow --task pre-work` Step 4a
 - Creating branches directly in `verify-authorization` instead of delegating to `pre-work`
-- Ignoring the `WORKTREE_STATUS` environment variable from session-init
+- Checking `WORKTREE_STATUS` or filesystem for worktree availability before deciding
+- Using `stash + checkout` as a fallback for ANY reason
+- Ignoring `WORKTREE_FATAL=1` in session init output
 
 ### ✅ REQUIRED
 
-- **Check `WORKTREE_STATUS` env var** (primary) or filesystem (fallback) before creating any feature branch
-- **When layout is active:** Use `using-git-worktrees` skill via `git-workflow --task pre-work` Step 4a
-- **When layout is NOT active:** Use standard stash+checkout workflow
+- **ALWAYS use `using-git-worktrees` skill** for feature branch creation — no exceptions, no conditions
+- **If `WORKTREE_FATAL=1` appears in session init output:** HALT immediately and report the fatal error to the developer — do NOT proceed with any implementation
 - **`verify-authorization` MUST delegate branch creation** to `git-workflow --task pre-work` — never create branches directly
 
 ### Why This Matters
 
 | Violation | Consequence |
 |-----------|-------------|
-| `stash + checkout -b` when worktrees active | Parallel agent conflicts, dirty working trees, lost changes |
+| `stash + checkout -b` for feature branches | Parallel agent conflicts, dirty working trees, lost changes |
 | Skipping Worktree Gate | Other agents unaware of parallel work, merge conflicts |
-| Ignoring `WORKTREE_STATUS` | Session-init output wasted, detection relies only on filesystem |
+| Using `stash+checkout` as fallback | Creates path of least resistance that bypasses worktree isolation |
+| Ignoring `WORKTREE_FATAL=1` | Agent proceeds despite infrastructure failure, corrupts work |
 | Branch creation in `verify-authorization` | Worktree Gate in `pre-work` completely bypassed |
 
-**See `git-workflow` skill `--task pre-work` Step 4a for the complete Worktree Gate procedure and decision matrix.**
+**See `git-workflow` skill `--task pre-work` Step 4a for the complete Worktree Gate procedure.**
 
 ______________________________________________________________________
 

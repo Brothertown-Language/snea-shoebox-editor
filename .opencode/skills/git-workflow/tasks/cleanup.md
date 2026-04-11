@@ -68,10 +68,9 @@ git checkout dev
 git pull origin dev
 ```
 
-### Step 4: Remove Feature Worktree (if applicable)
+### Step 4: Remove Feature Worktree
 
-When the worktree layout is active (`worktrees/main/` exists), feature worktrees must
-be cleaned up after PR merge.
+Feature worktrees must be cleaned up after PR merge.
 
 ```bash
 # Determine worktree name from branch name:

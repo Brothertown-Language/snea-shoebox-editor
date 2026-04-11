@@ -20,11 +20,11 @@ Guard checks (auto-create missing files/branches/worktree):
 - dev branch: Create from origin/dev or main/master if missing
 - worktrees/main/: Bootstrap worktree layout if not set up
 
-Worktree layout (#604):
-- Main folder always on dev branch
-- worktrees/main/ is a permanent production reference
-- worktrees/ is in .gitignore
-- WORKTREE_STATUS=output: ready, bootstrapped, skipped, or failed
+ Worktree layout (#604):
+ - Main folder always on dev branch
+ - worktrees/main/ is a permanent production reference
+ - worktrees/ is in .gitignore
+ - WORKTREE_FATAL=1 is emitted only on setup failure (silent on success)
 
 Usage:
     uv run python .opencode/scripts/session_init.py
@@ -532,7 +532,6 @@ def _add_to_gitignore(entry: str) -> bool:
 
 def bootstrap_worktree_layout() -> None:
     if is_worktree_setup():
-        print("WORKTREE_STATUS=ready")
         return
 
     main_wt_path = os.path.join(os.getcwd(), "worktrees", "main")
@@ -540,8 +539,8 @@ def bootstrap_worktree_layout() -> None:
     if os.path.isdir(main_wt_path):
         result = run_git_command(["worktree", "remove", main_wt_path, "--force"])
         if result is None:
-            print("# ⚠️ Failed to remove stale worktrees/main/ directory", file=sys.stderr)
-            print("WORKTREE_STATUS=failed")
+            print("WORKTREE_FATAL=1")
+            print("# ⚠️ FATAL: Failed to remove stale worktrees/main/ directory", file=sys.stderr)
             return
 
     main_branch = "main"
@@ -549,8 +548,10 @@ def bootstrap_worktree_layout() -> None:
         if run_git_command(["rev-parse", "--verify", "master"]) is not None:
             main_branch = "master"
         else:
-            print("# ⚠️ No main or master branch found — skipping worktree bootstrap", file=sys.stderr)
-            print("WORKTREE_STATUS=skipped")
+            print("WORKTREE_FATAL=1")
+            print(
+                "# ⚠️ FATAL: No main or master branch found — worktree setup requires a default branch", file=sys.stderr
+            )
             return
 
     current = get_current_branch()
@@ -566,8 +567,8 @@ def bootstrap_worktree_layout() -> None:
 
     result = run_git_command(["worktree", "add", main_wt_path, main_branch])
     if result is None:
-        print("# ⚠️ Failed to create worktrees/main/ worktree", file=sys.stderr)
-        print("WORKTREE_STATUS=failed")
+        print("WORKTREE_FATAL=1")
+        print("# ⚠️ FATAL: Failed to create worktrees/main/ worktree", file=sys.stderr)
         if current and current != "dev":
             run_git_command(["checkout", current])
         return
@@ -587,11 +588,6 @@ def bootstrap_worktree_layout() -> None:
         run_git_command(["checkout", current])
         if had_stash:
             run_git_command(["stash", "pop"])
-
-    print("WORKTREE_STATUS=bootstrapped")
-    print("# 🔧 Bootstrapped worktree layout:")
-    print(f"#   - worktrees/main/ → {main_branch} branch")
-    print("#   - worktrees/ added to .gitignore")
 
 
 def run_guard_checks() -> None:

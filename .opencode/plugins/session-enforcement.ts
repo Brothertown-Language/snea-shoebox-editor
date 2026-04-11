@@ -256,7 +256,7 @@ function buildEnforcementContent(skillDescriptions: Array<{ name: string; descri
   const processSkills = skillDescriptions.filter(s =>
     ["approval-gate", "brainstorming", "writing-plans", "executing-plans",
      "verification-before-completion", "finishing-a-development-branch",
-     "git-workflow", "systematic-debugging", "spec-auditor",
+     "git-workflow", "using-git-worktrees", "systematic-debugging", "spec-auditor",
      "github-issue-creation", "github-sub-issues"].includes(s.name)
   );
   const implSkills = skillDescriptions.filter(s => !processSkills.includes(s));

@@ -511,6 +511,30 @@ git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
 
+### Step 3.5: Rebase on Current Dev (MANDATORY)
+
+After squashing and before pushing, re-verify the branch is on top of current `dev`:
+
+```bash
+git fetch origin
+git rebase origin/dev
+```
+
+**Why this matters:**
+- Another agent may have merged a PR into `dev` between review and PR creation
+- The squash commit must be based on the current `dev` tip, not a stale one
+- Prevents the PR from having unexpected merge conflicts or stale base
+
+**If conflicts occur during rebase:**
+1. HALT and report conflicts to the developer
+2. List the conflicting files
+3. Request resolution — the developer must decide how to proceed
+4. After resolution, re-run squash if needed, then retry push
+
+**This step is MANDATORY.** Even if the review-prep rebase just ran, `dev` may have been updated since.
+
+**For worktree-based branches:** The rebase runs inside the worktree directory. The `origin/dev` reference is shared across all worktrees, so `git fetch origin` and `git rebase origin/dev` work correctly from any worktree.
+
 ### Step 4: Push to Remote
 
 ```bash
