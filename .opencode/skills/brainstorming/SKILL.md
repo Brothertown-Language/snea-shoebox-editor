@@ -1,6 +1,10 @@
-______________________________________________________________________
-
-## name: brainstorming description: Use when creating a spec, planning a feature, or exploring requirements before implementation. Triggers on: spec, plan, feature, brainstorm, explore, requirements, ideate, think through, what should. type: technique license: MIT compatibility: opencode
+---
+name: brainstorming
+description: Use when creating a spec, planning a feature, or exploring requirements before implementation. Triggers on: spec, plan, feature, brainstorm, explore, requirements, ideate, think through, what should.
+type: technique
+license: MIT
+compatibility: opencode
+---
 
 # Skill: brainstorming
 
