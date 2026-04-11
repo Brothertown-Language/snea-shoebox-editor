@@ -355,7 +355,7 @@ GitHub Issue comments are for **state changes** — things a future reader of th
 | Task/phase completion | Chat only | Git commits already track what changed |
 | Intermediate implementation updates | Chat only | Session-scoped, not relevant to future readers |
 | Review-prep / verification status | Chat only | Operational checkpoint, not stakeholder communication |
-| Substantive spec revision | Issue comment | Stakeholders need to know scope/approach changed |
+| Substantive spec revision | Chat + Issue comment | Stakeholders need record; active developer needs immediate visibility |
 | PR created | Issue comment | Links the PR to the issue for traceability |
 | Issue blocked | Issue comment | Others need to know work is stuck |
 | Bug discovered during implementation | Issue comment | Affects scope or approach |
@@ -600,7 +600,7 @@ ______________________________________________________________________
 
 **⚠️ Creating a PR without EXPLICIT developer instruction is a CRITICAL GUIDELINE VIOLATION.**
 
-PRs require the developer to say one of these EXACT phrases: "create a PR", "make a PR", "push and create PR", "let's get a PR up".
+PRs require the developer to say one of these EXACT phrases: "create a PR", "make a PR", "push and create PR", "let's get a PR up", "PR" (bare), "PR #NNN" (for a specific issue).
 
 **🚫 FORBIDDEN:**
 
@@ -709,8 +709,9 @@ ______________________________________________________________________
 | Documentation (`docs/`, `*.md`) | ✅ YES | Changes to docs |
 | Config (`*.toml`, `*.yaml`) | ✅ YES | Config changes |
 | **NO files modified** | ❌ NO | Already implemented |
+| **Already-implemented spec** (all criteria met) | ❌ NO | Autoclose with evidence comment |
 
-**The only exception is when ZERO files were modified.**
+**The only exceptions are when ZERO files were modified or the spec is already fully implemented (verified by `verify-already-implemented` task).** Already-implemented specs are autoclosed with a verification comment and byline — no branch, PR, or implementation needed.
 
 ______________________________________________________________________
 

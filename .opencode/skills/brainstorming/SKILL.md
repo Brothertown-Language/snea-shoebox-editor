@@ -43,8 +43,7 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
    - All relevant questions asked (driven by user's answers)
    - User confirms requirements are complete
-   - Spec written and self-reviewed
-   - HALT and wait for explicit approval to proceed to writing-plans
+   - HALT and invoke `spec-creation` skill to structure and write the spec
 
 ## Process Flow
 
@@ -75,11 +74,7 @@ digraph brainstorming {
     "Propose 2-3 approaches\n(significant decisions only)" -> "Present design incrementally\n(section by section)";
     "Present design incrementally\n(section by section)" -> "User approves?";
     "User approves?" -> "Present design incrementally\n(section by section)" [label="no, revise"];
-    "User approves?" -> "Write spec/design doc" [label="yes"];
-    "Write spec/design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write spec/design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans" [label="approved"];
+    "User approves?" -> "Invoke spec-creation" [label="yes"];
 }
 ```
 
@@ -164,33 +159,22 @@ You use these dimensions internally to decide what to ask about. The user never 
 - Include targeted improvements only where they serve the current goal
 - Don't propose unrelated refactoring
 
-### Step 7: Write Spec/Design Doc
+### Step 7: Transition to spec-creation
 
-- Write the validated design as a GitHub Issue spec
-- Include source attribution when adapting from external sources
+**The terminal state is invoking spec-creation.** Do NOT write the spec in brainstorming — that is now the responsibility of the `spec-creation` skill.
 
-### Step 8: Spec Self-Review
+> "Exploration complete. I'll now invoke the spec-creation skill to structure and write the spec from our investigation results."
 
-After writing the spec, review it with fresh eyes:
+The `spec-creation` skill handles:
+- Requirements extraction
+- Problem decomposition
+- Interface-first thinking
+- Traceability mapping
+- Risk & operational analysis
+- Spec writing, self-review, and user review
+- Change control for revisions
 
-1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
-1. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
-1. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
-1. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
-
-Fix any issues inline. No need to re-review — just fix and move on.
-
-### Step 9: User Reviews Spec
-
-Ask the user to review the written spec before proceeding:
-
-> "Spec written. Please review it and let me know if you want to make any changes before we start writing the implementation plan."
-
-Wait for the user's response. If they request changes, make them and re-run the self-review. Only proceed once the user approves.
-
-### Step 10: Transition to writing-plans
-
-**The terminal state is invoking writing-plans.** Do NOT invoke any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+This separation ensures exploration (brainstorming) and structuring (spec-creation) are distinct concerns with distinct discipline.
 
 ## Key Principles
 
@@ -212,7 +196,8 @@ Wait for the user's response. If they request changes, make them and re-run the 
 | Prose exploration summary | Conversational Q&A flow |
 | Alternatives always required | Alternatives for significant decisions only |
 | No scope decomposition | Scope check before diving in |
-| No spec self-review | Self-review checklist before user review |
+| Steps 7-9: Write spec in brainstorming | Steps 7-9 moved to `spec-creation` skill |
+| Terminal state: writing-plans | Terminal state: invoke `spec-creation` |
 | No source attribution | Source attribution required |
 
 ## Integration with Existing Workflow
@@ -220,7 +205,7 @@ Wait for the user's response. If they request changes, make them and re-run the 
 ### Dispatch Order
 
 ```
-brainstorming (mandatory) → spec creation → approval-gate → writing-plans → executing-plans
+brainstorming (mandatory) → spec-creation → spec-auditor → approval-gate → writing-plans → executing-plans
 ```
 
 ### Approval Gate Integration
@@ -300,6 +285,6 @@ Please complete exploration before proceeding to spec creation.
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `writing-plans` (plan creation)
+- Related skills: `approval-gate` (authorization), `spec-creation` (spec structuring and writing), `writing-plans` (plan creation)
 - Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol)
 - Source: Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md)
