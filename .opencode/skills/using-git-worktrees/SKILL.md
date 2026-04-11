@@ -129,19 +129,21 @@ git worktree list
 
 ### 6. Run Project Setup
 
-Auto-detect and run appropriate setup for this Python project:
+Auto-detect and run appropriate setup for this Python project. Use `workdir` parameter on tool calls — NEVER `cd`:
 
 ```bash
-cd .worktrees/$BRANCH_NAME
-
-# This project uses uv
+# Use workdir parameter on Bash tool call:
+# workdir=".worktrees/$BRANCH_NAME"
 if [ -f pyproject.toml ]; then uv sync; fi
 ```
 
 ### 7. Verify Clean Baseline with Tests
 
+Use `workdir` parameter on tool calls — NEVER `cd`:
+
 ```bash
-cd .worktrees/$BRANCH_NAME
+# Use workdir parameter on Bash tool call:
+# workdir=".worktrees/$BRANCH_NAME"
 uv run pytest test/ -x
 ```
 
@@ -156,7 +158,34 @@ Worktree ready at .worktrees/spec/554-git-worktrees-skill
 Tests passing (<N> tests, 0 failures)
 Branch: spec/554-git-worktrees-skill (from dev)
 Ready to implement <feature-name>
+All commands use workdir=".worktrees/$BRANCH_NAME" — never cd
 ```
+
+## Tool Usage Compliance
+
+**⚠️ CRITICAL: All commands in worktrees MUST use `workdir` parameter or relative paths from project root. NEVER use `cd` commands.**
+
+Per AGENTS.md and `060-tool-usage.md`, `cd` commands are a zero-tolerance violation. When executing commands inside a worktree:
+
+| Method | Example | Compliant? |
+|--------|---------|------------|
+| `workdir` parameter on Bash tool | `workdir=".worktrees/$BRANCH_NAME"` | ✅ YES |
+| Relative path from project root | `uv run --directory .worktrees/$BRANCH_NAME pytest` | ✅ YES |
+| `cd .worktrees/$BRANCH_NAME && ...` | `cd .worktrees/xyz && uv sync` | 🚫 NO — zero tolerance |
+
+**Rule:** Every tool call that operates inside a worktree directory MUST use `workdir="<worktree-path>"`. No exceptions.
+
+## Verification Step
+
+After worktree creation (step 5), verify the worktree actually exists before proceeding:
+
+```bash
+git worktree list
+# MUST show the new worktree entry
+# If missing → HALT and report — do NOT proceed with implementation in main folder
+```
+
+**If verification fails:** The worktree was not created successfully. HALT and report the failure. Do NOT fall back to working in the main folder — that defeats the isolation purpose.
 
 ## Quick Reference
 

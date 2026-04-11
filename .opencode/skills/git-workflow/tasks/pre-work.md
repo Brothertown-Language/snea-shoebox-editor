@@ -218,6 +218,36 @@ git checkout -b spec/<short-name>  # or feature/<description>
 - Ensure working tree is clean after sync
 - If `dev` doesn't exist locally, create it from `main`: `git checkout -b dev origin/dev`
 
+### Step 4a: Worktree Gate (MANDATORY when layout is active)
+
+**When the worktree layout is active (`worktrees/main/` or `.worktrees/main/` exists), feature branch creation MUST create a worktree — not just a branch in the main folder.**
+
+**Detection:**
+```bash
+ls -d worktrees/main .worktrees/main 2>/dev/null
+```
+
+**If worktree layout is active and creating a feature branch:**
+1. Invoke `using-git-worktrees` skill — it is MANDATORY, not optional
+2. The worktree skill handles branch creation, isolation, and setup
+3. Do NOT fall back to stash+checkout workflow when layout is active
+
+**Decision matrix:**
+
+| Condition | Action |
+|-----------|--------|
+| Worktree layout active + feature branch | **MANDATORY:** Use `using-git-worktrees` skill |
+| Worktree layout active + dev-only work | Work in main folder (no worktree needed) |
+| No worktree layout | Use standard stash+checkout workflow (below) |
+
+**Why mandatory:** The OR escape hatch (worktree OR stash+checkout) gives agents a path of least resistance. When the layout is active, worktree isolation is the correct default — it prevents conflicting work between parallel agents.
+
+**If no worktree layout is active**, proceed with standard branch creation:
+
+```bash
+git checkout -b spec/<short-name>
+```
+
 ### Step 5: Verify Clean Working Tree
 
 **Before yielding back to orchestration layer, verify:**
@@ -308,12 +338,11 @@ Verified all proposed changes were already implemented. No modifications needed.
    - No further steps needed
    - No branch cleanup (no branch was created)
 
-## Worktree Integration (Phase 2 of #604)
+## Worktree Integration
 
 ### Feature Worktree Creation
 
-When the worktree layout is active (`worktrees/main/` exists), feature branches
-should use worktrees instead of stash+checkout:
+When the worktree layout is active (`worktrees/main/` or `.worktrees/main/` exists), feature branches MUST use worktrees instead of stash+checkout. This is enforced by the Worktree Gate in Step 4a.
 
 **Before (stash-based):**
 1. `git stash -u` → 2. `git checkout -b feature/xyz dev` → 3. Work in same folder
