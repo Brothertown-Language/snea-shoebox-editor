@@ -48,4 +48,10 @@ Severity: [HIGH|MEDIUM|LOW]
 - Simple bug fix specs with one requirement and one step
 - Specs with obvious 1:1 requirement-to-step mapping
 
+## Cross-Reference
+
+Creation-time traceability is enforced by the `spec-creation` skill's `traceability` task. This subtask verifies traceability as a second pass — checking that the creation-time traceability was done correctly and that nothing was lost between spec creation and audit.
+
+**Finding pattern:** `MISSING-TRACEABILITY` — Spec lacks creation-time traceability. Was `spec-creation --task traceability` used?
+
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)

@@ -44,8 +44,9 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 **Mandatory actions on revision:**
 1. Add `(REVISED - NEEDS APPROVAL)` suffix to STATUS
 2. Add `needs-approval` label to the issue
-3. HALT — do NOT proceed with implementation
-4. Wait for fresh explicit approval
+3. Post chat output with exec summary + spec URL + byline (per `github-comments` skill → Spec Revision Chat Output)
+4. HALT — do NOT proceed with implementation
+5. Wait for fresh explicit approval
 
 **Exempt status updates (do NOT revoke approval):**
 - STATUS marker updates only (`STATUS: 1.1` → `STATUS: 1.2`)

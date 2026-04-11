@@ -40,6 +40,8 @@ instruction, HALTing after PR creation, and NEVER merging PRs.
 | "push and create PR"    | ✅ YES  |
 | "let's get a PR up"     | ✅ YES  |
 | "create a pull request" | ✅ YES  |
+| "PR" (bare)             | ✅ YES  |
+| "PR #NNN"               | ✅ YES  |
 
 **The developer MUST explicitly say one of these phrases (or unambiguous equivalent).**
 

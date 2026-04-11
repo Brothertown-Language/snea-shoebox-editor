@@ -51,4 +51,10 @@ Recommendation: [add logging/metrics/deployment section]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
+## Cross-Reference
+
+Creation-time operational requirements are enforced by the `spec-creation` skill's `risk` task. This subtask verifies completeness as a second pass — checking that operational concerns were addressed during spec creation and that nothing was missed.
+
+**Finding pattern:** `MISSING-OPERATIONAL` — Spec lacks creation-time operational requirements. Was `spec-creation --task risk` used?
+
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)

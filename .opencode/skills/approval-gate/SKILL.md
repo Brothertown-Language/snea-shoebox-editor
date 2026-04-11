@@ -24,6 +24,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-authorization` | Check explicit auth and needs-approval label; delegates branch creation to `git-workflow --task pre-work` | ~400 |
 | `verify-sub-issues` | Verify sub-issue structure for multi-task specs | ~480 |
 | `verify-codebase` | Re-evaluate codebase state, detect staleness | ~400 |
+| `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ~400 |
 | `verify-blockers` | Check for blocking issues/dependencies | ~320 |
 | `verify-open-questions` | Check for unresolved questions in spec | ~370 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
@@ -33,6 +34,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-authorization` - Check auth before work
 - `/skill approval-gate --task verify-sub-issues` - Check sub-issue structure
 - `/skill approval-gate --task verify-codebase` - Check codebase state
+- `/skill approval-gate --task verify-already-implemented` - Check if spec already implemented
 - `/skill approval-gate --task verify-blockers` - Check for blockers
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
 - `/skill approval-gate --task post-implementation` - After implementation done
@@ -202,9 +204,9 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
    - Conditional phrase → HALT (not explicit)
 
 **For `pr-creation` task:**
-1. Check if user said "create a PR" explicitly
+1. Check if user said an explicit PR creation phrase ("create a PR", "make a PR", "push and create PR", "let's get a PR up", "create a pull request", "PR", "PR #NNN")
 2. Apply enforcement matrix:
-   - "create a PR" present → PROCEED
+   - Explicit PR phrase present → PROCEED
    - "approved" only → HALT (auth for implementation, not PR)
    - Implementation complete → HALT (need explicit PR instruction)
 
@@ -234,7 +236,7 @@ PR creation requires explicit instruction.
 
 User said 'approved' which authorizes implementation ONLY, not PR creation.
 
-To create PR: Say 'create a PR' explicitly.
+To create PR: Say 'create a PR', 'make a PR', 'PR', or 'PR #NNN' explicitly.
 ```
 
 ## Analysis → Implementation Authorization Boundary

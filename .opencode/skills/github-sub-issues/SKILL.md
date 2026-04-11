@@ -72,16 +72,38 @@ If multi-task: Sub-issues are MANDATORY.
 
 **This step is covered by the parent spec's authorization. No separate 'approved' or 'go' is needed.**
 
+### ⚠️ CONTEXT EFFICIENCY (CRITICAL)
+
+**API responses from `github_issue_write` and `github_sub_issue_write` contain the full parent issue body (~8KB each). Creating + linking 8 sub-issues produces 16 responses consuming ~128KB of context — enough to block implementation.**
+
+**MANDATORY: Extract ONLY the minimal data needed from API responses. Immediately discard the full response body.**
+
+From each `github_issue_write` response, capture ONLY:
+- Issue number (`.number`)
+- Database ID (`.id`)
+
+From each `github_sub_issue_write` response, capture ONLY:
+- Confirmation that the link succeeded
+
+**DO NOT** read, summarize, or reference the full body text from creation responses. The parent issue body is already in context from the initial read. Receiving it again from each API call wastes context for zero new information.
+
+### Efficient Auto-Create Procedure
+
 ```
 For each PHASE in spec:
   1. Create issue: github_issue_write(method="create",
      title="[Task: #N] <phase-description>")
-  2. Get database ID from response (.id field)
-  3. Link: github_sub_issue_write(method="add",
+     → CAPTURE ONLY: issue number + database ID
+     → DISCARD: full body, labels, all other fields
+  2. Link: github_sub_issue_write(method="add",
      issue_number=N, sub_issue_id=db_id)
+     → CAPTURE ONLY: link confirmed (yes/no)
+     → DISCARD: full response body
 
-Post comment: "Created X sub-issues for phase tracking"
-Proceed to implement first phase
+After all sub-issues created:
+  Post comment: "Created X sub-issues for phase tracking"
+  List issue numbers and titles (from local knowledge, NOT from API responses)
+  Proceed to implement first phase
 ```
 
 **⚠️ DATABASE ID REQUIREMENT:**

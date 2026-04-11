@@ -273,6 +273,50 @@ The summary MUST answer:
 
 ---
 
+## Spec Revision Chat Output (MANDATORY)
+
+**When a substantive spec revision is made, BOTH chat output AND an Issue comment are required.**
+
+### When Required
+
+- **Substantive spec revision** — changes that set `REVISED - NEEDS APPROVAL` status
+- Changes to requirements, phases, success criteria, scope, or approach
+- Post-audit revisions that modify content (not just STATUS/typos/cross-refs)
+
+**NOT required for:**
+- Non-substantive changes (STATUS marker updates, typos, cross-reference additions)
+- Initial spec creation (has its own format via `github-issue-creation` skill)
+
+### Chat Output Format
+
+**Prose-driven with topical paragraph organization:**
+
+1. **Lead sentence** — One sentence stating what happened (e.g., "The spec was revised from v1.1 to v1.2 following audit findings.")
+2. **Topical paragraphs** — Each paragraph covers one logical area of change (e.g., task restructuring, triage logic, output format). If only one change, one paragraph suffices.
+3. **URL** — Spec issue URL
+4. **AI byline LAST** — `🤖 <AgentName> (<ModelID>) 📝`
+
+**Prohibited in output:** Labeled sections (`**Summary:**`, `**Outcome:**`), bullet-point templates (`- Changed:`, `- Added:`, `- Removed:`), template markers of any kind.
+
+### Issue Comment Format
+
+**Prose-driven, same structure as chat output but without URL (URL is chat-only):**
+
+1. **Lead sentence** — Same as chat output
+2. **Topical paragraphs** — Same content as chat output
+3. **AI byline LAST** — `🤖 <AgentName> (<ModelID>) 📝`
+
+**Prohibited in comment:** Authorization solicitation ("awaiting approval"), "ready when you are" language.
+
+### Why Both Channels
+
+| Channel | Purpose | Audience |
+|---------|---------|----------|
+| Chat | Immediate visibility | Active developer |
+| Issue comment | Permanent record | Future readers, stakeholders |
+
+---
+
 ## Issue Body Update Rules
 
 ### Issue Body Attribution (MANDATORY)
@@ -305,15 +349,15 @@ When updating textual content in an issue body:
 ### Spec Alteration Format
 
 ```
-📝 Spec altered: <summary>
+📝 Spec altered: <one-sentence lead stating what changed>
 
-- Changed: <what changed>
-- Added: <what added>
-- Removed: <what removed>
+<topical paragraphs covering each area of change>
 
 ---
 🤖 <AgentName> (<ModelID>) 📝
 ```
+
+**Format requirement:** Prose-driven with topical paragraph organization. Lead sentence stating what happened, followed by topical paragraphs covering logically distinct areas of change. No labeled sections, no bullet-point templates, no template markers.
 
 ### What Counts as "Textual Content"
 
@@ -602,11 +646,10 @@ All tasks complete from this specification.
 
 ### Spec Alteration Comment
 
-```
-📝 Spec altered: Added Phase 3 for verification
+**Prose-driven format (topical paragraphs, no labeled sections or bullet templates):**
 
-- Added: Phase 3: Verification (auto-progress)
-- Added: Success criteria verification steps
+```
+The spec was revised to address audit findings. Task structure was simplified from 6 phases to 3, merging verification steps into their respective implementation phases. Success criteria were expanded to explicitly cover edge cases.
 
 ---
 🤖 OpenCode (ollama-cloud/glm-5.1) 📝
