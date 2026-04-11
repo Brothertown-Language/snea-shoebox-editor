@@ -12,6 +12,12 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/613-worktree-enforcement
+
+- **Worktree Enforcement Gate** - Make worktree usage mandatory when layout is active instead of advisory, remove OR escape hatch from subagent-driven-development, fix cd command violations in using-git-worktrees skill
+- Add Tool Usage Compliance section and verification step to using-git-worktrees skill
+- Add Worktree Gate to git-workflow pre-work task that requires worktrees when layout is active
+
 ### spec/600-auto-create-changelog-dev
 
 - **Session Init Guard Checks** - Auto-create missing CHANGELOG.md, .opencode/CHANGELOG.md, and dev branch during session initialization, preventing silent failures from dead links and branch errors
