@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/664-cleanup-sync
+
+- **Cleanup Local Sync Fix** - Add mandatory dev sync verification (git log check after pull) and make git remote prune origin mandatory in cleanup task, preventing stale local branches and ghost remote-tracking references after PR merges
+
 ### spec/659-worktrees-standardization
 
 - **Worktrees Directory Standardization** - Standardize all references from `worktrees/` to `.worktrees/` in session_init.py, removing outdated bare directory references and updating .gitignore to remove the redundant bare `worktrees/` entry
