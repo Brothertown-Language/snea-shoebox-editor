@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Use when creating a branch, committing changes, pushing work, or creating a PR. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash.
+description: Use when creating a branch, committing changes, pushing work, or creating a PR. Also use when git rebase/merge produces conflicts — invoke conflict-resolution skill for classification. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash, conflict, merge conflict, rebase conflict.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -662,8 +662,8 @@ pre-work → implementation → review-prep → pr-creation → cleanup
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation)
-- Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
+- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)
+- Related guidelines: `000-critical-rules.md` (blind conflict resolution rule), `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
 - Session init: `.opencode/plugins/session-enforcement.ts` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)
 
 ## Changelog Generation (Sub-Task Integration)

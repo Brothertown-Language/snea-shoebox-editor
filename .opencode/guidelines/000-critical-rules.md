@@ -764,6 +764,64 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## Critical Violation: Blind Conflict Resolution
+
+**⚠️ Resolving git conflicts using "ours"/"theirs" heuristics without classifying conflict tier is a CRITICAL GUIDELINE VIOLATION.**
+
+When an agent performs a rebase, merge, cherry-pick, or any git operation that produces conflicts, it MUST classify each conflict before resolving it. Blindly accepting "ours" or "theirs" without understanding what is being lost can silently erase committed work and spec intent.
+
+### 🚫 FORBIDDEN
+
+- Resolving ALL conflicts with `git checkout --theirs` or `git checkout --ours` without classification
+- Using `git rebase --strategy-option=theirs/ours` as a blanket resolution
+- Accepting one side of a conflict without reading what the other side contains
+- Skipping conflict classification because "conflicts are just formatting"
+- Proceeding after conflict resolution without verifying spec compliance
+- Creating commits that resolve conflicts by dropping changes silently
+
+### ✅ REQUIRED
+
+**See `conflict-resolution` skill for the complete procedural workflow including classification, notification, and verification.**
+
+Key requirements:
+- **Classify EVERY conflict** into one of three tiers before resolving
+- **Tier 1 (Trivial):** Whitespace, formatting, reordering → auto-resolve, silent
+- **Tier 2 (Textual but safe):** Same intent, different text → auto-resolve, note in chat
+- **Tier 3 (Intent conflict):** Different goals or spec compliance at risk → HALT, flag for developer review
+- **Post-resolution verification:** After resolving conflicts, verify the result still satisfies the original spec
+- **Notify developer:** Chat summary for Tier 2 and Tier 3; GitHub Issue for complex Tier 3
+
+### Conflict Classification Tiers
+
+| Tier | Name | Criteria | Agent Action |
+|------|------|----------|-------------|
+| 1 | **Trivial** | Whitespace, formatting, reordering of unchanged lines | Auto-resolve, silent |
+| 2 | **Textual but safe** | Same intent on both sides, just different text (e.g., both rename same variable) | Auto-resolve, note in chat |
+| 3 | **Intent conflict** | Different goals, or resolution could alter spec compliance | Halt, flag for developer review |
+
+### Notification Strategy
+
+| Conflict Severity | Notification | Persistence |
+|-------------------|-------------|-------------|
+| Tier 1 (Trivial) | None | None |
+| Tier 2 (Textual but safe) | Chat summary | None |
+| Tier 3 — Minor (devil in the details) | Chat with specifics | None |
+| Tier 3 — Complex (architectural) | Chat summary + GitHub Issue | Persistent issue for review |
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| Blind "theirs" resolution | All feature branch changes silently erased |
+| Blind "ours" resolution | All parent branch changes silently erased |
+| Syntactically correct but semantically wrong | Spec intent violated without detection |
+| No notification to developer | No visibility into what was resolved or lost |
+| No spec compliance check | Rebased result may not satisfy original spec |
+
+**See `conflict-resolution` skill for the complete procedural workflow.**
+
+______________________________________________________________________
+
 ## Critical: Engineering Mindset Required
 
 **⚠️ All work must be approached with proper engineering discipline.**

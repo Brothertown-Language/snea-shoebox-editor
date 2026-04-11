@@ -157,10 +157,16 @@ git rebase origin/dev
 - Merge conflicts surfacing at review time are better than at PR creation time
 - The developer reviews the actual changes that will be in the PR
 
-**If conflicts occur during rebase:**
-1. HALT and report conflicts to the developer
-2. List the conflicting files
-3. Request resolution before proceeding
+**If conflicts occur during rebase, invoke `/skill conflict-resolution` to classify and resolve them:**
+
+1. **Invoke conflict-resolution skill** — classify each conflict into tier (trivial, textual, intent)
+2. **Resolve Tier 1 and Tier 2 conflicts** — auto-resolve, notify via chat
+3. **HALT for Tier 3 (intent) conflicts** — flag for developer review, create GitHub Issue for complex conflicts
+4. **After all conflicts resolved** — verify rebased result satisfies original spec (see Step 4 in conflict-resolution skill)
+
+**🚫 NEVER resolve ALL conflicts with `git checkout --theirs` or `git checkout --ours` without classification. This is a CRITICAL VIOLATION.**
+
+**See `conflict-resolution` skill for the complete procedural workflow.**
 
 **This step is MANDATORY even if no other agents are known to be working.** Dev may have been updated by human merges, other agents, or CI.
 
