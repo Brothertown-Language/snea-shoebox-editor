@@ -333,8 +333,8 @@ Feature branches MUST use worktrees instead of stash+checkout. This is ALWAYS en
 
 **After (worktree-based):**
 1. Ensure main folder is on `dev`: `git checkout dev && git pull origin dev`
-2. Create worktree: `git worktree add worktrees/feature-xyz -b feature/xyz dev`
-3. Work in `worktrees/feature-xyz/`
+2. Create worktree: `git worktree add .worktrees/feature-xyz -b feature/xyz dev`
+3. Work in `.worktrees/feature-xyz/`
 
 ### Branch Name to Worktree Name Mapping
 
@@ -342,8 +342,8 @@ Branch names containing `/` must be sanitized for the worktree directory name:
 
 | Branch Name | Worktree Directory |
 |-------------|-------------------|
-| `feature/my-change` | `worktrees/feature-my-change/` |
-| `spec/604-worktree-model` | `worktrees/spec-604-worktree-model/` |
+| `feature/<name>` | `.worktrees/feature-<name>/` |
+| `spec/<name>` | `.worktrees/spec-<name>/` |
 
 **Rule:** Replace `/` with `-` in the worktree directory name.
 

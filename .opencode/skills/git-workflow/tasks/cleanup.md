@@ -74,15 +74,15 @@ Feature worktrees must be cleaned up after PR merge.
 
 ```bash
 # Determine worktree name from branch name:
-# spec/604-worktree-model → worktrees/spec-604-worktree-model
-# feature/my-change → worktrees/feature-my-change
+# spec/<name> → .worktrees/spec-<name>
+# feature/<name> → .worktrees/feature-<name>
 # Rule: Replace / with - in the worktree directory name
 
 SANITIZED=$(echo "<merged-branch-name>" | tr '/' '-')
-WT_PATH="worktrees/${SANITIZED}"
+WT_PATH=".worktrees/${SANITIZED}"
 
 # Check if worktree exists for this branch
-if [ -d "worktrees" ] && git worktree list | grep -q "$WT_PATH"; then
+if [ -d ".worktrees" ] && git worktree list | grep -q "$WT_PATH"; then
     git worktree remove "$WT_PATH"
     echo "Removed worktree: $WT_PATH"
 fi
