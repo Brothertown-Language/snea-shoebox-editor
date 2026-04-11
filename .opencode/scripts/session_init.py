@@ -14,10 +14,17 @@ Extracts git context needed for agent startup:
 - GITBUCKET_HAS_CREDENTIALS: Whether .env has token configured
 - SRCLEIGHT_STATUS: Srclight index health (ok/empty/not_indexed)
 
-Guard checks (auto-create missing files/branches):
+Guard checks (auto-create missing files/branches/worktree):
 - CHANGELOG.md: Create with Keep a Changelog header if missing
 - .opencode/CHANGELOG.md: Create with minimal header if missing
 - dev branch: Create from origin/dev or main/master if missing
+- worktrees/main/: Bootstrap worktree layout if not set up
+
+Worktree layout (#604):
+- Main folder always on dev branch
+- worktrees/main/ is a permanent production reference
+- worktrees/ is in .gitignore
+- WORKTREE_STATUS=output: ready, bootstrapped, skipped, or failed
 
 Usage:
     uv run python .opencode/scripts/session_init.py
@@ -491,13 +498,109 @@ def _ensure_dev_branch() -> str:
     return "failed (no source branch)"
 
 
+def get_current_branch() -> str | None:
+    return run_git_command(["branch", "--show-current"])
+
+
+def is_worktree_setup() -> bool:
+    main_wt = os.path.join(os.getcwd(), "worktrees", "main")
+    if not os.path.isdir(main_wt):
+        return False
+    wt_git = os.path.join(main_wt, ".git")
+    if not os.path.isfile(wt_git):
+        return False
+    return True
+
+
+def _add_to_gitignore(entry: str) -> bool:
+    gitignore_path = os.path.join(os.getcwd(), ".gitignore")
+    if not os.path.isfile(gitignore_path):
+        return False
+    try:
+        with open(gitignore_path) as f:
+            lines = f.read().splitlines()
+        if entry in lines:
+            return False
+        with open(gitignore_path, "a") as f:
+            if lines and lines[-1] != "":
+                f.write("\n")
+            f.write(f"{entry}\n")
+        return True
+    except OSError:
+        return False
+
+
+def bootstrap_worktree_layout() -> None:
+    if is_worktree_setup():
+        print("WORKTREE_STATUS=ready")
+        return
+
+    main_wt_path = os.path.join(os.getcwd(), "worktrees", "main")
+
+    if os.path.isdir(main_wt_path):
+        result = run_git_command(["worktree", "remove", main_wt_path, "--force"])
+        if result is None:
+            print("# ⚠️ Failed to remove stale worktrees/main/ directory", file=sys.stderr)
+            print("WORKTREE_STATUS=failed")
+            return
+
+    main_branch = "main"
+    if run_git_command(["rev-parse", "--verify", "main"]) is None:
+        if run_git_command(["rev-parse", "--verify", "master"]) is not None:
+            main_branch = "master"
+        else:
+            print("# ⚠️ No main or master branch found — skipping worktree bootstrap", file=sys.stderr)
+            print("WORKTREE_STATUS=skipped")
+            return
+
+    current = get_current_branch()
+
+    if current and current != "dev":
+        stash_output = run_git_command(["stash", "push", "-u", "-m", "WIP: before worktree bootstrap"])
+        had_stash = stash_output is not None
+    else:
+        had_stash = False
+
+    if current and current != "dev":
+        run_git_command(["checkout", "dev"])
+
+    result = run_git_command(["worktree", "add", main_wt_path, main_branch])
+    if result is None:
+        print("# ⚠️ Failed to create worktrees/main/ worktree", file=sys.stderr)
+        print("WORKTREE_STATUS=failed")
+        if current and current != "dev":
+            run_git_command(["checkout", current])
+        return
+
+    _add_to_gitignore("worktrees/")
+
+    submod_dirs = get_submodule_dirs()
+    if submod_dirs:
+        init_result = run_git_command(["submodule", "update", "--init"])
+        if init_result is not None:
+            for submod in submod_dirs:
+                submod_path = os.path.join(main_wt_path, submod)
+                if os.path.isdir(submod_path):
+                    run_git_command(["-C", main_wt_path, "submodule", "update", "--init", submod])
+
+    if current and current != "dev":
+        run_git_command(["checkout", current])
+        if had_stash:
+            run_git_command(["stash", "pop"])
+
+    print("WORKTREE_STATUS=bootstrapped")
+    print("# 🔧 Bootstrapped worktree layout:")
+    print(f"#   - worktrees/main/ → {main_branch} branch")
+    print("#   - worktrees/ added to .gitignore")
+
+
 def run_guard_checks() -> None:
-    """Run guard checks for missing CHANGELOG files and dev branch."""
     print("")
     print("# --- Guard Checks ---")
     print(f"CHANGELOG.md: {_ensure_changelog_md()}")
     print(f".opencode/CHANGELOG.md: {_ensure_opencode_changelog_md()}")
     print(f"dev branch: {_ensure_dev_branch()}")
+    bootstrap_worktree_layout()
 
 
 def main() -> int:

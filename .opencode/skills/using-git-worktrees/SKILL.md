@@ -52,11 +52,11 @@ Follow this priority order:
 ### 1. Check Existing Directories
 
 ```bash
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
+ls -d worktrees 2>/dev/null       # Preferred (from #604 worktree model)
+ls -d .worktrees 2>/dev/null      # Legacy (hidden)
 ```
 
-**If found:** Use that directory. If both exist, `.worktrees` wins.
+**If found:** Use that directory. If both exist, `worktrees` wins (per #604 spec).
 
 ### 2. Check AGENTS.md / Project Config
 
@@ -69,7 +69,7 @@ grep -i "worktree" AGENTS.md .opencode/AGENTS.md 2>/dev/null
 
 ### 3. Default to Project-Local
 
-If no directory exists and no preference found, default to `.worktrees/` (project-local, hidden).
+If no directory exists and no preference found, default to `worktrees/` (per #604 worktree-integrated three-branch model).
 
 ## Safety Verification
 

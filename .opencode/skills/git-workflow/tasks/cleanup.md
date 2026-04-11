@@ -68,7 +68,31 @@ git checkout dev
 git pull origin dev
 ```
 
-### Step 4: Delete Current Merged Branch
+### Step 4: Remove Feature Worktree (if applicable)
+
+When the worktree layout is active (`worktrees/main/` exists), feature worktrees must
+be cleaned up after PR merge.
+
+```bash
+# Determine worktree name from branch name:
+# spec/604-worktree-model → worktrees/spec-604-worktree-model
+# feature/my-change → worktrees/feature-my-change
+# Rule: Replace / with - in the worktree directory name
+
+SANITIZED=$(echo "<merged-branch-name>" | tr '/' '-')
+WT_PATH="worktrees/${SANITIZED}"
+
+# Check if worktree exists for this branch
+if [ -d "worktrees" ] && git worktree list | grep -q "$WT_PATH"; then
+    git worktree remove "$WT_PATH"
+    echo "Removed worktree: $WT_PATH"
+fi
+
+# Prune stale worktree references
+git worktree prune
+```
+
+### Step 5: Delete Current Merged Branch
 
 ```bash
 # Delete local branch
@@ -81,7 +105,7 @@ git push origin --delete <merged-branch-name> 2>/dev/null || echo "Remote alread
 git fetch --prune
 ```
 
-### Step 5: Clean Other Merged Branches
+### Step 6: Clean Other Merged Branches
 
 **Find merged branches:**
 ```bash
@@ -93,7 +117,7 @@ git branch --merged dev
 git branch -d <branch>
 ```
 
-### Step 6: Verify Clean State
+### Step 7: Verify Clean State
 
 ```bash
 git status --porcelain  # Must be empty
