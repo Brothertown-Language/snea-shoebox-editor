@@ -220,27 +220,36 @@ git checkout -b spec/<short-name>  # or feature/<description>
 
 ### Step 4a: Worktree Gate (MANDATORY when layout is active)
 
-**When the worktree layout is active (`worktrees/main/` or `.worktrees/main/` exists), feature branch creation MUST create a worktree — not just a branch in the main folder.**
+**When the worktree layout is active, feature branch creation MUST create a worktree — not just a branch in the main folder. Bypassing this gate when the layout is active is a CRITICAL VIOLATION (see `000-critical-rules.md`).**
 
-**Detection:**
+**Detection (primary = env var, fallback = filesystem):**
 ```bash
+# Primary: Use WORKTREE_STATUS from session-init
+# WORKTREE_STATUS values: "ready", "bootstrapped", "skipped", "failed"
+# If WORKTREE_STATUS is empty/unset, fall back to filesystem check
+
+# Filesystem fallback:
 ls -d worktrees/main .worktrees/main 2>/dev/null
 ```
+
+**Decision matrix:**
+
+| Condition | Action |
+|-----------|--------|
+| `WORKTREE_STATUS=ready` or `WORKTREE_STATUS=bootstrapped` + feature branch | **MANDATORY:** Use `using-git-worktrees` skill |
+| Filesystem detects `worktrees/main/` or `.worktrees/main/` + feature branch | **MANDATORY:** Use `using-git-worktrees` skill |
+| `WORKTREE_STATUS=skipped` or `WORKTREE_STATUS=failed` | Use standard stash+checkout workflow |
+| No `WORKTREE_STATUS` env var AND no filesystem worktree dirs | Use standard stash+checkout workflow |
+| Worktree layout active + dev-only work | Work in main folder (no worktree needed) |
 
 **If worktree layout is active and creating a feature branch:**
 1. Invoke `using-git-worktrees` skill — it is MANDATORY, not optional
 2. The worktree skill handles branch creation, isolation, and setup
 3. Do NOT fall back to stash+checkout workflow when layout is active
 
-**Decision matrix:**
-
-| Condition | Action |
-|-----------|--------|
-| Worktree layout active + feature branch | **MANDATORY:** Use `using-git-worktrees` skill |
-| Worktree layout active + dev-only work | Work in main folder (no worktree needed) |
-| No worktree layout | Use standard stash+checkout workflow (below) |
-
 **Why mandatory:** The OR escape hatch (worktree OR stash+checkout) gives agents a path of least resistance. When the layout is active, worktree isolation is the correct default — it prevents conflicting work between parallel agents.
+
+**Why session-init variable:** `WORKTREE_STATUS` is emitted by `session_init.py` during every session. It reflects the actual state of the worktree layout at session start. Using it avoids redundant filesystem checks and ensures agents consume session-init output rather than ignoring it.
 
 **If no worktree layout is active**, proceed with standard branch creation:
 
