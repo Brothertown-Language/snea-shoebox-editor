@@ -27,7 +27,7 @@ git branch --show-current
 git status
 ```
 
-**If on `main` with ANY pending changes (modified, deleted, untracked):**
+**If on `main` or `dev` with ANY pending changes (modified, deleted, untracked):**
 
 ```bash
 git stash push -u -m "WIP: before <branch-name>"
@@ -44,12 +44,15 @@ git status       # VERIFY clean working tree
 
 **If EITHER check fails ⇒ STOP. Report failure. Let user resolve.**
 
-**Then proceed:**
+**🚫 CRITICAL: Do NOT create branches directly in verify-authorization.**
 
-```bash
-git checkout main && git pull origin main
-git checkout -b spec/<short-name>
-```
+Branch creation is DELEGATED to `git-workflow --task pre-work`, which includes the Worktree Gate (Step 4a). Creating branches here bypasses that gate — a CRITICAL VIOLATION when the worktree layout is active.
+
+**After git state verification:**
+1. Record that git state is verified and clean
+2. Proceed to Step 2 (authorization verification)
+3. After ALL verification steps, invoke `git-workflow --task pre-work` for branch creation
+4. `pre-work` will handle: stash, sync with `dev`, worktree gate check, and branch/worktree creation
 
 ### Step 2: Verify Authorization Is Explicit
 

@@ -21,7 +21,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | Task | Purpose | Words |
 |------|---------|-------|
 | `verify-qa-mode` | Detect spec-less implementation requests, switch to Q/A mode | ~800 |
-| `verify-authorization` | Check explicit auth and needs-approval label | ~400 |
+| `verify-authorization` | Check explicit auth and needs-approval label; delegates branch creation to `git-workflow --task pre-work` | ~400 |
 | `verify-sub-issues` | Verify sub-issue structure for multi-task specs | ~480 |
 | `verify-codebase` | Re-evaluate codebase state, detect staleness | ~400 |
 | `verify-blockers` | Check for blocking issues/dependencies | ~320 |

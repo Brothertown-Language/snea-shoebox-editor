@@ -5,6 +5,40 @@
 
 This file provides critical rules that must never be violated.
 
+## Critical Violation: Worktree Bypass When Layout Is Active
+
+**⚠️ Using `stash + checkout -b` instead of worktrees when the worktree layout is active is a CRITICAL GUIDELINE VIOLATION.**
+
+When `WORKTREE_STATUS=ready` or `WORKTREE_STATUS=bootstrapped` (or when `worktrees/main/` or `.worktrees/main/` exists), the agent MUST use the `using-git-worktrees` skill for feature branch creation — NEVER fall back to `stash + checkout -b`.
+
+### 🚫 FORBIDDEN
+
+- Using `git checkout -b` to create feature branches when the worktree layout is active
+- Using `git stash push -u` then `git checkout -b` as a substitute for worktree-based branch creation
+- Bypassing the Worktree Gate in `git-workflow --task pre-work` Step 4a
+- Creating branches directly in `verify-authorization` instead of delegating to `pre-work`
+- Ignoring the `WORKTREE_STATUS` environment variable from session-init
+
+### ✅ REQUIRED
+
+- **Check `WORKTREE_STATUS` env var** (primary) or filesystem (fallback) before creating any feature branch
+- **When layout is active:** Use `using-git-worktrees` skill via `git-workflow --task pre-work` Step 4a
+- **When layout is NOT active:** Use standard stash+checkout workflow
+- **`verify-authorization` MUST delegate branch creation** to `git-workflow --task pre-work` — never create branches directly
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| `stash + checkout -b` when worktrees active | Parallel agent conflicts, dirty working trees, lost changes |
+| Skipping Worktree Gate | Other agents unaware of parallel work, merge conflicts |
+| Ignoring `WORKTREE_STATUS` | Session-init output wasted, detection relies only on filesystem |
+| Branch creation in `verify-authorization` | Worktree Gate in `pre-work` completely bypassed |
+
+**See `git-workflow` skill `--task pre-work` Step 4a for the complete Worktree Gate procedure and decision matrix.**
+
+______________________________________________________________________
+
 ## Critical Violation: Skipping Git Pre-Check Before ANY Work
 
 **⚠️ Working on files without checking git state is a CRITICAL GUIDELINE VIOLATION.**
