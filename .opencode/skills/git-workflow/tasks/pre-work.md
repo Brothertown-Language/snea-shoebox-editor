@@ -308,6 +308,47 @@ Verified all proposed changes were already implemented. No modifications needed.
    - No further steps needed
    - No branch cleanup (no branch was created)
 
+## Worktree Integration (Phase 2 of #604)
+
+### Feature Worktree Creation
+
+When the worktree layout is active (`worktrees/main/` exists), feature branches
+should use worktrees instead of stash+checkout:
+
+**Before (stash-based):**
+1. `git stash -u` → 2. `git checkout -b feature/xyz dev` → 3. Work in same folder
+
+**After (worktree-based):**
+1. Ensure main folder is on `dev`: `git checkout dev && git pull origin dev`
+2. Create worktree: `git worktree add worktrees/feature-xyz -b feature/xyz dev`
+3. Work in `worktrees/feature-xyz/`
+
+### Branch Name to Worktree Name Mapping
+
+Branch names containing `/` must be sanitized for the worktree directory name:
+
+| Branch Name | Worktree Directory |
+|-------------|-------------------|
+| `feature/my-change` | `worktrees/feature-my-change/` |
+| `spec/604-worktree-model` | `worktrees/spec-604-worktree-model/` |
+
+**Rule:** Replace `/` with `-` in the worktree directory name.
+
+### Edge Cases
+
+- **Dev-only work** (no feature branch): Work in main folder directly, no worktree needed
+- **Worktree already exists**: Skip creation, use existing worktree directory
+- **Worktree layout not active**: Fall back to stash+checkout workflow
+
+### Worktree Already Exists Check
+
+```bash
+# Check if worktree for this branch already exists
+git worktree list | grep "feature-xyz"
+```
+
+If found, skip worktree creation and work in the existing directory.
+
 ## Enforcement Mechanisms (NO BYPASS)
 
 | Layer | Mechanism | Scope | Bypassable? |
