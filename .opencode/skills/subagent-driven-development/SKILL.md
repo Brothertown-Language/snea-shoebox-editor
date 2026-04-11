@@ -97,12 +97,57 @@ The batch execution plan from `batch-approval-analysis` provides:
 - The agent reports progress on ALL issues ONCE at the end (not per issue)
 - Meta/non-code issues are excluded from implementation but noted in the final report
 
+### Sub-Agent Dispatch Context
+
+Each sub-agent dispatched for parallel work MUST receive complete worktree context:
+
+```yaml
+# Sub-Agent Dispatch Context
+issue: <number>
+branch: "spec/<short-name>"
+worktree_path: ".worktrees/spec-<short-name>"
+dev_base_hash: "<7-char-sha>"
+env_vars:
+  WORKTREE_PATH: ".worktrees/spec-<short-name>"
+  BRANCH_NAME: "spec/<short-name>"
+  GIT_OWNER: "<from-session>"
+  GIT_REPO: "<from-session>"
+  DEV_NAME: "<from-session>"
+  DEV_EMAIL: "<from-session>"
+```
+
+**Invariants:**
+- `WORKTREE_PATH` is MANDATORY — no exceptions, no fallbacks
+- If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT**. The agent must not proceed without a valid worktree path
+- No sub-agent may operate without a valid `WORKTREE_PATH`
+- `dev_base_hash` MUST be captured before the first worktree is created
+- All bash commands MUST use `workdir="{{WORKTREE_PATH}}"` parameter
+
+### Dev Base Hash Capture
+
+Before dispatching any parallel worktrees, the orchestrating agent MUST:
+
+1. Capture `git rev-parse origin/dev` before dispatching any worktrees
+2. Pass `dev_base_hash` in dispatch context
+3. Each worktree creation should verify `origin/dev` matches or is newer than captured hash
+
+If `dev` has moved between capture and worktree creation, use the current `origin/dev` (always use latest).
+
+### Post-Parallel Cleanup
+
+After ALL parallel sub-agents complete:
+
+1. Verify no feature worktrees remain: `git worktree list`
+2. If only `.worktrees/main` remains: safe to prune
+3. Run: `git worktree prune`
+4. Run: `git checkout dev && git pull origin dev` (sync main working tree)
+
 ## Pre-Implementation Gates (MANDATORY)
 
 **Before dispatching any subagent, these gates MUST be satisfied:**
 
 1. **approval-gate** — Authorization verified (`approved` or `go` received)
-2. **git-workflow --task pre-work** — Branch created, working tree clean (includes Worktree Gate: feature branches MUST use `using-git-worktrees`)
+2. **git-workflow --task pre-work** — Branch created via worktree (`using-git-worktrees` MANDATORY)
 3. **Plan exists** — Writing-plans output available with TDD tasks
 
 **After all tasks complete, these gates are MANDATORY:**
@@ -198,7 +243,7 @@ This project uses the `feature→dev→main` three-branch workflow:
 | Phase | Skill | Purpose |
 |-------|-------|---------|
 | Pre-implementation | `approval-gate` | Verify authorization |
-| Branch creation | `git-workflow --task pre-work` (includes Worktree Gate) | Create feature branch (ALWAYS via worktree) |
+| Branch creation | `git-workflow --task pre-work` (uses `using-git-worktrees`) | Create feature worktree (ALWAYS via worktree) |
 | Per-task | Implementer → spec review → code quality review loop | Execute tasks |
 | Post-implementation | `verification-before-completion --task verify` | Evidence collection |
 | Completion | `finishing-a-development-branch --task checklist` | Branch readiness |
@@ -288,7 +333,7 @@ This skill integrates with the repo's mandatory workflow:
 approval-gate (authorization)
     ↓
 subagent-driven-development (this skill)
-    → pre-work: git-workflow --task pre-work (includes Worktree Gate)
+    → pre-work: git-workflow --task pre-work (creates worktree via using-git-worktrees)
     → per-task: implementer → spec review → code quality review
     → post-implementation: verification-before-completion
     → completion: finishing-a-development-branch

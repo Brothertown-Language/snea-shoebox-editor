@@ -47,7 +47,7 @@ After work is complete and PR is merged, the worktree cleanup is handled by the 
 
 ## Directory Selection Process
 
-Worktrees are ALWAYS created in `.worktrees/`. There is NO fallback to stash+checkout.
+Worktrees are ALWAYS created in `.worktrees/`. There is no alternative method. Stash+checkout is FORBIDDEN.
 
 **If `WORKTREE_FATAL=1` appears in session init output:** HALT immediately and report the fatal error to the developer. Do NOT proceed with any implementation.
 
@@ -93,6 +93,40 @@ Always create worktrees from an up-to-date `dev` branch.
 ```bash
 project=$(basename "$(git rev-parse --show-toplevel)")
 ```
+
+### 3.5. Check for Worktree Name Collisions
+
+Before creating a new worktree, check if a worktree for this branch already exists:
+
+```bash
+# Sanitize branch name for worktree directory (replace / with -)
+BRANCH_NAME_SANITIZED=$(echo "$BRANCH_NAME" | tr '/' '-')
+WT_PATH=".worktrees/$BRANCH_NAME_SANITIZED"
+
+if git worktree list | grep -q "$WT_PATH"; then
+    echo "Worktree $WT_PATH already exists. Checking branch match..."
+    CURRENT_BRANCH=$(git -C "$WT_PATH" branch --show-current 2>/dev/null)
+    if [ "$CURRENT_BRANCH" != "$BRANCH_NAME" ]; then
+        echo "HALT: Worktree collision: $WT_PATH exists for branch $CURRENT_BRANCH, expected $BRANCH_NAME"
+        # Report to developer — do not proceed
+    else
+        echo "Worktree $WT_PATH exists for correct branch. Reusing existing worktree."
+        # Skip to Step 6 (Project Setup)
+    fi
+fi
+```
+
+If a collision is detected with a different branch name, HALT and report to the developer. Do not proceed with worktree creation.
+
+### 3.6. Capture Dev Base Hash (Parallel Dispatch)
+
+When multiple worktrees will be created for parallel dispatch (from `batch-approval-analysis`), capture the dev branch hash BEFORE creating any worktrees:
+
+```bash
+DEV_BASE_HASH=$(git rev-parse --short 7 origin/dev)
+```
+
+Pass this hash in the dispatch context so all parallel worktrees start from the same base commit.
 
 ### 4. Create Worktree
 
@@ -145,6 +179,24 @@ Ready to implement <feature-name>
 All commands use workdir=".worktrees/$BRANCH_NAME" — never cd
 ```
 
+### 9. Export Worktree Environment Variables (MANDATORY)
+
+After worktree creation, export environment variables that ALL downstream skills and sub-agents require. These are NOT optional — every skill that operates in a worktree MUST read these variables.
+
+```bash
+export WORKTREE_PATH=".worktrees/$BRANCH_NAME_SANITIZED"
+export BRANCH_NAME="$BRANCH_NAME"
+export DEV_BASE_HASH=$(git rev-parse --short 7 origin/dev)
+```
+
+**If `WORKTREE_PATH` is not set or empty after this step: FATAL ERROR → FLAG DEV → HALT.** There is no alternative — worktree is the only method for feature branches.
+
+These environment variables are consumed by:
+- `git-workflow` tasks (review-prep, pr-creation, cleanup)
+- `finishing-a-development-branch` skill
+- `subagent-driven-development` dispatch context
+- `batch-approval-analysis` execution plan
+
 ## Tool Usage Compliance
 
 **⚠️ CRITICAL: All commands in worktrees MUST use `workdir` parameter or relative paths from project root. NEVER use `cd` commands.**
@@ -166,10 +218,10 @@ After worktree creation (step 5), verify the worktree actually exists before pro
 ```bash
 git worktree list
 # MUST show the new worktree entry
-# If missing → HALT and report — do NOT proceed with implementation in main folder
+# If missing → HALT and report — do NOT proceed without a valid worktree
 ```
 
-**If verification fails:** The worktree was not created successfully. HALT and report the failure. Do NOT fall back to working in the main folder — that defeats the isolation purpose.
+**If verification fails:** The worktree was not created successfully. HALT and report the failure — do not proceed without a valid worktree.
 
 ## Quick Reference
 
@@ -210,7 +262,7 @@ git worktree list
 
 1. HALT immediately — do NOT proceed with any implementation
 2. Report the fatal error to the developer
-3. Do NOT fall back to stash+checkout — worktrees are MANDATORY, not optional
+3. Worktrees are the ONLY method for feature branches — stash+checkout is FORBIDDEN
 4. The developer must fix the worktree infrastructure before any work can proceed
 
 **Worktree setup failure means the repository infrastructure is broken.** Proceeding without worktrees risks:
@@ -219,7 +271,7 @@ git worktree list
 - Lost changes
 - Branch contamination
 
-There is NO fallback to stash+checkout. Fix the infrastructure, then proceed.
+Fix the worktree infrastructure, then proceed. Stash+checkout is FORBIDDEN
 
 ## Integration
 
@@ -260,7 +312,7 @@ This cleanup happens as part of the standard `git-workflow --task cleanup` seque
 - Handle worktree cleanup in this skill (delegated to `finishing-a-development-branch`)
 
 **Always:**
-- Use `.worktrees/` directory (no fallback)
+- Use `.worktrees/` directory (the only method)
 - Verify directory is ignored for project-local
 - Auto-detect and run `uv sync` for project setup
 - Announce worktree creation at start

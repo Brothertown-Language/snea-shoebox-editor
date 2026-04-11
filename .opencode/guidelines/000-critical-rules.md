@@ -15,16 +15,16 @@ Worktrees are ALWAYS mandatory for feature branch creation. There is no conditio
 
 - Using `git checkout -b` to create feature branches — ALWAYS use worktrees instead
 - Using `git stash push -u` then `git checkout -b` as a substitute for worktree-based branch creation
-- Bypassing the Worktree Gate in `git-workflow --task pre-work` Step 4a
 - Creating branches directly in `verify-authorization` instead of delegating to `pre-work`
-- Checking `WORKTREE_STATUS` or filesystem for worktree availability before deciding
-- Using `stash + checkout` as a fallback for ANY reason
+- Using `stash + checkout` for ANY reason — this method does not exist as an option
 - Ignoring `WORKTREE_FATAL=1` in session init output
+- Operating in the main working directory for feature work
 
 ### ✅ REQUIRED
 
 - **ALWAYS use `using-git-worktrees` skill** for feature branch creation — no exceptions, no conditions
 - **If `WORKTREE_FATAL=1` appears in session init output:** HALT immediately and report the fatal error to the developer — do NOT proceed with any implementation
+- **If `WORKTREE_PATH` is not set or empty after worktree creation:** FATAL ERROR → FLAG DEV → HALT — do not proceed without a valid worktree path
 - **`verify-authorization` MUST delegate branch creation** to `git-workflow --task pre-work` — never create branches directly
 
 ### Why This Matters
@@ -32,12 +32,11 @@ Worktrees are ALWAYS mandatory for feature branch creation. There is no conditio
 | Violation | Consequence |
 |-----------|-------------|
 | `stash + checkout -b` for feature branches | Parallel agent conflicts, dirty working trees, lost changes |
-| Skipping Worktree Gate | Other agents unaware of parallel work, merge conflicts |
-| Using `stash+checkout` as fallback | Creates path of least resistance that bypasses worktree isolation |
+| Operating in main working directory | No isolation between agents, merge conflicts |
 | Ignoring `WORKTREE_FATAL=1` | Agent proceeds despite infrastructure failure, corrupts work |
-| Branch creation in `verify-authorization` | Worktree Gate in `pre-work` completely bypassed |
+| Branch creation in `verify-authorization` | Worktree creation in `pre-work` completely bypassed |
 
-**See `git-workflow` skill `--task pre-work` Step 4a for the complete Worktree Gate procedure.**
+**See `git-workflow` skill `--task pre-work` for the complete worktree creation procedure.**
 
 ______________________________________________________________________
 
@@ -47,24 +46,24 @@ ______________________________________________________________________
 
 ### 🚫 FORBIDDEN
 
-- Starting ANY work (implementation, verification, editing) WITHOUT checking git state first
-- Assuming working tree is clean without `git status` verification
+- Starting ANY work (implementation, verification, editing) WITHOUT creating a worktree first
+- Operating in the main working directory for feature work — ALWAYS use worktrees
 - Creating files while on `main` or `dev` branch
 - Editing files while on `main` or `dev` branch
-- Skipping stash when pending changes exist
+- Using `git checkout -b` instead of worktree creation
 
 ### ✅ MANDATORY
 
-**See `git-workflow` skill `--task pre-work` for the mandatory pre-check sequence, stash verification, and branch creation steps.**
+**See `git-workflow` skill `--task pre-work` for the mandatory worktree creation and environment variable verification steps.**
 
 ### Why This Matters
 
 | Scenario | Consequence |
 |----------|-------------|
 | Edit files on `main` | Cannot create branch, changes stuck on `main` |
-| Skip git status check | Untracked files lost when switching branches |
-| Forget `-u` flag | Untracked files NOT stashed, lost forever |
-| Skip stash verification | Modifications silently lost |
+| Skip worktree creation | No isolation between agents, merge conflicts |
+| Use stash+checkout instead of worktree | Parallel agent conflicts, dirty working trees |
+| Skip `WORKTREE_PATH` verification | Agent operates in wrong directory, corrupts work |
 
 ______________________________________________________________________
 

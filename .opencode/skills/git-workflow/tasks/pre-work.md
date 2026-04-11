@@ -2,18 +2,17 @@
 
 ## Purpose
 
-Verify branch state, preserve changes, create feature branch BEFORE any implementation work begins.
+Create feature branch in a worktree BEFORE any implementation work begins. Verify authorization, sync dev, and create isolated workspace via worktree.
 
 ## 🚫 ZERO TOLERANCE: Branch Before Edit
 
-**The agent MUST create a feature branch BEFORE ANY filesystem change.**
+**The agent MUST create a feature worktree BEFORE ANY filesystem change.**
 
 This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any file, creating any file, or making ANY change to the project:
 
-1. **Check current branch**: `git branch --show-current`
-2. **If on `main`**: STOP — you MUST create a feature branch first
-3. **Create branch**: `git checkout -b spec/<short-name>` or `git checkout -b feature/<description>`
-4. **ONLY THEN**: Proceed with file changes
+1. **Invoke `using-git-worktrees` skill** — creates isolated worktree (MANDATORY, no exceptions)
+2. **All work happens in the worktree** — never in the main working directory
+3. **ONLY THEN**: Proceed with file changes inside the worktree
 
 **What Counts as a "Change"?**
 - Editing any file (code, config, docs, tests)
@@ -26,101 +25,36 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - **Using file-editing MCP tools** (`pycharm_replace_text_in_file`, `pycharm_create_new_file`, etc.) — these ARE filesystem changes
 
 **⚠️ MCP Tools Are NOT an Exception**
-- `pycharm_replace_text_in_file` → edits files → MUST be on feature branch
-- `pycharm_create_new_file` → creates files → MUST be on feature branch
+- `pycharm_replace_text_in_file` → edits files → MUST be in worktree
+- `pycharm_create_new_file` → creates files → MUST be in worktree
 - `github_issue_write` → GitHub Issues, NOT local files → NOT a filesystem change
 - `github_add_issue_comment` → GitHub comments → NOT a filesystem change
 
-**Why FIRST?**
-- No exceptions for "small" changes
-- No exceptions for "just one file"
-- No exceptions for docs, tests, configs, or guidelines
-- No exceptions for hotfixes or urgent changes
-- No exceptions for typo fixes or whitespace changes
-- The branch IS the safety net — without it, mistakes have no rollback
-
 **Violation = Hard Stop**
 - If you catch yourself about to edit files while on `main`, STOP immediately
-- Report "I need to create a branch first" and wait for the branch creation
-- Never proceed past this checkpoint without a feature branch
+- Report "I need to create a worktree first" and wait for worktree creation
+- Never proceed past this checkpoint without an active worktree
 
 ### ✅ ALWAYS DO
 ```
-# Correct order:
-git checkout main && git pull origin main
-git checkout -b spec/my-change      # ← FIRST
-# NOW edit files, write code, etc.   # ← SECOND
+# Using using-git-worktrees skill:
+# 1. Sync dev: git checkout dev && git pull origin dev
+# 2. Create worktree: git worktree add .worktrees/spec-my-change -b spec/my-change dev
+# 3. Work in .worktrees/spec-my-change/ (using workdir parameter)
 ```
 
 ### 🚫 NEVER DO
 ```
-# WRONG ORDER — VIOLATION:
-# edit files, write code...           # ← WRONG: No branch yet
-git checkout -b spec/my-change        # ← Too late!
+# WRONG — VIOLATION (stash+checkout):
+git stash -u
+git checkout -b spec/my-change
+# Work in main working directory
+
+# WRONG — VIOLATION (checkout without worktree):
+git checkout dev && git pull origin dev
+git checkout -b spec/my-change dev
+# Work in main working directory
 ```
-
-## Preserve External Changes: Stash ALL Unrelated Changes FIRST
-
-**When ANY files are modified on `main` (or current branch), the agent MUST stash them BEFORE creating a new branch.**
-
-### ⚠️ MANDATORY: Stash First, Ask Questions Never
-
-**Before ANY branch creation, this sequence is MANDATORY:**
-
-1. `git status` — Check for modifications
-2. **ALWAYS stash ALL pending changes (modified, deleted, untracked):**
-   - `git stash push -u -m "WIP: before <branch-name>"`
-   - **The `-u` flag includes untracked files — MANDATORY.**
-   - `git stash list` — **VERIFY stash was created**
-   - `git status` — **VERIFY working tree is clean** (must show "nothing to commit, working tree clean")
-3. **Then and ONLY then**: Create branch
-4. **Do NOT pop the stash** on the new branch — those changes belong to the previous branch context
-
-### ⚠️ CRITICAL: Never Restore, Never Discard
-
-**`git restore` on externally-modified files DESTROYS THOSE CHANGES PERMANENTLY.**
-
-```
-WRONG SEQUENCE:
-git status                           # Shows external changes in project-config.ini
-git restore project-config.ini       # ← DESTROYS external changes permanently
-git checkout -b feature/my-change
-
-ALSO WRONG:
-git status                           # Shows external changes
-git checkout -b feature/my-change    # ← Branch created with dirty working tree
-git stash push -m "preserving"       # ← WRONG: Too late, wrong branch context
-
-CORRECT SEQUENCE:
-git status                           # Shows modified files
-git stash push -m "WIP: external changes before my-change"  # ← Stash FIRST
-git stash list                       # ← VERIFY: Must show stash entry
-git status                           # ← VERIFY: Must show clean working tree
-git checkout -b feature/my-change    # ← THEN create branch
-# Do your work, commit, push, create PR...
-# Stash remains for later restoration on appropriate branch
-```
-
-### ⚠️ VERIFICATION IS MANDATORY
-
-**After stashing, you MUST verify:**
-
-```bash
-git stash push -m "WIP: external changes before feature-x"
-git stash list   # ← MUST show the stash
-git status       # ← MUST show "nothing to commit, working tree clean"
-```
-
-If `git status` still shows modifications, **STOP** — the stash failed. Do not proceed to branch creation.
-
-### Do NOT Pop Stash on New Branch
-
-The stash preserves changes that belong to the previous context. Those changes may need to be:
-- Committed separately on a different branch
-- Reviewed by the user
-- Discarded intentionally by the user
-
-**Let the user decide when/where to restore the stash.**
 
 ## Operating Protocol
 
@@ -133,7 +67,6 @@ The stash preserves changes that belong to the previous context. Those changes m
 - User has authorized implementation (explicit `approved` or `go`)
 - Authorization is for the correct issue
 - Sub-issue structure verified (for multi-task specs)
-- Working tree is clean (no uncommitted changes)
 
 ## Three-Branch Workflow Context
 
@@ -149,112 +82,66 @@ The stash preserves changes that belong to the previous context. Those changes m
 
 ## Procedure
 
-### Step 1: Check Git State (Pure Git Operations)
+### Step 1: Verify Authorization Context
 
 **This task receives authorization context from orchestration layer. DO NOT re-check authorization.**
 
-```bash
-git branch --show-current
-git status
-```
+### Step 2: Sync Dev Branch
 
-If on `main` → stash changes then create feature branch.
-
-### Step 2: Stash ALL Pending Changes (MANDATORY)
-
-**ALWAYS stash before ANY branch operation. No exceptions.**
+The main working tree must be on `dev` and up-to-date so worktree creation has the correct base:
 
 ```bash
-git stash push -u -m "WIP: before <branch-name>"
+git checkout dev
+git pull origin dev
 ```
 
-**The `-u` flag includes untracked files. This is mandatory.**
+If `dev` doesn't exist locally, create it from `main`: `git checkout -b dev origin/dev`
 
-**What gets stashed:**
-- Modified files
-- Deleted files
-- Untracked files
-- Staged changes
+### Step 3: Create Feature Worktree (MANDATORY — NO EXCEPTIONS)
 
-### Step 3: Verify Stash Succeeded
+**Feature branch creation MUST use worktrees — no exceptions, no conditions, no fallback.**
 
-```bash
-git stash list  # VERIFY stash created
-git status      # VERIFY clean working tree
-```
+Invoke `using-git-worktrees` skill (ALWAYS, for ANY feature branch):
 
-**CRITICAL VERIFICATION:**
+1. Invoke `using-git-worktrees` skill
+2. The skill creates the worktree: `git worktree add .worktrees/spec-<name> -b spec/<name> dev`
+3. The skill exports `WORKTREE_PATH`, `BRANCH_NAME`, `DEV_BASE_HASH` as environment variables
+4. If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT**
 
-| Check | Command | Expected Result |
-|-------|---------|------------------|
-| Stash exists | `git stash list` | Shows stash entry |
-| Working tree clean | `git status --porcelain` | Empty output |
-
-**If EITHER check fails → STOP. Report failure. Let user resolve.**
-
-### Step 4: Sync and Create Feature Branch
-
-**Three-Branch Workflow:**
-- Feature branches branch from `dev` (staging/integration)
-- `dev` branches from `main`
-- AI must sync with `dev` before creating feature branch
-
-```bash
-# Sync with dev branch (staging/integration)
-git checkout dev && git pull origin dev
-
-# Create feature branch from dev
-git checkout -b spec/<short-name>  # or feature/<description>
-```
-
-**Why Branch from Dev:**
-- `dev` is the staging/integration branch (evergreen, never deleted)
-- Feature branches merge to `dev`, not directly to `main`
-- Releases merge from `dev` to `main` via human-triggered workflow
-- Branching from `dev` ensures you have the latest integrated changes
-
-**Sync Requirements:**
-- ALWAYS `git pull origin dev` before creating feature branch
-- Ensure working tree is clean after sync
-- If `dev` doesn't exist locally, create it from `main`: `git checkout -b dev origin/dev`
-
-### Step 4a: Worktree Gate (MANDATORY — ALWAYS)
-
-**Feature branch creation MUST use worktrees — no exceptions, no conditions. Bypassing this gate is a CRITICAL VIOLATION (see `000-critical-rules.md`).**
-
-1. Invoke `using-git-worktrees` skill (ALWAYS, for ANY feature branch)
-2. If worktree creation fails or `WORKTREE_FATAL=1` is detected in session init output, HALT and report the fatal error to the developer — do NOT proceed with any implementation
-
-**There is NO fallback to stash+checkout.** If worktree setup fails, the infrastructure is broken and must be fixed before any work can proceed.
-
-**If `WORKTREE_FATAL=1` appears in session init output:**
+**If worktree creation fails or `WORKTREE_FATAL=1` is detected:**
 - HALT immediately
 - Report the fatal error to the developer
 - Do NOT attempt any implementation until the worktree infrastructure is fixed
+- There is NO fallback to stash+checkout
 
-### Step 5: Verify Clean Working Tree
+### Step 4: Verify Worktree Environment
 
 **Before yielding back to orchestration layer, verify:**
 
 ```bash
-git status --porcelain
+# Inside the worktree (using workdir parameter):
+git branch --show-current
+# MUST show the feature branch name
+
+git rev-parse --show-toplevel
+# MUST show the worktree path
+
+echo $WORKTREE_PATH
+# MUST NOT be empty — FATAL ERROR if empty
 ```
 
-**Expected output:** Empty (nothing to commit, working tree clean)
+**If ANY check fails → STOP and report.**
 
-**If dirty:**
-- STOP and report
-- Let orchestration layer decide next action
+### Step 5: Report Ready
 
-### Step 6: Report Ready
-
-Report: "Ready for implementation on branch: <branch-name>"
+Report: "Ready for implementation in worktree: <worktree-path> on branch: <branch-name>"
 
 **Yield back to orchestration layer:**
 ```yaml
 status: success
 branch: <branch-name>
-stash_created: <true/false>
+worktree_path: .worktrees/<sanitized-branch-name>
+dev_base_hash: <7-char-sha>
 working_tree_clean: true
 ready_for: "implementation"
 ```
@@ -265,7 +152,6 @@ ready_for: "implementation"
 ```yaml
 authorization: confirmed (from approval-gate)
 issue: <issue-number>
-working_tree_status: checked
 ```
 
 This task does NOT re-check authorization. Authorization was verified by `approval-gate` before this task was invoked.
@@ -276,7 +162,8 @@ This task does NOT re-check authorization. Authorization was verified by `approv
 ```yaml
 status: success | failure
 branch: "spec/<feature-name>" | "feature/<feature-name>"
-stash_created: true | false
+worktree_path: ".worktrees/<sanitized-branch-name>"
+dev_base_hash: "<7-char-sha>"
 working_tree_clean: true
 ready_for: "implementation"
 ```
@@ -292,8 +179,8 @@ The orchestration layer (`implementation-workflow`) receives this yield and pass
    - Confirm no modifications needed
    - Document verification in issue comment
 
-2. **Skip branch creation entirely:**
-   - Do NOT create feature branch
+2. **Skip worktree creation entirely:**
+   - Do NOT create feature worktree
    - Do NOT push anything
    - Do NOT create PR
 
@@ -320,25 +207,11 @@ Verified all proposed changes were already implemented. No modifications needed.
 
 4. **HALT after closing:**
    - No further steps needed
-   - No branch cleanup (no branch was created)
+   - No worktree cleanup (no worktree was created)
 
-## Worktree Integration
+## Branch Name to Worktree Name Mapping
 
-### Feature Worktree Creation
-
-Feature branches MUST use worktrees instead of stash+checkout. This is ALWAYS enforced by the Worktree Gate in Step 4a.
-
-**Before (stash-based):**
-1. `git stash -u` → 2. `git checkout -b feature/xyz dev` → 3. Work in same folder
-
-**After (worktree-based):**
-1. Ensure main folder is on `dev`: `git checkout dev && git pull origin dev`
-2. Create worktree: `git worktree add .worktrees/feature-xyz -b feature/xyz dev`
-3. Work in `.worktrees/feature-xyz/`
-
-### Branch Name to Worktree Name Mapping
-
-Branch names containing `/` must be sanitized for the worktree directory name:
+Branch names containing `/` are sanitized for the worktree directory name:
 
 | Branch Name | Worktree Directory |
 |-------------|-------------------|
@@ -347,20 +220,14 @@ Branch names containing `/` must be sanitized for the worktree directory name:
 
 **Rule:** Replace `/` with `-` in the worktree directory name.
 
-### Edge Cases
-
-- **Dev-only work** (no feature branch): Work in main folder directly, no worktree needed
-- **Worktree already exists**: Skip creation, use existing worktree directory
-- **`WORKTREE_FATAL=1` detected**: HALT immediately, report fatal error to developer, do NOT proceed
-
 ### Worktree Already Exists Check
 
 ```bash
 # Check if worktree for this branch already exists
-git worktree list | grep "feature-xyz"
+git worktree list | grep "spec-xyz"
 ```
 
-If found, skip worktree creation and work in the existing directory.
+If found, report collision and HALT — do not reuse another branch's worktree.
 
 ## Enforcement Mechanisms (NO BYPASS)
 
@@ -371,42 +238,24 @@ If found, skip worktree creation and work in the existing directory.
 | **GitHub** | Branch protection rules | Requires PR | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
-1. Create a feature branch: `git checkout -b hotfix/urgent-fix`
-2. Make your changes and commit
+1. Create a worktree: `git worktree add .worktrees/hotfix-urgent-fix -b hotfix/urgent-fix dev`
+2. Make your changes and commit in the worktree
 3. Push and create PR with `hotfix` label
 4. Request expedited review
 
 ## Context Required
 
-- Related skills: `approval-gate` (authorization check)
+- Related skills: `approval-gate` (authorization check), `using-git-worktrees` (worktree creation)
 - Related tasks: `cleanup` (branch cleanup after PR merge)
-
-## Common Issues
-
-| Issue | Resolution |
-|-------|------------|
-| Stash failed | STOP. Report failure. Let user resolve manually. |
-| Wrong branch detected | STOP. Do not commit. Stash changes, switch to correct branch. |
-| Accidental main commit | Create recovery branch, reset main, switch to recovery branch. |
-
-## Safety Checks
-
-Before proceeding, verify ALL:
-
-- Current branch is NOT `main`
-- Working tree IS clean (`git status --porcelain` returns empty)
-- Branch name follows convention (`spec/` or `feature/` prefix)
-
-**If ANY check fails → STOP and report.**
 
 ## Enforcement Checklist
 
 **Before starting any work, verify:**
 
 - ✅ Authorization received (explicit `approved`, `go`, or `"#N approved"`)
-- ✅ Current branch is NOT `main` (or stash and create feature branch)
-- ✅ Working tree is clean (`git status --porcelain` returns empty)
-- ✅ Stash created if needed (`git stash list` shows entry)
-- ✅ Feature branch created from `main`
+- ✅ Worktree created (not on `main` or `dev`)
+- ✅ `WORKTREE_PATH` environment variable is set and non-empty (FATAL ERROR if empty)
+- ✅ `git branch --show-current` in worktree shows feature branch
+- ✅ Feature branch created from `dev`
 
 **These checks are MANDATORY. If ANY check fails → STOP and report.**

@@ -13,7 +13,7 @@ Check for explicit authorization and needs-approval label status before implemen
 
 - Authorization verified as explicit and for correct issue
 - needs-approval label status checked
-- Git state verified clean (stash if needed)
+- Git state verified (worktree environment ready)
 - Authorization recorded for scope tracking
 
 ## Procedure
@@ -27,32 +27,19 @@ git branch --show-current
 git status
 ```
 
-**If on `main` or `dev` with ANY pending changes (modified, deleted, untracked):**
+**If on `main` or `dev`:** This is expected — feature branches are created in worktrees, not by switching branches in the main tree. Proceed to Step 2.
 
-```bash
-git stash push -u -m "WIP: before <branch-name>"
-git stash list   # VERIFY stash created
-git status       # VERIFY clean working tree
-```
-
-**Verification Requirements:**
-
-| Check | Command | Expected Result |
-|-------|---------|------------------|
-| Stash created | `git stash list` | Shows stash entry |
-| Working tree clean | `git status --porcelain` | Empty output |
-
-**If EITHER check fails ⇒ STOP. Report failure. Let user resolve.**
+**If on a feature branch already:** Verify you're in the correct worktree. Check `WORKTREE_PATH` environment variable.
 
 **🚫 CRITICAL: Do NOT create branches directly in verify-authorization.**
 
-Branch creation is DELEGATED to `git-workflow --task pre-work`, which includes the Worktree Gate (Step 4a). Creating branches here bypasses that gate — a CRITICAL VIOLATION.
+Branch creation is DELEGATED to `git-workflow --task pre-work`, which creates worktrees via the `using-git-worktrees` skill. Creating branches here bypasses worktree isolation — a CRITICAL VIOLATION.
 
 **After git state verification:**
-1. Record that git state is verified and clean
+1. Record that git state is verified
 2. Proceed to Step 2 (authorization verification)
-3. After ALL verification steps, invoke `git-workflow --task pre-work` for branch creation
-4. `pre-work` will handle: stash, sync with `dev`, worktree gate check, and branch/worktree creation
+3. After ALL verification steps, invoke `git-workflow --task pre-work` for worktree creation
+4. `pre-work` will handle: sync with `dev`, worktree creation, and environment variable setup
 
 ### Step 2: Verify Authorization Is Explicit
 

@@ -47,7 +47,7 @@ implementation-workflow (orchestration layer)
 ```
 
 **What git-workflow DOES:**
-- Git operations (stash, branch, commit, push)
+- Git operations (worktree, branch, commit, push)
 - Git state checks (branch verification, working tree status)
 - Git cleanup (delete merged branches)
 
@@ -136,7 +136,7 @@ Example violation: User said "Continue if you have next steps, or ask for clarif
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `pre-work` | Verify branch state, stash changes, create feature branch | ~640 |
+| `pre-work` | Verify authorization, create worktree | ~420 |
 | `implementation` | Handle WIP commits during implementation | ~400 |
 | `review-prep` | Push branch, generate compare URL for review | ~560 |
 | `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
@@ -563,10 +563,9 @@ Once you've merged it, let me know and I'll start work on Tasks 6-13...
 
 ### ✅ ALWAYS DO
 
-- **Stash ALL modifications before branch creation** — Use `git stash push -u` to include untracked files
-- **Verify stash exists** (`git stash list`)
-- **Verify working tree is clean** (`git status --porcelain` must return empty)
-- **These checks are MANDATORY before ANY branch operation**
+- **Create worktree for feature branches** — Use `using-git-worktrees` skill (MANDATORY, no exceptions)
+- **Verify `WORKTREE_PATH` is set** — FATAL ERROR if empty, do not proceed without it
+- **Verify worktree branch** — `git branch --show-current` must match `BRANCH_NAME`
 - **SQUASH TO SINGLE COMMIT BEFORE ANY PR** — See `pr-creation-workflow` skill for pre-PR checklist
 - **Commit ALL changes before pushing** (`git add -A && git commit`)
 - **Push after committing** - ensures GitHub compare works correctly

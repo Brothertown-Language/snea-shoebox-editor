@@ -104,7 +104,8 @@ working_tree_status: checked
 ```yaml
 status: success
 branch: "spec/workflow-skills-integration"
-stash_created: false
+worktree_path: ".worktrees/spec-workflow-skills-integration"
+dev_base_hash: "abc1234"
 working_tree_clean: true
 ready_for: "implementation"
 ```
@@ -385,7 +386,7 @@ See `000-critical-rules.md` → "Skipping Post-Implementation Verification Skill
 ### ⚠️ CRITICAL: No Implementation Logic in Git-Workflow
 
 Git-workflow skills MUST remain pure git operations:
-- ✅ Git commands (stash, branch, commit, push)
+- ✅ Git commands (worktree, branch, commit, push)
 - ✅ Git status checks
 - ✅ Git cleanup
 - ❌ File editing
@@ -535,7 +536,7 @@ implementation-workflow/orchestrate:
 implementation-workflow/orchestrate:
     → Calls pre-work
         → pre-work detects dirty working tree
-        → pre-work stashes changes
-        → pre-work yields: {stash_created: true, branch: "spec/X"}
+        → pre-work creates worktree
+        → pre-work yields: {worktree_path: ".worktrees/spec-X", branch: "spec/X"}
     → Continues with implementation...
 ```
