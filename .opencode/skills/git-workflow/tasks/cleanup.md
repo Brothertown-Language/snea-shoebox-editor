@@ -59,14 +59,24 @@ proceed_to_close_issues()
 
 **Why API verification is mandatory:**
 
-### Step 3: Switch to Dev
+### Step 3: Switch to Dev and Sync
 
-**Three-Branch Workflow:** After feature PR merge, switch to `dev` (not `main`).
+**Three-Branch Workflow:** After feature PR merge, switch to `dev` (not `main`) and sync with remote.
 
 ```bash
 git checkout dev
 git pull origin dev
 ```
+
+**Verify local dev matches the merge commit:**
+
+```bash
+git log --oneline -5
+```
+
+The merge commit from the merged PR MUST be visible in the recent log. If the merge commit is NOT visible, `git pull origin dev` may have failed silently — re-run `git pull origin dev` and verify again.
+
+**Why this verification matters:** Without confirming local `dev` is synced, the next session starts with a stale local branch, causing `git pull` failures from untracked files and merge conflicts when creating new feature branches.
 
 ### Step 4: Remove Feature Worktree
 
@@ -102,7 +112,12 @@ git push origin --delete <merged-branch-name> 2>/dev/null || echo "Remote alread
 
 # Prune stale remote references
 git fetch --prune
+
+# Prune stale remote-tracking branches (MANDATORY)
+git remote prune origin
 ```
+
+**Why `git remote prune origin` is mandatory:** After a remote branch is deleted (either by GitHub auto-deletion or explicit `git push origin --delete`), the local remote-tracking reference (`refs/remotes/origin/<branch>`) becomes stale. `git fetch --prune` only prunes refs for remote branches that no longer exist AND have no upstream tracking, while `git remote prune origin` explicitly removes all stale remote-tracking branches. Skipping this leaves ghost references that cause confusion in `git branch -a` output and can interfere with new branch creation.
 
 ### Step 6: Clean Other Merged Branches
 
@@ -131,10 +146,12 @@ After EVERY merged PR, cleanup is MANDATORY — no exceptions, no "I'll do it la
 
 ### ✅ ALWAYS DO — IMMEDIATELY After Merge Confirmation
 
-1. **Delete local feature branch** — `git branch -d <branch-name>`
-2. **Delete remote branch** — `git push origin --delete <branch-name>` (if not auto-deleted by GitHub)
-3. **Verify cleanup** — `git branch -vv` to confirm deletion
-4. **Prune remote references** — `git fetch --prune`
+1. **Switch to dev and sync** — `git checkout dev && git pull origin dev`
+2. **Verify dev sync** — `git log --oneline -5` must show the merge commit
+3. **Delete local feature branch** — `git branch -d <branch-name>`
+4. **Delete remote branch** — `git push origin --delete <branch-name>` (if not auto-deleted by GitHub)
+5. **Verify cleanup** — `git branch -vv` to confirm deletion
+6. **Prune remote references** — `git fetch --prune && git remote prune origin`
 
 **This is NOT optional.** Cleanup happens in the same session as merge confirmation.
 
