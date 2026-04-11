@@ -18,12 +18,12 @@ Guard checks (auto-create missing files/branches/worktree):
 - CHANGELOG.md: Create with Keep a Changelog header if missing
 - .opencode/CHANGELOG.md: Create with minimal header if missing
 - dev branch: Create from origin/dev or main/master if missing
-- worktrees/main/: Bootstrap worktree layout if not set up
+- .worktrees/main/: Bootstrap worktree layout if not set up
 
  Worktree layout (#604):
  - Main folder always on dev branch
- - worktrees/main/ is a permanent production reference
- - worktrees/ is in .gitignore
+ - .worktrees/main/ is a permanent production reference
+ - .worktrees/ is in .gitignore
  - WORKTREE_FATAL=1 is emitted only on setup failure (silent on success)
 
 Usage:
@@ -503,7 +503,7 @@ def get_current_branch() -> str | None:
 
 
 def is_worktree_setup() -> bool:
-    main_wt = os.path.join(os.getcwd(), "worktrees", "main")
+    main_wt = os.path.join(os.getcwd(), ".worktrees", "main")
     if not os.path.isdir(main_wt):
         return False
     wt_git = os.path.join(main_wt, ".git")
@@ -534,13 +534,13 @@ def bootstrap_worktree_layout() -> None:
     if is_worktree_setup():
         return
 
-    main_wt_path = os.path.join(os.getcwd(), "worktrees", "main")
+    main_wt_path = os.path.join(os.getcwd(), ".worktrees", "main")
 
     if os.path.isdir(main_wt_path):
         result = run_git_command(["worktree", "remove", main_wt_path, "--force"])
         if result is None:
             print("WORKTREE_FATAL=1")
-            print("# ⚠️ FATAL: Failed to remove stale worktrees/main/ directory", file=sys.stderr)
+            print("# ⚠️ FATAL: Failed to remove stale .worktrees/main/ directory", file=sys.stderr)
             return
 
     main_branch = "main"
@@ -568,12 +568,12 @@ def bootstrap_worktree_layout() -> None:
     result = run_git_command(["worktree", "add", main_wt_path, main_branch])
     if result is None:
         print("WORKTREE_FATAL=1")
-        print("# ⚠️ FATAL: Failed to create worktrees/main/ worktree", file=sys.stderr)
+        print("# ⚠️ FATAL: Failed to create .worktrees/main/ worktree", file=sys.stderr)
         if current and current != "dev":
             run_git_command(["checkout", current])
         return
 
-    _add_to_gitignore("worktrees/")
+    _add_to_gitignore(".worktrees/")
 
     submod_dirs = get_submodule_dirs()
     if submod_dirs:
