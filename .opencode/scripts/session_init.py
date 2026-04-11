@@ -14,6 +14,11 @@ Extracts git context needed for agent startup:
 - GITBUCKET_HAS_CREDENTIALS: Whether .env has token configured
 - SRCLEIGHT_STATUS: Srclight index health (ok/empty/not_indexed)
 
+Guard checks (auto-create missing files/branches):
+- CHANGELOG.md: Create with Keep a Changelog header if missing
+- .opencode/CHANGELOG.md: Create with minimal header if missing
+- dev branch: Create from origin/dev or main/master if missing
+
 Usage:
     uv run python .opencode/scripts/session_init.py
 
@@ -379,6 +384,122 @@ def install_hooks() -> None:
         print("# 🧹 Removed legacy core.hooksPath config (hooks now in .git/hooks/)")
 
 
+def _extract_version_from_pyproject() -> str:
+    """Extract version string from pyproject.toml, or return '0.1.0' as fallback."""
+    pyproject_path = os.path.join(os.getcwd(), "pyproject.toml")
+    if os.path.isfile(pyproject_path):
+        try:
+            with open(pyproject_path) as f:
+                for line in f:
+                    stripped = line.strip()
+                    if stripped.startswith("version"):
+                        match = re.match(r'version\s*=\s*["\']([^"\']+)["\']', stripped)
+                        if match:
+                            return match.group(1)
+        except OSError:
+            pass
+    return "0.1.0"
+
+
+def _ensure_changelog_md() -> str:
+    """Create CHANGELOG.md if missing. Returns 'exists' or 'created'."""
+    changelog_path = os.path.join(os.getcwd(), "CHANGELOG.md")
+    if os.path.isfile(changelog_path):
+        return "exists"
+    version = _extract_version_from_pyproject()
+    content = (
+        "# Changelog\n"
+        "\n"
+        "All notable changes to this project will be documented in this file.\n"
+        "\n"
+        "The format is based on\n"
+        "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\n"
+        "and this project adheres to\n"
+        "[Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n"
+        "\n"
+        "For AI agent infrastructure changes (`.opencode/` directory), see\n"
+        "[`.opencode/CHANGELOG.md`](.opencode/CHANGELOG.md).\n"
+        "\n"
+        f"## [{version}] - Unreleased\n"
+    )
+    try:
+        with open(changelog_path, "w") as f:
+            f.write(content)
+        return "created"
+    except OSError as e:
+        print(f"# ⚠️ Failed to create CHANGELOG.md: {e}", file=sys.stderr)
+        return "failed"
+
+
+def _ensure_opencode_changelog_md() -> str:
+    """Create .opencode/CHANGELOG.md if missing. Returns 'exists' or 'created'."""
+    opencode_dir = os.path.join(os.getcwd(), ".opencode")
+    changelog_path = os.path.join(opencode_dir, "CHANGELOG.md")
+    if os.path.isfile(changelog_path):
+        return "exists"
+    version = _extract_version_from_pyproject()
+    content = (
+        "# OpenCode Changelog\n"
+        "\n"
+        "All notable changes to the `.opencode/` directory (skills, guidelines, agent configuration) "
+        "will be documented in this file.\n"
+        "\n"
+        "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).\n"
+        "\n"
+        f"## [{version}] - Unreleased\n"
+    )
+    try:
+        os.makedirs(opencode_dir, exist_ok=True)
+        with open(changelog_path, "w") as f:
+            f.write(content)
+        return "created"
+    except OSError as e:
+        print(f"# ⚠️ Failed to create .opencode/CHANGELOG.md: {e}", file=sys.stderr)
+        return "failed"
+
+
+def _ensure_dev_branch() -> str:
+    """Create dev branch if missing locally. Returns status string."""
+    current = run_git_command(["branch", "--show-current"])
+    if current == "dev":
+        return "exists (current)"
+
+    branches = run_git_command(["branch", "--list", "dev"])
+    if branches and "dev" in branches:
+        return "exists"
+
+    has_origin_dev = run_git_command(["ls-remote", "--heads", "origin", "dev"])
+    if has_origin_dev:
+        result = run_git_command(["branch", "dev", "origin/dev"])
+        if result is not None:
+            return "created from origin/dev"
+        return "failed"
+
+    default_branch = run_git_command(["symbolic-ref", "refs/remotes/origin/HEAD"])
+    if default_branch and "main" in default_branch:
+        source = "main"
+    else:
+        source = "master"
+
+    source_hash = run_git_command(["rev-parse", source])
+    if source_hash:
+        result = run_git_command(["branch", "dev", source_hash])
+        if result is not None:
+            return f"created from {source}"
+        return "failed"
+
+    return "failed (no source branch)"
+
+
+def run_guard_checks() -> None:
+    """Run guard checks for missing CHANGELOG files and dev branch."""
+    print("")
+    print("# --- Guard Checks ---")
+    print(f"CHANGELOG.md: {_ensure_changelog_md()}")
+    print(f".opencode/CHANGELOG.md: {_ensure_opencode_changelog_md()}")
+    print(f"dev branch: {_ensure_dev_branch()}")
+
+
 def main() -> int:
     """Extract and output git context."""
     # Get remote URL first - this is required
@@ -421,6 +542,7 @@ def main() -> int:
         print("# 📋 See: .opencode/skills/github-issue-creation/SKILL.md")
         check_srclight()
         install_hooks()
+        run_guard_checks()
         return 0
 
     # GitBucket remote detected
@@ -481,6 +603,7 @@ def main() -> int:
         print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
         check_srclight()
         install_hooks()
+        run_guard_checks()
         return 0
 
     # Unknown remote type

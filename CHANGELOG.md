@@ -12,6 +12,22 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/600-auto-create-changelog-dev
+
+- **Session Init Guard Checks** - Auto-create missing CHANGELOG.md, .opencode/CHANGELOG.md, and dev branch during session initialization, preventing silent failures from dead links and branch errors
+
+### spec/remove-hardcoded-identity-values
+
+- **Identity Value Cleanup** - Replace hardcoded org/user/identity values with typed placeholders in skills, enabling reuse across different repositories
+
+### spec/594-ban-recursive-flag
+
+- **Recursive Flag Ban** - Prohibit --recursive flag from all git submodule commands in guidelines, preventing unintended nested submodule resolution
+
+### spec/593-git-hooks-bypass
+
+- **Git Hook Protection** - Add pre-merge-commit and prepare-commit-msg hooks to block merges on protected branches, move hooks to .opencode/hooks/, and auto-install into submodule dirs
+
 ### spec/562-brainstorming-conversational-first
 
 - Redesign brainstorming skill from dimension-based exploration to conversational-first approach
