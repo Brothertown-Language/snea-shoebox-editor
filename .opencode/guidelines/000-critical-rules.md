@@ -302,21 +302,38 @@ Example: `Co-authored with AI: OpenCode (ollama-cloud/glm-5)`
 
 **See `.opencode/guidelines/080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).**
 
-## Critical Violation: Missing Progress Comments
+## Critical Violation: Missing Progress Reports
 
-**⚠️ Failing to post progress comments to the associated issue is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Failing to report progress in chat after implementation is a CRITICAL GUIDELINE VIOLATION.**
 
-Every implementation task MUST be documented with progress comments on the GitHub issue.
+Every implementation task MUST be documented with a progress executive summary in chat.
 
-**See `github-comments` skill for complete progress comment format, emoji guide, and byline requirements.**
+### GitHub Issue Comments vs Chat (CRITICAL)
 
-### 🚫 FORBIDDEN in Progress Comments
+**Progress executive summaries go to chat ONLY, not GitHub Issue comments.**
+
+GitHub Issue comments are for **state changes** — things a future reader of the issue needs to know. Chat is for **operational progress** — things the active developer needs to know now.
+
+| Action | Channel | Why |
+|--------|---------|-----|
+| Task/phase completion | Chat only | Git commits already track what changed |
+| Intermediate implementation updates | Chat only | Session-scoped, not relevant to future readers |
+| Review-prep / verification status | Chat only | Operational checkpoint, not stakeholder communication |
+| Substantive spec revision | Issue comment | Stakeholders need to know scope/approach changed |
+| PR created | Issue comment | Links the PR to the issue for traceability |
+| Issue blocked | Issue comment | Others need to know work is stuck |
+| Bug discovered during implementation | Issue comment | Affects scope or approach |
+| User question response | Issue comment | Must respond where asked |
+| Issue closure | Issue comment | Final summary with evidence |
+
+### 🚫 FORBIDDEN in Progress Reports
 
 - **File lists** — Redundant (visible in git commits)
 - **"Next" field** — Dialog prompt (violates AGENTS.md)
 - **Punch-list format** — Use executive summary paragraphs
 - **"Awaiting authorization"** — Use HALT protocol, not comments
 - **Technical changelog** — Focus on impact, not file-by-file changes
+- **Posting progress to Issue comments** — State changes only, not operational updates
 
 ### Audit Findings Are NOT Progress Comments
 
@@ -326,16 +343,35 @@ Audit findings from `spec-auditor` are internal agent guidance — equivalent to
 
 | Action | Post Comment? |
 |--------|---------------|
-| Agent completes implementation task | ✅ YES — progress comment with executive summary |
+| Agent completes implementation task | ❌ NO — chat only, not Issue comment |
 | Agent revises spec substantively after audit | ✅ YES — one revision comment per `github-comments` skill |
 | Agent makes non-substantive spec changes (STATUS, typos, cross-refs) after audit | ❌ NO |
 | Agent posts audit findings report | 🚫 FORBIDDEN — act on findings, don't post the report |
 
 ### ⚠️ Chat Output Rule (CRITICAL)
 
-**Progress executive summaries go to BOTH GitHub comments AND chat.**
+**Chat output order (mandatory):**
+1. Executive summary (what happened, outcome)
+2. URL (if one exists)
+3. AI byline LAST — `🤖 <AgentName> (<ModelID>) <status>`
 
-**See `github-comments` skill for complete requirements.**
+Nothing after the byline. The byline signals output is complete.
+
+**Byline format:** `🤖 <AgentName> (<ModelID>) <status>`
+
+Identity first, status last. Reads naturally: "AI agent X completed ✅"
+
+| Status | Icon | Example |
+|--------|------|---------|
+| Completed | ✅ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✅` |
+| Created | ✨ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✨` |
+| Updated | 📝 | `🤖 OpenCode (ollama-cloud/glm-5.1) 📝` |
+| Blocked | ⚠️ | `🤖 OpenCode (ollama-cloud/glm-5.1) ⚠️` |
+| Rejected | ❌ | `🤖 OpenCode (ollama-cloud/glm-5.1) ❌` |
+| Superseded | 🔄 | `🤖 OpenCode (ollama-cloud/glm-5.1) 🔄` |
+| Analysis | 🔍 | `🤖 OpenCode (ollama-cloud/glm-5.1) 🔍` |
+
+**See `github-comments` skill for Issue comment requirements.**
 
 ______________________________________________________________________
 

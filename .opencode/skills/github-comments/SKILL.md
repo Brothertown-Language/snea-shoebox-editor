@@ -16,54 +16,41 @@ You are a GitHub Comment Protocol enforcer. Your focus is ensuring all comments 
 
 ### Single Combined Byline (CRITICAL)
 
-**ALL comments MUST end with ONE byline that combines status, agent, and model.**
+**ALL comments MUST end with ONE byline that combines identity and status.**
 
 **Format:**
 ```
 <response content>
 
 ---
-🤖 <status-emoji> <status-text> by <AgentName> (<ModelID>)
-```
-
-**For progress comments:**
-```
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-**Summary:**
-
-<1-2 sentences describing stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
+🤖 <AgentName> (<ModelID>) <status>
 ```
 
 **Components (supplied dynamically at runtime):**
-- `<status-emoji>`: Status indicator (✅ ✨ 📝 ❌ 🔄 ↻ ⚠️ 🔍 📋 ✎)
-- `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
 - `<ModelID>`: Model identifier with provider (e.g., `<ModelID>`)
+- `<status>`: Single emoji for the outcome
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+**Rule:** Byline = WHO + outcome. Identity first, status last. No extra context.
 
-### Status Emoji Guide
+### Status Icon Guide
 
-| Status | Emoji | Byline Format |
-|--------|-------|---------------|
-| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
-| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)` |
-| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)` |
-| Copy Editor | ✎ | `🤖 ✎ on behalf of <UserName>` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>)` |
-| Superseded | 🔄 | `🤖 🔄 Superseded by <AgentName> (<ModelID>)` |
-| Blocking | ⚠️ | `🤖 ⚠️ Blocking by <AgentName> (<ModelID>)` |
-| Analysis | 🔍 | `🤖 🔍 Analysis by <AgentName> (<ModelID>)` |
-| Decision | 📋 | `🤖 📋 Decision by <AgentName> (<ModelID>)` |
+| Status | Icon | Example |
+|--------|------|---------|
+| Task Complete | ✅ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✅` |
+| In Progress | ↻ | `🤖 OpenCode (ollama-cloud/glm-5.1) ↻` |
+| Created | ✨ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✨` |
+| Updated | 📝 | `🤖 OpenCode (ollama-cloud/glm-5.1) 📝` |
+| Copy Editor | ✎ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✎ on behalf of <UserName>` |
+| Rejected | ❌ | `🤖 OpenCode (ollama-cloud/glm-5.1) ❌` |
+| Superseded | 🔄 | `🤖 OpenCode (ollama-cloud/glm-5.1) 🔄` |
+| Blocking | ⚠️ | `🤖 OpenCode (ollama-cloud/glm-5.1) ⚠️` |
+| Analysis | 🔍 | `🤖 OpenCode (ollama-cloud/glm-5.1) 🔍` |
+| Decision | 📋 | `🤖 OpenCode (ollama-cloud/glm-5.1) 📋` |
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+**Rule:** Byline = WHO + outcome. Identity first, status last. No extra context.
 
 ### Copy Editor Byline (User-Authored Content)
 
@@ -90,14 +77,14 @@ Use standard bylines (Created, Completed, Updated) for:
 <content posted on behalf of user>
 
 ---
-🤖 ✎ on behalf of <UserName>
+🤖 <AgentName> (<ModelID>) ✎ on behalf of <UserName>
 ```
 
 **Components:**
 - `✎`: Pencil emoji indicates editing/posting role (not authorship)
 - `on behalf of <UserName>`: The user who requested/owns the content
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline.
+**Rule:** Byline = WHO + outcome. Identity first, status last.
 
 #### Examples
 
@@ -112,7 +99,7 @@ Use standard bylines (Created, Completed, Updated) for:
 **Recommendation:** Update regex to allow hyphens in username patterns.
 
 ---
-🤖 ✎ on behalf of <DEV_NAME>
+🤖 OpenCode (ollama-cloud/glm-5.1) ✎ on behalf of <DEV_NAME>
 ```
 
 **Issue Comment Posted for User:**
@@ -122,7 +109,7 @@ Use standard bylines (Created, Completed, Updated) for:
 Based on the investigation, the feature is ready for implementation. The API endpoints are designed and the database schema is finalized.
 
 ---
-🤖 ✎ on behalf of <DEV_NAME>
+🤖 OpenCode (ollama-cloud/glm-5.1) ✎ on behalf of <DEV_NAME>
 ```
 
 ### Issue/PR Body Attribution (Lifecycle Status)
@@ -131,13 +118,13 @@ Based on the investigation, the feature is ready for implementation. The API end
 
 | Action | Operation | Byline |
 |--------|-----------|--------|
-| Create issue | Append | `🤖 ✨ Created by <AgentName> (<ModelID>)` |
-| Update content | Append | `🤖 📝 Updated by <AgentName> (<ModelID>)` |
-| Complete issue | Append | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Reject issue | Append | `🤖 ❌ Rejected by <AgentName> (<ModelID>)` |
-| Supersede issue | Append | `🤖 🔄 Superseded by <AgentName> (<ModelID>)` |
+| Create issue | Append | `🤖 <AgentName> (<ModelID>) ✨` |
+| Update content | Append | `🤖 <AgentName> (<ModelID>) 📝` |
+| Complete issue | Append | `🤖 <AgentName> (<ModelID>) ✅` |
+| Reject issue | Append | `🤖 <AgentName> (<ModelID>) ❌` |
+| Supersede issue | Append | `🤖 <AgentName> (<ModelID>) 🔄` |
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+**Rule:** Byline = WHO + outcome. Identity first, status last. No extra context.
 
 **Example lifecycle (append-only):**
 ```markdown
@@ -147,9 +134,9 @@ Based on the investigation, the feature is ready for implementation. The API end
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by <AgentName> (<ModelID>)
-🤖 📝 Updated by <AgentName> (<ModelID>)
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 OpenCode (ollama-cloud/glm-5.1) ✨
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
+🤖 OpenCode (ollama-cloud/glm-5.1) ✅
 ```
 
 **Why append-only:**
@@ -167,41 +154,67 @@ Based on the investigation, the feature is ready for implementation. The API end
 | Create new issue | ❌ NO | Issue body is the communication |
 | Update issue body (textual content) | ✅ YES | Explain the change |
 | Update issue body (STATUS field only) | ❌ NO | Status tracking, not narrative |
-| Complete implementation task | ✅ YES | Document progress |
-| Create PR | ✅ YES | Link to issue |
+| Complete implementation task | ❌ NO | Progress goes to chat only |
+| Create PR | ✅ YES | Link to issue for traceability |
 | Close issue | ✅ YES | Provide closing summary |
 | Alter spec (add/remove phases, steps) | ✅ YES | Document spec changes |
+| Report blocker | ✅ YES | Others need to know work is stuck |
+| Report bug discovered during implementation | ✅ YES | Affects scope or approach |
+| Respond to user question | ✅ YES | Must respond where asked |
 | Review status without action | ❌ NO | No value added |
 | Label changes | ❌ NO | GitHub auto-tracks |
 | Checklist completion (`☐` → `☑`) | ❌ NO | Status tracking |
 
 ---
 
-## Progress Comments (MANDATORY)
+## Progress Reports (MANDATORY)
 
-**Every implementation step MUST be documented with a comment on the associated issue.**
+**Every implementation step MUST be documented with a progress executive summary in chat.**
 
-### When to Post
+### When to Report
 
 - After completing EACH task in multi-task implementation
 - After ANY file modification
 - When creating PR
-- NEVER wait until all tasks complete — post after EACH task
+- NEVER wait until all tasks complete — report after EACH task
 
-### Chat Output Rule
+### Channel Decision (CRITICAL)
 
-**Progress executive summaries go to BOTH GitHub comments AND chat.**
+**Progress executive summaries go to chat ONLY, not GitHub Issue comments.**
 
-| Location | Content |
-|----------|---------|
-| **GitHub Issue Comment** | Full executive summary (summary, outcome) |
-| **Chat Output** | Same executive summary (summary, outcome) |
+| Channel | Purpose | Content |
+|---------|---------|---------|
+| **Chat** | Operational progress (immediate) | Full executive summary (summary, outcome) |
+| **GitHub Issue** | State changes (permanent record) | Only: spec revision, PR created, blocked, bug, user response, closure |
 
-**Why:** Both GitHub history AND chat transcript should show progress. GitHub preserves long-term history; chat maintains session context.
+**Why:** Chat serves the active developer. GitHub preserves long-term history. Implementation progress is ephemeral (session-scoped); state changes are permanent.
 
-**✅ DO:** Post executive summary to GitHub, then provide SAME summary in chat
-**🚫 NEVER:** Skip either location
-**🚫 NEVER:** Put full summary in chat but skip GitHub comment
+**✅ DO:** Post executive summary to chat
+**🚫 NEVER:** Post implementation progress to GitHub Issue comments
+**🚫 NEVER:** Skip chat report
+
+### Chat Output Rule (CRITICAL)
+
+**Chat output order (mandatory):**
+1. Executive summary (what happened, outcome)
+2. URL (if one exists)
+3. AI byline LAST — `🤖 <AgentName> (<ModelID>) <status>`
+
+Nothing after the byline. The byline signals output is complete.
+
+**Byline format:** `🤖 <AgentName> (<ModelID>) <status>`
+
+Identity first, status last. Reads naturally: "AI agent X completed ✅"
+
+| Status | Icon | Example |
+|--------|------|---------|
+| Completed | ✅ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✅` |
+| Created | ✨ | `🤖 OpenCode (ollama-cloud/glm-5.1) ✨` |
+| Updated | 📝 | `🤖 OpenCode (ollama-cloud/glm-5.1) 📝` |
+| Blocked | ⚠️ | `🤖 OpenCode (ollama-cloud/glm-5.1) ⚠️` |
+| Rejected | ❌ | `🤖 OpenCode (ollama-cloud/glm-5.1) ❌` |
+| Superseded | 🔄 | `🤖 OpenCode (ollama-cloud/glm-5.1) 🔄` |
+| Analysis | 🔍 | `🤖 OpenCode (ollama-cloud/glm-5.1) 🔍` |
 
 ### ✅ REQUIRED Format: Executive Summary
 
@@ -212,9 +225,6 @@ Based on the investigation, the feature is ready for implementation. The API end
 <1-2 sentences describing the impact and stakeholder value of the change.>
 
 **Outcome:** <What changed for stakeholders / users / system behavior>
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 **For final task or single-task spec:**
@@ -226,9 +236,6 @@ Based on the investigation, the feature is ready for implementation. The API end
 **Outcome:** <What changed for stakeholders / users / system behavior>
 
 All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Executive Summary Requirements
@@ -258,11 +265,11 @@ The summary MUST answer:
 ### Sequence Enforcement
 
 1. ✅ Complete the implementation
-2. ✅ Post progress comment IMMEDIATELY
+2. ✅ Report progress in chat IMMEDIATELY
 3. ✅ ONLY THEN: Move to next task or report completion
 
-**🚫 WRONG:** Complete task → Move to next → Comment later
-**✅ RIGHT:** Complete task → Comment → Then move to next
+**🚫 WRONG:** Complete task → Move to next → Report later
+**✅ RIGHT:** Complete task → Report in chat → Then move to next
 
 ---
 
@@ -289,23 +296,23 @@ When updating textual content in an issue body:
 ### Comment Format for Body Updates
 
 ```
-🤖 📝 Updated: <reason>
+📝 Updated: <reason>
 
 ---
-🤖 📝 Updated by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) 📝
 ```
 
 ### Spec Alteration Format
 
 ```
-🤖 📝 Spec altered: <summary>
+📝 Spec altered: <summary>
 
 - Changed: <what changed>
 - Added: <what added>
 - Removed: <what removed>
 
 ---
-🤖 📝 Updated by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) 📝
 ```
 
 ### What Counts as "Textual Content"
@@ -353,7 +360,7 @@ When updating textual content in an issue body:
 ### Closure Comment Format
 
 ```
-🤖 ❌ **Closed**
+❌ **Closed**
 
 ## Rejection Reason (if rejected)
 <reason with evidence>
@@ -365,24 +372,24 @@ When updating textual content in an issue body:
 <suggestion for rejected proposals>
 
 ---
-🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
+🤖 <AgentName> (<ModelID>) ❌
 ```
 
 ### After Closure: Append Completion Attribution
 
 When closing as completed:
 ```markdown
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) ✅
 ```
 
 When closing as rejected:
 ```markdown
-🤖 ❌ Rejected by <AgentName> (<ModelID>): <reason>
+🤖 <AgentName> (<ModelID>) ❌
 ```
 
 When closing as superseded:
 ```markdown
-🤖 🔄 Superseded by <AgentName> (<ModelID>): <replacement-issue>
+🤖 <AgentName> (<ModelID>) 🔄
 ```
 
 **⚠️ CRITICAL: ALWAYS APPEND attribution. NEVER replace existing creation attribution.**
@@ -412,16 +419,17 @@ When closing as superseded:
 - "Ready for approval?"
 - Cross-reference link additions (origin/back-reference links)
 - Housekeeping edits (typo fixes, formatting)
+- **Implementation progress comments** — progress reports go to chat only
 - **Audit findings reports** — spec-auditor findings are internal agent guidance, not stakeholder communication. Act on findings by revising the spec; don't post the audit report as a comment.
 
 ### ✅ REQUIRED Comments
 
 - Closing an issue (with reason)
 - Updating substantive textual content (requirements, objectives, phases)
-- Completing implementation task
 - Creating PR
 - Altering spec structure
 - Blocking/unblocking decision
+- Responding to user questions
 
 ### Audit Findings Are NOT Comments
 
@@ -480,20 +488,21 @@ GOOD: "The keys look correct. Ready when you are."
 - Use "Awaiting authorization" in comments
 - Analyze user comments without posting response
 - Create issue AND post separate comment (body is sufficient)
-- Proceed to next task without posting progress comment
+- Post implementation progress to GitHub Issue comments (chat only)
+- Proceed to next task without reporting progress in chat
 
 ### ✅ ALWAYS DO
 
 - Post ALL comments with attribution at END (not prefix)
-- Use 🤖 emoji FIRST, then status emoji
+- Use 🤖 emoji FIRST, then agent identity, then status icon
 - Use attribution footer for issue/PR bodies (appended, never replaced)
 - Ensure emoji is PLAIN TEXT (NOT inside italic/bold)
 - Comment when updating textual content
 - Comment when altering spec structure
 - Comment when closing issues
 - Append attribution for all issue body changes (created, updated, completed, rejected)
-- Comment after completing each task
-- Post progress comment IMMEDIATELY (not later)
+- Report progress in chat after completing each task
+- Report progress IMMEDIATELY (not later)
 - Respond to user questions via GitHub comment
 
 ---
@@ -515,9 +524,6 @@ GOOD: "The keys look correct. Ready when you are."
 Created skill file defining comment format rules, decision tables for when to comment vs edit issue bodies, and example workflows. This establishes clear protocols for AI agents posting to GitHub.
 
 **Outcome:** Agents now have explicit guidance on comment types, timing, and format—reducing inconsistent or missing issue updates.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Task Completion Comment (Final Task)
@@ -530,9 +536,6 @@ Updated cross-references in all affected guideline files to point to the new ski
 **Outcome:** All guideline references now correctly point to github-comments skill for comment protocol.
 
 All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Single-Task Completion
@@ -545,30 +548,27 @@ Replaced technical punch-list progress comments with executive summaries focused
 **Outcome:** Progress comments now communicate impact and outcomes rather than changelog details—improving readability for stakeholders reviewing issue history.
 
 All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
 ### Issue Body Update Comment
 
 ```
-🤖 📝 Updated for guideline updates per discussion in comment #5
+📝 Updated for guideline updates per discussion in comment #5
 
 ---
-🤖 📝 Updated by <AgentName> (<ModelID>)
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
 ```
 
 ### Spec Alteration Comment
 
 ```
-🤖 📝 Spec altered: Added Phase 3 for verification
+📝 Spec altered: Added Phase 3 for verification
 
 - Added: Phase 3: Verification (auto-progress)
 - Added: Success criteria verification steps
 
 ---
-🤖 📝 Updated by <AgentName> (<ModelID>)
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
 ```
 
 ### Issue Creation (Body)
@@ -580,7 +580,7 @@ All tasks complete from this specification.
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by <AgentName> (<ModelID>)
+🤖 OpenCode (ollama-cloud/glm-5.1) ✨
 ```
 
 ### Issue Updates as Combined Bylines List (Body)
@@ -592,10 +592,51 @@ All tasks complete from this specification.
 
 > **Approval Tracking**: Approvals tracked via comments.
 
-🤖 ✨ Created by <AgentName> (<ModelID>)
-🤖 📝 Updated by <AgentName> (<ModelID>)
-🤖 📝 Updated by <AgentName> (<ModelID>)
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 OpenCode (ollama-cloud/glm-5.1) ✨
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
+🤖 OpenCode (ollama-cloud/glm-5.1) ✅
+```
+
+## Issue Comment Protocol
+
+### Spec Alteration Comment
+
+```
+📝 Spec altered: Added Phase 3 for verification
+
+- Added: Phase 3: Verification (auto-progress)
+- Added: Success criteria verification steps
+
+---
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
+```
+
+### Issue Creation (Body)
+
+```markdown
+[Issue body content]
+
+---
+
+> **Approval Tracking**: Approvals tracked via comments.
+
+🤖 OpenCode (ollama-cloud/glm-5.1) ✨
+```
+
+### Issue Updates as Combined Bylines List (Body)
+
+```markdown
+[Issue body content]
+
+---
+
+> **Approval Tracking**: Approvals tracked via comments.
+
+🤖 OpenCode (ollama-cloud/glm-5.1) ✨
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
+🤖 OpenCode (ollama-cloud/glm-5.1) ✅
 ```
 
 ### Issue Closure Comment
@@ -613,8 +654,10 @@ Commit `abc123`: Add github-comments skill directory
 All success criteria met.
 
 ---
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```# Issue Comment Protocol
+🤖 OpenCode (ollama-cloud/glm-5.1) ✅
+```
+
+# Issue Comment Protocol
 
 ## NEVER Use Issue Comments as Dialog Prompts
 
@@ -692,13 +735,9 @@ Ready to proceed with the next task? Awaiting authorization.
 ### ✅ RIGHT: Clean Completion
 
 ```
-AI: OpenCode ollama-cloud/glm-5 ✅ Task complete: Updated the validation logic.
+Updated the validation logic to handle edge cases in MeSH term lookups and added error context propagation. This prevents validation failures when terms contain special characters.
 
-**Summary:**
-
-Refactored the input validation module to handle edge cases in MeSH term lookups and added error context propagation. This prevents validation failures when terms contain special characters.
-
-**Outcome:** MeSH term validation now handles edge cases gracefully with clear error messages.
+🤖 OpenCode (ollama-cloud/glm-5.1) ✅
 ```
 
 **Correct**: Documents progress with executive summary focusing on stakeholder value. No file lists. No dialog prompt.
@@ -714,13 +753,13 @@ AI: OpenCode ollama-cloud/glm-5 🤖 Analysis complete. Should I proceed with im
 ### ✅ RIGHT: Present Findings and HALT
 
 ```
-AI: OpenCode ollama-cloud/glm-5 🔍 Analysis complete: Found 3 issues in validation module.
+Found 3 issues in validation module:
 - Issue 1: Missing null check in `validate_input()`
 - Issue 2: Duplicate validation in `process_data()`
 - Issue 3: Unreachable code in `handle_error()`
-```
 
-**Correct**: Presents findings, HALTs. Developer will authorize when ready.
+🤖 OpenCode (ollama-cloud/glm-5.1) 🔍
+```
 
 ## After Spec Creation/Update Comments
 
@@ -729,15 +768,21 @@ When posting spec updates:
 ### ✅ CORRECT
 
 ```markdown
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added .env and local file support
+📝 Updated: Added .env and local file support
+
+---
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
 ```
 
 ### 🚫 FORBIDDEN
 
 ```markdown
-🤖 📝 Updated by OpenCode (ollama-cloud/glm-5): Added .env and local file support
+📝 Updated: Added .env and local file support
 
 **Awaiting authorization to begin Phase 1.** Say "approved" or "go" when ready.
+
+---
+🤖 OpenCode (ollama-cloud/glm-5.1) 📝
 ```
 
 The second example is FORBIDDEN because:
