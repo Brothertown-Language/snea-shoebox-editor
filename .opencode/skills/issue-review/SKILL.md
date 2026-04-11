@@ -1,0 +1,137 @@
+---
+name: issue-review
+description: Use when reviewing a GitHub issue for comments, audits, or Q/A. Triggers on: review issue, review spec, check issue, issue review, audit issue.
+type: orchestrator
+license: MIT
+compatibility: opencode
+---
+
+# Skill: issue-review
+
+## Overview
+
+Unified "review" command for GitHub Issues. Gathers issue data, classifies the review path via content analysis (not label conventions), delegates to appropriate downstream skills, and handles Q/A for non-spec issues. One entry point replaces manual orchestration of comment reading, audit detection, and audit execution.
+
+## Persona
+
+You are an Issue Review Orchestrator. Your focus is gathering all issue context, classifying the right review path, and delegating to the correct downstream skill or workflow.
+
+## Tasks
+
+| Task | Purpose | Words |
+|------|---------|-------|
+| `gather` | Collect all issue data (body, comments, labels, sub-issues, auth status) | ~500 |
+| `triage` | Two-pass classification: pattern signals + AI verification | ~600 |
+| `audit` | Delegate to `spec-auditor` with triage hints | ~350 |
+| `qa` | Ask clarifying questions one at a time in chat | ~500 |
+
+## Invocation
+
+- `/skill issue-review --issue N` — Full review (gather → triage → dispatch)
+- `/skill issue-review --issue N --task gather` — Data collection only
+- `/skill issue-review --issue N --task triage` — Classification only (requires prior gather)
+- `/skill issue-review --issue N --task audit` — Audit delegation only (requires prior triage)
+- `/skill issue-review --issue N --task qa` — Q/A mode only
+- `/skill issue-review` — Overview only
+
+## Operating Protocol
+
+1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to review.
+
+2. **Automatic workflow:** When invoked without `--task`, the full workflow runs:
+   - `gather` → `triage` → path dispatch → recursive sub-issue handling
+
+3. **Comments read first (CRITICAL):** `gather` reads ALL comments before any triage decision, per `067-context-completeness.md`.
+
+4. **No label dependency:** Triage uses content analysis, not `[SPEC]` prefix or other label conventions.
+
+5. **Sub-issue recursion:** When sub-issues exist, the full workflow runs on each sub-issue independently.
+
+## Orchestration Flow
+
+```
+review #N
+  ├── gather (issue + sub-issues data)
+  ├── triage (pattern signals + AI verification → path decision)
+  ├── path dispatch:
+  │   ├── audit → spec-auditor with hints → exec summary to chat
+  │   ├── qa → one-at-a-time questions in chat → exec summary to issue
+  │   ├── just-review → exec summary of current state to chat
+  │   └── already-handled → full re-verification → status to chat
+  └── recurse for sub-issues (gather → triage → dispatch for each)
+```
+
+## Triage Paths
+
+| Path | When | Output Target |
+|------|------|---------------|
+| `audit` | Content looks like a spec (phases/steps, success criteria, edge cases) | Chat exec summary |
+| `qa` | Bug report, unclear request, or issue needing clarification | Chat questions, then issue exec summary |
+| `just-review` | Already-audited spec with no new relevant comments | Chat exec summary |
+| `already-handled` | Issue appears complete (approved + implemented) | Chat re-verification status |
+
+## Path Dispatch Details
+
+### Audit Path
+
+Invoke `spec-auditor --issue N` with triage hints about which subtasks are relevant:
+
+| Spec Type | Hint |
+|-----------|------|
+| Simple bug-fix spec | "likely baseline only" |
+| Feature with phases | "baseline + concerns likely relevant" |
+| Complex multi-phase spec | "all subtasks likely relevant" |
+
+Hints inform but do not override — `spec-auditor` retains its own subtask selection logic.
+
+**CRITICAL:** Audit findings are internal agent guidance — DO NOT post to GitHub comments (per `000-critical-rules.md`). Produce prose exec summary for chat only.
+
+### Q/A Path
+
+Ask questions one at a time in chat. Q/A depth depends on content:
+
+| Content Type | Q/A Depth |
+|--------------|-----------|
+| Simple bug report | Scope questions only |
+| Feature with technical implications | Scope + feasibility |
+| Feature idea that could become a spec | Scope + feasibility + offer to scaffold spec |
+
+On resolution, post exec summary to issue (durable outcomes only, not Q&A chatter). HALT after posting.
+
+### Just-Review Path
+
+Produce prose exec summary of current state including: authorization status, last audit summary, open questions, overall health assessment.
+
+### Already-Handled Path
+
+**Full re-verification — NEVER rely on history, comments, or memory.**
+
+1. Verify GitHub state: issue closed, PR merged, sub-issues status
+2. Verify implementation: check that files mentioned in spec exist in codebase
+3. Verify tests: check test status for affected areas
+4. If fully verified: report "confirmed complete"
+5. If gaps found: report what needs attention, suggest re-triage
+
+## Final Report Format (CRITICAL)
+
+All outputs follow prose format per `000-critical-rules.md`:
+
+```
+<optional details and analysis>
+
+<exec summary>
+
+<URL if relevant>
+
+🤖 <AgentName> (<ModelID>) <status>
+```
+
+No template files. No structured schema output. Prose throughout.
+
+## Cross-References
+
+- `spec-auditor`: Called by `audit` task for spec quality checks
+- `approval-gate`: Referenced for authorization status in `gather`
+- `067-context-completeness`: Mandates reading all comments before acting
+
+Base directory for this skill: `.opencode/skills/issue-review/`

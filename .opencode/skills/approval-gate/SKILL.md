@@ -289,7 +289,7 @@ When a bug report requires code changes:
 
 ## Cross-References
 
-- Related skills: `git-workflow` (branch operations, cleanup with parent closure check), `pr-creation-workflow` (PR timing)
+- Related skills: `git-workflow` (branch operations, cleanup with parent closure check), `pr-creation-workflow` (PR timing), `issue-review` (reads authorization status in gather task)
 - Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md` (parent closure pre-check)
 
 ## Parent Closure Pre-Check Reference

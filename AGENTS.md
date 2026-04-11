@@ -154,6 +154,7 @@ Skill invocation is driven by self-discovery from SKILL.md frontmatter (see "Ski
 | `test-driven-development` | TDD red-green-refactor workflow | User requests TDD approach |
 | `receiving-code-review` | Address review feedback precisely | PR receives review comments |
 | `requesting-code-review` | Prepare and submit review requests | User says "request review" |
+| `issue-review` | Unified review command for GitHub Issues | Review issue, audit spec, check issue |
 
 **Implementation-workflow** coordinates git-workflow tasks (pre-work, review-prep, pr-creation) and yields structured context between stages. Authorization is checked once by `approval-gate`, then passed through the orchestration chain — no redundant re-checks.
 
