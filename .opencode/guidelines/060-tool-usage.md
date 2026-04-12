@@ -42,6 +42,24 @@ ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance,
 - Never issue a `cd` command. Run all commands from project root using relative paths.
 - **NEVER prefix commands with `cd /home/<user>/git/<repo> &&` or any variant.**
 
+### ⚠️ Worktree Path Resolution for File Operation Tools (CRITICAL)
+
+When working in a git worktree (`WORKTREE_PATH` is set), TIER 1 file operation tools (`read`, `edit`, `write`, `glob`, `grep`) do **NOT** have a `workdir` parameter. Relative paths like `src/main.py` resolve to the **main repo**, not the worktree. This causes silent file operation errors — edits go to the wrong file.
+
+**When `WORKTREE_PATH` is set, ALL file operations MUST prefix paths with the worktree path:**
+
+| Tool | Wrong (operates on main repo) | Correct (targets worktree) |
+|------|-------------------------------|---------------------------|
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` |
+
+**When NOT in a worktree** (working in main repo): Relative paths are correct and function as expected.
+
+**For `bash` tool:** Continue using `workdir` parameter (already documented in `using-git-worktrees` skill and `000-critical-rules.md`).
+
 ## 3. Temp Files & Cleanliness
 
 ### ✅ ALWAYS DO

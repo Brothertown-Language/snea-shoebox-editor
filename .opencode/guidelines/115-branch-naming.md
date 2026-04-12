@@ -37,7 +37,10 @@ git checkout dev && git pull origin dev
 # 2. Create feature worktree (using-git-worktrees skill)
 git worktree add .worktrees/spec-my-feature -b spec/my-feature dev
 
-# 3. Work in the worktree (use workdir parameter on all commands)
+# 3. Work in the worktree (use workdir parameter on all bash commands)
+# IMPORTANT: For read/edit/write/glob/grep tools, prefix filePath with WORKTREE_PATH
+#   read(filePath=f"{WORKTREE_PATH}/src/main.py")  — NOT read(filePath="src/main.py")
+#   edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)  — NOT edit(filePath="src/main.py", ...)
 # ... make changes, commit inside .worktrees/spec-my-feature ...
 
 # 4. Push feature branch from worktree

@@ -47,7 +47,13 @@ Task tool (general-purpose):
     If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
     1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
-    2. Before any push/squash/rebase operation, verify:
+2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{WORKTREE_PATH}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
+       - `read(filePath=f"{{WORKTREE_PATH}}/src/main.py")` — NOT `read(filePath="src/main.py")`
+       - `edit(filePath=f"{{WORKTREE_PATH}}/src/main.py", ...)` — NOT `edit(filePath="src/main.py", ...)`
+       - `write(filePath=f"{{WORKTREE_PATH}}/src/new.py", ...)` — NOT `write(filePath="src/new.py", ...)`
+       - `glob(pattern="src/**/*.py", path="{{WORKTREE_PATH}}")` — NOT `glob(pattern="src/**/*.py")`
+       - `grep(pattern="TODO", path=f"{{WORKTREE_PATH}}/src/")` — NOT `grep(pattern="TODO", path="src/")`
+     3. Before any push/squash/rebase operation, verify:
        ```
        git branch --show-current
        # MUST match BRANCH_NAME
