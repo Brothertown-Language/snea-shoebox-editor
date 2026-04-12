@@ -1,8 +1,17 @@
 /**
  * Session Enforcement Plugin for OpenCode
  *
- * Unified plugin that combines session initialization and skill enforcement
- * injection. Replaces the retired session-init.ts plugin.
+ * Injects session context into the LLM system prompt and enforces
+ * skill invocation rules. Also detects bare issue references (#N)
+ * and injects mandatory audit pipelines.
+ *
+ * Hook: system.transform — pushes English prose context (from session_init.py
+ *   and PluginInput augmentations) into the LLM system prompt.
+ * Hook: chat.messages.transform — injects skill enforcement content and
+ *   bare issue pipeline directives into user messages.
+ *
+ * NO shell.env hook — env-loader.ts owns all bash environment injection.
+ * NO parsing of session_init.py output — stdout goes verbatim to system prompt.
  *
  * Source attribution:
  * - Session init pattern adapted from existing session-init.ts (project-internal)
@@ -24,31 +33,11 @@ const SCRIPT_PATH = ".opencode/scripts/session_init.py";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 let cachedOutput: string | null = null;
-let cachedEnv: Record<string, string> | null = null;
 let cacheTimestamp = 0;
 
-function parseEnvFromOutput(stdout: string): Record<string, string> {
-  const env: Record<string, string> = {};
-  for (const line of stdout.split("\n")) {
-    const trimmed = line.trim();
-    if (trimmed.includes("=") && !trimmed.startsWith("#")) {
-      const eqIdx = trimmed.indexOf("=");
-      const key = trimmed.slice(0, eqIdx).trim();
-      const value = trimmed.slice(eqIdx + 1).trim();
-      if (key && value !== undefined) {
-        env[key] = value;
-      }
-    }
-  }
-  return env;
-}
-
-async function runSessionInit($: PluginInput["$"]): Promise<{
-  output: string;
-  env: Record<string, string>;
-}> {
+async function runSessionInit($: PluginInput["$"]): Promise<string> {
   if (cachedOutput && Date.now() - cacheTimestamp < CACHE_TTL_MS) {
-    return { output: cachedOutput, env: cachedEnv! };
+    return cachedOutput;
   }
 
   try {
@@ -57,26 +46,110 @@ async function runSessionInit($: PluginInput["$"]): Promise<{
 
     if (!stdout || stdout.trim().length === 0) {
       console.error("[session-enforcement] Script returned empty output");
-      return { output: "", env: {} };
+      return "";
     }
 
     if (result.exitCode !== 0) {
       const stderr = result.stderr.toString();
       console.error(`[session-enforcement] Script exited with code ${result.exitCode}: ${stderr}`);
-      return { output: "", env: {} };
+      return "";
     }
 
-    const env = parseEnvFromOutput(stdout);
-
     cachedOutput = stdout;
-    cachedEnv = env;
     cacheTimestamp = Date.now();
 
-    return { output: stdout, env };
+    return stdout;
   } catch (err) {
     console.error("[session-enforcement] Failed to run session_init.py:", err);
-    return { output: "", env: {} };
+    return "";
   }
+}
+
+interface ProjectMetadata {
+  name: string;
+  version: string;
+  pythonVersion: string;
+}
+
+function readProjectMetadata(projectDir: string): ProjectMetadata | null {
+  const pyprojectPath = path.join(projectDir, "pyproject.toml");
+  if (!fs.existsSync(pyprojectPath)) {
+    return null;
+  }
+
+  let name = "";
+  let version = "";
+  let inProjectSection = false;
+
+  try {
+    const content = fs.readFileSync(pyprojectPath, "utf8");
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (trimmed === "[project]") {
+        inProjectSection = true;
+        continue;
+      }
+      if (trimmed.startsWith("[") && trimmed.endsWith("]")) {
+        inProjectSection = false;
+        continue;
+      }
+      if (inProjectSection) {
+        if (trimmed.startsWith("name")) {
+          const eqIdx = trimmed.indexOf("=");
+          if (eqIdx > 0) {
+            name = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+          }
+        } else if (trimmed.startsWith("version")) {
+          const eqIdx = trimmed.indexOf("=");
+          if (eqIdx > 0) {
+            version = trimmed.slice(eqIdx + 1).trim().replace(/^["']|["']$/g, "");
+          }
+        }
+      }
+    }
+  } catch {
+    return null;
+  }
+
+  if (!name) {
+    return null;
+  }
+
+  let pythonVersion = "";
+  const pythonVersionPath = path.join(projectDir, ".python-version");
+  if (fs.existsSync(pythonVersionPath)) {
+    try {
+      pythonVersion = fs.readFileSync(pythonVersionPath, "utf8").trim();
+    } catch {
+      // Ignore read errors
+    }
+  }
+
+  return { name, version: version || "0.1.0", pythonVersion };
+}
+
+function buildMetadataBlock(projectDir: string): string {
+  const meta = readProjectMetadata(projectDir);
+  if (!meta) {
+    return "";
+  }
+
+  const lines: string[] = [`Project: ${meta.name} v${meta.version}`];
+  if (meta.pythonVersion) {
+    lines.push(`Python: ${meta.pythonVersion}`);
+  }
+  return lines.join("\n");
+}
+
+function buildWorktreeBlock(input: PluginInput): string {
+  const mainRepoDir = input?.directory || "";
+  const worktreeDir = input?.worktree || "";
+
+  if (worktreeDir && worktreeDir !== mainRepoDir) {
+    return `WORKTREE_PATH: ${worktreeDir}\nAll file operations (read, edit, write, glob, grep) MUST use paths prefixed with WORKTREE_PATH. Relative paths resolve to the main repo, not the worktree.`;
+  }
+
+  return "";
 }
 
 /**
@@ -246,7 +319,7 @@ Critical rules:
  * Build the enforcement content injected into the first user message.
  *
  * Adapted from obra/superpowers skill enforcement pattern:
- * https://github.com/obra/superpowers/blob/main/skills/using-superpowers/SKILL.md
+ * https://github.com/obra/superpowers/blob/main/.opencode/plugins/superpowers.js
  *
  * Key principle: "If you think there is even a 1% chance a skill might apply,
  * you ABSOLUTELY MUST invoke the skill." — from obra/superpowers using-superpowers
@@ -315,7 +388,7 @@ Invoke relevant skills BEFORE any response or action. Even a 1% chance means inv
 }
 
 export default async function sessionEnforcementPlugin(input: PluginInput): Promise<Hooks> {
-  // Determine skills directory
+  // Determine skills directory and project directory
   const projectDir = input?.directory || process.cwd();
   const skillsDir = path.join(projectDir, ".opencode", "skills");
 
@@ -323,25 +396,29 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
   const { skills: skillDescriptions, errors: frontmatterErrors } = loadSkillDescriptions(skillsDir);
 
   return {
-    // Inject session context into system prompt (absorbed from session-init.ts)
+    // Inject session context into system prompt (from session_init.py + PluginInput augmentations)
     "experimental.chat.system.transform": async (_input, output) => {
-      const { output: scriptOutput } = await runSessionInit(input.$);
+      const scriptOutput = await runSessionInit(input.$);
       if (scriptOutput) {
         output.system.push(scriptOutput);
+      }
+
+      // Inject worktree context when session is operating in a worktree
+      const worktreeBlock = buildWorktreeBlock(input);
+      if (worktreeBlock) {
+        output.system.push(worktreeBlock);
+      }
+
+      // Inject project metadata (name, version, Python version)
+      const metadataBlock = buildMetadataBlock(projectDir);
+      if (metadataBlock) {
+        output.system.push(metadataBlock);
       }
 
       // Inject frontmatter validation warning if any skills have broken frontmatter
       const warning = buildFrontmatterWarning(frontmatterErrors);
       if (warning) {
         output.system.push(warning);
-      }
-    },
-
-    // Inject environment variables (absorbed from session-init.ts)
-    "shell.env": async (_input, output) => {
-      const { env } = await runSessionInit(input.$);
-      for (const [key, value] of Object.entries(env)) {
-        output.env[key] = value;
       }
     },
 
