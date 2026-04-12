@@ -12,23 +12,120 @@ Analyze interdependencies when multiple issues are approved simultaneously, dete
 
 ## Exit Criteria
 
-- Each approved issue classified by dependency category
+- Each approved issue screened (pre-analysis) and classified by dependency category
+- Already-implemented, superseded, moot, and meta/non-code issues excluded with reason
+- Partially-implemented issues reduced to remaining phases
 - Dependency graph produced with execution order
 - Parallel-safe groups identified
-- Execution plan presented to developer in chat
-- Non-actionable issues identified and excluded from implementation
+- Execution plan presented in chat (informative only — no confirmation)
+- Agent proceeds immediately to `batch-orchestrate`
 
 ## Procedure
 
-### Step 1: Read All Approved Issues
+### Step 0: Pre-Analysis Screening
 
-For each approved issue, read the full issue body and comments:
+Before classification, screen each approved issue against the following categories. Issues that fail screening are excluded or scope-reduced BEFORE building the dependency graph.
+
+For each approved issue:
+
+1. Check partial/full implementation (merged PR references + success criteria)
+1. Check superseded by batch peer (scope overlap analysis)
+1. Check moot (spec references code that no longer exists/changed; no achievable criteria)
+1. Check stale assumptions (cross-reference with other issues in batch)
+1. Check revision status (flag in plan, remove `needs-approval` label)
+1. Check for cross-issue sub-issue pairs (default: parent covers; exception: isolated sub-agent)
+1. Classify conflicting pairs: auto-resolvable vs unresolvable
+
+#### Screening Categories
+
+| Category | Detection | Auto-resolve | Developer needed? |
+|----------|-----------|-------------|-------------------|
+| **Already implemented** | Merged PR references issue + all success criteria met | Exclude, mark "already-implemented" | No |
+| **Partially implemented** | Merged PR references issue + some success criteria met, some remaining | Include remaining phases only, mark "partially-implemented (phases X,Y done by PR #M)" | No |
+| **Superseded by batch peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
+| **Moot** | Referenced files/code restructured since spec creation; no remaining success criteria are achievable | Exclude, mark "moot" with reason | No |
+| **Stale assumptions** | Issue A references code/functions/files that Issue B modifies or deletes | Re-stage A after B only if same intent; otherwise HALT for developer | Yes (if different intent) / No (if same intent) |
+| **Conflicting (auto-resolvable)** | Issues touch same files, can be serialized | Serialize in correct order | No |
+| **Conflicting (unresolvable)** | Contradictory success criteria | Cannot auto-resolve | **Yes** — HALT |
+| **Meta/Non-code** | No code changes required | Exclude, mark "no code changes" | No |
+
+#### Screening Outcomes
+
+- **EXCLUDE**: already-implemented, superseded, moot, meta/non-code
+- **REDUCE SCOPE**: partially-implemented (include remaining phases only)
+- **SERIALIZE**: same-intent stale assumptions, auto-resolvable conflicts
+- **HALT**: different-intent stale assumptions, unresolvable conflicts
+
+#### Partial Implementation Detection
+
+When a merged PR references the issue but not all success criteria are met:
+
+1. Identify which phases/criteria are already satisfied by reading the merged PR's diff
+1. Extract remaining phases/criteria as the implementation scope
+1. Include in execution plan with reduced scope: `#N (phases 2, 3 remaining — phase 1 done by PR #M)`
+1. Sub-agent receives context: which phases are already done, what remains
+1. Do NOT ask the developer to specify — auto-detect
+
+#### Cross-Issue Sub-Issue Handling
+
+When both a parent issue and its sub-issues are in the approved batch:
+
+1. **Detect:** For each issue, check `github_issue_read(method=get_sub_issues)`. If any sub-issue number is also in the approved set, flag the pair.
+
+1. **Default behavior:** Omit sub-issues from execution plan — parent's cascade covers them. Sub-agent for parent receives the full spec including all phases.
+
+1. **Exception — isolated sub-issues:** If a sub-issue has a well-isolated scope (clear boundaries, no file overlap with parent's other phases), dispatch it to its own sub-agent for parallelism. Isolation criteria:
+
+   - Touches completely different files from parent's other phases
+   - No dependency on parent's other phases
+   - Can be merged independently
+
+1. **Edge case:** Parent is excluded (already implemented) but sub-issues aren't. Include sub-issues independently since parent's cascade doesn't apply.
+
+#### Stale Spec Assumption Detection
+
+When issue A's spec references code/functions/files that issue B modifies or deletes:
+
+1. **Same intent (auto-resolvable):** Issue A says "delete `parseEnvFromOutput()`" and Issue B also deletes it → same intent, serialize, no conflict. B before A is sufficient; A's implementation will find the function already gone.
+
+1. **Different intent (HALT for developer):** Issue A says "modify `parseEnvFromOutput()`" and Issue B deletes it → agent cannot determine if A's intent is still valid or if A should be adjusted. HALT and present to developer: "Issue #A references `parseEnvFromOutput()` but Issue #B deletes it. Should #A's spec be revised, or is the modification still needed?"
+
+1. **Do NOT auto-re-stage when intent differs.** The agent must not assume it knows whether the developer wants the function modified or deleted.
+
+#### Merge-Time Conflict Handling
+
+When two issues are independent during implementation but may conflict at merge:
+
+1. **Detect:** Issues that touch the same file in different sections or in overlapping but non-contradictory ways.
+
+1. **Action — Order PR creation:**
+
+   - First issue in dependency order: create PR normally
+   - Second issue: after first PR merges, rebase branch onto updated `dev`, then create PR
+   - This avoids avoidable merge conflicts in the second PR
+
+1. **Do NOT block execution.** Both issues proceed with implementation immediately. The ordering applies only at the PR creation step.
+
+1. **Note in execution plan:** "#A and #B may conflict at merge — #B will rebase onto `dev` after #A merges before creating its PR."
+
+#### Revision Status Handling
+
+When an issue in the batch has STATUS marked as `REVISED - NEEDS APPROVAL`:
+
+1. **"approved #N" covers the revised spec.** The developer explicitly authorized the issue number. The spec body (including revisions) is authoritative.
+
+1. **Flag in execution plan:** "#N has REVISED status — using revised spec as implementation scope."
+
+1. **Remove `needs-approval` label** from the issue post-approval (per existing approval-gate rule: explicit auth overrides label).
+
+### Step 1: Read All Remaining (Non-Excluded) Issues
+
+For each issue that survived screening, read the full issue body and comments:
 
 ```python
-for issue_number in approved_issues:
+for issue_number in remaining_issues:
     issue = github_issue_read(method="get", issue_number=issue_number)
     comments = github_issue_read(method="get_comments", issue_number=issue_number)
-    # Store issue data for analysis
 ```
 
 ### Step 2: Classify Each Issue
@@ -45,15 +142,21 @@ Determine each issue's category:
 **Classification heuristics:**
 
 1. **File overlap analysis**: Scan each issue's body for file path references, directory references, or component names that map to files in the repo.
-2. **Skill overlap**: Issues using the same skills that mutate shared state (e.g., both update `000-critical-rules.md`) are conflict-risk.
-3. **Logical ordering**: When Issue A's output becomes Issue B's input (e.g., A creates a skill that B references), A must precede B.
-4. **Scope analysis**: `.opencode/`-only changes vs `src/` changes vs doc-only changes.
+1. **Skill overlap**: Issues using the same skills that mutate shared state (e.g., both update `000-critical-rules.md`) are conflict-risk.
+1. **Logical ordering**: When Issue A's output becomes Issue B's input (e.g., A creates a skill that B references), A must precede B.
+1. **Scope analysis**: `.opencode/`-only changes vs `src/` changes vs doc-only changes.
+
+**Add edges from pre-analysis screening:**
+
+- Same-intent stale assumption pairs → must-precede edge (the issue providing the canonical change precedes)
+- Cross-issue sub-issue pairs → dependency edge (parent covers sub-issues unless isolated)
 
 ### Step 3: Build Dependency Graph
 
 Create a directed graph where:
-- Nodes = approved issues
-- Edges = "must-precede" relationships
+
+- Nodes = remaining (non-excluded) approved issues
+- Edges = "must-precede" relationships (including stale-assumption and cross-sub-issue edges from Step 0)
 - Groups = sets of issues with no inter-dependencies (parallel-safe)
 
 ```markdown
@@ -72,8 +175,13 @@ Create a directed graph where:
 **Parallel-safe Group 2:**
 - #E (touches `docs/`)
 
-### Excluded (Non-actionable)
+### Excluded (Pre-Analysis Screening)
 - #F — meta/behavioral issue, no code changes required
+- #G — already-implemented (PR #M merged)
+- #H — superseded by #B
+
+### Scope-Reduced
+- #I — partially-implemented (phase 1 done by PR #M; phases 2, 3 remaining)
 ```
 
 ### Step 4: Determine Execution Strategy
@@ -83,11 +191,14 @@ Create a directed graph where:
 | **Sequential** | Must-precede chain exists | Execute in dependency order |
 | **Parallel** | Independent issues | Dispatch via `subagent-driven-development` |
 | **Hybrid** | Mix of both | Serial for must-precede, parallel for independent groups |
-| **Exclude** | Meta/non-code issues | Report exclusion with reason |
+| **Exclude** | Meta/non-code, already-implemented, superseded, moot | Report exclusion with reason |
+| **Reduce scope** | Partially-implemented | Include remaining phases only |
 
-### Step 5: Present Execution Plan to Developer
+### Step 5: Present Execution Plan (Informative Only)
 
 **MANDATORY: The dependency analysis MUST be visible in chat (not hidden in agent reasoning).**
+
+**The plan is presented for informational purposes. Agent proceeds immediately to execution. No confirmation is requested or awaited.**
 
 Format:
 
@@ -96,15 +207,23 @@ Format:
 
 **Approved Issues:** #660, #662, #621, #614, #630
 
+### Pre-Analysis Screening
+
+| Issue | Screening Result | Reason |
+|-------|-----------------|--------|
+| #660 | Excluded — meta/non-code | No code changes required |
+| #670 | Excluded — already-implemented | PR #719 merged, all criteria met |
+| #671 | Scope-reduced — partially-implemented | Phase 1 done by PR #719; phases 2, 3 remaining |
+
 ### Classification
 
 | Issue | Category | Files | Dependencies |
 |-------|----------|-------|-------------|
-| #660 | Meta/Non-code | N/A | None (no code changes) |
 | #662 | Independent | `.opencode/skills/` | None |
 | #621 | Conflict-risk | `.opencode/guidelines/000-*.md` | Conflicts with #630 |
 | #614 | Independent | `src/` | None |
 | #630 | Must-precede #621 | `.opencode/guidelines/` | Must complete before #621 |
+| #671 | Independent | `.opencode/skills/` | None (scope: phases 2, 3 only) |
 
 ### Execution Plan
 
@@ -116,25 +235,42 @@ Format:
 Each parallel issue includes dispatch context:
 - #662 (`.opencode/skills/`) → `worktree_path: .worktrees/spec-662`
 - #614 (`src/`) → `worktree_path: .worktrees/spec-614`
+- #671 (`.opencode/skills/` — phases 2, 3 only) → `worktree_path: .worktrees/spec-671`
 
 **Phase 3 (After #630):**
 - #621 (`.opencode/guidelines/`)
 
+**Merge-time ordering:**
+- #662 and #621 may conflict at merge — #621 will rebase onto `dev` after #662 merges before creating its PR.
+
 **Excluded:**
 - #660 — meta/behavioral issue, no code changes required
+- #670 — already-implemented (PR #719)
+
+**Scope-reduced:**
+- #671 — partially-implemented (phase 1 done by PR #719; phases 2, 3 remaining)
 
 Proceeding with execution plan.
 ```
 
-### Step 6: Execute
+#### Prohibited Actions
 
-After presenting the plan, execute according to the dependency order:
+- **No `question` tool invocation** after plan presentation
+- **No HALT** between plan presentation and `batch-orchestrate`
+- **No "Proceed?" / "Shall I?" / any confirmation solicitation**
+- **No "awaiting approval" / "waiting for GO" / any pending-state marker**
 
-1. **Sequential issues**: Execute one at a time in dependency order
-2. **Parallel-safe groups**: Use `subagent-driven-development` skill
-3. **Report completion**: After ALL issues complete, report ONCE and HALT ONCE
+#### Developer Involvement Triggers
 
-### Step 6.5: Capture Dev Base Hash (Before Dispatch)
+The ONLY conditions requiring developer input during batch approval analysis:
+
+- **Unresolvable conflicts**: Contradictory success criteria between issues in batch
+- **Stale spec assumptions (different intent)**: Issue A references code that Issue B deletes, and A's intent differs from B's
+- **Ambiguous supersession**: Two issues partially overlap, unclear which supersedes which
+
+When any of these triggers fire, HALT and present the conflict to the developer with a clear question. Do NOT attempt to auto-resolve.
+
+### Step 6: Capture Dev Base Hash (Before Dispatch)
 
 Before dispatching any parallel worktrees, the orchestrating agent MUST capture the current dev branch hash:
 
@@ -164,14 +300,31 @@ env_vars:
 ```
 
 The `worktree_path` is derived from the branch name by replacing `/` with `-`:
+
 - Branch `spec/foo` → Worktree path `.worktrees/spec-foo`
 - Branch `feature/bar` → Worktree path `.worktrees/feature-bar`
 
 The `dev_base_hash` ensures all parallel worktrees start from the same base commit on `dev`.
 
+**For partially-implemented issues**, include additional context:
+
+```yaml
+  partially_implemented: true
+  completed_phases: [1]
+  completed_by_pr: "#M"
+  remaining_phases: [2, 3]
+```
+
+**For issues with REVISED status**, include:
+
+```yaml
+  revised_status: true
+  spec_version: "current revised body"
+```
+
 ### Step 8: Write Batch State File
 
-After the execution plan is presented and accepted, write a batch state file that persists the plan for sub-agent dispatch:
+After the execution plan is presented, write a batch state file that persists the plan for sub-agent dispatch:
 
 ```bash
 mkdir -p .opencode/tmp
@@ -180,6 +333,7 @@ mkdir -p .opencode/tmp
 **File:** `.opencode/tmp/batch-<timestamp>.md`
 
 **Contents:**
+
 ```markdown
 # Batch Execution Plan
 
@@ -187,11 +341,23 @@ mkdir -p .opencode/tmp
 **Authorized Issues:** #A, #B, #C
 **Authorization Context:** User said "approved" on <date>
 
+## Pre-Analysis Results
+
+| Issue | Screening | Details |
+|-------|-----------|---------|
+| #A | Included | — |
+| #D | Excluded | already-implemented (PR #M) |
+| #E | Scope-reduced | phase 1 done by PR #M; phases 2, 3 remaining |
+
 ## Execution Order
 
 1. #A — <title> (touches <files>)
 2. #B — <title> (depends on #A, touches <files>)
 3. #C — <title> (independent, touches <files>)
+
+## Merge-Time Ordering
+
+- #C will rebase onto `dev` after #A merges before creating its PR.
 
 ## Completed
 
@@ -205,26 +371,31 @@ mkdir -p .opencode/tmp
 ```
 
 **Key properties:**
+
 - Session-scoped via timestamp — stale files are detectable
 - Survives context turnover — agent can re-read after HALT
 - Hybrid: in-line context passed to each sub-agent + file backup for recovery
 - Cleaned up after batch completes (or on new session start)
 
-### Step 9: Yield to batch-orchestrate
+### Step 9: Execute Immediately
 
-After the batch state file is written, yield control to `implementation-workflow --task batch-orchestrate`:
+After presenting the plan, proceed immediately to `batch-orchestrate`. Do not HALT. Do not ask for confirmation. Do not wait.
 
-```
+Yield control to `implementation-workflow --task batch-orchestrate`:
+
+```text
 /skill implementation-workflow --task batch-orchestrate
 ```
 
 **batch-orchestrate** reads the batch state file and handles:
+
 - Creating worktrees for the batch
 - Dispatching sub-agents for each issue
 - Collecting results and updating batch state
 - Running review-prep after all issues complete
 
 This handoff ensures:
+
 - No HALTs between issues in the batch
 - Each sub-agent gets isolated context
 - The orchestrator stays clean — no implementation pollution
@@ -241,6 +412,7 @@ This handoff ensures:
 ### Must-Precede Detection
 
 An issue A must precede issue B when:
+
 - A creates or modifies a file that B references or imports
 - A defines a function/class/variable that B uses
 - A restructures a directory that B assumes the old layout for
@@ -249,6 +421,7 @@ An issue A must precede issue B when:
 ### Conflict-Risk Detection
 
 Two issues are conflict-risk when:
+
 - Both modify the same file (detected via file path mentions)
 - Both add content to the same section of a shared document
 - Both rename/move the same files
@@ -257,6 +430,7 @@ Two issues are conflict-risk when:
 ### Independent Detection
 
 Two issues are independent when:
+
 - They touch completely different file trees
 - They use different skills with no overlapping state
 - They add new files rather than modifying existing ones
@@ -265,25 +439,88 @@ Two issues are independent when:
 ### Meta/Non-Code Detection
 
 An issue is meta/non-code when:
+
 - The body describes behavioral rules without file modifications
 - The issue tracks observability or enforcement without requiring code changes
 - The "implementation" is just acknowledging a pattern, not writing code
 - All success criteria are satisfied by existence of documentation or rules already in place
 
+### Superseded Detection
+
+Issue A is superseded by batch peer B when:
+
+- B's file list is a superset of A's file list
+- B's scope description fully encompasses A's scope
+- All of A's success criteria would be met by implementing B
+
+**Ambiguous supersession** (partial overlap, unclear which is canonical): HALT for developer review.
+
+### Moot Detection
+
+An issue is moot when:
+
+- Its spec references files/directories that have been restructured or removed since spec creation
+- None of its remaining success criteria are achievable given the current codebase state
+- The problem it describes no longer exists
+
+### Partial Implementation Detection Heuristic
+
+An issue is partially implemented when:
+
+- A merged PR references the issue number in its body or commits
+- Some (but not all) success criteria are already met in the current codebase
+- The issue's phases can be mapped to the PR's changes to identify which are done
+
+### Stale Assumption Detection
+
+An issue has stale assumptions when:
+
+- Its spec references specific function names, class names, or file paths that another issue in the batch modifies or deletes
+- The reference is integral to the issue's implementation instructions (not just background context)
+
+**Same intent (auto-resolvable):** Both issues want the same outcome for the referenced code.
+**Different intent (HALT):** The issues have conflicting goals for the referenced code.
+
+### Cross-Issue Sub-Issue Detection
+
+A cross-issue sub-issue pair exists when:
+
+- Issue A is a parent issue with sub-issues
+- One or more of A's sub-issues are also in the approved batch
+- Detected via `github_issue_read(method=get_sub_issues)` for each issue
+
+### Merge-Time Conflict Detection
+
+Issues have a merge-time conflict risk when:
+
+- They touch the same file but in different sections or with non-contradictory changes
+- They are independent during implementation but may produce overlapping diffs
+- This is distinct from conflict-risk (which affects implementation order)
+
 ## Red Flags
 
 **Never:**
+
 - Skip dependency analysis when multiple issues are approved together
 - Dispatch parallel subagents for conflict-risk issues without serialization
-- Include meta/non-code issues in the implementation plan
+- Include meta/non-code, already-implemented, superseded, or moot issues in the implementation plan
 - Present dependency analysis only in agent reasoning (MUST be in chat)
 - Assume all issues are independent without analysis
 - Execute must-precede issues out of order
+- Use `question` tool after presenting the execution plan
+- HALT between plan presentation and `batch-orchestrate`
+- Ask "Proceed?", "Shall I?", or any confirmation solicitation after plan presentation
+- Auto-re-stage issues with different-intent stale assumptions
 
 **Always:**
+
+- Run pre-analysis screening (Step 0) before classification
 - Present the full dependency graph to the developer in chat
 - Classify every issue before execution
 - Execute must-precede issues first
 - Group independent issues for parallel dispatch
 - Exclude non-actionable issues with explicit reason
 - Report each issue's classification in the execution plan
+- Proceed immediately to `batch-orchestrate` after presenting the plan
+- Auto-detect partially-implemented issues (no developer input needed)
+- HALT for developer review only for unresolvable conflicts and different-intent stale assumptions
