@@ -58,15 +58,16 @@ LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work to
 
 | Priority | Criteria |
 |----------|----------|
-| HIGH | Duplication ≥2 AND (complexity ≥medium OR tokens ≥200) |
+| HIGH | Duplication ≥2 AND (complexity ≥medium OR words ≥150) |
 | MEDIUM | Duplication ≥2 OR single-file complexity ≥medium |
-| LOW | Single-file, low complexity, small tokens |
+| LOW | Single-file, low complexity, small word count |
 
-## Token Estimation
+## Word Count Measurement
 
-- Text: ~1.3 tokens per word
-- Code blocks: ~1.5 tokens per code token
-- Tables: ~4 tokens per cell + structure tokens
+- Use `wc -w` as the canonical measurement method
+- Text: word count via `wc -w`
+- Code blocks: word count via `wc -w` (includes code tokens as words)
+- Tables: word count via `wc -w`
 
 ## Critical: Fresh-Start Context Preservation
 

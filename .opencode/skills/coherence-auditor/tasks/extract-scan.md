@@ -34,23 +34,22 @@ Scan for:
 ### Step 3: Calculate Metrics
 
 For each candidate:
-- Lines of content (excluding headers)
-- Estimated token count (≈4 tokens per line)
+- Word count (via `wc -w`, excluding headers)
 - Duplication factor (1=single-file, 2=cross-referenced, 3+=multi-file)
 - Complexity score (low/medium/high)
 
 ### Step 4: Rank Candidates
 
-- **HIGH**: Duplication factor ≥2 AND (complexity ≥medium OR token count ≥200)
+- **HIGH**: Duplication factor ≥2 AND (complexity ≥medium OR word count ≥150)
 - **MEDIUM**: Duplication factor ≥2 OR (single-file with complexity ≥medium)
-- **LOW**: Single-file, low complexity, small token count
+- **LOW**: Single-file, low complexity, small word count
 
 ### Step 5: Output Audit Report
 
 Write to `./tmp/coherence-audit-YYYYMMDD-extraction.md` with:
 - Total candidates found
 - Priority breakdown (HIGH/MEDIUM/LOW)
-- Estimated token savings
+- Estimated word savings
 - Detailed candidate listing
 
 ## Context Required

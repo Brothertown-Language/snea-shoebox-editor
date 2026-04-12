@@ -21,7 +21,7 @@ Extract:
 - Master file path
 - Hash
 - Content type
-- Estimated tokens
+- Estimated words
 - Description
 - Sync status
 - Last sync timestamp

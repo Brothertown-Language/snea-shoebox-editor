@@ -12,7 +12,7 @@ Detect drift between guidelines and skills during maintenance mode by comparing 
 
 ## Exit Criteria
 
-- Token drift calculated (±% from baseline)
+- Word drift calculated (±% from baseline)
 - Duplicate content flagged
 - Missing skill references identified
 - Report created in `./tmp/coherence-audit-YYYYMMDD-maintenance.md`
@@ -21,7 +21,7 @@ Detect drift between guidelines and skills during maintenance mode by comparing 
 
 ### Step 1: Load Baseline
 
-- Previous token count
+- Previous word count
 - Previous skill list
 - Previous guideline-skill reference map
 
@@ -47,11 +47,11 @@ For each guideline:
 - DRIFT-DETECTED: Guideline changed independently of skill
 - ORPHANED-PROCEDURE: Procedure removed from guideline but still in skill
 
-### Step 4: Calculate Token Drift
+### Step 4: Calculate Word Drift
 
-- Previous baseline: N tokens
-- Current total: M tokens
-- Drift: M - N tokens, percentage: (M-N)/N × 100%
+- Previous baseline: N words
+- Current total: M words
+- Drift: M - N words, percentage: (M-N)/N × 100%
 - Flag if deviation >10%
 
 ## Context Required

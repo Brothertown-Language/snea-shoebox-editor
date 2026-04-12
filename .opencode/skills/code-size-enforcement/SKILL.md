@@ -10,7 +10,7 @@ compatibility: opencode
 
 ## Overview
 
-Ensures code artifacts stay within size limits for maintainability and readability. Covers Python functions (40 lines), notebook cells (50 lines), and source files (300 lines). Grandfather policy exempts existing files; only new and modified files must comply.
+Ensures code artifacts stay within size limits for maintainability and readability. Covers Python functions (~100 words), notebook cells (~120 words), and source files (~750 words). Grandfather policy exempts existing files; only new and modified files must comply.
 
 ## Tasks
 
@@ -29,35 +29,35 @@ Ensures code artifacts stay within size limits for maintainability and readabili
 
 | Artifact | Limit | Measurement |
 |----------|-------|-------------|
-| **Python functions** | 40 lines | Excluding docstrings, imports, blank lines |
-| **Notebook cells** | 50 lines | Including whitespace, excluding cell header |
-| **Source files** | 300 lines | Total file, excluding blank lines and file-start comments |
+| **Python functions** | ~100 words | `wc -w` on function body, excluding docstrings, imports, blank lines |
+| **Notebook cells** | ~120 words | `wc -w` on cell source, excluding cell header |
+| **Source files** | ~750 words | `wc -w` on file, excluding blank lines and file-start comments |
 
 ## What Counts and Doesn't Count
 
-**Functions count:** Function body lines (code + inline comments), nested functions/classes, multi-line non-docstring string literals.
+**Functions count:** Function body words (code + inline comments), nested functions/classes, multi-line non-docstring string literals.
 **Functions don't count:** Docstrings, import statements outside the function, blank lines, type hints on their own lines.
 
-**Notebook cells count:** All lines in cell source, comments, whitespace. NOT: cell metadata or outputs.
+**Notebook cells count:** All words in cell source, comments. NOT: cell metadata or outputs.
 
-**Source files count:** Total lines excluding blank lines, module-level docstrings, file-start copyright/license comments.
+**Source files count:** Total words excluding blank lines, module-level docstrings, file-start copyright/license comments.
 
 ## Permitted Detection Methods
 
 | Method | Purpose | Example |
 |--------|---------|---------|
-| `wc -l <file>` | File line count | `wc -l src/module.py` |
-| `srclight_symbols_in_file` | Function/class listing | Shows symbol structure and line ranges |
-| `the-notebook-mcp_notebook_get_outline` | Notebook cell structure | See cell indices and line counts |
+| `wc -w <file>` | File word count | `wc -w src/module.py` |
+| `srclight_symbols_in_file` | Function/class listing | Shows symbol structure and word counts |
+| `the-notebook-mcp_notebook_get_outline` | Notebook cell structure | See cell indices and word counts |
 | `git diff --stat` | Change size | For modified files |
 
 ## Forbidden Patterns
 
 | Pattern | Limit |
 |---------|-------|
-| Monolithic functions | > 40 lines |
-| Monolithic notebook cells | > 50 lines |
-| Monolithic files | > 300 lines |
+| Monolithic functions | > ~100 words |
+| Monolithic notebook cells | > ~120 words |
+| Monolithic files | > ~750 words |
 | Deep nesting | > 3 levels |
 | God classes/files | Single file importing many unrelated modules |
 

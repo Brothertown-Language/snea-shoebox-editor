@@ -39,7 +39,7 @@ Create new fragment master from existing content in skills.
    
    <!--
    Fragment ID: fragment-id
-   Estimated tokens: NNN
+    Estimated words: NNN
    Type: text-block
    Sync status: synchronized
    -->
@@ -69,7 +69,7 @@ fragments:
       lines: NN
     content:
       type: text-block
-      estimated_tokens: NNN
+      estimated_words: NNN
       description: "Fragment description"
     destinations:
       - path: .opencode/skills/some-skill/SKILL.md

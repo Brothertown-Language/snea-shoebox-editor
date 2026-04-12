@@ -62,6 +62,30 @@ Delete this entire "Structuring This Skill" section when done - it's just guidan
 - Concrete examples with realistic user requests
 - References to scripts/templates/references as needed]
 
+## Measurement Standard
+
+Word count is the universal unit for skill size measurement. Use `wc -w` as the canonical measurement method.
+
+- **Why words, not tokens:** Token counts vary by tokenizer, model, and encoding. Word counts are stable, reproducible, and model-agnostic.
+- **Why words, not lines:** Line length varies by formatting conventions. Words measure semantic density.
+- **Measurement command:** `wc -w <file>`
+- **Size targets:** getting-started <150 words, frequently-loaded <200 words, other skills <500 words.
+
+## Context Window Hygiene
+
+Strongly encourage sub-agents and sub-tasks for skill operations that risk consuming significant context.
+
+- **Sub-task isolation:** Dispatch analysis, audits, or multi-step workflows to sub-tasks. Main session receives minimal result, not intermediate reasoning.
+- **When to use sub-tasks:** Any skill task exceeding ~300 words of output, any multi-file analysis, any workflow with 3+ sequential operations.
+
+## Correctness-First Economics
+
+GPU/CPU billing is flat-rate per inference, not per word. Correctness > conciseness.
+
+- **No per-token cost pressure:** Writing more words does not cost more. Writing wrong words costs human time to fix.
+- **Redundancy for enforcement:** Repetition of critical rules across sections is enforcement insurance.
+- **Anti-pattern:** Cutting a rule to "save tokens" when the rule exists because agents violated it.
+
 ## Resources
 
 This skill includes example resource directories that demonstrate how to organize different types of bundled resources:
@@ -220,9 +244,7 @@ def init_skill(skill_name, path):
 
     # Create SKILL.md from template
     skill_title = title_case_skill_name(skill_name)
-    skill_content = SKILL_TEMPLATE.format(
-        skill_name=skill_name, skill_title=skill_title
-    )
+    skill_content = SKILL_TEMPLATE.format(skill_name=skill_name, skill_title=skill_title)
 
     skill_md_path = skill_dir / "SKILL.md"
     try:
@@ -263,9 +285,7 @@ def init_skill(skill_name, path):
     print(f"\n✅ Skill '{skill_name}' initialized successfully at {skill_dir}")
     print("\nNext steps:")
     print("1. Edit SKILL.md to complete the TODO items and update the description")
-    print(
-        "2. Customize or delete the example files in scripts/, references/, and assets/"
-    )
+    print("2. Customize or delete the example files in scripts/, references/, and assets/")
     print("3. Run the validator when ready to check the skill structure")
 
     return skill_dir
@@ -273,9 +293,7 @@ def init_skill(skill_name, path):
 
 def main():
     if len(sys.argv) < 4 or sys.argv[2] != "--path":
-        print(
-            "Usage: uv run python .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <path>"
-        )
+        print("Usage: uv run python .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <path>")
         print("\nSkill name requirements:")
         print("  - Hyphen-case identifier (e.g., 'data-analyzer')")
         print("  - Lowercase letters, digits, and hyphens only")
