@@ -29,6 +29,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-open-questions` | Check for unresolved questions in spec | ~370 |
 | `batch-approval-analysis` | Analyze interdependencies when multiple issues approved simultaneously | ~500 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
 
 ## Invocation
 
@@ -40,7 +41,10 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
 - `/skill approval-gate --task batch-approval-analysis` - Analyze interdependencies for multiple approved issues
 - `/skill approval-gate --task post-implementation` - After implementation done
+- `/skill approval-gate --task completion` - Invoke when workflow halts at any point
 - `/skill approval-gate` - Overview only
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (authorization result comment, status report) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 
