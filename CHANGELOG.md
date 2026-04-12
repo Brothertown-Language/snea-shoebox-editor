@@ -12,6 +12,19 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/724-batch-approval-fix
+
+- **Batch Approval Analysis: Autonomous Execution + Pre-Analysis Screening + Edge Cases** - Fix batch-approval-analysis to proceed autonomously after authorization (no confirmation prompts), add pre-analysis screening for superseded/moot/conflicting/partially-implemented issues, and handle edge cases (cross-issue sub-issues, stale spec assumptions, merge-time conflicts, revision status)
+- ADD: Step 0 pre-analysis screening with detection categories (already-implemented, partially-implemented, superseded, moot, stale assumptions, conflicting, meta/non-code)
+- UPDATE: Step 5 from confirmation-based to informative-only (agent proceeds immediately)
+- ADD: Prohibited Actions section and Developer Involvement Triggers
+- ADD: Partial implementation detection with auto-detect (no developer input)
+- ADD: Cross-issue sub-issue handling (parent covers default, isolated sub-agent exception)
+- ADD: Stale spec assumption detection (same-intent: serialize; different-intent: HALT)
+- ADD: Merge-time conflict PR ordering
+- ADD: Revision status handling (approval covers revision, flag in plan, remove label)
+- ADD: New classification detail sections (superseded, moot, partial implementation, stale assumption, cross-issue sub-issue, merge-time conflict)
+
 ### spec/sub-agent-batch-orchestration
 
 - **Sub-Agent-First Implementation with Batch Orchestration** - Make sub-agent dispatch the default pattern for all implementations, with batch orchestration for multi-issue approvals
