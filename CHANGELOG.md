@@ -12,6 +12,17 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/session-init-batch
+
+- **Session Injection Anti-Hallucination Context + uvx Compatibility + Worktree Detection** (#710, #712, #720, #721, #722, #723) - Rewrite session_init.py output to eliminate LLM hallucination-driven error-retry cycles. Add Remote URL, worktree detection with Working directory/Main repo paths, hooks path (problems-only), and fix bootstrap_worktree_layout for in-worktree execution. Make session_init.py uvx-compatible with proper shebang and pyproject.toml entry point. Switch session-enforcement.ts to uvx invocation. Document env-loader.ts input.$ cwd behavior.
+- FIX: session_init.py "Worktrees: available" replaced with actual path (e.g. .worktrees/main/)
+- FIX: session_init.py bootstrap_worktree_layout() fails when run inside a worktree
+- FIX: session_init.py shebang wrong and no pyproject.toml entry point for uvx
+- FIX: session-enforcement.ts hardcoded relative path breaks in worktrees
+- ADD: Remote URL line in session output (anti-hallucination)
+- ADD: In-worktree detection with Working directory/Main repo paths
+- ADD: Hooks path output only when core.hooksPath is non-standard
+
 ### spec/724-batch-approval-fix
 
 - **Batch Approval Analysis: Autonomous Execution + Pre-Analysis Screening + Edge Cases** - Fix batch-approval-analysis to proceed autonomously after authorization (no confirmation prompts), add pre-analysis screening for superseded/moot/conflicting/partially-implemented issues, and handle edge cases (cross-issue sub-issues, stale spec assumptions, merge-time conflicts, revision status)

@@ -227,7 +227,7 @@ export async function EnvLoaderPlugin(input: PluginInput): Promise<Hooks> {
         output.env["WORKTREE_PATH"] = worktreeDir;
       }
 
-      // --- Git values from input.$ shell ---
+      // input.$ runs git commands in the session working directory (worktree when active)
       try {
         // Branch name
         const branchResult = await input.$.nothrow()`git branch --show-current`;
