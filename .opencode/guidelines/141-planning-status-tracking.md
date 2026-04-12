@@ -50,7 +50,6 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 
 **Exempt status updates (do NOT revoke approval):**
 - STATUS marker updates only (`STATUS: 1.1` → `STATUS: 1.2`)
-- Progress comments added to issue
 - Bug report additions to existing spec
 
 ### Status Markers (Visual Icons)
@@ -84,7 +83,7 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 **Status updates mean editing the STATUS line ONLY — not rewriting the entire issue body.**
 
 When updating status:
-1. **Post progress comment** documenting what was completed
+1. **Report progress to chat** documenting what was completed
 2. **Edit STATUS field ONLY** (change `STATUS: 1.1` to `STATUS: 1.2` for example)
 3. **Never rewrite the entire body** to change status
 
@@ -93,7 +92,7 @@ See `123-github-ai-identity.md` and `github-comments` skill → "Issue Body Upda
 ### Missing Status Header
 If a spec file lacks a `STATUS:` header, the agent MUST:
 1. Add the header with `STATUS: 1.1` (default for new specs) — MINIMAL EDIT ONLY (add one line)
-2. If all tasks are marked `☑`, post completion comment then set `STATUS: completed`
+2. If all tasks are marked `☑`, set `STATUS: completed`
 
 ---
 

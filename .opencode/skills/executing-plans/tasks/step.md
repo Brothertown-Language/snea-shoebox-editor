@@ -26,7 +26,7 @@ For each step in the plan:
 
 ### 4. Report Progress
 
-Progress comment format:
+Report step completion to chat:
 
 ```markdown
 **Progress:** Step N of M complete
@@ -37,12 +37,8 @@ Progress comment format:
 - Verification: [Result]
 
 **Next:** Step N+1 - [Next concern]
-
----
-🤖 ↻ Working by OpenCode (ollama-cloud/glm-5)
 ```
 
-- Post comment to plan issue with evidence
 - Update STATUS in plan issue body
 - HALT and wait for user
 
@@ -64,15 +60,15 @@ Progress comment format:
 | API response | Status code and body |
 
 **Evidence storage:**
-- Post as comment to plan issue (primary)
-- Store artifacts in `./tmp/` (secondary)
+- Store artifacts in `./tmp/`
+- Report evidence to chat
 
 ## Enforcement
 
 During execution:
 - Is evidence collected for each task?
 - Is verification run for each step?
-- Is progress posted to plan issue?
+- Is progress reported to chat?
 
 Evidence missing for task → REQUIRE evidence before marking complete.
 Verification not run → RUN verification before marking complete.

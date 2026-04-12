@@ -90,14 +90,13 @@ If ANY file was created, modified, or deleted (including `.md` files in `.openco
 When implementation determines "no file changes needed":
 1. **STILL push branch** - git will report "up-to-date", which is acceptable
 2. **STILL generate compare URL** - developer can see branch state
-3. **STILL post completion comment** - clear signal that work is done
-4. **NEVER skip review prep** - visibility is mandatory
+3. **NEVER skip review prep** - visibility is mandatory
 
 **Why this matters:** Developer needs visibility into what was checked, even if no changes were made.
 
 ### ⚠️ CRITICAL: Model ID Detection
 
-**When posting completion comment (Step 3):**
+**When posting completion report (Step 3/4):**
 - **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
 - **MUST detect actual runtime identity** from environment/MCP tools
 - **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
@@ -232,25 +231,11 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 2. Report: "Cannot generate URL — GITBUCKET_HTML_URL not configured in .env"
 3. HALT — do not guess or fabricate a URL
 
-### Step 4: Report Completion (BOTH Issue AND Chat)
+### Step 4: Report Completion (Chat Only)
 
 **⚠️ CRITICAL: URLs go in CHAT ONLY - NEVER to GitHub Issues.**
 
-Post completion comment to GitHub issue (NO URL):
-```markdown
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-Post to chat (exec summary + URL):
+Report to chat (exec summary + URL):
 ```
 **Summary:**
 
@@ -265,9 +250,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 
 **Why This Matters:**
 - Chat gets exec summary + URL (developer needs visibility)
-- Issues get exec summary only (NO URL - keeps history clean)
 - Developer can click URL from chat to review changes
-- BOTH locations have matching summaries for context
 
 ### Step 5: HALT (MANDATORY - NO EXCEPTIONS)
 
@@ -298,7 +281,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 1. **Detect missed push:** `git branch -vv` shows no upstream
 2. **Inform user:** "Implementation task must commit and push. Fixing now."
 3. **Fix and continue:** `git push -u origin <branch-name>`
-4. **Continue:** Generate compare URL, post completion comment
+   4. **Continue:** Generate compare URL, report to chat
 
 **Why:** Commit without push = empty compare URL. Push is mandatory after commit.
 
@@ -324,7 +307,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 - ✅ Temp files are cleaned (no `./tmp/temp_*.py` or `./tmp/*.json`)
 - ✅ Compare URL generated correctly (using session init base URL + `compare/dev...branch`)
 - ✅ Chat output format correct (summary BEFORE URL)
-- ✅ Issue comment posted (NO URL in issue comment)
+- ✅ Issue comment posted (NO URL in issue comment) → Report to chat only (no issue comment per substantive-only policy)
 
 **These checks are MANDATORY. If ANY check fails → STOP and report.**
 
@@ -353,7 +336,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 | Branch pushed | `git branch -vv` | Shows `[origin/branch]` |
 | Compare URL works | Open URL in browser | Shows diff |
 | Chat has summary | Check chat output | Exec summary + URL |
-| Issue has comment | Check GitHub issue | Completion comment (NO URL) |
+| Developer visibility | Compare URL accessible | Developer can review |
 
 ## Correct vs Incorrect Workflow
 
@@ -381,8 +364,6 @@ Verify branch is pushed
 Generate compare URL
     ↓
 Report URL in CHAT ONLY (NEVER to GitHub Issues)
-    ↓
-Post completion comment to issue (NO URL)
     ↓
 HALT - Wait for "create a PR"
     ↓

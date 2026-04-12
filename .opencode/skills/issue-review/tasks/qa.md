@@ -73,11 +73,11 @@ When Q/A resolves (or user ends it), compose a prose exec summary capturing:
 - Scope boundaries confirmed
 - Any spec changes suggested
 
-### Step 5: Post Exec Summary to Issue
+### Step 5: Post Exec Summary to Issue (Conditional)
 
-Post the exec summary as an issue comment. This is a **durable outcome** — it records what was decided for future readers.
+Post the exec summary as an issue comment ONLY if it conveys substantive information stakeholders need. If the Q/A merely confirms what's already known or resolves minor clarification, skip the comment.
 
-**Only post durable outcomes, NOT the Q&A chatter.** The back-and-forth in chat is operational; the issue comment is the record.
+**Only post durable outcomes, NOT the Q&A chatter.** The back-and-forth in chat is operational; the issue comment is the record — but only if there's a meaningful record to create.
 
 ### Step 6: HALT
 

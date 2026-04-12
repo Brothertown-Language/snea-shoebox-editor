@@ -19,7 +19,7 @@ Create GitHub Issue with proper title format, labels, and byline after validatio
 
 - Issue created in GitHub
 - `needs-approval` label applied
-- Creation byline added to initial comment
+- Creation byline included in issue body footer
 - Issue number available for sub-issue linking
 
 ## Procedure
@@ -51,30 +51,15 @@ github_issue_write(
 - `id`: Database ID for sub-issue linking
 - `html_url`: Issue URL
 
-### Step 3: Add Creation Byline
+### Step 3: Verify Byline in Issue Body
 
-**Post initial comment with byline:**
+**The issue body must already include a byline footer** (added during spec drafting):
 
-```python
-github_add_issue_comment(
-    owner=owner,
-    repo=repo,
-    issue_number=issue_number,
-    body=f"""[Issue body content]
-
----
-
-> **Approval Tracking**: Approvals tracked via comments.
-
+```
 🤖 ✨ Created by <AgentName> (<ModelID>)
-"""
-)
 ```
 
-**Byline Format:**
-- **Plain text emoji** (not inside italic/bold)
-- Agent dynamically detects its own name and model ID
-- **NEVER copy example values** — detect at runtime
+**No separate comment needed.** The byline is part of the issue body content, not a standalone comment.
 
 ### Step 4: Report Issue Created
 
@@ -101,7 +86,7 @@ Before proceeding, verify ALL:
 - Pre-creation validation passed
 - Title follows proper format
 - `needs-approval` label applied
-- Creation byline added
+- Creation byline in body footer
 
 **If ANY check fails → HALT and report.**
 

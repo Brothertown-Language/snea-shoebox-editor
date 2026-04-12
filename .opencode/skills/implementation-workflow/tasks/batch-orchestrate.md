@@ -163,7 +163,7 @@ Compare URL: https://github.com/<owner>/<repo>/compare/dev...spec/<branch>
 ```
 
 **Issue comments:**
-Post completion comment on each issue (NO URL in issue comment, URL in chat only).
+Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.
 
 **HALT condition:**
 - Do NOT create PR

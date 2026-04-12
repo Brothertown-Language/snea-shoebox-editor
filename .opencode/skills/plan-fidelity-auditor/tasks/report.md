@@ -20,7 +20,7 @@ Previous version (`auto-fix`) would apply simple discrepancies automatically. Th
 2. **Classify each finding** by severity and type
 3. **For significant gaps**, check if brainstorming should be recommended
 4. **Format all findings** using the standard report format
-5. **Post findings** to the GitHub Issue as a comment
+5. **Report findings** to chat (NOT as GitHub Issue comment)
 6. **Create audit log** in `./tmp/audit-fidelity-YYYYMMDD.md`
 
 ## Finding Format
@@ -66,6 +66,6 @@ When significant gaps are found (3+ HIGH-severity findings or any VAGUE_PROBLEM 
 
 ## Audit Log Requirement
 
-After the audit session, create `./tmp/audit-fidelity-YYYYMMDD.md` with all findings, then attach to the spec issue as a comment and delete the temp file.
+After the audit session, create `./tmp/audit-fidelity-YYYYMMDD.md` with all findings and retain in `./tmp/` for session reference. Do NOT post as GitHub Issue comment — audit findings are internal agent guidance.
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)

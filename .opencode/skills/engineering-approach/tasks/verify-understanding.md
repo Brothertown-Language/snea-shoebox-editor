@@ -95,16 +95,9 @@ Shall I proceed with current understanding, or provide clarifications?
 | [Risk] | Low/Medium/High | Low/Medium/High | [Mitigation] |
 ```
 
-### Step 5: Post Understanding Report
+### Step 5: Report Understanding
 
-```python
-github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    issue_number=N,
-    body=f"AI: {AgentName} {ModelID}\n\n{understanding_report}"
-)
-```
+Report understanding verification to chat (NOT as GitHub Issue comment). The understanding report is internal agent context, not stakeholder communication.
 
 ## Common Issues
 

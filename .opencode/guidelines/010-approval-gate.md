@@ -94,11 +94,10 @@ Key rules:
 
 **See `approval-gate` skill for revision status transition rules, mandatory actions, and exemption categories.**
 
-Key rule: Revision = `STATUS: X.Y (REVISED - NEEDS APPROVAL)` + `needs-approval` label + chat output + Issue comment + HALT.
+Key rule: Revision = `STATUS: X.Y (REVISED - NEEDS APPROVAL)` + `needs-approval` label + chat output + HALT.
 
 Exempt from approval revocation:
 - STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
-- Progress comments added to issue
 - Bug report additions (separate from spec content changes)
 
 ### Label Handling

@@ -51,7 +51,7 @@ Issue format follows the `issue-format` task template.
 
 ### Step 5: Report Completion
 
-Post comment to spec issue documenting:
+Report to chat documenting:
 - Files analyzed
 - Classification decisions with reasoning
 - Issue URL created

@@ -5,13 +5,10 @@ Idempotent completion subtask for verification-before-completion. Ensures mandat
 ## State Check Phase
 
 1. **Verification result determined:** Was an evidence-based verification completed?
-2. **Existing comments:** Check if verification result comment already posted on issue
 
 ## Skill-Specific Completion
 
-1. **Post verification result comment** (if not already posted):
-   - Check issue comments for existing verification result (byline pattern)
-   - If missing: post result comment with evidence summary
+1. **Record verification result** in `./tmp/` if not already recorded
 
 ## Shared Completion Delegation
 

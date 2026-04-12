@@ -24,7 +24,7 @@ For each missing criterion:
 ### 3. Update Verification Status
 
 - Mark criterion as verified
-- Post evidence to issue
+- Store evidence in `./tmp/`
 - Proceed to next missing criterion
 
 ## Common Verification Commands
@@ -80,9 +80,8 @@ md5sum path/to/file
 
 ## Evidence Storage
 
-- Post as comment to plan issue (primary)
-- Store artifacts in `./tmp/` (secondary for large outputs)
-- Link evidence to plan via comments
+- Store artifacts in `./tmp/` (primary for all outputs)
+- Report verification results to chat
 
 ## Integration
 
@@ -94,9 +93,8 @@ executing-plans → verification-before-completion → (completion claim allowed
 
 ### GitBucket Platform Adaptations
 
-- Post verification reports to plan issue
-- Store large artifacts in `./tmp/`
-- Link evidence to plan via comments
+- Store verification reports in `./tmp/`
+- Report results to chat
 
 ### Git-Workflow Integration
 

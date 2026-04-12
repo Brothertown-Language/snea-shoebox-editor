@@ -70,7 +70,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-> **Approval Tracking**: Approvals are tracked via GitHub Issue comments. Issue body edits destroy history.
+🤖 ✨ Created by <AgentName> (<ModelID>)
 ```
 
 ---

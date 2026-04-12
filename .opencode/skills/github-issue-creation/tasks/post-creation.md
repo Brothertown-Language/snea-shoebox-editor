@@ -87,35 +87,12 @@ Previous workflow (DEPRECATED):
 
 **Auditors MUST run BEFORE approval.**
 
-### Step 4: Post Completion Comment
-
-**After auditors complete:**
-
-```markdown
-🤖 ✨ Created by <AgentName> (<ModelID>)
-
-**Status:** Ready for approval workflow.
-
-**Workflow:**
-1. Review auditor findings above
-2. Authorize with "approved" or "go"
-3. Agent will begin implementation
-```
-
 ## Single-Task Exemption
 
 **If single-task:**
-
-```markdown
-🤖 ✨ Created by <AgentName> (<ModelID>)
-
-**Status:** Single-task spec. No sub-issues needed.
-
-**Workflow:**
-1. Review auditor findings
-2. Authorize with "approved" or "go"
-3. Agent will begin implementation
-```
+- No sub-issues needed
+- Skip `github-sub-issues` skill invocation
+- Proceed to auditor invocation
 
 ## Safety Checks
 
@@ -123,7 +100,6 @@ Before proceeding, verify ALL:
 
 - Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
 - Sub-issues created (if multi-task)
-- Completion comment posted
 
 **If ANY check fails → HALT and report.**
 
