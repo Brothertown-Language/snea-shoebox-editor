@@ -24,12 +24,16 @@ You are a Verification Gatekeeper. Your focus is ensuring NO completion claim wi
 |------|---------|-------|
 | `verify` | Verify all success criteria have evidence | ~700 |
 | `collect` | Collect evidence for incomplete criteria | ~500 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
 
 ## Invocation
 
 - `/skill verification-before-completion` — Overview only
 - `/skill verification-before-completion --task verify` — Verify completion readiness
 - `/skill verification-before-completion --task collect` — Collect missing evidence
+- `/skill verification-before-completion --task completion` — Invoke when workflow halts at any point
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (verification result comment, status report) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 

@@ -274,6 +274,15 @@ Three tiers: **Tier 1 (Trivial)**: whitespace/formatting → auto-resolve, silen
 
 No feature creep: implement ONLY what is in the approved spec. No unapproved work: wait for explicit "approved" or "go".
 
+## Critical Violation: Skipping Completion Guarantee on Workflow Halt
+
+**⚠️ Halting a skill workflow without invoking `--task completion` is a CRITICAL GUIDELINE VIOLATION.** When a state-modifying skill halts at any point — including error, failure, or early termination — the completion subtask MUST be invoked before halting.
+
+- 🚫 FORBIDDEN: Halting mid-workflow without invoking `--task completion`; skipping completion because "nothing was done"; assuming cleanup happens automatically
+- ✅ REQUIRED: Invoke `--task completion` on the current skill before halting; completion tasks are idempotent and safe to invoke multiple times
+
+**See per-skill `tasks/completion.md` files and `.opencode/skills/completion-core/completion-core.md` for the shared completion operations.**
+
 ## Critical Violation: Skipping Interdependency Analysis for Batch Approvals
 
 **⚠️ Processing multiple approved issues without interdependency analysis is a CRITICAL GUIDELINE VIOLATION.**

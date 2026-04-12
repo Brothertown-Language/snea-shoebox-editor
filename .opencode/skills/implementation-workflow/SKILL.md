@@ -28,6 +28,7 @@ Orchestration layer that coordinates the implementation workflow by sequencing s
 | `orchestrate` | Full implementation workflow sequence with verification gates | ~900 |
 | `context-passing` | Reference for yield-back context shapes between subtasks | ~200 |
 | `purification-and-enforcement` | Git-workflow scope boundaries and enforcement rules | ~300 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
 
 ## Invocation
 
@@ -35,6 +36,9 @@ Orchestration layer that coordinates the implementation workflow by sequencing s
 - `/skill implementation-workflow --task orchestrate` - Same as above
 - `/skill implementation-workflow --task context-passing` - Reference context shapes
 - `/skill implementation-workflow --task purification-and-enforcement` - Reference boundaries and enforcement
+- `/skill implementation-workflow --task completion` - Invoke when workflow halts at any point
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (status report, URL, verification gates) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 

@@ -25,6 +25,7 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 | `review-prep` | Push branch, generate compare URL for review | ~560 |
 | `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
 | `cleanup` | Delete merged branches, clean stale refs | ~800 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
 
 ## Invocation
 
@@ -33,7 +34,10 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 - `/skill git-workflow --task review-prep` - AFTER implementation done (automatic, no decision point)
 - `/skill git-workflow --task pr-creation` - When user says "create a PR"
 - `/skill git-workflow --task cleanup` - After PR merge confirmed
+- `/skill git-workflow --task completion` - Invoke when workflow halts at any point
 - `/skill git-workflow` - Overview only
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (status report, URL, verification gates) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 

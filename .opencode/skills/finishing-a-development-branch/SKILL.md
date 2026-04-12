@@ -20,12 +20,16 @@ Branch completion workflow that ensures a feature branch is fully ready for PR c
 |------|---------|-------|
 | `prepare` | Prepare branch for PR creation | ~450 |
 | `checklist` | Run completion checklist | ~350 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
 
 ## Invocation
 
 - `/skill finishing-a-development-branch` — Overview only
 - `/skill finishing-a-development-branch --task prepare` — Prepare branch for PR
 - `/skill finishing-a-development-branch --task checklist` — Run completion checklist
+- `/skill finishing-a-development-branch --task completion` — Invoke when workflow halts at any point
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (push, compare URL, status report) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 

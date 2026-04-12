@@ -24,6 +24,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 | `creation` | Create issue with proper title, labels, byline | ~200 |
 | `post-creation` | Invoke auditors, create sub-issues for multi-task specs | ~180 |
 | `single-task-check` | Determine if spec needs sub-issues or is single-task | ~160 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
 
 ## Invocation
 
@@ -31,7 +32,10 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 - `/skill github-issue-creation --task creation` - Create issue with enforcement
 - `/skill github-issue-creation --task post-creation` - After creation (auditors, sub-issues)
 - `/skill github-issue-creation --task single-task-check` - Check if spec is single-task
+- `/skill github-issue-creation --task completion` - Invoke when workflow halts at any point
 - `/skill github-issue-creation` - Overview only
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (labels, auditors, sub-issues, status report) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 
