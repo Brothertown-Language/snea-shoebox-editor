@@ -179,7 +179,8 @@ All feature branches operate in worktrees. There is no alternative — worktree 
 If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
 1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
-2. Before any push/squash/rebase operation, verify:
+2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{WORKTREE_PATH}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
+3. Before any push/squash/rebase operation, verify:
    ```bash
    git branch --show-current
    # MUST match BRANCH_NAME

@@ -67,7 +67,46 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## Critical Violation: Implementing Without Documentation Verification
+## Critical Violation: Relative File Paths in Worktree Context
+
+**⚠️ Using relative paths with `read`/`edit`/`write`/`glob`/`grep` tools when `WORKTREE_PATH` is set is a CRITICAL GUIDELINE VIOLATION.**
+
+When working in a git worktree, the `read`, `edit`, `write`, `glob`, and `grep` tools do NOT have a `workdir` parameter. These tools resolve relative paths against the workspace root (main repo), NOT the worktree. Using a relative path like `src/main.py` silently operates on the wrong file.
+
+### 🚫 FORBIDDEN
+
+- Using `read(filePath="src/main.py")` in worktree context — reads main repo file, not worktree
+- Using `edit(filePath="src/main.py", ...)` in worktree context — edits main repo file, not worktree
+- Using `write(filePath="src/new.py", ...)` in worktree context — creates file in main repo, not worktree
+- Using `glob(pattern="src/**/*.py")` in worktree context — searches main repo, not worktree
+- Using `grep(pattern="TODO", path="src/")` in worktree context — searches main repo, not worktree
+- Assuming `read`/`edit`/`write`/`glob`/`grep` respect the bash `workdir` parameter
+
+### ✅ REQUIRED
+
+When `WORKTREE_PATH` is set, ALL file operations MUST prefix paths with the worktree path:
+
+| Tool | Wrong (main repo) | Correct (worktree) |
+|------|-------------------|---------------------|
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` |
+
+**When NOT in a worktree** (working in main repo): Relative paths are correct and function as expected.
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| `read` with relative path in worktree | Reads stale main repo file, believes worktree is unchanged |
+| `edit` with relative path in worktree | Edits main repo file instead of worktree — changes lost on merge |
+| `write` with relative path in worktree | Creates file in main repo — appears in `git status` on `dev` |
+| `glob`/`grep` with relative path | Searches wrong codebase, returns incorrect results |
+| Assuming tools respect `workdir` | `workdir` only applies to `bash` tool — file tools ignore it silently |
+
+**See `using-git-worktrees` skill → "Tool Usage Compliance" section and `mcp-tool-usage` skill → "Worktree Path Resolution" section for complete tool-by-tool guidance.**
 
 **⚠️ Implementing code without verifying against live documentation is a CRITICAL GUIDELINE VIOLATION.**
 

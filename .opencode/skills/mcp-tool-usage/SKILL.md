@@ -272,11 +272,40 @@ uvx srclight index --embed qwen3-embedding
 
 ## Examples
 
+### ⚠️ CRITICAL: Worktree Path Resolution for TIER 1 Tools
+
+When working in a git worktree (e.g., `.worktrees/spec-my-feature/`), the `read`, `edit`, `write`, `glob`, and `grep` tools do NOT have a `workdir` parameter. Their path parameters resolve relative to the workspace root (main repo), NOT the worktree.
+
+**Using relative paths in worktree context will silently operate on the wrong directory.**
+
+| Tool | ❌ WRONG (resolves to main repo) | ✅ CORRECT (targets worktree) |
+|------|-----------------------------------|------------------------------|
+| `read` | `read(filePath="src/main.py")` | `read(filePath="/abs/path/.worktrees/spec-X/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath="/abs/path/.worktrees/spec-X/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath="/abs/path/.worktrees/spec-X/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=".worktrees/spec-X")` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=".worktrees/spec-X/src/")` |
+
+**Simplified pattern using `WORKTREE_PATH` environment variable:**
+
+When `WORKTREE_PATH` is set (e.g., `.worktrees/spec-my-feature`), use it as a prefix:
+
+- `read(filePath=f"{WORKTREE_PATH}/src/main.py")` — works when `WORKTREE_PATH` is absolute
+- `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` — works with relative `WORKTREE_PATH`
+- `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` — works with relative `WORKTREE_PATH`
+
+**For `bash` tool calls, continue using the `workdir` parameter** (already documented in `using-git-worktrees` skill).
+
+**When NOT in a worktree (working in main repo):** Relative paths like `src/main.py` are correct and function as expected.
+
 ### ✅ CORRECT: Reading a File
 
 ```python
-# ✅ CORRECT: Use opencode built-in for file read
+# ✅ CORRECT: Use opencode built-in for file read (main repo)
 read(filePath="src/main.py")
+
+# ✅ CORRECT: Use absolute path for worktree file
+read(filePath=f"/abs/path/{WORKTREE_PATH}/src/main.py")
 ```
 
 ### ✅ CORRECT: Searching Python Code
@@ -306,6 +335,25 @@ edit(filePath="notebook.ipynb", ...)  # PROHIBITED
 ```python
 # ✅ CORRECT: Semantic rename via JetBrains MCP (no opencode equivalent)
 pycharm_rename_refactoring(pathInProject="src/main.py", symbolName="old_name", newName="new_name")
+```
+
+### ❌ WRONG: Relative Path in Worktree Context
+
+```python
+# ❌ WRONG: Relative path resolves to MAIN REPO, not worktree
+# When WORKTREE_PATH is set, this reads/writes the MAIN REPO file
+read(filePath="src/main.py")           # WRONG in worktree context
+edit(filePath="src/main.py", ...)      # WRONG in worktree context
+write(filePath="src/new.py", ...)      # WRONG in worktree context
+glob(pattern="src/**/*.py")            # WRONG in worktree context
+grep(pattern="TODO", path="src/")      # WRONG in worktree context
+
+# ✅ CORRECT: Prefix with WORKTREE_PATH for worktree operations
+read(filePath=f"{WORKTREE_PATH}/src/main.py")
+edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)
+write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)
+glob(pattern="src/**/*.py", path=WORKTREE_PATH)
+grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")
 ```
 
 ### ❌ WRONG: JetBrains MCP for Basic File Operation
