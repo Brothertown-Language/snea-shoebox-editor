@@ -17,6 +17,9 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+[project.scripts]
+session-init = ".opencode.scripts.session_init:main"
+
 [project.optional-dependencies]
 local = [
     "pgserver>=0.1.4",

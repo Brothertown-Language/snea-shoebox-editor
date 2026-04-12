@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run python
 """Session initialization script for AI agents.
 
 Outputs English prose context for LLM consumption on stdout.
@@ -12,7 +12,7 @@ Guard checks (auto-create missing files/branches/worktree):
 - .env gitignore: Warn if .env exists but is not in .gitignore
 
 Usage:
-    uv run python .opencode/scripts/session_init.py
+    uvx session-init
 
 Exit codes:
     0: Success
@@ -418,9 +418,34 @@ def _ensure_dev_branch() -> str:
 
 
 def is_worktree_setup() -> bool:
-    """Check if .worktrees/main/ exists and is a git worktree."""
     main_wt = os.path.join(os.getcwd(), ".worktrees", "main")
-    return os.path.isdir(main_wt) and os.path.isdir(os.path.join(main_wt, ".git"))
+    git_entry = os.path.join(main_wt, ".git")
+    return os.path.isdir(main_wt) and os.path.exists(git_entry)
+
+
+def detect_worktree() -> tuple[bool, str | None, str | None]:
+    toplevel = run_git_command(["rev-parse", "--show-toplevel"])
+    if not toplevel:
+        return False, None, None
+
+    git_path = os.path.join(toplevel, ".git")
+    if os.path.isfile(git_path):
+        try:
+            with open(git_path) as f:
+                content = f.read().strip()
+            if content.startswith("gitdir: "):
+                gitdir = content[8:]
+                if not os.path.isabs(gitdir):
+                    gitdir = os.path.join(toplevel, gitdir)
+                worktrees_dir = os.path.dirname(os.path.abspath(gitdir))
+                git_dir = os.path.dirname(worktrees_dir)
+                if os.path.basename(git_dir) == ".git" and os.path.basename(worktrees_dir) == "worktrees":
+                    main_repo = os.path.dirname(git_dir)
+                    return True, toplevel, main_repo
+        except OSError:
+            pass
+
+    return False, None, None
 
 
 def _add_to_gitignore(entry: str) -> bool:
@@ -442,8 +467,20 @@ def _add_to_gitignore(entry: str) -> bool:
         return False
 
 
+def get_worktree_display() -> str:
+    in_wt, wt_path, _ = detect_worktree()
+    if in_wt:
+        return f"Worktrees: {wt_path}"
+    if is_worktree_setup():
+        return "Worktrees: .worktrees/main/"
+    return ""
+
+
 def bootstrap_worktree_layout() -> bool:
-    """Bootstrap .worktrees/main/ if not set up. Returns True on success, False on failure."""
+    in_wt, _, _ = detect_worktree()
+    if in_wt:
+        return True
+
     if is_worktree_setup():
         return True
 
@@ -536,7 +573,6 @@ def run_guard_checks() -> list[str]:
 
 
 def main() -> int:
-    """Extract and output git context as English prose for LLM consumption."""
     remote_url = get_remote_url()
     if not remote_url:
         print("No git remote configured. Run: git remote add origin <url>", file=sys.stderr)
@@ -551,6 +587,9 @@ def main() -> int:
     worktree_ok = bootstrap_worktree_layout()
 
     current_branch = get_current_branch() or "unknown"
+    in_wt, wt_path, main_repo = detect_worktree()
+    wt_display = get_worktree_display()
+    hooks_path = get_hooks_path()
 
     if is_github_remote(remote_url):
         owner, repo = parse_git_remote_url(remote_url)
@@ -563,13 +602,23 @@ def main() -> int:
         print(f"Owner: {owner}")
         print(f'Use owner="{owner}" and repo="{repo}" for all GitHub tool calls.')
         print("HTML base: https://github.com/")
+        print(f"Remote: {remote_url}")
         print(f"Developer: {user_name} ({user_email})")
         print(f"Current branch: {current_branch}")
 
-        if worktree_ok:
-            print("Worktrees: available")
+        if in_wt and wt_path and main_repo:
+            print(f"Working directory: {wt_path}")
+            print(f"Main repo: {main_repo}")
+        elif worktree_ok:
+            if wt_display:
+                print(wt_display)
+            else:
+                print("Worktrees: available")
         else:
             print("Worktrees: setup failed — HALT and report to developer before proceeding")
+
+        if hooks_path:
+            print(f"Hooks path: {hooks_path}")
 
         if srclight_status == "indexed":
             print("Srclight: indexed")
@@ -609,6 +658,7 @@ def main() -> int:
         print(f'Use owner="{owner}" and repo="{repo}" for all GitBucket tool calls.')
         if base_url:
             print(f"HTML base: {base_url}")
+        print(f"Remote: {remote_url}")
         ssh_url = extract_ssh_url(remote_url)
         if ssh_url:
             print(f"SSH base: {ssh_url}")
@@ -616,10 +666,19 @@ def main() -> int:
         print(f"Developer: {user_name} ({user_email})")
         print(f"Current branch: {current_branch}")
 
-        if worktree_ok:
-            print("Worktrees: available")
+        if in_wt and wt_path and main_repo:
+            print(f"Working directory: {wt_path}")
+            print(f"Main repo: {main_repo}")
+        elif worktree_ok:
+            if wt_display:
+                print(wt_display)
+            else:
+                print("Worktrees: available")
         else:
             print("Worktrees: setup failed — HALT and report to developer before proceeding")
+
+        if hooks_path:
+            print(f"Hooks path: {hooks_path}")
 
         if srclight_status == "indexed":
             print("Srclight: indexed")

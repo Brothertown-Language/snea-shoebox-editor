@@ -29,7 +29,6 @@ import type { Hooks, PluginInput } from "@opencode-ai/plugin";
 import fs from "fs";
 import path from "path";
 
-const SCRIPT_PATH = ".opencode/scripts/session_init.py";
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 let cachedOutput: string | null = null;
@@ -41,7 +40,7 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
   }
 
   try {
-    const result = await $.nothrow()`uv run python ${SCRIPT_PATH}`;
+    const result = await $.nothrow()`uvx session-init`;
     const stdout = result.text();
 
     if (!stdout || stdout.trim().length === 0) {
@@ -60,7 +59,7 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
 
     return stdout;
   } catch (err) {
-    console.error("[session-enforcement] Failed to run session_init.py:", err);
+    console.error("[session-enforcement] Failed to run session-init:", err);
     return "";
   }
 }
