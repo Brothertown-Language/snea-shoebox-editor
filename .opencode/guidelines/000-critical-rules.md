@@ -122,7 +122,7 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 
 **⚠️ Failing to report progress in chat after implementation is a CRITICAL GUIDELINE VIOLATION.**
 
-Progress executive summaries go to **chat ONLY**, not GitHub Issue comments. Issue comments are for **state changes** only.
+Progress executive summaries go to **chat ONLY**, not GitHub Issue comments. Issue comments are for **substantive, stakeholder-meaningful information** only.
 
 Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelID>) <status>`
 
@@ -283,7 +283,7 @@ Three tiers: **Tier 1 (Trivial)**: whitespace/formatting → auto-resolve, silen
 1. Understand Before Solving — Read all relevant code before proposing changes
 2. Design Before Implementing — Document approach and obtain approval before coding
 3. Verify Before Declaring Complete — Run tests, check edge cases, validate success criteria
-4. Communicate Changes — Post comments when changes occur (NOT when creating issues)
+4. Communicate Changes — Post comments when substantive changes occur (NOT when creating issues, NOT for status updates)
 
 No feature creep: implement ONLY what is in the approved spec. No unapproved work: wait for explicit "approved" or "go".
 

@@ -132,7 +132,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-> **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
 
 **⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
 - ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
@@ -161,7 +161,7 @@ Every spec file MUST include:
 4. **Numbered Phases**: Phase 1, Phase 2, Phase 3...
 5. **Numbered Steps**: 1, 2, 3 within each phase
 6. **Status Markers**: `☐`/`↻`/`☑`/`☒` for each step
-7. **Approval Tracking Note**: A footer note directing approvals to comments (not a table in the body)
+7. **Byline Footer**: A footer line with AI attribution: `🤖 ✨ Created by <AgentName> (<ModelID>)`
 
 ## 8. Phase Naming Quality (MANDATORY)
 

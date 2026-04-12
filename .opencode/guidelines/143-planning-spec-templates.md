@@ -194,7 +194,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-> **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
 
 **⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
 - ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
@@ -335,7 +335,7 @@ def broken_function():
 
 ---
 
-> **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
 
 **⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
 - ✅ Good: "Database Schema Fix", "Authentication Logic Fix", "Error Handling Update"
@@ -438,7 +438,7 @@ CREATED: YYYY-MM-DD
 
 ---
 
-> **Approval Tracking**: Approvals are tracked via GitHub Issue comments (e.g., `AI: <Agent> ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+
 ```
 
 ---

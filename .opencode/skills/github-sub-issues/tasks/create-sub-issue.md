@@ -14,7 +14,6 @@ Create a sub-issue for a parent spec issue at the phase level.
 
 - Sub-issue created with proper title format
 - Sub-issue linked to parent via database ID
-- Comment posted to parent about creation
 
 ## Procedure
 
@@ -65,16 +64,7 @@ github_sub_issue_write(
 )
 ```
 
-### Step 5: Post Comment
-
-```python
-github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    issue_number=N,
-    body=f"AI: {AgentName} {ModelID}\n\nCreated sub-issue for phase: {phase_description}"
-)
-```
+### Step 5: Confirm Creation
 
 ## Common Issues
 

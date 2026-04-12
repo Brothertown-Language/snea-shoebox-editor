@@ -34,20 +34,18 @@ COMPARE_URL="${GITBUCKET_HTML_URL:-https://github.com/}${GIT_OWNER}/${GIT_REPO}/
 - Issue URL: `${GITBUCKET_HTML_URL:-https://github.com/}${GIT_OWNER}/${GIT_REPO}/issues/<number>`
 - PR URL: from `github_create_pull_request` response
 
-### 3. Post Status Comment (Idempotent)
+### 3. Post Status Comment (Substantive Only)
 
-Before posting, check if a comment with the same byline already exists:
+Before posting, evaluate whether the comment is substantive per the `github-comments` Substantive Comment Gate:
 
 ```python
-comments = github_issue_read(method="get_comments", owner=GIT_OWNER, repo=GIT_REPO, issue_number=N)
-existing = [c for c in comments if "byline-marker" in c.get("body", "")]
-if not existing:
+# ONLY post if the comment conveys stakeholder-meaningful information
+if is_substantive:
     github_add_issue_comment(owner=GIT_OWNER, repo=GIT_REPO, issue_number=N, body="...")
 else:
-    # Comment already posted, skip
+    # Skip posting — progress goes to chat only
+    pass
 ```
-
-Replace `byline-marker` with a unique identifier from the comment content (e.g., the agent byline pattern).
 
 ### 4. Report Executive Summary in Chat (Always Runs)
 
@@ -71,5 +69,5 @@ Chat output is idempotent by nature. Always produce:
 |-----------|----------------------|------------|
 | Push branch | Check `git log origin/..HEAD` before pushing | Git workflows only |
 | Generate URL | Check if URL already generated; compare URL for pushes, action URL for creation workflows | All workflows |
-| Post status comment | Check if comment already posted (query for existing byline) | Workflows with issue context |
+| Post status comment | Substantiveness gate (per `github-comments` skill) | Workflows with issue context |
 | Report executive summary + URL | Always run; idempotent by nature | All workflows |

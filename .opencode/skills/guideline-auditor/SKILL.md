@@ -279,31 +279,16 @@ Fix applied: <description of fix or "skipped per user request">
 
 ## Fresh-Start Context Preservation (CRITICAL)
 
-**After creating the audit log, ATTACH the content to a GitHub Issue.**
+**After creating the audit log, RETAIN it in `./tmp/` for session reference.**
 
-### Attachment Workflow
+### Retention Workflow
 
 1. **After writing audit log to `./tmp/audit-YYYYMMDD.md`:**
-   - Read the full audit log content
-   - Post as a GitHub Issue comment (use `github_add_issue_comment`)
-   - Delete the temp file: `rm ./tmp/audit-YYYYMMDD.md`
+    - Retain the file in `./tmp/` for session reference
+    - Report findings summary to chat (NOT as GitHub Issue comment)
+    - Audit findings are internal agent guidance — NOT stakeholder communication
 
-2. **Target Issue Selection:**
-   - If auditing guidelines for a specific implementation issue → attach to that issue
-   - If auditing guidelines proactively (no specific issue) → create a summary issue for the audit results
-   - Comment format:
-     ```
-     AI: <AgentName> <ModelID> ✅ Audit Complete
-     
-     **Summary:**
-     <1-2 sentences describing impact and findings>
-     
-     **Outcome:** <What changed in guidelines>
-     
-     <full audit log content>
-     ```
-
-**⚠️ CRITICAL: Always attach to GitHub Issue then delete temp file. No exceptions.**
+**⚠️ CRITICAL: Audit results are internal. Post a comment ONLY for substantive spec revisions that stakeholders need to understand.**
 
 ## Compliance Checkpoint Integration
 

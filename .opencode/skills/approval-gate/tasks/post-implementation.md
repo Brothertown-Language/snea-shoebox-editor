@@ -51,17 +51,13 @@ git status --porcelain
 
 **When implementation determined no changes were needed:**
 
-1. **Post completion comment to issue (NO URL):**
-   - Summarize what was completed
-   - No compare URL in GitHub issue
+1. **Report completion to chat:**
+    - Summarize what was completed
+    - No compare URL needed
 
-2. **Report compare URL in chat only:**
-   - URL goes in chat dialog only
-   - NEVER post URLs to GitHub issues
-
-3. **HALT after reporting:**
-   - No branch push (already pushed)
-   - No PR creation
+2. **HALT after reporting:**
+    - No branch push (already pushed)
+    - No PR creation
 
 ---
 
@@ -83,22 +79,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 ### Step 4: Report Completion
 
-Format for issue (NO URL):
-
-```markdown
-**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-**Outcome:** <What changed for stakeholders>
-
-All tasks complete from this specification.
-
----
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-```
-
-Post to chat (exec summary + URL):
+Report to chat (exec summary + URL):
 ```
 **Summary:**
 

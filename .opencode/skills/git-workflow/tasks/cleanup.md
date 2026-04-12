@@ -308,9 +308,18 @@ When ALL child issues are completed by a single PR merge:
 2. **ALSO close the parent issue** (all children are now complete)
 3. Add summary comment to the parent explaining all work is complete
 
-## Closing Summary (Required)
+## Closing Summary (Conditional)
 
-Before closing any issue (SPEC or Task), the AI agent MUST provide a final summary comment.
+Before closing any issue (SPEC or Task), the AI agent MAY provide a final summary comment ONLY if it conveys substantive information stakeholders need to understand what changed or why.
+
+### When to Post Closing Comment
+
+| Scenario | Action |
+|----------|--------|
+| Closing summary explains substantive changes stakeholders need to know | **POST comment** |
+| Closing summary is merely "Task complete" or status update | **SKIP — do not post** |
+| Multiple related changes that stakeholders need context on | **POST comment** |
+| Routine closure with no stakeholder-meaningful information | **SKIP — do not post** |
 
 ### Summary Requirements
 

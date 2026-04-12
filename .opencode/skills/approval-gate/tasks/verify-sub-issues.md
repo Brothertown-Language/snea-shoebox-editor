@@ -167,7 +167,7 @@ Auto-creating sub-issues for an approved multi-task spec does NOT require separa
 | Sub-issue not linked | Auto-create and link, POST report: "Created N sub-issues for phase tracking." |
 | Single-task spec with STATUS | Ignore STATUS, proceed, POST report: "Single-task spec, ignoring STATUS field." |
 | Subtask not in list | HALT, POST report: "Subtask X.Y not found. Available subtasks: [list]. Please authorize a valid subtask." |
-| Parent issue missing STATUS field | Default to first subtask (1.1), proceed, POST explanatory comment |
+| Parent issue missing STATUS field | Default to first subtask (1.1), proceed, report to chat |
 
 ## Context Required
 

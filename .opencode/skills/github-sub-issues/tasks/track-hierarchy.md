@@ -49,16 +49,7 @@ SPEC #N: [Title]
 - Check if it matches a phase
 - If orphan (no matching phase): flag for review
 
-### Step 5: Post Hierarchy Report
-
-```python
-github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    issue_number=N,
-    body=hierarchy_report
-)
-```
+### Step 5: Report in Chat
 
 ## Common Issues
 

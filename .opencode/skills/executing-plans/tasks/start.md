@@ -25,7 +25,7 @@ Begin plan execution and verify prerequisites before implementation.
 ### 3. Initialize Tracking
 
 - Set current step to 1
-- Post "Starting execution" comment to plan issue
+- Report "Starting execution" to chat
 - HALT and wait for `next step` or `continue`
 
 ### Enforcement

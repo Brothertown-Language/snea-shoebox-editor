@@ -2,12 +2,12 @@
 
 ## Purpose
 
-Format comments with AI identity attribution, lifecycle status indicators, and proper structure.
+Format comments with AI identity attribution, lifecycle status indicators, and proper structure. Only used for substantive comments that convey stakeholder-meaningful information.
 
 ## Entry Criteria
 
-- Comment content provided
-- Comment type specified (progress, completion, status)
+- Comment content is substantive (conveys information stakeholders need to understand what changed or why)
+- Comment type specified (completion, update, rejection)
 
 ## Exit Criteria
 
@@ -22,25 +22,11 @@ Format comments with AI identity attribution, lifecycle status indicators, and p
 
 | Type | Purpose | Emoji |
 |------|---------|-------|
-| Progress | Work in progress | ↻ |
 | Completion | Task finished | ✅ |
-| Creation | New issue/PR created | ✨ |
 | Update | Modified existing content | 📝 |
 | Rejection | Cannot proceed | ❌ |
 
 ### Step 2: Apply Format Template
-
-**Progress Template:**
-```markdown
-**Summary:**
-
-<1-2 sentences describing impact and stakeholder value>
-
-**Outcome:** <What changed for stakeholders>
-
----
-🤖 ↻ Working by <AgentName> (<ModelID>)
-```
 
 **Completion Template:**
 ```markdown
@@ -56,14 +42,16 @@ All tasks complete from this specification.
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-**Creation Template:**
+**Update Template:**
 ```markdown
-**Created:**
+**Summary:**
 
-<What was created and why>
+<1-2 sentences describing what changed and why stakeholders need to know>
+
+**Outcome:** <What changed for stakeholders>
 
 ---
-🤖 ✨ Created by <AgentName> (<ModelID>)[: Issue #N]
+🤖 📝 Updated by <AgentName> (<ModelID>)
 ```
 
 ### Step 3: Validate Format
@@ -96,4 +84,4 @@ Return formatted comment for posting via `github_add_issue_comment`.
 ## Context Required
 
 - Session values: GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL
-- Related tasks: `post-progress`, `post-completion`
+- Related tasks: `post-completion`

@@ -4,7 +4,7 @@
 
 ### Single Combined Byline (CRITICAL)
 
-**ALL comments MUST end with ONE byline that combines status, agent, and model.**
+**ALL substantive comments and issue body footers MUST end with ONE byline that combines status, agent, and model.** Non-substantive comments should not be posted (per `github-comments` skill).
 
 **Format:**
 ```
@@ -67,7 +67,7 @@ Use the **Copy Editor** byline when posting content on behalf of users:
 
 Use standard bylines (Created, Completed, Updated) for:
 - Agent creates its own spec/issue for implementation work
-- Agent posts progress comments for its own implementation tasks
+- Agent posts substantive comments for its own implementation tasks
 - Agent creates issues for user-approved specs (those already have user attribution)
 - Agent performs independent implementation work
 

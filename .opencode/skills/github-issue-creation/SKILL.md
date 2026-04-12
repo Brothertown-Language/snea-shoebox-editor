@@ -77,7 +77,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 **Applies:**
 - `needs-approval` label automatically
 - Proper title format (`[SPEC]`, `[SPEC-FIX]`, `[Task: #N]`)
-- Creation byline in initial comment
+- Creation byline in issue body footer
 
 ### Post-Creation Audits
 
@@ -90,7 +90,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 |-------|---------|-------------------|
 | `spec-auditor` | Orchestrate spec quality audit (subtasks: fresh-start, structure, content-quality, traceability, fidelity, concerns, operational) | Run BEFORE approval |
 | `approval-gate` | Enforce authorization | Run AFTER issue created |
-| `github-comments` | Byline format | Use for creation comment |
+| `github-comments` | Byline format | Use for substantive comments only |
 | `github-sub-issues` | Sub-issue creation | Invoke for multi-task specs |
 
 ## When to Invoke
@@ -115,7 +115,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 
 - Invoke `pre-creation` task before creating issue
 - Apply `needs-approval` label to new specs
-- Add creation byline in initial comment
+- Add creation byline in issue body footer
 - Invoke auditors before approval
 - Check for superseding/conflicting issues
 
