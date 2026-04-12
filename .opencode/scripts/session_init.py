@@ -1,38 +1,23 @@
 #!/usr/bin/env python3
 """Session initialization script for AI agents.
 
-Extracts git context needed for agent startup:
-- DEV_NAME: Developer's git config name (for commit trailers)
-- DEV_EMAIL: Developer's git config email (for commit trailers)
-- GIT_OWNER: Repository owner (for GitHub/GitBucket API calls)
-- GIT_REPO: Repository name (for GitHub/GitBucket API calls)
-- GIT_HOOKS_PATH: Git hooks path (to verify hooks installed)
-- GIT_REMOTE_URL: Full remote URL (for reference)
-- GITHUB_HTML_URL: GitHub web UI base URL (for GitHub remotes)
-- GITBUCKET_HTML_URL: GitBucket web UI base URL (from .env, NEVER fabricated)
-- GITBUCKET_SSH_URL: GitBucket SSH base URL (host+port, no path, for SSH remotes)
-- GITBUCKET_HAS_CREDENTIALS: Whether .env has token configured
-- SRCLEIGHT_STATUS: Srclight index health (ok/empty/not_indexed)
+Outputs English prose context for LLM consumption on stdout.
+Diagnostic and side-effect output goes to stderr — silent on success.
 
 Guard checks (auto-create missing files/branches/worktree):
 - CHANGELOG.md: Create with Keep a Changelog header if missing
 - .opencode/CHANGELOG.md: Create with minimal header if missing
 - dev branch: Create from origin/dev or main/master if missing
 - .worktrees/main/: Bootstrap worktree layout if not set up
-
- Worktree layout (#604):
- - Main folder always on dev branch
- - .worktrees/main/ is a permanent production reference
- - .worktrees/ is in .gitignore
- - WORKTREE_FATAL=1 is emitted only on setup failure (silent on success)
+- .env gitignore: Warn if .env exists but is not in .gitignore
 
 Usage:
     uv run python .opencode/scripts/session_init.py
 
 Exit codes:
     0: Success
-    1: No remote configured
-    2: Non-GitHub remote detected
+    1: No remote configured or failed to parse owner/repo
+    2: Non-GitHub/GitBucket remote detected
 """
 
 from __future__ import annotations
@@ -78,12 +63,6 @@ def get_user_email() -> str:
     return f"{user}@{hostname}"
 
 
-def get_hooks_path() -> str:
-    """Get git hooks path or empty string if not configured."""
-    hooks = run_git_command(["config", "core.hooksPath"])
-    return hooks or ""
-
-
 def parse_git_remote_url(url: str) -> tuple[str, str] | tuple[None, None]:
     """Parse owner and repo from GitHub remote URL.
 
@@ -94,13 +73,11 @@ def parse_git_remote_url(url: str) -> tuple[str, str] | tuple[None, None]:
     Returns:
         (owner, repo) on success, (None, None) on failure
     """
-    # SSH format: git@github.com:owner/repo.git
     ssh_pattern = r"^git@github\.com:([^/]+)/([^/]+?)(?:\.git)?$"
     match = re.match(ssh_pattern, url)
     if match:
         return match.group(1), match.group(2)
 
-    # HTTPS format: https://github.com/owner/repo.git
     https_pattern = r"^https://github\.com/([^/]+)/([^/]+?)(?:\.git)?$"
     match = re.match(https_pattern, url)
     if match:
@@ -138,7 +115,6 @@ def parse_gitbucket_url(
     owner: str | None = None
     repo: str | None = None
 
-    # SSH format: ssh://git@hostname:port/owner/repo.git
     ssh_url_pattern = r"^ssh://git@([^:/]+):(\d+)/([^/]+)/([^/]+?)(?:\.git)?$"
     match = re.match(ssh_url_pattern, url)
     if match:
@@ -146,7 +122,6 @@ def parse_gitbucket_url(
         repo = match.group(4)
 
     if not owner:
-        # SSH format: git@hostname:owner/repo.git (no port, colon separator)
         ssh_short_pattern = r"^git@([^:]+):([^/]+)/([^/]+?)(?:\.git)?$"
         match = re.match(ssh_short_pattern, url)
         if match:
@@ -154,7 +129,6 @@ def parse_gitbucket_url(
             repo = match.group(3)
 
     if not owner:
-        # HTTPS format: https://hostname/owner/repo.git
         https_pattern = r"^https://([^/]+)/([^/]+)/([^/]+?)(?:\.git)?$"
         match = re.match(https_pattern, url)
         if match:
@@ -164,17 +138,13 @@ def parse_gitbucket_url(
     if not owner or not repo:
         return None, None, None
 
-    # Read base URL from .env ONLY — never construct from remote hostname
     base_url = _read_gitbucket_url_from_env()
 
     return base_url, owner, repo
 
 
 def _read_gitbucket_url_from_env() -> str | None:
-    """Read GITBUCKET_HTML_URL (preferred) or GITBUCKET_URL (legacy) from .env file.
-
-    Returns None if neither found.
-    """
+    """Read GITBUCKET_HTML_URL (preferred) or GITBUCKET_URL (legacy) from .env file."""
     try:
         env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
         if os.path.exists(env_path):
@@ -198,8 +168,6 @@ def extract_ssh_url(url: str) -> str | None:
 
     For ssh://git@tomcat-0002.newsrx.com:29418/org/repo.git
     returns ssh://git@tomcat-0002.newsrx.com:29418
-
-    Returns None if the URL is not an SSH format remote.
     """
     ssh_url_pattern = r"^(ssh://git@[^:/]+:\d+)"
     match = re.match(ssh_url_pattern, url)
@@ -213,46 +181,34 @@ def get_remote_url() -> str | None:
     return run_git_command(["remote", "get-url", "origin"])
 
 
-def check_srclight() -> None:
-    """Check srclight index health via filesystem probe.
+def get_current_branch() -> str | None:
+    """Get current git branch name or None if HEAD is detached."""
+    return run_git_command(["branch", "--show-current"])
 
-    Fast check: looks for the srclight DB file instead of running
-    uvx srclight status (which takes ~30 seconds).
 
-    Outputs SRCLEIGHT_STATUS=<status> line.
-    Reports warnings to stderr if index is missing or unhealthy.
-    """
+def check_srclight() -> str:
+    """Check srclight index health. Returns 'indexed', 'empty', or 'not_indexed'."""
     db_path = os.path.join(os.getcwd(), ".srclight", "index.db")
     if os.path.exists(db_path):
         file_size = os.path.getsize(db_path)
         if file_size > 0:
-            print("SRCLEIGHT_STATUS=ok")
+            return "indexed"
         else:
-            print("SRCLEIGHT_STATUS=empty")
             print(
-                "# ⚠️ Srclight index is empty. Instruct the user to immediately run:"
-                " uvx srclight index --embed qwen3-embedding",
+                "Srclight index is empty. Run: uvx srclight index --embed qwen3-embedding",
                 file=sys.stderr,
             )
+            return "empty"
     else:
-        print("SRCLEIGHT_STATUS=not_indexed")
         print(
-            "# ⚠️ Srclight index not found. Instruct the user to immediately run:"
-            " uvx srclight index --embed qwen3-embedding",
+            "Srclight index not found. Run: uvx srclight index --embed qwen3-embedding",
             file=sys.stderr,
         )
+        return "not_indexed"
 
 
 def get_submodule_dirs() -> list[str]:
-    """Get list of submodule directory paths using git config.
-
-    Uses git's own config parser instead of manual .gitmodules parsing.
-    Handles all format variations (special chars, whitespace, etc.) correctly.
-
-    Returns:
-        List of submodule path strings (e.g., ['test-submodule-1', 'submodules/lib'])
-        Empty list if no submodules configured or .gitmodules missing.
-    """
+    """Get list of submodule directory paths using git config."""
     result = run_git_command(["config", "--file", ".gitmodules", "--get-regexp", "path"])
     if not result:
         return []
@@ -262,23 +218,33 @@ def get_submodule_dirs() -> list[str]:
         parts = line.strip().split()
         if len(parts) >= 2:
             paths.append(parts[-1])
-
     return paths
 
 
 def get_source_hooks_dir() -> str | None:
-    """Get the source hooks directory from .opencode/hooks/.
-
-    Returns None if the directory doesn't exist.
-    """
-    candidate = os.path.join(os.getcwd(), ".opencode", "hooks")
-    if os.path.isdir(candidate):
-        return candidate
+    """Find the .opencode/hooks/ directory or None if missing."""
+    hooks_dir = os.path.join(os.getcwd(), ".opencode", "hooks")
+    if os.path.isdir(hooks_dir):
+        return hooks_dir
     return None
 
 
+def get_hooks_path() -> str:
+    """Get git hooks path or empty string if not configured."""
+    hooks = run_git_command(["config", "core.hooksPath"])
+    return hooks or ""
+
+
+def _hooks_match(src: str, dst: str) -> bool:
+    """Check if two hook files have the same content."""
+    try:
+        return os.path.isfile(dst) and open(src).read() == open(dst).read()
+    except OSError:
+        return False
+
+
 def _copy_hook(src: str, dst: str) -> bool:
-    """Copy a single hook file, making it executable. Returns True on success."""
+    """Copy a hook file, making it executable."""
     try:
         shutil.copy2(src, dst)
         os.chmod(dst, 0o755)
@@ -287,29 +253,8 @@ def _copy_hook(src: str, dst: str) -> bool:
         return False
 
 
-def _hooks_match(src: str, dst: str) -> bool:
-    """Check if two hook files have identical content."""
-    if not os.path.isfile(dst):
-        return False
-    try:
-        with open(src) as a, open(dst) as b:
-            return a.read() == b.read()
-    except OSError:
-        return False
-
-
 def install_hooks() -> None:
-    """Install git hooks from .opencode/hooks/ to .git/hooks/ and submodule hooks dirs.
-
-    Source of truth: .opencode/hooks/ (tracked in git)
-    Deployment targets:
-      - .git/hooks/ (parent repo)
-      - .git/modules/<name>/hooks/ (submodules)
-
-    Copies hooks that are missing or outdated. Skips hooks that match.
-    Reports failures to stderr but does not halt the session.
-    Also unsets core.hooksPath if set (legacy cleanup).
-    """
+    """Install git hooks from .opencode/hooks/. Reports failures to stderr."""
     source_dir = get_source_hooks_dir()
     if not source_dir:
         return
@@ -335,7 +280,7 @@ def install_hooks() -> None:
             if _copy_hook(src, dst):
                 installed_count += 1
             else:
-                print(f"# ⚠️ Failed to install hook {hook_name} into parent repo", file=sys.stderr)
+                print(f"Failed to install hook {hook_name} into parent repo", file=sys.stderr)
                 failed_count += 1
 
     submodules = get_submodule_dirs()
@@ -360,7 +305,7 @@ def install_hooks() -> None:
                     pass
 
         if not os.path.isdir(hooks_target):
-            print(f"# ⚠️ Could not resolve hooks dir for submodule: {submod_path}", file=sys.stderr)
+            print(f"Could not resolve hooks dir for submodule: {submod_path}", file=sys.stderr)
             failed_count += 1
             continue
 
@@ -373,22 +318,17 @@ def install_hooks() -> None:
             if _copy_hook(src, dst):
                 installed_count += 1
             else:
-                print(f"# ⚠️ Failed to install hook {hook_name} into {submod_path}", file=sys.stderr)
+                print(f"Failed to install hook {hook_name} into {submod_path}", file=sys.stderr)
                 failed_count += 1
 
-    if installed_count > 0 or skipped_count > 0 or failed_count > 0:
-        print("")
-        print("# --- Hook Installation ---")
-        if installed_count > 0:
-            print(f"# ✅ Installed {installed_count} hook(s)")
-        if skipped_count > 0:
-            print(f"# ℹ️ {skipped_count} hook(s) already current (skipped)")
-        if failed_count > 0:
-            print(f"# ❌ Failed to install {failed_count} hook(s) — see stderr", file=sys.stderr)
+    if installed_count > 0:
+        print(f"Installed {installed_count} hook(s)", file=sys.stderr)
+    if failed_count > 0:
+        print(f"Failed to install {failed_count} hook(s)", file=sys.stderr)
 
     if get_hooks_path():
         run_git_command(["config", "--unset", "core.hooksPath"])
-        print("# 🧹 Removed legacy core.hooksPath config (hooks now in .git/hooks/)")
+        print("Removed legacy core.hooksPath config (hooks now in .git/hooks/)", file=sys.stderr)
 
 
 def _extract_version_from_pyproject() -> str:
@@ -400,32 +340,27 @@ def _extract_version_from_pyproject() -> str:
                 for line in f:
                     stripped = line.strip()
                     if stripped.startswith("version"):
-                        match = re.match(r'version\s*=\s*["\']([^"\']+)["\']', stripped)
-                        if match:
-                            return match.group(1)
+                        parts = stripped.split("=", 1)
+                        if len(parts) == 2:
+                            return parts[1].strip().strip('"').strip("'")
         except OSError:
             pass
     return "0.1.0"
 
 
 def _ensure_changelog_md() -> str:
-    """Create CHANGELOG.md if missing. Returns 'exists' or 'created'."""
+    """Create CHANGELOG.md if missing. Returns 'exists', 'created', or 'failed'."""
     changelog_path = os.path.join(os.getcwd(), "CHANGELOG.md")
     if os.path.isfile(changelog_path):
         return "exists"
+
     version = _extract_version_from_pyproject()
     content = (
         "# Changelog\n"
         "\n"
         "All notable changes to this project will be documented in this file.\n"
         "\n"
-        "The format is based on\n"
-        "[Keep a Changelog](https://keepachangelog.com/en/1.0.0/),\n"
-        "and this project adheres to\n"
-        "[Semantic Versioning](https://semver.org/spec/v2.0.0.html).\n"
-        "\n"
-        "For AI agent infrastructure changes (`.opencode/` directory), see\n"
-        "[`.opencode/CHANGELOG.md`](.opencode/CHANGELOG.md).\n"
+        "The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).\n"
         "\n"
         f"## [{version}] - Unreleased\n"
     )
@@ -434,12 +369,12 @@ def _ensure_changelog_md() -> str:
             f.write(content)
         return "created"
     except OSError as e:
-        print(f"# ⚠️ Failed to create CHANGELOG.md: {e}", file=sys.stderr)
+        print(f"Failed to create CHANGELOG.md: {e}", file=sys.stderr)
         return "failed"
 
 
 def _ensure_opencode_changelog_md() -> str:
-    """Create .opencode/CHANGELOG.md if missing. Returns 'exists' or 'created'."""
+    """Create .opencode/CHANGELOG.md if missing. Returns 'exists', 'created', or 'failed'."""
     opencode_dir = os.path.join(os.getcwd(), ".opencode")
     changelog_path = os.path.join(opencode_dir, "CHANGELOG.md")
     if os.path.isfile(changelog_path):
@@ -461,68 +396,45 @@ def _ensure_opencode_changelog_md() -> str:
             f.write(content)
         return "created"
     except OSError as e:
-        print(f"# ⚠️ Failed to create .opencode/CHANGELOG.md: {e}", file=sys.stderr)
+        print(f"Failed to create .opencode/CHANGELOG.md: {e}", file=sys.stderr)
         return "failed"
 
 
 def _ensure_dev_branch() -> str:
-    """Create dev branch if missing locally. Returns status string."""
-    current = run_git_command(["branch", "--show-current"])
-    if current == "dev":
-        return "exists (current)"
-
-    branches = run_git_command(["branch", "--list", "dev"])
-    if branches and "dev" in branches:
+    """Ensure dev branch exists. Returns 'exists', 'created from main', 'created from master', or 'failed'."""
+    if run_git_command(["rev-parse", "--verify", "dev"]):
         return "exists"
+    if run_git_command(["rev-parse", "--verify", "origin/dev"]):
+        run_git_command(["branch", "dev", "origin/dev"])
+        return "created from origin/dev"
 
-    has_origin_dev = run_git_command(["ls-remote", "--heads", "origin", "dev"])
-    if has_origin_dev:
-        result = run_git_command(["branch", "dev", "origin/dev"])
-        if result is not None:
-            return "created from origin/dev"
-        return "failed"
+    for default_branch in ["main", "master"]:
+        if run_git_command(["rev-parse", "--verify", default_branch]):
+            run_git_command(["branch", "dev", default_branch])
+            return f"created from {default_branch}"
 
-    default_branch = run_git_command(["symbolic-ref", "refs/remotes/origin/HEAD"])
-    if default_branch and "main" in default_branch:
-        source = "main"
-    else:
-        source = "master"
-
-    source_hash = run_git_command(["rev-parse", source])
-    if source_hash:
-        result = run_git_command(["branch", "dev", source_hash])
-        if result is not None:
-            return f"created from {source}"
-        return "failed"
-
-    return "failed (no source branch)"
-
-
-def get_current_branch() -> str | None:
-    return run_git_command(["branch", "--show-current"])
+    print("Failed to create dev branch — no main or master branch found", file=sys.stderr)
+    return "failed"
 
 
 def is_worktree_setup() -> bool:
+    """Check if .worktrees/main/ exists and is a git worktree."""
     main_wt = os.path.join(os.getcwd(), ".worktrees", "main")
-    if not os.path.isdir(main_wt):
-        return False
-    wt_git = os.path.join(main_wt, ".git")
-    if not os.path.isfile(wt_git):
-        return False
-    return True
+    return os.path.isdir(main_wt) and os.path.isdir(os.path.join(main_wt, ".git"))
 
 
 def _add_to_gitignore(entry: str) -> bool:
+    """Add an entry to .gitignore if not already present."""
     gitignore_path = os.path.join(os.getcwd(), ".gitignore")
-    if not os.path.isfile(gitignore_path):
-        return False
     try:
-        with open(gitignore_path) as f:
-            lines = f.read().splitlines()
-        if entry in lines:
-            return False
+        existing_lines: list[str] = []
+        if os.path.isfile(gitignore_path):
+            with open(gitignore_path) as f:
+                existing_lines = f.read().splitlines()
+        if entry in existing_lines:
+            return True
         with open(gitignore_path, "a") as f:
-            if lines and lines[-1] != "":
+            if existing_lines and existing_lines[-1] != "":
                 f.write("\n")
             f.write(f"{entry}\n")
         return True
@@ -530,29 +442,26 @@ def _add_to_gitignore(entry: str) -> bool:
         return False
 
 
-def bootstrap_worktree_layout() -> None:
+def bootstrap_worktree_layout() -> bool:
+    """Bootstrap .worktrees/main/ if not set up. Returns True on success, False on failure."""
     if is_worktree_setup():
-        return
+        return True
 
     main_wt_path = os.path.join(os.getcwd(), ".worktrees", "main")
 
     if os.path.isdir(main_wt_path):
         result = run_git_command(["worktree", "remove", main_wt_path, "--force"])
         if result is None:
-            print("WORKTREE_FATAL=1")
-            print("# ⚠️ FATAL: Failed to remove stale .worktrees/main/ directory", file=sys.stderr)
-            return
+            print("Failed to remove stale .worktrees/main/ directory", file=sys.stderr)
+            return False
 
     main_branch = "main"
     if run_git_command(["rev-parse", "--verify", "main"]) is None:
         if run_git_command(["rev-parse", "--verify", "master"]) is not None:
             main_branch = "master"
         else:
-            print("WORKTREE_FATAL=1")
-            print(
-                "# ⚠️ FATAL: No main or master branch found — worktree setup requires a default branch", file=sys.stderr
-            )
-            return
+            print("No main or master branch found — worktree setup requires a default branch", file=sys.stderr)
+            return False
 
     current = get_current_branch()
 
@@ -567,11 +476,10 @@ def bootstrap_worktree_layout() -> None:
 
     result = run_git_command(["worktree", "add", main_wt_path, main_branch])
     if result is None:
-        print("WORKTREE_FATAL=1")
-        print("# ⚠️ FATAL: Failed to create .worktrees/main/ worktree", file=sys.stderr)
+        print("Failed to create .worktrees/main/ worktree", file=sys.stderr)
         if current and current != "dev":
             run_git_command(["checkout", current])
-        return
+        return False
 
     _add_to_gitignore(".worktrees/")
 
@@ -589,90 +497,101 @@ def bootstrap_worktree_layout() -> None:
         if had_stash:
             run_git_command(["stash", "pop"])
 
+    return True
 
-def run_guard_checks() -> None:
-    print("")
-    print("# --- Guard Checks ---")
-    print(f"CHANGELOG.md: {_ensure_changelog_md()}")
-    print(f".opencode/CHANGELOG.md: {_ensure_opencode_changelog_md()}")
-    print(f"dev branch: {_ensure_dev_branch()}")
-    bootstrap_worktree_layout()
+
+def _check_env_gitignored() -> bool:
+    """Check if .env exists and is in .gitignore. Returns True if safe (gitignored or doesn't exist)."""
+    if not os.path.isfile(os.path.join(os.getcwd(), ".env")):
+        return True
+    gitignore_path = os.path.join(os.getcwd(), ".gitignore")
+    if not os.path.isfile(gitignore_path):
+        return False
+    try:
+        with open(gitignore_path) as f:
+            for line in f:
+                stripped = line.strip()
+                if stripped == ".env" or stripped == "/.env":
+                    return True
+    except OSError:
+        pass
+    return False
+
+
+def run_guard_checks() -> list[str]:
+    """Run guard checks silently. Returns list of problem descriptions."""
+    problems: list[str] = []
+    changelog_status = _ensure_changelog_md()
+    if changelog_status == "failed":
+        problems.append("CHANGELOG.md: failed to create")
+    opencode_changelog_status = _ensure_opencode_changelog_md()
+    if opencode_changelog_status == "failed":
+        problems.append(".opencode/CHANGELOG.md: failed to create")
+    dev_branch_status = _ensure_dev_branch()
+    if "failed" in dev_branch_status:
+        problems.append(f"dev branch: {dev_branch_status}")
+    if not _check_env_gitignored():
+        problems.append("WARNING: .env is NOT in .gitignore — secrets may be committed to version control")
+    return problems
 
 
 def main() -> int:
-    """Extract and output git context."""
-    # Get remote URL first - this is required
+    """Extract and output git context as English prose for LLM consumption."""
     remote_url = get_remote_url()
     if not remote_url:
-        print("ERROR: No git remote configured", file=sys.stderr)
-        print("Run: git remote add origin <url>", file=sys.stderr)
+        print("No git remote configured. Run: git remote add origin <url>", file=sys.stderr)
         return 1
 
-    # Get git config values with fallbacks
     user_name = get_user_name()
     user_email = get_user_email()
-    hooks_path = get_hooks_path()
 
-    # Output in the specified format
-    print("# Session Init - Git Context")
-    print(f"DEV_NAME={user_name}")
-    print(f"DEV_EMAIL={user_email}")
-    print(f"GIT_HOOKS_PATH={hooks_path}")
-    print(f"GIT_REMOTE_URL={remote_url}")
+    srclight_status = check_srclight()
+    install_hooks()
+    guard_problems = run_guard_checks()
+    worktree_ok = bootstrap_worktree_layout()
 
-    # Check if GitHub remote
+    current_branch = get_current_branch() or "unknown"
+
     if is_github_remote(remote_url):
-        # Parse owner/repo from remote
         owner, repo = parse_git_remote_url(remote_url)
         if not owner or not repo:
-            print("ERROR: Failed to parse owner/repo from remote URL", file=sys.stderr)
+            print("Could not determine repository owner from remote URL.", file=sys.stderr)
             print(f"Remote URL: {remote_url}", file=sys.stderr)
             return 1
 
-        print(f"GIT_OWNER={owner}")
-        print(f"GIT_REPO={repo}")
-        print("GIT_PLATFORM=github")
-        print("GITHUB_HTML_URL=https://github.com/")
-        print("")
-        print("# ============================")
-        print("# GITHUB REPOSITORY DETECTED")
-        print("# ============================")
-        print("# 📋 Invoke: /skill github-issue-creation before creating issues")
-        print("# 📋 See: .opencode/skills/github-issue-creation/SKILL.md")
-        check_srclight()
-        install_hooks()
-        run_guard_checks()
+        print(f"Repository: {repo} (GitHub)")
+        print(f"Owner: {owner}")
+        print(f'Use owner="{owner}" and repo="{repo}" for all GitHub tool calls.')
+        print("HTML base: https://github.com/")
+        print(f"Developer: {user_name} ({user_email})")
+        print(f"Current branch: {current_branch}")
+
+        if worktree_ok:
+            print("Worktrees: available")
+        else:
+            print("Worktrees: setup failed — HALT and report to developer before proceeding")
+
+        if srclight_status == "indexed":
+            print("Srclight: indexed")
+        else:
+            print("Srclight: NOT indexed — tell the developer to run: uvx srclight index --embed qwen3-embedding")
+
+        for problem in guard_problems:
+            print(problem)
+
         return 0
 
-    # GitBucket remote detected
     if is_gitbucket_remote(remote_url):
         result = parse_gitbucket_url(remote_url)
         base_url, owner, repo = result
         if not owner or not repo:
-            print("WARNING: Failed to parse owner/repo from remote URL", file=sys.stderr)
+            print("Could not determine repository owner from remote URL.", file=sys.stderr)
             print(f"Remote URL: {remote_url}", file=sys.stderr)
-            print("GIT_PLATFORM=gitbucket")
-            print("GITBUCKET_URL=")
-            print("GITBUCKET_HAS_CREDENTIALS=false")
-            print("")
-            print("# ==============================")
-            print("# GITBUCKET REPOSITORY DETECTED")
-            print("# ==============================")
-            print("# 📋 Invoke: /skill gitbucket-api before using GitBucket Python API")
-            print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
-            return 0
+            return 1
 
         if not base_url:
-            print(
-                "WARNING: GITBUCKET_HTML_URL not found in .env — URL generation unavailable",
-                file=sys.stderr,
-            )
-            print(
-                "Add GITBUCKET_HTML_URL=<web-ui-base-url> to .env to enable URL generation",
-                file=sys.stderr,
-            )
+            print("GITBUCKET_HTML_URL not found in .env — URL generation unavailable", file=sys.stderr)
 
-        # Check if credentials exist in .env
         has_credentials = False
         try:
             env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -685,30 +604,35 @@ def main() -> int:
         except OSError:
             pass
 
-        print(f"GIT_OWNER={owner}")
-        print(f"GIT_REPO={repo}")
-        print("GIT_PLATFORM=gitbucket")
-        print(f"GITBUCKET_HTML_URL={base_url or ''}")
+        print(f"Repository: {repo} (GitBucket)")
+        print(f"Owner: {owner}")
+        print(f'Use owner="{owner}" and repo="{repo}" for all GitBucket tool calls.')
+        if base_url:
+            print(f"HTML base: {base_url}")
         ssh_url = extract_ssh_url(remote_url)
         if ssh_url:
-            print(f"GITBUCKET_SSH_URL={ssh_url}")
-        print(f"GITBUCKET_HAS_CREDENTIALS={'true' if has_credentials else 'false'}")
-        print("")
-        print("# ============================")
-        print("# GITBUCKET REPOSITORY DETECTED")
-        print("# ============================")
-        print("# 📋 Invoke: /skill gitbucket-api before using GitBucket Python API")
-        print("# 📋 GitBucket API has specific authentication patterns and limitations")
-        print("# 📋 See: .opencode/skills/gitbucket-api/SKILL.md")
-        check_srclight()
-        install_hooks()
-        run_guard_checks()
+            print(f"SSH base: {ssh_url}")
+        print(f"API credentials: {'configured' if has_credentials else 'NOT configured'}")
+        print(f"Developer: {user_name} ({user_email})")
+        print(f"Current branch: {current_branch}")
+
+        if worktree_ok:
+            print("Worktrees: available")
+        else:
+            print("Worktrees: setup failed — HALT and report to developer before proceeding")
+
+        if srclight_status == "indexed":
+            print("Srclight: indexed")
+        else:
+            print("Srclight: NOT indexed — tell the developer to run: uvx srclight index --embed qwen3-embedding")
+
+        for problem in guard_problems:
+            print(problem)
+
         return 0
 
-    # Unknown remote type
-    print("WARNING: Unknown remote type", file=sys.stderr)
+    print("Unknown remote type", file=sys.stderr)
     print(f"Remote URL: {remote_url}", file=sys.stderr)
-    print("GIT_PLATFORM=unknown")
     return 2
 
 
