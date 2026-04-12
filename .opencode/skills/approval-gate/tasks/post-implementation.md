@@ -78,7 +78,7 @@ This pushes the branch WITHOUT creating a PR.
 Using session values (GIT_OWNER, GIT_REPO):
 
 ```
-https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/main...<branch-name>
+https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
 ### Step 4: Report Completion
@@ -106,7 +106,7 @@ Post to chat (exec summary + URL):
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: https://github.com/<owner>/<repo>/compare/main...<branch-name>
+Compare URL: https://github.com/<owner>/<repo>/compare/dev...<branch-name>
 ```
 
 ### Step 5: HALT

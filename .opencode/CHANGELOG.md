@@ -5,3 +5,8 @@ All notable changes to the `.opencode/` directory (skills, guidelines, agent con
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.2.0] - Unreleased
+
+### Changed
+
+- **Compare URL base branch** (`post-implementation.md`, `implementation-workflow/SKILL.md`) - Fix feature branch compare URLs from `compare/main` to `compare/dev` to match the three-branch model
+- **Authorization cascade rules** (`approval-gate/SKILL.md`, `000-critical-rules.md`, `010-approval-gate.md`) - Add Reference ≠ Authorization Cascade rule requiring formal sub-issue links, not text references, for authorization cascade. Add Confirmation ≠ Authorization rule distinguishing observation confirmations from implementation authorization.

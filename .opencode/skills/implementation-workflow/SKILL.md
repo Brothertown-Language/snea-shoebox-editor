@@ -237,7 +237,7 @@ implementation_complete: true
 **Expected yield from review-prep:**
 ```yaml
 status: success
-compare_url: "https://github.com/owner/repo/compare/main...branch"
+compare_url: "https://github.com/owner/repo/compare/dev...branch"
 exec_summary: |
   **Summary:**
   
@@ -263,7 +263,7 @@ Integrated workflow skills from Superpowers repository.
 
 Created 4 core skills for brainstorming, planning, execution, and verification.
 
-Compare URL: https://github.com/owner/repo/compare/main...branch
+Compare URL: https://github.com/owner/repo/compare/dev...branch
 ```
 
 **Issue comment:**
