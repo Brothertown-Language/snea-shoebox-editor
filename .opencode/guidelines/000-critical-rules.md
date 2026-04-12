@@ -277,6 +277,34 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
+## Critical Violation: Wrong Compare URL Base Branch
+
+**⚠️ Using `main` as the base branch in compare URLs for feature branches is a CRITICAL GUIDELINE VIOLATION.**
+
+In the three-branch model (feature → dev → main), feature branches are created from `dev` and target `dev`. Compare URLs for feature branches MUST use `dev` as the base, not `main`.
+
+### 🚫 FORBIDDEN
+
+- Using `compare/main...` in compare URLs for feature branches
+- Generating compare URLs with `main` as base when reviewing feature branch diffs
+- Copying compare URL templates that use `main` as base
+
+### ✅ REQUIRED
+
+- Feature branch compare URLs MUST use `compare/dev...<branch-name>`
+- Only release PRs (dev → main) use `compare/main...dev`
+- Compare URL template: `https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>`
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| `compare/main...` for feature branch | Shows inflated diff including all dev-integrated work, misleading reviewer |
+| `compare/main...` for feature branch | May appear to have conflicts with code already in dev |
+| Wrong base branch | Developer sees incorrect diff scope and may reject valid changes |
+
+______________________________________________________________________
+
 ## Critical Violation: Fabricating URLs — ZERO TOLERANCE
 
 **⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.**
@@ -703,6 +731,66 @@ When the agent catches itself about to edit code without an approved spec:
 | Continue after bug discovery | Branch contamination, lost work |
 
 **See `approval-gate` skill for the complete discovery protocol and authorization boundaries, including the analysis → implementation authorization decision table.**
+
+______________________________________________________________________
+
+## Critical Violation: Conflating Issue References with Authorization Cascade
+
+**⚠️ Treating issue references (mentions in body/comments) as sub-issue relationships that trigger authorization cascade is a CRITICAL GUIDELINE VIOLATION.**
+
+### 🚫 FORBIDDEN
+
+- Cascading authorization to an issue merely because it's mentioned in another issue's body or comments
+- Treating a bug report's remediation section referencing a spec issue as a sub-issue relationship
+- Assuming `#NNN` in issue text creates an authorization link
+- Cascading authorization without verifying formal sub-issue links via `github_issue_read(method=get_sub_issues)`
+
+### ✅ REQUIRED
+
+- **Only formal sub-issue links (created via `github_sub_issue_write`) trigger authorization cascade**
+- Before cascading, verify the relationship via `github_issue_read(method=get_sub_issues)` — if empty, do NOT cascade
+- Issue mentions in body/comments are references, NOT authorization links
+- Each issue requires its own explicit authorization
+
+### Why This Matters
+
+| Violation | Consequence |
+|-----------|-------------|
+| Mention reference treated as sub-issue | Unauthorized implementation of referenced spec |
+| Bug report references spec | Agent implements spec without approval |
+| Skipping `get_sub_issues` verification | Cascade happens without formal link, violates authorization scope |
+
+**See `approval-gate` skill → "Reference ≠ Authorization Cascade" for the complete verification procedure.**
+
+______________________________________________________________________
+
+## Critical Violation: Confirmation ≠ Authorization
+
+**⚠️ When a user confirms an observation or answers a clarifying question about agent behavior, that confirmation does NOT constitute authorization for implementation.**
+
+### 🚫 FORBIDDEN
+
+- Treating "yes, that's what happened" as authorization to implement
+- Treating "correct" (answering a question) as authorization
+- Treating "sounds like we should X" (discussion conclusion) as authorization
+- Interpreting any confirmation-of-observation as implementation approval
+
+### ✅ REQUIRED
+
+- Only explicit approval phrases authorize implementation: "approved", "go", "#NNN approved"
+- Confirmation of an observation is NOT implementation authorization
+- Discussion conclusions are NOT authorization — stay in discussion mode
+- When in doubt, ASK for explicit authorization rather than assuming it
+
+### Why This Matters
+
+| User says | Correct interpretation | Incorrect interpretation |
+|-----------|----------------------|--------------------------|
+| "yes, that's correct" | Confirmation of observation | ❌ Authorization to proceed |
+| "sounds like we need X" | Discussion conclusion | ❌ Authorization to implement X |
+| "I agree with your analysis" | Agreement with reasoning | ❌ Authorization to act |
+
+**See `approval-gate` skill → "Confirmation ≠ Authorization" for the complete enforcement table.**
 
 ______________________________________________________________________
 

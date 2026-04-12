@@ -12,6 +12,18 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/621-compare-url-base
+
+- **Compare URL Base Branch Fix** - Fix feature branch compare URLs to use `dev` as base instead of `main`, matching the three-branch model (feature→dev→main) and preventing inflated diffs that mislead reviewers
+- Add Wrong Compare URL Base Branch critical violation to 000-critical-rules.md
+
+### spec/676-reference-authorization-cascade
+
+- **Reference ≠ Authorization Cascade** - Add rule that only formal sub-issue links (via `github_sub_issue_write`) trigger authorization cascade, not mere text references in issue bodies or comments
+- Add mandatory verification step requiring `get_sub_issues` check before cascading authorization
+- Add Confirmation ≠ Authorization rule distinguishing observation confirmations from implementation authorization
+- Add both critical violations to 000-critical-rules.md and 010-approval-gate.md
+
 ### spec/668-batch-approval
 
 - **Batch Approval Orchestration** - Add interdependency analysis for multiple approved issues, classifying them as must-precede, independent, conflict-risk, or meta/non-code, and producing a dependency graph with parallel-safe group identification before implementation begins

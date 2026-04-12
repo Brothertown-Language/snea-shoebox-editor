@@ -51,6 +51,8 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - **Single-use**: Authorization for current phase/task only within that issue
 - **External input invalidates**: Bug reports require re-authorization
 - **Revision ≠ implementation**: Spec updates don't authorize code changes
+- **Reference ≠ authorization cascade**: Issue mentions in body/comments do NOT cascade authorization
+- **Confirmation ≠ authorization**: Confirming an observation does NOT authorize implementation
 
 **🚫 CRITICAL: Old authorizations do NOT apply:**
 - "Approved #332" in previous session → NOT VALID for new session
