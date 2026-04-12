@@ -4,6 +4,10 @@
 
 Check whether a spec is already fully implemented before starting work. When all success criteria are verifiably met with no file modifications needed, autoclose the issue instead of proceeding to implementation.
 
+## Pre-Conditions
+
+- **Load guideline:** `.opencode/guidelines/065-verification-honesty.md` before proceeding — verification claims must be backed by actual tool calls, not memory
+
 ## Entry Criteria
 
 - Authorization verified

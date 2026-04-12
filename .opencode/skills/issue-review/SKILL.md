@@ -128,10 +128,15 @@ All outputs follow prose format per `000-critical-rules.md`:
 
 No template files. No structured schema output. Prose throughout.
 
+## Lazy-Loaded Guidelines
+
+When invoked, this skill requires the following guidelines to be loaded on-demand (they are not permanently loaded):
+
+- **Load guideline:** `.opencode/guidelines/067-context-completeness.md` — Required before reading issue comments (mandatory per context completeness rule)
+
 ## Cross-References
 
 - `spec-auditor`: Called by `audit` task for spec quality checks
 - `approval-gate`: Referenced for authorization status in `gather`
-- `067-context-completeness`: Mandates reading all comments before acting
 
 Base directory for this skill: `.opencode/skills/issue-review/`

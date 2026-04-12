@@ -4,6 +4,10 @@
 
 Delegate to `spec-auditor` with triage hints about which subtasks are relevant based on the triage classification.
 
+## Pre-Conditions
+
+- **Load guideline:** `.opencode/guidelines/067-context-completeness.md` before proceeding — ALL comments MUST be read before audit
+
 ## Entry Criteria
 
 - Triage selected the `audit` path
