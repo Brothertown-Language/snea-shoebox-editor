@@ -42,8 +42,6 @@ Execute an approved implementation plan by dispatching fresh subagents per task,
 ```
 Read plan, extract all tasks with full text and context
     ↓
-Create TodoWrite with all tasks
-    ↓
 For each task:
     ↓
     Dispatch implementer subagent (tasks/implementer-prompt.md)
@@ -55,8 +53,6 @@ For each task:
     ↓
     Dispatch code quality reviewer subagent (tasks/code-quality-reviewer-prompt.md)
         ↓ (if quality fails → implementer fixes → re-review)
-    ↓
-    Mark task complete in TodoWrite
     ↓
 After all tasks:
     ↓

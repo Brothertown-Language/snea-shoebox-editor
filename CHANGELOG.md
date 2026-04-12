@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/purge-todowrite
+
+- **TodoWrite Purge** - Remove unreliable `todowrite`/`TodoWrite` tracking references from active skills, eliminating stale state issues caused by the tool's unreliable state maintenance
+
 ### spec/621-compare-url-base
 
 - **Compare URL Base Branch Fix** - Fix feature branch compare URLs to use `dev` as base instead of `main`, matching the three-branch model (feature→dev→main) and preventing inflated diffs that mislead reviewers
