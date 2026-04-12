@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/env-loader
+
+- **Env-Loader Plugin** - New `.opencode/plugins/env-loader.ts` plugin that reads the project root `.env` file and injects all key-value pairs into shell sessions via the `shell.env` hook. Handles quoted values, inline comments, graceful degradation on missing files, and flags a security warning if `.env` is not gitignored.
+
 ### spec/purge-todowrite
 
 - **TodoWrite Purge** - Remove unreliable `todowrite`/`TodoWrite` tracking references from active skills, eliminating stale state issues caused by the tool's unreliable state maintenance
