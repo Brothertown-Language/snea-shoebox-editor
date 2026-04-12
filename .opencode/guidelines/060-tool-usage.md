@@ -1,5 +1,13 @@
 # Tool Usage & Terminal Rules
 
+## 0. Lazy-Loaded Guidelines
+
+The following guidelines are loaded on-demand by skills, not permanently in context:
+- `065-verification-honesty.md` — Loaded by verification-dependent skills when invoked
+- `067-context-completeness.md` — Loaded by issue/PR review skills when invoked
+
+When a skill indicates "Load guideline:" in its pre-conditions, use the `read` tool or `uv run python .opencode/tools/guidelines read` command to load it before proceeding.
+
 ## 1. Tool Priority Hierarchy
 
 > **See `mcp-tool-usage` skill for the complete five-tier hierarchy with tool selection tables.**

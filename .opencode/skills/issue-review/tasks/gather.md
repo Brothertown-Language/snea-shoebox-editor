@@ -4,6 +4,10 @@
 
 Collect all issue data needed by downstream tasks. This is a pure data-collection step — no decisions.
 
+## Pre-Conditions
+
+- **Load guideline:** `.opencode/guidelines/067-context-completeness.md` before proceeding — ALL comments MUST be read before any triage decision
+
 ## Entry Criteria
 
 - Issue number provided via `--issue N`

@@ -169,6 +169,19 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 - No new specs, expansions, or "improvements" beyond what findings require
 - Must use GitHub MCP tools for all issue operations
 
+## Sub-Agent Spawning
+
+This skill is a **heavy skill** — quality audits with all subtasks consume significant context. When the main agent needs a spec audit, consider spawning a sub-agent via the `task` tool:
+
+1. Main agent loads this dispatch document (~1,278 words)
+2. Main agent identifies which subtasks to run (baseline + conditional)
+3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use spec-auditor skill --issue N --task <subtask> with context: <session-context>")`
+4. Sub-agent loads: this SKILL.md + relevant task file(s) + required guidelines
+5. Sub-agent executes audit in isolation, returns findings as structured report
+6. Main agent receives findings — no full audit content in main context
+
+**Sub-agent context parameters:** Pass issue number, `GIT_OWNER`, `GIT_REPO` from session init.
+
 ## Cross-References
 
 - Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task)

@@ -27,7 +27,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ~400 |
 | `verify-blockers` | Check for blocking issues/dependencies | ~320 |
 | `verify-open-questions` | Check for unresolved questions in spec | ~370 |
-| `batch-approval-analysis` | Analyze interdependencies when multiple issues are approved simultaneously; produce dependency graph and execution plan | ~500 |
+| `batch-approval-analysis` | Analyze interdependencies when multiple issues approved simultaneously | ~500 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
 
 ## Invocation
@@ -44,182 +44,34 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is referenced when:
-   - User says `approved`, `go`, or similar authorization
-   - User asks about approval workflow
-   - Implementation is about to begin
-   - DO NOT prompt for invocation - the skill is triggered automatically
-
-2. **Pre-Implementation Verification:**
-   - Verify spec exists as GitHub Issue
-   - Verify spec has received explicit authorization
-   - Verify sub-issues structure (multi-task only)
-   - Check for blocking issues/updates
-   - **When multiple issues are approved together:** Invoke `batch-approval-analysis` task
-
-3. **Implementation Scope:**
-   - Authorization grants ONLY the specified phase/task
-   - HALT after completing authorized work
-   - Wait for explicit authorization for next phase/task
+1. **Automatic invocation (mandatory):** Triggered by `approved`/`go`, authorization questions, or implementation start. Never prompt for invocation.
+2. **Pre-Implementation Verification:** Verify spec exists as GitHub Issue, verify authorization, verify sub-issues (multi-task), check for blockers.
+3. **Implementation Scope:** Authorization grants ONLY the specified phase/task. HALT after completing authorized work.
+4. **Multi-task cascade:** When parent has sub-issues, authorization cascades to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
 
 ## Authorization Requirements
 
-### Mandatory Before ANY Code Change
-
 | Requirement | Description |
 |-------------|-------------|
-| **Spec exists as GitHub Issue** | No local fallback - GitHub Issues only |
-| **Explicit authorization** | User says `approved`, `go`, or `approved: N.M` — **OVERRIDES `needs-approval` label** |
+| **Spec exists as GitHub Issue** | No local fallback — GitHub Issues only |
+| **Explicit authorization** | User says `approved`, `go`, or `approved: N.M` — OVERRIDES `needs-approval` label |
 | **Open questions resolved** | No unresolved items in spec |
 | **Sub-issues verified** | Multi-task specs require phase-level sub-issues |
-
-### Authorization Does NOT Authorize
-
-- Creating a spec does NOT authorize implementation
-- Analyzing/investigating is NOT authorization
-- Answering questions is NOT authorization
-- `"Should I do X?"` is seeking permission, not receiving it
 
 ## Authorization Scope Rules
 
 | Rule | Scope |
 |------|-------|
-| **Issue-bound** | Authorization applies ONLY to the specific issue where it was given |
-| **Single-use** | Authorization for current phase/task only within that issue |
-| **Session-bound** | New session = new authorization required (no carryover) |
+| **Issue-bound** | Authorization applies ONLY to the specific issue |
+| **Session-bound** | New session = new authorization required |
+| **Single-use** | Authorization for current phase/task only |
 | **Plan-bound** | Changes to plan invalidate authorization |
 | **External input invalidates** | Bug reports, PR feedback require re-authorization |
 | **Revision ≠ implementation** | Spec updates don't authorize code changes |
-| **Reference ≠ authorization cascade** | Issue mentions in body/comments do NOT cascade authorization |
+| **Reference ≠ cascade** | Issue mentions in body/comments do NOT cascade |
 | **Confirmation ≠ authorization** | Confirming an observation does NOT authorize implementation |
 
-### Reference ≠ Authorization Cascade
-
-**Only formal sub-issue links (created via `github_sub_issue_write`) trigger authorization cascade.** Text references in issue bodies or comments do NOT.
-
-| Relationship | Authorization cascade? | GitHub feature |
-|---|---|---|
-| Parent → sub-issue (formal link via `github_sub_issue_write`) | ✅ YES | GitHub sub-issue UI shows link |
-| Bug report references spec (mention in body/comments) | ❌ NO | Mere text reference |
-| Issue depends on another issue (mentioned in body) | ❌ NO | Mere text reference |
-| Issue blocks another issue (GitHub keyword) | ❌ NO | Dependency, not authorization |
-
-**Verification step (MANDATORY):** Before cascading authorization, verify the sub-issue relationship exists via `github_issue_read(method=get_sub_issues)`. If the API returns empty for the parent, do NOT cascade — even if the parent mentions other issue numbers in its body.
-
-### Confirmation ≠ Authorization
-
-When a user confirms an observation or answers a clarifying question about agent behavior, that confirmation does NOT constitute authorization for referenced issues.
-
-| User says | Is this authorization? | Correct action |
-|-----------|----------------------|----------------|
-| "approved" or "go" | ✅ YES | Proceed with implementation |
-| "#123 approved" | ✅ YES | Proceed with implementation of #123 |
-| "yes, that's what happened" (confirming observation) | ❌ NO | Acknowledge, do NOT implement |
-| "correct" (answering clarifying question) | ❌ NO | Acknowledge, do NOT implement |
-| "sounds like we should X" (discussion conclusion) | ❌ NO | Stay in discussion mode |
-
-## Multi-Task Spec Authorization (CRITICAL)
-
-**When parent issue has sub-issues:** Authorization cascades to ALL sub-issues.
-
-| Authorization | Scope | Behavior |
-|---------------|-------|----------|
-| `#34 approved` (parent with sub-issues) | ALL sub-issues authorized | Complete ALL phases in sequence, HALT once at end |
-| `#39 approved` (single sub-issue) | That sub-issue only | Complete that phase, HALT after completion |
-| `approved: 1.2` (specific phase) | That phase only | Complete that phase, HALT after completion |
-
-**⚠️ PROHIBITED (Common Misinterpretation):**
-- 🚫 DO NOT halt after each phase of multi-task spec
-- 🚫 DO NOT ask for re-authorization between phases
-- 🚫 DO NOT treat sub-issues as separate authorization units
-
-**✅ REQUIRED Behavior:**
-1. User authorizes parent issue
-2. Verify: parent has sub-issues? → ALL sub-issues authorized (cascade)
-3. Complete Phase 2 (or resume from current phase)
-4. Continue to Phase 3, Phase 4, Phase 5, Phase 6
-5. Report ONCE at the end
-6. HALT ONCE after ALL phases complete
-
-**Exception: User explicitly names a phase**
-- If user says "Phase 2 only" or "approved: 1.2" → complete that phase ONLY, then HALT
-- The explicit phase restriction OVERRIDES the cascade
-
-**Rationale:**
-- Sub-issues exist for **tracking visibility**, not authorization gates
-- GitHub sub-issue view shows progress across all phases
-- Developer already approved the entire spec—redundant per-phase HALTs waste time
-- Sub-issue database IDs link phases to parent for GitHub's hierarchy view
-
-## Sub-Issue Creation Authorization
-
-**When a multi-task spec is approved and has no sub-issues yet, the authorization cascade covers sub-issue creation as a pre-implementation setup step. No separate authorization is needed.**
-
-### Authorization Cascade Table (Extended)
-
-| Authorization | Sub-issues Exist? | Action |
-|---------------|-------------------|--------|
-| `#34 approved` (parent) | Yes | Cascade to all, proceed with implementation |
-| `#34 approved` (parent) | No | Auto-create sub-issues, then cascade, then proceed with implementation |
-| `#39 approved` (single sub-issue) | N/A | That sub-issue only, complete and HALT |
-| `approved: 1.2` (specific phase) | N/A | That phase only, complete and HALT |
-
-**Sub-issue creation is NOT an implementation action.** It is a tracking/setup action that falls under the existing authorization scope. Creating GitHub Issues for phase tracking does not modify the codebase, does not change files, and does not require separate human approval.
-
-### Pre-Implementation Setup Steps (No Separate Authorization Required)
-
-| Step | Requires Separate Auth? | Why |
-|------|------------------------|-----|
-| Auto-creating sub-issues | ❌ NO | Tracking/setup action, covered by parent authorization |
-| Linking sub-issues to parent | ❌ NO | Part of sub-issue creation workflow |
-| Proceeding to implementation after auto-creation | ❌ NO | Parent authorization continues to implementation |
-
-### Prohibited Halts
-
-- 🚫 PROHIBITED: Halting after authorization to ask for separate permission to create sub-issues. Sub-issue creation is a setup step, not an implementation action requiring separate authorization.
-- 🚫 PROHIBITED: Treating 'empty sub-issues' as a blocking gate that requires human intervention. The auto-create workflow resolves empty sub-issues without human involvement.
-- ✅ REQUIRED: When `get_sub_issues` returns empty for an approved multi-task spec, auto-create sub-issues and proceed to implementation in the same session.
-
-## Batch Approval Analysis (CRITICAL)
-
-**⚠️ When multiple issues are approved simultaneously, dependency analysis is MANDATORY. Skipping it is a CRITICAL GUIDELINE VIOLATION.**
-
-### When to Invoke
-
-This analysis MUST be performed whenever TWO OR MORE issues are approved at the same time. Single-issue approvals proceed directly to the standard workflow.
-
-### Dependency Categories
-
-| Category | Description | Action |
-|----------|-------------|--------|
-| **Must-precede** | Issue A MUST complete before B can start | Execute A before B (serial) |
-| **Independent** | A and B can run in parallel | Group for parallel dispatch |
-| **Conflict-risk** | A and B touch overlapping files | Serialize or coordinate |
-| **Meta/Non-code** | Issue describes behavior, not code changes | Exclude from implementation |
-
-### Analysis Procedure
-
-1. Read all approved issues (body + comments)
-2. Classify each issue by dependency category
-3. Build dependency graph with execution order
-4. Identify parallel-safe groups for sub-agent dispatch
-5. Present the complete analysis to the developer in chat (MANDATORY — not hidden in reasoning)
-6. Execute according to the dependency order
-
-### Execution Strategy
-
-| Strategy | When | How |
-|----------|------|-----|
-| **Sequential** | Must-precede chain exists | Execute in dependency order |
-| **Parallel** | Independent issues | Use `subagent-driven-development` |
-| **Hybrid** | Mix of both | Serial for must-precede, parallel for independent groups |
-| **Exclude** | Meta/non-code issues | Report exclusion with reason |
-
-**See `batch-approval-analysis` task for the complete procedure, classification heuristics, and output format.**
-
 ## Post-Implementation Workflow
-
-### After Implementation Completes
 
 1. Push feature branch to remote
 2. Generate compare URL for review
@@ -227,144 +79,20 @@ This analysis MUST be performed whenever TWO OR MORE issues are approved at the 
 4. HALT — do NOT create PR without explicit instruction
 5. WAIT for "create a PR" instruction
 
-## Exceptions (No Authorization Required)
+## Sub-Agent Spawning
 
-| Action | Authorization Needed? |
-|--------|----------------------|
-| Writing to `./tmp/` | NO - scratchpad exempt |
-| Creating/updating spec issues | NO - spec work exempt |
-| Updating STATUS markers | NO - tracking exempt |
-| Analyzing code (read-only) | NO - investigation exempt |
+This skill is a **heavy skill** — its task files contain significant detail that pollutes context. When the main agent needs authorization verification with re-evaluation, consider spawning a sub-agent via the `task` tool:
 
-## Skill Enforcement Mechanism
+1. Main agent loads this dispatch document (~597 words)
+2. Main agent identifies the needed task
+3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use approval-gate skill --task <task-name> with context: issue=#N, <session-context>")`
+4. Sub-agent loads: this SKILL.md + relevant task file + required guidelines
+5. Sub-agent executes verification in isolation, returns authorization result
+6. Main agent receives result — no full approval-gate content in main context
 
-**⚠️ CRITICAL: Skills MUST enforce authorization — guidelines alone are insufficient.**
-
-### Why Skills Must Enforce
-
-- **Guidelines document** what agents should do
-- **Skills contain code** that actually executes
-- Agents have proven to bypass documented guidelines
-- Enforcement in code prevents bypass
-
-### Which Skills MUST Enforce
-
-| Skill | Authorization Check Required |
-|-------|------------------------------|
-| `git-workflow` `--task pre-work` | ✅ YES - Check explicit "approved"/"go" before branch creation |
-| `git-workflow` `--task pr-creation` | ✅ YES - Check explicit "create a PR" before PR creation |
-| `git-workflow` `--task review-prep` | ❌ NO - Automatic after implementation |
-| `git-workflow` `--task cleanup` | ❌ NO - Automatic after PR merge confirmed |
-| All other skills | ❌ NO - Not git operation related |
-
-### What Skills MUST Check
-
-**For `pre-work` task:**
-1. Get issue context (issue number)
-2. Query GitHub Issue for labels and comments
-3. Check for explicit authorization in comments
-4. Check for `needs-approval` label
-5. Apply enforcement matrix:
-   - Explicit auth present → PROCEED
-   - Label + no auth → HALT
-   - No label + no auth → HALT
-   - Conditional phrase → HALT (not explicit)
-
-**For `pr-creation` task:**
-1. Check if user said an explicit PR creation phrase ("create a PR", "make a PR", "push and create PR", "let's get a PR up", "create a pull request", "PR", "PR #NNN")
-2. Apply enforcement matrix:
-   - Explicit PR phrase present → PROCEED
-   - "approved" only → HALT (auth for implementation, not PR)
-   - Implementation complete → HALT (need explicit PR instruction)
-
-### What Does NOT Authorize
-
-| Phrase | Why NOT Authorization |
-|--------|----------------------|
-| "continue" | Ambiguous - could mean analysis |
-| "if you have next steps" | CONDITIONAL - not explicit |
-| "proceed with X" | Ambiguous without "approved"/"go" |
-| Implementation complete | NOT instruction to create PR |
-
-### Enforcement Messages
-
-**Missing authorization:**
-```
-Authorization required before proceeding.
-
-Issue #N has needs-approval label and no explicit 'approved' or 'go' comment.
-
-To authorize: Say 'approved' or 'go' in a comment.
-```
-
-**PR not authorized:**
-```
-PR creation requires explicit instruction.
-
-User said 'approved' which authorizes implementation ONLY, not PR creation.
-
-To create PR: Say 'create a PR', 'make a PR', 'PR', or 'PR #NNN' explicitly.
-```
-
-## Analysis → Implementation Authorization Boundary
-
-**Finding a bug during analysis does NOT authorize fixing it.**
-
-**This is a CRITICAL behavioral violation, not a one-off mistake. See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete rule, authorization matrix, and self-correction protocol.**
-
-### Bug Discovery ≠ Bug Fixing Authorization
-
-| Discovery Action | Authorized? | Action Required |
-|-----------------|-------------|-----------------|
-| Found a bug during analysis | ✅ YES | Create bug report issue |
-| Read-only analysis of bug | ✅ YES | Report findings |
-| Edit code to fix the bug | 🚫 NO | STOP, create spec, wait for authorization |
-| Create branch for fix | 🚫 NO | STOP, wait for authorization |
-| Commit fix code | 🚫 NO | STOP, wait for authorization |
-
-### Self-Correction When Catching Unauthorized Edits
-
-1. **STOP** — do not proceed
-2. **REVERT** — `git checkout -- <affected-files>`
-3. **REPORT** — document as factual observation
-4. **HALT** — wait for explicit authorization
-
-## Revision Revokes Approval
-
-**Any modification to a spec or task document MUST immediately revoke approval.**
-
-### Status Transition
-
-When a spec is modified:
-1. **Status transitions to pending**: `STATUS: X.Y` → `STATUS: X.Y (REVISED - NEEDS APPROVAL)`
-2. **Label applied**: Add `needs-approval` label to the issue
-3. **Agent MUST HALT**: Do NOT proceed with implementation
-4. **Fresh authorization required**: New explicit approval needed before implementation
-
-### Exempt from Approval Revocation
-
-- STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
-- Progress comments added to issue
-- Bug report additions (separate from spec content changes)
-
-## Bug Report Response Protocol
-
-When a bug report requires code changes:
-
-1. Add `needs-approval` label to the issue
-2. Post additional spec comment documenting the bug
-3. HALT immediately — do NOT implement
-4. Wait for explicit `go` or `approved`
+**Sub-agent context parameters:** Pass issue number, `GIT_OWNER`, `GIT_REPO` from session init.
 
 ## Cross-References
 
-- Related skills: `git-workflow` (branch operations, cleanup with parent closure check), `pr-creation-workflow` (PR timing), `issue-review` (reads authorization status in gather task)
-- Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md` (parent closure pre-check)
-
-## Parent Closure Pre-Check Reference
-
-Parent/child issue closure verification is handled in:
-- **`git-workflow` skill** → `cleanup` task → Sub-issue double-check
-- **`124-github-archive-workflow.md`** → "Parent Closure Pre-Check" section
-
-The approval-gate verifies **pre-implementation** authorization. Parent closure verification happens **post-merge** during cleanup.
+- Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
+- Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md`

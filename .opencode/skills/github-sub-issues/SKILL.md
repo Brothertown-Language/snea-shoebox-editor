@@ -8,120 +8,40 @@ compatibility: opencode
 
 # GitHub Sub-Issues Workflow
 
-## Role
+## Overview
 
-You are a Sub-Issue Workflow enforcer. Your focus is ensuring multi-task specs have proper sub-issue structure before implementation begins.
+Ensures multi-task specs have proper sub-issue structure before implementation begins. Sub-issues track phases as separate GitHub Issues linked to the parent, providing state tracking, progress visibility, and proper parent-child relationships.
 
-## Single-Task vs Multi-Task Exemption
+## Tasks
 
-### ⚠️ SINGLE-TASK EXEMPTION
+| Task | Purpose | Words |
+|------|---------|-------|
+| `create-sub-issue` | Create and link a single sub-issue to parent | ~300 |
+| `link-sub-issue` | Link an existing issue as sub-issue to parent | ~200 |
+| `track-hierarchy` | Verify and manage parent-child relationships | ~250 |
 
-**Single-task issues do NOT require sub-issues.**
+## Invocation
 
-A spec is "single-task" if:
-- Exactly ONE implementation task/phase
-- No task decomposition needed
-- Entire spec implementable in one unit of work
+- `/skill github-sub-issues --task create-sub-issue` - Create a phase-level sub-issue
+- `/skill github-sub-issues --task link-sub-issue` - Link existing issue as sub-issue
+- `/skill github-sub-issues --task track-hierarchy` - Verify hierarchy structure
+- `/skill github-sub-issues` - Overview only
 
-**Example - Single-task (NO sub-issue required):**
-```
-SPEC #100: Fix typo in README
-- One task: Fix the typo
-- No decomposition needed
-```
+## Single-Task Exemption
 
-**Example - Multi-task (SUB-ISSUES REQUIRED):**
-```
-SPEC #101: Add user authentication
-- Phase 1: Database schema
-- Phase 2: API endpoints
-- Phase 3: UI components
-```
+Single-task issues do NOT require sub-issues. A spec is "single-task" if it has exactly ONE implementation task/phase with no decomposition needed. If single-task: proceed without sub-issue verification. If multi-task: sub-issues are MANDATORY.
 
-If single-task: Proceed without sub-issue verification.
-If multi-task: Sub-issues are MANDATORY.
-
----
-
-## Sub-Issue Verification Gate
-
-### ⚠️ MANDATORY CHECK (Before Implementation)
+## Sub-Issue Verification Gate (MANDATORY Before Implementation)
 
 1. Call `github_issue_read method=get_sub_issues` on parent issue
-2. **If empty AND multi-task:**
-   - AUTO-CREATE sub-issues (see workflow below)
-   - DO NOT BLOCK for manual creation
-3. **If sub-issues exist:**
-   - Verify phase being implemented is among them
-   - Proceed with implementation
+2. **If empty AND multi-task:** AUTO-CREATE sub-issues immediately, then proceed — no separate authorization needed
+3. **If sub-issues exist:** Verify phase being implemented is among them, proceed
 
-**Authorization for the parent spec covers sub-issue creation.** When `get_sub_issues` returns empty for an approved multi-task spec, auto-create sub-issues immediately and proceed — no separate authorization needed.
-
-### 🚫 FORBIDDEN
-
-- Implementing phase that exists only as text in parent issue body
-- Proceeding **to implementation** when `get_sub_issues` returns empty (for multi-task specs) **without creating sub-issues first**
-- Assuming markdown checkboxes = task tracking
-- Creating step-level sub-issues (create PHASE-level only)
-
----
-
-## Auto-Create Workflow
-
-**When multi-task spec has NO sub-issues:**
-
-**This step is covered by the parent spec's authorization. No separate 'approved' or 'go' is needed.**
-
-### ⚠️ CONTEXT EFFICIENCY (CRITICAL)
-
-**API responses from `github_issue_write` and `github_sub_issue_write` contain the full parent issue body (~8KB each). Creating + linking 8 sub-issues produces 16 responses consuming ~128KB of context — enough to block implementation.**
-
-**MANDATORY: Extract ONLY the minimal data needed from API responses. Immediately discard the full response body.**
-
-From each `github_issue_write` response, capture ONLY:
-- Issue number (`.number`)
-- Database ID (`.id`)
-
-From each `github_sub_issue_write` response, capture ONLY:
-- Confirmation that the link succeeded
-
-**DO NOT** read, summarize, or reference the full body text from creation responses. The parent issue body is already in context from the initial read. Receiving it again from each API call wastes context for zero new information.
-
-### Efficient Auto-Create Procedure
-
-```
-For each PHASE in spec:
-  1. Create issue: github_issue_write(method="create",
-     title="[Task: #N] <phase-description>")
-     → CAPTURE ONLY: issue number + database ID
-     → DISCARD: full body, labels, all other fields
-  2. Link: github_sub_issue_write(method="add",
-     issue_number=N, sub_issue_id=db_id)
-     → CAPTURE ONLY: link confirmed (yes/no)
-     → DISCARD: full response body
-
-After all sub-issues created:
-  Post comment: "Created X sub-issues for phase tracking"
-  List issue numbers and titles (from local knowledge, NOT from API responses)
-  Proceed to implement first phase
-```
-
-**⚠️ DATABASE ID REQUIREMENT:**
-- Use `.id` field from response (e.g., `4129879155`)
-- NOT the issue number (e.g., `10`)
-- Get via `github_issue_read method=get` response
-
-### Prohibited Halts
-
-- 🚫 PROHIBITED: Halting to ask 'should I create sub-issues?' when the parent spec is already approved. Sub-issue creation is automatic.
-- 🚫 PROHIBITED: Treating sub-issue creation as a separate implementation phase requiring its own authorization cycle.
-- ✅ REQUIRED: Auto-create sub-issues immediately upon finding empty sub-issues on an approved multi-task spec, then proceed to implementation.
-
----
+**Authorization for the parent spec covers sub-issue creation.** When `get_sub_issues` returns empty for an approved multi-task spec, auto-create and proceed.
 
 ## Phase-Level vs Step-Level
 
-**Sub-issues = PHASES, not steps.**
+Sub-issues = PHASES, not steps. Phases are approval units; steps are implementation details within phases.
 
 ```
 ✅ CORRECT: Phase-level sub-issues
@@ -131,218 +51,38 @@ SPEC #100: Feature Name
 └── Task #103: [Task: #100] Build UI components
 
 ❌ WRONG: Step-level sub-issues (too granular)
-SPEC #100: Feature Name
-├── Task #101: [Task: #100] Step 1.1 - Create table
-├── Task #102: [Task: #100] Step 1.2 - Add index
-└── Task #103: [Task: #100] Step 1.3 - Migrate data
+├── Task #101: Step 1.1 - Create table
+├── Task #102: Step 1.2 - Add index
 ```
-
-**Rationale:** Phases are approval units. Steps are implementation details within phases.
-
----
 
 ## Title Format
 
-Sub-issue titles MUST be descriptive. Use the WHAT, not the TYPE.
+Format: `[Task: #<parent-number>] <descriptive-title>`
 
-### ✅ REQUIRED Format
+Titles MUST describe WHAT the task accomplishes, not just the phase type. "Phase 1 - Implementation" is PROHIBITED. "[Task: #100] Add OAuth2 authentication" is correct.
 
-```
-[Task: #<parent-number>] <descriptive-title>
-```
+## Context Efficiency (CRITICAL)
 
-Where `<descriptive-title>` describes WHAT the task accomplishes, not just the phase type.
+API responses from `github_issue_write` and `github_sub_issue_write` contain full parent issue body (~8KB each). Creating + linking 8 sub-issues produces ~128KB of context — enough to block implementation.
 
-### Examples
+**MANDATORY:** Extract ONLY issue number and database ID from API responses. Discard full response body immediately.
 
-**✅ GOOD - Descriptive titles:**
-- `[Task: #100] Add OAuth2 authentication to API`
-- `[Task: #100] Create user registration endpoint`
-- `[Task: #100] Run integration test suite`
-- `[Task: #100] Review API security changes`
+## Database ID Requirement
 
-**❌ BAD - Boilerplate phase names:**
-- `[Task: #100] Phase 1 - Implementation` ❌ (no description, only type)
-- `[Task: #100] Phase 2 - Testing` ❌ (no description, only type)
-- `[Task: #100] Phase 3 - Review` ❌ (no description, only type)
+Use the `.id` field from response (e.g., `4129879155`), NOT the issue number (e.g., `10`). Get via `github_issue_read method=get` response.
 
-**Why:** 
-- "Implementation", "Testing", "Review" describe the TYPE of work, not WHAT is being done
-- GitHub sub-issue view already shows hierarchy - no need for "Phase X" prefix
-- Descriptive titles improve scannability without opening issues
+## STATUS Gate Verification
 
-### Extraction Rule
+Before implementing ANY subtask: get parent STATUS, extract authorized subtask, verify match, report decision to user. STATUS format: `STATUS: X.Y` where X = phase, Y = subtask within phase.
 
-For multi-phase specs, extract the descriptive content from each phase:
+## Prohibited Halts
 
-**Spec:**
-```
-## Phase 1: Add OAuth2 authentication (Gated)
-## Phase 2: Create user registration endpoint (Gated)
-## Phase 3: Review API security changes (Gated)
-```
+- Halting to ask "should I create sub-issues?" when parent spec is already approved
+- Treating sub-issue creation as a separate implementation phase
+- Implementing a phase that exists only as text in parent issue body
 
-**Sub-issue titles:**
-1. `[Task: #100] Add OAuth2 authentication`
-2. `[Task: #100] Create user registration endpoint`
-3. `[Task: #100] Review API security changes`
+## Cross-References
 
-Use the phase description AFTER the colon/number, not the phase type.
-
-### ⚠️ BOILERPLATE TITLE PROHIBITION (CRITICAL)
-
-Sub-issue titles that describe generic activities without specifying the concern are PROHIBITED:
-
-| Pattern | Status | Reason |
-|---------|--------|--------|
-| `[Task: #N] Phase 1` | PROHIBITED | No concern described |
-| `[Task: #N] Implementation` | PROHIBITED | Activity, not concern |
-| `[Task: #N] Task 1` | PROHIBITED | Placeholder, no meaning |
-| `[Task: #N] Do the work` | PROHIBITED | Meaningless |
-
-### Validation
-
-| Pattern | Status | Reason |
-|---------|--------|--------|
-| Single-word generic activity | BOILERPLATE-TITLE | No concern boundary |
-| "Phase N" without description | BOILERPLATE-TITLE | Placeholder, not meaningful |
-| "Implementation" alone | BOILERPLATE-TITLE | Activity, not concern |
-| Activity + specific concern | ACCEPTABLE | Describes WHAT is being done |
-
-**Enforcement:** Use the `BOILERPLATE-TITLE` problem class in spec-auditor for violations.
-
----
-
-## Correct Hierarchy
-
-Each sub-issue MUST:
-1. Be a separate GitHub Issue (using `.id` for database ID)
-2. Be linked via `github_sub_issue_write method=add`
-3. Be visible in parent's Task List (GitHub UI)
-
----
-
-## Why This Matters
-
-| Problem | Solution |
-|---------|----------|
-| Markdown checkboxes have no state tracking | Sub-issues provide proper parent-child relationships |
-| Cannot track progress across sessions | Sub-issues persist in GitHub |
-| Cannot see what's pending | GitHub sub-issue view shows remaining children |
-| Premature parent closure loses visibility | Parent stays open until all children complete |
-
----
-
-## Guideline References
-
-| Guideline | Section |
-|-----------|---------|
-| `010-approval-gate.md` | Sub-issue Verification Gate |
-| `120-github-issue-first.md` | Spec Tracking: GitHub Issues & Sub-Issues |
-| `000-critical-rules.md` | Critical Violation: Sub-issue Structure Bypass |
-
----
-
-## Templates
-
-- **Parent Issue Orchestrator**: `.opencode/skills/templates/PARENT-ISSUE-TEMPLATE.md`
-- **Sub-Issue Task**: `.opencode/skills/templates/SUB-ISSUE-TEMPLATE.md`
-
-Use these templates when creating new parent/child issue structures.
-
----
-
-## STATUS Gate Verification (CRITICAL)
-
-### Single Subtask at a Time
-
-**The architecture enforces sequential execution:**
-
-1. **Parent Issue orchestrates**: Parent issue tracks which subtask is "active" via STATUS field
-2. **STATUS Format**: `STATUS: X.Y` where X = phase, Y = subtask within phase
-3. **Authorization Gate**: Agent can ONLY implement subtask matching current STATUS
-4. **Sequential Completion**: After subtask completes → STATUS advances → Next subtask becomes eligible
-
-### STATUS Verification Protocol
-
-Before implementing ANY subtask:
-
-1. **Get parent STATUS:**
-   ```python
-   parent = github_issue_read(method="get", issue_number=parent_issue)
-   # Parse STATUS from body
-   # STATUS format: "STATUS: X.Y" or "STATUS: completed"
-   # If STATUS not found, default to first subtask (1.1)
-   ```
-
-2. **Extract authorized subtask:**
-   - "approved: 1.2" → subtask 1.2
-   - "approved" (no number) → check STATUS for current phase
-   - If STATUS not found → default to first subtask (1.1)
-
-3. **Verify match:**
-   - If authorized for X.Y → use X.Y (explicit override)
-   - If "approved" (no number) AND STATUS found → use STATUS value
-   - If "approved" (no number) AND STATUS not found → use first subtask (1.1)
-   - If subtask not in sub-issues list → HALT, report available subtasks
-
-4. **Report decision (MANDATORY - no silent halts):**
-   ```markdown
-   **STATUS Gate Verification:**
-   - Authorization: "approved" (no phase specified)
-   - STATUS field: X.Y (or "not found, defaulting to first subtask")
-   - Sub-issue: #NNN
-   - Proceeding with implementation
-   ```
-
-5. **If mismatch:**
-   POST report: "STATUS mismatch: authorized for X.Y but STATUS is Z.W. Please update STATUS or authorize correct subtask."
-
-### Why STATUS Gate Matters
-
-| Problem | Solution |
-|---------|----------|
-| Two agents start simultaneously | Only one STATUS authorized at a time |
-| Git branch conflicts | One subtask = one branch = no race |
-| File edit races | Only one active subtask = no conflicts |
-| Stash races | Sequential = no stash collision |
-
-### Forbidden Actions
-
-- Implementing when STATUS doesn't match authorized subtask
-- Parallel execution of subtasks
-- Proceeding without STATUS verification
-- Skipping STATUS gate for "quick" subtasks
-- **Halting silently** - MUST report STATUS gate decision to user
-- **Assuming failure without reporting** - MUST explain what was checked and outcome
-
----
-
-## Integration Points
-
-| Skill/Guideline | When |
-|-----------------|------|
-| `git-workflow` | Before starting implementation |
-| `010-approval-gate.md` | Pre-implementation check |
-| `120-github-issue-first.md` | Issue structure |
-| `124-github-archive-workflow.md` | Parent/child closure |
-
----
-
-## Example Workflow
-
-```
-User: "approved: 1" for SPEC #100 (multi-task)
-
-Agent:
-1. Calls github_issue_read(method="get_sub_issues", issue_number=100)
-2. Result: Empty []
-3. Spec has 3 phases → multi-task
-4. AUTO-CREATE:
-   - Issue #101: [Task: #100] Phase 1 - Database schema
-   - Issue #102: [Task: #100] Phase 2 - API endpoints
-   - Issue #103: [Task: #100] Phase 3 - UI components
-5. Links each to parent via github_sub_issue_write
-6. Posts comment: "Created 3 sub-issues for phase tracking"
-7. Proceeds to implement Phase 1
-```
+- Related skills: `git-workflow` (before starting implementation), `approval-gate` (pre-implementation check)
+- Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`
+- Templates: `.opencode/skills/templates/PARENT-ISSUE-TEMPLATE.md`, `.opencode/skills/templates/SUB-ISSUE-TEMPLATE.md`
