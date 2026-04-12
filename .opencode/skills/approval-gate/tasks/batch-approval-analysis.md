@@ -169,11 +169,72 @@ The `worktree_path` is derived from the branch name by replacing `/` with `-`:
 
 The `dev_base_hash` ensures all parallel worktrees start from the same base commit on `dev`.
 
+### Step 8: Write Batch State File
+
+After the execution plan is presented and accepted, write a batch state file that persists the plan for sub-agent dispatch:
+
+```bash
+mkdir -p .opencode/tmp
+```
+
+**File:** `.opencode/tmp/batch-<timestamp>.md`
+
+**Contents:**
+```markdown
+# Batch Execution Plan
+
+**Session:** <timestamp>
+**Authorized Issues:** #A, #B, #C
+**Authorization Context:** User said "approved" on <date>
+
+## Execution Order
+
+1. #A — <title> (touches <files>)
+2. #B — <title> (depends on #A, touches <files>)
+3. #C — <title> (independent, touches <files>)
+
+## Completed
+
+- [ ] #A — branch: <name>, status: pending
+- [ ] #B — branch: <name>, status: pending
+- [ ] #C — branch: <name>, status: pending
+
+## Results
+
+(Agent appends completion summaries here as issues finish)
+```
+
+**Key properties:**
+- Session-scoped via timestamp — stale files are detectable
+- Survives context turnover — agent can re-read after HALT
+- Hybrid: in-line context passed to each sub-agent + file backup for recovery
+- Cleaned up after batch completes (or on new session start)
+
+### Step 9: Yield to batch-orchestrate
+
+After the batch state file is written, yield control to `implementation-workflow --task batch-orchestrate`:
+
+```
+/skill implementation-workflow --task batch-orchestrate
+```
+
+**batch-orchestrate** reads the batch state file and handles:
+- Creating worktrees for the batch
+- Dispatching sub-agents for each issue
+- Collecting results and updating batch state
+- Running review-prep after all issues complete
+
+This handoff ensures:
+- No HALTs between issues in the batch
+- Each sub-agent gets isolated context
+- The orchestrator stays clean — no implementation pollution
+- Batch state survives context turnover
+
 ## Single-Issue Shortcut
 
-**When only ONE issue is approved:** Skip dependency analysis entirely. Proceed directly to standard `verify-authorization` → implementation workflow.
+**When only ONE issue is approved:** Skip dependency analysis entirely. The `batch-orchestrate` task handles single-issue dispatch as the default code path (single-item batch with one sub-agent).
 
-This task is ONLY invoked when TWO OR MORE issues are approved together.
+**This task is ONLY invoked when TWO OR MORE issues are approved together for full dependency analysis.** For single issues, the flow goes directly: `verify-authorization` → `implementation-workflow/orchestrate` → `batch-orchestrate`.
 
 ## Classification Detail
 

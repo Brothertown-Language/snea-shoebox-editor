@@ -12,9 +12,14 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
-### spec/env-loader
+### spec/sub-agent-batch-orchestration
 
-- **Env-Loader Plugin** - New `.opencode/plugins/env-loader.ts` plugin that reads the project root `.env` file and injects all key-value pairs into shell sessions via the `shell.env` hook. Handles quoted values, inline comments, graceful degradation on missing files, and flags a security warning if `.env` is not gitignored.
+- **Sub-Agent-First Implementation with Batch Orchestration** - Make sub-agent dispatch the default pattern for all implementations, with batch orchestration for multi-issue approvals
+- NEW: `batch-orchestrate` task in implementation-workflow skill for single and multi-issue dispatch
+- UPDATE: `orchestrate` task now dispatches to `batch-orchestrate` instead of implementing directly
+- UPDATE: `batch-approval-analysis` task adds batch state file writing and yield to `batch-orchestrate`
+- ADD: Batch authorization carry-forward rule to `010-approval-gate.md`
+- ADD: "Main Agent Implements Directly" critical violation to `000-critical-rules.md`
 
 ### spec/purge-todowrite
 

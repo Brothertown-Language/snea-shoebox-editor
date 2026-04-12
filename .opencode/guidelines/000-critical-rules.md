@@ -182,6 +182,19 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 - If superseding issue exists: SILENTLY HALT, report conflict, wait for direction
 - If stale: REVISE spec, report revision, HALT for approval — never implement stale without revision
 
+## Critical Violation: Main Agent Implements Directly
+
+**⚠️ The main agent implementing files directly instead of dispatching to sub-agents is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `implementation-workflow` skill `--task batch-orchestrate` for the complete sub-agent dispatch workflow.**
+
+- 🚫 FORBIDDEN: Main agent editing implementation files directly during batch orchestration
+- 🚫 FORBIDDEN: Bypassing batch-orchestrate for single-issue dispatch
+- 🚫 FORBIDDEN: Code-path divergence between single and batch issue handling
+- ✅ REQUIRED: All implementation dispatches through `batch-orchestrate` — single issue is a single-item batch
+- ✅ REQUIRED: Main agent only orchestrates — never edits implementation files
+- ✅ REQUIRED: Context window stays clean for orchestration decisions
+
 ## Auditor Skills Enforcement
 
 **⚠️ MANDATORY: Run `spec-auditor` when auditing specs. NO SKIPPING.**

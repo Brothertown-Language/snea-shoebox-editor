@@ -57,48 +57,68 @@ ready_for: "implementation"
 
 **Intelligence note:** Format matches what implementation needs (branch name, clean state).
 
-### Step 3: Invoke Implementation Subagent
+### Step 3: Dispatch Implementation via batch-orchestrate
 
 **⚠️ PRE-IMPLEMENTATION CHECK (CRITICAL):**
 
-Before invoking the implementation subagent, verify:
+Before dispatching, verify:
 
 1. **Bug-discovery guardrail**: Is this implementation for a bug discovered during other work? If yes, HALT — bug discovery does NOT authorize implementation. Create an issue and wait for explicit authorization.
 2. **Spec exists**: Verify the issue has a spec that was explicitly approved.
 3. **Authorization confirmed**: Verify the user said "approved" or "go" for this specific issue.
 
-If ANY check fails → HALT and report. Do NOT invoke the implementation subagent.
+If ANY check fails → HALT and report. Do NOT dispatch.
 
-**Context passed to subagent:**
-```yaml
-branch: "spec/workflow-skills-integration"
-issue: 77
-task: "Implement Phase 1 of spec"
-working_tree_clean: true
+**⚠️ SUB-AGENT DISPATCH IS THE DEFAULT (CRITICAL):**
+
+The main agent does NOT implement directly. All implementation is dispatched to sub-agents via `batch-orchestrate`. This ensures:
+- Context window stays clean for orchestration decisions
+- Each issue gets isolated context
+- Batch state is properly managed
+- No code-path divergence between single and batch dispatch
+
+**For single-issue dispatch:**
+Invoke `batch-orchestrate` task, which handles single-item batch as the default code path.
+
+**For multi-issue dispatch:**
+This was already handled by `batch-approval-analysis`, which wrote the batch state file. Invoke `batch-orchestrate` to process all issues.
+
+**Redirect to batch-orchestrate:**
+```
+/skill implementation-workflow --task batch-orchestrate
 ```
 
-**Implementation subagent responsibilities:**
-- Read spec details
-- Edit/create files
-- Make WIP commits as needed (calls `git-workflow --task commit-prep` directly)
-- Report progress
+**batch-orchestrate responsibilities:**
+- Create or read batch state file
+- Dispatch sub-agent for each issue in execution order
+- Collect results from each sub-agent
+- Update batch state with completion summaries
+- Run review-prep after all issues complete
+- Report and HALT
 
-**Expected yield from implementation:**
+**Sub-agent dispatch context (passed by batch-orchestrate to each sub-agent):**
 ```yaml
-status: success | failure
-files_changed:
-  - path: ".opencode/skills/new-skill/SKILL.md"
-    action: "created"
-  - path: ".opencode/dispatch-table.yaml"
-    action: "modified"
-commits:
-  - hash: "abc123"
-    message: "WIP: Phase 1 core skills"
-summary: "Created 4 new skills, updated dispatch table"
-ready_for: "review"
+batch:
+  plan_file: ".opencode/tmp/batch-<timestamp>.md"
+  authorized_issues: [#A]
+  completed_issues: []
+  prior_results: ""
+issue: #<N>
+spec: "<full spec body>"
+authorization: "User approved #N on <date>"
+env_vars:
+  WORKTREE_PATH: ".worktrees/spec-<name>"
+  BRANCH_NAME: "spec/<name>"
+  GIT_OWNER: "<from-session>"
+  GIT_REPO: "<from-session>"
 ```
 
-**Intelligence note:** Format provides what review-prep needs (files changed, commit summary).
+**Each sub-agent runs the full implementation pipeline:**
+- Uses `implementation-workflow --task orchestrate` internally
+- Makes WIP commits as needed
+- Runs `verification-before-completion --task verify`
+- Runs `finishing-a-development-branch --task checklist`
+- Returns structured result: `{status, files_changed, summary}`
 
 ### Step 3.5: Verification Gate (MANDATORY, NO DECISION POINT)
 
