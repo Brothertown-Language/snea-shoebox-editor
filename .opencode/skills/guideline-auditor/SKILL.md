@@ -61,7 +61,7 @@ When reviewing each guideline file, also check for potential context overflow is
 - **Wordy preamble or rationale**: Explanatory prose embedded in a directive file that could be trimmed or moved to a
   separate reference doc, freeing context budget for actionable rules.
 - **Repetitive elaboration**: The same constraint restated multiple times within a single file in slightly different
-  words, inflating token count without adding clarity.
+  words, inflating word count without adding clarity.
 
 For each `CONTEXT-OVERFLOW` issue, the report must include:
 

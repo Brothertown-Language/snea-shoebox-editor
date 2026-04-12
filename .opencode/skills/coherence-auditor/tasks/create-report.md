@@ -38,10 +38,10 @@ Scope: .opencode/guidelines/[, .opencode/skills/]
 <List each issue with file, issue class, priority, status, action>
 
 ## Baseline Metrics (maintenance mode only)
-- Total guideline tokens: N
-- Total skill tokens: N
-- Combined tokens: N
-- Drift from baseline: <+/-N tokens> (<+/-N%>)
+- Total guideline words: N
+- Total skill words: N
+- Combined words: N
+- Drift from baseline: <+/-N words> (<+/-N%>)
 ```
 
 ### Step 2: Report to Chat

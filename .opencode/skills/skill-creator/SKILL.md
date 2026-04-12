@@ -57,7 +57,7 @@ Applies to NEW skills AND EDITS to existing skills. No exceptions — not for "s
 1. **Description field:** "Use when..." format, triggering conditions only, NO workflow summaries
 2. **Keyword coverage:** Include error messages, symptoms, synonyms, tool names
 3. **Descriptive naming:** Active voice, verb-first
-4. **Token efficiency:** Move details to references, use cross-references
+4. **Word efficiency:** Move details to references, use cross-references
 5. **Target word counts:** getting-started <150, frequently-loaded <200, other skills <500
 
 ## Anti-Patterns
@@ -69,6 +69,34 @@ Applies to NEW skills AND EDITS to existing skills. No exceptions — not for "s
 | Code in flowcharts | Can't copy-paste | Markdown code blocks |
 | Generic labels | Lack semantic meaning | Descriptive names |
 | Workflow in description | Agents follow description, skip body | Triggering conditions only |
+
+## Measurement Standard
+
+Word count is the universal unit for skill size measurement. Use `wc -w` as the canonical measurement method.
+
+- **Why words, not tokens:** Token counts vary by tokenizer, model, and encoding. Word counts are stable, reproducible, and model-agnostic.
+- **Why words, not lines:** Line length varies by formatting conventions. A 40-line function and a 100-word function are not comparable — words measure semantic density.
+- **Measurement command:** `wc -w <file>` — available on every platform, no dependencies.
+- **Skill metadata:** Report size in words (e.g., `| Task | Purpose | Words |` table in SKILL.md).
+- **Size targets:** getting-started <150 words, frequently-loaded <200 words, other skills <500 words.
+
+## Context Window Hygiene
+
+Strongly encourage sub-agents and sub-tasks for skill operations that risk consuming significant context.
+
+- **Sub-task isolation:** Skills that perform analysis, audits, or multi-step workflows should dispatch work to sub-tasks. The main session receives a minimal result, not intermediate reasoning.
+- **Why:** LLM context windows are finite. A skill that consumes 2000 words of intermediate reasoning in the main session leaves less room for subsequent work. Sub-tasks isolate that consumption.
+- **Pattern:** Skill invocation spawns a sub-task → sub-task processes and produces compact result → main session receives result only.
+- **When to use sub-tasks:** Any skill task exceeding ~300 words of output, any multi-file analysis, any workflow with 3+ sequential operations.
+
+## Correctness-First Economics
+
+GPU/CPU billing is flat-rate per inference, not per word. There is no economic incentive to be concise at the expense of correctness.
+
+- **Correctness > conciseness:** A correct 200-word explanation is better than an ambiguous 100-word one. Never sacrifice clarity or completeness to reduce word count.
+- **No per-token cost pressure:** LLM inference is billed per request, not per token generated. Writing more words does not cost more. Writing wrong words costs human time to fix — that IS expensive.
+- **Redundancy for enforcement:** Repetition of critical rules across skill sections is not waste — it is enforcement insurance. An LLM that misses a rule in one section may catch it in another.
+- **Anti-pattern:** Cutting a rule or explanation to "save tokens" when the rule exists because agents violated it without the extra context.
 
 ## Operating Protocol
 

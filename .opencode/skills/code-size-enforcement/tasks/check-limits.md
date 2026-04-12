@@ -11,39 +11,39 @@ Measure and verify that code artifacts comply with size limits before commit or 
 ```bash
 # Get function sizes via srclight
 srclight_symbols_in_file(path="src/module.py")
-# Output includes function names and line ranges
+# Output includes function names and word counts
 ```
 
-For line counts, use `wc -l` on specific function ranges.
+For word counts, use `wc -w` on specific function ranges.
 
 ### Source Files
 
 ```bash
-# Count total lines
-wc -l src/module.py
+# Count total words
+wc -w src/module.py
 
-# Count non-blank lines (for 300-line limit)
+# Count non-blank words (for ~750-word limit)
 grep -c '.' src/module.py
 ```
 
 ### Notebook Cells
 
-Use `the-notebook-mcp_notebook_get_outline` to see cell structure, then `the-notebook-mcp_notebook_read_cell` to count lines for each cell.
+Use `the-notebook-mcp_notebook_get_outline` to see cell structure, then `the-notebook-mcp_notebook_read_cell` to count words for each cell.
 
 ## Size Limits Reference
 
 | Artifact | Limit | Measurement |
 |----------|-------|-------------|
-| **Python functions** | 40 lines | Excluding docstrings, imports, blank lines |
-| **Notebook cells** | 50 lines | Including whitespace, excluding cell header |
-| **Source files** | 300 lines | Total file, excluding blank lines and file-start comments |
+| **Python functions** | ~100 words | Excluding docstrings, imports, blank lines |
+| **Notebook cells** | ~120 words | Including whitespace, excluding cell header |
+| **Source files** | ~750 words | Total file, excluding blank lines and file-start comments |
 
 ## What Counts Toward Limits
 
 **Functions:**
-- Function body lines (code + inline comments)
-- Nested functions/classes contribute to outer function's line count
-- Multi-line string literals (non-docstrings) count as lines
+- Function body words (code + inline comments)
+- Nested functions/classes contribute to outer function's word count
+- Multi-line string literals (non-docstrings) count as words
 
 **What does NOT count for functions:**
 - Docstrings (the `"""..."""` block immediately after `def`)
@@ -52,11 +52,11 @@ Use `the-notebook-mcp_notebook_get_outline` to see cell structure, then `the-not
 - Type hints on their own lines
 
 **Notebook cells:**
-- All lines in cell source including comments and whitespace
+- All words in cell source including comments
 - Does NOT include cell metadata or outputs
 
 **Source files:**
-- Total lines excluding blank lines
+- Total words excluding blank lines
 - Excluding module-level docstrings
 - Excluding file-start comments (copyright, license)
 

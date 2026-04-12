@@ -418,7 +418,7 @@ If `[skip changelog]` is present, proceed directly to Step 3 (skip changelog gen
 **Why This Is Critical:**
 
 - Sub-task execution isolates the skill's thinking from main context
-- Prevents skill output from consuming main session tokens
+- Prevents skill output from consuming main session context window
 - Skill runs in its own context and writes CHANGELOG.md
 - Main context receives minimal confirmation only
 
@@ -494,7 +494,7 @@ This checkpoint ensures:
 | Commit categorization | NOT: intermediate reasoning |
 | Technical → User-friendly translation | NOT: commit details analyzed |
 | Noise filtering | NOT: generated text |
-| Thinking tokens consumed | Minimal result token only |
+| Context consumed by sub-task | Minimal result only |
 
 Then continue to Step 3 (squash).
 

@@ -6,14 +6,14 @@ Provide decomposition patterns and guidance for oversized code artifacts.
 
 ## Decomposition Patterns
 
-### Oversized Functions (> 40 lines)
+### Oversized Functions (> ~100 words)
 
 Extract helper functions using the "Extract Method" refactoring pattern:
 
 ```python
-# BEFORE (45 lines - exceeds 40 line limit)
+# BEFORE (~120 words - exceeds ~100 word limit)
 def process_data(data: dict) -> dict:
-    # ... 45 lines of processing ...
+    # ... ~120 words of processing ...
 
 # AFTER (decomposed)
 def process_data(data: dict) -> dict:
@@ -22,13 +22,13 @@ def process_data(data: dict) -> dict:
     return enrich_data(transformed)
 
 def validate_data(data: dict) -> dict:
-    # ... 15 lines ...
+    # ... ~35 words ...
 
 def transform_data(data: dict) -> dict:
-    # ... 15 lines ...
+    # ... ~35 words ...
 
 def enrich_data(data: dict) -> dict:
-    # ... 10 lines ...
+    # ... ~20 words ...
 ```
 
 Principles:
@@ -36,19 +36,19 @@ Principles:
 - Use descriptive names for decomposed functions
 - The outer function becomes an orchestrator calling helpers
 
-### Oversized Notebook Cells (> 50 lines)
+### Oversized Notebook Cells (> ~120 words)
 
 Split cells doing multiple things into focused cells:
 
 ```python
-# BEFORE (single 60-line cell doing data loading and processing)
-# Cell 1: Load and process data (60 lines)
+# BEFORE (single ~150-word cell doing data loading and processing)
+# Cell 1: Load and process data (~150 words)
 
 # AFTER (split into focused cells)
-# Cell 1: Load data (15 lines)
-# Cell 2: Validate data (10 lines)
-# Cell 3: Transform data (15 lines)
-# Cell 4: Display summary (10 lines)
+# Cell 1: Load data (~35 words)
+# Cell 2: Validate data (~25 words)
+# Cell 3: Transform data (~35 words)
+# Cell 4: Display summary (~20 words)
 ```
 
 Principles:
@@ -56,19 +56,19 @@ Principles:
 - Use intermediate variables only when necessary for clarity
 - Consider extracting complex logic to `.py` modules
 
-### Oversized Files (> 300 lines)
+### Oversized Files (> ~750 words)
 
 Split monolithic files into package structure:
 
 ```python
-# BEFORE: monolithic_file.py (350 lines)
+# BEFORE: monolithic_file.py (~800 words)
 
 # AFTER: package structure
 monolithic/
     __init__.py
-    core.py      # main logic (150 lines)
-    helpers.py   # utility functions (100 lines)
-    types.py     # type definitions (50 lines)
+    core.py      # main logic (~350 words)
+    helpers.py   # utility functions (~250 words)
+    types.py     # type definitions (~120 words)
 ```
 
 Principles:

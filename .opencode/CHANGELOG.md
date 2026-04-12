@@ -13,3 +13,4 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 - **Session init plugin** (#710, #720) - Anti-hallucination context: Remote URL, worktree detection paths, hooks path, in-worktree awareness
 - **Session init uvx compatibility** (#721) - Proper shebang, pyproject.toml entry point, uvx invocation
 - **env-loader worktree documentation** (#723) - Document input.$ cwd behavior for worktree sessions
+- **Skill-creator principles** (#711) - Add Measurement Standard (word counts), Context Window Hygiene (sub-agent encouragement), Correctness-First Economics (flat-rate billing) to skill-creator SKILL.md and init template. Propagate word-count measurement to code-size-enforcement, coherence-auditor, fragment-manager, git-workflow, guideline-auditor.

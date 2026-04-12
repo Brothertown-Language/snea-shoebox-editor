@@ -103,7 +103,7 @@ fragments:
       lines: NN
     content:
       type: text-block
-      estimated_tokens: NNN
+      estimated_words: NNN
       description: "Fragment description"
     destinations:
       - path: .opencode/skills/skill-name/SKILL.md
