@@ -240,12 +240,11 @@ assemble-batch:
 - Resume from the first incomplete issue by checking which issue numbers appear in commit messages
 - Feature branches still contain the individual issue work for reference
 
-### Parallel-Safe Issues (No Dependencies)
+### Parallel-Safe Issues (No Dependencies) — Opportunistic Only
 
-- Independent issues still get their own branches and worktrees
-- They do NOT merge any prior branches (no dependency)
-- They are squash-merged into the batch branch in any order
-- Parallel-safe issues CAN be developed simultaneously in separate worktrees
+- Even independent issues SHOULD be stacked sequentially. Parallel execution is opportunistic — it depends on circumstances genuinely allowing it (no shared files, no logical coupling, no hidden dependencies).
+- "Independent" in a batch context means "no declared dependency," not "safe to run in parallel." Stacking catches hidden dependencies automatically.
+- If parallel execution is chosen for an independent issue, document the justification in the batch state file with explicit reasoning (why stacking was bypassed, what makes the issue genuinely independent).
 
 ## Mandatory Rules
 

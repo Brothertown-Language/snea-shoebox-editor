@@ -16,6 +16,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 - **Batch Approval Implementation** (#756, #752, #728, #688, #680, #667, #533, #306, #662, #630, #683, #763, #762, #614, #470, #467) - 17 issues implemented in a single batch, including unified batch workflow, mandatory post-implementation invocation, auto-rebase pending PRs, bug analysis auto-spec, discussion-conclusion non-authorization patterns, label state machine cross-references, spec-auditor auto-fix model, branch-header changelog, identity placeholder cleanup, brainstorming terminal state, session enforcement discussion mode, ruff version sync, stale User import fix, byline format standardization, PR trigger check, and template-driven element removal.
 
+### spec/branch-stacking-prerequisite
+
+- **Branch Stacking Prerequisite** (#771) - Established that feature branch stacking is a prerequisite for code correctness, not a preference. Updated 6 documentation files to reframe parallel execution as opportunistic-only with documented justification required. Added critical violation entry for treating stacking as optional.
+
 ### Changed
 
 - **Unified Batch Workflow** (#756) - Renamed batch-approval-analysis to pre-implementation-analysis, removed IMPLEMENT_DIRECTLY dispatch path, and unified single/batch issue handling through divide-and-conquer assemble-batch.

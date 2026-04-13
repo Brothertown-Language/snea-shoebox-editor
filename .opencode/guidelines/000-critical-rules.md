@@ -402,6 +402,19 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - 🚫 FORBIDDEN: Processing issues one-by-one without analysis; assuming independence without checking; hiding analysis in reasoning
 - ✅ REQUIRED: Invoke `pre-implementation-analysis` for all approvals (single or batch); expand sub-issues; classify each issue; build dependency graph; present analysis in chat; execute in dependency order
 
+## Critical Violation: Treating Branch Stacking as Optional
+
+**⚠️ Bypassing stacking discipline without justification is a CRITICAL GUIDELINE VIOLATION. Stacking is a prerequisite for code correctness, not a preference.**
+
+- 🚫 FORBIDDEN: Treating stacking as a "default preference" that can be overridden for convenience
+- 🚫 FORBIDDEN: Interpreting "independent issues" as "must be parallel" — independence ≠ parallelism
+- 🚫 FORBIDDEN: Dispatching sub-agents in parallel when stacking is the appropriate approach
+- 🚫 FORBIDDEN: Choosing parallel execution because it "saves time" without verifying circumstances genuinely allow it
+- ✅ REQUIRED: Sequential branch stacking as the prerequisite execution model
+- ✅ REQUIRED: Explicit documented justification in batch state if parallel execution is chosen (opportunistic only)
+- ✅ REQUIRED: Stack branches via `git merge <prior-branch>` into dependent branches before implementation
+- ✅ REQUIRED: When in doubt, stack — parallel execution is never the starting assumption
+
 ______________________________________________________________________
 
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.
