@@ -14,6 +14,23 @@
 - AI intelligence determines appropriate branch name
 - Developer can override AI-suggested names
 
+## Stacking Prerequisite
+
+**Feature branches are stacked sequentially as a prerequisite for code correctness.** This is not a preference or default — it is the required approach. Parallel execution is opportunistic and depends on circumstances genuinely allowing it.
+
+**Why stacking is prerequisite (not preference):**
+- Incremental merge conflict resolution — conflicts discovered one branch at a time, not all at once at PR time
+- Clear causal chain in git history — each branch builds on the prior
+- Hidden dependency detection — "independent" issues often share imports, fixtures, or configuration
+- Context window savings from stacking outweigh time savings from parallelism
+
+**When parallel execution MAY be opportunistic (requires documented justification):**
+- Genuinely independent hotfixes touching completely separate files
+- Time-critical production fixes where stacking delay is unacceptable
+- Developer has verified no shared files, imports, fixtures, or configuration
+
+**When in doubt, stack.**
+
 ## Three-Branch Architecture
 
 **Branch Model:**

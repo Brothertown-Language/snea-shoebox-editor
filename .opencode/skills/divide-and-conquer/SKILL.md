@@ -59,7 +59,8 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 8. **Branch per issue** — each issue gets its own feature branch and worktree. No shared branches across issues.
 9. **Frozen branches** — once a prior branch is merged into a dependent, it is frozen (no rebase, amend, or force-push).
 10. **Verification gate remains mandatory** — sub-agents MUST run `verification-before-completion --task verify` and `finishing-a-development-branch --task checklist` before returning results. Orchestrator enforces this in dispatch context.
-11. **Completion guarantee** — idempotent completion on any halt. Invoke `--task completion` before halting regardless of outcome.
+11. **Stacking is a prerequisite, not a preference** — feature branches MUST be stacked sequentially (merge-based dependency resolution) as the prerequisite approach. Parallel sub-agent dispatch is OPPORTUNISTIC — it depends on circumstances genuinely allowing it (truly independent codepaths, no shared files, no hidden dependencies). When in doubt, stack.
+12. **Completion guarantee** — idempotent completion on any halt. Invoke `--task completion` before halting regardless of outcome.
 
 ## Overflow Signal Contract
 

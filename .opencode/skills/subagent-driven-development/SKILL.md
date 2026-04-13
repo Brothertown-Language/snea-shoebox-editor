@@ -34,12 +34,9 @@ Execute an approved implementation plan by dispatching fresh subagents per task,
 | Situation | Use |
 |-----------|-----|
 | Need two-stage review per task (spec + quality) | `subagent-driven-development` |
-| Plan with independent tasks, same session | `subagent-driven-development` |
-| Need fresh context per task | `subagent-driven-development` |
-| Standard implementation without per-task review | `divide-and-conquer` |
+| Standard implementation (stacking prerequisite) | `divide-and-conquer` (always stacked) |
 | Task risks context window overflow | `divide-and-conquer` |
-| Dependencies between tasks (must-precede) | `divide-and-conquer` (orchestrate) or `subagent-driven-development` with merge-based dependency resolution |
-| Any batch implementation | Either (use `divide-and-conquer` for simplicity, `subagent-driven-development` for review rigor) |
+| **Independent tasks that genuinely permit parallel work** | Either — but stacking is prerequisite, parallel is opportunistic |
 
 ## The Process
 
@@ -119,6 +116,8 @@ env_vars:
 ## Red Flags
 
 Never skip approval-gate, never skip reviews, never dispatch multiple implementation subagents in parallel, never accept "close enough" on spec compliance, never skip verification-before-completion, never skip review-prep before HALT, never create PR without explicit instruction.
+
+**Stacking prerequisite:** Feature branches MUST be stacked sequentially. Parallel dispatch is OPPORTUNISTIC and requires documented justification — it is never the default or preferred approach.
 
 ## Sub-Agent Spawning
 
