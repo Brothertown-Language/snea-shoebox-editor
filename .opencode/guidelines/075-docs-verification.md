@@ -19,7 +19,7 @@ Before writing ANY implementation code, verify against authoritative sources:
 ### What Must Be Verified
 
 | Item | Sources |
-|------|---------|
+| -- | -- |
 | **API signatures** | Official docs, source code, type hints |
 | **Environment variables** | Documentation, `.env.example`, config files |
 | **Function parameters** | Type hints, docstrings, source code |
@@ -29,23 +29,28 @@ Before writing ANY implementation code, verify against authoritative sources:
 ### Verification Sources (Priority Order)
 
 1. **Official documentation** (highest priority)
+
    - Library/framework official docs
    - API reference documentation
-   
+
 2. **Source code and type hints**
+
    - `pycharm_get_symbol_info` or `srclight_get_signature`
    - Inline type hints and docstrings
-   
+
 3. **Example files in codebase**
+
    - Existing usage examples in `src/`
    - Test files showing correct API usage
-   
+
 4. **Configuration files**
+
    - `.env.example`, `pyproject.toml`, config schemas
 
 ### What COUNTS as Verification
 
 ✅ **Verification Required:**
+
 - Calling `srclight_get_signature` to check function parameters
 - Reading source code to confirm API usage
 - Checking official documentation URLs
@@ -53,6 +58,7 @@ Before writing ANY implementation code, verify against authoritative sources:
 - Examining existing working code as reference
 
 ❌ **NOT Verification:**
+
 - Assuming based on similar libraries
 - Relying on memory from previous implementations
 - Guessing parameter names
@@ -93,6 +99,7 @@ When reviewing code, verify:
 ### Example 1: Pydantic Model Field Validator
 
 **❌ WRONG (Assumption-Based):**
+
 ```
 from pydantic import BaseModel, validator
 
@@ -107,6 +114,7 @@ class User(BaseModel):
 **Why Wrong:** `@validator` was deprecated in Pydantic v2. Assumed without checking.
 
 **✅ CORRECT (Verified):**
+
 ```
 # Checked Pydantic v2 docs: use @field_validator with mode parameter
 from pydantic import BaseModel, field_validator
@@ -123,11 +131,13 @@ class User(BaseModel):
 ### Example 2: Environment Variable
 
 **❌ WRONG (Assumption-Based):**
+
 ```
 database_url = os.environ["DATABASE_URL"]
 ```
 
 **✅ CORRECT (Verified):**
+
 ```
 # Checked .env.example and config documentation
 database_url = os.environ.get("DATABASE_URL", "sqlite:///./default.db")

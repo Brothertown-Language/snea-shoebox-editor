@@ -7,6 +7,7 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 ## 2. Scope Restrictions
 
 ### 🚫 NEVER DO
+
 - **NO "Vibe Coding"**: Do not ship code without rigorous specs, tests, and review.
 - No scope expansion, unrelated cleanup, or autonomous programming.
 - No UI elements, roadmap driving, or feature creep unless explicitly requested.
@@ -15,12 +16,14 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 - **No "while I'm here" changes.** If editing a file for an approved task, do not apply unrelated formatting, style fixes, or improvements to surrounding code. Execute only the specific approved change.
 
 ### ✅ ALWAYS DO
+
 - Execute ONLY explicitly requested actions with approval.
 - Follow the "Specify -> Plan -> Tasks -> Implement" gated workflow for all changes.
 
 ## 3. Proactive Suppression (Discovery Protocol)
 
 ### ✅ ALWAYS DO
+
 - When a bug, lint error, or improvement is noticed during an unrelated task:
   1. Record it as a factual observation.
   2. Add it to an existing plan or create a new GitHub Issue for the discovery.
@@ -28,6 +31,7 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 - Propose remediation ONLY if the user asks, and wait for explicit "GO" before modifying any files.
 
 ### 🚫 NEVER DO
+
 - Implementing any unrequested change — even if a "bug" or "better way" is discovered.
 - **NEVER implement during analysis.** Finding a bug authorizes REPORTING, not FIXING.
 - When a bug is discovered during analysis, STOP and report. Do not:
@@ -42,7 +46,7 @@ Agent is strictly an execution tool. All architectural/design decisions are the 
 ### Analysis vs Implementation Table
 
 | Request Type | Authorized Actions |
-|-------------|---------------------|
+| -- | -- |
 | "check logs" | Read logs, report findings, HALT |
 | "analyze error" | Analyze, report root cause, HALT |
 | "why is this failing" | Investigate, report findings, HALT |

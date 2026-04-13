@@ -6,7 +6,7 @@
 
 Domain-specific exception classes improve error clarity by making it immediately obvious WHERE in the system an error occurred and WHAT component failed.
 
----
+______________________________________________________________________
 
 ### Pattern: Wrap in domain-specific exceptions
 
@@ -40,7 +40,7 @@ def validate_mesh_term(term: str) -> MeshValidationResult:
 3. **Semantic clarity**: `MeshAPIError` vs `MeshValidationError` distinguishes API failures from validation failures
 4. **Chain preservation**: `from e` preserves the original traceback and cause
 
----
+______________________________________________________________________
 
 ### Pattern: Exception hierarchy for APIs
 
@@ -80,7 +80,7 @@ def fetch_article(pmid: str) -> Article:
     return article
 ```
 
----
+______________________________________________________________________
 
 ### Pattern: Domain-specific vs generic exceptions
 
@@ -104,21 +104,23 @@ def validate_mesh_term(term: str):
         raise MeshAPIError(f"MeSH API error for term '{term}': {e}") from e
 ```
 
----
+______________________________________________________________________
 
 ### When to create domain-specific exceptions
 
 **DO create domain-specific exceptions when**:
+
 - You have a distinct API/module/component (MeSH, PubMed, Database, etc.)
 - Different failure modes require different handling (API error vs validation error)
 - The exception will bubble up through multiple layers
 - You want handlers to catch specific exception types
 
 **DON'T create domain-specific exceptions when**:
+
 - The error is local to one function and will be caught immediately
 - A generic `ValueError` or `TypeError` provides sufficient context
 - The exception doesn't need to be distinguished from others at the call site
 
----
+______________________________________________________________________
 
 *Source: Content migrated from `095-never-hide-problems.md`*

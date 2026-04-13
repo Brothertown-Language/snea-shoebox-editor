@@ -25,7 +25,7 @@ Generate a clean-room implementation plan from a problem statement only, using p
 ## Key Differences from Standard Plan Creation
 
 | Aspect | Standard Plan (`--task create`) | Clean-Room Plan (`--task clean-room`) |
-|--------|-------------------------------|--------------------------------------|
+| -- | -- | -- |
 | Input source | Approved spec issue | Problem statement only (from temp file) |
 | References existing plan | May reference spec phases | **NEVER references existing plan** |
 | Creates GitHub issue | Yes | **No** — returned as markdown only |
@@ -39,11 +39,13 @@ Generate a clean-room implementation plan from a problem statement only, using p
 ### Step 1: Read Problem Statement
 
 **Read the clean-room input file:**
+
 ```
 Read: ./tmp/clean-room-input-N.md
 ```
 
 **Extract what's available:**
+
 - Objective
 - Problem Statement
 - Context
@@ -59,6 +61,7 @@ Read: ./tmp/clean-room-input-N.md
 ### Step 2: Explore Codebase (If Applicable)
 
 **For files and patterns mentioned in the problem statement:**
+
 - Use `srclight_search_symbols` or `pycharm_search_in_files_by_text` to find relevant code
 - Identify affected files, modules, and patterns
 - Note existing patterns that should be followed
@@ -72,6 +75,7 @@ Read: ./tmp/clean-room-input-N.md
 **Prose-driven approach:** The agent writes the plan naturally, deciding what sections and what structure makes sense for this specific problem. No template is imposed.
 
 **Quality requirements:**
+
 - Phase names describe **specific concerns**, NOT generic activities
 - Each step is **actionable** (not abstract goals)
 - Verification methods included where appropriate
@@ -84,12 +88,14 @@ Read: ./tmp/clean-room-input-N.md
 ### Step 4: Validate Plan
 
 **Check for prohibited patterns:**
+
 - No `TBD`, `TODO`, `[to be determined]`, `[placeholder]`
 - All phases have specific concern names (not "Implementation", "Testing")
 - All steps are actionable
 - Success criteria are testable
 
 **If validation fails:**
+
 - Re-generate the missing sections
 - Do NOT leave placeholders
 
@@ -99,20 +105,22 @@ Read: ./tmp/clean-room-input-N.md
 
 ```yaml
 # Yield-back context
-status: "success|failure"
-plan: "<complete plan markdown>"  # If success
-error: "<error message>"  # If failure
+status: success|failure
+plan: <complete plan markdown>    # If success
+error: <error message>    # If failure
 phases_count: N
 steps_count: M
 affected_files_count: K
 ```
 
 **If failure:**
+
 - Return error message
 - Do NOT create a partial plan
 - Do NOT create a GitHub Issue
 
 **If significant gaps found:**
+
 - Include recommendation for brainstorming in the yield-back context
 - The fidelity subtask can use this recommendation when reporting findings
 

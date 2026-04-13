@@ -51,12 +51,14 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 ## What Skills MUST Check
 
 1. **Before reporting readiness:**
+
    - Is working tree clean?
    - Do all quality checks pass?
    - Is branch pushed?
    - Is compare URL accessible?
 
 2. **During preparation:**
+
    - Are there leftover debug prints?
    - Are there TODO/FIXME comments?
    - Are there unrelated changes?

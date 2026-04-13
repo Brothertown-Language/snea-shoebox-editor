@@ -1,6 +1,7 @@
 # Approval Gate
 
 > **See `approval-gate` skill for complete procedural workflow including:**
+>
 > - Spec + authorization requirements
 > - Sub-issue verification gate
 > - Single-task exemption
@@ -14,7 +15,7 @@
 ### Mandatory Requirements
 
 | Requirement | Rule |
-|-------------|------|
+| -- | -- |
 | **Spec before code** | NO code/guideline changes WITHOUT approved spec |
 | **Authorization required** | NO implementation WITHOUT explicit `"approved"` or `"go"` |
 | **Explicit auth overrides label** | When user says `approved`/`go`, proceed REGARDLESS of `needs-approval` label |
@@ -30,6 +31,7 @@
 **⚠️ When user provides explicit authorization (`approved`, `go`, `#123 approved`), proceed with implementation even if the `needs-approval` label is present.**
 
 The `needs-approval` label is a **tracking tool**, not a permanent gate. Its purpose is:
+
 - Indicate "awaiting approval" visually
 - Remind reviewers that approval hasn't been given yet
 - Block agents from proceeding **until** explicit authorization is received
@@ -37,7 +39,7 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 **The label does NOT override explicit user authorization.**
 
 | Scenario | Action |
-|----------|--------|
+| -- | -- |
 | User says `approved` AND label present | ✅ **PROCEED** - explicit auth wins |
 | User says `#123 approved` AND label present | ✅ **PROCEED** - explicit auth wins |
 | User says `go` AND label present | ✅ **PROCEED** - explicit auth wins |
@@ -55,6 +57,7 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - **Confirmation ≠ authorization**: Confirming an observation does NOT authorize implementation
 
 **🚫 CRITICAL: Old authorizations do NOT apply:**
+
 - "Approved #332" in previous session → NOT VALID for new session
 - Previous session authorization → NOT VALID for new issue/spec
 - Authorization is ZERO-BASED — every task needs NEW authorization
@@ -66,6 +69,7 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 **See `approval-gate` skill → "Multi-Task Spec Authorization" for the complete authorization cascade workflow and enforcement matrix.**
 
 Key rules:
+
 - 🚫 DO NOT halt after each phase of multi-task spec
 - 🚫 DO NOT ask for re-authorization between phases
 - 🚫 DO NOT treat sub-issues as separate authorization units
@@ -80,6 +84,7 @@ Key rules:
 **See `implementation-workflow` skill `--task batch-orchestrate` for the complete batch orchestration workflow.**
 
 Key rules:
+
 - 🚫 DO NOT re-authorize between issues in a batch
 - 🚫 DO NOT HALT between issues in a batch
 - ✅ Batch state file (`.opencode/tmp/batch-<timestamp>.md`) carries authorization context forward
@@ -97,6 +102,7 @@ Key rules:
 Key rule: Revision = `STATUS: X.Y (REVISED - NEEDS APPROVAL)` + `needs-approval` label + chat output + HALT.
 
 Exempt from approval revocation:
+
 - STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
 - Bug report additions (separate from spec content changes)
 
@@ -121,6 +127,7 @@ Key rule: Bug reports requiring code changes → add `needs-approval` label → 
 **See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete authorization matrix, self-correction protocol, and enforcement details.**
 
 Key rules:
+
 - 🚫 NEVER edit source code after discovering a bug without an approved spec
 - 🚫 NEVER create a branch for a bug fix without authorization
 - ✅ ALWAYS create a bug report issue (permitted without authorization)
@@ -135,6 +142,7 @@ Key rules:
 **⚠️ CRITICAL: Skills MUST enforce authorization — guidelines alone are insufficient.**
 
 **See `approval-gate` skill for the complete enforcement specification including:**
+
 - Which skills MUST check authorization
 - What each skill MUST check (pre-work, pr-creation)
 - Enforcement matrix (explicit auth, label + no auth, conditionals)
@@ -156,7 +164,7 @@ Key rules:
 ## Related Guidelines
 
 | Guideline | Purpose |
-|-----------|---------|
+| -- | -- |
 | `000-critical-rules.md` | Critical violations and auditor enforcement |
 | `020-go-prohibitions.md` | GO command restrictions |
 | `120-github-issue-first.md` | Issue-first strategy and sub-issues |

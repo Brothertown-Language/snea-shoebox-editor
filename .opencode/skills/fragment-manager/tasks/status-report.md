@@ -22,6 +22,7 @@ Parse all fragments.
 ### Step 2: Run Quick Drift Check
 
 For each fragment:
+
 - Calculate master hash
 - Check if master hash matches registry
 - Flag fragments that need verification
@@ -115,6 +116,7 @@ print(json.dumps({
 ### Empty Registry
 
 If no fragments defined:
+
 ```
 Fragment Registry Status Report
 ==============================
@@ -128,6 +130,7 @@ Run 'create-fragment' to add the first fragment master.
 ### Registry Corrupted
 
 If YAML parsing fails:
+
 1. STOP - do not proceed
 2. Report: "Registry YAML parse error: {error}"
 3. Recommend: Manual inspection and repair

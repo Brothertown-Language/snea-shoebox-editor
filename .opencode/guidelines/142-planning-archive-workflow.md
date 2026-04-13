@@ -6,13 +6,14 @@
 
 For archive and closure workflow, see `124-github-archive-workflow.md`.
 
----
+______________________________________________________________________
 
 ## 6. Spec Structure Requirements
 
 ### Two Workflow Stages
 
 **Stage 1: Investigation & Planning (CRITICAL CHECKPOINT)**
+
 - Investigation phases: **MANDATORY** research, analysis, exploration — MUST complete before spec creation
 - Planning phases: design, architecture, breakdown — MUST complete before spec creation
 - **These are HARD GATES — not automatic, not optional**
@@ -24,7 +25,7 @@ For archive and closure workflow, see `124-github-archive-workflow.md`.
 During investigation, the agent MAY:
 
 | Activity | Allowed? | Notes |
-|----------|----------|-------|
+| -- | -- | -- |
 | Read production code | ✅ YES | Read-only exploration |
 | Read production data | ✅ YES | Read-only analysis |
 | Create test scripts in `./tmp/` | ✅ YES | Isolated from production |
@@ -38,6 +39,7 @@ During investigation, the agent MAY:
 **Test Scripts for Investigation:**
 
 Test code created during investigation MUST:
+
 - Be placed in `./tmp/` directory only
 - Use isolated test fixtures (dedicated test DB, test schemas)
 - NOT modify production code, data, or systems
@@ -62,7 +64,7 @@ print(f"Validation result: {result}")
 Before creating a spec, the agent MUST verify:
 
 | Requirement | Evidence |
-|-------------|----------|
+| -- | -- |
 | Problem understood | Clearly stated problem, context, stakeholders |
 | Codebase explored | Existing patterns, reusable components identified |
 | Hypotheses tested | Test scripts run, results documented |
@@ -89,6 +91,7 @@ Creating a spec without completed investigation is a CRITICAL GUIDELINE VIOLATIO
 - **ALLOWED**: Documenting findings for the spec
 
 **Stage 2: Requires Approval (In Spec)**
+
 - Implementation phases: build, code, integrate
 - Verification phases: test, review, validate
 - Completion phases: ship, deploy
@@ -142,6 +145,7 @@ CREATED: YYYY-MM-DD
 ### What NOT to Include in Specs
 
 **DO NOT include:**
+
 - Investigation phases (already done)
 - Planning phases (already done)
 - Research notes (that was investigation)
@@ -149,7 +153,7 @@ CREATED: YYYY-MM-DD
 
 The spec starts **AFTER** investigation and planning are complete.
 
----
+______________________________________________________________________
 
 ## 7. Required Elements
 
@@ -191,7 +195,7 @@ Phase names that describe specific concern boundaries:
 ### Validation Rules
 
 | Pattern | Status | Reason |
-|---------|--------|--------|
+| -- | -- | -- |
 | Single-word activity name | BOILERPLATE-TITLE | No concern boundary specified |
 | "Testing" alone | BOILERPLATE-TITLE | Generic activity |
 | "Testing Infrastructure" | ACCEPTABLE | Specific concern (infrastructure) |
@@ -201,6 +205,7 @@ Phase names that describe specific concern boundaries:
 ### Examples
 
 **❌ BOILERPLATE (Wrong):**
+
 ```markdown
 ## Phase 1: Implementation (Gated)
 ### Steps
@@ -210,6 +215,7 @@ Phase names that describe specific concern boundaries:
 ```
 
 **✅ MEANINGFUL (Correct):**
+
 ```markdown
 ## Phase 1: Database Schema Setup (Gated)
 ### Steps
@@ -218,6 +224,6 @@ Phase names that describe specific concern boundaries:
 3. ☐ Write migration script
 ```
 
----
+______________________________________________________________________
 
 *Source: Content migrated from `040-plan-delivery.md`*

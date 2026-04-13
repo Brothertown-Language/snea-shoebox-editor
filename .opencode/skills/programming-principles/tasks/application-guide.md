@@ -42,7 +42,7 @@ How to apply the 20 principles during design, implementation, and review. Includ
 Not all 20 principles matter equally in every context. Use this table to prioritize:
 
 | Context | Prioritize | Relax |
-|---------|-----------|-------|
+| -- | -- | -- |
 | One-off scripts | KISS, Fail Fast | SRP, SoC, Observability, Blast Radius |
 | Public APIs | Info Hiding, SoC, Defensive Programming, CQS | Performance optimizations |
 | Business logic | SRP, DRY, Determinism, Testability | Premature abstraction |
@@ -53,7 +53,7 @@ Not all 20 principles matter equally in every context. Use this table to priorit
 ### Red Flags — When to Pause and Reconsider
 
 | Thought | Check |
-|---------|-------|
+| -- | -- |
 | "This function is getting long" | SRP, KISS — should it be decomposed? |
 | "I need this in three places" | DRY — is it truly the same, or coincidental duplication? |
 | "Let me add this just in case" | YAGNI — is there a current requirement? |
@@ -77,6 +77,7 @@ ACCEPTANCE CRITERIA: [When this relaxation should be revisited]
 ```
 
 **Example:**
+
 ```
 PRINCIPLE RELAXED: Single Responsibility Principle
 REASON: This 8-line function coordinates validation and persistence, which change together for this entity. Splitting adds 3 classes for what is effectively one operation.

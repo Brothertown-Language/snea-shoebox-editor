@@ -19,7 +19,7 @@ Check an existing plan for placeholders and completeness.
 Every step must contain actual content. These are **plan failures**:
 
 | Pattern | Why Prohibited |
-|---------|----------------|
+| -- | -- |
 | `TBD` | Incomplete plan |
 | `TODO` | Incomplete plan |
 | `[to be determined]` | Incomplete plan |
@@ -38,7 +38,7 @@ Every step must contain actual content. These are **plan failures**:
 ## Specs vs Plans
 
 | Artifact | Placeholders Allowed? | Examples |
-|----------|----------------------|----------|
+| -- | -- | -- |
 | Spec (GitHub Issue) | YES, during iterative development | TBD, TODO, [needs investigation], [placeholder] |
 | Plan (for implementation) | NO — zero tolerance | None allowed before implementation begins |
 

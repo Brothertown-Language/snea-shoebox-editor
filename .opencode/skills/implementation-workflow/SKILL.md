@@ -23,7 +23,7 @@ Orchestration layer that coordinates the implementation workflow by dispatching 
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `orchestrate` | Full implementation workflow sequence — dispatches to batch-orchestrate for sub-agent execution | ~900 |
 | `batch-orchestrate` | Batch orchestration: branch-per-issue, merge dependencies, squash-merge into batch branch | ~600 |
 | `context-passing` | Reference for yield-back context shapes between subtasks | ~200 |
@@ -43,17 +43,17 @@ Orchestration layer that coordinates the implementation workflow by dispatching 
 
 ## Operating Protocol
 
-1. **Sequential orchestration:** This skill runs AFTER approval-gate has verified authorization
-1. **Context passing:** Each subtask receives context from the previous subtask
-1. **Yield-back pattern:** Each subtask yields structured results back to orchestrator
-1. **HALT after review-prep:** No PR creation without explicit "create a PR" instruction
-1. **Verification gate is MANDATORY:** Steps 3.5a and 3.5b cannot be skipped or manually executed
-1. **No implementation logic in git-workflow:** Git-workflow tasks are pure git operations
-1. **Bug-discovery guardrail:** If implementation is for a bug discovered during other work, HALT immediately
-1. **Worktree paths:** All file operations must use `WORKTREE_PATH` prefix when worktree is active
-1. **Always batch mode:** Single issue = batch of one, no special-case path
-1. **Branch per issue:** Each issue gets its own feature branch and worktree; dependent issues merge prior branches
-1. **Frozen branches:** Once a prior branch is merged into a dependent, it is frozen (no rebase/amend/force-push)
+01. **Sequential orchestration:** This skill runs AFTER approval-gate has verified authorization
+02. **Context passing:** Each subtask receives context from the previous subtask
+03. **Yield-back pattern:** Each subtask yields structured results back to orchestrator
+04. **HALT after review-prep:** No PR creation without explicit "create a PR" instruction
+05. **Verification gate is MANDATORY:** Steps 3.5a and 3.5b cannot be skipped or manually executed
+06. **No implementation logic in git-workflow:** Git-workflow tasks are pure git operations
+07. **Bug-discovery guardrail:** If implementation is for a bug discovered during other work, HALT immediately
+08. **Worktree paths:** All file operations must use `WORKTREE_PATH` prefix when worktree is active
+09. **Always batch mode:** Single issue = batch of one, no special-case path
+10. **Branch per issue:** Each issue gets its own feature branch and worktree; dependent issues merge prior branches
+11. **Frozen branches:** Once a prior branch is merged into a dependent, it is frozen (no rebase/amend/force-push)
 
 ## Interdependency Chain
 
@@ -134,12 +134,12 @@ implementation-workflow (receives context)
 
 ```yaml
 # POST-AUTHORIZATION GATE - Workflow orchestration
-- trigger: "After approval-gate confirms authorization"
-  skill: "implementation-workflow"
-  task: "orchestrate"
-  purpose: "Sequence implementation workflow with yield-back context"
-  automatic: true
-  note: "Called after approval-gate, orchestrates git-workflow + implementation"
+  - trigger: After approval-gate confirms authorization
+    skill: implementation-workflow
+    task: orchestrate
+    purpose: Sequence implementation workflow with yield-back context
+    automatic: true
+    note: Called after approval-gate, orchestrates git-workflow + implementation
 ```
 
 ## Platform Compatibility
@@ -153,11 +153,11 @@ implementation-workflow (receives context)
 This skill is a **heavy skill** — its orchestration logic can run in isolation. When the main agent needs full workflow execution, consider spawning a sub-agent via the `task` tool:
 
 1. Main agent loads this dispatch document (~656 words)
-1. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use implementation-workflow skill with context: issue=#N, branch=<name>, <session-context>")`
-1. Sub-agent loads: this SKILL.md + relevant task files + required guidelines
-1. Sub-agent executes the full workflow (yield-back context between stages)
-1. Sub-agent returns structured result: status, files modified, compare URL
-1. Main agent receives result — no full orchestration content in main context
+2. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use implementation-workflow skill with context: issue=#N, branch=<name>, <session-context>")`
+3. Sub-agent loads: this SKILL.md + relevant task files + required guidelines
+4. Sub-agent executes the full workflow (yield-back context between stages)
+5. Sub-agent returns structured result: status, files modified, compare URL
+6. Main agent receives result — no full orchestration content in main context
 
 **Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `BRANCH_NAME`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL` from session init.
 
@@ -170,7 +170,7 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 ## Migration from Old Architecture
 
 | Old (git-workflow) | New (implementation-workflow) |
-|--------------------|-------------------------------|
+| -- | -- |
 | git-workflow contains implementation logic | Implementation logic moved to subagent |
 | No orchestration layer | implementation-workflow orchestrates |
 | No context passing | Yield-back pattern between subtasks |
@@ -179,7 +179,7 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 **Migration from Previous Batch Architecture:**
 
 | Old (batch-orchestrate) | New (batch-orchestrate) |
-|-------------------------|-------------------------|
+| -- | -- |
 | Single shared branch for entire batch | Branch per issue |
 | `prior_results` = change summary template | `prior_context` = AI-composed intent-and-context |
 | Batch state file (`.opencode/tmp/batch-*.md`) | Git history + issue metadata |

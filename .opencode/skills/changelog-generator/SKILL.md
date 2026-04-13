@@ -19,7 +19,7 @@ This skill transforms technical git commits into polished, user-friendly changel
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `since-last-release` | Generate changelog for commits since last CHANGELOG.md update | ~170 |
 | `date-range` | Generate changelog for commits within specific date range | ~90 |
 | `backfill` | One-time historical backfill of missing changelog entries | ~120 |
@@ -86,6 +86,7 @@ guidelines from CHANGELOG_STYLE.md
 **User**: "Create a changelog for commits from the past 7 days"
 
 **Output**:
+
 ```markdown
 # Updates - Week of March 10, 2024
 

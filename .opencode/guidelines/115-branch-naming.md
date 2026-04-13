@@ -3,11 +3,13 @@
 ## Branch Naming Rules
 
 **Feature branches MUST use one of these prefixes:**
+
 - `spec/<short-name>` — For spec-driven implementation
 - `feature/<description>` — For feature development
 - `hotfix/<description>` — For urgent production fixes
 
 **Branch Naming is NOT Enforced by Hooks:**
+
 - Git hooks block AI commits to `main`/`master`/`dev` but do NOT validate branch naming
 - AI intelligence determines appropriate branch name
 - Developer can override AI-suggested names
@@ -15,11 +17,13 @@
 ## Three-Branch Architecture
 
 **Branch Model:**
+
 - **Feature branches** (`spec/*` or `feature/*`): Short-lived, one per issue/spec
 - **Dev branch** (`dev`): Evergreen staging/integration branch (never deleted)
 - **Main branch** (`main` or `master`): Production-ready code
 
 **Merge Paths:**
+
 1. **Feature → Dev**: PR required (squash to single commit, no CI tests required)
 2. **Release: Dev → Main**: Human-triggered (no approval required, CI tests required)
 3. **Hotfix**: Parallel branches to dev + main (paired issues, cross-referenced)
@@ -66,6 +70,7 @@ git worktree prune
 6. Delete release worktree and branch
 
 **AI DOES NOT:**
+
 - Create release branches
 - Merge `dev` to `main`
 - Tag releases
@@ -83,6 +88,7 @@ git worktree prune
 6. BOTH PRs must merge before issues close
 
 **Cross-referencing:**
+
 - Hotfix issue for `main`: Cross-reference hotfix issue for `dev`
 - Hotfix issue for `dev`: Cross-reference hotfix issue for `main`
 - Both issues close only after BOTH PRs merge
@@ -90,11 +96,13 @@ git worktree prune
 ## Protected Branches
 
 **AI Commits Blocked On:**
+
 - `main` (production)
 - `master` (production)
 - `dev` (staging/integration)
 
 **Enforcement:**
+
 - Local git hooks (`pre-commit`, `post-commit`) detect AI agent environment variables
 - GitBucket branch protection (defense-in-depth)
 - No bypass mechanism
@@ -102,11 +110,13 @@ git worktree prune
 ## Dev Branch Maintenance
 
 **Dev is evergreen:**
+
 - Never delete `dev` branch
 - Keep `dev` in sync with features
 - `dev` is NOT for direct commits — only via PR
 
 **Sync workflow (in main working tree):**
+
 ```bash
 # After merging feature PR to dev (cleanup removes worktree first)
 git checkout dev && git pull origin dev

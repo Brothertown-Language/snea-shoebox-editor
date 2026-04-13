@@ -9,6 +9,7 @@ Generate GitHub compare URL for developer review AFTER the implementation task h
 **This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
 
 The sequence is:
+
 1. Implementation complete → commit → push → **review-prep invoked automatically**
 2. Compare URL generated → HALT
 3. Wait for developer to say "create a PR"
@@ -20,12 +21,14 @@ The sequence is:
 **Every feature branch push MUST be followed by review-prep. No exceptions.**
 
 **Why this is mandatory:**
+
 - Developer needs visibility into changes before deciding to create PR
 - Compare URL allows review via GitHub's superior diff viewer
 - Prevents premature PR creation
 - Ensures clear separation between "done implementing" and "create PR"
 
 **When to invoke:**
+
 - After ANY commit+push to a feature branch
 - After ANY file modifications are committed and pushed
 - Even if branch is "just tracking existing work"
@@ -37,6 +40,7 @@ The sequence is:
 **The `implementation` task is responsible for pushing the branch.**
 
 **Correct sequence:**
+
 ```
 Implementation task:
   1. Make changes
@@ -55,6 +59,7 @@ Review-prep task:
 ```
 
 **If this task is invoked and branch is NOT pushed:**
+
 1. Inform user: "Implementation task must push before review-prep"
 2. Push the branch: `git push -u origin <branch-name>`
 3. Continue to generate compare URL
@@ -62,6 +67,7 @@ Review-prep task:
 ### ⚠️ CRITICAL: NO EXCEPTIONS
 
 **Review prep is MANDATORY regardless of:**
+
 - Whether file changes were made
 - Whether "no changes needed" was determined
 - Whether branch is already up-to-date
@@ -74,7 +80,7 @@ Review-prep task:
 The "Already Implemented" edge case in SKILL.md applies ONLY when **ZERO files were modified**.
 
 | Scenario | Workflow |
-|----------|----------|
+| -- | -- |
 | Zero files modified (all changes already present) | Skip PR workflow, close with verification |
 | ANY file modified (including docs/guidelines) | FULL PR workflow REQUIRED |
 | Guideline/documentation changes | FULL PR workflow REQUIRED |
@@ -82,12 +88,14 @@ The "Already Implemented" edge case in SKILL.md applies ONLY when **ZERO files w
 **Guideline and documentation changes are NOT exempt from PR workflow.**
 
 If ANY file was created, modified, or deleted (including `.md` files in `.opencode/`):
+
 1. **Follow full PR workflow** - commit → push → review-prep → PR creation → merge → cleanup
 2. **Do NOT skip review-prep** - developer visibility is mandatory
 3. **Do NOT close issues directly** - requires PR merge verification
 
 **"No File Changes" Edge Case:**
 When implementation determines "no file changes needed":
+
 1. **STILL push branch** - git will report "up-to-date", which is acceptable
 2. **STILL generate compare URL** - developer can see branch state
 3. **NEVER skip review prep** - visibility is mandatory
@@ -97,6 +105,7 @@ When implementation determines "no file changes needed":
 ### ⚠️ CRITICAL: Model ID Detection
 
 **When posting completion report (Step 3/4):**
+
 - **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
 - **MUST detect actual runtime identity** from environment/MCP tools
 - **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
@@ -137,6 +146,7 @@ ls ./tmp/
 ```
 
 **Preserve:**
+
 - `./tmp/*.db` (SQLite databases)
 - `./tmp/*.log` (log files)
 - `./tmp/.*` (hidden files like `.output.txt`)
@@ -151,6 +161,7 @@ git rebase origin/dev
 ```
 
 **Why this matters:**
+
 - Other agents may have merged work into `dev` since branch creation
 - The compare URL must reflect an accurate diff against current `dev`
 - Merge conflicts surfacing at review time are better than at PR creation time
@@ -184,10 +195,10 @@ If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** D
    git branch --show-current
    # MUST match BRANCH_NAME
    ```
-3. `git rev-parse --show-toplevel` MUST return the worktree path
-4. NEVER operate in the main working directory during implementation
-5. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
-6. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
+4. `git rev-parse --show-toplevel` MUST return the worktree path
+5. NEVER operate in the main working directory during implementation
+6. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
+7. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
 
 ### Step 2: Verify Branch Is Pushed
 
@@ -227,6 +238,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 ```
 
 **If GITBUCKET_HTML_URL is empty (not in .env):**
+
 1. REFUSE to generate any URL
 2. Report: "Cannot generate URL — GITBUCKET_HTML_URL not configured in .env"
 3. HALT — do not guess or fabricate a URL
@@ -236,6 +248,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 **⚠️ CRITICAL: URLs go in CHAT ONLY - NEVER to GitHub Issues.**
 
 Report to chat (exec summary + URL):
+
 ```
 **Summary:**
 
@@ -249,6 +262,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 (GitBucket example — for GitHub use `https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>`)
 
 **Why This Matters:**
+
 - Chat gets exec summary + URL (developer needs visibility)
 - Developer can click URL from chat to review changes
 
@@ -257,6 +271,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 **🚫 CRITICAL VIOLATION: Proceeding past this point without explicit "create a PR" is a CRITICAL GUIDELINE VIOLATION.**
 
 **DO NOT:**
+
 - Squash commits (happens at PR creation)
 - Create PR (requires explicit "create a PR" instruction)
 - Push again (already pushed in implementation)
@@ -264,11 +279,13 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 - Proceed to any next step (HALT means STOP)
 
 **WAIT for EXPLICIT instruction:**
+
 - Developer reviews changes via GitHub diff viewer
 - Developer says "create a PR" to proceed
 - NO assumptions, NO auto-progression
 
 **What HALT means:**
+
 - Report completion (issue + chat)
 - STOP all further action
 - Wait for developer's next explicit instruction
@@ -281,7 +298,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 1. **Detect missed push:** `git branch -vv` shows no upstream
 2. **Inform user:** "Implementation task must commit and push. Fixing now."
 3. **Fix and continue:** `git push -u origin <branch-name>`
-   4. **Continue:** Generate compare URL, report to chat
+   4\. **Continue:** Generate compare URL, report to chat
 
 **Why:** Commit without push = empty compare URL. Push is mandatory after commit.
 
@@ -316,7 +333,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 **This task runs AFTER EVERY implementation. No exceptions.**
 
 | Scenario | Run review-prep? |
-|----------|------------------|
+| -- | -- |
 | Code file modified | YES |
 | Documentation modified | YES |
 | Guidelines modified | YES |
@@ -332,7 +349,7 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 **After review-prep completes, verify:**
 
 | Check | Command | Expected |
-|-------|---------|----------|
+| -- | -- | -- |
 | Branch pushed | `git branch -vv` | Shows `[origin/branch]` |
 | Compare URL works | Open URL in browser | Shows diff |
 | Chat has summary | Check chat output | Exec summary + URL |
@@ -399,20 +416,22 @@ NO merge verification
 ### 🚫 CRITICAL VIOLATION: Commit Without Push
 
 ```
+
 Implementation complete
-    ↓
+↓
 git commit (commit made)
-    ↓
+↓
 [SKIPPED: git push]
-    ↓
+↓
 review-prep invoked
-    ↓
+↓
 Generate compare URL
-    ↓
+↓
 Result: "nothing to compare"
 Result: Developer CANNOT review changes
 Result: Workflow STALLS
-```
+
+````
 
 **Why this fails:**
 - Compare URL requires pushed commits
@@ -435,4 +454,4 @@ ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 ---
 🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
-```
+````

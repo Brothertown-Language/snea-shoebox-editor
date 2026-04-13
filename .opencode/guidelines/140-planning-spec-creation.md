@@ -13,7 +13,7 @@ AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 
 **INVESTIGATION CHECKPOINT**: Before creating a spec, the agent MUST verify investigation is complete. See `142-planning-archive-workflow.md` for investigation completion criteria and permissible test activities.
 
----
+______________________________________________________________________
 
 ## Terminology: Spec vs. Guideline Files
 
@@ -21,7 +21,7 @@ AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
 - **"Create a guideline file"** = Create/modify files in `.opencode/guidelines/` (Implementation task)
 - **SPEC = GitHub Issue** — Specs are planning/tracking artifacts, not file system artifacts
 
----
+______________________________________________________________________
 
 ## 1. Listing Available Specs
 
@@ -29,13 +29,13 @@ When the user issues commands `specs` or `pending`:
 
 1. **Gather all top-level specs**:
    - Query open GitHub Issues with `[SPEC]` prefix in title
- 2. **Check for superseding issues AND staleness**:
-    - Before implementing OR revising a spec, query for later `[SPEC]` or `[SPEC-FIX]` or `[SPEC-ENHANCEMENT]` issues
-    - If a later issue supersedes, invalidates, or contradicts the active spec, HALT and report
-    - Implementation of a superseded spec is wasted work
-    - Check if other specs were implemented while this spec was pending (staleness)
-    - If stale, REVISE the spec to reflect current reality before proceeding
-    - Report the revision and HALT — wait for approval before proceeding
+2. **Check for superseding issues AND staleness**:
+   - Before implementing OR revising a spec, query for later `[SPEC]` or `[SPEC-FIX]` or `[SPEC-ENHANCEMENT]` issues
+   - If a later issue supersedes, invalidates, or contradicts the active spec, HALT and report
+   - Implementation of a superseded spec is wasted work
+   - Check if other specs were implemented while this spec was pending (staleness)
+   - If stale, REVISE the spec to reflect current reality before proceeding
+   - Report the revision and HALT — wait for approval before proceeding
 3. **Present a multi-choice user query**:
    - Use the `question` tool with a list of available specs
    - Include spec title/name and current STATUS for each option
@@ -52,23 +52,25 @@ When the user issues commands `specs` or `pending`:
    - Show the spec details and current status
    - Report that the spec is ready and HALT. Do NOT prompt for approval or "GO".
 
----
+______________________________________________________________________
 
 ## 1.1. GitHub MCP Required — No Fallback
 
 **When GitHub MCP tools are NOT available, the agent MUST refuse planning work entirely.**
 
 ### 🚫 NO FALLBACK TO LOCAL FILES
+
 - **PROHIBITED**: Using `plans/SPEC-*.md` files as fallback when GitHub MCP is unavailable
 - **PROHIBITED**: Creating local plan files when GitHub MCP is unavailable
 - **PROHIBITED**: Proceeding with implementation without GitHub Issue tracking
 
 ### ✅ REQUIRED ACTION
+
 - If GitHub MCP is unavailable, STOP immediately
 - Report: "GitHub MCP tools unavailable. Cannot create or track specs without GitHub Issues."
 - Wait for GitHub MCP to be restored before proceeding
 
----
+______________________________________________________________________
 
 ## 1. Spec Reality Sync
 
@@ -80,7 +82,7 @@ When the user issues commands `specs` or `pending`:
 4. **This exemption applies ONLY to spec files in GitHub Issues**
 5. **`.opencode/guidelines/` modifications require full spec-first workflow**
 
----
+______________________________________________________________________
 
 ## 1.1. Engineering Requirements for Specs
 
@@ -91,7 +93,7 @@ When the user issues commands `specs` or `pending`:
 Before any implementation, every spec must document:
 
 | Requirement | Description |
-|-------------|-------------|
+| -- | -- |
 | **Problem Statement** | What is the problem? Why does it need solving? |
 | **Context** | Background, stakeholders, affected systems |
 | **Constraints** | Technical, resource, time, compatibility constraints |
@@ -114,6 +116,7 @@ Before any implementation, every spec must document:
 ### Anti-Patterns in Specifications
 
 **🚫 FORBIDDEN in Specs:**
+
 - Vague requirements ("make it better")
 - Missing success criteria
 - Unstated assumptions
@@ -122,13 +125,14 @@ Before any implementation, every spec must document:
 - Skipping design phase
 - Proceeding without approval
 
----
+______________________________________________________________________
 
 ## 1.2. Fresh-Start Context Requirements
 
 **All specs, bug reports, and issues MUST be self-contained for agents with NO memory context.**
 
 A different AI agent (or the same agent after a context reset) may pick up this spec without:
+
 - Prior conversation history
 - Mental context from discovery phases
 - Background knowledge of why decisions were made
@@ -138,23 +142,27 @@ A different AI agent (or the same agent after a context reset) may pick up this 
 **Specs MUST include ALL context inline:**
 
 1. **No "see above" or "as discussed" references**
+
    - ❌ "As discussed above..."
    - ❌ "See the previous comment..."
    - ❌ "As mentioned in the chat..."
    - ✅ RESTATE all information inline in the spec
 
 2. **Explicit file/line references**
+
    - Include exact file paths: `src/module/file.py`
    - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
    - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
-   - Include relevant code snippets (if short, <20 lines)
+   - Include relevant code snippets (if short, \<20 lines)
 
 3. **Cross-references with context**
+
    - When referencing other issues/specs: include issue number AND brief summary
    - Include URLs: `https://github.com/owner/repo/issues/123`
    - State WHY the reference matters
 
 4. **Decision rationale documented**
+
    - Why was this approach chosen?
    - What alternatives were considered?
    - What constraints drove the decision?
@@ -164,7 +172,7 @@ A different AI agent (or the same agent after a context reset) may pick up this 
 Before submitting any spec, verify ALL of the following:
 
 | Element | Required Content |
-|---------|------------------|
+| -- | -- |
 | **Problem Statement** | What is broken/needed and WHY (with context) |
 | **Affected Files** | List of files with function/section anchors and snippets |
 | **Related Issues** | Links + summaries + relevance explanation |
@@ -180,12 +188,15 @@ Before submitting any spec, verify ALL of the following:
 ### Example: Bad vs Good Spec Context
 
 **❌ BAD (assumes memory context):**
+
 > Fix the bug in the authentication module as discussed.
 
 **✅ GOOD (self-contained):**
+
 > **Problem:** The OAuth2 token refresh fails when the refresh token expires (issue #123).
 >
 > **Location:** `src/auth/oauth_client.py` in `refresh_token()` function:
+>
 > ```python
 > def refresh_token(self):
 >     # BUG: Does not handle expired refresh_token
@@ -197,7 +208,7 @@ Before submitting any spec, verify ALL of the following:
 >
 > **Decision:** Re-authenticate using stored credentials rather than failing.
 
----
+______________________________________________________________________
 
 ## 2. Spec Persistence
 
@@ -211,6 +222,6 @@ Before submitting any spec, verify ALL of the following:
 
 This ensures consistent workflow and prevents context fragmentation.
 
----
+______________________________________________________________________
 
 *Source: Content migrated from `040-plan-delivery.md`*

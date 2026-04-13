@@ -17,7 +17,7 @@ Plan creation workflow that transforms approved specs into actionable implementa
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `create` | Create plan from approved spec | ~800 |
 | `validate` | Check for placeholders and completeness | ~500 |
 | `retroactive` | Create plan for existing spec | ~600 |
@@ -54,6 +54,7 @@ Every step must contain actual content. These are **plan failures**: `TBD`, `TOD
 ## Self-Review Checklist
 
 After writing the complete plan, check:
+
 1. **Spec coverage:** Can you point to a task for each spec requirement?
 2. **Placeholder scan:** Search for red-flag patterns. Fix them.
 3. **Type consistency:** Do types/signatures used in later tasks match earlier definitions?

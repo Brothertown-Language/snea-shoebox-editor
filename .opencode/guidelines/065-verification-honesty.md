@@ -29,7 +29,7 @@ This erodes trust and leads to incorrect assertions about the codebase.
 The rule applies to ALL verification actions, not just explicit "check" instructions:
 
 | Trigger | Example |
-|---------|---------|
+| -- | -- |
 | Explicit instruction | "Check if tests pass" |
 | Implicit verification | Agent claims file exists without reading it |
 | Status confirmation | Agent reports git status from memory |
@@ -47,12 +47,14 @@ When the agent performs verification, it MUST show evidence:
 ### What COUNTS as Evidence
 
 ✅ **Verified:**
+
 - "X is Y — verified by `git status` just now" (with tool call visible)
 - "Running `pytest test/` confirms all tests pass" (with output shown)
 - "Checked `.env.example` — the variable name is `OLLAMA_API_URL`" (with read tool shown)
 - Calling a tool and reporting the result in the same exchange
 
 ❌ **NOT Evidence:**
+
 - "I checked earlier that X is Y" (memory recall without re-verification)
 - "The file contains Z (from my earlier read)" (stale reference)
 - "X is Y" without any visible tool call or command
@@ -61,7 +63,7 @@ When the agent performs verification, it MUST show evidence:
 ## Memory vs. Verified Distinction
 
 | Pattern | Classification | Acceptable? |
-|---------|---------------|-------------|
+| -- | -- | -- |
 | "I checked earlier that X is Y" | Memory recall | ❌ Must re-verify |
 | "The file contains Z (from my earlier read)" | Memory recall | ❌ Must re-read |
 | "X is Y — verified by `git status` just now" | Verified | ✅ |
@@ -80,6 +82,7 @@ When the agent performs verification, it MUST show evidence:
 The ONLY exception: if a tool was called in the **immediately preceding exchange** (the last assistant turn in the same conversation), the agent MAY reference that result without re-calling. Any earlier reference requires re-verification.
 
 This means:
+
 - If the agent just ran `git status` in the previous turn → MAY reference the result
 - If the agent ran `git status` two turns ago → MUST re-run before reporting status
 - If the agent ran `git status` in a previous session → MUST re-run (always)

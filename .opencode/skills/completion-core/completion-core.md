@@ -66,7 +66,7 @@ Chat output is idempotent by nature. Always produce:
 ## Idempotency Summary
 
 | Operation | Idempotency Mechanism | Applies To |
-|-----------|----------------------|------------|
+| -- | -- | -- |
 | Push branch | Check `git log origin/..HEAD` before pushing | Git workflows only |
 | Generate URL | Check if URL already generated; compare URL for pushes, action URL for creation workflows | All workflows |
 | Post status comment | Substantiveness gate (per `github-comments` skill) | Workflows with issue context |

@@ -23,7 +23,7 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `explore` | Full conversational exploration workflow (default) | ~800 |
 | `enforcement` | Enforcement rules and investigation completion criteria | ~400 |
 

@@ -21,7 +21,7 @@ Reference document defining what git-workflow tasks DO and DO NOT do, and the en
 #### What Git-Workflow Tasks DO (Pure Git Ops)
 
 | Task | Purpose | Implements? |
-|------|---------|-------------|
+| -- | -- | -- |
 | `pre-work` | Stash changes, create branch | NO - git ops only |
 | `commit-prep` | Stage and commit changes | NO - git ops only |
 | `review-prep` | Push branch, gen URL | NO - git ops only |
@@ -31,7 +31,7 @@ Reference document defining what git-workflow tasks DO and DO NOT do, and the en
 #### What Git-Workflow Tasks DO NOT Do
 
 | ❌ NOT in git-workflow | Moved Where? |
-|------------------------|---------------|
+| -- | -- |
 | Implementation logic | `implementation-workflow` orchestrator |
 | File editing | Implementation subagent |
 | Spec reading | Implementation subagent |
@@ -44,7 +44,7 @@ Reference document defining what git-workflow tasks DO and DO NOT do, and the en
 **This gate is MANDATORY and has NO decision point.** It cannot be skipped, bypassed, or manually executed.
 
 | Step | Skill | Required? | Decision Point? |
-|------|-------|-----------|-----------------|
+| -- | -- | -- | -- |
 | 3.5a | verification-before-completion --task verify | YES | NO |
 | 3.5b | finishing-a-development-branch --task checklist | YES | NO |
 | 4 | git-workflow --task review-prep | YES | NO |
@@ -56,6 +56,7 @@ See `000-critical-rules.md` → "Skipping Post-Implementation Verification Skill
 #### ⚠️ CRITICAL: No Implementation Logic in Git-Workflow
 
 Git-workflow skills MUST remain pure git operations:
+
 - ✅ Git commands (worktree, branch, commit, push)
 - ✅ Git status checks
 - ✅ Git cleanup
@@ -66,6 +67,7 @@ Git-workflow skills MUST remain pure git operations:
 #### ⚠️ CRITICAL: Yield-Back Before HALT
 
 Each subtask MUST yield structured context before HALT:
+
 - pre-work must yield branch info
 - implementation must yield files changed
 - review-prep must yield URL + summary
@@ -73,6 +75,7 @@ Each subtask MUST yield structured context before HALT:
 #### ⚠️ CRITICAL: HALT After Review-Prep
 
 NEVER proceed to PR creation without explicit "create a PR":
+
 - review-prep yields URL for CHAT
 - HALT and wait
 - Only "create a PR" triggers pr-creation
@@ -82,7 +85,7 @@ NEVER proceed to PR creation without explicit "create a PR":
 ### Common Issues
 
 | Issue | Resolution |
-|-------|------------|
+| -- | -- |
 | Authorization context lost | approval-gate passes context to implementation-workflow |
 | Pre-work asks for auth again | Pre-work receives context from orchestrator, no re-check |
 | Implementation doesn't commit | Implementation calls git-workflow commit-prep directly |

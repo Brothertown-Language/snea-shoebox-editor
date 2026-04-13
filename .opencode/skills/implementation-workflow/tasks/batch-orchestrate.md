@@ -31,9 +31,9 @@ Orchestrate batch implementation by dispatching sub-agents for each approved iss
 For each issue in the batch:
 
 1. Create a worktree with feature branch using `using-git-worktrees --task create-worktree`
-1. `BASE_BRANCH` defaults to `dev` for the first/only issue in the batch
-1. For dependent issues: `BASE_BRANCH` is set to the prior issue's feature branch (the merged branch, not the batch branch)
-1. Record each issue's branch name and worktree path
+2. `BASE_BRANCH` defaults to `dev` for the first/only issue in the batch
+3. For dependent issues: `BASE_BRANCH` is set to the prior issue's feature branch (the merged branch, not the batch branch)
+4. Record each issue's branch name and worktree path
 
 ### Step 3: Execute Issues in Dependency Order
 
@@ -50,7 +50,7 @@ For each issue in execution order:
      - Tiers 1-2 (trivial/formatting): Auto-resolve per `conflict-resolution` skill
      - Tier 3 (intent conflict): HALT and flag for developer review
 
-1. **Build dispatch context** with AI-composed intent-and-context metadata:
+2. **Build dispatch context** with AI-composed intent-and-context metadata:
 
    ```yaml
    batch:
@@ -70,9 +70,9 @@ For each issue in execution order:
      DEV_EMAIL: "<from-session>"
    ```
 
-1. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
+3. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
 
-1. **Sub-agent responsibilities:**
+4. **Sub-agent responsibilities:**
 
    - Load spec + session context + prior context
    - Run `implementation-workflow` skill for the specific issue
@@ -81,9 +81,9 @@ For each issue in execution order:
    - Run `finishing-a-development-branch --task checklist`
    - Return structured result: `{status, files_changed, summary}`
 
-1. **Collect result** from sub-agent
+5. **Collect result** from sub-agent
 
-1. **Compose prior_context** for the next issue based on what was implemented:
+6. **Compose prior_context** for the next issue based on what was implemented:
 
    - Design decisions made
    - Edge cases handled
@@ -91,9 +91,9 @@ For each issue in execution order:
    - Interfaces exposed that later issues should use
    - NOT a change summary (that's in git) — intent and context only
 
-1. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
+7. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
 
-1. **Handle failures:**
+8. **Handle failures:**
 
    - If sub-agent fails: record failure
    - For independent issues: continue to next issue
@@ -110,7 +110,7 @@ After ALL issues in the batch complete:
    git checkout -b <batch-branch-name>
    ```
 
-1. **Squash-merge each feature branch** into the batch branch, one commit per issue:
+2. **Squash-merge each feature branch** into the batch branch, one commit per issue:
 
    ```bash
    git merge --squash spec/issue-a
@@ -120,7 +120,7 @@ After ALL issues in the batch complete:
    git commit -m "Implement #B: <description> (#A dependency)"
    ```
 
-1. **Commit message format:**
+3. **Commit message format:**
 
    - MUST include issue number for GitHub auto-linking
    - Dependents reference their dependencies
@@ -129,8 +129,8 @@ After ALL issues in the batch complete:
 ### Step 5: Post-Batch Review-Prep
 
 1. **Verify all results** — check git log for all expected commits
-1. **Run git-workflow --task review-prep** for the batch branch
-1. **Collect compare URL**
+2. **Run git-workflow --task review-prep** for the batch branch
+3. **Collect compare URL**
 
 ### Step 6: Report and HALT
 
@@ -245,13 +245,13 @@ batch-orchestrate:
 
 ## Mandatory Rules
 
-1. **Main agent NEVER edits implementation files** — only orchestrates
-1. **Every sub-agent runs verification + finishing** — no skipping
-1. **One branch per issue** — each issue gets its own feature branch, never shared
-1. **Dependency resolution via git merge** — later issues merge prior branches, not branch-from-prior
-1. **Frozen branches after merge** — no rebasing or amending a merged branch
-1. **No HALTs between issues** — all issues complete before single HALT
-1. **Single batch PR** — squash-merge each feature branch into batch branch, then one PR
-1. **Intent-and-context metadata** — AI-composed, no fixed template, focus on why not what
-1. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
-1. **Always batch mode** — single issue = batch of one, no special-case path
+01. **Main agent NEVER edits implementation files** — only orchestrates
+02. **Every sub-agent runs verification + finishing** — no skipping
+03. **One branch per issue** — each issue gets its own feature branch, never shared
+04. **Dependency resolution via git merge** — later issues merge prior branches, not branch-from-prior
+05. **Frozen branches after merge** — no rebasing or amending a merged branch
+06. **No HALTs between issues** — all issues complete before single HALT
+07. **Single batch PR** — squash-merge each feature branch into batch branch, then one PR
+08. **Intent-and-context metadata** — AI-composed, no fixed template, focus on why not what
+09. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
+10. **Always batch mode** — single issue = batch of one, no special-case path

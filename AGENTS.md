@@ -39,7 +39,7 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 | Coverage | `uv run coverage run -m pytest test/ && uv run coverage report` | - |
 | Dead code scan | `uvx vulture src/` | Python ONLY |
 | Markdown lint | `uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/` | Markdown ONLY |
-| Markdown format | `uvx mdformat .opencode/guidelines/ docs/` | Markdown ONLY |
+| Markdown format | `uvx --with mdformat-frontmatter --with mdformat-tables --with mdformat-config --with mdformat-gfm mdformat --number --compact-tables --check .opencode/guidelines/ docs/` | Markdown ONLY |
 | Skill enforcement test | `bash .opencode/tests/test-enforcement.sh` | opencode-cli |
 | Isolated opencode-cli run | `bash .opencode/tests/with-test-home opencode-cli run '<message>'` | opencode-cli |
 | Clean test artifacts | `bash .opencode/tests/with-test-home --clean` | opencode-cli |

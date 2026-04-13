@@ -5,16 +5,19 @@ Enforcement rules and messages for the brainstorming skill. Ensures brainstormin
 ## What Skills MUST Check
 
 1. **Before spec creation:**
+
    - Has exploration been invoked?
    - Is exploration output present?
    - Has problem understanding been explored?
 
 2. **Enforcement matrix:**
+
    - Exploration NOT invoked → INVOKE brainstorming
    - Exploration invoked but incomplete (missing problem understanding) → COMPLETE exploration
    - Exploration complete → PROCEED to spec creation
 
 3. **What does NOT bypass exploration:**
+
    - "skip brainstorming" → NOT allowed
    - "I already know what I want" → Still require brief exploration (problem understanding at minimum)
    - User impatience → Document partial exploration, ask to proceed
@@ -44,7 +47,7 @@ Please complete exploration before proceeding to spec creation.
 Before creating a spec, investigation MUST be complete. This is a hard gate, not optional.
 
 | Requirement | Evidence |
-|-------------|----------|
+| -- | -- |
 | Problem understood | Clearly stated problem, context, stakeholders |
 | Codebase explored | Existing patterns, reusable components identified |
 | Alternatives considered | At least 2 approaches for significant decisions |
@@ -54,7 +57,7 @@ Before creating a spec, investigation MUST be complete. This is a hard gate, not
 ### Permissible Investigation Activities
 
 | Activity | Allowed? | Notes |
-|----------|----------|-------|
+| -- | -- | -- |
 | Read production code | YES | Read-only exploration |
 | Read production data | YES | Read-only analysis |
 | Create test scripts in `./tmp/` | YES | Isolated from production |

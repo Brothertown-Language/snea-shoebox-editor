@@ -66,6 +66,7 @@ exec_summary: string (markdown, human-readable)
 ### Context Lost Between Steps
 
 If a yield-back produces empty or missing fields:
+
 1. HALT orchestration
 2. Report which context field is missing
 3. Wait for manual intervention
