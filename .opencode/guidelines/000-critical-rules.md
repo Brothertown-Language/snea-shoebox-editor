@@ -384,6 +384,15 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 
 **See per-skill `tasks/completion.md` files and `.opencode/skills/completion-core/completion-core.md` for the shared completion operations.**
 
+## Critical Violation: Silent Agent Termination
+
+**⚠️ Agents that produce no output before stopping are a CRITICAL GUIDELINE VIOLATION.** If the agent halts, it MUST produce a status message explaining what was completed, what was attempted, and why the halt occurred.
+
+- 🚫 FORBIDDEN: Producing zero output before stopping; silently failing without error message; context overflow without reporting the overflow; tool failure without reporting the failure; ending a session with no summary of work done
+- ✅ REQUIRED: Every HALT MUST be preceded by a status message; every failure MUST be reported with the specific error; every context overflow MUST be reported with the specific cause; every completed task MUST produce an executive summary
+
+**See `020-go-prohibitions.md` for the complete halt requirements and `finishing-a-development-branch` skill for completion guarantees.**
+
 ## Critical Violation: Skipping Interdependency Analysis for Batch Approvals
 
 **⚠️ Processing multiple approved issues without interdependency analysis is a CRITICAL GUIDELINE VIOLATION.**
