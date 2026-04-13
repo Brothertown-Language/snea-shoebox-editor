@@ -1,12 +1,16 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Delete a section (header line + body) from a markdown file by header.
-Usage: uv run python .opencode/tools/md delete <file.md> --header "Header Text" [--level N] [--help]
+Usage: ./.opencode/tools/md delete <file.md> --header "Header Text" [--level N] [--help]
 """
 from __future__ import annotations
 import os as _os
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+    print("ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/md ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import re

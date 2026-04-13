@@ -1,14 +1,18 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Create a Python package (directory + __init__.py). Creates all intermediate packages too.
-Usage: uv run python .opencode/tools/py mkpkg <path> [<path2> ...]
-Example: uv run python .opencode/tools/py mkpkg src/commons/query
-         uv run python .opencode/tools/py mkpkg src/commons/query test/commons/query
+Usage: ./.opencode/tools/py mkpkg <path> [<path2> ...]
+Example: ./.opencode/tools/py mkpkg src/commons/query
+         ./.opencode/tools/py mkpkg src/commons/query test/commons/query
 """
 from __future__ import annotations
 import os as _os
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+    print("ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/py ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import sys

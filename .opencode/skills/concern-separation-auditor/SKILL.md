@@ -95,7 +95,7 @@ Co-authored with AI: OpenCode (ollama-cloud/glm-5)
 **Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
 
 ```bash
-uv run python .opencode/tools/symbolic flow
+./.opencode/tools/symbolic flow
 ```
 
 - `sym-flow`: Builds a networkx DiGraph from rule triggers/requires and detects activation graph anomalies. Cross-concern triggers (edges linking rules in different concern areas) indicate potential concern mixing.

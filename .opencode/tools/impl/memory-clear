@@ -1,12 +1,16 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Clear the Session State section of .opencode/memory.md.
-Usage: uv run python .opencode/tools/memory clear
+Usage: ./.opencode/tools/memory clear
 """
 from __future__ import annotations
 import os as _os
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+    print("ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/memory ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import sys

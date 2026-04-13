@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Stop the Jupyter server running on port 18888.
 
-Usage: uv run python .opencode/tools/jupyter-stop [--help]
+Usage: ./.opencode/tools/jupyter-stop [--help]
 
 Sends SIGTERM to any process listening on port 18888. Waits up to 5 seconds
 to confirm the port is released, then reports success or failure.

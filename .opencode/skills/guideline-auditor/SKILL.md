@@ -329,8 +329,8 @@ This auditor skill coordinates with the project's approval gate workflow:
 **Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
 
 ```bash
-uv run python .opencode/tools/symbolic drift
-uv run python .opencode/tools/symbolic complete
+./.opencode/tools/symbolic drift
+./.opencode/tools/symbolic complete
 ```
 
 - `sym-drift`: Detects YAML blocks where the file has been modified after the `last_updated` timestamp, indicating stale formalization.

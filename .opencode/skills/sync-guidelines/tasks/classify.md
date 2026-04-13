@@ -38,7 +38,7 @@ A file is **project-specific** if it:
 
 Examples of project-specific content:
 - `pubmed_data_3/` — project database path
-- `<repo>` — project name (from session_init.py)
+- `<repo>` — project name (from session-init)
 - `project_root /` — project-specific path handling
 - Project-specific table names or schemas
 

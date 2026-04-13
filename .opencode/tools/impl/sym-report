@@ -1,7 +1,11 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = ["networkx>=3.1"]
+# ///
 """
 DESCRIPTION: HTML+SVG report generator. Renders analysis results as self-contained HTML with inline CSS and SVG diagrams.
-Usage: uv run python .opencode/tools/symbolic report [--output PATH] [--format html|text]
+Usage: ./.opencode/tools/symbolic report [--output PATH] [--format html|text]
 """
 
 from __future__ import annotations
@@ -339,7 +343,7 @@ def generate_text_report(analysis_data: dict) -> str:
 def main() -> None:
     if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
         print(
-            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/symbolic ...). "
             "Direct invocation is not permitted.",
             file=sys.stderr,
         )

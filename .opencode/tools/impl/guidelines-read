@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Print the contents of a guideline file from .opencode/guidelines/.
-Usage: uv run python .opencode/tools/guidelines read <filename>
-Example: uv run python .opencode/tools/guidelines read 041
+Usage: ./.opencode/tools/guidelines read <filename>
+Example: ./.opencode/tools/guidelines read 041
 Note: Prefer 3-digit shorthand when available (for example `041` instead of full filename).
 """
 
@@ -11,7 +15,7 @@ import os as _os
 
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     print(
-        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+        "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/guidelines ...). "
         "Direct invocation is not permitted.",
         file=__import__("sys").stderr,
     )

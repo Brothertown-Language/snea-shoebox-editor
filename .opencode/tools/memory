@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
-DESCRIPTION: Memory tools dispatcher. Usage: uv run python .opencode/tools/memory <action> [args...]
+DESCRIPTION: Memory tools dispatcher. Usage: ./.opencode/tools/memory <action> [args...]
 Actions: read, write, update (alias: set), clear
-Example: uv run python .opencode/tools/memory read
+Example: ./.opencode/tools/memory read
 """
 from __future__ import annotations
 import os
@@ -23,7 +27,7 @@ ACTIONS = {
 
 def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
     result = subprocess.run(
-        [sys.executable, str(script)] + forwarded_args,
+        ["uv", "run", str(script)] + forwarded_args,
         capture_output=True,
         text=True,
         env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
@@ -50,7 +54,7 @@ def main() -> None:
                 seen_scripts.add(script)
                 try:
                     result = subprocess.run(
-                        [sys.executable, str(script_path), "--help"],
+                        ["uv", "run", str(script_path), "--help"],
                         capture_output=True, text=True,
                         env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
                     )

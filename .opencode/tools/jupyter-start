@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Start Jupyter server on port 18888 (XSRF disabled, no token) for notebook editing.
 
-Usage: uv run python .opencode/tools/jupyter-start [--help]
+Usage: ./.opencode/tools/jupyter-start [--help]
 
 Checks if port 18888 is already listening. If not, starts the server in the
 background and logs to tmp/jupyter.log. Prints the server URL on success.

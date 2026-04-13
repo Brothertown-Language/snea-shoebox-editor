@@ -5,13 +5,13 @@
  * skill invocation rules. Also detects bare issue references (#N)
  * and injects mandatory audit pipelines.
  *
- * Hook: system.transform — pushes English prose context (from session_init.py
+ * Hook: system.transform — pushes English prose context (from session-init
  *   and PluginInput augmentations) into the LLM system prompt.
  * Hook: chat.messages.transform — injects skill enforcement content and
  *   bare issue pipeline directives into user messages.
  *
  * NO shell.env hook — env-loader.ts owns all bash environment injection.
- * NO parsing of session_init.py output — stdout goes verbatim to system prompt.
+ * NO parsing of session-init output — stdout goes verbatim to system prompt.
  *
  * Source attribution:
  * - Session init pattern adapted from existing session-init.ts (project-internal)
@@ -40,7 +40,7 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
   }
 
   try {
-    const result = await $.nothrow()`uvx session-init`;
+    const result = await $.nothrow()`uv run .opencode/tools/session-init`;
     const stdout = result.text();
 
     if (!stdout || stdout.trim().length === 0) {
@@ -395,7 +395,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
   const { skills: skillDescriptions, errors: frontmatterErrors } = loadSkillDescriptions(skillsDir);
 
   return {
-    // Inject session context into system prompt (from session_init.py + PluginInput augmentations)
+    // Inject session context into system prompt (from session-init + PluginInput augmentations)
     "experimental.chat.system.transform": async (_input, output) => {
       const scriptOutput = await runSessionInit(input.$);
       if (scriptOutput) {

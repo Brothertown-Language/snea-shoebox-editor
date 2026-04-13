@@ -89,9 +89,9 @@ Use `.opencode/tools/guidelines` commands for searching developer guidelines:
 
 | Task | Command |
 | -- | -- |
-| Search guidelines | `uv run python .opencode/tools/guidelines search <term>` |
-| Read guideline | `uv run python .opencode/tools/guidelines read <filename>` |
-| List guidelines | `uv run python .opencode/tools/guidelines read --list` |
+| Search guidelines | `./.opencode/tools/guidelines search <term>` |
+| Read guideline | `./.opencode/tools/guidelines read <filename>` |
+| List guidelines | `./.opencode/tools/guidelines read --list` |
 
 ## Tool Selection Matrix
 
@@ -174,7 +174,7 @@ pycharm_search_in_files_by_text(searchText="article parsing")
 grep(pattern="MCP", glob="**/*.md")
 
 # ✅ ALSO CORRECT: Use .opencode/tools/guidelines for .opencode/guidelines/
-# Run: uv run python .opencode/tools/guidelines search MCP
+# Run: ./.opencode/tools/guidelines search MCP
 
 # ❌ WRONG: Srclight does not index .md files
 srclight_search_symbols(query="MCP")  # Returns no results for .md files
@@ -242,7 +242,7 @@ Srclight does not support filename search.
 
 ```
 # For .opencode/guidelines/*.md files:
-# Run: uv run python .opencode/tools/guidelines search <term>
+# Run: ./.opencode/tools/guidelines search <term>
 
 # For other .md files:
 grep(pattern="<term>", glob="**/*.md")

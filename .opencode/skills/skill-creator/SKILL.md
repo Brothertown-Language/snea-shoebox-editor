@@ -133,15 +133,15 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 ## Session Init Variable Alignment Requirement
 
-Skills and guidelines reference session-init variables by exact name (e.g., `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`). These names MUST match the `KEY: value` output of `session_init.py` exactly 1:1.
+Skills and guidelines reference session-init variables by exact name (e.g., `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`). These names MUST match the `KEY: value` output of `.opencode/tools/session-init` exactly 1:1.
 
 **When creating or updating a skill that references session-init variables:**
 
 1. **Use canonical variable names only** — never invent new names or use prose labels (e.g., use `GIT_OWNER`, not `Owner:`)
-2. **Verify new variable references exist in session_init.py output** — if a skill needs a session-init variable that doesn't appear in `session_init.py`, the variable MUST be added to both `session_init.py` and `env-loader.ts` before the skill ships
+2. **Verify new variable references exist in session-init output** — if a skill needs a session-init variable that doesn't appear in `.opencode/tools/session-init`, the variable MUST be added to both `.opencode/tools/session-init` and `env-loader.ts` before the skill ships
 3. **The canonical variable list is:** `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`
 
-**Why:** Agents extract values from session init output by matching variable names. A name mismatch (e.g., guideline says `GIT_OWNER` but session_init outputs `Owner:`) causes agents to fall back to inferring values from git remotes, which is a critical rule violation.
+**Why:** Agents extract values from session init output by matching variable names. A name mismatch (e.g., guideline says `GIT_OWNER` but session-init outputs `Owner:`) causes agents to fall back to inferring values from git remotes, which is a critical rule violation.
 
 ## Correctness-First Economics
 

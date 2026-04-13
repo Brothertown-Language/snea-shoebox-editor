@@ -17,8 +17,6 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
-[project.scripts]
-session-init = ".opencode.scripts.session_init:main"
 
 [project.optional-dependencies]
 local = [

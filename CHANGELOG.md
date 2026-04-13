@@ -18,6 +18,8 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ### Changed
 
+- **PEP 723 Self-Contained Tool Scripts** (#753) - Converted all 13 `.opencode/tools/` entry points (6 dispatchers + 5 standalones + session-init) and 26 impl scripts to self-contained PEP 723 scripts with `#!/usr/bin/env -S uv run --script` shebangs and inline metadata (`requires-python = "~=3.12"`, `dependencies`). Moved session-init from `.opencode/scripts/session_init.py` to `.opencode/tools/session-init`. Removed broken `[project.scripts]` from pyproject.toml. Updated all 6 dispatchers to invoke impl scripts via `uv run` instead of `sys.executable`. Updated session-enforcement.ts plugin to use `uv run .opencode/tools/session-init`. Added PEP 723 mandatory requirement to 070-environment.md. Created validation script `.opencode/tests/test-pep723-tools.sh`.
+
 - **Subagent-Driven-Development** (#734) - Updated to reference divide-and-conquer as primary orchestration skill. Fixed missing YAML frontmatter opening delimiter. Replaced implementation-workflow cross-references.
 - **Batch Orchestration Migration** (#734) - Migrated branch-per-issue, merge dependencies, squash-merge, frozen branches, and intent-and-context metadata from implementation-workflow into divide-and-conquer assemble-batch task.
 - **Cross-Reference Updates** (#734) - Updated all guidelines and skills referencing implementation-workflow or batch-orchestrate to reference divide-and-conquer and assemble-batch respectively.
