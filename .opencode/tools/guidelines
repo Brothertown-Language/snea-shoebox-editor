@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
-DESCRIPTION: Guidelines tools dispatcher. Usage: uv run python .opencode/tools/guidelines <action> [args...]
+DESCRIPTION: Guidelines tools dispatcher. Usage: ./.opencode/tools/guidelines <action> [args...]
 Actions: read, load, list, show, search, edit
-Example: uv run python .opencode/tools/guidelines search <term>
+Example: ./.opencode/tools/guidelines search <term>
 """
 from __future__ import annotations
 import os
@@ -31,12 +35,12 @@ def _suggest_search_for_unknown_action(action: str, rest: list[str]) -> str | No
     query = " ".join(query_parts).strip()
     if not query:
         return None
-    return f'Hint: did you mean `uv run python .opencode/tools/guidelines search "{query}"`?'
+    return f'Hint: did you mean `./.opencode/tools/guidelines search "{query}"`?'
 
 
 def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
     result = subprocess.run(
-        [sys.executable, str(script)] + forwarded_args,
+        ["uv", "run", str(script)] + forwarded_args,
         capture_output=True,
         text=True,
         env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},

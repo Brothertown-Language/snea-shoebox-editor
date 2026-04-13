@@ -1,7 +1,11 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = ["networkx>=3.1"]
+# ///
 """
 DESCRIPTION: Digraph block parser. Extracts dot/digraph fenced blocks from markdown and converts to networkx DiGraph.
-Usage: uv run python .opencode/tools/symbolic extract-dot
+Usage: ./.opencode/tools/symbolic extract-dot
 """
 
 from __future__ import annotations
@@ -77,7 +81,7 @@ def extract_digraphs(scan_dir: Path) -> list[tuple[str, nx.DiGraph, str]]:
 def main() -> None:
     if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
         print(
-            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/symbolic ...). "
             "Direct invocation is not permitted.",
             file=sys.stderr,
         )

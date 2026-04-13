@@ -1,7 +1,11 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = ["networkx>=3.1"]
+# ///
 """
 DESCRIPTION: State machine extraction and validation. Checks reachability, dead states, dangling references.
-Usage: uv run python .opencode/tools/symbolic states
+Usage: ./.opencode/tools/symbolic states
 """
 
 from __future__ import annotations
@@ -105,7 +109,7 @@ def validate_state_machines(state_machines: list, rules: list | None = None) -> 
 def main() -> None:
     if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
         print(
-            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/symbolic ...). "
             "Direct invocation is not permitted.",
             file=sys.stderr,
         )

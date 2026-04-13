@@ -10,7 +10,7 @@ import subprocess
 def get_session_values() -> dict[str, str]:
     """Extract values from session init script.
 
-    Runs `uv run python .opencode/scripts/session_init.py` and parses output.
+    Runs `uv run .opencode/tools/session-init` and parses output.
 
     Returns:
         Dict with GITBUCKET_URL, GITBUCKET_TOKEN, GIT_OWNER, GIT_REPO, etc.
@@ -29,7 +29,7 @@ def get_session_values() -> dict[str, str]:
         ValueError: Expected variable not found in output
     """
     result = subprocess.run(
-        ["uv", "run", "python", ".opencode/scripts/session_init.py"],
+        ["uv", "run", ".opencode/tools/session-init"],
         capture_output=True,
         text=True,
         check=True,

@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: List all agent tools in .opencode/tools/ with their descriptions.
 
-Usage: uv run python .opencode/tools/help
+Usage: ./.opencode/tools/help
 """
 from __future__ import annotations
 
@@ -44,7 +48,7 @@ def main() -> None:
         print("No tools found in .opencode/tools/.")
         return
 
-    print(f"Agent tools in .opencode/tools/  (run with: uv run python .opencode/tools/<tool>)\n")
+    print(f"Agent tools in .opencode/tools/  (run with: ./.opencode/tools/<tool>)\n")
     for script in scripts:
         desc = get_description(script)
         print(f"  {script.name:<24} — {desc}")

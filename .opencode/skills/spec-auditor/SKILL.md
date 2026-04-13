@@ -209,8 +209,8 @@ Co-authored with AI: OpenCode (ollama-cloud/glm-5)
 **Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
 
 ```bash
-uv run python .opencode/tools/symbolic states
-uv run python .opencode/tools/symbolic flow
+./.opencode/tools/symbolic states
+./.opencode/tools/symbolic flow
 ```
 
 - `sym-states`: Validates state machines extracted from yaml+symbolic blocks — checks reachability from start_state, detects dead/unreachable states, flags dangling references in transitions.

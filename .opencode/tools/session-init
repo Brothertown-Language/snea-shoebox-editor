@@ -1,4 +1,8 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """Session initialization script for AI agents.
 
 Outputs KEY: value pairs for LLM consumption on stdout. Variable names match
@@ -21,7 +25,7 @@ Guard checks (auto-create missing files/branches/worktree):
 - .env gitignore: Warn if .env exists but is not in .gitignore
 
 Usage:
-    uvx session-init
+    ./.opencode/tools/session-init
 
 Exit codes:
     0: Success

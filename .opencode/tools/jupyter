@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
-DESCRIPTION: Jupyter server tools dispatcher. Usage: uv run python .opencode/tools/jupyter <action> [args...]
+DESCRIPTION: Jupyter server tools dispatcher. Usage: ./.opencode/tools/jupyter <action> [args...]
 Actions: start, stop
-Example: uv run python .opencode/tools/jupyter start
+Example: ./.opencode/tools/jupyter start
 """
 from __future__ import annotations
 import os
@@ -20,7 +24,7 @@ ACTIONS = {
 
 def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
     result = subprocess.run(
-        [sys.executable, str(script)] + forwarded_args,
+        ["uv", "run", str(script)] + forwarded_args,
         capture_output=True,
         text=True,
         env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},

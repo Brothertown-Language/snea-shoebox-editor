@@ -7,7 +7,7 @@ The following guidelines are loaded on-demand by skills, not permanently in cont
 - `065-verification-honesty.md` — Loaded by verification-dependent skills when invoked
 - `067-context-completeness.md` — Loaded by issue/PR review skills when invoked
 
-When a skill indicates "Load guideline:" in its pre-conditions, use the `read` tool or `uv run python .opencode/tools/guidelines read` command to load it before proceeding.
+When a skill indicates "Load guideline:" in its pre-conditions, use the `read` tool or `./.opencode/tools/guidelines read` command to load it before proceeding.
 
 ## 1. Tool Priority Hierarchy
 
@@ -34,10 +34,10 @@ ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance,
 
 ### ✅ ALWAYS DO
 
-- **Reading or searching guideline files MUST use `uv run python .opencode/tools/guidelines`** — never raw `open`, `cat`, or `grep` on `.opencode/guidelines/` files.
-- `uv run python .opencode/tools/guidelines read <filename>` — print a single guideline file.
-- `uv run python .opencode/tools/guidelines search <term>` — search all guideline files for a term.
-- `uv run python .opencode/tools/guidelines search <term> --file <filename>` — search within one file.
+- **Reading or searching guideline files MUST use `./.opencode/tools/guidelines`** — never raw `open`, `cat`, or `grep` on `.opencode/guidelines/` files.
+- `./.opencode/tools/guidelines read <filename>` — print a single guideline file.
+- `./.opencode/tools/guidelines search <term>` — search all guideline files for a term.
+- `./.opencode/tools/guidelines search <term> --file <filename>` — search within one file.
 
 ### ⚠️ ASK FIRST
 
@@ -79,7 +79,7 @@ When working in a git worktree (`WORKTREE_PATH` is set), TIER 1 file operation t
 
 - All temporary scripts and output files MUST be written ONLY to `./tmp/` (project root). NO OTHER FOLDERS OR PATHS ARE PERMITTED.
 - Create the directory if needed: `mkdir -p ./tmp`.
-- **Mandatory pre-submit root cleanliness check:** Before calling `submit`, run `uv run python .opencode/tools/file-exists .output.txt` and confirm it is MISSING. If it exists, move it to `./tmp/.output.txt` immediately.
+- **Mandatory pre-submit root cleanliness check:** Before calling `submit`, run `./.opencode/tools/file-exists .output.txt` and confirm it is MISSING. If it exists, move it to `./tmp/.output.txt` immediately.
 - **ALWAYS clean up temp files after modification tasks are complete.**
 
 ### 🚫 NEVER DO

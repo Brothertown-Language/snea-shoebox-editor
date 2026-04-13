@@ -1,7 +1,11 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Extract yaml+symbolic fenced blocks from markdown files. Schema validation with graceful skip on errors.
-Usage: uv run python .opencode/tools/symbolic extract [--dir PATH] [--verbose]
+Usage: ./.opencode/tools/symbolic extract [--dir PATH] [--verbose]
 """
 
 from __future__ import annotations
@@ -181,7 +185,7 @@ def extract_yaml_blocks(scan_dir: Path, verbose: bool = False) -> ExtractResult:
 def main() -> None:
     if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
         print(
-            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/symbolic ...). "
             "Direct invocation is not permitted.",
             file=sys.stderr,
         )

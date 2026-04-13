@@ -1,7 +1,11 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Drift detection. Compares YAML last_updated timestamps against file mtime.
-Usage: uv run python .opencode/tools/symbolic drift
+Usage: ./.opencode/tools/symbolic drift
 """
 
 from __future__ import annotations
@@ -81,7 +85,7 @@ def detect_drift(scan_dir: Path) -> list[DriftEntry]:
 def main() -> None:
     if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
         print(
-            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/symbolic ...). "
             "Direct invocation is not permitted.",
             file=sys.stderr,
         )

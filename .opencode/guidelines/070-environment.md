@@ -6,11 +6,21 @@
   `uv run python`. Package ops: add dependencies by editing `pyproject.toml` then running `uv sync` — never `uv add`. `pip` prohibited. No `sys.path` hacks or manual
   path additions.
 - **Never use `python3` or `python` directly** — always `uv run python`. Never prefix commands with absolute paths or `cd /absolute/path &&`. See `060-tool-usage.md § Python Interpreter` and `§ Path Rules` for the full zero-tolerance rules.
-- Reusable agent scripts live in `.opencode/tools/` (project root). Invoke with `uv run python .opencode/tools/<script>`.
+- Reusable agent scripts live in `.opencode/tools/` (project root). Invoke with `./.opencode/tools/<script>`.
 - When `pyproject.toml` changes, purge `.venv` and run `uv sync` as a standalone command (never embedded in git hooks,
   commit scripts, or automated pipelines).
 - **Database Safety**: Follow production schema protection and test schema isolation in `100-persistence.md`.
   NEVER run test/experimental code against the production schema.
+
+## PEP 723 Self-Contained Scripts (MANDATORY)
+
+All Python entry points in `.opencode/tools/` MUST be self-contained PEP 723 scripts with:
+- Shebang: `#!/usr/bin/env -S uv run --script`
+- PEP 723 `# /// script` metadata block with `requires-python` and `dependencies`
+- Zero dependency on project `pyproject.toml` or `uv.lock`
+- Execute permission (`chmod +x`)
+
+New tools MUST follow this pattern. Do NOT use `uv run python .opencode/tools/X`.
 
 ## Isolated Tool Environments
 
@@ -196,7 +206,7 @@ This rule applies universally to:
 - **`.output.txt` files must be placed in `./tmp/` (e.g., `./tmp/.output.txt`), never at the project root (`.output.txt` is a violation).**
 - **Mandatory pre-submit root cleanliness check:** Before calling `submit`, confirm the project root is clean:
   (1) Never create `.output.txt`, `temp_*.py`, or any other temp/diagnostic file at the project root — always use `./tmp/` at time of creation.
-  (2) Run `uv run python .opencode/tools/file-exists .output.txt` — if it exists, move it to `./tmp/.output.txt` immediately (`mv .output.txt ./tmp/.output.txt`).
+  (2) Run `./.opencode/tools/file-exists .output.txt` — if it exists, move it to `./tmp/.output.txt` immediately (`mv .output.txt ./tmp/.output.txt`).
   (3) Check for any `temp_*.py` files at the project root (`ls temp_*.py 2>/dev/null`) — if any exist, move them to `./tmp/` before submitting.
 
 ### ⚠️ MANDATORY: Temp Files Cleanup After Task Completion

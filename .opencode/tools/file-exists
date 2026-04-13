@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Check whether one or more file/directory paths exist and report EXISTS or MISSING.
 
-Usage: uv run python .opencode/tools/file-exists <path> [<path> ...]
+Usage: ./.opencode/tools/file-exists <path> [<path> ...]
 """
 from __future__ import annotations
 
@@ -19,7 +23,7 @@ def main() -> None:
 
     paths = [a for a in sys.argv[1:] if not a.startswith("-")]
     if not paths:
-        print("Usage: uv run python .opencode/tools/file-exists <path> [<path> ...]")
+        print("Usage: ./.opencode/tools/file-exists <path> [<path> ...]")
         sys.exit(1)
 
     all_exist = True
