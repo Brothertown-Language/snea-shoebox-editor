@@ -18,7 +18,7 @@ Plan creation workflow that transforms approved specs into actionable implementa
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `create` | Create plan from approved spec | ~800 |
+| `create` | Create plan from approved spec; report in chat | ~800 |
 | `validate` | Check for placeholders and completeness | ~500 |
 | `retroactive` | Create plan for existing spec | ~600 |
 | `clean-room` | Generate independent plan from problem statement only | ~500 |
@@ -91,6 +91,7 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 6. Create plan issue or return markdown
 7. Self-review (coverage, placeholders, type consistency)
 8. Validate (no placeholders, TDD structure, actionable steps)
+9. Chat output with URL — Report plan creation using exec summary + URL + byline format per `000-critical-rules.md`
 
 ## Enforcement
 
