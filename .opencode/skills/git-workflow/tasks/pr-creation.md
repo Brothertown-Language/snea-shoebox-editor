@@ -19,6 +19,121 @@ Create pull request after explicit user instruction. Squash commits to single co
 
 ## Procedure
 
+### Step 0: Submodule PR Dependency Check (MANDATORY GATE)
+
+**⚠️ CRITICAL: This gate runs BEFORE all other PR creation steps. If it fails, PR creation is BLOCKED with no override.**
+
+This step enforces the PR dependency chain: submodule changes must be pushed and available on the remote before the parent PR can be created. This prevents broken parent PRs that reference submodule SHAs not yet available on the remote.
+
+#### Step 0.1: Check for .gitmodules
+
+```bash
+test -f .gitmodules && echo "HAS_GITMODULES=true" || echo "HAS_GITMODULES=false"
+```
+
+**If `.gitmodules` does NOT exist:** Skip all submodule steps. Proceed directly to Step 1.
+
+**If `.gitmodules` EXISTS:** Continue to Step 0.2.
+
+#### Step 0.2: Parse Submodule Entries
+
+For each `[submodule "name"]` entry in `.gitmodules`, extract:
+
+- **path**: Submodule directory path
+- **url**: Submodule remote URL
+
+```bash
+git config --file .gitmodules --get-regexp submodule
+```
+
+#### Step 0.3: Verify Committed SHA Against Remote dev HEAD
+
+For each submodule entry:
+
+1. **Get committed SHA** in the parent:
+
+   ```bash
+   git ls-tree HEAD <path> | awk '{print $3}'
+   ```
+
+2. **Get remote dev branch HEAD SHA**:
+
+   ```bash
+   git ls-remote <url> refs/heads/dev | awk '{print $1}'
+   ```
+
+3. **Compare SHAs**:
+
+   | Condition | Action |
+   | -- | -- |
+   | Committed SHA == remote dev HEAD | ✅ Pass — submodule is up to date |
+   | Committed SHA != remote dev HEAD | 🚫 **BLOCK PR creation** — hard gate, no `--force` override |
+
+**If ANY submodule SHA differs from remote dev HEAD:**
+
+```
+⛔ BLOCKED: Submodule '<name>' SHA differs from remote dev.
+  Committed: <committed_sha>
+  Remote dev: <remote_sha>
+  
+  Push the submodule changes to dev first, then update the parent reference.
+  
+  Commands:
+    cd <path> && git push origin dev
+    cd <parent> && git add <path> && git commit -m "chore: update submodule <name>"
+```
+
+**HALT.** Do not proceed to Step 1. The developer must push the submodule first.
+
+#### Step 0.4: Verify Submodule Tags for main-branch PRs (Release Gate)
+
+**This check applies ONLY when the target branch is `main`** (i.e., release PRs from `dev` to `main`).
+
+For each submodule entry:
+
+1. **Get committed SHA** (from Step 0.3):
+
+   ```bash
+   git ls-tree HEAD <path> | awk '{print $3}'
+   ```
+
+2. **Check if SHA is a tagged release**:
+
+   ```bash
+   git -C <path> describe --exact-match --tags <committed_sha> 2>/dev/null
+   ```
+
+   | Condition | Action |
+   | -- | -- |
+   | SHA is a tagged release | ✅ Pass — submodule is on a release tag |
+   | SHA is NOT a tagged release | 🚫 **BLOCK PR creation** — hard gate, no override |
+
+**If ANY submodule is not on a tagged release commit for a main-branch PR:**
+
+```
+⛔ BLOCKED: Submodule '<name>' is not on a tagged release.
+  Committed SHA: <committed_sha>
+  Nearest tag: <tag_from_describe>
+  
+  Tag the submodule release before creating a release PR for the parent.
+  
+  Commands:
+    cd <path> && git tag v<version> <committed_sha> && git push origin v<version>
+```
+
+**HALT.** Do not proceed to Step 1. The developer must tag the submodule release first.
+
+#### Step 0 Enforcement Summary
+
+| Gate | Condition | Action |
+| -- | -- | -- |
+| No .gitmodules | `.gitmodules` absent | Skip all submodule steps |
+| SHA mismatch | Committed SHA ≠ remote dev HEAD | 🚫 BLOCK PR creation |
+| Untagged release | Target is `main` and submodule not tagged | 🚫 BLOCK PR creation |
+| All pass | All SHAs match, all tags valid (if main) | ✅ Proceed to Step 1 |
+
+**There is NO `--force` override for submodule dependency gates.** Submodule changes must be pushed first — this is a correctness guarantee, not a preference.
+
 ### Step 1: Verify PR Instruction (MANDATORY FIRST)
 
 **🚫 CRITICAL: This is an ENFORCEMENT GATE, not just documentation.**

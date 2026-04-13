@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/592-submodule-release
+
+- **Submodule Release Coordination** (#592) - Implemented automanaged submodule lifecycle: session-start sync with missing dev auto-creation, automated commit/push in review-prep, SHA validation scripts (validate-submodule-refs.sh, enhanced validate-release-tags.sh with --semver/--branch), PR dependency chain enforcement, automated dev→main release promotion, and cross-platform (GitHub + GitBucket) tag verification.
+
 ### spec/batch-apr-13-2026
 
 - **Batch Approval Implementation** (#756, #752, #728, #688, #680, #667, #533, #306, #662, #630, #683, #763, #762, #614, #470, #467) - 17 issues implemented in a single batch, including unified batch workflow, mandatory post-implementation invocation, auto-rebase pending PRs, bug analysis auto-spec, discussion-conclusion non-authorization patterns, label state machine cross-references, spec-auditor auto-fix model, branch-header changelog, identity placeholder cleanup, brainstorming terminal state, session enforcement discussion mode, ruff version sync, stale User import fix, byline format standardization, PR trigger check, and template-driven element removal.
