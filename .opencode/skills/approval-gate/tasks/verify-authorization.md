@@ -89,32 +89,45 @@ After all verification gates pass, determine the approval context and auto-dispa
 
 | Approval Context | How to Detect | Auto-Dispatch Target |
 |------------------|---------------|----------------------|
-| **Spec approval** | Issue title contains `[SPEC` or has `spec` label; no existing plan sub-issue | `writing-plans --task create` |
-| **Plan approval** | Issue is a plan (linked from a spec via sub-issue relationship) | `executing-plans --task start` |
+| **Spec approval** | Issue title contains `[SPEC` or has `spec` label | `writing-plans --task create` |
+| **Plan approval** | Issue has `plan` label or `[PLAN]` prefix in title | `executing-plans --task start` |
 | **Already implemented** | `verify-already-implemented` returns positive | No dispatch — auto-close instead |
 
 #### Auto-Dispatch Procedure
 
 1. Determine approval context (spec vs plan) by checking:
    - Issue title format: `[SPEC` prefix = spec approval
-   - Sub-issue relationships: if this issue is a sub-issue of a spec, it is a plan approval
+   - Issue title format: `[PLAN]` prefix = plan approval
    - Labels: presence of `spec` or `plan` labels
+   - Plan detection is via `plan` label or `[PLAN]` prefix in title (NOT via sub-issue relationship to spec)
 2. **If spec approval:** Invoke `writing-plans --task create` with context:
    - `spec_issue=#N` (the approved spec issue number)
    - `GIT_OWNER`, `GIT_REPO`, `WORKTREE_PATH` from session
-3. **If plan approval:** Invoke `executing-plans --task start` (existing behavior, no change)
+3. **If plan approval:** Invoke `executing-plans --task start` with context:
+   - `plan_issue=#N` (the approved plan issue number)
+   - `spec_issue=#M` (extracted from plan body — the spec reference)
+   - `GIT_OWNER`, `GIT_REPO`, `WORKTREE_PATH` from session
 4. **Chat output:** Clearly indicate the transition:
    - Spec approval: "Verification passed → Creating implementation plan"
    - Plan approval: "Verification passed → Starting implementation"
 
+#### Spec Revision Revocation Detection
+
+If a spec is revised (status changed to `REVISED - NEEDS APPROVAL`):
+
+1. Search for `[PLAN]` issues that reference the spec number in their body
+2. Mark found plans for audit (their authorization is revoked by the spec revision)
+3. Report affected plans in chat output
+
 #### Auto-Dispatch Edge Cases
 
 - **Spec already has a plan:** `writing-plans --task create` handles this (skips or updates per its existing logic)
-- **Multi-task spec with missing sub-issues:** `verify-sub-issues` gate fails → HALT, no dispatch
-- **Batch approval:** Each spec in batch gets its own dispatch cycle after batch state is established
+- **Multi-task plan with missing sub-issues:** `verify-sub-issues` gate fails → HALT, no dispatch
+- **Batch approval:** Each plan in batch gets its own dispatch cycle after batch state is established
 
 ## Context Required
 
 - Related tasks: `verify-sub-issues`, `verify-codebase`
 - Auto-dispatch targets: `writing-plans` (spec approval), `executing-plans` (plan approval)
+- Dispatch context for plan approval: pass `plan_issue=#N` and `spec_issue=#M` (extracted from plan body)
 - Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval`, add `in-progress` on approval)

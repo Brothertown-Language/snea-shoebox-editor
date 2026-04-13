@@ -3,7 +3,8 @@
 > **See `approval-gate` skill for complete procedural workflow including:**
 >
 > - Spec + authorization requirements
-> - Sub-issue verification gate
+> - Plan approval gate
+> - Sub-issue verification gate (under plan)
 > - Single-task exemption
 > - Re-evaluation checklist
 > - Bug report response
@@ -17,6 +18,7 @@
 | Requirement | Rule |
 | -- | -- |
 | **Spec before code** | NO code/guideline changes WITHOUT approved spec |
+| **Plan before implementation** | NO implementation WITHOUT approved plan (spec approval → plan creation, plan approval → implementation) |
 | **Authorization required** | NO implementation WITHOUT explicit `"approved"` or `"go"` |
 | **Explicit auth overrides label** | When user says `approved`/`go`, proceed REGARDLESS of `needs-approval` label |
 | **Branch first** | Create feature branch BEFORE any file modification |
@@ -52,8 +54,8 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - **Session-bound**: New session = new authorization required (no carryover from previous sessions)
 - **Single-use**: Authorization for current phase/task only within that issue
 - **External input invalidates**: Bug reports require re-authorization
-- **Revision ≠ implementation**: Spec updates don't authorize code changes
-- **Reference ≠ authorization cascade**: Issue mentions in body/comments do NOT cascade authorization
+- **Revision ≠ implementation**: Spec updates don't authorize code changes; spec revision revokes linked plan approvals
+- **Reference ≠ authorization cascade**: Issue mentions in body/comments do NOT cascade authorization; spec references plan via body text, not sub-issue link
 - **Confirmation ≠ authorization**: Confirming an observation does NOT authorize implementation
 
 **🚫 CRITICAL: Old authorizations do NOT apply:**
@@ -62,15 +64,17 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - Previous session authorization → NOT VALID for new issue/spec
 - Authorization is ZERO-BASED — every task needs NEW authorization
 
-### Multi-Task Spec Authorization (CRITICAL)
+### Multi-Task Plan Authorization (CRITICAL)
 
-**When parent issue has sub-issues:** authorization cascades to ALL sub-issues.
+**When a plan has sub-issues:** plan approval cascades authorization to ALL sub-issues under the plan.
 
-**See `approval-gate` skill → "Multi-Task Spec Authorization" for the complete authorization cascade workflow and enforcement matrix.**
+**See `approval-gate` skill → "Multi-Task Plan Authorization" for the complete authorization cascade workflow and enforcement matrix.**
+
+The plan-bridge hierarchy: Spec → (body linked reference) → Plan → Sub-issues. Sub-issues are children of the plan, NOT the spec.
 
 Key rules:
 
-- 🚫 DO NOT halt after each phase of multi-task spec
+- 🚫 DO NOT halt after each phase of multi-task plan
 - 🚫 DO NOT ask for re-authorization between phases
 - 🚫 DO NOT treat sub-issues as separate authorization units
 - ✅ Complete ALL phases, then report ONCE and HALT ONCE
@@ -95,7 +99,7 @@ Key rules:
 
 ### Revision Revokes Approval (MANDATORY)
 
-**Any modification to a spec or task document MUST immediately revoke approval.**
+**Any modification to a spec or plan document MUST immediately revoke approval.** Spec revision revokes approval of any linked plan (referenced via body text). Plan revision revokes implementation authorization for its sub-issues.
 
 **See `approval-gate` skill for revision status transition rules, mandatory actions, and exemption categories.**
 
@@ -105,6 +109,15 @@ Exempt from approval revocation:
 
 - STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
 - Bug report additions (separate from spec content changes)
+
+### Re-implementation Workflow
+
+When a spec is revised after a linked plan was already approved:
+
+1. Spec revision revokes the linked plan's approval
+2. The old plan is closed with a comment referencing the spec revision
+3. A new plan is created under the same spec (using `writing-plans` skill)
+4. The new plan requires fresh approval before implementation proceeds
 
 ### Label Handling
 
@@ -167,24 +180,52 @@ Key rules:
 | -- | -- |
 | `000-critical-rules.md` | Critical violations and auditor enforcement |
 | `020-go-prohibitions.md` | GO command restrictions |
-| `github-sub-issues` skill | Sub-issue creation and verification |
+| `140-planning-spec-creation.md` | Spec creation and plan-bridge hierarchy |
+| `github-sub-issues` skill | Sub-issue creation and verification (under plan) |
 | `git-workflow` skill `cleanup` task | Post-merge closure workflow |
 | `pr-creation-workflow` skill | PR creation timing |
+| `writing-plans` skill | Plan creation from approved spec |
+| `executing-plans` skill | Plan execution after plan approval |
 
 ```yaml+symbolic
 schema_version: "1.0"
-last_updated: "2026-04-12T12:00:00Z"
+last_updated: "2026-04-13T12:00:00Z"
 rules:
   - id: approval-gate-001
     title: "No implementation without authorization"
     conditions:
       all:
-        - "has_approved_spec == false"
+        - "has_approved_plan == false"
     actions:
       - HALT
     conflicts_with: []
     requires: []
     triggers: []
+    source: "010-approval-gate.md §Tier0"
+
+  - id: approval-gate-001a
+    title: "Spec approval authorizes plan creation, not implementation"
+    conditions:
+      all:
+        - "has_approved_spec == true"
+        - "has_approved_plan == false"
+    actions:
+      - INVOKE(writing-plans)
+    conflicts_with: []
+    requires: [approval-gate-001]
+    triggers: [writing-plans]
+    source: "010-approval-gate.md §Tier0"
+
+  - id: approval-gate-001b
+    title: "Plan approval authorizes implementation"
+    conditions:
+      all:
+        - "has_approved_plan == true"
+    actions:
+      - INVOKE(executing-plans)
+    conflicts_with: []
+    requires: [approval-gate-001a]
+    triggers: [executing-plans]
     source: "010-approval-gate.md §Tier0"
 
   - id: approval-gate-002
@@ -237,19 +278,54 @@ rules:
     triggers: []
     source: "010-approval-gate.md §Mandatory Requirements"
 
+  - id: approval-gate-006
+    title: "Spec revision revokes linked plan approvals"
+    conditions:
+      all:
+        - "spec_revised == true"
+        - "has_linked_plan == true"
+    actions:
+      - REVOKE(plan_approval)
+      - INVOKE(re-implementation-workflow)
+    conflicts_with: []
+    requires: []
+    triggers: [writing-plans]
+    source: "010-approval-gate.md §Revision Revokes Approval"
+
+  - id: approval-gate-007
+    title: "Sub-issues are under plan, not spec"
+    conditions:
+      all:
+        - "spec_has_sub_issues == true"
+        - "plan_has_sub_issues == false"
+    actions:
+      - RESTRUCTURE(move sub-issues to plan)
+    conflicts_with: []
+    requires: []
+    triggers: [github-sub-issues]
+    source: "010-approval-gate.md §Multi-Task Plan Authorization"
+
 state_machines:
   - id: approval-lifecycle
-    states: [draft, approved, implementing, pr_created, merged, closed]
+    states: [draft, spec_approved, plan_created, plan_approved, implementing, pr_created, merged, closed]
     start_state: draft
     transitions:
       - from: draft
-        to: approved
-        guard: "user_authorizes == true"
+        to: spec_approved
+        guard: "user_authorizes_spec == true"
+        action: INVOKE(writing-plans)
+      - from: spec_approved
+        to: plan_created
+        guard: "plan_exists == true"
         action: PROCEED
-      - from: approved
+      - from: plan_created
+        to: plan_approved
+        guard: "user_authorizes_plan == true"
+        action: INVOKE(executing-plans)
+      - from: plan_approved
         to: implementing
-        guard: "spec_exists == true"
-        action: INVOKE(approval-gate, then divide-and-conquer)
+        guard: "plan_approved == true"
+        action: INVOKE(divide-and-conquer)
       - from: implementing
         to: pr_created
         guard: "implementation_complete == true"
@@ -260,6 +336,6 @@ state_machines:
         action: PROCEED
       - from: merged
         to: closed
-        guard: "all_sub_issues_closed == true"
+        guard: "all_plan_sub_issues_closed == true"
         action: PROCEED
 ```

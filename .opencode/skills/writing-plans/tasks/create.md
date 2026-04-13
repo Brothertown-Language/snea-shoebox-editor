@@ -42,9 +42,12 @@ Create an implementation plan from an approved spec.
 
 6. **Create plan issue:**
 
-   - Title: `[PLAN] <Feature Name>`
-   - Body: Plan with header, file structure, phases with TDD tasks
-   - Link to parent spec (sub-issue)
+    - Title: `[PLAN] <Feature Name>`
+    - Labels: `plan` + `needs-approval`
+    - Body: Spec reference as prose (e.g., `Spec: #784`), then plan with header, file structure, phases with TDD tasks
+    - Do NOT link plan as sub-issue of spec — the plan references the spec via body text only
+
+    After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `github-sub-issues --task create-sub-issue`.
 
 7. **Self-review:**
 
@@ -63,12 +66,14 @@ Create an implementation plan from an approved spec.
 
    Produce chat output in the mandatory format per `000-critical-rules.md`:
 
-   1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec
-   2. **URL**: The plan issue URL (e.g., `https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/<N>`)
-   3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
+    1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec
+    2. **URL**: The plan issue URL (e.g., `https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/<N>`)
+    3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
 
-   Example:
+    Example:
 
-   Created implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
-   https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
-   🤖 <AgentName> (<ModelID>)
+    Created implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
+    https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
+    🤖 <AgentName> (<ModelID>)
+
+    Sub-issues are linked under the plan issue, NOT under the spec.

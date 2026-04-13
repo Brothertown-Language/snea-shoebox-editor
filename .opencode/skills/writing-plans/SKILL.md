@@ -14,6 +14,25 @@ Plan creation workflow that transforms approved specs into actionable implementa
 
 **Source attribution:** TDD step granularity, no-placeholders rule, plan document header, file structure section, and self-review checklist adapted from [obra/superpowers `writing-plans`](https://github.com/obra/superpowers/blob/main/skills/writing-plans/SKILL.md).
 
+## Plan Issue Model
+
+Plans are separate GitHub Issues, not content appended to spec bodies. The hierarchy is:
+
+```
+Spec #N (approved)
+  → [PLAN] #M (linked reference via body text "Spec: #N")
+       ├── Task #P1: [Task: #M] Phase 1
+       ├── Task #P2: [Task: #M] Phase 2
+       └── Task #P3: [Task: #M] Phase 3
+```
+
+**Plan issue properties:**
+- Title prefix: `[PLAN]`
+- Labels: `plan` + `needs-approval`
+- Body contains spec reference as prose (e.g., `Spec: #784`)
+- Sub-issues are children of the plan, NOT the spec
+- The plan references the spec via body text (linked reference), not via GitHub sub-issue link
+
 ## Tasks
 
 | Task | Purpose | Words |
@@ -66,6 +85,7 @@ This skill can be invoked automatically by `approval-gate` after successful veri
 ```
 approval-gate --task verify-authorization (all gates pass for spec approval)
   → writing-plans --task create (auto-dispatched)
+    → github-sub-issues --task create-sub-issue (sub-issues under plan, not spec)
 ```
 
 **Auto-dispatch context passed from approval-gate:**
@@ -81,6 +101,28 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 
 **No circular dispatch:** `writing-plans` never dispatches back to `approval-gate`. After plan creation, the plan requires its own approval (user says "approved"), which triggers `approval-gate` → `executing-plans` (not `writing-plans`).
 
+## Spec Revision Revocation
+
+When the spec referenced by a plan is revised, all linked plans must be re-approved:
+
+1. **Find linked plans:** Search GitHub Issues with `plan` label for body text matching `Spec: #N` (where N is the revised spec number)
+2. **Re-apply `needs-approval` label** to each found plan
+3. **Add audit comment** on each plan: `Spec #N has been revised. Plan requires re-approval before implementation.`
+4. **HALT** — do not proceed with implementation from any plan linked to the revised spec until re-approved
+
+This replaces the previous model where plan content lived in the spec body and revision automatically invalidated it. With the plan-bridge model, revision affects the spec but plans are separate issues that must be explicitly re-reviewed.
+
+## Re-Implementation
+
+When a new plan is needed under the same spec (e.g., previous plan was rejected or superseded):
+
+1. **Create new `[PLAN]` issue** following standard plan creation procedure
+2. **Close old plan** with comment: `Superseded by #N` (where N is the new plan number)
+3. **Update old plan labels:** Remove `needs-approval`, add `wontfix` or close outright
+4. **Sub-issues of old plan** remain linked to the old plan (not the spec) — they are closed along with the old plan or re-created under the new plan as appropriate
+
+The spec itself is NOT modified during re-implementation. The plan is the mutable artifact; the spec is the stable reference.
+
 ## Operating Protocol
 
 1. Read approved spec from GitHub Issue
@@ -88,20 +130,20 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 3. Plan phase structure by judgment (prose-driven)
 4. Define tasks within each phase using TDD step structure
 5. Write plan document header (Goal, Architecture, Tech Stack)
-6. Create plan issue or return markdown
+6. Create `[PLAN]` GitHub Issue — title prefixed with `[PLAN]`, labels `plan`+`needs-approval`, body includes spec reference as prose (e.g., `Spec: #N`); then create sub-issues under the plan (not the spec) via `github-sub-issues` skill
 7. Self-review (coverage, placeholders, type consistency)
 8. Validate (no placeholders, TDD structure, actionable steps)
 9. Chat output with URL — Report plan creation using exec summary + URL + byline format per `000-critical-rules.md`
 
 ## Enforcement
 
-- No plan → CREATE plan (writing-plans skill)
-- Plan exists but unapproved → HALT, wait for approval
+- No plan → CREATE plan (writing-plans skill) as `[PLAN]` GitHub Issue
+- Plan exists but unapproved → HALT, wait for plan approval (not spec approval of plan content)
 - Plan approved but has placeholders → REJECT plan
 - Plan approved but missing TDD steps → REJECT plan
 - Plan approved and complete → PROCEED to implementation
 
 ## Cross-References
 
-- Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room)
+- Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `github-sub-issues` (sub-issue creation under plan)
 - Source: adapted from [obra/superpowers `writing-plans`](https://github.com/obra/superpowers/blob/main/skills/writing-plans/SKILL.md)

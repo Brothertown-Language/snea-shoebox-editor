@@ -28,7 +28,7 @@ Generate a clean-room implementation plan from a problem statement only, using p
 | -- | -- | -- |
 | Input source | Approved spec issue | Problem statement only (from temp file) |
 | References existing plan | May reference spec phases | **NEVER references existing plan** |
-| Creates GitHub issue | Yes | **No** — returned as markdown only |
+| Creates GitHub issue | Yes (`[PLAN]` prefixed issue) | **No** — returned as markdown only |
 | Requires approval | Yes (`needs-approval` label) | **No** — comparison artifact |
 | Skip approval gate | No | **Yes** — not an implementation plan |
 | Structure | Agent-chosen prose | Agent-chosen prose (no template) |

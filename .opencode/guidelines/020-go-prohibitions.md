@@ -95,15 +95,16 @@ This rule applies universally to:
 
 ______________________________________________________________________
 
-## 5. Multi-task Spec Without Sub-issues — CRITICAL VIOLATION
+## 5. Multi-task Plan Without Sub-issues — CRITICAL VIOLATION
 
-**⚠️ Implementing a multi-task spec without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Implementing a multi-task plan without sub-issues is a CRITICAL GUIDELINE VIOLATION.** Sub-issues are children of the plan, not the spec.
 
 ### 🚫 ABSOLUTE PROHIBITION
 
-- **NEVER implement a multi-task spec without verified sub-issue structure**
-- **NEVER proceed **to implementation** when `get_sub_issues` returns empty array for multi-task specs **without auto-creating sub-issues first****
+- **NEVER implement a multi-task plan without verified sub-issue structure**
+- **NEVER proceed **to implementation** when `get_sub_issues` on the plan returns empty array for multi-task plans **without auto-creating sub-issues first****
 - **NEVER assume markdown checkboxes = task tracking**
+- **NEVER create sub-issues under the spec** — sub-issues belong to the plan
 
 ### ✅ MANDATORY
 
@@ -111,15 +112,15 @@ ______________________________________________________________________
 
 Key points:
 
-- Sub-issues at PHASE level, not step level
-- Single-task specs are exempt from sub-issue requirement
-- All multi-task specs MUST have sub-issues before implementation begins
-- Auto-creating sub-issues for an approved multi-task spec is a pre-implementation setup step covered by the parent's authorization. No separate authorization is required.
+- Sub-issues at PHASE level under the plan, not step level
+- Single-task plans are exempt from sub-issue requirement
+- All multi-task plans MUST have sub-issues before implementation begins
+- Auto-creating sub-issues for an approved multi-task plan is a pre-implementation setup step covered by the plan's authorization. No separate authorization is required.
 - After auto-creating sub-issues, the agent proceeds with implementation immediately (no re-authorization needed).
 
 ```yaml+symbolic
 schema_version: "1.0"
-last_updated: "2026-04-12T12:00:00Z"
+last_updated: "2026-04-13T12:00:00Z"
 rules:
   - id: go-prohibitions-001
     title: "Agent must never write GO as standalone token"
@@ -185,11 +186,11 @@ rules:
     source: "020-go-prohibitions.md §1 NEVER DO"
 
   - id: go-prohibitions-006
-    title: "Multi-task spec requires sub-issues"
+    title: "Multi-task plan requires sub-issues under plan"
     conditions:
       all:
-        - "spec_has_phases == true"
-        - "sub_issues_count == 0"
+        - "plan_has_phases == true"
+        - "plan_sub_issues_count == 0"
     actions:
       - HALT
     conflicts_with: []

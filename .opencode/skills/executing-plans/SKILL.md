@@ -10,11 +10,25 @@ compatibility: opencode
 
 ## Overview
 
-Plan execution skill that dispatches to `divide-and-conquer/assemble-batch` for implementation. This skill is a thin dispatch layer — all implementation logic flows through the unified batch workflow.
+Plan execution skill that dispatches to `divide-and-conquer/assemble-batch` for implementation. This skill is a thin dispatch layer — all implementation logic flows through the unified batch workflow. It receives plan context from `approval-gate` after plan approval.
 
 **Every approval follows one path:** `executing-plans` → `divide-and-conquer/assemble-batch` → batch branch → pr-creation → one PR.
 
 **There is no single-issue bypass.** Single issue = batch of one = one sub-agent.
+
+## Received Context
+
+When dispatched from `approval-gate` after plan approval, the following context is available:
+
+```yaml
+plan_issue: <number>
+spec_issue: <number, extracted from plan body>
+GIT_OWNER: "<from-session>"
+GIT_REPO: "<from-session>"
+WORKTREE_PATH: "<worktree path>"
+```
+
+**Verification:** If `plan_issue` is not present in the dispatch context, HALT — this skill requires plan context to track progress against the correct issue.
 
 ## Tasks
 
@@ -35,11 +49,15 @@ Plan execution skill that dispatches to `divide-and-conquer/assemble-batch` for 
 
 ## Operating Protocol
 
-1. **Dispatch to divide-and-conquer:** The `start` task invokes `divide-and-conquer --task assemble-batch` which handles all implementation — single issue or batch — through the unified workflow.
+1. **Verify plan context:** Before dispatching, confirm `plan_issue` is present in received context. If missing, HALT and report.
 
-2. **No direct implementation:** This skill does not implement directly. It dispatches.
+2. **Dispatch to divide-and-conquer:** The `start` task invokes `divide-and-conquer --task assemble-batch` which handles all implementation — single issue or batch — through the unified workflow. Pass `plan_issue` in the dispatch context.
 
-3. **Single issue = batch of one:** There is no separate path for single issues. The `assemble-batch` task handles single-issue dispatch as the default code path.
+3. **No direct implementation:** This skill does not implement directly. It dispatches.
+
+4. **Single issue = batch of one:** There is no separate path for single issues. The `assemble-batch` task handles single-issue dispatch as the default code path.
+
+5. **Progress reports against plan:** All progress tracking references the plan issue (not the spec issue). The plan is the implementation tracking artifact; the spec is the requirements artifact.
 
 ## Dispatch Order
 
@@ -51,6 +69,8 @@ Plan approved (approval-gate)
   → finishing-a-development-branch
   → git-workflow/review-prep
 ```
+
+**Progress is tracked against the plan issue.** The plan references the spec via body text (linked reference), not via GitHub sub-issue link.
 
 ## Cross-References
 

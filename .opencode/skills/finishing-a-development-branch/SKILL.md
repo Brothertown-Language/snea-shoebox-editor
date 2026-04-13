@@ -10,7 +10,7 @@ compatibility: opencode
 
 ## Overview
 
-Branch completion workflow that ensures a feature branch is fully ready for PR creation. Verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. Adapted from the \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow.
+Branch completion workflow that ensures a feature branch is fully ready for PR creation. Verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. Implementation tracks against plan sub-issues, not spec sub-issues. Adapted from the \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow.
 
 **Source Attribution:** This skill is adapted from \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow (branch: newsrx).
 
@@ -59,6 +59,10 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 ```
 executing-plans → verification-before-completion → finishing-a-development-branch → review-prep → (PR creation by user)
 ```
+
+### Plan Hierarchy Context
+
+Implementation tracks against **plan sub-issues**, not spec sub-issues. The hierarchy is: Spec → (linked reference in body) → Plan → Sub-issues. When verifying branch completion, reference the plan issue for tracking status and the spec issue for requirements.
 
 ### Git-Workflow Integration
 

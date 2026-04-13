@@ -10,7 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Ensures multi-task specs have proper sub-issue structure before implementation begins. Sub-issues track phases as separate GitHub Issues linked to the parent, providing state tracking, progress visibility, and proper parent-child relationships.
+Ensures multi-task plans have proper sub-issue structure before implementation begins. Sub-issues track phases as separate GitHub Issues linked to the parent **plan** (not the spec), providing state tracking, progress visibility, and proper parent-child relationships.
+
+The hierarchy is: **Spec → (linked reference) → Plan → Sub-issues**. Sub-issues are children of the plan issue, NOT the spec.
 
 ## Tasks
 
@@ -29,41 +31,41 @@ Ensures multi-task specs have proper sub-issue structure before implementation b
 
 ## Single-Task Exemption
 
-Single-task issues do NOT require sub-issues. A spec is "single-task" if it has exactly ONE implementation task/phase with no decomposition needed. If single-task: proceed without sub-issue verification. If multi-task: sub-issues are MANDATORY.
+Single-task plans do NOT require sub-issues. A plan is "single-task" if it has exactly ONE implementation task/phase with no decomposition needed. If single-task: proceed without sub-issue verification. If multi-task: sub-issues are MANDATORY.
 
 ## Sub-Issue Verification Gate (MANDATORY Before Implementation)
 
-1. Call `github_issue_read method=get_sub_issues` on parent issue
-2. **If empty AND multi-task:** AUTO-CREATE sub-issues immediately, then proceed — no separate authorization needed
+1. Call `github_issue_read method=get_sub_issues` on the **plan** issue (not the spec)
+2. **If empty AND multi-task:** AUTO-CREATE sub-issues under the plan immediately, then proceed — no separate authorization needed
 3. **If sub-issues exist:** Verify phase being implemented is among them, proceed
 
-**Authorization for the parent spec covers sub-issue creation.** When `get_sub_issues` returns empty for an approved multi-task spec, auto-create and proceed.
+**Authorization for the parent plan covers sub-issue creation.** When `get_sub_issues` returns empty for an approved multi-task plan, auto-create and proceed.
 
 ## Phase-Level vs Step-Level
 
 Sub-issues = PHASES, not steps. Phases are approval units; steps are implementation details within phases.
 
 ```
-✅ CORRECT: Phase-level sub-issues
-SPEC #100: Feature Name
-├── Task #101: [Task: #100] Create database schema
-├── Task #102: [Task: #100] Implement API endpoints
-└── Task #103: [Task: #100] Build UI components
+✅ CORRECT: Phase-level sub-issues under plan
+PLAN #200: [PLAN] Feature Name
+├── Task #201: [Task: #200] Create database schema
+├── Task #202: [Task: #200] Implement API endpoints
+└── Task #203: [Task: #200] Build UI components
 
 ❌ WRONG: Step-level sub-issues (too granular)
-├── Task #101: Step 1.1 - Create table
-├── Task #102: Step 1.2 - Add index
+├── Task #201: Step 1.1 - Create table
+├── Task #202: Step 1.2 - Add index
 ```
 
 ## Title Format
 
-Format: `[Task: #<parent-number>] <descriptive-title>`
+Format: `[Task: #<plan-number>] <descriptive-title>`
 
-Titles MUST describe WHAT the task accomplishes, not just the phase type. "Phase 1 - Implementation" is PROHIBITED. "[Task: #100] Add OAuth2 authentication" is correct.
+Titles MUST describe WHAT the task accomplishes, not just the phase type. "Phase 1 - Implementation" is PROHIBITED. "[Task: #200] Add OAuth2 authentication" is correct.
 
 ## Context Efficiency (CRITICAL)
 
-API responses from `github_issue_write` and `github_sub_issue_write` contain full parent issue body (~8KB each). Creating + linking 8 sub-issues produces ~128KB of context — enough to block implementation.
+API responses from `github_issue_write` and `github_sub_issue_write` contain full plan issue body (~8KB each). Creating + linking 8 sub-issues produces ~128KB of context — enough to block implementation.
 
 **MANDATORY:** Extract ONLY issue number and database ID from API responses. Discard full response body immediately.
 
@@ -77,9 +79,9 @@ Before implementing ANY subtask: get parent STATUS, extract authorized subtask, 
 
 ## Prohibited Halts
 
-- Halting to ask "should I create sub-issues?" when parent spec is already approved
+- Halting to ask "should I create sub-issues?" when the plan is already approved
 - Treating sub-issue creation as a separate implementation phase
-- Implementing a phase that exists only as text in parent issue body
+- Implementing a phase that exists only as text in plan issue body
 
 ## Cross-References
 

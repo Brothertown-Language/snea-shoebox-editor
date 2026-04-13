@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Invoke auditors and create sub-issues after issue creation, ensuring spec quality before approval.
+Invoke auditors and trigger plan creation for multi-task specs after issue creation, ensuring spec quality before approval.
 
 ## Operating Protocol
 
@@ -18,7 +18,7 @@ Invoke auditors and create sub-issues after issue creation, ensuring spec qualit
 ## Exit Criteria
 
 - Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
-- Sub-issues created (if multi-task)
+- Plan creation triggered (if multi-task) via writing-plans skill
 - Issue ready for approval workflow
 
 ## Procedure
@@ -26,38 +26,26 @@ Invoke auditors and create sub-issues after issue creation, ensuring spec qualit
 ### Step 1: Determine Single-Task vs Multi-Task
 
 **Use `single-task-check` task to determine:**
-- Single-task spec (ONE phase, no sub-issues needed)
-- Multi-task spec (multiple phases, requires sub-issues)
+- Single-task spec (ONE phase, plan optional per agent intelligence)
+- Multi-task spec (multiple phases, requires plan issue)
 
-### Step 2: Create Sub-Issues (Multi-Task Only)
+### Step 2: Trigger Plan Creation (Multi-Task Only)
 
 **If multi-task spec:**
 
+Invoke `writing-plans --task create` to create the plan issue. Plan creation handles:
+- Creating the `[PLAN]` issue with `plan` label
+- Adding a linked reference to the spec in the plan body
+- Creating sub-issues under the plan (via `github-sub-issues` skill)
+
+**Do NOT create sub-issues directly under the spec.** Sub-issues belong under the plan, not the spec.
+
 ```python
-# For each phase in spec:
-sub_issue = github_issue_write(
-    method="create",
-    owner=owner,
-    repo=repo,
-    title=f"[Task: #{parent_number}] {phase_title}",
-    body=phase_content,
-    labels=["needs-approval"]
-)
-
-# Link as sub-issue:
-github_sub_issue_write(
-    method="add",
-    owner=owner,
-    repo=repo,
-    issue_number=parent_number,
-    sub_issue_id=sub_issue["id"]  # Use DATABASE ID
-)
+# Post-creation triggers writing-plans:
+# writing-plans --task create
+#   → creates [PLAN] issue referencing spec #N in body
+#   → creates sub-issues under the plan
 ```
-
-**Phase-level sub-issues:**
-- One sub-issue per phase
-- NOT one per step
-- Use database ID (not issue number) for linking
 
 ### Step 3: Invoke Spec-Auditor Orchestrator
 
@@ -90,8 +78,8 @@ Previous workflow (DEPRECATED):
 ## Single-Task Exemption
 
 **If single-task:**
-- No sub-issues needed
-- Skip `github-sub-issues` skill invocation
+- Plan issue optional (per agent intelligence — agent may create one if it adds clarity)
+- No sub-issues needed under any plan
 - Proceed to auditor invocation
 
 ## Safety Checks
@@ -99,10 +87,10 @@ Previous workflow (DEPRECATED):
 Before proceeding, verify ALL:
 
 - Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
-- Sub-issues created (if multi-task)
+- Plan creation triggered (if multi-task)
 
 **If ANY check fails → HALT and report.**
 
 ## Context Required
 
-- Related tasks: `creation` (runs first), `single-task-check` (determination logic)
+- Related tasks: `creation` (runs first), `single-task-check` (determination logic), `writing-plans --task create` (plan creation for multi-task)
