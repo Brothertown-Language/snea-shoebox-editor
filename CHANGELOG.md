@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### Fixed
+
+- **spec-creation write task now creates GitHub Issue instead of dumping to chat** (#733) - Fix spec-creation skill's write task to invoke github-issue-creation skill and output exec summary + URL + byline instead of dumping full spec content to chat.
+
 ### spec/session-init-batch
 
 - **Session Injection Anti-Hallucination Context + uvx Compatibility + Worktree Detection** (#710, #712, #720, #721, #722, #723) - Rewrite session_init.py output to eliminate LLM hallucination-driven error-retry cycles. Add Remote URL, worktree detection with Working directory/Main repo paths, hooks path (problems-only), and fix bootstrap_worktree_layout for in-worktree execution. Make session_init.py uvx-compatible with proper shebang and pyproject.toml entry point. Switch session-enforcement.ts to uvx invocation. Document env-loader.ts input.$ cwd behavior.

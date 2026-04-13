@@ -11,9 +11,10 @@ Assemble the final spec with acceptance criteria, ambiguity elimination, and del
 
 ## Exit Criteria
 
-- Spec written as GitHub Issue
+- GitHub Issue created with `[SPEC]` prefix and `needs-approval` label
 - Self-review completed (placeholder scan, consistency, scope, ambiguity)
-- User review requested
+- Chat output is ONLY: `<exec summary>` + `<issue URL>` + `<byline>` (no full spec dump)
+- User reviews spec ON THE ISSUE (not in chat)
 - Ready for spec-auditor and approval-gate
 
 ## Procedure
@@ -75,17 +76,42 @@ After writing the spec, review with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
-### Step 6: User Review
+### Step 6: Create GitHub Issue
 
-Ask the user to review the written spec:
+Invoke `github-issue-creation` skill to persist the spec as a GitHub Issue:
 
-> "Spec written. Please review it and let me know if you want to make any changes before we proceed to audit and approval."
+1. Invoke `github-issue-creation --task pre-creation` to validate (check for conflicts, superseded issues, missing sections)
+2. If validation fails → HALT and report. Fix issues and re-validate.
+3. If validation passes → invoke `github-issue-creation --task single-task-check` to determine sub-issue needs
+4. Invoke `github-issue-creation --task creation` to create the GitHub Issue
+5. Record the issue number and URL
 
-Wait for the user's response. If they request changes, make them and re-run the self-review. Only proceed once the user approves.
+**Chat output is ONLY:**
 
-### Step 7: Transition
+```
+<exec summary>
 
-After user approval of the spec:
+<issue URL>
+
+🤖 <AgentName> (<ModelID>) ✨
+```
+
+**🚫 NEVER:**
+- Dump full spec content to chat as the "review" step
+- Claim spec is "written" without a GitHub Issue URL
+- Ask the user to review the spec in chat
+
+### Step 7: User Review on Issue
+
+The user reviews the spec ON THE GITHUB ISSUE, not in chat.
+
+- If user requests revisions via issue comments: update the issue body, then post update summary + URL + byline to chat
+- If user approves the spec on the issue: proceed to Step 8
+- Do NOT re-dump the spec to chat for any reason
+
+### Step 8: Transition
+
+After user approval of the spec on the GitHub Issue:
 - Invoke `spec-auditor` for quality audit
 - Then proceed to `approval-gate` for authorization
 - Then `writing-plans` for implementation planning
@@ -94,4 +120,5 @@ After user approval of the spec:
 
 - Preceded by: `requirements` (mandatory), `decompose`, `traceability`, `risk` (or explicitly skipped)
 - Extends: brainstorming Steps 7-9 (adapted, not verbatim move)
+- Calls: `github-issue-creation` (pre-creation → single-task-check → creation)
 - Followed by: `spec-auditor`, then `approval-gate`

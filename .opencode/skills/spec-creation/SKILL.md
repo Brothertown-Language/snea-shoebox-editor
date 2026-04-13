@@ -28,7 +28,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 | `decompose` | Break into discrete units; define interfaces first (APIs, data contracts, schemas) | #2, #5 | Only for trivial bug fixes with one obvious fix |
 | `traceability` | Map requirements to sections, tests, implementation steps | #3 | Only for single-requirement specs |
 | `risk` | Analyze risk, blast radius, failure propagation, operational needs | #8, #9 | Only for simple bug fixes with no deployment impact |
-| `write` | Assemble spec with acceptance criteria, ambiguity elimination, deliverable structure | #4, #6, #10 | No — mandatory assembly step |
+| `write` | Assemble spec, create GitHub Issue, output exec summary + URL + byline | #4, #6, #10 | No — mandatory assembly step |
 | `change-control` | Version spec, document rationale and impact analysis for changes | #12 | Only for initial spec creation (not revisions) |
 
 ## Invocation
@@ -56,7 +56,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
 3. **Task completion gate:** Each task produces a structured output. The `write` task assembles these outputs into the final spec. Do NOT invoke `write` until prerequisite tasks are complete.
 
-4. **Exit condition:** Spec written, self-reviewed, user-reviewed. HALT and wait for approval before proceeding to writing-plans.
+4. **Exit condition:** Spec written to GitHub Issue, self-reviewed, user-reviewed on the issue. HALT and wait for approval before proceeding to writing-plans.
 
 ## Simplicity Heuristic
 
@@ -101,12 +101,15 @@ You are a Spec Architect. Your focus is structuring investigation results into a
    - Are acceptance criteria defined?
 
 1. **After `write` task:**
+   - GitHub Issue created with `[SPEC]` prefix and `needs-approval` label?
+   - Chat output is exec summary + URL + byline ONLY? (no full spec dump)
    - Spec self-review completed? (placeholder scan, consistency check, ambiguity check)
-   - User review requested?
+   - User directed to review on the GitHub Issue (not in chat)?
 
 1. **What does NOT bypass spec-creation:**
    - "skip spec-creation" → NOT allowed (even simple specs need `requirements` + `write`)
    - "brainstorming already wrote the spec" → Brainstorming no longer writes specs; this skill does
+   - "just show me the spec in chat" → NOT allowed; spec MUST be persisted as GitHub Issue
 
 ### Enforcement Messages
 
@@ -122,6 +125,7 @@ To invoke: /skill spec-creation --task requirements
 
 ## Cross-References
 
+- **Calls:** `github-issue-creation` (spec persistence — `write` task invokes pre-creation → single-task-check → creation)
 - **Preceded by:** `brainstorming` (exploration only — Steps 7-9 moved here)
 - **Followed by:** `spec-auditor` (quality audit — verifies what this skill produces)
 - **Parallel with:** `approval-gate` (authorization — waits for spec to be approved)
