@@ -1,8 +1,10 @@
 # Task: purification-and-enforcement
 
+Migrated from `implementation-workflow` task purification-and-enforcement.
+
 ## Purpose
 
-Reference document defining what git-workflow tasks DO and DO NOT do, and the enforcement rules for the implementation-workflow orchestration layer.
+Reference document defining what git-workflow tasks DO and DO NOT do, and the enforcement rules for the divide-and-conquer orchestration layer.
 
 ## Entry Criteria
 
@@ -32,22 +34,22 @@ Reference document defining what git-workflow tasks DO and DO NOT do, and the en
 
 | ❌ NOT in git-workflow | Moved Where? |
 | -- | -- |
-| Implementation logic | `implementation-workflow` orchestrator |
+| Implementation logic | `divide-and-conquer` orchestrator |
 | File editing | Implementation subagent |
 | Spec reading | Implementation subagent |
 | Progress tracking | Implementation subagent |
 
 ### Enforcement Mechanisms
 
-#### ⚠️ CRITICAL: Verification Gate (Step 3.5)
+#### ⚠️ CRITICAL: Verification Gate (Step 5)
 
 **This gate is MANDATORY and has NO decision point.** It cannot be skipped, bypassed, or manually executed.
 
 | Step | Skill | Required? | Decision Point? |
 | -- | -- | -- | -- |
-| 3.5a | verification-before-completion --task verify | YES | NO |
-| 3.5b | finishing-a-development-branch --task checklist | YES | NO |
-| 4 | git-workflow --task review-prep | YES | NO |
+| 5a | verification-before-completion --task verify | YES | NO |
+| 5b | finishing-a-development-branch --task checklist | YES | NO |
+| 6 | git-workflow --task review-prep | YES | NO |
 
 **Skipping any step in this sequence is a CRITICAL GUIDELINE VIOLATION.**
 
@@ -86,9 +88,11 @@ NEVER proceed to PR creation without explicit "create a PR":
 
 | Issue | Resolution |
 | -- | -- |
-| Authorization context lost | approval-gate passes context to implementation-workflow |
+| Authorization context lost | approval-gate passes context to divide-and-conquer |
 | Pre-work asks for auth again | Pre-work receives context from orchestrator, no re-check |
 | Implementation doesn't commit | Implementation calls git-workflow commit-prep directly |
 | Verification fails | HALT and report missing evidence; do NOT proceed to review-prep |
 | Finishing checklist fails | HALT and report issues (lint, tests, uncommitted); do NOT proceed to review-prep |
 | Review-prep HALTs prematurely | Correct behavior - wait for "create a PR" |
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)

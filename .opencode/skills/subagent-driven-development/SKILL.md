@@ -1,12 +1,17 @@
-______________________________________________________________________
-
-## name: subagent-driven-development description: Use when executing an approved implementation plan that benefits from task-level isolation or parallel work. Triggers on: subagent, dispatch task, implement plan tasks, task-by-task implementation, subagent development, parallel implementation, batch execution plan. type: technique license: MIT compatibility: opencode
+---
+name: subagent-driven-development
+description: Use when executing an approved implementation plan that benefits from task-level isolation or parallel work. Triggers on: subagent, dispatch task, implement plan tasks, task-by-task implementation, subagent development, parallel implementation, batch execution plan.
+type: technique
+license: MIT
+---
 
 # Skill: subagent-driven-development
 
 ## Overview
 
 Execute an approved implementation plan by dispatching fresh subagents per task, with two-stage review after each: spec compliance review first, then code quality review. Fresh subagent per task = no context pollution between tasks. Uses branch-per-issue with merge-based dependency resolution for batch execution.
+
+**Primary orchestration:** `divide-and-conquer` is the primary orchestration skill. Use `subagent-driven-development` when you specifically need the two-stage review pipeline (spec reviewer + code quality reviewer) that this skill provides. For standard implementation without per-task review, use `divide-and-conquer`.
 
 **Source attribution:** Adapted from [obra/superpowers `subagent-driven-development`](https://github.com/obra/superpowers/tree/main/skills/subagent-driven-development).
 
@@ -24,15 +29,17 @@ Execute an approved implementation plan by dispatching fresh subagents per task,
 - `/skill subagent-driven-development` - Overview only
 - `/skill subagent-driven-development --task batch-execution` - For batch approval plans
 
-## When to Use This Skill vs Implementation-Workflow
+## When to Use This Skill vs Divide-and-Conquer
 
 | Situation | Use |
 |-----------|-----|
+| Need two-stage review per task (spec + quality) | `subagent-driven-development` |
 | Plan with independent tasks, same session | `subagent-driven-development` |
-| Plan with tightly coupled tasks | `executing-plans` or manual execution |
 | Need fresh context per task | `subagent-driven-development` |
-| Dependencies between tasks (must-precede) | `subagent-driven-development` with merge-based dependency resolution |
-| Any batch implementation | `subagent-driven-development` (always batch mode) |
+| Standard implementation without per-task review | `divide-and-conquer` |
+| Task risks context window overflow | `divide-and-conquer` |
+| Dependencies between tasks (must-precede) | `divide-and-conquer` (orchestrate) or `subagent-driven-development` with merge-based dependency resolution |
+| Any batch implementation | Either (use `divide-and-conquer` for simplicity, `subagent-driven-development` for review rigor) |
 
 ## The Process
 
@@ -128,6 +135,6 @@ This skill is a **heavy skill** — task dispatching and orchestration can run i
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `git-workflow` (git ops), `implementation-workflow` (alternative orchestration), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation with BASE_BRANCH)
+- Related skills: `approval-gate` (authorization), `git-workflow` (git ops), `divide-and-conquer` (primary orchestration, context window safety), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation with BASE_BRANCH)
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)

@@ -1,6 +1,8 @@
 # Task: completion
 
-Idempotent completion subtask for implementation-workflow. Ensures mandatory steps run regardless of where the workflow halted.
+Migrated from `implementation-workflow` task completion.
+
+Idempotent completion subtask for divide-and-conquer. Ensures mandatory steps run regardless of where the workflow halted.
 
 ## State Check Phase
 
@@ -47,3 +49,5 @@ Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)

@@ -81,7 +81,7 @@ Key rules:
 
 **When multiple issues are approved together:** authorization carries forward within the batch via the persisted batch state file.
 
-**See `implementation-workflow` skill `--task batch-orchestrate` for the complete batch orchestration workflow.**
+**See `divide-and-conquer` skill `--task assemble-batch` for the complete batch orchestration workflow.**
 
 Key rules:
 

@@ -148,5 +148,5 @@ These environment variables are consumed by:
 - `git-workflow` tasks (review-prep, pr-creation, cleanup)
 - `finishing-a-development-branch` skill
 - `subagent-driven-development` dispatch context
-- `implementation-workflow` batch-orchestrate task
+- `divide-and-conquer` assemble-batch task
 - `batch-approval-analysis` execution plan

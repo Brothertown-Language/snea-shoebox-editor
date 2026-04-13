@@ -195,12 +195,12 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 **⚠️ The main agent implementing files directly instead of dispatching to sub-agents is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `implementation-workflow` skill `--task batch-orchestrate` for the complete sub-agent dispatch workflow.**
+**See `divide-and-conquer` skill `--task assemble-batch` for the complete sub-agent dispatch workflow.**
 
 - 🚫 FORBIDDEN: Main agent editing implementation files directly during batch orchestration
-- 🚫 FORBIDDEN: Bypassing batch-orchestrate for single-issue dispatch
+- 🚫 FORBIDDEN: Bypassing assemble-batch for single-issue dispatch
 - 🚫 FORBIDDEN: Code-path divergence between single and batch issue handling
-- ✅ REQUIRED: All implementation dispatches through `batch-orchestrate` — single issue is a single-item batch
+- ✅ REQUIRED: All implementation dispatches through `assemble-batch` — single issue is a single-item batch
 - ✅ REQUIRED: Main agent only orchestrates — never edits implementation files
 - ✅ REQUIRED: Context window stays clean for orchestration decisions
 

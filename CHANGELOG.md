@@ -12,9 +12,24 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### Added
+
+- **Divide-and-Conquer Skill** (#734) - New discipline-enforcing skill that mandates pre-flight context-fit assessment before implementation. Tasks that risk context window overflow are decomposed and dispatched to sub-agents. Sub-agents signal OVERFLOW for recursive decomposition up to a configurable depth limit (default 3). Replaces implementation-workflow with a more general decomposition-first approach.
+
+### Changed
+
+- **Subagent-Driven-Development** (#734) - Updated to reference divide-and-conquer as primary orchestration skill. Fixed missing YAML frontmatter opening delimiter. Replaced implementation-workflow cross-references.
+- **Batch Orchestration Migration** (#734) - Migrated branch-per-issue, merge dependencies, squash-merge, frozen branches, and intent-and-context metadata from implementation-workflow into divide-and-conquer assemble-batch task.
+- **Cross-Reference Updates** (#734) - Updated all guidelines and skills referencing implementation-workflow or batch-orchestrate to reference divide-and-conquer and assemble-batch respectively.
+
+### Removed
+
+- **Implementation-Workflow Skill** (#734) - Deleted `.opencode/skills/implementation-workflow/` directory; functionality absorbed by divide-and-conquer skill.
+
 ### Fixed
 
 - **spec-creation write task now creates GitHub Issue instead of dumping to chat** (#733) - Fix spec-creation skill's write task to invoke github-issue-creation skill and output exec summary + URL + byline instead of dumping full spec content to chat.
+- **Sub-agent worktree dispatch** (#741) - Add worktree awareness to all sub-agent dispatch and skill creation, preventing sub-agents from silently modifying the main repo.
 
 ### spec/session-init-batch
 
