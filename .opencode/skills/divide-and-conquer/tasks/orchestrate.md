@@ -226,7 +226,7 @@ Created 4 core skills for brainstorming, planning, execution, and verification.
 
 Compare URL: https://github.com/owner/repo/compare/dev...branch
 
-🤖 OpenCode (ollama-cloud/glm-5.1) completed
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 **Format verification (MANDATORY — check before posting):**
@@ -240,7 +240,7 @@ Compare URL: https://github.com/owner/repo/compare/dev...branch
 **Issue comment:**
 
 ```markdown
-🤖 OpenCode (ollama-cloud/glm-5) completed
+🤖 <AgentName> (<ModelID>) completed
 
 **Summary:**
 
@@ -304,4 +304,4 @@ divide-and-conquer/orchestrate:
     → Continues with implementation...
 ```
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

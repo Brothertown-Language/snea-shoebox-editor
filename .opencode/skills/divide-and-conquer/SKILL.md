@@ -153,4 +153,4 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
 - Adapted from: `implementation-workflow` (batch-orchestrate, context-passing, purification-and-enforcement, completion)
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

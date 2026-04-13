@@ -50,4 +50,4 @@ Recommendation: [merge phases OR make dependency explicit OR uncouple]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

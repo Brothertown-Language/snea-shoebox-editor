@@ -66,7 +66,7 @@ When ALL success criteria are verified as already met:
 4. **Post chat output** with executive summary:
    - What happened: Spec #N approved but all success criteria already met
    - Outcome: Issue autoclosed as already implemented
-   - Byline: `🤖 OpenCode (ollama-cloud/glm-5.1) completed`
+   - Byline: `🤖 <AgentName> (<ModelID>) completed`
 
 5. **HALT** — no branch, no PR, no implementation needed
 

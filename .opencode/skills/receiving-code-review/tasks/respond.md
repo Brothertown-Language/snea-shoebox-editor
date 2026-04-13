@@ -18,7 +18,7 @@ Reply to review comments after changes have been made, providing clear documenta
 **Response:** Fixed
 **Details:** [What was changed and where]
 
-🤖 OpenCode (ollama-cloud/glm-5) addressed
+🤖 <AgentName> (<ModelID>) addressed
 ```
 
 ### For Explained Comments (Not Fixed)
@@ -27,7 +27,7 @@ Reply to review comments after changes have been made, providing clear documenta
 **Response:** Explained
 **Details:** [Why this was not changed — rationale for keeping current approach]
 
-🤖 OpenCode (ollama-cloud/glm-5) addressed
+🤖 <AgentName> (<ModelID>) addressed
 ```
 
 ### For Declined Comments
@@ -36,7 +36,7 @@ Reply to review comments after changes have been made, providing clear documenta
 **Response:** Declined
 **Details:** [Respectful reasoning for disagreeing with the suggestion]
 
-🤖 OpenCode (ollama-cloud/glm-5) addressed
+🤖 <AgentName> (<ModelID>) addressed
 ```
 
 ## Important Notes

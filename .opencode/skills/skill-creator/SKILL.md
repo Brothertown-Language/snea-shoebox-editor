@@ -137,7 +137,7 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 ### Required in every skill that:
 
-1. **References AI agents** — MUST use `<AI-Name>` and `<model-id>` placeholders, never specific names like `OpenCode` or `Claude`
+1. **References AI agents** — MUST use `<AI-Name>` and `<model-id>` placeholders, never specific agent names or model IDs
 2. **References developers** — MUST use `DEV_NAME` and `DEV_EMAIL` from session init, never specific names like `michael-conrad`
 3. **References organizations/repos** — MUST use `GIT_OWNER` and `GIT_REPO` from session init, never specific names like `Brothertown-Language`
 4. **Contains bylines or attribution** — MUST use `<AI-Name> (<model-id>)` format, never specific agent/model combinations
@@ -145,8 +145,8 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 ### Validation Gate
 
 The `validate` task (`quick_validate.py`) SHOULD check for and flag:
-- Specific agent names (`OpenCode`, `Claude`, `GPT-4`, etc.) in SKILL.md or task files
-- Specific model IDs (`ollama-cloud/glm-5`, `claude-3-5-sonnet`, etc.) in SKILL.md or task files
+- Specific agent names (e.g., `<AI-Name>`) in SKILL.md or task files — must use placeholder tokens
+- Specific model IDs (e.g., `<model-id>`) in SKILL.md or task files — must use placeholder tokens
 - Specific developer names or emails in SKILL.md or task files
 - Specific org/repo names in SKILL.md or task files (except in examples using the `<GIT_OWNER>/<GIT_REPO>` pattern)
 - Specific platform URLs in SKILL.md or task files (except in examples using session init variable references)

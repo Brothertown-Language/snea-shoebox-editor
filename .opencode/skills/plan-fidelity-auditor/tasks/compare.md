@@ -64,4 +64,4 @@ phases_missing: K
 phases_extra: L
 ```
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

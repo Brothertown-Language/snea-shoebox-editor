@@ -58,3 +58,17 @@ Create an implementation plan from an approved spec.
    - Check for TBD/TODO placeholders
    - Verify all steps are actionable
    - Verify success criteria are testable
+
+9. **Report plan creation in chat (MANDATORY):**
+
+   Produce chat output in the mandatory format per `000-critical-rules.md`:
+
+   1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec
+   2. **URL**: The plan issue URL (e.g., `https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/<N>`)
+   3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
+
+   Example:
+
+   Created implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
+   https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
+   🤖 <AgentName> (<ModelID>)

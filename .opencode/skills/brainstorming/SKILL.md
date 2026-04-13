@@ -14,7 +14,7 @@ Conversational-first exploration workflow. One question at a time, user-driven, 
 
 **Source:** Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md). Key adaptations: no visual companion by default (conditional offer only for visual topics), no hard design-approval gate before writing-plans (our pipeline has approval-gate), dimensions used internally never as output sections, terminal state invokes spec-creation.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)
 
 ## Persona
 

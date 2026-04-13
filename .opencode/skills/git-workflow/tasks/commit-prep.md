@@ -100,7 +100,7 @@ Every implementation commit MUST include:
 ### AI Author Trailer
 
 - **Use your actual identity dynamically** — the AI knows its own name and email
-- **DO NOT use generic placeholders like "AI"** — use the actual AI agent name (e.g., "OpenCode Desktop", "OpenCode")
+- **DO NOT use generic placeholders like "AI"** — use the actual AI agent name detected from runtime context
 - **Email format**: Use a noreply address associated with the AI service (e.g., `noreply@opencode.ai`, `noreply@anthropic.com`)
 - **NEVER use the project domain** — those belong to the human collaborators
 - **Include model info**: Format is `Agent-Name (model-id) <email>`
@@ -108,7 +108,7 @@ Every implementation commit MUST include:
 **Example:**
 
 ```
-Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>
+Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>
 ```
 
 ### Human Collaborator Trailer
@@ -126,7 +126,7 @@ Co-authored-by: <DEV_NAME> <DEV_EMAIL>
 
 ```bash
 git commit -m "feat: Add user authentication" \
-    --trailer "Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>" \
+    --trailer "Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>" \
     --trailer "Co-authored-by: <DEV_NAME> <DEV_EMAIL>"
 ```
 

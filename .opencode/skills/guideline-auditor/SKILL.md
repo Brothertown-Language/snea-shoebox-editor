@@ -225,7 +225,7 @@ Fixed DRY violation where same rule appeared in three files with slightly differ
 **Outcome:** Single source of truth for "never use echo redirects" rule.
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) completed
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 ---
