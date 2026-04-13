@@ -26,7 +26,7 @@ Invoke `writing-plans --task clean-room` as a subtask:
 task(
   subagent_type="general",
   description="Generate clean-room plan for issue N",
-  prompt="Use the writing-plans skill --task clean-room to generate a plan from the problem statement in ./tmp/clean-room-input-N.md. Return the generated plan."
+  prompt="Use the writing-plans skill --task clean-room to generate a plan from the problem statement in ./tmp/clean-room-input-N.md. WORKTREE_PATH: <WORKTREE_PATH value or 'not set'>. If WORKTREE_PATH is set, all file operations MUST use it as the base directory. Return the generated plan."
 )
 ```
 

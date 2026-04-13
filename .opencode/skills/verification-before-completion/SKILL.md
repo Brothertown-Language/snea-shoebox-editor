@@ -75,6 +75,23 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 
 - **Load guideline:** `.opencode/guidelines/065-verification-honesty.md` — Required before any verification claim (mandatory per verification honesty rule)
 
+## Worktree Mode
+
+When invoked from a worktree context (`WORKTREE_PATH` is set):
+
+- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
+- ALL `read`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
+- Test/lint/typecheck commands MUST run from the worktree directory
+- `./tmp/` paths MUST resolve within the worktree, not the main repo
+
+**Verification guard:** Before running any command, verify:
+```bash
+git -C $WORKTREE_PATH rev-parse --show-toplevel
+```
+If the result does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
+
+If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+
 ## Cross-References
 
 - Related skills: `executing-plans` (implementation), `git-workflow` (branch push), `approval-gate` (authorization)
