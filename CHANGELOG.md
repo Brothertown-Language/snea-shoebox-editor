@@ -288,6 +288,11 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 - OAuth authentication via Streamlit OAuth
 - Session management and cookie handling
 
+### Changed
+
+- **Identity Placeholder Sweep** (#770) - Replaced remaining hardcoded org/user/identity values with typed placeholders across skill and tool files, ensuring repository portability.
+- **Mandatory Chat Output in Writing-Plans** (#773) - Added mandatory chat output step to the writing-plans create task, ensuring plan creation always produces a visible executive summary.
+
 ## [0.1.0]
 
 ### main (initial)
