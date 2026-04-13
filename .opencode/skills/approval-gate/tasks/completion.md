@@ -24,6 +24,15 @@ Reference `.opencode/skills/completion-core/completion-core.md` for reporting:
 
 Before adding or removing labels in completion, consult `141-planning-status-tracking.md §10` for the complete label transition matrix and the GitHub `labels` parameter warning (replaces all labels, not additive).
 
+## Completion Guarantee
+
+**MANDATORY:** Regardless of authorization outcome (approved, rejected, blocked, error), produce a status message containing:
+1. Authorization decision (approved/rejected/blocked)
+2. Issue number and branch (if applicable)
+3. What happens next (workflow forward, HALT, or error)
+
+This is the completion guarantee: NO authorization check ends without a status message.
+
 ## Report Phase
 
 Generate executive summary in chat:

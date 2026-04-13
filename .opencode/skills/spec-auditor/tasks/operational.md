@@ -66,4 +66,4 @@ Creation-time operational requirements are enforced by the `spec-creation` skill
 
 **Finding pattern:** `MISSING-OPERATIONAL` — Spec lacks creation-time operational requirements. Was `spec-creation --task risk` used?
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

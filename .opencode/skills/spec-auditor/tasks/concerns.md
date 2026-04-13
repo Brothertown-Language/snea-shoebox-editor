@@ -76,4 +76,4 @@ Severity: [HIGH|MEDIUM|LOW]
 - Single-task specs (no phases to analyze)
 - Simple bug fixes with one phase
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

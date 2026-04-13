@@ -127,6 +127,67 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 
 **See `080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).**
 
+## Critical Violation: Offer-to-Edit Bypass — Offering to Modify Files Without Spec
+
+**⚠️ Offering to modify files without a spec is a CRITICAL GUIDELINE VIOLATION.**
+
+When the agent identifies a problem and the fix is clear, the ONLY permitted next action is creating a spec or reporting the finding. Never offer to edit, update, modify, or fix a file directly.
+
+| Pattern | Correct Action |
+|---------|---------------|
+| "Want me to update X?" | Create a spec for the update, HALT |
+| "Shall I fix this?" | Create a bug report or fix spec, HALT |
+| "I can change X to Y" | Create a spec for the change, HALT |
+| "Ready to implement?" | Create a spec first, then HALT |
+
+**Why this matters:** The offer-to-edit pattern is a rationalization bypass. The agent reasons: "I'm not *doing* the edit, I'm just *offering* — so I'm not violating the rule." But the offer normalizes direct edits and creates social pressure to authorize without a spec. The spec-first workflow exists precisely to prevent this.
+
+## Critical Violation: Hardcoded Identity Values in Skills and Guidelines
+
+**⚠️ Hardcoding agent names, model IDs, developer names, developer emails, org names, repo names, or platform names in skill files, guideline files, task files, or any AI agent configuration is a CRITICAL GUIDELINE VIOLATION.**
+
+All identity values MUST use placeholder tokens that are resolved at runtime from session init output. Hardcoded values become stale when models, agents, orgs, or repos change.
+
+- 🚫 FORBIDDEN: `OpenCode`, `OpenCode Desktop`, `Claude`, or any specific agent name in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `ollama-cloud/glm-5`, `claude-3-5-sonnet`, or any specific model ID in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `michael-conrad`, `muksihs`, or any specific developer name/email in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `Brothertown-Language`, `snea-shoebox-editor`, or any specific org/repo name in skill files, guidelines, or task files
+- ✅ REQUIRED: Use `<AI-Name>`, `<model-id>`, `<AgentName>`, `<ModelID>`, `DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO` placeholders everywhere
+- ✅ REQUIRED: Skill-creator MUST validate that no hardcoded identity values appear in generated skill files
+- ✅ REQUIRED: Spec-auditor MUST flag hardcoded identity values as STRUCTURE-VIOLATION auto-fix findings
+
+**Applies to:** SKILL.md files, task/*.md files, guideline files, agent configuration files, code comments that serve as templates or examples.
+
+**Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<GIT_OWNER>/<GIT_REPO>` pattern.
+
+**See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.**
+
+## Critical Violation: Implementation Without Spec — Expanding the Definition
+
+**⚠️ "Implementation" includes more than writing source code.** The spec-first rule applies to ALL file modifications that alter behavior, configuration, or enforcement.
+
+The following are ALL implementation actions that require an approved spec:
+
+| Action | Requires Spec? | Why |
+|--------|---------------|-----|
+| Writing Python code | ✅ Yes | Classic implementation |
+| Editing skill files (SKILL.md, task/*.md) | ✅ Yes | Alters agent enforcement behavior |
+| Editing guideline files | ✅ Yes | Alters agent constraints |
+| Editing configuration (pyproject.toml, .pre-commit-config.yaml) | ✅ Yes | Alters build/test behavior |
+| Editing TypeScript plugins (session-enforcement.ts) | ✅ Yes | Alters runtime enforcement |
+| Editing test files | ✅ Yes | Alters test suite behavior |
+| Creating new files of any type | ✅ Yes | Adds new behavior or content |
+| Fixing a typo in documentation | ❌ No | No behavioral change |
+| Formatting code (ruff format) | ❌ No | No behavioral change |
+
+**🚫 FORBIDDEN patterns (all require spec):**
+- "It's just a skill file" → Skill files alter agent enforcement. Spec required.
+- "It's just a guideline" → Guidelines alter agent constraints. Spec required.
+- "It's just a config change" → Config changes alter behavior. Spec required.
+- "It's a small fix" → Size doesn't matter. If it changes behavior, spec required.
+
+**See `010-approval-gate.md` for the complete authorization workflow.**
+
 ## Critical Violation: Missing Progress Reports
 
 **⚠️ Failing to report progress in chat after implementation is a CRITICAL GUIDELINE VIOLATION.**
@@ -322,6 +383,15 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - ✅ REQUIRED: Invoke `--task completion` on the current skill before halting; completion tasks are idempotent and safe to invoke multiple times
 
 **See per-skill `tasks/completion.md` files and `.opencode/skills/completion-core/completion-core.md` for the shared completion operations.**
+
+## Critical Violation: Silent Agent Termination
+
+**⚠️ Agents that produce no output before stopping are a CRITICAL GUIDELINE VIOLATION.** If the agent halts, it MUST produce a status message explaining what was completed, what was attempted, and why the halt occurred.
+
+- 🚫 FORBIDDEN: Producing zero output before stopping; silently failing without error message; context overflow without reporting the overflow; tool failure without reporting the failure; ending a session with no summary of work done
+- ✅ REQUIRED: Every HALT MUST be preceded by a status message; every failure MUST be reported with the specific error; every context overflow MUST be reported with the specific cause; every completed task MUST produce an executive summary
+
+**See `020-go-prohibitions.md` for the complete halt requirements and `finishing-a-development-branch` skill for completion guarantees.**
 
 ## Critical Violation: Skipping Interdependency Analysis for Batch Approvals
 

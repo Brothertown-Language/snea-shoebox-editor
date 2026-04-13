@@ -25,6 +25,16 @@ Reference `.opencode/skills/completion-core/completion-core.md` for steps 3-6:
 3. Post status comment on issue (with idempotency check)
 4. Report executive summary in chat (always runs)
 
+## Completion Guarantee
+
+**MANDATORY:** Regardless of workflow outcome (success, failure, error, early termination), produce a status message containing:
+1. What was completed
+2. What was attempted
+3. Why the halt occurred (if not explicit completion)
+4. Current branch state (if applicable)
+
+This is the completion guarantee: NO workflow ends without a status message. The completion task is idempotent and safe to invoke multiple times.
+
 ## Report Phase
 
 Generate executive summary in chat:

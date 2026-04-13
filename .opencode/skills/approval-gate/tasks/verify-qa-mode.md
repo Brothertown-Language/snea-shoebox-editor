@@ -39,6 +39,16 @@ Check if user instruction contains implementation-related keywords:
 - Remove, remove X, delete X
 - Refactor, refactor X, clean up X
 - Optimize, optimize X, improve X
+- Want me to, shall I, I can change, I can update, I can fix, I can modify
+- Edit the skill, update the guideline, fix the skill file, update the guideline file, modify SKILL.md
+
+**Offer-to-Edit Patterns (ALSO require gate):**
+Phrases that offer to make changes without going through the spec workflow:
+- "Want me to update X?" → Redirect to spec creation, HALT
+- "Shall I fix this?" → Redirect to bug report or fix spec, HALT
+- "I can change X to Y" → Redirect to spec creation, HALT
+- "Ready to implement?" → Redirect to spec creation, HALT
+- "I'll just update this" → Redirect to spec creation, HALT
 
 **Spec/Planning Keywords (skip gate):**
 - Create a spec, create an issue, create a bug report

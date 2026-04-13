@@ -97,6 +97,7 @@ Already implemented
 | **Open questions resolved** | No unresolved items in spec |
 | **Sub-issues verified** | Multi-task specs require phase-level sub-issues |
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
+| **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
 
 ## Fix Spec Verification for Bug Reports
 
