@@ -81,7 +81,7 @@ https://gitbucket.newsrx.com/gitbucket/<owner>/<repo>/compare/<base>...<branch>
 ## Enforcement Matrix
 
 | Situation | Action |
-|-----------|--------|
+| -- | -- |
 | Uncommitted changes | COMMIT before proceeding |
 | Lint errors | FIX before proceeding |
 | Test failures | FIX before proceeding |

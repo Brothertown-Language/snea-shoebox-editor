@@ -74,7 +74,7 @@ Creates entries for all historical PRs not yet in changelog.
 ## Backfill vs Since-Last-Release
 
 | Task | Scope | Use Case |
-|------|-------|----------|
+| -- | -- | -- |
 | `since-last-release` | Commits after last changelog | Normal PR workflow |
 | `backfill` | Entire history | One-time historical catchup |
 | `date-range` | Specific dates | Weekly/monthly updates |

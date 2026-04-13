@@ -40,7 +40,7 @@ Verify the spec is self-contained:
 - [ ] Issue links include URLs and summaries
 ```
 
----
+______________________________________________________________________
 
 ## Spec Template (Feature)
 
@@ -201,13 +201,13 @@ CREATED: YYYY-MM-DD
 - ❌ Bad: "Implementation", "Testing", "Development", "Build"
 ```
 
----
+______________________________________________________________________
 
 ## Spec Template (Bug Fix)
 
 Use this template for bug fix specifications.
 
-```markdown
+````markdown
 # Spec: [Bug Description]
 
 STATUS: 1.1
@@ -261,25 +261,25 @@ def broken_function():
     # BUG: Off-by-one error in loop
     for i in range(len(items)):  # Should be range(len(items) - 1)
         process(items[i])
-```
+````
 
----
+______________________________________________________________________
 
 ## Affected Files
 
 | File | Anchor | Description |
-|------|--------|-------------|
+| -- | -- | -- |
 | `path/to/file.py` | `function_name()` or `"Section Name"` | [Function with bug] |
 
----
+______________________________________________________________________
 
 ## Related Issues
 
 | Issue | Summary | Relevance |
-|-------|---------|-----------|
+| -- | -- | -- |
 | [#123](https://github.com/owner/repo/issues/123) | [Related bug or feature] | [Connection to this fix] |
 
----
+______________________________________________________________________
 
 ## Fix Approach
 
@@ -289,7 +289,7 @@ def broken_function():
 
 **Side effects:** [What else might be affected]
 
----
+______________________________________________________________________
 
 ## Success Criteria
 
@@ -297,14 +297,14 @@ def broken_function():
 2. ✅ No regression in existing tests
 3. ✅ Edge case handling verified
 
----
+______________________________________________________________________
 
 ## Edge Cases
 
 1. **[Edge case 1]:** [How the fix handles it]
 2. **[Edge case 2]:** [How the fix handles it]
 
----
+______________________________________________________________________
 
 ## Phase 1: [Bug Fix Concern] (Gated)
 
@@ -314,7 +314,7 @@ def broken_function():
 2. ☐ Add test case for [specific scenario]
 3. ☐ Run full test suite to verify no regression
 
----
+______________________________________________________________________
 
 ## Phase 2: [Verification Concern] (Auto-progress)
 
@@ -324,7 +324,7 @@ def broken_function():
 2. ☐ Verify edge cases pass
 3. ☐ Verify no regression in related tests
 
----
+______________________________________________________________________
 
 ## Phase 3: [Review Concern] (Gated)
 
@@ -333,14 +333,14 @@ def broken_function():
 1. ☐ Code review
 2. ☐ Approve or request revisions
 
----
-
-
+______________________________________________________________________
 
 **⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+
 - ✅ Good: "Database Schema Fix", "Authentication Logic Fix", "Error Handling Update"
 - ❌ Bad: "Implementation", "Testing", "Bug Fix", "Development"
-```
+
+````
 
 ---
 
@@ -439,8 +439,8 @@ CREATED: YYYY-MM-DD
 ---
 
 
-```
+````
 
----
+______________________________________________________________________
 
 *Source: Created to support fresh-start context requirements*

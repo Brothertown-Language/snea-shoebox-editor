@@ -10,14 +10,14 @@ compatibility: opencode
 
 ## Overview
 
-Branch completion workflow that ensures a feature branch is fully ready for PR creation. Verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. Adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow.
+Branch completion workflow that ensures a feature branch is fully ready for PR creation. Verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. Adapted from the \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
+**Source Attribution:** This skill is adapted from \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `prepare` | Prepare branch for PR creation | ~450 |
 | `checklist` | Run completion checklist | ~350 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |

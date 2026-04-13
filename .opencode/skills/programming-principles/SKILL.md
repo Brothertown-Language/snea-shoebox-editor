@@ -17,7 +17,7 @@ compatibility: opencode
 ## Relationship to Code Standards
 
 | This Skill | `080-code-standards.md` |
-|------------|--------------------------|
+| -- | -- |
 | Master source for all 20 principles (rules + judgment) | Project-specific conventions (pathlib, f-strings, no re-exports, numbering, etc.) |
 | Both enforcement AND design judgment | Principles REMOVED from here; cross-reference note points to this skill |
 | Applies to any codebase | Applies to this repo only |
@@ -25,7 +25,7 @@ compatibility: opencode
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `principles` | Complete reference for all 20 principles with enforcement levels, apply/relax context, and tradeoff notes | ~2,200 |
 | `application-guide` | How to apply principles during design, implementation, and review; context prioritization table and red flags | ~400 |
 
@@ -38,7 +38,7 @@ This skill is **reference-driven**, not dispatch-triggered. Load via `/skill pro
 - `/skill programming-principles --task application-guide` - Application guide with context table and red flags
 
 | When to Invoke | Example Trigger |
-|----------------|-----------------|
+| -- | -- |
 | During design decisions | "Which approach has better cohesion?" |
 | Before implementation | "Am I violating any principles here?" |
 | During code review | "This violates CQS — is the tradeoff documented?" |
@@ -57,7 +57,7 @@ This skill is **reference-driven**, not dispatch-triggered. Load via `/skill pro
 ## Cross-References
 
 | Reference | Relationship |
-|-----------|-------------|
+| -- | -- |
 | `080-code-standards.md` | Project-specific conventions (this skill owns principles, that guideline owns conventions) |
 | `engineering-approach` skill | Workflow discipline — when to design, verify, communicate (this skill owns *what* principles to apply, that skill owns *when* in the process) |
 | `code-size-enforcement` skill | Size limits — SRP and "No Monoliths" have hard limits there |

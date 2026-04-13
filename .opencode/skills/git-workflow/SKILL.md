@@ -19,7 +19,7 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `pre-work` | Verify authorization, create worktree | ~420 |
 | `implementation` | Handle WIP commits during implementation | ~400 |
 | `review-prep` | Push branch, generate compare URL for review | ~560 |

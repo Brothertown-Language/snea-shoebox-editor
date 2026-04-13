@@ -7,9 +7,9 @@ Create pull request after explicit user instruction. Squash commits to single co
 ## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "create a PR" or similar
-1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
-1. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
-1. **HALT after PR creation:** Wait for human to merge
+2. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
+3. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
+4. **HALT after PR creation:** Wait for human to merge
 
 ## Entry Criteria
 
@@ -62,7 +62,7 @@ If ANY condition NOT satisfied → STOP and report.
    **What does NOT authorize PR creation (HALT):**
 
    | Phrase | Reason |
-   |--------|--------|
+   | -- | -- |
    | "approved" | Authorizes implementation ONLY, NOT PR creation |
    | "go" | Authorizes implementation ONLY, NOT PR creation |
    | Implementation complete | Does NOT authorize PR - wait for explicit instruction |
@@ -70,20 +70,20 @@ If ANY condition NOT satisfied → STOP and report.
    | "proceed" | Ambiguous - could mean next task |
    | "fix the skill and guideline" | Implementation instruction, NOT PR instruction |
 
-1. **Authorization scope table:**
+2. **Authorization scope table:**
 
    | Authorization | What It Authorizes |
-   |--------------|---------------------|
+   | -- | -- |
    | `approved` / `go` | Implementation ONLY |
    | `approved: X.Y` | Phase X.Y ONLY |
    | Implementation complete | NOTHING - wait for "create a PR" |
    | `create a PR` | PR creation workflow |
    | `create pull request` | PR creation workflow |
 
-1. **Enforcement matrix:**
+3. **Enforcement matrix:**
 
    | Scenario | Action |
-   |----------|--------|
+   | -- | -- |
    | User says "create a PR" | ✅ PROCEED with PR creation |
    | User says "approved" only | ⛔ HALT - "approved authorizes implementation, not PR. Wait for 'create a PR' instruction." |
    | Implementation complete, no PR instruction | ⛔ HALT - report completion, wait for PR instruction |
@@ -148,7 +148,7 @@ merged_at = pr.get("merged_at")  # Timestamp if merged, None otherwise
 **PR State Decision Matrix:**
 
 | State | merged_at | Action |
-|-------|-----------|--------|
+| -- | -- | -- |
 | open | None | ✅ **UPDATE EXISTING PR** - Push new commits, existing PR updates automatically |
 | closed | None | ⚠️ **Check close reason** - May be draft closed, proceed with caution |
 | closed | timestamp | 🔄 **MERGED PR DETECTED** - Go to Step 1.5c |
@@ -165,20 +165,20 @@ merged_at = pr.get("merged_at")  # Timestamp if merged, None otherwise
    git rebase origin/dev
    ```
 
-1. **Check for remaining changes:**
+2. **Check for remaining changes:**
 
    ```bash
    git diff origin/dev
    ```
 
-1. **Decision:**
+3. **Decision:**
 
    | Remaining Changes | Action |
-   |-------------------|--------|
+   | -- | -- |
    | Has differences | Create NEW PR for additional work |
    | No differences | HALT - branch already merged, no new PR needed |
 
-1. **HALT with appropriate message:**
+4. **HALT with appropriate message:**
 
 **If branch has remaining changes:**
 
@@ -252,7 +252,7 @@ if pr_state == "open":
 **Mergeable State Matrix:**
 
 | mergeable | mergeable_state | Meaning | Action |
-|-----------|-----------------|---------|--------|
+| -- | -- | -- | -- |
 | True | "clean" | No conflicts | ✅ Proceed with PR creation |
 | True | "has_hooks" | No conflicts + hooks | ✅ Proceed (hooks run on merge) |
 | False | "dirty" | Merge conflicts | 🔄 **CONFLICTS DETECTED** - Go to Step 1.5d.2 |
@@ -270,7 +270,7 @@ if pr_state == "open":
    git log --oneline origin/dev..HEAD  # See commits to be merged
    ```
 
-1. **Get conflict files from GitHub API:**
+2. **Get conflict files from GitHub API:**
 
    ```python
    # GitHub doesn't provide conflict files directly via API
@@ -284,11 +284,12 @@ if pr_state == "open":
        ).strip().split('\n')
    ```
 
-1. **Classify conflicts (AI-objective vs AI-subjective):**
+3. **Classify conflicts (AI-objective vs AI-subjective):**
 
 **AI-Objective Conflicts (Auto-Resolve):**
+
 | Conflict Type | Auto-Resolution Strategy |
-|----------------|--------------------------|
+| -- | -- |
 | Import statement changes | Take both import sets |
 | Whitespace/formatting | Apply consistent formatting |
 | Same function moved to different location | Use new location |
@@ -296,8 +297,9 @@ if pr_state == "open":
 | Configuration file additions | Merge sections |
 
 **AI-Subjective Conflicts (Request User Input):**
+
 | Conflict Type | Why Subjective | HALT Action |
-|----------------|----------------|-------------|
+| -- | -- | -- |
 | Logical/behavioral conflicts | Different implementations | Request clarification |
 | Deleted file vs modified file | Need design decision | Request decision |
 | Architectural changes | Multiple valid approaches | Request approach choice |
@@ -341,8 +343,8 @@ def authenticate(user):
 **Please specify which approach to use:**
 
 1. Keep your branch's version: `git checkout --ours src/file.py`
-1. Use main's version: `git checkout --theirs src/file.py`
-1. Provide custom resolution
+2. Use main's version: `git checkout --theirs src/file.py`
+3. Provide custom resolution
 
 **Files with conflicts:**
 
@@ -483,13 +485,13 @@ PRs #109, #114, #118, #119, #120 merged without changelog updates because Step 1
 This checkpoint ensures:
 
 1. Skill invocation (Step 2.2) actually happened
-1. Staging (Step 2.3) actually happened
-1. Changelog changes ARE in the squash commit
+2. Staging (Step 2.3) actually happened
+3. Changelog changes ARE in the squash commit
 
 #### Context Isolation Benefits
 
 | What Happens in Sub-Task | What Returns to Main Context |
-|--------------------------|------------------------------|
+| -- | -- |
 | Git commit analysis | Minimal confirmation only |
 | Commit categorization | NOT: intermediate reasoning |
 | Technical → User-friendly translation | NOT: commit details analyzed |
@@ -521,11 +523,13 @@ git rebase origin/dev
 ```
 
 **Why this matters:**
+
 - Another agent may have merged a PR into `dev` between review and PR creation
 - The squash commit must be based on the current `dev` tip, not a stale one
 - Prevents the PR from having unexpected merge conflicts or stale base
 
 **If conflicts occur during rebase:**
+
 1. HALT and report conflicts to the developer
 2. List the conflicting files
 3. Request resolution — the developer must decide how to proceed
@@ -548,10 +552,10 @@ If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** D
    git branch --show-current
    # MUST match BRANCH_NAME
    ```
-3. `git rev-parse --show-toplevel` MUST return the worktree path
-4. NEVER operate in the main working directory during implementation
-5. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
-6. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
+4. `git rev-parse --show-toplevel` MUST return the worktree path
+5. NEVER operate in the main working directory during implementation
+6. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
+7. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
 
 ### Step 4: Push to Remote
 
@@ -713,16 +717,16 @@ Wait for human to merge.
 ### What If PR Creation Fails?
 
 | Failure Reason | Response |
-|----------------|----------|
+| -- | -- |
 | No commits between branches | Report: "Branch has no commits to main. Changes may already be merged. Verify and HALT." |
 | Branch conflicts | Report: "Branch conflicts with main. Rebase and push, then create PR." |
 | GitHub API error | Report error details and HALT |
 
 ### Post-PR Creation Checklist
 
-- \[ \] Exec summary posted in chat
-- \[ \] PR URL posted in chat
-- \[ \] HALT — waiting for human merge
+- [ ] Exec summary posted in chat
+- [ ] PR URL posted in chat
+- [ ] HALT — waiting for human merge
 
 **🚫 NEVER:** Skip reporting PR URL, merge PR, or proceed without developer confirmation.
 
@@ -736,18 +740,18 @@ After implementation completes and BEFORE PR creation authorization:
    git push -u origin <branch-name>
    ```
 
-1. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
+2. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
 
    - URLs go in chat dialog ONLY
    - GitHub Issues receive completion comment WITHOUT URL
 
-1. **Developer reviews changes** via GitHub diff viewer
+3. **Developer reviews changes** via GitHub diff viewer
 
-1. **Developer decides** whether to create PR or request changes
+4. **Developer decides** whether to create PR or request changes
 
-1. **If satisfied, developer says** "create a PR"
+5. **If satisfied, developer says** "create a PR"
 
-1. **Agent creates PR** (squash, push, create PR, HALT)
+6. **Agent creates PR** (squash, push, create PR, HALT)
 
 **Why This Matters:**
 
@@ -767,7 +771,7 @@ After implementation completes and BEFORE PR creation authorization:
 **When a skill is invoked, EXECUTE it, not just read it.**
 
 | Wrong Behavior | Correct Behavior |
-|----------------|------------------|
+| -- | -- |
 | Load skill content | Load skill content |
 | Read the content | READ AND EXECUTE each step |
 | Halt without action | Follow procedural steps |
@@ -797,7 +801,7 @@ User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES c
 ## Enforcement Mechanisms
 
 | Layer | Mechanism | Scope | Bypassable? |
-|-------|-----------|-------|-------------|
+| -- | -- | -- | -- |
 | **Local** | `.githooks/pre-commit` | Blocks commit to main/master/dev | No |
 | **Local** | `.githooks/post-commit` | Warns after commit to main/master/dev | N/A (post) |
 | **GitBucket** | Branch protection rules | Requires PR for dev/main | No |
@@ -805,9 +809,9 @@ User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES c
 **There is NO emergency bypass.** If you need to make an urgent fix:
 
 1. Create a hotfix worktree: `git worktree add .worktrees/hotfix-urgent-fix -b hotfix/urgent-fix dev`
-1. Make your changes and commit
-1. Push and create PR with `hotfix` label (targeting `dev`)
-1. Request expedited review
+2. Make your changes and commit
+3. Push and create PR with `hotfix` label (targeting `dev`)
+4. Request expedited review
 
 ## Recovery from Accidental Protected Branch Commit
 
@@ -831,7 +835,7 @@ git push origin feature/recovery
 ## Common Issues
 
 | Issue | Resolution |
-|-------|------------|
+| -- | -- |
 | Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
 | PR body missing Fixes | Verify sub-issues, add all to body |
 | Branch conflicts | Rebase on dev: `git rebase origin/dev` |
@@ -842,7 +846,7 @@ git push origin feature/recovery
 Every squash commit MUST include:
 
 1. AI Author trailer
-1. Human Collaborator trailer
+2. Human Collaborator trailer
 
 **AI Trailer Format:**
 
@@ -860,7 +864,7 @@ Every squash commit MUST include:
 ## Sub-Issue Autoclose
 
 | Spec Type | PR Body Format |
-|-----------|---------------|
+| -- | -- |
 | Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
 | Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
 
@@ -880,7 +884,7 @@ Fixes #470
 ## Common Issues
 
 | Issue | Resolution |
-|-------|------------|
+| -- | -- |
 | Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
 | PR body missing Fixes | Verify sub-issues, add all to body |
 | Branch conflicts | Rebase on dev: `git rebase origin/dev` |
@@ -889,5 +893,5 @@ Fixes #470
 ## After PR Creation
 
 1. Report PR URL
-1. HALT — wait for human merge
-1. Do NOT merge (human-only operation)
+2. HALT — wait for human merge
+3. Do NOT merge (human-only operation)

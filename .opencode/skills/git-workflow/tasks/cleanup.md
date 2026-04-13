@@ -117,17 +117,20 @@ fi
 ```
 
 **Why this check matters:**
+
 - In parallel sub-agent mode, other agents may still be working in their worktrees
 - Premature `git worktree prune` could corrupt active worktrees
 - Only prune when ALL parallel work is confirmed complete
 - The orchestrator (per `subagent-driven-development` skill) runs `git worktree prune` after ALL sub-agents complete
 
 **Individual agent (during parallel work):**
+
 1. Remove only YOUR specific worktree: `git worktree remove .worktrees/<your-branch-name>`
 2. Do NOT run `git worktree prune` — other agents may still be active
 3. Do NOT run `git checkout dev` in main working tree during parallel work
 
 **Orchestrator (after ALL parallel work completes):**
+
 1. Verify no feature worktrees remain: `git worktree list`
 2. If only `.worktrees/main` remains: safe to prune
 3. Run: `git worktree prune`
@@ -154,11 +157,13 @@ git remote prune origin
 ### Step 6: Clean Other Merged Branches
 
 **Find merged branches:**
+
 ```bash
 git branch --merged dev
 ```
 
 **For each merged branch (except main/master/dev):**
+
 ```bash
 git branch -d <branch>
 ```
@@ -201,7 +206,7 @@ After EVERY merged PR, cleanup is MANDATORY — no exceptions, no "I'll do it la
 ## Branch Status Categories
 
 | Status | Condition | Action |
-|--------|-----------|--------|
+| -- | -- | -- |
 | **Fully merged** | `ahead=0, behind=0` or PR merged | **DELETE IMMEDIATELY** |
 | **Superseded** | PR closed/merged, changes incorporated via other branch | **DELETE IMMEDIATELY** |
 | **Stale** | Behind main by many commits, no PR, no recent work | Safe to delete |
@@ -224,7 +229,7 @@ github_list_pull_requests(state="merged", perPage=50)
 ### Safety Checks Before Deletion
 
 | Check | Purpose | Method |
-|-------|---------|--------|
+| -- | -- | -- |
 | Branch merged | Prevent deleting unmerged work | `git branch --merged dev` |
 | PR status | Confirm merge (not just closed) | GitHub API |
 | Not current | Prevent deleting active branch | `git branch --show-current` |
@@ -266,7 +271,7 @@ Archive a spec **immediately** after the final phase is approved and the PR is m
 ### ✅ REQUIRED SEQUENCE
 
 | Step | Action | Agent Role |
-|------|--------|------------|
+| -- | -- | -- |
 | Implementation complete | Create PR with `Fixes #123` | ✅ Agent creates PR |
 | PR created | Report URL, HALT | ✅ Agent waits |
 | Human merges PR | Merge happens | 🚫 Human ONLY |
@@ -315,7 +320,7 @@ Before closing any issue (SPEC or Task), the AI agent MAY provide a final summar
 ### When to Post Closing Comment
 
 | Scenario | Action |
-|----------|--------|
+| -- | -- |
 | Closing summary explains substantive changes stakeholders need to know | **POST comment** |
 | Closing summary is merely "Task complete" or status update | **SKIP — do not post** |
 | Multiple related changes that stakeholders need context on | **POST comment** |
@@ -447,7 +452,7 @@ This enables automatic closure by GitBucket/GitHub.
 ### Edge Case Handling
 
 | Scenario | Action |
-|----------|--------|
+| -- | -- |
 | Platform fails to auto-close sub-issue | Agent closes manually after PR merge verification |
 | PR closed without merge | Sub-issues remain open (correct behavior) |
 | Draft PR | Sub-issues remain open until PR is merged (correct behavior) |
@@ -468,15 +473,18 @@ children = github_issue_read(method="get_sub_issues", issue_number=parent_issue)
 ### Step 2: Classify Each Sub-Issue
 
 **Already Closed:**
+
 - `state: "closed"` + `state_reason: "completed"` → Done
 - `state: "closed"` + `state_reason: "not_planned"` → Intentionally not done
 - Closed with "Superseded by #N" comment → Check replacement exists
 
 **Open but May Be Complete:**
+
 - Check comments for "Superseded by #N" → Verify new issue covers work
 - Check body for PR link ("Fixes #N") → If merged, work is done
 
 **Open and Incomplete:**
+
 - No PR, no superseded link, no completion comment → BLOCK parent closure
 
 ### Step 3: Take Action
@@ -533,12 +541,10 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 🤖 ⚠️ Blocked by OpenCode (ollama-cloud/glm-5)
 ```
 
-
-
 ## Common Issues
 
 | Issue | Resolution |
-|-------|------------|
+| -- | -- |
 | Remote branch already deleted | Skip remote deletion, clean local |
 | Local has extra commits | Warn user, ask before deleting |
 | Multiple PRs from same branch | Wait until ALL PRs merged |
@@ -604,6 +610,7 @@ NO parent/child structure check
 ```
 
 **This incorrect workflow VIOLATES critical rules and causes:**
+
 - Issues closed without PR tracking
 - No merge verification
 - Potential reopen of closed issues if PR rejected
@@ -618,7 +625,7 @@ NO parent/child structure check
 ### What HALT Means After Cleanup
 
 | Action | Status |
-|--------|--------|
+| -- | -- |
 | Close issues | ✅ Done |
 | Delete branches | ✅ Done |
 | Post final summary | ✅ Done |
@@ -639,7 +646,7 @@ PR #81 merged. Branch `spec/github-issue-creation-skill` deleted. Cleanup comple
 ### 🚫 CRITICAL VIOLATIONS After Cleanup
 
 | Violation | Example |
-|-----------|---------|
+| -- | -- |
 | Continue without new instruction | "Ready for next task?" |
 | Suggest next work | "Should I start on #75?" |
 | Prompt for anything | "What would you like me to do?" |
@@ -656,6 +663,7 @@ When implementing an approved spec:
 1. **Branch Naming**: Derive from spec filename or issue — `spec/<short-name>` (e.g., `plans/SPEC-mesh-descriptor-lookup.md` → `spec/mesh-descriptor-lookup` or Issue #15 → `spec/project-first-strategy`)
 
 2. **Branch Creation**: Before any implementation, create a worktree:
+
    ```bash
    git checkout dev && git pull origin dev
    git worktree add .worktrees/spec-<short-name> -b spec/<short-name> dev
@@ -672,12 +680,14 @@ When implementing an approved spec:
 Use PR workflow instead of local merge:
 
 **Before creating PR:**
+
 1. **Rebase on main**: `git fetch origin && git rebase origin/dev`
 2. **Squash commits**: Interactive rebase to consolidate multiple commits
 3. **Force push**: `git push --force-with-lease origin <branch>`
 4. **Then create PR**: Only after branch is clean and rebased
 
 **PR Workflow Steps:**
+
 1. Create feature worktree: `git worktree add .worktrees/feature-issue-123 -b feature/issue-123-description dev`
 2. Commit changes to feature branch
 3. Push to remote: `git push origin feature/issue-123-description`
@@ -697,15 +707,17 @@ Use PR workflow instead of local merge:
 - One commit per PR, with PR number in commit message
 
 **For humans merging PRs:**
+
 - GitHub "Squash and merge" button is required
 - Never click "Merge" or "Rebase and merge" buttons
 
 **When Local Merge is Acceptable (even with MCP tools):**
+
 - Trivial fixes (typos, whitespace, single-line changes)
 - Urgent hotfixes requiring immediate deployment
 - Docs-only changes that don't affect production code
 
----
+______________________________________________________________________
 
 ## When GitHub MCP Tools Unavailable
 
@@ -714,15 +726,18 @@ Use PR workflow instead of local merge:
 ### ✅ ALWAYS DO
 
 **When merging a feature branch into main:**
+
 - Use **squash-merge** to create a single clean commit
 - Delete the feature branch after merge
 - Include spec reference in commit message
 
 **When keeping a feature branch up-to-date:**
+
 - Use **rebase** (not merge) to pull latest changes from dev
 - `git fetch origin && git rebase origin/dev`
 
 ### 🚫 NEVER DO
+
 - **NEVER use regular merge** (`git merge`) to merge feature branches into main — creates messy history
 - **NEVER use merge** to sync feature branch with main — use rebase instead
 - **NEVER force-push to main**
@@ -741,8 +756,8 @@ git add <resolved-files>
 git rebase --continue
 ```
 
----
+______________________________________________________________________
 
-*Source: Content migrated from `110-git-protocol.md`*
----
+## *Source: Content migrated from `110-git-protocol.md`*
+
 *Source: Migrated from .opencode/guidelines/112-git-merge-protocol.md*

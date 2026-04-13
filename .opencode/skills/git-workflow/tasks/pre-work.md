@@ -15,6 +15,7 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 3. **ONLY THEN**: Proceed with file changes inside the worktree
 
 **What Counts as a "Change"?**
+
 - Editing any file (code, config, docs, tests)
 - Creating new files
 - Deleting files
@@ -25,17 +26,20 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - **Using file-editing MCP tools** (`pycharm_replace_text_in_file`, `pycharm_create_new_file`, etc.) — these ARE filesystem changes
 
 **⚠️ MCP Tools Are NOT an Exception**
+
 - `pycharm_replace_text_in_file` → edits files → MUST be in worktree
 - `pycharm_create_new_file` → creates files → MUST be in worktree
 - `github_issue_write` → GitHub Issues, NOT local files → NOT a filesystem change
 - `github_add_issue_comment` → GitHub comments → NOT a filesystem change
 
 **Violation = Hard Stop**
+
 - If you catch yourself about to edit files while on `main`, STOP immediately
 - Report "I need to create a worktree first" and wait for worktree creation
 - Never proceed past this checkpoint without an active worktree
 
 ### ✅ ALWAYS DO
+
 ```
 # Using using-git-worktrees skill:
 # 1. Sync dev: git checkout dev && git pull origin dev
@@ -44,6 +48,7 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 ```
 
 ### 🚫 NEVER DO
+
 ```
 # WRONG — VIOLATION (stash+checkout):
 git stash -u
@@ -71,11 +76,13 @@ git checkout -b spec/my-change dev
 ## Three-Branch Workflow Context
 
 **Branch Model:**
+
 - **Feature branches** (`feature/*` or `spec/*`): Branch from `dev`, merge to `dev`
 - **Dev branch** (`dev`): Staging/integration (evergreen, never deleted)
 - **Main branches** (`main` or `master`): Production-ready code
 
 **AI Commit Restrictions:**
+
 - AI cannot commit to `main`, `master`, or `dev` (blocked by git hooks)
 - AI must create feature branches from `dev` (not `main`)
 - AI must sync with `dev` before creating feature branch
@@ -109,6 +116,7 @@ Invoke `using-git-worktrees` skill (ALWAYS, for ANY feature branch):
 4. If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT**
 
 **If worktree creation fails or `WORKTREE_FATAL=1` is detected:**
+
 - HALT immediately
 - Report the fatal error to the developer
 - Do NOT attempt any implementation until the worktree infrastructure is fixed
@@ -137,18 +145,20 @@ echo $WORKTREE_PATH
 Report: "Ready for implementation in worktree: <worktree-path> on branch: <branch-name>"
 
 **Yield back to orchestration layer:**
+
 ```yaml
 status: success
 branch: <branch-name>
 worktree_path: .worktrees/<sanitized-branch-name>
 dev_base_hash: <7-char-sha>
 working_tree_clean: true
-ready_for: "implementation"
+ready_for: implementation
 ```
 
 ## Context Received from Orchestration Layer
 
 **Input context from `implementation-workflow`:**
+
 ```yaml
 authorization: confirmed (from approval-gate)
 issue: <issue-number>
@@ -159,6 +169,7 @@ This task does NOT re-check authorization. Authorization was verified by `approv
 ## Yield-Back to Orchestration Layer
 
 **After completion, this task yields:**
+
 ```yaml
 status: success | failure
 branch: "spec/<feature-name>" | "feature/<feature-name>"
@@ -175,21 +186,25 @@ The orchestration layer (`implementation-workflow`) receives this yield and pass
 **When investigation reveals spec is already implemented:**
 
 1. **Detect before branch creation:**
+
    - After reading files, verify all proposed changes are already present
    - Confirm no modifications needed
    - Document verification in issue comment
 
 2. **Skip worktree creation entirely:**
+
    - Do NOT create feature worktree
    - Do NOT push anything
    - Do NOT create PR
 
 3. **Close issue directly:**
+
    - Post verification comment explaining what was checked
    - Close issue with `state_reason: "completed"`
    - Report completion in chat
 
 **Example Comment:**
+
 ```markdown
 🤖 ✅ Completed by <AgentName> (<ModelID>)
 
@@ -214,7 +229,7 @@ Verified all proposed changes were already implemented. No modifications needed.
 Branch names containing `/` are sanitized for the worktree directory name:
 
 | Branch Name | Worktree Directory |
-|-------------|-------------------|
+| -- | -- |
 | `feature/<name>` | `.worktrees/feature-<name>/` |
 | `spec/<name>` | `.worktrees/spec-<name>/` |
 
@@ -232,12 +247,13 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 ## Enforcement Mechanisms (NO BYPASS)
 
 | Layer | Mechanism | Scope | Bypassable? |
-|-------|-----------|-------|-------------|
+| -- | -- | -- | -- |
 | **Local** | `.githooks/pre-commit` | Blocks commit to main | No |
 | **Local** | `.githooks/post-commit` | Warns after commit to main | N/A (post) |
 | **GitHub** | Branch protection rules | Requires PR | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
+
 1. Create a worktree: `git worktree add .worktrees/hotfix-urgent-fix -b hotfix/urgent-fix dev`
 2. Make your changes and commit in the worktree
 3. Push and create PR with `hotfix` label

@@ -11,6 +11,7 @@ compatibility: opencode
 ## Overview
 
 Fragment Manager handles duplicate text blocks (fragments) that appear in multiple skills. It provides:
+
 - CRUD operations on fragment master files in `.opencode/.guidelines/`
 - Synchronization from masters to destination copies
 - Drift detection between masters and copies
@@ -19,11 +20,13 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 ## Architecture
 
 **Fragment Registry Schema:**
+
 - `.opencode/.guidelines/registry.yaml` - Tracks fragment masters and destinations
 - `.opencode/.guidelines/*.md` - Fragment master files (golden copies)
 - `.opencode/skills/*/SKILL.md` - Destination copies (embedded in skills)
 
 **Key Principles:**
+
 - Skills remain self-contained (copies, not references)
 - Masters are minimal (content blocks only, no context)
 - Syncs require verification (hash matching)
@@ -32,7 +35,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 ## Tasks
 
 | Task | Purpose | When to Use |
-|------|---------|-------------|
+| -- | -- | -- |
 | `create-fragment` | Create new fragment master from existing content | When duplicate content is found in skills |
 | `read-fragment` | Read fragment master content | When inspecting fragment details |
 | `update-fragment` | Update master content | When master needs changes |
@@ -61,12 +64,14 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 ## Conflict Resolution Protocol
 
 **When to STOP and ASK:**
+
 1. Destination content differs from master AND master unchanged
 2. File structure changed (lines shifted, sections reorganized)
 3. Registry has conflicts (ambiguous ID, cyclic dependency)
 4. Sync fails for any destination
 
 **Confirmation Format:**
+
 ```
 ⚠️ CONFLICT DETECTED
 
@@ -91,7 +96,7 @@ Your choice:
 
 ```yaml
 version: 2
-schema_version: "2.0.0"
+schema_version: 2.0.0
 last_updated: YYYY-MM-DD
 
 fragments:
@@ -104,7 +109,7 @@ fragments:
     content:
       type: text-block
       estimated_words: NNN
-      description: "Fragment description"
+      description: Fragment description
     destinations:
       - path: .opencode/skills/skill-name/SKILL.md
         hash: sha256:abc123...
@@ -114,7 +119,7 @@ fragments:
         verified_date: YYYY-MM-DDTHH:MM:SSZ
     sync_status: synchronized
     last_sync: YYYY-MM-DDTHH:MM:SSZ
-    notes: "Fragment notes"
+    notes: Fragment notes
 ```
 
 ## Cross-References

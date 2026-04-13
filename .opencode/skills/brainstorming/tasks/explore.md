@@ -66,7 +66,7 @@ Rules:
 **Internal Dimensions Checklist** (reference only, never exposed as output sections):
 
 | Dimension | When to Think About It | When to Skip |
-|-----------|------------------------|--------------|
+| -- | -- | -- |
 | Problem Understanding | Always | Never |
 | User Requirements | When there are end users | Bug fixes with no user-facing change |
 | Alternatives Analysis | When multiple approaches exist | Simple fixes with one obvious fix |
@@ -107,6 +107,7 @@ You use these dimensions internally to decide what to ask about. The user never 
 > "Exploration complete. I'll now invoke the spec-creation skill to structure and write the spec from our investigation results."
 
 The `spec-creation` skill handles:
+
 - Requirements extraction, problem decomposition, interface-first thinking
 - Traceability mapping, risk & operational analysis
 - Spec writing, self-review, and user review

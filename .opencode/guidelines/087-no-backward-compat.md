@@ -3,6 +3,7 @@
 ## Rule
 
 When refactoring internal code (non-public API):
+
 - Do NOT create backward compatibility aliases
 - Do NOT add deprecation warnings
 - Fix ALL callers immediately
@@ -20,12 +21,14 @@ Backward compatibility is ONLY for public APIs with external consumers. Internal
 ## When to Apply
 
 ### Apply this rule when:
+
 - Renaming internal modules, classes, functions, or variables
 - Changing internal function signatures
 - Moving code between internal modules
 - Refactoring internal data structures
 
 ### Do NOT apply when:
+
 - Changing public API (anything users import)
 - Modifying library interfaces consumed externally
 - Changing database schemas that external tools might use

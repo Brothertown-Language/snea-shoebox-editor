@@ -40,7 +40,7 @@ git commit -m "WIP: <descriptive message>"
 When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `write`, `glob`, `grep`) MUST prefix paths with the worktree path. These tools have NO `workdir` parameter — relative paths resolve to the main repo, causing silent errors.
 
 | Tool | Wrong (operates on main repo) | Correct (targets worktree) |
-|------|-------------------------------|---------------------------|
+| -- | -- | -- |
 | `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
 | `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
 | `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
@@ -54,6 +54,7 @@ When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `wri
 **The most common workflow failure is pushing without committing.**
 
 **Correct sequence:**
+
 ```
 1. Make file changes (edit tool, etc.)
 2. git status (verify changes exist)
@@ -63,6 +64,7 @@ When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `wri
 ```
 
 **Incorrect sequence (CRITICAL VIOLATION):**
+
 ```
 1. Make file changes
 2. git push (WRONG - uncommitted changes)
@@ -71,6 +73,7 @@ When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `wri
 ```
 
 **Verification before push:**
+
 - `git status` MUST show "nothing to commit, working tree clean"
 - Local branch MUST have at least one commit ahead of remote
 - If `git status` shows uncommitted changes → COMMIT FIRST
@@ -78,7 +81,7 @@ When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `wri
 ## Multiple Commits Are Acceptable
 
 | Commit Type | When | Message | Trailers |
-|-------------|------|---------|----------|
+| -- | -- | -- | -- |
 | Implementation commit | During work | `WIP: description` | None |
 | Squash commit | PR creation | Descriptive | Full co-author trailers |
 
@@ -97,6 +100,7 @@ When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `wri
 ## When to Commit During Implementation
 
 Commit when:
+
 - Completing a discrete logical unit of work
 - Reaching a checkpoint that might need rollback
 - Before attempting something risky

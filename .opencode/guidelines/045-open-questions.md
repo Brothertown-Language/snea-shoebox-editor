@@ -29,6 +29,7 @@ Your choice:
 ```
 
 After receiving the answer:
+
 1. Acknowledge the answer
 2. Explain how it affects the plan (if applicable)
 3. Update the plan file with the decision
@@ -44,6 +45,7 @@ After receiving the answer:
 ## 4. Complete Before Implementation
 
 Implementation is BLOCKED until:
+
 - All open questions have documented answers
 - The plan file reflects all decisions
 - User confirms "proceed with implementation"

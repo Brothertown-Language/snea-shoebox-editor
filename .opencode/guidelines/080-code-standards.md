@@ -86,7 +86,7 @@ The following project-specific code structure rules are enforced in this reposit
 **DO NOT run Python tools on non-Python files:**
 
 | Tool | Python Files | Markdown Files |
-|------|--------------|----------------|
+| -- | -- | -- |
 | `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
 | `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
 | `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
@@ -98,6 +98,7 @@ Running `ruff check` or `ruff format` on `.md` files is a **CRITICAL GUIDELINE V
 ### Correct Tool Usage
 
 **Python files (`.py`):**
+
 ```bash
 uvx ruff check --fix src/ test/   # Lint + auto-fix
 uvx ruff format src/ test/        # Format
@@ -106,6 +107,7 @@ uvx vulture src/                  # Dead code scan
 ```
 
 **Markdown files (`.md`):**
+
 ```bash
 uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/   # Lint
 uvx mdformat .opencode/guidelines/ docs/                # Format
@@ -118,11 +120,13 @@ uvx mdformat .opencode/guidelines/ docs/                # Format
 All enumeration lists, numbered sections, and step sequences in documentation MUST use **natural counting** (starting at 1).
 
 **Prohibited:**
+
 - Zero-indexed numbered lists (`0. First item`, `1. Second item`)
 - Step 0 in procedures (use Step 1 as the first step)
 - Phase 0 in specs (use Phase 1 as the first phase)
 
 **Exceptions:**
+
 - Code comments explaining 0-indexed array access
 - Technical documentation explicitly explaining zero-based indexing concepts
 
@@ -135,6 +139,7 @@ All enumeration lists, numbered sections, and step sequences in documentation MU
 ### What Counts as AI-Generated Content
 
 AI co-authorship applies to **creative, original content authored by AI**:
+
 - Original code written by AI
 - Original documentation written by AI
 - Original designs/architectures conceived by AI
@@ -143,6 +148,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### What Does NOT Require AI Attribution
 
 **Standard/boilerplate content does NOT require AI attribution:**
+
 - Standard licenses (MIT, Apache, GPL, etc.) - these are established legal templates
 - Auto-generated files (lock files, build artifacts, `__pycache__`)
 - Framework boilerplate (default configs, standard project structures)
@@ -150,6 +156,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 - Files with no creative content (empty `__init__.py`, pure config)
 
 **Copy-pasted content from ANY external source does NOT get AI attribution:**
+
 - Code copied from Stack Overflow, blogs, tutorials
 - Code copied from other projects/repositories
 - Documentation copied from official sources
@@ -161,7 +168,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### Files Requiring Attribution
 
 | File Type | Attribution Location | Format |
-|-----------|---------------------|--------|
+| -- | -- | -- |
 | Python files (`.py`) | Module docstring | `"""Co-authored with AI: AI-Name (model-id)"""` |
 | README files | Footer section | `## Co-Authored With AI` section |
 | New repositories | README.md | AI co-authored section (see below) |
@@ -170,7 +177,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### Files NOT Requiring Attribution
 
 | File Type | Reason |
-|-----------|--------|
+| -- | -- |
 | LICENSE files | Standard legal templates (MIT, Apache, etc.) |
 | `pyproject.toml`, `setup.py` | Boilerplate configuration |
 | Lock files (`uv.lock`, `package-lock.json`) | Auto-generated |
@@ -185,6 +192,7 @@ Co-authored with AI: <AI-Name> (<model-id>)
 ```
 
 **Example:**
+
 ```
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)
 ```
@@ -219,6 +227,7 @@ Co-authored with AI: OpenCode (ollama-cloud/glm-5)
 ### Why This Matters
 
 AI co-authored attribution:
+
 1. Maintains transparency about content origin
 2. Follows emerging best practices for AI-assisted work
 3. Enables proper credit and traceability
@@ -232,16 +241,16 @@ AI co-authored attribution:
 ### Required Format
 
 | Reference Type | Format | Example |
-|----------------|--------|---------|
+| -- | -- | -- |
 | Function | `file.py` `function_name()` | `process_data()` in `pubmed_client.py` |
 | Class | `file.py` `ClassName` | `MeshValidator` in `validator.py` |
 | Section | `file.md` `"Section Name"` | `"Cross-Reference Standards"` in `080-code-standards.md` |
-| Code snippet | Include snippet (<20 lines) | See examples below |
+| Code snippet | Include snippet (\<20 lines) | See examples below |
 
 ### Forbidden Format
 
 | Reference Type | Format | Why Forbidden |
-|----------------|--------|---------------|
+| -- | -- | -- |
 | Line number | `file.py:42` | Breaks on every edit |
 | Line range | `file.py:42-48` | Breaks on every edit |
 | Bare number | "line 42" | No context, breaks on edit |
@@ -249,6 +258,7 @@ AI co-authored attribution:
 ### Why This Matters
 
 Line numbers shift when:
+
 - Lines are added above the reference
 - Lines are deleted above the reference
 - Any edit changes file length
@@ -258,12 +268,14 @@ Stable anchors (function names, class names, section headers) remain valid acros
 ### Examples
 
 **❌ WRONG (Line Numbers):**
+
 ```
 See `file.py:42` for the function definition.
 See `guidelines.md:150` for the rule.
 ```
 
 **✅ CORRECT (Stable Anchors):**
+
 ```
 See `process_data()` in `file.py` for the function definition.
 See `"Cross-Reference Standards"` section in `guidelines.md` for the rule.

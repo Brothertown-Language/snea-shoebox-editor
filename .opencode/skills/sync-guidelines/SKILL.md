@@ -15,7 +15,7 @@ Intelligently synchronizes guidelines, skills, and tools between repositories th
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
+| -- | -- | -- |
 | `classify` | Classify files as core or project-specific | ~250 |
 | `sync-push` | Push core changes to target repository | ~300 |
 | `sync-pull` | Pull core changes into local repository | ~300 |
@@ -50,9 +50,9 @@ target:
   owner: <owner>
   repo: <repo>
 local_only:
-  - ".opencode/AGENTS.md"
-  - ".opencode/sync-config.yml"
-  - ".opencode/sync-state.yml"
+  - .opencode/AGENTS.md
+  - .opencode/sync-config.yml
+  - .opencode/sync-state.yml
 ```
 
 ## Sync State Tracking

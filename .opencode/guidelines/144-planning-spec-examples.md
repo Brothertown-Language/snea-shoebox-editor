@@ -4,7 +4,7 @@
 
 This document provides examples of good and bad spec context to illustrate the fresh-start requirements.
 
----
+______________________________________________________________________
 
 ## Example 1: Bug Report
 
@@ -17,13 +17,14 @@ This document provides examples of good and bad spec context to illustrate the f
 > **Steps:** Implement the fix we talked about.
 
 This is BAD because:
+
 - No context about WHAT bug
 - No WHERE (which file, which function)
 - No WHY (what causes the bug)
 - No HOW to fix (no approach documented)
 - References "previous comments" instead of restating
 
----
+______________________________________________________________________
 
 ### ✅ GOOD Bug Report (Self-Contained)
 
@@ -32,6 +33,7 @@ This is BAD because:
 > **Problem:** Users are unexpectedly logged out after 7 days when their OAuth2 refresh token expires. The current implementation does not handle the `TokenExpiredError` and instead propagates the exception, terminating the user session.
 >
 > **Location:** `refresh_token()` in `src/auth/oauth_client.py`:
+>
 > ```python
 > def refresh_token(self):
 >     # BUG: Does not handle expired refresh_token
@@ -49,28 +51,33 @@ This is BAD because:
 > **Decision:** Implement re-authentication flow by catching `TokenExpiredError` and calling `authenticate()` with stored credentials.
 >
 > **Constraints:**
+>
 > - Must not break existing token refresh logic
 > - Must work with the new credential storage added in #100
 > - Must not expose credentials in logs
 >
 > **Edge Cases:**
+>
 > - Credentials no longer valid → prompt user to re-login
 > - Network failure during re-auth → propagate error
 > - Rate limiting on auth API → backoff and retry
 >
 > **Related Issues:**
+>
 > | Issue | Summary | Relevance |
-> |-------|---------|-----------|
+> | -- | -- | -- |
 > | [#100](https://github.com/owner/repo/issues/100) | Persistent sessions | Credential storage implementation |
 > | [#150](https://github.com/owner/repo/issues/150) | Token rotation | Future improvement for longer sessions |
 >
 > **Success Criteria:**
+>
 > 1. ✅ Users with expired refresh tokens are automatically re-authenticated
 > 2. ✅ Re-authentication failures surface appropriate error messages
 > 3. ✅ No credentials logged or exposed
 > 4. ✅ Existing refresh logic unchanged for valid tokens
 
 This is GOOD because:
+
 - ✅ Problem clearly stated with symptom and impact
 - ✅ Exact file/line location provided
 - ✅ Code snippet included
@@ -82,7 +89,7 @@ This is GOOD because:
 - ✅ Edge cases identified
 - ✅ Success criteria testable
 
----
+______________________________________________________________________
 
 ## Example 2: Feature Specification
 
@@ -95,6 +102,7 @@ This is GOOD because:
 > **Steps:** Add caching layer, update API handlers, add tests.
 
 This is BAD because:
+
 - References "yesterday's meeting" without restating decisions
 - No context for WHY caching is needed
 - No details on WHAT to cache
@@ -102,7 +110,7 @@ This is BAD because:
 - No success criteria
 - No constraints or edge cases
 
----
+______________________________________________________________________
 
 ### ✅ GOOD Feature Spec (Self-Contained)
 
@@ -110,9 +118,10 @@ This is BAD because:
 >
 > **Problem Statement:** Article metadata API calls average 150ms response time, causing slow page loads for article lists. Users report poor experience on mobile devices with slower connections.
 >
-> **Objective:** Reduce API response time from 150ms average to <20ms for article metadata queries by implementing a Redis caching layer.
+> **Objective:** Reduce API response time from 150ms average to \<20ms for article metadata queries by implementing a Redis caching layer.
 >
 > **Context:**
+>
 > - Current article metadata queries hit PostgreSQL directly
 > - Most queries are for the same ~1000 recently-published articles
 > - Article metadata changes infrequently (title, author, publication date)
@@ -121,21 +130,24 @@ This is BAD because:
 > **Decision:** Use Redis as cache layer with 1-hour TTL for article metadata.
 >
 > **Why Redis over Alternatives:**
+>
 > | Option | Pros | Cons | Decision |
-> |--------|------|------|----------|
+> | -- | -- | -- | -- |
 > | Redis | Fast, supports TTL, already in infra | Memory-based | ✅ CHOSEN |
 > | Memcached | Simple, fast | No built-in TTL management | ❌ More config needed |
 > | In-process | No network overhead | Lost on restart | ❌ Not suitable for HA |
 >
 > **Affected Files:**
+>
 > | File | Anchor | Changes |
-> |------|--------|--------|
+> | -- | -- | -- |
 > | `src/api/articles.py` | `get_article_metadata()` function | Add cache layer |
 > | `src/cache/__init__.py` | new file | New Redis client wrapper |
 > | `src/config.py` | "Configuration" section | Add Redis connection config |
 >
 > **Code Context:**
 > Current `get_article_metadata()` in `src/api/articles.py`:
+>
 > ```python
 > def get_article_metadata(article_id: str) -> dict:
 >     """Fetch article metadata from database."""
@@ -145,44 +157,52 @@ This is BAD because:
 > ```
 >
 > **Constraints:**
+>
 > - Must not exceed 512MB Redis memory allocation
 > - Cache invalidation required on article updates
 > - Must handle Redis unavailable gracefully (fallback to DB)
 > - TTL of 1 hour (3600 seconds)
 >
 > **Assumptions:**
+>
 > - Redis server already deployed (per infra team confirmation)
 > - Article metadata structure stable (no schema changes planned)
 >
 > **Success Criteria:**
-> 1. ✅ API response time <20ms for cached article queries
+>
+> 1. ✅ API response time \<20ms for cached article queries
 > 2. ✅ Cache hit rate >80%
 > 3. ✅ Graceful fallback when Redis unavailable
 > 4. ✅ Cache invalidation on article update works
 >
 > **Edge Cases:**
+>
 > - Redis unavailable → Fallback to DB query (log warning)
 > - Article updated → Invalidate cache entry
 > - Cache full → Redis LRU eviction handles automatically
 >
 > **Dependencies:**
+>
 > - Redis server (already deployed: `redis.internal:6379`)
 > - `redis-py` library (add to requirements)
 >
 > **Risk Assessment:**
+>
 > | Risk | Probability | Impact | Mitigation |
-> |------|-------------|--------|------------|
+> | -- | -- | -- | -- |
 > | Redis memory limit exceeded | Low | High | Monitor usage, set TTL |
 > | Cache invalidation bugs | Medium | Medium | Tests for update flows |
 > | Increased complexity | Medium | Low | Clear abstraction layer |
 >
 > **Related Issues:**
+>
 > | Issue | Summary | Relevance |
-> |-------|---------|-----------|
+> | -- | -- | -- |
 > | [#50](https://github.com/owner/repo/issues/50) | Performance audit | Original performance report |
 > | [#200](https://github.com/owner/repo/pull/200) | Redis infra setup | Infrastructure PR |
 
 This is GOOD because:
+
 - ✅ Problem statement with measurable impact
 - ✅ Context explaining current state and why change is needed
 - ✅ Decision documented with alternatives considered
@@ -195,7 +215,7 @@ This is GOOD because:
 - ✅ Risk assessment with mitigations
 - ✅ Related issues with context on why they matter
 
----
+______________________________________________________________________
 
 ## Example 3: Guideline Update
 
@@ -206,12 +226,13 @@ This is GOOD because:
 > **Description:** Add the rule we talked about for specs.
 
 This is BAD because:
+
 - No context on WHAT rule
 - No WHY the rule is needed
 - No WHERE to add it
 - No decision rationale
 
----
+______________________________________________________________________
 
 ### ✅ GOOD Guideline Update
 
@@ -224,37 +245,41 @@ This is BAD because:
 > **Proposed Change:** Add new section 1.2 "Fresh-Start Context Requirements" mandating that all specs include full context inline, with no reliance on "see above" or "as discussed" references.
 >
 > **Why This Change:**
+>
 > 1. AI agents have no persistent memory between sessions
 > 2. Different agents may work on the same spec at different times
 > 3. Context loss leads to implementation errors
 > 4. Self-contained specs reduce back-and-forth questions
 >
 > **Decision Rationale:**
+>
 > - Considered adding to `000-critical-rules.md` — rejected because this is a process improvement, not a zero-tolerance violation
 > - Considered separate file — rejected because spec creation workflow should be in one place
 > - Chosen: Add to `00-spec-creation.md` as section 1.2, after engineering requirements
 >
 > **Success Criteria:**
+>
 > 1. ✅ New section added
 > 2. ✅ Checklist template created
 > 3. ✅ Bad/Good examples documented
 > 4. ✅ Guidelines load correctly
 
 This is GOOD because:
+
 - ✅ Clear problem statement
 - ✅ Current state with file references
 - ✅ Proposed change described
 - ✅ Decision rationale with alternatives
 - ✅ Success criteria listed
 
----
+______________________________________________________________________
 
 ## Quick Reference: Fresh-Start Checklist
 
 Before finalizing any spec, verify:
 
 | Element | Include This |
-|---------|--------------|
+| -- | -- |
 | **Problem** | What and WHY (with context) |
 | **Location** | File path + function/section anchors + snippets |
 | **References** | Issue URL + summary + relevance |
@@ -268,7 +293,7 @@ Before finalizing any spec, verify:
 
 **Golden Rule:** If a new agent with no memory context cannot implement the spec correctly from the spec alone, the spec is incomplete.
 
----
+______________________________________________________________________
 
 ## Example 4: Sub-issue Structure (Multi-task Spec)
 
@@ -277,6 +302,7 @@ Before finalizing any spec, verify:
 When a spec has multiple phases/tasks, each phase MUST be tracked as a separate sub-issue.
 
 **Parent Issue:**
+
 > **Title:** [SPEC] Add user authentication
 >
 > **STATUS:** 1.1
@@ -284,6 +310,7 @@ When a spec has multiple phases/tasks, each phase MUST be tracked as a separate 
 > **Objective:** Implement user authentication with OAuth2 and session management.
 >
 > **Phases:**
+>
 > 1. Phase 1: Database schema (user tables, indexes)
 > 2. Phase 2: API endpoints (login, logout, refresh)
 > 3. Phase 3: UI components (login form, session handling)
@@ -291,11 +318,13 @@ When a spec has multiple phases/tasks, each phase MUST be tracked as a separate 
 > **Implementation details in body...**
 
 **Sub-issues CREATED:**
+
 - `#101: [Task: #100] Create database schema for user authentication`
 - `#102: [Task: #100] Implement authentication API endpoints`
 - `#103: [Task: #100] Build user login UI components`
 
 **Why this works:**
+
 - Each phase is trackable as its own issue
 - Progress visible in GitHub's sub-issue view
 - Agents can verify which phase to implement
@@ -306,6 +335,7 @@ When a spec has multiple phases/tasks, each phase MUST be tracked as a separate 
 When a spec has ONE task, no sub-issues are required.
 
 **The Issue:**
+
 > **Title:** [SPEC] Fix typo in README
 >
 > **STATUS:** 1.1
@@ -317,6 +347,7 @@ When a spec has ONE task, no sub-issues are required.
 > **Success Criteria:** Typo corrected
 
 **No sub-issues needed because:**
+
 - ✅ Exactly ONE implementation task
 - ✅ No decomposition needed
 - ✅ Single unit of work
@@ -326,7 +357,7 @@ When a spec has ONE task, no sub-issues are required.
 
 **See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
 
----
+______________________________________________________________________
 
 ## Example 5: Issue-First Strategy (No Local Fallback)
 
@@ -337,6 +368,7 @@ When a spec has ONE task, no sub-issues are required.
 > **Notes:** Created plan file `plans/SPEC-rate-limiting.md` because GitHub MCP was unavailable.
 
 This is BAD because:
+
 - Local files fragment tracking
 - No centralized visibility
 - Manual sync required
@@ -349,6 +381,6 @@ When GitHub MCP tools are available, GitHub Issues are the ONLY authoritative so
 
 **See `github-issue-creation` skill for the complete issue creation workflow, `github-sub-issues` skill for sub-issue creation, and the GitHub MCP Required — No Fallback policy.**
 
----
+______________________________________________________________________
 
 *Source: Created to illustrate fresh-start context requirements*

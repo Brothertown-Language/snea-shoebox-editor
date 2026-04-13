@@ -26,7 +26,7 @@ except Exception as e:
     raise  # Preserve traceback
 ```
 
----
+______________________________________________________________________
 
 ## 4. Agent Behavior Requirements
 
@@ -40,7 +40,7 @@ Agents MUST:
 6. **Use type hints** - `Optional` for optional data, non-optional for required data
 7. **Document failure modes** - if a function can fail, document HOW it fails in docstring
 
----
+______________________________________________________________________
 
 ## 5. Code Review Checklist
 
@@ -58,7 +58,7 @@ When reviewing code, check:
 - [ ] Domain-specific exception classes used for API/module boundaries
 - [ ] Exception hierarchies used for complex modules (BaseError, APIError, ValidationError, etc.)
 
----
+______________________________________________________________________
 
 ## 6. Cross-References
 
@@ -69,6 +69,6 @@ When reviewing code, check:
 
 This guideline is foundational. When in doubt: **raise, don't return.**
 
----
+______________________________________________________________________
 
 *Source: Content migrated from `095-never-hide-problems.md`*

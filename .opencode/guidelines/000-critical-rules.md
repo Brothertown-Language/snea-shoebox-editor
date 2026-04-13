@@ -204,7 +204,7 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 **See `spec-auditor` skill for the complete orchestration model, baseline subtasks, conditional subtasks, and invocation commands.**
 
 | Trigger | Action |
-|---------|--------|
+| -- | -- |
 | Spec created | REQUIRED: `spec-auditor --issue N` |
 | "Audit/review/revisit this spec" | REQUIRED: `spec-auditor --issue N` |
 | Before implementation approval | REQUIRED: Verify no critical issues |

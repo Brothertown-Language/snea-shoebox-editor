@@ -15,6 +15,7 @@ Update fragment master content and optionally sync to destinations.
 ### Step 1: Create Backup
 
 Before any changes:
+
 ```bash
 mkdir -p .opencode/.backups/$(date +%Y%m%d)
 cp .opencode/.guidelines/fragment-id.md .opencode/.backups/$(date +%Y%m%d)/fragment-id.md
@@ -23,6 +24,7 @@ cp .opencode/.guidelines/fragment-id.md .opencode/.backups/$(date +%Y%m%d)/fragm
 ### Step 2: Update Master Content
 
 1. Edit master file:
+
    ```bash
    # User edits or agent edits with pycharm tools
    pycharm_replace_text_in_file(
@@ -45,6 +47,7 @@ Record new hash.
 ### Step 4: Update Registry
 
 Update registry entry:
+
 ```yaml
 master:
   hash: sha256:new-hash...
@@ -57,9 +60,11 @@ master:
 Ask user: "Master updated. Sync to all destinations now?"
 
 If YES:
+
 - Proceed to `sync-fragment` task
 
 If NO:
+
 - Mark `sync_status: drifted`
 - HALT
 
@@ -68,6 +73,7 @@ If NO:
 ### Destinations Would Drift
 
 If master updated but not synced:
+
 1. Mark `sync_status: drifted`
 2. Report: "Master updated but not synced. Destinations now out of sync."
 3. Recommend: Run `sync-fragment` to update destinations
@@ -75,6 +81,7 @@ If master updated but not synced:
 ### Conflicting Changes
 
 If destinations already have manual edits:
+
 1. STOP - do not overwrite
 2. Run `check-drift` to see current state
 3. Ask user: "Destinations have manual edits. Overwrite or update master from destinations?"

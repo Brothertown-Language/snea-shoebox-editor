@@ -52,6 +52,7 @@ Type 'DELETE {fragment-id}' to confirm:
 ### Step 3: Create Backup (MANDATORY)
 
 Before deletion:
+
 ```bash
 mkdir -p .opencode/.backups/$(date +%Y%m%d)
 cp .opencode/.guidelines/fragment-id.md .opencode/.backups/$(date +%Y%m%d)/fragment-id-deleted.md
@@ -68,6 +69,7 @@ rm .opencode/.guidelines/fragment-id.md
 ### Step 5: Update Registry
 
 Remove fragment entry from `.opencode/.guidelines/registry.yaml`:
+
 - Delete entire fragment block from `fragments:` list
 - Update `last_updated` date
 - Decrement `total_fragments` count
@@ -88,12 +90,14 @@ Remove fragment entry from `.opencode/.guidelines/registry.yaml`:
 ### Fragment in Use
 
 If destinations exist:
+
 1. WARN: "Fragment has {count} destinations. Deleting will orphan these copies."
 2. Ask user to confirm they understand
 
 ### Delete Wrong Fragment
 
 If user regrets deletion:
+
 1. Restore from backup: `cp .opencode/.backups/{date}/fragment-id-deleted.md .opencode/.guidelines/fragment-id.md`
 2. Re-add entry to registry manually
 3. Re-run `create-fragment` with fragment-id

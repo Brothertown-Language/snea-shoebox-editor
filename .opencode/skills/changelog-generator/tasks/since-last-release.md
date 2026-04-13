@@ -35,7 +35,7 @@ For merge commits, include the PR number and description from the merge message.
 Analyze commits and categorize into:
 
 | Category | Prefixes | Description |
-|----------|----------|-------------|
+| -- | -- | -- |
 | **Added** | `feat:`, `feat(`, `add` | New features, capabilities |
 | **Changed** | `refactor:`, `change`, `update`, `improve` | Modifications to existing features |
 | **Fixed** | `fix:`, `fix(`, `bug` | Bug fixes |
@@ -49,12 +49,13 @@ Convert technical commits to customer-friendly descriptions:
 **Technical → User-Facing Examples:**
 
 | Technical Commit | User-Facing Entry |
-|------------------|-------------------|
+| -- | -- |
 | `fix(approval-gate): prevent silent halt when STATUS field missing` | `**Approval Gate Silent Halt** - Fixed silent halt when STATUS field is missing from sub-issues. Added default behavior and mandatory status reporting.` |
 | `feat(skills): import skill-creator` | `**Skill Creator Import** - Imported skill-creator skill. Create new skills with templates and guided workflows.` |
 | `git-workflow: enforce PR timing` | `**Git Workflow Enforcement** - Added enforcement gates for PR timing. PRs now require explicit instruction to create.` |
 
 **Transformation Rules:**
+
 1. Start with feature name (bold)
 2. Describe WHAT changed (user perspective)
 3. Explain WHY it matters (benefit/impact)
@@ -72,6 +73,7 @@ Read current CHANGELOG.md, insert entries in [Unreleased] section:
 4. Preserve existing formatting
 
 **Format:**
+
 ```markdown
 ## [Unreleased]
 
@@ -105,6 +107,7 @@ git add CHANGELOG.md
 ### Step 7: Report Result
 
 Report to calling context:
+
 - Number of commits analyzed
 - Number of entries added (by category)
 - File updated: CHANGELOG.md
@@ -112,6 +115,7 @@ Report to calling context:
 ## Commit Message Conventions
 
 Look for conventional commit prefixes:
+
 - `feat:` / `feat(scope):` → **Added**
 - `fix:` / `fix(scope):` → **Fixed**
 - `refactor:` / `refactor(scope):` → **Changed**
@@ -125,6 +129,7 @@ Look for conventional commit prefixes:
 ## Merge Commit Handling
 
 For merge commits like:
+
 ```
 Merge pull request #120 from <GIT_OWNER>/spec/example-branch-name
 Fix cleanup task to use succinct confirmation output

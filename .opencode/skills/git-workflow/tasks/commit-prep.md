@@ -62,6 +62,7 @@ git log --oneline -10  # Recent commits for context
 ### Step 2: Summarize Changes
 
 Group changes logically:
+
 - Feature changes
 - Test changes
 - Documentation changes
@@ -87,6 +88,7 @@ git commit -m "<descriptive message>" \
 **DO NOT execute the script.**
 
 Report:
+
 - Script path: `./tmp/commit-<branch>.sh`
 - Proposed commit message
 - Summary of changes being committed
@@ -104,6 +106,7 @@ Every implementation commit MUST include:
 - **Include model info**: Format is `Agent-Name (model-id) <email>`
 
 **Example:**
+
 ```
 Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>
 ```
@@ -114,6 +117,7 @@ Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>
 - **Do NOT re-run `git config`** — use stored session values
 
 **Example:**
+
 ```
 Co-authored-by: <DEV_NAME> <DEV_EMAIL>
 ```

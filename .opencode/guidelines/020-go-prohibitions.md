@@ -3,6 +3,7 @@
 ## 1. What GO Is Not & Self-Authorization Prohibitions
 
 ### 🚫 NEVER DO
+
 - **ABSOLUTE PROHIBITION: The agent must never write the word "GO" as a standalone token, line, or heading in any response.** This includes standalone lines (`GO`), Markdown headings (`## GO`), phase labels (`GO - Phase 2`), acknowledgements, transition markers, or narrative labels. Any use of "GO" in agent output (including `<UPDATE>` blocks, tool parameters, or chat text) is a protocol violation and does NOT constitute authorization. The only permitted use is inside a quoted/code-fenced example illustrating a prohibited pattern. To acknowledge authorization, use a full sentence (e.g., "Authorization received.") — never a bare "GO".
 - **No `echo` or `printf` commands — ever.** The agent is absolutely prohibited from running `echo`, `printf`, or any equivalent shell output command for any purpose. This includes:
   - **Output for Narration**: Signalling waiting states, confirming completion, or self-narration.
@@ -29,10 +30,12 @@
 - **Never self-answer a solicitation.** Pose no questions that you then answer yourself to bypass authorization.
 
 ### ⚠️ ASK FIRST
+
 - **"GO" requires unambiguous scope; clarify only when ambiguous.** If the user types "GO" (or equivalent), treat it as valid authorization ONLY when the immediate session context identifies exactly one plan/scope target.
 - **Clarification gate for ambiguous "GO" only.** Ask for scope clarification only when more than one plausible plan file, phase, or implementation scope is active.
 
 ### ✅ ALWAYS DO
+
 - **Verify actual codebase state before acting.** When a GO names a specific phase, verify the actual codebase state of that phase's deliverables before taking any action — regardless of plan markers.
 - **SILENTLY HALT after a verified-complete phase.** If verification confirms a named phase is already fully and correctly implemented, report the verified findings and HALT without prompting.
 
@@ -51,6 +54,7 @@
 **DETESTABLE**: Installing Node.js in a Python-only or Java-only environment is absolutely prohibited. This introduces an unnecessary runtime dependency that pollutes the ecosystem and creates maintenance burden.
 
 ### 🚫 NEVER DO
+
 - **NEVER install Node.js globally or locally** on Python-only or Java-only projects.
 - **NEVER use NPX** to run packages — NPX requires Node.js runtime.
 - **NEVER add Node.js-based tools to project dependencies.**
@@ -58,31 +62,36 @@
 - **NEVER use Node.js-based formatters, linters, or tooling** when native alternatives exist.
 
 ### Context
+
 This rule applies universally to:
+
 - **Python projects**: Use `uv`, `pip`, `ruff`, `pytest` — never npm/pnpm/yarn.
 - **Java projects**: Use Maven/Gradle, JVM tooling — never npm/pnpm/yarn.
 - **Projects with mixed languages**: Isolate Node.js to its designated frontend/service layer.
 
 ### ✅ ALLOWED
+
 - **Docker containers that internally use Node.js** — Node.js runs inside container, not on host.
 - **Pure Python alternatives** — `githubkit` instead of `@octokit/rest`, `httpx` instead of `axios`.
 - **Dedicated frontend repositories** where Node.js IS the correct tool for that codebase.
 - **MCP servers via Docker** — Node.js isolated in container only.
 
 ### Why This Is Critical
+
 - **Security**: Node.js ecosystem has known supply-chain attack vectors.
 - **Dependency bloat**: Adds unnecessary runtime and package manager complexity.
 - **Maintenance burden**: Mixed language projects require additional CI/CD configuration.
 - **Ecosystem mismatch**: npm packages don't integrate with Python/Java tooling chains.
 - **Team friction**: Requires developers to install/maintain Node.js on their machines.
 
----
+______________________________________________________________________
 
 ## 5. Multi-task Spec Without Sub-issues — CRITICAL VIOLATION
 
 **⚠️ Implementing a multi-task spec without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
 
 ### 🚫 ABSOLUTE PROHIBITION
+
 - **NEVER implement a multi-task spec without verified sub-issue structure**
 - **NEVER proceed **to implementation** when `get_sub_issues` returns empty array for multi-task specs **without auto-creating sub-issues first****
 - **NEVER assume markdown checkboxes = task tracking**
@@ -92,6 +101,7 @@ This rule applies universally to:
 **See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
 
 Key points:
+
 - Sub-issues at PHASE level, not step level
 - Single-task specs are exempt from sub-issue requirement
 - All multi-task specs MUST have sub-issues before implementation begins

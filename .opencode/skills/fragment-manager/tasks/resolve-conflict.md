@@ -17,6 +17,7 @@ Handle merge conflicts when drift is detected or manual edits exist.
 **Scenario:** Developer edited destination copy, now different from master.
 
 **Detection:**
+
 - Master hash unchanged since last sync
 - Destination hash differs from master
 
@@ -43,16 +44,19 @@ Your choice:
 ```
 
 **Option (a):** Sync master to destination (manual edits lost)
+
 - Create backup first
 - Run sync-fragment
 
 **Option (b):** Update master from destination
+
 - Extract content from destination
 - Update master file
 - Update registry hash
 - Sync to other destinations
 
 **Option (c):** Show diff and HALT
+
 - Generate diff: `diff <(master) <(destination)`
 - HALT for human review
 
@@ -61,6 +65,7 @@ Your choice:
 **Scenario:** Two fragments overlap in same destination file.
 
 **Detection:**
+
 - Fragment A line range: 50-70
 - Fragment B line range: 60-80
 - Overlap: lines 60-70
@@ -91,6 +96,7 @@ Your choice:
 **Scenario:** Destination file reorganized, line ranges invalid.
 
 **Detection:**
+
 - Line range exceeds file length
 - Content at line range doesn't match fragment
 
@@ -120,6 +126,7 @@ Your choice:
 **Scenario:** Registry has ambiguous ID, cyclic dependency, or conflicting destinations.
 
 **Detection:**
+
 - Same fragment ID appears twice
 - Fragment A includes Fragment B, B includes A
 - Same destination registered for different fragments

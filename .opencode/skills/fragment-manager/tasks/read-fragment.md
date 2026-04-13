@@ -18,6 +18,7 @@ grep -A 30 "id: fragment-id" .opencode/.guidelines/registry.yaml
 ```
 
 Extract:
+
 - Master file path
 - Hash
 - Content type
@@ -37,6 +38,7 @@ Show full content with line numbers.
 ### Step 3: Show Destination Status
 
 For each destination:
+
 ```bash
 # Show destination location
 echo "Destination: .opencode/skills/skill/SKILL.md"
@@ -48,6 +50,7 @@ echo "Status: {sync_status}"
 ### Step 4: Report
 
 Display:
+
 - Fragment ID
 - Master file path and hash
 - Content (full)
@@ -59,11 +62,13 @@ Display:
 ### Fragment Not Found
 
 If fragment ID not in registry:
+
 1. STOP - fragment does not exist
 2. Ask user: "Fragment with ID '{id}' not found in registry. Use 'create-fragment' to create it."
 
 ### Master File Missing
 
 If registry entry exists but master file missing:
+
 1. WARN: "Master file missing at {path}"
 2. Ask user: "Registry references missing file. Recreate from destinations or remove fragment from registry?"

@@ -19,8 +19,9 @@ Generate changelog entries for commits within a specific date range.
 Input format: `--date-range "YYYY-MM-DD..YYYY-MM-DD"` or `--from DATE --to DATE`
 
 Validate:
+
 - Both dates are valid YYYY-MM-DD format
-- Start date <= End date
+- Start date \<= End date
 - Both dates are in the past
 
 ### Step 2: Collect Commits

@@ -21,17 +21,19 @@ Full implementation workflow sequence — from receiving authorization context t
 ### Step 1: Receive Authorization Context
 
 **Input (from approval-gate):**
+
 ```yaml
 issue: 77
 authorized: true
 context:
-  title: "[SPEC] Integrate skill enforcement plugin"
-  phases: [Core Skills, Dispatch Table, Quality Gates, ...]
+  title: '[SPEC] Integrate skill enforcement plugin'
+  phases: [Core Skills, Dispatch Table, Quality Gates, '...']
   current_phase: 1
-  authorization_comment: "approved"
+  authorization_comment: approved
 ```
 
 **Action:**
+
 - Verify authorization context is valid
 - Extract issue details for implementation
 - Pass to pre-work
@@ -39,6 +41,7 @@ context:
 ### Step 2: Call Pre-Work (Git Ops Only)
 
 **Context passed to pre-work:**
+
 ```yaml
 authorization: confirmed
 issue: 77
@@ -46,13 +49,14 @@ working_tree_status: checked
 ```
 
 **Expected yield from pre-work:**
+
 ```yaml
 status: success
-branch: "spec/workflow-skills-integration"
-worktree_path: ".worktrees/spec-workflow-skills-integration"
-dev_base_hash: "abc1234"
+branch: spec/workflow-skills-integration
+worktree_path: .worktrees/spec-workflow-skills-integration
+dev_base_hash: abc1234
 working_tree_clean: true
-ready_for: "implementation"
+ready_for: implementation
 ```
 
 **Intelligence note:** Format matches what implementation needs (branch name, clean state).
@@ -72,6 +76,7 @@ If ANY check fails → HALT and report. Do NOT dispatch.
 **⚠️ SUB-AGENT DISPATCH IS THE DEFAULT (CRITICAL):**
 
 The main agent does NOT implement directly. All implementation is dispatched to sub-agents via `batch-orchestrate`. This ensures:
+
 - Context window stays clean for orchestration decisions
 - Each issue gets isolated context
 - Batch state is properly managed
@@ -84,11 +89,13 @@ Invoke `batch-orchestrate` task, which handles single-item batch as the default 
 This was already handled by `batch-approval-analysis`, which wrote the batch state file. Invoke `batch-orchestrate` to process all issues.
 
 **Redirect to batch-orchestrate:**
+
 ```
 /skill implementation-workflow --task batch-orchestrate
 ```
 
 **batch-orchestrate responsibilities:**
+
 - Create or read batch state file
 - Dispatch sub-agent for each issue in execution order
 - Collect results from each sub-agent
@@ -97,6 +104,7 @@ This was already handled by `batch-approval-analysis`, which wrote the batch sta
 - Report and HALT
 
 **Sub-agent dispatch context (passed by batch-orchestrate to each sub-agent):**
+
 ```yaml
 batch:
   plan_file: ".opencode/tmp/batch-<timestamp>.md"
@@ -114,6 +122,7 @@ env_vars:
 ```
 
 **Each sub-agent runs the full implementation pipeline:**
+
 - Uses `implementation-workflow --task orchestrate` internally
 - Makes WIP commits as needed
 - Runs `verification-before-completion --task verify`
@@ -127,24 +136,27 @@ env_vars:
 After implementation completes, BEFORE proceeding to review-prep, invoke verification skills in strict sequence:
 
 **Step 3.5a: Invoke verification-before-completion**
+
 ```
 /skill verification-before-completion --task verify
 ```
 
 **Context:**
+
 ```yaml
 issue: 77
-phase: "Phase 1 implementation"
+phase: Phase 1 implementation
 success_criteria: [from spec issue]
-files_changed: [...]
+files_changed: ['...']
 ```
 
 **Expected yield:**
+
 ```yaml
 status: pass | fail
 verified_criteria:
-  - criterion: "..."
-    evidence: "..."
+  - criterion: '...'
+    evidence: '...'
     verified: true
 unverified_criteria: []  # Must be empty to pass
 missing_evidence: []      # Must be empty to pass
@@ -153,28 +165,31 @@ missing_evidence: []      # Must be empty to pass
 **If verification FAILS → HALT and report.** Do NOT proceed to Step 4.
 
 **Step 3.5b: Invoke finishing-a-development-branch**
+
 ```
 /skill finishing-a-development-branch --task checklist
 ```
 
 **Context:**
+
 ```yaml
-branch: "spec/workflow-skills-integration"
+branch: spec/workflow-skills-integration
 implementation_complete: true
 verification_passed: true
 ```
 
 **Expected yield:**
+
 ```yaml
 status: pass | fail
 checklist_results:
-  - item: "All changes committed"
+  - item: All changes committed
     passed: true
-  - item: "Lint checks pass"
+  - item: Lint checks pass
     passed: true
-  - item: "Tests pass"
+  - item: Tests pass
     passed: true
-  - item: "Branch pushed"
+  - item: Branch pushed
     passed: true
 failed_items: []  # Must be empty to pass
 ```
@@ -184,7 +199,7 @@ failed_items: []  # Must be empty to pass
 **Why This Gate Exists:**
 
 | Without Gate | With Gate |
-|-------------|-----------|
+| -- | -- |
 | Agent skips verification | Success criteria checked with evidence |
 | Agent skips branch checklist | Uncommitted changes, failing tests caught |
 | Agent manually executes steps | Full skill context loaded with enforcement |
@@ -193,25 +208,27 @@ failed_items: []  # Must be empty to pass
 ### Step 4: Call Review-Prep (Git Ops Only)
 
 **Context passed to review-prep:**
+
 ```yaml
-branch: "spec/workflow-skills-integration"
+branch: spec/workflow-skills-integration
 commits_pushed: true
 implementation_complete: true
 ```
 
 **Expected yield from review-prep:**
+
 ```yaml
 status: success
-compare_url: "https://github.com/owner/repo/compare/dev...branch"
+compare_url: https://github.com/owner/repo/compare/dev...branch
 exec_summary: |
   **Summary:**
-  
+
   Integrated workflow skills into the enforcement plugin.
-  
+
   **Outcome:**
-  
+
   Created 4 core skills for brainstorming, planning, execution, and verification.
-ready_for: "pr_creation"
+ready_for: pr_creation
 ```
 
 **Intelligence note:** Format matches what CHAT needs (markdown + actionable URL).
@@ -219,6 +236,7 @@ ready_for: "pr_creation"
 ### Step 5: HALT with Results
 
 **Chat output:**
+
 ```markdown
 **Summary:**
 
@@ -232,6 +250,7 @@ Compare URL: https://github.com/owner/repo/compare/dev...branch
 ```
 
 **Issue comment:**
+
 ```markdown
 🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
 
@@ -245,6 +264,7 @@ Created 4 core skills for brainstorming, planning, execution, and verification.
 ```
 
 **HALT condition:**
+
 - Do NOT create PR
 - Do NOT close issue
 - Wait for explicit "create a PR" instruction

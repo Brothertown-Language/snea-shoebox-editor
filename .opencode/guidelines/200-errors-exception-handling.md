@@ -5,11 +5,12 @@
 **NEVER FUCKING SWALLOW EXCEPTIONS OR OTHERWISE HIDE ERRORS OR MISSING DATA.**
 
 This is a zero-tolerance rule. Violations will be:
+
 - Caught in code review
 - Flagged immediately during implementation
 - Treated as critical bugs requiring immediate fix
 
----
+______________________________________________________________________
 
 ## 1. Exception Handling Rules
 
@@ -29,7 +30,7 @@ except:
 
 **CORRECT**: Specify exception types, or use `except Exception:` if truly needed.
 
----
+______________________________________________________________________
 
 #### Bare except Exception
 
@@ -44,6 +45,7 @@ except Exception:
 **WHY**: This pattern is an anti-pattern used to "make code not crash". It's a bug factory - errors are hidden, not handled.
 
 **CORRECT**:
+
 ```python
 try:
     result = some_operation()
@@ -56,7 +58,7 @@ except Exception as e:
     raise RuntimeError(f"Failed during Y: {e}") from e
 ```
 
----
+______________________________________________________________________
 
 #### Pass or continue in except block
 
@@ -71,6 +73,7 @@ except Exception:
 **WHY**: The error disappears. Downstream code receives no signal that anything went wrong.
 
 **CORRECT**:
+
 ```python
 try:
     process_data(data)
@@ -78,7 +81,7 @@ except DataValidationError as e:
     raise ValueError(f"Invalid data at record {record_id}: {e}") from e
 ```
 
----
+______________________________________________________________________
 
 #### Log without re-raise
 
@@ -94,6 +97,7 @@ except Exception as e:
 **WHY**: Logging is NOT error handling. The error is hidden from the caller.
 
 **CORRECT**:
+
 ```python
 try:
     ...
@@ -102,7 +106,7 @@ except Exception as e:
     raise  # MUST RE-RAISE
 ```
 
----
+______________________________________________________________________
 
 ### ✅ REQUIRED PATTERNS
 
@@ -118,7 +122,7 @@ except PermissionError as e:
     raise RuntimeError(f"Insufficient permissions for {path}: {e}") from e
 ```
 
----
+______________________________________________________________________
 
 #### Contextual error wrapping
 
@@ -136,7 +140,7 @@ def process_record(record_id: int) -> ProcessedRecord:
 
 **WHY**: Each layer adds relevant context. The final error message tells you WHERE (process_record), WHAT (fetch vs validation), and WHY (original cause).
 
----
+______________________________________________________________________
 
 #### Let it crash (when appropriate)
 
@@ -150,6 +154,6 @@ def calculate_average(values: list[float]) -> float:
 
 **WHY**: Not every error needs a try-except. If you can't add context or handle it meaningfully, let it propagate to code that can.
 
----
+______________________________________________________________________
 
 *Source: Content migrated from `095-never-hide-problems.md`*
