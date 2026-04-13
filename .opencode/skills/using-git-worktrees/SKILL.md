@@ -1,10 +1,6 @@
----
-name: using-git-worktrees
-description: Use when creating any feature branch. Always invoke before git-workflow pre-work. Triggers on: branch, feature branch, pre-work, worktree, new branch, checkout.
-type: technique
-license: MIT
-compatibility: opencode
----
+______________________________________________________________________
+
+## name: using-git-worktrees description: Use when creating any feature branch. Always invoke before git-workflow pre-work. Triggers on: branch, feature branch, pre-work, worktree, new branch, checkout. type: technique license: MIT compatibility: opencode
 
 # Skill: using-git-worktrees
 
@@ -40,15 +36,15 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 ## Operating Protocol
 
 1. **Announce intent** at start: "Using the using-git-worktrees skill to set up an isolated workspace."
-2. **Always create worktrees from `dev`** — never from `main`. Feature branches target `dev`.
-3. **Always use `.worktrees/` directory** — stash+checkout is FORBIDDEN.
-4. **Verify `.worktrees/` is gitignored** before creating worktree. If not, add it and commit.
-5. **Check for name collisions** before creating — reuse existing worktree for same branch, HALT on mismatch.
-6. **Export `WORKTREE_PATH`, `BRANCH_NAME`, `DEV_BASE_HASH`** after creation — downstream skills require these.
-7. **If `WORKTREE_FATAL=1`** appears in session init: HALT immediately, report to developer, do NOT proceed.
-8. **If `WORKTREE_PATH` is empty after creation**: FATAL ERROR → FLAG DEV → HALT.
-9. **Verify clean test baseline** after setup — report failures, get explicit permission to proceed.
-10. **Cleanup** is handled by `finishing-a-development-branch`, not by this skill.
+1. **Default base branch is `dev`** — never from `main`. For batch workflows, `BASE_BRANCH` may be a prior feature branch or batch branch. Feature branches target `dev`.
+1. **Always use `.worktrees/` directory** — stash+checkout is FORBIDDEN.
+1. **Verify `.worktrees/` is gitignored** before creating worktree. If not, add it and commit.
+1. **Check for name collisions** before creating — reuse existing worktree for same branch, HALT on mismatch.
+1. **Export `WORKTREE_PATH`, `BRANCH_NAME`, `DEV_BASE_HASH`** after creation — downstream skills require these.
+1. **If `WORKTREE_FATAL=1`** appears in session init: HALT immediately, report to developer, do NOT proceed.
+1. **If `WORKTREE_PATH` is empty after creation**: FATAL ERROR → FLAG DEV → HALT.
+1. **Verify clean test baseline** after setup — report failures, get explicit permission to proceed.
+1. **Cleanup** is handled by `finishing-a-development-branch`, not by this skill.
 
 ## Three-Branch Model Adaptation
 
@@ -59,7 +55,9 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 | No project setup step | Auto-detect and run `uv sync` |
 | No cleanup integration | Integrates with `finishing-a-development-branch` |
 
-Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>` for general feature work.
+Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>` for general feature work, `batch/<short-name>` for batch aggregation branches.
+
+**BASE_BRANCH parameter:** The `create-worktree` task supports creating worktrees from branches other than `dev`. Defaults to `dev` for standalone branches. In batch workflows, set to a prior feature branch (for dependency merge) or the batch branch. Agent decides at creation time based on context.
 
 ## Cross-References
 

@@ -14,14 +14,16 @@ Create a git worktree for a feature branch, following the full creation workflow
 
 State clearly: "Using the using-git-worktrees skill to set up an isolated workspace."
 
-### 2. Sync with Dev
+### 2. Sync with Base Branch
 
-Always create worktrees from an up-to-date `dev` branch:
+Create worktrees from an up-to-date base branch. The default base is `dev`, but for batch workflows where a batch branch already exists, the base can be the batch branch or another feature branch:
 
 ```bash
-git checkout dev
-git pull origin dev
+git checkout $BASE_BRANCH
+git pull origin $BASE_BRANCH
 ```
+
+**BASE_BRANCH defaults to `dev`** for standalone branches. In batch workflows, `BASE_BRANCH` may be set to a prior feature branch (for dependency merge) or the batch branch.
 
 ### 3. Detect Project Name
 
@@ -68,13 +70,21 @@ Pass this hash in the dispatch context so all parallel worktrees start from the 
 # Determine branch name (spec/<name> or feature/<name>)
 BRANCH_NAME="spec/<short-name>"
 
-# Create worktree with new branch from dev
-git worktree add .worktrees/$BRANCH_NAME -b $BRANCH_NAME dev
+# Create worktree with new branch from BASE_BRANCH (defaults to dev)
+git worktree add .worktrees/$BRANCH_NAME -b $BRANCH_NAME $BASE_BRANCH
 ```
 
+**BASE_BRANCH** determines the starting point for the new branch:
+
+- Default: `dev` (for standalone feature branches)
+- Batch workflow: may be `dev`, a prior issue's feature branch (dependency chain), or the batch branch
+- Agent decides the base branch at creation time based on context
+
 Branch naming conventions:
+
 - `spec/<short-name>` for spec-driven work
 - `feature/<description>` for general feature work
+- `batch/<short-name>` for batch aggregation branches
 
 ### 5. Verify Worktree Creation
 
@@ -127,13 +137,16 @@ After worktree creation, export environment variables that ALL downstream skills
 ```bash
 export WORKTREE_PATH=".worktrees/$BRANCH_NAME_SANITIZED"
 export BRANCH_NAME="$BRANCH_NAME"
+export BASE_BRANCH="${BASE_BRANCH:-dev}"
 export DEV_BASE_HASH=$(git rev-parse --short 7 origin/dev)
 ```
 
 **If `WORKTREE_PATH` is not set or empty after this step: FATAL ERROR → FLAG DEV → HALT.** There is no alternative — worktree is the only method for feature branches.
 
 These environment variables are consumed by:
+
 - `git-workflow` tasks (review-prep, pr-creation, cleanup)
 - `finishing-a-development-branch` skill
 - `subagent-driven-development` dispatch context
+- `implementation-workflow` batch-orchestrate task
 - `batch-approval-analysis` execution plan

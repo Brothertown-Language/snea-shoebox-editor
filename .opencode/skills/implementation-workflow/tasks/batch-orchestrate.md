@@ -2,156 +2,144 @@
 
 ## Purpose
 
-Orchestrate batch implementation by dispatching sub-agents for each approved issue, managing shared batch state, and ensuring no HALTs between issues. This task makes the main agent a pure orchestrator that never edits implementation files directly.
+Orchestrate batch implementation by dispatching sub-agents for each approved issue, using branch-per-issue with merge-based dependency resolution. This task makes the main agent a pure orchestrator that never edits implementation files directly.
 
 ## Entry Criteria
 
 - Approval-gate has verified authorization for one or more issues
-- Batch state file exists (for multi-issue) or single-issue dispatch context is available
 - Worktree is created and ready
 
 ## Exit Criteria
 
-- All issues in batch have been implemented via sub-agents
+- All issues in batch have been implemented via sub-agents in separate branches
 - Each sub-agent ran verification + finishing before returning
-- Batch state file updated with results for all completed issues
+- All feature branches squash-merged into a single batch branch
 - Compare URL generated, executive summary in chat
 - HALT after review-prep (no PR creation without explicit instruction)
 
 ## Procedure
 
-### Step 1: Initialize Batch State
+### Step 1: Determine Execution Order
 
-**For single-issue dispatch:**
-- Read the issue spec from GitHub
-- Create a minimal batch state file: `.opencode/tmp/batch-<timestamp>.md`
-- Determine complexity level (simple/moderate/complex)
+- Read the issue spec(s) from GitHub
+- For multi-issue: use dependency order from batch-approval-analysis
+- For single issue: treat as batch of one — no special casing
+- Determine complexity level for each issue (simple/moderate/complex)
 
-**For multi-issue dispatch:**
-- Read batch state file from batch-approval-analysis output
-- Verify all authorized issues are listed
-- Determine execution order from dependency analysis
+### Step 2: Create Feature Branches and Worktrees
 
-**Batch state file format:**
-```markdown
-# Batch Execution Plan
+For each issue in the batch:
 
-**Session:** <timestamp>
-**Authorized Issues:** #A, #B, #C
-**Authorization Context:** User said "approved" on <date>
+1. Create a worktree with feature branch using `using-git-worktrees --task create-worktree`
+1. `BASE_BRANCH` defaults to `dev` for the first/only issue in the batch
+1. For dependent issues: `BASE_BRANCH` is set to the prior issue's feature branch (the merged branch, not the batch branch)
+1. Record each issue's branch name and worktree path
 
-## Execution Order
+### Step 3: Execute Issues in Dependency Order
 
-1. #A — <title> (touches <files>)
-2. #B — <title> (depends on #A, touches <files>)
-3. #C — <title> (independent, touches <files>)
+For each issue in execution order:
 
-## Completed
+1. **Before sub-agent dispatch**, if this issue depends on a prior issue:
 
-- [ ] #A — branch: <name>, status: pending
-- [ ] #B — branch: <name>, status: pending
-- [ ] #C — branch: <name>, status: pending
+   - Merge the prior issue's feature branch into this issue's feature branch:
+     ```bash
+     # In the dependent issue's worktree:
+     git merge <prior-issue-branch> -m "Merge <prior-issue-branch> into <current-branch> — dependency chain (#<prior>, #<current>)"
+     ```
+   - If merge produces conflicts:
+     - Tiers 1-2 (trivial/formatting): Auto-resolve per `conflict-resolution` skill
+     - Tier 3 (intent conflict): HALT and flag for developer review
 
-## Results
+1. **Build dispatch context** with AI-composed intent-and-context metadata:
 
-(Agent appends completion summaries here as issues finish)
-```
+   ```yaml
+   batch:
+     authorized_issues: [#A, #B, #C]
+     completed_issues: [<completed>]
+   issue: #<current>
+   spec: "<full spec body from GitHub Issue>"
+   authorization: "User approved #A, #B, #C on <date>"
+   prior_context: "<AI-composed intent and context from prior issues>"
+   dependency_branches: ["spec/<prior-branch>"]
+   env_vars:
+     WORKTREE_PATH: ".worktrees/spec-<name>"
+     BRANCH_NAME: "spec/<name>"
+     GIT_OWNER: "<from-session>"
+     GIT_REPO: "<from-session>"
+     DEV_NAME: "<from-session>"
+     DEV_EMAIL: "<from-session>"
+   ```
 
-### Step 2: Determine Dispatch Context
+1. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
 
-For each issue in the batch, determine the dispatch context:
+1. **Sub-agent responsibilities:**
 
-```yaml
-batch:
-  plan_file: ".opencode/tmp/batch-<timestamp>.md"
-  authorized_issues: [#A, #B, #C]
-  completed_issues: [<completed>]  # populated as batch progresses
-  prior_results: "<summary of prior issues' changes>"
-issue: #<current>
-spec: "<full spec body from GitHub Issue>"
-authorization: "User approved #A, #B, #C on <date>"
-env_vars:
-  WORKTREE_PATH: ".worktrees/spec-<name>"
-  BRANCH_NAME: "spec/<name>"
-  GIT_OWNER: "<from-session>"
-  GIT_REPO: "<from-session>"
-  DEV_NAME: "<from-session>"
-  DEV_EMAIL: "<from-session>"
-```
-
-**Complexity determines context richness:**
-
-| Complexity | Context Level | Rationale |
-|------------|---------------|-----------|
-| Simple (≤3 files, obvious fix) | Minimal: issue + spec + env | Fast, isolated |
-| Moderate (multi-file, some interfaces) | Standard: + batch state file path | Needs full spec context |
-| Complex (multi-phase, architectural) | Full: + prior_results summary | Must adapt to prior changes |
-
-### Step 3: Dispatch Sub-Agent for Each Issue
-
-**For each issue in execution order:**
-
-1. **Build dispatch context** with accumulated `prior_results` from previously completed issues
-2. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
-3. **Sub-agent responsibilities:**
-   - Load spec + session context + batch state
+   - Load spec + session context + prior context
    - Run `implementation-workflow` skill for the specific issue
    - Make WIP commits as needed
    - Run `verification-before-completion --task verify`
    - Run `finishing-a-development-branch --task checklist`
    - Return structured result: `{status, files_changed, summary}`
-4. **Collect result** from sub-agent
-5. **Update batch state file:**
-   - Mark issue as completed
-   - Append summary to Results section
-   - Update `prior_results` for next sub-agent
-6. **Handle failures:**
-   - If sub-agent fails: record failure in batch state
+
+1. **Collect result** from sub-agent
+
+1. **Compose prior_context** for the next issue based on what was implemented:
+
+   - Design decisions made
+   - Edge cases handled
+   - Assumptions that later issues depend on
+   - Interfaces exposed that later issues should use
+   - NOT a change summary (that's in git) — intent and context only
+
+1. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
+
+1. **Handle failures:**
+
+   - If sub-agent fails: record failure
    - For independent issues: continue to next issue
    - For must-precede chains: skip dependent issues, report both
-7. **Continue** to next issue
 
-**Sub-agent prompt template:**
-```
-You are an implementation sub-agent for issue #<N>.
-
-Context:
-- Batch plan file: <plan_file_path>
-- Prior results: <prior_results_summary>
-- Spec: <full_spec_body>
-- Authorization: User approved <issues> on <date>
-
-Environment:
-- WORKTREE_PATH: <worktree_path>
-- BRANCH_NAME: <branch_name>
-- GIT_OWNER: <owner>
-- GIT_REPO: <repo>
-
-Your task:
-1. Read the spec from the batch plan and issue
-2. Use the implementation-workflow skill to implement the spec
-3. Run verification-before-completion --task verify
-4. Run finishing-a-development-branch --task checklist
-5. Commit and push changes to the shared branch
-6. Return: {status, files_changed, summary}
-```
-
-### Step 4: Post-Batch Review-Prep
+### Step 4: Batch Assembly
 
 After ALL issues in the batch complete:
 
-1. **Verify all results** — check batch state for any failures
-2. **Run git-workflow --task review-prep** for the single shared branch
-3. **Collect compare URL**
-4. **Clean up batch state file** if all issues succeeded
+1. **Create a batch branch** (name chosen by agent at creation time, e.g., `batch/<short-name>` or `spec/<short-name>`):
 
-### Step 5: Report and HALT
+   ```bash
+   git checkout dev
+   git checkout -b <batch-branch-name>
+   ```
+
+1. **Squash-merge each feature branch** into the batch branch, one commit per issue:
+
+   ```bash
+   git merge --squash spec/issue-a
+   git commit -m "Implement #A: <description>"
+
+   git merge --squash spec/issue-b
+   git commit -m "Implement #B: <description> (#A dependency)"
+   ```
+
+1. **Commit message format:**
+
+   - MUST include issue number for GitHub auto-linking
+   - Dependents reference their dependencies
+   - Example: `Implement #703: add reprocessing logic (#698 dependency)`
+
+### Step 5: Post-Batch Review-Prep
+
+1. **Verify all results** — check git log for all expected commits
+1. **Run git-workflow --task review-prep** for the batch branch
+1. **Collect compare URL**
+
+### Step 6: Report and HALT
 
 **Chat output:**
+
 ```markdown
 **Summary:**
 
-Implemented <N> issues via sub-agent batch orchestration.
+Implemented <N> issues via branch-per-issue batch orchestration.
 
 **Outcome:**
 
@@ -159,16 +147,51 @@ Implemented <N> issues via sub-agent batch orchestration.
 - #B: <summary> ✅
 - #C: <summary> ⚠️ (partial — see details)
 
-Compare URL: https://github.com/<owner>/<repo>/compare/dev...spec/<branch>
+Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
 ```
 
 **Issue comments:**
 Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.
 
 **HALT condition:**
+
 - Do NOT create PR
 - Do NOT close issues
 - Wait for explicit "create a PR" instruction
+
+## Intent-and-Context Metadata
+
+`prior_context` replaces the old `prior_results` field. It is:
+
+- **AI-composed**: The orchestrating agent intelligently composes the metadata based on the relationship between issues
+- **No fixed template**: Format is flexible prose, not a structured form
+- **Focus on intent**: Design decisions, edge case handling, assumptions, non-obvious constraints, interfaces that later issues depend on
+- **NOT a change summary**: What changed is in git; why it changed is in prior_context
+
+**What to include in prior_context:**
+
+- Key design decisions made during implementation
+- Non-obvious constraints discovered (e.g., "API returns 404 for missing items, not 403")
+- Interfaces exposed that dependents should use
+- Edge cases handled and how
+- Assumptions that downstream code relies on
+
+**What NOT to include:**
+
+- List of files changed (available via `git diff`)
+- Diff contents (available via `git log -p`)
+- Verbatim spec text (sub-agent reads the spec directly)
+
+## Frozen Branches
+
+Once a prior issue's branch is merged into a dependent branch, it is **frozen**:
+
+- No rebasing, amending, or force-pushing the frozen branch
+- If a backtrack is needed:
+  - Minor fix: Fix on the frozen branch, then each dependent branch re-merges
+  - Major change: Full review of all dependent implementations, potential discard-and-restart
+  - AI agent assesses scope based on blast radius
+  - Always requires explicit developer authorization before proceeding
 
 ## Edge Cases
 
@@ -178,7 +201,7 @@ Post completion comment on each issue ONLY if substantive (per `github-comments`
 batch-orchestrate:
     → Dispatch sub-agent for #B
         → Sub-agent fails (error/timeout)
-        → Record failure in batch state
+        → Record failure
     → If #B has dependents (#C requires #B): skip #C, report both
     → If #C is independent: continue with #C
     → After all possible issues complete:
@@ -199,38 +222,36 @@ batch-orchestrate:
     → Report bug in batch summary
 ```
 
+### Tier 3 Conflict During Dependency Merge
+
+- HALT immediately
+- Report the conflict and which two branches are involved
+- Do NOT attempt to resolve intent conflicts automatically
+- Wait for developer review per `conflict-resolution` skill
+
 ### Session Restart Mid-Batch
 
-```
-batch-orchestrate:
-    → Read batch state file
-        → Find: #A completed, #B pending, #C pending
-    → Authorization check: file contains auth context
-    → Resume from #B (skip #A, already done)
-    → Continue batch as normal
-```
+- Use `git log --oneline` on the batch branch to determine completed issues
+- Each squash-merged commit in the batch branch corresponds to one completed issue
+- Resume from the first incomplete issue by checking which issue numbers appear in commit messages
+- Feature branches still contain the individual issue work for reference
 
-### Single-Issue Dispatch
+### Parallel-Safe Issues (No Dependencies)
 
-```
-batch-orchestrate:
-    → Read issue spec
-    → Create minimal batch state (single-item batch)
-    → Create worktree
-    → Spawn sub-agent with dispatch context
-    → Sub-agent implements + verifies + pushes
-    → Update batch state
-    → review-prep → HALT
-```
-
-**Why?** Consistency. No special-casing. The agent always orchestrates, never implements. Context window stays clean for orchestration decisions.
+- Independent issues still get their own branches and worktrees
+- They do NOT merge any prior branches (no dependency)
+- They are squash-merged into the batch branch in any order
+- Parallel-safe issues CAN be developed simultaneously in separate worktrees
 
 ## Mandatory Rules
 
 1. **Main agent NEVER edits implementation files** — only orchestrates
-2. **Every sub-agent runs verification + finishing** — no skipping
-3. **One branch per batch** — all issues share one branch
-4. **No HALTs between issues** — all issues complete before single HALT
-5. **Batch state file is source of truth** — always read from file, not from memory
-6. **Prior results accumulate** — each sub-agent receives summary of all prior changes
-7. **Clean up batch state after completion** — remove file after PR is created
+1. **Every sub-agent runs verification + finishing** — no skipping
+1. **One branch per issue** — each issue gets its own feature branch, never shared
+1. **Dependency resolution via git merge** — later issues merge prior branches, not branch-from-prior
+1. **Frozen branches after merge** — no rebasing or amending a merged branch
+1. **No HALTs between issues** — all issues complete before single HALT
+1. **Single batch PR** — squash-merge each feature branch into batch branch, then one PR
+1. **Intent-and-context metadata** — AI-composed, no fixed template, focus on why not what
+1. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
+1. **Always batch mode** — single issue = batch of one, no special-case path
