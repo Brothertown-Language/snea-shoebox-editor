@@ -18,7 +18,7 @@ Analyze interdependencies when multiple issues are approved simultaneously, dete
 - Dependency graph produced with execution order
 - Parallel-safe groups identified
 - Execution plan presented in chat (informative only — no confirmation)
-- Agent proceeds immediately to `batch-orchestrate`
+- Agent proceeds immediately to `assemble-batch`
 
 ## Procedure
 
@@ -256,7 +256,7 @@ Proceeding with execution plan.
 #### Prohibited Actions
 
 - **No `question` tool invocation** after plan presentation
-- **No HALT** between plan presentation and `batch-orchestrate`
+- **No HALT** between plan presentation and `assemble-batch`
 - **No "Proceed?" / "Shall I?" / any confirmation solicitation**
 - **No "awaiting approval" / "waiting for GO" / any pending-state marker**
 
@@ -379,15 +379,15 @@ mkdir -p .opencode/tmp
 
 ### Step 9: Execute Immediately
 
-After presenting the plan, proceed immediately to `batch-orchestrate`. Do not HALT. Do not ask for confirmation. Do not wait.
+After presenting the plan, proceed immediately to `assemble-batch`. Do not HALT. Do not ask for confirmation. Do not wait.
 
-Yield control to `implementation-workflow --task batch-orchestrate`:
+Yield control to `divide-and-conquer --task assemble-batch`:
 
 ```text
-/skill implementation-workflow --task batch-orchestrate
+/skill divide-and-conquer --task assemble-batch
 ```
 
-**batch-orchestrate** reads the batch state file and handles:
+**assemble-batch** reads the batch state file and handles:
 
 - Creating worktrees for the batch
 - Dispatching sub-agents for each issue
@@ -403,9 +403,9 @@ This handoff ensures:
 
 ## Single-Issue Shortcut
 
-**When only ONE issue is approved:** Skip dependency analysis entirely. The `batch-orchestrate` task handles single-issue dispatch as the default code path (single-item batch with one sub-agent).
+**When only ONE issue is approved:** Skip dependency analysis entirely. The `assemble-batch` task handles single-issue dispatch as the default code path (single-item batch with one sub-agent).
 
-**This task is ONLY invoked when TWO OR MORE issues are approved together for full dependency analysis.** For single issues, the flow goes directly: `verify-authorization` → `implementation-workflow/orchestrate` → `batch-orchestrate`.
+**This task is ONLY invoked when TWO OR MORE issues are approved together for full dependency analysis.** For single issues, the flow goes directly: `verify-authorization` → `divide-and-conquer/orchestrate` → `assemble-batch`.
 
 ## Classification Detail
 
@@ -508,7 +508,7 @@ Issues have a merge-time conflict risk when:
 - Assume all issues are independent without analysis
 - Execute must-precede issues out of order
 - Use `question` tool after presenting the execution plan
-- HALT between plan presentation and `batch-orchestrate`
+- HALT between plan presentation and `assemble-batch`
 - Ask "Proceed?", "Shall I?", or any confirmation solicitation after plan presentation
 - Auto-re-stage issues with different-intent stale assumptions
 
@@ -521,6 +521,6 @@ Issues have a merge-time conflict risk when:
 - Group independent issues for parallel dispatch
 - Exclude non-actionable issues with explicit reason
 - Report each issue's classification in the execution plan
-- Proceed immediately to `batch-orchestrate` after presenting the plan
+- Proceed immediately to `assemble-batch` after presenting the plan
 - Auto-detect partially-implemented issues (no developer input needed)
 - HALT for developer review only for unresolvable conflicts and different-intent stale assumptions

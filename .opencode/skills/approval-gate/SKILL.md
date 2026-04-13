@@ -39,7 +39,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-already-implemented` - Check if spec already implemented
 - `/skill approval-gate --task verify-blockers` - Check for blockers
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
-- `/skill approval-gate --task batch-approval-analysis` - Analyze interdependencies for multiple approved issues (yields to batch-orchestrate)
+- `/skill approval-gate --task batch-approval-analysis` - Analyze interdependencies for multiple approved issues (yields to assemble-batch)
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate --task completion` - Invoke when workflow halts at any point
 - `/skill approval-gate` - Overview only

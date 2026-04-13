@@ -1,8 +1,10 @@
 # Task: context-passing
 
+Migrated from `implementation-workflow` task context-passing.
+
 ## Purpose
 
-Reference document for yield-back context patterns between subtasks in the implementation workflow orchestration chain.
+Reference document for yield-back context patterns between subtasks in the divide-and-conquer orchestration chain.
 
 ## Entry Criteria
 
@@ -74,3 +76,5 @@ If a yield-back produces empty or missing fields:
 ### Pre-Work Asks for Auth Again
 
 Pre-work receives context from orchestrator — no re-authorization check needed. If pre-work prompts for auth, it received stale context. Re-invoke with fresh context from approval-gate.
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)

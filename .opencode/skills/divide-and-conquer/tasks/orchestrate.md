@@ -1,8 +1,10 @@
 # Task: orchestrate
 
+Migrated from `implementation-workflow` task orchestrate.
+
 ## Purpose
 
-Full implementation workflow sequence — from receiving authorization context to yielding review-prep results. Coordinates git-workflow tasks (git ops only) and implementation subagents with mandatory verification gates.
+Full implementation workflow sequence — from receiving authorization context to yielding review-prep results. Coordinates git-workflow tasks (git ops only) and implementation subagents with mandatory verification gates. Includes pre-flight assessment to determine direct implementation vs decomposition.
 
 ## Entry Criteria
 
@@ -61,81 +63,92 @@ ready_for: implementation
 
 **Intelligence note:** Format matches what implementation needs (branch name, clean state).
 
-### Step 3: Dispatch Implementation via batch-orchestrate
+### Step 3: Pre-Flight Assessment
 
 **⚠️ PRE-IMPLEMENTATION CHECK (CRITICAL):**
 
-Before dispatching, verify:
+Before proceeding, verify:
 
 1. **Bug-discovery guardrail**: Is this implementation for a bug discovered during other work? If yes, HALT — bug discovery does NOT authorize implementation. Create an issue and wait for explicit authorization.
 2. **Spec exists**: Verify the issue has a spec that was explicitly approved.
 3. **Authorization confirmed**: Verify the user said "approved" or "go" for this specific issue.
 
-If ANY check fails → HALT and report. Do NOT dispatch.
+If ANY check fails → HALT and report. Do NOT proceed.
 
-**⚠️ SUB-AGENT DISPATCH IS THE DEFAULT (CRITICAL):**
-
-The main agent does NOT implement directly. All implementation is dispatched to sub-agents via `batch-orchestrate`. This ensures:
-
-- Context window stays clean for orchestration decisions
-- Each issue gets isolated context
-- Batch state is properly managed
-- No code-path divergence between single and batch dispatch
-
-**For single-issue dispatch:**
-Invoke `batch-orchestrate` task, which handles single-item batch as the default code path.
-
-**For multi-issue dispatch:**
-This was already handled by `batch-approval-analysis`, which wrote the batch state file. Invoke `batch-orchestrate` to process all issues.
-
-**Redirect to batch-orchestrate:**
+**Invoke assessment task:**
 
 ```
-/skill implementation-workflow --task batch-orchestrate
+/skill divide-and-conquer --task assess
 ```
 
-**batch-orchestrate responsibilities:**
+**Assessment yields one of:**
 
-- Create or read batch state file
-- Dispatch sub-agent for each issue in execution order
-- Collect results from each sub-agent
-- Update batch state with completion summaries
-- Run review-prep after all issues complete
-- Report and HALT
+- `IMPLEMENT_DIRECTLY` → Proceed to Step 4a
+- `DECOMPOSE` → Proceed to Step 4b
 
-**Sub-agent dispatch context (passed by batch-orchestrate to each sub-agent):**
+### Step 4a: Implement Directly (Trivial Tasks)
 
-```yaml
-batch:
-  plan_file: ".opencode/tmp/batch-<timestamp>.md"
-  authorized_issues: [#A]
-  completed_issues: []
-  prior_results: ""
-issue: #<N>
-spec: "<full spec body>"
-authorization: "User approved #N on <date>"
-env_vars:
-  WORKTREE_PATH: ".worktrees/spec-<name>"
-  BRANCH_NAME: "spec/<name>"
-  GIT_OWNER: "<from-session>"
-  GIT_REPO: "<from-session>"
-```
+For tasks assessed as `IMPLEMENT_DIRECTLY`:
 
-**Each sub-agent runs the full implementation pipeline:**
+- The orchestrator implements directly without sub-agent dispatch
+- Scope is small enough that context overflow is not a risk
+- Still MUST run verification gate (Step 5) and review-prep (Step 6)
+- After implementation, proceed to Step 5
 
-- Uses `implementation-workflow --task orchestrate` internally
-- Makes WIP commits as needed
-- Runs `verification-before-completion --task verify`
-- Runs `finishing-a-development-branch --task checklist`
-- Returns structured result: `{status, files_changed, summary}`
+### Step 4b: Decompose and Dispatch (Non-Trivial Tasks)
 
-### Step 3.5: Verification Gate (MANDATORY, NO DECISION POINT)
+For tasks assessed as `DECOMPOSE`:
+
+1. **Invoke decompose task:**
+
+   ```
+   /skill divide-and-conquer --task decompose
+   ```
+
+   Yields: ordered sub-tasks with descriptions, scope, boundaries, and dependencies.
+
+2. **Invoke dispatch task** for each sub-task in order:
+
+   ```
+   /skill divide-and-conquer --task dispatch
+   ```
+
+   Each sub-agent returns a structured result per Sub-agent Result Contract.
+
+3. **Invoke merge task** to aggregate results:
+
+   ```
+   /skill divide-and-conquer --task merge
+   ```
+
+   Yields: final summary, conflict identification, readiness for completion.
+
+### Step 4c: Batch Assembly (When Batch Needed)
+
+For multi-issue batches or when `assemble-batch` is needed:
+
+1. **Invoke assemble-batch task:**
+
+   ```
+   /skill divide-and-conquer --task assemble-batch
+   ```
+
+   This handles:
+   - Branch-per-issue creation and worktrees
+   - Dependency merge protocol (Tier 1-2 auto-resolve, Tier 3 HALT)
+   - Sub-agent dispatch per issue with intent-and-context metadata
+   - Squash-merge each feature branch into batch branch
+   - Frozen branch enforcement
+
+2. **After assemble-batch completes**, proceed to Step 5
+
+### Step 5: Verification Gate (MANDATORY, NO DECISION POINT)
 
 **⚠️ CRITICAL: This step is MANDATORY and has NO decision point. Skipping it is a CRITICAL GUIDELINE VIOLATION.**
 
 After implementation completes, BEFORE proceeding to review-prep, invoke verification skills in strict sequence:
 
-**Step 3.5a: Invoke verification-before-completion**
+**Step 5a: Invoke verification-before-completion**
 
 ```
 /skill verification-before-completion --task verify
@@ -162,9 +175,9 @@ unverified_criteria: []  # Must be empty to pass
 missing_evidence: []      # Must be empty to pass
 ```
 
-**If verification FAILS → HALT and report.** Do NOT proceed to Step 4.
+**If verification FAILS → HALT and report.** Do NOT proceed to Step 6.
 
-**Step 3.5b: Invoke finishing-a-development-branch**
+**Step 5b: Invoke finishing-a-development-branch**
 
 ```
 /skill finishing-a-development-branch --task checklist
@@ -194,7 +207,7 @@ checklist_results:
 failed_items: []  # Must be empty to pass
 ```
 
-**If checklist FAILS → HALT and report.** Do NOT proceed to Step 4.
+**If checklist FAILS → HALT and report.** Do NOT proceed to Step 6.
 
 **Why This Gate Exists:**
 
@@ -205,7 +218,7 @@ failed_items: []  # Must be empty to pass
 | Agent manually executes steps | Full skill context loaded with enforcement |
 | "Changes look correct" justification | Required evidence for each criterion |
 
-### Step 4: Call Review-Prep (Git Ops Only)
+### Step 6: Call Review-Prep (Git Ops Only)
 
 **Context passed to review-prep:**
 
@@ -233,7 +246,7 @@ ready_for: pr_creation
 
 **Intelligence note:** Format matches what CHAT needs (markdown + actionable URL).
 
-### Step 5: HALT with Results
+### Step 7: HALT with Results
 
 **Chat output:**
 
@@ -274,7 +287,7 @@ Created 4 core skills for brainstorming, planning, execution, and verification.
 ### Implementation Fails
 
 ```
-implementation-workflow/orchestrate:
+divide-and-conquer/orchestrate:
     → Calls pre-work: "Branch: spec/X, ready"
     → Invokes implementation subagent
         → Subagent encounters error
@@ -286,7 +299,7 @@ implementation-workflow/orchestrate:
 ### Verification Fails
 
 ```
-implementation-workflow/orchestrate:
+divide-and-conquer/orchestrate:
     → Invokes verification-before-completion --task verify
         → Success criterion missing evidence
         → Verification FAILS
@@ -297,7 +310,7 @@ implementation-workflow/orchestrate:
 ### Branch Checklist Fails
 
 ```
-implementation-workflow/orchestrate:
+divide-and-conquer/orchestrate:
     → Invokes finishing-a-development-branch --task checklist
         → Lint errors found, uncommitted changes
         → Checklist FAILS
@@ -308,10 +321,12 @@ implementation-workflow/orchestrate:
 ### Working Tree Dirty
 
 ```
-implementation-workflow/orchestrate:
+divide-and-conquer/orchestrate:
     → Calls pre-work
         → pre-work detects dirty working tree
         → pre-work creates worktree
         → pre-work yields: {worktree_path: ".worktrees/spec-X", branch: "spec/X"}
     → Continues with implementation...
 ```
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)

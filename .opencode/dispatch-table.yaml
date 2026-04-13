@@ -188,15 +188,15 @@ issue_pr_workflow:
     task: "checklist"
     purpose: "Run completion checklist before PR"
     
-  # Git workflow tasks (called by implementation-workflow orchestration)
-  - trigger: "Implementation-workflow calls pre-work"
+  # Git workflow tasks (called by divide-and-conquer orchestration)
+  - trigger: "Divide-and-conquer calls pre-work"
     skill: "git-workflow"
     task: "pre-work"
     purpose: "Pure git ops: stash, create branch (NO implementation logic)"
     automatic: false
     note: "Called by orchestration layer, not by dispatch table directly"
     
-  - trigger: "Implementation-workflow calls review-prep"
+  - trigger: "Divide-and-conquer calls review-prep"
     skill: "git-workflow"
     task: "review-prep"
     purpose: "Pure git ops: push branch, generate URL (NO implementation logic)"

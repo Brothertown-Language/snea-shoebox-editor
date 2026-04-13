@@ -1,4 +1,6 @@
-# Task: batch-orchestrate
+# Task: assemble-batch
+
+Migrated from `implementation-workflow` task batch-orchestrate.
 
 ## Purpose
 
@@ -43,7 +45,6 @@ For each issue in execution order:
 
    - Merge the prior issue's feature branch into this issue's feature branch:
      ```bash
-     # In the dependent issue's worktree:
      git merge <prior-issue-branch> -m "Merge <prior-issue-branch> into <current-branch> — dependency chain (#<prior>, #<current>)"
      ```
    - If merge produces conflicts:
@@ -75,7 +76,7 @@ For each issue in execution order:
 4. **Sub-agent responsibilities:**
 
    - Load spec + session context + prior context
-   - Run `implementation-workflow` skill for the specific issue
+   - Run `divide-and-conquer` skill for the specific issue
    - Make WIP commits as needed
    - Run `verification-before-completion --task verify`
    - Run `finishing-a-development-branch --task checklist`
@@ -198,7 +199,7 @@ Once a prior issue's branch is merged into a dependent branch, it is **frozen**:
 ### Sub-Agent Failure
 
 ```
-batch-orchestrate:
+assemble-batch:
     → Dispatch sub-agent for #B
         → Sub-agent fails (error/timeout)
         → Record failure
@@ -212,7 +213,7 @@ batch-orchestrate:
 ### Sub-Agent Discovers Bug
 
 ```
-batch-orchestrate:
+assemble-batch:
     → Dispatch sub-agent for #B
         → Sub-agent discovers bug per bug-discovery protocol
         → Sub-agent reports bug as finding (read-only)
@@ -255,3 +256,5 @@ batch-orchestrate:
 08. **Intent-and-context metadata** — AI-composed, no fixed template, focus on why not what
 09. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
 10. **Always batch mode** — single issue = batch of one, no special-case path
+
+Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
