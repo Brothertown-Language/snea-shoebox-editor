@@ -2,7 +2,14 @@
 
 ## Purpose
 
-Check that a spec follows the required structural format for STATUS headers, phase/step numbering, and status markers.
+Check that a document follows the required structural format. For specs, this means STATUS headers, phase/step numbering, and status markers. For non-spec documents, structure checks are adapted to be less strict.
+
+**Note for non-spec document types:** STATUS/phase/step markers and approval tracking are relaxed differently per type:
+- **Plan:** Has STATUS markers and phases but no approval tracking — check STATUS and phases, skip approval markers
+- **Process Flow:** Has sequential steps but no STATUS headers — check step numbering and I/O contracts, skip STATUS/phase checks
+- **Runbook/SOP:** Has sequential steps and possibly a prerequisites section — check step numbering and section presence, skip STATUS/phase checks
+- **Checklist:** Has checkbox items — check checkbox format, skip STATUS/phase/step checks
+- **Reference Doc:** No structural format required — skip this subtask entirely (baseline uses fresh-start only)
 
 ## Checks
 
@@ -57,4 +64,4 @@ Severity: [HIGH|MEDIUM|LOW]
 | MISSING-ELEMENT (CREATED date) | auto-fix | Add `CREATED: YYYY-MM-DD` |
 | MISSING-ELEMENT (phase names) | auto-fix | Rename boilerplate phase names to describe specific concerns |
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

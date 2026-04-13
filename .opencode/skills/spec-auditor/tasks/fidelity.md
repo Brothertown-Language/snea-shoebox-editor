@@ -116,4 +116,4 @@ If clean-room generation fails:
 - Clean-room plan is a comparison artifact only
 - Must use GitHub MCP tools for issue operations
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

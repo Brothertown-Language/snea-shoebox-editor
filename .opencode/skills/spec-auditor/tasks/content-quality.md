@@ -66,4 +66,4 @@ Severity: [HIGH|MEDIUM|LOW]
 | SUPERSEDED-CLOSURE-VIOLATION | flag-for-review | May reference valid future work |
 | ARCHITECTURAL-REASONING-GAP | flag-for-review | Requires understanding design tradeoffs |
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

@@ -1,6 +1,6 @@
 ---
 name: spec-auditor
-description: Use when auditing a spec for quality, structure, or completeness. Triggers on: audit spec, review spec, spec quality, validate spec, check spec, audit issue, revisit spec.
+description: Use when auditing a spec for quality, structure, or completeness. Triggers on: audit spec, review spec, spec quality, validate spec, check spec, audit issue, revisit spec, audit plan, audit runbook, audit SOP, audit checklist, audit document, content-aware audit.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -10,15 +10,17 @@ compatibility: opencode
 
 ## Overview
 
-Single audit orchestrator entry point for spec quality. Determines which subtasks to run based on the issue's nature, runs the minimal baseline always, and applies auto-fixes for safe findings while flagging ambiguous findings for review.
+Content-aware audit orchestrator that accepts any document type. Determines document type automatically (or via manual override), selects appropriate subtasks, runs the minimal baseline always, and applies auto-fixes for safe findings while flagging ambiguous findings for review.
 
 **Core v2 shift:** Spec-auditor is now the orchestrator. Plan-fidelity-auditor and concern-separation-auditor are no longer invoked directly — their logic lives as subtasks (`fidelity` and `concerns`) within spec-auditor.
 
 **v3 shift:** Spec-auditor now uses an auto-fix model with three-tier classification instead of the previous report-only approach. Safe findings are fixed directly; ambiguous findings are flagged for developer review.
 
+**v4 shift:** Spec-auditor now supports content-aware auditing. Input can come from issues, files, or URLs. Document type is autodetected and subtask selection is tailored per type. Three new operational subtasks (`operational-flow`, `determinism`, `error-recovery`) support process flows, runbooks, and SOPs.
+
 ## Persona
 
-You are a Spec Quality Orchestrator. Your focus is determining what to audit, running the appropriate subtasks, auto-fixing safe findings, flagging ambiguous findings for review, and presenting an executive summary of all actions taken.
+You are a Content-Aware Audit Orchestrator. Your focus is determining document type, selecting appropriate subtasks, auto-fixing safe findings, flagging ambiguous findings for review, and presenting an executive summary of all actions taken.
 
 ## Tasks
 
@@ -31,46 +33,102 @@ You are a Spec Quality Orchestrator. Your focus is determining what to audit, ru
 | `operational` | Logging, metrics, deployment completeness | ~300 |
 | `fidelity` | Clean-room plan comparison | ~600 |
 | `concerns` | Phase structure, deployment independence | ~400 |
+| `operational-flow` | Process flow / runbook operational checks | ~400 |
+| `determinism` | Deterministic behavior and state dependency checks | ~300 |
+| `error-recovery` | Runbook error recovery and rollback checks | ~350 |
 
 ## Invocation
 
-- `/skill spec-auditor --issue N` — Full audit (determine subtasks automatically)
+- `/skill spec-auditor --issue N` — Full audit of a GitHub Issue (determine subtasks automatically)
+- `/skill spec-auditor --file path` — Full audit of a local file (determine subtasks automatically)
+- `/skill spec-auditor --url URL` — Full audit of a URL (determine subtasks automatically)
 - `/skill spec-auditor --issue N --task fresh-start` — Self-containment checks only
 - `/skill spec-auditor --issue N --task structure` — Structure checks only
 - `/skill spec-auditor --issue N --task fidelity` — Clean-room comparison only
 - `/skill spec-auditor --issue N --task concerns` — Phase structure checks only
+- `/skill spec-auditor --file path --type plan` — Audit with manual type override
+- `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
 - `/skill spec-auditor` — Overview only
+
+One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). Use `--type` to override autodetected document type. Use `--task` to run a single subtask.
 
 ## Operating Protocol
 
-1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit.
+1. **Mandatory input parameter:** This skill MUST be invoked with one of `--issue N`, `--file path`, or `--url URL` (except overview mode). The content source determines how to read the document.
 
-2. **Subtask determination:** When invoked without `--task`, the agent determines which subtasks to run:
-   - **Baseline (always runs):** `fresh-start`, `structure`, `fidelity`
-   - **Conditional (agent decides based on issue nature):** `content-quality`, `traceability`, `operational`, `concerns`
+2. **Document type autodetection:** When invoked without `--type`, the agent detects the document type from content signals:
 
-3. **Conditional subtask selection guidance:**
+   **Signal table:**
 
-| Issue Type | Typically Relevant Subtasks |
-|------------|---------------------------|
-| Simple bug fix | Baseline only |
-| Feature with phases | Baseline + `concerns` |
-| Infrastructure change | Baseline + `operational` + `concerns` |
-| Complex multi-phase spec | All subtasks |
-| Spec with external dependencies | Baseline + `traceability` + `operational` |
-| Single-task spec (no phases) | Baseline (skip `concerns`) |
+   | Signal | Type Suggested | Weight |
+   |--------|---------------|--------|
+   | `STATUS:` header with phase.step format | Spec | 3 |
+   | Phase/step numbering (`1.1`, `1.2`, `2.1`) | Spec | 2 |
+   | Success criteria section | Spec | 2 |
+   | `STATUS:` header without approval tracking | Plan | 2 |
+   | Milestone/deliverable structure | Plan | 2 |
+   | Sequential numbered steps (imperative mood) | Process Flow | 3 |
+   | Step result feeds next step input | Process Flow | 2 |
+   | "Runbook" or "SOP" in title or header | Runbook/SOP | 3 |
+   | Prerequisites section | Runbook/SOP | 1 |
+   | Error recovery / rollback sections | Runbook/SOP | 2 |
+   | Checkbox list (`- [ ]`, `- [x]`) | Checklist | 3 |
+   | Flat list of items without phases | Checklist | 2 |
+   | Reference table, API documentation | Reference Doc | 3 |
+   | No phases, no steps, no criteria | Reference Doc | 1 |
+
+   **Scoring algorithm:**
+   - Sum weights for each type from matching signals
+   - Highest total score wins
+   - Ties: prefer more specific type (Spec > Plan > Process Flow > Runbook/SOP > Checklist > Reference Doc)
+
+   **Confidence levels:**
+
+   | Confidence | Condition | Action |
+   |------------|-----------|--------|
+   | High | Single type score ≥ 5 AND ≥ 3 points above runner-up | Proceed with detected type |
+   | Medium | Single type score ≥ 5 AND 1–2 points above runner-up | Proceed but note medium confidence in summary |
+   | Low | Two or more types within 2 points, or top score 3–4 | Flag for user to confirm type before auditing |
+   | None | Empty or unparseable content | Error out — cannot audit |
+
+   **Manual override:** `--type <type>` bypasses autodetection. Valid types: `spec`, `plan`, `process-flow`, `runbook`, `checklist`, `reference-doc`.
+
+3. **Subtask determination:** When invoked without `--task`, the agent determines which subtasks to run based on document type:
+
+   | Document Type | Baseline Subtasks | Conditional Subtasks |
+   |---------------|-------------------|---------------------|
+   | Spec | `fresh-start`, `structure`, `fidelity` | `content-quality`, `traceability`, `operational`, `concerns` |
+   | Plan | `fresh-start`, `structure` | `content-quality`, `concerns` |
+   | Process Flow | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism` |
+   | Runbook/SOP | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `error-recovery` |
+   | Checklist | `fresh-start`, `structure` (adapted) | — |
+   | Reference Doc | `fresh-start` | — |
+
+   **Conditional subtask selection guidance (Spec-type only):**
+
+   | Issue Type | Typically Relevant Subtasks |
+   |------------|---------------------------|
+   | Simple bug fix | Baseline only |
+   | Feature with phases | Baseline + `concerns` |
+   | Infrastructure change | Baseline + `operational` + `concerns` |
+   | Complex multi-phase spec | All subtasks |
+   | Spec with external dependencies | Baseline + `traceability` + `operational` |
+   | Single-task spec (no phases) | Baseline (skip `concerns`) |
 
 4. **All findings are classified and acted on per the auto-fix model.** Safe findings are fixed directly; ambiguous findings are flagged for developer review.
 
 5. **After all subtasks complete, produce a chat executive summary** per the `Chat Executive Summary` section below.
 
-## Minimal Baseline (Always Runs)
+## Minimal Baseline (Varies by Document Type)
 
-| Subtask | What It Checks | Why Always |
-|---------|----------------|------------|
-| `fresh-start` | Self-containment of spec content | Every spec must be understandable without prior context |
-| `structure` | STATUS headers, phase/step numbering, markers | Every spec needs proper structure |
-| `fidelity` | Clean-room plan comparison | Every spec should faithfully address its problem |
+| Document Type | Baseline Subtasks | Why These |
+|---------------|-------------------|-----------|
+| Spec | `fresh-start`, `structure`, `fidelity` | Every spec must be self-contained, properly structured, and faithful to its problem |
+| Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
+| Process Flow | `fresh-start`, `structure` (adapted) | Flows need self-containment and adapted structure checks |
+| Runbook/SOP | `fresh-start`, `structure` (adapted) | Runbooks need self-containment and adapted structure checks |
+| Checklist | `fresh-start`, `structure` (adapted) | Checklists need self-containment and adapted structure checks |
+| Reference Doc | `fresh-start` | Reference docs only need self-containment checks |
 
 ## Auto-Fix Model (CRITICAL)
 
@@ -98,6 +156,9 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | FRESH-START-VIOLATION | Inline context, replace "see above" with actual content | Self-containment is always correct; removes ambiguity |
 | DEPENDENCY-INCOMPLETE | Add specific integration points | Precision is always better than vagueness |
 | APPROACH_DIFFERENCE | Add missing approach or clarify difference | Fidelity to the clean-room plan is always desirable |
+| OPERATIONAL-FLOW-GAP | Add placeholder for missing error recovery, I/O contract, or rollback step | Placeholder doesn't change semantics; developer fills in |
+| DETERMINISM-VIOLATION | Add explicit environment assumptions and state dependency notes | Explicitness is always correct; removes ambiguity |
+| ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 
 **Conditional findings:**
 
@@ -141,13 +202,16 @@ The orchestrator delegates to these subtasks:
 
 ```
 spec-auditor (orchestrator)
-├── fresh-start.md    — Self-containment checks
-├── structure.md       — STATUS, numbering, markers
-├── content-quality.md — Reasoning, ambiguity, conflicts, scope
-├── traceability.md    — Orphan requirements/features (NEW)
-├── operational.md    — Logging, metrics, deployment (NEW)
-├── fidelity.md       — Clean-room plan comparison (delegated from plan-fidelity-auditor)
-└── concerns.md       — Phase structure, independence (delegated from concern-separation-auditor)
+├── fresh-start.md         — Self-containment checks
+├── structure.md            — STATUS, numbering, markers (adapted for non-spec types)
+├── content-quality.md      — Reasoning, ambiguity, conflicts, scope
+├── traceability.md         — Orphan requirements/features
+├── operational.md           — Logging, metrics, deployment
+├── fidelity.md             — Clean-room plan comparison (delegated from plan-fidelity-auditor)
+├── concerns.md             — Phase structure, independence (delegated from concern-separation-auditor)
+├── operational-flow.md     — Process flow / runbook operational checks (NEW)
+├── determinism.md          — Deterministic behavior and state dependency checks (NEW)
+└── error-recovery.md       — Runbook error recovery and rollback checks (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -173,6 +237,9 @@ Existing classes remain, plus two new ones:
 | DEPENDENCY-INCOMPLETE | Missing integration points |
 | **MISSING-TRACEABILITY** | Requirements/features without trace links (NEW) |
 | **OPERATIONAL-REQUIREMENTS-INCOMPLETE** | Missing logging/metrics/deployment (NEW) |
+| **OPERATIONAL-FLOW-GAP** | Missing error recovery, I/O contracts, idempotency, or rollback in process flows |
+| **DETERMINISM-VIOLATION** | Hidden non-determinism, unstated environment assumptions, undocumented state dependencies |
+| **ERROR-RECOVERY-GAP** | Missing prerequisites, scope, escalation contacts, versioning, or validation gates in runbooks |
 
 ## Audit Findings Handling
 
@@ -202,7 +269,10 @@ After the audit session completes, findings are acted on per the auto-fix model:
 
 **Format:**
 ```
-## Spec Audit: #N — [spec title]
+## Content Audit: [source identifier] — [document title]
+
+**Document Type:** [Spec|Plan|Process Flow|Runbook/SOP|Checklist|Reference Doc] (confidence: [High|Medium|Low])
+**Source:** [--issue N|--file path|--url URL]
 
 **Changes Made:**
 - [subtask] [problem-class]: [what was fixed] (auto-fix)
@@ -213,14 +283,14 @@ After the audit session completes, findings are acted on per the auto-fix model:
 - [subtask] [problem-class]: [summary] — [reason not acted on] (flag-for-review)
 - (or "None" if all findings were auto-fixed or conditionally fixed)
 
-**Issue:** [URL of the audited issue]
+**Issue:** [URL of the audited issue, if applicable]
 ```
 
 **Rules:**
 - Executive summary goes to chat ONLY, not GitHub comments
 - Changes Made lists ALL auto-fix and conditional fix actions in summary form
 - Findings Not Acted On lists ALL flag-for-review findings with the specific reason they weren't auto-fixed
-- If audit finds zero issues, output: `## Spec Audit: #N — [spec title] — No findings. Issue: [URL]`
+- If audit finds zero issues, output: `## Content Audit: [source] — [title] — No findings. Type: [type] (confidence: [level]). Issue: [URL if applicable]`
 - Issue URL is constructed from session init values (`GIT_OWNER`, `GIT_REPO`)
 
 ## Mandatory Invocation
@@ -229,21 +299,26 @@ After the audit session completes, findings are acted on per the auto-fix model:
 
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 1. Create the spec issue with all required content
-2. Invoke `/skill spec-auditor --issue N` (orchestrator determines subtasks)
+2. Invoke `/skill spec-auditor --issue N` (orchestrator determines type and subtasks)
 3. Auto-fix findings are applied directly; flag-for-review findings remain in executive summary for developer action
 4. Add `needs-approval` label
 5. Post "ready for review" comment ONLY if substantive spec changes were made during step 3 (auto-fixes of structure/boilerplate are non-substantive)
+
+When auditing a plan, runbook, process flow, checklist, or reference document, use `--file path` or `--url URL` as appropriate.
 
 **Skipping the orchestrator is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Scope Boundaries
 
-- Read-only analysis of GitHub Issue `[SPEC]` specs, plus auto-fix of safe findings
-- Edits limited to spec content via GitHub Issue updates (auto-fixes applied directly)
+- Read-only analysis of GitHub Issues, local files, or URLs, plus auto-fix of safe findings
+- Edits limited to spec content via GitHub Issue updates (auto-fixes applied directly); file/URL sources are read-only
 - Flag-for-review findings reported in executive summary but NOT applied
 - No changes to project source code, scripts, or notebooks
 - No new specs, expansions, or "improvements" beyond what findings require
 - Must use GitHub MCP tools for all issue operations
+- Document type autodetection uses signal scoring; Low confidence requires user confirmation before proceeding
+- None confidence (empty/unparseable content) produces an error — cannot audit
+- **Backward compatibility:** `--issue N` produces identical results to previous behavior
 - **Worktree awareness check:** Skills that perform git operations, read/write files, or dispatch sub-agents MUST include a "Worktree Mode" section and pass `WORKTREE_PATH` in sub-agent dispatch contexts. Missing worktree awareness is a medium-severity finding.
 
 ## Sub-Agent Spawning
@@ -268,20 +343,23 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 
 ## Key Differences from v1
 
-| v1 (Fixed Chain) | v2 (Orchestrator) | v3 (Auto-Fix Orchestrator) |
-|------------------|-------------------|---------------------------|
-| Three separate auditor skills | Single orchestrator with subtasks | Single orchestrator with subtasks |
-| All auditors always run | Agent decides conditional subtasks | Agent decides conditional subtasks |
-| Baseline runs every time | Baseline always runs (fresh-start, structure, fidelity) | Baseline always runs (fresh-start, structure, fidelity) |
-| Auto-fixes applied automatically | Findings reported, agent decides | Three-tier classification: auto-fix, conditional, flag-for-review |
-| No traceability check | `traceability` subtask (NEW) | `traceability` subtask |
-| No operational requirements check | `operational` subtask (NEW) | `operational` subtask |
-| plan-fidelity-auditor invoked directly | `fidelity` subtask delegated | `fidelity` subtask delegated |
-| concern-separation-auditor invoked directly | `concerns` subtask delegated | `concerns` subtask delegated |
-| No executive summary | No executive summary | Chat executive summary mandatory |
-| Report format: Recommendation field | Report format: Recommendation field | Report format: Classification + Fix Action fields |
+| v1 (Fixed Chain) | v2 (Orchestrator) | v3 (Auto-Fix Orchestrator) | v4 (Content-Aware) |
+|------------------|-------------------|---------------------------|-------------------|
+| Three separate auditor skills | Single orchestrator with subtasks | Single orchestrator with subtasks | Single orchestrator with subtasks |
+| All auditors always run | Agent decides conditional subtasks | Agent decides conditional subtasks | Agent decides conditional subtasks per document type |
+| Baseline runs every time | Baseline always runs (fresh-start, structure, fidelity) | Baseline always runs (fresh-start, structure, fidelity) | Baseline varies by document type |
+| Auto-fixes applied automatically | Findings reported, agent decides | Three-tier classification: auto-fix, conditional, flag-for-review | Three-tier classification (unchanged) |
+| No traceability check | `traceability` subtask (NEW) | `traceability` subtask | `traceability` subtask |
+| No operational requirements check | `operational` subtask (NEW) | `operational` subtask | `operational` subtask |
+| plan-fidelity-auditor invoked directly | `fidelity` subtask delegated | `fidelity` subtask delegated | `fidelity` subtask delegated |
+| concern-separation-auditor invoked directly | `concerns` subtask delegated | `concerns` subtask delegated | `concerns` subtask delegated |
+| No executive summary | No executive summary | Chat executive summary mandatory | Chat executive summary mandatory, includes document type |
+| Report format: Recommendation field | Report format: Recommendation field | Report format: Classification + Fix Action fields | Report format: Classification + Fix Action fields |
+| Issue-only input | Issue-only input | Issue-only input | `--issue`, `--file`, `--url` input |
+| No type detection | No type detection | No type detection | Signal-based autodetection + `--type` override |
+| Spec-only auditing | Spec-only auditing | Spec-only auditing | Multi-type: spec, plan, process-flow, runbook, checklist, reference-doc |
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
 
 ## Symbolic Engine Integration
 

@@ -2,7 +2,15 @@
 
 ## Purpose
 
-Check that a spec is self-contained and understandable by an agent with no memory context. No "see above", no vague references, no assumptions about prior conversations.
+Check that a document is self-contained and understandable by an agent with no memory context. No "see above", no vague references, no assumptions about prior conversations.
+
+**Note for non-spec document types:** Self-containment checks focus on the document type's specific requirements:
+- **Spec:** Full self-containment — all context inline, no external references without summaries
+- **Plan:** Milestones and deliverables must be self-contained; cross-references to specs must include summaries
+- **Process Flow:** Each step's inputs and outputs must be explicitly stated; no assumed knowledge of tool locations or credentials
+- **Runbook/SOP:** Prerequisites, tools, and credentials must be listed; no assumed environment knowledge
+- **Checklist:** Items must be self-explanatory; no ambiguous shorthand
+- **Reference Doc:** Definitions and context must be included; cross-references must have summaries
 
 ## Checks
 
@@ -49,4 +57,4 @@ Per guidelines `045-open-questions.md` and `140-planning-spec-creation.md`:
 - File references must use stable anchors
 - Cross-references must include summaries
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
