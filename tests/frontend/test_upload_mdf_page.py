@@ -12,7 +12,7 @@ SAMPLE_FILE = Path("src/seed_data/natick_sample_100.txt")
 class TestUploadMdfRoleGuard(unittest.TestCase):
     """C-2: Only editor/admin may access the page."""
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.error")
     @patch("streamlit.session_state", {"user_role": "viewer"})
     def test_viewer_blocked(self, mock_error, _mock_session):
@@ -21,7 +21,7 @@ class TestUploadMdfRoleGuard(unittest.TestCase):
         mock_error.assert_called_once()
         self.assertIn("permission", mock_error.call_args[0][0].lower())
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.error")
     @patch("streamlit.session_state", {})
     def test_no_role_blocked(self, mock_error, _mock_session):
@@ -29,7 +29,7 @@ class TestUploadMdfRoleGuard(unittest.TestCase):
         upload_mdf()
         mock_error.assert_called_once()
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.sidebar")
     @patch("streamlit.selectbox", return_value="TestSource")
@@ -43,7 +43,7 @@ class TestUploadMdfRoleGuard(unittest.TestCase):
         # Header is in sidebar now, or replaced by file_uploader label
         mock_sidebar.__enter__.assert_called()
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "admin"})
     @patch("streamlit.sidebar")
     @patch("streamlit.selectbox", return_value="TestSource")
@@ -60,7 +60,7 @@ class TestUploadMdfRoleGuard(unittest.TestCase):
 class TestUploadMdfSourceSelector(unittest.TestCase):
     """C-4 / C-4a: Source selector with create-new option."""
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.sidebar")
     @patch("streamlit.file_uploader", return_value=None)
@@ -83,7 +83,7 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
         options = mock_selectbox.call_args[0][1]
         self.assertEqual(options, ["Select a source...", "+ Add new source…", "Alpha", "Beta"])
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.sidebar")
     @patch("streamlit.file_uploader", return_value=None)
@@ -106,7 +106,7 @@ class TestUploadMdfSourceSelector(unittest.TestCase):
 class TestUploadMdfFileUploader(unittest.TestCase):
     """C-3: File uploader accepts .txt/.mdf and shows preview."""
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.sidebar")
     @patch("streamlit.selectbox", return_value="TestSource")
@@ -127,7 +127,7 @@ class TestUploadMdfFileUploader(unittest.TestCase):
 class TestUploadMdfParseSummary(unittest.TestCase):
     """C-5: Parse upload and display summary table."""
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.header")
@@ -165,7 +165,7 @@ class TestUploadMdfParseSummary(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertEqual(rows[0]["lx"], "word1")
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.header")
@@ -196,7 +196,7 @@ class TestUploadMdfParseSummary(unittest.TestCase):
         mock_error.assert_called()
         self.assertIn("No valid", mock_error.call_args[0][0])
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "admin"})
     @patch("streamlit.header")
     @patch("streamlit.selectbox", return_value="TestSource")
@@ -236,7 +236,7 @@ class TestUploadMdfParseSummary(unittest.TestCase):
 class TestStageAndMatch(unittest.TestCase):
     """C-6: Stage & Match button calls stage_entries then suggest_matches."""
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.suggest_matches")
     @patch("src.services.upload_service.UploadService.stage_entries")
     @patch("src.services.upload_service.UploadService.parse_upload")
@@ -306,7 +306,7 @@ class TestStageAndMatch(unittest.TestCase):
         mock_suggest.assert_called_once()
         self.assertEqual(mock_suggest.call_args[0][0], "batch-uuid-1234")
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.parse_upload")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
@@ -346,7 +346,7 @@ class TestPendingBatchSelector(unittest.TestCase):
     """C-6a: Pending upload batches shown inline on main upload view."""
 
     @patch("src.services.identity_service.IdentityService.get_github_username", return_value="testuser")
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
     @patch("streamlit.header")
@@ -409,7 +409,7 @@ class TestPendingBatchSelector(unittest.TestCase):
             # 14:52:00 = 14*3600 + 52*60 = 50400 + 3120 = 53520
             self.assertEqual(mock_download_btn.call_args[1]['file_name'], "pending_Natick_testuser_2026-02-08_53520.txt")
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.list_pending_batches")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com"})
     @patch("streamlit.header")
@@ -435,7 +435,7 @@ class TestPendingBatchSelector(unittest.TestCase):
 class TestReMatchButton(unittest.TestCase):
     """C-6b: Re-Match button calls rematch_batch (now in dedicated review view)."""
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("src.services.upload_service.UploadService.rematch_batch")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@example.com",
                                         "review_batch_id": "abc-123",

@@ -18,6 +18,14 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ### Changed
 
+### Fixed
+
+- **Mock Import Paths in Frontend Tests** (#761) - Updated 34 `@patch("src.database.get_session")` mock decorators in `test_upload_mdf_page.py` (15) and `test_upload_review_d1.py` (19) to use `@patch("src.database.connection.get_session")`, matching the post-#758 import path structure.
+
+### Added
+
+- **Hard-Delete Unit Tests** (#698) - Added 5 unit tests for `LinguisticService.hard_delete_record()` covering cleanup of all three search tables (SearchEntry, HeadwordSearchEntry, GlossSearchEntry), EditHistory cleanup, nonexistent record edge case, and MatchupQueue suggestion nullification.
+
 - **Database Import Paths** (#758) - Removed all convenience re-exports from `src/database/__init__.py` and `src/database/models/__init__.py`. All consumer files now use concrete import paths (e.g., `from src.database.models.core import Record` instead of `from src.database import Record`), eliminating IDE confusion and "Find Usages" misdirection.
 - **Environment Variable Rename** (#759) - Renamed `JUNIE_PRIVATE_DB` to `OPENCODE` and replaced all "Junie" references with "OpenCode" across source, tests, scripts, and docs. Legacy AI tool references no longer appear in the codebase.
 - **Database Initialization** (#758) - Added explicit model imports to `init_db()` so SQLAlchemy can resolve foreign keys without relying on `__init__.py` re-exports. Auto-enables `pgvector` extension when using local PostgreSQL (pgserver).

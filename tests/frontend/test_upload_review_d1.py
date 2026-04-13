@@ -90,7 +90,7 @@ class TestReviewTableRendering(unittest.TestCase):
         st.session_state["review_page_size"] = 1
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.rerun")
     def test_empty_batch_redirects_to_upload(self, mock_rerun, mock_get_session):
         """When batch is empty, clear review_batch_id and rerun to upload view."""
@@ -110,7 +110,7 @@ class TestReviewTableRendering(unittest.TestCase):
         self.assertIsNotNone(flash)
         self.assertEqual(flash[0], "success")
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -161,7 +161,7 @@ class TestReviewTableRendering(unittest.TestCase):
         md_calls = [str(c) for c in mock_md.call_args_list]
         self.assertTrue(any("Page **1**" in c for c in md_calls))
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -222,7 +222,7 @@ class TestBulkApprovalButtons(unittest.TestCase):
         st.session_state["review_page_size"] = 1
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button")
     @patch("streamlit.columns")
@@ -270,7 +270,7 @@ class TestBulkApprovalButtons(unittest.TestCase):
         btn_labels = [c[0][0] for c in mock_button.call_args_list]
         self.assertIn("Approve All as New Records", btn_labels)
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button")
     @patch("streamlit.columns")
@@ -328,7 +328,7 @@ class TestComparisonView(unittest.TestCase):
         st.session_state["review_page_size"] = 1
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -378,7 +378,7 @@ class TestComparisonView(unittest.TestCase):
         render_calls = [str(c) for c in mock_render.call_args_list]
         self.assertTrue(any("fire" in c for c in render_calls))
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -435,7 +435,7 @@ class TestPerRecordApplyNow(unittest.TestCase):
         st.session_state["review_page_size"] = 1
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button")
     @patch("streamlit.columns")
@@ -486,7 +486,7 @@ class TestPerRecordApplyNow(unittest.TestCase):
         self.assertTrue(len(apply_calls) > 0)
         self.assertTrue(apply_calls[0][1].get("disabled", False))
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button")
     @patch("streamlit.columns")
@@ -547,7 +547,7 @@ class TestPagination(unittest.TestCase):
         st.session_state["review_page_size"] = 1
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -594,7 +594,7 @@ class TestPagination(unittest.TestCase):
         md_calls = [str(c) for c in mock_md.call_args_list]
         self.assertTrue(any("Page **1**" in c for c in md_calls))
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -647,7 +647,7 @@ class TestStageAndMatchDisable(unittest.TestCase):
 
     @patch("src.services.upload_service.UploadService.list_pending_batches", return_value=[])
     @patch("src.services.upload_service.UploadService.parse_upload")
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "editor", "user_email": "test@test.com",
                                         "upload_staged_file_id": "already-staged-id"})
     @patch("streamlit.title")
@@ -703,7 +703,7 @@ class TestManualMatchOverride(unittest.TestCase):
         st.session_state["review_page_size"] = 1
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -754,7 +754,7 @@ class TestManualMatchOverride(unittest.TestCase):
                           if len(c[0]) > 0 and "Change match" in str(c[0][0])]
         self.assertTrue(len(expander_calls) > 0)
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -820,7 +820,7 @@ class TestManualMatchOverride(unittest.TestCase):
                         if len(c[0]) > 0 and c[0][0] == "Select record"]
         self.assertTrue(len(select_calls) > 0)
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button")
     @patch("streamlit.columns")
@@ -884,7 +884,7 @@ class TestManualMatchOverride(unittest.TestCase):
 
         mock_confirm.assert_called_once_with(7, 42)
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.subheader")
     @patch("streamlit.button", return_value=False)
     @patch("streamlit.columns")
@@ -946,7 +946,7 @@ class TestReviewFiltering(unittest.TestCase):
         st.session_state["review_page_size"] = 10
         st.session_state["review_filter_status"] = "All Records"
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.sidebar")
     @patch("streamlit.markdown")
     @patch("streamlit.container")
@@ -998,7 +998,7 @@ class TestReviewFiltering(unittest.TestCase):
         lx_calls_base = [c for c in _md.call_args_list if "base" in str(c[0][0])]
         self.assertEqual(len(lx_calls_base), 0)
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.sidebar")
     @patch("streamlit.markdown")
     @patch("streamlit.container")
@@ -1061,7 +1061,7 @@ class TestReviewFiltering(unittest.TestCase):
                 break
         self.assertTrue(page_info_found, f"Pagination info not found in markdown calls. MD calls: {md_texts}")
 
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.sidebar")
     @patch("streamlit.selectbox")
     @patch("streamlit.rerun")

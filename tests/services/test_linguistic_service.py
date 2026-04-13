@@ -10,7 +10,8 @@ from sqlalchemy.orm import sessionmaker
 from src.database.base import Base
 from src.database.models.core import Language, Record, RecordLanguage, Source
 from src.database.models.identity import User
-from src.database.models.workflow import EditHistory
+from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
+from src.database.models.workflow import EditHistory, MatchupQueue
 from src.services.linguistic_service import LinguisticService
 from src.services.statistics_service import StatisticsService
 
@@ -77,7 +78,10 @@ class TestLinguisticService(unittest.TestCase):
         with self.engine.connect() as conn:
             conn.execute(
                 text(
-                    "TRUNCATE edit_history, records, record_languages, users, languages, sources RESTART IDENTITY CASCADE;"
+                    "TRUNCATE matchup_queue, edit_history, "
+                    "search_entries, headword_search_entries, gloss_search_entries, "
+                    "records, record_languages, users, languages, sources "
+                    "RESTART IDENTITY CASCADE;"
                 )
             )
             conn.commit()
@@ -448,3 +452,124 @@ class TestLinguisticService(unittest.TestCase):
             recent = StatisticsService.get_recent_activity()
             self.assertEqual(len(recent), 1)
             self.assertEqual(recent[0]["lx"], "apple")
+
+    def test_hard_delete_record_with_search_entries(self):
+        record = Record(
+            lx="nup", hm=1, ps="v", ge="die", source_id=self.source_id, mdf_data="\\lx nup\n\\va nut\n\\ge die"
+        )
+        self.session.add(record)
+        self.session.commit()
+
+        se = SearchEntry(record_id=record.id, term="nup", normalized_term="nup", entry_type="lx")
+        hse_lx = HeadwordSearchEntry(record_id=record.id, term="nup", normalized_term="nup", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=record.id, term="nut", normalized_term="nut", entry_type="va")
+        gse = GlossSearchEntry(record_id=record.id, term="die", normalized_term="die")
+        self.session.add_all([se, hse_lx, hse_va, gse])
+        self.session.commit()
+
+        self.assertEqual(self.session.query(SearchEntry).filter_by(record_id=record.id).count(), 1)
+        self.assertEqual(self.session.query(HeadwordSearchEntry).filter_by(record_id=record.id).count(), 2)
+        self.assertEqual(self.session.query(GlossSearchEntry).filter_by(record_id=record.id).count(), 1)
+
+        with self._patch_session():
+            result = LinguisticService.hard_delete_record(record.id)
+
+        self.assertTrue(result)
+        self.session.expire_all()
+        self.assertIsNone(self.session.query(Record).filter_by(id=record.id).first())
+        self.assertEqual(self.session.query(SearchEntry).filter_by(record_id=record.id).count(), 0)
+        self.assertEqual(self.session.query(HeadwordSearchEntry).filter_by(record_id=record.id).count(), 0)
+        self.assertEqual(self.session.query(GlossSearchEntry).filter_by(record_id=record.id).count(), 0)
+
+    def test_hard_delete_record_with_edit_history(self):
+        record = Record(lx="histdel", source_id=self.source_id, mdf_data="\\lx histdel")
+        self.session.add(record)
+        self.session.commit()
+
+        h1 = EditHistory(
+            record_id=record.id,
+            user_email="editor@example.com",
+            version=1,
+            change_summary="Creation",
+            current_data="\\lx histdel",
+        )
+        h2 = EditHistory(
+            record_id=record.id,
+            user_email="editor@example.com",
+            version=2,
+            change_summary="Update",
+            current_data="\\lx histdel\n\\ge meaning",
+        )
+        self.session.add_all([h1, h2])
+        self.session.commit()
+
+        self.assertEqual(self.session.query(EditHistory).filter_by(record_id=record.id).count(), 2)
+
+        with self._patch_session():
+            result = LinguisticService.hard_delete_record(record.id)
+
+        self.assertTrue(result)
+        self.session.expire_all()
+        self.assertIsNone(self.session.query(Record).filter_by(id=record.id).first())
+        self.assertEqual(self.session.query(EditHistory).filter_by(record_id=record.id).count(), 0)
+
+    def test_hard_delete_record_cleans_headword_and_gloss(self):
+        record = Record(
+            lx="wôpan",
+            hm=1,
+            ps="n",
+            ge="light",
+            source_id=self.source_id,
+            mdf_data="\\lx wôpan\n\\va wôpanâk\n\\ge light",
+        )
+        self.session.add(record)
+        self.session.commit()
+
+        hse_lx = HeadwordSearchEntry(record_id=record.id, term="wôpan", normalized_term="wopan", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=record.id, term="wôpanâk", normalized_term="wopanak", entry_type="va")
+        gse = GlossSearchEntry(record_id=record.id, term="light", normalized_term="light")
+        self.session.add_all([hse_lx, hse_va, gse])
+        self.session.commit()
+
+        self.assertEqual(self.session.query(HeadwordSearchEntry).filter_by(record_id=record.id).count(), 2)
+        self.assertEqual(self.session.query(GlossSearchEntry).filter_by(record_id=record.id).count(), 1)
+
+        with self._patch_session():
+            result = LinguisticService.hard_delete_record(record.id)
+
+        self.assertTrue(result)
+        self.session.expire_all()
+        self.assertIsNone(self.session.query(Record).filter_by(id=record.id).first())
+        self.assertEqual(self.session.query(HeadwordSearchEntry).filter_by(record_id=record.id).count(), 0)
+        self.assertEqual(self.session.query(GlossSearchEntry).filter_by(record_id=record.id).count(), 0)
+
+    def test_hard_delete_record_nonexistent_returns_false(self):
+        with self._patch_session():
+            result = LinguisticService.hard_delete_record(99999)
+        self.assertFalse(result)
+
+    def test_hard_delete_record_nullifies_matchup_suggestion(self):
+        record1 = Record(lx="suggested", source_id=self.source_id, mdf_data="\\lx suggested")
+        record2 = Record(lx="to_delete", source_id=self.source_id, mdf_data="\\lx to_delete")
+        self.session.add_all([record1, record2])
+        self.session.commit()
+
+        queue_entry = MatchupQueue(
+            lx="word",
+            mdf_data="\\lx word",
+            suggested_record_id=record2.id,
+            batch_id="test-batch",
+            status="pending",
+        )
+        self.session.add(queue_entry)
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.hard_delete_record(record2.id)
+
+        self.assertTrue(result)
+        self.session.expire_all()
+        self.assertIsNone(self.session.query(Record).filter_by(id=record2.id).first())
+        updated_queue = self.session.query(MatchupQueue).filter_by(id=queue_entry.id).first()
+        self.assertIsNotNone(updated_queue)
+        self.assertIsNone(updated_queue.suggested_record_id)
