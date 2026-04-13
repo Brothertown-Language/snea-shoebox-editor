@@ -79,6 +79,41 @@ When user provides explicit authorization, it **OVERRIDES** the needs-approval l
 | NO auth AND label present | HALT - wait for authorization |
 | NO auth AND no label | Check other blockers |
 
+### Step 5: Auto-Dispatch After Successful Verification
+
+**🚫 CRITICAL: This step runs ONLY when ALL prior verification gates (Steps 1-4) pass. If ANY gate fails, HALT — do NOT dispatch.**
+
+After all verification gates pass, determine the approval context and auto-dispatch:
+
+#### Auto-Dispatch Context Differentiation
+
+| Approval Context | How to Detect | Auto-Dispatch Target |
+|------------------|---------------|----------------------|
+| **Spec approval** | Issue title contains `[SPEC` or has `spec` label; no existing plan sub-issue | `writing-plans --task create` |
+| **Plan approval** | Issue is a plan (linked from a spec via sub-issue relationship) | `executing-plans --task start` |
+| **Already implemented** | `verify-already-implemented` returns positive | No dispatch — auto-close instead |
+
+#### Auto-Dispatch Procedure
+
+1. Determine approval context (spec vs plan) by checking:
+   - Issue title format: `[SPEC` prefix = spec approval
+   - Sub-issue relationships: if this issue is a sub-issue of a spec, it is a plan approval
+   - Labels: presence of `spec` or `plan` labels
+2. **If spec approval:** Invoke `writing-plans --task create` with context:
+   - `spec_issue=#N` (the approved spec issue number)
+   - `GIT_OWNER`, `GIT_REPO`, `WORKTREE_PATH` from session
+3. **If plan approval:** Invoke `executing-plans --task start` (existing behavior, no change)
+4. **Chat output:** Clearly indicate the transition:
+   - Spec approval: "Verification passed → Creating implementation plan"
+   - Plan approval: "Verification passed → Starting implementation"
+
+#### Auto-Dispatch Edge Cases
+
+- **Spec already has a plan:** `writing-plans --task create` handles this (skips or updates per its existing logic)
+- **Multi-task spec with missing sub-issues:** `verify-sub-issues` gate fails → HALT, no dispatch
+- **Batch approval:** Each spec in batch gets its own dispatch cycle after batch state is established
+
 ## Context Required
 
 - Related tasks: `verify-sub-issues`, `verify-codebase`
+- Auto-dispatch targets: `writing-plans` (spec approval), `executing-plans` (plan approval)

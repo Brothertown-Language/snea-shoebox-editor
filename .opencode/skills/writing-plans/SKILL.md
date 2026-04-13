@@ -59,6 +59,28 @@ After writing the complete plan, check:
 2. **Placeholder scan:** Search for red-flag patterns. Fix them.
 3. **Type consistency:** Do types/signatures used in later tasks match earlier definitions?
 
+## Auto-Dispatch Entry
+
+This skill can be invoked automatically by `approval-gate` after successful verification of a spec approval. The auto-dispatch chain:
+
+```
+approval-gate --task verify-authorization (all gates pass for spec approval)
+  → writing-plans --task create (auto-dispatched)
+```
+
+**Auto-dispatch context passed from approval-gate:**
+
+| Parameter | Source | Purpose |
+|-----------|--------|---------|
+| `spec_issue` | Issue number from `verify-authorization` | Identifies the approved spec to plan from |
+| `GIT_OWNER` | Session init | Repository owner for API calls |
+| `GIT_REPO` | Session init | Repository name for API calls |
+| `WORKTREE_PATH` | Session / worktree setup | Base directory for file operations |
+
+**Manual invocation still works:** `writing-plans --task create` can be invoked directly at any time. Auto-dispatch is additive — it eliminates the silent gap between approval and plan creation, but does not replace manual invocation.
+
+**No circular dispatch:** `writing-plans` never dispatches back to `approval-gate`. After plan creation, the plan requires its own approval (user says "approved"), which triggers `approval-gate` → `executing-plans` (not `writing-plans`).
+
 ## Operating Protocol
 
 1. Read approved spec from GitHub Issue
