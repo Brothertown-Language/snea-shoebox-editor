@@ -40,6 +40,7 @@ Check if user instruction contains implementation-related keywords:
 - Refactor, refactor X, clean up X
 - Optimize, optimize X, improve X
 - Want me to, shall I, I can change, I can update, I can fix, I can modify
+- Edit the skill, update the guideline, fix the skill file, update the guideline file, modify SKILL.md
 
 **Offer-to-Edit Patterns (ALSO require gate):**
 Phrases that offer to make changes without going through the spec workflow:

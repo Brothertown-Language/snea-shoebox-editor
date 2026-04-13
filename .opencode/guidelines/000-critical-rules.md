@@ -162,6 +162,32 @@ All identity values MUST use placeholder tokens that are resolved at runtime fro
 
 **See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.**
 
+## Critical Violation: Implementation Without Spec — Expanding the Definition
+
+**⚠️ "Implementation" includes more than writing source code.** The spec-first rule applies to ALL file modifications that alter behavior, configuration, or enforcement.
+
+The following are ALL implementation actions that require an approved spec:
+
+| Action | Requires Spec? | Why |
+|--------|---------------|-----|
+| Writing Python code | ✅ Yes | Classic implementation |
+| Editing skill files (SKILL.md, task/*.md) | ✅ Yes | Alters agent enforcement behavior |
+| Editing guideline files | ✅ Yes | Alters agent constraints |
+| Editing configuration (pyproject.toml, .pre-commit-config.yaml) | ✅ Yes | Alters build/test behavior |
+| Editing TypeScript plugins (session-enforcement.ts) | ✅ Yes | Alters runtime enforcement |
+| Editing test files | ✅ Yes | Alters test suite behavior |
+| Creating new files of any type | ✅ Yes | Adds new behavior or content |
+| Fixing a typo in documentation | ❌ No | No behavioral change |
+| Formatting code (ruff format) | ❌ No | No behavioral change |
+
+**🚫 FORBIDDEN patterns (all require spec):**
+- "It's just a skill file" → Skill files alter agent enforcement. Spec required.
+- "It's just a guideline" → Guidelines alter agent constraints. Spec required.
+- "It's just a config change" → Config changes alter behavior. Spec required.
+- "It's a small fix" → Size doesn't matter. If it changes behavior, spec required.
+
+**See `010-approval-gate.md` for the complete authorization workflow.**
+
 ## Critical Violation: Missing Progress Reports
 
 **⚠️ Failing to report progress in chat after implementation is a CRITICAL GUIDELINE VIOLATION.**
