@@ -13,6 +13,9 @@ Check an existing plan for placeholders and completeness.
 5. **TDD structure** — Each task has failing test → implement → passing test steps
 6. **File structure** — All files are listed with responsibilities
 7. **Self-review evidence** — Agent has performed spec coverage, placeholder, and type consistency checks
+8. **Spec reference** — Plan body contains a spec reference (search for `Spec: #N` pattern)
+9. **Sub-issue parent** — If plan has sub-issues, they link to the plan (not the spec)
+10. **Plan label** — Plan issue has `plan` label
 
 ## No-Placeholders Rule
 

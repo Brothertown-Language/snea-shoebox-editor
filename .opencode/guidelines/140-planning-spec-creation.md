@@ -2,24 +2,34 @@
 
 ## Spec-Driven Development Workflow
 
-AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach:
+AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach with the **Plan-Bridge Hierarchy**:
 
 1. **Specify Phase**: Define **What & Why**. Kick off with a high-level vision (product brief), then expand it into a detailed specification focusing on user journeys, experiences, and success criteria.
-2. **Plan Phase**: Define **How**. Draft the technical plan (architecture, technical stack, and constraints).
-3. **Tasks Phase**: Break the plan into **small, reviewable chunks** (tasks) that can be implemented and tested in isolation.
+2. **Plan Phase** (Bridge): Define **How**. Create a plan issue (`[PLAN]` prefix, `plan` label) that references the spec via body linked reference. The plan bridges spec → tasks. **Spec approval authorizes plan creation; plan approval authorizes implementation.**
+3. **Tasks Phase**: Break the plan into **small, reviewable chunks** (sub-issues under the plan, not the spec) that can be implemented and tested in isolation.
 4. **Implement Phase**: **Execute** tasks and **verify** results.
+
+**Two-Gate Model:**
+- **Gate 1 — Spec Approval → Plan Creation**: Spec approval authorizes creating the plan issue. The spec references the plan via body text (linked reference, e.g., `Related Plan: #NNN`), NOT via GitHub sub-issue link.
+- **Gate 2 — Plan Approval → Implementation**: Plan approval authorizes implementation. Authorization cascades from the plan to all its sub-issues.
+
+**Plan-Bridge Hierarchy:** Spec → (body linked reference) → Plan → Sub-issues
 
 **CRITICAL**: Investigation and Planning phases are AUTO-COMPLETED before the spec is created. The spec file ONLY contains implementation and verification phases.
 
 **INVESTIGATION CHECKPOINT**: Before creating a spec, the agent MUST verify investigation is complete. See `142-planning-archive-workflow.md` for investigation completion criteria and permissible test activities.
 
+**SPEC REVISION**: When a spec is revised, all linked plan approvals are revoked. The old plan is closed and a new plan must be created and approved. See `010-approval-gate.md` §"Revision Revokes Approval" and §"Re-implementation Workflow".
+
 ______________________________________________________________________
 
-## Terminology: Spec vs. Guideline Files
+## Terminology: Spec vs. Plan vs. Guideline Files
 
 - **"Create a new spec"** = Create a GitHub Issue with `[SPEC]` prefix (Mandatory when GitHub MCP available)
+- **"Create a plan"** = Create a GitHub Issue with `[PLAN]` prefix and `plan` label, referencing the spec via body linked reference
 - **"Create a guideline file"** = Create/modify files in `.opencode/guidelines/` (Implementation task)
 - **SPEC = GitHub Issue** — Specs are planning/tracking artifacts, not file system artifacts
+- **PLAN = GitHub Issue** — Plans are separate issues that bridge specs to implementation sub-issues; sub-issues are children of the plan, not the spec
 
 ______________________________________________________________________
 

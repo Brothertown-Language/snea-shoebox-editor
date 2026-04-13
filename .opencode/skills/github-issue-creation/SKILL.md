@@ -22,8 +22,8 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 |------|---------|-------|
 | `pre-creation` | Validate before creating issue (conflicts, superseded, supersede check) | ~240 |
 | `creation` | Create issue with proper title, labels, byline | ~200 |
-| `post-creation` | Invoke auditors, create sub-issues for multi-task specs | ~180 |
-| `single-task-check` | Determine if spec needs sub-issues or is single-task | ~160 |
+| `post-creation` | Invoke auditors, trigger plan creation for multi-task specs | ~180 |
+| `single-task-check` | Determine if spec needs a plan issue (multi-task) or is single-task | ~160 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
 
 ## Invocation
@@ -46,9 +46,9 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 
 2. **Workflow sequence:**
    - Phase 1: `pre-creation` → Validate spec, check for conflicts/superseded
-   - Phase 2: `single-task-check` → Determine if spec needs sub-issues
+   - Phase 2: `single-task-check` → Determine if spec needs a plan issue
    - Phase 3: `creation` → Create issue with labels and byline
-   - Phase 4: `post-creation` → Invoke auditors, create sub-issues if multi-task
+   - Phase 4: `post-creation` → Invoke auditors, trigger plan creation via writing-plans if multi-task
 
 ## What This Skill Does
 
@@ -67,10 +67,10 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 ### Single-Task vs Multi-Task Detection
 
 **Determines:**
-- Single-task spec (one implementation task, no sub-issues needed)
-- Multi-task spec (multiple phases, requires sub-issues)
+- Single-task spec (one implementation task, plan optional per agent intelligence)
+- Multi-task spec (multiple phases, requires plan issue)
 
-**Auto-creates sub-issues** for multi-task specs via `github-sub-issues` skill.
+**Triggers plan creation** for multi-task specs via `writing-plans` skill. Plan creation handles sub-issue creation under the plan.
 
 ### Creation Time Enforcement
 
@@ -91,7 +91,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 | `spec-auditor` | Orchestrate spec quality audit (subtasks: fresh-start, structure, content-quality, traceability, fidelity, concerns, operational) | Run BEFORE approval |
 | `approval-gate` | Enforce authorization | Run AFTER issue created |
 | `github-comments` | Byline format | Use for substantive comments only |
-| `github-sub-issues` | Sub-issue creation | Invoke for multi-task specs |
+| `writing-plans` | Plan issue creation | Invoke for multi-task specs after creation |
 
 ## When to Invoke
 
@@ -110,6 +110,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 - Create sub-issues for single-task specs
 - Skip auditor invocation for multi-task specs
 - Create issues with conflicting/overlapping objectives
+- Create sub-issues directly under spec (sub-issues go under plan)
 
 ### ✅ ALWAYS DO
 
@@ -118,15 +119,18 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 - Add creation byline in issue body footer
 - Invoke auditors before approval
 - Check for superseding/conflicting issues
+- For multi-task specs, invoke `writing-plans` for plan creation (not `github-sub-issues` directly)
 
 ## Task Dependencies
 
 ```
 pre-creation → single-task-check → creation → post-creation
-                                           ↓
-                                    (if multi-task)
-                                           ↓
-                                     github-sub-issues skill
+                                            ↓
+                                     (if multi-task)
+                                            ↓
+                                      writing-plans skill
+                                            ↓
+                                      plan issue (with sub-issues under plan)
 ```
 
 ## Enforcement
@@ -165,4 +169,4 @@ If GitHub MCP is unavailable:
 
 - Related skills: `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
-- Related skill tasks: `github-sub-issues --task create-sub-issue` (multi-task sub-issue creation), `git-workflow --task cleanup` (post-merge closure)
+- Related skill tasks: `writing-plans --task create` (plan creation for multi-task specs), `git-workflow --task cleanup` (post-merge closure)

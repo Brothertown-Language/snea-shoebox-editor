@@ -51,10 +51,11 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 ## Operating Protocol
 
 1. **Mandatory invocation (no decision point):** The agent MUST invoke approval-gate when it encounters `approved`/`go`, authorization questions, or implementation start. Never prompt for invocation — just invoke the skill.
-2. **Pre-Implementation Verification:** Verify spec exists as GitHub Issue, verify authorization, verify sub-issues (multi-task), check for blockers.
-3. **Implementation Scope:** Authorization grants ONLY the specified phase/task. HALT after completing authorized work.
-4. **Multi-task cascade:** When parent has sub-issues, authorization cascades to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
-5. **Auto-dispatch after verification:** When all verification gates pass, auto-dispatch to the next skill in the chain. See Dispatch Order below.
+2. **Two-gate authorization model:** Spec approval → plan creation. Plan approval → implementation. Each gate requires explicit authorization.
+3. **Pre-Implementation Verification:** Verify spec or plan exists as GitHub Issue, verify authorization, verify sub-issues under plan (multi-task), check for blockers.
+4. **Multi-task cascade:** When plan has sub-issues, authorization cascades from plan to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
+5. **Spec revision revocation:** If a spec is revised (status changed to REVISED - NEEDS APPROVAL), find linked plan issues by searching for `[PLAN]` issues referencing the spec number in their body and mark them for audit. Revision of a spec revokes approval on its linked plan.
+6. **Auto-dispatch after verification:** When all verification gates pass, auto-dispatch to the next skill in the chain. See Dispatch Order below.
 
 ## Dispatch Order
 
@@ -63,15 +64,16 @@ After `verify-authorization` completes successfully (all gates pass), the skill 
 ```
 Spec approved
   → verify-authorization (all gates pass)
+  → writing-plans --task create (auto-dispatched to create plan issue)
+
+Plan approved
+  → verify-authorization (all gates pass)
+  → sub-issue verification (if multi-phase)
   → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
   → divide-and-conquer/assemble-batch (dispatch sub-agents, squash-merge into batch branch)
   → verification-before-completion
   → finishing-a-development-branch
   → git-workflow/review-prep
-
-Plan approved
-  → verify-authorization (all gates pass)
-  → executing-plans --task start (auto-dispatched)
 
 Already implemented
   → verify-authorization (all gates pass)
@@ -79,23 +81,24 @@ Already implemented
   → Auto-close (no dispatch)
 ```
 
-**Unified path:** Every approval — single issue or batch — follows the same flow: `verify-authorization` → `pre-implementation-analysis` → `assemble-batch`. Single issue = batch of one sub-agent. No forked paths.
+**Spec approval dispatches to plan creation, NOT implementation.** The plan then requires its own approval before implementation begins.
 
 **Dispatch context detection:**
 - Spec approval: Issue title contains `[SPEC` or has `spec` label
-- Plan approval: Issue is a sub-issue of a spec (plan relationship)
+- Plan approval: Issue has `plan` label or `[PLAN]` prefix in title
 - See `verify-authorization.md` Step 5 for full procedure
 
-**Circular dispatch prevention:** Plan approval dispatches to `executing-plans`, NOT back to `writing-plans`. Spec approval dispatches to `writing-plans`, which creates a plan. The plan then requires its own approval before dispatching to `executing-plans`.
+**Circular dispatch prevention:** Spec approval dispatches to `writing-plans`, which creates a plan. Plan approval dispatches to `executing-plans`. The plan requires its own approval before `executing-plans` can run.
 
 ## Authorization Requirements
 
 | Requirement | Description |
 |-------------|-------------|
-| **Spec exists as GitHub Issue** | No local fallback — GitHub Issues only |
+| **Spec or Plan exists as GitHub Issue** | No local fallback — GitHub Issues only |
+| **Two-gate authorization** | Spec approval → plan creation; Plan approval → implementation |
 | **Explicit authorization** | User says `approved`, `go`, or `approved: N.M` — OVERRIDES `needs-approval` label |
-| **Open questions resolved** | No unresolved items in spec |
-| **Sub-issues verified** | Multi-task specs require phase-level sub-issues |
+| **Open questions resolved** | No unresolved items in spec or plan |
+| **Sub-issues verified under plan** | Multi-task plans require phase-level sub-issues |
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
 | **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
 
@@ -176,16 +179,16 @@ rules:
     source: "approval-gate/SKILL.md §Authorization Requirements"
 
   - id: approval-gate-skill-002
-    title: "Multi-task cascade: authorization extends to all sub-issues"
+    title: "Multi-task cascade: authorization extends from plan to all sub-issues"
     conditions:
       all:
-        - "parent_has_sub_issues == true"
+        - "plan_has_sub_issues == true"
         - "user_authorized == true"
     actions:
       - PROCEED
     conflicts_with: []
     requires: [approval-gate-002]
-    triggers: [divide-and-conquer]
+    triggers: [divide-and-conquer, executing-plans]
     source: "approval-gate/SKILL.md §Multi-task cascade"
 
   - id: approval-gate-skill-003

@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Verify and maintain parent-child issue hierarchy for multi-task specs.
+Verify and maintain parent-child issue hierarchy for multi-task plans.
 
 ## Entry Criteria
 
-- Parent issue number identified
+- Plan issue number identified
 - Sub-issues created (or need creation)
 
 ## Exit Criteria
@@ -17,31 +17,31 @@ Verify and maintain parent-child issue hierarchy for multi-task specs.
 
 ## Procedure
 
-### Step 1: Get Parent Issue
+### Step 1: Get Plan Issue
 
 ```python
-parent = github_issue_read(method="get", issue_number=N)
-phases = extract_phases(parent["body"])
+plan = github_issue_read(method="get", issue_number=M)
+phases = extract_phases(plan["body"])
 ```
 
 ### Step 2: Get Sub-Issues
 
 ```python
-sub_issues = github_issue_read(method="get_sub_issues", issue_number=N)
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=M)
 ```
 
 ### Step 3: Build Hierarchy Tree
 
 ```markdown
-SPEC #N: [Title]
-├── Task #[M1]: Phase 1 - [Description]
-├── Task #[M2]: Phase 2 - [Description]
-└── Task #[M3]: Phase 3 - [Description]
+PLAN #M: [PLAN] Feature Name
+├── Task #P1: [Task: #M] Phase 1 - Description
+├── Task #P2: [Task: #M] Phase 2 - Description
+└── Task #P3: [Task: #M] Phase 3 - Description
 ```
 
 ### Step 4: Identify Gaps
 
-**For each phase in spec:**
+**For each phase in plan:**
 - Check if corresponding sub-issue exists
 - If missing: create via `create-sub-issue`
 

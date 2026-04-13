@@ -204,24 +204,25 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 
 **MANDATORY: Read issue comments and respond publicly. See `github-comments` skill → "Responding to User Comments (MANDATORY)".**
 
-## Critical Violation: Sub-issue Structure Bypass — Multi-task Specs
+## Critical Violation: Sub-issue Structure Bypass — Multi-task Plans
 
-**⚠️ Implementing a multi-task spec without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Implementing a multi-task plan without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
 
 - 🚫 FORBIDDEN: Implementing phases without sub-issue structure; assuming markdown checkboxes = tracking; creating step-level sub-issues
-- ✅ REQUIRED: Sub-issues at PHASE level; each linked via `github_sub_issue_write method=add`; single-task specs exempt; auto-create as pre-implementation setup
+- ✅ REQUIRED: Sub-issues at PHASE level under the plan (not the spec); each linked via `github_sub_issue_write method=add`; single-task plans exempt; auto-create as pre-implementation setup
+- ✅ REQUIRED: Plan is the parent of implementation sub-issues; spec references plan via body linked reference, NOT GitHub sub-issue link
 
 **See `github-sub-issues` skill for complete workflow including single-task exemption, auto-create workflow, and database ID requirement.**
 
-## Critical Violation: Stopping After Single Phase in Multi-Task Spec
+## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 
-**⚠️ Halting after completing a single phase of a multi-task spec is a CRITICAL GUIDELINE VIOLATION.** Authorization cascades to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
+**⚠️ Halting after completing a single phase of a multi-task plan is a CRITICAL GUIDELINE VIOLATION.** Plan approval cascades authorization to ALL sub-issues under the plan. Complete ALL phases, report ONCE, HALT ONCE.
 
-**See `approval-gate` skill → "Multi-Task Spec Authorization" for complete cascade workflow and enforcement matrix.**
+**See `approval-gate` skill → "Multi-Task Plan Authorization" for complete cascade workflow and enforcement matrix.**
 
 ## Critical Violation: Sub-issue Closure Timing — ZERO TOLERANCE
 
-**⚠️ Closing sub-issues before PR merge is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Closing sub-issues before PR merge is a CRITICAL GUIDELINE VIOLATION.** Sub-issues are children of the plan, not the spec.
 
 🚫 FORBIDDEN: Closing sub-issues after implementation but before PR merge; closing without verifying PR merge via GitHub API
 
@@ -295,7 +296,7 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 
 ## Critical Violation: Bug Reports Without Fix Spec
 
-**⚠️ Bug reports must have a fix spec sub-issue before closure is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Bug reports must have a fix spec sub-issue before closure is a CRITICAL GUIDELINE VIOLATION.** Fix specs follow the plan-bridge hierarchy: spec → plan → sub-issues.
 
 - 🚫 FORBIDDEN: Closing a bug report without a linked fix spec sub-issue; treating bug reports as complete without fix spec
 - ✅ REQUIRED: Use `issue-review --task analyze-and-spec` to create fix spec sub-issues for bug reports; verify fix spec exists via `approval-gate --task verify-fix-spec` before closure
@@ -313,10 +314,10 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 
 ## Critical Violation: Conflating Issue References with Authorization Cascade
 
-**⚠️ Treating issue references as sub-issue relationships that trigger authorization cascade is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Treating issue references as sub-issue relationships that trigger authorization cascade is a CRITICAL GUIDELINE VIOLATION.** In the plan-bridge hierarchy, the spec references the plan via body text (linked reference), NOT via GitHub sub-issue link. Only plan → sub-issue links trigger cascade.
 
-- 🚫 FORBIDDEN: Cascading authorization based on mentions in body/comments; assuming `#NNN` creates authorization links
-- ✅ REQUIRED: Only formal sub-issue links via `github_sub_issue_write` trigger cascade; verify with `github_issue_read(method=get_sub_issues)`
+- 🚫 FORBIDDEN: Cascading authorization based on mentions in body/comments; assuming `#NNN` creates authorization links; treating spec's body reference to a plan as a sub-issue link
+- ✅ REQUIRED: Only formal sub-issue links via `github_sub_issue_write` trigger cascade; verify with `github_issue_read(method=get_sub_issues)` on the **plan**, not the spec
 
 **See `approval-gate` skill → "Reference ≠ Authorization Cascade" for the complete verification procedure.**
 
@@ -333,7 +334,7 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 
 ## Critical Violation: Closing Issues Before PR Merge
 
-**⚠️ Closing issues BEFORE the PR is merged is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Closing issues BEFORE the PR is merged is a CRITICAL GUIDELINE VIOLATION.** In the plan-bridge hierarchy, close sub-issues under the plan first, then the plan, then the spec.
 
 🚫 FORBIDDEN: Closing after implementation; closing when PR created but not merged; closing parents while children open; closing without "merge confirmed"
 
@@ -345,7 +346,7 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 
 ## Critical Violation: Parent/Child Issue Closure
 
-**⚠️ Closing a parent issue while child issues remain open is a CRITICAL GUIDELINE VIOLATION.** Only close the child corresponding to the merged PR. Parent stays open until ALL children are closed.
+**⚠️ Closing a parent issue while child issues remain open is a CRITICAL GUIDELINE VIOLATION.** Only close the child corresponding to the merged PR. Parent stays open until ALL children are closed. In the plan-bridge hierarchy, the plan (not the spec) is the parent of implementation sub-issues.
 
 **See `git-workflow` skill `--task cleanup` for the complete parent/child closure workflow.**
 

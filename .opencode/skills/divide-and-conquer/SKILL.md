@@ -92,6 +92,7 @@ When the orchestrator dispatches a sub-agent, it MUST pass:
 issue: <number>
 branch: "spec/<short-name>"
 spec: "<full spec body or relevant section>"
+plan_issue: <number or empty>
 authorization: "User approved #<N> on <date>"
 depth: <current decomposition depth, starting at 0>
 max_depth: <DIVIDE_AND_CONQUER_MAX_DEPTH or 3>
@@ -109,7 +110,7 @@ env_vars:
   DEV_EMAIL: "<from-session>"
 ```
 
-**Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT.
+**Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow.
 
 ## Sub-agent Result Contract
 
@@ -120,6 +121,7 @@ status: DONE | DONE_WITH_CONCERNS | OVERFLOW | BLOCKED
 files_changed: ["<path>"]
 summary: "<what was implemented and key decisions>"
 concerns: "<only if DONE_WITH_CONCERNS>"
+plan_issue: <number or empty>
 verification_passed: true | false
 compare_url: "<compare URL from review-prep, or empty string>"
 exec_summary: "<1-2 sentence executive summary for chat output, or empty string>"
