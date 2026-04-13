@@ -64,4 +64,4 @@ This convention MUST be followed globally whenever sort keys are generated for t
 - `src/`: Source code for both frontend and backend.
 - `docs/`: Technical and linguistic documentation.
 - `tests/`: Automated test suite.
-- `.junie/`: AI-specific Sparse Priming Representations (SPR) and guidelines.
+- `.opencode/`: AI agent skills, guidelines, and tools.

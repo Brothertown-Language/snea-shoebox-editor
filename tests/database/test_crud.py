@@ -1,40 +1,43 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import unittest
-import os
-import uuid
-from datetime import datetime
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from src.database import (
-    Base, Source, Language, Record, SearchEntry, 
-    User, UserActivityLog, Permission, MatchupQueue, 
-    EditHistory, SchemaVersion, RecordLanguage
-)
+
+from src.database.base import Base
+from src.database.models.core import Language, Record, RecordLanguage, Source
+from src.database.models.identity import Permission, User, UserActivityLog
+from src.database.models.search import SearchEntry
+from src.database.models.workflow import EditHistory, MatchupQueue
+
 
 class TestDatabaseCRUD(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         """Start a temporary pgserver instance and initialize the schema."""
         try:
-            import pgserver
             from pathlib import Path
+
+            import pgserver
+
             # Use a unique path in tmp/ for this test session
             cls.test_db_path = Path("tmp/test_crud_db")
             if cls.test_db_path.exists():
                 import shutil
+
                 shutil.rmtree(cls.test_db_path)
             cls.test_db_path.mkdir(parents=True, exist_ok=True)
-            
+
             cls.pg_server = pgserver.get_server(str(cls.test_db_path))
             cls.db_url = cls.pg_server.get_uri()
             cls.engine = create_engine(cls.db_url)
-            
+
             # Enable extensions
             with cls.engine.connect() as conn:
                 conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
                 conn.commit()
-            
+
             # Create all tables
             Base.metadata.create_all(cls.engine)
             cls.Session = sessionmaker(bind=cls.engine)
@@ -44,10 +47,11 @@ class TestDatabaseCRUD(unittest.TestCase):
     @classmethod
     def tearDownClass(cls):
         """Shut down the pgserver instance."""
-        if hasattr(cls, 'pg_server'):
+        if hasattr(cls, "pg_server"):
             cls.pg_server.cleanup()
-        if hasattr(cls, 'test_db_path') and cls.test_db_path.exists():
+        if hasattr(cls, "test_db_path") and cls.test_db_path.exists():
             import shutil
+
             shutil.rmtree(cls.test_db_path)
 
     def setUp(self):
@@ -59,14 +63,23 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.close()
         # Clean up tables in order of dependency to avoid foreign key issues
         with self.engine.connect() as conn:
-            conn.execute(text("TRUNCATE schema_version, edit_history, matchup_queue, user_activity_log, permissions, search_entries, records, users, languages, sources RESTART IDENTITY CASCADE;"))
+            conn.execute(
+                text(
+                    "TRUNCATE schema_version, edit_history, matchup_queue, user_activity_log, permissions, search_entries, records, users, languages, sources RESTART IDENTITY CASCADE;"
+                )
+            )
             conn.commit()
 
     def test_lookup_tables_crud(self):
         """Test CRUD for Language and Source tables."""
         # Create
         lang = Language(code="wam", name="Wampanoag", description="A Southern New England Algonquian language")
-        source = Source(name="Natick/Trumbull", short_name="Trumbull", description="Trumbull's Natick Dictionary", citation_format="{page}")
+        source = Source(
+            name="Natick/Trumbull",
+            short_name="Trumbull",
+            description="Trumbull's Natick Dictionary",
+            citation_format="{page}",
+        )
         self.session.add_all([lang, source])
         self.session.commit()
 
@@ -98,14 +111,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.flush()
 
         # Create Record
-        record = Record(
-            lx="nup", 
-            hm=1, 
-            ps="v", 
-            ge="die", 
-            source_id=source.id,
-            mdf_data="\\lx nup\n\\ps v\n\\ge die"
-        )
+        record = Record(lx="nup", hm=1, ps="v", ge="die", source_id=source.id, mdf_data="\\lx nup\n\\ps v\n\\ge die")
         self.session.add(record)
         self.session.flush()
 
@@ -152,30 +158,18 @@ class TestDatabaseCRUD(unittest.TestCase):
     def test_user_and_identity_crud(self):
         """Test CRUD for User, UserActivityLog, and Permission tables."""
         # Create User
-        user = User(
-            email="tester@example.com", 
-            username="tester", 
-            github_id=12345, 
-            extra_metadata={"theme": "dark"}
-        )
+        user = User(email="tester@example.com", username="tester", github_id=12345, extra_metadata={"theme": "dark"})
         self.session.add(user)
         self.session.flush()
 
         # Create Activity Log
         log = UserActivityLog(
-            user_email=user.email,
-            action="login",
-            details="User logged in from test suite",
-            ip_address="127.0.0.1"
+            user_email=user.email, action="login", details="User logged in from test suite", ip_address="127.0.0.1"
         )
-        
+
         # Create Permission (must include github_team because it is NOT NULL)
-        perm = Permission(
-            github_org="brothertown",
-            github_team="testers",
-            role="editor"
-        )
-        
+        perm = Permission(github_org="brothertown", github_team="testers", role="editor")
+
         self.session.add_all([log, perm])
         self.session.commit()
 
@@ -191,12 +185,7 @@ class TestDatabaseCRUD(unittest.TestCase):
 
     def test_user_active_flag(self):
         """Test the is_active flag on the User model."""
-        user = User(
-            email="disabled@example.com",
-            username="disabled",
-            github_id=555,
-            is_active=False
-        )
+        user = User(email="disabled@example.com", username="disabled", github_id=555, is_active=False)
         self.session.add(user)
         self.session.commit()
 
@@ -221,7 +210,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.delete(user)
         with self.assertRaises(Exception):
             self.session.commit()
-        
+
         self.session.rollback()
 
     def test_prevention_of_accidental_record_deletion(self):
@@ -261,7 +250,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.delete(record)
         with self.assertRaises(Exception):
             self.session.commit()
-        
+
         self.session.rollback()
 
     def test_user_deletion_restriction(self):
@@ -289,7 +278,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         # Remove log to isolate matchup queue restriction
         log = self.session.query(UserActivityLog).filter_by(user_email=user.email).first()
         self.session.delete(log)
-        
+
         mq = MatchupQueue(user_email=user.email, source_id=source.id, batch_id="test-batch", mdf_data="\\lx test")
         self.session.add(mq)
         self.session.commit()
@@ -309,7 +298,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         record = Record(lx="test", source_id=source.id, mdf_data="\\lx test")
         self.session.add(record)
         self.session.flush()
-        
+
         # Link language
         self.session.add(RecordLanguage(record_id=record.id, language_id=lang.id))
         self.session.commit()
@@ -344,12 +333,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         self.session.add_all([lang, source, user])
         self.session.flush()
 
-        record = Record(
-            lx="nup", 
-            source_id=source.id,
-            mdf_data="\\lx nup",
-            updated_by=user.email
-        )
+        record = Record(lx="nup", source_id=source.id, mdf_data="\\lx nup", updated_by=user.email)
         self.session.add(record)
         self.session.commit()
 
@@ -363,6 +347,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         record_db = self.session.query(Record).filter_by(lx="nup").first()
         self.assertIsNotNone(record_db)
         self.assertEqual(record_db.updated_by, "temporary@example.com")
+
 
 if __name__ == "__main__":
     unittest.main()

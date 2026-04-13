@@ -1,44 +1,68 @@
 import unittest
 import uuid
 from pathlib import Path
+
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
-from src.database import Base, Record, Language, RecordLanguage, MatchupQueue, Source, User
+
+from src.database.base import Base
+from src.database.models.core import Language, Record, RecordLanguage, Source
+from src.database.models.identity import User
+from src.database.models.workflow import MatchupQueue
 from src.services.upload_service import UploadService
+
 
 class TestLanguageAssignment(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
         try:
             import pgserver
+
             cls.test_db_path = Path("tmp/test_lang_assignment_db")
             if cls.test_db_path.exists():
                 import shutil
+
                 shutil.rmtree(cls.test_db_path)
             cls.test_db_path.mkdir(parents=True, exist_ok=True)
-            
+
             cls.pg_server = pgserver.get_server(str(cls.test_db_path))
             cls.db_url = cls.pg_server.get_uri()
             cls.engine = create_engine(cls.db_url)
-            
+
             with cls.engine.connect() as conn:
                 conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
                 conn.commit()
-            
+
             Base.metadata.create_all(cls.engine)
             cls.Session = sessionmaker(bind=cls.engine)
 
             # Seed ISO 639-3 data required for language validation
             import csv
             from pathlib import Path as _Path
+
             from src.database.models.iso639 import ISO639_3
+
             _data_file = _Path("src/database/data/iso-639-3.tab")
             _Session = sessionmaker(bind=cls.engine)
             _sess = _Session()
             if _sess.query(ISO639_3).count() == 0:
-                with open(_data_file, encoding='utf-8') as _f:
-                    _reader = csv.DictReader(_f, delimiter='\t')
-                    _sess.add_all([ISO639_3(id=r['Id'], part2b=r.get('Part2b') or None, part2t=r.get('Part2t') or None, part1=r.get('Part1') or None, scope=r['Scope'], language_type=r['Language_Type'], ref_name=r['Ref_Name'], comment=r.get('Comment') or None) for r in _reader])
+                with open(_data_file, encoding="utf-8") as _f:
+                    _reader = csv.DictReader(_f, delimiter="\t")
+                    _sess.add_all(
+                        [
+                            ISO639_3(
+                                id=r["Id"],
+                                part2b=r.get("Part2b") or None,
+                                part2t=r.get("Part2t") or None,
+                                part1=r.get("Part1") or None,
+                                scope=r["Scope"],
+                                language_type=r["Language_Type"],
+                                ref_name=r["Ref_Name"],
+                                comment=r.get("Comment") or None,
+                            )
+                            for r in _reader
+                        ]
+                    )
                     _sess.commit()
             _sess.close()
         except ImportError:
@@ -46,17 +70,22 @@ class TestLanguageAssignment(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls):
-        if hasattr(cls, 'pg_server'):
+        if hasattr(cls, "pg_server"):
             cls.pg_server.cleanup()
-        if hasattr(cls, 'test_db_path') and cls.test_db_path.exists():
+        if hasattr(cls, "test_db_path") and cls.test_db_path.exists():
             import shutil
+
             shutil.rmtree(cls.test_db_path)
 
     def setUp(self):
         self.session = self.Session()
         # Clean up tables
         with self.engine.connect() as conn:
-            conn.execute(text("TRUNCATE user_activity_log, record_languages, edit_history, search_entries, records, languages, matchup_queue, users, sources RESTART IDENTITY CASCADE;"))
+            conn.execute(
+                text(
+                    "TRUNCATE user_activity_log, record_languages, edit_history, search_entries, records, languages, matchup_queue, users, sources RESTART IDENTITY CASCADE;"
+                )
+            )
             conn.commit()
 
         # Create a user
@@ -81,43 +110,50 @@ class TestLanguageAssignment(unittest.TestCase):
             batch_id=batch_id,
             status="create_new",
             lx=lx,
-            mdf_data=mdf_data
+            mdf_data=mdf_data,
         )
         self.session.add(q_row)
         self.session.commit()
 
         from unittest.mock import patch
-        with patch("src.services.upload_service.get_session", return_value=self.session), \
-             patch("src.services.audit_service.get_session", return_value=self.session):
+
+        with (
+            patch("src.services.upload_service.get_session", return_value=self.session),
+            patch("src.services.audit_service.get_session", return_value=self.session),
+        ):
             UploadService.commit_new(batch_id, "test@example.com", str(uuid.uuid4()))
-        
+
         return self.session.query(Record).filter_by(lx=lx).first()
 
     def test_scenario_1_headword_so_only(self):
         r"""1) headword has \so, sub entries do not = record has a primary language"""
         mdf_data = "\\lx test1\n\\so Mohegan-Pequot [xpq]\n\\ge test gloss\n\\se subentry\n\\ge subgloss"
         record = self._commit_mdf("test1", mdf_data)
-        
+
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
         self.assertEqual(len(record_langs), 1)
         self.assertTrue(record_langs[0].is_primary)
-        
+
         lang = self.session.get(Language, record_langs[0].language_id)
         self.assertEqual(lang.code, "xpq")
 
     def test_scenario_2_headword_and_subentry_so(self):
         r"""2) headword has \so, subentries have \so = record has both a primary language and secondary languages"""
-        mdf_data = "\\lx test2\n\\so Mohegan-Pequot [xpq]\n\\ge test gloss\n\\se subentry\n\\so English [eng]\n\\ge subgloss"
+        mdf_data = (
+            "\\lx test2\n\\so Mohegan-Pequot [xpq]\n\\ge test gloss\n\\se subentry\n\\so English [eng]\n\\ge subgloss"
+        )
         record = self._commit_mdf("test2", mdf_data)
-        
-        record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).order_by(RecordLanguage.id).all()
+
+        record_langs = (
+            self.session.query(RecordLanguage).filter_by(record_id=record.id).order_by(RecordLanguage.id).all()
+        )
         self.assertEqual(len(record_langs), 2)
-        
+
         # Primary
         self.assertTrue(record_langs[0].is_primary)
         lang1 = self.session.get(Language, record_langs[0].language_id)
         self.assertEqual(lang1.code, "xpq")
-        
+
         # Secondary
         self.assertFalse(record_langs[1].is_primary)
         lang2 = self.session.get(Language, record_langs[1].language_id)
@@ -127,11 +163,11 @@ class TestLanguageAssignment(unittest.TestCase):
         r"""3) headwords does not have \so, subentries have \so = record does not have a primary language and has secondary languages"""
         mdf_data = "\\lx test3\n\\ge test gloss\n\\se subentry\n\\so Mohegan-Pequot [xpq]\n\\ge subgloss"
         record = self._commit_mdf("test3", mdf_data)
-        
+
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
         self.assertEqual(len(record_langs), 1)
         self.assertFalse(record_langs[0].is_primary)
-        
+
         lang = self.session.get(Language, record_langs[0].language_id)
         self.assertEqual(lang.code, "xpq")
 
@@ -139,9 +175,10 @@ class TestLanguageAssignment(unittest.TestCase):
         r"""4) headwords does not have \so, subentries do not have \so = records does not have any languages"""
         mdf_data = "\\lx test4\n\\ge test gloss\n\\se subentry\n\\ge subgloss"
         record = self._commit_mdf("test4", mdf_data)
-        
+
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
         self.assertEqual(len(record_langs), 0)
+
 
 if __name__ == "__main__":
     unittest.main()

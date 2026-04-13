@@ -1,9 +1,11 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+from src.database.models.identity import UserPreference
 from src.services.preference_service import PreferenceService
-from src.database import UserPreference
+
 
 class TestPreferenceService(unittest.TestCase):
     """Unit tests for PreferenceService."""
@@ -14,12 +16,12 @@ class TestPreferenceService(unittest.TestCase):
         mock_session = MagicMock()
         mock_pref = MagicMock(spec=UserPreference)
         mock_pref.preference_value = "25"
-        
+
         mock_session.query.return_value.filter_by.return_value.first.return_value = mock_pref
         mock_get_session.return_value = mock_session
 
         val = PreferenceService.get_preference("test@test.com", "view1", "key1", "default")
-        
+
         self.assertEqual(val, "25")
         mock_session.close.assert_called_once()
 
@@ -30,7 +32,7 @@ class TestPreferenceService(unittest.TestCase):
         mock_get_session.return_value = mock_session
 
         val = PreferenceService.get_preference("test@test.com", "view1", "key1", "default")
-        
+
         self.assertEqual(val, "default")
         mock_session.close.assert_called_once()
 
@@ -41,7 +43,7 @@ class TestPreferenceService(unittest.TestCase):
         mock_get_session.return_value = mock_session
 
         val = PreferenceService.get_preference("test@test.com", "view1", "key1", "default")
-        
+
         self.assertEqual(val, "default")
         mock_session.close.assert_called_once()
 
@@ -49,12 +51,12 @@ class TestPreferenceService(unittest.TestCase):
     def test_set_preference_update_existing(self, mock_get_session):
         mock_session = MagicMock()
         mock_pref = MagicMock(spec=UserPreference)
-        
+
         mock_session.query.return_value.filter_by.return_value.first.return_value = mock_pref
         mock_get_session.return_value = mock_session
 
         success = PreferenceService.set_preference("test@test.com", "view1", "key1", "new_val")
-        
+
         self.assertTrue(success)
         self.assertEqual(mock_pref.preference_value, "new_val")
         mock_session.commit.assert_called_once()
@@ -68,7 +70,7 @@ class TestPreferenceService(unittest.TestCase):
         mock_get_session.return_value = mock_session
 
         success = PreferenceService.set_preference("test@test.com", "view1", "key1", "val1")
-        
+
         self.assertTrue(success)
         mock_session.add.assert_called_once()
         mock_session.commit.assert_called_once()
@@ -85,10 +87,11 @@ class TestPreferenceService(unittest.TestCase):
         mock_session.query.return_value.filter_by.return_value.first.return_value = mock_pref
 
         success = PreferenceService.set_preference("test@test.com", "view1", "key1", "val1")
-        
+
         self.assertFalse(success)
         mock_session.rollback.assert_called_once()
         mock_session.close.assert_called_once()
+
 
 if __name__ == "__main__":
     unittest.main()

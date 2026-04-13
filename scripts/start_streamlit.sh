@@ -2,7 +2,7 @@
 # Copyright (c) 2026 Brothertown Language
 
 # Script to start Streamlit in a persistent background process
-# This ensures it continues running even after the Junie session exits.
+# This ensures it continues running even after the OpenCode session exits.
 
 # Ensure we are in the project root using git
 cd "$(dirname "${BASH_SOURCE[0]}")" || exit 1

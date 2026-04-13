@@ -50,4 +50,4 @@ uv run python -m unittest discover tests
 - **Roadmap & Setup**: [docs/development/roadmap.md](docs/development/roadmap.md)
 - **Local Development**: [docs/development/local-development.md](docs/development/local-development.md)
 - **MDF Guidelines**: [docs/mdf/](docs/mdf/)
-- **AI Guidelines**: [.junie/guidelines.md](.junie/guidelines.md)
+- **AI Guidelines**: [.opencode/guidelines/](.opencode/guidelines/)

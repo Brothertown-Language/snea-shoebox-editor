@@ -14,9 +14,7 @@ from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 # ── Error Handling ─────────────────────────────────────────────────────
 
 
-def handle_ui_error(
-    e: Exception, user_message: str = "An unexpected error occurred.", logger_name: str | None = None
-):
+def handle_ui_error(e: Exception, user_message: str = "An unexpected error occurred.", logger_name: str | None = None):
     """
     Standardized error handler for UI-facing code.
     Logs the full stack trace to server logs and shows a sanitized message to the user.
@@ -72,7 +70,7 @@ def show_startup_dialog(config: dict[str, str], initial_status: str):
         if current_status == "RUNNING":
             from urllib.parse import urlparse
 
-            from src.database import get_db_url
+            from src.database.connection import get_db_url
 
             url = get_db_url()
             if url:

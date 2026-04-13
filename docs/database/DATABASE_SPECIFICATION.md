@@ -1,7 +1,7 @@
 <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 ---
 author: Michael Conrad
-contributor: Junie (gemini-3-flash-preview)
+contributor: OpenCode (gemini-3-flash-preview)
 status: active
 date: 2026-02-05
 ---
@@ -15,7 +15,7 @@ CRITICAL MAINTENANCE RULES:
 
 # SNEA Online Shoebox Editor - Database Specification
 
-This document records the finalized database schema design and implementation strategy developed through collaborative review between Michael Conrad and Junie (gemini-3-flash-preview).
+This document records the finalized database schema design and implementation strategy developed through collaborative review between Michael Conrad and OpenCode (gemini-3-flash-preview).
 
 ---
 

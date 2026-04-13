@@ -4,7 +4,7 @@ import os
 import pytest
 
 # Ensure private database is used
-os.environ["JUNIE_PRIVATE_DB"] = "true"
+os.environ["OPENCODE"] = "1"
 
 from src.database.connection import init_db
 from src.database.migrations import MigrationManager
@@ -42,9 +42,7 @@ class TestVersionTracking:
         """Each registered migration should have exactly one SchemaVersion row."""
         count = session.query(SchemaVersion).count()
         expected = len(MigrationManager._MIGRATIONS)
-        assert count >= expected, (
-            f"Expected at least {expected} schema_version rows, got {count}"
-        )
+        assert count >= expected, f"Expected at least {expected} schema_version rows, got {count}"
 
     def test_no_duplicate_versions(self, session):
         """No duplicate version numbers should exist in schema_version."""
@@ -69,9 +67,7 @@ class TestIdempotency:
         count_after = s2.query(SchemaVersion).count()
         s2.close()
 
-        assert count_before == count_after, (
-            f"Duplicate rows created: {count_before} before, {count_after} after"
-        )
+        assert count_before == count_after, f"Duplicate rows created: {count_before} before, {count_after} after"
 
 
 class TestPermissionSeeding:
@@ -86,12 +82,8 @@ class TestPermissionSeeding:
         """All permission org and team values should be lowercase."""
         permissions = session.query(Permission).all()
         for p in permissions:
-            assert p.github_org == p.github_org.lower(), (
-                f"github_org not lowercase: {p.github_org}"
-            )
-            assert p.github_team == p.github_team.lower(), (
-                f"github_team not lowercase: {p.github_team}"
-            )
+            assert p.github_org == p.github_org.lower(), f"github_org not lowercase: {p.github_org}"
+            assert p.github_team == p.github_team.lower(), f"github_team not lowercase: {p.github_team}"
 
     def test_expected_roles_present(self, session):
         """The three default roles (admin, editor, viewer) should be present."""

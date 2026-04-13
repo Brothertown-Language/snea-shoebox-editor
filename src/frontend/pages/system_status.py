@@ -5,10 +5,10 @@ def system_status():
     import os
     from src.services.infrastructure_service import InfrastructureService
     from src.frontend.ui_utils import apply_standard_layout_css, hide_sidebar_nav, render_back_to_main_button
-    
+
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
-    
+
     apply_standard_layout_css()
 
     # ── Sidebar ───────────────────────────────────────────────────
@@ -24,13 +24,13 @@ def system_status():
     with col1:
         # Database Infrastructure Checklist
         st.subheader("Database Connectivity Checklist")
-        
-        from src.database import is_production
-        
+
+        from src.database.connection import is_production
+
         is_prod = is_production()
         env_label = "Production" if is_prod else "Local Test"
         st.write(f"Environment: **{env_label}**")
-        
+
         db_host, db_port = InfrastructureService.get_db_host_port()
 
         # Check Aiven Status if in production
@@ -41,13 +41,13 @@ def system_status():
                 info = InfrastructureService.get_service_info(config)
                 if info:
                     aiven_status = info.get("state")
-                    
+
                     with st.expander("Aiven Database Details", expanded=(aiven_status != "RUNNING")):
                         st.write(f"Service: `{info.get('service_name')}`")
                         st.write(f"State: **{aiven_status}**")
                         st.write(f"Plan: `{info.get('plan')}`")
                         st.write(f"Cloud: `{info.get('cloud_name')}`")
-                        
+
                         pg_info = info.get("service_integrations", [])
                         # Some info might be in 'metadata' or 'components' depending on service type
                         # For Postgres:
@@ -56,39 +56,41 @@ def system_status():
                             version = user_config.get("pg_version")
                             if version:
                                 st.write(f"PostgreSQL Version: `{version}`")
-                            
+
                             backup_hour = user_config.get("backup_hour")
                             if backup_hour is not None:
                                 st.write(f"Daily Backup Hour: `{backup_hour}:00 UTC`")
-                        
+
                         # Show some stats if available
                         metadata = info.get("metadata", {})
                         if metadata:
                             # Not all services have these in metadata, but some do
                             pass
-                                
+
                         if aiven_status and aiven_status != "RUNNING":
                             st.warning(f"⚠️ Aiven Service Status: **{aiven_status}**")
-                            st.info("The database is currently starting up or powering on. DNS and Socket checks may fail until it is fully RUNNING.")
-        
+                            st.info(
+                                "The database is currently starting up or powering on. DNS and Socket checks may fail until it is fully RUNNING."
+                            )
+
         # Mask host for display
         masked_host = "Database Host [REDACTED]"
         if db_host:
             if "localhost" in db_host or "127.0.0.1" in db_host:
                 masked_host = f"Local Host (`{db_host}`)"
             else:
-                parts = db_host.split('.')
+                parts = db_host.split(".")
                 if len(parts) > 2:
                     masked_host = f"`{parts[0][:3]}...{parts[-2]}.{parts[-1]}`"
                 else:
                     masked_host = f"`{db_host[:3]}...`"
 
         # 1. DNS Check
-        is_unix_socket = (db_host and db_host.startswith('/')) or (not db_host and db_port == 0)
-        
+        is_unix_socket = (db_host and db_host.startswith("/")) or (not db_host and db_port == 0)
+
         if is_unix_socket:
             st.write("✅ Database Connection: Unix Socket (Local)")
-            dns_ok = True # Skip DNS for Unix socket
+            dns_ok = True  # Skip DNS for Unix socket
         else:
             dns_ok, dns_msg, ips_v4, ips_v6 = InfrastructureService.verify_dns(db_host)
             if dns_ok:
@@ -115,7 +117,7 @@ def system_status():
                     st.success("IPv4: CONNECTED")
                 else:
                     st.warning("IPv4: FAILED")
-                    
+
                 if v6_ok:
                     st.success("IPv6: CONNECTED")
                 else:
@@ -131,11 +133,11 @@ def system_status():
         st.divider()
         st.subheader("SQL Health Check")
         is_valid, message, caps = InfrastructureService.check_db_connection()
-        
+
         if is_valid:
             st.success("✅ SQL Connection: VALID")
             st.write("The database is reachable and responding to queries.")
-            
+
             # Display Capabilities
             if caps.get("pgvector"):
                 st.write("✅ **Capability: pgvector enabled**")
@@ -148,7 +150,7 @@ def system_status():
             db_url = os.getenv("DATABASE_URL")
             if db_url and db_url in masked_error:
                 masked_error = masked_error.replace(db_url, "[REDACTED_URL]")
-            
+
             st.write(f"Error Details: `{masked_error}`")
             st.info("Check your Streamlit Cloud Secrets and Database status.")
 
@@ -183,6 +185,6 @@ def system_status():
                 writable_str = "✅ Writable" if details["Writable"] else "❌ Read-only"
                 cols[1].text(f"Access: {writable_str}")
 
+
 if __name__ == "__main__":
     system_status()
-

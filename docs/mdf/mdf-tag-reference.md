@@ -134,5 +134,5 @@ In projects involving multiple languages or dialects (like the Brothertown proje
 
 **References:**
 
-- Detailed SPR-compressed reference: `.junie/mdf-guidelines-spr.md`
+- Detailed SPR-compressed reference: `.opencode/skills/`
 - Original Source Documentation: `documentation/MDFields19a_UTF8.txt`

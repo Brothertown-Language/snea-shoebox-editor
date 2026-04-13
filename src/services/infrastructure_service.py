@@ -4,6 +4,7 @@
 Infrastructure Service for centralizing Aiven API management,
 network diagnostics, and system inspection.
 """
+
 import os
 import platform
 import shutil
@@ -34,6 +35,7 @@ class InfrastructureService:
         """Retrieve Aiven configuration from Streamlit secrets."""
         try:
             import streamlit as st
+
             if "aiven" in st.secrets:
                 return {
                     "project": st.secrets["aiven"]["project_name"],
@@ -107,7 +109,10 @@ class InfrastructureService:
                             if k not in st.secrets["github_oauth"]:
                                 missing.append(f"github_oauth.{k}")
                     elif secret == "connections":
-                        if "postgresql" not in st.secrets["connections"] or "url" not in st.secrets["connections"]["postgresql"]:
+                        if (
+                            "postgresql" not in st.secrets["connections"]
+                            or "url" not in st.secrets["connections"]["postgresql"]
+                        ):
                             missing.append("connections.postgresql.url")
             except Exception:
                 missing.append(secret)
@@ -124,7 +129,7 @@ class InfrastructureService:
         Aiven service state (or a synthetic state like 'STARTING_DNS').
         Only meaningful in production; returns (True, 'RUNNING') for local dev.
         """
-        from src.database import is_production
+        from src.database.connection import is_production
 
         if not is_production():
             return True, "RUNNING"
@@ -136,7 +141,8 @@ class InfrastructureService:
         status = InfrastructureService.get_service_status(config)
 
         if status == "RUNNING":
-            from src.database import get_db_url
+            from src.database.connection import get_db_url
+
             url = get_db_url()
             if url:
                 parsed = urlparse(url)
@@ -155,7 +161,7 @@ class InfrastructureService:
     def get_db_host_port() -> Tuple[Optional[str], Optional[int]]:
         """Extract host and port from the database URL."""
         try:
-            from src.database import get_db_url
+            from src.database.connection import get_db_url
             import urllib.parse as _urlparse
 
             url = get_db_url()
@@ -263,13 +269,12 @@ class InfrastructureService:
     def check_db_connection() -> Tuple[bool, str, Dict[str, bool]]:
         """Check the database connection and return status and capabilities."""
         try:
-            from src.database import get_session
+            from src.database.connection import get_session
+
             session = get_session()
             try:
                 session.execute(text("SELECT 1"))
-                pgvector_check = session.execute(
-                    text("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
-                ).fetchone()
+                pgvector_check = session.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'")).fetchone()
                 capabilities = {"pgvector": bool(pgvector_check)}
                 return True, "Connected Successfully", capabilities
             finally:
@@ -285,15 +290,19 @@ class InfrastructureService:
         """Gather information about the current git state."""
         info: Dict[str, str] = {}
         try:
-            info["Commit"] = subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.STDOUT
-            ).decode().strip()
-            info["Branch"] = subprocess.check_output(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT
-            ).decode().strip()
-            info["Date"] = subprocess.check_output(
-                ["git", "log", "-1", "--format=%cd"], stderr=subprocess.STDOUT
-            ).decode().strip()
+            info["Commit"] = (
+                subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.STDOUT)
+                .decode()
+                .strip()
+            )
+            info["Branch"] = (
+                subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT)
+                .decode()
+                .strip()
+            )
+            info["Date"] = (
+                subprocess.check_output(["git", "log", "-1", "--format=%cd"], stderr=subprocess.STDOUT).decode().strip()
+            )
         except Exception:
             info["Error"] = "Not a git repository or git not installed"
         return info

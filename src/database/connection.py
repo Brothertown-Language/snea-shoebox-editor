@@ -8,6 +8,7 @@ import atexit
 import getpass
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
+
 # Base is imported lazily inside functions (see _reset_sequences, init_db) to avoid
 # circular initialization errors — per project lazy-import standard (05-code-standards.md).
 from src.logging_config import get_logger
@@ -21,19 +22,21 @@ _db_url_cache = None
 # _stop_local_db() skips cleanup in that case to avoid disrupting other processes.
 _pg_server_was_preexisting: bool = False
 
+
 def _get_local_db_path():
     """Get the path to the local database directory."""
     project_root = Path.cwd()
-    
-    # Junie separation: Use a dedicated path if JUNIE_PRIVATE_DB is set
-    if os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0"):
-        db_path = project_root / "tmp" / "junie_db"
-        _logger.debug("Using Junie-private DB path: %s", db_path)
+
+    # OpenCode isolation: Use a dedicated path if OPENCODE is set
+    if os.getenv("OPENCODE", "").lower() not in ("", "false", "0"):
+        db_path = project_root / "tmp" / "opencode_db"
+        _logger.debug("Using OpenCode-private DB path: %s", db_path)
         return db_path
 
     db_path = project_root / "tmp" / "local_db"
     _logger.debug("Using local DB path: %s", db_path)
     return db_path
+
 
 def _stop_local_db():
     """Stop the local database if it was auto-started."""
@@ -42,13 +45,13 @@ def _stop_local_db():
         _logger.debug("pgserver was pre-existing — skipping stop to avoid disrupting other processes.")
         return
     if _pg_server:
-        _logger.debug("Stopping local PostgreSQL (pgdata=%s)…", getattr(_pg_server, 'pgdata', '?'))
+        _logger.debug("Stopping local PostgreSQL (pgdata=%s)…", getattr(_pg_server, "pgdata", "?"))
         try:
-            db_path = getattr(_pg_server, 'pgdata', None)
+            db_path = getattr(_pg_server, "pgdata", None)
             _pg_server.cleanup()
             _pg_server = None
             _logger.debug("Local PostgreSQL stop command issued.")
-            
+
             # If the PID file still exists, it means shutdown is waiting for clients.
             if db_path:
                 pid_file = Path(db_path) / "postmaster.pid"
@@ -57,6 +60,7 @@ def _stop_local_db():
         except Exception as e:
             _logger.debug("Error stopping local PostgreSQL: %s", e)
             pass
+
 
 def is_production():
     """Detect if the application is running in the production environment (Streamlit Cloud)."""
@@ -76,6 +80,7 @@ def is_production():
     except Exception:
         # Fallback to local if user cannot be determined
         return False
+
 
 def _write_dbeaver_connection(uri):
     """Write a DBeaver project archive (.dbp) to tmp/ for local dev convenience.
@@ -152,6 +157,7 @@ def _write_dbeaver_connection(uri):
         meta_xml = template_entries[meta_key].decode("utf-8")
         # Replace the timestamp in the source element
         import re
+
         meta_xml = re.sub(
             r'time="[^"]*"',
             f'time="{timestamp_ms}"',
@@ -202,6 +208,7 @@ def _enable_tcp_listening(pg_server):
             import subprocess
             from pathlib import Path
             import pgserver
+
             pg_ctl_bin = Path(pgserver.__file__).parent / "pgbin" / "bin" / "pg_ctl"
             if not pg_ctl_bin.exists():
                 pg_ctl_bin = "pg_ctl"
@@ -210,6 +217,7 @@ def _enable_tcp_listening(pg_server):
 
     # Determine the socket directory from the current URI
     from urllib.parse import urlparse, parse_qs
+
     parsed = urlparse(pg_server.get_uri())
     query_params = parse_qs(parsed.query)
     socket_dir = query_params.get("host", [None])[0] or str(pg_server.pgdata)
@@ -217,26 +225,30 @@ def _enable_tcp_listening(pg_server):
 
     # Stop the socket-only instance
     _logger.debug("Stopping socket-only PostgreSQL instance…")
-    
+
     # Wait for PID file to be present before attempting stop
     pid_file = Path(pg_server.pgdata) / "postmaster.pid"
     for i in range(10):
         if pid_file.exists():
             break
-        _logger.debug("Waiting for postmaster.pid... (attempt %d)", i+1)
+        _logger.debug("Waiting for postmaster.pid... (attempt %d)", i + 1)
         import time
+
         time.sleep(0.5)
 
-    pg_ctl(['-w', 'stop'], pgdata=pg_server.pgdata, user=pg_server.system_user)
+    pg_ctl(["-w", "stop"], pgdata=pg_server.pgdata, user=pg_server.system_user)
     _logger.debug("Socket-only instance stopped.")
 
     # Restart with TCP enabled on localhost
     pg_ctl_args = [
-        '-w',
-        '-o', '-h "localhost"',
-        '-o', f'-k {socket_dir}',
-        '-l', str(pg_server.log),
-        'start',
+        "-w",
+        "-o",
+        '-h "localhost"',
+        "-o",
+        f"-k {socket_dir}",
+        "-l",
+        str(pg_server.log),
+        "start",
     ]
     _logger.debug("Restarting PostgreSQL with TCP (args=%s)…", pg_ctl_args)
     pg_ctl(pg_ctl_args, pgdata=pg_server.pgdata, user=pg_server.system_user, timeout=10)
@@ -245,25 +257,22 @@ def _enable_tcp_listening(pg_server):
 
 def _force_stop_stuck_db(db_path):
     """Force-stop a local DB that is stuck in a 'shutting down' state.
-    
-    Proceeds with an immediate shutdown and PID file/lock cleanup even if 
+
+    Proceeds with an immediate shutdown and PID file/lock cleanup even if
     postmaster.pid is missing, as the server may be stuck in shared memory.
     """
     _logger.debug("[DEV] Entering _force_stop_stuck_db(db_path=%s)", db_path)
     pid_file = Path(db_path) / "postmaster.pid"
     lock_file = Path(db_path) / ".s.PGSQL.5432.lock"
     opts_file = Path(db_path) / "postmaster.opts"
-    
+
     import time
     import signal
     import subprocess
     import os
 
-    _logger.warning(
-        "Forcing cleanup of potentially stuck DB (pgdata=%s). Starting recovery sequence…", 
-        db_path
-    )
-    
+    _logger.warning("Forcing cleanup of potentially stuck DB (pgdata=%s). Starting recovery sequence…", db_path)
+
     try:
         # 1. Read PID if possible
         pid = None
@@ -279,6 +288,7 @@ def _force_stop_stuck_db(db_path):
         # 2. Try pg_ctl stop -m immediate
         _logger.debug("[DEV] Calling pg_ctl stop -m immediate...")
         import pgserver
+
         # Try multiple common locations for pg_ctl in the pgserver package
         pg_ctl_path = None
         for subpath in [["pgbin", "bin", "pg_ctl"], ["pginstall", "bin", "pg_ctl"]]:
@@ -286,39 +296,40 @@ def _force_stop_stuck_db(db_path):
             if candidate.exists():
                 pg_ctl_path = candidate
                 break
-        
+
         if pg_ctl_path:
-            cmd = [str(pg_ctl_path), 'stop', '-m', 'immediate', '-D', str(db_path)]
+            cmd = [str(pg_ctl_path), "stop", "-m", "immediate", "-D", str(db_path)]
         else:
-            cmd = ['pg_ctl', 'stop', '-m', 'immediate', '-D', str(db_path)]
-            
+            cmd = ["pg_ctl", "stop", "-m", "immediate", "-D", str(db_path)]
+
         _logger.debug("[DEV] Executing: %s", " ".join(cmd))
         subprocess.run(cmd, capture_output=True, text=True, timeout=5)
 
         # 3. Use fuser to kill processes using the DB directory (Most Aggressive)
         try:
             _logger.debug("[DEV] Attempting fuser -k -TERM on %s", db_path)
-            subprocess.run(['fuser', '-k', '-TERM', str(db_path)], capture_output=True, timeout=5)
+            subprocess.run(["fuser", "-k", "-TERM", str(db_path)], capture_output=True, timeout=5)
             time.sleep(0.5)
             _logger.debug("[DEV] Attempting fuser -k -KILL on %s", db_path)
-            subprocess.run(['fuser', '-k', '-KILL', str(db_path)], capture_output=True, timeout=5)
+            subprocess.run(["fuser", "-k", "-KILL", str(db_path)], capture_output=True, timeout=5)
         except Exception as e:
             _logger.debug("[DEV] fuser failed (might not be installed or permissions): %s", e)
 
         # 4. If PID is still alive or known, use signals
         if pid:
             try:
-                os.kill(pid, 0) # Check if alive
+                os.kill(pid, 0)  # Check if alive
                 _logger.warning("[DEV] Process %d still alive. Sending SIGTERM.", pid)
                 os.kill(pid, signal.SIGTERM)
-                
+
                 try:
                     pgid = os.getpgid(pid)
                     os.killpg(pgid, signal.SIGTERM)
-                except Exception: pass
-                
+                except Exception:
+                    pass
+
                 time.sleep(0.5)
-                
+
                 try:
                     os.kill(pid, 0)
                     _logger.warning("[DEV] Process %d still alive. Sending SIGKILL.", pid)
@@ -326,7 +337,8 @@ def _force_stop_stuck_db(db_path):
                     try:
                         pgid = os.getpgid(pid)
                         os.killpg(pgid, signal.SIGKILL)
-                    except Exception: pass
+                    except Exception:
+                        pass
                 except ProcessLookupError:
                     _logger.info("[DEV] Process %d terminated.", pid)
             except ProcessLookupError:
@@ -336,21 +348,23 @@ def _force_stop_stuck_db(db_path):
         # Use ps -axww to ensure we see the full command line
         try:
             _logger.debug("[DEV] Scanning ps for orphaned processes associated with %s", db_path)
-            pg_procs = subprocess.run(['ps', '-axww', '-o', 'pid,cmd'], capture_output=True, text=True, timeout=5)
+            pg_procs = subprocess.run(["ps", "-axww", "-o", "pid,cmd"], capture_output=True, text=True, timeout=5)
             for proc_line in pg_procs.stdout.splitlines():
                 line = proc_line.strip()
-                if not line: continue
-                
+                if not line:
+                    continue
+
                 # Check for postgres or postmaster and the db_path
-                is_pg = 'postgres' in line or 'postmaster' in line
+                is_pg = "postgres" in line or "postmaster" in line
                 has_path = str(db_path) in line
-                
+
                 if is_pg and has_path:
                     try:
                         o_pid = int(line.split()[0])
                         # Don't kill ourselves
-                        if o_pid == os.getpid(): continue
-                        
+                        if o_pid == os.getpid():
+                            continue
+
                         _logger.warning("[DEV] Killing orphaned process %d: %s", o_pid, line)
                         os.kill(o_pid, signal.SIGKILL)
                     except (ValueError, IndexError, ProcessLookupError):
@@ -374,8 +388,10 @@ def _force_stop_stuck_db(db_path):
         # Final fallback for lock files
         for f in [pid_file, lock_file, opts_file]:
             if f.exists():
-                try: f.unlink()
-                except: pass
+                try:
+                    f.unlink()
+                except:
+                    pass
 
 
 def _start_pgserver_core(db_path: Path) -> str:
@@ -385,9 +401,9 @@ def _start_pgserver_core(db_path: Path) -> str:
     (_auto_start_pgserver) and CLI scripts (e.g. sync_prod_to_local.py).
 
     Connection URI rules (mirrors _auto_start_pgserver):
-    - Non-Junie local dev: enables TCP via _enable_tcp_listening() and returns
+    - Non-OpenCode local dev: enables TCP via _enable_tcp_listening() and returns
       ``postgresql://postgres:@localhost:5432/postgres``.
-    - Junie private DB (JUNIE_PRIVATE_DB set): keeps socket-only and returns
+    - OpenCode private DB (OPENCODE set): keeps socket-only and returns
       the raw socket URI from pgserver.get_uri().
 
     Raises on unrecoverable failure so callers can handle or log appropriately.
@@ -397,7 +413,7 @@ def _start_pgserver_core(db_path: Path) -> str:
     import pgserver
     import time as _time
 
-    is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
+    is_private_db = os.getenv("OPENCODE", "").lower() not in ("", "false", "0")
 
     db_path.mkdir(parents=True, exist_ok=True)
 
@@ -412,6 +428,7 @@ def _start_pgserver_core(db_path: Path) -> str:
         try:
             _pid = int(pid_file.read_text().splitlines()[0].strip())
             import os as _os
+
             _os.kill(_pid, 0)  # raises OSError if process is gone
             _logger.debug("pgserver already running (pid=%d) — will not stop on exit.", _pid)
             _pg_server_was_preexisting = True
@@ -433,7 +450,9 @@ def _start_pgserver_core(db_path: Path) -> str:
             _logger.debug("[DEV] pgserver.get_server() failed (%s): %s", err_type, start_err)
             if pid_file.exists() or err_type == "AssertionError":
                 if start_attempt < max_start_attempts:
-                    _logger.warning("pgserver failed to start (attempt %d/%d). Forcing cleanup.", start_attempt, max_start_attempts)
+                    _logger.warning(
+                        "pgserver failed to start (attempt %d/%d). Forcing cleanup.", start_attempt, max_start_attempts
+                    )
                     _force_stop_stuck_db(db_path)
                     _time.sleep(1)
                     continue
@@ -444,10 +463,10 @@ def _start_pgserver_core(db_path: Path) -> str:
             else:
                 raise start_err
 
-    # For non-Junie local dev, enable TCP so DBeaver and Streamlit can
-    # connect via localhost:5432.  Junie keeps the default socket-only
+    # For non-OpenCode local dev, enable TCP so DBeaver and Streamlit can
+    # connect via localhost:5432.  OpenCode keeps the default socket-only
     # connection to avoid port conflicts.
-    if not is_junie:
+    if not is_private_db:
         try:
             _logger.debug("Enabling TCP listening for local dev…")
             _enable_tcp_listening(_pg_server)
@@ -482,8 +501,8 @@ def _auto_start_pgserver():
     # to avoid re-initializing on every Streamlit rerun.
     if _pg_server is not None:
         warning_placeholder.empty()
-        is_junie = os.getenv("JUNIE_PRIVATE_DB", "").lower() not in ("", "false", "0")
-        uri = _pg_server.get_uri() if is_junie else "postgresql://postgres:@localhost:5432/postgres"
+        is_private_db = os.getenv("OPENCODE", "").lower() not in ("", "false", "0")
+        uri = _pg_server.get_uri() if is_private_db else "postgresql://postgres:@localhost:5432/postgres"
         _logger.debug("pgserver already running, returning cached URI.")
         return uri
 
@@ -499,6 +518,19 @@ def _auto_start_pgserver():
 
         # Clear shutdown tracking after successful start
         st.session_state.pop("pg_shutdown_first_seen", None)
+
+        # Ensure pgvector extension is available for Vector column type
+        try:
+            from sqlalchemy import create_engine as _create_engine, text as _text
+
+            _vec_engine = _create_engine(uri)
+            with _vec_engine.connect() as _conn:
+                _conn.execute(_text("CREATE EXTENSION IF NOT EXISTS vector;"))
+                _conn.commit()
+            _vec_engine.dispose()
+            _logger.debug("pgvector extension enabled.")
+        except Exception as _e:
+            _logger.debug("Could not enable pgvector extension: %s", _e)
 
         # Generate DBeaver connection file for local dev convenience
         _write_dbeaver_connection(uri)
@@ -522,6 +554,7 @@ def _auto_start_pgserver():
             else:
                 warning_placeholder.warning(f"Failed to auto-start local PostgreSQL: {e}")
         return None
+
 
 def get_db_url():
     """Get database URL from Streamlit secrets or environment variables."""
@@ -555,18 +588,19 @@ def get_db_url():
                 return url
     except Exception:
         pass
-    
+
     return None
+
 
 @st.cache_resource
 def get_engine():
     """
     Get the singleton SQLAlchemy engine instance, cached by Streamlit.
-    
+
     PRODUCTION JUSTIFICATION (Aiven / Streamlit Cloud):
-    - pool_size=0: Absolute Zero Idle Footprint. Ensures that during periods of 
+    - pool_size=0: Absolute Zero Idle Footprint. Ensures that during periods of
       inactivity, the application holds zero open connections to the database.
-      This is critical for low-slot environments like Aiven where every idle 
+      This is critical for low-slot environments like Aiven where every idle
       connection is a wasted resource.
     - max_overflow=10: Enforces a strict HARD LIMIT of 10 concurrent connections.
       SQLAlchemy's total limit is pool_size + max_overflow. With pool_size=0,
@@ -575,8 +609,8 @@ def get_engine():
       mitigates the risk of stale connections and ensures the database can
       cleanly recycle resources.
     - pool_pre_ping=True: Acts as a transparent liveness hook. Before handing
-      a connection to the app, it verifies the DB is reachable. If Aiven is 
-      shut down or restarting, this failure triggers the application's 
+      a connection to the app, it verifies the DB is reachable. If Aiven is
+      shut down or restarting, this failure triggers the application's
       standard infrastructure wake-up logic.
     - NIL Performance Impact: For a low-traffic linguistic tool, the overhead
       of a fresh connection handshake for each request is negligible compared
@@ -585,14 +619,15 @@ def get_engine():
     db_url = get_db_url()
     if not db_url:
         raise ValueError("Database URL not found in secrets or environment.")
-    
+
     return create_engine(
         db_url,
-        pool_size=0,          # NO permanent warm connections
-        max_overflow=10,      # Hard limit of 10 total concurrent connections
-        pool_recycle=300,     # Aggressive 5-minute recycle
-        pool_pre_ping=True,   # Detects if Aiven is down/restarting
+        pool_size=0,  # NO permanent warm connections
+        max_overflow=10,  # Hard limit of 10 total concurrent connections
+        pool_recycle=300,  # Aggressive 5-minute recycle
+        pool_pre_ping=True,  # Detects if Aiven is down/restarting
     )
+
 
 def _reset_sequences(engine) -> None:
     """
@@ -619,6 +654,7 @@ def _reset_sequences(engine) -> None:
     """
     from sqlalchemy import Integer
     from .base import Base  # lazy import — avoids circular init
+
     with engine.connect() as conn:
         for table in Base.metadata.sorted_tables:
             id_col = table.c.get("id")
@@ -626,15 +662,10 @@ def _reset_sequences(engine) -> None:
                 continue
             if not isinstance(id_col.type, Integer):
                 continue
-            seq = conn.execute(
-                text("SELECT pg_get_serial_sequence(:tbl, 'id')"),
-                {"tbl": table.name}
-            ).scalar()
+            seq = conn.execute(text("SELECT pg_get_serial_sequence(:tbl, 'id')"), {"tbl": table.name}).scalar()
             if not seq:
                 continue
-            conn.execute(
-                text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))")
-            )
+            conn.execute(text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))"))
         conn.commit()
     _logger.debug("Sequence reset complete.")
 
@@ -642,19 +673,25 @@ def _reset_sequences(engine) -> None:
 def init_db():
     """Initialize the database schema."""
     from .base import Base  # lazy import — avoids circular init
+    from .models.core import Record, Source, Language, RecordLanguage  # noqa: F401 — register models with Base.metadata
+    from .models.search import SearchEntry, HeadwordSearchEntry, GlossSearchEntry  # noqa
+    from .models.identity import User, Permission, UserPreference, UserActivityLog  # noqa
+    from .models.workflow import MatchupQueue, EditHistory  # noqa
+    from .models.meta import SchemaVersion  # noqa
+    from .models.iso639 import ISO639_3  # noqa
+
     engine = get_engine()
 
     Base.metadata.create_all(engine)
     from .migrations import MigrationManager
+
     MigrationManager(engine).run_all()
     try:
         _reset_sequences(engine)
     except Exception as e:
         mastodon_url = st.secrets.get("contact", {}).get("mastodon_url")
         contact = f" Please report this issue: {mastodon_url}" if mastodon_url else ""
-        _logger.error(
-            "Database sequence reset failed at startup — app cannot start safely: %s", e
-        )
+        _logger.error("Database sequence reset failed at startup — app cannot start safely: %s", e)
         st.error(
             f"⚠️ **Database startup error**: The database sequence reset failed. "
             f"The application cannot start safely — INSERTs would fail with duplicate key errors."
@@ -662,6 +699,7 @@ def init_db():
         )
         raise
     return engine
+
 
 def get_session():
     """Get a new database session."""
