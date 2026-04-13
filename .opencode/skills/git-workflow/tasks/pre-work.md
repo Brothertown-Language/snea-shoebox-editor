@@ -122,6 +122,56 @@ Invoke `using-git-worktrees` skill (ALWAYS, for ANY feature branch):
 - Do NOT attempt any implementation until the worktree infrastructure is fixed
 - There is NO fallback to stash+checkout
 
+### Step 3.5: Submodule Initialization and Sync
+
+**If `.gitmodules` exists in the worktree**, initialize and sync submodules before proceeding:
+
+```bash
+# Check if submodules are configured
+test -f .gitmodules
+```
+
+**If `.gitmodules` exists:**
+
+1. **Advance submodules to their `dev` tip:**
+
+   ```bash
+   git submodule update --init --remote
+   ```
+
+   - This checks out each submodule at the tip of its `origin/dev` branch.
+
+2. **For each submodule, ensure `origin/dev` exists:**
+
+   ```bash
+   # List submodule paths
+   git config --file .gitmodules --get-regexp path | awk '{print $2}'
+   ```
+
+   For each submodule path:
+   ```bash
+   cd <submodule-path>
+   git fetch origin
+   if ! git rev-parse --verify origin/dev >/dev/null 2>&1; then
+       # Auto-create dev branch from main
+       git checkout -b dev origin/main
+       git push -u origin dev
+   fi
+   cd -
+   ```
+
+3. **Log submodule status:**
+
+   ```bash
+   git submodule foreach --recursive 'echo "  $(basename $path) checked-out=$(git rev-parse --short HEAD) committed=$(git rev-parse --short $sha1) dev-tip=$(git rev-parse --short origin/dev 2>/dev/null || echo N/A)"'
+   ```
+
+4. **Report status to chat:** Report each submodule's path, checked-out SHA, committed SHA, and dev tip SHA.
+
+**If on `main` worktree:** Use `git submodule update --init` (no `--remote`) to lock submodules to their committed SHAs instead of advancing to dev tip.
+
+**If `.gitmodules` does NOT exist:** Skip all submodule steps and proceed to Step 4.
+
 ### Step 4: Verify Worktree Environment
 
 **Before yielding back to orchestration layer, verify:**

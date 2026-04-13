@@ -131,6 +131,82 @@ When implementation determines "no file changes needed":
 
 ## Procedure
 
+### Step 0: Submodule Push Automation (CONDITIONAL)
+
+**If `.gitmodules` exists in the worktree, submodule changes must be committed and pushed BEFORE the parent repo push.**
+
+**Detection:**
+
+```bash
+test -f .gitmodules && echo "HAS_SUBMODULES=true" || echo "HAS_SUBMODULES=false"
+```
+
+**If `.gitmodules` does NOT exist:** Skip this entire step and proceed to Step 1.
+
+**If `.gitmodules` exists:** Run the submodule push automation sequence below.
+
+#### Submodule Change Detection
+
+```bash
+git submodule foreach 'git diff HEAD --quiet || echo CHANGED'
+```
+
+This outputs one line per submodule. Lines containing `CHANGED` indicate the submodule has uncommitted changes that need to be pushed.
+
+#### Per-Submodule Push Sequence
+
+For **each** submodule reported as `CHANGED`:
+
+```bash
+# a. Enter submodule directory
+cd <submodule-path>
+
+# b. Stage all changes
+git add -A
+
+# c. Commit with descriptive message
+git commit -m "Agent push: sync from <parent_repo>"
+
+# d. Push to dev branch
+git push origin dev
+
+# e. Verify SHA on remote dev
+git branch --remotes --contains HEAD origin/dev
+
+# f. Return to parent directory
+cd ..
+
+# g. Stage submodule ref in parent
+git add <submodule-path>
+```
+
+**Submodule push failure handling:**
+
+- If **any** submodule `git push` fails: **BLOCK the parent repo push.** Report which submodule(s) failed and their error output. Do NOT proceed with the parent push until all submodule pushes succeed.
+- If all submodule pushes succeed: Continue to Step 1.
+
+#### `--skip-submodules` Flag
+
+If the `--skip-submodules` flag is provided:
+
+1. **Warn** in chat output: "⚠️ Submodule push skipped via --skip-submodules. Submodule changes are NOT pushed to remote."
+2. **Proceed** with parent repo push without submodule push steps.
+3. Submodule references will remain at their current state (stale or uncommitted).
+
+**This flag should only be used when submodule changes are intentionally deferred.**
+
+#### Worktree Mode Considerations
+
+When operating in a worktree, submodule directories are within the worktree path. Use `cd` to enter and exit submodule directories:
+
+```bash
+cd "${WORKTREE_PATH}/<submodule-path>"
+# ... submodule operations ...
+cd "${WORKTREE_PATH}"
+```
+
+The parent repo root is the worktree directory (verified by `git rev-parse --show-toplevel`), not the main repo working directory.
+
 ### Step 1: Temp File Cleanup (MANDATORY)
 
 **Before pushing, clean up temporary files.**
@@ -200,6 +276,7 @@ If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** D
 5. NEVER operate in the main working directory during implementation
 6. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
 7. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
+8. **Submodule directories within the worktree require `cd` to enter/exit.** When running commands inside a submodule, use `cd <submodule-path>` to enter and `cd "${WORKTREE_PATH}"` to return. Submodule operations (add, commit, push) must run from within the submodule directory, not from the parent worktree root.
 
 ### Step 2: Verify Branch Is Pushed
 
