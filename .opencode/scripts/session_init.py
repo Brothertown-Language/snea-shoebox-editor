@@ -1,7 +1,16 @@
 #!/usr/bin/env -S uv run python
 """Session initialization script for AI agents.
 
-Outputs English prose context for LLM consumption on stdout.
+Outputs KEY: value pairs for LLM consumption on stdout. Variable names match
+the canonical names referenced in guidelines and skills (GIT_OWNER, GIT_REPO,
+GIT_PLATFORM, DEV_NAME, DEV_EMAIL, BRANCH_NAME, WORKTREE_PATH, WORKTREE_FATAL,
+GITHUB_HTML_URL, GITBUCKET_HTML_URL, GITBUCKET_SSH_URL, GITBUCKET_HAS_CREDENTIALS).
+Agents must use these variable names directly — do NOT infer values from git
+remotes or other sources.
+
+Human-readable diagnostic lines (Remote:, Srclight:, Hooks path:) are preserved
+for developer diagnostics but are NOT referenced by guidelines as variables.
+
 Diagnostic and side-effect output goes to stderr — silent on success.
 
 Guard checks (auto-create missing files/branches/worktree):
@@ -598,24 +607,24 @@ def main() -> int:
             print(f"Remote URL: {remote_url}", file=sys.stderr)
             return 1
 
-        print(f"Repository: {repo} (GitHub)")
-        print(f"Owner: {owner}")
-        print(f'Use owner="{owner}" and repo="{repo}" for all GitHub tool calls.')
-        print("HTML base: https://github.com/")
+        print(f"GIT_OWNER: {owner}")
+        print(f"GIT_REPO: {repo}")
+        print("GIT_PLATFORM: github")
+        print("GITHUB_HTML_URL: https://github.com/")
+        print(f"DEV_NAME: {user_name}")
+        print(f"DEV_EMAIL: {user_email}")
+        print(f"BRANCH_NAME: {current_branch}")
         print(f"Remote: {remote_url}")
-        print(f"Developer: {user_name} ({user_email})")
-        print(f"Current branch: {current_branch}")
 
         if in_wt and wt_path and main_repo:
-            print(f"Working directory: {wt_path}")
-            print(f"Main repo: {main_repo}")
+            print(f"WORKTREE_PATH: {wt_path}")
         elif worktree_ok:
             if wt_display:
                 print(wt_display)
             else:
                 print("Worktrees: available")
         else:
-            print("Worktrees: setup failed — HALT and report to developer before proceeding")
+            print("WORKTREE_FATAL: 1")
 
         if hooks_path:
             print(f"Hooks path: {hooks_path}")
@@ -653,29 +662,29 @@ def main() -> int:
         except OSError:
             pass
 
-        print(f"Repository: {repo} (GitBucket)")
-        print(f"Owner: {owner}")
-        print(f'Use owner="{owner}" and repo="{repo}" for all GitBucket tool calls.')
+        print(f"GIT_OWNER: {owner}")
+        print(f"GIT_REPO: {repo}")
+        print("GIT_PLATFORM: gitbucket")
         if base_url:
-            print(f"HTML base: {base_url}")
+            print(f"GITBUCKET_HTML_URL: {base_url}")
         print(f"Remote: {remote_url}")
         ssh_url = extract_ssh_url(remote_url)
         if ssh_url:
-            print(f"SSH base: {ssh_url}")
-        print(f"API credentials: {'configured' if has_credentials else 'NOT configured'}")
-        print(f"Developer: {user_name} ({user_email})")
-        print(f"Current branch: {current_branch}")
+            print(f"GITBUCKET_SSH_URL: {ssh_url}")
+        print(f"GITBUCKET_HAS_CREDENTIALS: {'true' if has_credentials else 'false'}")
+        print(f"DEV_NAME: {user_name}")
+        print(f"DEV_EMAIL: {user_email}")
+        print(f"BRANCH_NAME: {current_branch}")
 
         if in_wt and wt_path and main_repo:
-            print(f"Working directory: {wt_path}")
-            print(f"Main repo: {main_repo}")
+            print(f"WORKTREE_PATH: {wt_path}")
         elif worktree_ok:
             if wt_display:
                 print(wt_display)
             else:
                 print("Worktrees: available")
         else:
-            print("Worktrees: setup failed — HALT and report to developer before proceeding")
+            print("WORKTREE_FATAL: 1")
 
         if hooks_path:
             print(f"Hooks path: {hooks_path}")
