@@ -4,16 +4,18 @@
 Identity Service for managing GitHub user identity and database synchronization.
 """
 
-import streamlit as st
-import requests
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-from src.database.connection import get_session
-from src.database.models.core import Record, Source
-from src.database.models.identity import User
+from typing import Any
+
+import requests
+import streamlit as st
 from sqlalchemy.sql import func
-from src.services.audit_service import AuditService
+
+from src.database.connection import get_session
+from src.database.models.core import Source
+from src.database.models.identity import User
 from src.logging_config import get_logger
+from src.services.audit_service import AuditService
 
 logger = get_logger("snea.identity")
 
@@ -116,7 +118,7 @@ class IdentityService:
             return False
 
     @staticmethod
-    def sync_user_to_db(user_info: Dict[str, Any], email: str) -> None:
+    def sync_user_to_db(user_info: dict[str, Any], email: str) -> None:
         """
         Update or create the user record in the database.
         """
@@ -176,7 +178,7 @@ class IdentityService:
             session.close()
 
     @staticmethod
-    def get_user_teams_and_orgs() -> Dict[str, List[str]]:
+    def get_user_teams_and_orgs() -> dict[str, list[str]]:
         """
         Return structured data of user's teams and organizations.
         """
@@ -186,7 +188,7 @@ class IdentityService:
 
     @staticmethod
     @st.cache_data
-    def get_github_username(email: str) -> Optional[str]:
+    def get_github_username(email: str) -> str | None:
         """
         Fetch the GitHub username for a given email address.
         Cached to minimize database hits.
@@ -223,7 +225,7 @@ class SourceService:
     """
 
     @staticmethod
-    def ensure_user_source(session, username: str, full_name: Optional[str], email: str) -> None:
+    def ensure_user_source(session, username: str, full_name: str | None, email: str) -> None:
         """
         Create or update a Source record for the user if it doesn't already exist.
         Follows standard email citation and description formats.

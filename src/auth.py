@@ -1,13 +1,14 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import datetime
+from typing import Any
+
 import streamlit as st
+from sqlalchemy.orm import Session
+from sqlalchemy.sql import func
+
 from src.database.connection import get_session
 from src.database.models.identity import User
 from src.frontend.ui_utils import handle_ui_error
-from sqlalchemy.orm import Session
-from sqlalchemy.sql import func
-from typing import Optional, Dict, Any
 
 
 def login_user_simple(username: str):
@@ -57,7 +58,7 @@ def login_user_simple(username: str):
         db.close()
 
 
-def login_user(github_user_data: Dict[str, Any]):
+def login_user(github_user_data: dict[str, Any]):
     """Login or create a user based on GitHub data and set the session."""
     github_id = github_user_data.get("id")
     email = github_user_data.get("email")

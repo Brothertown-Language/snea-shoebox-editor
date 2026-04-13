@@ -222,7 +222,7 @@ def check_repo_health(owner: str, repo: str):
         return True
 
 # Run health check
-check_repo_health(owner="NewSRX-Tech-LLC", repo="Documentation")
+check_repo_health(owner="<GIT_OWNER>", repo="<GIT_REPO>")
 ```
 
 ### Workflow 4: Sync Fork with Upstream

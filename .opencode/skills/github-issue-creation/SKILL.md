@@ -10,7 +10,7 @@ compatibility: opencode
 
 ## Overview
 
-Issue Creation Enforcer ensuring all GitHub Issues follow spec-first workflow with validation, labels, and auditor integration. Invoked automatically before any issue is created.
+Issue Creation Enforcer ensuring all GitHub Issues follow spec-first workflow with validation, labels, and auditor integration. The agent MUST invoke this skill before any issue is created.
 
 ## Persona
 
@@ -39,7 +39,7 @@ You are an Issue Creation Enforcer. Your focus is ensuring all GitHub issue crea
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is invoked when:
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
    - Agent is about to create a GitHub Issue
    - DO NOT create issues via direct `github_issue_write` calls
    - ALWAYS route through this skill for validation
@@ -164,4 +164,5 @@ If GitHub MCP is unavailable:
 ## Cross-References
 
 - Related skills: `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`
-- Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `124-github-archive-workflow.md`
+- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Related skill tasks: `github-sub-issues --task create-sub-issue` (multi-task sub-issue creation), `git-workflow --task cleanup` (post-merge closure)

@@ -167,9 +167,8 @@ Key rules:
 | -- | -- |
 | `000-critical-rules.md` | Critical violations and auditor enforcement |
 | `020-go-prohibitions.md` | GO command restrictions |
-| `120-github-issue-first.md` | Issue-first strategy and sub-issues |
-| `124-github-archive-workflow.md` | Issue closure timing |
-| `github-sub-issues` skill | Sub-issue creation workflow |
+| `github-sub-issues` skill | Sub-issue creation and verification |
+| `git-workflow` skill `cleanup` task | Post-merge closure workflow |
 | `pr-creation-workflow` skill | PR creation timing |
 
 ```yaml+symbolic
@@ -198,7 +197,7 @@ rules:
       - PROCEED
     conflicts_with: []
     requires: []
-    triggers: [implementation-workflow]
+    triggers: [approval-gate, divide-and-conquer]
     source: "010-approval-gate.md §Explicit Authorization Priority"
 
   - id: approval-gate-003
@@ -250,7 +249,7 @@ state_machines:
       - from: approved
         to: implementing
         guard: "spec_exists == true"
-        action: INVOKE(implementation-workflow)
+        action: INVOKE(approval-gate, then divide-and-conquer)
       - from: implementing
         to: pr_created
         guard: "implementation_complete == true"

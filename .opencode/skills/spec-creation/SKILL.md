@@ -40,7 +40,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is invoked when:
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
    - Brainstorming exploration completes (terminal state transitions here)
    - User says "write spec", "create spec", "spec creation"
    - User provides investigation results and asks for a structured spec

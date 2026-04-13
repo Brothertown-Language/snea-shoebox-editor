@@ -69,7 +69,8 @@ When diagnosis is triggered as a side-effect of other work:
 1. **STOP all code changes** — diagnosis is read-only
 2. **Complete diagnosis** — identify root cause
 3. **Create bug report** — file a GitHub/GitBucket issue
-4. **HALT** — do NOT proceed to `--task fix` without explicit authorization
+4. **Invoke `analyze-and-spec`** — `/skill issue-review --issue N --task analyze-and-spec` to create fix spec sub-issue
+5. **HALT** — do NOT proceed to `--task fix` without explicit authorization
 
 ### Self-Correction Protocol
 
@@ -81,5 +82,5 @@ If the agent catches itself about to edit code without an approved spec:
 
 ## Context Required
 
-- Related skills: `systematic-debugging` (parent skill), `approval-gate` (authorization)
+- Related skills: `systematic-debugging` (parent skill), `approval-gate` (authorization), `issue-review` (analyze-and-spec task for fix spec creation)
 - Related tasks: `fix`

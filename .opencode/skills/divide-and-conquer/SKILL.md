@@ -20,7 +20,7 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `assess` | Pre-flight context-fit assessment — determine IMPLEMENT_DIRECTLY vs DECOMPOSE | ~300 |
+| `assess` | Pre-flight context-fit assessment — determine workload sizing for sub-agent dispatch | ~300 |
 | `decompose` | Split a task into sub-tasks with dispatch context, preserve spec boundaries | ~300 |
 | `dispatch` | Spawn sub-agent with scoped instructions and collect structured result | ~250 |
 | `overflow-signal` | Structured OVERFLOW response protocol for sub-agents that can't fit the work | ~200 |
@@ -50,8 +50,8 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 ## Operating Protocol
 
 1. **Pre-flight assessment is MANDATORY** before any non-trivial task. Run `--task assess` first. Skipping assessment for non-trivial work is a CRITICAL violation.
-2. **Trivial exception** — single-file, obvious fixes (typo, one-line config, obvious single-function edit) skip assessment. When in doubt, assess.
-3. **AI-driven judgment** — no hardcoded categories, file count thresholds, or line-count triggers. The agent evaluates context fitness holistically: scope of work, number of files, complexity of changes, whether it can hold all needed context in working memory.
+2. **No direct implementation** — the orchestrator NEVER implements directly. All implementation goes through `assemble-batch` as sub-agent dispatch. Single issue = batch of one sub-agent. No IMPLEMENT_DIRECTLY path.
+3. **AI-driven sizing** — assessment informs workload sizing (single sub-agent vs multiple), not whether to dispatch. All work goes through sub-agents.
 4. **Recursive sub-delegation** — sub-agents receiving decomposed work CAN signal OVERFLOW if their portion still exceeds capacity. The orchestrator receives the signal and decomposes further.
 5. **Depth limit** — maximum decomposition depth configurable via `DIVIDE_AND_CONQUER_MAX_DEPTH` (default: 3). At max depth, HALT and report to user. Depth is tracked in the Dispatch Context Contract.
 6. **Orchestrator controls all spawning** — sub-agents never self-spawn. Only the orchestrator dispatches via `--task dispatch`. Sub-agents that need further decomposition return OVERFLOW; the orchestrator handles it.
@@ -120,6 +120,8 @@ files_changed: ["<path>"]
 summary: "<what was implemented and key decisions>"
 concerns: "<only if DONE_WITH_CONCERNS>"
 verification_passed: true | false
+compare_url: "<compare URL from review-prep, or empty string>"
+exec_summary: "<1-2 sentence executive summary for chat output, or empty string>"
 ```
 
 ## Worktree Mode

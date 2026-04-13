@@ -56,7 +56,7 @@ github_issue_write(
 **The issue body must already include a byline footer** (added during spec drafting):
 
 ```
-🤖 ✨ Created by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) created
 ```
 
 **No separate comment needed.** The byline is part of the issue body content, not a standalone comment.
@@ -94,3 +94,4 @@ Before proceeding, verify ALL:
 
 - Related tasks: `pre-creation` (runs first), `post-creation` (runs next)
 - Related skills: `github-comments` (byline format), `github-sub-issues` (sub-issue creation)
+- Label state machine: `141-planning-status-tracking.md §10` (add `needs-approval` on creation; GitHub `labels` parameter replaces all labels)

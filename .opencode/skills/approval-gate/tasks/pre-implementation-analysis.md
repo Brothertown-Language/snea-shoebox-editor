@@ -1,12 +1,12 @@
-# Task: batch-approval-analysis
+# Task: pre-implementation-analysis
 
 ## Purpose
 
-Analyze interdependencies when multiple issues are approved simultaneously, determine execution order, identify parallelization opportunities, and produce an execution plan for sub-agent dispatch.
+Analyze interdependencies and determine execution order for all approved issues — whether one or many — producing a flat item list for `assemble-batch` dispatch. Every approval follows this unified path: sub-issue expansion → flat item list → assemble-batch → batch branch → pr-creation → one PR.
 
 ## Entry Criteria
 
-- Multiple issues approved at the same time (e.g., `Approved: #660, #662, #621`)
+- One or more issues approved (e.g., `Approved: #660`, `Approved: #660, #662, #621`)
 - Each issue has been verified by `verify-authorization`
 - User has explicitly authorized implementation
 
@@ -15,6 +15,7 @@ Analyze interdependencies when multiple issues are approved simultaneously, dete
 - Each approved issue screened (pre-analysis) and classified by dependency category
 - Already-implemented, superseded, moot, and meta/non-code issues excluded with reason
 - Partially-implemented issues reduced to remaining phases
+- Sub-issues expanded into flat item list (even for single issues)
 - Dependency graph produced with execution order
 - Parallel-safe groups identified
 - Execution plan presented in chat (informative only — no confirmation)
@@ -92,21 +93,23 @@ When issue A's spec references code/functions/files that issue B modifies or del
 
 1. **Do NOT auto-re-stage when intent differs.** The agent must not assume it knows whether the developer wants the function modified or deleted.
 
-#### Merge-Time Conflict Handling
+#### Merge-Time Conflict Handling (Batch Assembly)
 
-When two issues are independent during implementation but may conflict at merge:
+When two issues are independent during implementation but may conflict when squash-merged into the batch branch:
 
 1. **Detect:** Issues that touch the same file in different sections or in overlapping but non-contradictory ways.
 
-1. **Action — Order PR creation:**
+1. **Action — Batch assembly ordering:**
 
-   - First issue in dependency order: create PR normally
-   - Second issue: after first PR merges, rebase branch onto updated `dev`, then create PR
-   - This avoids avoidable merge conflicts in the second PR
+   - The `assemble-batch` task handles squash-merge ordering automatically
+   - Issues are squash-merged into the batch branch in dependency/serial order
+   - Later issues may need to resolve conflicts from earlier squash-merges during the batch assembly step
+   - Tier 1-2 conflicts (formatting/whitespace): auto-resolve per `conflict-resolution` skill
+   - Tier 3 conflicts (intent): HALT and flag for developer review
 
-1. **Do NOT block execution.** Both issues proceed with implementation immediately. The ordering applies only at the PR creation step.
+1. **Do NOT block execution.** All issues proceed with implementation immediately. Conflict resolution happens at batch assembly time, not during implementation.
 
-1. **Note in execution plan:** "#A and #B may conflict at merge — #B will rebase onto `dev` after #A merges before creating its PR."
+1. **Note in execution plan:** "#A and #B may conflict at batch assembly — `assemble-batch` will handle merge ordering."
 
 #### Revision Status Handling
 
@@ -117,6 +120,31 @@ When an issue in the batch has STATUS marked as `REVISED - NEEDS APPROVAL`:
 1. **Flag in execution plan:** "#N has REVISED status — using revised spec as implementation scope."
 
 1. **Remove `needs-approval` label** from the issue post-approval (per existing approval-gate rule: explicit auth overrides label).
+
+### Step 0.5: Sub-Issue Expansion (MANDATORY)
+
+**Every approved issue — whether single or batch — MUST undergo sub-issue expansion before classification.**
+
+For each approved issue:
+
+1. **Query sub-issues:** `github_issue_read(method="get_sub_issues", issue_number=N)`
+2. **If sub-issues exist:** Expand the parent into its sub-issues as individual implementation items. The parent's spec body provides context; each sub-issue defines a phase.
+3. **If no sub-issues (single-task):** The issue IS the flat item — no expansion needed.
+4. **Build the flat item list:** Each sub-issue (or single issue) becomes one row in the execution plan. This is the input to `assemble-batch`.
+
+**Why expansion is mandatory even for single issues:**
+
+- Single issue = batch of one = one sub-agent in `assemble-batch`
+- Eliminates forked code paths between "single issue" and "batch" workflows
+- Sub-issue expansion produces a uniform data structure regardless of count
+
+**Expansion rules:**
+
+| Parent Type | Expansion Action |
+|-----------|-------------------|
+| Single-task spec (no sub-issues) | Item = the issue itself |
+| Multi-task spec (has sub-issues) | Items = each sub-issue (parent provides context) |
+| Multi-task spec with some sub-issues NOT in batch | Items = sub-issues in batch only |
 
 ### Step 1: Read All Remaining (Non-Excluded) Issues
 
@@ -400,12 +428,6 @@ This handoff ensures:
 - Each sub-agent gets isolated context
 - The orchestrator stays clean — no implementation pollution
 - Batch state survives context turnover
-
-## Single-Issue Shortcut
-
-**When only ONE issue is approved:** Skip dependency analysis entirely. The `assemble-batch` task handles single-issue dispatch as the default code path (single-item batch with one sub-agent).
-
-**This task is ONLY invoked when TWO OR MORE issues are approved together for full dependency analysis.** For single issues, the flow goes directly: `verify-authorization` → `divide-and-conquer/orchestrate` → `assemble-batch`.
 
 ## Classification Detail
 

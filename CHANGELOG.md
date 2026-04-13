@@ -12,6 +12,35 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/batch-apr-13-2026
+
+- **Batch Approval Implementation** (#756, #752, #728, #688, #680, #667, #533, #306, #662, #630, #683, #763, #762, #614, #470, #467) - 17 issues implemented in a single batch, including unified batch workflow, mandatory post-implementation invocation, auto-rebase pending PRs, bug analysis auto-spec, discussion-conclusion non-authorization patterns, label state machine cross-references, spec-auditor auto-fix model, branch-header changelog, identity placeholder cleanup, brainstorming terminal state, session enforcement discussion mode, ruff version sync, stale User import fix, byline format standardization, PR trigger check, and template-driven element removal.
+
+### Changed
+
+- **Unified Batch Workflow** (#756) - Renamed batch-approval-analysis to pre-implementation-analysis, removed IMPLEMENT_DIRECTLY dispatch path, and unified single/batch issue handling through divide-and-conquer assemble-batch.
+- **Mandatory Post-Implementation Invocation** (#752) - Added mandatory invocation steps to 22 skill files for verification-before-completion and finishing-a-development-branch after implementation completes.
+- **Auto-Rebase Pending PRs** (#728) - Added rebase-pending task to git-workflow with intent-based conflict resolution for PRs that fall behind dev.
+- **Bug Analysis Auto-Spec** (#688) - Added analyze-and-spec and verify-fix-spec tasks to issue-review skill for automatic fix spec creation from bug reports.
+- **Discussion-Conclusion Non-Authorization** (#680) - Added explicit non-authorization patterns for verbal agreement, consensus, and opinion in go-prohibitions guideline.
+- **Label State Machine Cross-References** (#667) - Added YAML symbolic state machines to 12 guideline and skill files for authorization lifecycle tracking.
+- **Spec-Auditor Auto-Fix Model** (#533) - Added three-tier auto-fix model (auto-fix, conditional, flag-for-review) and executive summary output format to spec-auditor skill.
+- **Branch-Header Changelog** (#306) - Implemented branch-header-based changelog with incremental entries, replacing flat category-only format.
+- **Byline Format Standardization** (#614) - Standardized AI byline format across 23 skill files to consistent `AgentName (ModelID)` pattern.
+
+### Fixed
+
+- **Identity Placeholder Cleanup** (#662) - Replaced hardcoded org/user/identity values with typed placeholders across 15+ skill and guideline files.
+- **Brainstorming Terminal State** (#630) - Added spec-creation path to brainstorming skill terminal state so brainstorming flows into spec creation.
+- **Session Enforcement Discussion Mode** (#683) - Added discussion mode declaration to session-enforcement TypeScript plugin.
+- **Ruff Version Sync** (#763) - Synchronized ruff version across pyproject.toml, .pre-commit-config.yaml, and normalized formatting in 50+ Python files.
+- **Stale User Import** (#762) - Fixed stale User import and missing schema_version table in 4 test files.
+- **PR Trigger Check** (#470) - Added PR creation trigger check to git-workflow skill.
+
+### Removed
+
+- **Template-Driven Elements** (#467) - Removed mechanical template files from skill-creator templates directory and fixed 9 broken cross-references.
+
 ### Added
 
 - **Divide-and-Conquer Skill** (#734) - New discipline-enforcing skill that mandates pre-flight context-fit assessment before implementation. Tasks that risk context window overflow are decomposed and dispatched to sub-agents. Sub-agents signal OVERFLOW for recursive decomposition up to a configurable depth limit (default 3). Replaces implementation-workflow with a more general decomposition-first approach.

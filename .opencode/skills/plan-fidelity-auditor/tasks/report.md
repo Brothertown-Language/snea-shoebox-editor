@@ -61,7 +61,7 @@ When significant gaps are found (3+ HIGH-severity findings or any VAGUE_PROBLEM 
 
 ---
 
-🤖 📝 Updated by <AgentName> (<ModelID>): Plan Fidelity Report
+🤖 <AgentName> (<ModelID>) updated: Plan Fidelity Report
 ```
 
 ## Audit Log Requirement

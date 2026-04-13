@@ -20,6 +20,10 @@ Reference `.opencode/skills/completion-core/completion-core.md` for reporting:
 1. Report executive summary in chat (always runs)
 2. Action URL (issue URL) as the URL (ALWAYS last)
 
+## Label State Machine
+
+Before adding or removing labels in completion, consult `141-planning-status-tracking.md §10` for the complete label transition matrix and the GitHub `labels` parameter warning (replaces all labels, not additive).
+
 ## Report Phase
 
 Generate executive summary in chat:

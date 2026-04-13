@@ -59,6 +59,33 @@ proceed_to_close_issues()
 
 **Why API verification is mandatory:**
 
+### Step 2.5: Rebase Pending PRs
+
+After verifying the PR merge and before switching to dev, rebase all other open PRs onto the updated `dev` branch.
+
+**Full procedure:** See `rebase-pending` task for complete details.
+
+**Summary:**
+
+1. List all open PRs: `github_list_pull_requests(owner, repo, state="open")`
+2. For each open PR (excluding the just-merged one):
+   a. Create temporary worktree for the PR branch
+   b. Attempt `git rebase origin/dev`
+   c. If clean rebase: force-push the updated branch (`git push --force-with-lease origin <branch>`)
+   d. If conflicts: classify per `conflict-resolution` skill tiers
+      - Tier 1 (Trivial): auto-resolve, silent
+      - Tier 2 (Textual but safe): auto-resolve, note in chat
+      - Tier 3 (Intent conflict): read both PR specs, determine intent
+        - Same intent: auto-resolve with note
+        - Different intent: HALT, report to developer with conflict details
+3. Report summary: which PRs rebased cleanly, which had conflicts, which were auto-resolved, which are blocked for developer review
+
+**If Tier 3 conflicts block any rebase:** Report full conflict details to developer (see `rebase-pending` task for template). Developer must resolve manually before force-pushing.
+
+**If no pending PRs:** Skip this step entirely.
+
+**Invoke as:** `/skill git-workflow --task rebase-pending`
+
 ### Step 3: Switch to Dev and Sync
 
 **Three-Branch Workflow:** After feature PR merge, switch to `dev` (not `main`) and sync with remote.
@@ -154,6 +181,86 @@ git remote prune origin
 
 **Why `git remote prune origin` is mandatory:** After a remote branch is deleted (either by GitHub auto-deletion or explicit `git push origin --delete`), the local remote-tracking reference (`refs/remotes/origin/<branch>`) becomes stale. `git fetch --prune` only prunes refs for remote branches that no longer exist AND have no upstream tracking, while `git remote prune origin` explicitly removes all stale remote-tracking branches. Skipping this leaves ghost references that cause confusion in `git branch -a` output and can interfere with new branch creation.
 
+### Step 5.5: Batch Branch Cleanup
+
+**When the merged branch was a batch branch (created by `assemble-batch`), additional cleanup is required.**
+
+#### Detecting a Batch Branch
+
+A batch branch has these characteristics:
+- Branch name typically starts with `batch/` or was identified in the batch state file
+- Batch state file exists at `.opencode/tmp/batch-*.md`
+- Multiple implementation commits in the branch (one per issue in the batch)
+
+#### Batch Cleanup Procedure
+
+After a batch PR is confirmed merged:
+
+1. **Delete individual feature branches that were squash-merged into the batch branch:**
+
+   ```bash
+   # Extract feature branch names from batch state file
+   # Each line like "- [ ] #A — branch: spec/<name>, status: done"
+   # gives us the branch names to delete
+
+   # For each feature branch listed in batch state:
+   git branch -d spec/<feature-branch-name>
+   git push origin --delete spec/<feature-branch-name> 2>/dev/null || echo "Remote already deleted"
+   ```
+
+2. **Delete the batch branch itself:**
+
+   ```bash
+   git branch -d <batch-branch-name>
+   git push origin --delete <batch-branch-name> 2>/dev/null || echo "Remote already deleted"
+   ```
+
+3. **Remove individual feature worktrees:**
+
+   ```bash
+   # For each feature worktree listed in batch state:
+   git worktree remove .worktrees/spec-<feature-name>
+
+   # Remove batch worktree if it exists:
+   git worktree remove .worktrees/<batch-worktree-name>
+   ```
+
+4. **Remove batch state file:**
+
+   ```bash
+   rm .opencode/tmp/batch-*.md
+   ```
+
+5. **Prune remote references:**
+
+   ```bash
+   git fetch --prune
+   git remote prune origin
+   ```
+
+6. **Verify all issues closed by platform:**
+
+   ```python
+   # For each issue in the batch:
+   for issue_number in batch_issues:
+       issue = github_issue_read(method="get", issue_number=issue_number)
+       if issue.get("state") != "closed":
+           # Edge case: Platform failed to auto-close
+           github_issue_write(method="update", issue_number=issue_number,
+                             state="closed", state_reason="completed")
+   ```
+
+#### Batch Cleanup Safety Checks
+
+| Check | Purpose |
+| -- | -- |
+| Batch PR is merged (verified via API) | Prevents deleting unmerged work |
+| Each feature branch is an ancestor of the batch branch | Ensures no work was lost |
+| Working tree clean on main repo | No uncommitted changes before cleanup |
+| Feature worktrees removed before branch deletion | Prevents dangling worktree references |
+
+**⚠️ CRITICAL: Never delete a batch branch or its feature branches until the batch PR is confirmed merged via GitHub API (`merged_at` is not None).**
+
 ### Step 6: Clean Other Merged Branches
 
 **Find merged branches:**
@@ -214,7 +321,24 @@ After EVERY merged PR, cleanup is MANDATORY — no exceptions, no "I'll do it la
 
 ## Automatic Cleanup Detection
 
-When invoked, can check for merged branches:
+**Entry triggers:** Explicit "PR merged" confirmation, "cleanup branches" request, or "check pr" / "check prs" / "check pull request" / "check pull requests" phrases.
+
+### "Check PR" Workflow
+
+When the user says "check pr", "check prs", "check pull request", or "check pull requests":
+
+1. **List all PRs** (open and merged) using `github_list_pull_requests`
+2. **For each merged PR:**
+   - Check if local branch still exists
+   - If local branch exists → proceed with cleanup (Steps 2–7 of this task)
+   - If no local branch → report "already cleaned up"
+3. **For each open PR:**
+   - Report PR number, title, and status
+   - Do NOT take any cleanup action
+4. **If only open PRs exist** → report PRs and HALT
+5. **If merged PRs detected** → activate full cleanup workflow
+
+When invoked without "check pr" trigger, can check for merged branches:
 
 ```python
 # Query GitHub for merged PRs
@@ -343,7 +467,7 @@ Before closing any issue (SPEC or Task), the AI agent MAY provide a final summar
 - **Superseded/Not Implemented**: The "Phase 3: Circuit breaker" was deferred to a follow-up issue #165.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) completed
 ```
 
 ### When to Close
@@ -538,7 +662,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 3. Or close as "not planned" with explanation if intentionally skipped
 
 ---
-🤖 ⚠️ Blocked by OpenCode (ollama-cloud/glm-5)
+🤖 ⚠️ OpenCode (ollama-cloud/glm-5) blocking
 ```
 
 ## Common Issues
@@ -550,7 +674,9 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 | Multiple PRs from same branch | Wait until ALL PRs merged |
 | Stash exists from pre-work | N/A — worktrees eliminate need for stash |
 
-## Automatic Cleanup Detection
+## Automatic Cleanup Detection (Secondary Reference)
+
+**Entry triggers:** Explicit "PR merged" confirmation, "cleanup branches" request, or "check pr" / "check prs" / "check pull request" / "check pull requests" phrases. See the primary "Automatic Cleanup Detection" section above for full "check PR" workflow details.
 
 When invoked, can check for merged branches:
 
@@ -652,7 +778,11 @@ PR #81 merged. Branch `spec/github-issue-creation-skill` deleted. Cleanup comple
 | Prompt for anything | "What would you like me to do?" |
 | Not posting final summary | Missing executive summary |
 
-**The cleanup task is the END. HALT means STOP.**# Git Protocol: Merge Protocol
+**The cleanup task is the END. HALT means STOP.**
+
+## Label State Machine
+
+When changing issue labels during cleanup (e.g., removing `in-progress`), consult `141-planning-status-tracking.md §10` for the complete label transition matrix and the GitHub `labels` parameter warning (replaces all labels, not additive).# Git Protocol: Merge Protocol
 
 ## 5. Spec Implementation Branches
 

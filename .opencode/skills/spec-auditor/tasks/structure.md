@@ -35,7 +35,7 @@ Check that a spec follows the required structural format for STATUS headers, pha
 | "Database Schema Setup" | GOOD | Specific concern |
 | "Implementation" | BOILERPLATE-TITLE flag | Generic activity |
 
-**Note:** This subtask flags BOILERPLATE-TITLE as a finding, but does NOT auto-rename phases. The agent decides whether to rename.
+**Note:** BOILERPLATE-TITLE findings are auto-fixed — the subtask renames generic phase names to describe specific concerns.
 
 ## Report Format
 
@@ -44,8 +44,17 @@ Subtask: structure
 Finding: [STRUCTURE-VIOLATION|MISSING-ELEMENT] - [summary]
 Location: [section of spec]
 Context: [why structure matters for this spec]
-Recommendation: [suggested fix]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| STRUCTURE-VIOLATION | auto-fix | Fix STATUS headers, numbering, markers |
+| MISSING-ELEMENT (CREATED date) | auto-fix | Add `CREATED: YYYY-MM-DD` |
+| MISSING-ELEMENT (phase names) | auto-fix | Rename boilerplate phase names to describe specific concerns |
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)

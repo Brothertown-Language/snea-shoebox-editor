@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import streamlit as st
-from sqlalchemy import desc, text
+from sqlalchemy import text
 
 
 def get_recent_sessions():
@@ -83,8 +83,8 @@ def get_recent_sessions():
 @st.dialog("Download Rollback MDF")
 def download_mdf_dialog(session_data):
     """Prompt the user to download the MDF data for a session."""
-    from src.services.upload_service import UploadService
     from src.services.identity_service import IdentityService
+    from src.services.upload_service import UploadService
 
     session_id = session_data.get("session_id")
     st.write(f"Preparing records from session **{session_id[:8]}** for download.")
@@ -118,8 +118,8 @@ def download_mdf_dialog(session_data):
 
 @st.dialog("Revert Post-Import Changes")
 def confirm_revert_dialog(session_data):
-    from src.services.upload_service import UploadService
     from src.logging_config import get_logger
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.pages.batch_rollback")
     session_id = session_data.get("session_id")
@@ -171,8 +171,8 @@ def confirm_revert_dialog(session_data):
 
 @st.dialog("Delete Records Added After Import")
 def confirm_delete_new_dialog(session_data):
-    from src.services.upload_service import UploadService
     from src.logging_config import get_logger
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.pages.batch_rollback")
     session_id = session_data.get("session_id")
@@ -227,8 +227,8 @@ def confirm_delete_new_dialog(session_data):
 
 @st.dialog("Confirm Rollback")
 def confirm_rollback_dialog(session_data):
-    from src.services.upload_service import UploadService
     from src.logging_config import get_logger
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.pages.batch_rollback")
     session_id = session_data.get("session_id")
@@ -285,11 +285,9 @@ def main():
     """
     from src.frontend.ui_utils import (
         apply_standard_layout_css,
-        handle_ui_error,
         hide_sidebar_nav,
         render_back_to_main_button,
     )
-    from src.services.identity_service import IdentityService
 
     # Role guard — only admin
     user_role = st.session_state.get("user_role")

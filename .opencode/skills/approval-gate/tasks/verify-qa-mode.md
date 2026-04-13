@@ -310,3 +310,4 @@ What would you like me to do?
 - Related guideline: `010-approval-gate.md`
 - Related task: `verify-authorization.md`
 - Related skill: `git-workflow` (pre-work task)
+- Label state machine: `141-planning-status-tracking.md §10` (label transitions for authorization gates)

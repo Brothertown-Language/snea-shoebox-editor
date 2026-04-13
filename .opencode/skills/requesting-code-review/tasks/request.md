@@ -34,7 +34,7 @@ Post a review request comment on the PR:
 - [Any specific questions]
 
 ---
-🤖 📝 Review requested by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) review-requested
 ```
 
 ### Step 2: Update PR Labels

@@ -93,7 +93,7 @@ Invoke `github-issue-creation` skill to persist the spec as a GitHub Issue:
 
 <issue URL>
 
-🤖 <AgentName> (<ModelID>) ✨
+🤖 <AgentName> (<ModelID>) created
 ```
 
 **🚫 NEVER:**

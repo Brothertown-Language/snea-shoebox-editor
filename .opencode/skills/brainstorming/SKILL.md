@@ -35,11 +35,11 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** Invoked when user says `spec` or `plan` or similar planning terms, or provides a feature description for planning. DO NOT proceed to spec creation until exploration completes.
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when user says `spec` or `plan` or similar planning terms, or provides a feature description for planning. DO NOT proceed to spec creation until exploration completes.
 
 2. **One question at a time:** STRICTLY one question per message. Questions follow from answers, not a checklist. Dimensions are an internal mental checklist only — never exposed as structured output sections.
 
-3. **Exit condition:** Exploration is COMPLETE when all relevant questions have been asked (driven by user's answers), and the user confirms requirements are complete. HALT and invoke `spec-creation` skill to structure and write the spec.
+3. **Exit condition:** Exploration is COMPLETE when all relevant questions have been asked (driven by user's answers), and the user confirms requirements are complete. Then apply the **two-path terminal state** (see below).
 
 4. **What does NOT bypass exploration:** "skip brainstorming" is not allowed. "I already know what I want" still requires brief exploration (problem understanding at minimum). User impatience → document partial exploration, ask to proceed.
 
@@ -47,7 +47,9 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 6. **Visual companion conditional:** Offered only when topic involves visual decisions. Do NOT offer by default for this backend/Python project.
 
-7. **Terminal state is spec-creation:** Do NOT write the spec in brainstorming. Invoke `spec-creation` skill instead.
+7. **Terminal state is two-path:** Do NOT write the spec in brainstorming. Do NOT ask permission to implement. Instead:
+   - **Path A (spec NOT yet a GitHub Issue):** Invoke `github-issue-creation` skill to create the spec as a GitHub Issue with `needs-approval` label → HALT for review.
+   - **Path B (spec already a GitHub Issue AND approved):** Transition directly to `writing-plans` skill.
 
 ## Key Principles
 
@@ -61,7 +63,9 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 ## Dispatch Order
 
 ```
-brainstorming (mandatory) → spec-creation → spec-auditor → approval-gate → writing-plans → executing-plans
+brainstorming (mandatory)
+  ├─ Path A: spec NOT yet GitHub Issue → github-issue-creation → HALT for review
+  └─ Path B: spec already GitHub Issue AND approved → writing-plans → executing-plans
 ```
 
 ## Approval Gate Integration
@@ -72,6 +76,6 @@ brainstorming (mandatory) → spec-creation → spec-auditor → approval-gate �
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `spec-creation` (spec structuring and writing), `writing-plans` (plan creation)
+- Related skills: `approval-gate` (authorization), `spec-creation` (spec structuring and writing), `github-issue-creation` (spec-as-issue creation), `writing-plans` (plan creation)
 - Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol)
 - Source: Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md)

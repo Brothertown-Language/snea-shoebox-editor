@@ -211,7 +211,8 @@ class TestStageAndListBatches(unittest.TestCase):
     def setUp(self):
         self.session = self.Session()
         # Seed required FK rows
-        from src.database.models.core import Language, Source, User
+        from src.database.models.core import Language, Source
+        from src.database.models.identity import User
 
         if not self.session.query(User).filter_by(email="test@example.com").first():
             self.session.add(User(email="test@example.com", username="tester", github_id=1))
@@ -335,7 +336,8 @@ class TestMatchAndCommitOperations(unittest.TestCase):
             cls.pg_server.cleanup()
 
     def setUp(self):
-        from src.database.models.core import Language, Record, Source, User
+        from src.database.models.core import Language, Record, Source
+        from src.database.models.identity import User
         from src.database.models.search import SearchEntry
         from src.database.models.workflow import EditHistory, MatchupQueue
 

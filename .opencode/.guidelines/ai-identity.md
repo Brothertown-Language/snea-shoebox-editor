@@ -4,54 +4,53 @@
 
 ### Single Combined Byline (CRITICAL)
 
-**ALL substantive comments and issue body footers MUST end with ONE byline that combines status, agent, and model.** Non-substantive comments should not be posted (per `github-comments` skill).
+**ALL substantive comments and issue body footers MUST end with ONE byline that combines agent, model, and status.** Non-substantive comments should not be posted (per `github-comments` skill).
 
-**Format:**
+**Authoritative format (from `000-critical-rules.md`):**
 ```
 <response content>
 
 ---
-🤖 <status-emoji> <status-text> by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) <status>
 ```
 
-**For progress comments:**
+**For completion comments:**
 ```
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
 **Summary:**
 
 <1-2 sentences describing stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
+
+---
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 **Components (supplied dynamically at runtime):**
-- `<status-emoji>`: Status indicator (✅ ✨ 📝 ❌ 🔄 ↻ ⚠️ 🔍 📋 ✎)
-- `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
 - `<ModelID>`: Model identifier with provider (e.g., `<ModelID>`)
+- `<status>`: Status in plain text (completed, created, updated, rejected, etc.)
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+**Rule:** Byline = WHO (model). Status is a plain-text suffix, not a separate emoji. Details belong in comment body, not byline.
 
-### Status Emoji Guide
+### Status Text Guide
 
-| Status | Emoji | Byline Format |
-|--------|-------|---------------|
-| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
-| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)` |
-| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)` |
-| Copy Editor | ✎ | `🤖 ✎ on behalf of <UserName>` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>)` |
-| Superseded | 🔄 | `🤖 🔄 Superseded by <AgentName> (<ModelID>)` |
-| Blocking | ⚠️ | `🤖 ⚠️ Blocking by <AgentName> (<ModelID>)` |
-| Analysis | 🔍 | `🤖 🔍 Analysis by <AgentName> (<ModelID>)` |
-| Decision | 📋 | `🤖 📋 Decision by <AgentName> (<ModelID>)` |
+| Status | Byline |
+|--------|--------|
+| Task Complete | `🤖 <AgentName> (<ModelID>) completed` |
+| In Progress | `🤖 <AgentName> (<ModelID>) working` |
+| Created | `🤖 <AgentName> (<ModelID>) created` |
+| Updated | `🤖 <AgentName> (<ModelID>) updated` |
+| Rejected | `🤖 <AgentName> (<ModelID>) rejected` |
+| Superseded | `🤖 <AgentName> (<ModelID>) superseded` |
+| Blocking | `🤖 <AgentName> (<ModelID>) blocking` |
+| Analysis | `🤖 <AgentName> (<ModelID>) analysis` |
+| Decision | `🤖 <AgentName> (<ModelID>) decision` |
+| Copy Editor | `🤖 ✎ on behalf of <UserName>` |
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+**Rule:** Byline = WHO (model). Status is a plain-text suffix. Details belong in comment body, not byline.
 
 ### Copy Editor Byline (User-Authored Content)
 

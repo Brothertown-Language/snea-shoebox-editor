@@ -179,8 +179,8 @@ def _read_gitbucket_url_from_env() -> str | None:
 def extract_ssh_url(url: str) -> str | None:
     """Extract SSH base URL (host + port, no path) from a GitBucket SSH remote.
 
-    For ssh://git@tomcat-0002.newsrx.com:29418/org/repo.git
-    returns ssh://git@tomcat-0002.newsrx.com:29418
+    For ssh://git@<GITBUCKET_HOST>:29418/org/repo.git
+    returns ssh://git@<GITBUCKET_HOST>:29418
     """
     ssh_url_pattern = r"^(ssh://git@[^:/]+:\d+)"
     match = re.match(ssh_url_pattern, url)

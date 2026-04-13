@@ -43,6 +43,13 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 - [ ] Module docstrings present
 - [ ] No narration print statements
 
+### Chat Output Format
+- [ ] Executive summary present as first chat output element
+- [ ] Compare URL present before AI byline
+- [ ] AI byline in format `🤖 <AgentName> (<ModelID>) <status>` after URL
+- [ ] No URL before executive summary
+- [ ] No byline before URL
+
 ### Ready for PR?
 - [ ] All checklist items pass
 - [ ] Compare URL verified

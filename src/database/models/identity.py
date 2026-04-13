@@ -1,10 +1,12 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-from sqlalchemy import Column, Integer, String, Text, TIMESTAMP, ForeignKey, Boolean, UniqueConstraint
+from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, Integer, String, Text, UniqueConstraint
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
+
 from ..base import Base
+
 
 class User(Base):
     """
@@ -22,8 +24,9 @@ class User(Base):
         created_at (datetime): Timestamp of account creation.
         extra_metadata (dict): JSON storage for flexible settings/metadata.
     """
-    __tablename__ = 'users'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "users"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     email = Column(String, unique=True, nullable=False)  # Primary logic key
     username = Column(String, unique=True, nullable=False)  # GitHub handle
@@ -33,64 +36,70 @@ class User(Base):
     last_login = Column(TIMESTAMP(timezone=True))
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
     extra_metadata = Column(JSONB)  # Settings/Info
-    
+
     edit_history = relationship("EditHistory", back_populates="user")
     activity_logs = relationship("UserActivityLog", back_populates="user")
     matchup_entries = relationship("MatchupQueue", back_populates="user")
     preferences = relationship("UserPreference", back_populates="user")
+
 
 class UserPreference(Base):
     """
     Persistent UI and workflow settings per user and view.
     Examples: 'upload_review' -> 'page_size' -> '25'
     """
-    __tablename__ = 'user_preferences'
+
+    __tablename__ = "user_preferences"
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_email = Column(String, ForeignKey('users.email', ondelete='CASCADE', onupdate='CASCADE'), nullable=False)
+    user_email = Column(String, ForeignKey("users.email", ondelete="CASCADE", onupdate="CASCADE"), nullable=False)
     view_name = Column(String, nullable=False)  # e.g., 'upload_review'
     preference_key = Column(String, nullable=False)  # e.g., 'page_size'
     preference_value = Column(String, nullable=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
 
     __table_args__ = (
-        UniqueConstraint('user_email', 'view_name', 'preference_key', name='uix_user_pref_view_key'),
-        {'extend_existing': True},  # Required: prevents re-import errors on Streamlit hot-reload
+        UniqueConstraint("user_email", "view_name", "preference_key", name="uix_user_pref_view_key"),
+        {"extend_existing": True},  # Required: prevents re-import errors on Streamlit hot-reload
     )
 
     user = relationship("User", back_populates="preferences")
+
 
 class UserActivityLog(Base):
     """
     General security and usage audit log.
     Tracks logins, sync sessions, and critical administrative actions.
     """
-    __tablename__ = 'user_activity_log'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "user_activity_log"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
-    user_email = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'), nullable=False)
+    user_email = Column(String, ForeignKey("users.email", ondelete="RESTRICT", onupdate="CASCADE"), nullable=False)
     session_id = Column(String)  # Unique UUID linking activity to a specific edit batch
     action = Column(String, nullable=False)  # e.g., 'login', 'sync_start', 'batch_rollback'
     details = Column(Text)
     ip_address = Column(String)
     timestamp = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    
+
     user = relationship("User", back_populates="activity_logs")
+
 
 class Permission(Base):
     """
     Access control mapping between GitHub Teams and application roles.
     Defines who can view or edit specific sources.
-    
+
     ROLE ENFORCEMENT:
     - 'admin': Automatic full access to all resources and administrative functions.
     - 'editor': Access to edit, update, and manage MDF records ONLY.
     - 'viewer': Read-only access to records. MAY NEVER edit or modify any data (HARD BLOCK).
     """
-    __tablename__ = 'permissions'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "permissions"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
-    source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'))  # NULL = all
+    source_id = Column(Integer, ForeignKey("sources.id", ondelete="RESTRICT"))  # NULL = all
     github_org = Column(String, nullable=False)
     github_team = Column(String, nullable=False)  # Mandatory: No NULL teams allowed for security
-    role = Column(String, nullable=False, default='viewer')  # 'admin', 'editor', 'viewer'
+    role = Column(String, nullable=False, default="viewer")  # 'admin', 'editor', 'viewer'
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())

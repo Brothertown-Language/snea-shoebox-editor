@@ -33,7 +33,7 @@ Branch completion workflow that ensures a feature branch is fully ready for PR c
 
 ## Operating Protocol
 
-1. **Automatic invocation (strongly recommended):** This skill is auto-invoked when implementation completes on a feature branch, user says "done" or "finished" or "ready for PR", or before review-prep task in git-workflow.
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when implementation completes on a feature branch, when the user says "done" or "finished" or "ready for PR", or before review-prep task in git-workflow.
 2. **Verification-first approach:** All changes must be committed. All tests must pass. All lint/typecheck must pass. Branch must be pushed to remote.
 3. **Exit conditions:** Branch is READY when all checklist items pass, compare URL is generated, and agent HALTs to report readiness.
 4. **Worktree mandatory:** All feature branches operate in worktrees. If `WORKTREE_PATH` is not set: FATAL ERROR → FLAG DEV → HALT.

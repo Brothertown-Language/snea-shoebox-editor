@@ -63,9 +63,9 @@ git checkout -b spec/my-change dev
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This task is invoked automatically when:
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this task when:
    - User says `approved`, `go`, or similar authorization to begin implementation
-   - DO NOT prompt for invocation - the skill is triggered automatically
+   - DO NOT prompt for invocation — invoke the skill directly
 
 ## Entry Criteria
 
@@ -206,7 +206,7 @@ The orchestration layer (`divide-and-conquer`) receives this yield and passes re
 **Example Comment:**
 
 ```markdown
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) completed
 
 **Summary:**
 

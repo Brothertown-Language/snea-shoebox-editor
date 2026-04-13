@@ -59,3 +59,4 @@ For each dependency listed in spec:
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-open-questions`
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on explicit auth, add `needs-revision` on revision required)

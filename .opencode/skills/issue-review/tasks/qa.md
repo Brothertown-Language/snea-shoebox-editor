@@ -2,12 +2,13 @@
 
 ## Purpose
 
-Handle non-spec issues by asking clarifying questions one at a time in chat. On resolution, post durable outcomes to the issue.
+Handle non-bug, non-spec issues by asking clarifying questions one at a time in chat. Bug reports are routed to `analyze-and-spec` instead.
 
 ## Entry Criteria
 
 - Triage selected the `qa` path
 - Issue data gathered (body, comments, labels)
+- Issue is NOT a bug report (bug reports go to `analyze-and-spec`)
 
 ## Exit Criteria
 
@@ -22,11 +23,11 @@ Analyze content to determine depth:
 
 | Content Type | Depth | Questions Cover |
 |--------------|-------|-----------------|
-| Simple bug report | Scope only | What's wrong, expected behavior, steps to reproduce |
-| Feature with technical implications | Scope + feasibility | Above + constraints, edge cases, integration points |
+| Feature with technical implications | Scope + feasibility | Constraints, edge cases, integration points |
 | Feature idea that could become a spec | Scope + feasibility + scaffold | Above + offer to write a spec from the answers |
+| Vague or unclear request (not a bug) | Scope clarification only | What is being requested, expected outcome |
 
-Output reasoning for the depth choice before starting Q/A.
+**Note:** Bug reports are NOT handled by this task. If bug language is detected during Q/A, stop and suggest re-triage to `analyze-and-spec`.
 
 ## Procedure
 
@@ -34,9 +35,9 @@ Output reasoning for the depth choice before starting Q/A.
 
 Analyze the issue content:
 
-- Bug report language ("crash", "error", "broken") → scope only
 - Feature request with technical detail → scope + feasibility
 - Vague feature idea or "we should..." → scope + feasibility + scaffold offer
+- Bug report language detected → STOP, suggest re-triage to `analyze-and-spec`
 
 Announce the depth choice and reasoning in chat.
 
@@ -46,8 +47,7 @@ Based on depth, prepare questions. **Ask ONE question at a time in chat.** Do NO
 
 **Scope questions:**
 - What is the expected behavior?
-- What is the current (broken) behavior?
-- What are the steps to reproduce?
+- What is the scope of this request?
 
 **Feasibility questions (added for depth 2+):**
 - Are there technical constraints?
@@ -90,6 +90,7 @@ HALT after posting the summary. Wait for the developer to act on the outcomes.
 | User doesn't respond to question | HALT; do not repeat or rephrase without prompting |
 | User provides incomplete answer | Ask one targeted follow-up in chat |
 | Q/A reveals the issue IS a spec | Stop Q/A, suggest re-triage to `audit` path |
+| Q/A reveals the issue IS a bug | Stop Q/A, suggest re-triage to `analyze-and-spec` path |
 | User says "never mind" or "closed" | Post summary noting cancellation, HALT |
 | Multiple unrelated questions | Focus on most relevant first; note others for follow-up |
 
@@ -97,3 +98,4 @@ HALT after posting the summary. Wait for the developer to act on the outcomes.
 
 - `000-critical-rules.md`: Q&A chatter goes to chat; durable outcomes go to issue
 - `approval-gate`: If Q/A reveals authorization is needed, note it in summary
+- `analyze-and-spec`: Bug reports are NOT handled by this task; redirect to `analyze-and-spec`

@@ -4,7 +4,6 @@
 Audit Service for standardizing user activity logging.
 """
 
-from typing import Optional
 from src.database.connection import get_session
 from src.database.models.identity import UserActivityLog
 from src.logging_config import get_logger
@@ -20,7 +19,7 @@ class AuditService:
 
     @staticmethod
     def log_activity(
-        user_email: str, action: str, details: Optional[str] = None, session_id: Optional[str] = None, session=None
+        user_email: str, action: str, details: str | None = None, session_id: str | None = None, session=None
     ) -> None:
         """
         Log a user activity to the database.

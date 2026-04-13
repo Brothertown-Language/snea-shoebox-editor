@@ -57,7 +57,7 @@ Post replies to each review comment:
 **Details:** [What was changed or why not]
 
 ---
-🤖 📝 Addressed by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) addressed
 ```
 
 ## Anti-Patterns

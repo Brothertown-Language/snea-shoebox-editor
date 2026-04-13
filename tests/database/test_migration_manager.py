@@ -1,16 +1,18 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import os
+
 import pytest
 
 # Ensure private database is used
 os.environ["OPENCODE"] = "1"
 
+from sqlalchemy.orm import sessionmaker
+
 from src.database.connection import init_db
 from src.database.migrations import MigrationManager
-from src.database.models.meta import SchemaVersion
 from src.database.models.identity import Permission
-from sqlalchemy.orm import sessionmaker
+from src.database.models.meta import SchemaVersion
 
 
 @pytest.fixture(scope="module")

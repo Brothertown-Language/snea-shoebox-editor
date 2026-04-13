@@ -117,3 +117,4 @@ After all verification gates pass, determine the approval context and auto-dispa
 
 - Related tasks: `verify-sub-issues`, `verify-codebase`
 - Auto-dispatch targets: `writing-plans` (spec approval), `executing-plans` (plan approval)
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval`, add `in-progress` on approval)

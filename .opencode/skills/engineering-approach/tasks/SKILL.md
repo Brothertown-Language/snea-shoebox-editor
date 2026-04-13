@@ -51,7 +51,7 @@ Execute implementation after design is approved, following established design de
 **Outcome:** <What changed>
 
 ---
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 ### Step 5: HALT

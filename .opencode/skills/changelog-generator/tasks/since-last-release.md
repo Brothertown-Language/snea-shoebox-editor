@@ -30,17 +30,45 @@ git log <last-changelog-hash>..HEAD --pretty=format:"%h|%ad|%an|%s%n%b" --date=s
 
 For merge commits, include the PR number and description from the merge message.
 
-### Step 3: Categorize Changes
+### Step 3: Extract Branch Headers and Categorize
 
-Analyze commits and categorize into:
+Analyze **merge commits** to extract branch names and map branch prefixes to changelog sections.
 
-| Category | Prefixes | Description |
+**Branch Prefix → Category Mapping:**
+
+| Branch Prefix | Changelog Section | Description |
 | -- | -- | -- |
-| **Added** | `feat:`, `feat(`, `add` | New features, capabilities |
-| **Changed** | `refactor:`, `change`, `update`, `improve` | Modifications to existing features |
-| **Fixed** | `fix:`, `fix(`, `bug` | Bug fixes |
-| **Security** | `security:`, `cve-`, `vuln` | Security improvements |
-| **Deprecated** | `deprecate:`, `remove` | Features being phased out |
+| `spec/` | Primary (own `### <branch-name>` header) | Spec-based feature work |
+| `feature/` | Added | New features |
+| `fix/` | Fixed | Bug fixes |
+| `hotfix/` | Fixed | Urgent bug fixes |
+| `chore/` | Changed | Maintenance tasks |
+| `doc/` | Changed | Documentation updates |
+| `skill/` | Changed | Skill updates |
+
+**Merge Commit Parsing:**
+
+From merge commit message:
+```
+Merge pull request #120 from <OWNER>/spec/example-branch-name
+Fix cleanup task to use succinct confirmation output
+```
+Extract branch name: `spec/example-branch-name` → prefix `spec/` → category: primary → header: `### spec/example-branch-name`
+
+**Fallback — Conventional Commit Prefix:**
+
+When no merge commit is available (squash merge, direct commit, or non-PR workflow), fall back to conventional commit prefix matching:
+
+| Convention Prefix | Category |
+| -- | -- |
+| `feat:` / `feat(scope):` | Added |
+| `fix:` / `fix(scope):` | Fixed |
+| `refactor:` / `refactor(scope):` | Changed |
+| `chore:` | Changed |
+| `docs:` | Changed |
+| `perf:` | Changed |
+| `security:` | Security |
+| `deprecate:` | Deprecated |
 
 ### Step 4: Transform to User-Facing Language
 
@@ -63,39 +91,47 @@ Convert technical commits to customer-friendly descriptions:
 5. Use active voice
 6. Avoid technical jargon
 
-### Step 5: Write to CHANGELOG.md
+### Step 5: Write Incremental Entries to CHANGELOG.md
 
-Read current CHANGELOG.md, insert entries in [Unreleased] section:
+**Incremental-only approach:** Append new `### <branch-name>` entries after existing ones in `[Unreleased]`. Never rewrite the entire `[Unreleased]` section.
 
-1. Read existing entries in [Unreleased]
-2. Merge new entries with existing (dedupe, consolidate)
-3. Maintain alphabetical order within each category
-4. Preserve existing formatting
+**Procedure:**
 
-**Format:**
+1. Read current CHANGELOG.md
+2. Identify the last entry in `[Unreleased]`
+3. Append new `### <branch-name>` sections after existing content
+4. Preserve all existing entries unchanged
+5. Do not dedupe or reorganize existing entries
+
+**Feature-Branch-Header Format:**
+
+Entries are grouped under their branch name as a subsection header within `[Unreleased]`:
 
 ```markdown
 ## [Unreleased]
 
+### spec/example-branch-name
+
+- **Feature Name** (#123) - Brief description of what it does and why it matters.
+
+### spec/another-branch
+
+- **Another Feature** (#124) - What changed and the impact on users.
+- **Bug Fix** (#124) - What was fixed and the problem it solves.
+```
+
+For non-spec branches (feature/, fix/, hotfix/, chore/, doc/, skill/), map to the appropriate `### Added`, `### Changed`, `### Fixed`, `### Security`, or `### Deprecated` section header and append entries there. If that section header already exists, append after existing entries within it.
+
+**Fallback format** (when no branch information available):
+
+```markdown
 ### Added
 
 - **Feature Name** - Brief description of what it does and why it matters.
 
-### Changed
-
-- **Feature Name** - What changed and the impact on users.
-
 ### Fixed
 
 - **Feature Name** - What was fixed and the problem it solves.
-
-### Security
-
-- **Feature Name** - Security improvement and protection provided.
-
-### Deprecated
-
-- **Feature Name** - What is being phased out and timeline.
 ```
 
 ### Step 6: Stage Changes
@@ -112,9 +148,9 @@ Report to calling context:
 - Number of entries added (by category)
 - File updated: CHANGELOG.md
 
-## Commit Message Conventions
+## Commit Message Conventions (Fallback)
 
-Look for conventional commit prefixes:
+When branch headers are unavailable, fall back to conventional commit prefixes:
 
 - `feat:` / `feat(scope):` → **Added**
 - `fix:` / `fix(scope):` → **Fixed**
@@ -126,16 +162,22 @@ Look for conventional commit prefixes:
 - `perf:` → **Changed** (performance improvement)
 - `security:` → **Security**
 
-## Merge Commit Handling
+## Branch Header Extraction
 
-For merge commits like:
+For merge commits, extract the branch name from the merge message:
 
 ```
-Merge pull request #120 from <GIT_OWNER>/spec/example-branch-name
+Merge pull request #120 from <OWNER>/spec/example-branch-name
 Fix cleanup task to use succinct confirmation output
 ```
 
-Use the PR number and description, not the merge itself. The actual changes are in the merged commits.
+- Branch name: `spec/example-branch-name`
+- Prefix: `spec/` → Primary section (use branch name as header)
+- Changelog header: `### spec/example-branch-name`
+
+All commits in that PR are grouped under this branch header section.
+
+**Fallback:** When no merge commit exists (squash merge, direct commit), use the conventional commit prefix on the individual commit message.
 
 ## Deduction Rules
 
@@ -146,27 +188,27 @@ Use the PR number and description, not the merge itself. The actual changes are 
 
 ## Example Output
 
-After analyzing commits since `ce6e5f1`:
+After analyzing merge commits since `ce6e5f1`:
 
 ```markdown
 ## [Unreleased]
 
+### spec/734-divide-and-conquer
+
+- **Divide-and-Conquer Skill** (#734) - New discipline-enforcing skill that mandates pre-flight context-fit assessment before implementation. Tasks that risk context window overflow are decomposed and dispatched to sub-agents.
+
+### spec/698-fix-phase1-schema-gaps
+
+- **FK Cascade on Record Deletion** (#698) - Fixed FK violation crash when deleting records. Added explicit deletes in hard_delete_record() and batch paths.
+- **Hard-Delete Unit Tests** (#698) - Added 5 unit tests for hard_delete_record() covering search entry cleanup, EditHistory cleanup, and edge cases.
+
 ### Added
 
-- **Skill Creator Import** - Imported skill-creator from awesome-opencode-skills. Create new skills with templates and guided workflows.
-- **Changelog Generator Integration** - Automated changelog updates during PR creation. Runs as sub-task for context isolation.
-
-### Changed
-
-- **Git Workflow Enforcement** - Added enforcement gates for PR timing. PRs require explicit "create a PR" instruction.
-- **PR Workflow** - Changelog generator invoked automatically during PR creation.
-- **Cleanup Task Output** - Streamlined to one-line confirmation.
+- **Environment Variable Rename** (from `spec/759-env-rename`) - Renamed JUNIE_PRIVATE_DB to OPENCODE across source, tests, scripts, and docs.
 
 ### Fixed
 
-- **Approval Gate Silent Halt** - Fixed silent halt when STATUS field missing. Added default behavior and status reporting.
-- **Changelog Invocation** - Fixed PR workflow that referenced skill but never invoked it.
-- **Changelog Verification** - Added checkpoint to verify changelog staged before squash.
+- **Sub-agent worktree dispatch** (from `spec/fix-subagent-worktree-741`) - Add worktree awareness to all sub-agent dispatch and skill creation.
 ```
 
 ## Context Required

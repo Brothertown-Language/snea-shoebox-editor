@@ -1,34 +1,37 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import streamlit as st
 import pandas as pd
+import streamlit as st
+
 
 def index():
-    from src.services.statistics_service import StatisticsService
     from src.frontend.ui_utils import apply_standard_layout_css
+    from src.services.statistics_service import StatisticsService
+
     apply_standard_layout_css()
     # Handle logout reload if coming from logout page
     if st.session_state.get("trigger_logout_reload"):
         del st.session_state["trigger_logout_reload"]
         from src.frontend.ui_utils import reload_page_at_root
+
         reload_page_at_root()
         st.stop()
 
     # --- Statistics Section ---
     st.markdown("### Database Statistics")
-    
+
     # Summary Metrics
     stats = StatisticsService.get_summary_stats()
     col1, col2, col3 = st.columns(3)
     col1.metric("Total Records", stats["records"])
     col2.metric("Sources", stats["sources"])
     col3.metric("Languages", stats["languages"])
-    
+
     st.divider()
-    
+
     # Distribution Charts
     chart_col1, chart_col2 = st.columns(2)
-    
+
     with chart_col1:
         st.subheader("Primary Language Distribution")
         primary_lang_data = StatisticsService.get_language_distribution(primary_only=True)
@@ -37,14 +40,14 @@ def index():
             st.bar_chart(df_primary.set_index("Language"))
         else:
             st.info("No primary language data available.")
-            
+
     with chart_col2:
         st.subheader("All Languages Distribution")
         all_lang_data = StatisticsService.get_language_distribution(primary_only=False)
         if all_lang_data:
             df_all = pd.DataFrame(list(all_lang_data.items()), columns=["Language", "Count"])
             st.bar_chart(df_all.set_index("Language"))
-            
+
             # UX Note: Explain if distributions are identical
             if all_lang_data == primary_lang_data:
                 st.caption("ℹ️ Currently identical to Primary distribution (no secondary languages assigned).")
@@ -65,12 +68,13 @@ def index():
         # Get source IDs to create links
         from src.services.linguistic_service import LinguisticService
         from src.services.navigation_service import NavigationService
+
         sources = LinguisticService.get_sources_with_counts()
-        source_id_map = {s['name']: s['id'] for s in sources}
-        
+        source_id_map = {s["name"]: s["id"] for s in sources}
+
         df_source = pd.DataFrame(list(source_distribution.items()), columns=["Source", "Count"])
         st.bar_chart(df_source.set_index("Source"))
-        
+
         # Add links to sources
         st.write("**Explore by Source:**")
         cols = st.columns(3)
@@ -93,7 +97,7 @@ def index():
         st.info("No status data available.")
 
     st.divider()
-    
+
     # Recent Activity
     st.subheader("Recent Activity")
     activity = StatisticsService.get_recent_activity()
@@ -102,12 +106,13 @@ def index():
             with st.expander(f"Record {item['record_id']} ({item['lx']}) edited by {item['user']}"):
                 st.write(f"**Time:** {item['timestamp']}")
                 st.write(f"**Change:** {item['summary']}")
-                
+
                 if st.button("View in Records", icon="🔍", key=f"view_rec_{item['record_id']}_{i}"):
                     st.session_state.search_query = f"#{item['record_id']}"
                     st.session_state.search_mode = "FTS"
                     st.session_state.current_page = 1
                     from src.services.navigation_service import NavigationService
+
                     st.switch_page(NavigationService.PAGE_RECORDS)
     else:
         st.info("No recent activity recorded.")

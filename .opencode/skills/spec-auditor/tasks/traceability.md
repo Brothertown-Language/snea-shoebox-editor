@@ -33,9 +33,17 @@ Subtask: traceability
 Finding: MISSING-TRACEABILITY - [orphan requirement/orphan feature description]
 Location: [section of spec]
 Context: [what requirement is unaddressed OR what feature is unjustified]
-Recommendation: [add implementation steps OR add requirement justification]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| MISSING-TRACEABILITY | auto-fix | Add trace links between requirements and implementation steps |
+| VERIFICATION-GAP | flag-for-review | Success criteria require domain expertise |
 
 ## When to Run
 

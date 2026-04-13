@@ -41,6 +41,69 @@ This skill transforms technical git commits into polished, user-friendly changel
 - Creating internal release documentation
 - Maintaining a public changelog/product updates page
 
+## Branch-Header-Based Workflow
+
+The `since-last-release` task uses **merge commit branch headers** as the primary categorization mechanism, with conventional commit prefixes as a fallback.
+
+### Branch Prefix → Category Mapping
+
+| Branch Prefix | Changelog Section |
+| -- | -- |
+| `spec/` | Own `### <branch-name>` header (primary) |
+| `feature/` | `### Added` |
+| `fix/` | `### Fixed` |
+| `hotfix/` | `### Fixed` |
+| `chore/` | `### Changed` |
+| `doc/` | `### Changed` |
+| `skill/` | `### Changed` |
+
+### How It Works
+
+1. Merge commits contain the branch name (e.g., `from Owner/spec/306-changelog-optimization`)
+2. The branch prefix maps to a changelog section
+3. `spec/` branches get their own `### spec/<branch-name>` subsection header
+4. Other prefixes map to standard sections (`### Added`, `### Fixed`, `### Changed`)
+5. When no merge commit exists (squash merge, direct commit), fall back to conventional commit prefix parsing
+
+### Fallback Behavior
+
+When a commit has no merge commit parent (squash merges, direct pushes):
+
+1. Parse the commit message for conventional commit prefixes (`feat:`, `fix:`, etc.)
+2. Map to the appropriate standard section
+3. Use the commit subject as the entry description
+
+### Examples
+
+**Branch-header-based generation** (merge commits available):
+
+```markdown
+## [Unreleased]
+
+### spec/306-changelog-optimization
+
+- **Branch Header Extraction** (#306) - Changelog now uses merge commit branch names to categorize entries instead of parsing individual commits.
+- **Incremental Updates** (#306) - since-last-release only appends new entries, never rewrites the entire [Unreleased] section.
+
+### spec/698-fix-phase1-schema-gaps
+
+- **FK Cascade** (#698) - Fixed FK violation crash on record deletion.
+```
+
+**Fallback generation** (no merge commits, conventional commits only):
+
+```markdown
+## [Unreleased]
+
+### Added
+
+- **Feature Name** - Description of new feature.
+
+### Fixed
+
+- **Bug Fix** - Description of what was fixed.
+```
+
 ## What This Skill Does
 
 1. **Scans Git History**: Analyzes commits from a specific time period or between versions
@@ -90,24 +153,23 @@ guidelines from CHANGELOG_STYLE.md
 ```markdown
 # Updates - Week of March 10, 2024
 
-## ✨ New Features
+### spec/team-workspaces
 
-- **Team Workspaces**: Create separate workspaces for different 
-  projects. Invite team members and keep everything organized.
+- **Team Workspaces** (#110) - Create separate workspaces for different projects. Invite team members and keep everything organized.
 
-- **Keyboard Shortcuts**: Press ? to see all available shortcuts. 
-  Navigate faster without touching your mouse.
+### spec/keyboard-shortcuts
 
-## 🔧 Improvements
+- **Keyboard Shortcuts** (#111) - Press ? to see all available shortcuts. Navigate faster without touching your mouse.
 
-- **Faster Sync**: Files now sync 2x faster across devices
-- **Better Search**: Search now includes file contents, not just titles
+### Changed
 
-## 🐛 Fixes
+- **Faster Sync** (from `chore/sync-perf`) - Files now sync 2x faster across devices.
+- **Better Search** (from `chore/search-improvement`) - Search now includes file contents, not just titles.
 
-- Fixed issue where large images wouldn't upload
-- Resolved timezone confusion in scheduled posts
-- Corrected notification badge count
+### Fixed
+
+- **Large Image Upload** (from `fix/image-upload`) - Fixed issue where large images wouldn't upload.
+- **Timezone Confusion** (from `hotfix/timezone-scheduled-posts`) - Resolved timezone confusion in scheduled posts.
 ```
 
 **Inspired by:** Manik Aggarwal's use case from Lenny's Newsletter

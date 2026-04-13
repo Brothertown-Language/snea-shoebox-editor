@@ -23,7 +23,8 @@ You are an Issue Review Orchestrator. Your focus is gathering all issue context,
 | `gather` | Collect all issue data (body, comments, labels, sub-issues, auth status) | ~500 |
 | `triage` | Two-pass classification: pattern signals + AI verification | ~600 |
 | `audit` | Delegate to `spec-auditor` with triage hints | ~350 |
-| `qa` | Ask clarifying questions one at a time in chat | ~500 |
+| `qa` | Ask clarifying questions one at a time for non-bug, non-spec issues | ~500 |
+| `analyze-and-spec` | Root cause analysis → fix spec auto-creation for bug reports | ~600 |
 
 ## Invocation
 
@@ -31,7 +32,8 @@ You are an Issue Review Orchestrator. Your focus is gathering all issue context,
 - `/skill issue-review --issue N --task gather` — Data collection only
 - `/skill issue-review --issue N --task triage` — Classification only (requires prior gather)
 - `/skill issue-review --issue N --task audit` — Audit delegation only (requires prior triage)
-- `/skill issue-review --issue N --task qa` — Q/A mode only
+- `/skill issue-review --issue N --task qa` — Q/A mode for non-bug, non-spec issues
+- `/skill issue-review --issue N --task analyze-and-spec` — Root cause analysis + fix spec for bug reports
 - `/skill issue-review` — Overview only
 
 ## Operating Protocol
@@ -55,6 +57,7 @@ review #N
   ├── triage (pattern signals + AI verification → path decision)
   ├── path dispatch:
   │   ├── audit → spec-auditor with hints → exec summary to chat
+  │   ├── analyze-and-spec → root cause analysis → fix spec sub-issue → exec summary to chat
   │   ├── qa → one-at-a-time questions in chat → exec summary to issue
   │   ├── just-review → exec summary of current state to chat
   │   └── already-handled → full re-verification → status to chat
@@ -66,7 +69,8 @@ review #N
 | Path | When | Output Target |
 |------|------|---------------|
 | `audit` | Content looks like a spec (phases/steps, success criteria, edge cases) | Chat exec summary |
-| `qa` | Bug report, unclear request, or issue needing clarification | Chat questions, then issue exec summary |
+| `analyze-and-spec` | Bug report (crash, error, broken, steps to reproduce) | Fix spec sub-issue linked to bug report |
+| `qa` | Non-bug, non-spec issue needing clarification (feature ideas, vague requests) | Chat questions, then issue exec summary |
 | `just-review` | Already-audited spec with no new relevant comments | Chat exec summary |
 | `already-handled` | Issue appears complete (approved + implemented) | Chat re-verification status |
 
@@ -86,15 +90,26 @@ Hints inform but do not override — `spec-auditor` retains its own subtask sele
 
 **CRITICAL:** Audit findings are internal agent guidance — DO NOT post to GitHub comments (per `000-critical-rules.md`). Produce prose exec summary for chat only.
 
+### Analyze-and-Spec Path
+
+Invoke `analyze-and-spec` task for root cause analysis and fix spec auto-creation. See `tasks/analyze-and-spec.md` for full procedure.
+
+**Key behavior:**
+- Bug language triggers this path (NOT `qa` anymore)
+- Root cause analysis is read-only
+- Fix spec sub-issue created and linked to bug report parent
+- Smart checkpoint: auto-proceed if clear, HALT if ambiguous
+- Fix spec still requires explicit authorization before code changes
+
 ### Q/A Path
 
-Ask questions one at a time in chat. Q/A depth depends on content:
+Ask questions one at a time in chat. Q/A is for non-bug, non-spec issues only.
 
 | Content Type | Q/A Depth |
 |--------------|-----------|
-| Simple bug report | Scope questions only |
 | Feature with technical implications | Scope + feasibility |
 | Feature idea that could become a spec | Scope + feasibility + offer to scaffold spec |
+| Vague or unclear request (not a bug) | Scope clarification only |
 
 On resolution, post exec summary to issue (durable outcomes only, not Q&A chatter). HALT after posting.
 
@@ -109,8 +124,9 @@ Produce prose exec summary of current state including: authorization status, las
 1. Verify GitHub state: issue closed, PR merged, sub-issues status
 2. Verify implementation: check that files mentioned in spec exist in codebase
 3. Verify tests: check test status for affected areas
-4. If fully verified: report "confirmed complete"
-5. If gaps found: report what needs attention, suggest re-triage
+4. For bug reports: check if fix spec sub-issue exists and is resolved
+5. If fully verified: report "confirmed complete"
+6. If gaps found: report what needs attention, suggest re-triage
 
 ## Final Report Format (CRITICAL)
 
@@ -137,6 +153,8 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 ## Cross-References
 
 - `spec-auditor`: Called by `audit` task for spec quality checks
-- `approval-gate`: Referenced for authorization status in `gather`
+- `approval-gate`: Referenced for authorization status in `gather`; verifies fix spec for bug reports
+- `systematic-debugging`: Invokes `analyze-and-spec` after bug report creation
+- `github-issue-creation`: Called by `analyze-and-spec` for fix spec creation
 
 Base directory for this skill: `.opencode/skills/issue-review/`

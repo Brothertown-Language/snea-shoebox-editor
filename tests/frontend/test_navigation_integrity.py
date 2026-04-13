@@ -1,6 +1,8 @@
-import os
 import ast
+import os
+
 import pytest
+
 from src.services.navigation_service import NavigationService
 
 # List of all valid Page objects from NavigationService
@@ -43,45 +45,48 @@ VALID_FILE_PATHS = [
     "src/frontend/pages/logout.py",
 ]
 
+
 def test_no_hardcoded_streamlit_navigation():
     """
     Ensure no files use hardcoded strings for st.switch_page() that don't match
     the centralized Page objects in NavigationService.
-    
+
     This helps prevent the StreamlitAPIException: Could not find page: `...`
     """
     project_root = os.getcwd()
     src_dir = os.path.join(project_root, "src")
-    
+
     violations = []
-    
+
     for root, _, files in os.walk(src_dir):
         for file in files:
             if file.endswith(".py"):
                 file_path = os.path.join(root, file)
                 violations.extend(check_file_for_hardcoded_navigation(file_path))
-    
+
     if violations:
         message = "Detected hardcoded st.switch_page calls with invalid or non-centralized paths:\n"
         for v in violations:
             message += f"- {v['file']}:{v['line']}: {v['call']}\n"
         pytest.fail(message)
 
+
 def check_file_for_hardcoded_navigation(file_path):
     violations = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         try:
             tree = ast.parse(f.read(), filename=file_path)
         except SyntaxError:
             return []
-            
+
     for node in ast.walk(tree):
-        if (isinstance(node, ast.Call) and 
-            isinstance(node.func, ast.Attribute) and 
-            node.func.attr == "switch_page" and 
-            isinstance(node.func.value, ast.Name) and 
-            node.func.value.id == "st"):
-            
+        if (
+            isinstance(node, ast.Call)
+            and isinstance(node.func, ast.Attribute)
+            and node.func.attr == "switch_page"
+            and isinstance(node.func.value, ast.Name)
+            and node.func.value.id == "st"
+        ):
             # Check if the first argument is a constant string
             if node.args and isinstance(node.args[0], ast.Constant) and isinstance(node.args[0].value, str):
                 path = node.args[0].value
@@ -89,9 +94,7 @@ def check_file_for_hardcoded_navigation(file_path):
                 # But ideally, we want to move towards using Page objects entirely.
                 # For now, we at least enforce that if they use strings, they must be valid.
                 if path not in VALID_FILE_PATHS and path not in VALID_URL_PATHS:
-                    violations.append({
-                        "file": os.path.relpath(file_path),
-                        "line": node.lineno,
-                        "call": f"st.switch_page(\"{path}\")"
-                    })
+                    violations.append(
+                        {"file": os.path.relpath(file_path), "line": node.lineno, "call": f'st.switch_page("{path}")'}
+                    )
     return violations

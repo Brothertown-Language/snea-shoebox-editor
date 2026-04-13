@@ -30,9 +30,17 @@ Subtask: fresh-start
 Finding: [FRESH-START-VIOLATION|CONTEXT-OVERFLOW] - [summary]
 Location: [section of spec]
 Context: [why this matters]
-Recommendation: [what to do]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| FRESH-START-VIOLATION | auto-fix | Inline context, replace "see above"/"as discussed" with actual content, add summaries to cross-references |
+| CONTEXT-OVERFLOW | conditional | Reduce section length after verifying all requirements are preserved |
 
 ## Standards Reference
 

@@ -76,7 +76,7 @@ Format per `000-critical-rules.md`:
 
 <exec summary>
 
-🤖 <AgentName> (<ModelID>) 🔍
+🤖 <AgentName> (<ModelID>) analysis
 ```
 
 ## Cross-References
@@ -84,3 +84,4 @@ Format per `000-critical-rules.md`:
 - `spec-auditor`: Called for actual spec quality checks
 - `000-critical-rules.md`: Audit findings must NOT be posted to GitHub
 - `067-context-completeness.md`: All comments were read during gather
+- `analyze-and-spec`: For bug-spec audits, verify that fix spec sub-issues exist (per `000-critical-rules.md` — bug reports must have fix spec before closure)

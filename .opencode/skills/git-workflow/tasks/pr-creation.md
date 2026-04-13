@@ -502,15 +502,40 @@ Then continue to Step 3 (squash).
 
 ### Step 3: Squash to Single Commit
 
-**MANDATORY:** All PRs must have exactly ONE commit.
+**Squash strategy depends on branch type:**
 
-**Three-Branch Workflow:** Squash against `origin/dev` (the integration branch).
+| Branch Type | Squash Strategy |
+| -- | -- |
+| **Single-issue branch** | All commits squashed to ONE commit |
+| **Batch branch** | One commit per implementation item (N commits is correct) |
+
+#### Single-Issue Branch (Default)
+
+Squash ALL implementation commits into ONE clean commit:
 
 ```bash
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
+```
+
+#### Batch Branch
+
+A batch branch already has one squash-merged commit per implementation item from `assemble-batch`. These commits are correct — do NOT squash them further.
+
+**Detect batch branch:** If the branch was created by `assemble-batch` (branch name typically starts with `batch/` or the batch state file exists at `.opencode/tmp/batch-*.md`), it is a batch branch with correctly-structured commits.
+
+**For batch branches, skip squash.** The commit history from `assemble-batch` is the intended final state.
+
+**Verify batch branch commits:**
+
+```bash
+# Check if batch state file exists
+ls .opencode/tmp/batch-*.md 2>/dev/null
+
+# If exists, this is a batch branch — skip squash
+# If not exists, treat as single-issue branch — squash to one commit
 ```
 
 ### Step 3.5: Rebase on Current Dev (MANDATORY)
@@ -766,7 +791,7 @@ After implementation completes and BEFORE PR creation authorization:
 - Pass CI checks
 - **Human review required** — Copilot review is supplemental, not sufficient for merge
 
-## Automatic Skill Invocation
+## Skill Execution (Mandatory)
 
 **When a skill is invoked, EXECUTE it, not just read it.**
 
@@ -836,7 +861,8 @@ git push origin feature/recovery
 
 | Issue | Resolution |
 | -- | -- |
-| Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
+| Multiple commits (single-issue branch) | Run `git reset --soft origin/dev` and re-commit |
+| Multiple commits (batch branch) | Expected — N commits = N implementation items. Do NOT re-squash. |
 | PR body missing Fixes | Verify sub-issues, add all to body |
 | Branch conflicts | Rebase on dev: `git rebase origin/dev` |
 | Wrong base branch | Close PR, create new one with `base="dev"` |
@@ -867,6 +893,7 @@ Every squash commit MUST include:
 | -- | -- |
 | Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
 | Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
+| Batch | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\n## Batch Issues\n\nImplements #<issue1>\nImplements #<issue2>\n\nFixes #<parent1>\nFixes #<child1>\nFixes #<parent2>` |
 
 **Example Multi-Task PR Body:**
 
@@ -879,6 +906,26 @@ Ensures specs are audited for plan fidelity before implementation, catching miss
 
 Fixes #469
 Fixes #470
+```
+
+**Example Batch PR Body:**
+
+```markdown
+**Summary:**
+
+Unified five approved issues into a single batch implementation, eliminating forked execution paths.
+
+**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-batch → batch branch → single PR.
+
+## Batch Issues
+
+Implements #660 — Add pre-implementation analysis task
+Implements #662 — Fix batch branch squash verification
+Implements #621 — Collapse executing-plans into divide-and-conquer
+
+Fixes #660
+Fixes #662
+Fixes #621
 ```
 
 ## Common Issues

@@ -210,7 +210,7 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 Trigger words: "audit this spec", "review this issue", "revisit this task", "check this [SPEC]", "validate the spec"
 
-**See `spec-auditor` skill for the complete orchestration model, baseline subtasks, conditional subtasks, and invocation commands.**
+**See `spec-auditor` skill for the complete orchestration model, auto-fix classification, baseline subtasks, conditional subtasks, and invocation commands.**
 
 | Trigger | Action |
 | -- | -- |
@@ -219,11 +219,27 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 | Before implementation approval | REQUIRED: Verify no critical issues |
 | Guideline change proposed | Optional: `guideline-auditor` |
 
+**Auto-fix model (v3):** Spec-auditor classifies all findings into three tiers and acts on them:
+- **Auto-fix:** Safe, mechanical fixes applied directly (structure violations, missing boilerplate, boilerplate titles, approach differences, concern separation)
+- **Conditional:** Applied after safety check (scope creep, context overflow)
+- **Flag-for-review:** Reported in executive summary only (ambiguous findings, conflicts)
+
+**Executive summary (v3):** After every audit, a structured executive summary MUST be posted to chat with: (a) changes made, (b) findings not acted on with reasons, (c) issue URL. See `spec-auditor` skill → `Chat Executive Summary` for format.
+
 ## Critical Violation: Creating PRs Without Explicit Instruction
 
 **⚠️ Creating a PR without EXPLICIT developer instruction is a CRITICAL GUIDELINE VIOLATION.** PRs require "create a PR", "make a PR", "push and create PR", "let's get a PR up", "PR" (bare), or "PR #NNN".
 
 **See `pr-creation-workflow` skill for the full PR timing workflow including authorization boundary.**
+
+## Critical Violation: Bug Reports Without Fix Spec
+
+**⚠️ Bug reports must have a fix spec sub-issue before closure is a CRITICAL GUIDELINE VIOLATION.**
+
+- 🚫 FORBIDDEN: Closing a bug report without a linked fix spec sub-issue; treating bug reports as complete without fix spec
+- ✅ REQUIRED: Use `issue-review --task analyze-and-spec` to create fix spec sub-issues for bug reports; verify fix spec exists via `approval-gate --task verify-fix-spec` before closure
+
+**See `issue-review` skill → `analyze-and-spec` task for the complete root cause analysis and fix spec creation workflow, and `approval-gate` skill → `verify-fix-spec` task for verification.**
 
 ## Critical Violation: Bug Discovery Does NOT Authorize Bug Fixing
 
@@ -232,7 +248,7 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 **See `approval-gate` skill for the complete discovery protocol and authorization matrix.**
 
 - 🚫 FORBIDDEN: Editing source code after discovering a bug; creating branches without approved spec; treating discovery as authorization
-- ✅ REQUIRED: Create bug report issue (permitted without auth); perform read-only analysis; HALT and wait for authorization
+- ✅ REQUIRED: Create bug report issue (permitted without auth); invoke `issue-review --task analyze-and-spec` for root cause analysis; perform read-only analysis; HALT and wait for authorization
 
 ## Critical Violation: Conflating Issue References with Authorization Cascade
 
@@ -251,6 +267,8 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 - "Yes, that's correct" = confirmation of observation, NOT authorization
 
 **See `approval-gate` skill → "Confirmation ≠ Authorization" for the complete enforcement table.**
+
+**See `020-go-prohibitions.md` §1 "Discussion Conclusion Patterns" for examples of non-authorization discussion conclusions.**
 
 ## Critical Violation: Closing Issues Before PR Merge
 
@@ -309,10 +327,10 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 
 **⚠️ Processing multiple approved issues without interdependency analysis is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `approval-gate` skill → `batch-approval-analysis` task for the complete procedure, classification heuristics, and output format.**
+**See `approval-gate` skill → `pre-implementation-analysis` task for the complete procedure, classification heuristics, and output format.**
 
 - 🚫 FORBIDDEN: Processing issues one-by-one without analysis; assuming independence without checking; hiding analysis in reasoning
-- ✅ REQUIRED: Invoke `batch-approval-analysis` for 2+ approvals; classify each issue; build dependency graph; present analysis in chat; execute in dependency order
+- ✅ REQUIRED: Invoke `pre-implementation-analysis` for all approvals (single or batch); expand sub-issues; classify each issue; build dependency graph; present analysis in chat; execute in dependency order
 
 ______________________________________________________________________
 

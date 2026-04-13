@@ -1,10 +1,12 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 def system_status():
-    import streamlit as st
     import os
-    from src.services.infrastructure_service import InfrastructureService
+
+    import streamlit as st
+
     from src.frontend.ui_utils import apply_standard_layout_css, hide_sidebar_nav, render_back_to_main_button
+    from src.services.infrastructure_service import InfrastructureService
 
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
@@ -103,8 +105,8 @@ def system_status():
                 if aiven_status and aiven_status != "RUNNING":
                     st.warning(f"⚠️ DNS Resolution: WAITING (Service is {aiven_status})")
                 else:
-                    st.error(f"❌ DNS Resolution: FAILED")
-                st.write(f"Details: DNS lookup failed for the configured host.")
+                    st.error("❌ DNS Resolution: FAILED")
+                st.write("Details: DNS lookup failed for the configured host.")
 
         # 2. Reachability Check
         reach_ok, reach_msg, v4_ok, v6_ok = InfrastructureService.verify_reachability(db_host, db_port)
@@ -126,7 +128,7 @@ def system_status():
             if aiven_status and aiven_status != "RUNNING":
                 st.warning(f"⚠️ Socket Reachability: WAITING (Service is {aiven_status})")
             else:
-                st.error(f"❌ Socket Reachability: FAILED")
+                st.error("❌ Socket Reachability: FAILED")
             st.write(f"Details: {reach_msg}")
 
         # 3. SQL Connection Check (Only if previous checks pass or as final step)

@@ -84,5 +84,5 @@ Before implementing ANY subtask: get parent STATUS, extract authorized subtask, 
 ## Cross-References
 
 - Related skills: `git-workflow` (before starting implementation), `approval-gate` (pre-implementation check)
-- Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`
-- Templates: `.opencode/skills/templates/PARENT-ISSUE-TEMPLATE.md`, `.opencode/skills/templates/SUB-ISSUE-TEMPLATE.md`
+- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Issue format: See `143-planning-spec-templates.md` for spec structure and `144-planning-spec-examples.md` for examples

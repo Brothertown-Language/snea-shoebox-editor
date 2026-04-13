@@ -66,7 +66,7 @@ When ALL success criteria are verified as already met:
 4. **Post chat output** with executive summary:
    - What happened: Spec #N approved but all success criteria already met
    - Outcome: Issue autoclosed as already implemented
-   - Byline: `🤖 OpenCode (ollama-cloud/glm-5.1) ✅`
+   - Byline: `🤖 OpenCode (ollama-cloud/glm-5.1) completed`
 
 5. **HALT** — no branch, no PR, no implementation needed
 
@@ -111,3 +111,4 @@ Autoclose bypasses the PR workflow because no branch, commits, or PR are needed 
 - Preceded by: `verify-authorization`, `verify-codebase`, `verify-blockers`
 - Supersedes: None (new task)
 - Related: `post-implementation` (used when implementation IS needed)
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on autoclose)

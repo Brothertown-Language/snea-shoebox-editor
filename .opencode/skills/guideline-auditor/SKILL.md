@@ -122,7 +122,7 @@ AI: Agent 📝 Update: Added new rule
 
 **RIGHT:**
 ```
-AI: <AgentName> <ModelID> ✅ Completed
+AI: <AgentName> (<ModelID>) completed
 
 **Summary:**
 <impact and stakeholder value>
@@ -201,18 +201,18 @@ Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 **Required Elements:**
 - **Summary section** FIRST with executive summary (1-2 sentences, stakeholder value)
 - **Outcome section** describing what changed
 - **Horizontal rule** (`---`) separator
-- **Byline at BOTTOM** with ✅ emoji, agent name, and model ID
+- **Byline at BOTTOM** with agent name and model ID
 
 **FORBIDDEN:**
 - Byline at TOP (belongs at BOTTOM)
-- 📝 emoji for completion comments (use ✅)
+- Status emoji before byline (status goes after model ID in plain text)
 - Missing Summary or Outcome sections
 - Punch-list format (bullet point lists)
 
@@ -225,7 +225,7 @@ Fixed DRY violation where same rule appeared in three files with slightly differ
 **Outcome:** Single source of truth for "never use echo redirects" rule.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) completed
 ```
 
 ---

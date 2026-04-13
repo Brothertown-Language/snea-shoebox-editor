@@ -7,7 +7,7 @@ from pathlib import Path
 # Add src to sys.path
 sys.path.append(str(Path(__file__).parent.parent))
 
-from src.database.connection import init_db, get_session
+from src.database.connection import get_session, init_db
 from src.database.models.iso639 import ISO639_3
 
 

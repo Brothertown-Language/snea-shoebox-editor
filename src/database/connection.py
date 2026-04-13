@@ -1,11 +1,12 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- Copyright (c) 2026 Brothertown Language -->
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import os
-import streamlit as st
-from pathlib import Path
 import atexit
 import getpass
+import os
+from pathlib import Path
+
+import streamlit as st
 from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
@@ -94,9 +95,9 @@ def _write_dbeaver_connection(uri):
     """
     try:
         import json
+        import socket
         import time
         import zipfile
-        import socket
         from urllib.parse import urlparse
 
         parsed = urlparse(uri)
@@ -207,6 +208,7 @@ def _enable_tcp_listening(pg_server):
         def pg_ctl(*args, **kwargs):
             import subprocess
             from pathlib import Path
+
             import pgserver
 
             pg_ctl_bin = Path(pgserver.__file__).parent / "pgbin" / "bin" / "pg_ctl"
@@ -216,7 +218,7 @@ def _enable_tcp_listening(pg_server):
             return subprocess.run(cmd, check=True)
 
     # Determine the socket directory from the current URI
-    from urllib.parse import urlparse, parse_qs
+    from urllib.parse import parse_qs, urlparse
 
     parsed = urlparse(pg_server.get_uri())
     query_params = parse_qs(parsed.query)
@@ -266,10 +268,10 @@ def _force_stop_stuck_db(db_path):
     lock_file = Path(db_path) / ".s.PGSQL.5432.lock"
     opts_file = Path(db_path) / "postmaster.opts"
 
-    import time
+    import os
     import signal
     import subprocess
-    import os
+    import time
 
     _logger.warning("Forcing cleanup of potentially stuck DB (pgdata=%s). Starting recovery sequence…", db_path)
 
@@ -410,8 +412,9 @@ def _start_pgserver_core(db_path: Path) -> str:
     """
     global _pg_server
 
-    import pgserver
     import time as _time
+
+    import pgserver
 
     is_private_db = os.getenv("OPENCODE", "").lower() not in ("", "false", "0")
 
@@ -521,7 +524,8 @@ def _auto_start_pgserver():
 
         # Ensure pgvector extension is available for Vector column type
         try:
-            from sqlalchemy import create_engine as _create_engine, text as _text
+            from sqlalchemy import create_engine as _create_engine
+            from sqlalchemy import text as _text
 
             _vec_engine = _create_engine(uri)
             with _vec_engine.connect() as _conn:
@@ -653,6 +657,7 @@ def _reset_sequences(engine) -> None:
     in this state.
     """
     from sqlalchemy import Integer
+
     from .base import Base  # lazy import — avoids circular init
 
     with engine.connect() as conn:
@@ -673,12 +678,12 @@ def _reset_sequences(engine) -> None:
 def init_db():
     """Initialize the database schema."""
     from .base import Base  # lazy import — avoids circular init
-    from .models.core import Record, Source, Language, RecordLanguage  # noqa: F401 — register models with Base.metadata
-    from .models.search import SearchEntry, HeadwordSearchEntry, GlossSearchEntry  # noqa
-    from .models.identity import User, Permission, UserPreference, UserActivityLog  # noqa
-    from .models.workflow import MatchupQueue, EditHistory  # noqa
-    from .models.meta import SchemaVersion  # noqa
+    from .models.core import Language, Record, RecordLanguage, Source  # noqa: F401 — register models with Base.metadata
+    from .models.identity import Permission, User, UserActivityLog, UserPreference  # noqa
     from .models.iso639 import ISO639_3  # noqa
+    from .models.meta import SchemaVersion  # noqa
+    from .models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry  # noqa
+    from .models.workflow import EditHistory, MatchupQueue  # noqa
 
     engine = get_engine()
 

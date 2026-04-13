@@ -37,7 +37,7 @@ You are a Verification Gatekeeper. Your focus is ensuring NO completion claim wi
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is auto-invoked when:
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
    - Agent claims "task complete" or "step complete"
    - Agent marks step as ☑ in plan
    - Agent attempts to close issue or create PR
@@ -110,5 +110,5 @@ This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch
 Key adaptations for OpenCode:
 - Integration with existing executing-plans and git-workflow skills
 - GitBucket platform support via MCP tools
-- Dispatch table integration for automatic invocation
+- Dispatch table integration for mandatory invocation
 - Structured evidence collection and verification gates
