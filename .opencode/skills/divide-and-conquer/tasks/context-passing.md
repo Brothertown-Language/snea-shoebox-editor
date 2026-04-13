@@ -77,4 +77,4 @@ If a yield-back produces empty or missing fields:
 
 Pre-work receives context from orchestrator — no re-authorization check needed. If pre-work prompts for auth, it received stale context. Re-invoke with fresh context from approval-gate.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

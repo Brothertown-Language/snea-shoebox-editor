@@ -136,4 +136,4 @@ This skill is a **heavy skill** — task dispatching and orchestration can run i
 
 - Related skills: `approval-gate` (authorization), `git-workflow` (git ops), `divide-and-conquer` (primary orchestration, context window safety), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation with BASE_BRANCH)
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

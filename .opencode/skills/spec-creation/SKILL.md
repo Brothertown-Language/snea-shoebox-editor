@@ -132,4 +132,4 @@ To invoke: /skill spec-creation --task requirements
 - **Downstream:** `writing-plans` (plan creation — transforms approved spec into implementation plan)
 - **Source:** Adapted and extended from `brainstorming` Steps 7-9 (not a verbatim move)
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

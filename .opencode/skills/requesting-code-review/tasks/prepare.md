@@ -86,7 +86,7 @@ uv run pyright src/
 Fixes #[issue-number]
 
 ---
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
 ```
 
 ## Anti-Patterns

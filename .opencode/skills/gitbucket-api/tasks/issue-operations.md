@@ -224,7 +224,7 @@ api.add_issue_comment(
     owner="org",
     repo="project",
     issue_number=14,
-    body="""🤖 OpenCode completed
+    body="""🤖 <AgentName> completed
 
 **Summary:**
 

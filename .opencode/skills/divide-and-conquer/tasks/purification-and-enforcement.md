@@ -95,4 +95,4 @@ NEVER proceed to PR creation without explicit "create a PR":
 | Finishing checklist fails | HALT and report issues (lint, tests, uncommitted); do NOT proceed to review-prep |
 | Review-prep HALTs prematurely | Correct behavior - wait for "create a PR" |
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

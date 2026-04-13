@@ -106,7 +106,7 @@ When implementation determines "no file changes needed":
 
 **When posting completion report (Step 3/4):**
 
-- **MUST dynamically detect model ID** - NEVER use hardcoded `ollama-cloud/glm-5`
+- **MUST dynamically detect model ID** - NEVER use hardcoded `<model-id>`
 - **MUST detect actual runtime identity** from environment/MCP tools
 - **If model ID unknown:** STOP and ask user - DO NOT use example from documentation
 
@@ -464,5 +464,5 @@ Updated git-workflow skill to push feature branches after implementation and pro
 ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) completed
+🤖 <AgentName> (<ModelID>) completed
 ````

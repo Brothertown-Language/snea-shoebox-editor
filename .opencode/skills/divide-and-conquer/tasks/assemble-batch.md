@@ -259,4 +259,4 @@ assemble-batch:
 09. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
 10. **Always batch mode** — single issue = batch of one, no special-case path
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

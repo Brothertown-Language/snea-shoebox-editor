@@ -73,7 +73,7 @@ Refactored the authentication module to use token-based sessions instead of cook
 **Outcome:** Session management now uses JWT tokens with configurable expiry, eliminating 401 errors for long-lived sessions.
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) completed
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 **❌ WRONG (rigid Changed/Added/Removed lists):**
@@ -84,7 +84,7 @@ Refactored the authentication module to use token-based sessions instead of cook
 - Removed: cookie-based sessions
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) completed
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 **Why prose-driven:**

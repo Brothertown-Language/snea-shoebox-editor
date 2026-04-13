@@ -57,7 +57,7 @@ Post replies to each review comment:
 **Details:** [What was changed or why not]
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) addressed
+🤖 <AgentName> (<ModelID>) addressed
 ```
 
 ## Anti-Patterns

@@ -148,8 +148,8 @@ When the agent identifies a problem and the fix is clear, the ONLY permitted nex
 
 All identity values MUST use placeholder tokens that are resolved at runtime from session init output. Hardcoded values become stale when models, agents, orgs, or repos change.
 
-- 🚫 FORBIDDEN: `OpenCode`, `OpenCode Desktop`, `Claude`, or any specific agent name in skill files, guidelines, or task files
-- 🚫 FORBIDDEN: `ollama-cloud/glm-5`, `claude-3-5-sonnet`, or any specific model ID in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `<specific-agent-name>` (e.g., `OpenCode`, `OpenCode Desktop`, `Claude`) in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `<specific-model-id>` (e.g., `ollama-cloud/glm-5`, `claude-3-5-sonnet`) in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `michael-conrad`, `muksihs`, or any specific developer name/email in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `Brothertown-Language`, `snea-shoebox-editor`, or any specific org/repo name in skill files, guidelines, or task files
 - ✅ REQUIRED: Use `<AI-Name>`, `<model-id>`, `<AgentName>`, `<ModelID>`, `DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO` placeholders everywhere

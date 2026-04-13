@@ -107,7 +107,7 @@ If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
 This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces evidence-based verification to prevent premature completion claims.
 
-Key adaptations for OpenCode:
+Key adaptations for <AI-Name>:
 - Integration with existing executing-plans and git-workflow skills
 - GitBucket platform support via MCP tools
 - Dispatch table integration for mandatory invocation

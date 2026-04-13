@@ -467,7 +467,7 @@ Before closing any issue (SPEC or Task), the AI agent MAY provide a final summar
 - **Superseded/Not Implemented**: The "Phase 3: Circuit breaker" was deferred to a follow-up issue #165.
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) completed
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 ### When to Close
@@ -662,7 +662,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 3. Or close as "not planned" with explanation if intentionally skipped
 
 ---
-🤖 ⚠️ OpenCode (ollama-cloud/glm-5) blocking
+🤖 ⚠️ <AgentName> (<ModelID>) blocking
 ```
 
 ## Common Issues

@@ -139,4 +139,4 @@ affected_files_count: K
 - Related tasks: `create` (standard plan creation), `validate` (plan validation)
 - Related skills: `spec-auditor` (orchestrator), `brainstorming` (recommended when gaps found)
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

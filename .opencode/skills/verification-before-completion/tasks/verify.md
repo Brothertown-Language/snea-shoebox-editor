@@ -90,7 +90,7 @@ Verify all success criteria have evidence before allowing completion claims.
 - [ ] Re-run verification after evidence added
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) verification
+🤖 <AgentName> (<ModelID>) verification
 ```
 
 ## Post-Verification Chain

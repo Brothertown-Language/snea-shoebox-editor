@@ -878,7 +878,7 @@ Every squash commit MUST include:
 
 - Use dynamic model detection at runtime
 - Format: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
-- Example: `Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>`
+- Example: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
 
 **Human Trailer:**
 

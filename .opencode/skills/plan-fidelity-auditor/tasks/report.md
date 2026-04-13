@@ -68,4 +68,4 @@ When significant gaps are found (3+ HIGH-severity findings or any VAGUE_PROBLEM 
 
 After the audit session, create `./tmp/audit-fidelity-YYYYMMDD.md` with all findings and retain in `./tmp/` for session reference. Do NOT post as GitHub Issue comment — audit findings are internal agent guidance.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)

@@ -88,7 +88,7 @@ This skill analyzes ACTUAL concerns, not static templates.
 - Related skills: `spec-auditor` (orchestrator), `writing-plans` (clean-room for fidelity)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `142-planning-archive-workflow.md`
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
 
 ## Symbolic Engine Integration
 

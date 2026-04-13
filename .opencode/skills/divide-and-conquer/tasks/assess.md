@@ -79,4 +79,4 @@ If during implementation the scope expands beyond what was assessed:
 
 A conservative assessment (multi-sub-agent for work that could be done by one) is acceptable. The decomposition overhead is small compared to the risk of overflow. Do not second-gauge a multi-sub-agent decision.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AI-Name> (<model-id>)

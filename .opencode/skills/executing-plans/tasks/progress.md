@@ -46,7 +46,7 @@ From plan's verification methods:
 **Next:** Step N+1 - [Next concern]
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) working
+🤖 <AgentName> (<ModelID>) working
 ```
 
 ## Multi-Step Execution Example
@@ -66,7 +66,7 @@ From plan's verification methods:
 **Evidence:** Migration test passed
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) step-1-complete
+🤖 <AgentName> (<ModelID>) step-1-complete
 
 ## Step 2: API Endpoints
 - ☐ Create login endpoint
@@ -74,5 +74,5 @@ From plan's verification methods:
 - ☐ Create refresh endpoint
 
 ---
-🤖 OpenCode (ollama-cloud/glm-5) working
+🤖 <AgentName> (<ModelID>) working
 ```

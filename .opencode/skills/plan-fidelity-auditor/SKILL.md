@@ -122,4 +122,4 @@ Only substantive differences after semantic matching are reported.
 - Related tasks: `compare` (comparison logic), `report` (finding reporting)
 - Related skills: `writing-plans` (clean-room generation), `brainstorming` (recommended for gaps)
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
