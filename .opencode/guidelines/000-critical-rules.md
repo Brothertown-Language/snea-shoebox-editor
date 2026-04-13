@@ -127,6 +127,41 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 
 **See `080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).**
 
+## Critical Violation: Offer-to-Edit Bypass — Offering to Modify Files Without Spec
+
+**⚠️ Offering to modify files without a spec is a CRITICAL GUIDELINE VIOLATION.**
+
+When the agent identifies a problem and the fix is clear, the ONLY permitted next action is creating a spec or reporting the finding. Never offer to edit, update, modify, or fix a file directly.
+
+| Pattern | Correct Action |
+|---------|---------------|
+| "Want me to update X?" | Create a spec for the update, HALT |
+| "Shall I fix this?" | Create a bug report or fix spec, HALT |
+| "I can change X to Y" | Create a spec for the change, HALT |
+| "Ready to implement?" | Create a spec first, then HALT |
+
+**Why this matters:** The offer-to-edit pattern is a rationalization bypass. The agent reasons: "I'm not *doing* the edit, I'm just *offering* — so I'm not violating the rule." But the offer normalizes direct edits and creates social pressure to authorize without a spec. The spec-first workflow exists precisely to prevent this.
+
+## Critical Violation: Hardcoded Identity Values in Skills and Guidelines
+
+**⚠️ Hardcoding agent names, model IDs, developer names, developer emails, org names, repo names, or platform names in skill files, guideline files, task files, or any AI agent configuration is a CRITICAL GUIDELINE VIOLATION.**
+
+All identity values MUST use placeholder tokens that are resolved at runtime from session init output. Hardcoded values become stale when models, agents, orgs, or repos change.
+
+- 🚫 FORBIDDEN: `OpenCode`, `OpenCode Desktop`, `Claude`, or any specific agent name in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `ollama-cloud/glm-5`, `claude-3-5-sonnet`, or any specific model ID in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `michael-conrad`, `muksihs`, or any specific developer name/email in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `Brothertown-Language`, `snea-shoebox-editor`, or any specific org/repo name in skill files, guidelines, or task files
+- ✅ REQUIRED: Use `<AI-Name>`, `<model-id>`, `<AgentName>`, `<ModelID>`, `DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO` placeholders everywhere
+- ✅ REQUIRED: Skill-creator MUST validate that no hardcoded identity values appear in generated skill files
+- ✅ REQUIRED: Spec-auditor MUST flag hardcoded identity values as STRUCTURE-VIOLATION auto-fix findings
+
+**Applies to:** SKILL.md files, task/*.md files, guideline files, agent configuration files, code comments that serve as templates or examples.
+
+**Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<GIT_OWNER>/<GIT_REPO>` pattern.
+
+**See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.**
+
 ## Critical Violation: Missing Progress Reports
 
 **⚠️ Failing to report progress in chat after implementation is a CRITICAL GUIDELINE VIOLATION.**

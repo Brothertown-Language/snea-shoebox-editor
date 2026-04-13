@@ -131,6 +131,40 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 **Rationale:** Sub-agents that don't receive worktree context silently modify the main repo instead of the feature branch. This is a context window safety issue (see #741).
 
+## Placeholder Enforcement Requirement (MANDATORY)
+
+**All new and updated skills MUST NOT contain hardcoded identity values.** This is a mandatory quality gate for the `validate` task.
+
+### Required in every skill that:
+
+1. **References AI agents** — MUST use `<AI-Name>` and `<model-id>` placeholders, never specific names like `OpenCode` or `Claude`
+2. **References developers** — MUST use `DEV_NAME` and `DEV_EMAIL` from session init, never specific names like `michael-conrad`
+3. **References organizations/repos** — MUST use `GIT_OWNER` and `GIT_REPO` from session init, never specific names like `Brothertown-Language`
+4. **Contains bylines or attribution** — MUST use `<AI-Name> (<model-id>)` format, never specific agent/model combinations
+
+### Validation Gate
+
+The `validate` task (`quick_validate.py`) SHOULD check for and flag:
+- Specific agent names (`OpenCode`, `Claude`, `GPT-4`, etc.) in SKILL.md or task files
+- Specific model IDs (`ollama-cloud/glm-5`, `claude-3-5-sonnet`, etc.) in SKILL.md or task files
+- Specific developer names or emails in SKILL.md or task files
+- Specific org/repo names in SKILL.md or task files (except in examples using the `<GIT_OWNER>/<GIT_REPO>` pattern)
+- Specific platform URLs in SKILL.md or task files (except in examples using session init variable references)
+
+### Placeholder Reference
+
+| Value Type | Placeholder | Source |
+|-----------|-------------|--------|
+| AI agent name | `<AI-Name>` or `<AgentName>` | System prompt identity detection |
+| AI model ID | `<model-id>` or `<ModelID>` | System prompt identity detection |
+| Developer name | `DEV_NAME` | Session init |
+| Developer email | `DEV_EMAIL` | Session init |
+| Organization | `GIT_OWNER` | Session init |
+| Repository | `GIT_REPO` | Session init |
+| Platform | `GIT_PLATFORM` | Session init |
+| GitHub URL | `GITHUB_HTML_URL` | Session init |
+| GitBucket URL | `GITBUCKET_HTML_URL` | Session init |
+
 ## Session Init Variable Alignment Requirement
 
 Skills and guidelines reference session-init variables by exact name (e.g., `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`). These names MUST match the `KEY: value` output of `.opencode/tools/session-init` exactly 1:1.

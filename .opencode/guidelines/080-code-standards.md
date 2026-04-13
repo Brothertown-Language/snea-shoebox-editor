@@ -194,7 +194,7 @@ Co-authored with AI: <AI-Name> (<model-id>)
 **Example:**
 
 ```
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
 ```
 
 ### Repository Creation
@@ -206,8 +206,8 @@ When creating a new repository, the README MUST include:
 
 This repository was created with assistance from AI:
 
-- **AI Agent**: OpenCode
-- **Model**: ollama-cloud/glm-5
+- **AI Agent**: <AI-Name>
+- **Model**: <model-id>
 - **Date**: YYYY-MM-DD
 ```
 
@@ -220,7 +220,7 @@ Every Python file with original AI-authored code MUST include attribution in the
 ```python
 """Module description.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AI-Name> (<model-id>)
 """
 ```
 
