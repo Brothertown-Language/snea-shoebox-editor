@@ -16,6 +16,12 @@ Task tool (general-purpose):
   prompt: |
     You are reviewing code quality for an implementation that has passed spec compliance review.
 
+    ## Worktree Context
+
+    WORKTREE_PATH: <WORKTREE_PATH value or 'not set'>
+
+    If WORKTREE_PATH is set, ALL file reads MUST prefix paths with WORKTREE_PATH/. ALL bash commands MUST use workdir=WORKTREE_PATH. If WORKTREE_PATH is not set, use project root.
+
     ## What Was Requested
 
     [FULL TEXT of task requirements]

@@ -168,6 +168,7 @@ When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
 - No changes to project source code, scripts, or notebooks
 - No new specs, expansions, or "improvements" beyond what findings require
 - Must use GitHub MCP tools for all issue operations
+- **Worktree awareness check:** Skills that perform git operations, read/write files, or dispatch sub-agents MUST include a "Worktree Mode" section and pass `WORKTREE_PATH` in sub-agent dispatch contexts. Missing worktree awareness is a medium-severity finding.
 
 ## Sub-Agent Spawning
 
@@ -180,7 +181,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 5. Sub-agent executes audit in isolation, returns findings as structured report
 6. Main agent receives findings — no full audit content in main context
 
-**Sub-agent context parameters:** Pass issue number, `GIT_OWNER`, `GIT_REPO` from session init.
+**Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
 
 ## Cross-References
 

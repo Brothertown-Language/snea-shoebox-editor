@@ -30,6 +30,15 @@ Worktrees are ALWAYS mandatory for feature branch creation. **See `using-git-wor
 - 🚫 FORBIDDEN: Relative paths with file operation tools when `WORKTREE_PATH` is set; assuming tools respect `workdir`
 - ✅ REQUIRED: Prefix ALL paths with `WORKTREE_PATH` when in worktree context
 
+## Critical Violation: Sub-Agents Ignoring Worktree Context
+
+**⚠️ Sub-agents that modify the main repo instead of the worktree are a CRITICAL GUIDELINE VIOLATION.**
+
+When a main agent is operating in a worktree and dispatches a sub-agent, the sub-agent MUST receive `WORKTREE_PATH` in its dispatch context and use it as the base directory for ALL file operations and git commands.
+
+- 🚫 FORBIDDEN: Spawning sub-agents without `WORKTREE_PATH` when operating in a worktree; sub-agents that stage/commit to the main repo's working directory; skills that perform git or file operations without a "Worktree Mode" section
+- ✅ REQUIRED: Pass `WORKTREE_PATH` in ALL sub-agent dispatch prompts when set; sub-agents verify `git rev-parse --show-toplevel` matches `WORKTREE_PATH` before mutating state; all new skills MUST include worktree awareness per `skill-creator` skill requirements
+
 ## Critical Violation: Implementing Without Verifying Against Live Documentation
 
 **⚠️ Implementing code without verifying API signatures, environment variables, or function parameters against live documentation is a CRITICAL GUIDELINE VIOLATION.**

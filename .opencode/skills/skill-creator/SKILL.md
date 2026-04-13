@@ -89,6 +89,48 @@ Strongly encourage sub-agents and sub-tasks for skill operations that risk consu
 - **Pattern:** Skill invocation spawns a sub-task → sub-task processes and produces compact result → main session receives result only.
 - **When to use sub-tasks:** Any skill task exceeding ~300 words of output, any multi-file analysis, any workflow with 3+ sequential operations.
 
+## Worktree Awareness Requirement
+
+**All new and updated skills MUST include worktree awareness.** This is a mandatory quality gate for the `validate` task.
+
+### Required in every skill that:
+
+1. **Performs git operations** — Must include a "Worktree Mode" section explaining how to handle `WORKTREE_PATH`
+2. **Dispatches sub-agents** — Must pass `WORKTREE_PATH` in the dispatch context/prompt
+3. **Reads or writes files** — Must document path prefixing rules when `WORKTREE_PATH` is set
+
+### Worktree Mode Template
+
+Every skill SKILL.md should include (adapt as appropriate for the skill's operations):
+
+```markdown
+## Worktree Mode
+
+When `WORKTREE_PATH` is set:
+- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
+- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
+- `git` commands run from the worktree directory, NOT the main repo
+
+If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+```
+
+### Sub-Agent Dispatch Template
+
+When a skill dispatches sub-agents, the prompt MUST include:
+
+```
+WORKTREE_PATH: <value or 'not set'>
+If WORKTREE_PATH is set, all file operations and git commands MUST use it as the base directory.
+```
+
+### Validation Gate
+
+The `validate` task (`quick_validate.py`) SHOULD check for:
+- Skills with `bash` or `git` operations that lack a "Worktree Mode" section
+- Skills that dispatch sub-agents but don't pass `WORKTREE_PATH` in context
+
+**Rationale:** Sub-agents that don't receive worktree context silently modify the main repo instead of the feature branch. This is a context window safety issue (see #741).
+
 ## Correctness-First Economics
 
 GPU/CPU billing is flat-rate per inference, not per word. There is no economic incentive to be concise at the expense of correctness.

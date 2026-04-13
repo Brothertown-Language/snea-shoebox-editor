@@ -95,7 +95,7 @@ This skill is a **heavy skill** — its task files contain significant detail th
 5. Sub-agent executes verification in isolation, returns authorization result
 6. Main agent receives result — no full approval-gate content in main context
 
-**Sub-agent context parameters:** Pass issue number, `GIT_OWNER`, `GIT_REPO` from session init.
+**Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
 
 ## Cross-References
 
