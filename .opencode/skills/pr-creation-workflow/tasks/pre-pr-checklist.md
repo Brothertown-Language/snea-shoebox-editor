@@ -20,10 +20,19 @@ Mandatory checks that must pass before creating ANY PR. No exceptions.
 
 **1. Squash Verification**
 
+**Detect branch type first:**
+
 ```bash
+# Check if this is a batch branch (assembly by assemble-batch)
+ls .opencode/tmp/batch-*.md 2>/dev/null
+
 # Check commit count between dev and HEAD
 git log origin/dev..HEAD --oneline
+```
 
+**Single-issue branch (no batch state file):**
+
+```bash
 # If MORE THAN ONE commit shown, SQUASH NOW:
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \
@@ -32,7 +41,18 @@ git commit -m "<descriptive message>" \
 git push --force-with-lease origin <branch>
 ```
 
-Every PR must have EXACTLY ONE commit. No exceptions.
+Single-issue PRs must have EXACTLY ONE commit. No exceptions.
+
+**Batch branch (batch state file exists):**
+
+Batch branches have one commit per implementation item (N commits). This is correct — do NOT re-squash. The `assemble-batch` task already squash-merged each feature branch into the batch branch with proper individual commit messages.
+
+```bash
+# Verify batch branch has expected commits (one per implementation item)
+# Do NOT squash — N commits is correct for batch branches
+```
+
+Batch PRs correctly have N commits where N = number of implementation items.
 
 **2. Changelog Generated**
 

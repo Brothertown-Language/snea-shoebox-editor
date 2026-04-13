@@ -1,15 +1,18 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-from sqlalchemy import Column, Integer, String, TIMESTAMP, Text, BigInteger
+from sqlalchemy import TIMESTAMP, BigInteger, Column, Integer, Text
 from sqlalchemy.sql import func
+
 from ..base import Base
+
 
 class SchemaVersion(Base):
     """
     Tracks the current version of the database schema.
     Used to ensure non-destructive updates and manage migrations.
     """
-    __tablename__ = 'schema_version'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "schema_version"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     version = Column(BigInteger, nullable=False)
     applied_at = Column(TIMESTAMP(timezone=True), server_default=func.now())

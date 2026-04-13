@@ -1,7 +1,9 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
+from typing import Any
+
 import streamlit as st
-from typing import Optional, List, Dict, Any
+
 from src.database.connection import get_session
 from src.database.models.identity import Permission
 from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
@@ -35,7 +37,7 @@ class SecurityManager:
             st.session_state.logged_in = True
 
     @staticmethod
-    def get_user_role(user_teams: List[Dict[str, Any]]) -> Optional[str]:
+    def get_user_role(user_teams: list[dict[str, Any]]) -> str | None:
         """
         Resolve the highest global role for a user based on their GitHub teams.
         """
@@ -79,7 +81,7 @@ class SecurityManager:
             session.close()
 
     @staticmethod
-    def check_permission(user_email: str, source_id: Optional[int], required_role: str) -> bool:
+    def check_permission(user_email: str, source_id: int | None, required_role: str) -> bool:
         """
         Check if a user has the required role for a specific source.
         If source_id is None, it checks for any permission matching the role.

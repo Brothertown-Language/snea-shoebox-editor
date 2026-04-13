@@ -38,7 +38,7 @@ LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work to
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is invoked when auditing guideline/skill coherence or when user requests extraction/maintenance audit.
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when auditing guideline/skill coherence or when user requests extraction/maintenance audit.
 
 2. **Mode selection:**
    - **Extraction mode**: Use when creating new skills from guideline content

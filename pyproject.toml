@@ -33,7 +33,7 @@ dev = [
 ]
 
 [tool.ruff]
-# Match PyCharm defaults (usually PEP 8)
+required-version = ">=0.14.14"
 line-length = 120
 indent-width = 4
 target-version = "py312"

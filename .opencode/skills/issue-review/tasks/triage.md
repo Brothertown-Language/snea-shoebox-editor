@@ -20,7 +20,8 @@ Classify the review path based on content analysis, not label conventions. Two-p
 | Path | When |
 |------|------|
 | `audit` | Content looks like a spec (phases/steps, success criteria, edge cases) |
-| `qa` | Bug report, unclear request, or issue needing clarification |
+| `analyze-and-spec` | Bug report (crash, error, broken, steps to reproduce, unexpected behavior) |
+| `qa` | Feature idea, unclear request, or issue needing clarification (not a bug) |
 | `just-review` | Already-audited spec with no new relevant comments |
 | `already-handled` | Issue appears complete (approved + implemented) |
 
@@ -40,10 +41,13 @@ Scan gathered data for these signals:
 | Comments contain "approved" or "go" | Check if also implemented → `already-handled` |
 | Comments contain audit finding patterns | `just-review` (if no new non-audit comments) |
 | `needs-approval` label present, no explicit auth | `just-review` (report auth status) |
-| Body uses bug report language ("crash", "error", "broken") | `qa` |
+| Body uses bug report language ("crash", "error", "broken") | `analyze-and-spec` |
+| Body contains "steps to reproduce" | `analyze-and-spec` |
+| Body describes unexpected behavior or regression | `analyze-and-spec` |
+| `bug` label present | `analyze-and-spec` (unless content clearly is not a bug) |
 | Issue is closed AND PR merged | `already-handled` |
-| Body is unclear, vague, or request for information | `qa` |
-| Title has `[SPEC]` but body is a bug report | `qa` (title ≠ content) |
+| Body is unclear, vague, or request for information (not a bug) | `qa` |
+| Title has `[SPEC]` but body is a bug report | `analyze-and-spec` (content over prefix) |
 
 **IMPORTANT:** Do NOT use the `[SPEC]` prefix or any label as the sole classification signal. Content analysis is the authoritative classifier.
 
@@ -55,11 +59,13 @@ Redirection examples:
 
 | Pass 1 Result | Pass 2 Observation | Redirect To |
 |----------------|--------------------|-------------| 
-| `audit` (based on checkboxes) | Content is really a bug report | `qa` |
+| `audit` (based on checkboxes) | Content is really a bug report | `analyze-and-spec` |
 | `just-review` | Body has no formal sections but describes a clear feature spec | `audit` |
 | `audit` | Comments contain audit findings AND unanswered questions | `audit` + flag for `qa` afterward |
 | `already-handled` | Only partially implemented | `audit` (spec still active) |
 | `just-review` | New scope-relevant comments since last audit | `audit` |
+| `qa` | Bug language detected on closer inspection | `analyze-and-spec` |
+| `analyze-and-spec` | Content is actually a feature request, not a bug | `qa` |
 
 ### Output Format
 
@@ -74,6 +80,10 @@ Verification: <one sentence confirming or noting redirect from Pass 1>
 Examples:
 
 ```
+Triage: analyze-and-spec (high confidence)
+Reason: Body describes a crash with steps to reproduce and expected vs actual behavior.
+Verification: Bug report language confirmed — routed to analyze-and-spec for root cause analysis.
+
 Triage: audit (high confidence)
 Reason: Body contains 6 phases with success criteria and edge cases.
 Verification: Content describes a structured feature spec — confirmed audit path.
@@ -81,6 +91,10 @@ Verification: Content describes a structured feature spec — confirmed audit pa
 Triage: qa (medium confidence)
 Reason: Body appears to be a spec but actually describes an error condition with no structured phases.
 Verification: Redirected from audit — title says [SPEC] but content is a bug report.
+
+Triage: analyze-and-spec (medium confidence)
+Reason: Body uses error terminology but lacks clear reproduction steps.
+Verification: Bug language detected, but root cause unclear — may need clarification before fix spec.
 ```
 
 ### Sub-issue Triage
@@ -100,7 +114,9 @@ Each sub-issue gets its own independent triage decision. A parent may be `audit`
 | Case | Handling |
 |------|----------|
 | No comments, no phases, no bug language | `qa` (unclear intent, ask for clarification) |
+| No comments, but bug language present | `analyze-and-spec` (bug language is sufficient) |
 | Issue is closed | Check if `already-handled` or stale |
 | Mixed signals (phases + bug language) | AI verification breaks tie; document reasoning |
-| Title says spec but body is bug | Redirect to `qa` |
+| Title says spec but body is bug | Redirect to `analyze-and-spec` |
 | Body lacks formal sections but clear feature | Redirect to `audit` |
+| Bug language present but actually a feature request | Redirect to `qa` |

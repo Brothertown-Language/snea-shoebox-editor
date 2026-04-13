@@ -65,13 +65,16 @@ Spec: <relevant spec section>
 Mandatory gates before returning:
 1. verification-before-completion --task verify
 2. finishing-a-development-branch --task checklist
-3. Commit and push to branch
+3. git-workflow --task review-prep
+4. Commit and push to branch
 
 Return result in Sub-agent Result Contract format:
   status: DONE | DONE_WITH_CONCERNS | OVERFLOW | BLOCKED
   files_changed: [...]
   summary: ...
   verification_passed: true | false
+  compare_url: "<URL or empty if not available>"
+  exec_summary: "<1-2 sentence executive summary or empty>"
 
 If context window overflow risk: return OVERFLOW per Overflow Signal Contract.
 """
@@ -106,9 +109,10 @@ Each sub-agent MUST:
 2. Implement only what is in the sub-task scope (respect boundaries)
 3. Run `verification-before-completion --task verify`
 4. Run `finishing-a-development-branch --task checklist`
-5. Commit and push to feature branch
-6. Return structured result per Sub-agent Result Contract
-7. Signal OVERFLOW if work exceeds capacity (per Overflow Signal Contract)
+5. Run `git-workflow --task review-prep`
+6. Commit and push to feature branch
+7. Return structured result per Sub-agent Result Contract (including compare_url and exec_summary)
+8. Signal OVERFLOW if work exceeds capacity (per Overflow Signal Contract)
 
 ## Edge Cases
 

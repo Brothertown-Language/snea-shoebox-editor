@@ -93,6 +93,12 @@ From all gathered data, extract prose descriptions of:
    - Has affected files table?
    - Has risk assessment?
 
+6. **Fix spec sub-issue check (for bug reports):**
+   - Do any sub-issues have titles starting with `[SPEC] Fix:`?
+   - Do any sub-issues have the `spec` label?
+   - If bug report has existing fix spec sub-issues, note their numbers and status
+   - This informs the `analyze-and-spec` task (skip creation if already exists)
+
 ### Step 7: Return Data for Downstream
 
 Prose description of gathered data — no structured schema required. The agent carries context forward to the triage task.

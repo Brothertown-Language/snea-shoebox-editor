@@ -1,52 +1,60 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-from sqlalchemy import Column, Integer, String, Text, Boolean, TIMESTAMP, ForeignKey
+from pgvector.sqlalchemy import Vector
+from sqlalchemy import TIMESTAMP, Boolean, Column, ForeignKey, Integer, String, Text
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
-from pgvector.sqlalchemy import Vector
+
 from ..base import Base
+
 
 class Source(Base):
     """
     Lookup table for high-level source collections (e.g., 'Natick/Trumbull').
     Managed via reference data seeding and administrative UI.
     """
-    __tablename__ = 'sources'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "sources"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(String, unique=True, nullable=False)  # Full name e.g., 'Natick/Trumbull'
     short_name = Column(String)  # Abbreviation for UI display
     description = Column(Text)
     citation_format = Column(Text)  # Rule for generating standard citations
     created_at = Column(TIMESTAMP(timezone=True), server_default=func.now())
-    
+
     records = relationship("Record", back_populates="source")
     matchup_entries = relationship("MatchupQueue", back_populates="source")
+
 
 class Language(Base):
     """
     Lookup table for valid language codes and display names.
     Ensures consistency across entries and provides dropdown data.
     """
-    __tablename__ = 'languages'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "languages"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
     code = Column(String, unique=True, nullable=False)  # ISO or project code
     name = Column(String, nullable=False)  # Display name
     description = Column(Text)
-    
+
     records = relationship("Record", secondary="record_languages", back_populates="language")
+
 
 class RecordLanguage(Base):
     """
     Auxiliary join table to support 1-record-to-many-languages.
     """
-    __tablename__ = 'record_languages'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "record_languages"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
-    record_id = Column(Integer, ForeignKey('records.id', ondelete='CASCADE'), nullable=False)
-    language_id = Column(Integer, ForeignKey('languages.id', ondelete='RESTRICT'), nullable=False)
+    record_id = Column(Integer, ForeignKey("records.id", ondelete="CASCADE"), nullable=False)
+    language_id = Column(Integer, ForeignKey("languages.id", ondelete="RESTRICT"), nullable=False)
     is_primary = Column(Boolean, nullable=False, default=False)
+
 
 class Record(Base):
     """
@@ -72,34 +80,37 @@ class Record(Base):
         reviewed_at (datetime): Timestamp of the last approval/review.
         reviewed_by (str): Email of the reviewer who approved the record.
     """
-    __tablename__ = 'records'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "records"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)  # Matches \nt Record: <id>
     lx = Column(String, nullable=False)  # Lexeme (\lx)
     sort_lx = Column(String)  # Normalized headword for sorting
     hm = Column(Integer, default=1)  # Homonym Number (\hm)
     ps = Column(String)  # Part of Speech (\ps)
     ge = Column(String)  # English Gloss (\ge)
-    source_id = Column(Integer, ForeignKey('sources.id', ondelete='RESTRICT'), nullable=False)
+    source_id = Column(Integer, ForeignKey("sources.id", ondelete="RESTRICT"), nullable=False)
     source_page = Column(String)  # Specific citation detail (\so)
-    status = Column(String, nullable=False, default='draft')  # 'draft', 'edited', 'approved'
+    status = Column(String, nullable=False, default="draft")  # 'draft', 'edited', 'approved'
     embedding = Column(Vector(1536))  # Semantic cross-reference
     mdf_data = Column(Text, nullable=False)  # Raw MDF body
-    
+
     # Locking fields
     is_locked = Column(Boolean, nullable=False, default=False)
-    locked_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))
+    locked_by = Column(String, ForeignKey("users.email", ondelete="RESTRICT", onupdate="CASCADE"))
     locked_at = Column(TIMESTAMP(timezone=True))
     lock_note = Column(Text)
-    
+
     # Audit & Workflow fields
     current_version = Column(Integer, nullable=False, default=1)
     is_deleted = Column(Boolean, nullable=False, default=False)
     updated_at = Column(TIMESTAMP(timezone=True), server_default=func.now(), onupdate=func.now())
-    updated_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))  # Identifier (email) of last editor
+    updated_by = Column(
+        String, ForeignKey("users.email", ondelete="RESTRICT", onupdate="CASCADE")
+    )  # Identifier (email) of last editor
     reviewed_at = Column(TIMESTAMP(timezone=True))
-    reviewed_by = Column(String, ForeignKey('users.email', ondelete='RESTRICT', onupdate='CASCADE'))
-    
+    reviewed_by = Column(String, ForeignKey("users.email", ondelete="RESTRICT", onupdate="CASCADE"))
+
     language = relationship("Language", secondary="record_languages", back_populates="records")
     source = relationship("Source", back_populates="records")
     history = relationship("EditHistory", back_populates="record")

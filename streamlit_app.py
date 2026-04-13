@@ -121,7 +121,7 @@ def _initialize_database():
                     if mastodon_url:
                         st.info(
                             f"If the problem persists, please report the issue to "
-                            f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
+                            f"<MAINTAINER_CONTACT>: [{mastodon_url}]({mastodon_url})"
                         )
 
                     if st.button("Retry initialization"):
@@ -198,7 +198,7 @@ def _initialize_database():
                     if mastodon_url:
                         st.info(
                             f"If the problem persists, please report the issue to "
-                            f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
+                            f"<MAINTAINER_CONTACT>: [{mastodon_url}]({mastodon_url})"
                         )
 
                     if st.button("Retry initialization"):

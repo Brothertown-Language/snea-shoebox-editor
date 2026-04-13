@@ -53,7 +53,20 @@ Only substantive differences after semantic matching are reported.
 
 ### Step 5: Report Findings
 
-Report all findings using the report-only format. No auto-fixes.
+Report all findings using the v3 auto-fix format. Auto-fix eligible findings (approach differences) are applied directly.
+
+## Auto-Fix Classification
+
+| Finding Type | Classification | Fix Action |
+|-------------|----------------|-----------|
+| MISSING_PHASE | auto-fix | Add missing phase to spec |
+| MISSING_STEP | auto-fix | Add missing step to spec |
+| APPROACH_DIFFERENCE | auto-fix | Add missing approach or clarify difference |
+| MISSING_EDGE_CASE | auto-fix | Add edge case handling to relevant step |
+| EXTRA_PHASE | flag-for-review | May be intentional; developer decides |
+| EXTRA_STEP | flag-for-review | May be intentional; developer decides |
+| SCOPE_EXPANSION | conditional | Verify clean-room plan isn't over-scoped before flagging |
+| VAGUE_PROBLEM | flag-for-review | Problem statement requires human input |
 
 ## Finding Classification
 
@@ -83,7 +96,8 @@ Subtask: fidelity
 Finding: [MISSING_PHASE|EXTRA_PHASE|MISSING_STEP|EXTRA_STEP|APPROACH_DIFFERENCE|MISSING_EDGE_CASE|SCOPE_EXPANSION|VAGUE_PROBLEM] - [summary]
 Location: [phase/step where difference found]
 Context: [why this matters for implementation fidelity]
-Recommendation: [add missing step/phase OR investigate approach difference OR trigger brainstorming]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 

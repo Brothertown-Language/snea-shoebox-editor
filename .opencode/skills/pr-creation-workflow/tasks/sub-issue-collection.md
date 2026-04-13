@@ -6,6 +6,18 @@ Fetch sub-issues for a parent issue and build the autoclose list for the PR body
 
 ## Procedure
 
+### Detect Branch Type
+
+First, detect whether this is a single-issue or batch PR:
+
+```bash
+# Check if batch state file exists
+ls .opencode/tmp/batch-*.md 2>/dev/null
+
+# If exists → batch PR format
+# If not exists → single/multi-task PR format
+```
+
 ### Single-Task Spec
 
 If the spec has no sub-issues (single-task), include only the parent issue in the PR body:
@@ -36,6 +48,33 @@ Fixes #<parent>
    Fixes #<child2>
    ```
 
+### Batch PR
+
+For batch PRs (assembled from multiple issues via `assemble-batch`):
+
+1. **Read batch state file** (`.opencode/tmp/batch-*.md`) to get list of all issues in the batch
+2. **Build both sections:**
+   - `## Batch Issues` section listing each issue with its description and `Implements #N` annotations
+   - `Fixes #N` annotations for all issues (parent and children) at the bottom
+
+```markdown
+**Summary:**
+
+<1-2 sentences describing the overall impact of the batch>
+
+**Outcome:** <What changed for stakeholders>
+
+## Batch Issues
+
+Implements #660 — Add pre-implementation analysis task
+Implements #662 — Fix batch branch squash verification
+Implements #621 — Collapse executing-plans into divide-and-conquer
+
+Fixes #660
+Fixes #662
+Fixes #621
+```
+
 ### Multi-Task Spec WITHOUT Sub-Issues
 
 If `get_sub_issues` returns empty for a multi-task spec, this is a CRITICAL VIOLATION — sub-issues should have been created before implementation. Halt and create sub-issues first.
@@ -59,6 +98,25 @@ Fixes #100
 Fixes #101
 Fixes #102
 Fixes #103
+```
+
+**Batch:**
+```markdown
+**Summary:**
+
+Unified five approved issues into a single batch implementation, eliminating forked execution paths.
+
+**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-batch → batch branch → single PR.
+
+## Batch Issues
+
+Implements #660 — Add pre-implementation analysis task
+Implements #662 — Fix batch branch squash verification
+Implements #621 — Collapse executing-plans into divide-and-conquer
+
+Fixes #660
+Fixes #662
+Fixes #621
 ```
 
 ## After PR Creation

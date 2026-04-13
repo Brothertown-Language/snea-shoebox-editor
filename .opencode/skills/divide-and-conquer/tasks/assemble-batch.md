@@ -9,6 +9,7 @@ Orchestrate batch implementation by dispatching sub-agents for each approved iss
 ## Entry Criteria
 
 - Approval-gate has verified authorization for one or more issues
+- `pre-implementation-analysis` has expanded sub-issues and produced the flat item list
 - Worktree is created and ready
 
 ## Exit Criteria
@@ -23,10 +24,12 @@ Orchestrate batch implementation by dispatching sub-agents for each approved iss
 
 ### Step 1: Determine Execution Order
 
-- Read the issue spec(s) from GitHub
-- For multi-issue: use dependency order from batch-approval-analysis
-- For single issue: treat as batch of one — no special casing
+- Read the batch state file from `pre-implementation-analysis` (`.opencode/tmp/batch-*.md`)
+- For multi-issue: use dependency order from `pre-implementation-analysis`
+- For single issue: treat as batch of one — no special casing, no shortcuts
 - Determine complexity level for each issue (simple/moderate/complex)
+
+**Single issue = batch of one.** There is no separate code path. The `assemble-batch` task handles single-issue dispatch as the default. This eliminates forked execution paths.
 
 ### Step 2: Create Feature Branches and Worktrees
 

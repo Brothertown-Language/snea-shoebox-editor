@@ -56,7 +56,7 @@ If a collision is detected with a different branch name, HALT and report to the 
 
 ### 3.6. Capture Dev Base Hash (Parallel Dispatch)
 
-When multiple worktrees will be created for parallel dispatch (from `batch-approval-analysis`), capture the dev branch hash BEFORE creating any worktrees:
+When multiple worktrees will be created for parallel dispatch (from `pre-implementation-analysis`), capture the dev branch hash BEFORE creating any worktrees:
 
 ```bash
 DEV_BASE_HASH=$(git rev-parse --short 7 origin/dev)
@@ -149,4 +149,4 @@ These environment variables are consumed by:
 - `finishing-a-development-branch` skill
 - `subagent-driven-development` dispatch context
 - `divide-and-conquer` assemble-batch task
-- `batch-approval-analysis` execution plan
+- `pre-implementation-analysis` execution plan

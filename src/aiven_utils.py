@@ -1,14 +1,15 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import requests
 import time
-import os
+from typing import Any
+
+import requests
 import streamlit as st
+
 from src.frontend.ui_utils import handle_ui_error
-from typing import Optional, Dict, Any
 
 
-def get_aiven_config() -> Optional[Dict[str, str]]:
+def get_aiven_config() -> dict[str, str] | None:
     """Retrieve Aiven configuration from Streamlit secrets."""
     try:
         if "aiven" in st.secrets:
@@ -22,7 +23,7 @@ def get_aiven_config() -> Optional[Dict[str, str]]:
     return None
 
 
-def get_service_info(config: Dict[str, str]) -> Optional[Dict[str, Any]]:
+def get_service_info(config: dict[str, str]) -> dict[str, Any] | None:
     """Get the full information of the Aiven service."""
     url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}"
     headers = {"Authorization": f"aivenv1 {config['api_token']}"}
@@ -40,13 +41,13 @@ def get_service_info(config: Dict[str, str]) -> Optional[Dict[str, Any]]:
         return None
 
 
-def get_service_status(config: Dict[str, str]) -> Optional[str]:
+def get_service_status(config: dict[str, str]) -> str | None:
     """Get the current state of the Aiven service."""
     info = get_service_info(config)
     return info.get("state") if info else None
 
 
-def start_service(config: Dict[str, str]) -> bool:
+def start_service(config: dict[str, str]) -> bool:
     """Trigger the Aiven service to start (power on)."""
     url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}"
     headers = {"Authorization": f"aivenv1 {config['api_token']}"}
@@ -62,7 +63,7 @@ def start_service(config: Dict[str, str]) -> bool:
 
 
 @st.dialog("Database Starting")
-def show_startup_dialog(config: Dict[str, str], initial_status: str):
+def show_startup_dialog(config: dict[str, str], initial_status: str):
     """Display a dialog with the database startup status."""
     st.write(f"The production database is currently **{initial_status}**.")
 
@@ -86,9 +87,10 @@ def show_startup_dialog(config: Dict[str, str], initial_status: str):
         # Also check DNS
         dns_ok = True
         if current_status == "RUNNING":
-            from src.frontend.utils import verify_dns
             from urllib.parse import urlparse
+
             from src.database.connection import get_db_url
+            from src.frontend.utils import verify_dns
 
             url = get_db_url()
             if url:
@@ -189,9 +191,10 @@ def ensure_db_alive():
 
     # Try DNS resolution first as a quick check
     if status == "RUNNING":
-        from src.frontend.utils import verify_dns
         from urllib.parse import urlparse
+
         from src.database.connection import get_db_url
+        from src.frontend.utils import verify_dns
 
         # In production, we expect DNS failures if service was recently started
         url = get_db_url()

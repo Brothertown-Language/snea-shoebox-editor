@@ -78,9 +78,7 @@ def test_endpoint(method: str, path: str, expected_status: int = 200) -> bool:
             print(f"✅ {method} {path} → {response.status_code}")
             return True
         else:
-            print(
-                f"❌ {method} {path} → {response.status_code} (expected {expected_status})"
-            )
+            print(f"❌ {method} {path} → {response.status_code} (expected {expected_status})")
             return False
     except requests.RequestException as e:
         print(f"❌ {method} {path} → Connection error: {e}")
@@ -97,36 +95,20 @@ def test_core_endpoints() -> dict:
     results["/users"] = test_endpoint("GET", "/users")
 
     # Repository endpoints (use current repo)
-    owner = os.environ.get("GIT_OWNER", "NewSRX-Tech-LLC")
-    repo = os.environ.get("GIT_REPO", "prn_email_util")
+    owner = os.environ.get("GIT_OWNER", "<GIT_OWNER>")
+    repo = os.environ.get("GIT_REPO", "<GIT_REPO>")
 
     results[f"/repos/{owner}/{repo}"] = test_endpoint("GET", f"/repos/{owner}/{repo}")
-    results[f"/repos/{owner}/{repo}/issues"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/issues"
-    )
-    results[f"/repos/{owner}/{repo}/pulls"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/pulls"
-    )
-    results[f"/repos/{owner}/{repo}/branches"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/branches"
-    )
-    results[f"/repos/{owner}/{repo}/labels"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/labels"
-    )
-    results[f"/repos/{owner}/{repo}/releases"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/releases"
-    )
-    results[f"/repos/{owner}/{repo}/milestones"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/milestones"
-    )
-    results[f"/repos/{owner}/{repo}/hooks"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/hooks"
-    )
+    results[f"/repos/{owner}/{repo}/issues"] = test_endpoint("GET", f"/repos/{owner}/{repo}/issues")
+    results[f"/repos/{owner}/{repo}/pulls"] = test_endpoint("GET", f"/repos/{owner}/{repo}/pulls")
+    results[f"/repos/{owner}/{repo}/branches"] = test_endpoint("GET", f"/repos/{owner}/{repo}/branches")
+    results[f"/repos/{owner}/{repo}/labels"] = test_endpoint("GET", f"/repos/{owner}/{repo}/labels")
+    results[f"/repos/{owner}/{repo}/releases"] = test_endpoint("GET", f"/repos/{owner}/{repo}/releases")
+    results[f"/repos/{owner}/{repo}/milestones"] = test_endpoint("GET", f"/repos/{owner}/{repo}/milestones")
+    results[f"/repos/{owner}/{repo}/hooks"] = test_endpoint("GET", f"/repos/{owner}/{repo}/hooks")
 
     # Contents endpoint
-    results["/repos/{owner}/{repo}/contents/"] = test_endpoint(
-        "GET", f"/repos/{owner}/{repo}/contents/"
-    )
+    results["/repos/{owner}/{repo}/contents/"] = test_endpoint("GET", f"/repos/{owner}/{repo}/contents/")
 
     return results
 
@@ -134,8 +116,8 @@ def test_core_endpoints() -> dict:
 def test_label_operations() -> bool:
     """Test label CRUD operations."""
     print("\n=== Testing Label Operations ===")
-    owner = os.environ.get("GIT_OWNER", "NewSRX-Tech-LLC")
-    repo = os.environ.get("GIT_REPO", "prn_email_util")
+    owner = os.environ.get("GIT_OWNER", "<GIT_OWNER>")
+    repo = os.environ.get("GIT_REPO", "<GIT_REPO>")
 
     # Create test label
     test_label = f"test-api-{os.urandom(4).hex()}"

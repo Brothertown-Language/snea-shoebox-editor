@@ -1,20 +1,20 @@
 # Copyright (c) 2026 Brothertown Language
 # 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨
 def upload_mdf():
-    import streamlit as st
     import datetime as _dt
+
+    import streamlit as st
+
     from src.database.connection import get_session
     from src.database.models.core import Source
-    from src.services.upload_service import UploadService
-    from src.services.identity_service import IdentityService
     from src.frontend.ui_utils import (
-        hide_sidebar_nav,
-        render_mdf_block,
         apply_standard_layout_css,
         handle_ui_error,
-        render_back_to_main_button,
+        hide_sidebar_nav,
     )
     from src.logging_config import get_logger
+    from src.services.identity_service import IdentityService
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.upload_mdf")
 
@@ -398,13 +398,10 @@ def _render_review_view():
     exclusively for record comparison content.
     """
     import streamlit as st
-    from src.services.upload_service import UploadService
+
     from src.frontend.ui_utils import (
-        hide_sidebar_nav,
-        render_mdf_block,
         apply_standard_layout_css,
-        handle_ui_error,
-        render_back_to_main_button,
+        hide_sidebar_nav,
     )
     from src.logging_config import get_logger
 
@@ -461,15 +458,17 @@ def _render_review_view():
 
 def _render_review_table(batch_id, session_deps):
     """Render the D-1 review table for a given batch_id."""
-    import streamlit as st
     import uuid as _uuid
+
+    import streamlit as st
+
     from src.database.connection import get_session
+    from src.database.models.core import Record, Source
     from src.database.models.workflow import MatchupQueue
-    from src.database.models.core import Record, Language, Source
-    from src.services.upload_service import UploadService
-    from src.services.preference_service import PreferenceService
-    from src.frontend.ui_utils import render_mdf_block, handle_ui_error, compute_mdf_line_diffs
+    from src.frontend.ui_utils import compute_mdf_line_diffs, handle_ui_error, render_mdf_block
     from src.logging_config import get_logger
+    from src.services.preference_service import PreferenceService
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.upload_mdf.review")
     user_email = session_deps["user_email"]

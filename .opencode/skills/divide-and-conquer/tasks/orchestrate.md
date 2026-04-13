@@ -81,51 +81,16 @@ If ANY check fails → HALT and report. Do NOT proceed.
 /skill divide-and-conquer --task assess
 ```
 
-**Assessment yields one of:**
+**Assessment yields workload sizing context only** — it informs the dispatch but does NOT change the workflow path. All implementation goes through `assemble-batch`:
 
-- `IMPLEMENT_DIRECTLY` → Proceed to Step 4a
-- `DECOMPOSE` → Proceed to Step 4b
+- **Small workload** → `assemble-batch` dispatches one sub-agent (batch of one)
+- **Large workload** → `assemble-batch` dispatches multiple sub-agents (batch of N)
 
-### Step 4a: Implement Directly (Trivial Tasks)
+**The unified path is: `orchestrate` → `assemble-batch` → sub-agent(s) → verification → review-prep.** There is no IMPLEMENT_DIRECTLY shortcut.
 
-For tasks assessed as `IMPLEMENT_DIRECTLY`:
+### Step 4: Dispatch to Assemble-Batch (Unified Path)
 
-- The orchestrator implements directly without sub-agent dispatch
-- Scope is small enough that context overflow is not a risk
-- Still MUST run verification gate (Step 5) and review-prep (Step 6)
-- After implementation, proceed to Step 5
-
-### Step 4b: Decompose and Dispatch (Non-Trivial Tasks)
-
-For tasks assessed as `DECOMPOSE`:
-
-1. **Invoke decompose task:**
-
-   ```
-   /skill divide-and-conquer --task decompose
-   ```
-
-   Yields: ordered sub-tasks with descriptions, scope, boundaries, and dependencies.
-
-2. **Invoke dispatch task** for each sub-task in order:
-
-   ```
-   /skill divide-and-conquer --task dispatch
-   ```
-
-   Each sub-agent returns a structured result per Sub-agent Result Contract.
-
-3. **Invoke merge task** to aggregate results:
-
-   ```
-   /skill divide-and-conquer --task merge
-   ```
-
-   Yields: final summary, conflict identification, readiness for completion.
-
-### Step 4c: Batch Assembly (When Batch Needed)
-
-For multi-issue batches or when `assemble-batch` is needed:
+**Every implementation — single issue or batch — follows this path.**
 
 1. **Invoke assemble-batch task:**
 
@@ -135,9 +100,9 @@ For multi-issue batches or when `assemble-batch` is needed:
 
    This handles:
    - Branch-per-issue creation and worktrees
-   - Dependency merge protocol (Tier 1-2 auto-resolve, Tier 3 HALT)
-   - Sub-agent dispatch per issue with intent-and-context metadata
+   - Sub-agent dispatch per issue (single issue = one sub-agent)
    - Squash-merge each feature branch into batch branch
+   - Dependency merge protocol (Tier 1-2 auto-resolve, Tier 3 HALT)
    - Frozen branch enforcement
 
 2. **After assemble-batch completes**, proceed to Step 5
@@ -248,7 +213,7 @@ ready_for: pr_creation
 
 ### Step 7: HALT with Results
 
-**Chat output:**
+**Chat output (MANDATORY format — executive summary FIRST, URL LAST, AI byline LAST after URL):**
 
 ```markdown
 **Summary:**
@@ -260,12 +225,22 @@ Integrated workflow skills from Superpowers repository.
 Created 4 core skills for brainstorming, planning, execution, and verification.
 
 Compare URL: https://github.com/owner/repo/compare/dev...branch
+
+🤖 OpenCode (ollama-cloud/glm-5.1) completed
 ```
+
+**Format verification (MANDATORY — check before posting):**
+
+- [ ] Executive summary present as first element
+- [ ] Compare URL present as last element before byline
+- [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelID>) <status>`
+- [ ] No URL before executive summary
+- [ ] No byline before URL
 
 **Issue comment:**
 
 ```markdown
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) completed
 
 **Summary:**
 

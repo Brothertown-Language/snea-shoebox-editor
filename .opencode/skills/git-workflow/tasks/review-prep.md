@@ -6,11 +6,11 @@ Generate GitHub compare URL for developer review AFTER the implementation task h
 
 ## ⚠️ MANDATORY INVOCATION
 
-**This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
+**This task MUST be invoked after every implementation completes. There is NO decision point. Invoking review-prep is NOT optional — the agent MUST call `/skill git-workflow --task review-prep` explicitly after implementation.**
 
 The sequence is:
 
-1. Implementation complete → commit → push → **review-prep invoked automatically**
+1. Implementation complete → commit → push → **review-prep MUST be invoked**
 2. Compare URL generated → HALT
 3. Wait for developer to say "create a PR"
 
@@ -122,6 +122,7 @@ When implementation determines "no file changes needed":
 - Feature branch pushed (done by implementation task)
 - No explicit "create a PR" instruction yet
 - Temp files cleaned up (see Step 1)
+- **Precondition: This task MUST be explicitly invoked by the agent after implementation completes. It is NOT auto-triggered.**
 
 ## Exit Criteria
 
@@ -247,7 +248,7 @@ https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 **⚠️ CRITICAL: URLs go in CHAT ONLY - NEVER to GitHub Issues.**
 
-Report to chat (exec summary + URL):
+Report to chat (exec summary + URL + AI byline):
 
 ```
 **Summary:**
@@ -257,9 +258,19 @@ Report to chat (exec summary + URL):
 **Outcome:** <What changed for stakeholders>
 
 Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
+
+🤖 <AgentName> (<ModelID>) completed
 ```
 
 (GitBucket example — for GitHub use `https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>`)
+
+**Format verification (MANDATORY — check before posting):**
+
+- [ ] Executive summary present as first element
+- [ ] Compare URL present as last element before byline
+- [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelID>) <status>`
+- [ ] No URL before executive summary
+- [ ] No byline before URL
 
 **Why This Matters:**
 
@@ -374,7 +385,7 @@ git push -u origin <branch> (push)
     ↓
 Report completion
     ↓
-review-prep invoked AUTOMATICALLY
+review-prep MUST be invoked
     ↓
 Verify branch is pushed
     ↓
@@ -453,5 +464,5 @@ Updated git-workflow skill to push feature branches after implementation and pro
 ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) completed
 ````

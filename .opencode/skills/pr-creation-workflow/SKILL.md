@@ -49,12 +49,13 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 
 ## Pre-PR Creation Checklist (MANDATORY)
 
-- Squash verification: EXACTLY ONE commit on branch
+- Squash verification: ONE commit for single-issue branches; N commits (one per item) for batch branches
+- Batch branch detection: Check for `.opencode/tmp/batch-*.md` — if present, skip re-squashing
 - Changelog generated (all platforms, no exceptions)
 - Branch state: working tree clean
 - Push verification: no unpushed commits
 - Co-author trailers: both AI and human trailers included
-- Issue references: `Fixes #<parent>` for single-task, `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue
+- Issue references: `Fixes #<parent>` for single-task, `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue; for batch PRs include `## Batch Issues` section listing all implemented issues
 
 ## After PR Creation
 
@@ -75,7 +76,7 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 
 | Guideline | Content |
 |-----------|---------|
-| `113-git-pr-workflow.md` | Full PR workflow |
+| `git-workflow` skill `pr-creation` task | Full PR workflow |
 | `000-critical-rules.md` | Critical violation: PRs without instruction |
 | `020-go-prohibitions.md` | GO does not authorize PR |
 | `010-approval-gate.md` | PR timing requirements |

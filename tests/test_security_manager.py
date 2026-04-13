@@ -3,8 +3,9 @@
 import os
 import sys
 from pathlib import Path
-import streamlit as st
 from unittest.mock import MagicMock
+
+import streamlit as st
 
 # Add src to sys.path
 sys.path.append(str(Path(__file__).parent.parent))
@@ -13,9 +14,9 @@ sys.path.append(str(Path(__file__).parent.parent))
 if "session_state" not in st.__dict__:
     st.session_state = {}
 
-from src.database.connection import init_db, get_session
-from src.database.models.identity import Permission, User
+from src.database.connection import get_session, init_db
 from src.database.models.core import Source
+from src.database.models.identity import Permission
 from src.services.security_manager import SecurityManager
 
 
@@ -99,7 +100,6 @@ def test_security_manager():
         assert has_perm is False
 
         # 6. Test rehydrate_session
-        from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
         mock_controller = MagicMock()
         mock_controller.get.return_value = {"token": {"access_token": "fake_token"}}

@@ -24,6 +24,12 @@
   - "**Awaiting authorization to begin Phase X.** Say 'approved' or 'go' when ready."
   - "Awaiting your approval."
   - "Ready when you are."
+- **Discussion conclusions are NOT authorization.** Verbal agreement, consensus, or opinion expressed in discussion does NOT constitute explicit authorization:
+  - "Sounds like we need to X" → discussion consensus, NOT "do X"
+  - "I think the answer is Y" → opinion, NOT "implement Y"
+  - "So we're going with approach Z" → conclusion, NOT "start Z"
+  - "That makes sense, let's do it" → verbal agreement, NOT explicit authorization
+  - "This looks like it should be X" → observation, NOT "make it X"
 - **Questions are NOT authorization.** "Should I do X?" and "Would you like me to X?" are questions seeking permission, not receiving it. Never act on a question — wait for explicit authorization.
 - **SILENTLY HALT after every task/report.** Factual reporting is permitted, but it must NEVER be followed by a prompt for next steps.
 - **Never name the next phase or action in a halt message.** Halt messages must be factual statements about what was completed — never forward-looking references to what comes next.

@@ -48,8 +48,22 @@ Subtask: content-quality
 Finding: [ARCHITECTURAL-REASONING-GAP|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|DEPENDENCY-INCOMPLETE|COMMENT-FORMAT-VIOLATION|SUPERSEDED-CLOSURE-VIOLATION] - [summary]
 Location: [section of spec]
 Context: [why this matters for implementability]
-Recommendation: [suggested fix]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| DEPENDENCY-INCOMPLETE | auto-fix | Add specific integration points |
+| SCOPE-CREEP-RISK | conditional | Remove scope-creep steps after verifying no orphan dependencies |
+| AMBIGUOUS | flag-for-review | Ambiguity requires domain context to resolve |
+| CONFLICTING | flag-for-review | Contradictions require understanding intent |
+| VERIFICATION-GAP | flag-for-review | Success criteria require domain expertise |
+| COMMENT-FORMAT-VIOLATION | flag-for-review | May be intentional formatting |
+| SUPERSEDED-CLOSURE-VIOLATION | flag-for-review | May reference valid future work |
+| ARCHITECTURAL-REASONING-GAP | flag-for-review | Requires understanding design tradeoffs |
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)

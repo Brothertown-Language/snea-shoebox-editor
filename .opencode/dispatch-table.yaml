@@ -410,11 +410,8 @@ integration_points:
     
   - skill: "git-workflow"
     guidelines:
-      - "110-git-branch-first.md"
-      - "111-git-commit-workflow.md"
-      - "113-git-pr-workflow.md"
-      - "114-git-branch-cleanup.md"
-      - "124-github-archive-workflow.md"
+      - "000-critical-rules.md"
+      - "115-branch-naming.md"
     note: "Git operations, branch management, PR creation"
 
   - skill: "systematic-debugging"

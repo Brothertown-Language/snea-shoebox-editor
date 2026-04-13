@@ -2,7 +2,9 @@
 
 ## Purpose
 
-Check for completeness of operational requirements: logging, metrics, alerts, deployment constraints, and data migration. New in v2.
+Check for completeness of operational requirements: logging, metrics, alerts, deployment constraints, and data migration. New in v2. Auto-fix eligible findings are applied directly.
+
+**Delegated from:** N/A (new in v2, indigenous to spec-auditor).
 
 ## Checks
 
@@ -47,9 +49,16 @@ Subtask: operational
 Finding: OPERATIONAL-REQUIREMENTS-INCOMPLETE - [what's missing]
 Location: [section of spec or "absent from spec"]
 Context: [why operational readiness matters for this spec]
-Recommendation: [add logging/metrics/deployment section]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| OPERATIONAL-REQUIREMENTS-INCOMPLETE | auto-fix | Add operational requirements section stub (developer fills in details) |
 
 ## Cross-Reference
 

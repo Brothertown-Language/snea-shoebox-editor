@@ -1,11 +1,11 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import unittest
+
 from src.mdf.parser import format_mdf_record
 
 
 class TestFormatMdfRecord(unittest.TestCase):
-
     def test_removes_indentation(self):
         text = "\\lx test\n    \\ps n\n    \\ge thing"
         result = format_mdf_record(text)
@@ -86,5 +86,5 @@ class TestFormatMdfRecord(unittest.TestCase):
         self.assertEqual(result, expected)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     unittest.main()

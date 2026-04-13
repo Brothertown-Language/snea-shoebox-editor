@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Use when creating a branch, committing changes, pushing work, or creating a PR. Also use when git rebase/merge produces conflicts — invoke conflict-resolution skill for classification. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash, conflict, merge conflict, rebase conflict.
+description: Use when creating a branch, committing changes, pushing work, or creating a PR. Also use when git rebase/merge produces conflicts — invoke conflict-resolution skill for classification. Also use when user says "check pr" or "check prs" to trigger PR state verification and cleanup if merged. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash, conflict, merge conflict, rebase conflict, check pr, check prs, check pull request, check pull requests.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -24,16 +24,20 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 | `implementation` | Handle WIP commits during implementation | ~400 |
 | `review-prep` | Push branch, generate compare URL for review | ~560 |
 | `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
+| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ~550 |
 | `cleanup` | Delete merged branches, clean stale refs | ~800 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
+| `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ~50 |
 
 ## Invocation
 
-- `/skill git-workflow --task pre-work` - BEFORE implementation starts (automatic via approval-gate)
+- `/skill git-workflow --task pre-work` - BEFORE implementation starts (MUST invoke after approval-gate passes)
 - `/skill git-workflow --task implementation` - During implementation work
-- `/skill git-workflow --task review-prep` - AFTER implementation done (automatic, no decision point)
+- `/skill git-workflow --task review-prep` - AFTER implementation done (MUST invoke, no decision point)
 - `/skill git-workflow --task pr-creation` - When user says "create a PR"
+- `/skill git-workflow --task rebase-pending` - After PR merge, before cleanup
 - `/skill git-workflow --task cleanup` - After PR merge confirmed
+- `/skill git-workflow --task check-pr` - When user says "check pr" / "check prs" / "check pull request(s)"
 - `/skill git-workflow --task completion` - Invoke when workflow halts at any point
 - `/skill git-workflow` - Overview only
 
@@ -41,9 +45,9 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** Triggered by `approved`/`go`, implementation completion, or `create a PR` — never prompt for invocation.
-2. **Phase sequence:** Pre-work (Phase 1) → Implementation (user-driven) → review-prep (Phase 3, MANDATORY, automatic) → pr-creation (explicit instruction only) → cleanup (after merge).
-3. **review-prep is mandatory:** Skipping it after implementation is a CRITICAL GUIDELINE VIOLATION.
+1. **Mandatory invocation (no decision point):** pre-work is invoked after approval-gate passes; review-prep is invoked after implementation completes — the agent MUST invoke both at the appropriate time, never skip them, and never prompt for invocation.
+2. **Phase sequence:** Pre-work (Phase 1) → Implementation (user-driven) → review-prep (Phase 3, MANDATORY, MUST invoke after implementation) → pr-creation (explicit instruction only) → cleanup (after merge).
+3. **review-prep is mandatory:** Skipping it after implementation is a CRITICAL GUIDELINE VIOLATION. The agent MUST invoke `/skill git-workflow --task review-prep` after implementation completes.
 4. **PR requires explicit instruction:** "approved"/"go" authorizes implementation ONLY — not PR creation.
 5. **Chat output order:** Executive summary FIRST, URL LAST. Never put URL before summary.
 6. **Compare URLs use `dev` as base:** Feature branches target `dev`, not `main`.
@@ -66,7 +70,7 @@ When spec investigation reveals ZERO file modifications: skip branch creation, s
 ```
 Implementation complete
     ↓
-review-prep invoked AUTOMATICALLY (Phase 3)
+review-prep MUST be invoked (Phase 3)
     ↓
 Push branch → Generate compare URL → HALT
     ↓
@@ -101,4 +105,5 @@ This skill is a **heavy skill** — its task files contain significant detail th
 ## Cross-References
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)
-- Related guidelines: `000-critical-rules.md`, `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
+- Related guidelines: `000-critical-rules.md`, `115-branch-naming.md`
+- Related skill tasks: `git-workflow --task pre-work` (branch creation), `git-workflow --task cleanup` (post-merge), `git-workflow --task pr-creation` (PR workflow)

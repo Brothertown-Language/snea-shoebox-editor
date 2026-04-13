@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from src.database.base import Base
+from src.database.models import meta as _meta  # noqa: F401 — register SchemaVersion with Base.metadata
 from src.database.models.core import Language, Record, RecordLanguage, Source
 from src.database.models.identity import User
 from src.database.models.workflow import MatchupQueue

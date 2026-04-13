@@ -6,6 +6,7 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 
 from src.database.base import Base
+from src.database.models import meta as _meta  # noqa: F401 — register SchemaVersion with Base.metadata
 from src.database.models.core import Language, Record, RecordLanguage, Source
 from src.database.models.identity import Permission, User, UserActivityLog
 from src.database.models.search import SearchEntry
@@ -65,7 +66,7 @@ class TestDatabaseCRUD(unittest.TestCase):
         with self.engine.connect() as conn:
             conn.execute(
                 text(
-                    "TRUNCATE schema_version, edit_history, matchup_queue, user_activity_log, permissions, search_entries, records, users, languages, sources RESTART IDENTITY CASCADE;"
+                    "TRUNCATE edit_history, matchup_queue, user_activity_log, permissions, search_entries, records, users, languages, sources RESTART IDENTITY CASCADE;"
                 )
             )
             conn.commit()

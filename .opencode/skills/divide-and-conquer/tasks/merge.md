@@ -73,6 +73,8 @@ After merge, invoke `--task completion` for:
 - Compare URL generation
 - Executive summary in chat
 - Status comments (substantive only)
+- Review-prep invocation (`git-workflow --task review-prep`) if not yet run
+- Chat output format verification (exec summary first, URL last, AI byline after URL)
 
 ## Edge Cases
 

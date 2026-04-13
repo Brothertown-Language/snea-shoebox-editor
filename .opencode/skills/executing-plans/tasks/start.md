@@ -1,34 +1,39 @@
 # Task: start
 
-Begin plan execution and verify prerequisites before implementation.
+Dispatch to divide-and-conquer/assemble-batch for implementation.
 
-## Prerequisites
+## Purpose
 
-1. Approved plan (verified by approval-gate)
-2. Plan stored as GitHub/GitBucket issue
-3. Feature branch created (by git-workflow)
+This task dispatches plan execution to `divide-and-conquer --task assemble-batch`, which handles all implementation through the unified batch workflow.
 
-## Start Execution
+## Dispatch Procedure
 
-### 1. Verify Plan Approval
+1. **Verify plan approval** — confirm the plan issue has explicit approval in comments
+2. **Verify prerequisites** — feature branch exists, working tree clean, dependencies ready
+3. **Dispatch to divide-and-conquer:**
 
-- Query the plan issue for plan content
-- Check for explicit approval in comments
-- Verify plan has no placeholders (writing-plans validation)
+```
+/skill divide-and-conquer --task assemble-batch
+```
 
-### 2. Verify Prerequisites
+The `assemble-batch` task handles:
 
-- Feature branch exists
-- Working tree clean
-- All dependencies ready
+- Creating feature branches and worktrees
+- Sub-agent dispatch for each implementation item
+- Squash-merging feature branches into batch branch
+- Verification gates (verification-before-completion, finishing-a-development-branch)
 
-### 3. Initialize Tracking
+**There is no single-issue bypass.** Single issue = batch of one = one sub-agent.
 
-- Set current step to 1
-- Report "Starting execution" to chat
-- HALT and wait for `next step` or `continue`
+## Legacy Task Redirects
 
-### Enforcement
+| Legacy Task | Redirect Target |
+|------------|----------------|
+| `step` | `divide-and-conquer --task orchestrate` |
+| `progress` | `divide-and-conquer --task orchestrate` |
+| `verify` | `verification-before-completion --task verify` |
+
+## Enforcement
 
 - No approval → HALT (approval-gate blocks)
 - Placeholders in plan → HALT (writing-plans blocks)

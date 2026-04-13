@@ -10,74 +10,50 @@ compatibility: opencode
 
 ## Overview
 
-Plan execution workflow that implements approved plans step-by-step with verification at each stage. This skill ensures systematic implementation, evidence collection, and quality gates.
+Plan execution skill that dispatches to `divide-and-conquer/assemble-batch` for implementation. This skill is a thin dispatch layer — all implementation logic flows through the unified batch workflow.
 
-**Source Attribution:** Adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
+**Every approval follows one path:** `executing-plans` → `divide-and-conquer/assemble-batch` → batch branch → pr-creation → one PR.
 
-## Persona
-
-You are an Implementation Executor. Your focus is executing approved plans systematically, collecting evidence, and maintaining progress tracking.
+**There is no single-issue bypass.** Single issue = batch of one = one sub-agent.
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `start` | Begin plan execution, verify prerequisites | ~300 |
-| `step` | Execute single step, collect evidence | ~500 |
-| `progress` | Report current progress | ~400 |
-| `verify` | Run verification for current step | ~350 |
+| `start` | Dispatch to divide-and-conquer/assemble-batch for implementation | ~200 |
+| `step` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
+| `progress` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
+| `verify` | Redirects to verification-before-completion | ~100 |
 
 ## Invocation
 
 - `/skill executing-plans` — Overview only
-- `/skill executing-plans --task start` — Begin execution
-- `/skill executing-plans --task step` — Execute next step
-- `/skill executing-plans --task progress` — Show progress
-- `/skill executing-plans --task verify` — Verify current step
+- `/skill executing-plans --task start` — Dispatch to divide-and-conquer/assemble-batch
+- `/skill executing-plans --task step` — Redirects to divide-and-conquer/orchestrate
+- `/skill executing-plans --task progress` — Redirects to divide-and-conquer/orchestrate
+- `/skill executing-plans --task verify` — Redirects to verification-before-completion
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** Auto-invoked when plan receives explicit approval (`approved: plan`), user says `execute plan` or `start implementation`, or after writing-plans creates approved plan. DO NOT skip steps or proceed without verification.
+1. **Dispatch to divide-and-conquer:** The `start` task invokes `divide-and-conquer --task assemble-batch` which handles all implementation — single issue or batch — through the unified workflow.
 
-2. **Step-by-Step Execution:** Execute ONE step at a time. Collect evidence for each step. Verify before marking complete. HALT after each step completion.
+2. **No direct implementation:** This skill does not implement directly. It dispatches.
 
-3. **Progress Tracking:** Update plan issue with step status. Post progress comments with evidence. Mark steps as ☑ when verified complete.
-
-4. **Exit conditions:** Execution HALTS when: current step complete → HALT and wait for user; all steps complete → transition to verification; user says `next step` → execute next step.
-
-5. **Evidence is mandatory:** No step is complete without verifiable evidence. "Trust me" is not evidence. Placeholders ("TBD", "TODO") are not evidence.
+3. **Single issue = batch of one:** There is no separate path for single issues. The `assemble-batch` task handles single-issue dispatch as the default code path.
 
 ## Dispatch Order
 
 ```
-writing-plans (approved) → approval-gate (plan) → executing-plans → verification-before-completion
+Plan approved (approval-gate)
+  → executing-plans --task start
+  → divide-and-conquer --task assemble-batch
+  → verification-before-completion
+  → finishing-a-development-branch
+  → git-workflow/review-prep
 ```
-
-## Integration
-
-### GitBucket Platform Adaptations
-
-- Post progress comments to plan issue
-- Update STATUS markers in issue body
-- Link evidence to plan via comments
-
-### Git-Workflow Integration
-
-- Feature branch created by git-workflow
-- Commits pushed after each step
-- PR created after all steps complete (by user instruction only)
 
 ## Cross-References
 
-- Related skills: `writing-plans` (plan creation), `verification-before-completion` (final verification), `git-workflow` (branch/PR), `subagent-driven-development` (alternative: dispatch subagents per task)
-- Related guidelines: `142-planning-archive-workflow.md` (plan structure), `000-critical-rules.md` (evidence requirements)
+- Related skills: `divide-and-conquer` (implementation orchestration), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `git-workflow` (branch/PR/cleanup)
 
-## Platform Compatibility
-
-- **GitHub:** Not applicable (this repository uses GitBucket)
-- **GitBucket:** Use Python client from gitbucket-api skill (MCP tools removed)
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
-
-## Source Attribution
-
-This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> (branch: newsrx). Key adaptations: integration with git-workflow skill for branch management, GitBucket platform support, dispatch table integration, structured evidence collection and verification gates.
+Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)

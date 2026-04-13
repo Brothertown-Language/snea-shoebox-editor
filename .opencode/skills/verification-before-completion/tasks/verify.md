@@ -90,8 +90,20 @@ Verify all success criteria have evidence before allowing completion claims.
 - [ ] Re-run verification after evidence added
 
 ---
-🤖 🔍 Verification by OpenCode (ollama-cloud/glm-5)
+🤖 OpenCode (ollama-cloud/glm-5) verification
 ```
+
+## Post-Verification Chain
+
+After verification passes, the following skills MUST be invoked in sequence:
+
+1. **finishing-a-development-branch --task checklist** — Branch readiness verification
+2. **git-workflow --task review-prep** — Push verification, compare URL, chat output
+
+These are NOT optional. Verification passing triggers the chain:
+`verify` → `finishing-a-development-branch --task checklist` → `git-workflow --task review-prep`
+
+If verification fails, HALT — do NOT proceed to the chain.
 
 ## Enforcement
 

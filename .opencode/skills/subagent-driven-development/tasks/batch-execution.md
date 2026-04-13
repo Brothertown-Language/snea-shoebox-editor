@@ -2,11 +2,11 @@
 
 ## Purpose
 
-Accept a batch execution plan from `approval-gate --task batch-approval-analysis` and dispatch subagents according to the dependency order and parallelization strategy. Uses branch-per-issue with merge-based dependency resolution.
+Accept a batch execution plan from `approval-gate --task pre-implementation-analysis` and dispatch subagents according to the dependency order and parallelization strategy. Uses branch-per-issue with merge-based dependency resolution.
 
 ## Entry Criteria
 
-- `batch-approval-analysis` has completed and produced an execution plan
+- `pre-implementation-analysis` has completed and produced an execution plan
 - All issues in the plan are verified as authorized
 - Worktrees are available for execution
 
@@ -23,7 +23,7 @@ Accept a batch execution plan from `approval-gate --task batch-approval-analysis
 
 ### Step 1: Receive Execution Plan
 
-The execution plan comes from `batch-approval-analysis` and contains:
+The execution plan comes from `pre-implementation-analysis` and contains:
 
 - **Serial phases**: Issues that must execute in order (must-precede chains)
 - **Parallel-safe groups**: Issues that can run simultaneously (no file overlap)

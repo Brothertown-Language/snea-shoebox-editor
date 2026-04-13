@@ -172,3 +172,4 @@ Auto-creating sub-issues for an approved multi-task spec does NOT require separa
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-codebase`
+- Label state machine: `141-planning-status-tracking.md §10` (label transitions when creating sub-issues)

@@ -82,7 +82,7 @@ Existing files that predate this skill are EXEMPT. New files and modified code i
 
 ## Operating Protocol
 
-1. Automatically applied whenever code is written or modified
+1. MUST be applied whenever code is written or modified
 2. Check size limits before merge/commit
 3. Grandfather existing files; enforce on new/modified files only
 4. If violation detected: stop, decompose, re-check, then proceed

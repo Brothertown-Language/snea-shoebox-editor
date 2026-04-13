@@ -7,6 +7,7 @@ Uses standard Python logging. Log level is determined by the runtime environment
 - Local development: DEBUG
 - Production (Streamlit Cloud): WARNING
 """
+
 import logging
 import sys
 
@@ -16,6 +17,7 @@ def _is_production() -> bool:
     # 1. Check Streamlit secrets for explicit override
     try:
         import streamlit as st
+
         # Note: streamlit.secrets might not be available depending on how the app is started,
         # but in a streamlit app it should be there.
         if hasattr(st, "secrets") and "runtime" in st.secrets and "mode" in st.secrets["runtime"]:
@@ -26,6 +28,7 @@ def _is_production() -> bool:
     # 2. Fallback to existing heuristic
     try:
         import getpass
+
         return getpass.getuser() == "appuser"
     except Exception:
         return False
@@ -51,10 +54,7 @@ def get_logger(name: str) -> logging.Logger:
         handler = logging.StreamHandler(sys.stderr)
         handler.setLevel(level)
 
-        formatter = logging.Formatter(
-            "%(asctime)s [%(levelname)s] %(name)s: %(message)s",
-            datefmt="%Y-%m-%d %H:%M:%S"
-        )
+        formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s: %(message)s", datefmt="%Y-%m-%d %H:%M:%S")
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 

@@ -191,4 +191,75 @@ When spec reaches completion:
 
 ______________________________________________________________________
 
+## 10. Label State Transitions
+
+### Label Categories
+
+| Category | Labels | Purpose |
+| -- | -- | -- |
+| **Core Workflow** | `needs-approval`, `needs-revision`, `in-progress` | Track issue lifecycle position |
+| **Categorization** | `bug`, `enhancement`, `architecture`, `spec`, `plan` | Classify issue type |
+| **Resolution** | `wontfix`, `duplicate`, `question` | Mark final disposition |
+
+### Core Workflow Labels
+
+| Label | Meaning | When Applied | When Removed |
+| -- | -- | -- | -- |
+| `needs-approval` | Awaiting explicit authorization to implement | Issue/spec created or spec revised | Explicit approval received (`approved`/`go`) |
+| `needs-revision` | Spec requires changes before approval | Spec audit findings, reviewer feedback | Revised spec re-submitted and awaiting approval (replace with `needs-approval`) |
+| `in-progress` | Currently being implemented | Authorization verified and implementation started | Implementation complete (PR created) or blocked |
+
+### Full Transition Matrix
+
+| From State | Trigger | To State | Label Actions |
+| -- | -- | -- | -- |
+| (new) | Issue created | `needs-approval` | **ADD** `needs-approval` |
+| `needs-approval` | User says `approved`/`go` | (implementation) | **REMOVE** `needs-approval`, **ADD** `in-progress` if starting work |
+| `needs-approval` | Spec audit requires changes | `needs-revision` | **REMOVE** `needs-approval`, **ADD** `needs-revision` |
+| `needs-approval` | Already implemented (autoclose) | (closed) | **REMOVE** `needs-approval` |
+| `needs-revision` | Revised spec re-submitted | `needs-approval` | **REMOVE** `needs-revision`, **ADD** `needs-approval` |
+| `needs-revision` | Spec withdrawn/duplicate | (closed) | **REMOVE** `needs-revision`, **ADD** resolution label (`wontfix`/`duplicate`) |
+| `in-progress` | PR created | (review) | **REMOVE** `in-progress` |
+| `in-progress` | Implementation blocked | `needs-revision` | **REMOVE** `in-progress`, **ADD** `needs-revision` |
+| (review) | PR merged | (closed) | No label change (labels no longer relevant on closed issue) |
+| (review) | PR changes requested | `needs-revision` | **ADD** `needs-revision` |
+| Any state | Bug/issue type identified | (categorized) | **ADD** categorization label (`bug`, `enhancement`, etc.) — categorization labels are additive, they do NOT replace workflow labels |
+
+### GitHub `labels` Parameter Warning
+
+**The GitHub `labels` parameter replaces ALL labels on an issue — it is NOT additive.**
+
+When updating labels via `github_issue_write` or similar tools, you MUST:
+
+1. **Read current labels first**: `github_issue_read(method="get_labels", ...)`
+2. **Construct the complete label set**: Include existing labels PLUS any new labels
+3. **Write the full set**: Pass ALL labels, not just the ones being added
+
+```python
+# WRONG — removes all other labels
+github_issue_write(method="update", labels=["in-progress"])
+
+# CORRECT — preserves existing labels
+current_labels = [l["name"] for l in github_issue_read(method="get_labels", ...)]
+new_labels = set(current_labels) - {"needs-approval"} | {"in-progress"}
+github_issue_write(method="update", labels=list(new_labels))
+```
+
+**Adding a label without reading first will ERASE all other labels.** Always read before writing.
+
+### Label Transition Cross-References
+
+Skills that change issue state MUST consult this section (`§10`) before adding or removing labels:
+
+| Skill | Task(s) | Label Actions |
+| -- | -- | -- |
+| `approval-gate` | `verify-authorization`, `verify-blockers`, `verify-already-implemented`, `completion` | Remove `needs-approval` on approval; add `needs-revision` on revision; remove `needs-approval` on autoclose |
+| `github-issue-creation` | `creation`, `completion` | Add `needs-approval` on creation |
+| `spec-auditor` | `structure` | Add `needs-revision` when audit requires changes |
+| `git-workflow` | `cleanup` | No label changes (issues closed, labels no longer relevant) |
+| `writing-plans` | `create` | No label changes (plan is a sub-issue) |
+| `executing-plans` | `start` | Add `in-progress` when implementation begins |
+
+______________________________________________________________________
+
 *Source: Content migrated from `040-plan-delivery.md`*

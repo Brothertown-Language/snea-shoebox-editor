@@ -6,10 +6,10 @@ Push feature branch, generate compare URL, and report completion for developer r
 
 ## ⚠️ MANDATORY INVOCATION
 
-**This task is ALWAYS invoked automatically after implementation completes. There is NO decision point.**
+**This task MUST be invoked after every implementation completes. There is NO decision point. The agent MUST call this explicitly — it is NOT auto-triggered.**
 
 The sequence is:
-1. Implementation complete → **post-implementation invoked automatically**
+1. Implementation complete → **MUST invoke post-implementation**
 2. Branch pushed, compare URL generated → HALT
 3. Wait for developer to say "create a PR"
 

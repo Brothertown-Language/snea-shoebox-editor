@@ -4,7 +4,7 @@
 
 **All specs use GitHub Issues as the authoritative source.**
 
-For archive and closure workflow, see `124-github-archive-workflow.md`.
+For archive and closure workflow, see the `git-workflow` skill `cleanup` task.
 
 ______________________________________________________________________
 
@@ -165,7 +165,7 @@ Every spec file MUST include:
 4. **Numbered Phases**: Phase 1, Phase 2, Phase 3...
 5. **Numbered Steps**: 1, 2, 3 within each phase
 6. **Status Markers**: `☐`/`↻`/`☑`/`☒` for each step
-7. **Byline Footer**: A footer line with AI attribution: `🤖 ✨ Created by <AgentName> (<ModelID>)`
+7. **Byline Footer**: A footer line with AI attribution: `🤖 <AgentName> (<ModelID>) created`
 
 ## 8. Phase Naming Quality (MANDATORY)
 

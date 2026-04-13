@@ -10,7 +10,7 @@ compatibility: opencode
 
 ## Overview
 
-Authorization Gatekeeper ensuring all code changes follow the spec + authorization workflow. Invoked automatically before implementation begins.
+Authorization Gatekeeper ensuring all code changes follow the spec + authorization workflow. The agent MUST invoke this skill before implementation begins.
 
 ## Persona
 
@@ -27,7 +27,8 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ~400 |
 | `verify-blockers` | Check for blocking issues/dependencies | ~320 |
 | `verify-open-questions` | Check for unresolved questions in spec | ~370 |
-| `batch-approval-analysis` | Analyze interdependencies when multiple issues approved simultaneously | ~500 |
+| `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ~250 |
+| `pre-implementation-analysis` | Analyze interdependencies and expand sub-issues for all approved issues (single or batch), producing flat item list for assemble-batch | ~500 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
 
@@ -39,7 +40,8 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-already-implemented` - Check if spec already implemented
 - `/skill approval-gate --task verify-blockers` - Check for blockers
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
-- `/skill approval-gate --task batch-approval-analysis` - Analyze interdependencies for multiple approved issues (yields to assemble-batch)
+- `/skill approval-gate --task verify-fix-spec` - Verify fix spec exists for bug reports
+- `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-batch
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate --task completion` - Invoke when workflow halts at any point
 - `/skill approval-gate` - Overview only
@@ -48,7 +50,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** Triggered by `approved`/`go`, authorization questions, or implementation start. Never prompt for invocation.
+1. **Mandatory invocation (no decision point):** The agent MUST invoke approval-gate when it encounters `approved`/`go`, authorization questions, or implementation start. Never prompt for invocation — just invoke the skill.
 2. **Pre-Implementation Verification:** Verify spec exists as GitHub Issue, verify authorization, verify sub-issues (multi-task), check for blockers.
 3. **Implementation Scope:** Authorization grants ONLY the specified phase/task. HALT after completing authorized work.
 4. **Multi-task cascade:** When parent has sub-issues, authorization cascades to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
@@ -61,17 +63,23 @@ After `verify-authorization` completes successfully (all gates pass), the skill 
 ```
 Spec approved
   → verify-authorization (all gates pass)
-  → ✅ writing-plans --task create (auto-dispatched)
+  → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
+  → divide-and-conquer/assemble-batch (dispatch sub-agents, squash-merge into batch branch)
+  → verification-before-completion
+  → finishing-a-development-branch
+  → git-workflow/review-prep
 
 Plan approved
   → verify-authorization (all gates pass)
-  → ✅ executing-plans --task start (auto-dispatched)
+  → executing-plans --task start (auto-dispatched)
 
 Already implemented
   → verify-authorization (all gates pass)
   → verify-already-implemented (detects implementation)
   → Auto-close (no dispatch)
 ```
+
+**Unified path:** Every approval — single issue or batch — follows the same flow: `verify-authorization` → `pre-implementation-analysis` → `assemble-batch`. Single issue = batch of one sub-agent. No forked paths.
 
 **Dispatch context detection:**
 - Spec approval: Issue title contains `[SPEC` or has `spec` label
@@ -88,6 +96,23 @@ Already implemented
 | **Explicit authorization** | User says `approved`, `go`, or `approved: N.M` — OVERRIDES `needs-approval` label |
 | **Open questions resolved** | No unresolved items in spec |
 | **Sub-issues verified** | Multi-task specs require phase-level sub-issues |
+| **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
+
+## Fix Spec Verification for Bug Reports
+
+Bug reports require a fix spec sub-issue before they can be considered complete. This verification is performed by the `verify-fix-spec` task.
+
+| Check | Action |
+|-------|--------|
+| Bug report has fix spec sub-issue with `[SPEC] Fix:` title | ✅ Pass — fix spec exists |
+| Bug report has fix spec sub-issue via `spec` label | ✅ Pass — fix spec exists |
+| Bug report has NO fix spec sub-issue | ❌ Fail — invoke `issue-review --task analyze-and-spec` to create one |
+| Bug report is NOT a bug report | ⏭️ Skip — this check does not apply |
+
+This check is invoked:
+- During `verify-already-implemented` for bug reports
+- During `issue-review --task analyze-and-spec` already-handled path
+- Before closing any issue that has `bug` label or bug report language
 
 ## Authorization Scope Rules
 
@@ -101,6 +126,7 @@ Already implemented
 | **Revision ≠ implementation** | Spec updates don't authorize code changes |
 | **Reference ≠ cascade** | Issue mentions in body/comments do NOT cascade |
 | **Confirmation ≠ authorization** | Confirming an observation does NOT authorize implementation |
+| **Discussion conclusion ≠ authorization** | Verbal agreement, consensus, or opinion expressed in discussion does NOT constitute explicit authorization — see `020-go-prohibitions.md` §1 |
 | **Batch carry-forward** | Authorization carries forward within a batch via persisted batch state file; no re-authorization needed between issues |
 
 ## Post-Implementation Workflow
@@ -127,7 +153,9 @@ This skill is a **heavy skill** — its task files contain significant detail th
 ## Cross-References
 
 - Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
-- Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md`
+- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Related skill tasks: `approval-gate --task verify-sub-issues` (sub-issue verification), `git-workflow --task cleanup` (post-merge closure)
+- Label state machine: `141-planning-status-tracking.md §10` (label add/remove actions for this skill)
 
 ```yaml+symbolic
 schema_version: "1.0"

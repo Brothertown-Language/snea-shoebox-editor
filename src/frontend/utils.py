@@ -1,12 +1,13 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import streamlit as st
-import socket
 import os
 import platform
 import shutil
-import psutil
+import socket
 from urllib.parse import urlparse
+
+import psutil
+import streamlit as st
 from sqlalchemy import text
 
 
