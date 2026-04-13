@@ -1,0 +1,102 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Digraph block parser. Extracts dot/digraph fenced blocks from markdown and converts to networkx DiGraph.
+Usage: uv run python .opencode/tools/symbolic extract-dot
+"""
+
+from __future__ import annotations
+import os as _os
+import re
+import sys
+from pathlib import Path
+
+import networkx as nx
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+DIGRAPH_PATTERN = re.compile(r"```(?:dot|digraph)\s*\n(.*?)```", re.DOTALL)
+
+
+def parse_dot_to_networkx(dot_text: str) -> nx.DiGraph:
+    g = nx.DiGraph()
+    edge_re = re.compile(r'"([^"]+)"\s*->\s*"([^"]+)"(?:\s*\[label\s*=\s*"([^"]*)"\])?')
+
+    for line in dot_text.splitlines():
+        line = line.strip().rstrip(";")
+        if not line or line.startswith("digraph") or line.startswith("graph") or line == "}":
+            continue
+        m = edge_re.match(line)
+        if m:
+            src, dst, label = m.group(1), m.group(2), m.group(3) or ""
+            g.add_edge(src, dst, label=label)
+            continue
+        bare_edge = re.match(r'"([^"]+)"\s*->\s*"([^"]+)"', line)
+        if bare_edge:
+            g.add_edge(bare_edge.group(1), bare_edge.group(2))
+
+    return g
+
+
+def extract_digraphs(scan_dir: Path) -> list[tuple[str, nx.DiGraph, str]]:
+    import yaml
+    yaml_fence = re.compile(r"```yaml\+symbolic\n(.*?)```", re.DOTALL)
+    results: list[tuple[str, nx.DiGraph, str]] = []
+
+    md_files = sorted(scan_dir.rglob("*.md"))
+    for md_file in md_files:
+        rel = str(md_file.relative_to(scan_dir))
+        try:
+            text = md_file.read_text()
+        except Exception:
+            continue
+
+        for match in DIGRAPH_PATTERN.finditer(text):
+            dot_text = match.group(1)
+            g = parse_dot_to_networkx(dot_text)
+            results.append((rel, g, dot_text))
+
+        for ym in yaml_fence.finditer(text):
+            try:
+                data = yaml.safe_load(ym.group(1))
+                if isinstance(data, dict):
+                    for sm_raw in data.get("state_machines", []):
+                        if isinstance(sm_raw, dict):
+                            g = nx.DiGraph()
+                            sm_id = sm_raw.get("id", "unknown")
+                            for t in sm_raw.get("transitions", []):
+                                if isinstance(t, dict) and "from" in t and "to" in t:
+                                    g.add_edge(str(t["from"]), str(t["to"]),
+                                              label=str(t.get("guard", "")))
+                            if g.number_of_nodes() > 0:
+                                results.append((f"{rel}#SM:{sm_id}", g, ""))
+            except Exception:
+                pass
+
+    return results
+
+
+def main() -> None:
+    if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+        print(
+            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "Direct invocation is not permitted.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Extract digraph blocks")
+    parser.add_argument("--dir", type=str, default=str(BASE_DIR / ".opencode"))
+    args = parser.parse_args()
+
+    results = extract_digraphs(Path(args.dir))
+    if results:
+        print(f"Found {len(results)} digraph/state-machine graphs:")
+        for rel, g, _ in results:
+            print(f"  {rel}: {g.number_of_nodes()} nodes, {g.number_of_edges()} edges")
+    else:
+        print("No digraph blocks found.")
+
+
+if __name__ == "__main__":
+    main()

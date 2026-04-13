@@ -107,3 +107,84 @@ Key points:
 - All multi-task specs MUST have sub-issues before implementation begins
 - Auto-creating sub-issues for an approved multi-task spec is a pre-implementation setup step covered by the parent's authorization. No separate authorization is required.
 - After auto-creating sub-issues, the agent proceeds with implementation immediately (no re-authorization needed).
+
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-12T12:00:00Z"
+rules:
+  - id: go-prohibitions-001
+    title: "Agent must never write GO as standalone token"
+    conditions:
+      all:
+        - "agent_output_contains == 'GO'"
+        - "context != 'quoted_example'"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: []
+    source: "020-go-prohibitions.md §1 NEVER DO"
+
+  - id: go-prohibitions-002
+    title: "No echo or printf commands ever"
+    conditions:
+      all:
+        - "command_includes == 'echo'"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: []
+    source: "020-go-prohibitions.md §1 NEVER DO"
+
+  - id: go-prohibitions-003
+    title: "No awaiting-GO or pending-state markers"
+    conditions:
+      all:
+        - "agent_output_contains == 'awaiting'"
+        - "agent_output_contains == 'approval'"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: []
+    source: "020-go-prohibitions.md §1 NEVER DO"
+
+  - id: go-prohibitions-004
+    title: "Never prompt for authorization"
+    conditions:
+      any:
+        - "agent_output_matches == 'May I proceed?'"
+        - "agent_output_matches == 'Shall I continue?'"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: []
+    source: "020-go-prohibitions.md §1 NEVER DO"
+
+  - id: go-prohibitions-005
+    title: "Questions are NOT authorization"
+    conditions:
+      all:
+        - "user_input_format == 'question'"
+    actions:
+      - SKIP
+    conflicts_with: [approval-gate-002]
+    requires: []
+    triggers: []
+    source: "020-go-prohibitions.md §1 NEVER DO"
+
+  - id: go-prohibitions-006
+    title: "Multi-task spec requires sub-issues"
+    conditions:
+      all:
+        - "spec_has_phases == true"
+        - "sub_issues_count == 0"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: [approval-gate-001]
+    triggers: [github-sub-issues]
+    source: "020-go-prohibitions.md §5"
+```

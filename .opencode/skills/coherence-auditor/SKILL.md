@@ -95,6 +95,18 @@ After creating audit log:
 
 - Related skills: `git-workflow` (PR with changes), `guideline-auditor` (verify guideline quality)
 
+## Symbolic Engine Integration
+
+**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
+
+```bash
+uv run python .opencode/tools/symbolic conflicts
+```
+
+The `sym-conflicts` analysis provides formal contradiction detection via sympy boolean satisfiability. Results are used as **evidence** (not verdict) during coherence audits — they identify overlapping conditions with conflicting actions, replacing ad-hoc prose comparison.
+
+**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.
+
 ## Parent Spec
 
 GitHub Issue #316: Guidelines Audit: Extract Complex Workflows to Skills

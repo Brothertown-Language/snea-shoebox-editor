@@ -1,0 +1,225 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Extract yaml+symbolic fenced blocks from markdown files. Schema validation with graceful skip on errors.
+Usage: uv run python .opencode/tools/symbolic extract [--dir PATH] [--verbose]
+"""
+
+from __future__ import annotations
+import os as _os
+import sys
+
+import json
+import re
+from dataclasses import dataclass, field, asdict
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+DEFAULT_SCAN_DIR = BASE_DIR / ".opencode"
+
+SCHEMA_VERSION = "1.0"
+FENCE_PATTERN = re.compile(r"```yaml\+symbolic\n(.*?)```", re.DOTALL)
+NORMATIVE_TERMS = re.compile(r"\b(MUST|SHALL|NEVER|ALWAYS|REQUIRED|FORBIDDEN)\b")
+
+REQUIRED_RULE_FIELDS = {"id", "title", "actions"}
+REQUIRED_SM_FIELDS = {"id", "states", "start_state", "transitions"}
+
+
+@dataclass
+class Rule:
+    id: str
+    title: str
+    conditions_all: list[str] = field(default_factory=list)
+    conditions_any: list[str] = field(default_factory=list)
+    actions: list[str] = field(default_factory=list)
+    conflicts_with: list[str] = field(default_factory=list)
+    requires: list[str] = field(default_factory=list)
+    triggers: list[str] = field(default_factory=list)
+    source: str = ""
+    raw_conditions: dict = field(default_factory=dict)
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class Transition:
+    from_state: str
+    to_state: str
+    guard: str = ""
+    action: str = ""
+
+    def to_dict(self) -> dict:
+        return asdict(self)
+
+
+@dataclass
+class StateMachine:
+    id: str
+    states: list[str] = field(default_factory=list)
+    start_state: str = ""
+    transitions: list[Transition] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {"id": self.id, "states": self.states, "start_state": self.start_state,
+                "transitions": [t.to_dict() for t in self.transitions]}
+
+
+@dataclass
+class ExtractResult:
+    rules: list[Rule] = field(default_factory=list)
+    state_machines: list[StateMachine] = field(default_factory=list)
+    files_scanned: int = 0
+    blocks_found: int = 0
+    warnings: list[str] = field(default_factory=list)
+
+    def to_dict(self) -> dict:
+        return {
+            "rules": [r.to_dict() for r in self.rules],
+            "state_machines": [sm.to_dict() for sm in self.state_machines],
+            "files_scanned": self.files_scanned,
+            "blocks_found": self.blocks_found,
+            "warnings": self.warnings,
+        }
+
+
+def _parse_rule(raw: dict, warnings: list[str], source_file: str) -> Rule | None:
+    missing = REQUIRED_RULE_FIELDS - set(raw.keys())
+    if missing:
+        warnings.append(f"{source_file}: rule missing required fields {missing}: {raw.get('id', '?')}")
+        return None
+    conds = raw.get("conditions", {})
+    if isinstance(conds, dict):
+        conditions_all = conds.get("all", []) if isinstance(conds.get("all", []), list) else []
+        conditions_any = conds.get("any", []) if isinstance(conds.get("any", []), list) else []
+    else:
+        conditions_all = []
+        conditions_any = []
+    return Rule(
+        id=str(raw["id"]),
+        title=str(raw["title"]),
+        conditions_all=[str(c) for c in conditions_all],
+        conditions_any=[str(c) for c in conditions_any],
+        actions=[str(a) for a in raw.get("actions", [])],
+        conflicts_with=[str(c) for c in raw.get("conflicts_with", [])],
+        requires=[str(r) for r in raw.get("requires", [])],
+        triggers=[str(t) for t in raw.get("triggers", [])],
+        source=str(raw.get("source", "")),
+    )
+
+
+def _parse_state_machine(raw: dict, warnings: list[str], source_file: str) -> StateMachine | None:
+    missing = REQUIRED_SM_FIELDS - set(raw.keys())
+    if missing:
+        warnings.append(f"{source_file}: state_machine missing required fields {missing}: {raw.get('id', '?')}")
+        return None
+    transitions = []
+    for t in raw.get("transitions", []):
+        if isinstance(t, dict) and "from" in t and "to" in t:
+            transitions.append(Transition(
+                from_state=str(t["from"]),
+                to_state=str(t["to"]),
+                guard=str(t.get("guard", "")),
+                action=str(t.get("action", "")),
+            ))
+        else:
+            warnings.append(f"{source_file}: malformed transition in SM {raw['id']}: {t}")
+    return StateMachine(
+        id=str(raw["id"]),
+        states=[str(s) for s in raw.get("states", [])],
+        start_state=str(raw.get("start_state", "")),
+        transitions=transitions,
+    )
+
+
+def extract_yaml_blocks(scan_dir: Path, verbose: bool = False) -> ExtractResult:
+    import yaml
+    result = ExtractResult()
+    md_files = sorted(scan_dir.rglob("*.md"))
+    result.files_scanned = len(md_files)
+
+    for md_file in md_files:
+        rel = md_file.relative_to(scan_dir)
+        try:
+            text = md_file.read_text()
+        except Exception as e:
+            result.warnings.append(f"{rel}: cannot read: {e}")
+            continue
+
+        for match in FENCE_PATTERN.finditer(text):
+            result.blocks_found += 1
+            yaml_text = match.group(1)
+            try:
+                data = yaml.safe_load(yaml_text)
+            except yaml.YAMLError as e:
+                result.warnings.append(f"{rel}: YAML parse error: {e}")
+                continue
+            if not isinstance(data, dict):
+                result.warnings.append(f"{rel}: expected dict, got {type(data).__name__}")
+                continue
+            sv = data.get("schema_version", "")
+            if sv != SCHEMA_VERSION:
+                result.warnings.append(f"{rel}: schema_version {sv!r} != {SCHEMA_VERSION!r}, skipping")
+                continue
+            for rule_raw in data.get("rules", []):
+                if isinstance(rule_raw, dict):
+                    rule = _parse_rule(rule_raw, result.warnings, str(rel))
+                    if rule:
+                        result.rules.append(rule)
+            for sm_raw in data.get("state_machines", []):
+                if isinstance(sm_raw, dict):
+                    sm = _parse_state_machine(sm_raw, result.warnings, str(rel))
+                    if sm:
+                        result.state_machines.append(sm)
+
+            last_updated = data.get("last_updated", "")
+            if verbose and last_updated:
+                print(f"  last_updated: {last_updated}", file=sys.stderr)
+
+    return result
+
+
+def main() -> None:
+    if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+        print(
+            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "Direct invocation is not permitted.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    import argparse
+    parser = argparse.ArgumentParser(description="Extract yaml+symbolic blocks")
+    parser.add_argument("--dir", type=str, default=str(DEFAULT_SCAN_DIR))
+    parser.add_argument("--verbose", action="store_true")
+    parser.add_argument("--json", action="store_true", help="Output as JSON")
+    args = parser.parse_args()
+
+    scan_dir = Path(args.dir)
+    if not scan_dir.exists():
+        print(f"Error: directory not found: {scan_dir}", file=sys.stderr)
+        sys.exit(1)
+
+    result = extract_yaml_blocks(scan_dir, verbose=args.verbose)
+
+    if args.json:
+        print(json.dumps(result.to_dict(), indent=2))
+    else:
+        print(f"Files scanned: {result.files_scanned}")
+        print(f"Blocks found:  {result.blocks_found}")
+        print(f"Rules:         {len(result.rules)}")
+        print(f"State machines:{len(result.state_machines)}")
+        for r in result.rules:
+            print(f"  [{r.id}] {r.title}")
+        for sm in result.state_machines:
+            print(f"  SM[{sm.id}] states={len(sm.states)} start={sm.start_state}")
+        if result.warnings:
+            print(f"\nWarnings ({len(result.warnings)}):")
+            for w in result.warnings:
+                print(f"  ⚠ {w}", file=sys.stderr)
+
+    if result.warnings and not args.verbose:
+        print(f"\n({len(result.warnings)} warnings — use --verbose for details)", file=sys.stderr)
+
+
+if __name__ == "__main__":
+    main()

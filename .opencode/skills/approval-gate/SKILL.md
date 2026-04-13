@@ -128,3 +128,48 @@ This skill is a **heavy skill** — its task files contain significant detail th
 
 - Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
 - Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md`
+
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-12T12:00:00Z"
+rules:
+  - id: approval-gate-skill-001
+    title: "Pre-implementation authorization verification"
+    conditions:
+      all:
+        - "spec_exists == true"
+        - "user_authorized == false"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: [approval-gate-001]
+    triggers: [git-workflow]
+    source: "approval-gate/SKILL.md §Authorization Requirements"
+
+  - id: approval-gate-skill-002
+    title: "Multi-task cascade: authorization extends to all sub-issues"
+    conditions:
+      all:
+        - "parent_has_sub_issues == true"
+        - "user_authorized == true"
+    actions:
+      - PROCEED
+    conflicts_with: []
+    requires: [approval-gate-002]
+    triggers: [divide-and-conquer]
+    source: "approval-gate/SKILL.md §Multi-task cascade"
+
+  - id: approval-gate-skill-003
+    title: "Post-implementation: push then halt"
+    conditions:
+      all:
+        - "implementation_complete == true"
+        - "pr_not_created == true"
+    actions:
+      - INVOKE(git-workflow)
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: [git-workflow]
+    source: "approval-gate/SKILL.md §Post-Implementation Workflow"
+```

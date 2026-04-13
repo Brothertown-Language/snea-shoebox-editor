@@ -4,6 +4,8 @@ Full conversational exploration workflow for requirements gathering before spec 
 
 ## Process Flow
 
+<!-- Original dot digraph below is superseded by the yaml+symbolic state machine block at the end of this file. -->
+
 ```dot
 digraph brainstorming {
     "Explore project context" -> "Scope check";
@@ -114,3 +116,72 @@ The `spec-creation` skill handles:
 - Change control for revisions
 
 This separation ensures exploration (brainstorming) and structuring (spec-creation) are distinct concerns with distinct discipline.
+
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-12T12:00:00Z"
+rules: []
+state_machines:
+  - id: brainstorming-flow
+    states:
+      - "Explore project context"
+      - "Scope check"
+      - "Decompose project"
+      - "Visual questions ahead?"
+      - "Offer Visual Companion"
+      - "Ask clarifying questions"
+      - "Propose 2-3 approaches"
+      - "Present design incrementally"
+      - "User approves?"
+      - "Invoke spec-creation"
+    start_state: "Explore project context"
+    transitions:
+      - from: "Explore project context"
+        to: "Scope check"
+        guard: "context_gathered == true"
+        action: PROCEED
+      - from: "Scope check"
+        to: "Decompose project"
+        guard: "scope_type == 'multi-subsystem'"
+        action: PROCEED
+      - from: "Scope check"
+        to: "Visual questions ahead?"
+        guard: "scope_type == 'single'"
+        action: PROCEED
+      - from: "Decompose project"
+        to: "Visual questions ahead?"
+        guard: "decomposition_complete == true"
+        action: PROCEED
+      - from: "Visual questions ahead?"
+        to: "Offer Visual Companion"
+        guard: "visual_questions == true"
+        action: PROCEED
+      - from: "Visual questions ahead?"
+        to: "Ask clarifying questions"
+        guard: "visual_questions == false"
+        action: PROCEED
+      - from: "Offer Visual Companion"
+        to: "Ask clarifying questions"
+        guard: "companion_offered == true"
+        action: PROCEED
+      - from: "Ask clarifying questions"
+        to: "Propose 2-3 approaches"
+        guard: "clarification_complete == true"
+        action: PROCEED
+      - from: "Propose 2-3 approaches"
+        to: "Present design incrementally"
+        guard: "approach_selected == true"
+        action: PROCEED
+      - from: "Present design incrementally"
+        to: "User approves?"
+        guard: "design_presented == true"
+        action: PROCEED
+      - from: "User approves?"
+        to: "Present design incrementally"
+        guard: "user_approved == false"
+        action: WARN
+      - from: "User approves?"
+        to: "Invoke spec-creation"
+        guard: "user_approved == true"
+        action: INVOKE(spec-creation)
+```
