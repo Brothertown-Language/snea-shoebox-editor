@@ -4,8 +4,9 @@ import unittest
 from unittest.mock import patch, MagicMock
 import streamlit as st
 
+
 class TestSelectorCleanup(unittest.TestCase):
-    @patch("src.database.get_session")
+    @patch("src.database.connection.get_session")
     @patch("streamlit.session_state", {"user_role": "editor"})
     @patch("streamlit.selectbox")
     @patch("streamlit.sidebar")
@@ -15,33 +16,34 @@ class TestSelectorCleanup(unittest.TestCase):
         src1 = MagicMock()
         src1.name = "Alpha"
         src1.id = 1
-        
+
         mock_sess = MagicMock()
         mock_sess.query.return_value.order_by.return_value.all.return_value = [src1]
         mock_session.return_value = mock_sess
-        
+
         # 2. Simulate state that would have triggered auto-switch
         # Previously, newly_created_source_name would be used to override the selection.
         st.session_state["newly_created_source_name"] = "Beta"
         st.session_state["upload_active_source_name"] = "+ Add new source…"
         # Also need pending upload to enable selector
         st.session_state["pending_upload_content"] = "lx test"
-        
+
         from src.frontend.pages.upload_mdf import upload_mdf
-        
+
         # We need to capture what index is passed to st.selectbox
         mock_selectbox.return_value = "+ Add new source…"
         upload_mdf()
-        
+
         args, kwargs = mock_selectbox.call_args
         index = kwargs.get("index")
         options = args[1]
-        
+
         # Index of "+ Add new source…" in ["Select a source...", "+ Add new source…", "Alpha"] is 1.
         self.assertEqual(index, 1, f"Should remain on current selection (+ Add new source…), got index {index}")
-        
+
         # newly_created_source_name should NOT have been popped because the logic is gone
         self.assertIn("newly_created_source_name", st.session_state)
+
 
 if __name__ == "__main__":
     unittest.main()

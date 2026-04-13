@@ -1,19 +1,22 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import unittest
-import os
-from src.database import is_production, _auto_start_pgserver
+
+from src.database.connection import _auto_start_pgserver, is_production
+
 
 class TestProductionSafety(unittest.TestCase):
     def test_production_detection(self):
         """Test that is_production correctly identifies environment based on the system user."""
-        from unittest.mock import patch, MagicMock
+        from unittest.mock import MagicMock, patch
 
         # Patch st.secrets to raise so the secrets branch is bypassed,
         # then patch getpass module so getuser is controlled.
         mock_getpass_module = MagicMock()
-        with patch('src.database.connection.st') as mock_st, \
-             patch('src.database.connection.getpass', mock_getpass_module):
+        with (
+            patch("src.database.connection.st") as mock_st,
+            patch("src.database.connection.getpass", mock_getpass_module),
+        ):
             mock_st.secrets.__contains__ = MagicMock(side_effect=Exception("no secrets"))
 
             # If user is 'appuser', it IS production
@@ -34,10 +37,13 @@ class TestProductionSafety(unittest.TestCase):
 
         # Patch _pg_server to None so the cache-hit branch is bypassed,
         # and patch is_production to return True so the safety check fires.
-        with patch('src.database.connection._pg_server', None), \
-             patch('src.database.connection.is_production', return_value=True):
+        with (
+            patch("src.database.connection._pg_server", None),
+            patch("src.database.connection.is_production", return_value=True),
+        ):
             result = _auto_start_pgserver()
             self.assertIsNone(result)
+
 
 if __name__ == "__main__":
     unittest.main()

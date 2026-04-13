@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 
 import streamlit as st
 
-from src.database import get_db_url, init_db, is_production
+from src.database.connection import get_db_url, init_db, is_production
 from src.frontend.ui_utils import hide_sidebar_nav
 from src.logging_config import get_logger
 from src.services.infrastructure_service import InfrastructureService

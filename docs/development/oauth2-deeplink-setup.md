@@ -2,7 +2,7 @@
 # OAuth2 and Deep Link Setup Guide
 
 ---
-**Attribution**: This guide was generated with the assistance of an AI agent (Junie) as part of the SNEA Online Shoebox Editor development process.
+**Attribution**: This guide was generated with the assistance of an AI agent (OpenCode) as part of the SNEA Online Shoebox Editor development process.
 ---
 
 This document provides step-by-step instructions for implementing a robust GitHub OAuth2 authentication system with deep linking and session persistence (via cookies) in a Streamlit application. 

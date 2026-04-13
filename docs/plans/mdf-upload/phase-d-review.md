@@ -117,7 +117,7 @@ use the batch-level bulk buttons (D-1a).
   button, Re-Match, pagination, bulk actions) moved to `st.sidebar`.
   The main panel is now reserved exclusively for record comparison
   content.  This follows the project-wide UI layout pattern documented
-  in `.junie/project-architecture.md` § "UI LAYOUT PATTERN — SIDEBAR
+  in `.opencode/skills/` § "UI LAYOUT PATTERN — SIDEBAR
   CONTROLS".
 
 **Test files added:**
@@ -215,7 +215,7 @@ This phase ensures the robustness of the upload matching logic and persistence l
 - **Status**: Complete (2026-02-11).
 
 #### 2. E2E Upload Flow Integration Test ✅
-- **Objective**: Perform a comprehensive end-to-end test using the private Junie database (`JUNIE_PRIVATE_DB=true`) to verify the entire lifecycle of an upload batch.
+- **Objective**: Perform a comprehensive end-to-end test using the private OpenCode database (`OPENCODE=1`) to verify the entire lifecycle of an upload batch.
 - **Workflow**:
     1.  **Staging**: Call `UploadService.stage_entries` with a sample file and verify rows appear in `matchup_queue` with a valid `batch_id`.
     2.  **Matching**: Call `UploadService.suggest_matches` and verify:

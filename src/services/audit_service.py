@@ -3,8 +3,10 @@
 """
 Audit Service for standardizing user activity logging.
 """
+
 from typing import Optional
-from src.database import get_session, UserActivityLog
+from src.database.connection import get_session
+from src.database.models.identity import UserActivityLog
 from src.logging_config import get_logger
 
 logger = get_logger("snea.audit")
@@ -17,7 +19,9 @@ class AuditService:
     """
 
     @staticmethod
-    def log_activity(user_email: str, action: str, details: Optional[str] = None, session_id: Optional[str] = None, session=None) -> None:
+    def log_activity(
+        user_email: str, action: str, details: Optional[str] = None, session_id: Optional[str] = None, session=None
+    ) -> None:
         """
         Log a user activity to the database.
 
@@ -32,12 +36,7 @@ class AuditService:
         if not _provided_session:
             session = get_session()
         try:
-            log = UserActivityLog(
-                user_email=user_email,
-                session_id=session_id,
-                action=action,
-                details=details
-            )
+            log = UserActivityLog(user_email=user_email, session_id=session_id, action=action, details=details)
             session.add(log)
             if not _provided_session:
                 session.commit()

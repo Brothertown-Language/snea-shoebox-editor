@@ -18,6 +18,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ### Changed
 
+- **Database Import Paths** (#758) - Removed all convenience re-exports from `src/database/__init__.py` and `src/database/models/__init__.py`. All consumer files now use concrete import paths (e.g., `from src.database.models.core import Record` instead of `from src.database import Record`), eliminating IDE confusion and "Find Usages" misdirection.
+- **Environment Variable Rename** (#759) - Renamed `JUNIE_PRIVATE_DB` to `OPENCODE` and replaced all "Junie" references with "OpenCode" across source, tests, scripts, and docs. Legacy AI tool references no longer appear in the codebase.
+- **Database Initialization** (#758) - Added explicit model imports to `init_db()` so SQLAlchemy can resolve foreign keys without relying on `__init__.py` re-exports. Auto-enables `pgvector` extension when using local PostgreSQL (pgserver).
+
 - **PEP 723 Self-Contained Tool Scripts** (#753) - Converted all 13 `.opencode/tools/` entry points (6 dispatchers + 5 standalones + session-init) and 26 impl scripts to self-contained PEP 723 scripts with `#!/usr/bin/env -S uv run --script` shebangs and inline metadata (`requires-python = "~=3.12"`, `dependencies`). Moved session-init from `.opencode/scripts/session_init.py` to `.opencode/tools/session-init`. Removed broken `[project.scripts]` from pyproject.toml. Updated all 6 dispatchers to invoke impl scripts via `uv run` instead of `sys.executable`. Updated session-enforcement.ts plugin to use `uv run .opencode/tools/session-init`. Added PEP 723 mandatory requirement to 070-environment.md. Created validation script `.opencode/tests/test-pep723-tools.sh`.
 
 - **Subagent-Driven-Development** (#734) - Updated to reference divide-and-conquer as primary orchestration skill. Fixed missing YAML frontmatter opening delimiter. Replaced implementation-workflow cross-references.
@@ -30,6 +34,9 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ### Fixed
 
+- **FK Cascade on Record Deletion** (#698) - Fixed `[23503] FK violation` crash when deleting records. Added explicit `HeadwordSearchEntry`/`GlossSearchEntry` deletes in `hard_delete_record()`, `populate_search_entries()`, `rollback_session()`, and batch delete paths.
+- **Missing Search Entry Index and Constraint** (#698) - Added migration `20260413120000` creating `ix_search_entries_entry_type` index and `ck_search_entries_entry_type` CHECK constraint on `search_entries.entry_type`.
+- **Search Entry Reprocessing Logic** (#698) - Updated `populate_search_entries` to handle all three search entry tables (headword, gloss, and generic) during reprocessing, preventing stale entries.
 - **spec-creation write task now creates GitHub Issue instead of dumping to chat** (#733) - Fix spec-creation skill's write task to invoke github-issue-creation skill and output exec summary + URL + byline instead of dumping full spec content to chat.
 - **Sub-agent worktree dispatch** (#741) - Add worktree awareness to all sub-agent dispatch and skill creation, preventing sub-agents from silently modifying the main repo.
 

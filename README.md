@@ -118,7 +118,7 @@ snea-shoebox-editor/
 ├── launchers/             # PyCharm run configurations
 ├── docs/                  # Project documentation
 ├── documentation/         # Active task tracking
-├── .junie/                # AI agent guidelines
+├── .opencode/              # AI agent skills, guidelines, and tools
 ├── pyproject.toml         # Project metadata & dependencies
 ├── uv.lock                # Locked dependency versions
 ├── LICENSE                # MIT License

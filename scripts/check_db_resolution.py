@@ -1,21 +1,22 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import sys
 import os
+import sys
 
 # Add project root to sys.path
 sys.path.insert(0, os.getcwd())
 
-from src.database import get_db_url, is_production
+from src.database.connection import get_db_url, is_production
+
 
 def test_db_resolution():
     # Detect environment
     is_prod = is_production()
     url = get_db_url()
-    
+
     print(f"Is Production: {is_prod}")
     print(f"Resolved DB URL: {url}")
-    
+
     if is_prod:
         print("Verification: Running in simulated production.")
     else:
@@ -24,6 +25,7 @@ def test_db_resolution():
             print("SUCCESS: Local database (pgserver or localhost) resolved.")
         else:
             print("FAILURE: Production database resolved in local environment.")
+
 
 if __name__ == "__main__":
     test_db_resolution()

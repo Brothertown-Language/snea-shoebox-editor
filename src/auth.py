@@ -2,11 +2,13 @@
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 import datetime
 import streamlit as st
-from src.database import get_session, User
+from src.database.connection import get_session
+from src.database.models.identity import User
 from src.frontend.ui_utils import handle_ui_error
 from sqlalchemy.orm import Session
 from sqlalchemy.sql import func
 from typing import Optional, Dict, Any
+
 
 def login_user_simple(username: str):
     """Login or create a user based on username and set the session."""
@@ -20,11 +22,11 @@ def login_user_simple(username: str):
         if not user:
             # Create new user
             user = User(
-                github_id=0, # Placeholder
+                github_id=0,  # Placeholder
                 email=f"{username}@example.com",
                 username=username,
                 full_name=username,
-                last_login=func.now()
+                last_login=func.now(),
             )
             db.add(user)
         else:
@@ -33,19 +35,19 @@ def login_user_simple(username: str):
                 return None
             # Update last login
             user.last_login = func.now()
-        
+
         db.commit()
         db.refresh(user)
-        
+
         # Set session state
         st.session_state.user = {
             "id": user.id,
             "username": user.username,
             "full_name": user.full_name,
-            "email": user.email
+            "email": user.email,
         }
         st.session_state.authenticated = True
-        
+
         return user
     except Exception as e:
         db.rollback()
@@ -53,6 +55,7 @@ def login_user_simple(username: str):
         return None
     finally:
         db.close()
+
 
 def login_user(github_user_data: Dict[str, Any]):
     """Login or create a user based on GitHub data and set the session."""
@@ -75,7 +78,7 @@ def login_user(github_user_data: Dict[str, Any]):
                 email=email or f"{username}@github.com",
                 username=username,
                 full_name=name,
-                last_login=func.now()
+                last_login=func.now(),
             )
             db.add(user)
         else:
@@ -88,19 +91,19 @@ def login_user(github_user_data: Dict[str, Any]):
                 user.email = email
             if name:
                 user.full_name = name
-        
+
         db.commit()
         db.refresh(user)
-        
+
         # Set session state
         st.session_state.user = {
             "id": user.id,
             "username": user.username,
             "full_name": user.full_name,
-            "email": user.email
+            "email": user.email,
         }
         st.session_state.authenticated = True
-        
+
         return user
     except Exception as e:
         db.rollback()
@@ -109,10 +112,12 @@ def login_user(github_user_data: Dict[str, Any]):
     finally:
         db.close()
 
+
 def logout_user():
     """Logout the current user."""
     st.session_state.authenticated = False
     st.session_state.user = None
+
 
 def check_auth():
     """Check if the user is authenticated via session state."""
