@@ -1,0 +1,134 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: Activation flow analysis via networkx. Builds DiGraph from rules (triggers/requires) and detects anomalies.
+Usage: uv run python .opencode/tools/symbolic flow
+"""
+
+from __future__ import annotations
+import os as _os
+import sys
+import types
+from dataclasses import dataclass
+from pathlib import Path
+
+import networkx as nx
+
+IMPL_DIR = Path(__file__).resolve().parent
+BASE_DIR = IMPL_DIR.parent.parent.parent
+
+
+def _load_extract():
+    source = (IMPL_DIR / "sym-extract").read_text()
+    mod = types.ModuleType("symextract")
+    mod.__file__ = str(IMPL_DIR / "sym-extract")
+    sys.modules["symextract"] = mod
+    exec(compile(source, str(IMPL_DIR / "sym-extract"), "exec"), mod.__dict__)
+    return mod
+
+
+@dataclass
+class FlowAnomaly:
+    node: str
+    anomaly_type: str
+    description: str
+
+    def to_dict(self) -> dict:
+        return {"node": self.node, "anomaly_type": self.anomaly_type, "description": self.description}
+
+
+def build_flow_graph(rules: list, digraphs: list | None = None) -> nx.DiGraph:
+    g = nx.DiGraph()
+    for r in rules:
+        g.add_node(r.id, type="rule", title=r.title)
+        for t in r.triggers:
+            g.add_node(t, type="skill")
+            g.add_edge(r.id, t, edge_type="triggers")
+        for req in r.requires:
+            g.add_edge(req, r.id, edge_type="requires")
+
+    if digraphs:
+        for dg in digraphs:
+            if isinstance(dg, nx.DiGraph):
+                for node in dg.nodes():
+                    if node not in g:
+                        g.add_node(node, type="digraph")
+                for u, v in dg.edges():
+                    if not g.has_edge(u, v):
+                        g.add_edge(u, v, edge_type="digraph")
+    return g
+
+
+def analyze_flow(graph: nx.DiGraph) -> list[FlowAnomaly]:
+    anomalies: list[FlowAnomaly] = []
+    nodes = set(graph.nodes())
+
+    for node in nodes:
+        in_edges = graph.in_degree(node)
+        out_edges = graph.out_degree(node)
+        if in_edges == 0 and out_edges == 0:
+            anomalies.append(FlowAnomaly(node=node, anomaly_type="orphan", description="No incoming or outgoing edges"))
+        elif in_edges == 0 and out_edges > 0:
+            anomalies.append(FlowAnomaly(node=node, anomaly_type="root", description="No incoming edges (possible entry point or unreachable)"))
+
+    try:
+        cycles = list(nx.simple_cycles(graph))
+        for cycle in cycles:
+            anomalies.append(FlowAnomaly(
+                node="→".join(cycle),
+                anomaly_type="cycle",
+                description=f"Circular dependency: {' → '.join(cycle)} → {cycle[0]}",
+            ))
+    except Exception:
+        pass
+
+    if graph.number_of_nodes() > 0:
+        try:
+            sorted_nodes = list(nx.topological_sort(graph))
+            reachable = set()
+            for root in [n for n in sorted_nodes if graph.in_degree(n) == 0]:
+                reachable.update(nx.descendants(graph, root))
+                reachable.add(root)
+            unreachable = nodes - reachable
+            for node in unreachable:
+                anomalies.append(FlowAnomaly(node=node, anomaly_type="unreachable", description="Not reachable from any root node"))
+        except nx.NetworkXUnfeasible:
+            pass
+
+    return anomalies
+
+
+def main() -> None:
+    if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+        print(
+            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "Direct invocation is not permitted.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Flow analysis")
+    parser.add_argument("--dir", type=str, default=str(BASE_DIR / ".opencode"))
+    args = parser.parse_args()
+
+    mod = _load_extract()
+    result = mod.extract_yaml_blocks(Path(args.dir))
+    if not result.rules:
+        print("No rules found.")
+        sys.exit(0)
+
+    graph = build_flow_graph(result.rules)
+    anomalies = analyze_flow(graph)
+
+    print(f"Flow graph: {graph.number_of_nodes()} nodes, {graph.number_of_edges()} edges")
+    if anomalies:
+        print(f"Anomalies ({len(anomalies)}):")
+        for a in anomalies:
+            print(f"  [{a.anomaly_type}] {a.node}: {a.description}")
+    else:
+        print("No anomalies detected.")
+
+
+if __name__ == "__main__":
+    main()

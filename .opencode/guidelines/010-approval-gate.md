@@ -171,3 +171,96 @@ Key rules:
 | `124-github-archive-workflow.md` | Issue closure timing |
 | `github-sub-issues` skill | Sub-issue creation workflow |
 | `pr-creation-workflow` skill | PR creation timing |
+
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-12T12:00:00Z"
+rules:
+  - id: approval-gate-001
+    title: "No implementation without authorization"
+    conditions:
+      all:
+        - "has_approved_spec == false"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: []
+    source: "010-approval-gate.md §Tier0"
+
+  - id: approval-gate-002
+    title: "Explicit authorization overrides needs-approval label"
+    conditions:
+      any:
+        - "user_says == 'approved'"
+        - "user_says == 'go'"
+    actions:
+      - PROCEED
+    conflicts_with: []
+    requires: []
+    triggers: [implementation-workflow]
+    source: "010-approval-gate.md §Explicit Authorization Priority"
+
+  - id: approval-gate-003
+    title: "No authorization without user input"
+    conditions:
+      all:
+        - "has_authorization == false"
+        - "needs_approval_label == true"
+    actions:
+      - HALT
+    conflicts_with: [approval-gate-002]
+    requires: []
+    triggers: []
+    source: "010-approval-gate.md §Explicit Authorization Priority"
+
+  - id: approval-gate-004
+    title: "Branch first before any file modification"
+    conditions:
+      all:
+        - "has_feature_branch == false"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: [approval-gate-001]
+    triggers: [git-workflow]
+    source: "010-approval-gate.md §Mandatory Requirements"
+
+  - id: approval-gate-005
+    title: "Agents must never merge PRs"
+    conditions:
+      all:
+        - "is_agent == true"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: []
+    source: "010-approval-gate.md §Mandatory Requirements"
+
+state_machines:
+  - id: approval-lifecycle
+    states: [draft, approved, implementing, pr_created, merged, closed]
+    start_state: draft
+    transitions:
+      - from: draft
+        to: approved
+        guard: "user_authorizes == true"
+        action: PROCEED
+      - from: approved
+        to: implementing
+        guard: "spec_exists == true"
+        action: INVOKE(implementation-workflow)
+      - from: implementing
+        to: pr_created
+        guard: "implementation_complete == true"
+        action: INVOKE(git-workflow)
+      - from: pr_created
+        to: merged
+        guard: "pr_approved == true"
+        action: PROCEED
+      - from: merged
+        to: closed
+        guard: "all_sub_issues_closed == true"
+        action: PROCEED
+```

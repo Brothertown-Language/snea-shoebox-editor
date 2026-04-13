@@ -203,3 +203,32 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | concern-separation-auditor invoked directly | `concerns` subtask delegated |
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+
+## Symbolic Engine Integration
+
+**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
+
+```bash
+uv run python .opencode/tools/symbolic states
+uv run python .opencode/tools/symbolic flow
+```
+
+- `sym-states`: Validates state machines extracted from yaml+symbolic blocks — checks reachability from start_state, detects dead/unreachable states, flags dangling references in transitions.
+- `sym-flow`: Builds a networkx DiGraph from rule triggers/requires and detects flow anomalies — unreachable nodes, cycles, orphan nodes with no edges.
+
+Results are used as **evidence** (not verdict) — they supplement prose-only analysis with formal state machine and flow validation.
+
+**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.
+
+**Import interface (for in-process usage):**
+```python
+import types, sys
+from pathlib import Path
+impl_dir = Path(".opencode/tools/impl")
+source = (impl_dir / "sym-states").read_text()
+mod = types.ModuleType("symstates")
+mod.__file__ = str(impl_dir / "sym-states")
+sys.modules["symstates"] = mod
+exec(compile(source, str(impl_dir / "sym-states"), "exec"), mod.__dict__)
+anomalies = mod.validate_state_machines(state_machines, rules)
+```

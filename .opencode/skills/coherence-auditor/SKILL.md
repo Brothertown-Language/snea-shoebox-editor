@@ -53,6 +53,17 @@ LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work to
 | STALE-SKILL | Skill references outdated guideline section |
 | DRIFT-DETECTED | Guideline changed independently of skill |
 | ORPHANED-PROCEDURE | Procedure removed from guideline but still in skill |
+| SESSION-INIT-MISMATCH | Skill/guideline references a session-init variable name that doesn't appear in `session_init.py` output, or `session_init.py` outputs a prose label instead of the canonical variable name |
+
+### Session Init Variable Alignment Check (maintenance mode)
+
+When running in maintenance mode, the coherence auditor SHOULD verify:
+
+1. All session-init variable names referenced in `.opencode/guidelines/` and `.opencode/skills/` (e.g., `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`) appear as `KEY:` prefixes in `session_init.py` stdout output
+2. `session_init.py` does NOT output prose-only labels (e.g., `Owner:`, `Repository:`) for variables referenced by canonical names in guidelines
+3. `env-loader.ts` `output.env` keys match the same canonical names
+
+A mismatch is a MEDIUM-severity finding of class SESSION-INIT-MISMATCH.
 
 ## Priority Ranking
 
@@ -83,6 +94,18 @@ After creating audit log:
 ## Cross-References
 
 - Related skills: `git-workflow` (PR with changes), `guideline-auditor` (verify guideline quality)
+
+## Symbolic Engine Integration
+
+**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
+
+```bash
+uv run python .opencode/tools/symbolic conflicts
+```
+
+The `sym-conflicts` analysis provides formal contradiction detection via sympy boolean satisfiability. Results are used as **evidence** (not verdict) during coherence audits — they identify overlapping conditions with conflicting actions, replacing ad-hoc prose comparison.
+
+**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.
 
 ## Parent Spec
 

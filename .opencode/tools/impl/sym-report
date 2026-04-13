@@ -1,0 +1,381 @@
+#!/usr/bin/env -S uv run python
+"""
+DESCRIPTION: HTML+SVG report generator. Renders analysis results as self-contained HTML with inline CSS and SVG diagrams.
+Usage: uv run python .opencode/tools/symbolic report [--output PATH] [--format html|text]
+"""
+
+from __future__ import annotations
+import os as _os
+import sys
+import types
+import json
+import shutil
+import subprocess
+from pathlib import Path
+
+import networkx as nx
+
+IMPL_DIR = Path(__file__).resolve().parent
+BASE_DIR = IMPL_DIR.parent.parent.parent
+DEFAULT_OUTPUT = BASE_DIR / "tmp"
+
+
+def _load_module(module_file: str):
+    safe_name = module_file.replace("-", "_")
+    source = (IMPL_DIR / module_file).read_text()
+    mod = types.ModuleType(safe_name)
+    mod.__file__ = str(IMPL_DIR / module_file)
+    sys.modules[safe_name] = mod
+    exec(compile(source, str(IMPL_DIR / module_file), "exec"), mod.__dict__)
+    return mod
+
+
+REPORT_TEMPLATE = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Symbolic Analysis Report</title>
+<style>
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; max-width: 960px; margin: 2em auto; padding: 0 1em; color: #1a1a1a; background: #fafafa; }
+h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 0.3em; }
+h2 { color: #2980b9; margin-top: 2em; }
+.summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1em; margin: 1.5em 0; }
+.card { background: white; border: 1px solid #ddd; border-radius: 8px; padding: 1em; text-align: center; }
+.card .count { font-size: 2em; font-weight: bold; color: #2c3e50; }
+.card .label { font-size: 0.85em; color: #666; text-transform: uppercase; }
+table { width: 100%; border-collapse: collapse; margin: 1em 0; background: white; }
+th, td { padding: 0.6em 1em; text-align: left; border-bottom: 1px solid #eee; }
+th { background: #f8f9fa; font-weight: 600; color: #2c3e50; }
+.severity-CRITICAL { color: #e74c3c; font-weight: bold; }
+.severity-HIGH { color: #e67e22; font-weight: bold; }
+.severity-MEDIUM { color: #f39c12; }
+.severity-LOW { color: #27ae60; }
+.svg-container { margin: 1em 0; text-align: center; }
+.svg-container svg { max-width: 100%; height: auto; }
+.warning { background: #fff3cd; border-left: 4px solid #ffc107; padding: 0.8em 1em; margin: 1em 0; }
+.footer { margin-top: 3em; font-size: 0.85em; color: #999; border-top: 1px solid #eee; padding-top: 0.5em; }
+</style>
+</head>
+<body>
+
+<h1>Symbolic Analysis Report</h1>
+
+<div class="summary">
+  <div class="card"><div class="count">{{ rules_count }}</div><div class="label">Rules</div></div>
+  <div class="card"><div class="count">{{ sms_count }}</div><div class="label">State Machines</div></div>
+  <div class="card"><div class="count">{{ conflicts_count }}</div><div class="label">Conflicts</div></div>
+  <div class="card"><div class="count">{{ flow_anomalies_count }}</div><div class="label">Flow Anomalies</div></div>
+  <div class="card"><div class="count">{{ state_anomalies_count }}</div><div class="label">State Anomalies</div></div>
+  <div class="card"><div class="count">{{ gaps_count }}</div><div class="label">Completeness Gaps</div></div>
+  <div class="card"><div class="count">{{ drift_count }}</div><div class="label">Drift Entries</div></div>
+</div>
+
+{% if warnings %}
+<div class="warning">⚠️ {{ warnings|length }} warnings during analysis. Re-run with --verbose for details.</div>
+{% endif %}
+
+<h2>Conflicts</h2>
+{% if conflicts %}
+<table>
+<tr><th>Rule A</th><th>Rule B</th><th>Severity</th><th>Description</th></tr>
+{% for c in conflicts %}
+<tr>
+  <td>{{ c.rule_a }}</td>
+  <td>{{ c.rule_b }}</td>
+  <td class="severity-{{ c.severity }}">{{ c.severity }}</td>
+  <td>{{ c.description }}</td>
+</tr>
+{% endfor %}
+</table>
+{% else %}
+<p>No conflicts detected.</p>
+{% endif %}
+
+<h2>Flow Analysis</h2>
+{% if flow_svg %}
+<div class="svg-container">{{ flow_svg }}</div>
+{% endif %}
+<p>Nodes: {{ flow_nodes }}, Edges: {{ flow_edges }}</p>
+{% if flow_anomalies %}
+<table>
+<tr><th>Node</th><th>Type</th><th>Description</th></tr>
+{% for a in flow_anomalies %}
+<tr><td>{{ a.node }}</td><td>{{ a.anomaly_type }}</td><td>{{ a.description }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<p>No flow anomalies.</p>
+{% endif %}
+
+<h2>State Machine Validation</h2>
+{% if state_anomalies %}
+<table>
+<tr><th>Machine</th><th>State</th><th>Type</th><th>Description</th></tr>
+{% for a in state_anomalies %}
+<tr><td>{{ a.machine_id }}</td><td>{{ a.state }}</td><td>{{ a.anomaly_type }}</td><td>{{ a.description }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<p>All state machines valid.</p>
+{% endif %}
+
+<h2>Completeness Gaps</h2>
+{% if gaps %}
+<table>
+<tr><th>Type</th><th>Location</th><th>Detail</th></tr>
+{% for g in gaps %}
+<tr><td>{{ g.type }}</td><td>{{ g.location }}</td><td>{{ g.detail }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<p>No completeness gaps.</p>
+{% endif %}
+
+<h2>Drift Detection</h2>
+{% if drift_entries %}
+<table>
+<tr><th>File</th><th>YAML Updated</th><th>File Modified</th><th>Drift (days)</th></tr>
+{% for d in drift_entries %}
+<tr><td>{{ d.file }}</td><td>{{ d.yaml_last_updated }}</td><td>{{ d.file_mtime }}</td><td>{{ "%.1f"|format(d.drift_days) }}</td></tr>
+{% endfor %}
+</table>
+{% else %}
+<p>No drift detected.</p>
+{% endif %}
+
+<div class="footer">
+  Generated by symbolic analysis engine — {{ timestamp }}
+</div>
+
+</body>
+</html>"""
+
+TEXT_TEMPLATE = """SYMBOLIC ANALYSIS REPORT
+========================
+
+Summary:
+  Rules:           {rules_count}
+  State Machines:  {sms_count}
+  Conflicts:       {conflicts_count}
+  Flow Anomalies:   {flow_anomalies_count}
+  State Anomalies:  {state_anomalies_count}
+  Completeness:    {gaps_count}
+  Drift Entries:   {drift_count}
+
+{conflicts_section}
+
+{flow_section}
+
+{states_section}
+
+{complete_section}
+
+{drift_section}
+
+---
+Generated by symbolic analysis engine — {timestamp}
+"""
+
+
+def _graph_to_dot(graph: nx.DiGraph) -> str:
+    lines = ["digraph flow {"]
+    for node in sorted(graph.nodes()):
+        lines.append(f'  "{node}";')
+    for u, v, data in graph.edges(data=True):
+        label = data.get("label", "")
+        if label:
+            lines.append(f'  "{u}" -> "{v}" [label="{label}"];')
+        else:
+            lines.append(f'  "{u}" -> "{v}";')
+    lines.append("}")
+    return "\n".join(lines)
+
+
+def _dot_to_svg(dot_text: str) -> str | None:
+    if not shutil.which("dot"):
+        return None
+    try:
+        result = subprocess.run(
+            ["dot", "-Tsvg"],
+            input=dot_text,
+            capture_output=True,
+            text=True,
+            timeout=30,
+        )
+        if result.returncode == 0:
+            svg = result.stdout
+            if "<svg" in svg:
+                start = svg.index("<svg")
+                return svg[start:]
+        return None
+    except Exception:
+        return None
+
+
+def _text_table(headers: list[str], rows: list[list[str]]) -> str:
+    col_widths = [len(h) for h in headers]
+    for row in rows:
+        for i, cell in enumerate(row):
+            col_widths[i] = max(col_widths[i], len(cell))
+    fmt = "  ".join(f"{{:{w}}}" for w in col_widths)
+    lines = [fmt.format(*headers), fmt.format(*["-" * w for w in col_widths])]
+    for row in rows:
+        lines.append(fmt.format(*row))
+    return "\n".join(lines)
+
+
+def generate_html_report(
+    analysis_data: dict,
+    flow_graph: nx.DiGraph | None = None,
+    output_path: Path | None = None,
+) -> Path:
+    from jinja2 import Template
+    from datetime import datetime, timezone
+
+    template = Template(REPORT_TEMPLATE)
+    flow_svg = ""
+    flow_nodes = 0
+    flow_edges = 0
+    if flow_graph is not None:
+        flow_nodes = flow_graph.number_of_nodes()
+        flow_edges = flow_graph.number_of_edges()
+        dot_text = _graph_to_dot(flow_graph)
+        svg = _dot_to_svg(dot_text)
+        if svg:
+            flow_svg = svg
+        else:
+            flow_svg = "<p><em>Graphviz not available — text fallback:</em></p><pre>" + dot_text + "</pre>"
+
+    conflicts = analysis_data.get("conflicts", [])
+    flow_anomalies = analysis_data.get("flow", {}).get("anomalies", [])
+    state_anomalies = analysis_data.get("states", [])
+    gaps = analysis_data.get("complete", [])
+    drift_entries = analysis_data.get("drift", [])
+    extract = analysis_data.get("extract", {})
+    warnings = extract.get("warnings", [])
+
+    html = template.render(
+        rules_count=len(extract.get("rules", [])),
+        sms_count=len(extract.get("state_machines", [])),
+        conflicts_count=len(conflicts),
+        flow_anomalies_count=len(flow_anomalies),
+        state_anomalies_count=len(state_anomalies),
+        gaps_count=len(gaps),
+        drift_count=len(drift_entries),
+        conflicts=conflicts,
+        flow_svg=flow_svg,
+        flow_nodes=flow_nodes,
+        flow_edges=flow_edges,
+        flow_anomalies=flow_anomalies,
+        state_anomalies=state_anomalies,
+        gaps=gaps,
+        drift_entries=drift_entries,
+        warnings=warnings,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+
+    if output_path is None:
+        output_path = DEFAULT_OUTPUT / "symbolic-report.html"
+    output_path.parent.mkdir(parents=True, exist_ok=True)
+    output_path.write_text(html)
+    return output_path
+
+
+def generate_text_report(analysis_data: dict) -> str:
+    from datetime import datetime, timezone
+
+    extract = analysis_data.get("extract", {})
+    conflicts = analysis_data.get("conflicts", [])
+    flow_data = analysis_data.get("flow", {})
+    flow_anomalies = flow_data.get("anomalies", [])
+    state_anomalies = analysis_data.get("states", [])
+    gaps = analysis_data.get("complete", [])
+    drift_entries = analysis_data.get("drift", [])
+
+    conflicts_section = "Conflicts:\n" + _text_table(
+        ["Rule A", "Rule B", "Severity", "Description"],
+        [[c.get("rule_a", ""), c.get("rule_b", ""), c.get("severity", ""), c.get("description", "")] for c in conflicts],
+    ) if conflicts else "Conflicts: None"
+
+    flow_section = f"Flow: {flow_data.get('node_count', 0)} nodes, {flow_data.get('edge_count', 0)} edges\n"
+    if flow_anomalies:
+        flow_section += _text_table(
+            ["Node", "Type", "Description"],
+            [[a.get("node", ""), a.get("anomaly_type", ""), a.get("description", "")] for a in flow_anomalies],
+        )
+
+    states_section = "State Anomalies:\n" + _text_table(
+        ["Machine", "State", "Type", "Description"],
+        [[a.get("machine_id", ""), a.get("state", ""), a.get("anomaly_type", ""), a.get("description", "")] for a in state_anomalies],
+    ) if state_anomalies else "State Machines: All valid"
+
+    complete_section = "Completeness Gaps:\n" + _text_table(
+        ["Type", "Location", "Detail"],
+        [[g.get("type", ""), g.get("location", ""), g.get("detail", "")] for g in gaps],
+    ) if gaps else "Completeness: No gaps"
+
+    drift_section = "Drift:\n" + _text_table(
+        ["File", "YAML Updated", "Drift Days"],
+        [[d.get("file", ""), d.get("yaml_last_updated", ""), f"{d.get('drift_days', 0):.1f}"] for d in drift_entries],
+    ) if drift_entries else "Drift: None detected"
+
+    return TEXT_TEMPLATE.format(
+        rules_count=len(extract.get("rules", [])),
+        sms_count=len(extract.get("state_machines", [])),
+        conflicts_count=len(conflicts),
+        flow_anomalies_count=len(flow_anomalies),
+        state_anomalies_count=len(state_anomalies),
+        gaps_count=len(gaps),
+        drift_count=len(drift_entries),
+        conflicts_section=conflicts_section,
+        flow_section=flow_section,
+        states_section=states_section,
+        complete_section=complete_section,
+        drift_section=drift_section,
+        timestamp=datetime.now(timezone.utc).isoformat(),
+    )
+
+
+def main() -> None:
+    if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+        print(
+            "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/symbolic ...). "
+            "Direct invocation is not permitted.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Generate report")
+    parser.add_argument("--output", type=str, default=str(DEFAULT_OUTPUT))
+    parser.add_argument("--format", choices=["html", "text"], default="html")
+    parser.add_argument("--dir", type=str, default=str(BASE_DIR / ".opencode"))
+    args = parser.parse_args()
+
+    analysis_path = Path(args.output) / "symbolic-analysis.json"
+    if not analysis_path.exists():
+        print("No analysis data found. Run `symbolic analyze` first.", file=sys.stderr)
+        sys.exit(1)
+
+    with open(analysis_path) as f:
+        analysis_data = json.load(f)
+
+    if args.format == "html":
+        extract_mod = _load_module("sym-extract")
+        flow_mod = _load_module("sym-flow")
+        result = extract_mod.extract_yaml_blocks(Path(args.dir))
+        flow_graph = flow_mod.build_flow_graph(result.rules)
+
+        output_path = generate_html_report(analysis_data, flow_graph, Path(args.output) / "symbolic-report.html")
+        print(f"HTML report written to {output_path}")
+    else:
+        text = generate_text_report(analysis_data)
+        output_path = Path(args.output) / "symbolic-report.txt"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+        output_path.write_text(text)
+        print(text)
+
+
+if __name__ == "__main__":
+    main()

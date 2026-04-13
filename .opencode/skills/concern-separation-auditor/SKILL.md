@@ -89,3 +89,17 @@ This skill analyzes ACTUAL concerns, not static templates.
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `142-planning-archive-workflow.md`
 
 Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+
+## Symbolic Engine Integration
+
+**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
+
+```bash
+uv run python .opencode/tools/symbolic flow
+```
+
+- `sym-flow`: Builds a networkx DiGraph from rule triggers/requires and detects activation graph anomalies. Cross-concern triggers (edges linking rules in different concern areas) indicate potential concern mixing.
+
+Results are used as **evidence** (not verdict) — they supplement prose-only analysis with formal activation graph showing cross-concern dependencies.
+
+**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.

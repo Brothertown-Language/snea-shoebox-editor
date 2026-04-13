@@ -323,3 +323,32 @@ This auditor skill coordinates with the project's approval gate workflow:
   ignored due to LLM context window pressure. The fix is to trim, rewrite for brevity, or split the content.
 - **REORGANIZE**: The current file/folder/document structure hinders LLM comprehension or compliance — files should be
   combined, split, or rearranged for better performance.
+
+## Symbolic Engine Integration
+
+**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
+
+```bash
+uv run python .opencode/tools/symbolic drift
+uv run python .opencode/tools/symbolic complete
+```
+
+- `sym-drift`: Detects YAML blocks where the file has been modified after the `last_updated` timestamp, indicating stale formalization.
+- `sym-complete`: Identifies uncovered normative terms (MUST, NEVER, etc.) without corresponding YAML rules, dangling cross-references, and rules without prose backing.
+
+Results are used as **evidence** (not verdict) — they supplement prose-only analysis with formal gap detection.
+
+**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.
+
+**Import interface (for in-process usage):**
+```python
+import types, sys
+from pathlib import Path
+impl_dir = Path(".opencode/tools/impl")
+source = (impl_dir / "sym-drift").read_text()
+mod = types.ModuleType("symdrift")
+mod.__file__ = str(impl_dir / "sym-drift")
+sys.modules["symdrift"] = mod
+exec(compile(source, str(impl_dir / "sym-drift"), "exec"), mod.__dict__)
+drift_entries = mod.detect_drift(Path(".opencode"))
+```

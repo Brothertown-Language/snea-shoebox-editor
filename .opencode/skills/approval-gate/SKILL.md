@@ -52,6 +52,33 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 2. **Pre-Implementation Verification:** Verify spec exists as GitHub Issue, verify authorization, verify sub-issues (multi-task), check for blockers.
 3. **Implementation Scope:** Authorization grants ONLY the specified phase/task. HALT after completing authorized work.
 4. **Multi-task cascade:** When parent has sub-issues, authorization cascades to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
+5. **Auto-dispatch after verification:** When all verification gates pass, auto-dispatch to the next skill in the chain. See Dispatch Order below.
+
+## Dispatch Order
+
+After `verify-authorization` completes successfully (all gates pass), the skill auto-dispatches based on approval context:
+
+```
+Spec approved
+  → verify-authorization (all gates pass)
+  → ✅ writing-plans --task create (auto-dispatched)
+
+Plan approved
+  → verify-authorization (all gates pass)
+  → ✅ executing-plans --task start (auto-dispatched)
+
+Already implemented
+  → verify-authorization (all gates pass)
+  → verify-already-implemented (detects implementation)
+  → Auto-close (no dispatch)
+```
+
+**Dispatch context detection:**
+- Spec approval: Issue title contains `[SPEC` or has `spec` label
+- Plan approval: Issue is a sub-issue of a spec (plan relationship)
+- See `verify-authorization.md` Step 5 for full procedure
+
+**Circular dispatch prevention:** Plan approval dispatches to `executing-plans`, NOT back to `writing-plans`. Spec approval dispatches to `writing-plans`, which creates a plan. The plan then requires its own approval before dispatching to `executing-plans`.
 
 ## Authorization Requirements
 
@@ -101,3 +128,48 @@ This skill is a **heavy skill** — its task files contain significant detail th
 
 - Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
 - Related guidelines: `010-approval-gate.md`, `120-github-issue-first.md`, `000-critical-rules.md`, `124-github-archive-workflow.md`
+
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-12T12:00:00Z"
+rules:
+  - id: approval-gate-skill-001
+    title: "Pre-implementation authorization verification"
+    conditions:
+      all:
+        - "spec_exists == true"
+        - "user_authorized == false"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: [approval-gate-001]
+    triggers: [git-workflow]
+    source: "approval-gate/SKILL.md §Authorization Requirements"
+
+  - id: approval-gate-skill-002
+    title: "Multi-task cascade: authorization extends to all sub-issues"
+    conditions:
+      all:
+        - "parent_has_sub_issues == true"
+        - "user_authorized == true"
+    actions:
+      - PROCEED
+    conflicts_with: []
+    requires: [approval-gate-002]
+    triggers: [divide-and-conquer]
+    source: "approval-gate/SKILL.md §Multi-task cascade"
+
+  - id: approval-gate-skill-003
+    title: "Post-implementation: push then halt"
+    conditions:
+      all:
+        - "implementation_complete == true"
+        - "pr_not_created == true"
+    actions:
+      - INVOKE(git-workflow)
+      - HALT
+    conflicts_with: []
+    requires: []
+    triggers: [git-workflow]
+    source: "approval-gate/SKILL.md §Post-Implementation Workflow"
+```
