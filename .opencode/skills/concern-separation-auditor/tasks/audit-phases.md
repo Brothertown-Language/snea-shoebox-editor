@@ -9,8 +9,8 @@ Analyze spec phase structure for concern separation quality. Reports findings to
 1. Read the spec issue via GitHub MCP
 2. Extract all phases and their steps
 3. For each phase, analyze:
-   - **Phase name**: Is it a specific concern or a generic activity (BOILERPLATE-TITLE)?
-   - **Concern boundaries**: Do all steps in this phase share the same concern?
+    - **Phase name**: Is it a specific concern or a generic activity (BOILERPLATE-TITLE)? Generic names like "Implementation", "Development", "Coding" are dual signals: BOILERPLATE-TITLE AND potential PLAN-BLEED (phase may describe HOW instead of WHAT).
+    - **Concern boundaries**: Do all steps in this phase share the same concern?
    - **Risk profile**: What's the risk level (HIGH/MEDIUM/LOW) for each step?
    - **Blast radius**: How many files/components are affected?
    - **Deployment independence**: Can this phase be deployed independently?
@@ -32,6 +32,7 @@ Analyze spec phase structure for concern separation quality. Reports findings to
 | Type | Problem Class | When to Report |
 |------|---------------|----------------|
 | Generic phase name | BOILERPLATE-TITLE | Phase uses "Implementation", "Testing", "Build" |
+| Generic phase name (plan-bleed signal) | BOILERPLATE-TITLE + potential PLAN-BLEED | "Implementation", "Development", "Coding" — these names often indicate the phase describes HOW instead of WHAT |
 | Mixed concerns | CONCERN_MIXING | Steps from different concern boundaries in one phase |
 | Wrong dependency order | DEPENDENCY_REVERSAL | Phase depends on a later phase |
 | High/low risk mixing | HIGH_RISK_GROUPING | HIGH and LOW risk steps in same phase |

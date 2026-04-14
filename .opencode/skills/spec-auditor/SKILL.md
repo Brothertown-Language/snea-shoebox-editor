@@ -165,6 +165,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | DETERMINISM-VIOLATION | Add explicit environment assumptions and state dependency notes | Explicitness is always correct; removes ambiguity |
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 | SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
+| PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
 
 **Conditional findings:**
 
@@ -262,6 +263,7 @@ Existing classes remain, plus two new ones:
 | **BLAST_RADIUS_VIOLATION** | Change scope wider than necessary; failure isolation absent |
 | **TESTABILITY_VIOLATION** | Design that makes testing difficult without explicit tradeoff note |
 | **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
+| **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
 
 ## Audit Findings Handling
 

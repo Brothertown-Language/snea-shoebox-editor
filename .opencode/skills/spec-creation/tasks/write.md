@@ -65,6 +65,22 @@ Spec sections (adapt to spec complexity):
 
 Skip sections that don't apply (e.g., no data models for a guideline-only change).
 
+### Step 4.5: Spec/Plan Boundary Check
+
+Review the assembled spec for plan-level content that belongs in the implementation plan, not the spec. Specs describe **WHAT** and **WHY**; plans describe **HOW**.
+
+**Replacement rules:**
+
+| Plan-Level Content (remove) | Spec-Level Replacement |
+|------------------------------|------------------------|
+| Function/class definitions with code | Function names + responsibilities table |
+| SQL DDL statements (`CREATE TABLE...`) | Table names + constraints table |
+| Implementation algorithms with step-by-step logic | Input/output contract (what goes in, what comes out) |
+| File paths with "what to change" language | Affected files + anchors table (what exists, not what to write) |
+| Architecture decisions without constraints | Architecture requirements table (what the system MUST satisfy) |
+
+**Self-review question:** "Could two developers produce valid but different implementations from this spec?" If yes, the spec is at the right level. If no — if the spec only allows one implementation — it contains plan-level detail that should be removed.
+
 ### Step 5: Self-Review
 
 After writing the spec, review with fresh eyes:

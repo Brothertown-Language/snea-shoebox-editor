@@ -16,6 +16,7 @@ Check architectural reasoning, ambiguity, conflicts, and scope creep in a spec.
 | Dependencies | DEPENDENCY-INCOMPLETE | Are integration points specific? |
 | Comment format | COMMENT-FORMAT-VIOLATION | Does the spec use executive summary format? |
 | Superseded closure | SUPERSEDED-CLOSURE-VIOLATION | Does closing language claim future action without execution? |
+| Plan bleed | PLAN-BLEED | Does the spec contain implementation details (code, DDL, algorithms) that belong in the plan? |
 
 ## Procedure
 
@@ -27,6 +28,17 @@ Check architectural reasoning, ambiguity, conflicts, and scope creep in a spec.
 6. Check that success criteria are testable and measurable
 7. Verify dependencies have specific integration points
 8. Check comment format uses executive summary with byline at bottom
+9. Check for plan-bleed: content that prescribes HOW instead of WHAT
+
+**Plan-bleed detection signals:**
+
+| Signal | Plan-Level Content | Replace With |
+|--------|--------------------|--------------|
+| Code blocks with `def`, `class`, or function bodies | Implementation code | Function names + responsibilities table |
+| SQL DDL (`CREATE TABLE`, `ALTER TABLE`) | Database implementation | Table names + constraints table |
+| Step-by-step algorithms with imperative logic | Implementation procedure | Input/output contract |
+| File paths with "add", "modify", "create" language | File-level instructions | Affected files + anchors table |
+| Architecture decisions without "MUST" constraints | Design choices | Architecture requirements table |
 
 ## Nine Core Areas (Reference)
 
@@ -45,7 +57,7 @@ These are NOT mandatory sections — they're areas the agent should consider. A 
 
 ```
 Subtask: content-quality
-Finding: [ARCHITECTURAL-REASONING-GAP|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|DEPENDENCY-INCOMPLETE|COMMENT-FORMAT-VIOLATION|SUPERSEDED-CLOSURE-VIOLATION] - [summary]
+Finding: [ARCHITECTURAL-REASONING-GAP|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|DEPENDENCY-INCOMPLETE|COMMENT-FORMAT-VIOLATION|SUPERSEDED-CLOSURE-VIOLATION|PLAN-BLEED] - [summary]
 Location: [section of spec]
 Context: [why this matters for implementability]
 Classification: [auto-fix|conditional|flag-for-review]
@@ -65,5 +77,6 @@ Severity: [HIGH|MEDIUM|LOW]
 | COMMENT-FORMAT-VIOLATION | flag-for-review | May be intentional formatting |
 | SUPERSEDED-CLOSURE-VIOLATION | flag-for-review | May reference valid future work |
 | ARCHITECTURAL-REASONING-GAP | flag-for-review | Requires understanding design tradeoffs |
+| PLAN-BLEED | auto-fix | Replace code/DDL/algorithms with requirements tables; note moved content for plan |
 
 Co-authored with AI: <AI-Name> (<model-id>)
