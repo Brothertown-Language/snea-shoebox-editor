@@ -161,6 +161,14 @@ CREATED: YYYY-MM-DD
 
 ### Steps
 
+**SPEC PHASE STEPS describe WHAT to deliver, not HOW to implement.**
+
+| ✅ What-Level (Spec) | ❌ How-Level (Plan) |
+|-----------------------|----------------------|
+| "Add user validation endpoint" | "Create validate_user() in auth.py" |
+| "Ensure emails are unique" | "ALTER TABLE users ADD UNIQUE(email)" |
+| "Processing completes within 2s" | "Use asyncio with connection pool" |
+
 1. ☐ [First task for this concern]
 2. ☐ [Second task for this concern]
 3. ☐ [Third task for this concern]

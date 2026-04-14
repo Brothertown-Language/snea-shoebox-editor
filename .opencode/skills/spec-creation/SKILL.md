@@ -40,7 +40,14 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
 ## Operating Protocol
 
-1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
+1. **Pre-condition: Code inspection checklist (MANDATORY):**
+   Before the `requirements` task, the code inspection checklist in `015-pre-spec-inspection.md` MUST be completed when the spec proposes changes to existing code. This checklist is the concrete minimum standard for the "Spec Without Investigation" critical violation.
+   - If brainstorming already completed the checklist (Step 0 in `explore.md`), reference those results — do not re-investigate.
+   - If the checklist was NOT completed during brainstorming, complete it before proceeding to `requirements`.
+   - Exempt: New greenfield features with no existing code interaction; trivial typos with no code interaction.
+   - Incomplete inspection = HALT and complete the checklist first.
+
+2. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
    - Brainstorming exploration completes (terminal state transitions here)
    - User says "write spec", "create spec", "spec creation"
    - User provides investigation results and asks for a structured spec
@@ -95,18 +102,22 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
 ### What Skills MUST Check
 
-1. **Before `write` task:**
+1. **Before `requirements` task:**
+   - Has the code inspection checklist (`015-pre-spec-inspection.md`) been completed? (or explicitly exempt per greenfield/typo criteria)
+   - If not completed and spec touches existing code, HALT and complete the checklist first
+
+2. **Before `write` task:**
    - Has `requirements` task been completed? (or explicitly skipped for trivial specs)
    - Has exploration (brainstorming) output been referenced?
    - Are acceptance criteria defined?
 
-1. **After `write` task:**
+3. **After `write` task:**
    - GitHub Issue created with `[SPEC]` prefix and `needs-approval` label?
    - Chat output is exec summary + URL + byline ONLY? (no full spec dump)
    - Spec self-review completed? (placeholder scan, consistency check, ambiguity check)
    - User directed to review on the GitHub Issue (not in chat)?
 
-1. **What does NOT bypass spec-creation:**
+4. **What does NOT bypass spec-creation:**
    - "skip spec-creation" → NOT allowed (even simple specs need `requirements` + `write`)
    - "brainstorming already wrote the spec" → Brainstorming no longer writes specs; this skill does
    - "just show me the spec in chat" → NOT allowed; spec MUST be persisted as GitHub Issue

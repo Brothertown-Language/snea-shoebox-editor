@@ -36,6 +36,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `operational-flow` | Process flow / runbook operational checks | ~400 |
 | `determinism` | Deterministic behavior and state dependency checks | ~300 |
 | `error-recovery` | Runbook error recovery and rollback checks | ~350 |
+| `principles` | Engineering principle violations from programming-principles skill | ~350 |
 
 ## Invocation
 
@@ -46,6 +47,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task structure` — Structure checks only
 - `/skill spec-auditor --issue N --task fidelity` — Clean-room comparison only
 - `/skill spec-auditor --issue N --task concerns` — Phase structure checks only
+- `/skill spec-auditor --issue N --task principles` — Engineering principle checks only
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
 - `/skill spec-auditor` — Overview only
@@ -97,12 +99,12 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
    | Document Type | Baseline Subtasks | Conditional Subtasks |
    |---------------|-------------------|---------------------|
-   | Spec | `fresh-start`, `structure`, `fidelity` | `content-quality`, `traceability`, `operational`, `concerns` |
-   | Plan | `fresh-start`, `structure` | `content-quality`, `concerns` |
-   | Process Flow | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism` |
-   | Runbook/SOP | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `error-recovery` |
-   | Checklist | `fresh-start`, `structure` (adapted) | — |
-   | Reference Doc | `fresh-start` | — |
+    | Spec | `fresh-start`, `structure`, `fidelity` | `content-quality`, `traceability`, `operational`, `concerns`, `principles` |
+    | Plan | `fresh-start`, `structure` | `content-quality`, `concerns`, `principles` |
+    | Process Flow | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `principles` |
+    | Runbook/SOP | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `error-recovery`, `principles` |
+    | Checklist | `fresh-start`, `structure` (adapted) | `principles` |
+    | Reference Doc | `fresh-start` | `principles` |
 
    **Conditional subtask selection guidance (Spec-type only):**
 
@@ -125,6 +127,7 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 |---------------|-------------------|-----------|
 | Spec | `fresh-start`, `structure`, `fidelity` | Every spec must be self-contained, properly structured, and faithful to its problem |
 | Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
+| Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
 | Process Flow | `fresh-start`, `structure` (adapted) | Flows need self-containment and adapted structure checks |
 | Runbook/SOP | `fresh-start`, `structure` (adapted) | Runbooks need self-containment and adapted structure checks |
 | Checklist | `fresh-start`, `structure` (adapted) | Checklists need self-containment and adapted structure checks |
@@ -135,6 +138,8 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 **Findings from all subtasks are classified into three tiers and acted on accordingly.**
 
 This is a v3 core principle. Previous versions (v2) were report-only — findings were listed and the agent decided what to apply. v3 auto-fixes safe findings directly and only flags ambiguous findings for developer review.
+
+**Authorization path:** Auto-fix findings are exempt from the approval-gate's "no implementation without authorization" rule. See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete conditions. **Conditional findings are NOT exempt** — they require explicit authorization before application. **Flag-for-review findings are never applied** — they are reported in the executive summary only.
 
 **Three-tier classification:**
 
@@ -159,6 +164,8 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | OPERATIONAL-FLOW-GAP | Add placeholder for missing error recovery, I/O contract, or rollback step | Placeholder doesn't change semantics; developer fills in |
 | DETERMINISM-VIOLATION | Add explicit environment assumptions and state dependency notes | Explicitness is always correct; removes ambiguity |
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
+| SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
+| PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
 
 **Conditional findings:**
 
@@ -166,6 +173,8 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 |---------------|------------------------------|-----------|
 | SCOPE-CREEP-RISK | Verify removed scope doesn't break dependencies | Removing scope could orphan other steps |
 | CONTEXT-OVERFLOW | Verify section reduction preserves all requirements | Shortening sections could lose critical details |
+| YAGNI_VIOLATION | Verify removed features/abstractions have no dependents | Removing unrequired features could orphan other steps |
+| SOC_VIOLATION (phase split) | Verify split preserves all step content | Splitting phases could lose cross-concern context |
 
 **Flag-for-review findings:**
 
@@ -178,6 +187,11 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | SUPERSEDED-CLOSURE-VIOLATION | Closure language may reference valid future work |
 | ARCHITECTURAL-REASONING-GAP | Requires understanding design tradeoffs |
 | VAGUE_PROBLEM | Problem statement vagueness requires human input |
+| KISS_VIOLATION | Simplicity vs. design intent requires domain judgment |
+| COUPLING_VIOLATION | Decoupling strategy depends on architecture context |
+| BLAST_RADIUS_VIOLATION | Isolation scope depends on deployment architecture |
+| TESTABILITY_VIOLATION | Testability tradeoffs require understanding of project constraints |
+| PRINCIPLE_VIOLATION | Generic principle violation requires domain judgment |
 
 **Reporting format (v3 — includes Classification and Fix Action):**
 ```
@@ -211,7 +225,8 @@ spec-auditor (orchestrator)
 ├── concerns.md             — Phase structure, independence (delegated from concern-separation-auditor)
 ├── operational-flow.md     — Process flow / runbook operational checks (NEW)
 ├── determinism.md          — Deterministic behavior and state dependency checks (NEW)
-└── error-recovery.md       — Runbook error recovery and rollback checks (NEW)
+├── error-recovery.md       — Runbook error recovery and rollback checks (NEW)
+└── principles.md           — Engineering principle violations from programming-principles skill (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -240,6 +255,15 @@ Existing classes remain, plus two new ones:
 | **OPERATIONAL-FLOW-GAP** | Missing error recovery, I/O contracts, idempotency, or rollback in process flows |
 | **DETERMINISM-VIOLATION** | Hidden non-determinism, unstated environment assumptions, undocumented state dependencies |
 | **ERROR-RECOVERY-GAP** | Missing prerequisites, scope, escalation contacts, versioning, or validation gates in runbooks |
+| **SRP_VIOLATION** | Phase/step/module with multiple reasons to change |
+| **SOC_VIOLATION** | Mixed concerns in a single phase or step |
+| **YAGNI_VIOLATION** | Features or abstractions without current requirement |
+| **KISS_VIOLATION** | Unnecessarily complex approach when simpler solution exists |
+| **COUPLING_VIOLATION** | Tight coupling between phases or steps that should be independent |
+| **BLAST_RADIUS_VIOLATION** | Change scope wider than necessary; failure isolation absent |
+| **TESTABILITY_VIOLATION** | Design that makes testing difficult without explicit tradeoff note |
+| **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
+| **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
 
 ## Audit Findings Handling
 
@@ -336,7 +360,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 
 ## Cross-References
 
-- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task)
+- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (principle definitions for `principles` subtask)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `140-planning-spec-creation.md`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-revision` when audit requires changes; replace with `needs-approval` on re-submission)
 - Delegated from: `plan-fidelity-auditor` (now `fidelity` subtask), `concern-separation-auditor` (now `concerns` subtask)

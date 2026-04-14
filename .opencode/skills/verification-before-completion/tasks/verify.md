@@ -22,6 +22,13 @@ Verify all success criteria have evidence before allowing completion claims.
 - Check `./tmp/` for artifacts
 - Verify evidence matches criteria
 
+### 2a. Todowrite Cleanup Verification
+
+- Verify no stale todowrite items remain (`pending` or `in_progress`)
+- If todowrite was used during the session, confirm `todowrite(todos=[])` was called before HALT
+- Evidence: todowrite state is empty or all items are `completed`
+- Failure: HALT and require todowrite cleanup before allowing completion
+
 ### 3. Mark Verified/Unverified
 
 ```markdown

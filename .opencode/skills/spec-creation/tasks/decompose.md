@@ -27,11 +27,20 @@ Break the problem into logical units where each unit:
 ### Step 2: Define Interfaces First (Interface-First Thinking)
 
 For each unit, define:
-- **API contracts:** Function signatures, endpoints, request/response schemas
-- **Data contracts:** Data types, validation rules, serialization format
+- **Interface Requirements:** What the unit must accept, return, and guarantee (function names, responsibilities, input/output contracts)
+- **Data Boundaries:** What data exists, what constraints it satisfies, what invariants hold (table names, constraint tables, ownership boundaries)
 - **Boundary conditions:** What crosses the unit boundary, in what format
 
 **Why first:** Interface definitions constrain implementation correctly. Code written against undefined interfaces tends to couple to implementation details.
+
+**Boundary discipline:**
+
+| ✅ Spec-Level (WHAT) | ❌ Plan-Level (HOW) |
+|-----------------------|----------------------|
+| "validate_user() accepts user_id, returns bool" | `def validate_user(user_id: int) -> bool: ...` |
+| "users table has unique email constraint" | `CREATE TABLE users (email TEXT UNIQUE)` |
+| "processing must complete within 2s" | "use batch processing with chunk size 100" |
+| "layer must not depend on presentation" | "use dependency injection pattern" |
 
 ### Step 3: Document Invariants
 

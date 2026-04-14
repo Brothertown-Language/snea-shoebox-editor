@@ -23,6 +23,25 @@ digraph brainstorming {
 }
 ```
 
+## Step 0: Pre-Spec Code Inspection (MANDATORY)
+
+**Before exploring project context, complete the code inspection checklist in `015-pre-spec-inspection.md`.**
+
+The checklist is MANDATORY when the spec or bug report proposes changes to existing code. It covers:
+
+1. Trace actual call paths (who imports/calls the target?)
+2. Verify imports (actual import path vs assumed)
+3. Detect dead code (exported but unused symbols)
+4. Verify format/protocol assumptions (data formats, signatures, protocols)
+5. Confirm architectural layer (correct layer, no boundary violations)
+6. Check for existing alternatives (already-solved concerns)
+
+**Incomplete inspection = "Spec Without Investigation" critical violation** (see `000-critical-rules.md`).
+
+Exempt: New greenfield features with no existing code interaction; trivial typos with no code interaction.
+
+Address all six items. If an item is not applicable, state "N/A" with a one-sentence justification. Unmentioned items are violations.
+
 ## Step 1: Explore Project Context
 
 Check current project state before asking any questions:
@@ -30,6 +49,7 @@ Check current project state before asking any questions:
 - Files, docs, recent commits
 - Existing patterns, reusable components
 - README, CHANGELOG, and relevant documentation
+- **Reference code inspection results from Step 0** — do not re-investigate what was already verified
 
 ## Step 2: Scope Check
 
@@ -39,6 +59,27 @@ Before asking detailed questions, assess scope:
 - Help the user **decompose into sub-projects**: what are the independent pieces, how do they relate, what order should they be built?
 - Then brainstorm the first sub-project through the normal flow
 - Each sub-project gets its own spec → plan → implementation cycle
+
+### Autonomous Structural Classification (MANDATORY)
+
+Structural classification — single-task vs multi-task, phase decomposition — is an **agent intelligence concern**. Resolve it autonomously. Do NOT ask the user to make this decision.
+
+**Ask the user when**: Multiple valid structures exist with meaningful trade-offs that only the user can resolve:
+- 3+ subsystems with unclear boundaries or interdependencies
+- Ambiguity about whether a subsystem is in-scope or out-of-scope
+- Multiple valid decomposition orders where business priority is genuinely unclear
+
+**Do NOT ask the user when**: One structure is clearly appropriate:
+- Focused rule addition, single-file change, or bug fix with obvious scope → single-task, no question
+- Request naturally decomposes into sequential phases with clear boundaries → multi-task with phased structure, no question
+- The agent can determine scope from context, codebase, or the request itself → autonomous decision, no question
+
+**Prohibited questions** (examples of what NOT to ask):
+- "Should this be a single-task spec or broken into phases?"
+- "Is this a small change or a big one?"
+- "Do you want this as one spec or multiple?"
+
+When in doubt, classify autonomously and state the classification as part of your design proposal. The user can override during design review — but the default is agent-resolved.
 
 ## Step 3: Offer Visual Companion (Conditional)
 
@@ -124,6 +165,7 @@ rules: []
 state_machines:
   - id: brainstorming-flow
     states:
+      - "Pre-spec code inspection"
       - "Explore project context"
       - "Scope check"
       - "Decompose project"
@@ -134,8 +176,16 @@ state_machines:
       - "Present design incrementally"
       - "User approves?"
       - "Invoke spec-creation"
-    start_state: "Explore project context"
+    start_state: "Pre-spec code inspection"
     transitions:
+      - from: "Pre-spec code inspection"
+        to: "Explore project context"
+        guard: "checklist_completed == true OR exempt == true"
+        action: PROCEED
+      - from: "Pre-spec code inspection"
+        to: "HALT"
+        guard: "checklist_completed == false AND exempt == false"
+        action: WARN
       - from: "Explore project context"
         to: "Scope check"
         guard: "context_gathered == true"

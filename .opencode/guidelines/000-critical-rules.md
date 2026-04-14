@@ -179,6 +179,20 @@ The following are ALL implementation actions that require an approved spec:
 | Creating new files of any type | ✅ Yes | Adds new behavior or content |
 | Fixing a typo in documentation | ❌ No | No behavioral change |
 | Formatting code (ruff format) | ❌ No | No behavioral change |
+| Spec-auditor auto-fix on GitHub Issue | ❌ No* | Non-substantive; see audit auto-fix exemption below |
+
+**\* Audit Auto-Fix Exemption:** Spec-auditor auto-fixes applied to GitHub Issues are NOT implementation actions when ALL of the following conditions are met:
+
+- The audit was deliberately invoked (user-triggered via `spec-auditor --issue N` or pipeline-triggered)
+- Findings are classified as `auto-fix` by spec-auditor's three-tier model
+- Fix is applied to a GitHub Issue body (not source code, not skill files, not guideline files)
+- Fix is non-substantive (structure violations, missing boilerplate, boilerplate titles, numbering, trace links, approach differences, inline context replacement, concern separation fixes)
+- **`conditional` fixes require separate authorization before application** (they are NOT auto-applied without explicit "approved"/"go")
+- **`flag-for-review` findings are reported in the executive summary but NOT applied**
+
+When any condition is NOT met, the action reverts to requiring an approved spec per the standard "Implementation Without Spec" rule.
+
+**See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete exemption section and `spec-auditor` skill → "Auto-Fix Model" for the three-tier classification.**
 
 **🚫 FORBIDDEN patterns (all require spec):**
 - "It's just a skill file" → Skill files alter agent enforcement. Spec required.
@@ -242,7 +256,9 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 🚫 FORBIDDEN: Specs from vague requirements; skipping codebase analysis; finalizing without edge cases; proceeding without success criteria
 
-**See `brainstorming` skill for investigation requirements and completion criteria.**
+**The concrete minimum standard is the code inspection checklist in `015-pre-spec-inspection.md`** — all six items (trace call paths, verify imports, detect dead code, verify format/protocol assumptions, confirm architectural layer, check for existing alternatives) MUST be addressed before proposing any approach. Incomplete inspection = this critical violation.
+
+**See `brainstorming` skill for investigation requirements and completion criteria. See `015-pre-spec-inspection.md` for the mandatory checklist and evidence requirements.**
 
 ## Critical Violation: Implementing Stale or Superseded Specs
 
@@ -415,6 +431,32 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - ✅ REQUIRED: Explicit documented justification in batch state if parallel execution is chosen (opportunistic only)
 - ✅ REQUIRED: Stack branches via `git merge <prior-branch>` into dependent branches before implementation
 - ✅ REQUIRED: When in doubt, stack — parallel execution is never the starting assumption
+
+## Critical Violation: Stale Todowrite State After Task Completion
+
+**⚠️ Leaving stale or uncleared todowrite state after task completion is a CRITICAL GUIDELINE VIOLATION.**
+
+When the `todowrite` tool is used during a session, the agent MUST maintain the full lifecycle: create items with correct status, update status as work progresses, and clear all items before halting.
+
+- 🚫 FORBIDDEN: Leaving `pending` items after task completes; abandoning `in_progress` items without transitioning to `completed`; halting without calling `todowrite(todos=[])`; ignoring stale state from previous tasks
+- ✅ REQUIRED: Transition each item to `in_progress` when work begins and `completed` when done; call `todowrite(todos=[])` to clear state before HALT; verify no stale items remain at session end
+
+**See `060-tool-usage.md` §7 for the complete todowrite lifecycle rules (CREATE/UPDATE/CLEAR).**
+
+## Critical Violation: Pushing Agent Intelligence Decisions to the User
+
+**⚠️ Asking the user to make structural classification decisions that the agent should resolve autonomously is a CRITICAL GUIDELINE VIOLATION.**
+
+Structural decisions — single-task vs multi-task classification, phase decomposition, scope sizing — are agent intelligence concerns. The agent must resolve them autonomously based on request analysis and codebase context.
+
+- 🚫 FORBIDDEN: "Should this be a single-task spec or broken into phases?" — the agent decides
+- 🚫 FORBIDDEN: "Is this a small change or a big one?" — the agent assesses
+- 🚫 FORBIDDEN: "Do you want this as one spec or multiple?" — the agent classifies
+- 🚫 FORBIDDEN: Any question where the answer is determinable from context, codebase, or request analysis
+- ✅ REQUIRED: Classify autonomously and state the classification as part of the design proposal
+- ✅ REQUIRED: Only ask when multiple valid structures exist with genuinely ambiguous trade-offs (e.g., 3+ subsystems with unclear boundaries)
+
+**See `brainstorming` skill → `explore` task → "Autonomous Structural Classification" for the complete criteria.**
 
 ______________________________________________________________________
 
