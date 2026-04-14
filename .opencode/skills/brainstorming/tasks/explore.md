@@ -23,6 +23,25 @@ digraph brainstorming {
 }
 ```
 
+## Step 0: Pre-Spec Code Inspection (MANDATORY)
+
+**Before exploring project context, complete the code inspection checklist in `015-pre-spec-inspection.md`.**
+
+The checklist is MANDATORY when the spec or bug report proposes changes to existing code. It covers:
+
+1. Trace actual call paths (who imports/calls the target?)
+2. Verify imports (actual import path vs assumed)
+3. Detect dead code (exported but unused symbols)
+4. Verify format/protocol assumptions (data formats, signatures, protocols)
+5. Confirm architectural layer (correct layer, no boundary violations)
+6. Check for existing alternatives (already-solved concerns)
+
+**Incomplete inspection = "Spec Without Investigation" critical violation** (see `000-critical-rules.md`).
+
+Exempt: New greenfield features with no existing code interaction; trivial typos with no code interaction.
+
+Address all six items. If an item is not applicable, state "N/A" with a one-sentence justification. Unmentioned items are violations.
+
 ## Step 1: Explore Project Context
 
 Check current project state before asking any questions:
@@ -30,6 +49,7 @@ Check current project state before asking any questions:
 - Files, docs, recent commits
 - Existing patterns, reusable components
 - README, CHANGELOG, and relevant documentation
+- **Reference code inspection results from Step 0** — do not re-investigate what was already verified
 
 ## Step 2: Scope Check
 
@@ -145,6 +165,7 @@ rules: []
 state_machines:
   - id: brainstorming-flow
     states:
+      - "Pre-spec code inspection"
       - "Explore project context"
       - "Scope check"
       - "Decompose project"
@@ -155,8 +176,16 @@ state_machines:
       - "Present design incrementally"
       - "User approves?"
       - "Invoke spec-creation"
-    start_state: "Explore project context"
+    start_state: "Pre-spec code inspection"
     transitions:
+      - from: "Pre-spec code inspection"
+        to: "Explore project context"
+        guard: "checklist_completed == true OR exempt == true"
+        action: PROCEED
+      - from: "Pre-spec code inspection"
+        to: "HALT"
+        guard: "checklist_completed == false AND exempt == false"
+        action: WARN
       - from: "Explore project context"
         to: "Scope check"
         guard: "context_gathered == true"

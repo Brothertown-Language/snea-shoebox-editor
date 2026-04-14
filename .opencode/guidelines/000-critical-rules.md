@@ -256,7 +256,9 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 🚫 FORBIDDEN: Specs from vague requirements; skipping codebase analysis; finalizing without edge cases; proceeding without success criteria
 
-**See `brainstorming` skill for investigation requirements and completion criteria.**
+**The concrete minimum standard is the code inspection checklist in `015-pre-spec-inspection.md`** — all six items (trace call paths, verify imports, detect dead code, verify format/protocol assumptions, confirm architectural layer, check for existing alternatives) MUST be addressed before proposing any approach. Incomplete inspection = this critical violation.
+
+**See `brainstorming` skill for investigation requirements and completion criteria. See `015-pre-spec-inspection.md` for the mandatory checklist and evidence requirements.**
 
 ## Critical Violation: Implementing Stale or Superseded Specs
 
