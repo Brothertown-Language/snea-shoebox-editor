@@ -38,6 +38,9 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 - [ ] Compare URL generated
 - [ ] Compare URL accessible
 
+### Todowrite State
+- [ ] No stale todowrite state (all items `completed` or cleared via `todowrite(todos=[])`)
+
 ### Documentation
 - [ ] AI co-authored attribution in new files
 - [ ] Module docstrings present

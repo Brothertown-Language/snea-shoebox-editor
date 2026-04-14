@@ -122,3 +122,20 @@ When working in a git worktree (`WORKTREE_PATH` is set), TIER 1 file operation t
 ## 6. File Renaming
 
 - When renaming a file and the developer does not specify the new name, infer the best semantic name based on the file's actual content and purpose — do not ask for clarification.
+
+## 7. Todowrite Lifecycle Management
+
+When the `todowrite` tool is used during a session, the agent MUST maintain the full lifecycle for every item. Failure to do so is a critical violation — see `000-critical-rules.md` → "Stale Todowrite State After Task Completion".
+
+### ✅ ALWAYS DO
+
+- **CREATE**: When `todowrite` is invoked, every item MUST have an explicit `status` field: `pending`, `in_progress`, or `completed`
+- **UPDATE**: Each item MUST transition to `in_progress` when work on that item begins, and to `completed` when the item is fully done
+- **CLEAR**: `todowrite(todos=[])` MUST be called when the task completes — this is required before any HALT
+
+### 🚫 NEVER DO
+
+- Leave items in `pending` or `in_progress` status after task completion
+- Halt a session without calling `todowrite(todos=[])` to clear state
+- Create items without a `status` field
+- Skip status transitions (e.g., jump from `pending` directly to `completed` without `in_progress`)

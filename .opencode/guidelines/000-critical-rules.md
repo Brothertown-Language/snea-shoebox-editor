@@ -430,6 +430,17 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - ✅ REQUIRED: Stack branches via `git merge <prior-branch>` into dependent branches before implementation
 - ✅ REQUIRED: When in doubt, stack — parallel execution is never the starting assumption
 
+## Critical Violation: Stale Todowrite State After Task Completion
+
+**⚠️ Leaving stale or uncleared todowrite state after task completion is a CRITICAL GUIDELINE VIOLATION.**
+
+When the `todowrite` tool is used during a session, the agent MUST maintain the full lifecycle: create items with correct status, update status as work progresses, and clear all items before halting.
+
+- 🚫 FORBIDDEN: Leaving `pending` items after task completes; abandoning `in_progress` items without transitioning to `completed`; halting without calling `todowrite(todos=[])`; ignoring stale state from previous tasks
+- ✅ REQUIRED: Transition each item to `in_progress` when work begins and `completed` when done; call `todowrite(todos=[])` to clear state before HALT; verify no stale items remain at session end
+
+**See `060-tool-usage.md` §7 for the complete todowrite lifecycle rules (CREATE/UPDATE/CLEAR).**
+
 ______________________________________________________________________
 
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.
