@@ -99,14 +99,14 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 3. **Subtask determination:** When invoked without `--task`, the agent determines which subtasks to run based on document type:
 
-   | Document Type | Baseline Subtasks | Conditional Subtasks |
-   |---------------|-------------------|---------------------|
-     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth` | `content-quality`, `traceability`, `operational`, `concerns`, `principles` |
-     | Plan | `fresh-start`, `structure`, `ground-truth` | `content-quality`, `concerns`, `principles` |
-     | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth` | `operational-flow`, `determinism`, `principles` |
-     | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth` | `operational-flow`, `determinism`, `error-recovery`, `principles` |
-     | Checklist | `fresh-start`, `structure` (adapted), `ground-truth` | `principles` |
-     | Reference Doc | `fresh-start`, `ground-truth` | `principles` |
+    | Document Type | Baseline Subtasks | Conditional Subtasks |
+    |---------------|-------------------|---------------------|
+    | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns` |
+    | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns` |
+    | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
+    | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
+    | Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | — |
+    | Reference Doc | `fresh-start`, `ground-truth`, `principles` | — |
 
    **Conditional subtask selection guidance (Spec-type only):**
 
@@ -127,13 +127,12 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 | Document Type | Baseline Subtasks | Why These |
 |---------------|-------------------|-----------|
-| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth` | Every spec must be self-contained, properly structured, faithful to its problem, and metadata-verified |
-| Plan | `fresh-start`, `structure`, `ground-truth` | Plans need self-containment, structure, and metadata verification; `fidelity` applies only to specs |
-| Plan | `fresh-start`, `structure`, `ground-truth` | Plans need self-containment, structure, and metadata verification; `fidelity` applies only to specs |
-| Process Flow | `fresh-start`, `structure` (adapted), `ground-truth` | Flows need self-containment, adapted structure checks, and metadata verification |
-| Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth` | Runbooks need self-containment, adapted structure checks, and metadata verification |
-| Checklist | `fresh-start`, `structure` (adapted), `ground-truth` | Checklists need self-containment, adapted structure checks, and metadata verification |
-| Reference Doc | `fresh-start`, `ground-truth` | Reference docs need self-containment checks and metadata verification |
+| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, and principle-compliant |
+| Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | Plans need self-containment, structure, metadata verification, and principle compliance; `fidelity` applies only to specs |
+| Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Flows need self-containment, adapted structure checks, metadata verification, and principle compliance |
+| Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Runbooks need self-containment, adapted structure checks, metadata verification, and principle compliance |
+| Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Checklists need self-containment, adapted structure checks, metadata verification, and principle compliance |
+| Reference Doc | `fresh-start`, `ground-truth`, `principles` | Reference docs need self-containment, metadata verification, and principle compliance |
 
 ## Auto-Fix Model (CRITICAL)
 
@@ -373,7 +372,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 
 ## Cross-References
 
-- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (principle definitions for `principles` subtask)
+- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `140-planning-spec-creation.md`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-revision` when audit requires changes; replace with `needs-approval` on re-submission)
 - Delegated from: `plan-fidelity-auditor` (now `fidelity` subtask), `concern-separation-auditor` (now `concerns` subtask)
@@ -390,6 +389,8 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | No operational requirements check | `operational` subtask (NEW) | `operational` subtask | `operational` subtask |
 | plan-fidelity-auditor invoked directly | `fidelity` subtask delegated | `fidelity` subtask delegated | `fidelity` subtask delegated |
 | concern-separation-auditor invoked directly | `concerns` subtask delegated | `concerns` subtask delegated | `concerns` subtask delegated |
+| No principle compliance check | — | — | `principles` subtask (NEW) — baseline for all types |
+| No ground-truth verification | — | — | `ground-truth` subtask (NEW) — baseline for all types |
 | No executive summary | No executive summary | Chat executive summary mandatory | Chat executive summary mandatory, includes document type |
 | Report format: Recommendation field | Report format: Recommendation field | Report format: Classification + Fix Action fields | Report format: Classification + Fix Action fields |
 | Issue-only input | Issue-only input | Issue-only input | `--issue`, `--file`, `--url` input |

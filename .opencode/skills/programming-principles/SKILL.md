@@ -60,8 +60,8 @@ This skill is **reference-driven**, not dispatch-triggered. Load via `/skill pro
 | -- | -- |
 | `080-code-standards.md` | Project-specific conventions (this skill owns principles, that guideline owns conventions) |
 | `engineering-approach` skill | Workflow discipline — when to design, verify, communicate (this skill owns *what* principles to apply, that skill owns *when* in the process) |
-| `code-size-enforcement` skill | Size limits — SRP and "No Monoliths" have hard limits there |
-| `concern-separation-auditor` skill | Structural concern separation — this skill provides the design judgment perspective for SoC and Blast Radius |
-| `spec-auditor` skill | Auditing orchestrator — `principles` subtask checks specs against these 20 principles |
-| `plan-fidelity-auditor` skill | Plan fidelity — this skill provides design judgment for approach difference findings |
-| `issue-review` skill | Issue review — delegates to spec-auditor which uses `principles` subtask |
+| `code-size-enforcement` skill | Size limits — SRP and "No Monoliths" have hard limits there; that skill references here for decomposition guidance |
+| `concern-separation-auditor` skill | Structural concern separation — this skill provides the design judgment perspective for SoC and Blast Radius; that skill references here for principle definitions |
+| `spec-auditor` skill | Principles checked during audit — `principles` subtask checks document compliance against this skill's definitions |
+| `plan-fidelity-auditor` skill | Design principle alignment for clean-room comparison context; that skill references here for principle judgment |
+| `issue-review` skill | Principle context for audit path delegation; that skill references here for principle-aware triage |

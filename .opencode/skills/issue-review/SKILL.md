@@ -153,9 +153,9 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 ## Cross-References
 
 - `spec-auditor`: Called by `audit` task for spec quality checks
-- `programming-principles`: Design judgment resource for audit and analyze-and-spec paths; provides principle definitions for evaluating spec quality
 - `approval-gate`: Referenced for authorization status in `gather`; verifies fix spec for bug reports
 - `systematic-debugging`: Invokes `analyze-and-spec` after bug report creation
 - `github-issue-creation`: Called by `analyze-and-spec` for fix spec creation
+- `programming-principles`: Principle context for audit path delegation
 
 Base directory for this skill: `.opencode/skills/issue-review/`
