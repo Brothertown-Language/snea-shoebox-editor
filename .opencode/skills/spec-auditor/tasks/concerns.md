@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Analyze spec phase structure for concern separation quality — deployment independence, risk profile, and blast radius. All findings are reported, NOT auto-applied.
+Analyze spec phase structure for concern separation quality — deployment independence, risk profile, and blast radius. All findings are reported for agent review, NOT auto-applied.
 
 **Delegated from:** concern-separation-auditor (v1). Now a subtask within spec-auditor.
 
@@ -44,26 +44,22 @@ Subtask: concerns
 Finding: [BOILERPLATE-TITLE|CONCERN_MIXING|DEPENDENCY_REVERSAL|HIGH_RISK_GROUPING] - [summary]
 Location: [phase/step where issue found]
 Context: [why concern separation matters for this spec]
-Classification: [auto-fix|conditional|flag-for-review]
-Fix Action: [what was done OR "flagged for review — [reason]"]
+Classification: flag-for-review
+Fix Action: flagged for review — [reason]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
-## Auto-Fix Classification
+## Why Flag-for-Review (Not Auto-Fix)
 
-| Problem Class | Classification | Fix Action |
-|---------------|---------------|------------|
-| BOILERPLATE-TITLE | auto-fix | Rename phase to describe specific concern |
-| CONCERN_MIXING | auto-fix | Split mixed-concern phase into separate phases per concern |
-| DEPENDENCY_REVERSAL | auto-fix | Reorder phases to match dependency order |
-| HIGH_RISK_GROUPING | auto-fix | Separate high-risk steps into their own phase or flag at top of phase |
+Concern-splitting and phase-renaming require context judgment that the auditor lacks:
 
-## Why Auto-Fix Is Safe for These Findings
+- A BOILERPLATE-TITLE rename might be wrong for the specific spec. The spec author may have chosen a simple name intentionally for a simple change.
+- A concern split might break an intentionally grouped phase. Some phases group related concerns that are deployed together.
+- The agent has full context about the spec's complexity, domain, and deployment requirements. The auditor doesn't.
 
-- BOILERPLATE-TITLE: Generic names are always suboptimal; specific concern names are always better
-- CONCERN_MIXING: Mixed-concern phases create deployment risk; splitting is always correct
-- DEPENDENCY_REVERSAL: Wrong order is objectively wrong; reordering is always correct
-- HIGH_RISK_GROUPING: Separating risk profiles is always safer
+All findings are reported for agent review. The agent decides whether to apply changes based on their understanding of the spec's domain.
+
+This aligns with the v2 design philosophy from `concern-separation-auditor/SKILL.md`: findings are presented, not imposed.
 
 ## When to Run
 

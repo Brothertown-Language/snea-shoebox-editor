@@ -94,34 +94,23 @@ ______________________________________________________________________
 
 ______________________________________________________________________
 
-## 1.1. Engineering Requirements for Specs
+## 1.1. Spec Content Requirements
 
-**Every specification MUST include thorough requirements analysis.**
+**Every specification MUST cover these content areas.** The format is up to the agent — a simple spec may cover several areas in a single paragraph, while a complex spec may use separate sections.
 
-### Full Requirements Analysis Required
+### Content Coverage Questions
 
-Before any implementation, every spec must document:
-
-| Requirement | Description |
-| -- | -- |
-| **Problem Statement** | What is the problem? Why does it need solving? |
-| **Context** | Background, stakeholders, affected systems |
-| **Constraints** | Technical, resource, time, compatibility constraints |
-| **Assumptions** | What are we assuming that may not be true? |
-| **Success Criteria** | Testable, measurable criteria for completion |
-| **Edge Cases** | Boundary conditions and corner cases identified |
-| **Dependencies** | External systems, libraries, other teams affected |
-| **Integrations** | How does this integrate with existing code? |
-| **Risk Assessment** | What could go wrong? Mitigation strategies? |
-
-### Design Phase Required
-
-**No direct-to-implementation.** Before coding:
-
-1. **Explore codebase** for existing patterns and reusable components
-2. **Document design decisions** in the spec
-3. **Consider alternatives** and their tradeoffs
-4. **Get approval on approach** before starting implementation
+| Question | Why It Matters |
+|----------|---------------|
+| Does the spec clearly state the problem it solves and why? | Without this, the reader doesn't know what they're solving or whether the solution addresses the right thing |
+| Does the spec provide enough context for someone with no prior knowledge? | Agents lack memory context; the spec must be self-contained |
+| Does the spec identify what constraints and assumptions apply? | Constraints shape the solution space; assumptions may be wrong and need verification |
+| Does the spec define testable success criteria? | Binary pass/fail criteria are the only reliable way to verify completion |
+| Does the spec address edge cases and risks? | Unhandled edge cases become production bugs |
+| Does the spec explain why the chosen approach was selected? | Without rationale, the implementer might make different assumptions |
+| Does the spec identify affected files with stable anchors? | File paths and function names (not line numbers) enable targeted implementation |
+| Does the spec reference related issues with context? | Cross-references prevent duplicate work and ensure consistency |
+| Does the spec define what is explicitly out of scope? | Non-requirements prevent scope creep |
 
 ### Anti-Patterns in Specifications
 
@@ -134,6 +123,16 @@ Before any implementation, every spec must document:
 - No risk assessment
 - Skipping design phase
 - Proceeding without approval
+
+### Simple vs Complex Specs
+
+**Simple specs** (bug fixes, one-file changes, obvious solutions) may address all required content areas in a few paragraphs. A minimal spec can be as short as:
+
+> Problem → Context → Fix approach → Success criteria → Edge cases
+
+**Complex specs** (multi-file changes, cross-cutting concerns, architectural decisions) typically use separate sections for each content area. The `brainstorming` skill and `spec-creation` skill tasks provide prompts for thinking through each area.
+
+**The key principle: every content area must be addressed, but agents choose the format that matches the spec's complexity.**
 
 ______________________________________________________________________
 
@@ -177,46 +176,17 @@ A different AI agent (or the same agent after a context reset) may pick up this 
    - What alternatives were considered?
    - What constraints drove the decision?
 
-### Fresh-Start Context Checklist
+### Context Coverage Checklist
 
-Before submitting any spec, verify ALL of the following:
+Before submitting any spec, verify these self-containment questions:
 
-| Element | Required Content |
-| -- | -- |
-| **Problem Statement** | What is broken/needed and WHY (with context) |
-| **Affected Files** | List of files with function/section anchors and snippets |
-| **Related Issues** | Links + summaries + relevance explanation |
-| **Context** | Background on affected systems, prior decisions |
-| **Constraints** | Technical, resource, time, compatibility limits |
-| **Assumptions** | What we're assuming that may not be true |
-| **Success Criteria** | Testable, measurable completion criteria |
-| **Edge Cases** | Identified boundary conditions |
-| **Dependencies** | External systems, libraries, affected teams |
-| **Risk Assessment** | What could go wrong and mitigations |
-| **Decision Rationale** | Why this approach was chosen |
-
-### Example: Bad vs Good Spec Context
-
-**❌ BAD (assumes memory context):**
-
-> Fix the bug in the authentication module as discussed.
-
-**✅ GOOD (self-contained):**
-
-> **Problem:** The OAuth2 token refresh fails when the refresh token expires (issue #123).
->
-> **Location:** `src/auth/oauth_client.py` in `refresh_token()` function:
->
-> ```python
-> def refresh_token(self):
->     # BUG: Does not handle expired refresh_token
->     response = self._request_token(...)
->     # Raises TokenExpiredError instead of re-authenticating
-> ```
->
-> **Context:** Users reported being logged out after 7 days (token expiry). Related to #100 (persistent sessions).
->
-> **Decision:** Re-authenticate using stored credentials rather than failing.
+| Question | Why It Matters |
+|----------|---------------|
+| Does the spec describe the problem with full context, not just "as discussed"? | A fresh agent has no memory of earlier conversation |
+| Does the spec include file paths with stable anchors (not line numbers)? | Line numbers break on every edit |
+| Does the spec include code snippets for key changes (<20 lines)? | Code context prevents misunderstandings |
+| Does the spec include URLs and summaries for all related issues? | Bare links without context are useless |
+| Does the spec document decision rationale? | Without it, implementers may choose different approaches |
 
 ______________________________________________________________________
 
@@ -234,4 +204,4 @@ This ensures consistent workflow and prevents context fragmentation.
 
 ______________________________________________________________________
 
-*Source: Content migrated from `040-plan-delivery.md`*
+*Source: Content migrated from `040-plan-delivery.md`, restructured per spec #821*

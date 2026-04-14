@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Validate spec before creating GitHub Issue to prevent conflicts, superseded issues, and missing essential sections.
+Validate spec before creating GitHub Issue to prevent conflicts, superseded issues, and missing essential content.
 
 ## Operating Protocol
 
@@ -17,7 +17,7 @@ Validate spec before creating GitHub Issue to prevent conflicts, superseded issu
 ## Exit Criteria
 
 - Spec validated (no conflicts, no superseded issues)
-- All essential sections present
+- Essential content coverage confirmed
 - Ready to create issue
 
 ## Procedure
@@ -52,20 +52,28 @@ For each open spec issue:
 1. HALT
 2. Suggest updating or closing stale spec first
 
-### Step 3: Validate Spec Completeness
+### Step 3: Validate Spec Content Coverage
 
-**Ensure essential sections are present:**
+**Ensure essential content is present, regardless of section header names.**
 
-| Section | Required |
-|---------|----------|
-| Problem Statement | ✅ YES |
-| Context | ✅ YES |
-| Success Criteria | ✅ YES |
-| Decision Rationale | (for complex specs) |
+The check is content-coverage, not structural conformity. A spec that covers all required concerns under different section names passes. A spec with the exact "correct" headers but missing content fails.
 
-**If missing sections:**
+| Content Area | What to Check |
+|-------------|---------------|
+| Problem description | Does the spec describe what problem it solves and why it matters? |
+| Context | Does the spec provide enough background for a fresh agent to understand? |
+| Success criteria | Does the spec include testable, binary pass/fail completion criteria? |
+
+**Content coverage check examples:**
+
+- A spec with "Background", "The Issue", "How We Know It Works" passes ✅ (covers problem, context, criteria)
+- A spec with "Problem Statement", "Context", "Success Criteria" passes ✅ (covers problem, context, criteria)
+- A spec with "Problem Statement" header but empty content fails ❌ (missing actual content)
+- A spec with no problem description but a detailed implementation plan fails ❌ (what problem is it solving?)
+
+**If content coverage is missing:**
 1. HALT
-2. Report missing sections
+2. Report missing content areas (not missing headers, missing *content*)
 3. Do NOT proceed with creation
 
 ### Step 4: Report Validation Result
@@ -85,7 +93,7 @@ For each open spec issue:
 |-------|------------|
 | Superseding issue found | HALT, report conflict, suggest closing superseded spec |
 | Conflicting objectives | HALT, suggest reconciling or splitting scopes |
-| Missing sections | HALT, require spec update before creation |
+| Missing content coverage | HALT, require spec update before creation |
 | Stale open spec detected | HALT, suggest updating or closing stale spec |
 
 ## Safety Checks
@@ -94,22 +102,30 @@ Before proceeding, verify ALL:
 
 - No superseding issues exist
 - No conflicting specs exist
-- All essential sections present
+- Essential content coverage is present (problem, context, success criteria)
 - Spec is not stale
 
 **If ANY check fails → HALT and report.**
 
-## Example: Superseding Issue Detection
+## Example: Content Coverage Check
 
-**New Spec:** "[SPEC] Add rate limiting"
+**New Spec:** "Add rate limiting to API endpoints"
 
-**Check:** Query open issues
-- Found: Issue #50 "[SPEC-FIX] Rate limiting for API endpoints"
+**Check:** Content coverage
+- Problem described? Yes — "API calls average 150ms, causing slow page loads"
+- Context provided? Yes — "Current queries hit DB directly, 85% cache hit potential"
+- Success criteria testable? Yes — "API response <20ms for cached queries, >80% cache hit rate"
 
-**Result:** HALT. Issue #50 supersedes this spec. Suggest:
-1. Review #50 to see if it covers the requirement
-2. Close new spec if superseded
-3. Update #50 if scope needs expansion
+**Result:** PASS. Content coverage is sufficient regardless of section headers.
+
+**New Spec:** "Improve the API"
+
+**Check:** Content coverage
+- Problem described? No — "improve" is vague, no measurable problem stated
+- Context provided? No — no background on what's wrong
+- Success criteria testable? No — "better API" is not testable
+
+**Result:** FAIL. Missing content coverage, not missing headers.
 
 ## Context Required
 

@@ -56,19 +56,15 @@ For each unit:
 - What happens when it fails? (error propagation, fallback behavior, recovery)
 - How is failure detected? (logging, metrics, alerts)
 
-## Output Format
+## Content Coverage
 
-```
-## Problem Decomposition
+Does the decomposition define clear units with:
+- A single purpose for each unit?
+- Defined interfaces (what goes in, what comes out)?
+- Known invariants that must hold?
+- Failure modes (how it fails, what happens)?
 
-### Unit: <name>
-- Purpose: <one-sentence description>
-- Interface: <API contract, data schema>
-- Inputs: <what comes in>
-- Outputs: <what goes out>
-- Invariants: <what must always be true>
-- Failure modes: <how it fails, what happens>
-```
+**Any format that communicates these concerns clearly is acceptable** — structured per-unit sections, tables, prose descriptions, or diagrams. The agent chooses the format that best serves the spec's complexity.
 
 ## Context Required
 

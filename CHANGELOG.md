@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/821-template-enforcement
+
+- **Intent-Driven Spec Guidelines** (#821) - Replaced rigid structural templates across 12 guideline and skill files with intent-driven prose guidelines. Auditors now flag issues for review instead of auto-fixing, and spec creation uses content coverage prompts instead of mandatory section checklists.
+
 ### spec/592-submodule-release
 
 - **Submodule Release Coordination** (#592) - Implemented automanaged submodule lifecycle: session-start sync with missing dev auto-creation, automated commit/push in review-prep, SHA validation scripts (validate-submodule-refs.sh, enhanced validate-release-tags.sh with --semver/--branch), PR dependency chain enforcement, automated dev→main release promotion, and cross-platform (GitHub + GitBucket) tag verification.

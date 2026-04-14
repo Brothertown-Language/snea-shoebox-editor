@@ -21,13 +21,15 @@ Assemble the final spec with acceptance criteria, ambiguity elimination, and del
 
 ### Step 1: Assemble Spec
 
-Combine outputs from prerequisite tasks into a structured spec:
-- Overview and goals (from requirements)
-- Non-goals (from non-requirements)
-- Architecture and interfaces (from decompose)
-- Success criteria (acceptance criteria with binary pass/fail)
-- Edge cases and error handling (from risk)
-- Traceability references (from traceability)
+Combine outputs from prerequisite tasks into a coherent spec. The spec should address the following content areas — the agent decides which sections to use and how to organize them:
+
+- **Objectives and goals** — What this spec achieves
+- **Constraints and scope** — What's in and out of scope
+- **Success criteria** — Testable, binary pass/fail conditions
+- **Risk and edge cases** — What could go wrong and boundary conditions
+- **Implementation approach** — For the reader's understanding, not prescribing HOW (see Step 4.5)
+
+Skip areas that don't apply to simple specs; add areas that do. The spec should be self-contained and clear, regardless of structure.
 
 ### Step 2: Eliminate Ambiguity (Principle #4)
 
@@ -48,22 +50,13 @@ For each feature/requirement:
 
 ### Step 4: Structure the Deliverable (Principle #10)
 
-Spec sections (adapt to spec complexity):
+**Content coverage matters more than section structure.** The agent chooses the optimal structure for the spec's complexity:
 
-1. **Overview** — Problem statement and context
-2. **Goals** — What this spec achieves
-3. **Non-Goals** — What is explicitly out of scope
-4. **Success Criteria** — Testable, binary pass/fail
-5. **Architecture** — Components, interfaces, data flow
-6. **Interfaces** — API contracts, data schemas, boundaries
-7. **Data Models** — Schemas, migrations, constraints
-8. **Edge Cases** — Error handling, failure modes, limits
-9. **Acceptance Criteria** — Per-feature binary tests
-10. **Risk Assessment** — High-risk areas, mitigation
-11. **Operational Requirements** — Logging, metrics, deployment
-12. **Rollout Plan** — Deployment strategy, rollback
+- **Simple specs** (bug fixes, one-file changes): May use a minimal format — Problem, Context, Fix, Criteria, Edge Cases — all in flowing prose without section headers
+- **Standard specs** (multi-file changes): May use typical sections — Objective, Problem, Context, Fix Approach, Success Criteria, Edge Cases
+- **Complex specs** (cross-cutting, multi-phase): May use full structure — Objective, Problem, Context, Affected Files, Fix Approach, Success Criteria, Edge Cases, Dependencies, Risk, Decision Rationale, Phases
 
-Skip sections that don't apply (e.g., no data models for a guideline-only change).
+**Any format that covers the required content areas is acceptable.** The agent decides the structure that best serves the specific spec.
 
 ### Step 4.5: Spec/Plan Boundary Check
 
@@ -96,7 +89,7 @@ Fix any issues inline. No need to re-review — just fix and move on.
 
 Invoke `github-issue-creation` skill to persist the spec as a GitHub Issue:
 
-1. Invoke `github-issue-creation --task pre-creation` to validate (check for conflicts, superseded issues, missing sections)
+1. Invoke `github-issue-creation --task pre-creation` to validate (check for conflicts, superseded issues, content coverage)
 2. If validation fails → HALT and report. Fix issues and re-validate.
 3. If validation passes → invoke `github-issue-creation --task single-task-check` to determine sub-issue needs
 4. Invoke `github-issue-creation --task creation` to create the GitHub Issue

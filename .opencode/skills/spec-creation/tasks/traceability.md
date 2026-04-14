@@ -18,13 +18,12 @@ Map every requirement to spec section, test, and implementation step. Ensure not
 
 ## Procedure
 
-### Step 1: Build Traceability Matrix
+### Step 1: Build Traceability
 
-Map each requirement ID to:
-
-| Requirement | Spec Section | Test Scenario | Implementation Step |
-|-------------|-------------|---------------|---------------------|
-| [R1] | Section X | Test case Y | Step Z |
+Map each requirement to:
+- Which spec section covers it
+- What test scenario validates it
+- Which implementation step implements it
 
 ### Step 2: Verify Bidirectional Coverage
 
@@ -40,19 +39,14 @@ Map each requirement ID to:
 - Requirements without test scenarios (untestable)
 - Requirements without implementation steps (orphan)
 
-## Output Format
+## Content Coverage
 
-```
-## Traceability Matrix
+Can each requirement be traced to a spec section, test scenario, and implementation step? Does the traceability provide bidirectional coverage?
 
-| Req ID | Spec Section | Test | Implementation |
-|--------|-------------|------|----------------|
-| [R1]   | §2.1        | T1   | Step 3         |
-| [R2]   | §2.2        | T2   | Step 4         |
+- **Forward traceability:** Every requirement → spec section and test
+- **Backward traceability:** Every spec section → requirement
 
-### Gaps
-- <any missing mappings>
-```
+**Any format that provides this coverage is acceptable.** A formal traceability matrix table works well for complex specs. A prose list or inline references work well for simple specs. The agent chooses the format that best serves the spec.
 
 ## Context Required
 
