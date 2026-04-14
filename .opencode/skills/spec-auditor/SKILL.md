@@ -37,6 +37,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `determinism` | Deterministic behavior and state dependency checks | ~300 |
 | `error-recovery` | Runbook error recovery and rollback checks | ~350 |
 | `principles` | Engineering principle violations from programming-principles skill | ~350 |
+| `ground-truth` | Adversarial verification of metadata claims against direct evidence | ~500 |
 
 ## Invocation
 
@@ -48,6 +49,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task fidelity` — Clean-room comparison only
 - `/skill spec-auditor --issue N --task concerns` — Phase structure checks only
 - `/skill spec-auditor --issue N --task principles` — Engineering principle checks only
+- `/skill spec-auditor --issue N --task ground-truth` — Metadata verification checks only
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
 - `/skill spec-auditor` — Overview only
@@ -99,12 +101,12 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
    | Document Type | Baseline Subtasks | Conditional Subtasks |
    |---------------|-------------------|---------------------|
-    | Spec | `fresh-start`, `structure`, `fidelity` | `content-quality`, `traceability`, `operational`, `concerns`, `principles` |
-    | Plan | `fresh-start`, `structure` | `content-quality`, `concerns`, `principles` |
-    | Process Flow | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `principles` |
-    | Runbook/SOP | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `error-recovery`, `principles` |
-    | Checklist | `fresh-start`, `structure` (adapted) | `principles` |
-    | Reference Doc | `fresh-start` | `principles` |
+     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth` | `content-quality`, `traceability`, `operational`, `concerns`, `principles` |
+     | Plan | `fresh-start`, `structure`, `ground-truth` | `content-quality`, `concerns`, `principles` |
+     | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth` | `operational-flow`, `determinism`, `principles` |
+     | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth` | `operational-flow`, `determinism`, `error-recovery`, `principles` |
+     | Checklist | `fresh-start`, `structure` (adapted), `ground-truth` | `principles` |
+     | Reference Doc | `fresh-start`, `ground-truth` | `principles` |
 
    **Conditional subtask selection guidance (Spec-type only):**
 
@@ -125,13 +127,13 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 | Document Type | Baseline Subtasks | Why These |
 |---------------|-------------------|-----------|
-| Spec | `fresh-start`, `structure`, `fidelity` | Every spec must be self-contained, properly structured, and faithful to its problem |
-| Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
-| Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
-| Process Flow | `fresh-start`, `structure` (adapted) | Flows need self-containment and adapted structure checks |
-| Runbook/SOP | `fresh-start`, `structure` (adapted) | Runbooks need self-containment and adapted structure checks |
-| Checklist | `fresh-start`, `structure` (adapted) | Checklists need self-containment and adapted structure checks |
-| Reference Doc | `fresh-start` | Reference docs only need self-containment checks |
+| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth` | Every spec must be self-contained, properly structured, faithful to its problem, and metadata-verified |
+| Plan | `fresh-start`, `structure`, `ground-truth` | Plans need self-containment, structure, and metadata verification; `fidelity` applies only to specs |
+| Plan | `fresh-start`, `structure`, `ground-truth` | Plans need self-containment, structure, and metadata verification; `fidelity` applies only to specs |
+| Process Flow | `fresh-start`, `structure` (adapted), `ground-truth` | Flows need self-containment, adapted structure checks, and metadata verification |
+| Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth` | Runbooks need self-containment, adapted structure checks, and metadata verification |
+| Checklist | `fresh-start`, `structure` (adapted), `ground-truth` | Checklists need self-containment, adapted structure checks, and metadata verification |
+| Reference Doc | `fresh-start`, `ground-truth` | Reference docs need self-containment checks and metadata verification |
 
 ## Auto-Fix Model (CRITICAL)
 
@@ -166,6 +168,8 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 | SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
 | PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
+| GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity | STATUS is metadata, not content; correcting it removes false tracking |
+| GROUND-TRUTH-MISMATCH (auth superseded) | Add re-approval note to document body | Revision revokes approval is a mandatory rule; noting it is mechanical |
 
 **Conditional findings:**
 
@@ -175,6 +179,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | CONTEXT-OVERFLOW | Verify section reduction preserves all requirements | Shortening sections could lose critical details |
 | YAGNI_VIOLATION | Verify removed features/abstractions have no dependents | Removing unrequired features could orphan other steps |
 | SOC_VIOLATION (phase split) | Verify split preserves all step content | Splitting phases could lose cross-concern context |
+| GROUND-TRUTH-MISMATCH (stale label) | Verify auth scope covers current document before removing label | Removing label without confirming auth scope could misrepresent approval state |
 
 **Flag-for-review findings:**
 
@@ -193,6 +198,10 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | TESTABILITY_VIOLATION | Testability tradeoffs require understanding of project constraints |
 | PRINCIPLE_VIOLATION | Generic principle violation requires domain judgment |
 | PLAN-BLEED-AMBIGUOUS | Content could be requirement or implementation detail; requires domain judgment |
+| GROUND-TRUTH-MISMATCH (cross-ref missing) | Referenced issue may have been deleted or renumbered; requires developer to resolve |
+| GROUND-TRUTH-MISMATCH (cross-ref mismatch) | Referenced issue exists but content differs from claim; intent requires domain judgment |
+| GROUND-TRUTH-MISMATCH (code ref missing) | Referenced file/function may be planned but not implemented; requires developer to confirm |
+| GROUND-TRUTH-MISMATCH (STATUS inflated) | STATUS says COMPLETE but content is immature; may be intentional tracking |
 
 **Reporting format (v3 — includes Classification and Fix Action):**
 ```
@@ -227,7 +236,8 @@ spec-auditor (orchestrator)
 ├── operational-flow.md     — Process flow / runbook operational checks (NEW)
 ├── determinism.md          — Deterministic behavior and state dependency checks (NEW)
 ├── error-recovery.md       — Runbook error recovery and rollback checks (NEW)
-└── principles.md           — Engineering principle violations from programming-principles skill (NEW)
+├── principles.md           — Engineering principle violations from programming-principles skill (NEW)
+└── ground-truth.md         — Adversarial verification of metadata claims against direct evidence (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -266,6 +276,7 @@ Existing classes remain, plus two new ones:
 | **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
 | **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
 | **PLAN-BLEED-AMBIGUOUS** | Content that could be either a requirement or implementation detail; requires domain judgment |
+| **GROUND-TRUTH-MISMATCH** | Metadata claim (STATUS, label, cross-ref, code ref, auth) contradicts actual state |
 
 ## Audit Findings Handling
 

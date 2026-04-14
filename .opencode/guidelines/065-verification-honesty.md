@@ -109,3 +109,42 @@ This means:
 - Re-verify before significant actions even if previously checked
 - Tag unverified recollections explicitly as "(unverified)"
 - Treat verification as mandatory work, not optional confirmation
+
+## Metadata Verification Extension
+
+The verification honesty principle extends to metadata claims in specs, plans, and other documents. Metadata — STATUS markers, labels, cross-references, code references, and authorization state — must be verified against actual evidence, not trusted at face value.
+
+### Metadata Categories Requiring Verification
+
+| Metadata Category | What to Verify | How to Verify |
+|-------------------|----------------|---------------|
+| STATUS marker | Compare STATUS value against actual content maturity | Analyze content against maturity criteria (brainstorm/draft/detailed/complete); update STATUS if mismatch |
+| Label | Verify label claims match actual issue state | Read labels via `github_issue_read(method=get_labels)`; compare against authorization state |
+| Comments/body claims | Verify factual claims in issue body against live state | Re-read issue comments; verify claims against current data |
+| Cross-references | Verify `#N` references point to existing, matching content | Call `github_issue_read(method=get, issue_number=N)` for each reference |
+| Code references | Verify file paths, function names, and code references exist | Use `srclight_search_symbols`, `glob`, or `srclight_get_signature` |
+| Process-completion flags | Verify completion markers reflect actual completion | Check referenced artifacts (branches, commits, PRs) exist and are merged |
+| Authorization currency | Check whether authorization claims are superseded by revisions | Compare comment timestamps: latest authorization vs. latest revision |
+
+### Metadata Evidence Requirement
+
+Every metadata verification MUST produce an evidence artifact — a tool call result, command output, or API response that directly supports the verification claim. Assertions without evidence are violations of this guideline.
+
+| Pattern | Classification | Acceptable? |
+|---------|---------------|-------------|
+| "STATUS says DRAFT but content is COMPLETE — verified by reading issue body" | Verified with evidence | ✅ |
+| "Cross-reference #42 exists — verified by `github_issue_read(method=get, issue_number=42)`" | Verified with evidence | ✅ |
+| "The label is `needs-approval` — verified by `github_issue_read(method=get_labels)`" | Verified with evidence | ✅ |
+| "STATUS marker looks accurate" | Memory assertion | ❌ Must verify with tool call |
+| "That issue probably still exists" | Memory assertion | ❌ Must verify with GitHub MCP |
+| "The function name looks right" | Memory assertion | ❌ Must verify with codebase search |
+
+### No Metadata Trust Exceptions
+
+There are NO exceptions to metadata verification:
+
+- **STATUS markers are not self-certifying.** A STATUS of COMPLETE does not make the content complete. Verify the content.
+- **Labels are not self-certifying.** A `needs-approval` label does not mean approval is absent. Verify via comments.
+- **Cross-references are not self-certifying.** A `#N` reference does not mean the issue exists or matches. Verify via GitHub MCP.
+- **Code references are not self-certifying.** A file path in a spec does not mean the file exists. Verify via codebase tools.
+- **Authorization comments are not self-certifying.** An approval comment may predate a revision. Verify timestamps.
