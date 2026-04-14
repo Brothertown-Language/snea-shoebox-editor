@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/814-plan-bleed-ambiguous
+
+- **PLAN-BLEED-AMBIGUOUS Problem Class** (#814) - Added the PLAN-BLEED-AMBIGUOUS problem class to spec-auditor, completing the spec/plan boundary enforcement plan. Ambiguous content that could be either requirement or implementation detail is now flagged for domain judgment instead of being auto-fixed or missed.
+
 ### spec/821-template-enforcement
 
 - **Intent-Driven Spec Guidelines** (#821) - Replaced rigid structural templates across 12 guideline and skill files with intent-driven prose guidelines. Auditors now flag issues for review instead of auto-fixing, and spec creation uses content coverage prompts instead of mandatory section checklists.

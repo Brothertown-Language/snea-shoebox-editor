@@ -192,6 +192,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | BLAST_RADIUS_VIOLATION | Isolation scope depends on deployment architecture |
 | TESTABILITY_VIOLATION | Testability tradeoffs require understanding of project constraints |
 | PRINCIPLE_VIOLATION | Generic principle violation requires domain judgment |
+| PLAN-BLEED-AMBIGUOUS | Content could be requirement or implementation detail; requires domain judgment |
 
 **Reporting format (v3 — includes Classification and Fix Action):**
 ```
@@ -264,6 +265,7 @@ Existing classes remain, plus two new ones:
 | **TESTABILITY_VIOLATION** | Design that makes testing difficult without explicit tradeoff note |
 | **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
 | **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
+| **PLAN-BLEED-AMBIGUOUS** | Content that could be either a requirement or implementation detail; requires domain judgment |
 
 ## Audit Findings Handling
 
