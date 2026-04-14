@@ -17,6 +17,7 @@ Check architectural reasoning, ambiguity, conflicts, and scope creep in a spec.
 | Comment format | COMMENT-FORMAT-VIOLATION | Does the spec use executive summary format? |
 | Superseded closure | SUPERSEDED-CLOSURE-VIOLATION | Does closing language claim future action without execution? |
 | Plan bleed | PLAN-BLEED | Does the spec contain implementation details (code, DDL, algorithms) that belong in the plan? |
+| Plan bleed (ambiguous) | PLAN-BLEED-AMBIGUOUS | Could content be either a requirement or implementation detail? Requires domain judgment |
 
 ## Procedure
 
@@ -39,6 +40,7 @@ Check architectural reasoning, ambiguity, conflicts, and scope creep in a spec.
 | Step-by-step algorithms with imperative logic | Implementation procedure | Input/output contract |
 | File paths with "add", "modify", "create" language | File-level instructions | Affected files + anchors table |
 | Architecture decisions without "MUST" constraints | Design choices | Architecture requirements table |
+| Ambiguous content (could be requirement or implementation) | Could be either spec- or plan-level | Flag for domain judgment (PLAN-BLEED-AMBIGUOUS) |
 
 ## Nine Core Areas (Reference)
 
@@ -57,7 +59,7 @@ These are NOT mandatory sections — they're areas the agent should consider. A 
 
 ```
 Subtask: content-quality
-Finding: [ARCHITECTURAL-REASONING-GAP|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|DEPENDENCY-INCOMPLETE|COMMENT-FORMAT-VIOLATION|SUPERSEDED-CLOSURE-VIOLATION|PLAN-BLEED] - [summary]
+Finding: [ARCHITECTURAL-REASONING-GAP|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|DEPENDENCY-INCOMPLETE|COMMENT-FORMAT-VIOLATION|SUPERSEDED-CLOSURE-VIOLATION|PLAN-BLEED|PLAN-BLEED-AMBIGUOUS] - [summary]
 Location: [section of spec]
 Context: [why this matters for implementability]
 Classification: [auto-fix|conditional|flag-for-review]
@@ -78,5 +80,6 @@ Severity: [HIGH|MEDIUM|LOW]
 | SUPERSEDED-CLOSURE-VIOLATION | flag-for-review | May reference valid future work |
 | ARCHITECTURAL-REASONING-GAP | flag-for-review | Requires understanding design tradeoffs |
 | PLAN-BLEED | auto-fix | Replace code/DDL/algorithms with requirements tables; note moved content for plan |
+| PLAN-BLEED-AMBIGUOUS | flag-for-review | Content could be requirement or implementation detail; requires domain judgment |
 
 Co-authored with AI: <AI-Name> (<model-id>)
