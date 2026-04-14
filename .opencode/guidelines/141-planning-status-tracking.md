@@ -4,7 +4,9 @@
 
 ### STATUS Field Format
 
-Every spec file MUST have a **STATUS** header at the top of the file:
+Every spec file SHOULD have a **STATUS** indicator at the top. The format varies by spec complexity:
+
+**For multi-phase specs (recommended format):**
 
 ```markdown
 # Spec: [Feature Name]
@@ -18,20 +20,37 @@ CREATED: 2026-03-24
 ...
 ```
 
-**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+**For simple single-task specs (acceptable format):**
 
-- ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
-- ❌ Bad: "Implementation", "Testing", "Development", "Build"
+```markdown
+# Spec: [Bug Description]
 
-#### Status Values
+STATUS: in progress
+
+---
+
+## Fix Approach
+...
+```
+
+**STATUS values:**
 
 | Format | Meaning |
 | -- | -- |
 | `1` | Phase 1, no specific step tracked |
 | `1.2` | Phase 1, step 2 (currently active) |
 | `2.1-3` | Phase 2, steps 1-3 in progress |
+| `in progress` | Simple spec — currently being worked on |
+| `complete` | Simple spec — all work done |
 | `completed` | All phases done, ready for archive |
 | `1.1 (REVISED - NEEDS APPROVAL)` | Spec was modified, awaiting fresh approval |
+
+**Advisory note:** `STATUS: phase.step` format is recommended for multi-phase specs. For simple bug fixes or single-task specs, a brief status note like `in progress` or `complete` is acceptable without phase.step numbering.
+
+**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
+
+- ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
+- ❌ Bad: "Implementation", "Testing", "Development", "Build"
 
 #### Revision Status Format
 
@@ -64,6 +83,8 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 | `↻` | In progress | Currently working — **MARK DURING WORK** |
 | `☑` | Complete | Task done and verified |
 | `☒` | Blocked | Issue found, cannot proceed |
+
+Status markers (`☐`/`↻`/`☑`/`☒`) are recommended for tracking step completion. Any clear progress indicator works — the intent is visibility, not a specific format.
 
 **CRITICAL**: Update to `↻` (in progress) **during** implementation, not just after completion.
 
@@ -262,4 +283,4 @@ Skills that change issue state MUST consult this section (`§10`) before adding 
 
 ______________________________________________________________________
 
-*Source: Content migrated from `040-plan-delivery.md`*
+*Source: Content migrated from `040-plan-delivery.md`, updated per spec #821*

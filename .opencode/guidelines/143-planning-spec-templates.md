@@ -1,454 +1,147 @@
 # Planning: Spec Templates
 
-## Spec Creation Checklist
+## Intent, Not Templates
 
-Before creating or submitting any spec, bug report, or issue, verify ALL required elements are present.
+**These examples illustrate possibilities, not mandatory formats.** Agents should adapt structure to match the spec's complexity and domain.
 
-### Mandatory Elements Checklist
+A simple bug fix needs only a few sentences of problem, context, and criteria. A multi-phase feature benefits from more structure. The goal is always: can a fresh agent pick up this spec and implement it correctly without additional context?
 
-Use this checklist for every spec:
+## Content Coverage Checklist
 
-```markdown
-## Fresh-Start Context Checklist
+Before creating any spec, bug report, or issue, verify these intent questions are answered. The *format* of the answers is up to the agent — the *content* must be present:
 
-- [ ] **Problem Statement** — What is broken/needed and WHY (with context)
-- [ ] **Affected Files** — List of files with anchors (function/section) and code snippets
-- [ ] **Related Issues** — Links + summaries + relevance explanation
-- [ ] **Context** — Background on affected systems, prior decisions
-- [ ] **Constraints** — Technical, resource, time, compatibility limits
-- [ ] **Assumptions** — What we're assuming that may not be true
-- [ ] **Success Criteria** — Testable, measurable completion criteria
-- [ ] **Edge Cases** — Identified boundary conditions
-- [ ] **Dependencies** — External systems, libraries, affected teams
-- [ ] **Risk Assessment** — What could go wrong and mitigations
-- [ ] **Decision Rationale** — Why this approach was chosen (if applicable)
-```
+| Question | Intent |
+|----------|--------|
+| Does the spec describe what problem it solves and why? | Problem statement — what's broken or needed, with context |
+| Does the spec explain the background and affected systems? | Context — who is affected, what triggered this, what's the current state |
+| Does the spec define testable completion criteria? | Success criteria — binary pass/fail conditions for each requirement |
+| Does the spec address what could go wrong? | Edge cases and risk — boundary conditions, failure modes |
+| Does the spec explain why this approach was chosen? | Decision rationale — alternatives considered and reasons for rejection |
+| Does the spec list constraints and assumptions? | Technical, resource, time, and compatibility limits |
+| Does the spec reference related issues with context? | Related issues — links with summaries and relevance (not bare links) |
+| Does the spec identify affected files with anchors? | Affected files — file paths with function names or section headers, not line numbers |
+| Does the spec provide enough context for a fresh agent? | Self-containment — no "as discussed above" or "see previous comment" |
 
-### Self-Containment Rules
+**Simple specs may address several questions in a single paragraph. Complex specs may need separate sections for each. The format adapts to complexity.**
 
-Verify the spec is self-contained:
+## Self-Containment Rules
 
-```markdown
-## Self-Containment Verification
+These are content quality rules, not structural requirements:
 
-- [ ] NO "as discussed above" — all context stated inline
-- [ ] NO "see previous comment" — information restated
-- [ ] NO "as mentioned in chat" — decisions documented
-- [ ] File paths use STABLE ANCHORS — function names `process_data()` or section headers `"Section Name"`
-- [ ] ⚠️ AVOID line numbers `file.py:42` — they break on every edit
-- [ ] Code snippets included for short sections (<20 lines)
-- [ ] Issue links include URLs and summaries
-```
+- NO "as discussed above" — all context stated inline
+- NO "see previous comment" — information restated
+- NO "as mentioned in chat" — decisions documented
+- File paths use STABLE ANCHORS — function names `process_data()` or section headers `"Section Name"`
+- AVOID line numbers `file.py:42` — they break on every edit
+- Code snippets included for short sections (<20 lines)
+- Issue links include URLs and summaries
 
 ______________________________________________________________________
 
-## Spec Template (Feature)
-
-Use this template for new feature specifications.
-
-```markdown
-# Spec: [Feature Name]
-
-STATUS: 1.1
-CREATED: YYYY-MM-DD
-
----
-
-## Objective
-
-[What does this feature accomplish? Why is it needed?]
-
----
-
-## Problem Statement
-
-[What problem does this solve? What pain point does it address? Include context about who is affected and why this matters now.]
-
----
-
-## Context
-
-**Background:**
-[Relevant history, prior decisions, current state]
-
-**Affected Systems:**
-[Which components, modules, or services are affected]
-
-**Stakeholders:**
-[Who cares about this change? Developers, users, other teams]
-
----
-
-## Constraints
-
-| Constraint Type | Details |
-|-----------------|---------|
-| Technical | [e.g., must work with Python 3.10+] |
-| Resource | [e.g., no additional dependencies] |
-| Time | [e.g., needed by Q2] |
-| Compatibility | [e.g., cannot break existing API] |
-
----
-
-## Assumptions
-
-1. [Assumption 1 - what we're assuming that may not be true]
-2. [Assumption 2]
-3. [Assumption 3]
-
----
-
-## Affected Files
-
-| File | Anchor | Description | Code Snippet |
-|------|--------|-------------|--------------|
-| `path/to/file.py` | `function_name()` or `"Section Name"` | [What this section does] | [Short snippet] |
-
----
-
-## Related Issues
-
-| Issue | Summary | Relevance |
-|-------|---------|-----------|
-| [#123](https://github.com/owner/repo/issues/123) | [Brief summary] | [Why it matters to this spec] |
-
----
-
-## Success Criteria
-
-1. ✅ [Testable criterion 1]
-2. ✅ [Testable criterion 2]
-3. ✅ [Testable criterion 3]
-
----
-
-## Edge Cases
-
-1. **[Edge case 1]:** [Description and handling]
-2. **[Edge case 2]:** [Description and handling]
-
----
-
-## Dependencies
-
-| Dependency | Type | Impact |
-|------------|------|--------|
-| [Library/Service] | [Internal/External] | [What happens if unavailable] |
-
----
-
-## Risk Assessment
-
-| Risk | Probability | Impact | Mitigation |
-|------|-------------|--------|------------|
-| [What could go wrong] | [Low/Medium/High] | [Low/Medium/High] | [How we handle it] |
-
----
-
-## Decision Rationale
-
-**Decision:** [What approach was chosen]
-
-**Why:** [Why this approach over alternatives]
-
-**Alternatives Considered:**
-1. [Alternative 1] — Rejected because [reason]
-2. [Alternative 2] — Rejected because [reason]
-
----
-
-## Phase 1: [Concern Name] (Gated)
-
-### Steps
-
-**SPEC PHASE STEPS describe WHAT to deliver, not HOW to implement.**
-
-| ✅ What-Level (Spec) | ❌ How-Level (Plan) |
-|-----------------------|----------------------|
-| "Add user validation endpoint" | "Create validate_user() in auth.py" |
-| "Ensure emails are unique" | "ALTER TABLE users ADD UNIQUE(email)" |
-| "Processing completes within 2s" | "Use asyncio with connection pool" |
-
-1. ☐ [First task for this concern]
-2. ☐ [Second task for this concern]
-3. ☐ [Third task for this concern]
-
----
-
-## Phase 2: [Next Concern] (Gated)
-
-### Steps
-
-1. ☐ [First task for this concern]
-2. ☐ [Second task for this concern]
-
----
-
-## Phase 3: [Verification Concern] (Auto-progress)
-
-### Steps
-
-1. ☐ Run automated tests
-2. ☐ Verify edge cases
-
----
-
-## Phase 4: [Review Concern] (Gated)
-
-### Steps
-
-1. ☐ Human review of changes
-2. ☐ Approve or request revisions
-
----
-
-
-
-**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
-- ✅ Good: "Database Schema Setup", "API Endpoint Integration", "Error Handling Layer"
-- ❌ Bad: "Implementation", "Testing", "Development", "Build"
-```
+## Example Variants: Feature Spec
+
+### Minimal Feature Spec (simple change, single file)
+
+> **Objective:** Add `retry_count` parameter to `fetch_data()` in `src/api/client.py` so callers can control retry behavior.
+>
+> **Problem:** Currently `fetch_data()` retries indefinitely on transient failures, causing timeout cascades in production.
+>
+> **Success Criteria:**
+> 1. ✅ `fetch_data(retry_count=3)` retries exactly 3 times then raises
+> 2. ✅ Default behavior unchanged (current retries for backward compatibility)
+> 3. ✅ Existing tests pass
+>
+> **Edge Cases:** retry_count=0 means no retries (fail immediately).
+
+This minimal spec works because the change is small and self-explanatory. Separate sections for context, dependencies, and risk aren't needed — they're obvious.
+
+### Standard Feature Spec (moderate change, multiple files)
+
+> **Objective:** Add Redis caching layer for frequently accessed article metadata.
+>
+> **Problem:** Article metadata API calls average 150ms response time, causing slow page loads. 85% cache hit potential identified.
+>
+> **Context:** Current queries hit PostgreSQL directly. Most queries target the same ~1000 recently-published articles. Article metadata changes infrequently. Redis already deployed per infra team.
+>
+> **Fix Approach:** Redis as cache layer with 1-hour TTL. Fallback to DB when Redis unavailable.
+>
+> **Affected Files:**
+> | File | Anchor | Changes |
+> |------|--------|---------|
+> | `src/api/articles.py` | `get_article_metadata()` | Add cache check before DB query |
+> | `src/cache/__init__.py` | new file | Redis client wrapper |
+> | `src/config.py` | "Configuration" section | Add Redis connection config |
+>
+> **Constraints:** Must not exceed 512MB Redis memory. Must handle Redis unavailable gracefully.
+>
+> **Success Criteria:**
+> 1. ✅ API response time <20ms for cached queries
+> 2. ✅ Cache hit rate >80%
+> 3. ✅ Graceful fallback when Redis unavailable
+> 4. ✅ Cache invalidation on article update
+>
+> **Edge Cases:** Redis unavailable → fallback to DB (log warning). Cache full → LRU eviction. Article updated → invalidate entry.
+>
+> **Risk Assessment:** Redis memory limit (Low prob, High impact → monitor). Cache invalidation bugs (Med prob, Med impact → test update flows).
+
+This standard spec adds context, affected files, constraints, and risk because the change touches multiple files and has infrastructure dependencies.
+
+### Comprehensive Feature Spec (large change, cross-cutting)
+
+See the full example in `144-planning-spec-examples.md` for comprehensive specs with phased implementation, full risk assessment, and detailed decision rationale. Comprehensive specs use all the structure they need — phases, affected files with code snippets, extended risk assessment, dependencies table, and decision rationale with alternatives.
 
 ______________________________________________________________________
 
-## Spec Template (Bug Fix)
+## Example Variants: Bug Fix Spec
 
-Use this template for bug fix specifications.
+### Minimal Bug Fix Spec (obvious fix, one line change)
 
-````markdown
-# Spec: [Bug Description]
+> **Problem:** `process_data()` crashes when input list is empty, raising `IndexError` at `src/core/processor.py:42`.
+>
+> **Fix:** Add empty list guard before accessing `data[0]`.
+>
+> **Success Criteria:**
+> 1. ✅ Empty list input returns empty result (no crash)
+> 2. ✅ Non-empty list input behavior unchanged
 
-STATUS: 1.1
-CREATED: YYYY-MM-DD
+### Standard Bug Fix Spec (needs investigation context)
 
----
-
-## Objective
-
-[What does this bug fix accomplish?]
-
----
-
-## Problem Statement
-
-**Symptom:** [What is the observed incorrect behavior?]
-
-**Expected Behavior:** [What should happen instead?]
-
-**Impact:** [Who is affected and how severely?]
-
----
-
-## Context
-
-**Where the bug occurs:**
-[Which component, module, or user flow]
-
-**When the bug occurs:**
-[What conditions trigger the bug]
-
-**Discovery:**
-[How was the bug found? User report, automated test, etc.]
-
----
-
-## Root Cause Analysis
-
-**Investigation:**
-[What was discovered during analysis]
-
-**Cause:**
-[What is the underlying cause]
-
-**Evidence:**
-[Code snippets, logs, or other evidence]
-
-```python
-# Relevant code at path/to/file.py in `function_name()` or "Section Name"
-def broken_function():
-    # BUG: Off-by-one error in loop
-    for i in range(len(items)):  # Should be range(len(items) - 1)
-        process(items[i])
-````
+> **Problem:** OAuth2 refresh_token fails on expiry, causing unexpected logout for ~15% of users who don't log in for more than 7 days.
+>
+> **Expected Behavior:** Automatically re-authenticate using stored credentials when refresh token expires.
+>
+> **Root Cause:** `refresh_token()` in `src/auth/oauth_client.py` catches `TokenExpiredError` but re-raises instead of calling `authenticate()`.
+>
+> **Fix Approach:** Catch `TokenExpiredError` and call `authenticate()` with stored credentials.
+>
+> **Side Effects:** None — existing refresh logic unchanged for valid tokens.
+>
+> **Success Criteria:**
+> 1. ✅ Users with expired refresh tokens auto-re-authenticated
+> 2. ✅ Auth failures surface appropriate error messages
+> 3. ✅ No credentials logged or exposed
+> 4. ✅ Existing refresh logic unchanged for valid tokens
+>
+> **Edge Cases:** Credentials no longer valid → prompt re-login. Network failure → propagate error. Rate limiting → backoff and retry.
+>
+> **Related Issues:** #100 (persistent sessions), #150 (token rotation)
 
 ______________________________________________________________________
 
-## Affected Files
+## Example Variants: Guideline Update Spec
 
-| File | Anchor | Description |
-| -- | -- | -- |
-| `path/to/file.py` | `function_name()` or `"Section Name"` | [Function with bug] |
+### Minimal Guideline Update (small rule change)
 
-______________________________________________________________________
+> **Problem:** Current guidelines don't address when to use `--no-verify` with git commands.
+>
+> **Proposed Change:** Add rule to `000-critical-rules.md` prohibiting `--no-verify` unless explicitly authorized.
+>
+> **Success Criteria:** Guidelines load correctly. Search finds new content.
 
-## Related Issues
+### Standard Guideline Update (philosophy or process change)
 
-| Issue | Summary | Relevance |
-| -- | -- | -- |
-| [#123](https://github.com/owner/repo/issues/123) | [Related bug or feature] | [Connection to this fix] |
-
-______________________________________________________________________
-
-## Fix Approach
-
-**Solution:** [What change will fix the bug]
-
-**Why this approach:** [Why this is the minimal correct fix]
-
-**Side effects:** [What else might be affected]
+See `144-planning-spec-examples.md` for a standard guideline update example with problem statement, context, proposed change, decision rationale, and verification steps.
 
 ______________________________________________________________________
 
-## Success Criteria
-
-1. ✅ Bug is fixed and test passes
-2. ✅ No regression in existing tests
-3. ✅ Edge case handling verified
-
-______________________________________________________________________
-
-## Edge Cases
-
-1. **[Edge case 1]:** [How the fix handles it]
-2. **[Edge case 2]:** [How the fix handles it]
-
-______________________________________________________________________
-
-## Phase 1: [Bug Fix Concern] (Gated)
-
-### Steps
-
-1. ☐ Implement fix for [bug description]
-2. ☐ Add test case for [specific scenario]
-3. ☐ Run full test suite to verify no regression
-
-______________________________________________________________________
-
-## Phase 2: [Verification Concern] (Auto-progress)
-
-### Steps
-
-1. ☐ Verify original bug scenario passes
-2. ☐ Verify edge cases pass
-3. ☐ Verify no regression in related tests
-
-______________________________________________________________________
-
-## Phase 3: [Review Concern] (Gated)
-
-### Steps
-
-1. ☐ Code review
-2. ☐ Approve or request revisions
-
-______________________________________________________________________
-
-**⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
-
-- ✅ Good: "Database Schema Fix", "Authentication Logic Fix", "Error Handling Update"
-- ❌ Bad: "Implementation", "Testing", "Bug Fix", "Development"
-
-````
-
----
-
-## Spec Template (Guideline Update)
-
-Use this template for changes to `.opencode/guidelines/`.
-
-```markdown
-# Spec: Guidelines: [Topic]
-
-STATUS: 1.1
-CREATED: YYYY-MM-DD
-
----
-
-## Objective
-
-[What guideline change is being made? Why?]
-
----
-
-## Problem Statement
-
-**Current State:** [What do the guidelines currently say or not say?]
-
-**Issue:** [What problem does this cause? Why is the current state insufficient?]
-
-**Impact:** [Who is affected? What mistakes happen without this guidance?]
-
----
-
-## Context
-
-**Background:**
-[Why is this guideline needed now? What triggered this change?]
-
-**Stakeholders:**
-[Which agents/developers need this guidance]
-
----
-
-## Proposed Change
-
-**File(s) to modify:**
-- `.opencode/guidelines/planning/00-spec-creation.md`
-
-**Change summary:**
-[What sections are being added or modified]
-
----
-
-## Decision Rationale
-
-**Why this approach:**
-[Why this specific change over alternatives]
-
-**Alternatives considered:**
-1. [Alternative 1] — Rejected because [reason]
-2. [Alternative 2] — Rejected because [reason]
-
----
-
-## Success Criteria
-
-1. ✅ Guideline documentation updated
-2. ✅ Changes load correctly in `.opencode/tools/guidelines`
-3. ✅ All files pass linting
-
----
-
-## Phase 1: [Guideline Module Update] (Gated)
-
-### Steps
-
-1. ☐ [Update guideline file]
-2. ☐ [Verify with .opencode/tools tools]
-
----
-
-## Phase 2: Guideline Verification (Auto-progress)
-
-### Steps
-
-1. ☐ Verify guidelines load correctly
-2. ☐ Verify search finds new content
-
----
-
-## Phase 3: Human Approval (Gated)
-
-### Steps
-
-1. ☐ Human review of changes
-2. ☐ Approve or request revisions
-
----
-
-
-````
-
-______________________________________________________________________
-
-*Source: Created to support fresh-start context requirements*
+*Source: Migrated from rigid templates to intent-driven prose per spec #821*

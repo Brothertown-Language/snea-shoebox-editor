@@ -34,13 +34,12 @@ Requirements implied but not stated:
 
 ### Step 3: Build Constraints & Assumptions Ledger
 
-| Category | Items | Source |
-|----------|-------|--------|
-| Technical constraints | Platform, language, framework restrictions | Investigation |
-| Resource constraints | Time, personnel, infrastructure limits | User input |
-| Assumptions | Things taken as true without verification | Inference |
-| Dependencies | External systems, libraries, APIs required | Investigation |
-| Non-requirements | What is explicitly NOT in scope | User input + scoping |
+Document constraints and assumptions in any format that clearly communicates:
+- **Technical constraints** — platform, language, framework restrictions and their source (investigation findings or user input)
+- **Resource constraints** — time, personnel, infrastructure limits and their source
+- **Assumptions** — things taken as true without verification, with how to confirm each
+- **Dependencies** — external systems, libraries, APIs required and what happens if unavailable
+- **Non-requirements** — what is explicitly out of scope and why
 
 ### Step 4: Document Non-Requirements
 
@@ -49,27 +48,16 @@ Explicitly list what is NOT in scope:
 - Capabilities implied but excluded
 - Edge cases that are out of scope
 
-## Output Format
+## Content Coverage
 
-```
-## Requirements Extraction
+Does the requirements analysis cover:
+- Explicit requirements from the user?
+- Implicit requirements inferred from context?
+- Constraints (technical, resource, compatibility)?
+- Assumptions (and how to verify them)?
+- Non-requirements (what's explicitly out of scope)?
 
-### Explicit Requirements
-1. [R1] <requirement>
-2. [R2] <requirement>
-
-### Implicit Requirements
-1. [IR1] <requirement> (inferred from: <source>)
-
-### Constraints
-- <constraint> (source: <investigation or user>)
-
-### Assumptions
-- <assumption> (verification: <how to confirm>)
-
-### Non-Requirements (Out of Scope)
-- <exclusion> (reason: <why>)
-```
+**Any format that covers these concerns is acceptable** — tables, prose lists, bullet points, or structured sections. The agent chooses the format that best communicates the requirements for this specific spec.
 
 ## Context Required
 

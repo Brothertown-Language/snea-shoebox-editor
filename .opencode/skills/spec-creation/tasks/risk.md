@@ -20,9 +20,11 @@ Analyze risk, blast radius, failure propagation, and operational requirements (l
 
 ### Step 1: Risk Assessment
 
-For each component/change:
-| Risk | Severity | Probability | Mitigation |
-|------|----------|-------------|------------|
+For each component/change, assess:
+- What risks exist (technical, integration, data, security)
+- Severity of each risk (low/medium/high/critical)
+- Probability of each risk occurring
+- Mitigation strategy for each risk
 
 ### Step 2: Blast Radius Analysis
 
@@ -47,26 +49,15 @@ Document operational needs:
 - **Deployment:** Rollout strategy, blue/green, canary, feature flags
 - **Data migration:** Schema changes, data transformation, rollback
 
-## Output Format
+## Content Coverage
 
-```
-## Risk Assessment
+Does the risk assessment cover:
+- Severity and probability for each risk?
+- Blast radius for high-risk components (what breaks, how far it spreads, rollback strategy)?
+- Failure propagation paths?
+- Operational requirements (logging, metrics, alerts, deployment)?
 
-| Risk | Severity | Probability | Mitigation |
-|------|----------|-------------|------------|
-
-### Blast Radius: <high-risk component>
-- Failure impact: <what breaks>
-- Propagation: <how far it spreads>
-- Rollback: <recovery strategy>
-
-## Operational Requirements
-- Logging: <requirements>
-- Metrics: <requirements>
-- Alerts: <requirements>
-- Deployment: <requirements>
-- Data migration: <requirements>
-```
+**Any format that communicates these concerns effectively is acceptable.** Formal risk tables with severity/probability matrices work well for complex specs. Prose descriptions work well for simple specs with few risks. The agent chooses the format that best serves the spec.
 
 ## Context Required
 
