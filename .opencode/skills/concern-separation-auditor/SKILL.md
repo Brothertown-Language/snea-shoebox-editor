@@ -85,7 +85,7 @@ This skill analyzes ACTUAL concerns, not static templates.
 ## Cross-References
 
 - Orchestrated by: `spec-auditor` (via `concerns` subtask)
-- Related skills: `spec-auditor` (orchestrator), `writing-plans` (clean-room for fidelity)
+- Related skills: `spec-auditor` (orchestrator), `writing-plans` (clean-room for fidelity), `programming-principles` (principle definitions for SoC and Blast Radius design judgment)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `142-planning-archive-workflow.md`
 
 Co-authored with AI: <AI-Name> (<model-id>)

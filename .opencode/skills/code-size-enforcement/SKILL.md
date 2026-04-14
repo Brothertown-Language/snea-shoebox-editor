@@ -94,3 +94,4 @@ Existing files that predate this skill are EXEMPT. New files and modified code i
 | `080-code-standards.md` | Design Principles — ENFORCED UNIVERSALLY |
 | `061-notebook-rules.md` | Code Standards for Notebooks |
 | `000-critical-rules.md` | General violation enforcement |
+| `programming-principles` skill | Master source for SRP, "No Monoliths", and design judgment underlying size limits |
