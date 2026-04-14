@@ -441,6 +441,21 @@ When the `todowrite` tool is used during a session, the agent MUST maintain the 
 
 **See `060-tool-usage.md` §7 for the complete todowrite lifecycle rules (CREATE/UPDATE/CLEAR).**
 
+## Critical Violation: Pushing Agent Intelligence Decisions to the User
+
+**⚠️ Asking the user to make structural classification decisions that the agent should resolve autonomously is a CRITICAL GUIDELINE VIOLATION.**
+
+Structural decisions — single-task vs multi-task classification, phase decomposition, scope sizing — are agent intelligence concerns. The agent must resolve them autonomously based on request analysis and codebase context.
+
+- 🚫 FORBIDDEN: "Should this be a single-task spec or broken into phases?" — the agent decides
+- 🚫 FORBIDDEN: "Is this a small change or a big one?" — the agent assesses
+- 🚫 FORBIDDEN: "Do you want this as one spec or multiple?" — the agent classifies
+- 🚫 FORBIDDEN: Any question where the answer is determinable from context, codebase, or request analysis
+- ✅ REQUIRED: Classify autonomously and state the classification as part of the design proposal
+- ✅ REQUIRED: Only ask when multiple valid structures exist with genuinely ambiguous trade-offs (e.g., 3+ subsystems with unclear boundaries)
+
+**See `brainstorming` skill → `explore` task → "Autonomous Structural Classification" for the complete criteria.**
+
 ______________________________________________________________________
 
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.

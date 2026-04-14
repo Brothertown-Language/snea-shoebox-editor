@@ -40,6 +40,27 @@ Before asking detailed questions, assess scope:
 - Then brainstorm the first sub-project through the normal flow
 - Each sub-project gets its own spec → plan → implementation cycle
 
+### Autonomous Structural Classification (MANDATORY)
+
+Structural classification — single-task vs multi-task, phase decomposition — is an **agent intelligence concern**. Resolve it autonomously. Do NOT ask the user to make this decision.
+
+**Ask the user when**: Multiple valid structures exist with meaningful trade-offs that only the user can resolve:
+- 3+ subsystems with unclear boundaries or interdependencies
+- Ambiguity about whether a subsystem is in-scope or out-of-scope
+- Multiple valid decomposition orders where business priority is genuinely unclear
+
+**Do NOT ask the user when**: One structure is clearly appropriate:
+- Focused rule addition, single-file change, or bug fix with obvious scope → single-task, no question
+- Request naturally decomposes into sequential phases with clear boundaries → multi-task with phased structure, no question
+- The agent can determine scope from context, codebase, or the request itself → autonomous decision, no question
+
+**Prohibited questions** (examples of what NOT to ask):
+- "Should this be a single-task spec or broken into phases?"
+- "Is this a small change or a big one?"
+- "Do you want this as one spec or multiple?"
+
+When in doubt, classify autonomously and state the classification as part of your design proposal. The user can override during design review — but the default is agent-resolved.
+
 ## Step 3: Offer Visual Companion (Conditional)
 
 **STRICTLY CONDITIONAL** — only when the topic clearly involves visual decisions (UI layouts, visual mockups, architecture diagrams).
