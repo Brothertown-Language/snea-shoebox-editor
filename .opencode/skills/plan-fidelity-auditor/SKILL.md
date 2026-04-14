@@ -120,6 +120,6 @@ Only substantive differences after semantic matching are reported.
 
 - Orchestrated by: `spec-auditor` (via `fidelity` subtask)
 - Related tasks: `compare` (comparison logic), `report` (finding reporting)
-- Related skills: `writing-plans` (clean-room generation), `brainstorming` (recommended for gaps), `programming-principles` (design judgment for approach differences and architectural reasoning)
+- Related skills: `writing-plans` (clean-room generation), `brainstorming` (recommended for gaps), `programming-principles` (design principle alignment for clean-room comparison context)
 
 Co-authored with AI: <AI-Name> (<model-id>)

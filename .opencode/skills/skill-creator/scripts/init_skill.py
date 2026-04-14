@@ -1,14 +1,18 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 Skill Initializer - Creates a new skill from template
 
-Usage (from project root):
-    uv run python .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <path>
+Usage:
+    uv run .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <path>
 
 Examples:
-    uv run python .opencode/skills/skill-creator/scripts/init_skill.py my-new-skill --path .opencode/skills
-    uv run python .opencode/skills/skill-creator/scripts/init_skill.py my-api-helper --path .opencode/skills
-    uv run python .opencode/skills/skill-creator/scripts/init_skill.py custom-skill --path /custom/location
+    uv run .opencode/skills/skill-creator/scripts/init_skill.py my-new-skill --path .opencode/skills
+    uv run .opencode/skills/skill-creator/scripts/init_skill.py my-api-helper --path .opencode/skills
+    uv run .opencode/skills/skill-creator/scripts/init_skill.py custom-skill --path /custom/location
 """
 
 import sys
@@ -292,22 +296,16 @@ def init_skill(skill_name, path):
 
 def main():
     if len(sys.argv) < 4 or sys.argv[2] != "--path":
-        print("Usage: uv run python .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <path>")
+        print("Usage: uv run .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <path>")
         print("\nSkill name requirements:")
         print("  - Hyphen-case identifier (e.g., 'data-analyzer')")
         print("  - Lowercase letters, digits, and hyphens only")
         print("  - Max 40 characters")
         print("  - Must match directory name exactly")
         print("\nExamples:")
-        print(
-            "  uv run python .opencode/skills/skill-creator/scripts/init_skill.py my-new-skill --path .opencode/skills"
-        )
-        print(
-            "  uv run python .opencode/skills/skill-creator/scripts/init_skill.py my-api-helper --path .opencode/skills"
-        )
-        print(
-            "  uv run python .opencode/skills/skill-creator/scripts/init_skill.py custom-skill --path /custom/location"
-        )
+        print("  uv run .opencode/skills/skill-creator/scripts/init_skill.py my-new-skill --path .opencode/skills")
+        print("  uv run .opencode/skills/skill-creator/scripts/init_skill.py my-api-helper --path .opencode/skills")
+        print("  uv run .opencode/skills/skill-creator/scripts/init_skill.py custom-skill --path /custom/location")
         sys.exit(1)
 
     skill_name = sys.argv[1]

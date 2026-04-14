@@ -56,6 +56,10 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 ### Ready for PR?
 - [ ] All checklist items pass
 - [ ] Compare URL verified
+
+### Issue Closure Verification
+- [ ] Verify all issues referenced by the merged PR are closed on GitHub
+- [ ] If issues remain open after verified merge, close them with a comment referencing the merged PR
 ```
 
 ## What Skills MUST Check

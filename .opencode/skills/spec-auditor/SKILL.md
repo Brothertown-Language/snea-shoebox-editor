@@ -37,6 +37,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `determinism` | Deterministic behavior and state dependency checks | ~300 |
 | `error-recovery` | Runbook error recovery and rollback checks | ~350 |
 | `principles` | Engineering principle violations from programming-principles skill | ~350 |
+| `ground-truth` | Adversarial verification of metadata claims against direct evidence | ~500 |
 
 ## Invocation
 
@@ -48,6 +49,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task fidelity` — Clean-room comparison only
 - `/skill spec-auditor --issue N --task concerns` — Phase structure checks only
 - `/skill spec-auditor --issue N --task principles` — Engineering principle checks only
+- `/skill spec-auditor --issue N --task ground-truth` — Metadata verification checks only
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
 - `/skill spec-auditor` — Overview only
@@ -97,14 +99,14 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 3. **Subtask determination:** When invoked without `--task`, the agent determines which subtasks to run based on document type:
 
-   | Document Type | Baseline Subtasks | Conditional Subtasks |
-   |---------------|-------------------|---------------------|
-    | Spec | `fresh-start`, `structure`, `fidelity` | `content-quality`, `traceability`, `operational`, `concerns`, `principles` |
-    | Plan | `fresh-start`, `structure` | `content-quality`, `concerns`, `principles` |
-    | Process Flow | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `principles` |
-    | Runbook/SOP | `fresh-start`, `structure` (adapted) | `operational-flow`, `determinism`, `error-recovery`, `principles` |
-    | Checklist | `fresh-start`, `structure` (adapted) | `principles` |
-    | Reference Doc | `fresh-start` | `principles` |
+    | Document Type | Baseline Subtasks | Conditional Subtasks |
+    |---------------|-------------------|---------------------|
+    | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns` |
+    | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns` |
+    | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
+    | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
+    | Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | — |
+    | Reference Doc | `fresh-start`, `ground-truth`, `principles` | — |
 
    **Conditional subtask selection guidance (Spec-type only):**
 
@@ -125,13 +127,12 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 | Document Type | Baseline Subtasks | Why These |
 |---------------|-------------------|-----------|
-| Spec | `fresh-start`, `structure`, `fidelity` | Every spec must be self-contained, properly structured, and faithful to its problem |
-| Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
-| Plan | `fresh-start`, `structure` | Plans need self-containment and structure; `fidelity` applies only to specs |
-| Process Flow | `fresh-start`, `structure` (adapted) | Flows need self-containment and adapted structure checks |
-| Runbook/SOP | `fresh-start`, `structure` (adapted) | Runbooks need self-containment and adapted structure checks |
-| Checklist | `fresh-start`, `structure` (adapted) | Checklists need self-containment and adapted structure checks |
-| Reference Doc | `fresh-start` | Reference docs only need self-containment checks |
+| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, and principle-compliant |
+| Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | Plans need self-containment, structure, metadata verification, and principle compliance; `fidelity` applies only to specs |
+| Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Flows need self-containment, adapted structure checks, metadata verification, and principle compliance |
+| Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Runbooks need self-containment, adapted structure checks, metadata verification, and principle compliance |
+| Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Checklists need self-containment, adapted structure checks, metadata verification, and principle compliance |
+| Reference Doc | `fresh-start`, `ground-truth`, `principles` | Reference docs need self-containment, metadata verification, and principle compliance |
 
 ## Auto-Fix Model (CRITICAL)
 
@@ -166,6 +167,8 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 | SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
 | PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
+| GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity | STATUS is metadata, not content; correcting it removes false tracking |
+| GROUND-TRUTH-MISMATCH (auth superseded) | Add re-approval note to document body | Revision revokes approval is a mandatory rule; noting it is mechanical |
 
 **Conditional findings:**
 
@@ -175,6 +178,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | CONTEXT-OVERFLOW | Verify section reduction preserves all requirements | Shortening sections could lose critical details |
 | YAGNI_VIOLATION | Verify removed features/abstractions have no dependents | Removing unrequired features could orphan other steps |
 | SOC_VIOLATION (phase split) | Verify split preserves all step content | Splitting phases could lose cross-concern context |
+| GROUND-TRUTH-MISMATCH (stale label) | Verify auth scope covers current document before removing label | Removing label without confirming auth scope could misrepresent approval state |
 
 **Flag-for-review findings:**
 
@@ -193,6 +197,10 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | TESTABILITY_VIOLATION | Testability tradeoffs require understanding of project constraints |
 | PRINCIPLE_VIOLATION | Generic principle violation requires domain judgment |
 | PLAN-BLEED-AMBIGUOUS | Content could be requirement or implementation detail; requires domain judgment |
+| GROUND-TRUTH-MISMATCH (cross-ref missing) | Referenced issue may have been deleted or renumbered; requires developer to resolve |
+| GROUND-TRUTH-MISMATCH (cross-ref mismatch) | Referenced issue exists but content differs from claim; intent requires domain judgment |
+| GROUND-TRUTH-MISMATCH (code ref missing) | Referenced file/function may be planned but not implemented; requires developer to confirm |
+| GROUND-TRUTH-MISMATCH (STATUS inflated) | STATUS says COMPLETE but content is immature; may be intentional tracking |
 
 **Reporting format (v3 — includes Classification and Fix Action):**
 ```
@@ -227,7 +235,8 @@ spec-auditor (orchestrator)
 ├── operational-flow.md     — Process flow / runbook operational checks (NEW)
 ├── determinism.md          — Deterministic behavior and state dependency checks (NEW)
 ├── error-recovery.md       — Runbook error recovery and rollback checks (NEW)
-└── principles.md           — Engineering principle violations from programming-principles skill (NEW)
+├── principles.md           — Engineering principle violations from programming-principles skill (NEW)
+└── ground-truth.md         — Adversarial verification of metadata claims against direct evidence (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -266,6 +275,7 @@ Existing classes remain, plus two new ones:
 | **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
 | **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
 | **PLAN-BLEED-AMBIGUOUS** | Content that could be either a requirement or implementation detail; requires domain judgment |
+| **GROUND-TRUTH-MISMATCH** | Metadata claim (STATUS, label, cross-ref, code ref, auth) contradicts actual state |
 
 ## Audit Findings Handling
 
@@ -362,7 +372,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 
 ## Cross-References
 
-- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (principle definitions for `principles` subtask)
+- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `140-planning-spec-creation.md`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-revision` when audit requires changes; replace with `needs-approval` on re-submission)
 - Delegated from: `plan-fidelity-auditor` (now `fidelity` subtask), `concern-separation-auditor` (now `concerns` subtask)
@@ -379,6 +389,8 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | No operational requirements check | `operational` subtask (NEW) | `operational` subtask | `operational` subtask |
 | plan-fidelity-auditor invoked directly | `fidelity` subtask delegated | `fidelity` subtask delegated | `fidelity` subtask delegated |
 | concern-separation-auditor invoked directly | `concerns` subtask delegated | `concerns` subtask delegated | `concerns` subtask delegated |
+| No principle compliance check | — | — | `principles` subtask (NEW) — baseline for all types |
+| No ground-truth verification | — | — | `ground-truth` subtask (NEW) — baseline for all types |
 | No executive summary | No executive summary | Chat executive summary mandatory | Chat executive summary mandatory, includes document type |
 | Report format: Recommendation field | Report format: Recommendation field | Report format: Classification + Fix Action fields | Report format: Classification + Fix Action fields |
 | Issue-only input | Issue-only input | Issue-only input | `--issue`, `--file`, `--url` input |

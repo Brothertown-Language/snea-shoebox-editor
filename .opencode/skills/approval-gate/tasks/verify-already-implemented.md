@@ -86,6 +86,25 @@ Each criterion verification MUST include:
 | 2 | Task file exists at correct path | PASS | `tasks/verify-already-implemented.md` verified via read |
 | 3 | Guideline section updated | PASS | `000-critical-rules.md:688-713` includes autoclose exemption |
 
+## Auto-Close Procedure (Post-Merge Verification)
+
+When `verify-already-implemented` identifies issues that were already implemented via a merged PR, the following auto-close procedure MUST be followed:
+
+1. **Verify PR merge via GitHub API** — Use `github_pull_request_read(method=get)` on the referenced PR. Confirm `merged == true` and `state == "closed"`. Do NOT rely on visual inspection or memory.
+
+2. **Close each verified-already-implemented issue** with a comment referencing the merged PR:
+   - Use `github_issue_write(method=update, state="closed", state_reason="completed")`
+   - Use `github_add_issue_comment` with a reference to the merged PR (e.g., `Closing: implementation verified via merged PR #N`)
+
+3. **Remove `needs-approval` label** if present — Use `github_issue_read(method=get_labels)` to check, then remove via label update if found.
+
+4. **Report closure in chat output** — Include:
+   - Which issues were closed
+   - The merged PR that verified the implementation
+   - Byline: `🤖 <AgentName> (<ModelID>) completed`
+
+**⚠️ CRITICAL:** Do NOT close issues without verifying PR merge via the GitHub API. Assuming a PR was merged without API confirmation is a verification dishonesty violation per `065-verification-honesty.md`.
+
 ## What This Is NOT
 
 This task does NOT replace:
