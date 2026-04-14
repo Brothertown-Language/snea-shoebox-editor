@@ -136,6 +136,8 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 This is a v3 core principle. Previous versions (v2) were report-only — findings were listed and the agent decided what to apply. v3 auto-fixes safe findings directly and only flags ambiguous findings for developer review.
 
+**Authorization path:** Auto-fix findings are exempt from the approval-gate's "no implementation without authorization" rule. See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete conditions. **Conditional findings are NOT exempt** — they require explicit authorization before application. **Flag-for-review findings are never applied** — they are reported in the executive summary only.
+
 **Three-tier classification:**
 
 | Tier | Classification | Action | When |

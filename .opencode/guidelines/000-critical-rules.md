@@ -179,6 +179,20 @@ The following are ALL implementation actions that require an approved spec:
 | Creating new files of any type | ✅ Yes | Adds new behavior or content |
 | Fixing a typo in documentation | ❌ No | No behavioral change |
 | Formatting code (ruff format) | ❌ No | No behavioral change |
+| Spec-auditor auto-fix on GitHub Issue | ❌ No* | Non-substantive; see audit auto-fix exemption below |
+
+**\* Audit Auto-Fix Exemption:** Spec-auditor auto-fixes applied to GitHub Issues are NOT implementation actions when ALL of the following conditions are met:
+
+- The audit was deliberately invoked (user-triggered via `spec-auditor --issue N` or pipeline-triggered)
+- Findings are classified as `auto-fix` by spec-auditor's three-tier model
+- Fix is applied to a GitHub Issue body (not source code, not skill files, not guideline files)
+- Fix is non-substantive (structure violations, missing boilerplate, boilerplate titles, numbering, trace links, approach differences, inline context replacement, concern separation fixes)
+- **`conditional` fixes require separate authorization before application** (they are NOT auto-applied without explicit "approved"/"go")
+- **`flag-for-review` findings are reported in the executive summary but NOT applied**
+
+When any condition is NOT met, the action reverts to requiring an approved spec per the standard "Implementation Without Spec" rule.
+
+**See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete exemption section and `spec-auditor` skill → "Auto-Fix Model" for the three-tier classification.**
 
 **🚫 FORBIDDEN patterns (all require spec):**
 - "It's just a skill file" → Skill files alter agent enforcement. Spec required.

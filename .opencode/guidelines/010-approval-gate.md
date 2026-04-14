@@ -133,6 +133,28 @@ Key rule: Explicit authorization (`approved`/`go`) OVERRIDES the `needs-approval
 
 Key rule: Bug reports requiring code changes → add `needs-approval` label → HALT → wait for explicit authorization.
 
+### Audit Auto-Fix Exemption
+
+**Spec-auditor auto-fixes applied to GitHub Issues are exempt from the "no implementation without authorization" rule** when ALL conditions below are met. This exemption exists because audit auto-fixes are analogous to linter auto-fixes (`ruff --fix`) — they correct mechanical issues without changing semantics.
+
+**Conditions for exemption (ALL must be true):**
+
+| Condition | Requirement |
+| -- | -- |
+| Deliberate invocation | Audit was user-triggered (`spec-auditor --issue N`) or pipeline-triggered |
+| Classification | Finding is classified as `auto-fix` by spec-auditor's three-tier model |
+| Target | Fix is applied to a GitHub Issue body only (not source code, not skill files, not guideline files, not configuration) |
+| Non-substantive | Fix is structural/mechanical: STATUS headers, numbering, markers, boilerplate additions, trace links, approach differences, concern separation, inline context replacement |
+| No scope change | Fix does not add/remove phases, requirements, success criteria, or alter scope |
+
+**Conditional fixes are NOT exempt.** They require separate authorization ("approved"/"go") before application, even when the audit itself was deliberately invoked. The safety check in the conditional tier assesses whether the fix could break dependencies — it does NOT substitute for authorization.
+
+**Flag-for-review findings are never applied.** They are reported in the executive summary for developer action.
+
+**When any condition is NOT met**, the action reverts to the standard approval-gate rule: no implementation without explicit authorization.
+
+**See `000-critical-rules.md` → "Implementation Without Spec" table for the auto-fix exemption row, and `spec-auditor` skill → "Auto-Fix Model" for the three-tier classification.**
+
 ### Bug Discovery Protocol (CRITICAL)
 
 **⚠️ Finding a bug during analysis or any other activity does NOT authorize fixing it.**
@@ -304,6 +326,34 @@ rules:
     requires: []
     triggers: [github-sub-issues]
     source: "010-approval-gate.md §Multi-Task Plan Authorization"
+
+  - id: approval-gate-008
+    title: "Audit auto-fix exempt from authorization when conditions met"
+    conditions:
+      all:
+        - "audit_deliberately_invoked == true"
+        - "finding_classification == 'auto-fix'"
+        - "fix_target == 'github-issue-body'"
+        - "fix_non_substantive == true"
+    actions:
+      - PROCEED
+    conflicts_with: [approval-gate-001]
+    requires: []
+    triggers: [spec-auditor]
+    source: "010-approval-gate.md §Audit Auto-Fix Exemption"
+
+  - id: approval-gate-009
+    title: "Conditional audit fixes require authorization"
+    conditions:
+      all:
+        - "audit_deliberately_invoked == true"
+        - "finding_classification == 'conditional'"
+    actions:
+      - HALT
+    conflicts_with: [approval-gate-008]
+    requires: []
+    triggers: [spec-auditor]
+    source: "010-approval-gate.md §Audit Auto-Fix Exemption"
 
 state_machines:
   - id: approval-lifecycle
