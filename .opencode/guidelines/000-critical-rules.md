@@ -458,6 +458,21 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 
 **See `brainstorming` skill → `explore` task → "Autonomous Structural Classification" for the complete criteria.**
 
+## Critical Violation: Process Gaps Are Bugs — Completed Issues Not Auto-Closed
+
+**⚠️ Failing to follow a mandatory workflow step is a systemic failure, not an individual oversight.** Process gaps must be treated as bugs requiring guideline/skill fixes.
+
+- 🚫 FORBIDDEN: "I just didn't do it" / "I forgot" / "I skipped it" as explanations for missed workflow steps
+- 🚫 FORBIDDEN: Leaving issues open after their implementation is verified complete via merged PR
+- 🚫 FORBIDDEN: Treating process gaps as acceptable human error rather than systemic bugs
+- ✅ REQUIRED: When a process gap is discovered (e.g., completed issues not auto-closed, verification steps skipped), create a fix spec to prevent recurrence
+- ✅ REQUIRED: Fix the guideline/skill to close the gap — the process must enforce itself, not rely on agent memory or diligence
+- ✅ REQUIRED: Issues verified as already-implemented via merged PR MUST be auto-closed with a comment referencing the PR
+
+**Why this matters:** If a mandatory step can be skipped by accident, the workflow is defective — not the agent. The correct response to a process gap is to fix the process (add enforcement to guidelines/skills), not to accept the gap as inevitable. "I forgot" means the process lacks a verification gate or checklist item that would catch the omission.
+
+**See `approval-gate` skill → `verify-already-implemented` task → "Auto-Close Procedure" for the post-merge issue closure workflow. See `finishing-a-development-branch` skill → `checklist` task for issue-closure verification steps.**
+
 ______________________________________________________________________
 
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.
