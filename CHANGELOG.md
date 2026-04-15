@@ -12,6 +12,21 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### batch/apr-15-enforcement-batch
+
+- **Byline Format Drift Audit** (#866) - Audited and corrected `<AI-Name>`/`<ModelID>` placeholder tokens across all guidelines and skills. Replaced hardcoded agent/model references with runtime-resolvable placeholders. Added critical violation for hardcoded identity values in `000-critical-rules.md`.
+- **Question Tool Checkpoint in Batch Approval** (#863) - Added mandatory checkpoint in `assemble-batch.md` Step 3 prohibiting `question` tool usage during sub-agent dispatch. Structural decisions must be resolved autonomously.
+- **Compare URL vs PR URL Labels** (#876) - Differentiated Compare URL (pre-PR) from PR URL (post-PR) labels in `000-critical-rules.md`, `assemble-batch.md`, and `review-prep.md`. Added URL label context table.
+- **Sub-Agent Abnormal Termination Detection** (#871) - Added completion checkpoint in `assemble-batch.md` Step 3.6 and `dispatch.md` Step 4 for detecting sub-agent crashes/timeouts with recovery decision logic.
+- **Chat Output Format Enforcement** (#869) - Added mandatory format verification checklist to `assemble-batch.md` Step 6, `000-critical-rules.md`, and approval-gate tasks. Auto-fix for missing/misordered elements before output.
+- **Combined Spec+Plan for Single-Task Plans** (#842) - Updated `writing-plans` skill to create a single combined spec+plan issue for single-task work. Added `is_single_task` detection and updated workflow.
+- **Auto-Create Dev Branch in Pre-Work** (#861) - Added dev branch auto-creation in `git-workflow/tasks/pre-work.md` when dev branch doesn't exist.
+- **Non-Submodule Release Promotion Path** (#913) - Added `release-promotion.md` task to `git-workflow` skill supporting plain Git repos with version bump, tag, push, and merge-back steps.
+- **Mandate Tiering for Process vs Safety Rules** (#912) - Added Tier 1 (non-yielding, safety-critical) and Tier 2 (authorization-waivable, process) classification to `000-critical-rules.md`. Tier 1 never yields to developer authorization.
+- **Placeholder Identity Resolution** (#905) - Replaced hardcoded identity tokens with runtime-resolvable placeholders (`<AI-Name>`, `<ModelID>`, `DEV_NAME`, `GIT_OWNER`, `GIT_REPO`). Updated `session-init` tool to emit these values.
+- **Batch PR Enforcement** (#904) - Added mandatory rule #07 to `assemble-batch.md` and updated `pr-creation-workflow/SKILL.md` to enforce single PR per batch.
+- **Submodule Provenance Tracking** (#783) - Added `provenance.md` task to `git-workflow` skill. Updated `release-promotion.md` and `review-prep.md` with submodule-aware checkout verification.
+
 ### spec/838-active-enforcement
 
 - **Active Spec/Plan Enforcement** (#838) - Added "Silent Halt Without Prompt" critical violation requiring agents to search GitHub Issues for existing spec/plan candidates before halting, present the results to the user, and flag as FAILURE if no spec/plan is created. Updated 7 files: 000-critical-rules.md, 010-approval-gate.md, 020-go-prohibitions.md, approval-gate SKILL.md, verify-qa-mode.md, brainstorming SKILL.md, and spec-creation SKILL.md.
