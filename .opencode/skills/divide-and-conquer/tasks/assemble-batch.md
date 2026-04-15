@@ -44,6 +44,8 @@ For each issue in the batch:
 
 For each issue in execution order:
 
+**Checkpoint (MANDATORY):** Before dispatching the next sub-agent, verify NO `question` tool calls have been made. If any were made, remove them and proceed autonomously. Structural decisions (single-task vs multi-task, execution order, scope sizing) are agent intelligence concerns that the agent must resolve autonomously.
+
 1. **Before sub-agent dispatch**, if this issue depends on a prior issue:
 
    - Merge the prior issue's feature branch into this issue's feature branch:
