@@ -73,6 +73,7 @@ service-account.json
 .streamlit/*
 !.streamlit/config.toml
 .streamlit/secrets.toml.production
+.secrets.baseline
 *.key
 *.pem
 *.p12

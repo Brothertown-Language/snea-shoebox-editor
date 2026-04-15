@@ -8,3 +8,10 @@ repos:
         args: [ --fix ]
       # Run the formatter.
       - id: ruff-format
+-   repo: local
+    hooks:
+      - id: detect-secrets
+        name: detect-secrets
+        entry: .opencode/tools/detect-secrets-wrapper.sh
+        language: script
+        stages: [pre-commit]
