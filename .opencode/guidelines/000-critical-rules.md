@@ -352,6 +352,23 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 
 **See `approval-gate` skill → "Reference ≠ Authorization Cascade" for the complete verification procedure.**
 
+## Critical Violation: Ignoring Spec-to-Plan Approval Cascade
+
+**⚠️ Requiring manual plan approval when a spec is approved and a faithful plan already exists is a CRITICAL GUIDELINE VIOLATION.**
+
+The spec-to-plan approval cascade means: when a spec is approved and a plan already exists that is faithful to the spec, the plan is automatically approved. Manual plan approval is only required when no plan exists at the time of spec approval (the standard two-gate flow: spec approval → plan creation → plan approval → implementation).
+
+- 🚫 FORBIDDEN: Requiring manual plan approval when a faithful plan already exists at the time of spec approval
+- 🚫 FORBIDDEN: Treating spec approval as only authorizing plan creation when a faithful plan already exists
+- 🚫 FORBIDDEN: Bypassing the two-gate model when no plan exists (cascade does NOT apply — normal flow required)
+- ✅ REQUIRED: Auto-approve faithful existing plans when their linked spec is approved
+- ✅ REQUIRED: Verify plan fidelity before cascading (plan must faithfully represent the approved spec)
+- ✅ REQUIRED: Spec revision still revokes plan approval per existing "Revision Revokes Approval" rules
+
+**Edge cases:** Plan not faithful → fidelity audit catches deviations, plan must be revised and re-approved. Spec revised → revokes all linked plan approvals (existing behavior). No plan exists → normal two-gate flow, no cascade. Multiple plans → most recent approved plan takes precedence, older plans superseded.
+
+**See `010-approval-gate.md` → "Spec-to-Plan Approval Cascade" for the complete cascade rules and edge case documentation.**
+
 ## Critical Violation: Confirmation ≠ Authorization
 
 **⚠️ User confirmation of an observation does NOT constitute implementation authorization.**
