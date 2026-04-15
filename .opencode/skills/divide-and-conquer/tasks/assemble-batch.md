@@ -204,7 +204,22 @@ Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
 **If a PR has been created for this batch, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
 
 PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
+
+🤖 <AgentName> (<ModelID>) <status>
 ```
+
+**Chat Output Format Verification (MANDATORY — before sending):**
+
+Before sending the chat report, verify ALL elements are present and correctly ordered:
+
+- [ ] Executive summary present as **first** element (before any URL)
+- [ ] Outcome line present after summary
+- [ ] Compare URL present (after outcome, before byline)
+- [ ] AI byline present as **LAST** element (after URL)
+- [ ] No URL before executive summary
+- [ ] No byline before URL
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
 
 **Issue comments:**
 Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.

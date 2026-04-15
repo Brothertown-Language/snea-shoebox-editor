@@ -93,9 +93,9 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 - 🚫 FORBIDDEN: Marking complete without commit/push/URL; skipping review-prep for any reason; proceeding without URL in chat
 - ✅ REQUIRED: See `git-workflow` skill `--task review-prep` for mandatory commit, push, compare URL, and HALT protocol
 
-## Critical Violation: Wrong Chat Output Format
+## Critical Violation: Wrong Chat Output at Halt Points
 
-**⚠️ Posting URL before executive summary in chat is a CRITICAL GUIDELINE VIOLATION.** Executive summary first, URL last, AI byline LAST after URL.
+**⚠️ Producing casual summaries at halt points instead of the mandatory format (exec summary → outcome → URL → byline) is a CRITICAL GUIDELINE VIOLATION.**
 
 **URL Label Context:**
 
@@ -106,7 +106,33 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 Using "Compare URL" after a PR has been created is a format violation — the label MUST be "PR URL" with the `pull/N` format. Using "PR URL" before a PR exists is also a format violation — the label MUST be "Compare URL" with the `compare/dev...` format.
 
-**See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples.**
+The format applies to ALL halt points where implementation is reported complete:
+
+- **review-prep** after implementation
+- **Sub-agent result reports** from divide-and-conquer dispatch
+- **Phase boundary halts** (merge gates between phases)
+- **Approval-gate post-implementation** reports
+- **Batch orchestration** reports (assemble-batch Step 6)
+- **Completion task** reports (approval-gate completion)
+
+**Mandatory format:**
+
+```
+**Summary:**
+
+<1-2 sentences describing impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+<Compare URL or Issue URL>
+
+🤖 <AgentName> (<ModelID>) <status>
+```
+
+- 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any element (summary, outcome, URL, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent
+- ✅ REQUIRED: Verify chat output format before sending at every halt point; auto-fix missing or misordered elements before output is sent; summary first, outcome after summary, URL before byline, byline last
+
+**See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples. See `approval-gate/tasks/post-implementation.md` Step 4.5, `approval-gate/tasks/completion.md`, `divide-and-conquer/tasks/assemble-batch.md` Step 6, `finishing-a-development-branch/tasks/checklist.md` §Chat Output Format, and `git-workflow/tasks/review-prep.md` §Live Verification for the verification checkpoints.**
 
 ## Critical Violation: Wrong PR Body Format
 
