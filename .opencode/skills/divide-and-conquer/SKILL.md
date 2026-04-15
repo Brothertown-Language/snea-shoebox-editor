@@ -97,6 +97,7 @@ authorization: "User approved #<N> on <date>"
 depth: <current decomposition depth, starting at 0>
 max_depth: <DIVIDE_AND_CONQUER_MAX_DEPTH or 3>
 prior_context: "<AI-composed intent and context from prior sub-agents>"
+decision_log_reference: "<URL or reference to the Decision Log on the Plan issue, or 'see Decision Log on Plan #N' — the sub-agent can retrieve full decision history from this reference>"
 phase_progress:
   completed_phases: "<prose listing of completed phases by concern name, not just number>"
   concern_boundaries_crossed: "<prose description of architectural concern transitions encountered>"
@@ -127,6 +128,7 @@ status: DONE | DONE_WITH_CONCERNS | OVERFLOW | BLOCKED
 files_changed: ["<path>"]
 summary: "<what was implemented and key decisions>"
 concerns: "<only if DONE_WITH_CONCERNS>"
+decision_log_entry: "<prose summary of design decisions made during this phase — no prescribed format, the agent decides structure>"
 plan_issue: <number or empty>
 phase_progress:
   completed_phases: "<prose listing of phases completed, named by concern>"
@@ -138,6 +140,8 @@ exec_summary: "<1-2 sentence executive summary for chat output, or empty string>
 ```
 
 **Phase progress in results** enables the orchestrator to compose `phase_progress` for subsequent sub-agents. The completed phases, concern boundaries crossed, and verification evidence from prior sub-agent results feed directly into the next dispatch context's `phase_progress` field.
+
+**Decision Log persistence.** The `decision_log_entry` field captures design decisions made during a phase. After each sub-agent returns, the orchestrator appends this entry as a dedicated GitHub Issue comment on the Plan issue — this is the Decision Log. It persists across session restarts because it lives on the GitHub Issue, not in transient agent context. The Decision Log uses comments (not Plan body edits) for lightweight, append-only durability. The `decision_log_entry` is prose-driven — no prescribed format, the agent decides the structure that best communicates what was decided and why.
 
 ## Worktree Mode
 

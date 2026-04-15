@@ -73,8 +73,9 @@ For each issue in execution order:
      sub_issue_body: "<phase prose from sub-issue body, not just parent reference>"
      spec: "<full spec body from GitHub Issue>"
      authorization: "User approved #A, #B, #C on <date>"
-     prior_context: "<AI-composed intent and context from prior issues>"
-     phase_progress:
+      prior_context: "<AI-composed intent and context from prior issues>"
+      decision_log_reference: "<URL or reference to the Decision Log on the Plan issue — the sub-agent can retrieve full decision history from this reference>"
+      phase_progress:
        completed_phases: "<prose listing of completed phases by concern name, accumulated from prior sub-agent results and Plan STATUS>"
        concern_boundaries_crossed: "<prose description of architectural concern transitions between the prior sub-agent's work and this sub-agent's work>"
        verification_evidence: "<prose summary of what was verified in prior phases and the outcomes>"
@@ -103,23 +104,34 @@ For each issue in execution order:
 
 6. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
 
-    prior_context (intent and context):
-    - Design decisions made
-    - Edge cases handled
-    - Assumptions that later issues depend on
-    - Interfaces exposed that later issues should use
-    - NOT a change summary (that's in git) — intent and context only
+     prior_context (intent and context):
+     - Design decisions made
+     - Edge cases handled
+     - Assumptions that later issues depend on
+     - Interfaces exposed that later issues should use
+     - NOT a change summary (that's in git) — intent and context only
 
-    phase_progress (accumulated from sub-agent result + Plan STATUS):
-    - completed_phases: append the just-completed phase concern name to the running list
-    - concern_boundaries_crossed: if the next issue's concern differs from the just-completed issue's concern, note the transition
-    - verification_evidence: append what was verified and the outcome
+     phase_progress (accumulated from sub-agent result + Plan STATUS):
+     - completed_phases: append the just-completed phase concern name to the running list
+     - concern_boundaries_crossed: if the next issue's concern differs from the just-completed issue's concern, note the transition
+     - verification_evidence: append what was verified and the outcome
 
-    Both prior_context and phase_progress are prose-driven. The orchestrator composes them intelligently — no fixed template, no rigid schema.
+     Both prior_context and phase_progress are prose-driven. The orchestrator composes them intelligently — no fixed template, no rigid schema.
 
-7. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
+7. **Append the sub-agent's decision_log_entry to the Decision Log on the Plan issue.** After collecting each sub-agent's result, post their `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. The Decision Log persists design decisions across phase boundaries and session restarts.
 
-8. **Handle failures:**
+   **Decision Log storage:** Use a dedicated GitHub Issue comment on the Plan issue, NOT the Plan body. Rationale:
+   - Append-only — new decisions are added without editing existing content
+   - Lightweight — appending a comment doesn't require re-editing the entire Plan body
+   - Survives session restarts — comments persist on the GitHub Issue independently of any agent session
+   - Doesn't bloat the Plan body — the Plan body stays focused on phase structure and STATUS markers
+   - Sequential — comments are naturally ordered chronologically
+
+   The orchestrator posts the decision log entry after each sub-agent returns. If posting fails, log the failure and continue — the Decision Log is a durability enhancement, not a blocking gate. The `decision_log_entry` is also returned in the sub-agent result for immediate use by subsequent dispatches within the same session.
+
+8. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
+
+9. **Handle failures:**
 
    - If sub-agent fails: record failure
    - For independent issues: continue to next issue
@@ -280,5 +292,6 @@ assemble-batch:
 08. **Intent-and-context metadata** — AI-composed, no fixed template, focus on why not what
 09. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
 10. **Always batch mode** — single issue = batch of one, no special-case path
+11. **Decision Log persistence** — after each sub-agent returns, append `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. Decision Log uses comments (not body edits) for lightweight, append-only, session-surviving persistence
 
 Co-authored with AI: <AI-Name> (<model-id>)
