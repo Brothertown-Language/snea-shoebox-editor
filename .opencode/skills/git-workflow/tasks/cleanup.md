@@ -460,7 +460,7 @@ Before closing any issue (SPEC or Task), the AI agent MAY provide a final summar
 ### Example Closing Comment
 
 ```
-🤖 ✅ **Issue Closing Summary**
+✅ **Issue Closing Summary**
 - **Changes**: Implemented the new rate limiting middleware in `pubmed_client.py` and updated workflow docs.
 - **Test Results**: All 12 unit tests passed. Manual verification confirmed retry logic works.
 - **Impacts**: None on existing issues.
@@ -647,7 +647,7 @@ else:
 If parent cannot be closed:
 
 ```markdown
-🤖 ⚠️ **Cannot Close Parent — Open Sub-Issues Detected**
+🤖 **Cannot Close Parent — Open Sub-Issues Detected**
 
 This parent issue cannot be closed because the following sub-issue(s) remain incomplete:
 
@@ -662,7 +662,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 3. Or close as "not planned" with explanation if intentionally skipped
 
 ---
-🤖 ⚠️ <AgentName> (<ModelID>) blocking
+🤖 <AgentName> (<ModelID>) blocking
 ```
 
 ## Live Verification (MANDATORY)

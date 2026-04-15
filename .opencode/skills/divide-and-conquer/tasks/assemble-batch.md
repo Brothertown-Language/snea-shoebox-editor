@@ -44,6 +44,8 @@ For each issue in the batch:
 
 For each issue in execution order:
 
+**Checkpoint (MANDATORY):** Before dispatching the next sub-agent, verify NO `question` tool calls have been made. If any were made, remove them and proceed autonomously. Structural decisions (single-task vs multi-task, execution order, scope sizing) are agent intelligence concerns that the agent must resolve autonomously.
+
 1. **Before sub-agent dispatch**, if this issue depends on a prior issue:
 
    - Merge the prior issue's feature branch into this issue's feature branch:
@@ -100,9 +102,21 @@ For each issue in execution order:
    - Run `finishing-a-development-branch --task checklist`
    - Return structured result: `{status, files_changed, summary}`
 
-5. **Collect result** from sub-agent
+ 5. **Collect result** from sub-agent
 
-6. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
+ 6. **Sub-Agent Completion Checkpoint** — after collecting each result, perform the completion checkpoint per `dispatch` task Step 4:
+
+    - If sub-agent returned a structured result: check `status` field and handle accordingly
+    - If sub-agent returned **NO result** (timeout, crash, empty): this is **ABNORMAL TERMINATION**
+      - Run `git status` in the worktree
+      - Clean tree → didn't start → re-dispatch
+      - Uncommitted changes + all deliverables → complete manually (commit + push)
+      - Uncommitted changes + partial deliverables → `git checkout .` + re-dispatch reduced scope
+      - Uncommitted changes + wrong changes → `git checkout .` + re-dispatch full scope
+    - Report abnormal termination to chat (see format in SKILL.md "Sub-Agent Completion Checkpoint")
+    - The orchestrator decides recovery action autonomously per "Pushing Agent Intelligence Decisions to the User" (`000-critical-rules.md`)
+
+ 7. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
 
      prior_context (intent and context):
      - Design decisions made
@@ -118,7 +132,7 @@ For each issue in execution order:
 
      Both prior_context and phase_progress are prose-driven. The orchestrator composes them intelligently — no fixed template, no rigid schema.
 
-7. **Append the sub-agent's decision_log_entry to the Decision Log on the Plan issue.** After collecting each sub-agent's result, post their `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. The Decision Log persists design decisions across phase boundaries and session restarts.
+ 8. **Append the sub-agent's decision_log_entry to the Decision Log on the Plan issue.** After collecting each sub-agent's result, post their `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. The Decision Log persists design decisions across phase boundaries and session restarts.
 
    **Decision Log storage:** Use a dedicated GitHub Issue comment on the Plan issue, NOT the Plan body. Rationale:
    - Append-only — new decisions are added without editing existing content
@@ -129,9 +143,9 @@ For each issue in execution order:
 
    The orchestrator posts the decision log entry after each sub-agent returns. If posting fails, log the failure and continue — the Decision Log is a durability enhancement, not a blocking gate. The `decision_log_entry` is also returned in the sub-agent result for immediate use by subsequent dispatches within the same session.
 
-8. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
+ 9. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
 
-9. **Handle failures:**
+ 10. **Handle failures:**
 
    - If sub-agent fails: record failure
    - For independent issues: continue to next issue
@@ -170,6 +184,23 @@ After ALL issues in the batch complete:
 2. **Run git-workflow --task review-prep** for the batch branch
 3. **Collect compare URL**
 
+### Step 5.5: Pre-PR Checklist (MANDATORY before any PR creation)
+
+Before creating ANY pull request, verify:
+
+1. Batch state file exists at `.opencode/tmp/batch-*.md`
+2. All feature branches listed in batch state have been squash-merged into the batch branch
+3. The batch branch has exactly one squash-merge commit per issue
+4. Working tree is clean (no uncommitted changes)
+
+If any check fails:
+
+- If batch state file missing → the agent skipped pre-implementation-analysis; HALT
+- If squash-merges missing → complete Step 4 (Batch Assembly) first
+- If working tree dirty → commit or stash changes first
+
+**🚫 CRITICAL: Individual PR creation for batch-approved issues is FORBIDDEN. All issues in a batch MUST be squash-merged into a single batch branch, then ONE PR created from that branch.**
+
 ### Step 6: Report and HALT
 
 **Chat output:**
@@ -186,7 +217,26 @@ Implemented <N> issues via branch-per-issue batch orchestration.
 - #C: <summary> ⚠️ (partial — see details)
 
 Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
+
+**If a PR has been created for this batch, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
+
+PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
+
+🤖 <AgentName> (<ModelID>) <status>
 ```
+
+**Chat Output Format Verification (MANDATORY — before sending):**
+
+Before sending the chat report, verify ALL elements are present and correctly ordered:
+
+- [ ] Executive summary present as **first** element (before any URL)
+- [ ] Outcome line present after summary
+- [ ] Compare URL present (after outcome, before byline)
+- [ ] AI byline present as **LAST** element (after URL)
+- [ ] No URL before executive summary
+- [ ] No byline before URL
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
 
 **Issue comments:**
 Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.

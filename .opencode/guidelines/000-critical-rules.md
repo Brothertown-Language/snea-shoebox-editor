@@ -5,6 +5,52 @@
 
 This file provides critical rules that must never be violated. Sections with full detail in dedicated guidelines are referenced here with one-line pointers — the referenced guideline contains the complete rule, enforcement matrix, and examples.
 
+## Mandate Tiering
+
+Not all "zero tolerance" rules carry the same weight. This document classifies rules into two tiers based on what is at stake when they are violated:
+
+### Tier 1 — Non-Yielding Mandates (Safety-Critical)
+
+These mandates protect the integrity of the codebase and repository. They **NEVER yield to developer authorization** — even if a developer says "approved" or "go", the agent MUST still comply with these rules.
+
+| Mandate | Why Non-Yielding |
+| -- | -- |
+| Worktree required before file edits | Prevents corruption of main/dev working directory |
+| No commits to `main` or `dev` | Branch protection is a repository integrity concern |
+| Human-only merge | Agents must never merge PRs |
+| No `/tmp/` usage — `./tmp/` only | Prevents system-level temp file leakage |
+| Path rules in worktree context | Prevents silent file operation errors across worktrees |
+| Sub-agents must receive `WORKTREE_PATH` | Prevents sub-agents from mutating main repo |
+| Human-only branch deletion | Unmerged branches must never be force-deleted by agents |
+| Agents must never self-authorize | Authorization comes from developers, never from agent reasoning |
+
+**"Zero tolerance" language in this file applies ABSOLUTELY to Tier 1 mandates.** There is no waiver, no override, no emergency bypass.
+
+### Tier 2 — Authorization-Waivable Mandates (Process)
+
+These mandates ensure disciplined workflow (spec-first, plan-before-implementation). They **CAN be waived by explicit developer authorization** ("approved" or "go") because the developer is accepting the risk of skipping process steps.
+
+| Mandate | What Waiver Means |
+| -- | -- |
+| Spec before code | Developer authorization means "you may begin the process" — for complex work, still create a spec/plan; for clearly simple work (docs, runbooks, minor config), the developer's explicit authorization IS the process |
+| Plan before implementation | Same as above — authorization authorizes the work, not necessarily every intermediate artifact |
+| `needs-approval` label present | Explicit auth overrides this label per `010-approval-gate.md` |
+| Sub-issue structure for multi-task plans | When developer authorizes a multi-task plan, sub-issue creation is auto-setup, not a separate gate |
+
+**For Tier 2 mandates, developer authorization does NOT mean "skip the process entirely"** — it means "you may begin." For complex work (new features, behavioral changes), the spec/plan workflow still produces value even when authorization exists. For clearly simple work (documentation, runbooks, minor configuration edits), the developer's explicit authorization IS sufficient process — no separate spec/plan is required.
+
+### Interaction Rule
+
+When developer authorization conflicts with a mandate:
+
+| Scenario | Resolution |
+| -- | -- |
+| Developer authorization + Tier 2 process mandate | Developer authorization wins — the work is authorized |
+| Developer authorization + Tier 1 safety mandate | Safety mandate wins — must use worktree, must not commit to main/dev |
+| No developer authorization + any mandate | Mandate holds — HALT and wait |
+
+**See `010-approval-gate.md` → "Mandate Tiering Interaction" for the complete interaction semantics and examples.**
+
 ## Critical Violation: Worktree Bypass — Using stash+checkout Instead of Worktrees
 
 **⚠️ Using `stash + checkout -b` instead of worktrees for ANY feature branch creation is a CRITICAL GUIDELINE VIOLATION.**
@@ -93,11 +139,46 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 - 🚫 FORBIDDEN: Marking complete without commit/push/URL; skipping review-prep for any reason; proceeding without URL in chat
 - ✅ REQUIRED: See `git-workflow` skill `--task review-prep` for mandatory commit, push, compare URL, and HALT protocol
 
-## Critical Violation: Wrong Chat Output Format
+## Critical Violation: Wrong Chat Output at Halt Points
 
-**⚠️ Posting URL before executive summary in chat is a CRITICAL GUIDELINE VIOLATION.** Executive summary first, URL last, AI byline LAST after URL.
+**⚠️ Producing casual summaries at halt points instead of the mandatory format (exec summary → outcome → URL → byline) is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples.**
+**URL Label Context:**
+
+| Context | Label | URL Format |
+| -- | -- | -- |
+| Pre-PR (after push, before PR creation) | **Compare URL** | `compare/dev...<branch-name>` |
+| Post-PR (PR has been created) | **PR URL** | `pull/<PR-number>` |
+
+Using "Compare URL" after a PR has been created is a format violation — the label MUST be "PR URL" with the `pull/N` format. Using "PR URL" before a PR exists is also a format violation — the label MUST be "Compare URL" with the `compare/dev...` format.
+
+The format applies to ALL halt points where implementation is reported complete:
+
+- **review-prep** after implementation
+- **Sub-agent result reports** from divide-and-conquer dispatch
+- **Phase boundary halts** (merge gates between phases)
+- **Approval-gate post-implementation** reports
+- **Batch orchestration** reports (assemble-batch Step 6)
+- **Completion task** reports (approval-gate completion)
+
+**Mandatory format:**
+
+```
+**Summary:**
+
+<1-2 sentences describing impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+<Compare URL or Issue URL>
+
+🤖 <AgentName> (<ModelID>) <status>
+```
+
+- 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any element (summary, outcome, URL, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent
+- ✅ REQUIRED: Verify chat output format before sending at every halt point; auto-fix missing or misordered elements before output is sent; summary first, outcome after summary, URL before byline, byline last
+
+**See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples. See `approval-gate/tasks/post-implementation.md` Step 4.5, `approval-gate/tasks/completion.md`, `divide-and-conquer/tasks/assemble-batch.md` Step 6, `finishing-a-development-branch/tasks/checklist.md` §Chat Output Format, and `git-workflow/tasks/review-prep.md` §Live Verification for the verification checkpoints.**
 
 ## Critical Violation: Wrong PR Body Format
 
@@ -165,8 +246,8 @@ All identity values MUST use placeholder tokens that are resolved at runtime fro
 
 - 🚫 FORBIDDEN: `<specific-agent-name>` (e.g., `OpenCode`, `OpenCode Desktop`, `Claude`) in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `<specific-model-id>` (e.g., `ollama-cloud/glm-5`, `claude-3-5-sonnet`) in skill files, guidelines, or task files
-- 🚫 FORBIDDEN: `michael-conrad`, `muksihs`, or any specific developer name/email in skill files, guidelines, or task files
-- 🚫 FORBIDDEN: `Brothertown-Language`, `snea-shoebox-editor`, or any specific org/repo name in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `example-developer`, `example-dev-alias`, or any specific developer name/email in skill files, guidelines, or task files
+- 🚫 FORBIDDEN: `example-org`, `example-repo`, or any specific org/repo name in skill files, guidelines, or task files
 - ✅ REQUIRED: Use `<AI-Name>`, `<model-id>`, `<AgentName>`, `<ModelID>`, `DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO` placeholders everywhere
 - ✅ REQUIRED: Skill-creator MUST validate that no hardcoded identity values appear in generated skill files
 - ✅ REQUIRED: Spec-auditor MUST flag hardcoded identity values as STRUCTURE-VIOLATION auto-fix findings

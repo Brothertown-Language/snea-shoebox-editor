@@ -218,6 +218,19 @@ Findings from adversarial verification follow the same three-tier model as `spec
 - Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)
 - Label state machine: `141-planning-status-tracking.md §10` (label add/remove actions for this skill)
 
+## Mandate Tiering Enforcement
+
+Rules are classified into two tiers per `000-critical-rules.md` → "Mandate Tiering":
+
+| Tier | Behavior | Examples |
+|------|----------|----------|
+| **Tier 1 (Non-Yielding)** | Enforced REGARDLESS of developer authorization | Worktree requirement, branch protection, human-only merge, no `/tmp/`, path rules |
+| **Tier 2 (Authorization-Waivable)** | Yields to explicit developer authorization | Spec-before-code, plan-before-implementation, `needs-approval` label |
+
+**Enforcement rule:** When `verify-authorization` confirms developer authorization exists, Tier 2 mandates are satisfied by that authorization. Tier 1 mandates are NEVER satisfied by authorization — they are independently enforced. An agent with developer authorization MUST still create a worktree, MUST still not commit to main/dev, MUST still not merge PRs.
+
+**For simple work** (docs, runbooks, minor config): developer authorization IS the process — no spec/plan required. **For complex work**: developer authorization means "begin the process"; spec/plan creation is part of the authorized work.
+
 ```yaml+symbolic
 schema_version: "1.0"
   last_updated: "2026-04-14T12:00:00Z"

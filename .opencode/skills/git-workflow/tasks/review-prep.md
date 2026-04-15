@@ -197,12 +197,12 @@ If the `--skip-submodules` flag is provided:
 
 #### Provenance Tracking After Submodule Push (MANDATORY)
 
-**After each submodule is successfully pushed, invoke provenance tracking immediately.**
+**After each submodule is successfully pushed, invoke provenance tracking immediately with inline fallback.**
 
 For each submodule that was pushed in the Per-Submodule Push Sequence above:
 
 ```
-1. Invoke: /skill git-workflow --task provenance
+1. Invoke: /skill git-workflow --task provenance --mode=dev-push
    with parameters:
      - parent_repo: <GIT_OWNER>/<GIT_REPO>
      - parent_branch: <BRANCH_NAME>
@@ -210,12 +210,23 @@ For each submodule that was pushed in the Per-Submodule Push Sequence above:
      - submodule_path: <path of the pushed submodule>
      - change_description: <brief description of what changed>
 
-2. Provenance is NON-BLOCKING:
-   - If issue/PR creation succeeds → log result, continue
-   - If API access unavailable → falls back silently to commit message provenance (Tier 3)
-   - If any tier fails → next tier attempted, no HALT, no blocking
+2. Inline fallback (P12) — provenance attempts each tier and falls back automatically:
+   - Detect submodule platform and API availability (provenance.md Step 0-1)
+   - Attempt Tier 1 (issue + PR) → if PR creation fails, downgrade to Tier 2
+   - Attempt Tier 2 (issue only) → if issue creation fails, downgrade to Tier 3
+   - Tier 3 (commit message) → no API calls, provenance in commit metadata only
+   - All fallbacks are SILENT — no HALT, no blocking of the parent git workflow
 
-3. Do NOT wait for provenance to succeed before proceeding with the parent repo push.
+3. Tier logging (P13) — each provenance operation logs which tier was used:
+   Record: {timestamp, submodule, operation: "dev-push", tier: <1|2|3>, issue_number?, pr_number?}
+
+4. Cross-reference parent issue (P4) — when Tier 1 or 2 succeeds:
+   Post comment on parent issue:
+     Submodule provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number> (Tier <tier>)
+     [If PR exists: PR #<pr-number>]
+     Operation: dev-push | Submodule: <submodule-path>
+
+5. Do NOT wait for provenance to succeed before proceeding with the parent repo push.
    Provenance tracking is best-effort and never blocks the git workflow.
 ```
 
@@ -372,10 +383,20 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 
 (GitBucket example — for GitHub use `https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>`)
 
+**URL Label Context:**
+
+| Context | Label | URL Format |
+| -- | -- | -- |
+| Pre-PR (review-prep, after push) | **Compare URL** | `compare/dev...<branch-name>` |
+| Post-PR (PR has been created) | **PR URL** | `pull/<PR-number>` |
+
+After a PR has been created, the chat output MUST use **"PR URL"** with the `pull/<N>` format — never "Compare URL". The "Compare URL" label is correct ONLY before PR creation when the compare URL is the only available reference. Once a PR exists, labeling it "Compare URL" is a format violation.
+
 **Format verification (MANDATORY — check before posting):**
 
 - [ ] Executive summary present as first element
-- [ ] Compare URL present as last element before byline
+- [ ] URL label is context-appropriate: "Compare URL" (pre-PR, `compare/dev...`) or "PR URL" (post-PR, `pull/N`)
+- [ ] URL present as last element before byline
 - [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelID>) <status>`
 - [ ] No URL before executive summary
 - [ ] No byline before URL
@@ -471,7 +492,8 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 | -- | -- | -- | -- |
 | Executive summary present | Review chat output | First element is `**Summary:**` block | MISSING-ELEMENT → add before proceeding |
 | Outcome present | Review chat output | `**Outcome:**` line follows summary | MISSING-ELEMENT → add before proceeding |
-| Compare URL present | Review chat output | URL starts with `https://github.com/` or `${GITBUCKET_HTML_URL}` | MISSING-ELEMENT → generate URL before proceeding |
+| URL label context-appropriate | Review chat output | Pre-PR: "Compare URL" with `compare/dev...`; Post-PR: "PR URL" with `pull/N` | STRUCTURE-VIOLATION → fix label and format |
+| URL present | Review chat output | URL starts with `https://github.com/` or `${GITBUCKET_HTML_URL}` | MISSING-ELEMENT → generate URL before proceeding |
 | AI byline present | Review chat output | Ends with `🤖 <AgentName> (<ModelID>)` line | MISSING-ELEMENT → add before proceeding |
 | No URL before summary | Review chat output | URL appears AFTER summary, not before | STRUCTURE-VIOLATION → reorder output |
 | No byline before URL | Review chat output | Byline appears AFTER URL, not before | STRUCTURE-VIOLATION → reorder output |
@@ -487,7 +509,15 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 
 **Outcome:** <What changed for stakeholders>
 
-https://github.com/<GIT_OWNER>/<GIT_REPO>/compare/dev...<branch-name>
+Compare URL: https://github.com/<GIT_OWNER>/<GIT_REPO>/compare/dev...<branch-name>
+
+🤖 <AgentName> (<ModelID>) <status>
+```
+
+**After a PR has been created**, replace "Compare URL" with "PR URL" and use the `pull/N` format:
+
+```
+PR URL: https://github.com/<GIT_OWNER>/<GIT_REPO>/pull/<PR-number>
 
 🤖 <AgentName> (<ModelID>) <status>
 ```
@@ -510,9 +540,10 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 ```
 1. Review chat output for "**Summary:**" → EVIDENCE: <found or missing>
 2. Review chat output for "**Outcome:**" → EVIDENCE: <found or missing>
-3. Review chat output for compare URL pattern → EVIDENCE: <found or missing>
-4. Review chat output for byline pattern → EVIDENCE: <found or missing>
-5. Verify ordering: summary → outcome → URL → byline → EVIDENCE: <correct or reordered>
+3. Review chat output for URL label → EVIDENCE: <"Compare URL" (pre-PR) or "PR URL" (post-PR)>
+4. Review chat output for URL pattern → EVIDENCE: <found or missing>
+5. Review chat output for byline pattern → EVIDENCE: <found or missing>
+6. Verify ordering: summary → outcome → URL → byline → EVIDENCE: <correct or reordered>
 ```
 
 **Classification on failure:**
@@ -521,7 +552,8 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 | -- | -- | -- | -- |
 | Missing summary | MISSING-ELEMENT | auto-fix | Add summary before proceeding |
 | Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before proceeding |
-| Missing compare URL | MISSING-ELEMENT | auto-fix | Generate URL before proceeding |
+| Wrong URL label (post-PR says "Compare URL") | STRUCTURE-VIOLATION | auto-fix | Change to "PR URL" with `pull/N` format |
+| Missing URL | MISSING-ELEMENT | auto-fix | Generate URL before proceeding |
 | Missing byline | MISSING-ELEMENT | auto-fix | Add byline before proceeding |
 | Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → URL → byline |
 

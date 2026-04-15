@@ -145,7 +145,7 @@ Produce prose exec summary for chat:
 <impact assessment>
 <fix spec created: #N>
 
-🤖 <AgentName> (<ModelID>) 🐛→📋
+🤖 <AgentName> (<ModelID>) analysis
 ```
 
 ## Edge Cases

@@ -29,22 +29,26 @@ Invoke auditors and trigger plan creation for multi-task specs after issue creat
 - Single-task spec (ONE phase, plan optional per agent intelligence)
 - Multi-task spec (multiple phases, requires plan issue)
 
-### Step 2: Trigger Plan Creation (Multi-Task Only)
+**Export the determination** as `single_task_determination` with value `single-task` or `multi-task`. This value is passed to `writing-plans --task create` so the decision gate can evaluate combined vs separate plan without re-running the single-task analysis.
+
+### Step 2: Trigger Plan Creation (All Specs)
+
+**Invoke `writing-plans --task create` for ALL specs**, passing the `single_task_determination` from Step 1. The `writing-plans` skill's decision gate evaluates whether to produce a combined spec+plan or a separate [PLAN] issue.
 
 **If multi-task spec:**
 
-Invoke `writing-plans --task create` to create the plan issue. Plan creation handles:
-- Creating the `[PLAN]` issue with `plan` label
-- Adding a linked reference to the spec in the plan body
-- Creating sub-issues under the plan (via `github-sub-issues` skill)
+The writing-plans decision gate will create a separate [PLAN] issue with sub-issues (current behavior).
 
-**Do NOT create sub-issues directly under the spec.** Sub-issues belong under the plan, not the spec.
+**If single-task spec:**
+
+The writing-plans decision gate evaluates whether to combine the plan into the spec body or create a separate plan — agent intelligence decides, not a rigid rule.
 
 ```python
-# Post-creation triggers writing-plans:
-# writing-plans --task create
-#   → creates [PLAN] issue referencing spec #N in body
-#   → creates sub-issues under the plan
+# Post-creation triggers writing-plans with single-task determination:
+# writing-plans --task create --context single_task_determination=single-task|multi-task
+#   → decision gate evaluates combined vs separate
+#   → if separate: creates [PLAN] issue + sub-issues
+#   → if combined: appends ## Implementation Plan to spec body
 ```
 
 ### Step 3: Invoke Spec-Auditor Orchestrator
@@ -78,8 +82,10 @@ Previous workflow (DEPRECATED):
 ## Single-Task Exemption
 
 **If single-task:**
-- Plan issue optional (per agent intelligence — agent may create one if it adds clarity)
-- No sub-issues needed under any plan
+- Plan strategy is determined by writing-plans decision gate (combined spec+plan or separate plan)
+- Writing-plans receives `single_task_determination=single-task` and evaluates the best document structure
+- If combined: no sub-issues, plan content lives in spec body under `## Implementation Plan`
+- If separate: standard [PLAN] issue with sub-issues
 - Proceed to auditor invocation
 
 ## Safety Checks
@@ -87,10 +93,10 @@ Previous workflow (DEPRECATED):
 Before proceeding, verify ALL:
 
 - Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
-- Plan creation triggered (if multi-task)
+- Plan creation triggered via writing-plans (for all specs, with single_task_determination passed)
 
 **If ANY check fails → HALT and report.**
 
 ## Context Required
 
-- Related tasks: `creation` (runs first), `single-task-check` (determination logic), `writing-plans --task create` (plan creation for multi-task)
+- Related tasks: `creation` (runs first), `single-task-check` (determination logic), `writing-plans --task create` (plan creation — decision gate handles combined vs separate)

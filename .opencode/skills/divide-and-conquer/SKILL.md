@@ -23,6 +23,7 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 | `assess` | Pre-flight context-fit assessment — determine workload sizing for sub-agent dispatch | ~300 |
 | `decompose` | Split a task into sub-tasks with dispatch context, preserve spec boundaries | ~300 |
 | `dispatch` | Spawn sub-agent with scoped instructions and collect structured result | ~250 |
+| `completion-checkpoint` | Post-dispatch verification: detect abnormal termination, assess work, recover | ~300 |
 | `overflow-signal` | Structured OVERFLOW response protocol for sub-agents that can't fit the work | ~200 |
 | `merge` | Combine sub-agent results into final output, pure aggregation | ~150 |
 | `context-passing` | Reference for dispatch context shapes between orchestrator and sub-agents | ~200 |
@@ -119,6 +120,54 @@ env_vars:
 
 **Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` is composed by the orchestrator from prior sub-agent results and the Plan STATUS marker — it accumulates across the batch as each issue completes.
 
+## Sub-Agent Completion Checkpoint
+
+After every sub-agent dispatch, the orchestrating agent MUST perform a completion checkpoint before accepting work. This ensures abnormal terminations (context overflow, timeout, crash, incomplete execution) are detected and recovered rather than silently accepted.
+
+**Detection:**
+
+| Sub-agent Signal | Meaning | Action |
+| -- | -- | -- |
+| Returns `status: DONE` | Normal completion | Proceed to next sub-task |
+| Returns `status: DONE_WITH_CONCERNS` | Completed with caveats | Review concerns, proceed if correctness/scope OK |
+| Returns `status: OVERFLOW` | Context overflow | Re-dispatch with reduced scope per `overflow-signal` task |
+| Returns `status: BLOCKED` | Blocked by external issue | HALT and report blocker |
+| Returns **no result** (timeout, crash, empty) | **ABNORMAL TERMINATION** | Trigger assessment protocol |
+
+**Assessment Protocol (for ABNORMAL TERMINATION):**
+
+1. Check `git status` in the worktree:
+   - If working tree is **CLEAN** (no changes) → sub-agent didn't start → Re-dispatch full scope
+   - If working tree has **UNCOMMITTED changes** → sub-agent started but didn't commit → continue to step 2
+
+2. If uncommitted changes exist:
+   a. Read changed files via `git diff` and `git diff --cached`
+   b. Compare against the dispatch spec (what was the sub-agent asked to do?)
+   c. Assess completion level:
+
+| Condition | Git State | Assessment | Recovery Action |
+| -- | -- | -- | -- |
+| No result, clean tree | No changes | Didn't start | Re-dispatch full scope |
+| No result, uncommitted, complete | All deliverables in diff | Started, completed, didn't commit | Manual commit + push |
+| No result, uncommitted, partial | Some deliverables in diff | Started, incomplete | `git checkout .` + re-dispatch reduced scope |
+| No result, uncommitted, wrong | Changes don't match spec | Started, went wrong | `git checkout .` + re-dispatch full scope |
+| OVERFLOW result | Changes up to overflow point | Context overflow | Re-dispatch remaining scope |
+
+**The AI agent makes the recovery decision autonomously** based on the assessment protocol. This is an agent intelligence concern per the "Pushing Agent Intelligence Decisions to the User" critical violation in `000-critical-rules.md`. The user should NOT be asked to decide whether to complete manually or undo + re-dispatch.
+
+**Reporting:** All abnormal terminations MUST be reported to chat with this format:
+
+```
+⚠️ SUB-AGENT ABNORMAL TERMINATION DETECTED
+
+Sub-agent for #<issue> terminated abnormally.
+Assessment: <Didn't start | Complete but uncommitted | Partial work | Wrong work>
+Recovery action: <Re-dispatch full scope | Manual commit+push | Undo + re-dispatch reduced | Undo + re-dispatch full>
+Files affected: <list>
+
+Proceeding with recovery...
+```
+
 ## Sub-agent Result Contract
 
 Every sub-agent MUST return a structured result:
@@ -142,6 +191,31 @@ exec_summary: "<1-2 sentence executive summary for chat output, or empty string>
 **Phase progress in results** enables the orchestrator to compose `phase_progress` for subsequent sub-agents. The completed phases, concern boundaries crossed, and verification evidence from prior sub-agent results feed directly into the next dispatch context's `phase_progress` field.
 
 **Decision Log persistence.** The `decision_log_entry` field captures design decisions made during a phase. After each sub-agent returns, the orchestrator appends this entry as a dedicated GitHub Issue comment on the Plan issue — this is the Decision Log. It persists across session restarts because it lives on the GitHub Issue, not in transient agent context. The Decision Log uses comments (not Plan body edits) for lightweight, append-only durability. The `decision_log_entry` is prose-driven — no prescribed format, the agent decides the structure that best communicates what was decided and why.
+
+## Orchestrator Recovery Mode
+
+When the orchestrating agent detects abnormal termination via the Sub-Agent Completion Checkpoint, it enters Recovery Mode. The orchestrator autonomously decides the recovery strategy based on the assessment protocol — this is an agent intelligence concern per the "Pushing Agent Intelligence Decisions to the User" critical violation in `000-critical-rules.md`.
+
+**Recovery Option A: Complete Manually**
+
+- **When:** Changes are complete and correct, but the sub-agent failed to commit/push
+- **Action:** Commit and push the changes, then run verification (`verification-before-completion --task verify`)
+- **Assessment:** All deliverables from the dispatch spec are present in the uncommitted changes
+
+**Recovery Option B: Undo and Re-dispatch**
+
+- **When:** Changes are partial, wrong, corrupted, or the sub-agent didn't start
+- **Action:** `git checkout .` to discard changes, then re-dispatch with appropriate scope
+- **Scope determination:**
+  - Clean tree (didn't start) → re-dispatch full scope
+  - Partial deliverables → re-dispatch reduced scope (only remaining deliverables)
+  - Wrong/corrupted changes → re-dispatch full scope
+
+**The orchestrator MUST NOT ask the user to decide between recovery options.** The assessment protocol provides sufficient information for the AI agent to choose autonomously. Asking "Should I complete manually or re-dispatch?" would violate the "Pushing Agent Intelligence Decisions to the User" critical violation.
+
+**Logging requirement:** All abnormal terminations MUST be reported to chat with the format specified in the Sub-Agent Completion Checkpoint section. Silent acceptance of abnormal termination state is a critical violation.
+
+**Cross-reference:** See `000-critical-rules.md` → "Pushing Agent Intelligence Decisions to the User" for the rule that structural decisions (including recovery strategy) are agent intelligence concerns, not user decisions.
 
 ## Worktree Mode
 

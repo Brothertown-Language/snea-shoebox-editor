@@ -19,6 +19,7 @@ Determine if a spec is single-task (plan optional) or multi-task (requires plan 
 - Determination made: single-task or multi-task
 - If multi-task: phase list identified for plan creation
 - Plan need determination passed to post-creation
+- `single_task_determination` value exported for `writing-plans` consumption
 
 ## Procedure
 
@@ -56,22 +57,24 @@ Determine if a spec is single-task (plan optional) or multi-task (requires plan 
 
 ```
 Result: SINGLE-TASK
-Plan needed: Optional (per agent intelligence — create if it adds clarity)
-Sub-issues: None
-Next: Proceed to issue creation
+single_task_determination: single-task
+Plan needed: Determined by writing-plans decision gate (combined or separate)
+Sub-issues: None if combined; under plan if separate
+Next: Pass single_task_determination to post-creation → writing-plans
 ```
 
 **If MULTI-TASK:**
 
 ```
 Result: MULTI-TASK
-Plan needed: YES
+single_task_determination: multi-task
+Plan needed: YES (always separate)
 Phases:
   - Phase 1: [Title]
   - Phase 2: [Title]
   - ...
 Sub-issues under plan: YES
-Next: Create plan issue in post-creation via writing-plans
+Next: Pass single_task_determination to post-creation → writing-plans
 ```
 
 ### Step 4: Report Determination

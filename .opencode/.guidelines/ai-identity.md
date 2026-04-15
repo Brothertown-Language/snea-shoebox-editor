@@ -29,7 +29,7 @@
 **Components (supplied dynamically at runtime):**
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
 - `<ModelID>`: Model identifier with provider (e.g., `<ModelID>`)
-- `<status>`: Status in plain text (completed, created, updated, rejected, etc.)
+- `<status>`: Status in plain text (completed, created, updated, rejected, etc.). Use `other` as fallback when no canonical status fits.
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
@@ -48,6 +48,7 @@
 | Blocking | `🤖 <AgentName> (<ModelID>) blocking` |
 | Analysis | `🤖 <AgentName> (<ModelID>) analysis` |
 | Decision | `🤖 <AgentName> (<ModelID>) decision` |
+| Other | `🤖 <AgentName> (<ModelID>) other` |
 | Copy Editor | `🤖 ✎ on behalf of <UserName>` |
 
 **Rule:** Byline = WHO (model). Status is a plain-text suffix. Details belong in comment body, not byline.

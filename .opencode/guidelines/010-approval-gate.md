@@ -45,6 +45,24 @@
 | **No plan exists at spec approval** | Normal two-gate flow applies. The cascade only activates when a plan already exists. Spec approval authorizes plan creation via `writing-plans` skill, then plan approval is required before implementation. |
 | **Multiple plans exist** | When a spec has multiple linked plans, the most recent approved plan takes precedence. Older plans are superseded and treated as stale per "Implementing Stale or Superseded Specs" rules. |
 
+### Mandate Tiering Interaction (Critical)
+
+**The contradiction between zero-tolerance mandates and explicit authorization is resolved through mandate tiering.** See `000-critical-rules.md` → "Mandate Tiering" for the complete classification.
+
+The interaction between developer authorization and process mandates follows these rules:
+
+| Scenario | Resolution | Rationale |
+| -- | -- | -- |
+| Developer authorization + Tier 2 process mandate | Developer authorization wins | The developer has accepted the risk of skipping process; the work is authorized |
+| Developer authorization + Tier 1 safety mandate | Safety mandate wins | Worktree and branch protection protect repository integrity regardless of authorization |
+| No developer authorization + any mandate | Mandate holds | Authorization is always required for implementation |
+
+**For clearly simple work** (documentation, runbooks, minor configuration edits, single-file non-behavioral changes), developer authorization IS sufficient process — no separate spec/plan is required. The developer's explicit "approved" or "go" serves as both the authorization and the process justification.
+
+**For complex work** (new features, behavioral changes, multi-file modifications), developer authorization means "you may begin the process." The spec/plan workflow still produces value (traceability, review trail, edge case discovery) even when authorization exists. The agent should proceed through spec/plan creation as part of the authorized work.
+
+**This resolves the contradiction identified in #912:** "NO code WITHOUT approved spec" is a Tier 2 mandate that yields to explicit developer authorization, while "create worktree before editing" is a Tier 1 mandate that never yields.
+
 ### Explicit Authorization Priority (Critical)
 
 **⚠️ When user provides explicit authorization (`approved`, `go`, `#123 approved`), proceed with implementation even if the `needs-approval` label is present.**

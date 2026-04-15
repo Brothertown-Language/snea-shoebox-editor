@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Create an implementation plan from an approved spec.
+Create an implementation plan from an approved spec. For single-task specs the agent may combine the plan into the spec issue body instead of creating a separate [PLAN] issue.
 
 ## Prerequisites
 
@@ -40,7 +40,41 @@ Create an implementation plan from an approved spec.
 
    - Goal, Architecture, Tech Stack
 
-6. **Create plan issue:**
+6. **Decision gate — combined vs separate plan:**
+
+   Before creating the plan document, evaluate whether to combine the plan into the spec issue body or create a separate [PLAN] issue.
+
+   **Input:** The `single_task_determination` passed from `github-issue-creation/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
+
+   **Decision logic — agent intelligence, no hardcoded thresholds:**
+
+   | Condition | Outcome |
+   |-----------|---------|
+   | Multi-task spec (multiple phases, mixed concerns, deployment independence) | **Always separate** — create [PLAN] issue with sub-issues (current behavior) |
+   | Single-task spec AND spec body can absorb plan content without becoming unwieldy | **Candidate for combined** — agent evaluates readability and coherence |
+   | Single-task spec AND combining would make document hard to read or mix concerns | **Separate** — create [PLAN] issue (current behavior) |
+
+   **Agent evaluation for combined candidates — consider:**
+
+   - How many TDD steps the plan would add
+   - Whether the spec body is already long or dense
+   - Whether the plan content flows naturally after the spec content
+   - Whether keeping everything in one document aids or hinders review
+
+   **If COMBINED:**
+
+   - Append `## Implementation Plan` section to the spec issue body
+   - The section contains the plan header, file structure, and TDD tasks
+   - The issue retains its `[SPEC]` title prefix (not changed to `[PLAN]`)
+   - No sub-issues needed (single-task by definition)
+   - Remove `needs-approval` label if the spec was already approved (plan inherits approval via spec-to-plan cascade)
+   - Proceed to Step 7 (Self-review)
+
+   **If SEPARATE:**
+
+   - Continue to Step 6a (Create separate plan issue) — current behavior
+
+6a. **Create separate plan issue:**
 
    - Title: `[PLAN] <Feature Name>`
       - Labels: `plan` + `needs-approval`
@@ -83,19 +117,25 @@ Create an implementation plan from an approved spec.
 
 9. **Report plan creation in chat (MANDATORY):**
 
-    Produce chat output in the mandatory format per `000-critical-rules.md`:
+     Produce chat output in the mandatory format per `000-critical-rules.md`:
 
-     1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec
-     2. **URL**: The plan issue URL (e.g., `https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/<N>`)
-     3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
+      1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec. Include combined/separate designation.
+      2. **URL**: The plan issue URL (separate plan) or the spec issue URL (combined plan)
+      3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
 
-     Example:
+      Example (separate plan):
 
-     Created implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
-     https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
-     🤖 <AgentName> (<ModelID>)
+      Created separate implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
+      https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
+      🤖 <AgentName> (<ModelID>)
 
-     Sub-issues are linked under the plan issue, NOT under the spec.
+      Example (combined spec+plan):
+
+      Created combined spec+plan for #771 (simple configuration change). Plan appended under `## Implementation Plan`.
+      https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/771
+      🤖 <AgentName> (<ModelID>)
+
+      Sub-issues are linked under the plan issue for separate plans, NOT under the spec. Combined plans have no sub-issues.
 
 10. **Cross-reference verification (MANDATORY before plan creation):**
 
@@ -118,35 +158,35 @@ Create an implementation plan from an approved spec.
 
 11. **Post-creation approval cascade check (MANDATORY):**
 
-    After the plan issue is created, check whether the spec that triggered plan creation was already approved. If yes, the new plan inherits the spec's approval status.
+     After the plan is created (either combined or separate), check whether the spec that triggered plan creation was already approved. If yes, the plan inherits the spec's approval status.
 
-    ```python
-    # Check if the spec was already approved
-    spec_issue = github_issue_read(method="get", issue_number=spec_number)
-    spec_comments = github_issue_read(method="get_comments", issue_number=spec_number)
+     **For combined spec+plan:** The spec issue already has the plan content appended. If the spec was already approved, no further approval action is needed — the combined document inherits the spec's approval. Do NOT remove `needs-approval` if it is still present on the spec (the spec itself may still be pending approval). If the spec was already approved AND `needs-approval` is absent, the combined plan is auto-approved.
 
-    # Look for explicit approval in spec comments
-    has_approval = any(
-        "approved" in comment["body"].lower() or comment["body"].strip().lower() == "go"
-        for comment in spec_comments
-        if comment["author_association"] in ("MEMBER", "OWNER", "COLLABORATOR")
-    )
+     **For separate plan:** Apply the existing cascade logic:
 
-    # Check if needs-approval label is absent from spec (indicates prior approval)
-    spec_labels = [l["name"] for l in spec_issue["labels"]]
-    label_already_removed = "needs-approval" not in spec_labels
+     ```python
+     spec_issue = github_issue_read(method="get", issue_number=spec_number)
+     spec_comments = github_issue_read(method="get_comments", issue_number=spec_number)
 
-    if has_approval or label_already_removed:
-        # Spec was already approved — cascade approval to the new plan
-        github_issue_write(
-            method="update",
-            issue_number=plan_issue_number,
-            labels=[l for l in plan_labels if l != "needs-approval"],
-        )
-        github_add_issue_comment(
-            issue_number=plan_issue_number,
-            body=f"Approval cascaded from spec #{spec_number}. Plan created for an already-approved spec — plan inherits approval status automatically.",
-        )
-    ```
+     has_approval = any(
+         "approved" in comment["body"].lower() or comment["body"].strip().lower() == "go"
+         for comment in spec_comments
+         if comment["author_association"] in ("MEMBER", "OWNER", "COLLABORATOR")
+     )
 
-    This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
+     spec_labels = [l["name"] for l in spec_issue["labels"]]
+     label_already_removed = "needs-approval" not in spec_labels
+
+     if has_approval or label_already_removed:
+         github_issue_write(
+             method="update",
+             issue_number=plan_issue_number,
+             labels=[l for l in plan_labels if l != "needs-approval"],
+         )
+         github_add_issue_comment(
+             issue_number=plan_issue_number,
+             body=f"Approval cascaded from spec #{spec_number}. Plan created for an already-approved spec — plan inherits approval status automatically.",
+         )
+     ```
+
+     This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).

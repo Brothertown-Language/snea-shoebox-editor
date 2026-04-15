@@ -605,10 +605,35 @@ def run_guard_checks() -> list[str]:
     return problems
 
 
+def resolve_identity(remote_url: str) -> tuple[str, str, str] | tuple[None, None, None]:
+    """Resolve git platform, owner, and repo from the remote URL.
+
+    Returns:
+        (platform, owner, repo) on success, (None, None, None) on failure.
+        platform is 'github' or 'gitbucket'.
+    """
+    if is_github_remote(remote_url):
+        owner, repo = parse_git_remote_url(remote_url)
+        if owner and repo:
+            return "github", owner, repo
+        return None, None, None
+
+    base_url, owner, repo = parse_gitbucket_url(remote_url)
+    if owner and repo:
+        return "gitbucket", owner, repo
+    return None, None, None
+
+
 def main() -> int:
     remote_url = get_remote_url()
     if not remote_url:
         print("No git remote configured. Run: git remote add origin <url>", file=sys.stderr)
+        return 1
+
+    platform, owner, repo = resolve_identity(remote_url)
+    if not platform or not owner or not repo:
+        print("Could not determine repository identity from remote URL.", file=sys.stderr)
+        print(f"Remote URL: {remote_url}", file=sys.stderr)
         return 1
 
     user_name = get_user_name()
@@ -624,56 +649,26 @@ def main() -> int:
     wt_display = get_worktree_display()
     hooks_path = get_hooks_path()
 
-    if is_github_remote(remote_url):
-        owner, repo = parse_git_remote_url(remote_url)
-        if not owner or not repo:
-            print("Could not determine repository owner from remote URL.", file=sys.stderr)
-            print(f"Remote URL: {remote_url}", file=sys.stderr)
-            return 1
+    print(f"GIT_OWNER: {owner}")
+    print(f"GIT_REPO: {repo}")
+    print(f"GIT_PLATFORM: {platform}")
+    print(f"DEV_NAME: {user_name}")
+    print(f"DEV_EMAIL: {user_email}")
+    print(f"BRANCH_NAME: {current_branch}")
+    print(f"Remote: {remote_url}")
 
-        print(f"GIT_OWNER: {owner}")
-        print(f"GIT_REPO: {repo}")
-        print("GIT_PLATFORM: github")
+    if platform == "github":
         print("GITHUB_HTML_URL: https://github.com/")
-        print(f"DEV_NAME: {user_name}")
-        print(f"DEV_EMAIL: {user_email}")
-        print(f"BRANCH_NAME: {current_branch}")
-        print(f"Remote: {remote_url}")
 
-        if in_wt and wt_path and main_repo:
-            print(f"WORKTREE_PATH: {wt_path}")
-        elif worktree_ok:
-            if wt_display:
-                print(wt_display)
-            else:
-                print("Worktrees: available")
+    if platform == "gitbucket":
+        base_url, _, _ = parse_gitbucket_url(remote_url)
+        if base_url:
+            print(f"GITBUCKET_HTML_URL: {base_url}")
         else:
-            print("WORKTREE_FATAL: 1")
-
-        if hooks_path:
-            print(f"Hooks path: {hooks_path}")
-
-        if srclight_status == "indexed":
-            print("Srclight: indexed")
-        else:
-            print("Srclight: NOT indexed — tell the developer to run: uvx srclight index --embed qwen3-embedding")
-
-        for problem in guard_problems:
-            print(problem)
-
-        return 0
-
-    if is_gitbucket_remote(remote_url):
-        result = parse_gitbucket_url(remote_url)
-        base_url, owner, repo = result
-        if not owner or not repo:
-            print("Could not determine repository owner from remote URL.", file=sys.stderr)
-            print(f"Remote URL: {remote_url}", file=sys.stderr)
-            return 1
-
-        if not base_url:
             print("GITBUCKET_HTML_URL not found in .env — URL generation unavailable", file=sys.stderr)
-
+        ssh_url = extract_ssh_url(remote_url)
+        if ssh_url:
+            print(f"GITBUCKET_SSH_URL: {ssh_url}")
         has_credentials = False
         try:
             env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -685,47 +680,30 @@ def main() -> int:
                     )
         except OSError:
             pass
-
-        print(f"GIT_OWNER: {owner}")
-        print(f"GIT_REPO: {repo}")
-        print("GIT_PLATFORM: gitbucket")
-        if base_url:
-            print(f"GITBUCKET_HTML_URL: {base_url}")
-        print(f"Remote: {remote_url}")
-        ssh_url = extract_ssh_url(remote_url)
-        if ssh_url:
-            print(f"GITBUCKET_SSH_URL: {ssh_url}")
         print(f"GITBUCKET_HAS_CREDENTIALS: {'true' if has_credentials else 'false'}")
-        print(f"DEV_NAME: {user_name}")
-        print(f"DEV_EMAIL: {user_email}")
-        print(f"BRANCH_NAME: {current_branch}")
 
-        if in_wt and wt_path and main_repo:
-            print(f"WORKTREE_PATH: {wt_path}")
-        elif worktree_ok:
-            if wt_display:
-                print(wt_display)
-            else:
-                print("Worktrees: available")
+    if in_wt and wt_path and main_repo:
+        print(f"WORKTREE_PATH: {wt_path}")
+    elif worktree_ok:
+        if wt_display:
+            print(wt_display)
         else:
-            print("WORKTREE_FATAL: 1")
+            print("Worktrees: available")
+    else:
+        print("WORKTREE_FATAL: 1")
 
-        if hooks_path:
-            print(f"Hooks path: {hooks_path}")
+    if hooks_path:
+        print(f"Hooks path: {hooks_path}")
 
-        if srclight_status == "indexed":
-            print("Srclight: indexed")
-        else:
-            print("Srclight: NOT indexed — tell the developer to run: uvx srclight index --embed qwen3-embedding")
+    if srclight_status == "indexed":
+        print("Srclight: indexed")
+    else:
+        print("Srclight: NOT indexed — tell the developer to run: uvx srclight index --embed qwen3-embedding")
 
-        for problem in guard_problems:
-            print(problem)
+    for problem in guard_problems:
+        print(problem)
 
-        return 0
-
-    print("Unknown remote type", file=sys.stderr)
-    print(f"Remote URL: {remote_url}", file=sys.stderr)
-    return 2
+    return 0
 
 
 if __name__ == "__main__":

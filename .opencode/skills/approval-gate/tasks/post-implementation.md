@@ -87,8 +87,33 @@ Report to chat (exec summary + URL):
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: https://github.com/<owner>/<repo>/compare/dev...<branch-name>
+https://github.com/<owner>/<repo>/compare/dev...<branch-name>
+
+🤖 <AgentName> (<ModelID>) <status>
 ```
+
+### Step 4.5: Chat Output Format Verification (MANDATORY)
+
+**Before sending the chat message in Step 4, verify ALL elements are present and correctly ordered:**
+
+- [ ] Executive summary present as **first** element (before any URL)
+- [ ] Outcome line present after summary
+- [ ] Compare/PR URL present (after outcome, before byline)
+- [ ] AI byline present as **LAST** element (after URL)
+- [ ] No URL before executive summary
+- [ ] No byline before URL
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Missing summary | MISSING-ELEMENT | auto-fix | Add summary before sending |
+| Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before sending |
+| Missing compare URL | MISSING-ELEMENT | auto-fix | Generate URL before sending |
+| Missing byline | MISSING-ELEMENT | auto-fix | Add byline before sending |
+| Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → URL → byline |
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are auto-fixed before output is sent — NOT reported after the fact.
 
 ### Step 5: HALT
 

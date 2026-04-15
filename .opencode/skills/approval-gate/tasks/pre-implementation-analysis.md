@@ -281,6 +281,8 @@ Each parallel issue includes dispatch context:
 Proceeding with execution plan.
 ```
 
+**Checkpoint (MANDATORY):** Before proceeding to `assemble-batch`, verify NO `question` tool calls have been made since the execution plan was presented. If any were made, remove them and proceed autonomously. The execution plan is presented for informational purposes — no confirmation is requested or awaited.
+
 #### Prohibited Actions
 
 - **No `question` tool invocation** after plan presentation

@@ -45,6 +45,21 @@ Generate executive summary in chat:
 **Outcome:** <What the result means for stakeholders>
 
 Issue URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/issues/<number>
+
+🤖 <AgentName> (<ModelID>) <status>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.
+
+### Chat Output Format Verification (MANDATORY)
+
+**Before sending the chat message, verify ALL elements are present and correctly ordered:**
+
+- [ ] Executive summary present as **first** element (before any URL)
+- [ ] Outcome line present after summary
+- [ ] URL present (after outcome, before byline)
+- [ ] AI byline present as **LAST** element (after URL)
+- [ ] No URL before executive summary
+- [ ] No byline before URL
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.

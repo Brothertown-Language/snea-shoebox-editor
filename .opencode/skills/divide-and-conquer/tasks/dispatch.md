@@ -62,11 +62,13 @@ Scope: <scope>
 Boundaries: <boundaries — do NOT exceed these>
 Spec: <relevant spec section>
 
-Mandatory gates before returning:
-1. verification-before-completion --task verify
-2. finishing-a-development-branch --task checklist
-3. git-workflow --task review-prep
-4. Commit and push to branch
+ Mandatory gates before returning:
+ 1. verification-before-completion --task verify
+ 2. finishing-a-development-branch --task checklist
+ 3. git-workflow --task review-prep
+ 4. Commit and push to branch (**MANDATORY — do NOT return without committing and pushing**)
+ 
+ If you cannot commit (e.g., conflicts): return status: BLOCKED with explanation.
 
 Return result in Sub-agent Result Contract format:
   status: DONE | DONE_WITH_CONCERNS | OVERFLOW | BLOCKED
@@ -92,7 +94,29 @@ Sub-agent MUST return per Sub-agent Result Contract:
 | **OVERFLOW** | Handle per `overflow-signal` task |
 | **BLOCKED** | Provide context, escalate, or decompose further |
 
-### Step 4: Compose Prior Context
+### Step 4: Sub-Agent Completion Checkpoint
+
+After collecting the sub-agent result, the orchestrator MUST perform a completion checkpoint before proceeding:
+
+1. **If sub-agent returned a structured result** — check `status` field:
+   - `DONE` → normal, proceed to Step 5
+   - `DONE_WITH_CONCERNS` → review concerns, proceed if OK
+   - `OVERFLOW` → handle per `overflow-signal` task
+   - `BLOCKED` → HALT and report blocker
+
+2. **If sub-agent returned NO result** (timeout, crash, empty response) — this is **ABNORMAL TERMINATION**:
+   a. Run `git status` in the worktree (`workdir=WORKTREE_PATH`)
+   b. If working tree is clean → sub-agent didn't start → re-dispatch (return to Step 2)
+   c. If working tree has uncommitted changes → assess the changes:
+      - `git diff` and `git diff --cached` to see what was modified
+      - Compare changed files against the dispatch spec deliverables
+      - Determine completion level: complete / partial / wrong
+      - Apply recovery action per the decision matrix in SKILL.md "Sub-Agent Completion Checkpoint" section
+   d. Report abnormal termination to chat (see reporting format in SKILL.md)
+
+**The orchestrator decides the recovery action autonomously.** Per the "Pushing Agent Intelligence Decisions to the User" critical violation (`000-critical-rules.md`), the recovery decision (manual complete vs. undo + re-dispatch) is an agent intelligence concern. The user is NOT asked to decide.
+
+### Step 5: Compose Prior Context
 
 After each successful sub-agent, compose intent-and-context for the next:
 
@@ -110,7 +134,12 @@ Each sub-agent MUST:
 3. Run `verification-before-completion --task verify`
 4. Run `finishing-a-development-branch --task checklist`
 5. Run `git-workflow --task review-prep`
-6. Commit and push to feature branch
+6. **Commit and push to feature branch (MANDATORY self-commit protocol)** — sub-agents MUST commit their own work before returning. Steps:
+   a. `git add -A` (stage all changes)
+   b. `git commit -m "<descriptive message>"` with co-authored-by trailer
+   c. `git push -u origin <branch>`
+   d. THEN return structured result
+   If a sub-agent cannot commit (e.g., conflicts), it MUST return `status: BLOCKED` with an explanation.
 7. Return structured result per Sub-agent Result Contract (including compare_url and exec_summary)
 8. Signal OVERFLOW if work exceeds capacity (per Overflow Signal Contract)
 

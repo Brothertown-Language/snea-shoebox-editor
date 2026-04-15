@@ -16,7 +16,9 @@ Plan creation workflow that transforms approved specs into actionable implementa
 
 ## Plan Issue Model
 
-Plans are separate GitHub Issues, not content appended to spec bodies. The hierarchy is:
+Plans are either separate GitHub Issues or combined into the spec issue body, depending on agent intelligence evaluation of spec complexity. The hierarchy is:
+
+**Separate plan (multi-task or agent-determined):**
 
 ```
 Spec #N (approved)
@@ -26,12 +28,27 @@ Spec #N (approved)
        └── Task #P3: [Task: #M] Phase 3
 ```
 
-**Plan issue properties:**
+**Combined spec+plan (single-task, agent-determined):**
+
+```
+Spec #N (approved)
+  → Body contains spec content
+       └── ## Implementation Plan (appended section with header, file structure, TDD tasks)
+```
+
+**Plan issue properties (separate):**
 - Title prefix: `[PLAN]`
 - Labels: `plan` + `needs-approval`
 - Body contains spec reference as prose (e.g., `Spec: #784`)
 - Sub-issues are children of the plan, NOT the spec
 - The plan references the spec via body text (linked reference), not via GitHub sub-issue link
+
+**Combined spec+plan properties:**
+- Title prefix: `[SPEC]` (retained, not changed to `[PLAN]`)
+- Labels: existing spec labels (no `plan` label added)
+- Plan content appended under `## Implementation Plan` heading in spec body
+- No sub-issues (single-task by definition)
+- Approval follows spec approval status (no separate plan approval needed)
 
 ## Tasks
 
@@ -93,6 +110,7 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 | Parameter | Source | Purpose |
 |-----------|--------|---------|
 | `spec_issue` | Issue number from `verify-authorization` | Identifies the approved spec to plan from |
+| `single_task_determination` | From `github-issue-creation/tasks/post-creation` (via `single-task-check`) | Informs combined vs separate plan decision (`single-task` or `multi-task`) |
 | `GIT_OWNER` | Session init | Repository owner for API calls |
 | `GIT_REPO` | Session init | Repository name for API calls |
 | `WORKTREE_PATH` | Session / worktree setup | Base directory for file operations |
@@ -107,23 +125,40 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 
 When the spec referenced by a plan is revised, all linked plans must be re-approved:
 
+**For separate plans:**
+
 1. **Find linked plans:** Search GitHub Issues with `plan` label for body text matching `Spec: #N` (where N is the revised spec number)
 2. **Re-apply `needs-approval` label** to each found plan
 3. **Add audit comment** on each plan: `Spec #N has been revised. Plan requires re-approval before implementation.`
 4. **HALT** — do not proceed with implementation from any plan linked to the revised spec until re-approved
 
-This replaces the previous model where plan content lived in the spec body and revision automatically invalidated it. With the plan-bridge model, revision affects the spec but plans are separate issues that must be explicitly re-reviewed.
+**For combined spec+plan:**
+
+1. **The `## Implementation Plan` section is invalidated** by the spec revision
+2. **Add a comment** on the spec issue: `Spec revised — the `## Implementation Plan` section requires re-evaluation.`
+3. **The agent re-evaluates** whether the combined plan still matches the revised spec, or whether it needs to be rewritten/separated
+4. **HALT** — do not proceed with implementation from the combined plan until re-evaluated
+
+This replaces the previous model where plan content lived in the spec body and revision automatically invalidated it. With the plan-bridge model, revision affects the spec but plans are tracked artifacts that must be explicitly re-reviewed — whether they are separate issues or combined sections.
 
 ## Re-Implementation
 
 When a new plan is needed under the same spec (e.g., previous plan was rejected or superseded):
+
+**For separate plans:**
 
 1. **Create new `[PLAN]` issue** following standard plan creation procedure
 2. **Close old plan** with comment: `Superseded by #N` (where N is the new plan number)
 3. **Update old plan labels:** Remove `needs-approval`, add `wontfix` or close outright
 4. **Sub-issues of old plan** remain linked to the old plan (not the spec) — they are closed along with the old plan or re-created under the new plan as appropriate
 
-The spec itself is NOT modified during re-implementation. The plan is the mutable artifact; the spec is the stable reference.
+**For combined spec+plan:**
+
+1. **Remove the `## Implementation Plan` section** from the spec issue body (edit the issue body to remove the appended plan content)
+2. **If replacing with a new combined plan:** Append the new `## Implementation Plan` section to the spec issue body
+3. **If replacing with a separate plan:** Create a new `[PLAN]` issue following standard procedure; no plan content remains in the spec body
+
+The spec itself is the stable reference. Whether the plan is combined or separate, re-implementation modifies the plan artifact, not the spec content above the `## Implementation Plan` marker.
 
 ## Operating Protocol
 
@@ -132,18 +167,20 @@ The spec itself is NOT modified during re-implementation. The plan is the mutabl
 3. Plan phase structure by judgment (prose-driven)
 4. Define tasks within each phase using TDD step structure
 5. Write plan document header (Goal, Architecture, Tech Stack)
-6. Create `[PLAN]` GitHub Issue — title prefixed with `[PLAN]`, labels `plan`+`needs-approval`, body includes spec reference as prose (e.g., `Spec: #N`); then create sub-issues under the plan (not the spec) via `github-sub-issues` skill
-7. Self-review (coverage, placeholders, type consistency)
-8. Validate (no placeholders, TDD structure, actionable steps)
-9. Chat output with URL — Report plan creation using exec summary + URL + byline format per `000-critical-rules.md`
+6. **Decision gate:** Evaluate combined vs separate plan using `single_task_determination` input and agent intelligence — see `tasks/create.md` Step 6
+7. If combined: append `## Implementation Plan` to spec issue body; if separate: create `[PLAN]` GitHub Issue with sub-issues via `github-sub-issues` skill
+8. Self-review (coverage, placeholders, type consistency)
+9. Validate (no placeholders, TDD structure, actionable steps)
+10. Chat output with URL — Report plan creation (combined or separate) using exec summary + URL + byline format per `000-critical-rules.md`
 
 ## Enforcement
 
-- No plan → CREATE plan (writing-plans skill) as `[PLAN]` GitHub Issue
+- No plan → CREATE plan (writing-plans skill) as `[PLAN]` GitHub Issue or combined into spec body per decision gate
 - Plan exists but unapproved → HALT, wait for plan approval (not spec approval of plan content)
 - Plan approved but has placeholders → REJECT plan
 - Plan approved but missing TDD steps → REJECT plan
 - Plan approved and complete → PROCEED to implementation
+- Combined spec+plan → plan inherits spec approval status; no separate plan approval needed
 
 ## Cross-Reference Verification (MANDATORY)
 

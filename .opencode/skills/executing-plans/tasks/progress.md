@@ -66,7 +66,7 @@ From plan's verification methods:
 **Evidence:** Migration test passed
 
 ---
-🤖 <AgentName> (<ModelID>) step-1-complete
+🤖 <AgentName> (<ModelID>) completed
 
 ## Step 2: API Endpoints
 - ☐ Create login endpoint

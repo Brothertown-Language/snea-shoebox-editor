@@ -116,13 +116,13 @@ Per `000-critical-rules.md` and `github-comments` skill, all comments MUST use e
 
 **WRONG:**
 ```
-AI: Agent 📝 Update: Added new rule
+🤖 Agent 📝 Update: Added new rule
 - Changed: ...
 ```
 
 **RIGHT:**
 ```
-AI: <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) completed
 
 **Summary:**
 <impact and stakeholder value>
