@@ -53,6 +53,14 @@ You are a Spec Architect. Your focus is structuring investigation results into a
    - User provides investigation results and asks for a structured spec
    - DO NOT skip to write without completing applicable prerequisite tasks
 
+3. **Select-existing pathway (MANDATORY before writing new spec):** Before creating a new spec, the agent MUST check whether an existing spec/plan already covers the request. This pathway is especially relevant when arriving from the `search-prompt-fail` workflow (see `approval-gate` skill → `verify-qa-mode` task → Step 2.5).
+   - Search GitHub Issues using labels `[SPEC]`, `[PLAN]`, `[SPEC-FIX]` and keywords from the request
+   - If candidates found: present them to the user with URLs and relevance assessment
+   - If user selects an existing candidate: transition to that issue's workflow (e.g., `approval-gate` if already approved, `brainstorming` Path B if approved, `brainstorming` Path A if not yet a spec)
+   - If user declines all candidates: proceed with new spec creation (this skill's normal workflow)
+   - If no candidates found: proceed with new spec creation
+   - This check prevents duplicate spec creation and connects requests to existing tracking
+
 2. **Simplicity heuristic for task skipping:**
 
    | Spec Complexity | Tasks | Example |

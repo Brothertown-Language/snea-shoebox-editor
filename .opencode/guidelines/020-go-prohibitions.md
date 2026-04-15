@@ -36,6 +36,7 @@
 - **No "offer to edit" patterns.** The agent MUST NOT offer to edit, update, modify, or fix a file directly. Instead, create a spec or bug report. Patterns like "Want me to update X?", "Shall I fix this?", "I can change X to Y" are PROHIBITED — they bypass the spec-first workflow.
 - **Never self-answer a solicitation.** Pose no questions that you then answer yourself to bypass authorization.
 - **NEVER suggest parallel execution as a valid default approach.** Stacking is prerequisite; parallel is opportunistic. Agents must not present parallelism as an equally valid option.
+- **No silent halt without search+prompt.** When no spec/plan exists for an implementation request, the agent MUST NOT simply halt. It must search GitHub Issues for existing candidates, present them with URLs, and offer create-or-select before halting. A silent halt with no search and no candidate presentation is a critical violation — see `000-critical-rules.md` §Silent Halt Without Prompt.
 
 ### ⚠️ ASK FIRST
 
@@ -47,6 +48,12 @@
 - **Verify actual codebase state before acting.** When a GO names a specific phase, verify the actual codebase state of that phase's deliverables before taking any action — regardless of plan markers.
 - **SILENTLY HALT after a verified-complete phase.** If verification confirms a named phase is already fully and correctly implemented, report the verified findings and HALT without prompting.
 - **Every halt MUST produce a status message.** If the agent stops, it MUST output what was completed, what was attempted, and why it stopped. Zero output before stopping is a critical violation.
+- **Search issues before halting on missing spec/plan.** When an implementation request lacks a matching spec or plan:
+  1. Search GitHub Issues using label filters: `[SPEC]`, `[PLAN]`, `[SPEC-FIX]`
+  2. Search GitHub Issues using keyword matching against the request target
+  3. If candidates found: present all candidates with URLs, offer user a choice to select one or create a new spec
+  4. If no candidates found: present the failure state ("No existing spec/plan found for [topic]"), offer to create a new spec
+  5. Only after search+presentation: HALT, but the halt message now includes the search results
 
 ## 2. Iterative Feedback & Plan Revision
 
@@ -197,4 +204,21 @@ rules:
     requires: [approval-gate-001]
     triggers: [github-sub-issues]
     source: "020-go-prohibitions.md §5"
+
+  - id: go-prohibitions-007
+    title: "No silent halt without search+prompt for missing spec/plan"
+    conditions:
+      all:
+        - "implementation_requested == true"
+        - "matching_spec_exists == false"
+        - "matching_plan_exists == false"
+        - "search_performed == false"
+    actions:
+      - SEARCH(github_issues)
+      - PRESENT(candidates)
+      - HALT
+    conflicts_with: []
+    requires: [approval-gate-010]
+    triggers: [approval-gate, brainstorming]
+    source: "020-go-prohibitions.md §1 NEVER DO, ALWAYS DO"
 ```

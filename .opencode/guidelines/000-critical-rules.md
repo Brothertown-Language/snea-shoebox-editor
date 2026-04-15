@@ -473,6 +473,20 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 
 **See `approval-gate` skill → `verify-already-implemented` task → "Auto-Close Procedure" for the post-merge issue closure workflow. See `finishing-a-development-branch` skill → `checklist` task for issue-closure verification steps.**
 
+## Critical Violation: Silent Halt Without Prompt — No Spec/Plan Search Before Stopping
+
+**⚠️ Halting silently when no spec/plan exists for an implementation request — without first searching GitHub Issues for candidates and presenting them — is a CRITICAL GUIDELINE VIOLATION.**
+
+When an agent receives an implementation instruction but cannot find an associated spec or plan, it must actively search for existing candidates before halting. A silent halt with no search and no presentation of options is a process gap that treats missing documentation as the user's problem rather than an actionable finding.
+
+- 🚫 FORBIDDEN: Halting silently without searching GitHub Issues; presenting no candidates when implementation authorization lacks a matching spec/plan; offering only "create a new spec" without checking for existing specs first
+- ✅ REQUIRED: Search GitHub Issues for candidate specs/plans using label filters (`[SPEC]`, `[PLAN]`, `[SPEC-FIX]`) and keyword matching against the request target; present all candidates with URLs; offer create-or-select before halting; flag as FAILURE if no candidates found
+- ✅ REQUIRED: When no candidate exists, the agent MUST present the failure state ("No existing spec/plan found for [topic]") before offering to create one
+
+**Why this matters:** The current Q/A mode halt is passive — it stops work but doesn't help the user find existing tracking. Active search turns "no spec found" from a dead end into a decision point: "here are N existing issues that may match, which one (if any) did you mean?" This reduces duplicate spec creation and connects implementation requests to existing tracking.
+
+**See `020-go-prohibitions.md` §1 "NEVER DO" and "ALWAYS DO" for the search procedure, and `approval-gate` skill → `verify-qa-mode` task → Step 2.5 for the mandatory search step.**
+
 ______________________________________________________________________
 
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.

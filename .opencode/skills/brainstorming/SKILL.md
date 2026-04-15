@@ -47,9 +47,10 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 6. **Visual companion conditional:** Offered only when topic involves visual decisions. Do NOT offer by default for this backend/Python project.
 
-7. **Terminal state is two-path:** Do NOT write the spec in brainstorming. Do NOT ask permission to implement. Instead:
+7. **Terminal state is three-path:**
    - **Path A (spec NOT yet a GitHub Issue):** Invoke `github-issue-creation` skill to create the spec as a GitHub Issue with `needs-approval` label → HALT for review.
    - **Path B (spec already a GitHub Issue AND approved):** Transition directly to `writing-plans` skill.
+   - **Path C (user declines spec/plan → FAILURE):** If the user declines both creating a new spec and selecting an existing candidate (from the search-prompt-fail workflow), this is a FAILURE state. Report: "Spec/Plan Required → Cannot proceed without a spec or plan to track this work." HALT.
 
 ## Key Principles
 
@@ -66,7 +67,8 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 ```
 brainstorming (mandatory)
   ├─ Path A: spec NOT yet GitHub Issue → github-issue-creation → HALT for review
-  └─ Path B: spec already GitHub Issue AND approved → writing-plans → executing-plans
+  ├─ Path B: spec already GitHub Issue AND approved → writing-plans → executing-plans
+  └─ Path C: user declines spec/plan → FAILURE: Spec/Plan Required → HALT
 ```
 
 ## Approval Gate Integration

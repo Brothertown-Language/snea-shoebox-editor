@@ -175,24 +175,6 @@ org = api.create_organization(
 )
 ```
 
-## Session Integration
-
-Get credentials from session init:
-
-```python
-from skills.gitbucket_api.tools import get_session_values, GitBucketAPI
-
-# Get all session values
-values = get_session_values()
-# {'GITBUCKET_URL': '...', 'GIT_OWNER': '...', ...}
-
-# GitBucket auto-detects from environment
-api = GitBucketAPI()  # Uses GITBUCKET_URL and GITBUCKET_TOKEN
-```
-
 ## Source Code
 
 - `tools/gitbucket_api.py` - Core client with all endpoints
-- `tools/auth.py` - Token & Basic auth
-- `tools/exceptions.py` - Exception hierarchy
-- `tools/session.py` - Session integration
