@@ -134,6 +134,41 @@ The `requirements` task identifies explicit, implicit, and constraint requiremen
 To invoke: /skill spec-creation --task requirements
 ```
 
+## Evidence Artifact Requirements
+
+Every task in this skill that asserts a verification checkpoint (self-review, traceability, change control) MUST produce a tool-call artifact demonstrating the verification was performed. Assertions without tool-call evidence are verification honesty violations per `065-verification-honesty.md`.
+
+### Verification Table
+
+| Checkpoint | Verification Action | Tool Call | Problem Class |
+|------------|-------------------|-----------|---------------|
+| Self-review placeholder scan | Verify no "TBD", "TODO", incomplete sections remain in the spec body | `github_issue_read(method=get)` → search body for placeholder patterns | STRUCTURE-VIOLATION |
+| Self-review consistency | Cross-reference requirement IDs between sections; verify no contradictions | `github_issue_read(method=get)` → parse section anchors | CONFLICTING |
+| Traceability bidirectional | Verify every requirement maps to a section and every section maps to a requirement | `github_issue_read(method=get)` → check trace references | MISSING-TRACEABILITY |
+| Traceability target existence | Verify that referenced issues, specs, and code actually exist | `github_issue_read(method=get, issue_number=N)` for each referenced issue; `srclight_get_symbol(name=N)` for each referenced symbol | VERIFICATION-GAP |
+| Change-control STATUS exemption | Verify that STATUS markers claiming exemption (initial creation, non-substantive) actually qualify | `github_issue_read(method=get)` → check STATUS against revision history | CONFLICTING |
+| Spec created as Issue | Verify the spec exists as a GitHub Issue with `[SPEC]` prefix and `needs-approval` label | `github_issue_read(method=get)` → check title, `github_issue_read(method=get_labels)` → check label | MISSING-ELEMENT |
+
+### Evidence Format
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+### Finding Classification
+
+Findings from evidence verification follow the three-tier model:
+
+| Classification | When | Action |
+|----------------|------|--------|
+| auto-fix | Safe, mechanical corrections (placeholder removal, reference fix) | Apply fix, note in evidence |
+| conditional | Requires scope/safety check before applying (traceability gap, STATUS claim) | Verify scope, then apply if safe |
+| flag-for-review | Requires domain judgment (contradictions, ambiguous STATUS exemption) | Report in findings, do not apply |
+
 ## Cross-References
 
 - **Calls:** `github-issue-creation` (spec persistence — `write` task invokes pre-creation → single-task-check → creation)
@@ -142,5 +177,7 @@ To invoke: /skill spec-creation --task requirements
 - **Parallel with:** `approval-gate` (authorization — waits for spec to be approved)
 - **Downstream:** `writing-plans` (plan creation — transforms approved spec into implementation plan)
 - **Source:** Adapted and extended from `brainstorming` Steps 7-9 (not a verbatim move)
+- **Guidelines:** `065-verification-honesty.md` (evidence artifacts)
+- **Related subtask:** `spec-auditor --task ground-truth` (adversarial metadata verification model)
 
 Co-authored with AI: <AI-Name> (<model-id>)

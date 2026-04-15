@@ -428,6 +428,74 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 
 **These verifications are MANDATORY. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
 
+## Live Verification: Chat Output Format (MANDATORY)
+
+**🚫 CRITICAL: Skipping the mandatory output format is a CRITICAL GUIDELINE VIOLATION. Every halt point MUST produce this format.**
+
+### Output Format Verification
+
+After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL elements are present in the chat output:
+
+| Check | Tool Call Evidence | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| Executive summary present | Review chat output | First element is `**Summary:**` block | MISSING-ELEMENT → add before proceeding |
+| Outcome present | Review chat output | `**Outcome:**` line follows summary | MISSING-ELEMENT → add before proceeding |
+| Compare URL present | Review chat output | URL starts with `https://github.com/` or `${GITBUCKET_HTML_URL}` | MISSING-ELEMENT → generate URL before proceeding |
+| AI byline present | Review chat output | Ends with `🤖 <AgentName> (<ModelID>)` line | MISSING-ELEMENT → add before proceeding |
+| No URL before summary | Review chat output | URL appears AFTER summary, not before | STRUCTURE-VIOLATION → reorder output |
+| No byline before URL | Review chat output | Byline appears AFTER URL, not before | STRUCTURE-VIOLATION → reorder output |
+
+### Format Template (MANDATORY at EVERY halt point)
+
+**This format applies not just to review-prep, but to EVERY sub-agent completion and every HALT where implementation is done:**
+
+```
+**Summary:**
+
+<1-2 sentences describing impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+https://github.com/<GIT_OWNER>/<GIT_REPO>/compare/dev...<branch-name>
+
+🤖 <AgentName> (<ModelID>) <status>
+```
+
+### Applicability
+
+This format requirement applies to:
+
+1. **review-prep** — after implementation, before PR
+2. **Sub-agent result reports** — every sub-agent returning from divide-and-conquer dispatch
+3. **Phase boundary halts** — when a multi-phase plan requires a merge gate before the next phase
+4. **Approval-gate post-implementation** — when reporting implementation complete
+
+Any halt point where the agent reports completion MUST produce this format. Skipping it is a VERIFICATION-GAP finding equivalent to asserting "implementation complete" without evidence.
+
+### Verification Procedure
+
+**After Step 4 (Report Completion) and before Step 5 (HALT):**
+
+```
+1. Review chat output for "**Summary:**" → EVIDENCE: <found or missing>
+2. Review chat output for "**Outcome:**" → EVIDENCE: <found or missing>
+3. Review chat output for compare URL pattern → EVIDENCE: <found or missing>
+4. Review chat output for byline pattern → EVIDENCE: <found or missing>
+5. Verify ordering: summary → outcome → URL → byline → EVIDENCE: <correct or reordered>
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Missing summary | MISSING-ELEMENT | auto-fix | Add summary before proceeding |
+| Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before proceeding |
+| Missing compare URL | MISSING-ELEMENT | auto-fix | Generate URL before proceeding |
+| Missing byline | MISSING-ELEMENT | auto-fix | Add byline before proceeding |
+| Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → URL → byline |
+
+**These verifications are MANDATORY. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Context Required
 
 - Related skills: `pr-creation-workflow` (PR timing)

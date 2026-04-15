@@ -66,3 +66,45 @@ Before creating a spec, investigation MUST be complete. This is a hard gate, not
 | Modify production code | NO | Requires approved spec |
 | Modify production data | NO | Requires approved spec |
 | Run code against production DB | NO | Requires explicit user authorization |
+
+## Adversarial Verification of Process Flags (MANDATORY)
+
+**🚫 CRITICAL: STATUS markers and process-completion flags MUST be verified against actual state, not trusted from claims in issue comments or chat. This extends `065-verification-honesty.md` to brainstorming process flags.**
+
+### Verification Table
+
+| Process Flag | Verification Action | Tool Call | Problem Class |
+|-------------|-------------------|-----------|---------------|
+| "Exploration complete" | Verify all investigation checklist items have evidence artifacts (not just assertions) | Check that tool-call artifacts exist for each of the 6 checklist items | VERIFICATION-GAP |
+| "Code inspection done" | Verify actual tool calls were made for call paths, imports, dead code, formats, layers, alternatives | `srclight_get_callers`, `srclight_get_symbol`, etc. — confirm in artifacts | MISSING-ELEMENT |
+| "Problem understood" | Verify a clear problem statement exists in the spec or exploration notes | `github_issue_read(method=get, issue_number=N)` → check body for problem section | STRUCTURE-VIOLATION |
+| "Alternatives considered" | Verify at least 2 approaches were documented for significant decisions | `github_issue_read(method=get, issue_number=N)` → check for approach comparison | MISSING-ELEMENT |
+| "Risks identified" | Verify risk assessment with mitigation is documented | `github_issue_read(method=get, issue_number=N)` → check for risk section | MISSING-ELEMENT |
+| "User approved design" | Verify approval comment exists from a developer (not bot/agent) on the issue | `github_issue_read(method=get_comments)` → filter by author_association | CONFLICTING |
+| "STATUS marker value" | Compare claimed STATUS against actual issue content maturity | `github_issue_read(method=get)` → parse STATUS from body | STRUCTURE-VIOLATION |
+
+### Evidence Artifacts
+
+Every process-flag verification MUST produce an evidence artifact — a tool call result demonstrating the verification was performed. Assertions without artifacts are VERIFICATION-GAP findings.
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+### Classification on Failure
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Checklist items claimed without tool-call evidence | VERIFICATION-GAP | conditional | Complete the tool calls before proceeding |
+| Problem statement missing from issue | STRUCTURE-VIOLATION | auto-fix | Add problem statement to issue body |
+| No alternatives documented for significant decision | MISSING-ELEMENT | conditional | Document alternatives before proceeding |
+| Approval from non-developer (bot/agent) | CONFLICTING | flag-for-review | HALT — requires real developer authorization |
+| STATUS marker claims maturity but content is incomplete | STRUCTURE-VIOLATION | auto-fix | Update STATUS to reflect actual maturity |
+
+**These verifications are MANDATORY before transitioning out of brainstorming. Skipping them is a CRITICAL GUIDELINE VIOLATION.**

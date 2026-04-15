@@ -2,6 +2,53 @@
 
 Full conversational exploration workflow for requirements gathering before spec creation.
 
+## Evidence Artifact Requirement for Exploration Checklist (MANDATORY)
+
+**🚫 CRITICAL: Each item in the code inspection checklist (Step 0) and project context exploration (Step 1) MUST produce a tool-call artifact demonstrating the verification was performed. Assertions without tool-call evidence are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+### Checklist Evidence Requirements
+
+| Checklist Item | Verification Action | Tool Call | Problem Class |
+|----------------|-------------------|-----------|---------------|
+| 1. Trace call paths | Verify actual import/call relationships for the target code | `srclight_get_callers(symbol_name="target")` and `srclight_get_callees(symbol_name="target")` | VERIFICATION-GAP |
+| 2. Verify imports | Confirm actual import path matches assumed path | `srclight_get_symbol(name="module.symbol")` → check file location | VERIFICATION-GAP |
+| 3. Detect dead code | Verify referenced symbols are actually used | `srclight_get_dependents(symbol_name="symbol")` → check if non-empty | MISSING-ELEMENT |
+| 4. Verify format/protocol assumptions | Confirm data format, signature, or protocol matches assumption | `srclight_get_signature(name="function_name")` → compare with assumed | CONFLICTING |
+| 5. Confirm architectural layer | Verify the target code is in the correct layer | `srclight_search_symbols(query="target", kind="function")` → check file path | STRUCTURE-VIOLATION |
+| 6. Check for existing alternatives | Search for existing solutions to the stated problem | `srclight_search_symbols(query="feature description")` → check results | MISSING-ELEMENT |
+
+### Exploration Context Evidence (Step 1)
+
+| Context Item | Verification Action | Tool Call | Problem Class |
+|-------------|-------------------|-----------|---------------|
+| Recent commits | Verify claimed recent activity actually exists | `srclight_recent_changes(n=10)` → confirm commits | VERIFICATION-GAP |
+| Existing patterns | Verify referenced patterns exist in codebase | `srclight_search_symbols(query="pattern")` → confirm results | MISSING-ELEMENT |
+| Documentation files | Verify claimed documentation exists | `glob(pattern="docs/**/*.md")` → confirm file paths | MISSING-ELEMENT |
+| Configuration state | Verify project config matches assumptions | `read(filePath="pyproject.toml")` → confirm dependencies | CONFLICTING |
+
+### Evidence Format
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+### Classification on Failure
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Call path assumption wrong | CONFLICTING | conditional | Re-map actual call path, update analysis |
+| Import path assumed but not found | VERIFICATION-GAP | conditional | Search alternates, verify actual path |
+| Dead code claimed as alive | MISSING-ELEMENT | auto-fix | Remove from affected-files list |
+| Data format assumption wrong | CONFLICTING | flag-for-review | HALT — design may be based on wrong format |
+| Architectural layer violation | STRUCTURE-VIOLATION | flag-for-review | HALT — redesign may be needed |
+| Alternative solution already exists | MISSING-ELEMENT | conditional | Evaluate existing solution, adjust scope |
+
+**These verifications are MANDATORY. Asserting "I checked" without tool-call artifacts is a VERIFICATION-GAP finding. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Process Flow
 
 <!-- Original dot digraph below is superseded by the yaml+symbolic state machine block at the end of this file. -->
