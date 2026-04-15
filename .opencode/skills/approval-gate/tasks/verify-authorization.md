@@ -250,6 +250,18 @@ elif not plan_issues:
 
 **🚫 CRITICAL: This step runs ONLY when ALL prior verification gates (Steps 1-5) pass. If ANY gate fails, HALT — do NOT dispatch.**
 
+#### 6.1 Pre-Implementation Worktree Setup (MANDATORY)
+
+**Before any sub-agent dispatch or file modification, the agent MUST invoke `git-workflow --task pre-work` to:**
+
+1. Create the feature branch in a worktree (`.worktrees/`)
+2. Set the `WORKTREE_PATH` environment variable
+3. Verify branch state and working tree cleanliness
+
+**This step is MANDATORY and CANNOT be skipped.** If the worktree already exists from a previous session, verify it and proceed. If worktree creation fails, HALT — do not proceed without a valid worktree.
+
+**Evidence requirement:** `git worktree list` must show the feature branch worktree, and `WORKTREE_PATH` must be set before any `divide-and-conquer` dispatch.
+
 After all verification gates pass, determine the approval context and auto-dispatch:
 
 #### Auto-Dispatch Context Differentiation

@@ -63,6 +63,19 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 11. **Stacking is a prerequisite, not a preference** — feature branches MUST be stacked sequentially (merge-based dependency resolution) as the prerequisite approach. Parallel sub-agent dispatch is OPPORTUNISTIC — it depends on circumstances genuinely allowing it (truly independent codepaths, no shared files, no hidden dependencies). When in doubt, stack.
 12. **Completion guarantee** — idempotent completion on any halt. Invoke `--task completion` before halting regardless of outcome.
 
+## Pre-Dispatch Verification Checkpoint (MANDATORY)
+
+**Before dispatching any sub-agent, the main agent MUST verify:**
+
+1. **Worktree exists:** `git worktree list` shows the feature branch worktree
+2. **WORKTREE_PATH is set:** `echo $WORKTREE_PATH` returns a non-empty path inside the repository (`.worktrees/`)
+3. **git-workflow --task pre-work was invoked:** The worktree was created by the mandatory skill, not manually
+4. **Feature branch is checked out:** The worktree shows the correct branch name
+
+**If ANY check fails:** HALT and invoke `git-workflow --task pre-work` before proceeding.
+
+**Evidence requirement:** Record `git worktree list` output and `WORKTREE_PATH` value before dispatching any sub-agent.
+
 ## Overflow Signal Contract
 
 When a sub-agent determines it cannot fit the assigned work within its context window, it MUST return:

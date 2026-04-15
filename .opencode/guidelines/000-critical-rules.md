@@ -378,6 +378,32 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 - ✅ REQUIRED: Main agent only orchestrates — never edits implementation files
 - ✅ REQUIRED: Context window stays clean for orchestration decisions
 
+## Critical Violation: Bypassing Mandatory Skill Invocations During Implementation
+
+**⚠️ Skipping mandatory skill invocations (git-workflow pre-work, divide-and-conquer, verification-before-completion) during the implementation workflow is a CRITICAL GUIDELINE VIOLATION.**
+
+The approval-gate dispatch chain defines a mandatory sequence after plan approval:
+
+1. `git-workflow --task pre-work` — Create worktree, set `WORKTREE_PATH`, verify branch state
+2. `divide-and-conquer --task assemble-batch` — Dispatch sub-agents for implementation
+3. `verification-before-completion` — Verify success criteria before marking complete
+4. `finishing-a-development-branch --task checklist` — Final branch readiness check
+5. `git-workflow --task review-prep` — Push branch, generate compare URL
+
+**Each step is MANDATORY. Skipping any step is a CRITICAL VIOLATION.**
+
+- 🚫 FORBIDDEN: Creating a worktree manually instead of invoking `git-workflow --task pre-work`
+- 🚫 FORBIDDEN: Implementing files directly as the main agent instead of dispatching via `divide-and-conquer`
+- 🚫 FORBIDDEN: Skipping `verification-before-completion` and claiming task completion without evidence
+- 🚫 FORBIDDEN: Pushing changes without invoking `finishing-a-development-branch --task checklist`
+- 🚫 FORBIDDEN: Generating compare URL without invoking `git-workflow --task review-prep`
+- ✅ REQUIRED: Follow the approval-gate dispatch chain in order after plan approval
+- ✅ REQUIRED: Invoke each mandatory skill in sequence
+- ✅ REQUIRED: Verify `WORKTREE_PATH` is set before any file modification
+- ✅ REQUIRED: Use `divide-and-conquer` to dispatch sub-agents for all file modifications on multi-task plans
+
+**See `approval-gate/SKILL.md` → "Dispatch Order" for the complete mandatory sequence. See `using-git-worktrees` skill → `create-worktree` task for worktree creation procedure.**
+
 ## Auditor Skills Enforcement
 
 **⚠️ MANDATORY: Run `spec-auditor` when auditing specs. NO SKIPPING.**
