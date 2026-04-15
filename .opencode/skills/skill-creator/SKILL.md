@@ -137,16 +137,16 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 ### Required in every skill that:
 
-1. **References AI agents** — MUST use `<AI-Name>` and `<model-id>` placeholders, never specific agent names or model IDs
-2. **References developers** — MUST use `DEV_NAME` and `DEV_EMAIL` from session init, never specific names like `michael-conrad`
-3. **References organizations/repos** — MUST use `GIT_OWNER` and `GIT_REPO` from session init, never specific names like `Brothertown-Language`
-4. **Contains bylines or attribution** — MUST use `<AI-Name> (<model-id>)` format, never specific agent/model combinations
+1. **References AI agents** — MUST use `<AgentName>` and `<ModelID>` placeholders, never specific agent names or model IDs
+2. **References developers** — MUST use `DEV_NAME` and `DEV_EMAIL` from session init, never specific names like `<DEV_NAME>`
+3. **References organizations/repos** — MUST use `GIT_OWNER` and `GIT_REPO` from session init, never specific names like `<GIT_OWNER>`
+4. **Contains bylines or attribution** — MUST use `<AgentName> (<ModelID>)` format, never specific agent/model combinations
 
 ### Validation Gate
 
 The `validate` task (`quick_validate.py`) SHOULD check for and flag:
-- Specific agent names (e.g., `<AI-Name>`) in SKILL.md or task files — must use placeholder tokens
-- Specific model IDs (e.g., `<model-id>`) in SKILL.md or task files — must use placeholder tokens
+- Specific agent names (e.g., `<AgentName>`) in SKILL.md or task files — must use placeholder tokens
+- Specific model IDs (e.g., `<ModelID>`) in SKILL.md or task files — must use placeholder tokens
 - Specific developer names or emails in SKILL.md or task files
 - Specific org/repo names in SKILL.md or task files (except in examples using the `<GIT_OWNER>/<GIT_REPO>` pattern)
 - Specific platform URLs in SKILL.md or task files (except in examples using session init variable references)
@@ -155,8 +155,8 @@ The `validate` task (`quick_validate.py`) SHOULD check for and flag:
 
 | Value Type | Placeholder | Source |
 |-----------|-------------|--------|
-| AI agent name | `<AI-Name>` or `<AgentName>` | System prompt identity detection |
-| AI model ID | `<model-id>` or `<ModelID>` | System prompt identity detection |
+| AI agent name | `<AgentName>` | System prompt identity detection |
+| AI model ID | `<ModelID>` | System prompt identity detection |
 | Developer name | `DEV_NAME` | Session init |
 | Developer email | `DEV_EMAIL` | Session init |
 | Organization | `GIT_OWNER` | Session init |

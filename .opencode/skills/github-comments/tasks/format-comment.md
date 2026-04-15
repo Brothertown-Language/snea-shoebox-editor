@@ -24,6 +24,9 @@ Format comments with AI identity attribution and proper structure. Only used for
 | Completion | Task finished | completed |
 | Update | Modified existing content | updated |
 | Rejection | Cannot proceed | rejected |
+| Copy Editor | Posting on behalf of user | `🤖 ✎ on behalf of <UserName>` (see `ai-identity.md`) |
+
+**Note:** For Copy Editor byline format, see `.opencode/.guidelines/ai-identity.md` → "Copy Editor Byline" section.
 
 ### Step 2: Apply Format Template
 

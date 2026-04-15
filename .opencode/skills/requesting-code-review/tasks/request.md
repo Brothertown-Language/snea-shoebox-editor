@@ -34,7 +34,7 @@ Post a review request comment on the PR:
 - [Any specific questions]
 
 ---
-🤖 <AgentName> (<ModelID>) review-requested
+🤖 <AgentName> (<ModelID>) created
 ```
 
 ### Step 2: Update PR Labels
