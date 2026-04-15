@@ -953,6 +953,46 @@ User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES c
 3. Push and create PR with `hotfix` label (targeting `dev`)
 4. Request expedited review
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Each verification point requires a tool call for evidence. Assertions without tool-call artifacts are VERIFICATION-GAP findings. Creating a PR without verified state is a CRITICAL GUIDELINE VIOLATION.**
+
+### All Changes Committed Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| Working tree clean | `git status --porcelain` | Empty output | VERIFICATION-GAP → commit or stash first |
+| Staged changes match intent | `git diff --staged` | Shows expected staged changes only | CONFLICTING → re-stage correctly |
+| No unstaged changes | `git diff` | Empty diff | VERIFICATION-GAP → stage remaining changes |
+| Commits ahead of dev | `git log origin/dev..HEAD --oneline` | Expected commit(s) listed | MISSING-ELEMENT → squash may have failed |
+| Branch tracking | `git branch -vv` | `[origin/<branch>]` present | MISSING-ELEMENT → push with `-u` |
+| Worktree path correct | `git rev-parse --show-toplevel` | Worktree path (not main repo) | STRUCTURE-VIOLATION → HALT |
+
+### Verification Procedure
+
+**Between Step 3 (Squash) and Step 4 (Push), run these verifications:**
+
+```
+1. git status --porcelain → EVIDENCE: "(empty)" for clean tree
+2. git diff --staged → EVIDENCE: shows only intended squash commit diff
+3. git diff → EVIDENCE: "(empty)" for no unstaged changes
+4. git log origin/dev..HEAD --oneline → EVIDENCE: single commit for single-issue branch
+5. git branch -vv → EVIDENCE: tracking branch shown
+6. git rev-parse --show-toplevel → EVIDENCE: worktree path
+```
+
+### Finding Classification
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Uncommitted files | VERIFICATION-GAP | conditional | Commit before squash/push |
+| Staged diff shows wrong changes | CONFLICTING | flag-for-review | Verify squash targets correct files |
+| Unstaged changes remaining | VERIFICATION-GAP | auto-fix | `git add -A` and re-commit |
+| No commits ahead of dev | MISSING-ELEMENT | flag-for-review | Branch may be empty diff — investigate |
+| Wrong toplevel path | STRUCTURE-VIOLATION | auto-fix | HALT — not in worktree, wrong context |
+
+**These verifications are MANDATORY. Skipping them before PR creation is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Recovery from Accidental Protected Branch Commit
 
 If you somehow committed to `main`, `master`, or `dev` locally (hooks not installed):

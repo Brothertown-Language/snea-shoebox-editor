@@ -104,6 +104,47 @@ This skill is a **heavy skill** — its task files contain significant detail th
 
 **⚠️ Worktree pass-through is MANDATORY:** When spawning sub-agents from a worktree context, `WORKTREE_PATH` MUST be included in the dispatch prompt. Sub-agents that perform git operations without `WORKTREE_PATH` will silently modify the main repo — this is a CRITICAL GUIDELINE VIOLATION (see #741).
 
+## Live Verification Requirements
+
+**🚫 CRITICAL: Every git-workflow task MUST verify actual git/GitHub state via tool calls before acting on claims. Do NOT trust cached values, assumed branch names, or claimed merge status without direct evidence.**
+
+### Verification Matrix
+
+| Verification Point | Tool Call | Expected Evidence | Applies To |
+| -- | -- | -- | -- |
+| **Branch state** | `git branch --show-current` | Current branch name matches expected | pre-work, implementation, rebase-pending |
+| **Working tree cleanliness** | `git status --porcelain` | Empty output (no uncommitted changes) | review-prep, pr-creation |
+| **Worktree location** | `git rev-parse --show-toplevel` | Returns worktree path (not main repo) | pre-work, implementation |
+| **Commit/push state** | `git log dev..HEAD --oneline` | At least one commit ahead of dev | review-prep, pr-creation |
+| **Tracking branch** | `git branch -vv` | `[origin/<branch>]` tracking exists | review-prep |
+| **Unpushed commits** | `git diff @{u} HEAD` | Empty diff (all commits pushed) | review-prep |
+| **PR merge status** | `github_pull_request_read(method=get)` | `merged_at` is not None | cleanup |
+| **Sub-issue closure** | `github_issue_read(method=get_sub_issues)` | All sub-issues state=closed | cleanup |
+| **File existence** | `git status --porcelain` | No uncommitted files (all committed) | pr-creation, implementation |
+| **Staged state** | `git diff --staged` | Expected changes are staged | commit-prep, pr-creation |
+| **Unstaged changes** | `git diff` | Empty (no unstaged changes) | pr-creation |
+| **Worktree environment** | `echo $WORKTREE_PATH` | Non-empty path matching worktree dir | pre-work, implementation |
+| **Stash state** | `git stash list` | Expected number of stashes (usually 0) | cleanup |
+
+### Adversarial Verification Principles
+
+1. **No cached trust:** Re-verify git state before every state-modifying operation (commit, push, squash, rebase)
+2. **Evidence required:** Each verification point MUST produce a tool-call artifact — assertions without evidence are VERIFICATION-GAP findings
+3. **Contradiction detection:** If actual state contradicts expected state, classify as a finding before proceeding
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Branch name doesn't match expected | STRUCTURE-VIOLATION | auto-fix | Report actual branch, verify worktree context |
+| Working tree dirty when should be clean | VERIFICATION-GAP | conditional | Commit or stash before proceeding |
+| `merged_at` is None (no merge) | CONFLICTING | flag-for-review | HALT — do not close issues |
+| Tracking branch missing | MISSING-ELEMENT | auto-fix | Push with `-u` to establish tracking |
+| Unpushed commits detected | VERIFICATION-GAP | conditional | Push before generating compare URL |
+| WORKTREE_PATH empty/not set | STRUCTURE-VIOLATION | auto-fix | HALT — fatal error, cannot proceed safely |
+| Staged changes differ from expected | CONFLICTING | flag-for-review | Verify staging matches intent before commit |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason, may need reopen |
+
 ## Cross-References
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)

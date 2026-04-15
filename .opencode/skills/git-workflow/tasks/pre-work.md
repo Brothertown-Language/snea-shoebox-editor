@@ -309,6 +309,43 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 3. Push and create PR with `hotfix` label
 4. Request expedited review
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Each verification point requires a tool call for evidence. Assertions without tool-call artifacts are VERIFICATION-GAP findings.**
+
+### Branch State Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| Current branch | `git branch --show-current` | Feature branch name (not `main`, `dev`) | STRUCTURE-VIOLATION → HALT |
+| Working tree clean | `git status --porcelain` | Empty output | VERIFICATION-GAP → stash or commit first |
+| Worktree location | `git rev-parse --show-toplevel` | Worktree path (not main repo path) | STRUCTURE-VIOLATION → HALT |
+| WORKTREE_PATH set | `echo $WORKTREE_PATH` (or equivalent) | Non-empty, matches worktree dir | STRUCTURE-VIOLATION → HALT (fatal) |
+| Dev base hash | `git rev-parse --short dev` | Valid 7-char SHA | MISSING-ELEMENT → sync dev first |
+
+### Verification Procedure
+
+**After Step 4 (Verify Worktree Environment), run these verifications and record evidence:**
+
+```
+1. git branch --show-current → EVIDENCE: <branch-name>
+2. git status --porcelain → EVIDENCE: <output or "(empty)">
+3. git rev-parse --show-toplevel → EVIDENCE: <path>
+4. WORKTREE_PATH → EVIDENCE: <path or "(empty)">
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| On `main` or `dev` branch | CONFLICTING | flag-for-review | HALT — must create worktree first |
+| Dirty working tree in worktree | VERIFICATION-GAP | conditional | Stash or commit before implementation |
+| `rev-parse` returns main repo path | STRUCTURE-VIOLATION | auto-fix | Not in worktree — re-invoke using-git-worktrees |
+| WORKTREE_PATH empty | STRUCTURE-VIOLATION | auto-fix | FATAL — cannot safely do file operations |
+| dev hash stale | MISSING-ELEMENT | conditional | Re-run `git pull origin dev` |
+
+**These verifications are MANDATORY. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Context Required
 
 - Related skills: `approval-gate` (authorization check), `using-git-worktrees` (worktree creation)

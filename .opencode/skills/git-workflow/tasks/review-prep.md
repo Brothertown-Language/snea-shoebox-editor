@@ -390,6 +390,44 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 
 **Why:** Commit without push = empty compare URL. Push is mandatory after commit.
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Each verification point requires a tool call for evidence. Assertions without tool-call artifacts are VERIFICATION-GAP findings.**
+
+### Commit/Push State Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| Working tree clean | `git status --porcelain` | Empty output | VERIFICATION-GAP → commit/stash first |
+| Commits ahead of dev | `git log dev..HEAD --oneline` | At least one commit listed | MISSING-ELEMENT → branch has no changes |
+| Tracking branch exists | `git branch -vv` | `[origin/<branch>]` shown | MISSING-ELEMENT → push with `-u` |
+| All commits pushed | `git diff @{u} HEAD` | Empty diff | VERIFICATION-GAP → push remaining commits |
+| Branch on correct base | `git merge-base HEAD origin/dev` | Dev-based ancestor SHA | STRUCTURE-VIOLATION → rebase on dev |
+
+### Verification Procedure
+
+**After Step 1.5 (Rebase on Current Dev) and before Step 2 (Verify Branch Is Pushed), run these verifications:**
+
+```
+1. git status --porcelain → EVIDENCE: <output or "(empty)">
+2. git log dev..HEAD --oneline → EVIDENCE: <commit list>
+3. git branch -vv → EVIDENCE: <tracking status>
+4. git diff @{u} HEAD → EVIDENCE: <output or "(empty)">
+5. git merge-base HEAD origin/dev → EVIDENCE: <SHA>
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Uncommitted changes | VERIFICATION-GAP | conditional | Commit before pushing |
+| No commits ahead of dev | MISSING-ELEMENT | flag-for-review | Branch may have empty diff — investigate |
+| No tracking branch | MISSING-ELEMENT | auto-fix | Push with `git push -u origin <branch>` |
+| Unpushed commits | VERIFICATION-GAP | auto-fix | Push remaining commits immediately |
+| Wrong merge base | STRUCTURE-VIOLATION | conditional | Rebase on `origin/dev` before generating URL |
+
+**These verifications are MANDATORY. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Context Required
 
 - Related skills: `pr-creation-workflow` (PR timing)

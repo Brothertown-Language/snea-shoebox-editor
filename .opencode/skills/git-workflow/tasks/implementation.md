@@ -97,6 +97,48 @@ When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `wri
 - Related skills: `approval-gate` (authorization scope)
 - Related tasks: `pr-creation` (push and PR)
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Verify git state via tool calls before each commit during implementation. Assertions without tool-call artifacts are VERIFICATION-GAP findings.**
+
+### Pre-Commit Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| On correct branch | `git branch --show-current` | Feature branch (not `main`/`dev`) | STRUCTURE-VIOLATION → HALT |
+| Worktree location | `git rev-parse --show-toplevel` | Worktree path | STRUCTURE-VIOLATION → HALT |
+| Changes to commit | `git status --porcelain` | Expected modified files listed | MISSING-ELEMENT → no changes found |
+| Staged state matches intent | `git diff --staged` | Intended changes visible | VERIFICATION-GAP → re-stage |
+
+### Verification Procedure
+
+**Before each implementation commit, run:**
+
+```
+1. git branch --show-current → EVIDENCE: <feature-branch-name>
+2. git rev-parse --show-toplevel → EVIDENCE: <worktree-path>
+3. git status --porcelain → EVIDENCE: <modified files or "(empty)">
+4. git diff --staged → EVIDENCE: <staged changes or "(empty)">
+```
+
+**After each implementation commit, verify:**
+
+```
+1. git log --oneline -1 → EVIDENCE: commit hash and message visible
+2. git status --porcelain → EVIDENCE: "(empty)" if all committed
+```
+
+### Finding Classification
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| On `main` or `dev` | CONFLICTING | flag-for-review | HALT — must be in worktree on feature branch |
+| Wrong toplevel path | STRUCTURE-VIOLATION | auto-fix | HALT — not in worktree, re-invoke pre-work |
+| No changes to commit | MISSING-ELEMENT | conditional | Verify changes were saved — may need `git add` |
+| Staged changes don't match intent | VERIFICATION-GAP | conditional | Review diff, adjust staging |
+
+**These verifications are MANDATORY before each commit. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## When to Commit During Implementation
 
 Commit when:
