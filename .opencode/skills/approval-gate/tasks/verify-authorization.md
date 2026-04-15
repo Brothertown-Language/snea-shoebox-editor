@@ -79,9 +79,84 @@ When user provides explicit authorization, it **OVERRIDES** the needs-approval l
 | NO auth AND label present | HALT - wait for authorization |
 | NO auth AND no label | Check other blockers |
 
-### Step 5: Auto-Dispatch After Successful Verification
+### Step 5: Verify Sub-Issue Structure (for Plan Approval)
 
-**🚫 CRITICAL: This step runs ONLY when ALL prior verification gates (Steps 1-4) pass. If ANY gate fails, HALT — do NOT dispatch.**
+**This gate is the SINGLE AUTHORITATIVE verification point for sub-issue readiness.** The `github-sub-issues` skill's verification gate is superseded — all sub-issue verification logic lives here.
+
+#### 5.1 Determine Plan Type
+
+```
+plan_issue = github_issue_read(method="get", issue_number=N)
+
+# Check if this is a plan (has plan label or [PLAN] prefix)
+is_plan = "plan" in [l["name"] for l in plan_issue["labels"]] or plan_issue["title"].startswith("[PLAN]")
+
+if is_plan:
+    # Determine single-task vs multi-task
+    phases = parse_phases_from_plan_body(plan_issue["body"])
+    is_single_task = len(phases) == 1
+```
+
+#### 5.2 Verify Sub-Issues Under Plan (Multi-Task Only)
+
+**Single-task exemption:** If the plan has exactly ONE implementation phase with no decomposition, skip sub-issue verification entirely.
+
+For multi-task plans:
+
+```python
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
+
+# Verify sub-issues exist under the plan (NOT the spec)
+if not sub_issues:
+    # Auto-create sub-issues under the plan
+    # Plan approval covers sub-issue creation — no separate auth needed
+    # See github-sub-issues --task create-sub-issue for creation procedure
+    pass
+
+# Verify sub-issue structure matches plan phases
+for phase in phases:
+    matching_sub_issue = find_sub_issue_for_phase(sub_issues, phase)
+    if not matching_sub_issue:
+        # HALT: sub-issue structure incomplete
+        pass
+
+# Verify sub-issue bodies contain phase context (Phase 1 enrichment)
+for sub_issue in sub_issues:
+    body = github_issue_read(method="get", issue_number=sub_issue["number"])["body"]
+    if phase_context_insufficient(body):
+        # Report: sub-issue body lacks phase context
+        pass
+```
+
+#### 5.3 Adversarial Verification of Sub-Issue State
+
+**Before trusting any sub-issue claim, verify against actual GitHub API state.**
+
+```
+For each sub-issue:
+  child = github_issue_read(method="get", issue_number=sub_issue_number)
+  - Verify child.state matches claimed state (do NOT trust cache)
+  - If child.state == "closed" → verify merged PR exists (not premature closure)
+  - Verify child is linked under plan (NOT spec) → STRUCTURE-VIOLATION if under spec
+  - Verify needs-approval label absent if parent plan has explicit authorization
+```
+
+**Evidence artifact:** `github_issue_read(method=get)` for each sub-issue showing actual state, title, labels, and parent link.
+
+#### Finding Classification for Sub-Issue Verification
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| No sub-issues on multi-task plan | MISSING-ELEMENT | auto-create | Auto-create under plan, proceed |
+| Sub-issue linked under spec (not plan) | STRUCTURE-VIOLATION | auto-fix | Re-link under correct parent |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Report — may be premature closure |
+| Sub-issue needs-approval stale (parent authorized) | STRUCTURE-VIOLATION | auto-fix | Remove label |
+| Sub-issue body lacks phase context | MISSING-ELEMENT | conditional | Report, fall back to plan body |
+| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve |
+
+### Step 6: Auto-Dispatch After Successful Verification
+
+**🚫 CRITICAL: This step runs ONLY when ALL prior verification gates (Steps 1-5) pass. If ANY gate fails, HALT — do NOT dispatch.**
 
 After all verification gates pass, determine the approval context and auto-dispatch:
 
@@ -122,7 +197,7 @@ If a spec is revised (status changed to `REVISED - NEEDS APPROVAL`):
 #### Auto-Dispatch Edge Cases
 
 - **Spec already has a plan:** `writing-plans --task create` handles this (skips or updates per its existing logic)
-- **Multi-task plan with missing sub-issues:** `verify-sub-issues` gate fails → HALT, no dispatch
+- **Multi-task plan with missing sub-issues:** Step 5 sub-issue verification gate fails → HALT, no dispatch
 - **Batch approval:** Each plan in batch gets its own dispatch cycle after batch state is established
 
 ### Step 2.5: Adversarial Verification — Verify Authorization Against Actual State
@@ -196,7 +271,8 @@ For plan issues (detected in Step 5):
 
 ## Context Required
 
-- Related tasks: `verify-sub-issues`, `verify-codebase`
+- Related tasks: `verify-sub-issues` (delegated sub-issue verification detail), `verify-codebase`
+- Sub-issue verification gate: This task (Step 5) is the SINGLE AUTHORITATIVE verification point. `github-sub-issues` skill's verification gate is superseded by this gate.
 - Auto-dispatch targets: `writing-plans` (spec approval), `executing-plans` (plan approval)
 - Dispatch context for plan approval: pass `plan_issue=#N` and `spec_issue=#M` (extracted from plan body)
 - Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval`, add `in-progress` on approval)

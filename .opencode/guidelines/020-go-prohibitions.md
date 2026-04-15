@@ -115,7 +115,7 @@ ______________________________________________________________________
 
 ### ✅ MANDATORY
 
-**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
+**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
 Key points:
 

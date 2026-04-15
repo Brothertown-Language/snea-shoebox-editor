@@ -1,5 +1,7 @@
 # Task: verify-sub-issues
 
+> **Note:** Sub-issue verification is consolidated into `verify-authorization` Step 5 as the single authoritative readiness check. This task remains available for standalone invocation when detailed sub-issue inspection is needed, but the pre-implementation gate is `verify-authorization` Step 5.
+
 ## Purpose
 
 Verify sub-issue structure and STATUS gate for multi-task plans before implementation. Sub-issues are verified under the plan issue, not the spec issue.
