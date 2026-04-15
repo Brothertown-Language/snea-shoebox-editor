@@ -97,6 +97,8 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 | `GIT_REPO` | Session init | Repository name for API calls |
 | `WORKTREE_PATH` | Session / worktree setup | Base directory for file operations |
 
+**Spec-to-plan approval cascade:** When `writing-plans --task create` is invoked for a spec that is already approved, the newly created plan inherits the spec's approval status. The `needs-approval` label is removed from the plan and a comment documents the cascade — see Step 11 in `tasks/create.md` for the complete post-creation cascade procedure. This handles the case where plan creation happens AFTER spec approval in the same session.
+
 **Manual invocation still works:** `writing-plans --task create` can be invoked directly at any time. Auto-dispatch is additive — it eliminates the silent gap between approval and plan creation, but does not replace manual invocation.
 
 **No circular dispatch:** `writing-plans` never dispatches back to `approval-gate`. After plan creation, the plan requires its own approval (user says "approved"), which triggers `approval-gate` → `executing-plans` (not `writing-plans`).

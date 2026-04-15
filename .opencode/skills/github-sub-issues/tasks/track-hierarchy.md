@@ -39,7 +39,17 @@ PLAN #M: [PLAN] Feature Name
 └── Task #P3: [Task: #M] Phase 3 - Description
 ```
 
-### Step 4: Identify Gaps
+### Step 4: Verify Sub-Issue Context Sufficiency
+
+**For each sub-issue:**
+- Read the sub-issue body and verify it contains sufficient phase context for a sub-agent to operate independently
+- A sub-issue body that contains only `**Parent Plan:** #M` fails this check — it lacks the phase prose needed for autonomous implementation
+- Verify that the body communicates: why this phase exists, what it must accomplish, how to verify completion, what could go wrong, and what must be done first
+- This check is prose-agnostic — it verifies information presence, not format or section structure
+
+If a sub-issue fails the context check, flag it for re-creation via `create-sub-issue` with phase prose extraction.
+
+### Step 5: Identify Gaps
 
 **For each phase in plan:**
 - Check if corresponding sub-issue exists
@@ -49,13 +59,14 @@ PLAN #M: [PLAN] Feature Name
 - Check if it matches a phase
 - If orphan (no matching phase): flag for review
 
-### Step 5: Report in Chat
+### Step 6: Report in Chat
 
 ## Common Issues
 
 | Issue | Resolution |
 |-------|------------|
 | Sub-issues missing for phases | Auto-create via `create-sub-issue` |
+| Sub-issues lack phase context | Re-create via `create-sub-issue` with prose extraction |
 | Orphan sub-issues found | Flag for manual review |
 | Hierarchy mismatch | Rebuild hierarchy tree |
 

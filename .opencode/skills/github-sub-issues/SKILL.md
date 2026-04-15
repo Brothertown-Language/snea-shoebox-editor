@@ -33,13 +33,34 @@ The hierarchy is: **Spec → (linked reference) → Plan → Sub-issues**. Sub-i
 
 Single-task plans do NOT require sub-issues. A plan is "single-task" if it has exactly ONE implementation task/phase with no decomposition needed. If single-task: proceed without sub-issue verification. If multi-task: sub-issues are MANDATORY.
 
-## Sub-Issue Verification Gate (MANDATORY Before Implementation)
+## Sub-Issue Verification Gate (SUPERSEDED — Use `approval-gate --task verify-authorization`)
+
+**⚠️ This verification gate is SUPERSEDED.** Sub-issue verification is now consolidated into `approval-gate --task verify-authorization` (Step 5) as the single authoritative readiness check. The content below is retained for reference only.
+
+**Authoritative check:** `approval-gate --task verify-authorization` Step 5 handles:
+- Verifying sub-issues exist under the Plan
+- Verifying sub-issue structure matches Plan phases
+- Verifying sub-issue bodies contain phase context (leveraging Phase 1 enrichment)
+- Adversarial verification of sub-issue state (open/closed, labels, parent linkage)
+- Auto-creating sub-issues under the plan when missing
+
+**This skill (`github-sub-issues`) remains the authoritative source for:**
+- Sub-issue creation (`create-sub-issue` task)
+- Sub-issue linking (`link-sub-issue` task)
+- Hierarchy tracking (`track-hierarchy` task)
+
+---
+
+<details>
+<summary>Historical verification gate content (reference only — do NOT invoke this gate directly)</summary>
 
 1. Call `github_issue_read method=get_sub_issues` on the **plan** issue (not the spec)
 2. **If empty AND multi-task:** AUTO-CREATE sub-issues under the plan immediately, then proceed — no separate authorization needed
 3. **If sub-issues exist:** Verify phase being implemented is among them, proceed
 
 **Authorization for the parent plan covers sub-issue creation.** When `get_sub_issues` returns empty for an approved multi-task plan, auto-create and proceed.
+
+</details>
 
 ## Phase-Level vs Step-Level
 
@@ -75,7 +96,21 @@ Use the `.id` field from response (e.g., `4129879155`), NOT the issue number (e.
 
 ## STATUS Gate Verification
 
-Before implementing ANY subtask: get parent STATUS, extract authorized subtask, verify match, report decision to user. STATUS format: `STATUS: X.Y` where X = phase, Y = subtask within phase.
+Before implementing ANY subtask: get parent STATUS, extract authorized subtask, verify match, report decision to user.
+
+**STATUS format recognition (prose-driven, backward-compatible):**
+
+| Format | Example | Meaning |
+|--------|---------|---------|
+| `in progress — {concern}, Step {N}` | `in progress — Authorization Gate, Step 1` | Working on a specific step (prose-driven, recommended) |
+| `completed — {concern}` | `completed — Authorization Gate` | Phase/concern done (prose-driven, recommended) |
+| `{concern} — {task description}` | `Authorization Gate — verify label state` | Active task within concern (prose-driven, recommended) |
+| `X.Y` | `1.2` | Phase 1, step 2 (numeric, backward-compatible) |
+| `completed` | `completed` | All work done (both formats) |
+| `X.Y (REVISED - NEEDS APPROVAL)` | `1.2 (REVISED - NEEDS APPROVAL)` | Spec was modified (numeric, backward-compatible) |
+| `{concern} (REVISED - NEEDS APPROVAL)` | `Authorization Gate (REVISED - NEEDS APPROVAL)` | Spec was modified (prose-driven) |
+
+When matching STATUS to sub-issues, match the concern name in the STATUS to the sub-issue title/description. Numeric `X.Y` format is still recognized for backward compatibility but prose-driven formats are recommended for new specs and plans.
 
 ## Prohibited Halts
 
@@ -117,6 +152,7 @@ Before invoking any cross-referenced skill:
 
 ## Cross-References
 
-- Related skills: `git-workflow` (before starting implementation), `approval-gate` (pre-implementation check), `writing-plans` (auto-dispatch chain: writing-plans → github-sub-issues)
+- Related skills: `approval-gate` (sub-issue verification gate — the single authoritative readiness check), `git-workflow` (before starting implementation), `writing-plans` (auto-dispatch chain: writing-plans → github-sub-issues)
+- Superseded gate: `github-sub-issues` verification gate is superseded by `approval-gate --task verify-authorization` Step 5
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
 - Issue format: See `143-planning-spec-templates.md` for spec structure and `144-planning-spec-examples.md` for examples

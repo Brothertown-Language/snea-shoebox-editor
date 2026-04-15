@@ -23,7 +23,8 @@ This subtask verifies content quality and completeness, not structural conformit
 | Concern-named phases | MISSING-ELEMENT | Do phase names describe specific concerns, not generic activities? ("Database Schema Setup", not "Implementation") | flag-for-review |
 
 **Advisory guidelines (not mandatory):**
-- STATUS with `phase.step` format (e.g., `STATUS: 1.2`) is recommended for multi-phase specs but not required
+- STATUS with prose-driven format (e.g., `STATUS: in progress — Authorization Gate, Step 1`) is recommended for multi-phase specs — it references concern names rather than numeric phase indices, making progress tracking self-explanatory and resilient to phase renumbering
+- STATUS with `phase.step` format (e.g., `STATUS: 1.2`) is backward-compatible but no longer recommended
 - CREATED date is recommended but not mandatory
 - Phase/step numbering is recommended for multi-phase specs, optional for simple specs
 - Status markers (`☐`/`↻`/`☑`/`☒`) are recommended but any clear progress indicator works

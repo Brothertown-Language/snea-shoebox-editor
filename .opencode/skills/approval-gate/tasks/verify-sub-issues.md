@@ -1,5 +1,7 @@
 # Task: verify-sub-issues
 
+> **Note:** Sub-issue verification is consolidated into `verify-authorization` Step 5 as the single authoritative readiness check. This task remains available for standalone invocation when detailed sub-issue inspection is needed, but the pre-implementation gate is `verify-authorization` Step 5.
+
 ## Purpose
 
 Verify sub-issue structure and STATUS gate for multi-task plans before implementation. Sub-issues are verified under the plan issue, not the spec issue.
@@ -41,39 +43,46 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
 
 **For multi-task plans with sub-issues:**
 
-1. Extract subtask number from authorization:
-   - "approved: 1.2" → subtask 1.2
-   - "approved: X.Y" → subtask X.Y
-   - "approved" (no number) → check STATUS for current phase
+1. Extract subtask from authorization:
+    - "approved: 1.2" → subtask 1.2 (numeric format, backward-compatible)
+    - "approved: X.Y" → subtask X.Y (numeric format, backward-compatible)
+    - "approved: {concern}" → find phase matching concern name (prose format)
+    - "approved" (no number) → check STATUS for current phase
 
 2. Get plan issue STATUS:
-   ```python
-   plan = github_issue_read(method="get", issue_number=plan_issue)
-   # Parse STATUS from body
-   # STATUS format: "STATUS: X.Y" or "STATUS: completed"
-   # If STATUS not found, default to first subtask (1.1)
-   ```
+    ```python
+    plan = github_issue_read(method="get", issue_number=plan_issue)
+    # Parse STATUS from body
+    # Prose-driven formats (recommended):
+    #   "STATUS: in progress — {concern}, Step {N}"
+    #   "STATUS: completed — {concern}"
+    #   "STATUS: {concern} — {task description}"
+    #   "STATUS: in progress — {concern} (REVISED - NEEDS APPROVAL)"
+    # Numeric formats (backward-compatible):
+    #   "STATUS: X.Y" or "STATUS: completed"
+    # If STATUS not found, default to first concern's first step
+    ```
 
 3. Determine which subtask to implement:
-   - If authorized for X.Y → use X.Y (explicit override)
-   - If "approved" (no number) AND STATUS found → use STATUS value
-   - If "approved" (no number) AND STATUS missing → use first subtask (1.1)
-   - POST COMMENT explaining which subtask is being implemented
+    - If authorized for concern name or X.Y → use that subtask (explicit override)
+    - If "approved" (no number) AND STATUS found → use STATUS value
+    - If "approved" (no number) AND STATUS missing → use first concern, first step
+    - POST COMMENT explaining which subtask is being implemented
 
 4. Verify subtask exists:
-   - If subtask X.Y exists in sub-issues → PROCEED
-   - If subtask X.Y NOT in sub-issues → HALT and report: "Subtask X.Y not found. Available subtasks: [list]"
+   - If subtask X.Y or concern name exists in sub-issues → PROCEED
+   - If subtask X.Y or concern name NOT in sub-issues → HALT and report: "Subtask not found. Available subtasks: [list]"
 
 5. Report to user (MANDATORY - no silent halts):
-   ```markdown
-   Proceeding to implement subtask X.Y.
-   
-   Authorization: "approved" (no phase specified)
-   STATUS: X.Y (or "not found, defaulting to first subtask")
-   Sub-issue: #NNN
-   
-   Starting implementation now.
-   ```
+```markdown
+Proceeding to implement subtask for {concern} (or X.Y).
+
+Authorization: "approved" (no phase specified)
+STATUS: {concern}, Step {N} (or "not found, defaulting to first concern")
+Sub-issue: #NNN
+
+Starting implementation now.
+```
 
 6. **Why STATUS Gate Matters:**
    - Prevents parallel execution of subtasks
@@ -122,11 +131,12 @@ Auto-creating sub-issues for an approved multi-task plan does NOT require separa
 
 | Scenario | Action |
 |----------|--------|
-| STATUS matches authorized subtask | ✅ PROCEED - report which subtask |
+| STATUS matches authorized subtask (prose or numeric) | ✅ PROCEED - report which subtask and concern |
 | STATUS mismatch | ⛔ HALT - report mismatch clearly |
 | STATUS is "completed" | ⛔ HALT - spec already complete |
-| STATUS not found + "approved" | ✅ PROCEED - default to first subtask (1.1), report decision |
+| STATUS not found + "approved" | ✅ PROCEED - default to first concern's first step, report decision |
 | STATUS not found + "approved: X.Y" | ✅ PROCEED - use specified X.Y, report decision |
+| STATUS not found + "approved: {concern}" | ✅ PROCEED - find phase matching concern name, report decision |
 | Single-phase plan (no STATUS) | ✅ PROCEED - no gate needed |
 | Subtask not in sub-issues list | ⛔ HALT - report available subtasks |
 
@@ -142,7 +152,7 @@ Auto-creating sub-issues for an approved multi-task plan does NOT require separa
 ```markdown
 **STATUS Gate Verification:**
 - Authorization: "approved" (no phase specified)
-- STATUS field: Not found → Defaulting to first subtask (1.1)
+- STATUS field: Not found → Defaulting to first concern's first step
 - Sub-issue: #473
 - Proceeding with implementation
 ```
@@ -162,12 +172,12 @@ Auto-creating sub-issues for an approved multi-task plan does NOT require separa
 
 | Issue | Resolution |
 |-------|------------|
-| STATUS mismatch | POST report: "STATUS mismatch: authorized for X.Y but STATUS is Z.W. Please update STATUS or authorize correct subtask." |
-| STATUS not found | Default to first subtask (1.1), POST report: "STATUS not found. Defaulting to first subtask (1.1). Add 'STATUS: X.Y' to plan issue for tracking." |
+| STATUS mismatch | POST report: "STATUS mismatch: authorized for {concern}/{X.Y} but STATUS is {actual}. Please update STATUS or authorize correct subtask." |
+| STATUS not found | Default to first concern's first step, POST report: "STATUS not found. Defaulting to first concern. Add 'STATUS: in progress — {concern}, Step 1' to plan issue for tracking." |
 | Sub-issue not linked | Auto-create and link, POST report: "Created N sub-issues for phase tracking." |
 | Single-phase plan with STATUS | Ignore STATUS, proceed, POST report: "Single-phase plan, ignoring STATUS field." |
-| Subtask not in list | HALT, POST report: "Subtask X.Y not found. Available subtasks: [list]. Please authorize a valid subtask." |
-| Plan issue missing STATUS field | Default to first subtask (1.1), proceed, report to chat |
+| Subtask not in list | HALT, POST report: "Subtask {X.Y}/{concern} not found. Available subtasks: [list]. Please authorize a valid subtask." |
+| Plan issue missing STATUS field | Default to first concern's first step, proceed, report to chat |
 
 ## Adversarial Verification: Sub-Issue State
 
