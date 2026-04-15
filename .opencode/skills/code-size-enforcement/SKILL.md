@@ -92,6 +92,6 @@ Existing files that predate this skill are EXEMPT. New files and modified code i
 | Guideline/Skill | Section | Relationship |
 |-----------------|---------|--------------|
 | `080-code-standards.md` | Design Principles — ENFORCED UNIVERSALLY | Project-specific conventions |
-| `061-notebook-rules.md` | Code Standards for Notebooks | Notebook-specific standards |
+| `notebook-operations` skill | Code Standards for Notebooks | Notebook-specific standards |
 | `000-critical-rules.md` | General violation enforcement | Violation handling |
 | `programming-principles` skill | SRP, KISS, "No Monoliths" | Decomposition principle guidance — authoritative source for principle definitions |

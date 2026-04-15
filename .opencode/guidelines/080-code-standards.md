@@ -60,7 +60,7 @@ The following project-specific code structure rules are enforced in this reposit
 - All DB/system ops use existing project libraries. Direct data file manipulation prohibited unless instructed.
 - Use `ConfigurationManager` for all data file paths — never hardcode or assume data file locations.
   `project-config.ini` is located at project root; initialize `ConfigurationManager` with the project root path (
-  resolved via root resolution per `120-scripting.md`).
+  resolved via root resolution per `210-scripting.md`).
 
 ## Print Statements & Output
 

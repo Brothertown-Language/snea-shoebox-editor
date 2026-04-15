@@ -81,6 +81,6 @@ ALL code standards in `080-code-standards.md` apply to notebook cells: KISS/DRY,
 
 | Guideline | Section |
 |-----------|---------|
-| `061-notebook-rules.md` | Essential directive referencing this skill |
+| `notebook-operations` skill (this file) | Essential directive for notebook operations |
 | `060-tool-usage.md` | Tool usage and terminal rules |
 | `000-critical-rules.md` | Violation enforcement |

@@ -212,6 +212,7 @@ Findings from adversarial verification follow the same three-tier model as `spec
 
 - Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md`
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 - Related skill tasks: `approval-gate --task verify-authorization` (sub-issue verification is Step 5 — single authoritative gate), `git-workflow --task cleanup` (post-merge closure)
 - Superseded: `github-sub-issues` verification gate is superseded by `approval-gate --task verify-authorization` Step 5
 - Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)

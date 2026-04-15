@@ -80,6 +80,7 @@ Implementation tracks against **plan sub-issues**, not spec sub-issues. The hier
 
 - Related skills: `git-workflow` (branch management), `verification-before-completion` (evidence), `pr-creation-workflow` (PR timing)
 - Related guidelines: `000-critical-rules.md` (review-prep required), `060-tool-usage.md` (build/lint commands)
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 
 ## Platform Compatibility
 

@@ -127,6 +127,8 @@ Exempt from approval revocation:
 - STATUS marker updates (`☐ → ☑`, `1.1 → 1.2`)
 - Bug report additions (separate from spec content changes)
 
+**Exception: Needs-Approval State** — When an issue is already in `needs-approval` state (no approval has been granted), spec revision does NOT constitute "revoking approval" — there is nothing to revoke. The `needs-approval` label is preserved and the revision is documented in Revision Notes. This is the common case: most spec updates happen before approval.
+
 ### Re-implementation Workflow
 
 When a spec is revised after a linked plan was already approved:
@@ -188,6 +190,31 @@ Key rules:
 - ✅ If you catch yourself editing code without a spec, immediately `git checkout` and HALT
 
 **Bug discovery is a reporting action, NOT an implementation authorization.**
+
+### Action Authorization Classification
+
+**The single source for determining whether an action requires authorization.** When in doubt, check this table before checking other files.
+
+| Action | Requires Auth? | Authority Source |
+|--------|---------------|-----------------|
+| Writing Python/source code | Yes | Tier 0: Spec before code |
+| Editing skill files (SKILL.md, task/*.md) | Yes | `000-critical-rules.md` §Implementation Without Spec |
+| Editing guideline files | Yes | `000-critical-rules.md` §Implementation Without Spec |
+| Editing config (pyproject.toml, .pre-commit) | Yes | `000-critical-rules.md` §Implementation Without Spec |
+| Editing test files | Yes | `000-critical-rules.md` §Implementation Without Spec |
+| Creating new files of any type | Yes | `000-critical-rules.md` §Implementation Without Spec |
+| Creating new GitHub Issue (spec/plan) | No auth, but mandatory `github-issue-creation` skill | `github-issue-creation` skill |
+| Updating existing issue spec text (revision) | No auth — spec revision ≠ implementation | `010-approval-gate.md` §Revision ≠ Implementation |
+| Updating issue spec to match code reality (drift sync) | No auth — administrative sync | `130-authority-source.md` §Documentation Drift Protocol |
+| Moving issue labels | No auth | (explicit classification) |
+| Running lint/typecheck/format commands | No auth | (existing practice, now explicit) |
+| Posting progress comments to GitHub | No auth | `github-comments` skill |
+| Creating feature branch | No auth, but mandatory worktree | `git-workflow` skill pre-work |
+| Merging PR | Forbidden — human-only | Tier 0: Human-only merge |
+| Closing issues | Only after PR merge confirmed | `git-workflow` skill cleanup |
+| Spec-auditor auto-fixes on GitHub Issue bodies | Exempt (per conditions) | `010-approval-gate.md` §Audit Auto-Fix Exemption |
+
+**Key invariant**: This table does NOT weaken any existing authorization gate. It only makes existing practice explicit and resolves ambiguous boundary cases.
 
 ## Skill Enforcement (CRITICAL)
 

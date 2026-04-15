@@ -169,6 +169,7 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 
 - Related skills: `subagent-driven-development` (task-level isolation with two-stage review), `git-workflow` (git ops), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation)
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 - Adapted from: `implementation-workflow` (batch-orchestrate, context-passing, purification-and-enforcement, completion)
 
 Co-authored with AI: <AI-Name> (<model-id>)

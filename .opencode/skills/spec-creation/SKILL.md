@@ -186,6 +186,7 @@ Findings from evidence verification follow the three-tier model:
 - **Downstream:** `writing-plans` (plan creation — transforms approved spec into implementation plan)
 - **Source:** Adapted and extended from `brainstorming` Steps 7-9 (not a verbatim move)
 - **Guidelines:** `065-verification-honesty.md` (evidence artifacts)
+- **Authorization classification:** See `010-approval-gate.md` §Action Authorization Classification
 - **Related subtask:** `spec-auditor --task ground-truth` (adversarial metadata verification model)
 
 Co-authored with AI: <AI-Name> (<model-id>)
