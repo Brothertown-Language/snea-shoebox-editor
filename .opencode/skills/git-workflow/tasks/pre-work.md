@@ -98,11 +98,17 @@ git checkout -b spec/my-change dev
 The main working tree must be on `dev` and up-to-date so worktree creation has the correct base:
 
 ```bash
-git checkout dev
-git pull origin dev
+git fetch origin
+if git rev-parse --verify origin/dev >/dev/null 2>&1; then
+    git checkout -b dev origin/dev 2>/dev/null || git checkout dev
+    git pull origin dev
+else
+    git checkout -b dev origin/main || { echo "FATAL: Failed to create dev branch from origin/main"; exit 1; }
+    git push -u origin dev
+fi
 ```
 
-If `dev` doesn't exist locally, create it from `main`: `git checkout -b dev origin/dev`
+**If dev branch creation fails entirely (neither origin/dev nor origin/main exists), the agent MUST HALT immediately and report the fatal error. Proceeding on `main` is a CRITICAL GUIDELINE VIOLATION.**
 
 ### Step 3: Create Feature Worktree (MANDATORY — NO EXCEPTIONS)
 
