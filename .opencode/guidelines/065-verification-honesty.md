@@ -148,3 +148,70 @@ There are NO exceptions to metadata verification:
 - **Cross-references are not self-certifying.** A `#N` reference does not mean the issue exists or matches. Verify via GitHub MCP.
 - **Code references are not self-certifying.** A file path in a spec does not mean the file exists. Verify via codebase tools.
 - **Authorization comments are not self-certifying.** An approval comment may predate a revision. Verify timestamps.
+
+## Proactive Verification
+
+The verification honesty principle extends beyond reactive verification (when instructed to check) to **proactive verification** — verifying BEFORE making claims, not just when told to verify.
+
+### Core Rule: Verify Before Claiming
+
+**🚫 CRITICAL VIOLATION: Asserting config schema compliance, API signatures, or code implementation details without verifying against live documentation or live source.**
+
+When an agent is about to make a structural claim — about config schemas, API signatures, function parameters, or code behavior — it MUST verify that claim against live documentation or live source before asserting it. Memory, training data, and "common knowledge" are NOT verification sources.
+
+### What Must Be Proactively Verified
+
+| Category | What to Verify | How to Verify |
+|----------|---------------|---------------|
+| Config schemas / JSON schemas | Field names, types, required vs optional, default values, nested structure | Fetch schema from canonical source; parse and verify against spec |
+| API signatures | Function names, parameter names, parameter order, return types, async/sync | `srclight_get_signature`, official docs, source code `read` |
+| Library methods | Method existence, parameter names, deprecation status, version compatibility | Official docs, `srclight_search_symbols`, changelog |
+| Code implementation details | Class hierarchy, function behavior, error handling, side effects | `srclight_get_symbol`, `srclight_get_type_hierarchy`, source code `read` |
+| Environment variables | Variable names, defaults, required vs optional | `.env.example`, config documentation, `read` tool |
+
+### Examples of Violations and Correct Behavior
+
+❌ **VIOLATION:** "The config accepts a `timeout` field" (asserted from training data without checking the actual schema)
+
+❌ **VIOLATION:** "The `create_shoebox` method takes `name` and `path` parameters" (from memory, not verified)
+
+❌ **VIOLATION:** "This function returns a `Shoebox` object" (assumed from context, not checked)
+
+✅ **CORRECT:** "The config accepts a `timeout` field — verified by reading `schemas/config.json`" (with tool call visible)
+
+✅ **CORRECT:** "The `create_shoebox` method takes `name` and `path` parameters — verified via `srclight_get_signature`" (with tool call visible)
+
+✅ **CORRECT:** "The `ShoeboxEditor.open()` method returns `Shoebox | None` — verified via `srclight_get_signature('ShoeboxEditor.open')`" (with tool call visible)
+
+✅ **CORRECT:** "The `timeout` field defaults to 30 seconds (unverified)" — tagged when verification is not yet available
+
+### When Proactive Verification Applies
+
+| Situation | Proactive Verification Required? |
+|-----------|----------------------------------|
+| Writing a spec that references config fields | ✅ Yes — verify fields exist in schema |
+| Writing a spec that references API endpoints | ✅ Yes — verify endpoints and parameters |
+| Writing a spec that references function signatures | ✅ Yes — verify via srclight or source |
+| Implementing code that calls an API | ✅ Yes — verify signature before calling |
+| Creating a config file | ✅ Yes — verify schema compliance |
+| Describing existing code behavior | ✅ Yes — verify via read or srclight |
+| General explanation or reasoning about approach | ❌ No — but tag unverified assertions |
+| Brainstorming alternatives | ❌ No — but tag assertions as speculative |
+
+### Unverified Assertion Tagging
+
+When proactive verification is not immediately feasible (e.g., external service unavailable, schema not yet published), the agent MUST tag unverified assertions:
+
+- Format: `(unverified)` after the assertion
+- Example: "The API accepts `page_size` as a query parameter (unverified)"
+- Limitations: No more than 3 unverified assertions per spec section before verification becomes mandatory
+
+### Relationship to Other Sections
+
+This Proactive Verification section extends the core Verification Honesty rule (verify when instructed) by adding a proactive duty (verify BEFORE claiming). It does NOT replace the reactive duty — both apply simultaneously:
+
+- **Reactive** (core rule): When instructed to check, verify, confirm — use tools
+- **Proactive** (this section): Before asserting schema/API/code claims — verify against live source
+- **Metadata** (previous section): Before trusting metadata claims — verify against actual state
+
+All three duties share the same evidence requirement: visible tool call or command output confirming the result.
