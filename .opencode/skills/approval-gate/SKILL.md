@@ -81,6 +81,7 @@ Spec approved (existing plan found)
 
 Plan approved
   → verify-authorization (all gates pass)
+  → git-workflow --task pre-work (MANDATORY: worktree creation and environment setup)
   → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
   → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
   → divide-and-conquer/assemble-batch (dispatch sub-agents, squash-merge into batch branch)
@@ -100,6 +101,8 @@ Already implemented
 - Spec approval: Issue title contains `[SPEC` or has `spec` label
 - Plan approval: Issue has `plan` label or `[PLAN]` prefix in title
 - See `verify-authorization.md` Step 5 for full procedure
+
+**⚠️ MANDATORY WORKTREE STEP:** `git-workflow --task pre-work` MUST be invoked between plan approval and any implementation. This step creates the feature branch worktree, sets `WORKTREE_PATH`, and verifies branch state. Skipping this step is a CRITICAL GUIDELINE VIOLATION (see `000-critical-rules.md`).
 
 **Circular dispatch prevention:** Spec approval dispatches to `writing-plans`, which creates a plan. Plan approval dispatches to `executing-plans`. The plan requires its own approval before `executing-plans` can run.
 
