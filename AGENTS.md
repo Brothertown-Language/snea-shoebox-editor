@@ -68,7 +68,6 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 ## Boundaries (Critical)
 
 **✅ ALWAYS:**
-- Run session init script at session start
 - Create feature branch BEFORE any filesystem change
 - Wait for explicit authorization ("approved" or "go") before implementing
 - SILENTLY HALT after completing a task

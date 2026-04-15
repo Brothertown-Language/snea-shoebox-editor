@@ -124,38 +124,6 @@ GITBUCKET_TOKEN=your-personal-access-token
 | Token | All operations | `GITBUCKET_TOKEN` | ✅ Working |
 | Basic | Admin endpoints | `GITBUCKET_USERNAME`, `GITBUCKET_PASSWORD` | ❌ Broken |
 
-## Platform Detection
-
-```python
-from skills.gitbucket_api.tools import is_gitbucket, is_github
-
-if is_gitbucket():
-    # Use GitBucket API
-    api = GitBucketAPI()
-    issue = api.create_issue(...)
-
-elif is_github():
-    # Use GitHub tools
-    issue = github_issue_write(...)
-```
-
-## Repository Context
-
-```python
-from skills.gitbucket_api.tools import get_repo_context
-
-context = get_repo_context()
-# {'GIT_OWNER': 'myorg', 'GIT_REPO': 'myrepo', 'GIT_PLATFORM': 'gitbucket'}
-
-# Use in API calls
-api = GitBucketAPI()
-issue = api.create_issue(
-    owner=context['GIT_OWNER'],
-    repo=context['GIT_REPO'],
-    title="Bug report"
-)
-```
-
 ## Error Handling
 
 ```python
@@ -196,13 +164,5 @@ except NotFoundError:
 
 1. **Use config file** - Create `secrets.toml` with `create_config_file()` for persistent credentials
 2. **Token auth ONLY** - Basic auth is broken in GitBucket, use token for all operations
-3. **Platform detection** - Check `is_gitbucket()` before GitBucket API calls
-4. **Error handling** - Catch specific exceptions (AuthenticationError, NotFoundError, etc.)
-5. **Cross-platform** - Config locations work on Linux, macOS, Windows
-
-## Source Code
-
-- `tools/auth.py` - Credential loading, platform-specific paths
-- `tools/session.py` - Session integration
-- `.opencode/tools/session-init` - Session init script
-
+3. **Error handling** - Catch specific exceptions (AuthenticationError, NotFoundError, etc.)
+4. **Cross-platform** - Config locations work on Linux, macOS, Windows
