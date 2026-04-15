@@ -75,7 +75,7 @@ Test whether the issue system API is reachable and authenticated for the submodu
 3. Map error responses:
    - HTTP 403 → {platform: "github", access_level: "no-access", reason: "HTTP 403 Forbidden"}
    - HTTP 404 → {platform: "github", access_level: "no-repo", reason: "HTTP 404 Not Found"}
-   - Authentication error → {platform: "github", access_level: "no-access", reason: "Authentication failed"}
+   - Authentication error → {platform: "github", access_level: "auth-failed", reason: "Authentication failed"}
 ```
 
 **For GitBucket:**
@@ -86,7 +86,7 @@ Test whether the issue system API is reachable and authenticated for the submodu
 3. Map error responses:
    - HTTP 403 → {platform: "gitbucket", access_level: "no-access", reason: "HTTP 403 Forbidden"}
    - HTTP 404 → {platform: "gitbucket", access_level: "no-repo", reason: "HTTP 404 Not Found"}
-   - Authentication error → {platform: "gitbucket", access_level: "no-access", reason: "Authentication failed"}
+   - Authentication error → {platform: "gitbucket", access_level: "auth-failed", reason: "Authentication failed"}
 ```
 
 **For unknown platform:**
@@ -101,7 +101,9 @@ Test whether the issue system API is reachable and authenticated for the submodu
 | -- | -- | -- |
 | `full` | Issue + PR creation available | Tier 1 |
 | `issue-only` | Issue creation works, PR creation fails | Tier 2 |
-| `no-access` | No API access (403, 404, auth failure, unknown platform) | Tier 3 |
+| `no-access` | No API access (HTTP 403 Forbidden) | Tier 3 |
+| `auth-failed` | Authentication error (credentials invalid or missing) | Tier 3 |
+| `no-repo` | Repository not found (HTTP 404 Not Found) | Tier 3 |
 
 ### Step 2: Cache Detection Result
 
@@ -146,7 +148,7 @@ When `access_level` is `issue-only`:
 
 **Tier 3: Commit Message Provenance**
 
-When `access_level` is `no-access`:
+When `access_level` is `no-access`, `no-repo`, or `auth-failed`:
 
 ```
 1. No API calls attempted — provenance is recorded via commit message metadata
@@ -193,6 +195,7 @@ Logging is informational only — it does not affect the git workflow.
 | GitBucket API unreachable | Treat as `no-access` with reason "API unreachable"; fall back to Tier 3 |
 | Submodule has no remote | Classify as `unknown` platform; fall back to Tier 3 |
 | Platform detected but repo not found (404) | Return `{platform, "no-repo", "HTTP 404 Not Found"}`; fall back to Tier 3 |
+| Authentication error (401/403 with invalid token) | Return `{platform, "auth-failed", "Authentication failed"}`; fall back to Tier 3 |
 
 ## Context Required
 
@@ -311,17 +314,17 @@ When Tier 1 PR creation failed, or `access_level` is `issue-only`:
 
 #### Step 8: Tier 3 — Commit Message Provenance
 
-When Tier 2 issue creation failed, or `access_level` is `no-access`:
+When Tier 2 issue creation failed, or `access_level` is `no-access`, `no-repo`, or `auth-failed`:
 
 ```
 1. No API calls attempted
 2. Structured commit message metadata is the provenance record:
 
-   Sync <submodule-path> from <parent-repo>/<parent-branch>
+    Sync <submodule-path> from <parent-repo>/<parent-branch>
 
-   Triggered-by: <parent-repo>#<parent-issue>
-   Change: <description>
-   [skip-ci]
+    Triggered-by: <parent-repo>#<parent-issue>
+    Change: <description>
+    [skip-ci]
 
 3. Record: {timestamp, submodule, operation: "dev-push", tier: 3, issue_number: null, pr_number: null}
 ```
@@ -335,8 +338,10 @@ When Tier 1 or Tier 2 succeeds (a submodule issue was created):
 ```
 Post a comment on the parent issue (<parent-issue>) in the parent repo:
 
-  Submodule provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number>
-  Tier: <1 or 2> | Operation: dev-push | Submodule: <submodule-path>
+  Submodule provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number> (Tier <tier>)
+  [If PR exists: PR #<pr-number>]
+
+  Operation: dev-push | Submodule: <submodule-path>
 
   ---
 
@@ -526,17 +531,17 @@ When Tier 1 PR creation failed, or `access_level` is `issue-only`:
 
 #### Step 14: Tier 3 — Commit Message Provenance
 
-When Tier 2 issue creation failed, or `access_level` is `no-access`:
+When Tier 2 issue creation failed, or `access_level` is `no-access`, `no-repo`, or `auth-failed`:
 
 ```
 1. No API calls attempted
 2. Structured commit message metadata is the provenance record:
 
-   Release <submodule-path>: promoted from <source-branch> #[parent-issue]
+    Release <submodule-path>: promoted from <source-branch> #[parent-issue]
 
-   Tag: <tag-name>
-   Parent: <parent-repo>#<parent-issue>
-   Branch: <parent-branch>
+    Tag: <tag-name>
+    Parent: <parent-repo>#<parent-issue>
+    Branch: <parent-branch>
 
 3. Record: {timestamp, submodule, operation: "promotion", tier: 3, issue_number: null, pr_number: null}
 ```
@@ -550,8 +555,10 @@ When Tier 1 or Tier 2 succeeds (a submodule issue was created):
 ```
 Post a comment on the parent issue (<parent-issue>) in the parent repo:
 
-  Submodule promotion provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number>
-  Tier: <1 or 2> | Operation: promotion | Submodule: <submodule-path> | Tag: <tag-name>
+  Submodule provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number> (Tier <tier>)
+  [If PR exists: PR #<pr-number>]
+
+  Operation: promotion | Submodule: <submodule-path> | Tag: <tag-name>
 
   ---
 

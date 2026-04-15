@@ -112,7 +112,7 @@ fi
 #### 2d: Create Annotated Tag
 
 ```bash
-git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG"
+git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG: promoted from dev #<parent-issue>"
 ```
 
 #### 2e: Push Submodule Main and Tags
@@ -151,7 +151,7 @@ git add <path>
 
 #### 2h: Create Provenance Tracking
 
-After promoting a submodule, invoke provenance tracking:
+After promoting a submodule, invoke provenance tracking with inline fallback:
 
 ```
 Invoke: /skill git-workflow --task provenance --mode=promotion
@@ -170,7 +170,32 @@ Invoke: /skill git-workflow --task provenance --mode=promotion
 | change_description | Brief description of changes in this submodule |
 | parent_release_ref | Parent release tag or issue reference |
 
-**Provenance is non-blocking:** If issue/PR creation fails, provenance falls back silently through tiers (issue-only → commit message). The promotion workflow continues regardless of provenance outcome.
+**Inline fallback (P12) — provenance attempts each tier and falls back automatically:**
+
+1. Detect submodule platform and API availability (provenance.md Step 0-1)
+2. Attempt Tier 1 (issue + PR):
+   - Create issue: `Release <submodule-path> promoted from <source-branch>`
+   - Create PR targeting `main` with `Fixes #<submodule-issue-number>` (P8)
+   - If PR creation fails → downgrade to Tier 2, log reason
+3. Attempt Tier 2 (issue only):
+   - If issue creation fails → downgrade to Tier 3, log reason
+4. Tier 3 (commit message):
+   - No API calls; provenance in tag message: `Release <path>: promoted from <branch> #[parent-issue]` (P9)
+5. All fallbacks are SILENT — no HALT, no blocking of the promotion workflow
+
+**Tier logging (P13):** Each provenance operation logs:
+```
+{timestamp, submodule, operation: "promotion", tier: <1|2|3>, issue_number?, pr_number?, tag_name}
+```
+
+**Cross-reference (P14/P15):** When Tier 1 or 2 succeeds, post comment on parent issue:
+```
+Submodule provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number> (Tier <tier>)
+[If PR exists: PR #<pr-number>]
+Operation: promotion | Submodule: <submodule-path> | Tag: <tag-name>
+```
+
+**Provenance is non-blocking:** The promotion workflow continues regardless of provenance outcome. Failures at any tier result in silent downgrade, never HALT.
 
 **See `provenance.md` → promotion-provenance section for complete procedure.**
 

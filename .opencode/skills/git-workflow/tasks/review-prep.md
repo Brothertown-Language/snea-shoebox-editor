@@ -197,12 +197,12 @@ If the `--skip-submodules` flag is provided:
 
 #### Provenance Tracking After Submodule Push (MANDATORY)
 
-**After each submodule is successfully pushed, invoke provenance tracking immediately.**
+**After each submodule is successfully pushed, invoke provenance tracking immediately with inline fallback.**
 
 For each submodule that was pushed in the Per-Submodule Push Sequence above:
 
 ```
-1. Invoke: /skill git-workflow --task provenance
+1. Invoke: /skill git-workflow --task provenance --mode=dev-push
    with parameters:
      - parent_repo: <GIT_OWNER>/<GIT_REPO>
      - parent_branch: <BRANCH_NAME>
@@ -210,12 +210,23 @@ For each submodule that was pushed in the Per-Submodule Push Sequence above:
      - submodule_path: <path of the pushed submodule>
      - change_description: <brief description of what changed>
 
-2. Provenance is NON-BLOCKING:
-   - If issue/PR creation succeeds → log result, continue
-   - If API access unavailable → falls back silently to commit message provenance (Tier 3)
-   - If any tier fails → next tier attempted, no HALT, no blocking
+2. Inline fallback (P12) — provenance attempts each tier and falls back automatically:
+   - Detect submodule platform and API availability (provenance.md Step 0-1)
+   - Attempt Tier 1 (issue + PR) → if PR creation fails, downgrade to Tier 2
+   - Attempt Tier 2 (issue only) → if issue creation fails, downgrade to Tier 3
+   - Tier 3 (commit message) → no API calls, provenance in commit metadata only
+   - All fallbacks are SILENT — no HALT, no blocking of the parent git workflow
 
-3. Do NOT wait for provenance to succeed before proceeding with the parent repo push.
+3. Tier logging (P13) — each provenance operation logs which tier was used:
+   Record: {timestamp, submodule, operation: "dev-push", tier: <1|2|3>, issue_number?, pr_number?}
+
+4. Cross-reference parent issue (P4) — when Tier 1 or 2 succeeds:
+   Post comment on parent issue:
+     Submodule provenance tracked in <sub-owner>/<sub-repo>#<submodule-issue-number> (Tier <tier>)
+     [If PR exists: PR #<pr-number>]
+     Operation: dev-push | Submodule: <submodule-path>
+
+5. Do NOT wait for provenance to succeed before proceeding with the parent repo push.
    Provenance tracking is best-effort and never blocks the git workflow.
 ```
 
