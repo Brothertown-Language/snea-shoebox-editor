@@ -49,7 +49,8 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 ### Chat Output Format (MANDATORY — Zero Tolerance)
 - [ ] Executive summary present as **first** chat output element (before any URL)
 - [ ] Outcome line present after summary
-- [ ] Compare URL present (after summary, before byline)
+- [ ] URL label is context-appropriate: "Compare URL" (pre-PR, `compare/dev...`) or "PR URL" (post-PR, `pull/N`)
+- [ ] URL present (after summary, before byline)
 - [ ] AI byline in format `🤖 <AgentName> (<ModelID>) <status>` appears **last** (after URL)
 - [ ] No URL before executive summary (CRITICAL VIOLATION if violated)
 - [ ] No byline before URL (CRITICAL VIOLATION if violated)

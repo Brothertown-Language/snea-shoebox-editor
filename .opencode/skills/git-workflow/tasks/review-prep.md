@@ -372,10 +372,20 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 
 (GitBucket example — for GitHub use `https://github.com/${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>`)
 
+**URL Label Context:**
+
+| Context | Label | URL Format |
+| -- | -- | -- |
+| Pre-PR (review-prep, after push) | **Compare URL** | `compare/dev...<branch-name>` |
+| Post-PR (PR has been created) | **PR URL** | `pull/<PR-number>` |
+
+After a PR has been created, the chat output MUST use **"PR URL"** with the `pull/<N>` format — never "Compare URL". The "Compare URL" label is correct ONLY before PR creation when the compare URL is the only available reference. Once a PR exists, labeling it "Compare URL" is a format violation.
+
 **Format verification (MANDATORY — check before posting):**
 
 - [ ] Executive summary present as first element
-- [ ] Compare URL present as last element before byline
+- [ ] URL label is context-appropriate: "Compare URL" (pre-PR, `compare/dev...`) or "PR URL" (post-PR, `pull/N`)
+- [ ] URL present as last element before byline
 - [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelID>) <status>`
 - [ ] No URL before executive summary
 - [ ] No byline before URL
@@ -471,7 +481,8 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 | -- | -- | -- | -- |
 | Executive summary present | Review chat output | First element is `**Summary:**` block | MISSING-ELEMENT → add before proceeding |
 | Outcome present | Review chat output | `**Outcome:**` line follows summary | MISSING-ELEMENT → add before proceeding |
-| Compare URL present | Review chat output | URL starts with `https://github.com/` or `${GITBUCKET_HTML_URL}` | MISSING-ELEMENT → generate URL before proceeding |
+| URL label context-appropriate | Review chat output | Pre-PR: "Compare URL" with `compare/dev...`; Post-PR: "PR URL" with `pull/N` | STRUCTURE-VIOLATION → fix label and format |
+| URL present | Review chat output | URL starts with `https://github.com/` or `${GITBUCKET_HTML_URL}` | MISSING-ELEMENT → generate URL before proceeding |
 | AI byline present | Review chat output | Ends with `🤖 <AgentName> (<ModelID>)` line | MISSING-ELEMENT → add before proceeding |
 | No URL before summary | Review chat output | URL appears AFTER summary, not before | STRUCTURE-VIOLATION → reorder output |
 | No byline before URL | Review chat output | Byline appears AFTER URL, not before | STRUCTURE-VIOLATION → reorder output |
@@ -487,7 +498,15 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 
 **Outcome:** <What changed for stakeholders>
 
-https://github.com/<GIT_OWNER>/<GIT_REPO>/compare/dev...<branch-name>
+Compare URL: https://github.com/<GIT_OWNER>/<GIT_REPO>/compare/dev...<branch-name>
+
+🤖 <AgentName> (<ModelID>) <status>
+```
+
+**After a PR has been created**, replace "Compare URL" with "PR URL" and use the `pull/N` format:
+
+```
+PR URL: https://github.com/<GIT_OWNER>/<GIT_REPO>/pull/<PR-number>
 
 🤖 <AgentName> (<ModelID>) <status>
 ```
@@ -510,9 +529,10 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 ```
 1. Review chat output for "**Summary:**" → EVIDENCE: <found or missing>
 2. Review chat output for "**Outcome:**" → EVIDENCE: <found or missing>
-3. Review chat output for compare URL pattern → EVIDENCE: <found or missing>
-4. Review chat output for byline pattern → EVIDENCE: <found or missing>
-5. Verify ordering: summary → outcome → URL → byline → EVIDENCE: <correct or reordered>
+3. Review chat output for URL label → EVIDENCE: <"Compare URL" (pre-PR) or "PR URL" (post-PR)>
+4. Review chat output for URL pattern → EVIDENCE: <found or missing>
+5. Review chat output for byline pattern → EVIDENCE: <found or missing>
+6. Verify ordering: summary → outcome → URL → byline → EVIDENCE: <correct or reordered>
 ```
 
 **Classification on failure:**
@@ -521,7 +541,8 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 | -- | -- | -- | -- |
 | Missing summary | MISSING-ELEMENT | auto-fix | Add summary before proceeding |
 | Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before proceeding |
-| Missing compare URL | MISSING-ELEMENT | auto-fix | Generate URL before proceeding |
+| Wrong URL label (post-PR says "Compare URL") | STRUCTURE-VIOLATION | auto-fix | Change to "PR URL" with `pull/N` format |
+| Missing URL | MISSING-ELEMENT | auto-fix | Generate URL before proceeding |
 | Missing byline | MISSING-ELEMENT | auto-fix | Add byline before proceeding |
 | Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → URL → byline |
 

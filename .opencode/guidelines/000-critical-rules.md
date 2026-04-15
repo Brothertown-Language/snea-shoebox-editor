@@ -97,6 +97,15 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 **⚠️ Posting URL before executive summary in chat is a CRITICAL GUIDELINE VIOLATION.** Executive summary first, URL last, AI byline LAST after URL.
 
+**URL Label Context:**
+
+| Context | Label | URL Format |
+| -- | -- | -- |
+| Pre-PR (after push, before PR creation) | **Compare URL** | `compare/dev...<branch-name>` |
+| Post-PR (PR has been created) | **PR URL** | `pull/<PR-number>` |
+
+Using "Compare URL" after a PR has been created is a format violation — the label MUST be "PR URL" with the `pull/N` format. Using "PR URL" before a PR exists is also a format violation — the label MUST be "Compare URL" with the `compare/dev...` format.
+
 **See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples.**
 
 ## Critical Violation: Wrong PR Body Format

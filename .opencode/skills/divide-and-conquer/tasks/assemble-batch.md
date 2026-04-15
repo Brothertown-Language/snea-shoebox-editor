@@ -188,6 +188,10 @@ Implemented <N> issues via branch-per-issue batch orchestration.
 - #C: <summary> ⚠️ (partial — see details)
 
 Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
+
+**If a PR has been created for this batch, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
+
+PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
 ```
 
 **Issue comments:**
