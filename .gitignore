@@ -65,8 +65,14 @@ tmp/
 # Secrets and sensitive files
 .env
 .env.*
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+service-account.json
 .streamlit/*
 !.streamlit/config.toml
+.streamlit/secrets.toml.production
 *.key
 *.pem
 *.p12
