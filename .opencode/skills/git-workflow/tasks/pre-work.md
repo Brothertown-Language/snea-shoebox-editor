@@ -8,6 +8,8 @@ Create feature branch in a worktree BEFORE any implementation work begins. Verif
 
 **The agent MUST create a feature worktree BEFORE ANY filesystem change.**
 
+**This is a Tier 1 (Non-Yielding) mandate** per `000-critical-rules.md` → "Mandate Tiering." Even with explicit developer authorization ("approved"/"go"), the agent MUST create a worktree before editing files. Developer authorization can waive Tier 2 process mandates (spec-before-code, plan-before-implementation) but CANNOT waive this Tier 1 safety mandate. No exceptions, no fallbacks.
+
 This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any file, creating any file, or making ANY change to the project:
 
 1. **Invoke `using-git-worktrees` skill** — creates isolated worktree (MANDATORY, no exceptions)

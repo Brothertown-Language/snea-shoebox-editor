@@ -5,6 +5,52 @@
 
 This file provides critical rules that must never be violated. Sections with full detail in dedicated guidelines are referenced here with one-line pointers — the referenced guideline contains the complete rule, enforcement matrix, and examples.
 
+## Mandate Tiering
+
+Not all "zero tolerance" rules carry the same weight. This document classifies rules into two tiers based on what is at stake when they are violated:
+
+### Tier 1 — Non-Yielding Mandates (Safety-Critical)
+
+These mandates protect the integrity of the codebase and repository. They **NEVER yield to developer authorization** — even if a developer says "approved" or "go", the agent MUST still comply with these rules.
+
+| Mandate | Why Non-Yielding |
+| -- | -- |
+| Worktree required before file edits | Prevents corruption of main/dev working directory |
+| No commits to `main` or `dev` | Branch protection is a repository integrity concern |
+| Human-only merge | Agents must never merge PRs |
+| No `/tmp/` usage — `./tmp/` only | Prevents system-level temp file leakage |
+| Path rules in worktree context | Prevents silent file operation errors across worktrees |
+| Sub-agents must receive `WORKTREE_PATH` | Prevents sub-agents from mutating main repo |
+| Human-only branch deletion | Unmerged branches must never be force-deleted by agents |
+| Agents must never self-authorize | Authorization comes from developers, never from agent reasoning |
+
+**"Zero tolerance" language in this file applies ABSOLUTELY to Tier 1 mandates.** There is no waiver, no override, no emergency bypass.
+
+### Tier 2 — Authorization-Waivable Mandates (Process)
+
+These mandates ensure disciplined workflow (spec-first, plan-before-implementation). They **CAN be waived by explicit developer authorization** ("approved" or "go") because the developer is accepting the risk of skipping process steps.
+
+| Mandate | What Waiver Means |
+| -- | -- |
+| Spec before code | Developer authorization means "you may begin the process" — for complex work, still create a spec/plan; for clearly simple work (docs, runbooks, minor config), the developer's explicit authorization IS the process |
+| Plan before implementation | Same as above — authorization authorizes the work, not necessarily every intermediate artifact |
+| `needs-approval` label present | Explicit auth overrides this label per `010-approval-gate.md` |
+| Sub-issue structure for multi-task plans | When developer authorizes a multi-task plan, sub-issue creation is auto-setup, not a separate gate |
+
+**For Tier 2 mandates, developer authorization does NOT mean "skip the process entirely"** — it means "you may begin." For complex work (new features, behavioral changes), the spec/plan workflow still produces value even when authorization exists. For clearly simple work (documentation, runbooks, minor configuration edits), the developer's explicit authorization IS sufficient process — no separate spec/plan is required.
+
+### Interaction Rule
+
+When developer authorization conflicts with a mandate:
+
+| Scenario | Resolution |
+| -- | -- |
+| Developer authorization + Tier 2 process mandate | Developer authorization wins — the work is authorized |
+| Developer authorization + Tier 1 safety mandate | Safety mandate wins — must use worktree, must not commit to main/dev |
+| No developer authorization + any mandate | Mandate holds — HALT and wait |
+
+**See `010-approval-gate.md` → "Mandate Tiering Interaction" for the complete interaction semantics and examples.**
+
 ## Critical Violation: Worktree Bypass — Using stash+checkout Instead of Worktrees
 
 **⚠️ Using `stash + checkout -b` instead of worktrees for ANY feature branch creation is a CRITICAL GUIDELINE VIOLATION.**
