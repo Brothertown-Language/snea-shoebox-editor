@@ -6,17 +6,17 @@
 
 Every spec file SHOULD have a **STATUS** indicator at the top. The format varies by spec complexity:
 
-**For multi-phase specs (recommended format):**
+**For multi-phase specs (prose-driven format — recommended):**
 
 ```markdown
 # Spec: [Feature Name]
 
-STATUS: 1.1
+STATUS: in progress — Authorization Gate, Step 1
 CREATED: 2026-03-24
 
 ---
 
-## Phase 1: [Concern Name] (Gated)
+## Phase 1: Authorization Gate (Gated)
 ...
 ```
 
@@ -37,15 +37,19 @@ STATUS: in progress
 
 | Format | Meaning |
 | -- | -- |
-| `1` | Phase 1, no specific step tracked |
-| `1.2` | Phase 1, step 2 (currently active) |
-| `2.1-3` | Phase 2, steps 1-3 in progress |
+| `in progress — {concern}, Step {N}` | Working on a specific step within a concern (prose-driven, recommended) |
+| `completed — {concern}` | Phase/concern done (prose-driven, recommended) |
+| `{concern} — {task description}` | Active task within a concern (prose-driven, recommended) |
+| `1` | Phase 1, no specific step tracked (numeric, backward-compatible) |
+| `1.2` | Phase 1, step 2 (numeric, backward-compatible) |
+| `2.1-3` | Phase 2, steps 1-3 in progress (numeric, backward-compatible) |
 | `in progress` | Simple spec — currently being worked on |
 | `complete` | Simple spec — all work done |
 | `completed` | All phases done, ready for archive |
 | `1.1 (REVISED - NEEDS APPROVAL)` | Spec was modified, awaiting fresh approval |
+| `in progress — {concern} (REVISED - NEEDS APPROVAL)` | Prose-driven revision marker |
 
-**Advisory note:** `STATUS: phase.step` format is recommended for multi-phase specs. For simple bug fixes or single-task specs, a brief status note like `in progress` or `complete` is acceptable without phase.step numbering.
+**Backward compatibility:** The numeric `X.Y` format (e.g., `1.2`, `2.1-3`) is still recognized by all tools and skills, but is no longer recommended. New specs should use prose-driven STATUS formats that reference concern names rather than numeric phase indices. This makes STATUS markers self-explanatory and resilient to phase renumbering.
 
 **⚠️ CRITICAL: Phase names MUST describe specific concerns, NOT generic activities.**
 
@@ -55,6 +59,14 @@ STATUS: in progress
 #### Revision Status Format
 
 **When a spec or task is modified, the status MUST change:**
+
+```
+STATUS: in progress — Authorization Gate, Step 1
+    ↓ (revision made)
+STATUS: in progress — Authorization Gate, Step 1 (REVISED - NEEDS APPROVAL)
+```
+
+**Numeric revision format (backward-compatible):**
 
 ```
 STATUS: 1.1
@@ -72,7 +84,7 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 
 **Exempt status updates (do NOT revoke approval):**
 
-- STATUS marker updates only (`STATUS: 1.1` → `STATUS: 1.2`)
+- STATUS marker updates only (`STATUS: in progress — Auth, Step 1` → `STATUS: in progress — Auth, Step 2`, or `STATUS: 1.1` → `STATUS: 1.2`)
 - Bug report additions to existing spec
 
 ### Status Markers (Visual Icons)
@@ -100,6 +112,13 @@ Status markers (`☐`/`↻`/`☑`/`☒`) are recommended for tracking step compl
 
 ### When to Update Status
 
+- **PENDING → `in progress — {concern}, Step 1`**: When spec is created (or `1.1` for backward compatibility)
+- **Step completion**: `in progress — {concern}, Step N` → `in progress — {concern}, Step N+1`
+- **Concern completion**: `in progress — {concern}, Step N` → `completed — {concern}` → `in progress — {next concern}, Step 1`
+- **Final completion**: Last concern → `completed`
+
+**Numeric transitions (backward-compatible):**
+
 - **PENDING → `1.1`**: When spec is created (first phase, first step)
 - **`N.M` → `N.M+1`**: When step M completes
 - **`N.last → N+1.1`**: When last step of phase N completes, move to next phase
@@ -112,7 +131,7 @@ Status markers (`☐`/`↻`/`☑`/`☒`) are recommended for tracking step compl
 When updating status:
 
 1. **Report progress to chat** documenting what was completed
-2. **Edit STATUS field ONLY** (change `STATUS: 1.1` to `STATUS: 1.2` for example)
+2. **Edit STATUS field ONLY** (change `STATUS: in progress — {concern}, Step N` or `STATUS: 1.1` for backward compatibility)
 3. **Never rewrite the entire body** to change status
 
 See `123-github-ai-identity.md` and `github-comments` skill → "Issue Body Update Rules" section for complete rules.
@@ -121,7 +140,7 @@ See `123-github-ai-identity.md` and `github-comments` skill → "Issue Body Upda
 
 If a spec file lacks a `STATUS:` header, the agent MUST:
 
-1. Add the header with `STATUS: 1.1` (default for new specs) — MINIMAL EDIT ONLY (add one line)
+1. Add the header with prose-driven STATUS (e.g., `STATUS: in progress — {concern}, Step 1`) — MINIMAL EDIT ONLY (add one line). For backward compatibility, `STATUS: 1.1` is also acceptable.
 2. If all tasks are marked `☑`, set `STATUS: completed`
 
 ______________________________________________________________________

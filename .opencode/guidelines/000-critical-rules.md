@@ -241,7 +241,7 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 - ✅ REQUIRED: Sub-issues at PHASE level under the plan (not the spec); each linked via `github_sub_issue_write method=add`; single-task plans exempt; auto-create as pre-implementation setup
 - ✅ REQUIRED: Plan is the parent of implementation sub-issues; spec references plan via body linked reference, NOT GitHub sub-issue link
 
-**See `github-sub-issues` skill for complete workflow including single-task exemption, auto-create workflow, and database ID requirement.**
+**See `github-sub-issues` skill for complete workflow including single-task exemption, auto-create workflow, and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 

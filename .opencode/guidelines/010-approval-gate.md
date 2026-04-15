@@ -4,7 +4,7 @@
 >
 > - Spec + authorization requirements
 > - Plan approval gate
-> - Sub-issue verification gate (under plan)
+> - Sub-issue verification gate (under plan) — consolidated into `approval-gate --task verify-authorization` Step 5
 > - Single-task exemption
 > - Re-evaluation checklist
 > - Bug report response
@@ -204,7 +204,7 @@ Key rules:
 | `000-critical-rules.md` | Critical violations and auditor enforcement |
 | `020-go-prohibitions.md` | GO command restrictions |
 | `140-planning-spec-creation.md` | Spec creation and plan-bridge hierarchy |
-| `github-sub-issues` skill | Sub-issue creation and verification (under plan) |
+| `github-sub-issues` skill | Sub-issue creation and hierarchy tracking (verification superseded by `approval-gate --task verify-authorization`) |
 | `git-workflow` skill `cleanup` task | Post-merge closure workflow |
 | `pr-creation-workflow` skill | PR creation timing |
 | `writing-plans` skill | Plan creation from approved spec |

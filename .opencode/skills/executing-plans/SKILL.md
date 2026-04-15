@@ -26,9 +26,15 @@ spec_issue: <number, extracted from plan body>
 GIT_OWNER: "<from-session>"
 GIT_REPO: "<from-session>"
 WORKTREE_PATH: "<worktree path>"
+phase_progress:
+  completed_phases: "<prose listing of completed phases by concern name, from Plan STATUS>"
+  concern_boundaries_crossed: "<prose description of architectural concern transitions from plan>"
+  verification_evidence: "<prose summary of what was verified and outcomes>"
 ```
 
 **Verification:** If `plan_issue` is not present in the dispatch context, HALT — this skill requires plan context to track progress against the correct issue.
+
+**Phase progress composition:** Before dispatching to `divide-and-conquer`, `executing-plans` reads the Plan STATUS marker and concern boundary annotations to compose the initial `phase_progress`. If no phases are complete yet, the field notes that explicitly. The `assemble-batch` task then maintains and extends phase progress as each sub-agent completes.
 
 ## Tasks
 

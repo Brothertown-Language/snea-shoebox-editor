@@ -56,9 +56,9 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 
 1. **Mandatory invocation (no decision point):** The agent MUST invoke approval-gate when it encounters `approved`/`go`, authorization questions, or implementation start. Never prompt for invocation — just invoke the skill.
 2. **Two-gate authorization model:** Spec approval → plan creation. Plan approval → implementation. Each gate requires explicit authorization.
-3. **Pre-Implementation Verification:** Verify spec or plan exists as GitHub Issue, verify authorization, verify sub-issues under plan (multi-task), check for blockers.
+3. **Pre-Implementation Verification:** Verify spec or plan exists as GitHub Issue, verify authorization, verify sub-issues under plan (multi-task) — all consolidated in `verify-authorization` Step 5 as the single readiness check. The `github-sub-issues` verification gate is superseded by `verify-authorization`.
 4. **Multi-task cascade:** When plan has sub-issues, authorization cascades from plan to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
-5. **Spec revision revocation:** If a spec is revised (status changed to REVISED - NEEDS APPROVAL), find linked plan issues by searching for `[PLAN]` issues referencing the spec number in their body and mark them for audit. Revision of a spec revokes approval on its linked plan.
+5. **Spec revision revocation:** If a spec is revised (status contains `REVISED - NEEDS APPROVAL` — in either prose or numeric format), find linked plan issues by searching for `[PLAN]` issues referencing the spec number in their body and mark them for audit. Revision of a spec revokes approval on its linked plan. Prose format example: `STATUS: in progress — {concern} (REVISED - NEEDS APPROVAL)`. Numeric format example: `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`.
 6. **Auto-dispatch after verification:** When all verification gates pass, auto-dispatch to the next skill in the chain. See Dispatch Order below.
 
 ## Dispatch Order
@@ -72,7 +72,7 @@ Spec approved
 
 Plan approved
   → verify-authorization (all gates pass)
-  → sub-issue verification (if multi-phase)
+  → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
   → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
   → divide-and-conquer/assemble-batch (dispatch sub-agents, squash-merge into batch branch)
   → verification-before-completion
@@ -100,9 +100,9 @@ Already implemented
 |-------------|-------------|
 | **Spec or Plan exists as GitHub Issue** | No local fallback — GitHub Issues only |
 | **Two-gate authorization** | Spec approval → plan creation; Plan approval → implementation |
-| **Explicit authorization** | User says `approved`, `go`, or `approved: N.M` — OVERRIDES `needs-approval` label |
+| **Explicit authorization** | User says `approved`, `go`, `approved: N.M`, or `approved: {concern}` — OVERRIDES `needs-approval` label |
 | **Open questions resolved** | No unresolved items in spec or plan |
-| **Sub-issues verified under plan** | Multi-task plans require phase-level sub-issues |
+| **Sub-issues verified under plan** | Multi-task plans require phase-level sub-issues (verified in `verify-authorization` Step 5 — single authoritative gate) |
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
 | **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
 
@@ -202,7 +202,8 @@ Findings from adversarial verification follow the same three-tier model as `spec
 
 - Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md`
-- Related skill tasks: `approval-gate --task verify-sub-issues` (sub-issue verification), `git-workflow --task cleanup` (post-merge closure)
+- Related skill tasks: `approval-gate --task verify-authorization` (sub-issue verification is Step 5 — single authoritative gate), `git-workflow --task cleanup` (post-merge closure)
+- Superseded: `github-sub-issues` verification gate is superseded by `approval-gate --task verify-authorization` Step 5
 - Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)
 - Label state machine: `141-planning-status-tracking.md §10` (label add/remove actions for this skill)
 
