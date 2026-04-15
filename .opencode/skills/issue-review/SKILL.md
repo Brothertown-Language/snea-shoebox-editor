@@ -150,6 +150,43 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 
 - **Load guideline:** `.opencode/guidelines/067-context-completeness.md` — Required before reading issue comments (mandatory per context completeness rule)
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `spec-auditor` in Cross-References and Audit Path | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References and gather task | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `github-comments` in Cross-References section | File exists at `.opencode/skills/github-comments/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `systematic-debugging` in Cross-References section | File exists at `.opencode/skills/systematic-debugging/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `github-issue-creation` in Cross-References section | File exists at `.opencode/skills/github-issue-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `gather` | File exists at `.opencode/skills/issue-review/tasks/gather.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `triage` | File exists at `.opencode/skills/issue-review/tasks/triage.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `audit` | File exists at `.opencode/skills/issue-review/tasks/audit.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `qa` | File exists at `.opencode/skills/issue-review/tasks/qa.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `analyze-and-spec` | File exists at `.opencode/skills/issue-review/tasks/analyze-and-spec.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` audit delegation behavior | Matches actual SKILL.md: `audit` task delegates to spec-auditor with triage hints | CONFLICTING if mismatched |
+| `approval-gate` authorization check behavior | Matches actual SKILL.md: `verify-authorization` task for authorization status | CONFLICTING if mismatched |
+| `github-comments` comment posting behavior | Matches actual SKILL.md: comment format and routing rules | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
 - `spec-auditor`: Called by `audit` task for spec quality checks

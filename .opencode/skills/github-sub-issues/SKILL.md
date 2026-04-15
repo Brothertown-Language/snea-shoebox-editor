@@ -83,8 +83,40 @@ Before implementing ANY subtask: get parent STATUS, extract authorized subtask, 
 - Treating sub-issue creation as a separate implementation phase
 - Implementing a phase that exists only as text in plan issue body
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References section | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in auto-dispatch chain | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `create-sub-issue` | File exists at `.opencode/skills/github-sub-issues/tasks/create-sub-issue.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `link-sub-issue` | File exists at `.opencode/skills/github-sub-issues/tasks/link-sub-issue.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `track-hierarchy` | File exists at `.opencode/skills/github-sub-issues/tasks/track-hierarchy.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` authorization cascade behavior | Matches actual SKILL.md: plan approval cascades to sub-issues | CONFLICTING if mismatched |
+| `git-workflow` cleanup behavior | Matches actual SKILL.md: `cleanup` task handles post-merge closure | CONFLICTING if mismatched |
+| `writing-plans` auto-dispatch | Matches actual SKILL.md: `create` task creates plan then dispatches to github-sub-issues | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
-- Related skills: `git-workflow` (before starting implementation), `approval-gate` (pre-implementation check)
+- Related skills: `git-workflow` (before starting implementation), `approval-gate` (pre-implementation check), `writing-plans` (auto-dispatch chain: writing-plans → github-sub-issues)
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
 - Issue format: See `143-planning-spec-templates.md` for spec structure and `144-planning-spec-examples.md` for examples

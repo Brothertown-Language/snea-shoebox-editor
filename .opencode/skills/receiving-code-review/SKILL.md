@@ -65,9 +65,39 @@ PR review received → receiving-code-review (address) → push changes → (rev
 - Push additional commits (do NOT squash review fixes)
 - PR is updated automatically on push
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `github-comments` (implied by PR comment responses) | File exists at `.opencode/skills/github-comments/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `requesting-code-review` in Cross-References section | File exists at `.opencode/skills/requesting-code-review/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `address` | File exists at `.opencode/skills/receiving-code-review/tasks/address.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `respond` | File exists at `.opencode/skills/receiving-code-review/tasks/respond.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` branch management behavior | Matches actual SKILL.md: push additional commits, no squash of review fixes | CONFLICTING if mismatched |
+| `requesting-code-review` review request behavior | Matches actual SKILL.md: `prepare` and `request` tasks | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
-- Related skills: `requesting-code-review` (requesting review), `git-workflow` (branch management)
+- Related skills: `requesting-code-review` (requesting review), `git-workflow` (branch management), `github-comments` (PR comment format and routing)
 - Related guidelines: `050-scope-autonomy.md` (no scope creep), `060-tool-usage.md` (commands)
 
 ## Platform Compatibility

@@ -64,16 +64,35 @@ Create an implementation plan from an approved spec.
 
 9. **Report plan creation in chat (MANDATORY):**
 
-   Produce chat output in the mandatory format per `000-critical-rules.md`:
+    Produce chat output in the mandatory format per `000-critical-rules.md`:
 
-    1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec
-    2. **URL**: The plan issue URL (e.g., `https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/<N>`)
-    3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
+     1. **Executive summary**: 1-2 sentences describing what plan was created and for which spec
+     2. **URL**: The plan issue URL (e.g., `https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/<N>`)
+     3. **AI byline**: `🤖 <AgentName> (<ModelID>)` — ALWAYS LAST
 
-    Example:
+     Example:
 
-    Created implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
-    https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
-    🤖 <AgentName> (<ModelID>)
+     Created implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
+     https://github.com/<GIT_OWNER>/<GIT_REPO>/issues/772
+     🤖 <AgentName> (<ModelID>)
 
-    Sub-issues are linked under the plan issue, NOT under the spec.
+     Sub-issues are linked under the plan issue, NOT under the spec.
+
+10. **Cross-reference verification (MANDATORY before plan creation):**
+
+    Before creating the plan issue, verify that all referenced skills exist and their described behaviors match actual skill content:
+
+    ```bash
+    # Verify approval-gate dispatch chain
+    ls .opencode/skills/approval-gate/SKILL.md && grep -c "verify-authorization" .opencode/skills/approval-gate/SKILL.md
+    # Verify github-sub-issues task
+    ls .opencode/skills/github-sub-issues/SKILL.md && grep -c "create-sub-issue" .opencode/skills/github-sub-issues/SKILL.md
+    # Verify spec-creation exists
+    ls .opencode/skills/spec-creation/SKILL.md
+    # Verify brainstorming exists
+    ls .opencode/skills/brainstorming/SKILL.md
+    # Verify spec-auditor clean-room invocation
+    ls .opencode/skills/spec-auditor/SKILL.md && grep -c "clean-room\|fidelity" .opencode/skills/spec-auditor/SKILL.md
+    ```
+
+    If any verification fails: flag as MISSING-TRACEABILITY or CONFLICTING and note in plan creation output.

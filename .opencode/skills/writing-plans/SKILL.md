@@ -143,7 +143,43 @@ The spec itself is NOT modified during re-implementation. The plan is the mutabl
 - Plan approved but missing TDD steps → REJECT plan
 - Plan approved and complete → PROCEED to implementation
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `brainstorming` in Cross-References section | File exists at `.opencode/skills/brainstorming/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References and Auto-Dispatch Entry | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `executing-plans` in Cross-References section | File exists at `.opencode/skills/executing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` in Cross-References section | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `github-sub-issues` in Cross-References and Auto-Dispatch Entry | File exists at `.opencode/skills/github-sub-issues/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-creation` in Cross-References section | File exists at `.opencode/skills/spec-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `create` | File exists at `.opencode/skills/writing-plans/tasks/create.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `validate` | File exists at `.opencode/skills/writing-plans/tasks/validate.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `retroactive` | File exists at `.opencode/skills/writing-plans/tasks/retroactive.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `clean-room` | File exists at `.opencode/skills/writing-plans/tasks/clean-room.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` auto-dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `writing-plans` | CONFLICTING if mismatched |
+| `github-sub-issues` dispatch behavior | Matches actual SKILL.md: `create-sub-issue` task for sub-issue linking | CONFLICTING if mismatched |
+| `spec-auditor` clean-room invocation | Matches actual SKILL.md: `fidelity` subtask invokes `writing-plans --task clean-room` | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
-- Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `github-sub-issues` (sub-issue creation under plan)
+- Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `github-sub-issues` (sub-issue creation under plan), `spec-creation` (spec creation discipline)
 - Source: adapted from [obra/superpowers `writing-plans`](https://github.com/obra/superpowers/blob/main/skills/writing-plans/SKILL.md)

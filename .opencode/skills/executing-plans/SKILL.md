@@ -72,8 +72,44 @@ Plan approved (approval-gate)
 
 **Progress is tracked against the plan issue.** The plan references the spec via body text (linked reference), not via GitHub sub-issue link.
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `divide-and-conquer` in Cross-References and Dispatch Order | File exists at `.opencode/skills/divide-and-conquer/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References and Dispatch Order | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `verification-before-completion` in Cross-References and Dispatch Order | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `finishing-a-development-branch` in Cross-References and Dispatch Order | File exists at `.opencode/skills/finishing-a-development-branch/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References and Dispatch Order | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in Received Context | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `start` | File exists at `.opencode/skills/executing-plans/tasks/start.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `step` | File exists at `.opencode/skills/executing-plans/tasks/step.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `progress` | File exists at `.opencode/skills/executing-plans/tasks/progress.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `verify` | File exists at `.opencode/skills/executing-plans/tasks/verify.md` | MISSING-TRACEABILITY if missing |
+| `divide-and-conquer` dispatch behavior | Matches actual SKILL.md: `assemble-batch` task handles implementation | CONFLICTING if mismatched |
+| `approval-gate` dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `executing-plans` | CONFLICTING if mismatched |
+| `verification-before-completion` redirect | Matches actual SKILL.md: `verify` task exists and redirects | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
-- Related skills: `divide-and-conquer` (implementation orchestration), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `git-workflow` (branch/PR/cleanup)
+- Related skills: `divide-and-conquer` (implementation orchestration), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `git-workflow` (branch/PR/cleanup), `writing-plans` (plan creation)
 
 Co-authored with AI: <AI-Name> (<model-id>)
