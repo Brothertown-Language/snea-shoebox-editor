@@ -12,6 +12,14 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/838-active-enforcement
+
+- **Active Spec/Plan Enforcement** (#838) - Added "Silent Halt Without Prompt" critical violation requiring agents to search GitHub Issues for existing spec/plan candidates before halting, present the results to the user, and flag as FAILURE if no spec/plan is created. Updated 7 files: 000-critical-rules.md, 010-approval-gate.md, 020-go-prohibitions.md, approval-gate SKILL.md, verify-qa-mode.md, brainstorming SKILL.md, and spec-creation SKILL.md.
+
+### spec/805-redundant-session-init
+
+- **Remove Redundant Session-Init Execution** (#805) - Removed redundant "Run session init script at session start" instruction from AGENTS.md (plugin already injects this) and cleaned stale references to deleted session.py, auth.py, and exceptions.py from gitbucket-api skill documentation.
+
 ### spec/840-credential-leakage
 
 - **Credential Leakage Prevention** (#840) - Added layered defense against credential leaks: gitignore hardening (16 patterns), conditional detect-secrets pre-commit hook (opt-in via `.secrets.baseline`), generalized session-init credential guard (`.env`, `.streamlit/secrets.toml`, `.streamlit/secrets.toml.production`), remediation documentation, and 25 integration tests across 4 test classes.
