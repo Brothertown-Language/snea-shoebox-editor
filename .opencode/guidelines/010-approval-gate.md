@@ -28,6 +28,22 @@
 | **Search before halt** | When no spec/plan exists for an implementation request, search GitHub Issues for existing candidates (label filters: `[SPEC]`, `[PLAN]`, `[SPEC-FIX]`; keyword matching against request target), present candidates with URLs, offer create-or-select before halting — see `000-critical-rules.md` §Silent Halt Without Prompt |
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
+| **Spec-to-Plan cascade** | When a spec is approved and a plan already exists, the plan is automatically approved. Manual plan approval is only required when no plan exists at the time of spec approval |
+
+### Spec-to-Plan Approval Cascade (Critical)
+
+**When a spec is approved and a plan already exists, the plan is automatically approved.** This eliminates redundant manual approval when the implementation plan was already created and is faithful to the approved spec.
+
+**The two-gate model still applies when no plan exists at the time of spec approval:** spec approval → plan creation → plan approval → implementation.
+
+#### Edge Cases
+
+| Edge Case | Resolution |
+| -- | -- |
+| **Plan not faithful** | If the plan deviates from the spec, the plan-fidelity-auditor catches this during implementation. The plan must be revised to match the spec, and the revised plan requires fresh approval. |
+| **Spec revised after cascade** | Spec revision revokes ALL linked plan approvals (existing behavior per "Revision Revokes Approval"). The cascade does not override revision-based revocation. |
+| **No plan exists at spec approval** | Normal two-gate flow applies. The cascade only activates when a plan already exists. Spec approval authorizes plan creation via `writing-plans` skill, then plan approval is required before implementation. |
+| **Multiple plans exist** | When a spec has multiple linked plans, the most recent approved plan takes precedence. Older plans are superseded and treated as stale per "Implementing Stale or Superseded Specs" rules. |
 
 ### Explicit Authorization Priority (Critical)
 
@@ -232,12 +248,28 @@ rules:
       all:
         - "has_approved_spec == true"
         - "has_approved_plan == false"
+        - "has_existing_plan == false"
     actions:
       - INVOKE(writing-plans)
     conflicts_with: []
     requires: [approval-gate-001]
     triggers: [writing-plans]
     source: "010-approval-gate.md §Tier0"
+
+  - id: approval-gate-001a-cascade
+    title: "Spec approval cascades to existing faithful plan"
+    conditions:
+      all:
+        - "has_approved_spec == true"
+        - "has_existing_plan == true"
+        - "plan_is_faithful == true"
+    actions:
+      - AUTO_APPROVE(plan)
+      - PROCEED_TO(implementation)
+    conflicts_with: [approval-gate-001a]
+    requires: [approval-gate-001]
+    triggers: [executing-plans]
+    source: "010-approval-gate.md §Spec-to-Plan Approval Cascade"
 
   - id: approval-gate-001b
     title: "Plan approval authorizes implementation"
@@ -369,6 +401,10 @@ state_machines:
         to: plan_created
         guard: "plan_exists == true"
         action: PROCEED
+      - from: draft
+        to: plan_approved
+        guard: "user_authorizes_spec == true AND existing_plan_is_faithful == true"
+        action: AUTO_APPROVE_PLAN_THEN_IMPLEMENT
       - from: plan_created
         to: plan_approved
         guard: "user_authorizes_plan == true"

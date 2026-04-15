@@ -55,20 +55,29 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 ## Operating Protocol
 
 1. **Mandatory invocation (no decision point):** The agent MUST invoke approval-gate when it encounters `approved`/`go`, authorization questions, or implementation start. Never prompt for invocation — just invoke the skill.
-2. **Two-gate authorization model:** Spec approval → plan creation. Plan approval → implementation. Each gate requires explicit authorization.
+2. **Two-gate authorization model:** Spec approval → plan creation. Plan approval → implementation. Each gate requires explicit authorization. **Exception: Spec-to-plan cascade** — when a spec is approved and a plan already exists, the plan inherits the spec's approval status automatically (see Step 5b in `verify-authorization.md`).
 3. **Pre-Implementation Verification:** Verify spec or plan exists as GitHub Issue, verify authorization, verify sub-issues under plan (multi-task) — all consolidated in `verify-authorization` Step 5 as the single readiness check. The `github-sub-issues` verification gate is superseded by `verify-authorization`.
 4. **Multi-task cascade:** When plan has sub-issues, authorization cascades from plan to ALL sub-issues. Complete ALL phases, report ONCE, HALT ONCE.
-5. **Spec revision revocation:** If a spec is revised (status contains `REVISED - NEEDS APPROVAL` — in either prose or numeric format), find linked plan issues by searching for `[PLAN]` issues referencing the spec number in their body and mark them for audit. Revision of a spec revokes approval on its linked plan. Prose format example: `STATUS: in progress — {concern} (REVISED - NEEDS APPROVAL)`. Numeric format example: `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`.
-6. **Auto-dispatch after verification:** When all verification gates pass, auto-dispatch to the next skill in the chain. See Dispatch Order below.
+5. **Spec-to-plan approval cascade:** When a spec is approved and a plan already exists that references the spec (`Spec: #N` in plan body), the plan inherits the spec's approval status. The `needs-approval` label is removed from the plan and a comment documents the cascade. If multiple plans reference the spec, the most recent plan by creation date is cascade-approved and older plans are superseded. If no plan exists, the cascade does NOT apply — the standard flow (spec approval → writing-plans create → plan needs approval) continues. See `verify-authorization.md` Step 5b for the complete cascade procedure.
+6. **Spec revision revocation:** If a spec is revised (status contains `REVISED - NEEDS APPROVAL` — in either prose or numeric format), find linked plan issues by searching for `[PLAN]` issues referencing the spec number in their body and mark them for audit. Revision of a spec revokes approval on its linked plan — including cascaded approval. Prose format example: `STATUS: in progress — {concern} (REVISED - NEEDS APPROVAL)`. Numeric format example: `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`.
+7. **Auto-dispatch after verification:** When all verification gates pass, auto-dispatch to the next skill in the chain. See Dispatch Order below.
 
 ## Dispatch Order
 
 After `verify-authorization` completes successfully (all gates pass), the skill auto-dispatches based on approval context:
 
 ```
-Spec approved
+Spec approved (no existing plan)
   → verify-authorization (all gates pass)
   → writing-plans --task create (auto-dispatched to create plan issue)
+  → Plan retains needs-approval label (requires separate plan approval)
+
+Spec approved (existing plan found)
+  → verify-authorization (all gates pass)
+  → Step 5b: cascade approval to existing plan (remove needs-approval, add comment)
+  → Plan is now approved → skip to plan-approved dispatch path
+  → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
+  → pre-implementation-analysis → divide-and-conquer/assemble-batch → ...
 
 Plan approved
   → verify-authorization (all gates pass)
@@ -85,7 +94,7 @@ Already implemented
   → Auto-close (no dispatch)
 ```
 
-**Spec approval dispatches to plan creation, NOT implementation.** The plan then requires its own approval before implementation begins.
+**Spec approval dispatches to plan creation, NOT implementation.** The plan then requires its own approval before implementation begins — **unless the cascade applies** (spec approved + existing plan = plan inherits approval). See `verify-authorization.md` Step 5b for cascade conditions.
 
 **Dispatch context detection:**
 - Spec approval: Issue title contains `[SPEC` or has `spec` label
@@ -99,7 +108,8 @@ Already implemented
 | Requirement | Description |
 |-------------|-------------|
 | **Spec or Plan exists as GitHub Issue** | No local fallback — GitHub Issues only |
-| **Two-gate authorization** | Spec approval → plan creation; Plan approval → implementation |
+| **Two-gate authorization** | Spec approval → plan creation; Plan approval → implementation. Exception: spec-to-plan cascade (see below) |
+| **Spec-to-plan approval cascade** | When a spec is approved and a plan already exists referencing the spec, the plan inherits the spec's approval status. `needs-approval` label is removed and a comment documents the cascade. Most recent plan is approved; older plans are superseded. If no plan exists, standard flow applies. |
 | **Explicit authorization** | User says `approved`, `go`, `approved: N.M`, or `approved: {concern}` — OVERRIDES `needs-approval` label |
 | **Open questions resolved** | No unresolved items in spec or plan |
 | **Sub-issues verified under plan** | Multi-task plans require phase-level sub-issues (verified in `verify-authorization` Step 5 — single authoritative gate) |
@@ -279,4 +289,19 @@ rules:
     requires: []
     triggers: [engineering-approach]
     source: "approval-gate/SKILL.md §verify-schema-api-knowledge task"
+
+  - id: approval-gate-skill-005
+    title: "Spec-to-plan approval cascade"
+    conditions:
+      all:
+        - "spec_approved == true"
+        - "spec_has_existing_plan == true"
+    actions:
+      - REMOVE_LABEL(needs-approval, plan)
+      - ADD_COMMENT(cascade approval documentation)
+      - PROCEED_TO(plan-approved dispatch path)
+    conflicts_with: []
+    requires: [approval-gate-002]
+    triggers: [writing-plans]
+    source: "approval-gate/SKILL.md §Spec-to-plan Approval Cascade"
 ```

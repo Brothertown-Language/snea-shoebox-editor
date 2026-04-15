@@ -115,3 +115,38 @@ Create an implementation plan from an approved spec.
     ```
 
     If any verification fails: flag as MISSING-TRACEABILITY or CONFLICTING and note in plan creation output.
+
+11. **Post-creation approval cascade check (MANDATORY):**
+
+    After the plan issue is created, check whether the spec that triggered plan creation was already approved. If yes, the new plan inherits the spec's approval status.
+
+    ```python
+    # Check if the spec was already approved
+    spec_issue = github_issue_read(method="get", issue_number=spec_number)
+    spec_comments = github_issue_read(method="get_comments", issue_number=spec_number)
+
+    # Look for explicit approval in spec comments
+    has_approval = any(
+        "approved" in comment["body"].lower() or comment["body"].strip().lower() == "go"
+        for comment in spec_comments
+        if comment["author_association"] in ("MEMBER", "OWNER", "COLLABORATOR")
+    )
+
+    # Check if needs-approval label is absent from spec (indicates prior approval)
+    spec_labels = [l["name"] for l in spec_issue["labels"]]
+    label_already_removed = "needs-approval" not in spec_labels
+
+    if has_approval or label_already_removed:
+        # Spec was already approved — cascade approval to the new plan
+        github_issue_write(
+            method="update",
+            issue_number=plan_issue_number,
+            labels=[l for l in plan_labels if l != "needs-approval"],
+        )
+        github_add_issue_comment(
+            issue_number=plan_issue_number,
+            body=f"Approval cascaded from spec #{spec_number}. Plan created for an already-approved spec — plan inherits approval status automatically.",
+        )
+    ```
+
+    This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
