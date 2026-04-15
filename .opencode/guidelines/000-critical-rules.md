@@ -46,6 +46,21 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 - 🚫 FORBIDDEN: Using unverified APIs, guessed env vars, outdated patterns, or memory-based signatures
 - ✅ REQUIRED: Verify API signatures from official docs, confirm env vars from config, use `srclight_get_signature` for code signatures
 
+## Critical Violation: Schema/API/Code Verification — Claiming Knowledge Without Verification
+
+**⚠️ Asserting config schema compliance, API signatures, or code implementation details without verifying against live documentation or live source is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `065-verification-honesty.md` → "Proactive Verification" section for the complete rule, evidence requirements, examples, and when proactive verification applies.**
+
+- 🚫 FORBIDDEN: Asserting config compliance without fetching and verifying the actual schema
+- 🚫 FORBIDDEN: Using API signatures from training data without verifying against live documentation or `srclight_get_signature`
+- 🚫 FORBIDDEN: Claiming code behavior without checking via `srclight_get_symbol`, `read`, or `srclight_get_signature`
+- 🚫 FORBIDDEN: Writing specs or code that reference schema fields, API parameters, or function signatures from memory
+- ✅ REQUIRED: Fetch and verify config schemas before asserting compliance
+- ✅ REQUIRED: Verify API signatures via `srclight_get_signature` or official documentation before using them
+- ✅ REQUIRED: Verify code implementation details via `srclight_get_symbol`, `read`, or `srclight_get_signature` before claiming behavior
+- ✅ REQUIRED: Tag any assertion that could not be verified as `(unverified)`
+
 ## Critical Violation: Verification Dishonesty — Reporting Memory as Verified
 
 **⚠️ Reporting unverified information as verified, or using memory recall instead of actual verification, is a CRITICAL GUIDELINE VIOLATION.**
