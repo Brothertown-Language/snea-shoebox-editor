@@ -91,9 +91,45 @@ After creating audit log:
 
 **Why:** Fresh-start AI agents cannot access `./tmp/` from previous sessions. GitHub Issue comments ARE preserved.
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `guideline-auditor` in Cross-References section | File exists at `.opencode/skills/guideline-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `skill-creator` (implied by extraction workflow) | File exists at `.opencode/skills/skill-creator/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `sync-guidelines` (implied by sync workflow) | File exists at `.opencode/skills/sync-guidelines/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `extract-scan` | File exists at `.opencode/skills/coherence-auditor/tasks/extract-scan.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `extract-analyze` | File exists at `.opencode/skills/coherence-auditor/tasks/extract-analyze.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `maintenance-detect` | File exists at `.opencode/skills/coherence-auditor/tasks/maintenance-detect.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `maintenance-verify` | File exists at `.opencode/skills/coherence-auditor/tasks/maintenance-verify.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `create-report` | File exists at `.opencode/skills/coherence-auditor/tasks/create-report.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` PR behavior | Matches actual SKILL.md: PR creation and branch management | CONFLICTING if mismatched |
+| `guideline-auditor` quality verification behavior | Matches actual SKILL.md: guideline quality auditing | CONFLICTING if mismatched |
+| `skill-creator` creation workflow behavior | Matches actual SKILL.md: TDD skill creation, validation | CONFLICTING if mismatched |
+| `sync-guidelines` cross-repo sync behavior | Matches actual SKILL.md: issue-based sync, classification | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
-- Related skills: `git-workflow` (PR with changes), `guideline-auditor` (verify guideline quality)
+- Related skills: `git-workflow` (PR with changes), `guideline-auditor` (verify guideline quality), `skill-creator` (TDD skill creation for extraction candidates), `sync-guidelines` (cross-repo synchronization)
 
 ## Symbolic Engine Integration
 

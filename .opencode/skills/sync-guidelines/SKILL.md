@@ -106,7 +106,38 @@ last_sync:
 3. Human reviews and merges in target repository
 4. Update sync state after successful sync
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `coherence-auditor` (implied by sync consistency checking) | File exists at `.opencode/skills/coherence-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `classify` | File exists at `.opencode/skills/sync-guidelines/tasks/classify.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sync-push` | File exists at `.opencode/skills/sync-guidelines/tasks/sync-push.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sync-pull` | File exists at `.opencode/skills/sync-guidelines/tasks/sync-pull.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `issue-format` | File exists at `.opencode/skills/sync-guidelines/tasks/issue-format.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` branch management behavior | Matches actual SKILL.md: branch, commit, PR workflow | CONFLICTING if mismatched |
+| `coherence-auditor` drift detection behavior | Matches actual SKILL.md: detects guideline-skill drift | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
-- Related skills: `git-workflow` (branch management, commit workflow)
+- Related skills: `git-workflow` (branch management, commit workflow), `coherence-auditor` (drift detection and verification after sync)
 - Related guidelines: `000-critical-rules.md` (no vibe coding, scope autonomy)

@@ -370,6 +370,53 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 
 **Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `brainstorming` in Cross-References section | File exists at `.opencode/skills/brainstorming/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-creation` in Cross-References section | File exists at `.opencode/skills/spec-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in Cross-References section | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-review` in Cross-References section | File exists at `.opencode/skills/issue-review/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `plan-fidelity-auditor` in delegated-from | File exists at `.opencode/skills/plan-fidelity-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `concern-separation-auditor` in delegated-from | File exists at `.opencode/skills/concern-separation-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `fresh-start` | File exists at `.opencode/skills/spec-auditor/tasks/fresh-start.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `structure` | File exists at `.opencode/skills/spec-auditor/tasks/structure.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `content-quality` | File exists at `.opencode/skills/spec-auditor/tasks/content-quality.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `traceability` | File exists at `.opencode/skills/spec-auditor/tasks/traceability.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `operational` | File exists at `.opencode/skills/spec-auditor/tasks/operational.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `fidelity` | File exists at `.opencode/skills/spec-auditor/tasks/fidelity.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `concerns` | File exists at `.opencode/skills/spec-auditor/tasks/concerns.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `operational-flow` | File exists at `.opencode/skills/spec-auditor/tasks/operational-flow.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `determinism` | File exists at `.opencode/skills/spec-auditor/tasks/determinism.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `error-recovery` | File exists at `.opencode/skills/spec-auditor/tasks/error-recovery.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `principles` | File exists at `.opencode/skills/spec-auditor/tasks/principles.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `ground-truth` | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
+| Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |
+| Described behavior of `programming-principles` | Matches actual SKILL.md: defines engineering principles | CONFLICTING if mismatched |
+| `brainstorming` invocation in Invocation section | Skill has corresponding invocation entry | MISSING-TRACEABILITY if missing |
+| `spec-creation` invocation context | Skill describes creation-time discipline for traceability | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
 - Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles)

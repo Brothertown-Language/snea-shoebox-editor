@@ -191,6 +191,39 @@ If the output does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatc
 
 If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `since-last-release` | File exists at `.opencode/skills/changelog-generator/tasks/since-last-release.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `date-range` | File exists at `.opencode/skills/changelog-generator/tasks/date-range.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `backfill` | File exists at `.opencode/skills/changelog-generator/tasks/backfill.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` commit/branch workflow behavior | Matches actual SKILL.md: branch management and commit workflow | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
+## Cross-References
+
+- Related skills: `git-workflow` (branch management, commit workflow)
+- Related guidelines: `000-critical-rules.md` (no vibe coding, scope autonomy)
+
 ## Tips
 
 - Run from your git repository root

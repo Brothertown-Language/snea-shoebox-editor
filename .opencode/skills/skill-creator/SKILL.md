@@ -195,6 +195,34 @@ GPU/CPU billing is flat-rate per inference, not per word. There is no economic i
 5. Validate skill structure with `quick_validate.py`
 6. Package with `package_skill.py`
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `coherence-auditor` in Cross-References section | File exists at `.opencode/skills/coherence-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `init` | File exists at `.opencode/skills/skill-creator/tasks/init.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `package` | File exists at `.opencode/skills/skill-creator/tasks/package.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `validate` | File exists at `.opencode/skills/skill-creator/tasks/validate.md` | MISSING-TRACEABILITY if missing |
+| `coherence-auditor` maintenance behavior | Matches actual SKILL.md: drift detection and verification for skills | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
 | External Source | Content Adapted |
@@ -202,3 +230,5 @@ GPU/CPU billing is flat-rate per inference, not per word. There is no economic i
 | [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md) | TDD methodology, CSO, rationalization resistance, anti-patterns |
 | [obra/superpowers `testing-skills-with-subagents`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/testing-skills-with-subagents.md) | Pressure scenario testing methodology |
 | [obra/superpowers `persuasion-principles`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md) | Persuasion principles for skill design |
+
+Related skills: `coherence-auditor` (drift detection and verification for new/updated skills)

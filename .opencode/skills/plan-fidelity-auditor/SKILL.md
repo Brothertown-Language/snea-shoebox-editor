@@ -116,6 +116,39 @@ Only substantive differences after semantic matching are reported.
 | Flag-only for substantive changes | Recommends brainstorming for significant gaps |
 | Mandatory audit chain entry | Subtask within orchestrator |
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `spec-auditor` in Cross-References (orchestrated by) | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in Cross-References section | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `brainstorming` in Cross-References section | File exists at `.opencode/skills/brainstorming/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `audit` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/audit.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `compare` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/compare.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `report` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/report.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` orchestration behavior | Matches actual SKILL.md: `fidelity` subtask delegates to this skill | CONFLICTING if mismatched |
+| `writing-plans` clean-room invocation | Matches actual SKILL.md: `clean-room` task exists for generating plans | CONFLICTING if mismatched |
+| `brainstorming` recommendation behavior | Matches actual SKILL.md: exploration skill for deeper analysis | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
 ## Cross-References
 
 - Orchestrated by: `spec-auditor` (via `fidelity` subtask)
