@@ -151,6 +151,7 @@ This skill is a **heavy skill** — its task files contain significant detail th
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)
 - Related guidelines: `000-critical-rules.md`, `115-branch-naming.md`
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 - Related skill tasks: `git-workflow --task pre-work` (branch creation), `git-workflow --task cleanup` (post-merge), `git-workflow --task pr-creation` (PR workflow), `git-workflow --task provenance` (submodule provenance tracking)
 
 ```yaml+symbolic

@@ -9,7 +9,7 @@ This file provides critical rules that must never be violated. Sections with ful
 
 **⚠️ Using `stash + checkout -b` instead of worktrees for ANY feature branch creation is a CRITICAL GUIDELINE VIOLATION.**
 
-Worktrees are ALWAYS mandatory for feature branch creation. **See `using-git-worktrees` skill for the complete worktree creation procedure. See `060-tool-usage.md` §1-2 for tool priority hierarchy and path resolution rules.**
+Worktrees are ALWAYS mandatory for feature branch creation. **See `using-git-worktrees` skill for the complete worktree creation procedure. See `060-tool-usage.md` §1-2 for tool priority hierarchy and path resolution rules.** **AUTHORITY: `060-tool-usage.md` §1-2** (this line is a reference only)
 
 - 🚫 FORBIDDEN: `git checkout -b`, `stash + checkout`, operating in main working directory, ignoring `WORKTREE_FATAL=1`
 - ✅ REQUIRED: `using-git-worktrees` skill for every feature branch; HALT if `WORKTREE_FATAL=1` or `WORKTREE_PATH` empty
@@ -25,7 +25,7 @@ Worktrees are ALWAYS mandatory for feature branch creation. **See `using-git-wor
 
 **⚠️ Using relative paths with `read`/`edit`/`write`/`glob`/`grep` tools when `WORKTREE_PATH` is set is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `060-tool-usage.md` §2 "Path Rules (ZERO TOLERANCE)" for the complete tool-by-tool table showing wrong vs correct path resolution, and the `using-git-worktrees` skill → "Tool Usage Compliance" section for worktree-specific guidance.**
+**See `060-tool-usage.md` §2 "Path Rules (ZERO TOLERANCE)" for the complete tool-by-tool table showing wrong vs correct path resolution, and the `using-git-worktrees` skill → "Tool Usage Compliance" section for worktree-specific guidance.** **AUTHORITY: `060-tool-usage.md` §2** (this line is a reference only)
 
 - 🚫 FORBIDDEN: Relative paths with file operation tools when `WORKTREE_PATH` is set; assuming tools respect `workdir`
 - ✅ REQUIRED: Prefix ALL paths with `WORKTREE_PATH` when in worktree context
@@ -50,7 +50,7 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 **⚠️ Asserting config schema compliance, API signatures, or code implementation details without verifying against live documentation or live source is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `065-verification-honesty.md` → "Proactive Verification" section for the complete rule, evidence requirements, examples, and when proactive verification applies.**
+**See `065-verification-honesty.md` → "Proactive Verification" section for the complete rule, evidence requirements, examples, and when proactive verification applies.** **AUTHORITY: `065-verification-honesty.md` Proactive Verification** (this line is a reference only)
 
 - 🚫 FORBIDDEN: Asserting config compliance without fetching and verifying the actual schema
 - 🚫 FORBIDDEN: Using API signatures from training data without verifying against live documentation or `srclight_get_signature`
@@ -65,7 +65,7 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 **⚠️ Reporting unverified information as verified, or using memory recall instead of actual verification, is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `065-verification-honesty.md` for the complete rule, evidence requirements, single exchange window exception, and relationship to other guidelines.**
+**See `065-verification-honesty.md` for the complete rule, evidence requirements, single exchange window exception, and relationship to other guidelines.** **AUTHORITY: `065-verification-honesty.md`** (this line is a reference only)
 
 - 🚫 FORBIDDEN: Reporting from memory without re-verification; claiming "I checked earlier" without current tool call; training knowledge as fact; omitting tool call evidence
 - ✅ REQUIRED: Use a tool/command for every verification; show evidence; tag unverified recollections as "(unverified)"
@@ -74,7 +74,7 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 **⚠️ Acting on a GitHub/GitBucket resource without reading ALL comments is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `067-context-completeness.md` for the complete rule, evidence requirements, staleness rule, single exchange window exception, and reading requirements per resource type.**
+**See `067-context-completeness.md` for the complete rule, evidence requirements, staleness rule, single exchange window exception, and reading requirements per resource type.** **AUTHORITY: `067-context-completeness.md`** (this line is a reference only)
 
 - 🚫 FORBIDDEN: Acting after reading only the issue body; reviewing PRs without reading comments; assuming "no new comments"; caching comment state
 - ✅ REQUIRED: Read ALL comments before any action; show evidence of having read them; re-read before significant actions; use `github_issue_read` with `method=get_comments`
@@ -140,7 +140,7 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 - **Exempt**: Standard licenses, copy-pasted code, auto-generated files, framework boilerplate, minor edits
 - **Format**: `Co-authored with AI: <AI-Name> (<model-id>)`
 
-**See `080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).**
+**See `080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).** **AUTHORITY: `080-code-standards.md`** (this line is a reference only)
 
 ## Critical Violation: Offer-to-Edit Bypass — Offering to Modify Files Without Spec
 
@@ -175,7 +175,7 @@ All identity values MUST use placeholder tokens that are resolved at runtime fro
 
 **Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<GIT_OWNER>/<GIT_REPO>` pattern.
 
-**See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.**
+**See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.** **AUTHORITY: `080-code-standards.md`** (this line is a reference only)
 
 ## Critical Violation: Implementation Without Spec — Expanding the Definition
 
@@ -207,7 +207,7 @@ The following are ALL implementation actions that require an approved spec:
 
 When any condition is NOT met, the action reverts to requiring an approved spec per the standard "Implementation Without Spec" rule.
 
-**See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete exemption section and `spec-auditor` skill → "Auto-Fix Model" for the three-tier classification.**
+**See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete exemption section and `spec-auditor` skill → "Auto-Fix Model" for the three-tier classification.** **AUTHORITY: `010-approval-gate.md` Audit Auto-Fix Exemption** (this line is a reference only)
 
 **🚫 FORBIDDEN patterns (all require spec):**
 - "It's just a skill file" → Skill files alter agent enforcement. Spec required.
@@ -215,7 +215,7 @@ When any condition is NOT met, the action reverts to requiring an approved spec 
 - "It's just a config change" → Config changes alter behavior. Spec required.
 - "It's a small fix" → Size doesn't matter. If it changes behavior, spec required.
 
-**See `010-approval-gate.md` for the complete authorization workflow.**
+**See `010-approval-gate.md` for the complete authorization workflow.** **AUTHORITY: `010-approval-gate.md`** (this line is a reference only)
 
 ## Critical Violation: Missing Progress Reports
 
@@ -273,7 +273,7 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 **The concrete minimum standard is the code inspection checklist in `015-pre-spec-inspection.md`** — all six items (trace call paths, verify imports, detect dead code, verify format/protocol assumptions, confirm architectural layer, check for existing alternatives) MUST be addressed before proposing any approach. Incomplete inspection = this critical violation.
 
-**See `brainstorming` skill for investigation requirements and completion criteria. See `015-pre-spec-inspection.md` for the mandatory checklist and evidence requirements.**
+**See `brainstorming` skill for investigation requirements and completion criteria. See `015-pre-spec-inspection.md` for the mandatory checklist and evidence requirements.** **AUTHORITY: `015-pre-spec-inspection.md`** (this line is a reference only)
 
 ## Critical Violation: Implementing Stale or Superseded Specs
 
@@ -367,7 +367,7 @@ The spec-to-plan approval cascade means: when a spec is approved and a plan alre
 
 **Edge cases:** Plan not faithful → fidelity audit catches deviations, plan must be revised and re-approved. Spec revised → revokes all linked plan approvals (existing behavior). No plan exists → normal two-gate flow, no cascade. Multiple plans → most recent approved plan takes precedence, older plans superseded.
 
-**See `010-approval-gate.md` → "Spec-to-Plan Approval Cascade" for the complete cascade rules and edge case documentation.**
+**See `010-approval-gate.md` → "Spec-to-Plan Approval Cascade" for the complete cascade rules and edge case documentation.** **AUTHORITY: `010-approval-gate.md` Spec-to-Plan Approval Cascade** (this line is a reference only)
 
 ## Critical Violation: Confirmation ≠ Authorization
 
@@ -378,7 +378,7 @@ The spec-to-plan approval cascade means: when a spec is approved and a plan alre
 
 **See `approval-gate` skill → "Confirmation ≠ Authorization" for the complete enforcement table.**
 
-**See `020-go-prohibitions.md` §1 "Discussion Conclusion Patterns" for examples of non-authorization discussion conclusions.**
+**See `020-go-prohibitions.md` §1 "Discussion Conclusion Patterns" for examples of non-authorization discussion conclusions.** **AUTHORITY: `020-go-prohibitions.md` §1** (this line is a reference only)
 
 ## Critical Violation: Closing Issues Before PR Merge
 
@@ -415,7 +415,7 @@ Three tiers: **Tier 1 (Trivial)**: whitespace/formatting → auto-resolve, silen
 
 ## Critical: Engineering Mindset Required
 
-**⚠️ All work must be approached with proper engineering discipline.** See `085-engineering-approach.md` for complete requirements.
+**⚠️ All work must be approached with proper engineering discipline.** See `engineering-approach` skill for complete requirements. **AUTHORITY: `engineering-approach` skill** (this line is a reference only)
 
 1. Understand Before Solving — Read all relevant code before proposing changes
 2. Design Before Implementing — Document approach and obtain approval before coding
@@ -440,7 +440,7 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - 🚫 FORBIDDEN: Producing zero output before stopping; silently failing without error message; context overflow without reporting the overflow; tool failure without reporting the failure; ending a session with no summary of work done
 - ✅ REQUIRED: Every HALT MUST be preceded by a status message; every failure MUST be reported with the specific error; every context overflow MUST be reported with the specific cause; every completed task MUST produce an executive summary
 
-**See `020-go-prohibitions.md` for the complete halt requirements and `finishing-a-development-branch` skill for completion guarantees.**
+**See `020-go-prohibitions.md` for the complete halt requirements and `finishing-a-development-branch` skill for completion guarantees.** **AUTHORITY: `020-go-prohibitions.md`** (this line is a reference only)
 
 ## Critical Violation: Skipping Interdependency Analysis for Batch Approvals
 
@@ -473,7 +473,7 @@ When the `todowrite` tool is used during a session, the agent MUST maintain the 
 - 🚫 FORBIDDEN: Leaving `pending` items after task completes; abandoning `in_progress` items without transitioning to `completed`; halting without calling `todowrite(todos=[])`; ignoring stale state from previous tasks
 - ✅ REQUIRED: Transition each item to `in_progress` when work begins and `completed` when done; call `todowrite(todos=[])` to clear state before HALT; verify no stale items remain at session end
 
-**See `060-tool-usage.md` §7 for the complete todowrite lifecycle rules (CREATE/UPDATE/CLEAR).**
+**See `060-tool-usage.md` §7 for the complete todowrite lifecycle rules (CREATE/UPDATE/CLEAR).** **AUTHORITY: `060-tool-usage.md` §7** (this line is a reference only)
 
 ## Critical Violation: Pushing Agent Intelligence Decisions to the User
 
@@ -517,7 +517,7 @@ When an agent receives an implementation instruction but cannot find an associat
 
 **Why this matters:** The current Q/A mode halt is passive — it stops work but doesn't help the user find existing tracking. Active search turns "no spec found" from a dead end into a decision point: "here are N existing issues that may match, which one (if any) did you mean?" This reduces duplicate spec creation and connects implementation requests to existing tracking.
 
-**See `020-go-prohibitions.md` §1 "NEVER DO" and "ALWAYS DO" for the search procedure, and `approval-gate` skill → `verify-qa-mode` task → Step 2.5 for the mandatory search step.**
+**See `020-go-prohibitions.md` §1 "NEVER DO" and "ALWAYS DO" for the search procedure, and `approval-gate` skill → `verify-qa-mode` task → Step 2.5 for the mandatory search step.** **AUTHORITY: `020-go-prohibitions.md` §1** (this line is a reference only)
 
 ______________________________________________________________________
 

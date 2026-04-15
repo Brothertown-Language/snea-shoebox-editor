@@ -197,4 +197,5 @@ For the provenance issue body format and tier-specific details, see `git-workflo
 
 - Related skills: `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 - Related skill tasks: `writing-plans --task create` (plan creation for multi-task specs), `git-workflow --task cleanup` (post-merge closure), `git-workflow --task provenance` (submodule provenance tracking)

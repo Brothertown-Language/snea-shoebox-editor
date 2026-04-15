@@ -93,7 +93,7 @@ When working in a git worktree (`WORKTREE_PATH` is set), TIER 1 file operation t
 - **ALWAYS use `uv run python` to invoke Python.**
 - **Fixed sleep value for polling**: Always use a fixed value of `15`.
 - **One clear command per invocation.** A short `&&` guard is acceptable.
-- **Use built-in Edit/Write tools for file modifications.** For Jupyter notebooks, use `the-notebook-mcp` tools exclusively — see `061-notebook-rules.md`.
+- **Use built-in Edit/Write tools for file modifications.** For Jupyter notebooks, use `the-notebook-mcp` tools exclusively — see `notebook-operations` skill.
 
 ### 🚫 NEVER DO
 
@@ -139,3 +139,14 @@ When the `todowrite` tool is used during a session, the agent MUST maintain the 
 - Halt a session without calling `todowrite(todos=[])` to clear state
 - Create items without a `status` field
 - Skip status transitions (e.g., jump from `pending` directly to `completed` without `in_progress`)
+
+## 8. Skill Dispatch Principle
+
+Invoke skills when their trigger keywords match the current task. Each skill defines explicit trigger patterns in its SKILL.md frontmatter (`Triggers on:` line). Match against those patterns, not against mere possibility.
+
+| Principle | Rule |
+|-----------|------|
+| **Trigger matching** | Skills apply when their frontmatter `Triggers on:` keywords match the current task |
+| **Priority ordering** | Process skills (approval-gate, brainstorming, writing-plans, systematic-debugging) before implementation skills |
+| **No speculative loading** | Do not load skills "just in case" — load when triggers match |
+| **Skill self-describes boundary** | Each SKILL.md defines what it covers; when in doubt, check `Triggers on:` line |
