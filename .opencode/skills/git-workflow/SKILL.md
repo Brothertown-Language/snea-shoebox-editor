@@ -27,7 +27,7 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 | `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ~550 |
 | `cleanup` | Delete merged branches, clean stale refs | ~800 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
-| `release-promotion` | Automate submodule dev → main promotion and tagging | ~350 |
+| `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ~500 |
 | `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ~50 |
 | `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ~600 |
 
@@ -39,7 +39,7 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 - `/skill git-workflow --task pr-creation` - When user says "create a PR"
 - `/skill git-workflow --task rebase-pending` - After PR merge, before cleanup
 - `/skill git-workflow --task cleanup` - After PR merge confirmed
-- `/skill git-workflow --task release-promotion` - When promoting dev → main with submodules, or explicit "promote/push submodule" instruction
+- `/skill git-workflow --task release-promotion` - When promoting dev → main (submodule repos: lock SHAs, promote each submodule; non-submodule repos: merge dev → main, tag, push, create release), or explicit "promote/push submodule" instruction
 - `/skill git-workflow --task check-pr` - When user says "check pr" / "check prs" / "check pull request(s)"
 - `/skill git-workflow --task provenance` - Create provenance tracking in submodule repos
 - `/skill git-workflow --task completion` - Invoke when workflow halts at any point
