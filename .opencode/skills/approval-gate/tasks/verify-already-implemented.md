@@ -125,6 +125,67 @@ Per `000-critical-rules.md` → "Skipping PR for Documentation/Guideline Changes
 
 Autoclose bypasses the PR workflow because no branch, commits, or PR are needed — the work is already done.
 
+## Adversarial Verification: Implementation State
+
+**Before claiming a spec is "already implemented," verify against actual codebase and git state — not claimed state, not cached results, not visual inspection.**
+
+### Verify Success Criteria Against Live Code
+
+```
+For each success criterion:
+  - Use actual tool calls: read, grep, srclight_search_symbols, srclight_get_signature
+  - Read the relevant file(s) directly — do NOT rely on memory of previous reads
+  - If criterion references specific file paths → verify files exist with glob
+  - If criterion references specific functions/classes → verify with srclight_get_signature
+  - If criterion references specific content → verify with grep or read
+  - Record: tool used, file path, line reference, summary of evidence
+```
+
+**Evidence artifact:** Tool call results (read, grep, srclight) for each criterion — NOT just "PASS/FAIL" assertions.
+
+### Verify Implementation Source
+
+```
+When claiming implementation exists:
+  - Check git log for commits referencing the issue number
+  git log --oneline --grep="#N" origin/dev
+  
+  - If commits found → verify they are merged to dev:
+    git branch --contains <commit-sha> | grep dev
+  
+  - If PR references found → verify PR merge via GitHub API:
+    github_pull_request_read(method=get, pullNumber=M)
+    → confirm merged == true AND state == "closed"
+  
+  - Do NOT trust "looks implemented" from file reads alone
+  - Do NOT trust cached PR merge status from previous sessions
+```
+
+**Evidence artifact:** Git log output and/or `github_pull_request_read` response confirming merge status.
+
+### Verify No Stale Implementation Claims
+
+```
+If success criteria reference specific code structure:
+  - Verify that code structure is CURRENT, not from a previous version
+  - If a file was modified after the "already implemented" check → re-verify
+  - Use srclight_recent_changes to check if relevant files changed recently
+  - If files changed since implementation → VERIFICATION-GAP (re-verify all criteria)
+```
+
+**Evidence artifact:** Recent changes output showing file modification dates relative to implementation.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Criterion cannot be verified | VERIFICATION-GAP | flag-for-review | Developer must confirm manually |
+| Implementation exists but not merged | VERIFICATION-GAP | flag-for-review | Cannot autoclose — PR must merge first |
+| Implementation claim from stale session | STRUCTURE-VIOLATION | conditional | Re-verify all criteria with fresh tool calls |
+| Code changed since implementation | VERIFICATION-GAP | flag-for-review | Re-verify affected criteria |
+| PR claimed merged but API says open | CONFLICTING | flag-for-review | Do NOT autoclose — verify merge manually |
+| File/symbol referenced in criterion does not exist | MISSING-TRACEABILITY | flag-for-review | Criterion may be inapplicable or spec may be stale |
+
 ## Context Required
 
 - Preceded by: `verify-authorization`, `verify-codebase`, `verify-blockers`

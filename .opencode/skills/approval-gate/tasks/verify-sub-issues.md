@@ -169,6 +169,69 @@ Auto-creating sub-issues for an approved multi-task plan does NOT require separa
 | Subtask not in list | HALT, POST report: "Subtask X.Y not found. Available subtasks: [list]. Please authorize a valid subtask." |
 | Plan issue missing STATUS field | Default to first subtask (1.1), proceed, report to chat |
 
+## Adversarial Verification: Sub-Issue State
+
+**Before trusting any sub-issue claim (existence, state, labels, STATUS), verify against actual GitHub API state.** Do NOT rely on cached sub-issue lists, previously-read state, or claimed closures.
+
+### Verify Sub-Issue Existence and State
+
+```
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
+
+For each sub-issue returned:
+  child = github_issue_read(method="get", issue_number=sub_issue_number)
+  
+  - Verify child exists (404 = deleted sub-issue → MISSING-TRACEABILITY)
+  - Verify child.state matches claimed state (do NOT trust cache)
+  - If child.state == "closed" → verify merged PR exists before treating as complete
+    - Search for PRs referencing the sub-issue
+    - If closed but no merged PR → VERIFICATION-GAP (premature closure)
+  - Verify child.title matches the phase description (not reassigned to different work)
+```
+
+**Evidence artifact:** `github_issue_read(method=get)` for each sub-issue showing actual state, title, and labels.
+
+### Verify Sub-Issue Labels and STATUS
+
+```
+For each sub-issue:
+  labels = github_issue_read(method=get_labels, issue_number=sub_issue_number)
+  body = github_issue_read(method=get, issue_number=sub_issue_number)
+  
+  - If has "needs-approval" label but parent plan has explicit authorization → STRUCTURE-VIOLATION
+    (auto-fix: authorization cascades from plan, label should be removed)
+  - If STATUS marker in sub-issue body is mismatched to actual content maturity → STRUCTURE-VIOLATION
+    (auto-fix: update STATUS per ground-truth maturity classification)
+  - If STATUS says COMPLETE but sub-issue is open → CONFLICTING
+    (flag-for-review: may indicate tracking mismatch)
+```
+
+**Evidence artifact:** Label list and body content for each sub-issue.
+
+### Verify Sub-Issue Link Integrity
+
+```
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
+parent_check = github_issue_read(method="get_sub_issues", issue_number=sub_issue_number)
+
+- Verify sub-issues are linked under the correct parent (plan, not spec)
+- If sub-issue is linked under spec instead of plan → STRUCTURE-VIOLATION
+  (auto-fix: re-link under plan, remove from spec)
+```
+
+**Evidence artifact:** Sub-issue list from plan showing correct parent-child relationships.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve deleted sub-issue |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Report — may be premature closure |
+| Sub-issue needs-approval stale | STRUCTURE-VIOLATION | auto-fix | Remove label (auth cascades from plan) |
+| STATUS maturity mismatch | STRUCTURE-VIOLATION | auto-fix | Update STATUS to match content |
+| Sub-issue linked under spec (not plan) | STRUCTURE-VIOLATION | auto-fix | Re-link under correct parent |
+| Title reassigned to different work | CONFLICTING | flag-for-review | Developer must verify scope |
+
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-codebase`

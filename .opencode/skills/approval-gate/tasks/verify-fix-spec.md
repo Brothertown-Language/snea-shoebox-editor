@@ -68,3 +68,66 @@ Examine sub-issues for:
 
 - `issue-review --task analyze-and-spec`: Creates fix spec for bug reports
 - `000-critical-rules.md`: Bug reports must have fix spec before closure
+- `065-verification-honesty.md`: Verification claims must be backed by tool call evidence
+- `spec-auditor --task ground-truth`: Adversarial verification model for metadata claims
+
+## Ground-Truth Verification
+
+**Before trusting any fix spec claim, verify it against actual GitHub state.** Do NOT rely on cached sub-issue lists, assumed labels, or claimed STATUS values.
+
+### Verify Fix Spec Exists (Not Just Claimed)
+
+```
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=N)
+
+For each sub-issue returned:
+  - Verify it actually exists by reading it:
+    child = github_issue_read(method="get", issue_number=sub_issue_number)
+  - Verify it is a fix spec (not a related but non-fix issue):
+    - Title starts with "[SPEC] Fix:" OR
+    - Has "spec" label OR
+    - Body contains fix spec content
+  - If sub_issue_number returns 404 → MISSING-TRACEABILITY (flag-for-review)
+```
+
+**Evidence artifact:** `github_issue_read(method=get_sub_issues)` and `github_issue_read(method=get)` for each sub-issue.
+
+### Verify Fix Spec Labels and STATUS Match Maturity
+
+```
+For each verified fix spec sub-issue:
+  labels = github_issue_read(method=get_labels, issue_number=sub_issue_number)
+  body = github_issue_read(method=get, issue_number=sub_issue_number)
+  
+  - If has "needs-approval" label but content is DETAILED or COMPLETE → STRUCTURE-VIOLATION
+    (auto-fix: note label is stale, recommend removal after auth)
+  - If STATUS says BRAINSTORM/DRAFT but content is DETAILED/COMPLETE → STRUCTURE-VIOLATION
+    (auto-fix: update STATUS marker per ground-truth maturity classification)
+  - If STATUS says COMPLETE but content is BRAINSTORM/DRAFT → CONFLICTING
+    (flag-for-review: may indicate tracking intent, developer must judge)
+```
+
+**Evidence artifact:** Label list and body content for each fix spec sub-issue.
+
+### Verify Fix Spec Is Not Closed Prematurely
+
+```
+For each fix spec sub-issue:
+  child = github_issue_read(method=get, issue_number=sub_issue_number)
+  
+  - If child state is "closed" → verify a merged PR exists
+  - Search for PRs referencing the sub-issue number
+  - If closed with no merged PR → VERIFICATION-GAP (flag-for-review: premature closure)
+```
+
+**Evidence artifact:** Issue state response and PR search results.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Fix spec sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve missing issue |
+| Fix spec labels stale | STRUCTURE-VIOLATION | auto-fix | Note stale label, recommend removal |
+| STATUS mismatch (conservative) | STRUCTURE-VIOLATION | auto-fix | Update STATUS to match content |
+| STATUS mismatch (overstated) | CONFLICTING | flag-for-review | Developer must judge intent |
+| Premature closure | VERIFICATION-GAP | flag-for-review | Report — no merged PR found |

@@ -154,16 +154,57 @@ This skill is a **heavy skill** — its task files contain significant detail th
 
 **Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
 
+## Adversarial Verification Requirements
+
+Every task in this skill that reads a metadata claim (label, comment, STATUS marker, sub-issue state, authorization history) MUST verify that claim against actual state before trusting it for workflow decisions. This extends the `065-verification-honesty.md` principle from code verification to metadata verification.
+
+### Verification Table
+
+| Metadata Claim | Verification Action | Tool Call | Problem Class |
+|----------------|-------------------|-----------|---------------|
+| `needs-approval` label present | Check issue comments for explicit authorization ("approved"/"go") from a developer | `github_issue_read(method=get_comments)` | MISSING-ELEMENT |
+| `needs-approval` label absent | Verify no pending authorization is needed (issue state is actually authorized) | `github_issue_read(method=get_labels)` | STRUCTURE-VIOLATION |
+| Authorization comment exists | Verify author is a developer (not bot/agent); verify scope matches current issue; verify comment is not superseded by revision | `github_issue_read(method=get_comments)` → filter by author association | CONFLICTING |
+| STATUS marker value | Compare STATUS against actual content maturity per ground-truth classification | `github_issue_read(method=get)` → parse body content | STRUCTURE-VIOLATION |
+| Authorization currency | Verify spec has not been revised after most recent authorization comment | `github_issue_read(method=get_comments)` → compare revision timestamps | STRUCTURE-VIOLATION |
+| Sub-issue state (open/closed) | Verify sub-issue state via GitHub API, not from cached or claimed state | `github_issue_read(method=get, issue_number=N)` → check `state` field | VERIFICATION-GAP |
+| Fix spec existence | Verify fix spec sub-issue exists and has correct labels/STATUS for its maturity | `github_issue_read(method=get_sub_issues)` → verify each child | MISSING-TRACEABILITY |
+
+### Evidence Artifacts
+
+Every adversarial verification check MUST produce an evidence artifact — a tool call result that demonstrates the verification was performed. Assertions without tool call evidence are verification honesty violations per `065-verification-honesty.md`.
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+### Finding Classification
+
+Findings from adversarial verification follow the same three-tier model as `spec-auditor` ground-truth:
+
+| Classification | When | Action |
+|----------------|------|--------|
+| auto-fix | Safe, mechanical corrections (stale label, mismatched STATUS) | Apply fix, note in evidence |
+| conditional | Requires scope/safety check before applying (authorization claim vs actual) | Verify scope, then apply if safe |
+| flag-for-review | Requires domain judgment (conflicting authorization, ambiguous state) | Report in findings, do not apply |
+
 ## Cross-References
 
 - Related skills: `git-workflow` (branch operations, cleanup), `pr-creation-workflow` (PR timing), `issue-review` (authorization status)
-- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md`
 - Related skill tasks: `approval-gate --task verify-sub-issues` (sub-issue verification), `git-workflow --task cleanup` (post-merge closure)
+- Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)
 - Label state machine: `141-planning-status-tracking.md §10` (label add/remove actions for this skill)
 
 ```yaml+symbolic
 schema_version: "1.0"
-last_updated: "2026-04-12T12:00:00Z"
+  last_updated: "2026-04-14T12:00:00Z"
 rules:
   - id: approval-gate-skill-001
     title: "Pre-implementation authorization verification"
