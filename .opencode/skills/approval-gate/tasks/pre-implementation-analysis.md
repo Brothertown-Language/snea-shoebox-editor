@@ -546,3 +546,62 @@ Issues have a merge-time conflict risk when:
 - Proceed immediately to `assemble-batch` after presenting the plan
 - Auto-detect partially-implemented issues (no developer input needed)
 - HALT for developer review only for unresolvable conflicts and different-intent stale assumptions
+
+## Adversarial Interdependency Verification
+
+**Before trusting spec-claimed dependencies, verify them against actual codebase state.** Specs may claim "Issue A must precede Issue B" based on assumed file overlap that doesn't exist, or miss dependencies that do exist.
+
+### Verify File Overlap Claims Against Actual Code
+
+```
+For each spec claiming file overlap with another spec:
+  - Extract file paths mentioned in each spec body
+  - Use srclight_get_dependents or srclight_get_callers to verify actual import/call chains
+  - If spec claims "A modifies X which B needs" but srclight shows no dependency → VERIFICATION-GAP
+  - If srclight shows dependency not mentioned in either spec → MISSING-ELEMENT
+```
+
+**Evidence artifact:** `srclight_get_dependents` and `srclight_get_callers` results for symbols mentioned in specs.
+
+### Verify Must-Precede Claims
+
+```
+For each must-precede relationship claimed in specs:
+  - Check if A actually creates/modifies symbols that B uses
+  - srclight_get_callers(symbol_name="<symbol_from_A>", project="<project>")
+  - If callers include code from B's scope → dependency verified
+  - If callers do NOT include code from B's scope → VERIFICATION-GAP (may not actually need serialization)
+```
+
+**Evidence artifact:** Caller graph results showing whether the claimed dependency exists in actual code.
+
+### Verify Independence Claims
+
+```
+For each pair of issues claimed as "independent":
+  - Use srclight_get_dependents(symbol_name="<key_symbol>", project="<project>", transitive=True)
+  - If transitive dependents include code from the other issue's scope → NOT independent
+  - Downgrade from "parallel-safe" to "conflict-risk" or "must-precede"
+```
+
+**Evidence artifact:** Transitive dependency graph showing whether claimed independence holds.
+
+### Verify Code References Exist
+
+```
+For each file path or symbol mentioned in any spec:
+  - File paths: verify with glob or read that the file exists
+  - Symbol names: verify with srclight_get_signature that the symbol exists
+  - If file/symbol does not exist → VERIFICATION-GAP (flag-for-review: planned but not yet implemented, or typo)
+```
+
+**Evidence artifact:** Search/glob results confirming existence or absence of referenced code.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| File overlap claimed but no actual dependency | VERIFICATION-GAP | flag-for-review | Re-classify as independent unless other evidence |
+| Dependency exists but not mentioned in specs | MISSING-ELEMENT | conditional | Add to dependency graph, adjust execution order |
+| Independence claimed but transitive dependency exists | CONFLICTING | conditional | Downgrade to conflict-risk or must-precede |
+| Code reference to non-existent file/symbol | VERIFICATION-GAP | flag-for-review | Developer must confirm: planned or typo |

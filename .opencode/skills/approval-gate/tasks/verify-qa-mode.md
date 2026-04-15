@@ -259,6 +259,66 @@ What would you like me to do?
   purpose: "Branch creation and git state"
 ```
 
+## Adversarial Verification: Spec-Less Detection
+
+**Before trusting the three-gate checks (GitHub Issue, authorization, feature branch), verify each gate against actual state — not assumptions or cached values.**
+
+### Verify Issue Exists and Contains Actual Spec Content
+
+```
+If user references an issue number:
+  issue = github_issue_read(method="get", issue_number=N)
+  body = issue["body"]
+  
+  - Verify issue actually exists (404 = no issue → Gate 1 FAILS)
+  - Verify body contains spec content (not empty or placeholder text)
+  - Check if body has STATUS marker — if so, compare against actual content maturity
+  - If STATUS says BRAINSTORM but content is DETAILED/COMPLETE → STRUCTURE-VIOLATION
+    (Gate still passes — issue exists — but NOTE the maturity mismatch)
+  - If body is empty or placeholder → Gate 1 FAILS (no real spec)
+```
+
+**Evidence artifact:** `github_issue_read(method=get)` response showing issue body content and STATUS marker.
+
+### Verify Authorization Against Actual Comment State
+
+```
+If user claims authorization exists:
+  comments = github_issue_read(method="get_comments", issue_number=N)
+  
+  - Search ALL comments for "approved", "go", "authorized"
+  - Verify author is a developer (author_association: MEMBER/OWNER/COLLABORATOR)
+  - Bot/agent "approved" comments are NOT valid authorization
+  - If no valid authorization comment found → Gate 2 FAILS
+  - If authorization comment found but spec was revised after → Gate 2 FAILS (stale auth)
+```
+
+**Evidence artifact:** `github_issue_read(method=get_comments)` response with author details for authorization claims.
+
+### Verify Branch State Against Actual Git State
+
+```
+current_branch = git branch --show-current
+git_status = git status
+
+- If claimed to be on feature branch but actually on main/dev → Gate 3 FAILS
+- If claimed to be clean but has uncommitted changes → VERIFICATION-GAP
+  (uncommitted changes may indicate prior unauthorized work)
+```
+
+**Evidence artifact:** `git branch --show-current` and `git status` output.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must create or reference correct issue |
+| Issue body empty/placeholder | MISSING-ELEMENT | flag-for-review | Spec content must be created before implementation |
+| STATUS maturity mismatch | STRUCTURE-VIOLATION | auto-fix | Note mismatch, recommend STATUS update |
+| Authorization from bot/agent | CONFLICTING | flag-for-review | Reject as authorization, require human approval |
+| Authorization superseded by revision | STRUCTURE-VIOLATION | flag-for-review | Require re-authorization |
+| Unauthorized prior work detected | VERIFICATION-GAP | flag-for-review | Report — may need to `git checkout` to clean state |
+
 ## Edge Cases
 
 ### Edge Case 1: User Bypass Attempt
