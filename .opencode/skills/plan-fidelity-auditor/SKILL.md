@@ -25,6 +25,7 @@ Plan Fidelity Auditor generates a clean-room plan from the spec's problem statem
 | `audit` | Full audit workflow (default) | ~600 |
 | `compare` | Compare clean-room plan against existing plan | ~500 |
 | `report` | Report findings (renamed from auto-fix) | ~300 |
+| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases | ~350 |
 
 ## Invocation
 
@@ -129,6 +130,7 @@ Only substantive differences after semantic matching are reported.
 | Task table entry `audit` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/audit.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `compare` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/compare.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `report` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/report.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sub-issue-fidelity` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/sub-issue-fidelity.md` | MISSING-TRACEABILITY if missing |
 | `spec-auditor` orchestration behavior | Matches actual SKILL.md: `fidelity` subtask delegates to this skill | CONFLICTING if mismatched |
 | `writing-plans` clean-room invocation | Matches actual SKILL.md: `clean-room` task exists for generating plans | CONFLICTING if mismatched |
 | `brainstorming` recommendation behavior | Matches actual SKILL.md: exploration skill for deeper analysis | CONFLICTING if mismatched |

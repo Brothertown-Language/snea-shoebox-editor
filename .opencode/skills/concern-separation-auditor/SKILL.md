@@ -20,6 +20,7 @@ Concern Separation Auditor analyzes spec phase structures to identify deployment
 |------|---------|-------|
 | `audit-phases` | Analyze phase structure for concern quality | ~400 |
 | `check-independence` | Validate deployment independence between phases | ~300 |
+| `concern-coverage` | Verify sub-issue bodies reflect Plan concern boundaries | ~350 |
 
 ## Invocation
 
@@ -93,6 +94,7 @@ This skill analyzes ACTUAL concerns, not static templates.
 | `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `audit-phases` | File exists at `.opencode/skills/concern-separation-auditor/tasks/audit-phases.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `check-independence` | File exists at `.opencode/skills/concern-separation-auditor/tasks/check-independence.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `concern-coverage` | File exists at `.opencode/skills/concern-separation-auditor/tasks/concern-coverage.md` | MISSING-TRACEABILITY if missing |
 | `spec-auditor` orchestration behavior | Matches actual SKILL.md: `concerns` subtask delegates to this skill | CONFLICTING if mismatched |
 | `writing-plans` clean-room behavior | Matches actual SKILL.md: `clean-room` task for fidelity generation | CONFLICTING if mismatched |
 | `programming-principles` principle definitions | Matches actual SKILL.md: SoC and Blast Radius principles defined there | CONFLICTING if mismatched |
