@@ -25,6 +25,7 @@
 | **Human-only merge** | Agents MUST NEVER merge PRs |
 | **MCP tools** | Use appropriate tools per five-tier hierarchy (see `mcp-tool-usage` skill) |
 | **Silent halt** | HALT after completion, after PR creation — no prompts |
+| **Search before halt** | When no spec/plan exists for an implementation request, search GitHub Issues for existing candidates (label filters: `[SPEC]`, `[PLAN]`, `[SPEC-FIX]`; keyword matching against request target), present candidates with URLs, offer create-or-select before halting — see `000-critical-rules.md` §Silent Halt Without Prompt |
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
 

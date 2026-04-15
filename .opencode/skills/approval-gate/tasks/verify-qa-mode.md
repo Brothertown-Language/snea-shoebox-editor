@@ -71,6 +71,24 @@ GATE 2: Is authorization documented (explicit "approved"/"go" comment)?
 GATE 3: Is current branch a feature branch (not main/dev/master)?
 ```
 
+### Step 2.5: Search for Existing Spec/Plan Candidates (MANDATORY before Q/A mode)
+
+**When ANY gate fails (no spec, no authorization, or wrong branch), the agent MUST search GitHub Issues for existing candidates before entering Q/A mode.** A silent halt without searching is a critical violation — see `000-critical-rules.md` §Silent Halt Without Prompt.
+
+**Search Procedure:**
+
+1. **Label search:** Search GitHub Issues with labels `[SPEC]`, `[PLAN]`, `[SPEC-FIX]` in the repository
+2. **Keyword search:** Search GitHub Issues using keywords from the implementation request (e.g., feature name, component, module, bug area)
+3. **Evaluate candidates:** For each result, assess relevance to the request target
+4. **Present candidates:** If candidates found, list them with:
+   - Issue number and title
+   - URL
+   - Brief relevance assessment (why it matches)
+5. **Offer create-or-select:** Present user with options: select an existing candidate OR create a new spec
+6. **Report failure if no candidates:** If search yields no relevant candidates, explicitly state "No existing spec/plan found for [topic]" before offering spec creation
+
+**This step is MANDATORY.** Skipping it and going straight to Q/A mode is a critical violation.
+
 ### Step 3: Evaluate Gate Results
 
 #### Scenario A: All Checks Pass → PROCEED
@@ -83,7 +101,7 @@ GATE 3: Is current branch a feature branch (not main/dev/master)?
 ACTION: Invoke git-workflow --task pre-work
 ```
 
-#### Scenario B: Any Check Fails → Q/A MODE
+#### Scenario B: Any Check Fails → SEARCH → Q/A MODE
 
 ```
 ❌ Gate failed
@@ -93,8 +111,10 @@ ENFORCEMENT:
 2. Do NOT create branch
 3. Do NOT write code
 4. Do NOT commit
-5. Switch to Q/A mode
-6. Ask single question: "What would you like me to do?"
+5. SEARCH GitHub Issues for existing candidates (Step 2.5)
+6. PRESENT candidates or failure state
+7. Switch to Q/A mode
+8. Offer create-or-select before halting
 ```
 
 ### Step 4: Q/A Mode Response Format
@@ -104,14 +124,21 @@ ENFORCEMENT:
 ```
 I see you'd like me to implement [X], but I need clarification first.
 
-[If no spec] There's no GitHub Issue tracking this work. 
+[If search found candidates:]
+I found the following existing specs/plans that may be relevant:
+1. #123 [SPEC] Feature X implementation — <URL>
+2. #456 [PLAN] Feature X rollout — <URL>
+
+Would you like me to work with one of these, or create a new spec?
+
+[If no spec] No existing spec/plan found for [X].
   Would you like me to create a spec first?
 
-[If on main/dev] I'm currently on the [main] branch. 
+[If on main/dev] I'm currently on the [main] branch.
   I need to create a feature branch first, but I need a spec/issue to associate it with.
 
 [If no authorization] This work hasn't been authorized yet.
-  Would you like to create a spec for review first?
+  Would you like to review the spec and authorize it?
 
 What would you like me to do?
 ```
@@ -142,12 +169,30 @@ What would you like me to do?
 **Agent Internal Check:**
 - Keyword: "Fix" = implementation
 - GitHub Issue? NO
-- Action: Q/A Mode
+- Action: Search before Q/A Mode
 
-**Agent Response:**
+**Agent Search:**
+- Label search: `[SPEC]`, `[PLAN]`, `[SPEC-FIX]` for "authentication" or "login"
+- Keyword search: "authentication bug", "login.py"
+
+**Agent Response (if candidates found):**
 ```
 I see you'd like me to fix an authentication bug, but there's no GitHub Issue 
 tracking this work.
+
+I found these existing issues that may be relevant:
+1. #42 [SPEC] Authentication flow improvements — https://github.com/owner/repo/issues/42
+2. #87 [SPEC-FIX] Login timeout bug — https://github.com/owner/repo/issues/87
+
+Would you like me to work with one of these, or create a new spec/bug report?
+
+What would you like me to do?
+```
+
+**Agent Response (if no candidates found):**
+```
+I see you'd like me to fix an authentication bug, but no existing spec/plan 
+was found for this topic.
 
 Would you like me to create a spec/bug report first?
 
