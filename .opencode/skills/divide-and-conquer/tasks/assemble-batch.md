@@ -184,6 +184,23 @@ After ALL issues in the batch complete:
 2. **Run git-workflow --task review-prep** for the batch branch
 3. **Collect compare URL**
 
+### Step 5.5: Pre-PR Checklist (MANDATORY before any PR creation)
+
+Before creating ANY pull request, verify:
+
+1. Batch state file exists at `.opencode/tmp/batch-*.md`
+2. All feature branches listed in batch state have been squash-merged into the batch branch
+3. The batch branch has exactly one squash-merge commit per issue
+4. Working tree is clean (no uncommitted changes)
+
+If any check fails:
+
+- If batch state file missing → the agent skipped pre-implementation-analysis; HALT
+- If squash-merges missing → complete Step 4 (Batch Assembly) first
+- If working tree dirty → commit or stash changes first
+
+**🚫 CRITICAL: Individual PR creation for batch-approved issues is FORBIDDEN. All issues in a batch MUST be squash-merged into a single batch branch, then ONE PR created from that branch.**
+
 ### Step 6: Report and HALT
 
 **Chat output:**
