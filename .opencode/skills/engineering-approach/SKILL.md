@@ -97,6 +97,8 @@ During coding:
 
 Before writing ANY implementation code:
 
+- ☐ **Verify all config schemas, API signatures, and code implementations against live documentation before proceeding.** Run `srclight_get_signature` for function signatures, `srclight_get_symbol` for code details, and fetch JSON schemas for config compliance. Tag any unverified assertions as `(unverified)`.
+
 1. **Verify API Signatures**
    - [ ] Check official documentation for correct parameters
    - [ ] Use `srclight_get_signature` or type hints for function signatures
