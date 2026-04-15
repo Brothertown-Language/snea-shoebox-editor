@@ -4,7 +4,7 @@ Migrated from `implementation-workflow` task context-passing.
 
 ## Purpose
 
-Reference document for yield-back context patterns between subtasks in the divide-and-conquer orchestration chain.
+Reference document for yield-back context patterns between subtasks in the divide-and-conquer orchestration chain, including phase progress information that must travel across phase boundaries.
 
 ## Entry Criteria
 
@@ -63,6 +63,29 @@ compare_url: string (actionable link)
 exec_summary: string (markdown, human-readable)
 ```
 
+### Phase Progress — What Travels at Phase Boundaries
+
+When the orchestrator dispatches a sub-agent for a phase that follows a prior phase, the dispatch context MUST carry phase progress information composed from prior sub-agent results and the Plan STATUS marker. This information ensures each phase knows what has already been accomplished and can act accordingly.
+
+**Phase progress is prose-driven.** The requirement is that the information travels — the agent composing the context decides how to encode it. The following information must be present:
+
+- **Completed phases by concern name.** Each completed phase should be identified by the concern it addresses, not just a phase number. For example: "dispatch context schema" rather than "Phase 1", "assemble-batch phase progress" rather than "Phase 3". The concern name makes the progress meaningful to the receiving sub-agent.
+
+- **Concern boundaries crossed.** When the current phase's work transitions from one architectural concern to another (e.g., from data layer to UI, from orchestration to enforcement, from schema definition to runtime behavior), this transition must be documented. The boundary description should explain what concern the previous phase addressed and what concern the current phase enters.
+
+- **Verification evidence.** What was verified in prior phases and the outcome. This is not a test log — it is a prose summary of what the sub-agent confirmed and the result. For example: "verified that the dispatch context contract includes the new phase_progress field and all invariants hold" rather than "3/3 tests passed".
+
+**How it is composed:**
+
+The orchestrator builds phase_progress incrementally. Before each sub-agent dispatch:
+1. Read the Plan STATUS marker to identify which phases are already complete
+2. Accumulate `completed_phases`, `concern_boundaries_crossed`, and `verification_evidence` from each prior sub-agent's result
+3. If this sub-agent's work crosses a concern boundary, note the transition in `concern_boundaries_crossed`
+
+**How it is NOT composed:**
+
+There is no fixed template, no rigid YAML schema, no mandatory section headers. The orchestrator describes progress in natural prose that communicates what the next sub-agent needs to know. The information requirement is the rule; the encoding is up to the agent.
+
 ## Edge Cases
 
 ### Context Lost Between Steps
@@ -72,6 +95,10 @@ If a yield-back produces empty or missing fields:
 1. HALT orchestration
 2. Report which context field is missing
 3. Wait for manual intervention
+
+### Phase Progress with No Prior Phases
+
+For the first sub-agent dispatched (no prior phases completed), `phase_progress` should still be present but note that no prior phases exist. For example: "No phases completed yet. This is the first phase." This ensures the field is never absent — it is either populated with prior progress or explicitly states that no progress has been made.
 
 ### Pre-Work Asks for Auth Again
 
