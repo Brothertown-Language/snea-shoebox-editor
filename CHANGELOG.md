@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/840-credential-leakage
+
+- **Gitignore Credential Hardening** (#840) - Expanded `.gitignore` with 6 new credential file patterns (SSH keys, production secrets, service accounts) and added 16 parameterized tests verifying all credential patterns are gitignored.
+
 ### spec/814-plan-bleed-ambiguous
 
 - **PLAN-BLEED-AMBIGUOUS Problem Class** (#814) - Added the PLAN-BLEED-AMBIGUOUS problem class to spec-auditor, completing the spec/plan boundary enforcement plan. Ambiguous content that could be either requirement or implementation detail is now flagged for domain judgment instead of being auto-fixed or missed.
