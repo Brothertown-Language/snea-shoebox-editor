@@ -102,9 +102,21 @@ For each issue in execution order:
    - Run `finishing-a-development-branch --task checklist`
    - Return structured result: `{status, files_changed, summary}`
 
-5. **Collect result** from sub-agent
+ 5. **Collect result** from sub-agent
 
-6. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
+ 6. **Sub-Agent Completion Checkpoint** — after collecting each result, perform the completion checkpoint per `dispatch` task Step 4:
+
+    - If sub-agent returned a structured result: check `status` field and handle accordingly
+    - If sub-agent returned **NO result** (timeout, crash, empty): this is **ABNORMAL TERMINATION**
+      - Run `git status` in the worktree
+      - Clean tree → didn't start → re-dispatch
+      - Uncommitted changes + all deliverables → complete manually (commit + push)
+      - Uncommitted changes + partial deliverables → `git checkout .` + re-dispatch reduced scope
+      - Uncommitted changes + wrong changes → `git checkout .` + re-dispatch full scope
+    - Report abnormal termination to chat (see format in SKILL.md "Sub-Agent Completion Checkpoint")
+    - The orchestrator decides recovery action autonomously per "Pushing Agent Intelligence Decisions to the User" (`000-critical-rules.md`)
+
+ 7. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
 
      prior_context (intent and context):
      - Design decisions made
@@ -120,7 +132,7 @@ For each issue in execution order:
 
      Both prior_context and phase_progress are prose-driven. The orchestrator composes them intelligently — no fixed template, no rigid schema.
 
-7. **Append the sub-agent's decision_log_entry to the Decision Log on the Plan issue.** After collecting each sub-agent's result, post their `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. The Decision Log persists design decisions across phase boundaries and session restarts.
+ 8. **Append the sub-agent's decision_log_entry to the Decision Log on the Plan issue.** After collecting each sub-agent's result, post their `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. The Decision Log persists design decisions across phase boundaries and session restarts.
 
    **Decision Log storage:** Use a dedicated GitHub Issue comment on the Plan issue, NOT the Plan body. Rationale:
    - Append-only — new decisions are added without editing existing content
@@ -131,9 +143,9 @@ For each issue in execution order:
 
    The orchestrator posts the decision log entry after each sub-agent returns. If posting fails, log the failure and continue — the Decision Log is a durability enhancement, not a blocking gate. The `decision_log_entry` is also returned in the sub-agent result for immediate use by subsequent dispatches within the same session.
 
-8. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
+ 9. **Mark prior issue's branch as frozen** — no rebasing, amending, or force-pushing
 
-9. **Handle failures:**
+ 10. **Handle failures:**
 
    - If sub-agent fails: record failure
    - For independent issues: continue to next issue
