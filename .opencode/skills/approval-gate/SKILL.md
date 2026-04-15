@@ -30,6 +30,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ~250 |
 | `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ~300 |
 | `pre-implementation-analysis` | Analyze interdependencies and expand sub-issues for all approved issues (single or batch), producing flat item list for assemble-batch | ~500 |
+| `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ~350 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
 
@@ -43,6 +44,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
 - `/skill approval-gate --task verify-fix-spec` - Verify fix spec exists for bug reports
 - `/skill approval-gate --task search-prompt-fail` - Search for existing spec/plan candidates before Q/A halt
+- `/skill approval-gate --task verify-schema-api-knowledge` - Verify schema/API/code knowledge before claims
 - `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-batch
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate --task completion` - Invoke when workflow halts at any point
@@ -263,4 +265,17 @@ rules:
     requires: []
     triggers: [approval-gate, brainstorming, spec-creation]
     source: "approval-gate/SKILL.md §search-prompt-fail task"
+
+  - id: approval-gate-skill-010
+    title: "Verify schema/API/code knowledge before claims"
+    conditions:
+      all:
+        - "agent_about_to_make_structural_claim == true"
+        - "verification_performed == false"
+    actions:
+      - INVOKE(verify-schema-api-knowledge)
+    conflicts_with: []
+    requires: []
+    triggers: [engineering-approach]
+    source: "approval-gate/SKILL.md §verify-schema-api-knowledge task"
 ```
