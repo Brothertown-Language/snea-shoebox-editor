@@ -140,6 +140,41 @@ function buildMetadataBlock(projectDir: string): string {
   return lines.join("\n");
 }
 
+function buildTrainingStalenessBlock(): string {
+  return `<TRAINING_STALENESS_CRITICAL>
+⚠️ Your training data is STALE. You CANNOT rely on your training data for:
+
+- API signatures, library versions, framework syntax
+- Configuration formats, environment variable names
+- Code patterns, best practices, recommended approaches
+- Documentation, examples, tutorials
+
+**VERIFICATION IS MANDATORY:**
+
+1. **Check live documentation** before using any API, framework, or library
+2. **Verify code signatures** using srclight_get_signature before claiming behavior
+3. **Read actual source files** before asserting code behavior
+4. **Confirm configuration** against live schemas before asserting compliance
+5. **Tag unverified assertions** as "(unverified)" if you cannot verify them
+
+**DO NOT TRUST:**
+
+- Your memory about how something works
+- Code comments (they may be outdated or wrong)
+- Documentation snippets from training data
+- "I've seen this before" or "I know this pattern"
+- Second-hand information without live source verification
+
+**ALWAYS VERIFY** before:
+- Proposing a course of action
+- Providing an technical answer
+- Making claims about code behavior
+- Suggesting solutions
+
+This is a CRITICAL rule. Violations result in incorrect guidance and broken implementations.
+</TRAINING_STALENESS_CRITICAL>`;
+}
+
 function buildWorktreeBlock(input: PluginInput): string {
   const mainRepoDir = input?.directory || "";
   const worktreeDir = input?.worktree || "";
@@ -424,6 +459,9 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       if (metadataBlock) {
         output.system.push(metadataBlock);
       }
+
+      // Inject training staleness warning (verifying everything is mandatory)
+      output.system.push(buildTrainingStalenessBlock());
 
       // Inject frontmatter validation warning if any skills have broken frontmatter
       const warning = buildFrontmatterWarning(frontmatterErrors);
