@@ -46,12 +46,23 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 - [ ] Module docstrings present
 - [ ] No narration print statements
 
-### Chat Output Format
-- [ ] Executive summary present as first chat output element
-- [ ] Compare URL present before AI byline
-- [ ] AI byline in format `🤖 <AgentName> (<ModelID>) <status>` after URL
-- [ ] No URL before executive summary
-- [ ] No byline before URL
+### Chat Output Format (MANDATORY — Zero Tolerance)
+- [ ] Executive summary present as **first** chat output element (before any URL)
+- [ ] Outcome line present after summary
+- [ ] Compare URL present (after summary, before byline)
+- [ ] AI byline in format `🤖 <AgentName> (<ModelID>) <status>` appears **last** (after URL)
+- [ ] No URL before executive summary (CRITICAL VIOLATION if violated)
+- [ ] No byline before URL (CRITICAL VIOLATION if violated)
+
+**This format applies to EVERY halt point where implementation is reported complete:**
+- review-prep after implementation
+- Sub-agent result reports from divide-and-conquer dispatch
+- Phase boundary halts (merge gates between phases)
+- Approval-gate post-implementation reports
+
+**Evidence requirement:** Verify format by reviewing chat output before marking this checklist item complete. Assertions without reviewing the actual output are VERIFICATION-GAP findings.
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before proceeding. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix).
 
 ### Ready for PR?
 - [ ] All checklist items pass

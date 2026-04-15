@@ -46,6 +46,42 @@ After revision, the spec needs fresh authorization:
 - Do NOT proceed to implementation
 - Wait for explicit `approved` or `go`
 
+## Adversarial Verification of STATUS Exemption (MANDATORY)
+
+**🚫 CRITICAL: Every STATUS marker claiming exemption from change control MUST be verified against actual revision history. Unverified exemption claims are CONFLICTING findings per `065-verification-honesty.md`.**
+
+### Verification Procedure
+
+After Step 1 (Identify Changes) and Step 2 (Version the Spec), verify any STATUS exemption claims:
+
+| Exemption Claim | Verification Action | Tool Call | Problem Class |
+|----------------|-------------------|-----------|---------------|
+| "Initial spec creation" (no version increment) | Verify the spec has no prior versions — check Issue body for `STATUS: 1.0` or version history | `github_issue_read(method=get, issue_number=N)` → search body for `STATUS:` markers | CONFLICTING |
+| "Non-substantive change" (typos, cross-refs) | Verify the change is truly non-substantive — no scope, requirements, or success criteria changes | `github_issue_read(method=get, issue_number=N)` → compare current vs previous body content | CONFLICTING |
+| "STATUS marker update" (checkbox, phase number) | Verify the change is only a STATUS marker toggle — no content change | `github_issue_read(method=get, issue_number=N)` → diff body against comment history | STRUCTURE-VIOLATION |
+| "Bug report addition" (separate from spec content) | Verify the added content is a bug report section, not a spec content change | `github_issue_read(method=get, issue_number=N)` → check section added | VERIFICATION-GAP |
+
+### Evidence Format
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+### Classification on Failure
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Claims "initial creation" but `STATUS: 1.0` exists | CONFLICTING | auto-fix | Increment version, apply change control |
+| Claims "non-substantive" but content changed | CONFLICTING | flag-for-review | HALT — requires domain review |
+| Claims "STATUS update" but content also changed | STRUCTURE-VIOLATION | auto-fix | Apply full change control to content change |
+| Claims "bug report" but adds spec requirements | VERIFICATION-GAP | conditional | Verify scope; if requirements changed, apply change control |
+
+**These verifications are MANDATORY for any STATUS exemption claim. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Exemptions
 
 - Initial spec creation (version 1.0): No change control needed
