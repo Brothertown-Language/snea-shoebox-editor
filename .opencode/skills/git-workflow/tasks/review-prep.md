@@ -195,6 +195,37 @@ If the `--skip-submodules` flag is provided:
 
 **This flag should only be used when submodule changes are intentionally deferred.**
 
+#### Provenance Tracking After Submodule Push (MANDATORY)
+
+**After each submodule is successfully pushed, invoke provenance tracking immediately.**
+
+For each submodule that was pushed in the Per-Submodule Push Sequence above:
+
+```
+1. Invoke: /skill git-workflow --task provenance
+   with parameters:
+     - parent_repo: <GIT_OWNER>/<GIT_REPO>
+     - parent_branch: <BRANCH_NAME>
+     - parent_issue: <issue number from current implementation>
+     - submodule_path: <path of the pushed submodule>
+     - change_description: <brief description of what changed>
+
+2. Provenance is NON-BLOCKING:
+   - If issue/PR creation succeeds → log result, continue
+   - If API access unavailable → falls back silently to commit message provenance (Tier 3)
+   - If any tier fails → next tier attempted, no HALT, no blocking
+
+3. Do NOT wait for provenance to succeed before proceeding with the parent repo push.
+   Provenance tracking is best-effort and never blocks the git workflow.
+```
+
+**Why this hook exists:** Without provenance tracking, submodule changes pushed from the parent repo have no traceability back to the parent issue. The provenance task creates issues (and optionally PRs) in the submodule repo that cross-reference the parent, enabling bidirectional traceability.
+
+**When provenance is skipped:**
+
+- `--skip-submodules` flag provided → provenance is also skipped (no submodule was pushed)
+- No submodules changed → no provenance needed
+
 #### Worktree Mode Considerations
 
 When operating in a worktree, submodule directories are within the worktree path. Use `cd` to enter and exit submodule directories:
