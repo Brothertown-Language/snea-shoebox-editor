@@ -54,25 +54,28 @@ For each issue in execution order:
      - Tiers 1-2 (trivial/formatting): Auto-resolve per `conflict-resolution` skill
      - Tier 3 (intent conflict): HALT and flag for developer review
 
-2. **Build dispatch context** with AI-composed intent-and-context metadata:
+  2. **Build dispatch context** with AI-composed intent-and-context metadata:
 
-   ```yaml
-   batch:
-     authorized_issues: [#A, #B, #C]
-     completed_issues: [<completed>]
-   issue: #<current>
-   spec: "<full spec body from GitHub Issue>"
-   authorization: "User approved #A, #B, #C on <date>"
-   prior_context: "<AI-composed intent and context from prior issues>"
-   dependency_branches: ["spec/<prior-branch>"]
-   env_vars:
-     WORKTREE_PATH: ".worktrees/spec-<name>"
-     BRANCH_NAME: "spec/<name>"
-     GIT_OWNER: "<from-session>"
-     GIT_REPO: "<from-session>"
-     DEV_NAME: "<from-session>"
-     DEV_EMAIL: "<from-session>"
-   ```
+    Sub-issues contain phase context in their body (enriched during creation via `create-sub-issue`). When composing dispatch context, reference the sub-issue body for phase-specific context rather than re-reading the Plan body. The sub-issue body should already include: why the phase exists, what it must accomplish, how to verify completion, edge cases, and dependencies. If the sub-issue body is insufficient (only contains `**Parent Plan:** #M`), fall back to reading the Plan body for the relevant phase section.
+
+    ```yaml
+    batch:
+      authorized_issues: [#A, #B, #C]
+      completed_issues: [<completed>]
+    issue: #<current>
+    sub_issue_body: "<phase prose from sub-issue body, not just parent reference>"
+    spec: "<full spec body from GitHub Issue>"
+    authorization: "User approved #A, #B, #C on <date>"
+    prior_context: "<AI-composed intent and context from prior issues>"
+    dependency_branches: ["spec/<prior-branch>"]
+    env_vars:
+      WORKTREE_PATH: ".worktrees/spec-<name>"
+      BRANCH_NAME: "spec/<name>"
+      GIT_OWNER: "<from-session>"
+      GIT_REPO: "<from-session>"
+      DEV_NAME: "<from-session>"
+      DEV_EMAIL: "<from-session>"
+    ```
 
 3. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
 

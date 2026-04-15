@@ -35,7 +35,19 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=M)
 # If sub-issues exist for this phase, skip
 ```
 
-### Step 3: Create Sub-Issue
+### Step 3: Extract Phase Prose from Plan Body
+
+Read the full plan issue body and locate the section for the target phase. Extract all prose that a sub-agent needs to implement this phase independently — without re-reading the plan. This includes:
+
+- **Why this phase exists**: The concern it addresses and its place in the overall design
+- **What it must accomplish**: Tasks, deliverables, and behavioral requirements
+- **How to verify completion**: Success criteria and testable outcomes
+- **What could go wrong**: Edge cases, known risks, and failure modes
+- **What must be done first**: Dependencies on prior phases or external prerequisites
+
+The agent decides how to structure this content within the sub-issue body. There is no prescribed section format, no fill-in-the-blanks template, and no required headers. The prose from the plan body should flow naturally, preserving the author's intent and context.
+
+### Step 4: Create Sub-Issue
 
 ```python
 sub_issue = github_issue_write(
@@ -43,12 +55,14 @@ sub_issue = github_issue_write(
     owner=GIT_OWNER,
     repo=GIT_REPO,
     title=f"[Task: #{M}] {phase_description}",
-    body=f"**Parent Plan:** #{M}\n\n{phase_content}",
+    body=f"**Parent Plan:** #{M}\n\n{phase_prose}",
     labels=["task"]
 )
 ```
 
 **Title format:** `[Task: #PLAN] Phase Description`
+
+**Body requirement:** The sub-issue body MUST contain enough phase context for a sub-agent to implement the phase independently. A body that contains only `**Parent Plan:** #M` is insufficient — the phase prose extracted in Step 3 must be included.
 
 ### Step 4: Link to Plan
 

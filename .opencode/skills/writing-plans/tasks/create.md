@@ -42,12 +42,22 @@ Create an implementation plan from an approved spec.
 
 6. **Create plan issue:**
 
-    - Title: `[PLAN] <Feature Name>`
-    - Labels: `plan` + `needs-approval`
-    - Body: Spec reference as prose (e.g., `Spec: #784`), then plan with header, file structure, phases with TDD tasks
-    - Do NOT link plan as sub-issue of spec — the plan references the spec via body text only
+     - Title: `[PLAN] <Feature Name>`
+     - Labels: `plan` + `needs-approval`
+     - Body: Spec reference as prose (e.g., `Spec: #784`), then plan with header, file structure, phases with TDD tasks
+     - Do NOT link plan as sub-issue of spec — the plan references the spec via body text only
 
-    After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `github-sub-issues --task create-sub-issue`.
+     **Phase body requirements (critical):** Each phase in the plan body MUST include the information a sub-agent needs to implement the phase independently, without re-reading the plan. This means each phase section must contain:
+
+     - Why this phase exists — the concern it addresses and its place in the overall design
+     - What it must accomplish — tasks, deliverables, and behavioral requirements
+     - How to verify completion — success criteria and testable outcomes
+     - What could go wrong — edge cases, known risks, and failure modes
+     - What must be done first — dependencies on prior phases or external prerequisites
+
+     This is a prose-driven requirement: state what information must be present, not what section headers to use. The agent writing the plan decides how to organize this content naturally within the phase description.
+
+     After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `github-sub-issues --task create-sub-issue`.
 
 7. **Self-review:**
 
