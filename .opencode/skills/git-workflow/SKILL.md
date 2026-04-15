@@ -29,6 +29,7 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
 | `release-promotion` | Automate submodule dev → main promotion and tagging | ~350 |
 | `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ~50 |
+| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ~600 |
 
 ## Invocation
 
@@ -40,6 +41,7 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 - `/skill git-workflow --task cleanup` - After PR merge confirmed
 - `/skill git-workflow --task release-promotion` - When promoting dev → main with submodules, or explicit "promote/push submodule" instruction
 - `/skill git-workflow --task check-pr` - When user says "check pr" / "check prs" / "check pull request(s)"
+- `/skill git-workflow --task provenance` - Create provenance tracking in submodule repos
 - `/skill git-workflow --task completion` - Invoke when workflow halts at any point
 - `/skill git-workflow` - Overview only
 
@@ -149,4 +151,21 @@ This skill is a **heavy skill** — its task files contain significant detail th
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)
 - Related guidelines: `000-critical-rules.md`, `115-branch-naming.md`
-- Related skill tasks: `git-workflow --task pre-work` (branch creation), `git-workflow --task cleanup` (post-merge), `git-workflow --task pr-creation` (PR workflow)
+- Related skill tasks: `git-workflow --task pre-work` (branch creation), `git-workflow --task cleanup` (post-merge), `git-workflow --task pr-creation` (PR workflow), `git-workflow --task provenance` (submodule provenance tracking)
+
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-15T00:00:00Z"
+rules:
+  - id: git-workflow-provenance-001
+    title: "Submodule provenance tracking after push or promotion"
+    conditions:
+      all:
+        - "submodule_pushed == true OR submodule_promoted == true"
+    actions:
+      - INVOKE(git-workflow --task provenance)
+    conflicts_with: []
+    requires: []
+    triggers: [release-promotion, review-prep]
+    source: "git-workflow/SKILL.md Tasks table"
+```

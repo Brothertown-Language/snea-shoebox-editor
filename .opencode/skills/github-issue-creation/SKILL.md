@@ -165,8 +165,36 @@ If GitHub MCP is unavailable:
 
 **See `140-planning-spec-creation.md` → "GitHub MCP Required — No Fallback" for the complete rule.**
 
+## Submodule Provenance Issues
+
+Submodule provenance issues are created as part of the `git-workflow` provenance task, not through this skill's standard flow. See `git-workflow/tasks/provenance.md` for the complete implementation.
+
+### Provenance Issue Creation Pathway
+
+When the `git-workflow` provenance task creates an issue in a submodule repository:
+
+| Aspect | Standard | Provenance |
+| -- | -- | -- |
+| Invocation | Via this skill | Via `git-workflow --task provenance` |
+| Target repo | Parent repo (`GIT_OWNER`/`GIT_REPO`) | Submodule repo |
+| Labels | `needs-approval` | None (provenance tracking is informational) |
+| Title format | `[SPEC]`, `[SPEC-FIX]`, etc. | `Sync from <parent-repo>/<parent-branch>: ...` or `Release ...` |
+| Body | Spec content | Provenance metadata (parent refs, tier info) |
+| Byline | Required | Required |
+
+### Key Differences
+
+- **No pre-creation validation:** Provenance issues are created automatically during git workflow; they don't conflict with specs
+- **No plan creation:** Provenance issues are standalone tracking records, not specs requiring implementation plans
+- **No auditor invocation:** Provenance issues are informational records, not work items requiring quality audits
+- **Three-tier fallback:** Provenance gracefully falls back through tiers without HALT
+
+### Cross-Reference
+
+For the provenance issue body format and tier-specific details, see `git-workflow/tasks/provenance.md`.
+
 ## Cross-References
 
 - Related skills: `spec-auditor`, `approval-gate`, `github-comments`, `github-sub-issues`
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
-- Related skill tasks: `writing-plans --task create` (plan creation for multi-task specs), `git-workflow --task cleanup` (post-merge closure)
+- Related skill tasks: `writing-plans --task create` (plan creation for multi-task specs), `git-workflow --task cleanup` (post-merge closure), `git-workflow --task provenance` (submodule provenance tracking)

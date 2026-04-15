@@ -135,6 +135,31 @@ cd <parent-repo-root>
 git add <path>
 ```
 
+#### 2h: Create Provenance Tracking
+
+After promoting a submodule, invoke provenance tracking:
+
+```
+Invoke: /skill git-workflow --task provenance --mode=promotion
+```
+
+**Context parameters to pass:**
+
+| Parameter | Value |
+| -- | -- |
+| parent_repo | `<GIT_OWNER>/<GIT_REPO>` from session init |
+| parent_branch | The branch being released (commonly `main` or `dev`) |
+| parent_issue | Issue number from the release spec |
+| submodule_path | Path of the promoted submodule |
+| tag_name | The semver tag created in Step 2d |
+| source_branch | The branch promoted (typically `dev`) |
+| change_description | Brief description of changes in this submodule |
+| parent_release_ref | Parent release tag or issue reference |
+
+**Provenance is non-blocking:** If issue/PR creation fails, provenance falls back silently through tiers (issue-only → commit message). The promotion workflow continues regardless of provenance outcome.
+
+**See `provenance.md` → promotion-provenance section for complete procedure.**
+
 ### Step 3: Validate Tags
 
 After all submodules are promoted and tagged:

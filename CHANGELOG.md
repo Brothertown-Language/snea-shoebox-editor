@@ -317,6 +317,11 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 - **Identity Placeholder Sweep** (#770) - Replaced remaining hardcoded org/user/identity values with typed placeholders across skill and tool files, ensuring repository portability.
 - **Mandatory Chat Output in Writing-Plans** (#773) - Added mandatory chat output step to the writing-plans create task, ensuring plan creation always produces a visible executive summary.
 
+### spec/submodule-provenance-tracking
+
+- **Submodule Provenance Tracking** (#783) - New provenance skill tracks submodule changes across parent repositories. Uses 3-tier fallback (issue+PR → issue-only → commit message) to ensure tracking even when PRs aren't available. Supports both dev-push and release-promotion workflows with platform detection for GitHub and GitBucket.
+- **Provenance Workflow Integration** (#783) - Integrated provenance tracking into git-workflow skill: review-prep invokes dev-push provenance after submodule push, and release-promotion invokes promotion provenance after submodule promotion. Cross-reference documentation links parent issues to submodule changes for full traceability.
+
 ## [0.1.0]
 
 ### main (initial)
