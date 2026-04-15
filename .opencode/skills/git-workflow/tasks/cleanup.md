@@ -665,6 +665,68 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 🤖 ⚠️ <AgentName> (<ModelID>) blocking
 ```
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Each verification point requires a tool call for evidence. Assertions without tool-call artifacts are VERIFICATION-GAP findings. Closing issues without verified merge evidence is a CRITICAL GUIDELINE VIOLATION.**
+
+### PR Merge Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| PR merge status | `github_pull_request_read(method=get, ...)` | `merged_at` is not None | CONFLICTING → HALT, do not close issues |
+| Merged by | `github_pull_request_read(method=get, ...)` | `merged_by` populated | VERIFICATION-GAP → investigate |
+| Branch merged into dev | `git branch --merged dev` | Feature branch listed | VERIFICATION-GAP → may need manual merge |
+| Dev has merge commit | `git log --oneline -5 dev` | Merge commit visible | MISSING-ELEMENT → sync dev first |
+| Sub-issues closed | `github_issue_read(method=get_sub_issues, ...)` | All sub-issues state=closed | VERIFICATION-GAP → close remaining or investigate |
+
+### Verification Procedure
+
+**In Step 2 (Verify PR Merge), mandatory evidence collection:**
+
+```python
+# PR merge verification — MANDATORY, NOT OPTIONAL
+pr = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=N)
+
+# Evidence artifacts:
+# EVIDENCE: merged_at = pr.get("merged_at")  # Must be non-None
+# EVIDENCE: merged_by = pr.get("merged_by")   # Should be populated
+# EVIDENCE: state = pr.get("state")            # "closed" for merged PRs
+
+if pr.get("merged_at") is None:
+    # CONFLICTING finding — HALT
+    # Do NOT close issues, do NOT delete branches
+    pass
+```
+
+**In Step 5.5/6 (Issue Closure), verify sub-issues:**
+
+```python
+# Sub-issue closure verification
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=parent)
+
+# Evidence artifacts:
+# EVIDENCE: sub_issue_count = len(sub_issues)
+# EVIDENCE: open_issues = [s for s in sub_issues if s["state"] == "open"]
+
+if open_issues:
+    # VERIFICATION-GAP finding — investigate each open sub-issue
+    # Do NOT close parent until all children resolved
+    pass
+```
+
+### Finding Classification
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| `merged_at` is None | CONFLICTING | flag-for-review | HALT — PR not merged, cannot close issues |
+| `merged_by` is None but `merged_at` set | VERIFICATION-GAP | conditional | Investigate — may be bot merge, proceed with caution |
+| Branch not in `--merged dev` list | VERIFICATION-GAP | conditional | Sync dev with `git pull origin dev`, recheck |
+| Merge commit not in dev log | MISSING-ELEMENT | conditional | `git pull origin dev` then recheck |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason, may need reopen |
+| Sub-issue still open after merge | VERIFICATION-GAP | conditional | Wait for platform auto-close, or manually close after verifying |
+
+**PR merge verification via API is MANDATORY. Trusting local git state alone is a CRITICAL GUIDELINE VIOLATION. Local `git pull` or fast-forward checks are NOT sufficient — they cannot distinguish between "merged via PR" and "locally merged without review."**
+
 ## Common Issues
 
 | Issue | Resolution |

@@ -232,6 +232,44 @@ Rebase Summary: All <count> pending PRs rebased onto updated dev.
 Continuing with cleanup for the merged PR...
 ```
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Each verification point requires a tool call for evidence. Assertions without tool-call artifacts are VERIFICATION-GAP findings. Rebasing without verified branch state is a CRITICAL GUIDELINE VIOLATION.**
+
+### Branch State Verification Before Rebase
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| On correct branch | `git branch --show-current` | PR branch name (not `main`/`dev`) | STRUCTURE-VIOLATION → HALT |
+| Worktree location | `git rev-parse --show-toplevel` | Worktree path (not main repo) | STRUCTURE-VIOLATION → HALT |
+| Working tree clean | `git status --porcelain` | Empty output | VERIFICATION-GAP → stash or commit first |
+| Dev is up to date | `git fetch origin && git log --oneline origin/dev -1` | Recent SHA, post-merge | MISSING-ELEMENT → re-fetch |
+
+### Verification Procedure
+
+**Before each rebase attempt (Step 2), verify branch state:**
+
+```
+1. git branch --show-current → EVIDENCE: <branch-name>
+2. git rev-parse --show-toplevel → EVIDENCE: <worktree-path-or-main-repo>
+3. git status --porcelain → EVIDENCE: "(empty)" for clean tree
+4. git fetch origin → EVIDENCE: fetch result
+5. git log --oneline origin/dev -1 → EVIDENCE: recent dev SHA
+```
+
+### Finding Classification
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| On wrong branch | CONFLICTING | flag-for-review | Switch to correct branch before rebase |
+| Not in worktree | STRUCTURE-VIOLATION | auto-fix | Create worktree or use existing one |
+| Dirty working tree | VERIFICATION-GAP | conditional | Stash changes before rebase (`git stash`) |
+| Dev SHA is stale | MISSING-ELEMENT | auto-fix | `git fetch origin` to update |
+| Rebase conflicts (Tier 1-2) | VERIFICATION-GAP | auto-fix | Auto-resolve, note in chat |
+| Rebase conflicts (Tier 3) | CONFLICTING | flag-for-review | HALT for developer review |
+
+**These verifications are MANDATORY before each rebase. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## Edge Cases
 
 | Scenario | Action |
