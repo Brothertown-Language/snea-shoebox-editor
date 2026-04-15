@@ -550,22 +550,42 @@ def bootstrap_worktree_layout() -> bool:
     return True
 
 
-def _check_env_gitignored() -> bool:
-    """Check if .env exists and is in .gitignore. Returns True if safe (gitignored or doesn't exist)."""
-    if not os.path.isfile(os.path.join(os.getcwd(), ".env")):
-        return True
+CREDENTIAL_FILE_PATTERNS = [
+    (".env", "Environment variables file"),
+    (".streamlit/secrets.toml", "Streamlit secrets file"),
+    (".streamlit/secrets.toml.production", "Streamlit production secrets file"),
+]
+
+
+def _check_credential_files_gitignored() -> list[str]:
+    """Check credential files for gitignore coverage.
+
+    Returns a list of warning messages for unprotected credential files.
+    Empty list means all credential files are safe (gitignored or absent).
+    """
     gitignore_path = os.path.join(os.getcwd(), ".gitignore")
-    if not os.path.isfile(gitignore_path):
-        return False
-    try:
-        with open(gitignore_path) as f:
-            for line in f:
-                stripped = line.strip()
-                if stripped == ".env" or stripped == "/.env":
-                    return True
-    except OSError:
-        pass
-    return False
+    gitignore_entries: set[str] = set()
+    if os.path.isfile(gitignore_path):
+        try:
+            with open(gitignore_path) as f:
+                for line in f:
+                    stripped = line.strip()
+                    if stripped and not stripped.startswith("#"):
+                        gitignore_entries.add(stripped)
+        except OSError:
+            pass
+
+    unprotected: list[str] = []
+    for filepath, description in CREDENTIAL_FILE_PATTERNS:
+        full_path = os.path.join(os.getcwd(), filepath)
+        if not os.path.isfile(full_path):
+            continue
+        if filepath in gitignore_entries or f"/{filepath}" in gitignore_entries:
+            continue
+        result = run_git_command(["check-ignore", filepath])
+        if result is None:
+            unprotected.append(f"WARNING: {filepath} ({description}) is NOT in .gitignore — secrets may be committed")
+    return unprotected
 
 
 def run_guard_checks() -> list[str]:
@@ -580,8 +600,8 @@ def run_guard_checks() -> list[str]:
     dev_branch_status = _ensure_dev_branch()
     if "failed" in dev_branch_status:
         problems.append(f"dev branch: {dev_branch_status}")
-    if not _check_env_gitignored():
-        problems.append("WARNING: .env is NOT in .gitignore — secrets may be committed to version control")
+    unprotected = _check_credential_files_gitignored()
+    problems.extend(unprotected)
     return problems
 
 

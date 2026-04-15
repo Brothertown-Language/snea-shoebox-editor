@@ -14,7 +14,7 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ### spec/840-credential-leakage
 
-- **Gitignore Credential Hardening** (#840) - Expanded `.gitignore` with 6 new credential file patterns (SSH keys, production secrets, service accounts) and added 16 parameterized tests verifying all credential patterns are gitignored.
+- **Credential Leakage Prevention** (#840) - Added layered defense against credential leaks: gitignore hardening (16 patterns), conditional detect-secrets pre-commit hook (opt-in via `.secrets.baseline`), generalized session-init credential guard (`.env`, `.streamlit/secrets.toml`, `.streamlit/secrets.toml.production`), remediation documentation, and 25 integration tests across 4 test classes.
 
 ### spec/814-plan-bleed-ambiguous
 

@@ -1292,6 +1292,7 @@ dev = [
     { name = "playwright" },
     { name = "pre-commit" },
     { name = "pytest" },
+    { name = "pyyaml" },
     { name = "ruff" },
     { name = "sentence-transformers" },
 ]
@@ -1317,6 +1318,7 @@ dev = [
     { name = "playwright", specifier = ">=1.58.0" },
     { name = "pre-commit", specifier = ">=4.5.1" },
     { name = "pytest", specifier = ">=9.0.2" },
+    { name = "pyyaml", specifier = ">=6.0.3" },
     { name = "ruff", specifier = ">=0.14.14" },
     { name = "sentence-transformers", specifier = ">=3.0.0" },
 ]
