@@ -188,7 +188,10 @@ After all verification gates pass, determine the approval context and auto-dispa
 
 #### Spec Revision Revocation Detection
 
-If a spec is revised (status changed to `REVISED - NEEDS APPROVAL`):
+If a spec is revised (status contains `REVISED - NEEDS APPROVAL` — in either prose or numeric format):
+
+Prose format: `STATUS: in progress — {concern} (REVISED - NEEDS APPROVAL)`
+Numeric format: `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`
 
 1. Search for `[PLAN]` issues that reference the spec number in their body
 2. Mark found plans for audit (their authorization is revoked by the spec revision)

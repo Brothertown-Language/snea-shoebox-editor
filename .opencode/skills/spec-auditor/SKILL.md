@@ -70,7 +70,9 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
    | Signal | Type Suggested | Weight |
    |--------|---------------|--------|
-   | `STATUS:` header with phase.step format | Spec | 3 |
+   | `STATUS:` header with prose-driven format (`in progress — {concern}`) | Spec | 3 |
+   | `STATUS:` header with phase.step format (`1.1`, `1.2`, `2.1`) | Spec | 3 |
+   | `STATUS:` header with `(REVISED - NEEDS APPROVAL)` suffix | Spec | 2 |
    | Phase/step numbering (`1.1`, `1.2`, `2.1`) | Spec | 2 |
    | Success criteria section | Spec | 2 |
    | `STATUS:` header without approval tracking | Plan | 2 |
@@ -173,7 +175,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 | SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
 | PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
-| GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity | STATUS is metadata, not content; correcting it removes false tracking |
+| GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity (prose or numeric format, matching the document's convention) | STATUS is metadata, not content; correcting it removes false tracking |
 | GROUND-TRUTH-MISMATCH (auth superseded) | Add re-approval note to document body | Revision revokes approval is a mandatory rule; noting it is mechanical |
 | INCOMPLETE_SUB_ISSUE_BODY | Update sub-issue body with Plan phase prose | Sub-issue should reflect Plan phase prose per the spec; alignment is always correct |
 | TASK_NOT_IN_SUB_ISSUE | Add traceable task from Plan phase to sub-issue | Traceability is always correct; adding tasks aligns sub-issues with phases |

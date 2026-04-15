@@ -42,10 +42,11 @@ Create an implementation plan from an approved spec.
 
 6. **Create plan issue:**
 
-     - Title: `[PLAN] <Feature Name>`
-     - Labels: `plan` + `needs-approval`
-     - Body: Spec reference as prose (e.g., `Spec: #784`), then plan with header, file structure, phases with TDD tasks
-     - Do NOT link plan as sub-issue of spec — the plan references the spec via body text only
+   - Title: `[PLAN] <Feature Name>`
+      - Labels: `plan` + `needs-approval`
+      - Body: Spec reference as prose (e.g., `Spec: #784`), then plan with header, file structure, phases with TDD tasks
+      - Initial STATUS: Use prose-driven format. Set `STATUS: in progress — {first concern}, Step 1` (or backward-compatible `STATUS: 1.1` if the spec uses numeric STATUS convention). The STATUS concern name should match the first phase's concern name.
+      - Do NOT link plan as sub-issue of spec — the plan references the spec via body text only
 
    **Phase body requirements (critical):** Each phase in the plan body MUST include the information a sub-agent needs to implement the phase independently, without re-reading the plan. This means each phase section must contain:
 

@@ -96,7 +96,21 @@ Use the `.id` field from response (e.g., `4129879155`), NOT the issue number (e.
 
 ## STATUS Gate Verification
 
-Before implementing ANY subtask: get parent STATUS, extract authorized subtask, verify match, report decision to user. STATUS format: `STATUS: X.Y` where X = phase, Y = subtask within phase.
+Before implementing ANY subtask: get parent STATUS, extract authorized subtask, verify match, report decision to user.
+
+**STATUS format recognition (prose-driven, backward-compatible):**
+
+| Format | Example | Meaning |
+|--------|---------|---------|
+| `in progress — {concern}, Step {N}` | `in progress — Authorization Gate, Step 1` | Working on a specific step (prose-driven, recommended) |
+| `completed — {concern}` | `completed — Authorization Gate` | Phase/concern done (prose-driven, recommended) |
+| `{concern} — {task description}` | `Authorization Gate — verify label state` | Active task within concern (prose-driven, recommended) |
+| `X.Y` | `1.2` | Phase 1, step 2 (numeric, backward-compatible) |
+| `completed` | `completed` | All work done (both formats) |
+| `X.Y (REVISED - NEEDS APPROVAL)` | `1.2 (REVISED - NEEDS APPROVAL)` | Spec was modified (numeric, backward-compatible) |
+| `{concern} (REVISED - NEEDS APPROVAL)` | `Authorization Gate (REVISED - NEEDS APPROVAL)` | Spec was modified (prose-driven) |
+
+When matching STATUS to sub-issues, match the concern name in the STATUS to the sub-issue title/description. Numeric `X.Y` format is still recognized for backward compatibility but prose-driven formats are recommended for new specs and plans.
 
 ## Prohibited Halts
 
