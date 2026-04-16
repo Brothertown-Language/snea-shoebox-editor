@@ -33,6 +33,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `screen-issue` | Per-issue screening for pre-implementation analysis (Gate 1 + Gate 2 + screening categories); dispatched as parallel sub-agents | ~3,000 |
 | `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-batch | ~500 |
 | `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ~350 |
+| `reconcile-issue-graph` | Act on graph traversal findings: auto-close verified-complete, reopen verified-incomplete, flag uncertain | ~600 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
 
@@ -48,6 +49,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task search-prompt-fail` - Search for existing spec/plan candidates before Q/A halt
 - `/skill approval-gate --task verify-closed-issue` - Verify closed issue was legitimately closed via merged PR
 - `/skill approval-gate --task verify-schema-api-knowledge` - Verify schema/API/code knowledge before claims
+- `/skill approval-gate --task reconcile-issue-graph` - Act on graph traversal findings
 - `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-batch
 - `/skill approval-gate --task screen-issue` - Per-issue screening (dispatched as sub-agent from pre-implementation-analysis)
 - `/skill approval-gate --task post-implementation` - After implementation done
@@ -180,6 +182,7 @@ This check is invoked:
 | `verify-blockers` | 722 | inline |
 | `verify-codebase` | 726 | inline |
 | `verify-open-questions` | 531 | inline |
+| `reconcile-issue-graph` | ~600 | inline |
 | `completion` | 769 | inline |
 | `search-prompt-fail` | ~300 | inline |
 | `verify-schema-api-knowledge` | ~350 | inline |
@@ -300,6 +303,19 @@ bug_report: <N>
 fix_spec_exists: bool
 fix_spec_issue: <N|null>
 action: none | create_fix_spec
+```
+
+#### reconcile-issue-graph
+
+```yaml
+status: DONE | DONE_WITH_UNCERTAIN
+task: reconcile-issue-graph
+root_issue: <N>
+auto_closed: [<N>]
+reopened: [<N>]
+no_action: [<N>]
+requires_dev_action: [{issue: <N>, current: <state>, needed: <state>, reason: <str>}]
+nodes_visited: <N>
 ```
 
 ### Dispatch Context Schema (All Sub-Agent Tasks)

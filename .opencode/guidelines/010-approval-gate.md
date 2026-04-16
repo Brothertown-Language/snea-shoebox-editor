@@ -221,6 +221,7 @@ Key rules:
 | Editing config (pyproject.toml, .pre-commit) | Yes | `000-critical-rules.md` §Implementation Without Spec |
 | Editing test files | Yes | `000-critical-rules.md` §Implementation Without Spec |
 | Creating new files of any type | Yes | `000-critical-rules.md` §Implementation Without Spec |
+| **Graph reconciliation** | On approval/re-approval, `reconcile-issue-graph` auto-closes verified-complete tickets and reopens verified-incomplete tickets in the reachable issue graph |
 | Creating new GitHub Issue (spec/plan) | No auth, but mandatory `github-issue-creation` skill | `github-issue-creation` skill |
 | Updating existing issue spec text (revision) | No auth — spec revision ≠ implementation | `010-approval-gate.md` §Revision ≠ Implementation |
 | Updating issue spec to match code reality (drift sync) | No auth — administrative sync | `130-authority-source.md` §Documentation Drift Protocol |

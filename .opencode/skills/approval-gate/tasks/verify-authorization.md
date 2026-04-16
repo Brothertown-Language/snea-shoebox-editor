@@ -276,6 +276,18 @@ def traverse_issue_graph(root_issue_number, depth_limit=5):
                     queue.append((ref_num, depth + 1))
 
     return findings
+
+# After traversal completes:
+findings = traverse_issue_graph(root_issue_number)
+
+# INVOKE reconcile-issue-graph to act on findings
+# (previously, findings were only reported as flag-for-review)
+reconcile_result = reconcile_issue_graph(
+    root_issue_number=root_issue_number,
+    findings=findings,
+    GIT_OWNER=GIT_OWNER,
+    GIT_REPO=GIT_REPO
+)
 ```
 
 ##### When to Traverse
@@ -292,11 +304,17 @@ def traverse_issue_graph(root_issue_number, depth_limit=5):
 | Finding | Problem Class | Classification | Action |
 |---------|---------------|----------------|--------|
 | All nodes verified (closed with merged PR or open and consistent) | VERIFIED | auto-proceed | Graph is consistent |
-| Open sub-issue on closed parent | VERIFICATION-GAP | flag-for-review | Parent closure may be premature |
-| Cross-reference to open/closed mismatch | CONFLICTING | flag-for-review | Spec closed but plan open, or vice versa |
-| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Premature sub-issue closure |
+| Open + merged PR exists | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
+| Open + code in repo verified | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
+| Closed + no merged PR + code NOT in repo | VERIFICATION-GAP | reopen | Reopen as open via reconcile-issue-graph |
+| Open sub-issue on closed parent | VERIFICATION-GAP | flag-for-review | Parent closure may be premature — uncertain, requires dev judgment |
+| Cross-reference to open/closed mismatch | CONFLICTING | flag-for-review | Spec closed but plan open, or vice versa — uncertain |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | reopen | Reopen via reconcile-issue-graph |
+| Closed + state_reason not_planned | VERIFIED | no-action | Intentionally skipped — do not change |
+| Closed + state_reason duplicate + target OK | VERIFIED | no-action | Duplicate properly resolved |
 | Depth limit reached | VERIFICATION-GAP | flag-for-review | Graph too deep — investigate manually |
 | Cross-reference 404 | MISSING-TRACEABILITY | flag-for-review | Referenced issue does not exist |
+| Cannot determine | CONFLICTING | flag-for-review | Conflicting signals — report for dev action |
 
 ##### Evidence Requirement
 
@@ -311,7 +329,13 @@ Max depth: <D>
 Findings:
   - #<issue>: <state> — <finding> (<classification>)
   ...
-Overall: CONSISTENT / HAS_FLAGS
+Reconciliation: (via reconcile-issue-graph)
+  Auto-closed: #<n1> (merged PR #<pr1>), #<n2> (code verified)
+  Reopened: #<n3> (no merged PR, code not in repo)
+  No action: #<n5> (not_planned), #<n6> (duplicate of #<n7>)
+  Requires dev action: (if uncertain findings remain)
+    - #<n8>: current=<state>, needed=<state> — <reason>
+Overall: CONSISTENT / HAS_FLAGS / RECONCILED
 ```
 
 #### Finding Classification for Sub-Issue Verification
@@ -442,6 +466,7 @@ After all verification gates pass, determine the approval context and auto-dispa
 | **Spec approval** | Issue title contains `[SPEC` or has `spec` label | `writing-plans --task create` |
 | **Plan approval** | Issue has `plan` label or `[PLAN]` prefix in title | `executing-plans --task start` |
 | **Already implemented** | `verify-already-implemented` returns positive (after closed-issue verification in Step 5.4 confirms legitimate closure) | No dispatch — auto-close instead |
+| **Reconciled during verification** | reconcile-issue-graph returned auto-closed or reopened tickets | Include reconciled tickets in chat output; proceed with dispatch |
 | **Closed but NOT verified** | Step 5.4 closed-issue verification finds closure without merged PR evidence | flag-for-review — do NOT autoclose |
 
 #### Auto-Dispatch Procedure
