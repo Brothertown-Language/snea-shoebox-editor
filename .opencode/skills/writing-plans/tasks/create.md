@@ -12,6 +12,10 @@ Create an implementation plan from an approved spec. For single-task specs the a
 
 ## Creation Steps
 
+### Pre-Step: Verification Gate (MANDATORY FIRST)
+
+Before reading the approved spec, invoke `verification-enforcement --task verify`. This gate dispatches section-based sub-agents to collect evidence artifacts for the factual claims the plan will make — file references, skill invocations, architectural decisions, and dependency assertions. Evidence artifacts collected here ensure that the plan's claims about the codebase and skill ecosystem are grounded in live sources. Claims that cannot be verified at this stage are marked with `⚠️ UNVERIFIED` for resolution in the post-generation revisit pass.
+
 1. **Read approved spec:**
 
    - Query GitHub Issue for spec content
@@ -133,7 +137,13 @@ Create an implementation plan from an approved spec. For single-task specs the a
    - Verify all steps are actionable
    - Verify success criteria are testable
 
-9. **Report plan creation in chat (MANDATORY):**
+   **Prose-structure check:** Phase descriptions and plan headers should remain prose. TDD steps within tasks are naturally structured and exempt — their numbered format serves direct implementation guidance, not narrative communication. If a phase description reads as a rigid checklist rather than an explanation of the concern it addresses, rewrite it as flowing prose.
+
+9. **Post-Validation: Verification Revisit (MANDATORY):**
+
+   Invoke `verification-enforcement --task revisit`. This pass scans the plan for any remaining `⚠️ UNVERIFIED` markers and attempts to resolve them using domain-appropriate tools. Claims that cannot be resolved are escalated to the developer. The plan must not be stored or reported as complete while unverified claims remain without developer acknowledgment.
+
+10. **Report plan creation in chat (MANDATORY):**
 
      Produce chat output in the mandatory format per `000-critical-rules.md`:
 

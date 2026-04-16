@@ -38,6 +38,10 @@ available_tools: <comma-separated list of confirmed-available tools>
 
 ## Procedure
 
+### Pre-Step: Verification Gate (MANDATORY FIRST)
+
+Before collecting environment context or writing any runbook content, invoke `verification-enforcement --task verify`. This gate dispatches section-based sub-agents to collect evidence artifacts for the factual claims the runbook will make — CLI commands, GUI paths, configuration values, and system behavior assertions. Evidence artifacts collected here inform every subsequent step. Claims that cannot be verified at this stage are marked with `⚠️ UNVERIFIED` for resolution in the post-generation revisit pass.
+
 ### Step 0: Collect Environment Context (MANDATORY FIRST)
 
 **WHAT:** Determine the operator's interface preference, available tools, OS version, and existing documentation before writing any instructions.
@@ -349,6 +353,14 @@ After generating the runbook, the agent MUST validate the output against ALL enf
 17. ✅ Evidence collection failure handled (HALT, not fallback)?
 
 If ANY check fails, fix the runbook before presenting. The user should never need to correct the same issue twice.
+
+### Post-Self-Review: Verification Revisit (MANDATORY)
+
+After the self-review step, invoke `verification-enforcement --task revisit`. This pass scans the generated runbook for any remaining `⚠️ UNVERIFIED` markers and attempts to resolve them using domain-appropriate tools. Claims that cannot be resolved are escalated to the developer. The runbook must not ship as complete while unverified claims remain without developer acknowledgment.
+
+### Prose-Structure Check Note
+
+Non-operational sections of the generated runbook — the environment header, symptom descriptions, diagnosis reasoning, and postmortem narrative — should remain prose. These sections communicate context and reasoning; rigid enumeration or tabular structure in them reduces readability. Operational steps (numbered commands, mitigation actions, verification commands) are naturally structured and exempt from the prose check. When a section mixes operational commands with surrounding reasoning, the reasoning stays prose while the commands stay structured.
 
 ## Context Required
 

@@ -116,6 +116,17 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 - 🚫 FORBIDDEN: Reporting from memory without re-verification; claiming "I checked earlier" without current tool call; training knowledge as fact; omitting tool call evidence
 - ✅ REQUIRED: Use a tool/command for every verification; show evidence; tag unverified recollections as "(unverified)"
 
+## Critical Violation: Skipping verification-enforcement During Content Generation
+
+**⚠️ Generating content without invoking verification-enforcement is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `verification-enforcement` skill for the complete procedural workflow including section-based sub-agent dispatch, evidence artifact collection, unverified marker resolution, and escalation procedure.** **AUTHORITY: `verification-enforcement` skill** (this line is a reference only)
+
+Content generation — producing specs, plans, runbooks, documentation, or correspondence — must pass through the verification-enforcement gate before and after generation. This gate ensures that every factual claim in generated content is backed by evidence artifacts collected from live sources. Skipping the gate means content ships with unverified claims, which is the generative equivalent of reporting memory as verified.
+
+- 🚫 FORBIDDEN: Generating content without invoking `verification-enforcement --task verify` first; skipping the `revisit` task after generation; accepting sub-agent output without evidence artifacts; removing `⚠️ UNVERIFIED` markers without verification; treating verification-enforcement as optional for "small" content
+- ✅ REQUIRED: Invoke `verification-enforcement --task verify` before content generation; invoke `verification-enforcement --task revisit` after self-review; require evidence artifacts for all factual claims; escalate unresolvable claims to the developer
+
 ## Critical Violation: Acting on Resources Without Reading All Comments
 
 **⚠️ Acting on a GitHub/GitBucket resource without reading ALL comments is a CRITICAL GUIDELINE VIOLATION.**

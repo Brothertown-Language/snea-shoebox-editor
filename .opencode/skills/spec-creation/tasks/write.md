@@ -19,6 +19,10 @@ Assemble the final spec with acceptance criteria, ambiguity elimination, and del
 
 ## Procedure
 
+### Pre-Step: Verification Gate (MANDATORY FIRST)
+
+Before assembling the spec, invoke `verification-enforcement --task verify`. This gate dispatches section-based sub-agents to collect evidence artifacts for the factual claims the spec will make — file references, API signatures, configuration fields, code behavior, and environment details. Evidence artifacts collected here ensure that the spec's claims are grounded in live sources. Claims that cannot be verified at this stage are marked with `⚠️ UNVERIFIED` for resolution in the post-generation revisit pass.
+
 ### Step 1: Assemble Spec
 
 Combine outputs from prerequisite tasks into a coherent spec. The spec should address the following content areas — the agent decides which sections to use and how to organize them:
@@ -85,6 +89,8 @@ After writing the spec, review with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
+**Prose-structure check:** After checking for placeholders, consistency, scope, and ambiguity, verify that the spec body is prose-first. Rigid numbered procedures where flowing prose would serve better, tabular mappings that should be prose descriptions, and fixed checklists that have replaced narrative should be flagged and rewritten. Success criteria checklists and affected file tables are exempt from this check as they are naturally structured content. The spec should read as a coherent narrative document, not as a mechanical checklist.
+
 ### Step 5.5: Evidence Artifact Verification (MANDATORY)
 
 **🚫 CRITICAL: Each self-review checkpoint MUST produce a tool-call artifact demonstrating the verification was performed. Assertions without tool-call evidence are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
@@ -116,6 +122,10 @@ Action: [auto-fix|conditional|flag-for-review]
 | Vague/ambiguous terms present | STRUCTURE-VIOLATION | auto-fix | Replace with measurable terms |
 
 **These verifications are MANDATORY after self-review. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
+### Post-Review: Verification Revisit (MANDATORY)
+
+After Step 5 self-review and Step 5.5 evidence verification, invoke `verification-enforcement --task revisit`. This pass scans the spec for any remaining `⚠️ UNVERIFIED` markers and attempts to resolve them using domain-appropriate tools. Claims that cannot be resolved are escalated to the developer. The spec must not be submitted as a GitHub Issue while unverified claims remain without developer acknowledgment.
 
 ### Step 6: Create GitHub Issue
 

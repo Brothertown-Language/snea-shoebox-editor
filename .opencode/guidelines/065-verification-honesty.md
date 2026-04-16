@@ -94,6 +94,14 @@ This means:
 - `000-critical-rules.md` — Zero tolerance enforcement
 - `130-authority-source.md` — Code as authoritative source
 
+## Verification-Enforcement Boundary
+
+The `verification-enforcement` skill supersedes this guideline for content generation workflows. When an agent is generating content — runbooks, specs, plans, documentation, or correspondence — the `verification-enforcement` skill's proactive verification requirements take priority. The skill dispatches section-based sub-agents to collect evidence artifacts for every factual claim before generation begins, and resolves unverified claims after generation through its revisit pass. This represents a stricter, more structured form of proactive verification than this guideline alone provides.
+
+This guideline retains governance of reactive honesty during conversation and ad-hoc claims. When a discussion involves factual assertions in chat — explaining how a function works, reporting test results, describing current code state — this guideline's evidence requirements apply directly. The boundary is generative: if the agent is producing a document or formal content, verification-enforcement governs; if the agent is responding in conversation, this guideline governs.
+
+Both this guideline and the verification-enforcement skill share the same core principle: no claim should be presented as verified without a tool call or live source as evidence. The skill extends this principle with a structured dispatch-and-collect workflow appropriate for multi-section content generation, while this guideline covers the same principle in its simpler, conversational form.
+
 ## 🚫 FORBIDDEN
 
 - Reporting values from memory without re-running the verification

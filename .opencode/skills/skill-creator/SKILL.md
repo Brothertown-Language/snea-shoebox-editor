@@ -195,6 +195,12 @@ GPU/CPU billing is flat-rate per inference, not per word. There is no economic i
 5. Validate skill structure with `quick_validate.py`
 6. Package with `package_skill.py`
 
+## Prose-Structure Check
+
+When creating or updating skills, verify the output is prose-first. The SKILL.md overview, operating protocol, enforcement rules, and cross-reference descriptions should read as flowing narrative — not as rigid numbered procedures where prose is expected, not as tabular mappings that should be prose descriptions, and not as fixed checklists that should be flowing narrative. Task files with TDD steps (numbered implementation actions) are naturally structured and exempt from this check. Skill type taxonomy tables, task tables, and word count tables are also exempt as they are structured reference data.
+
+Anti-prose drift patterns to watch for: rigid numbered procedures in the operating protocol where a prose description of the workflow would communicate better; tabular mappings in the overview or persona sections that replace narrative explanation; fixed checklists in enforcement rules that should be prose statements of principle. When these patterns are found, rewrite the affected sections as flowing prose.
+
 ## Cross-Reference Verification (MANDATORY)
 
 **🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**

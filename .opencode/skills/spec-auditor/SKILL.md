@@ -40,6 +40,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `ground-truth` | Adversarial verification of metadata claims against direct evidence | ~500 |
 | `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) | ~350 |
 | `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ~350 |
+| `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ~250 |
 
 ## Invocation
 
@@ -54,6 +55,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task ground-truth` — Metadata verification checks only
 - `/skill spec-auditor --issue N --task sub-issue-fidelity` — Sub-issue alignment with Plan phases only
 - `/skill spec-auditor --issue N --task concern-coverage` — Sub-issue concern boundary checks only
+- `/skill spec-auditor --issue N --task prose-structure` — Anti-prose drift checks only
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
 - `/skill spec-auditor` — Overview only
@@ -107,8 +109,8 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
     | Document Type | Baseline Subtasks | Conditional Subtasks |
     |---------------|-------------------|---------------------|
-     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage` |
-     | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage` |
+     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure` |
+     | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure` |
     | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
     | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
     | Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | — |
@@ -126,6 +128,7 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
     | Single-task spec (no phases) | Baseline (skip `concerns`) |
     | Spec with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
     | Plan with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
+    | Spec or Plan with anti-prose patterns | Baseline + `prose-structure` |
 
 4. **All findings are classified and acted on per the auto-fix model.** Safe findings are fixed directly; ambiguous findings are flagged for developer review.
 
@@ -174,6 +177,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | DETERMINISM-VIOLATION | Add explicit environment assumptions and state dependency notes | Explicitness is always correct; removes ambiguity |
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 | SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
+| ANTI-PROSE-DRIFT | Rewrite rigid structure as flowing prose | Prose is always more readable than mechanical enumeration where narrative is expected; conversion is mechanical |
 | PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
 | GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity (prose or numeric format, matching the document's convention) | STATUS is metadata, not content; correcting it removes false tracking |
 | GROUND-TRUTH-MISMATCH (auth superseded) | Add re-approval note to document body | Revision revokes approval is a mandatory rule; noting it is mechanical |
@@ -254,6 +258,7 @@ spec-auditor (orchestrator)
 ├── ground-truth.md         — Adversarial verification of metadata claims against direct evidence (NEW)
 ├── sub-issue-fidelity.md   — Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) (NEW)
 └── concern-coverage.md     — Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) (NEW)
+└── prose-structure.md      — Anti-prose drift detection (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -300,6 +305,7 @@ Existing classes remain, plus two new ones:
 | **CONCERN_SCOPE_NARROWER** | Sub-issue body omits tasks within Plan phase's concern boundary (from concern-coverage) |
 | **CONCERN_SCOPE_WIDER** | Sub-issue body includes tasks outside Plan phase's concern boundary (from concern-coverage) |
 | **CONCERN_BOUNDARY_CROSSED** | Sub-issue body mixes tasks from multiple Plan phase concerns (from concern-coverage) |
+| **ANTI-PROSE-DRIFT** | Rigid enumeration, tabular mapping, or fixed checklist where flowing prose is expected (from prose-structure) |
 
 ## Audit Findings Handling
 
@@ -421,6 +427,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | Task table entry `ground-truth` | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `sub-issue-fidelity` | File exists at `.opencode/skills/spec-auditor/tasks/sub-issue-fidelity.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `concern-coverage` | File exists at `.opencode/skills/spec-auditor/tasks/concern-coverage.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `prose-structure` | File exists at `.opencode/skills/spec-auditor/tasks/prose-structure.md` | MISSING-TRACEABILITY if missing |
 | Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
 | Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |
 | Described behavior of `programming-principles` | Matches actual SKILL.md: defines engineering principles | CONFLICTING if mismatched |
@@ -445,7 +452,7 @@ Before invoking any cross-referenced skill:
 
 ## Cross-References
 
-- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles)
+- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles), `verification-enforcement` (pre-generation verification gate that prevents the problems spec-auditor would find)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `140-planning-spec-creation.md`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-revision` when audit requires changes; replace with `needs-approval` on re-submission)
 - Delegated from: `plan-fidelity-auditor` (now `fidelity` and `sub-issue-fidelity` subtasks), `concern-separation-auditor` (now `concerns` and `concern-coverage` subtasks)
