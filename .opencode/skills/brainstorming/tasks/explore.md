@@ -153,6 +153,31 @@ Rules:
 - Simple fixes skip straight to design without requiring alternatives analysis
 - YAGNI ruthlessly — remove unnecessary features from all designs
 
+### Per-Item Developer Confirmation Gate (MANDATORY)
+
+After each significant finding discovered during Q&A, the agent MUST:
+
+1. **Present the finding** — clearly state what was discovered (new requirement, architectural decision, risk, alternative, constraint)
+2. **Ask for confirmation** — "Does this align with your intent?" or "Should this be included in the spec?"
+3. **Wait for developer response** — the developer must confirm, modify, or reject before proceeding
+4. **Track confirmation state** — confirmed items become part of the exploration output; unconfirmed items remain as open questions
+
+**The agent MUST NOT accumulate unconfirmed findings and present them as a batch.** Each significant discovery is confirmed individually before the next question.
+
+**Prohibited patterns:**
+- Listing multiple findings then asking "Does this all look right?" — each finding needs its own confirmation
+- Presenting a complete investigation result without having confirmed individual findings during the conversation
+- Proceeding with a pre-determined list of requirements without checking each one against the developer's actual answers
+
+**Turn tracking:** Each Q&A exchange (one agent question + one developer response with real content) counts as one interactive turn. The minimum threshold for proceeding to Step 5 is **2 interactive turns**. "Yes"/"No"/"OK" responses without substance do NOT count as interactive turns.
+
+**Deep analysis expectation:** The agent should explore pros, cons, what-ifs, howevers, and counterpoints for each significant finding. Brainstorming is not merely listing requirements — it is a thorough back-and-forth considering both wanted and unwanted outcomes. The agent should:
+- Challenge assumptions ("What happens if this fails?" / "What about when X occurs?")
+- Explore edge cases and second-order effects
+- Present counterarguments to its own proposals
+- Consider unintended consequences
+- Discuss trade-offs explicitly rather than presenting a single option as obvious
+
 **Internal Dimensions Checklist** (reference only, never exposed as output sections):
 
 | Dimension | When to Think About It | When to Skip |
@@ -207,7 +232,7 @@ This separation ensures exploration (brainstorming) and structuring (spec-creati
 
 ```yaml+symbolic
 schema_version: "1.0"
-last_updated: "2026-04-12T12:00:00Z"
+last_updated: "2026-04-16T12:00:00Z"
 rules: []
 state_machines:
   - id: brainstorming-flow
@@ -223,6 +248,8 @@ state_machines:
       - "Present design incrementally"
       - "User approves?"
       - "Invoke spec-creation"
+      - "HALT: batch-dump detected"
+      - "HALT: insufficient interactive turns"
     start_state: "Pre-spec code inspection"
     transitions:
       - from: "Pre-spec code inspection"
@@ -262,8 +289,20 @@ state_machines:
         guard: "companion_offered == true"
         action: PROCEED
       - from: "Ask clarifying questions"
+        to: "Ask clarifying questions"
+        guard: "protocol_compliance == true AND min_interactive_turns < 2"
+        action: CONTINUE_QA
+      - from: "Ask clarifying questions"
+        to: "HALT: batch-dump detected"
+        guard: "consecutive_agent_messages_without_developer_response == true OR multiple_findings_without_confirmation == true"
+        action: HALT_REQUIRE_INTERACTION
+      - from: "Ask clarifying questions"
+        to: "HALT: insufficient interactive turns"
+        guard: "protocol_compliance == false"
+        action: HALT_REQUIRE_PROTOCOL_COMPLIANCE
+      - from: "Ask clarifying questions"
         to: "Propose 2-3 approaches"
-        guard: "clarification_complete == true"
+        guard: "clarification_complete == true AND protocol_compliance == true AND min_interactive_turns >= 2"
         action: PROCEED
       - from: "Propose 2-3 approaches"
         to: "Present design incrementally"

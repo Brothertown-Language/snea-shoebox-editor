@@ -24,8 +24,8 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `explore` | Full conversational exploration workflow (default) | ~800 |
-| `enforcement` | Enforcement rules and investigation completion criteria | ~400 |
+| `explore` | Full conversational exploration workflow (default) | ~1000 |
+| `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ~600 |
 
 ## Invocation
 
@@ -39,15 +39,19 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 2. **One question at a time:** STRICTLY one question per message. Questions follow from answers, not a checklist. Dimensions are an internal mental checklist only — never exposed as structured output sections.
 
-3. **Exit condition:** Exploration is COMPLETE when all relevant questions have been asked (driven by user's answers), and the user confirms requirements are complete. Then apply the **two-path terminal state** (see below).
+3. **Per-item developer confirmation:** Each significant discovery (requirement, architectural decision, risk, alternative) MUST be confirmed by the developer before it becomes part of the exploration output. The agent MUST NOT batch-dump findings. See `explore` task Step 4 "Per-Item Developer Confirmation Gate" for the complete protocol.
 
-4. **What does NOT bypass exploration:** "skip brainstorming" is not allowed. "I already know what I want" still requires brief exploration (problem understanding at minimum). User impatience → document partial exploration, ask to proceed.
+4. **Protocol-compliance enforcement:** The enforcement task verifies the one-question-at-a-time protocol was actually followed — not just that exploration was invoked. Batch-dump detection, turn tracking, and per-item confirmation are hard gates. An agent that produces findings without interactive discussion is HALTed, not allowed to proceed to spec creation.
 
-5. **YAGNI ruthlessly:** Remove unnecessary features from all designs. For simple fixes with one obvious approach, skip alternatives and go straight to design.
+5. **Exit condition:** Exploration is COMPLETE when all relevant questions have been asked (driven by user's answers), at least 2 interactive Q&A turns have occurred, each significant finding has developer confirmation, and the user confirms requirements are complete. Then apply the **two-path terminal state** (see below).
 
-6. **Visual companion conditional:** Offered only when topic involves visual decisions. Do NOT offer by default for this backend/Python project.
+6. **What does NOT bypass exploration:** "skip brainstorming" is not allowed. "I already know what I want" still requires brief exploration (problem understanding at minimum). User impatience → document partial exploration, ask to proceed.
 
-7. **Terminal state is three-path:**
+7. **YAGNI ruthlessly:** Remove unnecessary features from all designs. For simple fixes with one obvious approach, skip alternatives and go straight to design.
+
+8. **Visual companion conditional:** Offered only when topic involves visual decisions. Do NOT offer by default for this backend/Python project.
+
+9. **Terminal state is three-path:**
    - **Path A (spec NOT yet a GitHub Issue):** Invoke `issue-operations` skill to create the spec as a GitHub Issue with `needs-approval` label → HALT for review.
    - **Path B (spec already a GitHub Issue AND approved):** Transition directly to `writing-plans` skill.
    - **Path C (user declines spec/plan → FAILURE):** If the user declines both creating a new spec and selecting an existing candidate (from the search-prompt-fail workflow), this is a FAILURE state. Report: "Spec/Plan Required → Cannot proceed without a spec or plan to track this work." HALT.

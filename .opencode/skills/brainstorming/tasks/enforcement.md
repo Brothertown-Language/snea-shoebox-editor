@@ -10,17 +10,35 @@ Enforcement rules and messages for the brainstorming skill. Ensures brainstormin
    - Is exploration output present?
    - Has problem understanding been explored?
 
-2. **Enforcement matrix:**
+2. **Enforcement matrix (expanded with protocol-compliance):**
 
-   - Exploration NOT invoked → INVOKE brainstorming
-   - Exploration invoked but incomplete (missing problem understanding) → COMPLETE exploration
-   - Exploration complete → PROCEED to spec creation
+   | State | Check | Action |
+   | -- | -- | -- |
+   | Exploration NOT invoked | Skill not loaded | INVOKE brainstorming |
+   | Exploration invoked, no turns | Skill loaded but no interactive Q&A turns recorded | HALT — require at least one Q&A exchange |
+   | Exploration invoked, batch-dump detected | Agent produced findings without developer interaction | HALT — require developer confirmation of each item |
+   | Exploration invoked, partial protocol | Agent asked one question then ignored the answer | HALT — require per-item developer confirmation before proceeding |
+   | Exploration invoked, protocol followed | Interactive Q&A with developer confirmation for key items | PROCEED to spec creation |
 
 3. **What does NOT bypass exploration:**
 
    - "skip brainstorming" → NOT allowed
    - "I already know what I want" → Still require brief exploration (problem understanding at minimum)
    - User impatience → Document partial exploration, ask to proceed
+
+## Batch-Dump Detection Heuristics
+
+Define verifiable signals that the agent skipped the conversational protocol:
+
+| Signal | Detection | Classification |
+| -- | -- | -- |
+| Multiple findings in one message | Agent produced >1 discovery per message without interleaving developer responses | batch-dump |
+| No developer response between findings | Agent output has consecutive findings with no developer message between them | batch-dump |
+| Dimensions exposed as structured output | "Dimensions Explored" or numbered dimension list in output | protocol violation (dimensions are internal-only per `explore.md`) |
+| Pre-determined question list | Questions do not reference or build on prior developer answers | protocol violation |
+| Single question then ignored answer | Agent asked one question but proceeded with a pre-determined path regardless of the answer | partial protocol application |
+
+**Detection rule:** If the exploration record contains two or more consecutive agent messages (findings, conclusions, or design proposals) without an intervening developer response, the enforcement gate MUST classify this as batch-dump and HALT.
 
 ## Enforcement Messages
 
@@ -42,6 +60,33 @@ Exploration incomplete. Problem understanding must be explored at minimum.
 Please complete exploration before proceeding to spec creation.
 ```
 
+**Batch-dump detected (protocol violation):**
+
+```
+Protocol violation: Exploration produced findings without interactive discussion.
+
+The brainstorming skill requires one-question-at-a-time interactive Q&A with the
+developer. Batch-dumping findings without developer input violates the exploration
+protocol.
+
+Required: Re-engage the developer with one question at a time, and obtain
+confirmation for each significant discovery before including it in the spec.
+```
+
+**Partial protocol application:**
+
+```
+Protocol violation: Exploration asked questions but did not follow the
+developer's answers.
+
+The brainstorming skill requires that each question builds on the developer's
+prior response. Asking one question then proceeding with a pre-determined
+list regardless of the answer violates the exploration protocol.
+
+Required: Restart the Q&A cycle, letting each question follow from the
+developer's actual answer.
+```
+
 ## Investigation Completion Criteria
 
 Before creating a spec, investigation MUST be complete. This is a hard gate, not optional.
@@ -53,6 +98,9 @@ Before creating a spec, investigation MUST be complete. This is a hard gate, not
 | Alternatives considered | At least 2 approaches for significant decisions |
 | Risks identified | Risk assessment with mitigation strategies |
 | Success criteria defined | Testable, measurable completion criteria |
+| Protocol compliance verified | Interactive Q&A turns documented; no batch-dump; each significant finding has developer confirmation |
+| No batch-dump patterns | No consecutive agent messages without interleaving developer responses in the exploration record |
+| Dimensions kept internal | No "Dimensions Explored" or structured dimension output in exploration artifacts |
 
 ### Permissible Investigation Activities
 
@@ -82,6 +130,9 @@ Before creating a spec, investigation MUST be complete. This is a hard gate, not
 | "Risks identified" | Verify risk assessment with mitigation is documented | `github_issue_read(method=get, issue_number=N)` → check for risk section | MISSING-ELEMENT |
 | "User approved design" | Verify approval comment exists from a developer (not bot/agent) on the issue | `github_issue_read(method=get_comments)` → filter by author_association | CONFLICTING |
 | "STATUS marker value" | Compare claimed STATUS against actual issue content maturity | `github_issue_read(method=get)` → parse STATUS from body | STRUCTURE-VIOLATION |
+| "Protocol compliance verified" | Verify exploration involved interactive Q&A (not batch-dump); check for consecutive agent-only messages | Chat/exploration record review — confirm developer responses interleave agent messages | CONFLICTING |
+| "Developer confirmed findings" | Verify each significant discovery has a developer acknowledgment before being included | Chat/exploration record review — confirm per-item confirmation | VERIFICATION-GAP |
+| "Min interactive turns met" | Verify at least 2 Q&A exchanges occurred before proceeding to approaches | Chat/exploration record review — count developer-agent exchanges | VERIFICATION-GAP |
 
 ### Evidence Artifacts
 
@@ -106,5 +157,8 @@ Action: [auto-fix|conditional|flag-for-review]
 | No alternatives documented for significant decision | MISSING-ELEMENT | conditional | Document alternatives before proceeding |
 | Approval from non-developer (bot/agent) | CONFLICTING | flag-for-review | HALT — requires real developer authorization |
 | STATUS marker claims maturity but content is incomplete | STRUCTURE-VIOLATION | auto-fix | Update STATUS to reflect actual maturity |
+| Consecutive agent messages without developer response | CONFLICTING | flag-for-review | HALT — batch-dump detected, re-engage developer interactively |
+| Significant findings lack developer confirmation | VERIFICATION-GAP | conditional | Re-present each finding for developer confirmation before proceeding |
+| Fewer than 2 Q&A exchanges before proceeding | VERIFICATION-GAP | conditional | Continue Q&A until minimum turns met |
 
 **These verifications are MANDATORY before transitioning out of brainstorming. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
