@@ -42,7 +42,7 @@ For each approved issue:
 
 | Category | Detection | Auto-resolve | Developer needed? |
 |----------|-----------|-------------|-------------------|
-| **Already implemented** | Merged PR references issue + all success criteria met + sub-issues verified closed via merged PR (not prematurely closed) | Exclude, mark "already-implemented" | No |
+| **Already implemented** | Merged PR references issue + Gate 1 passed (sub-issue enumeration gate) + Gate 2 passed (success criteria verification gate) + cross-references consistent | Exclude, mark "already-implemented" | No |
 | **Partially implemented** | Merged PR references issue + some success criteria met, some remaining | Include remaining phases only, mark "partially-implemented (phases X,Y done by PR #M)" | No |
 | **Superseded by batch peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
 | **Moot** | Referenced files/code restructured since spec creation; no remaining success criteria are achievable | Exclude, mark "moot" with reason | No |
@@ -95,6 +95,94 @@ For each sub-issue of the candidate "already implemented" issue:
     # Open sub-issue means parent is NOT fully implemented
     DOWNGRADE to "partially-implemented"
 ```
+
+#### Mandatory Sub-Issue Enumeration Gate (Gate 1)
+
+**🚫 CRITICAL — ZERO TOLERANCE: Before classifying ANY issue as "already-implemented," the agent MUST call `github_issue_read(method=get_sub_issues)` for that issue. Skipping this gate is a CRITICAL GUIDELINE VIOLATION. If `get_sub_issues` is not called, the classification is INVALID.**
+
+This gate ensures the agent cannot skip the sub-issue traversal prescribed in the "Already-Implemented Sub-Issue Verification" section above. The existing section describes what to check; this gate enforces that the check ACTUALLY HAPPENS.
+
+**Mandatory gate procedure — every candidate "already-implemented" issue MUST pass through ALL steps:**
+
+1. **ENUMERATE:** Call `github_issue_read(method=get_sub_issues, issue_number=<candidate>)` — no exceptions, no shortcuts
+2. **VERIFY EACH CHILD:** For EVERY sub-issue returned, call `github_issue_read(method=get, issue_number=<sub_issue_number>)` — do NOT trust cached state; verify against live GitHub API
+3. **CHECK CLOSURE LEGITIMACY:** For each closed sub-issue, search for merged PR evidence via `github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")`. If closed without merged PR and `state_reason != "not_planned"` → DOWNGRADE to "partially-implemented"
+4. **CHECK OPEN SUB-ISSUES:** If ANY sub-issue is open → the parent CANNOT be "already-implemented" — DOWNGRADE to "partially-implemented"
+5. **PRODUCE EVIDENCE:** Each sub-issue MUST produce a tool-call artifact showing its state was verified. Blanket assertions ("all sub-issues checked") WITHOUT per-sub-issue tool-call evidence are VERIFICATION-GAP findings
+
+**Gate 1 failure triggers:**
+
+| Failure Condition | Classification | Action |
+|-----------------|----------------|--------|
+| `get_sub_issues` not called | CRITICAL VIOLATION | Classification is INVALID — retry with gate |
+| Open sub-issue found | DOWNGRADE | "partially-implemented" — open sub-issue remains |
+| Sub-issue closed without merged PR | DOWNGRADE | "partially-implemented" — premature closure suspected |
+| Sub-issue closed as "not_planned" | SCOPE-REDUCE | "scope-reduced" — exclude intentionally skipped sub-issue |
+| No evidence artifacts produced | VERIFICATION-GAP | Re-run gate with evidence collection |
+
+#### Success Criteria Verification Gate (Gate 2)
+
+**🚫 CRITICAL — ZERO TOLERANCE: After Gate 1 passes (all sub-issues legitimately closed), the agent MUST verify every success criterion from the issue body against the live codebase. `state:closed` + merged PR does NOT shortcut this gate — closed issues require the SAME evidence as open issues, plus the additional merged PR evidence.**
+
+A merged PR proves code was merged. It does NOT prove that success criteria are met, that changes are complete, or that no files were accidentally omitted. The merged PR is a **prerequisite gate** (needed to begin verification), NOT proof of implementation. Verification against the live codebase IS the evidence.
+
+**Mandatory gate procedure — every candidate "already-implemented" issue MUST pass through ALL steps:**
+
+1. **EXTRACT CRITERIA:** Read the issue body and extract every success criterion (checkboxes, bullet points with "must"/"shall"/"should", testable assertions)
+2. **VERIFY EACH CRITERION:** For each success criterion, perform a direct verification action against the current state of `dev`:
+   - Criterion says "file X contains Y" → `read` file X, verify Y exists
+   - Criterion says "command Z returns expected output" → run command Z, verify output
+   - Criterion says "no lint failures" → run lint command, verify zero failures
+   - Criterion says "test T passes" → run test T, verify it passes
+   - Criterion references a skill task → `read` the task file, verify the claimed content exists
+3. **EVIDENCE REQUIRED:** Each criterion MUST produce a tool-call artifact. Assertions without tool-call evidence are VERIFICATION-GAP findings. "I checked earlier" or "the PR merged" are NOT evidence.
+4. **FAILURE HANDLING:** If ANY criterion fails or is unverified → DOWNGRADE to "partially-implemented" or "not-implemented-despite-closure"
+
+**Gate 2 failure triggers:**
+
+| Failure Condition | Classification | Action |
+|-----------------|----------------|--------|
+| No success criteria extracted | VERIFICATION-GAP | Re-read issue body; if criteria cannot be found, flag for review |
+| Criterion fails verification | DOWNGRADE | "partially-implemented" — criterion not met despite closure |
+| Criterion unverified (no tool call) | VERIFICATION-GAP | Re-run verification; if unverifiable, flag for review |
+| Success criteria not in issue body | MISSING-ELEMENT | Search comments; if absent, flag for developer to confirm |
+| Agent claims "all criteria met" without evidence | CRITICAL VIOLATION | Re-run gate with evidence collection |
+
+#### Cross-Reference Traversal
+
+After both Gate 1 and Gate 2 pass, check the issue body for cross-references and verify those referenced issues have consistent state. This prevents scenarios where a spec references a plan that has been closed, or a plan references a spec that is still open, indicating inconsistent closure.
+
+**Mandatory cross-reference check:**
+
+```
+For each candidate "already-implemented" issue:
+  body = github_issue_read(method="get", issue_number=candidate)
+  
+  # Parse body for cross-reference patterns
+  for pattern in [r"Spec:\s*#(\d+)", r"Plan:\s*#(\d+)", r"Implements\s*#(\d+)"]:
+    for match in re.finditer(pattern, body):
+      ref_num = int(match.group(1))
+      ref_issue = github_issue_read(method="get", issue_number=ref_num)
+      
+      # Verify referenced issue has consistent state
+      if ref_issue["state"] == "open" and candidate is classified as "already-implemented":
+        # Referenced issue is open but candidate claims done — INCONSISTENT
+        DOWNGRADE to "partially-implemented" or flag-for-review
+      
+      if ref_issue["state"] == "closed":
+        # Verify referenced issue was legitimately closed (merged PR exists)
+        # Reuse closed-issue verification logic from verify-authorization Step 5.4
+```
+
+**Cross-reference failure triggers:**
+
+| Failure Condition | Classification | Action |
+|-----------------|----------------|--------|
+| Referenced issue is open | CONFLICTING | DOWNGRADE or flag-for-review — state mismatch |
+| Referenced issue closed without merged PR | VERIFICATION-GAP | Flag for review — may be premature closure |
+| Cross-reference 404 | MISSING-TRACEABILITY | Flag for developer — referenced issue doesn't exist |
+
+**Key principle:** Even if Gate 1 and Gate 2 pass, cross-reference inconsistencies invalidate the "already-implemented" classification. The full issue graph must be consistent.
 
 1. Identify which phases/criteria are already satisfied by reading the merged PR's diff
 1. Extract remaining phases/criteria as the implementation scope
@@ -570,6 +658,8 @@ Issues have a merge-time conflict risk when:
 - HALT between plan presentation and `assemble-batch`
 - Ask "Proceed?", "Shall I?", or any confirmation solicitation after plan presentation
 - Auto-re-stage issues with different-intent stale assumptions
+- Skip Gate 1 (sub-issue enumeration) for any candidate "already-implemented" issue
+- Classify an issue as "already-implemented" while it has open sub-issues or unverified success criteria
 
 **Always:**
 
@@ -582,6 +672,8 @@ Issues have a merge-time conflict risk when:
 - Report each issue's classification in the execution plan
 - Proceed immediately to `assemble-batch` after presenting the plan
 - Auto-detect partially-implemented issues (no developer input needed)
+- Call `github_issue_read(method=get_sub_issues)` for every candidate "already-implemented" issue (Gate 1)
+- Verify each success criterion against the live codebase before classifying as "already-implemented" (Gate 2)
 - HALT for developer review only for unresolvable conflicts and different-intent stale assumptions
 
 ## Adversarial Interdependency Verification
