@@ -152,6 +152,17 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 Using "Compare URL" after a PR has been created is a format violation — the label MUST be "PR URL" with the `pull/N` format. Using "PR URL" before a PR exists is also a format violation — the label MUST be "Compare URL" with the `compare/dev...` format.
 
+**URL Applicability:**
+
+| Scenario | URL Required? | Action |
+| -- | -- | -- |
+| Branch pushed, compare URL generated | ✅ Yes | Include URL between outcome and byline |
+| Issue URL available | ✅ Yes | Include issue URL between outcome and byline |
+| No branch pushed, no URL exists | ❌ No | Omit URL element entirely; byline follows outcome directly |
+| PR already created | ✅ Yes | Use PR URL label with `pull/<N>` format |
+
+The URL element is CONDITIONAL: required when a branch has been pushed or an issue/PR URL exists, **omitted entirely when no relevant URL exists**. Including a URL when none is applicable is a STRUCTURE-VIOLATION (auto-fix: remove URL, reorder to summary → outcome → byline).
+
 The format applies to ALL halt points where implementation is reported complete:
 
 - **review-prep** after implementation
@@ -160,8 +171,9 @@ The format applies to ALL halt points where implementation is reported complete:
 - **Approval-gate post-implementation** reports
 - **Batch orchestration** reports (assemble-batch Step 6)
 - **Completion task** reports (approval-gate completion)
+- **Any completion message** where the agent reports work done and halts
 
-**Mandatory format:**
+**Mandatory format (with URL):**
 
 ```
 **Summary:**
@@ -175,8 +187,20 @@ The format applies to ALL halt points where implementation is reported complete:
 🤖 <AgentName> (<ModelID>) <status-icon> <status>
 ```
 
-- 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any element (summary, outcome, URL, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent
-- ✅ REQUIRED: Verify chat output format before sending at every halt point; auto-fix missing or misordered elements before output is sent; summary first, outcome after summary, URL before byline, byline last
+**Mandatory format (without URL — when no relevant URL exists):**
+
+```
+**Summary:**
+
+<1-2 sentences describing impact and stakeholder value.>
+
+**Outcome:** <What changed for stakeholders>
+
+🤖 <AgentName> (<ModelID>) <status-icon> <status>
+```
+
+- 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any required element (summary, outcome, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent; including a URL when no relevant URL exists
+- ✅ REQUIRED: Verify chat output format before sending at every halt point; auto-fix missing or misordered elements before output is sent; summary first, outcome after summary, URL if relevant (omit if not), byline last; each verification checkpoint MUST produce a tool-call artifact as evidence
 
 **See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples. See `approval-gate/tasks/post-implementation.md` Step 4.5, `approval-gate/tasks/completion.md`, `divide-and-conquer/tasks/assemble-batch.md` Step 6, `finishing-a-development-branch/tasks/checklist.md` §Chat Output Format, and `git-workflow/tasks/review-prep.md` §Live Verification for the verification checkpoints.**
 

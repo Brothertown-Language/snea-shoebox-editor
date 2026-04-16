@@ -92,16 +92,26 @@ https://github.com/<owner>/<repo>/compare/dev...<branch-name>
 🤖 <AgentName> (<ModelID>) <status>
 ```
 
-### Step 4.5: Chat Output Format Verification (MANDATORY)
+### Step 4.5: Verify Chat Output Format (MANDATORY)
 
 **Before sending the chat message in Step 4, verify ALL elements are present and correctly ordered:**
 
 - [ ] Executive summary present as **first** element (before any URL)
 - [ ] Outcome line present after summary
-- [ ] Compare/PR URL present (after outcome, before byline)
-- [ ] AI byline present as **LAST** element (after URL)
+- [ ] URL present IF relevant (after outcome, before byline) — required when branch pushed, **omitted** when no branch/compare URL exists
+- [ ] AI byline present as **LAST** element (after URL, or after outcome when no URL)
 - [ ] No URL before executive summary
-- [ ] No byline before URL
+- [ ] No byline before URL/outcome
+
+**Evidence requirement:** Each checkpoint verification MUST produce a tool-call artifact (e.g., `read` of the composed message, or a verification command) confirming the element is present or correctly absent. Verbal assertion without tool-call evidence is insufficient.
+
+**URL applicability:**
+
+| Scenario | URL Required? | Action |
+| -- | -- | -- |
+| Branch pushed, compare URL generated | ✅ Yes | Include compare URL between outcome and byline |
+| No branch pushed (no-changes path) | ❌ No | Omit URL element entirely; byline follows outcome directly |
+| PR already created | ✅ Yes | Use PR URL label with `pull/<N>` format instead of "Compare URL" |
 
 **Classification on failure:**
 
@@ -109,9 +119,10 @@ https://github.com/<owner>/<repo>/compare/dev...<branch-name>
 | -- | -- | -- | -- |
 | Missing summary | MISSING-ELEMENT | auto-fix | Add summary before sending |
 | Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before sending |
-| Missing compare URL | MISSING-ELEMENT | auto-fix | Generate URL before sending |
+| Missing URL when required | MISSING-ELEMENT | auto-fix | Generate URL before sending |
+| URL included when not applicable | STRUCTURE-VIOLATION | auto-fix | Remove URL, reorder to summary → outcome → byline |
 | Missing byline | MISSING-ELEMENT | auto-fix | Add byline before sending |
-| Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → URL → byline |
+| Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → [URL] → byline |
 
 **Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are auto-fixed before output is sent — NOT reported after the fact.
 

@@ -51,15 +51,33 @@ Issue URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/issues/<number>
 
 URL is ALWAYS last per `000-critical-rules.md`.
 
-### Chat Output Format Verification (MANDATORY)
+### Format Verification Before Halt (MANDATORY)
 
-**Before sending the chat message, verify ALL elements are present and correctly ordered:**
+**Idempotent — safe to invoke multiple times. This verification runs before EVERY halt, regardless of path.**
+
+**For chat messages (visible output):**
 
 - [ ] Executive summary present as **first** element (before any URL)
 - [ ] Outcome line present after summary
-- [ ] URL present (after outcome, before byline)
-- [ ] AI byline present as **LAST** element (after URL)
+- [ ] URL present IF relevant (after outcome, before byline) — required when branch pushed or issue URL exists, **omitted** when no URL exists
+- [ ] AI byline present as **LAST** element (after URL, or after outcome when no URL)
 - [ ] No URL before executive summary
-- [ ] No byline before URL
+- [ ] No byline before URL/outcome
+
+**For silent stops (no visible output):**
+
+- [ ] Executive summary already reported in a prior chat message
+- [ ] No stale todowrite items remain (all cleared or N/A)
+
+**Evidence requirement:** Each checkpoint verification MUST produce a tool-call artifact confirming the element is present or correctly absent. Verbal assertion without tool-call evidence is insufficient.
+
+**URL applicability:**
+
+| Scenario | URL Required? | Action |
+| -- | -- | -- |
+| Branch pushed | ✅ Yes | Include compare URL between outcome and byline |
+| Issue URL available | ✅ Yes | Include issue URL between outcome and byline |
+| No URL available | ❌ No | Omit URL element entirely; byline follows outcome directly |
+| PR already created | ✅ Yes | Use PR URL label with `pull/<N>` format |
 
 **Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.

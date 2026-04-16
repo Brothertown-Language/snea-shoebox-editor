@@ -226,18 +226,28 @@ PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
 🤖 <AgentName> (<ModelID>) <status>
 ```
 
-**Chat Output Format Verification (MANDATORY — before sending):**
+**Chat Output Format Verification (MANDATORY — Zero Tolerance)**
 
 Before sending the chat report, verify ALL elements are present and correctly ordered:
 
 - [ ] Executive summary present as **first** element (before any URL)
 - [ ] Outcome line present after summary
-- [ ] Compare URL present (after outcome, before byline)
-- [ ] AI byline present as **LAST** element (after URL)
+- [ ] URL present IF relevant (after outcome, before byline) — required when branches pushed (compare URL), **omitted** when no branches pushed; **after PR creation**: compare URL becomes PR URL, label changes from "Compare URL" to "PR URL"
+- [ ] AI byline present as **LAST** element (after URL, or after outcome when no URL)
 - [ ] No URL before executive summary
-- [ ] No byline before URL
+- [ ] No byline before URL/outcome
 
-**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
+**Evidence requirement:** Each checkpoint verification MUST produce a tool-call artifact (e.g., verification of composed message content) confirming the element is present or correctly absent. Verbal assertion without tool-call evidence is insufficient.
+
+**URL applicability:**
+
+| Scenario | URL Required? | Label | URL Format |
+| -- | -- | -- | -- |
+| Branches pushed, no PR yet | ✅ Yes | Compare URL | `compare/dev...<batch-branch>` |
+| PR already created | ✅ Yes | PR URL | `pull/<PR-number>` |
+| No branches pushed | ❌ No | (omit) | Omit URL element entirely |
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Missing URL when required → generate URL. URL included when not applicable → STRUCTURE-VIOLATION, remove URL and reorder. Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
 
 **Issue comments:**
 Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.
