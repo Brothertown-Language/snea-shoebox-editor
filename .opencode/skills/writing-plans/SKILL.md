@@ -213,6 +213,7 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 ## Operating Protocol
 
 1. Read approved spec from GitHub Issue
+1.5. Check for existing plans referencing the same spec — if found, surface overlap and require developer acknowledgment (see `tasks/create.md` Step 1.6 for the full duplicate plan check procedure)
 2. **Decision gate:** Evaluate combined vs separate plan using `single_task_determination` and `single_task` inputs — see `tasks/create.md` Step 1.5
 3. Map file structure (all files to create/modify with responsibilities)
 4. Plan phase structure by judgment (prose-driven)

@@ -63,6 +63,29 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
 
    - Proceed to Step 2 (Map file structure) — plan content will be stored in a separate [PLAN] issue created at Step 6a
 
+### Step 1.6: Duplicate Plan Check
+
+Before mapping file structure, check whether existing plans already reference the same spec. This prevents accidental plan duplication and ensures the developer is aware of overlapping implementation tracking.
+
+**Procedure:**
+
+1. Using `github_search_issues`, search for issues labeled `plan` in the repository:
+   ```
+   github_search_issues(query="label:plan", owner=GIT_OWNER, repo=GIT_REPO, state="open")
+   ```
+2. Filter results for those whose body contains `Spec: #<spec_number>` referencing the current spec number.
+3. If one or more existing plans are found:
+   - Collect each existing plan's issue number, title, and URL
+   - Read each existing plan's body to extract its phase scope (phase names, file structure, and concern boundaries)
+   - Present the overlap to the developer in chat: list each existing plan with its URL and a scope summary
+   - Offer the developer a choice:
+     - **"proceed with new plan (will add reference to existing plan)"** — record the existing plan reference and add an explicit `Supersedes/replaces #N` or `Parallel track to #N` statement in the new plan body
+     - **"halt and review existing plan first"** — HALT and present the existing plan for review
+4. If the developer chooses to proceed, include the relationship statement in the new plan body at the top, immediately after the spec reference:
+   - If the new plan replaces an existing plan: `Supersedes/replaces #N` where N is the existing plan issue number
+   - If the new plan covers a parallel concern: `Parallel track to #N` where N is the existing plan issue number
+5. If no existing plans are found for the same spec, proceed without modification.
+
 2. **Map file structure:**
 
    - List all files that will be created or modified
