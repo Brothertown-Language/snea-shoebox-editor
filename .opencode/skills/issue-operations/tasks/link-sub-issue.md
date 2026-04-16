@@ -110,3 +110,27 @@ Title format: `[Task: #<plan-number>] <descriptive-title>`
 - Session values: GIT_OWNER, GIT_REPO, GIT_PLATFORM
 - Related tasks: `close` (verifies sub-issue state), `track-hierarchy` (verifies structure)
 - Sub-issue closure queries parent comments when comment-based linking was used
+
+## Live Verification: Sub-Issue Linking Evidence (MANDATORY)
+
+**Each sub-issue operation MUST be verified via tool call. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Plan #M is multi-task" | Verify plan has multiple phases | `github_issue_read(method="get", issue_number=M)` → parse body | VERIFICATION-GAP |
+| "Sub-issue created" | Verify sub-issue exists | `github_issue_read(method="get", issue_number=sub_number)` | MISSING-ELEMENT |
+| "Sub-issue linked to plan" | Verify sub-issue parent | `github_issue_read(method="get_sub_issues", issue_number=M)` | STRUCTURE-VIOLATION |
+| "Database ID used (not issue number)" | Verify `sub_issue_id` is numeric DB ID | Check `id` field from creation response | STRUCTURE-VIOLATION |
+| "Platform supports sub-issue API" | Probe capabilities | `issue-operations --task capabilities` | CONFLICTING |
+
+**Evidence artifact:** Creation response, sub-issue link verification result.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Plan is single-task | VERIFICATION-GAP | auto-fix | Skip sub-issue creation per exemption |
+| Sub-issue creation failed | MISSING-ELEMENT | flag-for-review | HALT — retry |
+| Sub-issue under wrong parent | STRUCTURE-VIOLATION | auto-fix | Re-link under plan |
+| Used issue number instead of DB ID | STRUCTURE-VIOLATION | auto-fix | Re-link with correct DB ID |
+| Platform lacks sub-issue API | CONFLICTING | auto-fix | Use comment-based fallback |

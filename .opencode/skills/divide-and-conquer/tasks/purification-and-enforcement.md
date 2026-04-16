@@ -96,3 +96,25 @@ NEVER proceed to PR creation without explicit "create a PR":
 | Review-prep HALTs prematurely | Correct behavior - wait for "create a PR" |
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Enforcement Claims (MANDATORY)
+
+**Verify enforcement checkpoint claims against actual state per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Authorization context preserved" | Verify batch state contains auth | Read batch state file for auth section | STRUCTURE-VIOLATION |
+| "All commits made" | Verify clean working tree | `git status --porcelain` | VERIFICATION-GAP |
+| "Verification passed" | Verify evidence artifacts exist | `glob(pattern="./tmp/verification-*")` | MISSING-ELEMENT |
+| "Checklist completed" | Verify branch readiness | `git status --porcelain` and test execution | VERIFICATION-GAP |
+
+**Evidence artifact:** Git state and file existence checks confirming enforcement accuracy.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Auth context lost | STRUCTURE-VIOLATION | conditional | Re-read from approval-gate |
+| Uncommitted changes | VERIFICATION-GAP | conditional | Commit before proceeding |
+| No verification evidence | MISSING-ELEMENT | conditional | Run verification before review-prep |
+| Checklist not completed | VERIFICATION-GAP | conditional | Run checklist before review-prep |

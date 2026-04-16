@@ -99,3 +99,23 @@ HALT after posting the summary. Wait for the developer to act on the outcomes.
 - `000-critical-rules.md`: Q&A chatter goes to chat; durable outcomes go to issue
 - `approval-gate`: If Q/A reveals authorization is needed, note it in summary
 - `analyze-and-spec`: Bug reports are NOT handled by this task; redirect to `analyze-and-spec`
+
+## Live Verification: Classification Claims (MANDATORY)
+
+**Before trusting Q/A path classification, verify issue content matches the claimed type. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Issue is NOT a bug" | Verify no bug language in body/comments | `github_issue_read(method=get)` → scan for bug patterns | CONFLICTING |
+| "Issue needs spec-creation" | Verify no existing spec/plan covers this topic | `github_search_issues(query="topic")` → check for duplicates | MISSING-ELEMENT |
+| "Q/A resolution is current" | Verify no new comments since Q/A | `github_issue_read(method=get_comments)` → check timestamps | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results confirming classification and recency.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Bug language found in Q/A path | CONFLICTING | auto-fix | Re-triage to `analyze-and-spec` |
+| Existing spec found for topic | MISSING-ELEMENT | conditional | Offer to link to existing spec |
+| New comments since Q/A | VERIFICATION-GAP | conditional | Re-read and consider new context |

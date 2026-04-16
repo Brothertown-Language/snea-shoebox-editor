@@ -51,3 +51,25 @@ Issue URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/issues/<number>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.
+
+## Live Verification: Completion Evidence (MANDATORY)
+
+**Each completion state check MUST be verified via tool call, not just asserted. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Issue was created" | Verify issue exists | `github_issue_read(method="get", issue_number=N)` | MISSING-ELEMENT |
+| "`needs-approval` label applied" | Verify label present | `github_issue_read(method="get_labels", issue_number=N)` | MISSING-ELEMENT |
+| "Sub-issues created" | Verify sub-issues exist | `github_issue_read(method="get_sub_issues", issue_number=N)` | MISSING-ELEMENT |
+| "Auditor was invoked" | Check for auditor results | Session records or `./tmp/` files | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results for each completion state check.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Issue not found | MISSING-ELEMENT | flag-for-review | HALT — creation may have failed |
+| Label missing | MISSING-ELEMENT | auto-fix | Add label immediately |
+| Sub-issues missing (multi-task) | MISSING-ELEMENT | conditional | Create sub-issues if multi-task spec |
+| Auditor not invoked | VERIFICATION-GAP | conditional | Invoke spec-auditor |

@@ -366,3 +366,27 @@ assemble-batch:
 11. **Decision Log persistence** — after each sub-agent returns, append `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. Decision Log uses comments (not body edits) for lightweight, append-only, session-surviving persistence
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Batch State Claims (MANDATORY)
+
+**Each batch state claim MUST be verified against actual git and GitHub state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Batch state file exists" | Verify batch state file in `./tmp/` | `glob(pattern="./tmp/batch-*.md")` | MISSING-ELEMENT |
+| "All sub-agents returned" | Verify result contracts collected | Check for all expected result contracts | VERIFICATION-GAP |
+| "Branch merged into batch branch" | Verify merge commit exists | `git log --oneline batch-branch` → check merge messages | VERIFICATION-GAP |
+| "Decision log persisted" | Verify comment on Plan issue | `github_issue_read(method=get_comments)` → search for decision log | MISSING-ELEMENT |
+| "Authorization carries forward" | Verify batch state contains auth context | Read batch state file for auth section | STRUCTURE-VIOLATION |
+
+**Evidence artifact:** Tool call results confirming batch state accuracy.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Batch state file missing | MISSING-ELEMENT | auto-fix | Create or locate batch state file |
+| Sub-agent result missing | VERIFICATION-GAP | conditional | Wait for or re-dispatch sub-agent |
+| Merge not in batch branch | VERIFICATION-GAP | conditional | Re-merge feature branch |
+| Decision log not persisted | MISSING-ELEMENT | auto-fix | Post decision log comment now |
+| Auth context missing from batch state | STRUCTURE-VIOLATION | conditional | Re-read auth from approval-gate |

@@ -84,3 +84,23 @@ When the GitBucket MCP plugin implements missing endpoints, the capability lands
 
 - Session values: GIT_PLATFORM
 - Platform sub-skill: `../platforms/github-mcp/SKILL.md` or `../platforms/gitbucket-api/SKILL.md`
+
+## Live Verification: Capabilities Evidence (MANDATORY)
+
+**Each capability claim MUST be verified via tool call, not assumed from memory. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "GIT_PLATFORM is X" | Verify session init value | Check session init output | MISSING-ELEMENT |
+| "Platform supports operation Y" | Probe platform SKILL.md or MCP | `read(path=".opencode/skills/issue-operations/platforms/<platform>/SKILL.md")` | CONFLICTING |
+| "MCP plugin present" | Check for platform MCP tools | `grep(pattern="gitbucket_", path=".opencode/skills/issue-operations/platforms/")` | VERIFICATION-GAP |
+
+**Evidence artifact:** Capability manifest returned from Step 3 with per-operation verification.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Platform not detected | MISSING-ELEMENT | flag-for-review | HALT — default to github-mcp |
+| Capability claim wrong | CONFLICTING | auto-fix | Update capability set from live probe |
+| MCP not present | VERIFICATION-GAP | auto-fix | Fall back to static manifest |

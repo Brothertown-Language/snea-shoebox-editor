@@ -80,3 +80,25 @@ for pr in prs:
 
 - Session values: GIT_OWNER, GIT_REPO, GIT_PLATFORM
 - Related tasks: `close` (uses merge verification before closing)
+
+## Live Verification: Merge Evidence (MANDATORY)
+
+**Each merge status claim MUST be verified via tool call against the actual PR state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "PR #N is merged" | Verify merge status via API | `github_pull_request_read(method="get", pullNumber=N)` → check `merged` and `state` | VERIFICATION-GAP |
+| "PR state is closed" | Verify state field | `github_pull_request_read(method="get", pullNumber=N)` → check `state` | VERIFICATION-GAP |
+| "PR references issue #M" | Verify cross-reference in PR body | `github_pull_request_read(method="get", pullNumber=N)` → check body for `#M` | MISSING-ELEMENT |
+| "Platform returns reliable merge data" | Verify platform capability | `issue-operations --task capabilities` | CONFLICTING |
+
+**Evidence artifact:** PR API response with `merged` and `state` fields.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| PR not merged | VERIFICATION-GAP | flag-for-review | HALT — do not close issue |
+| PR closed without merge | VERIFICATION-GAP | flag-for-review | HALT — PR was rejected |
+| PR doesn't reference issue | MISSING-ELEMENT | flag-for-review | Verify association manually |
+| Platform returns unreliable data | CONFLICTING | conditional | Use search fallback to verify |

@@ -169,3 +169,25 @@ Before proceeding, verify ALL:
 ## Context Required
 
 - Related tasks: `pre-creation` (runs first), `creation` (uses determination), `post-creation` (triggers writing-plans if multi-task)
+
+## Live Verification: Single-Task Check Evidence (MANDATORY)
+
+**Each determination claim MUST be verified via tool call against the actual spec body. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Spec has N phases" | Count `## Phase N:` sections in spec body | `github_issue_read(method="get", issue_number=N)` → parse body | VERIFICATION-GAP |
+| "All steps address one concern" | Verify concern consistency | Manual parse — flag mixed concerns | CONFLICTING |
+| "No decomposition needed" | Verify single atomic unit | Manual parse — flag decomposition needs | VERIFICATION-GAP |
+| "Spec structure parsed correctly" | Verify parsing produces valid phase list | Re-parse and compare | STRUCTURE-VIOLATION |
+
+**Evidence artifact:** Spec body parse result, phase count, concern analysis.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Phase count wrong | VERIFICATION-GAP | auto-fix | Re-parse spec body |
+| Mixed concerns in single phase | CONFLICTING | flag-for-review | Classify as multi-task |
+| Decomposition needed | VERIFICATION-GAP | flag-for-review | Classify as multi-task |
+| Parse error | STRUCTURE-VIOLATION | conditional | Re-parse or flag ambiguous |

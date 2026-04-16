@@ -217,4 +217,31 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
          )
      ```
 
-     This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
+      This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
+
+## Live Verification: Plan Creation Evidence (MANDATORY)
+
+**Each factual claim in the plan MUST be verified via tool call before storing. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Spec #N is approved" | Verify spec has approval comment or no `needs-approval` label | `github_issue_read(method="get_comments", issue_number=N)` + `github_issue_read(method="get", issue_number=N)` | VERIFICATION-GAP |
+| "File X exists in codebase" | Verify file path | `glob(pattern="**/X")` | MISSING-ELEMENT |
+| "Function Y has signature Z" | Verify signature against live code | `srclight_get_signature(name="Y")` | VERIFICATION-GAP |
+| "Spec requires multi-task plan" | Verify spec has multiple phases | `github_issue_read(method="get", issue_number=N)` → parse body for phase sections | CONFLICTING |
+| "Skill X supports operation Y" | Verify skill declares the operation | `grep(pattern="Y", path=".opencode/skills/X/SKILL.md")` | CONFLICTING |
+| "Sub-issue linked to plan" | Verify sub-issue parent is plan (not spec) | `github_issue_read(method="get_sub_issues", issue_number=plan_number)` | STRUCTURE-VIOLATION |
+| "Plan issue has `plan` label" | Verify label present | `github_issue_read(method="get", issue_number=plan_number)` → check labels | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results for each verification claim, stored in plan creation context.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Spec not actually approved | VERIFICATION-GAP | flag-for-review | HALT — do not create plan without approved spec |
+| Referenced file not found | MISSING-ELEMENT | conditional | Remove from plan or mark `⚠️ UNVERIFIED` |
+| Function signature mismatch | VERIFICATION-GAP | conditional | Correct claim or mark `⚠️ UNVERIFIED` |
+| Skill doesn't support operation | CONFLICTING | flag-for-review | Remove reference, find alternative |
+| Sub-issues under spec instead of plan | STRUCTURE-VIOLATION | auto-fix | Re-link under plan |
+| Plan missing `plan` label | MISSING-ELEMENT | auto-fix | Add label immediately |

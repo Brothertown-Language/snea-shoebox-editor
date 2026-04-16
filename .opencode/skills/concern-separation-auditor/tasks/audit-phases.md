@@ -58,3 +58,25 @@ Severity: [HIGH|MEDIUM|LOW]
 | Already separated | Analysis shows single concern | No change needed |
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Boundary Claims (MANDATORY)
+
+**Each concern boundary claim MUST be verified against actual code structure. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Phases share same concern" | Verify file references in spec point to same architectural layer | `srclight_search_symbols(query="target", kind="function")` → check file paths | CONFLICTING |
+| "Phase is deployment-independent" | Verify no import dependency on other phases' outputs | `srclight_get_callers(symbol_name="target")` → check cross-phase calls | VERIFICATION-GAP |
+| "Risk classification is accurate" | Verify blast radius matches claimed risk level | `srclight_get_dependents(symbol_name="target", transitive=true)` → count affected files | STRUCTURE-VIOLATION |
+| "Spec file references exist" | Verify referenced files/symbols exist in codebase | `glob(pattern="**/filepath")` or `srclight_get_signature(name="symbol")` | MISSING-TRACEABILITY |
+
+**Evidence artifact:** Tool call results confirming boundary and dependency claims.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| File references cross architectural layers | CONFLICTING | flag-for-review | Report — phase may need splitting |
+| Cross-phase import dependency found | VERIFICATION-GAP | conditional | Report dependency, suggest re-ordering |
+| Risk level misaligned with actual blast radius | STRUCTURE-VIOLATION | auto-fix | Update risk level in finding |
+| Referenced file/symbol does not exist | MISSING-TRACEABILITY | flag-for-review | Developer must confirm: planned or typo |

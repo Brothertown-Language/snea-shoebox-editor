@@ -80,3 +80,22 @@ If during implementation the scope expands beyond what was assessed:
 A conservative assessment (multi-sub-agent for work that could be done by one) is acceptable. The decomposition overhead is small compared to the risk of overflow. Do not second-gauge a multi-sub-agent decision.
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Assessment Claims (MANDATORY)
+
+**Each assessment claim MUST be verified against actual codebase state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Context overflow risk" | Verify context size requires decomposition | Check actual token/file count of issues | VERIFICATION-GAP |
+| "Single sub-agent sufficient" | Verify file scope is limited to cohesive set | `git diff dev --name-only` → count files | CONFLICTING |
+| "Multi-sub-agent needed" | Verify task touches multiple independent areas | `srclight_get_dependents(symbol_name="target", transitive=true)` | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results confirming assessment accuracy.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Overflow risk unverified | VERIFICATION-GAP | conditional | Check actual context size |
+| Assessment contradicted by file scope | CONFLICTING | conditional | Re-assess with actual file list |

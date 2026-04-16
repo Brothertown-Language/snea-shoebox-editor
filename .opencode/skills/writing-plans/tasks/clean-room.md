@@ -133,6 +133,29 @@ affected_files_count: K
 - **YES** prose-driven output — agent decides structure, not template
 - **YES** brainstorming recommendation — when gaps are significant
 
+## Live Verification: Clean-Room Evidence (MANDATORY)
+
+**Each factual claim in the clean-room plan MUST be verified via tool call before inclusion. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Problem statement exists at path" | Verify file exists and is non-empty | `ls ./tmp/clean-room-input-N.md` | MISSING-ELEMENT |
+| "Affected file X exists" | Verify file in codebase | `srclight_search_symbols(query="X")` or `glob(pattern="**/X")` | VERIFICATION-GAP |
+| "Function Y has signature Z" | Verify signature against live code | `srclight_get_signature(name="Y")` | VERIFICATION-GAP |
+| "Pattern follows existing code" | Verify the referenced pattern exists | `grep(pattern="pattern_text")` | CONFLICTING |
+| "Skill X supports operation Y" | Verify skill declares the operation | `grep(pattern="Y", path=".opencode/skills/X/SKILL.md")` | CONFLICTING |
+
+**Evidence artifact:** Tool call results for each verification claim in the clean-room plan.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Input file missing | MISSING-ELEMENT | flag-for-review | HALT — cannot generate without input |
+| Referenced file not found | VERIFICATION-GAP | flag-for-review | Mark `⚠️ UNVERIFIED` — fidelity comparison will flag |
+| Function signature mismatch | VERIFICATION-GAP | conditional | Correct or mark `⚠️ UNVERIFIED` |
+| Pattern doesn't exist | CONFLICTING | flag-for-review | Remove claim from clean-room plan |
+
 ## Cross-References
 
 - Invoked by: `spec-auditor` fidelity subtask

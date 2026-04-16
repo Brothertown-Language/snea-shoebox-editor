@@ -316,6 +316,34 @@ For the provenance issue body format and tier-specific details, see `git-workflo
 
 All tasks are under 1,000 words — inline execution. No sub-agent dispatch needed.
 
+## Live Verification: Issue Operations Evidence (MANDATORY)
+
+**Each factual claim about platform state, issue state, and issue relationships MUST be verified via tool call before acting. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Issue #N exists" | Verify via platform API | `github_issue_read(method="get", issue_number=N)` | MISSING-ELEMENT |
+| "PR #N is merged" | Verify merge status | `github_pull_request_read(method="get", pullNumber=N)` → check `merged` field | VERIFICATION-GAP |
+| "Platform supports sub-issues" | Probe capabilities | `issue-operations --task capabilities` | CONFLICTING |
+| "Issue has `needs-approval` label" | Verify label presence | `github_issue_read(method="get_labels", issue_number=N)` | VERIFICATION-GAP |
+| "All sub-issues closed" | Verify each sub-issue state | `github_issue_read(method="get_sub_issues", issue_number=N)` → check each closed | VERIFICATION-GAP |
+| "No conflicting spec exists" | Search for overlapping issues | `github_search_issues(query="label:spec <keyword>")` | CONFLICTING |
+| "Session init has GIT_OWNER/GIT_REPO" | Verify session values | Check session init output | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results for each claim before the operation proceeds.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Issue not found | MISSING-ELEMENT | flag-for-review | HALT — cannot operate on missing issue |
+| PR not merged | VERIFICATION-GAP | flag-for-review | HALT — do not close issue |
+| Platform lacks capability | CONFLICTING | auto-fix | Use fallback pattern from SKILL.md |
+| Label missing | VERIFICATION-GAP | auto-fix | Add missing label |
+| Sub-issues still open | VERIFICATION-GAP | flag-for-review | Do not close parent |
+| Conflicting spec found | CONFLICTING | flag-for-review | HALT — report conflict |
+| Session values missing | MISSING-ELEMENT | flag-for-review | HALT — cannot construct API calls |
+
 ## Cross-References
 
 - Related skills: `spec-auditor`, `approval-gate`, `writing-plans`, `git-workflow`

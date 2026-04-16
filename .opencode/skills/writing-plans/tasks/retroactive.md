@@ -25,3 +25,25 @@ Create a plan for an existing spec that does not yet have one.
     - Validate plan (check for placeholders, TDD structure)
     - If invalid → Report issues
     - If valid → Proceed to implementation
+
+## Live Verification: Retroactive Plan Evidence (MANDATORY)
+
+**Each factual claim about existing specs and plans MUST be verified via tool call. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Spec #N exists" | Verify issue exists and has spec label | `github_issue_read(method="get", issue_number=N)` | MISSING-ELEMENT |
+| "No plan exists for spec #N" | Query for linked plans | `github_search_issues(query="label:plan Spec: #N")` or iterate recent issues | VERIFICATION-GAP |
+| "Plan is valid" | Run `validate` task checks | `validate` task inline | VERIFICATION-GAP |
+| "Plan has sub-issues" | Check sub-issue state | `github_issue_read(method="get_sub_issues", issue_number=plan_number)` | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results confirming spec exists, plan state, and validation outcome.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Spec not found | MISSING-ELEMENT | flag-for-review | HALT — cannot create plan for missing spec |
+| Plan actually exists (missed) | VERIFICATION-GAP | auto-fix | Use existing plan instead of creating duplicate |
+| Plan invalid | VERIFICATION-GAP | flag-for-review | Report issues, do not proceed to implementation |
+| Spec not approved | CONFLICTING | flag-for-review | HALT — plan requires approved spec |

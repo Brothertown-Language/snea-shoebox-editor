@@ -89,3 +89,25 @@ All tasks complete from this specification.
 - Session values: GIT_OWNER, GIT_REPO, GIT_PLATFORM
 - Related tasks: `verify-merge` (runs first), `comment` (format for closure comment)
 - Parent/child closure order per `010-approval-gate.md`
+
+## Live Verification: Closure Evidence (MANDATORY)
+
+**Each closure precondition MUST be verified via tool call before closing. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "PR #N is merged" | Verify merge status via API | `github_pull_request_read(method="get", pullNumber=N)` → `merged` field | VERIFICATION-GAP |
+| "All sub-issues are closed" | Verify each sub-issue state | `github_issue_read(method="get_sub_issues", issue_number=N)` → check each closed | VERIFICATION-GAP |
+| "Issue #N has a merged PR" | Search for PR referencing issue | `github_search_pull_requests(query="fixes #N")` | MISSING-ELEMENT |
+| "Platform supports PATCH close" | Probe platform capabilities | `issue-operations --task capabilities` | CONFLICTING |
+
+**Evidence artifact:** Merge verification result, sub-issue state check results.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| PR not merged | VERIFICATION-GAP | flag-for-review | HALT — do not close issue |
+| Sub-issues still open | VERIFICATION-GAP | flag-for-review | Do not close parent |
+| No PR references issue | MISSING-ELEMENT | flag-for-review | HALT — cannot verify implementation |
+| Platform lacks PATCH | CONFLICTING | auto-fix | Use closure comment fallback |

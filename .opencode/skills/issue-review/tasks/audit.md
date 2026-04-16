@@ -85,3 +85,25 @@ Format per `000-critical-rules.md`:
 - `000-critical-rules.md`: Audit findings must NOT be posted to GitHub
 - `067-context-completeness.md`: All comments were read during gather
 - `analyze-and-spec`: For bug-spec audits, verify that fix spec sub-issues exist (per `000-critical-rules.md` — bug reports must have fix spec before closure)
+
+## Live Verification: Audit Delegation Claims (MANDATORY)
+
+**Before trusting that spec-auditor was invoked or that audit findings are current, verify against actual state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "spec-auditor invoked" | Verify audit was actually performed (not just planned) | Check that spec-auditor output/findings exist in context | VERIFICATION-GAP |
+| "Findings are current" | Verify no new comments or revisions since audit | `github_issue_read(method=get_comments)` → check timestamps after last audit | VERIFICATION-GAP |
+| "Triage classification is accurate" | Verify issue content matches triage label | `github_issue_read(method=get)` → re-read body, compare with triage call | CONFLICTING |
+| "Bug report has fix spec" | Verify via GitHub API, not cached sub-issue list | `github_issue_read(method=get_sub_issues)` → check children | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results confirming audit invocation, recency, and classification accuracy.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Audit never performed | VERIFICATION-GAP | conditional | Invoke spec-auditor now |
+| New comments since audit | VERIFICATION-GAP | conditional | Re-audit with new context |
+| Triage classification wrong | CONFLICTING | flag-for-review | Report mismatch, re-evaluate path |
+| Fix spec missing for bug | MISSING-ELEMENT | conditional | Proceed to `analyze-and-spec` |

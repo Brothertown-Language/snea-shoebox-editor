@@ -93,3 +93,29 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 
 - Related skills: `finishing-a-development-branch` (parent skill), `verification-before-completion` (evidence)
 - Related tasks: `prepare`
+
+## Live Verification: Checklist Evidence (MANDATORY)
+
+**Each checklist item MUST be verified via tool call, not just checked off. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Checklist Item | Verification Action | Tool Call | Problem Class |
+|----------------|-------------------|-----------|---------------|
+| "All changes committed" | Verify clean working tree | `git status --porcelain` → check empty | VERIFICATION-GAP |
+| "Branch pushed to remote" | Verify tracking branch exists | `git branch -vv` → check `[origin/<branch>]` | MISSING-ELEMENT |
+| "Tests passing" | Run actual test command | `uv run pytest test/` → check exit code | VERIFICATION-GAP |
+| "Lint passing" | Run actual lint command | `uvx ruff check src/ test/` → check exit code | VERIFICATION-GAP |
+| "No debug prints" | Search for debug statements | `grep(pattern="print\\(|debugger|breakpoint")` | STRUCTURE-VIOLATION |
+| "No TODO/FIXME" | Search for placeholder comments | `grep(pattern="TODO|FIXME|HACK")` | STRUCTURE-VIOLATION |
+| "No unrelated changes" | Verify diff scope matches spec | `git diff dev --name-only` → compare with spec files | CONFLICTING |
+
+**Evidence artifact:** Tool call results for each checklist verification.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Uncommitted changes found | VERIFICATION-GAP | conditional | Commit before proceeding |
+| Branch not pushed | MISSING-ELEMENT | auto-fix | Push immediately |
+| Lint/test failures | VERIFICATION-GAP | flag-for-review | HALT — fix issues before PR |
+| Debug prints or TODOs found | STRUCTURE-VIOLATION | auto-fix | Remove before proceeding |
+| Unrelated files in diff | CONFLICTING | flag-for-review | Report — scope may have deviated |

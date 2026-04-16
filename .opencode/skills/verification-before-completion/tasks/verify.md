@@ -162,3 +162,28 @@ Evidence placeholder detected. Real evidence required.
 
 Please replace placeholder with actual evidence.
 ```
+
+## Live Verification: Completion Evidence Claims (MANDATORY)
+
+**Each completion claim MUST be verified against live state — not assumed from checklist assertions. This extends `065-verification-honesty.md` to completion verification.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Success criterion met" | Verify criterion against actual code/test output | `read` or `srclight_get_symbol` or test execution | VERIFICATION-GAP |
+| "Test passing" | Run the actual test command | `uv run pytest test/test_file.py` | VERIFICATION-GAP |
+| "Files modified as specified" | Verify file changes match spec | `git diff dev --name-only` → compare with spec | CONFLICTING |
+| "No uncommitted changes" | Verify clean working tree | `git status --porcelain` | VERIFICATION-GAP |
+| "Branch pushed to remote" | Verify tracking branch exists | `git branch -vv` → check `[origin/<branch>]` | MISSING-ELEMENT |
+| "Evidence artifact produced" | Verify tool call exists for each criterion | Check tool-call records in context | MISSING-ELEMENT |
+
+**Evidence artifact:** Each verification check MUST produce a tool-call result. Assertions without tool-call artifacts are VERIFICATION-GAP findings.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Criterion claimed met without evidence | VERIFICATION-GAP | conditional | Re-verify with actual tool call |
+| Test not actually passing | CONFLICTING | flag-for-review | HALT — fix test before claiming completion |
+| Files differ from spec | CONFLICTING | flag-for-review | Report — scope may have deviated |
+| Uncommitted changes exist | VERIFICATION-GAP | conditional | Commit before proceeding |
+| Branch not pushed | MISSING-ELEMENT | auto-fix | Push immediately |

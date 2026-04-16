@@ -111,3 +111,29 @@ Before proceeding, verify ALL:
 - Related tasks: `pre-creation` (runs first), `post-creation` (runs next), `link-sub-issue` (sub-issue creation)
 - Platform routing: `../platforms/github-mcp/` or `../platforms/gitbucket-api/`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-approval` on creation; GitHub `labels` parameter replaces all labels)
+
+## Live Verification: Creation Evidence (MANDATORY)
+
+**Each creation precondition MUST be verified via tool call. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Pre-creation validation passed" | Verify validation result exists | Check pre-creation output in session | MISSING-ELEMENT |
+| "No conflicting spec exists" | Search for overlapping issues | `github_search_issues(query="label:spec <keyword>")` | CONFLICTING |
+| "Title follows format" | Verify title prefix | Check `[SPEC]`, `[SPEC-FIX]`, `[SPEC-ENHANCEMENT]`, `[Task:` prefix | STRUCTURE-VIOLATION |
+| "Issue was created" | Verify API response | Check `number` field in creation response | MISSING-ELEMENT |
+| "`needs-approval` label applied" | Verify label on created issue | `github_issue_read(method="get_labels", issue_number=N)` | MISSING-ELEMENT |
+| "Byline in body" | Verify byline present | Check issue body for `🤖` marker | STRUCTURE-VIOLATION |
+
+**Evidence artifact:** Pre-creation result, creation API response, post-creation label check.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Pre-creation not run | MISSING-ELEMENT | flag-for-review | HALT — run pre-creation first |
+| Conflicting spec found | CONFLICTING | flag-for-review | HALT — report conflict |
+| Wrong title format | STRUCTURE-VIOLATION | auto-fix | Correct title before creation |
+| Creation API failed | MISSING-ELEMENT | flag-for-review | HALT — retry or report error |
+| Label missing post-creation | MISSING-ELEMENT | auto-fix | Add label immediately |
+| Byline missing | STRUCTURE-VIOLATION | auto-fix | Add byline to body |

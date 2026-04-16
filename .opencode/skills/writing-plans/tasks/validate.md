@@ -63,3 +63,27 @@ def validate_plan(plan_content: str) -> bool:
 ```
 
 Does NOT enforce a specific section order. A plan without "Risks" is valid if risks are addressed elsewhere or are not relevant.
+
+## Live Verification: Validation Evidence (MANDATORY)
+
+**Each validation check MUST be verified via tool call, not just asserted. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "No placeholders present" | Search for placeholder patterns in plan body | `grep(pattern="TBD|TODO|\\[to be determined\\]|\\[placeholder\\]")` | VERIFICATION-GAP |
+| "Spec reference exists in plan" | Search for `Spec: #N` pattern | `grep(pattern="Spec: #")` on plan body | MISSING-ELEMENT |
+| "Sub-issues link to plan (not spec)" | Verify sub-issue parent | `github_issue_read(method="get_sub_issues", issue_number=plan_number)` | STRUCTURE-VIOLATION |
+| "Plan has `plan` label" | Verify label on plan issue | `github_issue_read(method="get", issue_number=plan_number)` → check labels | MISSING-ELEMENT |
+| "Steps are actionable" | Verify each step has concrete action | Manual parse — flag abstract goals | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results for automated checks; manual review log for actionable-step verification.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Placeholders found | VERIFICATION-GAP | conditional | Remove placeholders or mark plan invalid |
+| Missing spec reference | MISSING-ELEMENT | auto-fix | Add spec reference to plan body |
+| Sub-issues under wrong parent | STRUCTURE-VIOLATION | auto-fix | Re-link under plan |
+| Missing `plan` label | MISSING-ELEMENT | auto-fix | Add label immediately |
+| Abstract goals found | VERIFICATION-GAP | flag-for-review | Flag for plan author to rewrite |

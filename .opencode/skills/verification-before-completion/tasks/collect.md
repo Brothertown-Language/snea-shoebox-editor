@@ -101,3 +101,23 @@ executing-plans → verification-before-completion → (completion claim allowed
 - Verification happens BEFORE branch push
 - Evidence collected during execution phase
 - PR created only after all verification passes
+
+## Live Verification: Evidence Collection Claims (MANDATORY)
+
+**Each collected evidence item MUST be verified as genuinely produced by a tool call. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Evidence collected" | Verify tool-call artifacts exist for each criterion | Check tool-call records in collection output | MISSING-ELEMENT |
+| "Verification report exists" | Verify report file in `./tmp/` | `glob(pattern="./tmp/verification-*")` | MISSING-ELEMENT |
+| "All criteria have evidence" | Verify no criterion lacks tool-call proof | Cross-reference criteria list with evidence list | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results confirming each evidence item is genuine and complete.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Evidence missing for criterion | MISSING-ELEMENT | conditional | Re-run tool call for missing evidence |
+| Verification report not created | MISSING-ELEMENT | auto-fix | Create report now |
+| Placeholder evidence detected | VERIFICATION-GAP | conditional | Replace with actual tool-call output |

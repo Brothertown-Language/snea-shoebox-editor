@@ -100,3 +100,27 @@ Before proceeding, verify ALL:
 ## Context Required
 
 - Related tasks: `creation` (runs first), `single-task-check` (determination logic), `writing-plans --task create` (plan creation — decision gate at Step 1.5 handles combined vs separate)
+
+## Live Verification: Post-Creation Evidence (MANDATORY)
+
+**Each post-creation step MUST be verified via tool call. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Issue #N was created" | Verify issue exists | `github_issue_read(method="get", issue_number=N)` | MISSING-ELEMENT |
+| "Spec is single/multi-task" | Verify determination result | Check `single-task-check` output | VERIFICATION-GAP |
+| "Spec-auditor was invoked" | Verify auditor ran | Session records or auditor output | MISSING-ELEMENT |
+| "Plan creation triggered" | Verify writing-plans was invoked | Check for plan issue creation | MISSING-ELEMENT |
+| "Auditors run BEFORE approval" | Verify no approval exists before auditor | `github_issue_read(method="get_comments", issue_number=N)` → check for "approved"/"go" | CONFLICTING |
+
+**Evidence artifact:** Auditor invocation result, plan creation result, determination output.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Issue not found | MISSING-ELEMENT | flag-for-review | HALT — creation may have failed |
+| Determination missing | VERIFICATION-GAP | conditional | Re-run single-task-check |
+| Auditor not invoked | MISSING-ELEMENT | auto-fix | Invoke spec-auditor immediately |
+| Plan creation not triggered | MISSING-ELEMENT | conditional | Invoke writing-plans |
+| Approval exists before audit | CONFLICTING | flag-for-review | HALT — auditors must run first |

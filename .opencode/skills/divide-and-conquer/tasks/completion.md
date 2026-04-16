@@ -54,3 +54,25 @@ Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch>
 URL is ALWAYS last per `000-critical-rules.md`.
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Completion State (MANDATORY)
+
+**Verify completion claims against actual state before halting.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "All commits pushed" | Verify no unpushed commits | `git diff @{u} HEAD` | VERIFICATION-GAP |
+| "Verification invoked" | Verify evidence exists | `glob(pattern="./tmp/verification-*")` | MISSING-ELEMENT |
+| "Checklist completed" | Verify branch readiness | `git status --porcelain` → check clean | VERIFICATION-GAP |
+| "Compare URL generated" | Verify URL exists in context | Check chat output for URL | MISSING-ELEMENT |
+
+**Evidence artifact:** Git command output confirming each claim.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Unpushed commits | VERIFICATION-GAP | auto-fix | Push immediately |
+| Verification not invoked | MISSING-ELEMENT | conditional | Invoke verification-now |
+| Working tree dirty | VERIFICATION-GAP | conditional | Commit remaining changes |
+| No compare URL | MISSING-ELEMENT | auto-fix | Generate URL now |

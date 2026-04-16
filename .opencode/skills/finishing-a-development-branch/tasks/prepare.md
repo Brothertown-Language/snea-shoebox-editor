@@ -92,3 +92,25 @@ https://<GITBUCKET_HOST>/gitbucket/<owner>/<repo>/compare/<base>...<branch>
 
 - Related skills: `finishing-a-development-branch` (parent skill), `verification-before-completion` (evidence)
 - Related tasks: `checklist`
+
+## Live Verification: Preparation Claims (MANDATORY)
+
+**Each preparation step MUST produce a tool-call artifact. Assertions without artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Working tree clean" | Verify no uncommitted changes | `git status --porcelain` | VERIFICATION-GAP |
+| "Lint passes" | Run lint command and check result | `uvx ruff check src/ test/` | VERIFICATION-GAP |
+| "Tests pass" | Run test command and check result | `uv run pytest test/` | VERIFICATION-GAP |
+| "All changes relevant to spec" | Verify diff file list matches spec scope | `git diff dev --name-only` → compare with spec | CONFLICTING |
+
+**Evidence artifact:** Tool call output for each verification step.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Uncommitted changes exist | VERIFICATION-GAP | conditional | Commit first |
+| Lint failures | VERIFICATION-GAP | flag-for-review | HALT — fix before PR |
+| Test failures | VERIFICATION-GAP | flag-for-review | HALT — fix before PR |
+| Unrelated changes in diff | CONFLICTING | flag-for-review | Report — scope deviation |

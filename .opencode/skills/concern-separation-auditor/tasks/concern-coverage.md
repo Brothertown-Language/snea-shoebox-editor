@@ -107,3 +107,25 @@ All findings are reported for agent review. The agent decides whether to adjust 
 - Must use GitHub MCP tools for all issue operations
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Concern Scope Claims (MANDATORY)
+
+**Each concern scope claim about sub-issues MUST be verified against actual GitHub state and code structure. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Sub-issue maps to Plan phase" | Verify sub-issue content matches expected phase | `github_issue_read(method=get, issue_number=N)` → compare body with Plan phase | CONFLICTING |
+| "Sub-issue concern is narrower" | Verify claimed scope actually omits specific tasks | `github_issue_read(method=get)` → parse sub-issue body | VERIFICATION-GAP |
+| "Sub-issue concern is wider" | Verify sub-issue references files/tasks outside claimed boundary | `github_issue_read(method=get)` → check file references cross boundaries | CONFLICTING |
+| "Plan phase defines single concern" | Verify Plan phase is not itself mixed | `github_issue_read(method=get)` on parent → check Plan body | STRUCTURE-VIOLATION |
+
+**Evidence artifact:** Tool call results for each sub-issue and Plan phase comparison.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Sub-issue content contradicts scope claim | CONFLICTING | flag-for-review | Report — requires domain judgment |
+| Plan phase itself is mixed-concern | STRUCTURE-VIOLATION | flag-for-review | Report — may affect sub-issue scoping |
+| Sub-issue references non-existent files | MISSING-TRACEABILITY | flag-for-review | Developer must confirm: planned or typo |
+| Scope claim without evidence | VERIFICATION-GAP | conditional | Re-verify and document evidence |

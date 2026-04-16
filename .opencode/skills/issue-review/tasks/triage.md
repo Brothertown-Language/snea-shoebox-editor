@@ -133,3 +133,27 @@ If any verification fails, do NOT classify as `already-handled`. Instead:
 | Title says spec but body is bug | Redirect to `analyze-and-spec` |
 | Body lacks formal sections but clear feature | Redirect to `audit` |
 | Bug language present but actually a feature request | Redirect to `qa` |
+
+## Live Verification: Triage Classification Claims (MANDATORY)
+
+**Before trusting a triage classification, verify key claims against actual GitHub state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Issue is a bug report" | Verify bug language in body | `github_issue_read(method=get)` → scan for bug patterns | CONFLICTING |
+| "Issue is already handled" | Verify sub-issues closed + merged PR | `github_issue_read(method=get_sub_issues)` + PR search | VERIFICATION-GAP |
+| "Issue has been audited before" | Verify audit comments exist | `github_issue_read(method=get_comments)` → search for audit patterns | VERIFICATION-GAP |
+| "Authorization exists" | Verify auth comment from developer | `github_issue_read(method=get_comments)` → check `author_association` | CONFLICTING |
+| "`[SPEC]` prefix is accurate" | Verify content matches prefix (content over label) | `github_issue_read(method=get)` → body analysis vs title | STRUCTURE-VIOLATION |
+| "Sub-issues are all closed" | Verify each sub-issue state via API | `github_issue_read(method=get, issue_number=N)` per child | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results for each claim verified during triage.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| `[SPEC]` prefix on bug report | STRUCTURE-VIOLATION | auto-fix | Re-triage to `analyze-and-spec` |
+| `already-handled` but no merged PR | VERIFICATION-GAP | flag-for-review | Re-classify as `audit` or `just-review` |
+| Authorization from bot/agent | CONFLICTING | flag-for-review | Require human authorization |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason |

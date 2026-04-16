@@ -84,3 +84,25 @@ result = some_function(timeout=60, retries=3)
 
 - Related skills: `systematic-debugging` (parent skill), `approval-gate` (authorization)
 - Related tasks: `diagnose`
+
+## Live Verification: Fix Evidence Claims (MANDATORY)
+
+**Each fix claim MUST be verified against actual test/code state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Fix resolves root cause" | Verify fix targets identified root cause location | `srclight_get_symbol(name="target")` → confirm change location | VERIFICATION-GAP |
+| "Tests pass after fix" | Run actual test suite | `uv run pytest test/` → check exit code | VERIFICATION-GAP |
+| "No unrelated changes" | Verify diff scope matches fix spec | `git diff --name-only` → compare with spec file list | CONFLICTING |
+| "Fix is minimal" | Verify no refactoring or enhancement included | `git diff dev` → check change scope | CONFLICTING |
+
+**Evidence artifact:** Tool call results for each fix verification step.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Fix doesn't target root cause | VERIFICATION-GAP | flag-for-review | HALT — re-diagnose before fixing |
+| Tests still failing | VERIFICATION-GAP | flag-for-review | Fix tests before claiming complete |
+| Unrelated changes in diff | CONFLICTING | flag-for-review | Report scope deviation |
+| Refactoring disguised as fix | CONFLICTING | flag-for-review | Revert and create spec |
