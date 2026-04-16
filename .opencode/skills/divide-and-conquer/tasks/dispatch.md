@@ -112,9 +112,10 @@ After collecting the sub-agent result, the orchestrator MUST perform a completio
       - Compare changed files against the dispatch spec deliverables
       - Determine completion level: complete / partial / wrong
       - Apply recovery action per the decision matrix in SKILL.md "Sub-Agent Completion Checkpoint" section
-   d. Report abnormal termination to chat (see reporting format in SKILL.md)
+    d. Report abnormal termination to chat (see reporting format in SKILL.md)
+    e. Do NOT proceed to next task until recovery is complete
 
-**The orchestrator decides the recovery action autonomously.** Per the "Pushing Agent Intelligence Decisions to the User" critical violation (`000-critical-rules.md`), the recovery decision (manual complete vs. undo + re-dispatch) is an agent intelligence concern. The user is NOT asked to decide.
+**The orchestrator decides the recovery action autonomously.** Per the "Pushing Agent Intelligence Decisions to the User" critical violation (`000-critical-rules.md`), the recovery decision is an agent intelligence concern. The user is NOT asked to decide. UNDO + re-dispatch is the default; manual completion is a narrow exception (see SKILL.md Recovery Mode for conditions).
 
 ### Step 5: Compose Prior Context
 

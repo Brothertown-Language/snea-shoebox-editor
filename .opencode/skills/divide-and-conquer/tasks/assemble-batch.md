@@ -104,17 +104,18 @@ For each issue in execution order:
 
  5. **Collect result** from sub-agent
 
- 6. **Sub-Agent Completion Checkpoint** — after collecting each result, perform the completion checkpoint per `dispatch` task Step 4:
+  6. **Sub-Agent Completion Checkpoint** — after collecting each result, perform the completion checkpoint per `dispatch` task Step 4:
 
-    - If sub-agent returned a structured result: check `status` field and handle accordingly
-    - If sub-agent returned **NO result** (timeout, crash, empty): this is **ABNORMAL TERMINATION**
-      - Run `git status` in the worktree
-      - Clean tree → didn't start → re-dispatch
-      - Uncommitted changes + all deliverables → complete manually (commit + push)
-      - Uncommitted changes + partial deliverables → `git checkout .` + re-dispatch reduced scope
-      - Uncommitted changes + wrong changes → `git checkout .` + re-dispatch full scope
-    - Report abnormal termination to chat (see format in SKILL.md "Sub-Agent Completion Checkpoint")
-    - The orchestrator decides recovery action autonomously per "Pushing Agent Intelligence Decisions to the User" (`000-critical-rules.md`)
+     - If sub-agent returned a structured result: check `status` field and handle accordingly
+     - If sub-agent returned **NO result** (timeout, crash, empty): this is **ABNORMAL TERMINATION**
+       - Run `git status` in the worktree
+       - Clean tree → didn't start → re-dispatch
+       - Uncommitted changes + all deliverables → UNDO + re-dispatch by default; manual commit+push only if narrow exception applies (≤50 lines, single file, fully correct, no remaining dispatches — see SKILL.md Recovery Mode)
+       - Uncommitted changes + partial deliverables → `git checkout .` + re-dispatch reduced scope
+       - Uncommitted changes + wrong changes → `git checkout .` + re-dispatch full scope
+     - Report abnormal termination to chat (see format in SKILL.md "Sub-Agent Completion Checkpoint")
+     - The orchestrator decides recovery action autonomously per "Pushing Agent Intelligence Decisions to the User" (`000-critical-rules.md`)
+     - **Do NOT proceed to the next sub-agent until abnormal termination recovery is complete.** Recovery must fully resolve (re-dispatch succeeded or manual commit+push verified) before advancing.
 
  7. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
 
