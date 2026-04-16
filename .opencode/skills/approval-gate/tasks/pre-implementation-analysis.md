@@ -43,6 +43,7 @@ For each approved issue:
 | Category | Detection | Auto-resolve | Developer needed? |
 |----------|-----------|-------------|-------------------|
 | **Already implemented** | Merged PR references issue + Gate 1 passed (sub-issue enumeration gate) + Gate 2 passed (success criteria verification gate) + cross-references consistent | Exclude, mark "already-implemented" | No |
+| **Not implemented despite closure** | `state: closed` + merged PR exists + Gate 1 OR Gate 2 FAILED (sub-issues open/unverified, or success criteria not met) | Reopen or include remaining work, mark "not-implemented-despite-closure — premature closure" | No |
 | **Partially implemented** | Merged PR references issue + some success criteria met, some remaining | Include remaining phases only, mark "partially-implemented (phases X,Y done by PR #M)" | No |
 | **Superseded by batch peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
 | **Moot** | Referenced files/code restructured since spec creation; no remaining success criteria are achievable | Exclude, mark "moot" with reason | No |
@@ -53,7 +54,8 @@ For each approved issue:
 
 #### Screening Outcomes
 
-- **EXCLUDE**: already-implemented (verified via merged PR + sub-issues closed via merged PR), superseded, moot, meta/non-code
+- **EXCLUDE**: already-implemented (verified via merged PR + sub-issues closed via merged PR + success criteria verified), superseded, moot, meta/non-code
+- **REOPEN/RE-CLASSIFY**: not-implemented-despite-closure (closed but Gate 1 or Gate 2 failed — include remaining work)
 - **REDUCE SCOPE**: partially-implemented (include remaining phases only)
 - **SERIALIZE**: same-intent stale assumptions, auto-resolvable conflicts
 - **HALT**: different-intent stale assumptions, unresolvable conflicts
@@ -244,7 +246,67 @@ When an issue in the batch has STATUS marked as `REVISED - NEEDS APPROVAL`:
 
 1. **Remove `needs-approval` label** from the issue post-approval (per existing approval-gate rule: explicit auth overrides label).
 
-### Step 0.5: Sub-Issue Expansion (MANDATORY)
+### Step 0.5: Gate Evidence Audit (MANDATORY — ZERO TOLERANCE)
+
+**🚫 CRITICAL — STRUCTURAL CHECKPOINT: After Step 0 screening and BEFORE sub-issue expansion, the agent MUST verify that Gate 1 and Gate 2 were actually EXECUTED (not just read) for every issue classified as "already-implemented." This step is a mechanical audit — it checks whether evidence artifacts exist. It is NOT advisory text the agent can skip.**
+
+**Why this step exists:** Previous fixes (#979, #980, PR #981) added Gate 1 and Gate 2 as text instructions to `pre-implementation-analysis.md`. Subsequent agent sessions read these instructions and skipped them anyway — no `get_sub_issues` calls, no per-sub-issue evidence, no success criteria verification. Text-based guardrails are insufficient; this step adds a structural checkpoint that halts advancement unless evidence exists.
+
+**If NO issues were classified as "already-implemented":** This step passes trivially. Skip to Step 1.
+
+**If ANY issues were classified as "already-implemented":** Perform the following audit:
+
+#### GA-1: Verify Gate 1 Evidence Exists
+
+For EACH issue classified as "already-implemented":
+
+1. **Check sub-issue enumeration call:** Did you call `github_issue_read(method=get_sub_issues, issue_number=<candidate>)` during Step 0 screening? If NO → STOP. Return to Step 0 and re-run Gate 1 for this issue before proceeding.
+
+2. **Check per-sub-issue evidence:** For EACH sub-issue returned by `get_sub_issues`, did you produce a tool-call artifact (`github_issue_read(method=get, issue_number=<sub>)`) verifying its state? If NO → STOP. Return to Step 0 and re-run Gate 1 verification.
+
+3. **Check closure legitimacy evidence:** For each closed sub-issue, did you search for merged PR evidence? If NO → STOP. Return to Step 0 and re-run Gate 1 closure legitimacy check.
+
+#### GA-2: Verify Gate 2 Evidence Exists
+
+For EACH issue classified as "already-implemented":
+
+1. **Extract success criteria:** Did you read the issue body and extract every success criterion? If NO → STOP. Return to Step 0 and re-run Gate 2 for this issue.
+
+2. **Verify each criterion:** For each success criterion, did you perform a direct verification action (read, grep, lint, test) against the current `dev` branch? If NO → STOP. Return to Step 0 and re-run Gate 2 verification.
+
+3. **Evidence artifacts:** For each criterion, is there a tool-call artifact documenting the verification? If NO → STOP. Return to Step 0 and re-run with evidence collection.
+
+#### GA-3: Produce the Gate Evidence Audit Table
+
+**This table is a MANDATORY structural artifact.** `assemble-batch` (Step 1 of assemble-batch.md) checks for this table before proceeding. If the table is missing, `assemble-batch` returns here.
+
+For all "already-implemented" classifications, produce:
+
+```markdown
+## Gate Evidence Audit Table
+
+| Issue # | Sub-issues Enumerated? (Gate 1) | All Sub-issues Verified? | Closure Legitimacy Verified? | Success Criteria Extracted? (Gate 2) | All Criteria Verified vs Codebase? | Final Classification |
+|---------|----------------------------------|--------------------------|-------------------------------|--------------------------------------|-----------------------------------|---------------------|
+| #N | ✅/❌ | ✅/❌ | ✅/❌ | ✅/❌ | ✅/❌ | already-implemented / partially-implemented / not-implemented-despite-closure |
+```
+
+**If ANY row has ❌ in columns 2-5:** That issue's classification is INVALID. It MUST be DOWNGRADED:
+- ❌ in Gate 1 columns → DOWNGRADE to "partially-implemented" (sub-issues not verified)
+- ❌ in Gate 2 columns → DOWNGRADE to "partially-implemented" or "not-implemented-despite-closure" (success criteria not verified)
+
+**After downgrades:** Remove downgraded issues from "already-implemented" list. Add them to the "partially-implemented" list in the execution plan. Re-classify per Screening Categories table.
+
+#### GA-4: Verify Audit Table Completeness
+
+Before proceeding to Step 1:
+1. The Gate Evidence Audit Table includes ALL issues classified as "already-implemented"
+2. Every column has ✅ or ❌ (no blank entries)
+3. All ❌ entries have been actioned (downgrade applied, issue moved to correct list)
+4. The table is present in the chat output (not hidden in agent reasoning)
+
+**If the table is incomplete:** HALT and complete it before proceeding.
+
+### Step 1: Sub-Issue Expansion (MANDATORY)
 
 **Every approved issue — whether single or batch — MUST undergo sub-issue expansion before classification.**
 
@@ -269,7 +331,7 @@ For each approved issue:
 | Multi-task spec (has sub-issues) | Items = each sub-issue (parent provides context) |
 | Multi-task spec with some sub-issues NOT in batch | Items = sub-issues in batch only |
 
-### Step 1: Read All Remaining (Non-Excluded) Issues
+### Step 2: Read All Remaining (Non-Excluded) Issues
 
 For each issue that survived screening, read the full issue body and comments:
 
@@ -279,7 +341,7 @@ for issue_number in remaining_issues:
     comments = github_issue_read(method="get_comments", issue_number=issue_number)
 ```
 
-### Step 2: Classify Each Issue
+### Step 3: Classify Each Issue
 
 Determine each issue's category:
 
@@ -302,7 +364,7 @@ Determine each issue's category:
 - Same-intent stale assumption pairs → must-precede edge (the issue providing the canonical change precedes)
 - Cross-issue sub-issue pairs → dependency edge (parent covers sub-issues unless isolated)
 
-### Step 3: Build Dependency Graph
+### Step 4: Build Dependency Graph
 
 Create a directed graph where:
 
@@ -335,7 +397,7 @@ Create a directed graph where:
 - #I — partially-implemented (phase 1 done by PR #M; phases 2, 3 remaining)
 ```
 
-### Step 4: Determine Execution Strategy
+### Step 5: Determine Execution Strategy
 
 | Strategy | When | How |
 |----------|------|-----|
@@ -345,7 +407,7 @@ Create a directed graph where:
 | **Exclude** | Meta/non-code, already-implemented, superseded, moot | Report exclusion with reason |
 | **Reduce scope** | Partially-implemented | Include remaining phases only |
 
-### Step 5: Present Execution Plan (Informative Only)
+### Step 6: Present Execution Plan (Informative Only)
 
 **MANDATORY: The dependency analysis MUST be visible in chat (not hidden in agent reasoning).**
 
@@ -423,7 +485,7 @@ The ONLY conditions requiring developer input during batch approval analysis:
 
 When any of these triggers fire, HALT and present the conflict to the developer with a clear question. Do NOT attempt to auto-resolve.
 
-### Step 6: Capture Dev Base Hash (Before Dispatch)
+### Step 7: Capture Dev Base Hash (Before Dispatch)
 
 Before dispatching any parallel worktrees, the orchestrating agent MUST capture the current dev branch hash:
 
@@ -433,7 +495,7 @@ git rev-parse origin/dev
 
 This `dev_base_hash` MUST be included in the dispatch context for each parallel issue. See Step 7 for the complete dispatch context schema.
 
-### Step 7: Dispatch Context for Parallel Issues
+### Step 8: Dispatch Context for Parallel Issues
 
 For each issue in a parallel-safe group, the dispatch context MUST include worktree information:
 
@@ -475,7 +537,7 @@ The `dev_base_hash` ensures all parallel worktrees start from the same base comm
   spec_version: "current revised body"
 ```
 
-### Step 8: Write Batch State File
+### Step 9: Write Batch State File
 
 After the execution plan is presented, write a batch state file that persists the plan for sub-agent dispatch:
 
@@ -501,6 +563,12 @@ mkdir -p .opencode/tmp
 | #A | Included | — |
 | #D | Excluded | already-implemented (PR #M) |
 | #E | Scope-reduced | phase 1 done by PR #M; phases 2, 3 remaining |
+
+## Gate Evidence Audit Table
+
+| Issue # | Sub-issues Enumerated? (Gate 1) | All Sub-issues Verified? | Closure Legitimacy Verified? | Success Criteria Extracted? (Gate 2) | All Criteria Verified vs Codebase? | Final Classification |
+|---------|----------------------------------|--------------------------|-------------------------------|--------------------------------------|-----------------------------------|---------------------|
+| #D | ✅ | ✅ | ✅ | ✅ | ✅ | already-implemented |
 
 ## Execution Order
 
@@ -530,7 +598,7 @@ mkdir -p .opencode/tmp
 - Hybrid: in-line context passed to each sub-agent + file backup for recovery
 - Cleaned up after batch completes (or on new session start)
 
-### Step 9: Execute Immediately
+### Step 10: Execute Immediately
 
 After presenting the plan, proceed immediately to `assemble-batch`. Do not HALT. Do not ask for confirmation. Do not wait.
 
@@ -660,6 +728,8 @@ Issues have a merge-time conflict risk when:
 - Auto-re-stage issues with different-intent stale assumptions
 - Skip Gate 1 (sub-issue enumeration) for any candidate "already-implemented" issue
 - Classify an issue as "already-implemented" while it has open sub-issues or unverified success criteria
+- Proceed to Step 1 (sub-issue expansion) without completing the Gate Evidence Audit Table for all "already-implemented" classifications
+- Classify an issue as "already-implemented" without a corresponding `get_sub_issues` tool-call artifact in the current session
 
 **Always:**
 
@@ -674,6 +744,8 @@ Issues have a merge-time conflict risk when:
 - Auto-detect partially-implemented issues (no developer input needed)
 - Call `github_issue_read(method=get_sub_issues)` for every candidate "already-implemented" issue (Gate 1)
 - Verify each success criterion against the live codebase before classifying as "already-implemented" (Gate 2)
+- Complete the Gate Evidence Audit Table (Step 0.5) before proceeding to Step 1
+- Produce a per-issue `get_sub_issues` tool-call artifact in the current session for every "already-implemented" classification
 - HALT for developer review only for unresolvable conflicts and different-intent stale assumptions
 
 ## Adversarial Interdependency Verification

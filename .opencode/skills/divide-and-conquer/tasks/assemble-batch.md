@@ -22,9 +22,15 @@ Orchestrate batch implementation by dispatching sub-agents for each approved iss
 
 ## Procedure
 
-### Step 1: Determine Execution Order
+### Step 1: Verify Gate Evidence Audit and Determine Execution Order
+
+**🚫 CRITICAL PREREQUISITE: Before determining execution order, verify the Gate Evidence Audit Table exists in the batch state file (`.opencode/tmp/batch-*.md`).**
 
 - Read the batch state file from `pre-implementation-analysis` (`.opencode/tmp/batch-*.md`)
+- **If the Gate Evidence Audit Table is missing** AND any issues were classified as "already-implemented" during screening: HALT and return to `pre-implementation-analysis` Step 0.5 to complete the audit. The table is a mandatory structural artifact — its absence means Gate 1 and Gate 2 evidence was not verified.
+- **If the Gate Evidence Audit Table exists** AND has ❌ entries for any issue: those issues were already downgraded during pre-implementation-analysis. Verify the downgraded classifications are reflected in the execution plan. If not, return to `pre-implementation-analysis`.
+- **If NO issues were classified as "already-implemented":** The Gate Evidence Audit Table is not required. Proceed normally.
+
 - For multi-issue: use dependency order from `pre-implementation-analysis`
 - For single issue: treat as batch of one — no special casing, no shortcuts
 - Determine complexity level for each issue (simple/moderate/complex)

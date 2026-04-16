@@ -38,16 +38,44 @@ For each success criterion:
 
 **⚠️ CRITICAL: Use tool calls for every verification. Memory recall is NOT evidence. Per `065-verification-honesty.md`, reporting unverified information as verified is a critical violation.**
 
-### Step 3: Decision
+### Step 3: Gate Evidence Audit (MANDATORY)
+
+**🚫 CRITICAL — STRUCTURAL CHECKPOINT: Before deciding autoclose vs implementation, verify that Gate 1 (sub-issue enumeration) and Gate 2 (success criteria verification) were actually EXECUTED — not just read. This step is the same evidence audit pattern from `pre-implementation-analysis` Step 0.5.**
+
+#### VAI-1: Verify Gate 1 Evidence
+
+1. Did you call `github_issue_read(method=get_sub_issues, issue_number=<candidate>)`? If NO → STOP. Run Gate 1 now.
+2. For EACH sub-issue, did you produce a tool-call artifact verifying its state? If NO → STOP. Run Gate 1 verification now.
+3. For each closed sub-issue, did you search for merged PR evidence? If NO → STOP. Run closure legitimacy check now.
+
+#### VAI-2: Verify Gate 2 Evidence
+
+1. Did you extract every success criterion from the issue body? If NO → STOP. Run Gate 2 now.
+2. For each success criterion, did you perform a direct verification action against the codebase? If NO → STOP. Run Gate 2 verification now.
+3. For each criterion, is there a tool-call artifact? If NO → STOP. Re-run with evidence collection.
+
+#### VAI-3: Produce Gate Evidence Audit Table
+
+```markdown
+## Gate Evidence Audit Table
+
+| Issue # | Sub-issues Enumerated? | All Sub-issues Verified? | Closure Legitimacy Verified? | Success Criteria Extracted? | All Criteria Verified? | Final Classification |
+|---------|------------------------|--------------------------|-------------------------------|-----------------------------|------------------------|---------------------|
+| #N | ✅/❌ | ✅/❌ | ✅/❌ | ✅/❌ | ✅/❌ | already-implemented / NOT already-implemented |
+```
+
+**If ANY row has ❌:** The issue CANNOT be autoclosed. Proceed to normal implementation (Step 5).
+
+### Step 4: Decision
 
 | All criteria PASS? | Action |
 |--------------------|--------|
-| YES — ALL pass | Proceed to Step 4 (autoclose) |
-| NO — ANY fail | Proceed to normal implementation |
+| YES — ALL pass + Gate Evidence Audit Table all ✅ | Proceed to Step 5 (autoclose) |
+| NO — ANY fail OR Gate Evidence Audit Table has ❌ | Proceed to normal implementation |
 
 **If ANY criterion fails, do NOT autoclose.** Proceed to the standard implementation workflow. A partially-implemented spec requires implementation, not autoclose.
 
-### Step 4: Autoclose Already-Implemented Issue
+### Step 5: Autoclose Already-Implemented Issue
 
 When ALL success criteria are verified as already met:
 
