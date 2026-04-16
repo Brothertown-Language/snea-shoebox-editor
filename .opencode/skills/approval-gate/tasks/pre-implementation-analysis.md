@@ -85,6 +85,49 @@ Each row comes from the `gate_evidence` field of the corresponding `screen-issue
 
 **If the table is incomplete:** HALT and complete it before proceeding.
 
+### Step 0.7: Reconcile Issue Status Inconsistencies (MANDATORY)
+
+After the Gate Evidence Audit Table is assembled (Step 0.5), identify all issues with status inconsistencies and invoke `reconcile-issue-graph` to auto-correct them before assembling the flat item list. This step prevents the pipeline from escalating deterministic status corrections to the developer.
+
+**Status inconsistency indicators from screening results:**
+
+| Indicator | Example | Reconciliation Action |
+|-----------|---------|----------------------|
+| Issue reopened after PR merge | `state: open` + merged PR exists with `Fixes #N` | Auto-close (merged PR path) |
+| Issue open but all success criteria verified in codebase | `state: open` + Gate 1 + Gate 2 pass | Auto-close (code verified path) |
+| Sub-issue closed without merged PR | Sub-issue `state: closed` + `state_reason` not `not_planned`/`duplicate` + no merged PR | Reopen |
+| Issue closed as completed but success criteria fail Gate 2 | `state: closed` + Gate 2 FAIL | Reopen (not-implemented-despite-closure) |
+| Sub-issue open but parent PR merged with `Fixes` on parent | Sub-issue `state: open` + parent has merged PR | Evaluate: auto-close if criteria met, or include remaining work |
+
+**Procedure:**
+
+1. **Collect inconsistencies:** From the screening results, collect all issues where the current GitHub state contradicts the verified implementation state:
+   - `category: already-implemented` + `gate_evidence.gate1_closure_legitimacy: false` → status inconsistency
+   - `category: partially-implemented` + issue/sub-issues closed prematurely → status inconsistency
+   - `requires_developer: true` due to status confusion (not genuine conflict) → route to reconciliation
+
+2. **Build findings list:** For each inconsistent issue, create a finding with:
+   - `issue_number`: the issue with wrong state
+   - `state`: current state from GitHub API
+   - `classification`: one of `auto-close (merged PR)`, `auto-close (code verified)`, `reopen`, `no-action (not_planned)`, `no-action (duplicate)`, `uncertain`
+   - `evidence_summary`: brief description of why the state is wrong
+
+3. **Invoke `reconcile-issue-graph`:** Pass the findings list to the reconciliation task. Follow the `reconcile-issue-graph` procedure exactly:
+   - Step 1: Categorize findings (reuse classifications from above)
+   - Step 2: Verify auto-close candidates (merged PR or code verification)
+   - Step 3: Verify reopen candidates (no merged PR, code not in repo)
+   - Step 4: Process no-action findings
+   - Step 5: Collect uncertain findings (only these escalate to developer)
+   - Step 6: Execute auto-close actions (update issue state + comment with evidence)
+   - Step 7: Execute reopen actions (update issue state + comment with evidence)
+   - Step 8: Output reconciliation report to chat
+
+4. **Re-screen after reconciliation:** After `reconcile-issue-graph` completes, re-read the affected issues' state from GitHub API. Update screening result classifications if state changed. Proceed to Step 1.
+
+**Key principle:** The developer is NEVER asked to determine whether an issue's state is correct. `reconcile-issue-graph` resolves all deterministic cases (merged PR = auto-close, no merged PR = reopen). Only `uncertain` findings (conflicting signals) are escalated.
+
+**This step MUST complete before Step 1.** Assembling the flat item list requires accurate issue state — if issues are in the wrong state, the flat item list will be wrong.
+
 ### Step 1: Assemble Flat Item List
 
 From the collected screening results, assemble the flat item list:
@@ -92,7 +135,8 @@ From the collected screening results, assemble the flat item list:
 - For each `included` issue: add its `flat_items` to the execution list
 - For each `excluded` issue: add to "Excluded" section with reason
 - For each `scope-reduced` issue: add its remaining phases to the execution list
-- For issues with `requires_developer: true`: HALT for developer review
+- For issues with `requires_reconciliation: true`: these were handled by Step 0.7 — use their post-reconciliation classification
+- For issues with `requires_developer: true` AFTER reconciliation (only `uncertain` findings): HALT for developer review
 
 ### Step 2: Cross-Issue Analysis
 
@@ -256,7 +300,10 @@ The ONLY conditions requiring developer input during batch approval analysis:
 - **Unresolvable conflicts**: Contradictory success criteria between issues in batch
 - **Stale spec assumptions (different intent)**: Issue A references code that Issue B deletes, and A's intent differs from B's
 - **Ambiguous supersession**: Two issues partially overlap, unclear which supersedes which
-- **screen-issue returned `requires_developer: true`**: Any screening sub-agent flagged for developer review
+- **Uncertain reconciliation findings**: `reconcile-issue-graph` (Step 0.7) produced `requires_dev_action` entries with conflicting signals that prevent confident classification
+- **screen-issue returned `requires_developer: true` AFTER reconciliation**: Any screening sub-agent flagged for developer review for reasons OTHER than status inconsistencies (which Step 0.7 handles)
+
+**Status inconsistencies are NOT a developer involvement trigger.** `reconcile-issue-graph` resolves them deterministically (auto-close for verified-complete, reopen for verified-incomplete). Only `uncertain` findings with conflicting evidence that prevent classification are escalated.
 
 When any of these triggers fire, HALT and present the conflict to the developer with a clear question. Do NOT attempt to auto-resolve.
 
@@ -545,6 +592,7 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - Skip gate evidence audit table assembly from screening results
 - Proceed without verifying all screening result contracts are collected
 - Classify an issue as "already-implemented" while it has open sub-issues or unverified success criteria
+- Escalate status inconsistencies (reopened after merge, premature closure) to the developer instead of invoking `reconcile-issue-graph`
 
 **Always:**
 
@@ -558,5 +606,6 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - Report each issue's classification in the execution plan
 - Proceed immediately to `assemble-batch` after presenting the plan
 - Auto-detect partially-implemented issues (no developer input needed)
-- HALT for developer review only for unresolvable conflicts, different-intent stale assumptions, and ambiguous supersession
-- Verify screening result `requires_developer` field and HALT if true
+- HALT for developer review only for unresolvable conflicts, different-intent stale assumptions, ambiguous supersession, and uncertain reconciliation findings
+- Verify screening result `requires_developer` field and HALT if true (after reconciliation runs)
+- Invoke `reconcile-issue-graph` (Step 0.7) for all issues with status inconsistencies before assembling the flat item list

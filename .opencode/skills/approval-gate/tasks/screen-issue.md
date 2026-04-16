@@ -51,6 +51,7 @@ Check each category in order:
 - **EXCLUDE**: already-implemented (verified via merged PR + sub-issues closed via merged PR + success criteria verified), superseded, moot, meta/non-code
 - **REOPEN/RE-CLASSIFY**: not-implemented-despite-closure (closed but Gate 1 or Gate 2 failed — include remaining work)
 - **REDUCE SCOPE**: partially-implemented (include remaining phases only)
+- **RECONCILE**: status inconsistencies detected (issue state contradicts verified implementation state) — set `requires_reconciliation: true` in result contract; `pre-implementation-analysis` Step 0.7 invokes `reconcile-issue-graph` to auto-correct; developer is NOT asked
 - **SERIALIZE**: same-intent stale assumptions, auto-resolvable conflicts
 - **HALT**: different-intent stale assumptions, unresolvable conflicts
 
@@ -354,6 +355,8 @@ gate_evidence:
   final_classification: already-implemented | partially-implemented | included | not-implemented-despite-closure
 requires_developer: true | false
 developer_reason: <reason if true, null if false>
+requires_reconciliation: true | false
+reconciliation_reason: <reason if true, null if false>
 file_references:
   - <file path>
 symbol_references:
@@ -387,6 +390,7 @@ session_vars:
 - Claim "all criteria met" without per-criterion tool-call evidence
 - Skip cross-reference traversal after Gate 1 and Gate 2 pass
 - Trust cached sub-issue state or closure status without live API verification
+- Set `requires_developer: true` for status inconsistencies (reopened after merge, premature closure) — these are deterministic and should use `requires_reconciliation: true` instead
 
 **Always:**
 
@@ -396,4 +400,6 @@ session_vars:
 - Produce a per-issue `get_sub_issues` tool-call artifact in the current session for every "already-implemented" classification
 - HALT for developer review only for unresolvable conflicts and different-intent stale assumptions
 - Auto-detect partially-implemented issues (no developer input needed)
+- Set `requires_reconciliation: true` (NOT `requires_developer: true`) when issue state contradicts verified implementation state — `reconcile-issue-graph` handles this deterministically
+- Set `requires_developer: true` ONLY for: unresolvable conflicts, different-intent stale assumptions, ambiguous supersession, and `uncertain` reconciliation findings after `reconcile-issue-graph` runs
 - Produce the result contract as the final output of this task
