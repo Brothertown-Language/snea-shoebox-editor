@@ -230,6 +230,17 @@ For each submodule that was pushed in the Per-Submodule Push Sequence above:
    Provenance tracking is best-effort and never blocks the git workflow.
 ```
 
+#### Cross-Reference Step: Add Parent Issue Comment
+
+After provenance issue creation succeeds (Tier 1 or Tier 2 only):
+
+1. Add a parent issue comment referencing the submodule provenance issue
+2. Comment format includes: submodule repo, issue number, PR number (if applicable), tier used
+3. Example: `Submodule provenance: <sub-owner>/<sub-repo>#<issue-number> (Tier 1: Issue + PR)`
+4. If tier used is Tier 2 (issue only): `Submodule provenance: <sub-owner>/<sub-repo>#<issue-number> (Tier 2: Issue only)`
+5. If parent issue comment creation fails: log the failure and continue — cross-reference comments are non-blocking
+6. Cross-reference comments provide bidirectional traceability between parent and submodule repos
+
 **Why this hook exists:** Without provenance tracking, submodule changes pushed from the parent repo have no traceability back to the parent issue. The provenance task creates issues (and optionally PRs) in the submodule repo that cross-reference the parent, enabling bidirectional traceability.
 
 **When provenance is skipped:**
