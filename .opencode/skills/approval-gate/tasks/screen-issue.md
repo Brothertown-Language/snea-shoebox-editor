@@ -401,5 +401,12 @@ session_vars:
 - HALT for developer review only for unresolvable conflicts and different-intent stale assumptions
 - Auto-detect partially-implemented issues (no developer input needed)
 - Set `requires_reconciliation: true` (NOT `requires_developer: true`) when issue state contradicts verified implementation state — `reconcile-issue-graph` handles this deterministically
-- Set `requires_developer: true` ONLY for: unresolvable conflicts, different-intent stale assumptions, ambiguous supersession, and `uncertain` reconciliation findings after `reconcile-issue-graph` runs
+- Set `requires_developer: true` ONLY for the following conditions (exhaustive list):
+  1. Unresolvable conflicts: contradictory success criteria between batch issues
+  2. Different-intent stale assumptions: Issue A references code Issue B deletes, with different goals
+  3. Ambiguous supersession: partial scope overlap, unclear which is canonical
+  4. `Uncertain` reconciliation findings after `reconcile-issue-graph` runs
+  5. Authorization scope gap: user approves an issue but the implementable target is unclear AND output lineage cascade (Step 2.1) does NOT apply
+
+**DEFAULT FAILSAFE:** If a screening sub-agent encounters a scenario not covered by conditions 1-5, it must RESOLVE autonomously (classify with best judgment) rather than defaulting to `requires_developer: true`. Escalating undefined scenarios to the developer is the "Pushing Agent Intelligence Decisions" anti-pattern. Set `requires_developer: true` ONLY when the developer's intent is genuinely ambiguous and cannot be inferred from context.
 - Produce the result contract as the final output of this task

@@ -124,6 +124,7 @@ Already implemented
 | **Sub-issues verified under plan** | Multi-task plans require phase-level sub-issues (verified in `verify-authorization` Step 5 — single authoritative gate) |
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
 | **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
+| **Output lineage cascade** | When user approves an investigation/review issue whose sole deliverable is creating a spec, approval cascades to the spec. See `verify-authorization.md` Step 2.1 for the complete cascade procedure. |
 
 ## Fix Spec Verification for Bug Reports
 
@@ -220,6 +221,8 @@ cascade_applied: bool
 sub_issues_verified: bool
 gates_passed: [gate_name]
 blocking_reason: <reason|null>
+cascade_type: plan_cascade | output_lineage_cascade | none
+cascade_parent: <issue_number | null>
 ```
 
 #### verify-qa-mode
