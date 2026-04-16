@@ -132,10 +132,76 @@ If the result does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatc
 
 If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
+## Live Verification: Runbook Claims (MANDATORY)
+
+**🚫 CRITICAL: When this skill generates runbook instructions, it MUST verify every CLI command, GUI path, API call, and configuration value against live documentation. Runbook claims without live verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Runbook Claim | Verification Action | Tool Call | Problem Class |
+|---------------|-------------------|-----------|---------------|
+| "CLI command exists with these flags" | Verify via `--help` output or man page | `bash` to run `<command> --help` | VERIFICATION-GAP |
+| "API endpoint accepts these parameters" | Verify against live API docs or schema | `webfetch` to fetch API docs | VERIFICATION-GAP |
+| "Configuration file at path X" | Verify file exists in actual environment | `glob(pattern="**/filepath")` | MISSING-ELEMENT |
+| "Service name is Y" | Verify service exists in environment | `bash` to run `systemctl list-units \| grep Y` | CONFLICTING |
+| "Package version is Z" | Verify installed version matches | `bash` to run `<pkg> --version` | VERIFICATION-GAP |
+| Runbook step connects logically | Verify symptom → diagnosis → mitigation → verification chain | Review step connections with evidence artifacts | STRUCTURE-VIOLATION |
+| "Last verified" timestamp accurate | Verify runbook was tested against stated version | `bash` to confirm environment version | VERIFICATION-GAP |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Command doesn't exist or flags wrong | VERIFICATION-GAP | flag-for-review | HALT — exclude from runbook, cannot verify |
+| API endpoint mismatches | VERIFICATION-GAP | flag-for-review | HALT — verify against live docs before including |
+| Config file not at claimed path | MISSING-ELEMENT | conditional | Search alternates, correct path |
+| Service name wrong | CONFLICTING | auto-fix | Update with actual service name |
+| Package version mismatch | VERIFICATION-GAP | auto-fix | Update with actual version |
+| Step chain broken | STRUCTURE-VIOLATION | flag-for-review | HALT — rework step connection |
+
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `systematic-debugging` in Cross-References | File exists at `.opencode/skills/systematic-debugging/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `verification-before-completion` in Cross-References | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` in Cross-References | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `generate` | File exists at `.opencode/skills/sre-runbook/tasks/generate.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `track` | File exists at `.opencode/skills/sre-runbook/tasks/track.md` | MISSING-TRACEABILITY if missing |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including code reference existence and cross-reference validity. When this skill's runbook references code or configuration that may not exist in the actual environment, invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
 ## Cross-References
 
-- Related skills: `systematic-debugging` (root cause analysis discipline), `verification-before-completion` (evidence gates), `github-issue-creation` (issue creation discipline)
-- Related guidelines: `010-approval-gate.md` (authorization), `000-critical-rules.md` (no implementation without spec)
+- Related skills: `systematic-debugging` (root cause analysis discipline), `verification-before-completion` (evidence gates), `issue-operations` (issue creation discipline), `spec-auditor` (ground-truth adversarial verification)
+- Related guidelines: `010-approval-gate.md` (authorization), `000-critical-rules.md` (no implementation without spec), `065-verification-honesty.md` (metadata verification extension)
 
 ## Platform Compatibility
 

@@ -84,3 +84,24 @@ If the agent catches itself about to edit code without an approved spec:
 
 - Related skills: `systematic-debugging` (parent skill), `approval-gate` (authorization), `issue-review` (analyze-and-spec task for fix spec creation)
 - Related tasks: `fix`
+
+## Live Verification: Hypothesis Claims (MANDATORY)
+
+**Each diagnostic hypothesis MUST be verified against actual code state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Hypothesis verified" | Verify hypothesis via actual code read | `read` or `srclight_get_symbol` → confirm or refute | VERIFICATION-GAP |
+| "Root cause identified" | Verify root cause location in code | `srclight_get_callers(symbol_name="target")` → trace path | VERIFICATION-GAP |
+| "Error pattern confirmed" | Verify error occurs at claimed location | `grep(pattern="error_pattern")` → confirm matches | CONFLICTING |
+| "Read-only analysis maintained" | Verify no code modifications during diagnosis | `git status --porcelain` → check empty | STRUCTURE-VIOLATION |
+
+**Evidence artifact:** Tool call results for each hypothesis verification step.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Hypothesis not verified against code | VERIFICATION-GAP | conditional | Verify before reporting |
+| Root cause location wrong | CONFLICTING | flag-for-review | Re-trace call path |
+| Unintended code changes during diagnosis | STRUCTURE-VIOLATION | auto-fix | `git checkout` to revert |

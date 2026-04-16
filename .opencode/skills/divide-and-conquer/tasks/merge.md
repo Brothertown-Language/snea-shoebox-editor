@@ -89,3 +89,14 @@ Some sub-agents succeeded, some failed. Include successful results in summary, f
 ### No Conflicts but Verification Failures
 
 If any sub-agent returned `verification_passed: false`, HALT. Do NOT proceed. Report which sub-tasks failed verification and why.
+## Live Verification: Merge State Claims (MANDATORY)
+
+**Verify merge state claims against actual git state per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Feature branch merged into batch branch" | Verify merge commit exists | `git log --oneline --merges` | VERIFICATION-GAP |
+| "No conflicts remaining" | Verify clean merge | `git status --porcelain` → check for conflict markers | CONFLICTING |
+| "All sub-agent changes included" | Verify diff matches expected | `git diff dev --name-only` | VERIFICATION-GAP |
+
+**Evidence artifact:** Git log and status output confirming merge state.

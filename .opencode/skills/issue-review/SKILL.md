@@ -158,9 +158,9 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 | -- | -- | -- |
 | `spec-auditor` in Cross-References and Audit Path | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `approval-gate` in Cross-References and gather task | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `github-comments` in Cross-References section | File exists at `.opencode/skills/github-comments/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` comment task in Cross-References section | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `systematic-debugging` in Cross-References section | File exists at `.opencode/skills/systematic-debugging/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `github-issue-creation` in Cross-References section | File exists at `.opencode/skills/github-issue-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` in Cross-References section | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `gather` | File exists at `.opencode/skills/issue-review/tasks/gather.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `triage` | File exists at `.opencode/skills/issue-review/tasks/triage.md` | MISSING-TRACEABILITY if missing |
@@ -169,7 +169,9 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 | Task table entry `analyze-and-spec` | File exists at `.opencode/skills/issue-review/tasks/analyze-and-spec.md` | MISSING-TRACEABILITY if missing |
 | `spec-auditor` audit delegation behavior | Matches actual SKILL.md: `audit` task delegates to spec-auditor with triage hints | CONFLICTING if mismatched |
 | `approval-gate` authorization check behavior | Matches actual SKILL.md: `verify-authorization` task for authorization status | CONFLICTING if mismatched |
-| `github-comments` comment posting behavior | Matches actual SKILL.md: comment format and routing rules | CONFLICTING if mismatched |
+| `issue-operations` comment posting behavior | Matches actual SKILL.md: `comment` task format and routing rules | CONFLICTING if mismatched |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
 
 **Verification Procedure:**
 
@@ -186,6 +188,9 @@ Before invoking any cross-referenced skill:
 | Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+| Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including STATUS markers, label accuracy, comment verification, and authorization currency. When this skill's triage relies on comment claims or metadata state, ground-truth verification ensures those claims are accurate. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
 
 ## Live Verification: Comment Claims (MANDATORY)
 
@@ -221,10 +226,11 @@ Action: [auto-fix|conditional|flag-for-review]
 
 ## Cross-References
 
-- `spec-auditor`: Called by `audit` task for spec quality checks
+- `spec-auditor`: Called by `audit` task for spec quality checks (including `ground-truth` adversarial verification subtask)
 - `approval-gate`: Referenced for authorization status in `gather`; verifies fix spec for bug reports
 - `systematic-debugging`: Invokes `analyze-and-spec` after bug report creation
-- `github-issue-creation`: Called by `analyze-and-spec` for fix spec creation
+- `issue-operations`: Called by `analyze-and-spec` for fix spec creation
 - `programming-principles`: Principle context for audit path delegation
+- `065-verification-honesty.md` (metadata verification extension): Extended "don't trust — verify" principle covering issue metadata
 
 Base directory for this skill: `.opencode/skills/issue-review/`

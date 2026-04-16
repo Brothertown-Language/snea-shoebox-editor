@@ -151,7 +151,7 @@ This skill can be invoked automatically by `approval-gate` after successful veri
 ```
 approval-gate --task verify-authorization (all gates pass for spec approval)
   → writing-plans --task create (auto-dispatched)
-    → github-sub-issues --task create-sub-issue (sub-issues under plan, not spec)
+    → issue-operations --task link-sub-issue (sub-issues under plan, not spec)
 ```
 
 **Auto-dispatch context passed from approval-gate:**
@@ -159,8 +159,8 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 | Parameter | Source | Purpose |
 |-----------|--------|---------|
 | `spec_issue` | Issue number from `verify-authorization` | Identifies the approved spec to plan from |
-| `single_task_determination` | From `github-issue-creation/tasks/post-creation` (via `single-task-check`) | Informs combined vs separate plan decision (`single-task` or `multi-task`) |
-| `single_task` | Boolean from `github-issue-creation/tasks/post-creation` (via `single-task-check`) | `true` for single-task, `false` for multi-task — shorthand for decision gate |
+| `single_task_determination` | From `issue-operations/tasks/post-creation` (via `single-task-check`) | Informs combined vs separate plan decision (`single-task` or `multi-task`) |
+| `single_task` | Boolean from `issue-operations/tasks/post-creation` (via `single-task-check`) | `true` for single-task, `false` for multi-task — shorthand for decision gate |
 | `GIT_OWNER` | Session init | Repository owner for API calls |
 | `GIT_REPO` | Session init | Repository name for API calls |
 | `WORKTREE_PATH` | Session / worktree setup | Base directory for file operations |
@@ -218,7 +218,7 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 4. Plan phase structure by judgment (prose-driven)
 5. Define tasks within each phase using TDD step structure
 6. Write plan document header (Goal, Architecture, Tech Stack)
-7. Store plan document: if combined, append `## Implementation Plan` to spec issue body; if separate, create `[PLAN]` GitHub Issue with sub-issues via `github-sub-issues` skill
+7. Store plan document: if combined, append `## Implementation Plan` to spec issue body; if separate, create `[PLAN]` GitHub Issue with sub-issues via `issue-operations` skill
 8. Self-review (coverage, placeholders, type consistency)
 9. Validate (no placeholders, TDD structure, actionable steps)
 10. Chat output with URL — Report plan creation (combined or separate) using exec summary + URL + byline format per `000-critical-rules.md`
@@ -279,14 +279,14 @@ session_vars:
 | `approval-gate` in Cross-References and Auto-Dispatch Entry | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `executing-plans` in Cross-References section | File exists at `.opencode/skills/executing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `spec-auditor` in Cross-References section | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `github-sub-issues` in Cross-References and Auto-Dispatch Entry | File exists at `.opencode/skills/github-sub-issues/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` in Cross-References and Auto-Dispatch Entry | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `spec-creation` in Cross-References section | File exists at `.opencode/skills/spec-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `create` | File exists at `.opencode/skills/writing-plans/tasks/create.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `validate` | File exists at `.opencode/skills/writing-plans/tasks/validate.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `retroactive` | File exists at `.opencode/skills/writing-plans/tasks/retroactive.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `clean-room` | File exists at `.opencode/skills/writing-plans/tasks/clean-room.md` | MISSING-TRACEABILITY if missing |
 | `approval-gate` auto-dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `writing-plans` | CONFLICTING if mismatched |
-| `github-sub-issues` dispatch behavior | Matches actual SKILL.md: `create-sub-issue` task for sub-issue linking | CONFLICTING if mismatched |
+| `issue-operations` dispatch behavior | Matches actual SKILL.md: `link-sub-issue` task for sub-issue linking | CONFLICTING if mismatched |
 | `spec-auditor` clean-room invocation | Matches actual SKILL.md: `fidelity` subtask invokes `writing-plans --task clean-room` | CONFLICTING if mismatched |
 
 **Verification Procedure:**
@@ -337,5 +337,5 @@ Action: [auto-fix|conditional|flag-for-review]
 
 ## Cross-References
 
-- Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `github-sub-issues` (sub-issue creation under plan), `spec-creation` (spec creation discipline)
+- Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `issue-operations` (sub-issue creation via `link-sub-issue` task), `spec-creation` (spec creation discipline)
 - Source: adapted from [obra/superpowers `writing-plans`](https://github.com/obra/superpowers/blob/main/skills/writing-plans/SKILL.md)

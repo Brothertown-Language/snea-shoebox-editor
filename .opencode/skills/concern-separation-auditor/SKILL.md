@@ -98,6 +98,8 @@ This skill analyzes ACTUAL concerns, not static templates.
 | `spec-auditor` orchestration behavior | Matches actual SKILL.md: `concerns` subtask delegates to this skill | CONFLICTING if mismatched |
 | `writing-plans` clean-room behavior | Matches actual SKILL.md: `clean-room` task for fidelity generation | CONFLICTING if mismatched |
 | `programming-principles` principle definitions | Matches actual SKILL.md: SoC and Blast Radius principles defined there | CONFLICTING if mismatched |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
 
 **Verification Procedure:**
 
@@ -114,6 +116,9 @@ Before invoking any cross-referenced skill:
 | Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+| Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including code reference existence. When this skill's boundary claims reference code that may not exist or may have moved, ground-truth verification ensures the references are valid. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
 
 ## Live Verification: Code Boundary Claims (MANDATORY)
 
@@ -147,9 +152,9 @@ Action: [auto-fix|conditional|flag-for-review]
 
 ## Cross-References
 
-- Orchestrated by: `spec-auditor` (via `concerns` subtask)
+- Orchestrated by: `spec-auditor` (via `concerns` subtask, including `ground-truth` adversarial verification)
 - Related skills: `spec-auditor` (orchestrator), `writing-plans` (clean-room for fidelity), `programming-principles` (principle definitions for SoC and Blast Radius — this subtask checks structural separation, that skill defines the underlying principles)
-- Related guidelines: `000-critical-rules.md` (auditor enforcement), `142-planning-archive-workflow.md`
+- Related guidelines: `000-critical-rules.md` (auditor enforcement), `065-verification-honesty.md` (metadata verification extension), `142-planning-archive-workflow.md`
 
 Co-authored with AI: <AI-Name> (<model-id>)
 

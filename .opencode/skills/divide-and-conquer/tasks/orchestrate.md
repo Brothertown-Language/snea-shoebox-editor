@@ -305,3 +305,25 @@ divide-and-conquer/orchestrate:
 ```
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Orchestration Claims (MANDATORY)
+
+**Verify orchestration state claims against actual git/GitHub state per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Workflow step completed" | Verify step was actually executed | Check for step output in context | VERIFICATION-GAP |
+| "Sub-agent dispatch correct" | Verify dispatch context includes WORKTREE_PATH | Review dispatch prompt | STRUCTURE-VIOLATION |
+| "Batch state current" | Verify batch state file reflects latest state | `glob(pattern="./tmp/batch-*.md")` | VERIFICATION-GAP |
+| "No skipped steps" | Verify all mandatory steps were invoked | Check for tool-call artifacts per step | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results and context inspection confirming orchestration accuracy.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Step claimed but no artifact | VERIFICATION-GAP | conditional | Re-execute step |
+| WORKTREE_PATH missing from dispatch | STRUCTURE-VIOLATION | auto-fix | Re-dispatch with correct context |
+| Batch state stale | VERIFICATION-GAP | auto-fix | Re-read and verify |
+| Mandatory step skipped | MISSING-ELEMENT | conditional | Execute skipped step now |

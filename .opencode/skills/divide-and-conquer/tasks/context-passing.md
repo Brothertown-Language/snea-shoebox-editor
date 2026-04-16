@@ -113,3 +113,22 @@ For the first sub-agent dispatched (no prior phases completed), `phase_progress`
 Pre-work receives context from orchestrator — no re-authorization check needed. If pre-work prompts for auth, it received stale context. Re-invoke with fresh context from approval-gate.
 
 Co-authored with AI: <AI-Name> (<model-id>)
+## Live Verification: Context Accuracy (MANDATORY)
+
+**Verify dispatch context accuracy before sending to sub-agents.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "WORKTREE_PATH correct" | Verify path exists | `ls -d <path>` | STRUCTURE-VIOLATION |
+| "Session vars current" | Verify vars match session init | Check against session values | VERIFICATION-GAP |
+| "Prior results accurate" | Verify result contracts from prior sub-agents | Read batch state file | VERIFICATION-GAP |
+
+**Evidence artifact:** Path verification and session var check results.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| WORKTREE_PATH invalid | STRUCTURE-VIOLATION | auto-fix | HALT — cannot safely dispatch |
+| Stale session vars | VERIFICATION-GAP | conditional | Refresh from session init |
+| Prior results contradicted | VERIFICATION-GAP | conditional | Re-verify prior sub-agent output |

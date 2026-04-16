@@ -115,7 +115,7 @@ ______________________________________________________________________
 
 ### ✅ MANDATORY
 
-**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
+**See `issue-operations` skill → `link-sub-issue` task for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
 Key points:
 
@@ -202,7 +202,7 @@ rules:
       - HALT
     conflicts_with: []
     requires: [approval-gate-001]
-    triggers: [github-sub-issues]
+    triggers: [issue-operations]
     source: "020-go-prohibitions.md §5"
 
   - id: go-prohibitions-007

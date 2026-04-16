@@ -29,7 +29,7 @@ Document each change:
 
 - Increment version number: `STATUS: 1.0` → `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`
 - Add `needs-approval` label to the GitHub Issue
-- Post chat output with prose revision summary (per `github-comments` skill → Spec Revision Chat Output)
+- Post chat output with prose revision summary (per `issue-operations` skill → `comment` task)
 - Post Issue comment with prose revision summary
 
 ### Step 3: Impact Analysis

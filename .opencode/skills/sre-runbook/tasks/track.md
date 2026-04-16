@@ -65,7 +65,7 @@ Output:
 
 **WHY:** GitHub Issues provide the single source of truth for incident tracking. Structured labels enable filtering; prose narrative provides context for humans.
 
-**Follow `github-issue-creation` skill discipline** — do NOT bypass issue creation validation. Invoke `/skill github-issue-creation --task pre-creation` before creating the issue.
+**Follow `issue-operations` skill discipline** — do NOT bypass issue creation validation. Invoke `/skill issue-operations --task pre-creation` before creating the issue.
 
 Issue structure:
 
@@ -181,7 +181,7 @@ change:
 | Missing incident description | HALT, prompt user for context |
 | Unable to classify incident type | HALT, present options to user |
 | Escalation threshold reached | HALT, add `escalation` label, notify on-call |
-| GitHub Issue creation validation fails | HALT, follow `github-issue-creation` skill guidance |
+| GitHub Issue creation validation fails | HALT, follow `issue-operations` skill guidance |
 
 ## Output
 
@@ -193,7 +193,7 @@ A GitHub Issue with:
 
 ## Cross-References
 
-- Related skills: `sre-runbook` (parent skill), `github-issue-creation` (issue creation discipline), `verification-before-completion` (evidence gates)
+- Related skills: `sre-runbook` (parent skill), `issue-operations` (issue creation discipline), `verification-before-completion` (evidence gates)
 - Related tasks: `generate`
 
 ## Context Required

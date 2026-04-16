@@ -64,7 +64,7 @@ finishing-a-development-branch → PR created by user → requesting-code-review
 
 | Reference | Verification | Finding Class |
 | -- | -- | -- |
-| `github-comments` (implied by review request PR comments) | File exists at `.opencode/skills/github-comments/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` (implied by review request PR comments) | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `receiving-code-review` in Cross-References section | File exists at `.opencode/skills/receiving-code-review/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `pr-creation-workflow` in Cross-References section | File exists at `.opencode/skills/pr-creation-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
@@ -92,7 +92,7 @@ Before invoking any cross-referenced skill:
 
 ## Cross-References
 
-- Related skills: `receiving-code-review` (responding to review), `git-workflow` (PR creation), `pr-creation-workflow` (PR timing), `github-comments` (PR comment format)
+- Related skills: `receiving-code-review` (responding to review), `git-workflow` (PR creation), `pr-creation-workflow` (PR timing), `issue-operations` (PR comment format via `comment` task)
 - Related guidelines: `080-code-standards.md` (AI attribution), `060-tool-usage.md` (commands)
 
 ## Platform Compatibility

@@ -341,13 +341,13 @@ Progress executive summaries go to **chat ONLY**, not GitHub Issue comments. Iss
 
 Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelID>) <status-icon> <status>`
 
-**See `github-comments` skill for Issue comment requirements and the complete channel routing table.**
+**See `issue-operations` skill for Issue comment requirements and the complete channel routing table.**
 
 ## Critical Violation: Ignoring Issue Comments
 
 **⚠️ Failing to respond to user comments on GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
 
-**MANDATORY: Read issue comments and respond publicly. See `github-comments` skill → "Responding to User Comments (MANDATORY)".**
+**MANDATORY: Read issue comments and respond publicly. See `issue-operations` skill → `comment` task → "Responding to User Comments (MANDATORY)".**
 
 ## Critical Violation: Sub-issue Structure Bypass — Multi-task Plans
 
@@ -357,7 +357,7 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 - ✅ REQUIRED: Sub-issues at PHASE level under the plan (not the spec); each linked via `github_sub_issue_write method=add`; single-task plans exempt; auto-create as pre-implementation setup
 - ✅ REQUIRED: Plan is the parent of implementation sub-issues; spec references plan via body linked reference, NOT GitHub sub-issue link
 
-**See `github-sub-issues` skill for complete workflow including single-task exemption, auto-create workflow, and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
+**See `issue-operations` skill → `link-sub-issue` task for complete workflow including single-task exemption, auto-create workflow, and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 
@@ -411,7 +411,7 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 **⚠️ Implementing a stale or superseded spec without revision is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `github-issue-creation` skill `--task pre-creation` for the complete superseded/stale spec check procedure.**
+**See `issue-operations` skill `--task pre-creation` for the complete superseded/stale spec check procedure.**
 
 - If superseding issue exists: SILENTLY HALT, report conflict, wait for direction
 - If stale: REVISE spec, report revision, HALT for approval — never implement stale without revision
@@ -690,6 +690,24 @@ When an agent receives an implementation instruction but cannot find an associat
 **Why this matters:** The current Q/A mode halt is passive — it stops work but doesn't help the user find existing tracking. Active search turns "no spec found" from a dead end into a decision point: "here are N existing issues that may match, which one (if any) did you mean?" This reduces duplicate spec creation and connects implementation requests to existing tracking.
 
 **See `020-go-prohibitions.md` §1 "NEVER DO" and "ALWAYS DO" for the search procedure, and `approval-gate` skill → `verify-qa-mode` task → Step 2.5 for the mandatory search step.** **AUTHORITY: `020-go-prohibitions.md` §1** (this line is a reference only)
+
+## Critical Violation: Non-Idempotent API Mutations
+
+**⚠️ Creating duplicate resources through non-idempotent API mutations is a CRITICAL GUIDELINE VIOLATION.**
+
+Any API mutation (PR creation, issue creation, branch creation) MUST be idempotent — check for existing resource before creating, handle "already exists" gracefully, never create duplicates through retry.
+
+- 🚫 FORBIDDEN: Creating a PR without checking for existing open PR on the same head branch; retrying a mutation POST after the first call succeeded but response parsing failed; creating duplicate issues, branches, or releases without a pre-check
+- ✅ REQUIRED: Before any mutation POST, check whether the resource already exists (e.g., `list_pull_requests(state='open')` before `create_pull_request`); if resource exists, return existing data — do NOT create duplicate; if creation call succeeded but parsing failed, the resource was created — report what happened, do NOT retry the POST
+
+## Critical Violation: Inline Mutation Scripts
+
+**⚠️ API calls that mutate state (POST, PUT, PATCH) inlined in `python -c '...'` strings are a CRITICAL GUIDELINE VIOLATION.**
+
+API calls that mutate state must use the platform's dedicated API client (e.g., `GitBucketAPI`, GitHub MCP). If the client lacks the method, HALT — do NOT work around it with inline scripts. Shell interpolation corrupts inline Python, POST calls succeed but parsing crashes, and agents retry the entire call creating duplicates.
+
+- 🚫 FORBIDDEN: `uv run python -c '...'` for any POST/PUT/PATCH operation; raw `requests.post()` / `requests.put()` / `requests.patch()` outside the dedicated API client; any inline script containing a mutation HTTP method
+- ✅ REQUIRED: Use `GitBucketAPI.create_pull_request()`, `GitBucketAPI.create_issue()`, etc. for all mutations; if the client lacks a needed method, HALT and report the gap; use the API client's built-in error handling and response parsing
 
 ## Sub-Agent Extraction Pattern
 

@@ -245,6 +245,17 @@ Operation: promotion | Submodule: <submodule-path> | Tag: <tag-name>
 
 **Provenance is non-blocking:** The promotion workflow continues regardless of provenance outcome. Failures at any tier result in silent downgrade, never HALT.
 
+#### Cross-Reference Step: Add Parent Issue Comment for Promotion
+
+After promotion provenance issue creation succeeds (Tier 1 or Tier 2 only):
+
+1. Add a parent issue comment referencing the submodule provenance issue
+2. Comment format includes: submodule repo, issue number, PR number (if applicable), tier used
+3. Example: `Submodule provenance: <sub-owner>/<sub-repo>#<issue-number> (Tier 1: Issue + PR)`
+4. If tier used is Tier 2 (issue only): `Submodule provenance: <sub-owner>/<sub-repo>#<issue-number> (Tier 2: Issue only)`
+5. If parent issue comment creation fails: log the failure and continue — cross-reference comments are non-blocking
+6. Cross-reference comments provide bidirectional traceability between parent release and submodule promotion
+
 **See `provenance.md` → promotion-provenance section for complete procedure.**
 
 ### Step 3: Validate Tags

@@ -153,3 +153,14 @@ Record failure with details. For independent sub-tasks, continue to next. For de
 ### Sub-agent Discovers Bug
 
 Sub-agent reports bug as finding (read-only), HALTs implementation for its sub-task. Orchestrator records and reports in batch summary. Bug discovery does NOT authorize fixing.
+## Live Verification: Dispatch Claims (MANDATORY)
+
+**Verify dispatch state claims against actual sub-agent results per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Sub-agent completed" | Verify result contract returned | Check for result contract in context | VERIFICATION-GAP |
+| "WORKTREE_PATH passed" | Verify worktree path in dispatch context | Check dispatch prompt for WORKTREE_PATH | STRUCTURE-VIOLATION |
+| "Sub-agent stayed in worktree" | Verify sub-agent didn't modify main repo | `git -C <main-repo> status --porcelain` | CONFLICTING |
+
+**Evidence artifact:** Result contract presence and main repo cleanliness check.

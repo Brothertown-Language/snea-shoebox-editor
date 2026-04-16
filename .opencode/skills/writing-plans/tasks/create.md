@@ -26,7 +26,7 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
 
    Before mapping file structure, evaluate whether to combine the plan into the spec issue body or create a separate [PLAN] issue. This decision must be made early because it affects how the plan content is structured and where it is stored.
 
-   **Input:** The `single_task_determination` passed from `github-issue-creation/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
+   **Input:** The `single_task_determination` passed from `issue-operations/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
 
    **Decision logic — agent intelligence, no hardcoded thresholds:**
 
@@ -122,7 +122,7 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
 
       These annotations enable `assemble-batch` to compose accurate `concern_boundaries_crossed` in the dispatch context, so sub-agents understand the architectural transitions they are participating in. Concern boundary annotations should be woven into the phase description naturally, not as separate structured fields.
 
-      After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `github-sub-issues --task create-sub-issue`.
+      After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `issue-operations --task link-sub-issue`.
 
 7. **Self-review:**
 
@@ -172,8 +172,8 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
     ```bash
     # Verify approval-gate dispatch chain
     ls .opencode/skills/approval-gate/SKILL.md && grep -c "verify-authorization" .opencode/skills/approval-gate/SKILL.md
-    # Verify github-sub-issues task
-    ls .opencode/skills/github-sub-issues/SKILL.md && grep -c "create-sub-issue" .opencode/skills/github-sub-issues/SKILL.md
+    # Verify issue-operations task
+    ls .opencode/skills/issue-operations/SKILL.md && grep -c "link-sub-issue" .opencode/skills/issue-operations/SKILL.md
     # Verify spec-creation exists
     ls .opencode/skills/spec-creation/SKILL.md
     # Verify brainstorming exists
@@ -217,4 +217,31 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
          )
      ```
 
-     This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
+      This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
+
+## Live Verification: Plan Creation Evidence (MANDATORY)
+
+**Each factual claim in the plan MUST be verified via tool call before storing. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Spec #N is approved" | Verify spec has approval comment or no `needs-approval` label | `github_issue_read(method="get_comments", issue_number=N)` + `github_issue_read(method="get", issue_number=N)` | VERIFICATION-GAP |
+| "File X exists in codebase" | Verify file path | `glob(pattern="**/X")` | MISSING-ELEMENT |
+| "Function Y has signature Z" | Verify signature against live code | `srclight_get_signature(name="Y")` | VERIFICATION-GAP |
+| "Spec requires multi-task plan" | Verify spec has multiple phases | `github_issue_read(method="get", issue_number=N)` → parse body for phase sections | CONFLICTING |
+| "Skill X supports operation Y" | Verify skill declares the operation | `grep(pattern="Y", path=".opencode/skills/X/SKILL.md")` | CONFLICTING |
+| "Sub-issue linked to plan" | Verify sub-issue parent is plan (not spec) | `github_issue_read(method="get_sub_issues", issue_number=plan_number)` | STRUCTURE-VIOLATION |
+| "Plan issue has `plan` label" | Verify label present | `github_issue_read(method="get", issue_number=plan_number)` → check labels | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results for each verification claim, stored in plan creation context.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Spec not actually approved | VERIFICATION-GAP | flag-for-review | HALT — do not create plan without approved spec |
+| Referenced file not found | MISSING-ELEMENT | conditional | Remove from plan or mark `⚠️ UNVERIFIED` |
+| Function signature mismatch | VERIFICATION-GAP | conditional | Correct claim or mark `⚠️ UNVERIFIED` |
+| Skill doesn't support operation | CONFLICTING | flag-for-review | Remove reference, find alternative |
+| Sub-issues under spec instead of plan | STRUCTURE-VIOLATION | auto-fix | Re-link under plan |
+| Plan missing `plan` label | MISSING-ELEMENT | auto-fix | Add label immediately |

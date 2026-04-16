@@ -71,7 +71,7 @@ PR review received → receiving-code-review (address) → push changes → (rev
 
 | Reference | Verification | Finding Class |
 | -- | -- | -- |
-| `github-comments` (implied by PR comment responses) | File exists at `.opencode/skills/github-comments/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` (implied by PR comment responses) | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `requesting-code-review` in Cross-References section | File exists at `.opencode/skills/requesting-code-review/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `address` | File exists at `.opencode/skills/receiving-code-review/tasks/address.md` | MISSING-TRACEABILITY if missing |
@@ -97,7 +97,7 @@ Before invoking any cross-referenced skill:
 
 ## Cross-References
 
-- Related skills: `requesting-code-review` (requesting review), `git-workflow` (branch management), `github-comments` (PR comment format and routing)
+- Related skills: `requesting-code-review` (requesting review), `git-workflow` (branch management), `issue-operations` (PR comment format and routing via `comment` task)
 - Related guidelines: `050-scope-autonomy.md` (no scope creep), `060-tool-usage.md` (commands)
 
 ## Platform Compatibility

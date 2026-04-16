@@ -95,3 +95,25 @@ Severity: [HIGH|MEDIUM|LOW]
 - Must use GitHub MCP tools for all issue operations
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+## Live Verification: Sub-Issue Alignment Claims (MANDATORY)
+
+**Each sub-issue alignment claim MUST be verified against actual GitHub state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Sub-issue exists for Plan phase" | Verify sub-issue is accessible via API | `github_issue_read(method=get, issue_number=N)` → confirm non-404 | MISSING-TRACEABILITY |
+| "Sub-issue body matches Plan phase" | Verify body content actually aligns with Plan prose | `github_issue_read(method=get)` → compare sub-issue vs Plan body | VERIFICATION-GAP |
+| "Sub-issue state matches expected" | Verify sub-issue is open/closed as expected | `github_issue_read(method=get, issue_number=N)` → check `state` field | STRUCTURE-VIOLATION |
+| "Plan phase exists in Plan body" | Verify the referenced phase actually exists | `github_issue_read(method=get)` → search for phase header | MISSING-TRACEABILITY |
+
+**Evidence artifact:** GitHub MCP call results for each sub-issue and Plan verification.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Sub-issue returns 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve missing issue |
+| Sub-issue body contradicts alignment claim | VERIFICATION-GAP | flag-for-review | Report — alignment needs re-verification |
+| Sub-issue state unexpected | STRUCTURE-VIOLATION | flag-for-review | May indicate premature closure |
+| Plan phase not found in body | MISSING-TRACEABILITY | flag-for-review | Plan may have been revised |

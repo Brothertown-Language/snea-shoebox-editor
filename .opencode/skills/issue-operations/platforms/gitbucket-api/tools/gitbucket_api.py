@@ -510,9 +510,19 @@ class GitBucketAPI:
     def create_label(self, owner: str, repo: str, name: str, color: str) -> dict[str, Any]:
         return self.post(f"/repos/{owner}/{repo}/labels", {"name": name, "color": color})
 
-    def list_pull_requests(self, owner: str, repo: str, state: str | None = None) -> list[dict[str, Any]]:
-        params = {"state": state} if state else None
-        return self.get(f"/repos/{owner}/{repo}/pulls", params=params)
+    def list_pull_requests(
+        self,
+        owner: str,
+        repo: str,
+        state: str | None = None,
+        head: str | None = None,
+    ) -> list[dict[str, Any]]:
+        params: dict[str, str] = {}
+        if state:
+            params["state"] = state
+        if head:
+            params["head"] = head
+        return self.get(f"/repos/{owner}/{repo}/pulls", params=params if params else None)
 
     def create_pull_request(
         self,
@@ -524,6 +534,15 @@ class GitBucketAPI:
         body: str | None = None,
         maintainer_can_modify: bool = True,
     ) -> dict[str, Any]:
+        existing = self.list_pull_requests(owner, repo, state="open")
+        for pr in existing:
+            pr_head = pr.get("head", {})
+            if isinstance(pr_head, dict):
+                pr_ref = pr_head.get("ref", "") or pr_head.get("label", "")
+            else:
+                pr_ref = str(pr_head)
+            if pr_ref == head:
+                return pr
         data = {
             "title": title,
             "head": head,
@@ -531,10 +550,27 @@ class GitBucketAPI:
             "body": body,
             "maintainer_can_modify": maintainer_can_modify,
         }
-        return self.post(
+        result = self.post(
             f"/repos/{owner}/{repo}/pulls",
             {k: v for k, v in data.items() if v is not None},
         )
+        self._persist_pr_response(result)
+        return result
+
+    def _persist_pr_response(self, response: dict[str, Any]) -> None:
+        tmp_dir = Path.cwd() / "tmp"
+        tmp_dir.mkdir(parents=True, exist_ok=True)
+        pr_file = tmp_dir / "pr-response.json"
+        existing: list[dict[str, Any]] = []
+        if pr_file.exists():
+            try:
+                existing = json.loads(pr_file.read_text(encoding="utf-8"))
+                if not isinstance(existing, list):
+                    existing = []
+            except (json.JSONDecodeError, OSError):
+                existing = []
+        existing.append(response)
+        pr_file.write_text(json.dumps(existing, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
 
     def get_pull_request(self, owner: str, repo: str, pull_number: int) -> dict[str, Any]:
         return self.get(f"/repos/{owner}/{repo}/pulls/{pull_number}")
@@ -708,7 +744,7 @@ def _cmd_add_comment(args: argparse.Namespace) -> None:
 
 def _cmd_list_prs(args: argparse.Namespace) -> None:
     api = _make_api(args)
-    _json_output(api.list_pull_requests(args.owner, args.repo, state=args.state))
+    _json_output(api.list_pull_requests(args.owner, args.repo, state=args.state, head=args.head))
 
 
 def _cmd_create_pr(args: argparse.Namespace) -> None:
@@ -795,6 +831,7 @@ def main() -> None:
     p_prs.add_argument("owner", help="Repository owner")
     p_prs.add_argument("repo", help="Repository name")
     p_prs.add_argument("--state", help="Filter: open, closed, all")
+    p_prs.add_argument("--head", help="Filter by head branch ref")
     _add_auth_args(p_prs)
 
     p_create_pr = sub.add_parser("create-pr", help="Create pull request")

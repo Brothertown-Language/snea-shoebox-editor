@@ -116,3 +116,28 @@ Prose summary of all gathered data, organized by the five categories above. Incl
 | Sub-issues present | Gather each; triage runs independently per sub-issue |
 | No sub-issues | Skip recursive gathering |
 | API error | Report error and HALT; do not proceed with partial data |
+
+## Live Verification: Gathered Data Claims (MANDATORY)
+
+**Each data claim gathered for downstream tasks MUST be verified via actual tool calls. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Issue has N comments" | Re-count via `get_comments` response | `github_issue_read(method=get_comments)` → count items | VERIFICATION-GAP |
+| "Authorization comment exists" | Verify comment author is developer, not bot/agent | `github_issue_read(method=get_comments)` → check `author_association` | CONFLICTING |
+| "Sub-issues exist" | Verify sub-issues are accessible and not 404 | `github_issue_read(method=get_sub_issues)` → check each child exists | MISSING-TRACEABILITY |
+| "`needs-approval` label present/absent" | Verify label list matches claimed state | `github_issue_read(method=get_labels)` → check label array | STRUCTURE-VIOLATION |
+| "Bug report has fix spec" | Verify sub-issue exists with correct prefix | `github_issue_read(method=get_sub_issues)` + `github_issue_read(method=get)` per child | MISSING-ELEMENT |
+| "Last audit timestamp" | Verify comment containing audit pattern actually exists | `github_issue_read(method=get_comments)` → search for audit patterns | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results for each claim category.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Comment count mismatched | VERIFICATION-GAP | auto-fix | Re-count and report correct number |
+| Authorization from bot/agent | CONFLICTING | flag-for-review | Reject as valid authorization |
+| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve missing issue |
+| Label state contradicted claim | STRUCTURE-VIOLATION | auto-fix | Report actual label state |
+| Fix spec missing for bug | MISSING-ELEMENT | conditional | Proceed to `analyze-and-spec` to create one |

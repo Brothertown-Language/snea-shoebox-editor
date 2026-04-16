@@ -64,21 +64,29 @@ When the user issues commands `specs` or `pending`:
 
 ______________________________________________________________________
 
-## 1.1. GitHub MCP Required — No Fallback
+## 1.1. Issue Tracking Required — Platform Routing
 
-**When GitHub MCP tools are NOT available, the agent MUST refuse planning work entirely.**
+**When issue tracking tools are NOT available, the agent MUST refuse planning work entirely.**
 
-### 🚫 NO FALLBACK TO LOCAL FILES
+### NO FALLBACK TO LOCAL FILES
 
-- **PROHIBITED**: Using `plans/SPEC-*.md` files as fallback when GitHub MCP is unavailable
-- **PROHIBITED**: Creating local plan files when GitHub MCP is unavailable
-- **PROHIBITED**: Proceeding with implementation without GitHub Issue tracking
+- **PROHIBITED**: Using `plans/SPEC-*.md` files as fallback when issue tracking is unavailable
+- **PROHIBITED**: Creating local plan files when issue tracking is unavailable
+- **PROHIBITED**: Proceeding with implementation without issue tracking
 
-### ✅ REQUIRED ACTION
+### REQUIRED ACTION
 
-- If GitHub MCP is unavailable, STOP immediately
-- Report: "GitHub MCP tools unavailable. Cannot create or track specs without GitHub Issues."
-- Wait for GitHub MCP to be restored before proceeding
+- If issue tracking tools are unavailable, STOP immediately
+- Report: "Issue tracking tools unavailable. Cannot create or track specs without issue tracking."
+- Wait for issue tracking to be restored before proceeding
+
+### Platform Routing
+
+| `GIT_PLATFORM` | Platform Sub-Skill |
+|----------------|-------------------|
+| `github` | `issue-operations/platforms/github-mcp/` |
+| `gitbucket` | `issue-operations/platforms/gitbucket-api/` |
+| (unset) | `issue-operations/platforms/github-mcp/` (default) |
 
 ______________________________________________________________________
 

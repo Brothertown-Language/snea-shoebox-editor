@@ -99,3 +99,14 @@ If decomposition depth exceeds `DIVIDE_AND_CONQUER_MAX_DEPTH` (default 3):
 1. HALT
 2. Report the situation to the user
 3. Suggest the work may need to be broken into separate issues/phases
+## Live Verification: Decomposition Claims (MANDATORY)
+
+**Verify decomposition claims against actual codebase state per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Tasks are independent" | Verify no code dependency between tasks | `srclight_get_dependents(symbol_name="target")` | CONFLICTING |
+| "File scope per task verified" | Verify file references exist | `glob(pattern="**/filepath")` | MISSING-TRACEABILITY |
+| "Dependency order correct" | Verify must-precede claims | `srclight_get_callers(symbol_name="target")` | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results confirming decomposition accuracy.

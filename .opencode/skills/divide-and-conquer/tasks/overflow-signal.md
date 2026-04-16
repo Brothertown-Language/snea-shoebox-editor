@@ -111,3 +111,13 @@ Valid scenario — the entire sub-task exceeded capacity. The full sub-task beco
 ### Depth Limit Variable
 
 `DIVIDE_AND_CONQUER_MAX_DEPTH` defaults to 3. Override by setting the environment variable. Validate that the value is a positive integer; if not, fall back to default.
+## Live Verification: Overflow State Claims (MANDATORY)
+
+**Verify overflow detection claims against actual context state per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Context overflow detected" | Verify actual context size | Check token/file count | VERIFICATION-GAP |
+| "Decomposition needed" | Verify task scope exceeds single-agent capacity | `srclight_get_dependents(symbol_name="target", transitive=true)` | VERIFICATION-GAP |
+
+**Evidence artifact:** Context size measurement and dependency analysis.

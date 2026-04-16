@@ -129,12 +129,12 @@ After Step 5 self-review and Step 5.5 evidence verification, invoke `verificatio
 
 ### Step 6: Create GitHub Issue
 
-Invoke `github-issue-creation` skill to persist the spec as a GitHub Issue:
+Invoke `issue-operations` skill to persist the spec as a GitHub Issue:
 
-1. Invoke `github-issue-creation --task pre-creation` to validate (check for conflicts, superseded issues, content coverage)
+1. Invoke `issue-operations --task pre-creation` to validate (check for conflicts, superseded issues, content coverage)
 2. If validation fails → HALT and report. Fix issues and re-validate.
-3. If validation passes → invoke `github-issue-creation --task single-task-check` to determine sub-issue needs
-4. Invoke `github-issue-creation --task creation` to create the GitHub Issue
+3. If validation passes → invoke `issue-operations --task single-task-check` to determine sub-issue needs
+4. Invoke `issue-operations --task creation` to create the GitHub Issue
 5. Record the issue number and URL
 
 **Chat output is ONLY:**
@@ -171,5 +171,5 @@ After user approval of the spec on the GitHub Issue:
 
 - Preceded by: `requirements` (mandatory), `decompose`, `traceability`, `risk` (or explicitly skipped)
 - Extends: brainstorming Steps 7-9 (adapted, not verbatim move)
-- Calls: `github-issue-creation` (pre-creation → single-task-check → creation)
+- Calls: `issue-operations` (pre-creation → single-task-check → creation)
 - Followed by: `spec-auditor`, then `approval-gate`

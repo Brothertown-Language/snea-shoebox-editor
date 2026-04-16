@@ -50,3 +50,23 @@ Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.
+
+## Live Verification: Completion State Claims (MANDATORY)
+
+**Before claiming branch is ready, verify against actual git state.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "All commits pushed" | Verify no unpushed commits | `git diff @{u} HEAD` → check empty | VERIFICATION-GAP |
+| "Compare URL correct" | Verify URL uses correct base (dev) and session values | Verify URL string format | STRUCTURE-VIOLATION |
+| "Status comment posted" | Verify comment exists on issue | `github_issue_read(method=get_comments)` → search for byline | MISSING-ELEMENT |
+
+**Evidence artifact:** Git command output and/or GitHub MCP response confirming each claim.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Unpushed commits found | VERIFICATION-GAP | auto-fix | Push immediately |
+| Compare URL uses wrong base | STRUCTURE-VIOLATION | auto-fix | Regenerate URL |
+| Status comment missing | MISSING-ELEMENT | auto-fix | Post comment now |

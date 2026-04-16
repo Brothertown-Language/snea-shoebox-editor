@@ -112,7 +112,7 @@ Detection:
 
 ### 5. Comment Format Validation
 
-Per `000-critical-rules.md` and `github-comments` skill, all comments MUST use executive summary format.
+Per `000-critical-rules.md` and `issue-operations` skill, all comments MUST use executive summary format.
 
 **WRONG:**
 ```
@@ -191,7 +191,7 @@ After each fix is applied, the auditor MUST:
 
 ## GitHub Comment Format (MANDATORY)
 
-Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments MUST use executive summary format with byline at the BOTTOM:
+Per `000-critical-rules.md` and `issue-operations` skill, ALL completion comments MUST use executive summary format with byline at the BOTTOM:
 
 ```
 **Summary:**

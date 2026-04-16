@@ -32,3 +32,21 @@ Issue URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/issues/<number>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.
+
+## Live Verification: Completion Claims (MANDATORY)
+
+**Before claiming verification complete, verify claims against actual evidence.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Verification completed" | Verify evidence artifacts exist | `glob(pattern="./tmp/verification-*")` | VERIFICATION-GAP |
+| "All criteria passed" | Verify each criterion has PASS evidence | Read collection output | MISSING-ELEMENT |
+
+**Evidence artifact:** File existence check or collection output confirming verification was performed.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| No verification report found | VERIFICATION-GAP | conditional | Re-run verification |
+| Criterion lacks evidence | MISSING-ELEMENT | conditional | Collect evidence for missing criterion |
