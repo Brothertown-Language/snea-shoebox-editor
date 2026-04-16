@@ -2,25 +2,28 @@
 
 ## Purpose
 
-Generate an operational runbook for a given domain and scenario type. Enforces reasoning at every step — each action must explain WHY it is the right action for the observed symptoms and diagnosed root cause.
+Generate an operational runbook for a given domain and scenario type. The runbook is a step-by-step "do this, in this order" procedure — not an analysis document. Every command is verified against live documentation. Every value comes from the actual environment.
 
 ## Operating Protocol
 
 1. Invoked by: `/skill sre-runbook --task generate`
 2. When to use: When an operational runbook is needed for a system, service, or infrastructure domain
-3. Exit criteria: Runbook generated with reasoning at every step, verified against dual-output contract
+3. Exit criteria: Runbook generated with environment-verified instructions at every step, validated against all enforcement rules
 
 ## Pre-Conditions
 
-**Domain context is MANDATORY.** If any of the following are missing, the agent MUST prompt the user before proceeding:
+**Domain context AND environment context are MANDATORY.** If any of the following are missing, the agent MUST prompt the user before proceeding:
 
 | Parameter | Required | Description |
 |-----------|----------|-------------|
 | `domain` | ✅ Yes | System/service name (e.g., "PostgreSQL primary", "Kubernetes ingress") |
 | `scenario_type` | ✅ Yes | One of: `incident`, `procedure`, `degradation`, `failover` |
 | `severity` | ✅ Yes | One of: `P1` (outage), `P2` (degraded), `P3` (minor) |
+| `interface_preference` | ✅ Yes | One of: `gui`, `cli`, `mixed` — determines which instructions go in the runbook |
+| `environment_os` | ✅ Yes | OS name and version (e.g., "Proxmox 8.1", "Windows Server 2022", "Ubuntu 24.04") |
+| `available_tools` | ✅ Yes | Tools/package managers confirmed installed (e.g., "apt, systemctl, qm", or "PowerShell, DNS Manager") |
 
-If domain context is missing or insufficient, HALT and prompt the user. Do NOT guess or fabricate domain context.
+If domain OR environment context is missing or insufficient, HALT and prompt the user. Do NOT guess or fabricate context.
 
 ## Input Parameters
 
@@ -28,15 +31,67 @@ If domain context is missing or insufficient, HALT and prompt the user. Do NOT g
 domain: <system or service name>
 scenario_type: incident | procedure | degradation | failover
 severity: P1 | P2 | P3
+interface_preference: gui | cli | mixed
+environment_os: <OS name and version>
+available_tools: <comma-separated list of confirmed-available tools>
 ```
 
 ## Procedure
+
+### Step 0: Collect Environment Context (MANDATORY FIRST)
+
+**WHAT:** Determine the operator's interface preference, available tools, OS version, and existing documentation before writing any instructions.
+
+**WHY:** Runbooks generated without environment context prescribe CLI commands for GUI operators, reference tools that aren't installed, and invent paths from training data. Environment context determines WHICH instructions are correct, WHETHER they are still valid, and whether the operator can trust them.
+
+**Check-repo-first:** Before prompting the user for any environment value, check existing documentation in the repository:
+
+```
+1. Search for IP addresses, hostlists, system reference tables in docs/ or src/docs/
+2. Search for existing runbooks in docs/runbooks/ that reference the same domain
+3. If environment values (hostnames, IPs, domains, versions) exist in repo docs, USE THEM — never prompt for values already documented
+```
+
+If environment context cannot be determined from the repository, prompt the user:
+
+| Parameter | How to Collect | If Unavailable |
+|-----------|---------------|----------------|
+| `interface_preference` | Ask: "Do you prefer GUI or CLI for operating [domain]?" | HALT — cannot determine correct instruction path |
+| `environment_os` | Ask: "What OS/version is [domain] running on?" | HALT — commands may differ across versions |
+| `available_tools` | Ask: "Which tools/managers are installed on [domain]?" | HALT — cannot verify command availability |
+| `hostnames/IPs/domains` | Check repo docs first; if absent, ask user | Use values from conversation — NEVER fabricate |
+
+**Evidence anchoring:** Run or request baseline state collection commands:
+
+```
+For each relevant system query:
+  1. Attempt to run the query directly (if environment is accessible)
+  2. If not accessible: ask the user to run the command and supply output
+  3. If neither is possible: HALT — do NOT write instructions based on assumed state
+  4. Include the baseline output in the runbook under "Current State Baseline"
+```
+
+**Version pinning:** Record all version information observed or confirmed:
+
+```yaml
+environment:
+  os: "<OS name and version>"
+  software_versions:
+    - name: "<software name>"
+      version: "<version observed>"
+  verified_at: "<ISO date>"
+  interface: gui | cli | mixed
+  tools_available:
+    - "<tool name>"
+```
+
+**Verification gate:** Confirm ALL environment context parameters are collected. If any are missing, HALT and prompt the user. Do NOT proceed with incomplete context.
 
 ### Step 1: Document Symptoms
 
 **WHAT:** Catalog all observed symptoms with severity and affected components.
 
-**WHY:** Symptom documentation is the foundation of diagnosis. Without a complete symptom catalog, diagnosis is guesswork. Each symptom must be classified by severity and component so that diagnosis can trace symptoms to root causes.
+**WHY:** Symptom documentation is the foundation of diagnosis. Without a complete symptom catalog, diagnosis is guesswork.
 
 Output — AI-parseable enforcement block:
 
@@ -50,7 +105,7 @@ symptoms:
     observed_at: "<timestamp or condition>"
 ```
 
-Plus human-readable narrative explaining context and background.
+Plus operational observations (what the operator sees, not explanations of why).
 
 **Verification gate:** Confirm each symptom matches observed behavior. If symptoms are ambiguous, HALT and prompt for clarification.
 
@@ -76,15 +131,67 @@ diagnosis:
     escalation_threshold: "<time or condition that triggers escalation>"
 ```
 
-Plus human-readable narrative with decision tree explaining reasoning.
-
 **Verification gate:** Confirm diagnosis connects to symptoms via evidence. If diagnosis is unconfirmed (low confidence), do NOT proceed to mitigation — escalate instead.
 
 ### Step 3: Define Mitigation Steps
 
-**WHAT:** Define specific mitigation actions that target the diagnosed root cause.
+**WHAT:** Define specific mitigation actions that target the diagnosed root cause. ONE path per step. Steps only — no explanations, no conditional flows.
 
-**WHY:** Mitigation steps must address the diagnosed root cause, not just suppress symptoms. Each step must explain why this action resolves the root cause, and what risk it carries.
+**WHY:** Runbooks are operational procedures. A sysop under pressure needs "do this" instructions, not decision trees.
+
+**Single-path enforcement:** For each mitigation action, include exactly ONE method:
+
+- If `interface_preference` is `gui`: provide GUI steps only (click this, navigate there)
+- If `interface_preference` is `cli`: provide CLI commands only
+- If `interface_preference` is `mixed`: provide the operator's preferred interface; CLI only when no GUI equivalent exists
+- NEVER present "or via CLI" alternatives alongside GUI steps
+- NEVER present "or via GUI" alternatives alongside CLI steps
+
+**Prerequisites-first:** If any command requires elevated privileges:
+
+```
+## Prerequisites
+
+1. Open elevated PowerShell (right-click → Run as Administrator)
+
+## Mitigation Steps
+
+1. Set-MaxCacheTtl ...
+```
+
+NOT:
+
+```
+1. Set-MaxCacheTtl ...  (requires admin)
+```
+
+**Minimum-necessary:** Include ONLY the settings/parameters that directly solve the diagnosed problem. Do NOT include:
+- Related-but-irrelevant settings from the same subsystem
+- "Recommended" values for parameters not causing the issue
+- Additional parameters "just in case"
+
+**Set-and-restore pattern:** Structure commands as exactly two blocks:
+
+```
+## Apply Fix
+
+1. <command to set the specific value>
+
+## Restore Defaults (if needed)
+
+1. <command to restore the original value>
+```
+
+NOT:
+
+```
+## Check Current Value
+
+1. <command to query>  ← REMOVED — if we're going to overwrite, pre-checking is unnecessary
+2. <command to set>
+3. <command to verify>
+4. <command to reset if needed>
+```
 
 Output — AI-parseable enforcement block:
 
@@ -93,11 +200,9 @@ mitigation:
   - step: "<mitigation action>"
     targets_root_cause: "<reference to diagnosis entry>"
     risk_level: low | medium | high
-    rollback: "<rollback procedure if mitigation fails>"
-    reasoning: "<why this action addresses the root cause>"
+    rollback: "<restore-defaults command>"
+    interface: gui | cli
 ```
-
-Plus human-readable narrative with decision trees for conditional mitigation paths.
 
 **Verification gate:** Confirm each mitigation step targets a diagnosed root cause. If mitigation does not address the root cause, return to Step 2.
 
@@ -118,15 +223,13 @@ verification:
     fail_action: "<what to do if verification fails>"
 ```
 
-Plus human-readable narrative explaining verification methodology.
-
 **Verification gate:** Confirm each criterion maps to a symptom. If verification fails, return to Step 2 (re-diagnose) — do NOT proceed to postmortem.
 
 ### Step 5: Postmortem Template
 
 **WHAT:** Generate a postmortem template capturing what happened, why, and how to prevent recurrence.
 
-**WHY:** Postmortems close the feedback loop. Without postmortems, the same incident recurs. The template must capture causal reasoning, not just timelines.
+**WHY:** Postmortems close the feedback loop. Without postmortems, the same incident recurs.
 
 Output — AI-parseable enforcement block:
 
@@ -141,39 +244,111 @@ postmortem:
   action_items:
     - action: "<preventive action>"
       owner: "<role or team>"
-      reasoning: "<why this prevents recurrence>"
 ```
 
-Plus human-readable narrative with timeline template and action item tracking.
+## Live Verification Requirements (MANDATORY)
+
+**Every command, GUI path, button label, menu structure, and API call in the runbook MUST be verified against a live source before inclusion.**
+
+### Verification Sources (in priority order)
+
+| Source | How | When Required |
+|--------|-----|---------------|
+| Live system query | Run the command directly or ask user to supply output | ALL CLI commands |
+| `--help` output | Run `<command> --help` and verify flags/syntax exist | ALL CLI commands |
+| `man` page | Run `man <command>` and verify parameters | When `--help` unavailable |
+| Official vendor documentation | Fetch from vendor docs URL | ALL GUI paths, API calls, settings |
+| Existing runbooks in repo | Check `docs/runbooks/` for verified commands | As reference/cross-check |
+
+### Verification Procedure
+
+For each CLI command in the runbook:
+
+```
+1. Run `<command> --help` or `man <command>`
+2. Verify every flag and parameter exists in the help output
+3. If a flag/parameter does NOT appear in help output → EXCLUDE it, do NOT annotate "(unverified)"
+4. Record the verification source in the runbook metadata
+```
+
+For each GUI path in the runbook:
+
+```
+1. Verify the path against official vendor documentation
+2. If no vendor documentation confirms the path → EXCLUDE it
+3. NEVER invent GUI paths, button labels, or menu structures from training data
+4. If only a CLI exists for a setting, state that explicitly: "No GUI available — CLI only"
+```
+
+### Evidence Collection Failure Handling
+
+**If the agent cannot verify a command or path against a live source:**
+
+1. Do NOT include the unverified command/path in the runbook
+2. Do NOT annotate it as "(unverified)" — unverified information is excluded
+3. HALT and inform the user: "I cannot verify [command/path] against live documentation. Please run `[command] --help` and supply the output, or confirm the correct syntax."
+4. Do NOT silently fall back to training knowledge — this is the worst-case scenario that produces confident-sounding wrong instructions
 
 ## HALT Conditions
 
 | Condition | Action |
 |-----------|--------|
+| Environment context missing or insufficient | HALT, prompt user for context |
 | Domain context missing or insufficient | HALT, prompt user for context |
 | Diagnosis unconfirmed (low confidence) | HALT, escalate — do NOT mitigate |
 | Mitigation risk exceeds severity threshold | HALT, escalate before proceeding |
 | Verification fails | Return to Step 2, do NOT proceed to postmortem |
 | Escalation needed | HALT, create GitHub Issue with `escalation` label |
+| Evidence collection fails (cannot verify command against live source) | HALT, prompt user for confirmation or output — do NOT fall back to training knowledge |
+| Live documentation unavailable | HALT, inform user — do NOT generate instructions from training data |
 
 ## Output Contract
 
-The generated runbook is saved as a Markdown file in `docs/runbooks/` with both:
-1. AI-parseable yaml+symbolic enforcement blocks (structured data for automation)
-2. Human-readable narrative prose (context and reasoning for humans)
+The generated runbook is saved as a Markdown file with:
+
+1. **Environment header** — verified environment context block:
+   ```yaml
+   environment:
+     os: "<os and version>"
+     interface: gui | cli | mixed
+     tools: ["<confirmed tool list>"]
+     verified_at: "<ISO date>"
+     last_verified: "Verified against <product> <version> on <date>"
+   ```
+
+2. **Current state baseline** — evidence anchoring with actual outputs
+3. **AI-parseable yaml+symbolic enforcement blocks** (structured data for automation)
+4. **Operational procedures** — numbered steps with copy-paste commands
+5. **Restore defaults** — rollback commands
+6. **Verification commands** — confirm fix applied
 
 File naming convention: `docs/runbooks/<domain>-<scenario_type>.md`
 
-## Self-Review Step (MANDATORY)
+## Self-Review Step (MANDATORY — Before Presenting)
 
-After generating the runbook, the agent MUST review its own output for template-fill patterns. Check:
-1. Does every step include WHY reasoning? If not, add it.
-2. Does every diagnosis connect to symptoms via evidence? If not, add evidence chains.
-3. Does every mitigation target a diagnosed root cause? If not, add reasoning.
-4. Does every verification criterion map to a specific symptom? If not, add mappings.
-5. Does the postmortem template include action items with reasoning? If not, add reasoning.
+After generating the runbook, the agent MUST validate the output against ALL enforcement rules. One-shot correctness is the target.
 
-If any step lacks reasoning, the runbook is incomplete. Add reasoning before presenting.
+### Validation Checklist
+
+1. ✅ Environment context collected and documented?
+2. ✅ Single path per operation (no "or via CLI" alternatives)?
+3. ✅ Only confirmed-available tools referenced?
+4. ✅ Real values from environment (zero generic placeholders)?
+5. ✅ Prerequisites (elevation) before privileged commands?
+6. ✅ Steps only — no explanations, no conditional flows?
+7. ✅ Minimum-necessary settings only?
+8. ✅ Set-and-restore pattern (two command blocks)?
+9. ✅ No content re-added after removal?
+10. ✅ Every CLI command verified against `--help`/`man`/live docs?
+11. ✅ Every GUI path verified against vendor docs?
+12. ✅ Evidence anchoring with baseline outputs?
+13. ✅ Version/environment pinning included?
+14. ✅ "Last verified" timestamp included?
+15. ✅ Existing repo documentation checked for hostnames/IPs/domains?
+16. ✅ No training-knowledge commands presented as verified?
+17. ✅ Evidence collection failure handled (HALT, not fallback)?
+
+If ANY check fails, fix the runbook before presenting. The user should never need to correct the same issue twice.
 
 ## Context Required
 

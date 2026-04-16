@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/runbook-fix
+
+- **SRE Runbook Operational Discipline** (#943, #955) - Rewrote `sre-runbook` skill to enforce environment-context-first discipline and single-path operational procedures. Runbooks now collect interface preference, available tools, OS version, and repo documentation before generating any instructions. Added 17-point validation checklist, live-verification requirements (verify commands against `--help`/man pages/vendor docs), evidence anchoring, version pinning, and "last verified" timestamps. Skills that cannot verify against live sources now HALT instead of falling back to training knowledge.
+
 ### spec/946-closed-issue-verification
 
 - **Closed Issue Verification Gates** (#946) - Fixed "closed = verified" assumption across 8 skill files and 1 guideline. Closed issues are no longer trusted without merged PR evidence. Added `verify-closed-issue` task with 7-step verification procedure, pre-closure sub-issue verification gate in cleanup, closed-issue verification in auto-dispatch, and critical violation in `000-critical-rules.md`.
