@@ -662,6 +662,20 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 
 **See `approval-gate` skill → `verify-already-implemented` task → "Auto-Close Procedure" for the post-merge issue closure workflow. See `finishing-a-development-branch` skill → `checklist` task for issue-closure verification steps.**
 
+## Critical Violation: Inline Screening of Batch Approvals
+
+**⚠️ When more than 3 issues are approved in a batch, the agent MUST dispatch `screen-issue` sub-agents for per-issue screening. Loading all issue bodies into the orchestrator's own context is a CRITICAL GUIDELINE VIOLATION.**
+
+- 🚫 FORBIDDEN: Fetching all approved issue bodies into orchestrator context before sub-agent dispatch
+- 🚫 FORBIDDEN: Running screening logic inline when batch size > 3
+- ✅ REQUIRED: Dispatch one `screen-issue` sub-agent per approved issue
+- ✅ REQUIRED: Orchestrator receives only compact result contracts (~100-500 words each)
+- ✅ REQUIRED: Cross-issue merge and dependency graph built from result contracts, not raw issue bodies
+
+**Why 3 as the threshold:** Single approvals and pairs can reasonably be screened inline. Three or more issues risk context exhaustion and require sub-agent isolation. The `screen-issue` sub-agent architecture exists precisely to prevent the orchestrator from blowing out its context window on batch approvals.
+
+**AUTHORITY:** `approval-gate/tasks/pre-implementation-analysis.md` Step -1
+
 ## Critical Violation: Silent Halt Without Prompt — No Spec/Plan Search Before Stopping
 
 **⚠️ Halting silently when no spec/plan exists for an implementation request — without first searching GitHub Issues for candidates and presenting them — is a CRITICAL GUIDELINE VIOLATION.**

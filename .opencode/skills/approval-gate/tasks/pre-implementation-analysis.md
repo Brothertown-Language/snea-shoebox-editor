@@ -26,6 +26,16 @@ Analyze interdependencies and determine execution order for all approved issues 
 
 ## Procedure
 
+### Step -1: Batch Size Check and Dispatch Decision (MANDATORY FIRST)
+
+Before reading ANY issue body:
+
+1. COUNT the number of approved issues
+2. If count ≤ 3: inline screening is PERMITTED (proceed to Step 0)
+3. If count > 3: sub-agent dispatch is MANDATORY — do NOT read any issue body into orchestrator context
+
+**⚠️ CRITICAL VIOLATION:** Reading issue bodies for >3 issues into orchestrator context before sub-agent dispatch is a CRITICAL GUIDELINE VIOLATION per `000-critical-rules.md` §Inline Screening of Batch Approvals. The orchestrator's context window must stay clean for cross-issue merge and dependency graph building — not consumed by raw issue bodies.
+
 ### Step 0: Collect Screening Results
 
 Collect per-issue screening results from `screen-issue` sub-agents (parallel) or inline execution.
