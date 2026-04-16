@@ -55,6 +55,36 @@ Ensures all comments on issues and PRs are substantive and stakeholder-meaningfu
 | Squash violation report | **Yes** | **KEEP** |
 | Response to user question on issue | **Yes** | **KEEP** |
 
+## Live Verification: Comment Claims (MANDATORY)
+
+**🚫 CRITICAL: When this skill prepares a comment, any claims about issue/PR state MUST be verified against live GitHub state. Comment assertions without live verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Comment Claim | Verification Action | Tool Call | Problem Class |
+|--------------|-------------------|-----------|---------------|
+| "Spec revised" in revision comment | Verify spec body actually changed | `github_issue_read(method=get, issue_number=N)` → compare body | VERIFICATION-GAP |
+| "Implementation complete" in closure comment | Verify PR merged via GitHub API | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+| "Fixes #N" in PR comment | Verify issue #N exists and is relevant | `github_issue_read(method=get, issue_number=N)` | MISSING-TRACEABILITY |
+| Status indicator claims | Verify status reflects actual state | `github_issue_read(method=get)` → check labels, state | CONFLICTING |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Revision claimed but body unchanged | VERIFICATION-GAP | flag-for-review | HALT — do not post misleading comment |
+| PR not actually merged | CONFLICTING | flag-for-review | HALT — wait for actual merge |
+| Referenced issue does not exist | MISSING-TRACEABILITY | auto-fix | Remove broken reference from comment |
+| Status contradicts actual state | CONFLICTING | auto-fix | Update status indicator to match reality |
+
 ## Cross-References
 
 - Related skills: `git-workflow` (post comment when PR created), `spec-auditor` (findings are internal guidance)

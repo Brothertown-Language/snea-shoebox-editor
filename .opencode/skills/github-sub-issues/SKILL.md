@@ -150,6 +150,38 @@ Before invoking any cross-referenced skill:
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
+## Live Verification: Sub-Issue State (MANDATORY)
+
+**🚫 CRITICAL: When this skill reads sub-issue metadata (state, labels, parent linkage), it MUST verify against live GitHub API. Trusting cached sub-issue state is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
+
+| Metadata Trust Point | Verification Action | Tool Call | Problem Class |
+|---------------------|-------------------|-----------|---------------|
+| Sub-issue claimed as "open" | Verify actual state via GitHub API | `github_issue_read(method=get, issue_number=N)` → check `state` | CONFLICTING |
+| Sub-issue claimed as linked to parent | Verify parent-child relationship exists | `github_issue_read(method=get_sub_issues, issue_number=N)` → check linkage | MISSING-TRACEABILITY |
+| Sub-issue body claimed to contain phase context | Verify body actually contains relevant context | `github_issue_read(method=get, issue_number=N)` → check body content | MISSING-ELEMENT |
+| Sub-issue labels claimed | Verify labels match expectations | `github_issue_read(method=get_labels, issue_number=N)` → check label set | CONFLICTING |
+| Sub-issue database ID claimed | Verify ID is valid for sub-issue write operations | `github_issue_read(method=get)` → verify `.id` field | VERIFICATION-GAP |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Sub-issue closed but claimed open | CONFLICTING | auto-fix | Update tracking to reflect actual state |
+| Parent-child link missing | MISSING-TRACEABILITY | conditional | Re-link via `github_sub_issue_write` |
+| Sub-issue body empty or missing context | MISSING-ELEMENT | conditional | Re-populate sub-issue body |
+| Labels don't match expectations | CONFLICTING | auto-fix | Update labels |
+| Database ID invalid | VERIFICATION-GAP | conditional | Re-fetch valid ID |
+
 ## Cross-References
 
 - Related skills: `approval-gate` (sub-issue verification gate — the single authoritative readiness check), `git-workflow` (before starting implementation), `writing-plans` (auto-dispatch chain: writing-plans → github-sub-issues)

@@ -19,23 +19,23 @@ Format comments with AI identity attribution and proper structure. Only used for
 
 ### Step 1: Determine Comment Type
 
-| Type | Purpose | Status Text |
-|------|---------|-------------|
-| Completion | Task finished | completed |
-| Update | Modified existing content | updated |
-| Rejection | Cannot proceed | rejected |
-| Copy Editor | Posting on behalf of user | `🤖 ✎ on behalf of <UserName>` (see `ai-identity.md`) |
+| Type | Purpose | Status Text | Icon |
+|------|---------|-------------|------|
+| Completion | Task finished | completed | ✅ |
+| Update | Modified existing content | updated | 📝 |
+| Rejection | Cannot proceed | rejected | ❌ |
+| Copy Editor | Posting on behalf of user | `🤖 ✎📝 on behalf of <AI-Name>` (see `ai-identity.md`) | ✎ |
 
-**Note:** For Copy Editor byline format, see `.opencode/.guidelines/ai-identity.md` → "Copy Editor Byline" section.
+**Note:** For Copy Editor byline format with iconography, see `.opencode/.guidelines/ai-identity.md` → "Copy Editor Byline" section.
 
 ### Step 2: Apply Format Template
 
 **Invariant byline format (all types):**
 ```
-🤖 <AgentName> (<ModelID>) <status>
+🤖 <AI-Name> (<ModelID>) <status-icon> <status>
 ```
 
-The byline is identical for all comment types — only the status text changes.
+The byline is identical for all comment types — only the status text and icon change.
 
 **Completion Template:**
 ```markdown
@@ -48,7 +48,7 @@ The byline is identical for all comment types — only the status text changes.
 All tasks complete from this specification.
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AI-Name> (<ModelID>) ✅ completed
 ```
 
 **Update Template:**
@@ -60,7 +60,7 @@ All tasks complete from this specification.
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 <AgentName> (<ModelID>) updated
+🤖 <AI-Name> (<ModelID>) 📝 updated
 ```
 
 ### Prose-Driven Comment Bodies (CRITICAL)
@@ -76,7 +76,7 @@ Refactored the authentication module to use token-based sessions instead of cook
 **Outcome:** Session management now uses JWT tokens with configurable expiry, eliminating 401 errors for long-lived sessions.
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AI-Name> (<ModelID>) ✅ completed
 ```
 
 **❌ WRONG (rigid Changed/Added/Removed lists):**
@@ -87,7 +87,7 @@ Refactored the authentication module to use token-based sessions instead of cook
 - Removed: cookie-based sessions
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AI-Name> (<ModelID>) ✅ completed
 ```
 
 **Why prose-driven:**
@@ -101,13 +101,13 @@ Refactored the authentication module to use token-based sessions instead of cook
 **CRITICAL: Emoji must be PLAIN TEXT (not inside italic/bold formatting)**
 
 ❌ WRONG: `**Summary** 🤖 completed...`
-✅ CORRECT: `**Summary:**\n...\n---\n🤖 <AgentName> (<ModelID>) completed`
+✅ CORRECT: `**Summary:**\n...\n---\n🤖 <AI-Name> (<ModelID>) ✅ completed`
 
 **Checklist:**
 - [ ] Emoji is outside markdown formatting
-- [ ] Byline follows invariant format: `🤖 <AgentName> (<ModelID>) <status>`
+- [ ] Byline follows invariant format: `🤖 <AI-Name> (<ModelID>) <status-icon> <status>`
 - [ ] No "by" between model ID and status text
-- [ ] No status emoji before status text (status is plain lowercase word)
+- [ ] No status emoji before status text without matching icon (status icon precedes status text)
 - [ ] Summary is 1-2 sentences max
 - [ ] Outcome states what changed
 - [ ] Horizontal rule separates summary from byline

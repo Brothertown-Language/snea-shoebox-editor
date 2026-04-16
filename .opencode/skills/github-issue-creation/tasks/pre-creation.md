@@ -127,6 +127,36 @@ Before proceeding, verify ALL:
 
 **Result:** FAIL. Missing content coverage, not missing headers.
 
+## Live Verification: Staleness Checks (MANDATORY)
+
+**🚫 CRITICAL: Each staleness check in Steps 1-2 MUST verify against live GitHub and codebase state. Staleness assertions without live verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Staleness Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "Spec may be implemented but left open" | Verify referenced code exists and matches spec claims | `srclight_get_symbol(name="symbol")` or `glob(pattern="**/file")` | VERIFICATION-GAP |
+| "Referenced code locations changed" | Verify file paths and symbols still exist as referenced | `srclight_get_symbol(name="symbol")` → confirm location | CONFLICTING |
+| "Problem statement still applies" | Verify the original problem is not resolved | `github_issue_read(method=get_comments)` → check for resolution comments | VERIFICATION-GAP |
+| "Superseding issue found" | Verify superseding issue actually supersedes (compare objectives) | `github_issue_read(method=get, issue_number=N)` → compare objectives | CONFLICTING |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Spec claimed implemented but code not found | VERIFICATION-GAP | conditional | Verify with broader search before marking stale |
+| Code location changed | CONFLICTING | auto-fix | Update spec reference to new location |
+| Problem already resolved | VERIFICATION-GAP | auto-fix | Mark spec as resolved, suggest closure |
+| Superseding issue not actually related | CONFLICTING | flag-for-review | HALT — do not block creation incorrectly |
+
 ## Context Required
 
 - Related tasks: `creation` (create after validation)

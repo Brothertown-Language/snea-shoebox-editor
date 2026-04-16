@@ -137,15 +137,15 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 ### Required in every skill that:
 
-1. **References AI agents** — MUST use `<AgentName>` and `<ModelID>` placeholders, never specific agent names or model IDs
+1. **References AI agents** — MUST use `<AI-Name>` and `<ModelID>` placeholders in byline contexts, never specific agent names or model IDs
 2. **References developers** — MUST use `DEV_NAME` and `DEV_EMAIL` from session init, never specific names like `<DEV_NAME>`
 3. **References organizations/repos** — MUST use `GIT_OWNER` and `GIT_REPO` from session init, never specific names like `<GIT_OWNER>`
-4. **Contains bylines or attribution** — MUST use `<AgentName> (<ModelID>)` format, never specific agent/model combinations
+4. **Contains bylines or attribution** — MUST use `🤖 <AI-Name> (<ModelID>) <status-icon> <status>` format, never specific agent/model combinations
 
 ### Validation Gate
 
 The `validate` task (`quick_validate.py`) SHOULD check for and flag:
-- Specific agent names (e.g., `<AgentName>`) in SKILL.md or task files — must use placeholder tokens
+- Specific agent names (e.g., `<AI-Name>`) in SKILL.md or task files — must use placeholder tokens
 - Specific model IDs (e.g., `<ModelID>`) in SKILL.md or task files — must use placeholder tokens
 - Specific developer names or emails in SKILL.md or task files
 - Specific org/repo names in SKILL.md or task files (except in examples using the `<GIT_OWNER>/<GIT_REPO>` pattern)
@@ -155,7 +155,7 @@ The `validate` task (`quick_validate.py`) SHOULD check for and flag:
 
 | Value Type | Placeholder | Source |
 |-----------|-------------|--------|
-| AI agent name | `<AgentName>` | System prompt identity detection |
+| AI agent name | `<AI-Name>` | System prompt identity detection |
 | AI model ID | `<ModelID>` | System prompt identity detection |
 | Developer name | `DEV_NAME` | Session init |
 | Developer email | `DEV_EMAIL` | Session init |
@@ -194,6 +194,12 @@ GPU/CPU billing is flat-rate per inference, not per word. There is no economic i
 4. Close loopholes, add rationalization tables and red flags (REFACTOR phase)
 5. Validate skill structure with `quick_validate.py`
 6. Package with `package_skill.py`
+
+## Prose-Structure Check
+
+When creating or updating skills, verify the output is prose-first. The SKILL.md overview, operating protocol, enforcement rules, and cross-reference descriptions should read as flowing narrative — not as rigid numbered procedures where prose is expected, not as tabular mappings that should be prose descriptions, and not as fixed checklists that should be flowing narrative. Task files with TDD steps (numbered implementation actions) are naturally structured and exempt from this check. Skill type taxonomy tables, task tables, and word count tables are also exempt as they are structured reference data.
+
+Anti-prose drift patterns to watch for: rigid numbered procedures in the operating protocol where a prose description of the workflow would communicate better; tabular mappings in the overview or persona sections that replace narrative explanation; fixed checklists in enforcement rules that should be prose statements of principle. When these patterns are found, rewrite the affected sections as flowing prose.
 
 ## Cross-Reference Verification (MANDATORY)
 

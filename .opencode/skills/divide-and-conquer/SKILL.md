@@ -161,7 +161,7 @@ After every sub-agent dispatch, the orchestrating agent MUST perform a completio
 | Condition | Git State | Assessment | Recovery Action |
 | -- | -- | -- | -- |
 | No result, clean tree | No changes | Didn't start | Re-dispatch full scope |
-| No result, uncommitted, complete | All deliverables in diff | Started, completed, didn't commit | Manual commit + push |
+| No result, uncommitted, complete | All deliverables in diff | Started, completed, didn't commit | UNDO + re-dispatch (default) OR Manual commit + push (narrow exception, see Recovery Mode) |
 | No result, uncommitted, partial | Some deliverables in diff | Started, incomplete | `git checkout .` + re-dispatch reduced scope |
 | No result, uncommitted, wrong | Changes don't match spec | Started, went wrong | `git checkout .` + re-dispatch full scope |
 | OVERFLOW result | Changes up to overflow point | Context overflow | Re-dispatch remaining scope |
@@ -209,20 +209,26 @@ exec_summary: "<1-2 sentence executive summary for chat output, or empty string>
 
 When the orchestrating agent detects abnormal termination via the Sub-Agent Completion Checkpoint, it enters Recovery Mode. The orchestrator autonomously decides the recovery strategy based on the assessment protocol — this is an agent intelligence concern per the "Pushing Agent Intelligence Decisions to the User" critical violation in `000-critical-rules.md`.
 
-**Recovery Option A: Complete Manually**
+**Recovery Option A: Undo and Re-dispatch (DEFAULT)**
 
-- **When:** Changes are complete and correct, but the sub-agent failed to commit/push
-- **Action:** Commit and push the changes, then run verification (`verification-before-completion --task verify`)
-- **Assessment:** All deliverables from the dispatch spec are present in the uncommitted changes
-
-**Recovery Option B: Undo and Re-dispatch**
-
-- **When:** Changes are partial, wrong, corrupted, or the sub-agent didn't start
+- **When:** Changes are partial, wrong, corrupted, the sub-agent didn't start, OR no narrow exception applies
 - **Action:** `git checkout .` to discard changes, then re-dispatch with appropriate scope
 - **Scope determination:**
   - Clean tree (didn't start) → re-dispatch full scope
   - Partial deliverables → re-dispatch reduced scope (only remaining deliverables)
   - Wrong/corrupted changes → re-dispatch full scope
+  - Complete but uncommitted (no narrow exception) → re-dispatch full scope
+
+**Recovery Option B: Complete Manually (NARROW EXCEPTION — Strongly Discouraged)**
+
+- **When ALL conditions are met simultaneously:**
+  1. Uncommitted changes represent ≤50 lines of diff
+  2. Changes touch a single file only
+  3. Changes are fully correct and complete against the dispatch spec
+  4. No remaining sub-agent dispatches in the batch (this is the last sub-agent)
+- **Action:** Commit and push the changes, then run verification (`verification-before-completion --task verify`)
+- **⚠️ Context window risk:** Manual completion consumes orchestrator context window. Even a "small" manual completion (reading diffs, composing commits) can push an already-loaded context toward overflow. This risk is WHY manual completion is strongly discouraged — the orchestrator's context window is a scarce resource that must be preserved for orchestration duties. Re-dispatching to a fresh sub-agent is context-free for the orchestrator.
+- **If ANY condition is NOT met → use Option A (Undo and Re-dispatch)**
 
 **The orchestrator MUST NOT ask the user to decide between recovery options.** The assessment protocol provides sufficient information for the AI agent to choose autonomously. Asking "Should I complete manually or re-dispatch?" would violate the "Pushing Agent Intelligence Decisions to the User" critical violation.
 
@@ -251,6 +257,38 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 6. Main agent receives result — no orchestration detail in main context
 
 **Sub-agent context parameters:** Pass `WORKTREE_PATH`, `BRANCH_NAME`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL` from session init.
+
+## Live Verification: Batch State (MANDATORY)
+
+**🚫 CRITICAL: When this skill reads batch state (prior results, authorization, branch status), it MUST verify against live GitHub/git state. Trusting batch file claims without verification is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
+
+| Batch State Claim | Verification Action | Tool Call | Problem Class |
+|------------------|-------------------|-----------|---------------|
+| "Prior issue completed" in batch file | Verify prior issue PR was actually merged | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+| "Authorization cascades" | Verify authorization comment exists on parent issue | `github_issue_read(method=get_comments, issue_number=N)` → find auth comment | VERIFICATION-GAP |
+| "Batch branch is current" | Verify branch tip matches expected state | `bash` to run `git log -1 --oneline <branch>` | VERIFICATION-GAP |
+| "Sub-issue phase complete" | Verify sub-issue state is actually closed (if applicable) | `github_issue_read(method=get, issue_number=N)` → check `state` | CONFLICTING |
+| "Prior results reference" | Verify referenced files/issues still exist | `glob(pattern="**/file")` or `github_issue_read(method=get, issue_number=N)` | MISSING-TRACEABILITY |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Prior PR not merged | CONFLICTING | flag-for-review | HALT — dependent branch may need to be stacked differently |
+| Authorization missing | VERIFICATION-GAP | conditional | Re-verify authorization before dispatching |
+| Branch out of date | VERIFICATION-GAP | auto-fix | Rebase or merge as needed |
+| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update batch state to reflect actual state |
+| Referenced file/issue missing | MISSING-TRACEABILITY | conditional | Search alternates before proceeding |
 
 ## Cross-References
 

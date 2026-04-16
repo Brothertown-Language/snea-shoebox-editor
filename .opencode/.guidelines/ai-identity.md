@@ -11,7 +11,7 @@
 <response content>
 
 ---
-🤖 <AgentName> (<ModelID>) <status>
+🤖 <AgentName> (<ModelID>) <status-icon> <status>
 ```
 
 **For completion comments:**
@@ -23,35 +23,40 @@
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 ```
 
 **Components (supplied dynamically at runtime):**
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
 - `<ModelID>`: Model identifier with provider (e.g., `<ModelID>`)
+- `<status-icon>`: Status icon from the iconography map (preferred where feasible)
 - `<status>`: Status in plain text (completed, created, updated, rejected, etc.). Use `other` as fallback when no canonical status fits.
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
-**Rule:** Byline = WHO (model). Status is a plain-text suffix, not a separate emoji. Details belong in comment body, not byline.
+**Rule:** Byline = WHO (model) + STATUS (icon + text). Status icons are preferred where feasible. Details belong in comment body, not byline.
 
 ### Status Text Guide
 
-| Status | Byline |
-|--------|--------|
-| Task Complete | `🤖 <AgentName> (<ModelID>) completed` |
-| In Progress | `🤖 <AgentName> (<ModelID>) working` |
-| Created | `🤖 <AgentName> (<ModelID>) created` |
-| Updated | `🤖 <AgentName> (<ModelID>) updated` |
-| Rejected | `🤖 <AgentName> (<ModelID>) rejected` |
-| Superseded | `🤖 <AgentName> (<ModelID>) superseded` |
-| Blocking | `🤖 <AgentName> (<ModelID>) blocking` |
-| Analysis | `🤖 <AgentName> (<ModelID>) analysis` |
-| Decision | `🤖 <AgentName> (<ModelID>) decision` |
-| Other | `🤖 <AgentName> (<ModelID>) other` |
-| Copy Editor | `🤖 ✎ on behalf of <UserName>` |
+| Status | Icon | Byline |
+|--------|------|--------|
+| Task Complete | ✅ | `🤖 <AgentName> (<ModelID>) ✅ completed` |
+| In Progress | 🔄 | `🤖 <AgentName> (<ModelID>) 🔄 working` |
+| Created | ➕ | `🤖 <AgentName> (<ModelID>) ➕ created` |
+| Updated | 📝 | `🤖 <AgentName> (<ModelID>) 📝 updated` |
+| Rejected | ❌ | `🤖 <AgentName> (<ModelID>) ❌ rejected` |
+| Superseded | ⏭️ | `🤖 <AgentName> (<ModelID>) ⏭️ superseded` |
+| Blocking | 🚫 | `🤖 <AgentName> (<ModelID>) 🚫 blocking` |
+| Analysis | 🔍 | `🤖 <AgentName> (<ModelID>) 🔍 analysis` |
+| Decision | ✋ | `🤖 <AgentName> (<ModelID>) ✋ decision` |
+| Other | 🎯 | `🤖 <AgentName> (<ModelID>) 🎯 other` |
+| Copy Editor | ✎ | `🤖 ✎📝 on behalf of <AI-Name>` |
 
-**Rule:** Byline = WHO (model). Status is a plain-text suffix. Details belong in comment body, not byline.
+When no canonical status matches the agent's current state, use `other` as the status text with the 🎯 icon rather than inventing a new status word. This ensures bylines remain parseable and consistent.
+
+Status icons are preferred where the AI agent can determine the appropriate icon. When in doubt, use the plain-text status alone without an icon. Do not invent new icons.
+
+**Rule:** Byline = WHO (model). Status icons replace plain-text status words to improve visual scanning. Details belong in comment body, not byline.
 
 ### Copy Editor Byline (User-Authored Content)
 
@@ -78,12 +83,13 @@ Use standard bylines (Created, Completed, Updated) for:
 <content posted on behalf of user>
 
 ---
-🤖 ✎ on behalf of <UserName>
+🤖 ✎📝 on behalf of <AI-Name>
 ```
 
 **Components:**
 - `✎`: Pencil emoji indicates editing/posting role (not authorship)
-- `on behalf of <UserName>`: The user who requested/owns the content
+- `📝`: Updated icon for copy editor context
+- `on behalf of <AI-Name>`: The AI agent posting on behalf of the user
 
 **Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline.
 

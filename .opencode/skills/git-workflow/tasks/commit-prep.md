@@ -75,7 +75,7 @@ Write to `./tmp/commit-<branch>.sh`:
 ```bash
 #!/bin/bash
 # Commit script for <branch-name>
-# 🤖 <AgentName> (<ModelID>) created
+# 🤖 <AgentName> (<ModelID>) ➕ created
 
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \

@@ -147,6 +147,53 @@ This skill is a **heavy skill** — its task files contain significant detail th
 | Staged changes differ from expected | CONFLICTING | flag-for-review | Verify staging matches intent before commit |
 | Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason, may need reopen |
 
+## Submodule Provenance
+
+### Three-Tier Model
+
+When a submodule is pushed or promoted from the parent repo, provenance tracking creates a traceable record in the submodule repository. The tier used depends on API availability:
+
+| Tier | Method | When Available | Provenance Record |
+| -- | -- | -- | -- |
+| 1 | Issue + PR in submodule repo | Full API access | Full issue + PR with `Fixes #N` and cross-links |
+| 2 | Issue only in submodule repo | API available, PR creation fails | Issue documenting the change |
+| 3 | Commit message provenance | No API access | Structured commit message with parent context |
+
+### When Each Tier Applies
+
+| Condition | Tier |
+| -- | -- |
+| API responds successfully, full access | Tier 1: Create issue + PR |
+| API responds but PR endpoint fails (403, 405) | Tier 2: Create issue only |
+| API returns 403/404/auth error, or platform is `unknown` | Tier 3: Commit message only |
+
+### Integration Points
+
+| Integration | When Provenance Runs |
+| -- | -- |
+| `review-prep` (Step 0, Submodule Push Automation) | After each submodule is pushed to dev — provenance tracks the dev-push |
+| `release-promotion` (Step 2h) | After each submodule is promoted dev → main — provenance tracks the promotion |
+
+### Fire-and-Forget Semantics
+
+Provenance operations are **fire-and-forget** — they never block git operations:
+
+- All fallbacks are **silent** — no HALT, no developer intervention required
+- If Tier 1 fails, automatically downgrade to Tier 2
+- If Tier 2 fails, automatically downgrade to Tier 3
+- The parent repo push/promotion proceeds **regardless** of provenance outcome
+- Cross-reference comments on the parent issue are non-blocking — failures are logged, not raised
+
+### Platform Detection
+
+Before provenance tracking, each submodule's host platform is detected from its remote URL:
+
+- `github.com` → GitHub API
+- Known GitBucket host patterns → GitBucket API
+- Unknown → Tier 3 (no API available)
+
+Detection results are cached for the session to avoid redundant API calls.
+
 ## Cross-References
 
 - Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)

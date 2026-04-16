@@ -390,12 +390,17 @@ Compare URL: ${GITBUCKET_HTML_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch
 | Pre-PR (review-prep, after push) | **Compare URL** | `compare/dev...<branch-name>` |
 | Post-PR (PR has been created) | **PR URL** | `pull/<PR-number>` |
 
-After a PR has been created, the chat output MUST use **"PR URL"** with the `pull/<N>` format — never "Compare URL". The "Compare URL" label is correct ONLY before PR creation when the compare URL is the only available reference. Once a PR exists, labeling it "Compare URL" is a format violation.
+After a PR has been created, the chat output MUST use **"PR URL"** with the `pull/<N>` format — never "Compare URL". Before PR creation, the chat output MUST use **"Compare URL"** with the `compare/dev...` format — never "PR URL". The label and URL format MUST always match the current context:
+
+- **Before PR creation:** "Compare URL" label with `compare/dev...<branch-name>` format
+- **After PR creation:** "PR URL" label with `pull/<PR-number>` format
+
+**NEVER use the wrong label for the wrong URL format.** A label-format mismatch (e.g., "Compare URL" with a `pull/N` URL or "PR URL" with a `compare/dev...` URL) is a critical violation.
 
 **Format verification (MANDATORY — check before posting):**
 
 - [ ] Executive summary present as first element
-- [ ] URL label is context-appropriate: "Compare URL" (pre-PR, `compare/dev...`) or "PR URL" (post-PR, `pull/N`)
+- [ ] URL label matches context: "Compare URL" (pre-PR, `compare/dev...`) or "PR URL" (post-PR, `pull/N`) — label and URL format MUST correspond; mismatch is a critical violation
 - [ ] URL present as last element before byline
 - [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelID>) <status>`
 - [ ] No URL before executive summary
@@ -492,7 +497,7 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 | -- | -- | -- | -- |
 | Executive summary present | Review chat output | First element is `**Summary:**` block | MISSING-ELEMENT → add before proceeding |
 | Outcome present | Review chat output | `**Outcome:**` line follows summary | MISSING-ELEMENT → add before proceeding |
-| URL label context-appropriate | Review chat output | Pre-PR: "Compare URL" with `compare/dev...`; Post-PR: "PR URL" with `pull/N` | STRUCTURE-VIOLATION → fix label and format |
+| URL label context-appropriate | Review chat output | Pre-PR: "Compare URL" with `compare/dev...`; Post-PR: "PR URL" with `pull/N`; label-format mismatch = critical violation | STRUCTURE-VIOLATION → fix label and format to match context |
 | URL present | Review chat output | URL starts with `https://github.com/` or `${GITBUCKET_HTML_URL}` | MISSING-ELEMENT → generate URL before proceeding |
 | AI byline present | Review chat output | Ends with `🤖 <AgentName> (<ModelID>)` line | MISSING-ELEMENT → add before proceeding |
 | No URL before summary | Review chat output | URL appears AFTER summary, not before | STRUCTURE-VIOLATION → reorder output |
@@ -540,7 +545,7 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 ```
 1. Review chat output for "**Summary:**" → EVIDENCE: <found or missing>
 2. Review chat output for "**Outcome:**" → EVIDENCE: <found or missing>
-3. Review chat output for URL label → EVIDENCE: <"Compare URL" (pre-PR) or "PR URL" (post-PR)>
+3. Review chat output for URL label → EVIDENCE: <"Compare URL" (pre-PR) or "PR URL" (post-PR); label and format MUST match>
 4. Review chat output for URL pattern → EVIDENCE: <found or missing>
 5. Review chat output for byline pattern → EVIDENCE: <found or missing>
 6. Verify ordering: summary → outcome → URL → byline → EVIDENCE: <correct or reordered>
@@ -552,7 +557,7 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 | -- | -- | -- | -- |
 | Missing summary | MISSING-ELEMENT | auto-fix | Add summary before proceeding |
 | Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before proceeding |
-| Wrong URL label (post-PR says "Compare URL") | STRUCTURE-VIOLATION | auto-fix | Change to "PR URL" with `pull/N` format |
+| Wrong URL label (post-PR says "Compare URL" or pre-PR says "PR URL") | STRUCTURE-VIOLATION | auto-fix | Change label to match context: pre-PR → "Compare URL" with `compare/dev...`; post-PR → "PR URL" with `pull/N` |
 | Missing URL | MISSING-ELEMENT | auto-fix | Generate URL before proceeding |
 | Missing byline | MISSING-ELEMENT | auto-fix | Add byline before proceeding |
 | Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → URL → byline |

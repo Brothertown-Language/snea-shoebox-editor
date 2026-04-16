@@ -104,17 +104,18 @@ For each issue in execution order:
 
  5. **Collect result** from sub-agent
 
- 6. **Sub-Agent Completion Checkpoint** — after collecting each result, perform the completion checkpoint per `dispatch` task Step 4:
+  6. **Sub-Agent Completion Checkpoint** — after collecting each result, perform the completion checkpoint per `dispatch` task Step 4:
 
-    - If sub-agent returned a structured result: check `status` field and handle accordingly
-    - If sub-agent returned **NO result** (timeout, crash, empty): this is **ABNORMAL TERMINATION**
-      - Run `git status` in the worktree
-      - Clean tree → didn't start → re-dispatch
-      - Uncommitted changes + all deliverables → complete manually (commit + push)
-      - Uncommitted changes + partial deliverables → `git checkout .` + re-dispatch reduced scope
-      - Uncommitted changes + wrong changes → `git checkout .` + re-dispatch full scope
-    - Report abnormal termination to chat (see format in SKILL.md "Sub-Agent Completion Checkpoint")
-    - The orchestrator decides recovery action autonomously per "Pushing Agent Intelligence Decisions to the User" (`000-critical-rules.md`)
+     - If sub-agent returned a structured result: check `status` field and handle accordingly
+     - If sub-agent returned **NO result** (timeout, crash, empty): this is **ABNORMAL TERMINATION**
+       - Run `git status` in the worktree
+       - Clean tree → didn't start → re-dispatch
+       - Uncommitted changes + all deliverables → UNDO + re-dispatch by default; manual commit+push only if narrow exception applies (≤50 lines, single file, fully correct, no remaining dispatches — see SKILL.md Recovery Mode)
+       - Uncommitted changes + partial deliverables → `git checkout .` + re-dispatch reduced scope
+       - Uncommitted changes + wrong changes → `git checkout .` + re-dispatch full scope
+     - Report abnormal termination to chat (see format in SKILL.md "Sub-Agent Completion Checkpoint")
+     - The orchestrator decides recovery action autonomously per "Pushing Agent Intelligence Decisions to the User" (`000-critical-rules.md`)
+     - **Do NOT proceed to the next sub-agent until abnormal termination recovery is complete.** Recovery must fully resolve (re-dispatch succeeded or manual commit+push verified) before advancing.
 
  7. **Compose prior_context and phase_progress** for the next issue based on what was implemented:
 
@@ -220,23 +221,37 @@ Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
 
 **If a PR has been created for this batch, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
 
+```
 PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
+```
+
+**NEVER use the wrong label for the wrong URL format.** Label-format mismatch (e.g., "Compare URL" with `pull/N` URL, or "PR URL" with `compare/dev...` URL) is a critical violation.
 
 🤖 <AgentName> (<ModelID>) <status>
 ```
 
-**Chat Output Format Verification (MANDATORY — before sending):**
+**Chat Output Format Verification (MANDATORY — Zero Tolerance)**
 
 Before sending the chat report, verify ALL elements are present and correctly ordered:
 
 - [ ] Executive summary present as **first** element (before any URL)
 - [ ] Outcome line present after summary
-- [ ] Compare URL present (after outcome, before byline)
-- [ ] AI byline present as **LAST** element (after URL)
+- [ ] URL present IF relevant (after outcome, before byline) — required when branches pushed (compare URL), **omitted** when no branches pushed; **after PR creation**: compare URL becomes PR URL, label changes from "Compare URL" to "PR URL"; label and URL format MUST match context — mismatch is a critical violation
+- [ ] AI byline present as **LAST** element (after URL, or after outcome when no URL)
 - [ ] No URL before executive summary
-- [ ] No byline before URL
+- [ ] No byline before URL/outcome
 
-**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
+**Evidence requirement:** Each checkpoint verification MUST produce a tool-call artifact (e.g., verification of composed message content) confirming the element is present or correctly absent. Verbal assertion without tool-call evidence is insufficient.
+
+**URL applicability:**
+
+| Scenario | URL Required? | Label | URL Format |
+| -- | -- | -- | -- |
+| Branches pushed, no PR yet | ✅ Yes | Compare URL | `compare/dev...<batch-branch>` |
+| PR already created | ✅ Yes | PR URL | `pull/<PR-number>` |
+| No branches pushed | ❌ No | (omit) | Omit URL element entirely |
+
+**Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Missing URL when required → generate URL. URL included when not applicable → STRUCTURE-VIOLATION, remove URL and reorder. Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
 
 **Issue comments:**
 Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.

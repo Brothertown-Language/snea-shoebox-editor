@@ -101,11 +101,16 @@ The main working tree must be on `dev` and up-to-date so worktree creation has t
 
 ```bash
 git fetch origin
+
 if git rev-parse --verify origin/dev >/dev/null 2>&1; then
-    git checkout -b dev origin/dev 2>/dev/null || git checkout dev
+    git checkout dev
     git pull origin dev
 else
-    git checkout -b dev origin/main || { echo "FATAL: Failed to create dev branch from origin/main"; exit 1; }
+    git checkout -b dev origin/main
+    if [ $? -ne 0 ]; then
+        echo "FATAL: Failed to create dev branch from origin/main. HALT."
+        exit 1
+    fi
     git push -u origin dev
 fi
 ```
@@ -156,17 +161,23 @@ test -f .gitmodules
    git config --file .gitmodules --get-regexp path | awk '{print $2}'
    ```
 
-   For each submodule path:
-   ```bash
-   cd <submodule-path>
-   git fetch origin
-   if ! git rev-parse --verify origin/dev >/dev/null 2>&1; then
-       # Auto-create dev branch from main
-       git checkout -b dev origin/main
-       git push -u origin dev
-   fi
-   cd -
-   ```
+    For each submodule path:
+    ```bash
+    cd <submodule-path>
+    git fetch origin
+    if git rev-parse --verify origin/dev >/dev/null 2>&1; then
+        git checkout dev
+        git pull origin dev
+    else
+        git checkout -b dev origin/main
+        if [ $? -ne 0 ]; then
+            echo "FATAL: Failed to create dev branch in submodule <submodule-path> from origin/main. HALT."
+            exit 1
+        fi
+        git push -u origin dev
+    fi
+    cd -
+    ```
 
 3. **Log submodule status:**
 

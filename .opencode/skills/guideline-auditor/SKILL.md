@@ -116,13 +116,13 @@ Per `000-critical-rules.md` and `github-comments` skill, all comments MUST use e
 
 **WRONG:**
 ```
-🤖 Agent 📝 Update: Added new rule
+AI: Agent 📝 Update: Added new rule
 - Changed: ...
 ```
 
 **RIGHT:**
 ```
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 
 **Summary:**
 <impact and stakeholder value>
@@ -201,7 +201,7 @@ Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 ```
 
 **Required Elements:**
@@ -225,7 +225,7 @@ Fixed DRY violation where same rule appeared in three files with slightly differ
 **Outcome:** Single source of truth for "never use echo redirects" rule.
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 ```
 
 ---

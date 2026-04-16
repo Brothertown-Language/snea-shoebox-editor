@@ -94,6 +94,14 @@ This means:
 - `000-critical-rules.md` — Zero tolerance enforcement
 - `130-authority-source.md` — Code as authoritative source
 
+## Verification-Enforcement Boundary
+
+The `verification-enforcement` skill supersedes this guideline for content generation workflows. When an agent is generating content — runbooks, specs, plans, documentation, or correspondence — the `verification-enforcement` skill's proactive verification requirements take priority. The skill dispatches section-based sub-agents to collect evidence artifacts for every factual claim before generation begins, and resolves unverified claims after generation through its revisit pass. This represents a stricter, more structured form of proactive verification than this guideline alone provides.
+
+This guideline retains governance of reactive honesty during conversation and ad-hoc claims. When a discussion involves factual assertions in chat — explaining how a function works, reporting test results, describing current code state — this guideline's evidence requirements apply directly. The boundary is generative: if the agent is producing a document or formal content, verification-enforcement governs; if the agent is responding in conversation, this guideline governs.
+
+Both this guideline and the verification-enforcement skill share the same core principle: no claim should be presented as verified without a tool call or live source as evidence. The skill extends this principle with a structured dispatch-and-collect workflow appropriate for multi-section content generation, while this guideline covers the same principle in its simpler, conversational form.
+
 ## 🚫 FORBIDDEN
 
 - Reporting values from memory without re-running the verification
@@ -125,6 +133,8 @@ The verification honesty principle extends to metadata claims in specs, plans, a
 | Code references | Verify file paths, function names, and code references exist | Use `srclight_search_symbols`, `glob`, or `srclight_get_signature` |
 | Process-completion flags | Verify completion markers reflect actual completion | Check referenced artifacts (branches, commits, PRs) exist and are merged |
 | Authorization currency | Check whether authorization claims are superseded by revisions | Compare comment timestamps: latest authorization vs. latest revision |
+| Authorization author identity | Verify comments claiming authorization come from a developer, not a bot or agent | `github_issue_read(method=get_comments)` → filter by `author_association` (MEMBER/OWNER/COLLABORATOR = human; FIRST_TIME_CONTRIBUTOR/NONE = untrusted; bot login = rejected) |
+| Sub-issue state | Verify sub-issue open/closed state via GitHub API, not cached or claimed state | `github_issue_read(method=get, issue_number=N)` → check `state` field; `github_issue_read(method=get_sub_issues)` |
 
 ### Metadata Evidence Requirement
 
@@ -148,6 +158,8 @@ There are NO exceptions to metadata verification:
 - **Cross-references are not self-certifying.** A `#N` reference does not mean the issue exists or matches. Verify via GitHub MCP.
 - **Code references are not self-certifying.** A file path in a spec does not mean the file exists. Verify via codebase tools.
 - **Authorization comments are not self-certifying.** An approval comment may predate a revision. Verify timestamps.
+- **Authorization author identity is not self-certifying.** A comment saying "approved" from a bot or agent account is not valid authorization. Verify the author is a developer (MEMBER, OWNER, or COLLABORATOR association).
+- **Sub-issue state is not self-certifying.** A claimed "closed" sub-issue may not actually be closed, or may have been closed without a merged PR. Verify via GitHub API.
 
 ## Proactive Verification
 

@@ -8,6 +8,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ### Changed
 
+- **Secret detection semaphore docs** (#840, #919) - Add `.opencode/docs/secret-detection.md` documenting the detect-secrets semaphore mechanism, configuration options, and opt-in workflow.
+- **Byline iconography correction** (#866, #917) - Add `other` catch-all status with 🎯 icon, iconography column to Status Text Guide, correct non-standard status words in 8 skill files, fix structural deviations in 3 files, update placeholder consistency in 4 files.
+- **Dev branch auto-creation** (#861, #922) - Fix `git-workflow/tasks/pre-work.md` with proper conditional for missing `origin/dev`, auto-creating dev from main when absent.
+- **Submodule provenance platform detection** (#783, #921) - Add Step 0.5 platform detection to `release-promotion.md` and Submodule Provenance section to SKILL.md for cross-platform tracking.
+- **Sub-agent abnormal termination recovery** (#871, #915) - Add completion checkpoint protocol to `divide-and-conquer/SKILL.md`, post-dispatch verification + self-commit protocol to `dispatch.md`, abnormal termination detection to `assemble-batch.md`.
+- **Chat output format enforcement** (#869, #916) - Add format verification checkpoints to `post-implementation.md`, `completion.md`, `assemble-batch.md`. Expand "Wrong Chat Output at Halt Points" in `000-critical-rules.md`.
+- **PR URL vs Compare URL differentiation** (#876, #923) - Differentiate labels across `review-prep.md`, `assemble-batch.md`, `000-critical-rules.md`, `checklist.md`. Add URL applicability table.
+- **Combined spec+plan decision gate** (#842, #918) - Add Step 1.5 decision gate to `writing-plans/tasks/create.md`, document combined option in SKILL.md, add `single_task` parameter to `github-issue-creation/tasks/post-creation.md`.
+
+### Added
+
+- **Verification-enforcement skill** (#959, #960) - New `verification-enforcement` skill (SKILL.md + 4 task files) enforcing mandatory pre-generation verification gate. Updated 7 existing files with `verify`/`revisit` invocations and prose-structure checks.
+- **Ground-truth adversarial verification** (#827, #920) - Add adversarial verification to 3 approval-gate task files and live verification sections to 12 remaining skills, closing the "trust without evidence" gap.
+
 - **Audit auto-fix exemption** (#793, absorbs #806) - Add exemption in `000-critical-rules.md` and `010-approval-gate.md` allowing spec-auditor auto-fix classified findings to be applied directly to GitHub Issues without separate authorization. Conditional fixes still require auth; flag-for-review findings are reported only. Add cross-reference in `spec-auditor/SKILL.md`.
 - **Todowrite lifecycle mandate** (#803, fixes #801) - Add critical violation for stale todowrite state in `000-critical-rules.md`. Add CREATE/UPDATE/CLEAR lifecycle rules in `060-tool-usage.md` §7. Add cleanup checklist item in `finishing-a-development-branch` and verification step in `verification-before-completion`.
 - **Autonomous structural decisions** (#807, fixes #804) - Add critical violation for pushing agent intelligence decisions to users in `000-critical-rules.md`. Add autonomous structural classification rule in `brainstorming/tasks/explore.md` with ask/don't-ask criteria. Add "Structural decisions are agent-resolved" principle to brainstorming SKILL.md.
