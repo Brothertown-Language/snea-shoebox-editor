@@ -12,6 +12,19 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### batch/apr-16-enforcement-batch
+
+- **Secret Detection Semaphore Documentation** (#840, #919) - Added `.opencode/docs/secret-detection.md` documenting the detect-secrets semaphore mechanism, configuration options, and opt-in workflow for credential leak prevention.
+- **Byline Format Drift Correction** (#866, #917) - Audited and corrected byline iconography across 16 files. Added `other` catch-all status with 🎯 icon, added iconography column to Status Text Guide, and corrected non-standard status words in 8 skill files.
+- **Dev Branch Auto-Creation** (#861, #922) - Fixed `git-workflow/tasks/pre-work.md` to auto-create `origin/dev` when it doesn't exist, preventing pre-work failures on fresh repositories.
+- **Submodule Provenance Platform Detection** (#783, #921) - Added Step 0.5 platform detection to `release-promotion.md` and Submodule Provenance section to SKILL.md, ensuring cross-platform provenance tracking works correctly.
+- **Sub-Agent Abnormal Termination Recovery** (#871, #915) - Added completion checkpoint protocol to `divide-and-conquer`, post-dispatch verification + self-commit protocol to `dispatch.md`, and abnormal termination detection to `assemble-batch.md`.
+- **Chat Output Format Enforcement** (#869, #916) - Added format verification checkpoints to 3 approval-gate task files and expanded "Wrong Chat Output at Halt Points" in `000-critical-rules.md` with mandatory auto-fix before output.
+- **PR URL vs Compare URL Differentiation** (#876, #923) - Differentiated PR URL (post-PR) from Compare URL (pre-PR) labels across `review-prep.md`, `assemble-batch.md`, `000-critical-rules.md`, and `checklist.md`.
+- **Combined Spec+Plan Decision Gate** (#842, #918) - Added Step 1.5 decision gate to `writing-plans/tasks/create.md` for single combined spec+plan issue on single-task work, with `single_task` parameter in `post-creation.md`.
+- **Verification-Enforcement Skill** (#959, #960) - Created new `verification-enforcement` skill (SKILL.md + 4 task files) enforcing mandatory pre-generation verification gate. Updated 7 existing files with `verify`/`revisit` invocations.
+- **Ground-Truth Adversarial Verification** (#827, #920) - Added adversarial verification to 3 approval-gate task files and live verification sections to 12 remaining skills, closing the "trust without evidence" gap.
+
 ### spec/runbook-fix
 
 - **SRE Runbook Operational Discipline** (#943, #955) - Rewrote `sre-runbook` skill to enforce environment-context-first discipline and single-path operational procedures. Runbooks now collect interface preference, available tools, OS version, and repo documentation before generating any instructions. Added 17-point validation checklist, live-verification requirements (verify commands against `--help`/man pages/vendor docs), evidence anchoring, version pinning, and "last verified" timestamps. Skills that cannot verify against live sources now HALT instead of falling back to training knowledge.
