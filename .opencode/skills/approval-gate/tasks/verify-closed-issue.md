@@ -249,11 +249,13 @@ for adj_issue in adjacent:
 
 | Finding | Problem Class | Classification | Action |
 |---------|---------------|----------------|--------|
-| Open sub-issue on closed parent where PR covers deliverables | VERIFICATION-GAP | conditional | Close sub-issue with comment referencing PR |
-| Open sub-issue on closed parent where PR does NOT cover deliverables | VERIFICATION-GAP | flag-for-review | Report — sub-issue work remains |
-| Cross-reference to open issue when parent is closed | CONFLICTING | flag-for-review | Chain incomplete — report |
-| Closed issue without merged PR | VERIFICATION-GAP | flag-for-review | Premature closure |
-| Depth limit reached | VERIFICATION-GAP | flag-for-review | Graph too deep |
+| Open sub-issue on closed parent where PR covers deliverables | VERIFICATION-GAP | auto-close | Auto-close sub-issue with comment referencing PR via reconcile-issue-graph |
+| Open sub-issue on closed parent where PR does NOT cover deliverables | VERIFICATION-GAP | flag-for-review | Sub-issue work remains — report for dev action |
+| Cross-reference to open issue when parent is closed | CONFLICTING | flag-for-review | Chain incomplete — uncertain, requires dev judgment |
+| Closed issue without merged PR | VERIFICATION-GAP | reopen | Reopen via reconcile-issue-graph — premature closure |
+| Closed + state_reason not_planned | VERIFIED | no-action | Intentionally skipped |
+| Depth limit reached | VERIFICATION-GAP | flag-for-review | Graph too deep — investigate manually |
+| Cross-reference 404 | MISSING-TRACEABILITY | flag-for-review | Referenced issue does not exist |
 
 #### 8.4 Report
 
@@ -284,18 +286,21 @@ Overall: CONSISTENT / HAS_FLAGS
 | `BLOCKED_BY_SUB_ISSUE` | Parent cannot close because a sub-issue has a verification gap | Resolve sub-issue verification first |
 | `GRAPH_HAS_FLAGS` | Graph traversal found one or more verification gaps | Resolve flagged issues or acknowledge accepted risk |
 | `GRAPH_CONSISTENT` | All nodes in reachable graph are in a consistent state | Safe to treat as verified — no action needed |
+| `ACTION_TAKEN` | Reconciliation took action on one or more findings (auto-closed or reopened tickets) | Process reconcile result for updated ticket states |
 
 ## Finding Classification
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
 | Closed + merged PR | VERIFIED | auto-proceed | Trust closed state |
-| Closed "completed" + no merged PR | VERIFICATION-GAP | flag-for-review | Do NOT trust — investigate closure |
-| Closed "not_planned" | VERIFIED | auto-proceed | Work intentionally skipped |
-| Closed "duplicate" + target verified | VERIFIED | auto-proceed | Trust duplicate closure |
+| Closed "completed" + no merged PR | VERIFICATION-GAP | reopen | Reopen via reconcile-issue-graph — premature closure |
+| Closed "not_planned" | VERIFIED | no-action | Work intentionally skipped — do not change |
+| Closed "duplicate" + target verified | VERIFIED | no-action | Duplicate properly resolved |
 | Closed "duplicate" + target not found | MISSING-TRACEABILITY | flag-for-review | Cannot verify duplicate chain |
-| Closed + no reason recorded | VERIFICATION-GAP | flag-for-review | Investigate closure reason |
-| Parent closed + sub-issue verification gap | VERIFICATION-GAP | flag-for-review | Resolve sub-issue first |
+| Closed + no reason recorded | VERIFICATION-GAP | flag-for-review | Investigate closure reason — uncertain |
+| Parent closed + sub-issue verification gap | VERIFICATION-GAP | flag-for-review | Resolve sub-issue first — uncertain |
+| Open + merged PR exists | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
+| Open + code in repo verified | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
 
 ## Integration Points
 
@@ -306,6 +311,7 @@ This task is invoked by:
 3. **`pre-implementation-analysis` Step 0** — Before excluding "already implemented" issues from batch
 4. **`cleanup` pre-closure gate** — Before closing parent issues in post-merge workflow
 5. **`verify-fix-spec`** — Before skipping closed bug reports
+6. **`reconcile-issue-graph`** — Acts on findings from graph traversal (auto-close, reopen, flag uncertain)
 
 This task now performs transitive graph traversal (Step 8). Callers should handle `GRAPH_HAS_FLAGS` and `GRAPH_CONSISTENT` result types in addition to the single-issue result types.
 
