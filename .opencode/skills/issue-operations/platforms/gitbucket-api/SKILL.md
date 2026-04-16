@@ -70,6 +70,8 @@ api = GitBucketAPI()  # Reads GITBUCKET_HTML_URL and GITBUCKET_TOKEN from .env
 
 **Use `from skills.gitbucket_api.tools import GitBucketAPI` for all operations.** The client handles both array and object responses correctly. See task files for endpoint-specific patterns.
 
+**CRITICAL: Agent MUST use `GitBucketAPI` for ALL API calls on GitBucket platform. If a needed method is missing, the agent MUST HALT and report: executive summary, exact error/missing method, possible resolution, byline. NEVER fall back to inline `requests` scripts or `python -c` strings.**
+
 ## Response Schema
 
 All `list_*` endpoints return arrays (`List[Dict]`), NOT objects. The Python client handles this automatically.

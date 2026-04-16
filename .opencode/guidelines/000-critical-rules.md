@@ -691,6 +691,24 @@ When an agent receives an implementation instruction but cannot find an associat
 
 **See `020-go-prohibitions.md` §1 "NEVER DO" and "ALWAYS DO" for the search procedure, and `approval-gate` skill → `verify-qa-mode` task → Step 2.5 for the mandatory search step.** **AUTHORITY: `020-go-prohibitions.md` §1** (this line is a reference only)
 
+## Critical Violation: Non-Idempotent API Mutations
+
+**⚠️ Creating duplicate resources through non-idempotent API mutations is a CRITICAL GUIDELINE VIOLATION.**
+
+Any API mutation (PR creation, issue creation, branch creation) MUST be idempotent — check for existing resource before creating, handle "already exists" gracefully, never create duplicates through retry.
+
+- 🚫 FORBIDDEN: Creating a PR without checking for existing open PR on the same head branch; retrying a mutation POST after the first call succeeded but response parsing failed; creating duplicate issues, branches, or releases without a pre-check
+- ✅ REQUIRED: Before any mutation POST, check whether the resource already exists (e.g., `list_pull_requests(state='open')` before `create_pull_request`); if resource exists, return existing data — do NOT create duplicate; if creation call succeeded but parsing failed, the resource was created — report what happened, do NOT retry the POST
+
+## Critical Violation: Inline Mutation Scripts
+
+**⚠️ API calls that mutate state (POST, PUT, PATCH) inlined in `python -c '...'` strings are a CRITICAL GUIDELINE VIOLATION.**
+
+API calls that mutate state must use the platform's dedicated API client (e.g., `GitBucketAPI`, GitHub MCP). If the client lacks the method, HALT — do NOT work around it with inline scripts. Shell interpolation corrupts inline Python, POST calls succeed but parsing crashes, and agents retry the entire call creating duplicates.
+
+- 🚫 FORBIDDEN: `uv run python -c '...'` for any POST/PUT/PATCH operation; raw `requests.post()` / `requests.put()` / `requests.patch()` outside the dedicated API client; any inline script containing a mutation HTTP method
+- ✅ REQUIRED: Use `GitBucketAPI.create_pull_request()`, `GitBucketAPI.create_issue()`, etc. for all mutations; if the client lacks a needed method, HALT and report the gap; use the API client's built-in error handling and response parsing
+
 ## Sub-Agent Extraction Pattern
 
 Skill task files exceeding 1,000 words are extracted into sub-agent execution per the pattern established by spec #984. Each SKILL.md contains a "Sub-Agent Tasks" section with execution mode tables, result contract schemas, and dispatch context schemas. The main agent loads only SKILL.md files and reads compact result contracts (~100-500 words), never loading task files >1,000 words directly.

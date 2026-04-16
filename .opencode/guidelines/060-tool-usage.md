@@ -30,6 +30,15 @@ ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance,
 - ANY direct access to `.ipynb` files (use `the-notebook-mcp` exclusively)
 - JetBrains MCP for basic file operations that opencode built-in tools handle (TIER 1 covers read/write/edit/glob/grep for all non-notebook files)
 
+### API Client Mandatory (ZERO TOLERANCE)
+
+When a platform has a dedicated API client (e.g., `GitBucketAPI`, GitHub MCP), the agent MUST use it for ALL operations. If the client lacks a needed method:
+
+1. HALT
+2. Report: executive summary of what was needed, the missing method name, possible resolution
+3. Include byline
+4. Do NOT bypass the client with raw `requests` calls or `python -c` inline scripts
+
 ## 1. Guidelines Lookup
 
 ### ✅ ALWAYS DO
