@@ -68,6 +68,38 @@ When the `diagnose` task creates a bug report:
 | Fix includes unrelated changes | REJECT scope creep |
 | Fix is refactoring disguised as bug fix | REJECT, require spec |
 
+## Live Verification: Hypothesis Evidence (MANDATORY)
+
+**🚫 CRITICAL: When this skill forms a hypothesis about a bug's root cause, it MUST verify the hypothesis against live code/runtime evidence before proceeding. Hypotheses without verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Hypothesis Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "Bug is in function X" | Verify function X actually exhibits the buggy behavior (trace execution, read source) | `srclight_get_symbol(name="X")` → read implementation | VERIFICATION-GAP |
+| "Error caused by missing dependency Y" | Verify dependency Y is actually missing or misconfigured | `srclight_get_callers(symbol_name="Y")` → check usage | CONFLICTING |
+| "Code path reaches Z" | Verify actual call path via call graph | `srclight_get_callees(symbol_name="caller")` → trace execution | VERIFICATION-GAP |
+| "Fix is minimal — only change file F" | Verify no other files depend on the changed code | `srclight_get_dependents(symbol_name="symbol")` → check blast radius | CONFLICTING |
+| "No new issues introduced" | Verify by running tests after fix | `bash` to run `uv run pytest test/` → confirm pass | VERIFICATION-GAP |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Bug not in assumed function | VERIFICATION-GAP | conditional | Broaden search, form new hypothesis |
+| Dependency not actually missing | CONFLICTING | conditional | Re-hypothesize root cause |
+| Call path doesn't reach target | VERIFICATION-GAP | conditional | Re-trace actual execution path |
+| Fix has larger blast radius | CONFLICTING | flag-for-review | HALT — fix may need broader scope |
+| Tests fail after fix | VERIFICATION-GAP | flag-for-review | HALT — revert and re-diagnose |
+
 ## Cross-References
 
 - Related skills: `verification-before-completion` (evidence), `approval-gate` (authorization), `git-workflow` (branch)

@@ -115,6 +115,36 @@ Before invoking any cross-referenced skill:
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
+## Live Verification: Code Boundary Claims (MANDATORY)
+
+**🚫 CRITICAL: When this skill makes boundary claims about code (concern mixing, layer violations, dependency directions), it MUST verify against actual code. Boundary claims without code verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Boundary Claim | Verification Action | Tool Call | Problem Class |
+|---------------|-------------------|-----------|---------------|
+| "Phase mixes concerns X and Y" | Verify actual code in claimed files touches both concerns | `srclight_get_symbol(name="symbol")` → check file contents | VERIFICATION-GAP |
+| "Deployment independence violated" | Verify actual cross-phase imports/dependencies exist | `srclight_get_callers(symbol_name="symbol")` or `srclight_get_callees(symbol_name="symbol")` | CONFLICTING |
+| "Blast radius exceeds phase boundary" | Verify actual code dependencies span claimed phases | `srclight_get_dependents(symbol_name="symbol")` | VERIFICATION-GAP |
+| "Architectural layer violation" | Verify code exists in the claimed layer | `srclight_search_symbols(query="target", kind="function")` → check file paths | STRUCTURE-VIOLATION |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Claimed mixing not found in code | VERIFICATION-GAP | flag-for-review | Boundary claim may be incorrect |
+| Cross-phase dependency not found | CONFLICTING | flag-for-review | Independence claim may be correct |
+| Symbol not found at claimed layer | MISSING-ELEMENT | conditional | Search alternates, verify actual location |
+| File path assumption wrong | STRUCTURE-VIOLATION | auto-fix | Update finding with actual path |
+
 ## Cross-References
 
 - Orchestrated by: `spec-auditor` (via `concerns` subtask)

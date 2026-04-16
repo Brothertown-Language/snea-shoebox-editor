@@ -268,6 +268,36 @@ Before invoking any cross-referenced skill:
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
+## Live Verification: Spec State (MANDATORY)
+
+**🚫 CRITICAL: When this skill reads spec metadata (approval status, revision state, content), it MUST verify against live GitHub state. Trusting cached or claimed spec state is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
+
+| Metadata Trust Point | Verification Action | Tool Call | Problem Class |
+|---------------------|-------------------|-----------|---------------|
+| Spec claimed as "approved" | Verify `needs-approval` label is absent AND authorization comment exists from a developer | `github_issue_read(method=get_labels)` + `github_issue_read(method=get_comments)` | CONFLICTING |
+| Spec content used for planning | Verify spec body matches current issue state, not a cached version | `github_issue_read(method=get, issue_number=N)` → read body fresh | VERIFICATION-GAP |
+| Spec claimed as "not revised since approval" | Verify no revision comments or STATUS changes after authorization comment | `github_issue_read(method=get_comments)` → compare timestamps | CONFLICTING |
+| Spec-to-plan cascade eligibility | Verify spec approval actually exists (not just assumed) before auto-approving plan | `github_issue_read(method=get_comments)` → find explicit authorization comment | VERIFICATION-GAP |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Spec lacks approval but plan created | CONFLICTING | flag-for-review | HALT — plan requires separate approval |
+| Spec content stale vs live | VERIFICATION-GAP | auto-fix | Re-read spec, regenerate plan |
+| Spec revised after authorization | CONFLICTING | conditional | Verify plan still matches revised spec |
+| Cascade assumed without evidence | VERIFICATION-GAP | conditional | Collect authorization evidence before proceeding |
+
 ## Cross-References
 
 - Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `github-sub-issues` (sub-issue creation under plan), `spec-creation` (spec creation discipline)

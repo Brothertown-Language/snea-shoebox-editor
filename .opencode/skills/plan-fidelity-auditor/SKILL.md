@@ -151,6 +151,36 @@ Before invoking any cross-referenced skill:
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
+## Live Verification: Clean-Room Against Code (MANDATORY)
+
+**🚫 CRITICAL: When this skill generates a clean-room plan and compares it against the existing plan, it MUST verify both against actual codebase state. Clean-room claims without code verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Clean-Room Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "Missing file reference" | Verify the file does NOT exist in the codebase (confirming it's actually missing) | `glob(pattern="**/filepath")` → confirm absence | VERIFICATION-GAP |
+| "Extra phase not needed" | Verify claimed functionality is already implemented | `srclight_get_symbol(name="symbol")` or `srclight_search_symbols(query="feature")` | CONFLICTING |
+| "Different approach" | Verify the existing approach actually works as claimed | `srclight_get_callers(symbol_name="symbol")` → trace actual usage | VERIFICATION-GAP |
+| Clean-room input isolation verified | Confirm clean-room input file excludes existing plan details | `read(filePath="./tmp/clean-room-input-N.md")` → check for plan leakage | CONFLICTING |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| "Missing" file actually exists | CONFLICTING | flag-for-review | Finding is incorrect; remove from report |
+| "Extra" phase covers unimplemented feature | VERIFICATION-GAP | conditional | Finding may be valid; verify before applying |
+| Clean-room input contains plan details | CONFLICTING | auto-fix | Regenerate clean-room input with proper isolation |
+| Approach comparison based on stale code | VERIFICATION-GAP | conditional | Re-verify against current codebase |
+
 ## Cross-References
 
 - Orchestrated by: `spec-auditor` (via `fidelity` subtask)

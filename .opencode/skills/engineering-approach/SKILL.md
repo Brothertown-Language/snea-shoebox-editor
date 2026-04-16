@@ -176,6 +176,38 @@ Before declaring complete:
 - [ ] **Temp files cleaned up** — no `temp_*.py` or `*.json` left in `./tmp/`
 - [ ] **No temp files at project root** — confirm with `ls *.py *.json 2>/dev/null`
 
+## Live Verification: Understanding Claims (MANDATORY)
+
+**🚫 CRITICAL: When this skill claims understanding of code (patterns, dependencies, architecture), it MUST verify against live codebase state. Understanding claims without code verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Understanding Claim | Verification Action | Tool Call | Problem Class |
+|-------------------|-------------------|-----------|---------------|
+| "Codebase uses pattern X" | Verify pattern actually exists in codebase | `srclight_search_symbols(query="pattern", kind="class")` → confirm results | VERIFICATION-GAP |
+| "Function Y depends on Z" | Verify actual call relationship | `srclight_get_callers(symbol_name="Y")` or `srclight_get_callees(symbol_name="Y")` | CONFLICTING |
+| "Module follows architecture A" | Verify architectural boundaries in code | `srclight_search_symbols(query="module", kind="function")` → check file paths | STRUCTURE-VIOLATION |
+| "Library X available in project" | Verify library is in dependencies | `read(filePath="pyproject.toml")` → check dependencies | MISSING-ELEMENT |
+| Pre-implementation verification complete | Verify each checklist item has tool-call evidence, not just assertions | Review checklist items for tool-call artifacts | VERIFICATION-GAP |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Pattern not found | VERIFICATION-GAP | conditional | Search alternates, verify with broader query |
+| Call relationship wrong | CONFLICTING | flag-for-review | HALT — design may be based on wrong dependencies |
+| Architecture assumption wrong | STRUCTURE-VIOLATION | flag-for-review | HALT — redesign may be needed |
+| Library not in dependencies | MISSING-ELEMENT | flag-for-review | HALT — add dependency or use alternative |
+| Checklist items lack evidence | VERIFICATION-GAP | conditional | Re-verify items with tool calls |
+
 ## Cross-References
 
 | Reference | Relationship |

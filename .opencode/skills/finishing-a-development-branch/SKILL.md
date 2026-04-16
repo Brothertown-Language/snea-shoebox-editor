@@ -76,6 +76,38 @@ Implementation tracks against **plan sub-issues**, not spec sub-issues. The hier
 - PR creation requires explicit "create a PR" instruction
 - After checklist passes, report readiness and HALT
 
+## Live Verification: Checklist Evidence (MANDATORY)
+
+**🚫 CRITICAL: Each checklist item in the `checklist` task MUST produce a tool-call artifact demonstrating the check was actually performed, not just checked off. Checklist assertions without tool-call evidence are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Checklist Item | Verification Action | Tool Call | Problem Class |
+|---------------|-------------------|-----------|---------------|
+| "All changes committed" | Verify working tree is clean | `bash` to run `git status` → confirm "nothing to commit" | VERIFICATION-GAP |
+| "Tests pass" | Verify by running tests | `bash` to run `uv run pytest test/` → confirm exit code 0 | VERIFICATION-GAP |
+| "Lint passes" | Verify by running linter | `bash` to run `uvx ruff check src/ test/` → confirm no errors | VERIFICATION-GAP |
+| "Branch pushed to remote" | Verify remote branch exists | `bash` to run `git log origin/<branch>..HEAD` → confirm empty | MISSING-ELEMENT |
+| "All files in worktree" | Verify all changed files are under WORKTREE_PATH | `bash` to run `git diff --name-only HEAD~1` → check paths | STRUCTURE-VIOLATION |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Uncommitted changes found | VERIFICATION-GAP | auto-fix | Commit remaining changes |
+| Tests failing | VERIFICATION-GAP | flag-for-review | HALT — fix test failures before proceeding |
+| Lint errors found | VERIFICATION-GAP | auto-fix | Run `ruff check --fix` and re-verify |
+| Branch not pushed | MISSING-ELEMENT | auto-fix | Push branch and re-verify |
+| Changes outside worktree | STRUCTURE-VIOLATION | flag-for-review | HALT — investigate, may need worktree re-creation |
+
 ## Cross-References
 
 - Related skills: `git-workflow` (branch management), `verification-before-completion` (evidence), `pr-creation-workflow` (PR timing)

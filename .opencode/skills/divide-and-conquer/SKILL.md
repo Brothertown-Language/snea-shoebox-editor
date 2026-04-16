@@ -258,6 +258,38 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 
 **Sub-agent context parameters:** Pass `WORKTREE_PATH`, `BRANCH_NAME`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL` from session init.
 
+## Live Verification: Batch State (MANDATORY)
+
+**🚫 CRITICAL: When this skill reads batch state (prior results, authorization, branch status), it MUST verify against live GitHub/git state. Trusting batch file claims without verification is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
+
+| Batch State Claim | Verification Action | Tool Call | Problem Class |
+|------------------|-------------------|-----------|---------------|
+| "Prior issue completed" in batch file | Verify prior issue PR was actually merged | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+| "Authorization cascades" | Verify authorization comment exists on parent issue | `github_issue_read(method=get_comments, issue_number=N)` → find auth comment | VERIFICATION-GAP |
+| "Batch branch is current" | Verify branch tip matches expected state | `bash` to run `git log -1 --oneline <branch>` | VERIFICATION-GAP |
+| "Sub-issue phase complete" | Verify sub-issue state is actually closed (if applicable) | `github_issue_read(method=get, issue_number=N)` → check `state` | CONFLICTING |
+| "Prior results reference" | Verify referenced files/issues still exist | `glob(pattern="**/file")` or `github_issue_read(method=get, issue_number=N)` | MISSING-TRACEABILITY |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Prior PR not merged | CONFLICTING | flag-for-review | HALT — dependent branch may need to be stacked differently |
+| Authorization missing | VERIFICATION-GAP | conditional | Re-verify authorization before dispatching |
+| Branch out of date | VERIFICATION-GAP | auto-fix | Rebase or merge as needed |
+| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update batch state to reflect actual state |
+| Referenced file/issue missing | MISSING-TRACEABILITY | conditional | Search alternates before proceeding |
+
 ## Cross-References
 
 - Related skills: `subagent-driven-development` (task-level isolation with two-stage review), `git-workflow` (git ops), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation)

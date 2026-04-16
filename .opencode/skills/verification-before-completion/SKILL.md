@@ -92,6 +92,36 @@ If the result does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatc
 
 If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
+## Live Verification: Completion Claims (MANDATORY)
+
+**🚫 CRITICAL: When this skill verifies completion, it MUST check against live state (not cached or claimed). Completion claims without live verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Completion Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "All success criteria met" | Verify each criterion against actual test/implementation state | `bash` to run tests; `srclight_get_symbol(name="symbol")` for code existence | VERIFICATION-GAP |
+| "Tests pass" | Verify by actually running tests, not from memory | `bash` to run `uv run pytest test/` | VERIFICATION-GAP |
+| "Files implemented per spec" | Verify files exist and contain expected changes | `glob(pattern="**/file")` + `srclight_get_symbol(name="symbol")` | MISSING-ELEMENT |
+| "Issue ready to close" | Verify PR actually merged via GitHub API, not just claimed | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Criterion claimed met but test fails | VERIFICATION-GAP | conditional | Re-verify, fix implementation if needed |
+| Tests claimed passing but actually failing | CONFLICTING | flag-for-review | HALT — do not mark complete |
+| Expected files missing | MISSING-ELEMENT | conditional | Implement missing files before completion |
+| PR not actually merged | CONFLICTING | flag-for-review | HALT — wait for merge confirmation |
+
 ## Cross-References
 
 - Related skills: `executing-plans` (implementation), `git-workflow` (branch push), `approval-gate` (authorization)
