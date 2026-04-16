@@ -221,7 +221,11 @@ Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
 
 **If a PR has been created for this batch, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
 
+```
 PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
+```
+
+**NEVER use the wrong label for the wrong URL format.** Label-format mismatch (e.g., "Compare URL" with `pull/N` URL, or "PR URL" with `compare/dev...` URL) is a critical violation.
 
 🤖 <AgentName> (<ModelID>) <status>
 ```
@@ -232,7 +236,7 @@ Before sending the chat report, verify ALL elements are present and correctly or
 
 - [ ] Executive summary present as **first** element (before any URL)
 - [ ] Outcome line present after summary
-- [ ] URL present IF relevant (after outcome, before byline) — required when branches pushed (compare URL), **omitted** when no branches pushed; **after PR creation**: compare URL becomes PR URL, label changes from "Compare URL" to "PR URL"
+- [ ] URL present IF relevant (after outcome, before byline) — required when branches pushed (compare URL), **omitted** when no branches pushed; **after PR creation**: compare URL becomes PR URL, label changes from "Compare URL" to "PR URL"; label and URL format MUST match context — mismatch is a critical violation
 - [ ] AI byline present as **LAST** element (after URL, or after outcome when no URL)
 - [ ] No URL before executive summary
 - [ ] No byline before URL/outcome
