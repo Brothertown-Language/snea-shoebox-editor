@@ -143,6 +143,72 @@ For each sub-issue:
 
 **Evidence artifact:** `github_issue_read(method=get)` for each sub-issue showing actual state, title, labels, and parent link.
 
+#### 5.4 Closed-Issue Verification Before Skipping
+
+**Before skipping a closed issue in any workflow gate (already-implemented, already-handled, auto-dispatch), verify it was closed for the right reason. A closed state alone does NOT mean work is done.**
+
+```
+For each closed issue encountered during verification:
+  issue = github_issue_read(method="get", issue_number=closed_issue_number)
+
+  if issue.state == "closed":
+    # CRITICAL: Do NOT assume closed = verified. Verify closure reason.
+
+    # Check 1: Was it closed via merged PR?
+    # Search for PRs referencing this issue
+    prs = github_search_pull_requests(query=f"Fixes #{closed_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+    merged_pr_found = False
+    for pr in prs:
+      pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+      if pr_detail.get("merged_at") is not None:
+        merged_pr_found = True
+        break
+
+    # Check 2: Was it closed as "not planned" or duplicate?
+    state_reason = issue.get("state_reason", "")
+    if state_reason == "not_planned":
+      # Issue was intentionally not implemented — may still need implementation
+      # Do NOT skip; treat as if the issue were open for verification purposes
+      VERIFICATION-GAP — flag-for-review
+    elif state_reason == "completed" and not merged_pr_found:
+      # Closed as "completed" but no merged PR found
+      # May have been closed manually without implementation
+      VERIFICATION-GAP — flag-for-review
+    elif state_reason == "completed" and merged_pr_found:
+      # Closed as "completed" with merged PR — legitimate closure
+      # Verify success criteria are actually met (see verify-already-implemented)
+      PROCEED to verify-already-implemented
+    else:
+      # State reason unclear or missing
+      VERIFICATION-GAP — flag-for-review
+```
+
+**Closed-Issue Verification Gate for Auto-Dispatch:**
+
+The "Already implemented" row in the Auto-Dispatch table (Step 6) MUST NOT skip a closed issue without this verification gate passing. Update auto-dispatch logic:
+
+```
+# In auto-dispatch, when detect "already implemented":
+# 1. Run closed-issue verification (Step 5.4)
+# 2. If verification confirms legitimate closure (merged PR + success criteria met):
+#    → Proceed to verify-already-implemented → autoclose if all criteria pass
+# 3. If verification finds closure without merged PR:
+#    → flag-for-review, do NOT autoclose
+# 4. If verification finds "not_planned" closure:
+#    → flag-for-review, treat as open for implementation purposes
+```
+
+**Finding Classification for Closed-Issue Verification:**
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| Closed + merged PR + criteria met | VERIFIED | auto-proceed | Skip to autoclose workflow |
+| Closed + merged PR + criteria NOT met | CONFLICTING | flag-for-review | Investigation needed — PR may not cover full scope |
+| Closed as "completed" + no merged PR | VERIFICATION-GAP | flag-for-review | Manual closure without implementation evidence |
+| Closed as "not_planned" | VERIFICATION-GAP | flag-for-review | Intentionally deferred — may need reopening |
+| Closed as "duplicate" | MISSING-TRACEABILITY | conditional | Verify duplicate target exists and covers scope |
+| Closed state unclear (no reason) | VERIFICATION-GAP | flag-for-review | Do NOT skip — verify implementation manually |
+
 #### Finding Classification for Sub-Issue Verification
 
 | Finding | Problem Class | Classification | Action |
@@ -270,7 +336,8 @@ After all verification gates pass, determine the approval context and auto-dispa
 |------------------|---------------|----------------------|
 | **Spec approval** | Issue title contains `[SPEC` or has `spec` label | `writing-plans --task create` |
 | **Plan approval** | Issue has `plan` label or `[PLAN]` prefix in title | `executing-plans --task start` |
-| **Already implemented** | `verify-already-implemented` returns positive | No dispatch — auto-close instead |
+| **Already implemented** | `verify-already-implemented` returns positive (after closed-issue verification in Step 5.4 confirms legitimate closure) | No dispatch — auto-close instead |
+| **Closed but NOT verified** | Step 5.4 closed-issue verification finds closure without merged PR evidence | flag-for-review — do NOT autoclose |
 
 #### Auto-Dispatch Procedure
 

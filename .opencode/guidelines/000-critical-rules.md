@@ -338,6 +338,21 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 
 **See `git-workflow` skill `--task cleanup` for complete post-merge verification and closure workflow.**
 
+## Critical Violation: Assuming Closed Issues Are Verified — ZERO TOLERANCE
+
+**⚠️ Assuming an issue is fully implemented or resolved based solely on its closed state — without verifying a merged PR and success criteria — is a CRITICAL GUIDELINE VIOLATION.** A closed GitHub issue does NOT guarantee the work was completed, merged, or verified.
+
+- 🚫 FORBIDDEN: Skipping verification because an issue is "closed"
+- 🚫 FORBIDDEN: Trusting `state: "closed"` as evidence of implementation without merged PR proof
+- 🚫 FORBIDDEN: Classifying issues as "already implemented" based on closed state alone
+- 🚫 FORBIDDEN: Autoclosing parent issues when sub-issues are closed without merged PR evidence
+- 🚫 FORBIDDEN: Bypassing bug fix spec verification because the bug report is closed
+- ✅ REQUIRED: Verify closed issues have merged PR evidence via `github_pull_request_read` before treating them as resolved
+- ✅ REQUIRED: Check `state_reason` — `"not_planned"` means intentionally skipped, `"duplicate"` requires verifying the target, `"completed"` requires merged PR evidence
+- ✅ REQUIRED: Use `approval-gate --task verify-closed-issue` to verify legitimate closure before skipping, autoclosing, or excluding from implementation
+
+**See `approval-gate --task verify-closed-issue` for the complete verification procedure. See `git-workflow` skill `--task cleanup` for pre-closure sub-issue verification gate.**
+
 ## Critical Violation: Scope Creep — NEVER Do Things Outside the Spec
 
 **⚠️ Implementing changes not explicitly called for in the spec is a CRITICAL GUIDELINE VIOLATION.** The spec defines EXACTLY what to implement.

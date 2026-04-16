@@ -30,6 +30,7 @@ Before classification, screen each approved issue against the following categori
 For each approved issue:
 
 1. Check partial/full implementation (merged PR references + success criteria)
+1. Check sub-issue closure verification for already-implemented classification (each sub-issue must be closed via merged PR, not prematurely closed)
 1. Check superseded by batch peer (scope overlap analysis)
 1. Check moot (spec references code that no longer exists/changed; no achievable criteria)
 1. Check stale assumptions (cross-reference with other issues in batch)
@@ -41,7 +42,7 @@ For each approved issue:
 
 | Category | Detection | Auto-resolve | Developer needed? |
 |----------|-----------|-------------|-------------------|
-| **Already implemented** | Merged PR references issue + all success criteria met | Exclude, mark "already-implemented" | No |
+| **Already implemented** | Merged PR references issue + all success criteria met + sub-issues verified closed via merged PR (not prematurely closed) | Exclude, mark "already-implemented" | No |
 | **Partially implemented** | Merged PR references issue + some success criteria met, some remaining | Include remaining phases only, mark "partially-implemented (phases X,Y done by PR #M)" | No |
 | **Superseded by batch peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
 | **Moot** | Referenced files/code restructured since spec creation; no remaining success criteria are achievable | Exclude, mark "moot" with reason | No |
@@ -52,7 +53,7 @@ For each approved issue:
 
 #### Screening Outcomes
 
-- **EXCLUDE**: already-implemented, superseded, moot, meta/non-code
+- **EXCLUDE**: already-implemented (verified via merged PR + sub-issues closed via merged PR), superseded, moot, meta/non-code
 - **REDUCE SCOPE**: partially-implemented (include remaining phases only)
 - **SERIALIZE**: same-intent stale assumptions, auto-resolvable conflicts
 - **HALT**: different-intent stale assumptions, unresolvable conflicts
@@ -60,6 +61,40 @@ For each approved issue:
 #### Partial Implementation Detection
 
 When a merged PR references the issue but not all success criteria are met:
+
+#### Already-Implemented Sub-Issue Verification
+
+**🚫 CRITICAL: An issue cannot be classified as "already implemented" if any of its sub-issues were closed without a merged PR.** Before excluding an issue as "already implemented," verify each sub-issue's closure:
+
+```
+For each sub-issue of the candidate "already implemented" issue:
+  child = github_issue_read(method="get", issue_number=sub_issue_number)
+
+  if child.state == "closed":
+    state_reason = child.get("state_reason", "")
+    prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+    merged_pr_found = False
+    for pr in prs:
+      pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+      if pr_detail.get("merged_at") is not None:
+        merged_pr_found = True
+        break
+
+    if not merged_pr_found and state_reason != "not_planned":
+      # Sub-issue closed without merged PR — NOT legitimate closure
+      # Do NOT classify parent as "already implemented"
+      DOWNGRADE to "partially-implemented" or "scope-reduced"
+
+    if state_reason == "not_planned":
+      # Sub-issue intentionally not implemented
+      # Parent may be "already implemented" for remaining scope only
+      # Reduce scope to exclude intentionally skipped sub-issue
+      MARK as "scope-reduced — sub-issue #{sub_issue_number} intentionally not planned"
+
+  elif child.state == "open":
+    # Open sub-issue means parent is NOT fully implemented
+    DOWNGRADE to "partially-implemented"
+```
 
 1. Identify which phases/criteria are already satisfied by reading the merged PR's diff
 1. Extract remaining phases/criteria as the implementation scope

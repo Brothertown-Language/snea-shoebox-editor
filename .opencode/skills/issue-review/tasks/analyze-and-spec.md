@@ -157,8 +157,28 @@ Produce prose exec summary for chat:
 | Bug already has a fix spec sub-issue | Skip creation; report existing fix spec in chat |
 | Root cause is in a dependency | Note in fix spec; fix may be "work around" or "update dependency" |
 | Bug is actually expected behavior | Report misclassification; suggest closing as not-a-bug |
-| Issue is closed bug report | Skip analysis — closed bugs are already-handled or stale |
+| Issue is closed bug report | Do NOT skip — verify sub-issues are closed and cross-references resolved; if all verified, classify as `already-handled`; otherwise proceed with analysis or flag for review |
 | Fix spec creation fails | HALT; report error in chat; retry is developer's decision |
+
+## Closed Issue Verification Gate
+
+**⚠️ NEVER skip analysis for a closed issue without verification.** A closed issue may have:
+
+1. **Open sub-issues** — The parent is closed but child issues remain open (premature parent closure)
+2. **Unresolved cross-references** — The spec → plan chain may still have pending links
+3. **Erroneous closure** — No merged PR, `state_reason` is "not_planned" instead of "completed"
+
+### Verification Procedure
+
+Before classifying a closed bug report as `already-handled` or `stale`:
+
+1. **Check sub-issues:** `github_issue_read(method="get_sub_issues", issue_number=N)` — if any sub-issue is open, the parent closure is premature
+2. **Check cross-references:** Read issue body for `Spec: #N`, `Plan: #N` references — verify referenced issues are also resolved
+3. **Check closure correctness:** Verify `state_reason == "completed"` AND a merged PR exists (search for PRs referencing the issue)
+4. **If all verified:** Classify as `already-handled` and skip analysis
+5. **If any check fails:** Proceed with analysis (root cause may still need fix spec) or flag for review
+
+**Evidence requirement:** Each check must produce a tool-call artifact. Do NOT assume "closed" = "verified."
 
 ## Cross-References
 

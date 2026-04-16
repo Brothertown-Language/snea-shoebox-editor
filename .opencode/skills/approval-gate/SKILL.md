@@ -29,6 +29,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-open-questions` | Check for unresolved questions in spec | ~370 |
 | `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ~250 |
 | `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ~300 |
+| `verify-closed-issue` | Verify that a closed issue was legitimately closed via merged PR; enforce "closed ≠ verified" rule | ~350 |
 | `pre-implementation-analysis` | Analyze interdependencies and expand sub-issues for all approved issues (single or batch), producing flat item list for assemble-batch | ~500 |
 | `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ~350 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
@@ -44,6 +45,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-open-questions` - Check for unresolved questions
 - `/skill approval-gate --task verify-fix-spec` - Verify fix spec exists for bug reports
 - `/skill approval-gate --task search-prompt-fail` - Search for existing spec/plan candidates before Q/A halt
+- `/skill approval-gate --task verify-closed-issue` - Verify closed issue was legitimately closed via merged PR
 - `/skill approval-gate --task verify-schema-api-knowledge` - Verify schema/API/code knowledge before claims
 - `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-batch
 - `/skill approval-gate --task post-implementation` - After implementation done
