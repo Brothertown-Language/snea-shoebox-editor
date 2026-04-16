@@ -63,6 +63,17 @@ session_vars:
 
 **After all sub-agents return**, assemble screening results.
 
+### Step 0.1: No Questions During Analysis (ZERO TOLERANCE)
+
+**CRITICAL: The `question` tool MUST NOT be invoked at ANY point during the pre-implementation-analysis flow — not just after plan presentation.**
+
+Structural classification decisions (authorization scope, plan structure, sub-issue creation, execution order) are agent intelligence concerns per `000-critical-rules.md` §"Pushing Agent Intelligence Decisions to the User." The agent resolves these autonomously.
+
+If the agent encounters a scenario not covered by existing rules:
+1. Apply the closest applicable rule by analogy
+2. If no analogy exists, resolve with best judgment and document the reasoning in the execution plan
+3. Do NOT escalate to the developer unless the scenario matches one of the five `requires_developer: true` conditions from `screen-issue`
+
 ### Step 0.5: Assemble Gate Evidence Audit Table
 
 From the collected screening results, assemble the full Gate Evidence Audit Table:
@@ -284,7 +295,7 @@ Each parallel issue includes dispatch context:
 Proceeding with execution plan.
 ```
 
-**Checkpoint (MANDATORY):** Before proceeding to `assemble-batch`, verify NO `question` tool calls have been made since the execution plan was presented. If any were made, remove them and proceed autonomously. The execution plan is presented for informational purposes — no confirmation is requested or awaited.
+**Checkpoint (MANDATORY):** Before proceeding to `assemble-batch`, verify NO `question` tool calls have been made at ANY point during the pre-implementation-analysis flow (not just since plan presentation). If any were made, remove them and proceed autonomously. The execution plan is presented for informational purposes — no confirmation is requested or awaited. If any were made, the answers are irrelevant — the agent should have resolved the questions autonomously.
 
 #### Prohibited Actions
 

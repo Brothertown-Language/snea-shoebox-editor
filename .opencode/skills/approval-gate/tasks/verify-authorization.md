@@ -48,6 +48,26 @@ Check that authorization is:
 - Explicit ("approved", "go", "approved: N.M")
 - For the CURRENT issue (not old session)
 
+#### Step 2.1: Authorization Cascade by Output Lineage
+
+When user approves issue #P, and #P's body or comments explicitly state that it created issue #C (e.g., "Spec created: #966"), authorization cascades from #P to #C if ALL conditions are met:
+
+1. #P is a meta/investigation/review issue (no implementation criteria of its own)
+2. #P's sole or primary deliverable is the creation of #C
+3. #C is a spec or plan with implementation criteria
+4. No contradictory evidence (e.g., #P's body says "spec rejected, try again")
+
+When cascade applies:
+- #C is treated as if the user said "Approved: #C"
+- Add comment to #C: "Authorization cascaded from #P (approvable output of approved issue)"
+- Remove `needs-approval` label from #C
+
+When cascade does NOT apply (conditions not met):
+- HALT and inform user: "#P was approved but it is an investigation issue — its spec #C was not named. Please confirm: approve #C?"
+- This is a genuine authorization gap where the developer's intent is ambiguous
+
+**Evidence artifact:** `github_issue_read(method=get_comments)` showing lineage evidence in #P, and `github_issue_write` / `github_add_issue_comment` responses confirming cascade actions on #C.
+
 ### Step 3: Check needs-approval Label
 
 ```python
