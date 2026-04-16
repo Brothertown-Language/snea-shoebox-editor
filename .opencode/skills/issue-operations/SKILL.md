@@ -344,9 +344,48 @@ All tasks are under 1,000 words — inline execution. No sub-agent dispatch need
 | Conflicting spec found | CONFLICTING | flag-for-review | HALT — report conflict |
 | Session values missing | MISSING-ELEMENT | flag-for-review | HALT — cannot construct API calls |
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `spec-auditor` in Cross-References | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in Cross-References | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `pre-creation` | File exists at `.opencode/skills/issue-operations/tasks/pre-creation.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `creation` | File exists at `.opencode/skills/issue-operations/tasks/creation.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `close` | File exists at `.opencode/skills/issue-operations/tasks/close.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `verify-merge` | File exists at `.opencode/skills/issue-operations/tasks/verify-merge.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `link-sub-issue` | File exists at `.opencode/skills/issue-operations/tasks/link-sub-issue.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `comment` | File exists at `.opencode/skills/issue-operations/tasks/comment.md` | MISSING-TRACEABILITY if missing |
+| Platform sub-skills | Files exist at `platforms/github-mcp/SKILL.md` and `platforms/gitbucket-api/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` provenance task | Task exists at `.opencode/skills/git-workflow/tasks/provenance.md` | MISSING-TRACEABILITY if missing |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Platform sub-skill missing | MISSING-TRACEABILITY | flag-for-review | Platform support may have changed |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including sub-issue state, label accuracy, and authorization currency — all of which are core concerns for issue operations. When this skill encounters a label or sub-issue state claim that may be stale or inaccurate, invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
 ## Cross-References
 
-- Related skills: `spec-auditor`, `approval-gate`, `writing-plans`, `git-workflow`
-- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`
+- Related skills: `spec-auditor`, `approval-gate`, `writing-plans`, `git-workflow`, `spec-auditor` (ground-truth adversarial verification)
+- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md` (metadata verification extension)
 - Authorization classification: See `010-approval-gate.md` Action Authorization Classification
 - Platform sub-skills: `platforms/github-mcp/SKILL.md`, `platforms/gitbucket-api/SKILL.md`

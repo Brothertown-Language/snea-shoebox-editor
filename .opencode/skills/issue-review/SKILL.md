@@ -170,6 +170,8 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 | `spec-auditor` audit delegation behavior | Matches actual SKILL.md: `audit` task delegates to spec-auditor with triage hints | CONFLICTING if mismatched |
 | `approval-gate` authorization check behavior | Matches actual SKILL.md: `verify-authorization` task for authorization status | CONFLICTING if mismatched |
 | `issue-operations` comment posting behavior | Matches actual SKILL.md: `comment` task format and routing rules | CONFLICTING if mismatched |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
 
 **Verification Procedure:**
 
@@ -186,6 +188,9 @@ Before invoking any cross-referenced skill:
 | Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+| Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including STATUS markers, label accuracy, comment verification, and authorization currency. When this skill's triage relies on comment claims or metadata state, ground-truth verification ensures those claims are accurate. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
 
 ## Live Verification: Comment Claims (MANDATORY)
 
@@ -221,10 +226,11 @@ Action: [auto-fix|conditional|flag-for-review]
 
 ## Cross-References
 
-- `spec-auditor`: Called by `audit` task for spec quality checks
+- `spec-auditor`: Called by `audit` task for spec quality checks (including `ground-truth` adversarial verification subtask)
 - `approval-gate`: Referenced for authorization status in `gather`; verifies fix spec for bug reports
 - `systematic-debugging`: Invokes `analyze-and-spec` after bug report creation
 - `issue-operations`: Called by `analyze-and-spec` for fix spec creation
 - `programming-principles`: Principle context for audit path delegation
+- `065-verification-honesty.md` (metadata verification extension): Extended "don't trust — verify" principle covering issue metadata
 
 Base directory for this skill: `.opencode/skills/issue-review/`

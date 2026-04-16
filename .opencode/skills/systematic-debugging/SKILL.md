@@ -100,10 +100,42 @@ Action: [auto-fix|conditional|flag-for-review]
 | Fix has larger blast radius | CONFLICTING | flag-for-review | HALT — fix may need broader scope |
 | Tests fail after fix | VERIFICATION-GAP | flag-for-review | HALT — revert and re-diagnose |
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `verification-before-completion` in Cross-References | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-review` in Bug Discovery Guardrail | File exists at `.opencode/skills/issue-review/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `diagnose` | File exists at `.opencode/skills/systematic-debugging/tasks/diagnose.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `fix` | File exists at `.opencode/skills/systematic-debugging/tasks/fix.md` | MISSING-TRACEABILITY if missing |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency and code reference existence. When this skill forms a hypothesis about code behavior, ground-truth verification ensures the referenced code actually exists and behaves as claimed. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
 ## Cross-References
 
-- Related skills: `verification-before-completion` (evidence), `approval-gate` (authorization), `git-workflow` (branch)
-- Related guidelines: `050-scope-autonomy.md` (no vibe coding), `090-data-integrity.md` (no synthetic data)
+- Related skills: `verification-before-completion` (evidence), `approval-gate` (authorization), `git-workflow` (branch), `issue-review` (analyze-and-spec for bug reports), `spec-auditor` (ground-truth adversarial verification)
+- Related guidelines: `050-scope-autonomy.md` (no vibe coding), `090-data-integrity.md` (no synthetic data), `065-verification-honesty.md` (metadata verification extension)
 - Related task files: `diagnose.md`, `fix.md`
 
 ## Platform Compatibility

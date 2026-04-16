@@ -208,13 +208,46 @@ Action: [auto-fix|conditional|flag-for-review]
 | Library not in dependencies | MISSING-ELEMENT | flag-for-review | HALT — add dependency or use alternative |
 | Checklist items lack evidence | VERIFICATION-GAP | conditional | Re-verify items with tool calls |
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `programming-principles` in Cross-References | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `code-size-enforcement` in Cross-References | File exists at `.opencode/skills/code-size-enforcement/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| `080-code-standards.md` in Cross-References | Guideline exists at `.opencode/guidelines/080-code-standards.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `verify-understanding` | File exists at `.opencode/skills/engineering-approach/tasks/verify-understanding.md` | MISSING-TRACEABILITY if missing |
+| `programming-principles` principle definitions | Matches actual SKILL.md: 20 engineering principles defined | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced guideline missing | MISSING-TRACEABILITY | flag-for-review | Guideline may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of code references including file paths, function names, and code references in specs. When this skill's pre-implementation verification finds code references in a spec that may not exist in the codebase, invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
 ## Cross-References
 
 | Reference | Relationship |
 |-----------|-------------|
 | `programming-principles` skill | Design judgment for 20 engineering principles — this skill owns *when* to verify, that skill owns *what* principles to apply |
 | `code-size-enforcement` skill | Size limit enforcement — SRP and "No Monoliths" have hard limits there |
+| `spec-auditor` (ground-truth subtask) | Adversarial verification of code references in specs |
 | `080-code-standards.md` | Project-specific conventions (typing, modern Python, libraries, linting) |
+| `065-verification-honesty.md` | Metadata verification extension for spec/code claims |
 
 ## Invocation
 
