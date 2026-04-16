@@ -48,6 +48,54 @@ test -f .gitmodules
 
 ## Submodule Path
 
+### Step 0.5: Detect Issue System Availability
+
+Before iterating submodules, detect each submodule's host platform and test API access. Results are cached for the session so that provenance tracking (Step 2h) can use them without redundant API calls.
+
+For each submodule listed in `.gitmodules`:
+
+```bash
+git config --file .gitmodules --get-regexp path | awk '{print $2}'
+```
+
+For each submodule `<path>`:
+
+**a. Determine platform from remote URL:**
+
+```bash
+cd <path>
+REMOTE_URL=$(git remote get-url origin)
+cd ..
+```
+
+Parse `REMOTE_URL` to identify the hosting platform:
+
+| URL Pattern | Platform |
+| -- | -- |
+| Contains `github.com` | `github` |
+| Matches known GitBucket host pattern | `gitbucket` |
+| No match | `unknown` |
+
+**b. Test API availability:**
+
+| Platform | Test | Result Mapping |
+| -- | -- | -- |
+| `github` | `github_get_file_contents(owner, repo, path="")` | Success → `full`; 403 → `no-access`; 404 → `no-repo`; Auth error → `auth-failed` |
+| `gitbucket` | `GET /api/v3/repos/<owner>/<repo>` per `gitbucket-api` skill | Success → `full`; 403 → `no-access`; 404 → `no-repo`; Auth error → `auth-failed` |
+| `unknown` | No API available | `no-access` |
+
+**c. Cache result:**
+
+Session-scoped cache keyed by `<owner>/<repo>`. Value: `{platform, access_level, reason}`.
+
+| `access_level` | Tier Used by Provenance |
+| -- | -- |
+| `full` | Tier 1 (issue + PR) |
+| `issue-only` | Tier 2 (issue only) |
+| `no-access`, `auth-failed`, `no-repo` | Tier 3 (commit message) |
+
+**This step is non-blocking.** Detection failures default to Tier 3 silently.
+
 ### Step 1: Lock Submodule SHAs
 
 When promoting parent dev → main, submodule SHAs must be locked to their committed values (no `--remote`):
