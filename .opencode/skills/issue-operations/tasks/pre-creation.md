@@ -76,6 +76,24 @@ The check is content-coverage, not structural conformity. A spec that covers all
 2. Report missing content areas (not missing headers, missing *content*)
 3. Do NOT proceed with creation
 
+### Step 3.5: Check for Duplicate Plans
+
+**Before creating any plan issue, check whether an existing plan already references the same spec.** This mirrors the duplicate plan check in `writing-plans/tasks/create.md` Step 1.6 and ensures that even when plan creation is invoked via a different path, the duplication check is performed.
+
+1. Using `github_search_issues`, search for issues labeled `plan` in the repository:
+   ```
+   github_search_issues(query="label:plan", owner=GIT_OWNER, repo=GIT_REPO, state="open")
+   ```
+2. Filter results for those whose body contains `Spec: #<spec_number>` referencing the spec that will be planned.
+3. If one or more existing plans are found:
+   - Collect each existing plan's issue number, title, and URL
+   - Read each existing plan's body to extract its phase scope
+   - Present the overlap to the developer in chat: list each existing plan with its URL and a scope summary
+   - Offer the developer a choice:
+     - **"proceed with new plan (will add reference to existing plan)"** — continue creation, adding `Supersedes/replaces #N` or `Parallel track to #N` in the new plan body
+     - **"halt and review existing plan first"** — HALT and present the existing plan for review
+4. If no existing plans are found for the same spec, proceed without modification.
+
 ### Step 4: Report Validation Result
 
 **If all checks pass:**
