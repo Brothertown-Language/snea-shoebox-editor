@@ -1,5 +1,7 @@
 # Task: ground-truth
 
+<!-- ground-truth.md: adversarial verification of metadata claims for spec-auditor -->
+
 ## Purpose
 
 Adversarial verification of metadata claims against direct evidence. Do not trust markers, labels, or assertions at face value — verify every claim against actual state. This subtask embodies the "don't trust — verify" principle: a STATUS marker saying DRAFT might hide complete content; a `needs-approval` label might be stale after explicit authorization; a cross-reference might point to a deleted issue.

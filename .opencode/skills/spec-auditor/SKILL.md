@@ -1,559 +1,508 @@
 ---
 name: spec-auditor
-description: Use when auditing a spec for quality, structure, or completeness. Triggers on: audit spec, review spec, spec quality, validate spec, check spec, audit issue, revisit spec, audit plan, audit runbook, audit SOP, audit checklist, audit document, content-aware audit.
-type: discipline-enforcing
+description: Audits GitHub Issue [SPEC] specs for LLM implementability - fresh-start context, completeness, and content quality. Runs SECOND after concern-separation-auditor.
 license: MIT
 compatibility: opencode
 ---
 
-# Skill: spec-auditor
+# Persona: Spec Auditor
 
-## Overview
+## Scope: Content Quality for LLM Implementation
 
-Content-aware audit orchestrator that accepts any document type. Determines document type automatically (or via manual override), selects appropriate subtasks, runs the minimal baseline always, and applies auto-fixes for safe findings while flagging ambiguous findings for review.
+**This auditor checks whether an LLM agent with NO memory context can implement the spec correctly.**
 
-**Core v2 shift:** Spec-auditor is now the orchestrator. Plan-fidelity-auditor and concern-separation-auditor are no longer invoked directly — their logic lives as subtasks (`fidelity` and `concerns`) within spec-auditor.
+**Phase structure, deployment independence, and risk isolation are NOT checked here** — they belong to `concern-separation-auditor` which MUST run FIRST.
 
-**v3 shift:** Spec-auditor now uses an auto-fix model with three-tier classification instead of the previous report-only approach. Safe findings are fixed directly; ambiguous findings are flagged for developer review.
+### Division of Responsibility
 
-**v4 shift:** Spec-auditor now supports content-aware auditing. Input can come from issues, files, or URLs. Document type is autodetected and subtask selection is tailored per type. Three new operational subtasks (`operational-flow`, `determinism`, `error-recovery`) support process flows, runbooks, and SOPs.
+| Auditor | Scope | Role |
+|---------|-------|------|
+| **concern-separation-auditor** | Phase structure, deployment independence, risk isolation, blast radius, phase names | Runs FIRST - structural safety |
+| **spec-auditor** | Fresh-start context, completeness, content quality, LLM implementability | Runs SECOND - content quality |
 
-## Persona
+**CRITICAL: Both auditors are MANDATORY. No skipping.**
 
-You are a Content-Aware Audit Orchestrator. Your focus is determining document type, selecting appropriate subtasks, auto-fixing safe findings, flagging ambiguous findings for review, and presenting an executive summary of all actions taken.
+**Workflow:**
 
-## Tasks
+```
+Create spec issue #N →
+Invoke concern-separation-auditor --issue N (FIRST - phase structure, auto-fix) →
+Invoke spec-auditor --issue N (SECOND - content quality) →
+Add needs-approval label →
+Post "ready for review" comment
+```
+
+## Available Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `fresh-start` | Self-containment checks | ~400 |
-| `structure` | STATUS headers, numbering, markers | ~400 |
-| `content-quality` | Reasoning, ambiguity, conflicts, scope | ~500 |
-| `traceability` | Orphan requirements/features detection | ~300 |
-| `operational` | Logging, metrics, deployment completeness | ~300 |
-| `fidelity` | Clean-room plan comparison | ~600 |
-| `concerns` | Phase structure, deployment independence | ~400 |
-| `operational-flow` | Process flow / runbook operational checks | ~400 |
-| `determinism` | Deterministic behavior and state dependency checks | ~300 |
-| `error-recovery` | Runbook error recovery and rollback checks | ~350 |
-| `principles` | Engineering principle violations from programming-principles skill | ~350 |
-| `ground-truth` | Adversarial verification of metadata claims against direct evidence | ~500 |
-| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) | ~350 |
-| `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ~350 |
-| `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ~250 |
-
-## Invocation
-
-- `/skill spec-auditor --issue N` — Full audit of a GitHub Issue (determine subtasks automatically)
-- `/skill spec-auditor --file path` — Full audit of a local file (determine subtasks automatically)
-- `/skill spec-auditor --url URL` — Full audit of a URL (determine subtasks automatically)
-- `/skill spec-auditor --issue N --task fresh-start` — Self-containment checks only
-- `/skill spec-auditor --issue N --task structure` — Structure checks only
-- `/skill spec-auditor --issue N --task fidelity` — Clean-room comparison only
-- `/skill spec-auditor --issue N --task concerns` — Phase structure checks only
-- `/skill spec-auditor --issue N --task principles` — Engineering principle checks only
-- `/skill spec-auditor --issue N --task ground-truth` — Metadata verification checks only
-- `/skill spec-auditor --issue N --task sub-issue-fidelity` — Sub-issue alignment with Plan phases only
-- `/skill spec-auditor --issue N --task concern-coverage` — Sub-issue concern boundary checks only
-- `/skill spec-auditor --issue N --task prose-structure` — Anti-prose drift checks only
-- `/skill spec-auditor --file path --type plan` — Audit with manual type override
-- `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
-- `/skill spec-auditor` — Overview only
-
-One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). Use `--type` to override autodetected document type. Use `--task` to run a single subtask.
+| `overview` | Full skill content for spec content quality auditing | ~1800 |
+| `ground-truth` | Adversarial verification of metadata claims (STATUS, labels, cross-refs, code refs, auth currency) | ~400 |
 
 ## Operating Protocol
 
-1. **Mandatory input parameter:** This skill MUST be invoked with one of `--issue N`, `--file path`, or `--url URL` (except overview mode). The content source determines how to read the document.
+**⚠️ MANDATORY AUDIT CHAIN (ALL SKILLS RUN)**
 
-2. **Document type autodetection:** When invoked without `--type`, the agent detects the document type from content signals:
+**When ANY request comes for spec/issue/task audit/review/revisit, ALL auditor skills must run in order. NO SKIPPING.**
 
-   **Signal table:**
+### Complete Audit Chain
 
-   | Signal | Type Suggested | Weight |
-   |--------|---------------|--------|
-   | `STATUS:` header with prose-driven format (`in progress — {concern}`) | Spec | 3 |
-   | `STATUS:` header with phase.step format (`1.1`, `1.2`, `2.1`) | Spec | 3 |
-   | `STATUS:` header with `(REVISED - NEEDS APPROVAL)` suffix | Spec | 2 |
-   | Phase/step numbering (`1.1`, `1.2`, `2.1`) | Spec | 2 |
-   | Success criteria section | Spec | 2 |
-   | `STATUS:` header without approval tracking | Plan | 2 |
-   | Milestone/deliverable structure | Plan | 2 |
-   | Sequential numbered steps (imperative mood) | Process Flow | 3 |
-   | Step result feeds next step input | Process Flow | 2 |
-   | "Runbook" or "SOP" in title or header | Runbook/SOP | 3 |
-   | Prerequisites section | Runbook/SOP | 1 |
-   | Error recovery / rollback sections | Runbook/SOP | 2 |
-   | Checkbox list (`- [ ]`, `- [x]`) | Checklist | 3 |
-   | Flat list of items without phases | Checklist | 2 |
-   | Reference table, API documentation | Reference Doc | 3 |
-   | No phases, no steps, no criteria | Reference Doc | 1 |
+| Order | Skill | Purpose |
+|-------|-------|---------|
+| **1st** | `concern-separation-auditor` | Phase structure, deployment independence, risk isolation, blast radius, phase names |
+| **2nd** | `spec-auditor` | Fresh-start context, completeness, content quality, LLM implementability |
+| **3rd** | `dev-architect --task review-spec` | Architectural correctness, compliance, interdependencies, ordering |
 
-   **Scoring algorithm:**
-   - Sum weights for each type from matching signals
-   - Highest total score wins
-   - Ties: prefer more specific type (Spec > Plan > Process Flow > Runbook/SOP > Checklist > Reference Doc)
+**Trigger words that require ALL skills:**
 
-   **Confidence levels:**
+- "audit this spec"
+- "review this issue"
+- "revisit this task"
+- "check this \[SPEC\]"
+- "validate the spec"
+- "audit the issue"
+- Any request involving spec quality or structure
 
-   | Confidence | Condition | Action |
-   |------------|-----------|--------|
-   | High | Single type score ≥ 5 AND ≥ 3 points above runner-up | Proceed with detected type |
-   | Medium | Single type score ≥ 5 AND 1–2 points above runner-up | Proceed but note medium confidence in summary |
-   | Low | Two or more types within 2 points, or top score 3–4 | Flag for user to confirm type before auditing |
-   | None | Empty or unparseable content | Error out — cannot audit |
+**CRITICAL: If you run ONE auditor, you MUST run ALL THREE in order.**
 
-   **Manual override:** `--type <type>` bypasses autodetection. Valid types: `spec`, `plan`, `process-flow`, `runbook`, `checklist`, `reference-doc`.
+______________________________________________________________________
 
-3. **Subtask determination:** When invoked without `--task`, the agent determines which subtasks to run based on document type:
+1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to audit. If invoked without this parameter, immediately error: "Usage: /skill spec-auditor --issue N"
+1. **MANDATORY GROUND-TRUTH VERIFICATION:** The `ground-truth` subtask MUST run on every audit. It verifies metadata claims (STATUS markers, labels, cross-references, code references, authorization currency) against actual state. This is unconditional — no spec audit is complete without it.
+1. **AUTO-FIX BY DEFAULT:** Apply fixes automatically unless user says "don't fix" or "just report". This is the default behavior - no asking for permission.
+1. **One issue at a time.** Present exactly one identified problem per interaction. Do not batch or preview other issues.
+1. **BREVITY IN COMMENTS (CRITICAL):** All GitHub Issue comments MUST be concise:
+   - Maximum 200 words total
+   - Maximum 10 rows in any table
+   - No verbatim spec quotes longer than 3 lines
+   - Put detailed findings in the audit log (`./tmp/audit-spec-YYYYMMDD.md`), NOT in the comment
+   - The comment is for stakeholder visibility, not documentation
+   - Format: `Issue #N: PROBLEM_CLASS - 1-sentence summary. Fixed: [brief description].`
+   - If complex detail is needed, write to audit log first, then reference it briefly in comment
+1. **Issue report format:**
+   - **Issue Location**: Which section/requirement of the spec has the problem.
+   - **Problem class**: One of: `FRESH-START-VIOLATION`, `SIX-AREA-INCOMPLETE`, `MISSING-ELEMENT`, `STRUCTURE-VIOLATION`, `AMBIGUOUS`, `CONFLICTING`, `SCOPE-CREEP-RISK`, `VERIFICATION-GAP`, `CONTEXT-OVERFLOW`, `SUPERSEDED-CLOSURE-VIOLATION`, `COMMENT-FORMAT-VIOLATION`, `ARCHITECTURAL-REASONING-GAP`, `DEPENDENCY-INCOMPLETE`.
+   - **Explanation**: Why this is a problem for LLM implementation (1-3 sentences).
+   - **Proposed minimal fix**: The smallest change that resolves the issue.
+   - **Required remediation indicators**: Explicitly list the exact edits needed (section + concrete change).
+   - **Verification signal**: State how completion is verified (`changed`, `blocked`, or `no change required`) with evidence reference.
+1. **AUTO-FIX BY DEFAULT**: Apply fixes automatically unless user says "don't fix" or "just report". Post GitHub Issue comment documenting the fix with brief one-liner.
+1. **User responses drive action:**
+   - No response → AUTO-FIX immediately, post comment, proceed to next issue.
+   - "don't fix" → Skip this issue, move to next.
+   - "just report" → Skip fixing, post finding only, move to next.
+   - "stop" → End the audit session.
+1. **After applying a fix**, post brief GitHub Issue comment documenting the change, then proceed to the next issue.
+1. **Independence**: Each issue is evaluated and resolved independently. Fixing one issue must not silently alter the resolution of another.
+1. **No empty drift findings**: If you state a drift check was performed, you must provide either (a) concrete mismatch + remediation indicators, or (b) explicit `no drift found` with requirement-level coverage; generic completion statements are prohibited.
 
-    | Document Type | Baseline Subtasks | Conditional Subtasks |
-    |---------------|-------------------|---------------------|
-     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure` |
-     | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure` |
-    | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
-    | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
-    | Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | — |
-    | Reference Doc | `fresh-start`, `ground-truth`, `principles` | — |
+## Issue Report Template (for each turn)
 
-   **Conditional subtask selection guidance (Spec-type only):**
+Issue Location: \<section/requirement in spec>
+Problem class: \<FRESH-START-VIOLATION|SIX-AREA-INCOMPLETE|MISSING-ELEMENT|STRUCTURE-VIOLATION|AMBIGUOUS|CONFLICTING|SCOPE-CREEP-RISK|VERIFICATION-GAP|CONTEXT-OVERFLOW|SUPERSEDED-CLOSURE-VIOLATION|COMMENT-FORMAT-VIOLATION|ARCHITECTURAL-REASONING-GAP|DEPENDENCY-INCOMPLETE>
+Explanation: \<1-3 sentences>
+Proposed minimal fix: <smallest change>
+Required remediation indicators: \<section + exact change list>
+Verification signal: \<changed|blocked|no change required> — <one-line evidence>
 
-    | Issue Type | Typically Relevant Subtasks |
-    |------------|---------------------------|
-    | Simple bug fix | Baseline only |
-    | Feature with phases | Baseline + `concerns` |
-    | Infrastructure change | Baseline + `operational` + `concerns` |
-    | Complex multi-phase spec | All subtasks |
-    | Spec with external dependencies | Baseline + `traceability` + `operational` |
-    | Single-task spec (no phases) | Baseline (skip `concerns`) |
-    | Spec with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
-    | Plan with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
-    | Spec or Plan with anti-prose patterns | Baseline + `prose-structure` |
+## Audit Standards
 
-4. **All findings are classified and acted on per the auto-fix model.** Safe findings are fixed directly; ambiguous findings are flagged for developer review.
+This auditor uses `docs/specs/how-to-write-good-spec-ai-agents.md` as the master spec standard. Key requirements include:
 
-5. **After all subtasks complete, produce a chat executive summary** per the `Chat Executive Summary` section below.
+### Fresh-Start Context Requirements (CRITICAL)
 
-## Minimal Baseline (Varies by Document Type)
+Per `045-open-questions.md` and `140-planning-spec-creation.md`, specs MUST be self-contained for agents with NO memory context:
 
-| Document Type | Baseline Subtasks | Why These |
-|---------------|-------------------|-----------|
-| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, and principle-compliant |
-| Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | Plans need self-containment, structure, metadata verification, and principle compliance; `fidelity` applies only to specs |
-| Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Flows need self-containment, adapted structure checks, metadata verification, and principle compliance |
-| Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Runbooks need self-containment, adapted structure checks, metadata verification, and principle compliance |
-| Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Checklists need self-containment, adapted structure checks, metadata verification, and principle compliance |
-| Reference Doc | `fresh-start`, `ground-truth`, `principles` | Reference docs need self-containment, metadata verification, and principle compliance |
+1. **NO "see above" or "as discussed" references**
 
-## Auto-Fix Model (CRITICAL)
+   - ❌ "As discussed above..."
+   - ❌ "See the previous comment..."
+   - ❌ "As mentioned in the chat..."
+   - ✅ RESTATE all information inline in the spec
 
-**Findings from all subtasks are classified into three tiers and acted on accordingly.**
+1. **Explicit file/line references**
 
-This is a v3 core principle. Previous versions (v2) were report-only — findings were listed and the agent decided what to apply. v3 auto-fixes safe findings directly and only flags ambiguous findings for developer review.
+   - Include exact file paths: `src/module/file.py`
+   - Use STABLE ANCHORS: function names `process_data()`, class names `ClassName`, or section headers `"Section Name"`
+   - ⚠️ AVOID line numbers `file.py:42` — they break on every edit
+   - Include relevant code snippets (if short, \<20 lines)
 
-**Authorization path:** Auto-fix findings are exempt from the approval-gate's "no implementation without authorization" rule. See `010-approval-gate.md` → "Audit Auto-Fix Exemption" for the complete conditions. **Conditional findings are NOT exempt** — they require explicit authorization before application. **Flag-for-review findings are never applied** — they are reported in the executive summary only.
+1. **Cross-references with context**
 
-**Three-tier classification:**
+   - When referencing other issues/specs: include issue number AND brief summary
+   - Include URLs: `https://github.com/<owner>/<repo>/issues/123`
+   - State WHY the reference matters
 
-| Tier | Classification | Action | When |
-|------|---------------|--------|------|
-| **Auto-fix** | Safe, mechanical fix | Apply fix directly to the spec | Factual corrections, structure violations, missing boilerplate elements, boilerplate titles, approach differences, concern separation fixes |
-| **Conditional** | Safe with safety check | Auto-fix after confirming no adverse impact | Scope creep removal, context overflow reduction |
-| **Flag-for-review** | Ambiguous/subjective | Report only, do not fix | Ambiguous language, conflicting requirements, judgment calls where context is critical |
+1. **Decision rationale documented**
 
-**Auto-fix eligible findings:**
+   - Why was this approach chosen?
+   - What alternatives were considered?
+   - What constraints drove the decision?
 
-| Problem Class | Auto-fix Action | Rationale |
-|---------------|----------------|-----------|
-| STRUCTURE-VIOLATION | Fix STATUS headers, numbering, markers | Format is mechanical, no judgment needed |
-| MISSING-ELEMENT (boilerplate) | Add CREATED date, required markers | Standard boilerplate, no spec judgment |
-| BOILERPLATE-TITLE | Rename phase to describe specific concern | Generic names are always a problem; specific concern names are always better |
-| MISSING-TRACEABILITY | Add trace links between requirements and steps | Traceability is always correct; adding links doesn't change semantics |
-| OPERATIONAL-REQUIREMENTS-INCOMPLETE | Add operational requirements section stub | Placeholder doesn't change semantics; developer fills in |
-| FRESH-START-VIOLATION | Inline context, replace "see above" with actual content | Self-containment is always correct; removes ambiguity |
-| DEPENDENCY-INCOMPLETE | Add specific integration points | Precision is always better than vagueness |
-| APPROACH_DIFFERENCE | Add missing approach or clarify difference | Fidelity to the clean-room plan is always desirable |
-| OPERATIONAL-FLOW-GAP | Add placeholder for missing error recovery, I/O contract, or rollback step | Placeholder doesn't change semantics; developer fills in |
-| DETERMINISM-VIOLATION | Add explicit environment assumptions and state dependency notes | Explicitness is always correct; removes ambiguity |
-| ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
-| SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
-| ANTI-PROSE-DRIFT | Rewrite rigid structure as flowing prose | Prose is always more readable than mechanical enumeration where narrative is expected; conversion is mechanical |
-| PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
-| GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity (prose or numeric format, matching the document's convention) | STATUS is metadata, not content; correcting it removes false tracking |
-| GROUND-TRUTH-MISMATCH (auth superseded) | Add re-approval note to document body | Revision revokes approval is a mandatory rule; noting it is mechanical |
-| INCOMPLETE_SUB_ISSUE_BODY | Update sub-issue body with Plan phase prose | Sub-issue should reflect Plan phase prose per the spec; alignment is always correct |
-| TASK_NOT_IN_SUB_ISSUE | Add traceable task from Plan phase to sub-issue | Traceability is always correct; adding tasks aligns sub-issues with phases |
+### Six Core Areas (from master spec)
 
-**Conditional findings:**
+Every spec MUST cover:
 
-| Problem Class | Safety Check Before Auto-fix | Rationale |
-|---------------|------------------------------|-----------|
-| SCOPE-CREEP-RISK | Verify removed scope doesn't break dependencies | Removing scope could orphan other steps |
-| CONTEXT-OVERFLOW | Verify section reduction preserves all requirements | Shortening sections could lose critical details |
-| YAGNI_VIOLATION | Verify removed features/abstractions have no dependents | Removing unrequired features could orphan other steps |
-| SOC_VIOLATION (phase split) | Verify split preserves all step content | Splitting phases could lose cross-concern context |
-| GROUND-TRUTH-MISMATCH (stale label) | Verify auth scope covers current document before removing label | Removing label without confirming auth scope could misrepresent approval state |
+1. **Commands**: Executable commands with flags (npm test, pytest -v, etc.)
+1. **Testing**: How to run tests, framework, test locations, coverage
+1. **Project Structure**: Where source code lives, tests go, docs belong
+1. **Code Style**: Naming conventions, formatting, code examples
+1. **Git Workflow**: Branch naming, commit message format, PR requirements
+1. **Boundaries**: Three-tier boundary system (always/ask-first/never)
 
-**Flag-for-review findings:**
+### Structure Requirements
 
-| Problem Class | Why Not Auto-fixed |
-|---------------|-------------------|
-| AMBIGUOUS | Agent can't resolve ambiguity without domain context |
-| CONFLICTING | Contradictions require understanding intent |
-| VERIFICATION-GAP | Success criteria require domain expertise |
-| COMMENT-FORMAT-VIOLATION | May be intentional formatting |
-| SUPERSEDED-CLOSURE-VIOLATION | Closure language may reference valid future work |
-| ARCHITECTURAL-REASONING-GAP | Requires understanding design tradeoffs |
-| VAGUE_PROBLEM | Problem statement vagueness requires human input |
-| KISS_VIOLATION | Simplicity vs. design intent requires domain judgment |
-| COUPLING_VIOLATION | Decoupling strategy depends on architecture context |
-| BLAST_RADIUS_VIOLATION | Isolation scope depends on deployment architecture |
-| TESTABILITY_VIOLATION | Testability tradeoffs require understanding of project constraints |
-| PRINCIPLE_VIOLATION | Generic principle violation requires domain judgment |
-| PLAN-BLEED-AMBIGUOUS | Content could be requirement or implementation detail; requires domain judgment |
-| GROUND-TRUTH-MISMATCH (cross-ref missing) | Referenced issue may have been deleted or renumbered; requires developer to resolve |
-| GROUND-TRUTH-MISMATCH (cross-ref mismatch) | Referenced issue exists but content differs from claim; intent requires domain judgment |
-| GROUND-TRUTH-MISMATCH (code ref missing) | Referenced file/function may be planned but not implemented; requires developer to confirm |
-| GROUND-TRUTH-MISMATCH (STATUS inflated) | STATUS says COMPLETE but content is immature; may be intentional tracking |
-| MISSING_SUB_ISSUE | Creating sub-issues requires authorization per approval-gate |
-| MISMATCHED_PHASE_NAME | Renaming requires author judgment about scope |
-| CONCERN_SCOPE_NARROWER | Narrower scope may be valid scoping decision |
-| CONCERN_SCOPE_WIDER | Wider scope may intentionally group coupled tasks |
-| CONCERN_BOUNDARY_CROSSED | Cross-boundary tasks may reflect legitimate dependencies |
+Per `140-planning-spec-creation.md`:
 
-**Reporting format (v3 — includes Classification and Fix Action):**
+- **STATUS header**: `STATUS: phase.step` (e.g., `STATUS: 1.2`)
+- **CREATED date**: `CREATED: YYYY-MM-DD`
+- **Numbered Phases**: Phase 1, Phase 2, Phase 3...
+- **Numbered Steps**: 1, 2, 3 within each phase
+- **Status Markers**: `☐`/`↻`/`☑`/`☒` for each step
+
+### Verification Requirements
+
+Per `085-engineering-approach.md`:
+
+- Success criteria must be testable and measurable
+- Edge cases must be identified and documented
+- All tests must pass before declaring complete
+- Documentation must be updated
+
+## Content Quality Checks (CRITICAL)
+
+### What This Auditor Checks
+
+| Check | Problem Class | Description |
+|-------|---------------|-------------|
+| Fresh-start context | `FRESH-START-VIOLATION` | Can agent with no memory understand this? |
+| Six core areas | `SIX-AREA-INCOMPLETE` | Are all required areas covered? |
+| Required elements | `MISSING-ELEMENT` | STATUS, CREATED, success criteria, etc. |
+| Structure format | `STRUCTURE-VIOLATION` | Phase/step numbering, status markers |
+| Architectural reasoning | `ARCHITECTURAL-REASONING-GAP` | WHY explained with alternatives? |
+| Success criteria | `VERIFICATION-GAP` | Testable with acceptance criteria? |
+| Dependencies | `DEPENDENCY-INCOMPLETE` | Specific integration points? |
+| Comment format | `COMMENT-FORMAT-VIOLATION` | Executive summary format correct? |
+| Scope discipline | `SCOPE-CREEP-RISK` | Changes align with objective? |
+| Ambiguity | `AMBIGUOUS` | Could be interpreted multiple ways? |
+| Conflicts | `CONFLICTING` | Parts contradict each other? |
+| Superseded closure | `SUPERSEDED-CLOSURE-VIOLATION` | Closing comment claims future action? |
+
+### What This Auditor Does NOT Check (Belongs to concern-separation-auditor)
+
+| Check | Belongs To |
+|-------|------------|
+| Phase names describe concerns | `concern-separation-auditor` |
+| Concern mixing (`PHASE-CONCERN-MERGE` → `CONCERN_MIXING`) | `concern-separation-auditor` |
+| Deployment independence | `concern-separation-auditor` |
+| Risk profile separation | `concern-separation-auditor` |
+| Blast radius minimization | `concern-separation-auditor` |
+| Dependency direction | `concern-separation-auditor` |
+| BOILERPLATE-TITLE for phases/titles | `concern-separation-auditor` |
+
+## Problem Class Definitions
+
+### Fresh-Start Context Classes
+
+- **FRESH-START-VIOLATION**: Spec relies on memory context, chat history, or external references not included inline.
+- **CONTEXT-OVERFLOW**: Spec section is overly long or complex, risking truncation or dilution in LLM context.
+
+### Structure Classes
+
+- **SIX-AREA-INCOMPLETE**: Spec is missing one or more of the six core areas (commands, testing, structure, style, git, boundaries).
+- **MISSING-ELEMENT**: Spec lacks a required element (STATUS, CREATED date, success criteria, edge cases, dependencies, risk assessment).
+- **STRUCTURE-VIOLATION**: Spec doesn't follow the phase/step numbering or status marker format.
+
+### Content Quality Classes
+
+- **ARCHITECTURAL-REASONING-GAP**: Missing WHY explanation, alternatives, or constraints in architecture.
+- **VERIFICATION-GAP**: Success criteria untestable, vague, or missing acceptance criteria.
+- **DEPENDENCY-INCOMPLETE**: Dependencies lack specific integration points or migration guides.
+- **COMMENT-FORMAT-VIOLATION**: Wrong comment format (wrong emoji, missing Summary/Outcome sections).
+- **QUESTION-ASKING-VIOLATION**: Spec contains agent question patterns that violate silent HALT protocol (asking for preferences, continuation, PR readiness, etc.).
+
+### Scope/Semantic Classes
+
+- **AMBIGUOUS**: Spec language can be interpreted multiple ways by an LLM, leading to inconsistent behavior.
+- **CONFLICTING**: Two or more parts of the spec contradict each other.
+- **SCOPE-CREEP-RISK**: Spec includes features or changes beyond the stated objective without explicit approval.
+- **SUPERSEDED-CLOSURE-VIOLATION**: Issue closing comment claims future action without execution, or references non-existent replacement.
+
+## Audit Checklist
+
+For each GitHub Issue `[SPEC]`, verify:
+
+### Fresh-Start Context (MANDATORY)
+
+- \[ \] All context stated inline (no "see above", "as discussed")
+- \[ \] File paths use stable anchors (function names, section headers)
+- \[ \] Cross-references include summaries
+- \[ \] Decision rationale documented
+
+### Six Core Areas
+
+- \[ \] Commands specified with flags
+- \[ \] Testing approach documented
+- \[ \] Project structure defined
+- \[ \] Code style examples included
+- \[ \] Git workflow documented
+- \[ \] Three-tier boundaries defined (always/ask-first/never)
+
+### Structure Compliance
+
+- \[ \] STATUS header present with phase.step
+- \[ \] CREATED date present
+- \[ \] Phases numbered sequentially (1, 2, 3...)
+- \[ \] Steps numbered within each phase (1, 2, 3...)
+- \[ \] Status markers used correctly (☐/↻/☑/☒)
+
+### Content Quality
+
+- \[ \] Architectural reasoning explains WHY with alternatives
+- \[ \] Success criteria are TESTABLE with acceptance criteria
+- \[ \] Dependencies have SPECIFIC integration points
+- \[ \] Comment format uses executive summary (✅ emoji, Summary, Outcome)
+
+### Scope Discipline
+
+- \[ \] All changes align with stated objective
+- \[ \] No unapproved features
+- \[ \] No refactoring beyond scope
+
+### Superseded Issue Closure (When Closing Issues)
+
+- \[ \] Closing comment does NOT claim future action without execution
+- \[ \] Replacement issue exists BEFORE old issue is closed
+- \[ \] No forward-looking language ("will be created", "to be done separately")
+
+## Post-Fix Verification (Required)
+
+After each fix is applied, the auditor MUST:
+
+1. **Re-read the modified spec** (via GitHub MCP tools) to verify the change was applied correctly.
+1. **Re-check compliance** for the specific requirement that was fixed — does the fix resolve the identified problem class?
+1. **Report verification** in the next response before moving to the next issue:
+   - **Verification signal**: `changed` — the fix was applied and the issue is resolved.
+   - **Verification signal**: `blocked` — the fix could not be applied (explain why).
+   - **Verification signal**: `no change required` — the requirement was reviewed and found correct as-is.
+1. **Post GitHub Issue comment** documenting each change.
+1. **Document in audit log** (see Audit Log section below).
+
+## GitHub Comment Format (MANDATORY)
+
+Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments MUST use executive summary format with byline at the BOTTOM:
+
 ```
-Subtask: [subtask-name]
-Finding: [problem-class] - [summary]
-Location: [section of spec]
-Context: [why this matters for this specific spec]
-Classification: [auto-fix|conditional|flag-for-review]
-Fix Action: [what was done OR "flagged for review — [reason]"]
-Severity: [HIGH|MEDIUM|LOW]
+**Summary:**
+
+<1-2 sentences describing impact and stakeholder value>
+
+**Outcome:** <What changed for stakeholders>
+
+---
+🤖 ✅ Completed by <AgentName> (<ModelID>)
 ```
 
-**For auto-fix findings:** `Fix Action` describes what change was applied. For example: "Renamed phase from 'Implementation' to 'Schema Migration'", "Added CREATED: 2025-04-13", "Inlined 'see above' with actual context".
+**Required Elements:**
 
-**For conditional findings:** `Fix Action` describes the fix applied after the safety check passed, or "conditional fix skipped — [reason]" if the check failed.
+- **Summary section** FIRST with executive summary (1-2 sentences, stakeholder value)
+- **Outcome section** describing what changed
+- **Horizontal rule** (`---`) separator
+- **Byline at BOTTOM** with ✅ emoji, agent name, and model ID
 
-**For flag-for-review findings:** `Fix Action` is "flagged for review — [reason it can't be auto-fixed]".
+**FORBIDDEN:**
 
-## Subtask Architecture
+- Byline at TOP (belongs at BOTTOM)
+- 📝 emoji for completion comments (use ✅)
+- Missing Summary or Outcome sections
+- Punch-list format (bullet point lists)
+- Technical changelogs (focus on impact, not files)
 
-The orchestrator delegates to these subtasks:
+### Error Handling
 
-```
-spec-auditor (orchestrator)
-├── fresh-start.md         — Self-containment checks
-├── structure.md            — STATUS, numbering, markers (adapted for non-spec types)
-├── content-quality.md      — Reasoning, ambiguity, conflicts, scope
-├── traceability.md         — Orphan requirements/features
-├── operational.md           — Logging, metrics, deployment
-├── fidelity.md             — Clean-room plan comparison (delegated from plan-fidelity-auditor)
-├── concerns.md             — Phase structure, independence (delegated from concern-separation-auditor)
-├── operational-flow.md     — Process flow / runbook operational checks (NEW)
-├── determinism.md          — Deterministic behavior and state dependency checks (NEW)
-├── error-recovery.md       — Runbook error recovery and rollback checks (NEW)
-├── principles.md           — Engineering principle violations from programming-principles skill (NEW)
-├── ground-truth.md         — Adversarial verification of metadata claims against direct evidence (NEW)
-├── sub-issue-fidelity.md   — Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) (NEW)
-└── concern-coverage.md     — Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) (NEW)
-└── prose-structure.md      — Anti-prose drift detection (NEW)
-```
+- If GitHub MCP is unavailable, report error and halt
+- If issue cannot be read, report error and skip to next
+- If issue cannot be updated, document in audit log and continue
 
-Each subtask is loaded via `--task` and produces findings in the report format above.
+## Audit Log (Required)
 
-## Problem Classes
+After the audit session completes (user says "stop" or no more issues found), the auditor MUST create an audit log:
 
-Existing classes remain, plus two new ones:
-
-| Class | Description |
-|-------|-------------|
-| FRESH-START-VIOLATION | Spec relies on memory context |
-| SIX-AREA-INCOMPLETE | Missing core area coverage |
-| MISSING-ELEMENT | Lacks required element |
-| STRUCTURE-VIOLATION | Phase/step/marker format issues |
-| AMBIGUOUS | Language can be interpreted multiple ways |
-| CONFLICTING | Parts contradict each other |
-| SCOPE-CREEP-RISK | Changes beyond stated objective |
-| VERIFICATION-GAP | Untestable success criteria |
-| CONTEXT-OVERFLOW | Spec section too long/complex |
-| SUPERSEDED-CLOSURE-VIOLATION | Closing comment claims future action |
-| COMMENT-FORMAT-VIOLATION | Wrong comment format |
-| ARCHITECTURAL-REASONING-GAP | Missing WHY explanation |
-| DEPENDENCY-INCOMPLETE | Missing integration points |
-| **MISSING-TRACEABILITY** | Requirements/features without trace links (NEW) |
-| **OPERATIONAL-REQUIREMENTS-INCOMPLETE** | Missing logging/metrics/deployment (NEW) |
-| **OPERATIONAL-FLOW-GAP** | Missing error recovery, I/O contracts, idempotency, or rollback in process flows |
-| **DETERMINISM-VIOLATION** | Hidden non-determinism, unstated environment assumptions, undocumented state dependencies |
-| **ERROR-RECOVERY-GAP** | Missing prerequisites, scope, escalation contacts, versioning, or validation gates in runbooks |
-| **SRP_VIOLATION** | Phase/step/module with multiple reasons to change |
-| **SOC_VIOLATION** | Mixed concerns in a single phase or step |
-| **YAGNI_VIOLATION** | Features or abstractions without current requirement |
-| **KISS_VIOLATION** | Unnecessarily complex approach when simpler solution exists |
-| **COUPLING_VIOLATION** | Tight coupling between phases or steps that should be independent |
-| **BLAST_RADIUS_VIOLATION** | Change scope wider than necessary; failure isolation absent |
-| **TESTABILITY_VIOLATION** | Design that makes testing difficult without explicit tradeoff note |
-| **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
-| **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
-| **PLAN-BLEED-AMBIGUOUS** | Content that could be either a requirement or implementation detail; requires domain judgment |
-| **GROUND-TRUTH-MISMATCH** | Metadata claim (STATUS, label, cross-ref, code ref, auth) contradicts actual state |
-| **MISSING_SUB_ISSUE** | Plan phase has no corresponding sub-issue (from sub-issue-fidelity) |
-| **MISMATCHED_PHASE_NAME** | Sub-issue name doesn't semantically match Plan phase name (from sub-issue-fidelity) |
-| **INCOMPLETE_SUB_ISSUE_BODY** | Sub-issue body missing substantial Plan phase content (from sub-issue-fidelity) |
-| **TASK_NOT_IN_SUB_ISSUE** | Plan phase task not represented in sub-issue (from sub-issue-fidelity) |
-| **CONCERN_SCOPE_NARROWER** | Sub-issue body omits tasks within Plan phase's concern boundary (from concern-coverage) |
-| **CONCERN_SCOPE_WIDER** | Sub-issue body includes tasks outside Plan phase's concern boundary (from concern-coverage) |
-| **CONCERN_BOUNDARY_CROSSED** | Sub-issue body mixes tasks from multiple Plan phase concerns (from concern-coverage) |
-| **ANTI-PROSE-DRIFT** | Rigid enumeration, tabular mapping, or fixed checklist where flowing prose is expected (from prose-structure) |
-
-## Audit Findings Handling
-
-After the audit session completes, findings are acted on per the auto-fix model: safe fixes are applied directly, conditional fixes are applied after safety checks, and ambiguous findings are flagged for review.
-
-**Findings are NOT posted as GitHub comments.** Audit findings are analogous to linter output: auto-fixes are applied silently (like `ruff --fix`), and flagged findings are reported in the executive summary. The correct workflow is:
-
-1. **Audit** → run subtasks, collect findings
-2. **Classify** → assign each finding to auto-fix, conditional, or flag-for-review
-3. **Act** → apply auto-fixes directly; apply conditional fixes after safety checks; leave flag-for-review findings for developer action
-4. **Comment ONLY for substantive revisions** → if the combined auto-fixes and conditional fixes change requirements, phases, success criteria, or scope, post one revision comment following `issue-operations` skill `comment` task format. Non-substantive changes (STATUS markers, boilerplate additions, numbering fixes, trace links) get NO comment.
-5. **Post executive summary to chat** → per the `Chat Executive Summary` section below
-
-**When NO comment is posted:**
-- Audit finds zero issues (all PASS) — move on, no comment
-- Agent only makes non-substantive auto-fixes (STATUS updates, boilerplate, numbering, trace links, typo fixes) — no comment
-- Flag-for-review findings exist but no substantive changes made — no comment (flagged in executive summary instead)
-
-**When a comment IS posted:**
-- Agent makes substantive spec changes (adding/removing phases, changing requirements, altering approach) — post one revision comment per `issue-operations` skill `comment` task
-
-**Session scratch space:** Findings may be written to `./tmp/audit-spec-YYYYMMDD.md` for session-level reference. This file is NOT posted anywhere and is deleted after the session ends.
-
-## Chat Executive Summary
-
-**After every audit, a structured executive summary MUST be posted to chat.** This is mandatory regardless of whether findings were found.
+**Location:** `./tmp/audit-spec-YYYYMMDD.md` (where YYYYMMDD is today's date)
 
 **Format:**
+
+```markdown
+# Audit Log: Spec Content Quality
+
+Date: YYYY-MM-DD
+Auditor: spec-auditor
+Issue: #N (URL to issue)
+Scope: GitHub Issue [SPEC] content quality auditing
+
+## Summary
+- Issues Found: N
+- Issues Fixed: M
+- Issues Skipped: K
+- Remaining: L (issues identified but not yet resolved)
+
+## Issues Processed
+
+### Issue 1
+Issue Location: <section>
+Problem class: <class>
+Status: <fixed|skipped|pending>
+Fix applied: <description of fix or "skipped per user request">
+GitHub Comment: <URL to comment>
+
+### Issue 2
+...
+
+## Unresolved Issues
+<List any issues identified but not resolved during this session>
+
+## Fresh-Start Context Compliance
+- Inline context: <PASS|FAIL> (reason if fail)
+- File references: <PASS|FAIL> (reason if fail)
+- Cross-reference quality: <PASS|FAIL> (reason if fail)
+
+## Six-Area Coverage
+- Commands: <PASS|FAIL|N/A>
+- Testing: <PASS|FAIL|N/A>
+- Project Structure: <PASS|FAIL|N/A>
+- Code Style: <PASS|FAIL|N/A>
+- Git Workflow: <PASS|FAIL|N/A>
+- Boundaries: <PASS|FAIL|N/A>
 ```
-## Content Audit: [source identifier] — [document title]
 
-**Document Type:** [Spec|Plan|Process Flow|Runbook/SOP|Checklist|Reference Doc] (confidence: [High|Medium|Low])
-**Source:** [--issue N|--file path|--url URL]
+**Requirements:**
 
-**Changes Made:**
-- [subtask] [problem-class]: [what was fixed] (auto-fix)
-- [subtask] [problem-class]: [what was fixed after safety check] (conditional)
-- (or "No changes made" if no auto-fixes or conditional fixes applied)
+- Log MUST be created after every audit session.
+- Log MUST include all issues identified (fixed, skipped, or pending).
+- Log MUST be written to `./tmp/` directory.
+- Log file MUST NOT be committed to version control (tmp files are excluded).
 
-**Findings Not Acted On:**
-- [subtask] [problem-class]: [summary] — [reason not acted on] (flag-for-review)
-- (or "None" if all findings were auto-fixed or conditionally fixed)
+## Fresh-Start Context Preservation (CRITICAL)
 
-**Issue:** [URL of the audited issue, if applicable]
-```
+**After creating the audit log, ATTACH the content to the spec issue being audited.**
 
-**Rules:**
-- Executive summary goes to chat ONLY, not GitHub comments
-- Changes Made lists ALL auto-fix and conditional fix actions in summary form
-- Findings Not Acted On lists ALL flag-for-review findings with the specific reason they weren't auto-fixed
-- If audit finds zero issues, output: `## Content Audit: [source] — [title] — No findings. Type: [type] (confidence: [level]). Issue: [URL if applicable]`
-- Issue URL is constructed from session init values (`GIT_OWNER`, `GIT_REPO`)
+### Attachment Workflow
 
-## Mandatory Invocation
+1. **After writing audit log to `./tmp/audit-spec-YYYYMMDD.md`:**
 
-**AI agents creating or auditing specs MUST invoke this skill. NO EXCEPTIONS.**
+   - Read the full audit log content
+   - Post as comment on the GitHub Issue specified by `--issue N`
+   - Delete the temp file: `rm ./tmp/audit-spec-YYYYMMDD.md`
+
+1. **Target Issue:**
+
+   - ALWAYS attach to the issue specified by `--issue N` parameter
+   - This is the spec being audited, so it needs the audit results
+
+1. **Comment Format:**
+
+   ```
+   AI: <AgentName> <ModelID> 📝 Spec Audit: <issue-number>
+
+   ## Summary
+   - Issues Found: N
+   - Issues Fixed: M
+   - Issues Skipped: K
+
+   <full audit log content>
+   ```
+
+1. **Why This Matters:**
+
+   - Temp files (`./tmp/`) are NOT preserved between sessions
+   - Fresh-start agents have no memory of previous sessions
+   - The spec issue needs the audit results for context in future sessions
+   - Ensures spec quality issues are visible to anyone reviewing the spec
+
+**⚠️ CRITICAL: Always attach to the spec issue being audited, then delete temp file. No exceptions.**
+
+## Mandatory Invocation (NO SKIPPING)
+
+**AI agents creating new specs MUST invoke this auditor. NO EXCEPTIONS.**
 
 When creating a GitHub Issue `[SPEC]`, the AI agent MUST:
+
 1. Create the spec issue with all required content
-2. Invoke `/skill spec-auditor --issue N` (orchestrator determines type and subtasks)
-3. Auto-fix findings are applied directly; flag-for-review findings remain in executive summary for developer action
-4. Add `needs-approval` label
-5. Post "ready for review" comment ONLY if substantive spec changes were made during step 3 (auto-fixes of structure/boilerplate are non-substantive)
+1. Invoke `/skill concern-separation-auditor --issue N` (FIRST - phase structure, auto-fix by default)
+1. Invoke `/skill spec-auditor --issue N` (SECOND - content quality)
+1. Invoke `/skill dev-architect --task review-spec` (THIRD - architectural correctness)
+1. Apply any fixes identified by auditors
+1. Add `needs-approval` label
+1. Post "ready for review" comment
 
-When auditing a plan, runbook, process flow, checklist, or reference document, use `--file path` or `--url URL` as appropriate.
-
-**Skipping the orchestrator is a CRITICAL GUIDELINE VIOLATION.**
+**Skipping this auditor is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Scope Boundaries
 
-- Read-only analysis of GitHub Issues, local files, or URLs, plus auto-fix of safe findings
-- Edits limited to spec content via GitHub Issue updates (auto-fixes applied directly); file/URL sources are read-only
-- Flag-for-review findings reported in executive summary but NOT applied
-- No changes to project source code, scripts, or notebooks
-- No new specs, expansions, or "improvements" beyond what findings require
-- Must use GitHub MCP tools for all issue operations
-- Document type autodetection uses signal scoring; Low confidence requires user confirmation before proceeding
-- None confidence (empty/unparseable content) produces an error — cannot audit
-- **Backward compatibility:** `--issue N` produces identical results to previous behavior
-- **Worktree awareness check:** Skills that perform git operations, read/write files, or dispatch sub-agents MUST include a "Worktree Mode" section and pass `WORKTREE_PATH` in sub-agent dispatch contexts. Missing worktree awareness is a medium-severity finding.
+- Read-only analysis of GitHub Issue `[SPEC]` specs.
+- Edits limited to the spec content via GitHub Issue updates.
+- No changes to project source code, scripts, notebooks, or non-spec files.
+- No new specs, expansions, or "improvements" beyond what the fix requires.
+- Must use GitHub MCP tools for all issue operations.
 
-## Sub-Agent Tasks
+## Coordination Points
 
-### Execution Mode Table
+### Integration with concern-separation-auditor and dev-architect
 
-| Task | Words | Mode |
-|------|-------|------|
-| `structure` | ~400 | inline |
-| `content-quality` | ~500 | inline |
-| `traceability` | ~300 | inline |
-| `operational` | ~300 | inline |
-| `fidelity` | ~600 | sub-agent |
-| `concerns` | ~400 | inline |
-| `operational-flow` | ~400 | inline |
-| `determinism` | ~300 | inline |
-| `error-recovery` | ~350 | inline |
-| `principles` | ~350 | inline |
-| `ground-truth` | ~500 | sub-agent |
-| `sub-issue-fidelity` | ~350 | inline |
-| `concern-coverage` | ~350 | inline |
-| `prose-structure` | ~250 | inline |
-| `fresh-start` | ~400 | inline |
+**ALL THREE auditors are required. They check different things.**
 
-**Note:** Individual subtasks are lightweight. Sub-agent dispatch is recommended for the full audit (all subtasks per document type) when running 3+ subtasks together, not for individual subtasks.
+| Auditor | Runs When | Checks |
+|---------|----------|--------|
+| `concern-separation-auditor` | FIRST | Phase structure, deployment independence, risk isolation, blast radius, phase names, BOILERPLATE-TITLE |
+| `spec-auditor` | SECOND | Fresh-start context, completeness, content quality, LLM implementability |
+| `dev-architect --task review-spec` | THIRD | Architectural correctness, compliance, interdependencies, ordering |
 
-### Dispatch Context Schema (Full Audit as Sub-Agent)
+**Order matters:** concern-separation-auditor fixes structural issues first, then spec-auditor checks content quality, then dev-architect reviews architectural correctness.
 
-```yaml
-source: {type: issue|file|url, identifier: <str>}
-document_type: <auto|spec|plan|process-flow|runbook|checklist|reference-doc>
-subtasks: [<task_name>]
-session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+### Integration with Approval Gate
+
+- **Approval Gate (`010-approval-gate.md`)**: Before approving implementation, both auditors must have been run.
+- **Critical Rules (`000-critical-rules.md`)**: References auditor skills for enforcement.
+- **Planning Guidelines (`140-planning-spec-creation.md`)**: Defines the structure requirements enforced by these auditors.
+
+### Enforcement Flow
+
+1. User creates a \[SPEC\] issue.
+1. concern-separation-auditor runs (phase structure fixes).
+1. spec-auditor runs (content quality fixes).
+1. dev-architect runs (architectural correctness review).
+1. After all three auditors pass → Add `needs-approval` label.
+1. After approval → Implementation begins.
+
+## Example Session
+
 ```
+User: /skill spec-auditor --issue 258
 
-### Result Contract (Full Audit)
+AI: <AgentName> (<ModelID>) 🤖 Auditing Issue #258 for content quality...
 
-```yaml
-status: DONE | DONE_WITH_CONCERNS | OVERFLOW
-task: spec-auditor
-document_type: <str>
-confidence: High | Medium | Low
-changes_made: [{subtask: <str>, problem_class: <str>, fix: <str>, classification: auto-fix|conditional}]
-findings_not_acted_on: [{subtask: <str>, problem_class: <str>, reason: <str>}]
-issue_url: <url|null>
-```
+Issue Location: Problem Statement section
+Problem class: FRESH-START-VIOLATION
+Explanation: Spec references "as discussed above" and "see previous comment" without restating the context inline. LLM agents with no memory context cannot follow these references.
+Proposed minimal fix: Replace all vague references with explicit inline context. Add "This means..." explanations where needed.
+Required remediation indicators: Problem Statement section - replace "As discussed above" with explicit context; add "This means..." clarification paragraph.
+Verification signal: changed — fixed fresh-start violation
 
-## Sub-Agent Spawning
+[User responds: fix]
 
-This skill is a **heavy skill** — quality audits with all subtasks consume significant context. When the main agent needs a spec audit, consider spawning a sub-agent via the `task` tool:
+AI: Applying fix...
 
-1. Main agent loads this dispatch document (~1,278 words)
-2. Main agent identifies which subtasks to run (baseline + conditional)
-3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use spec-auditor skill --issue N --task <subtask> with context: <session-context>")`
-4. Sub-agent loads: this SKILL.md + relevant task file(s) + required guidelines
-5. Sub-agent executes audit in isolation, returns findings as structured report
-6. Main agent receives findings — no full audit content in main context
+AI: <AgentName> (<ModelID>) 📝 Spec Update: Fixed fresh-start context violation
 
-**Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
+- Changed: Replaced "as discussed above" with explicit inline context in Problem Statement
+- Reason: LLM agents cannot follow references to previous context
+- Standard: docs/specs/how-to-write-good-spec-ai-agents.md - Fresh-Start Context Requirements
 
-## Cross-Reference Verification (MANDATORY)
+GitHub Comment: https://github.com/<owner>/<repo>/issues/258#issuecomment-xxxxx
 
-**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+Moving to next issue...
 
-| Reference | Verification | Finding Class |
-| -- | -- | -- |
-| `brainstorming` in Cross-References section | File exists at `.opencode/skills/brainstorming/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `spec-creation` in Cross-References section | File exists at `.opencode/skills/spec-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `writing-plans` in Cross-References section | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `issue-review` in Cross-References section | File exists at `.opencode/skills/issue-review/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `plan-fidelity-auditor` in delegated-from | File exists at `.opencode/skills/plan-fidelity-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `concern-separation-auditor` in delegated-from | File exists at `.opencode/skills/concern-separation-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `fresh-start` | File exists at `.opencode/skills/spec-auditor/tasks/fresh-start.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `structure` | File exists at `.opencode/skills/spec-auditor/tasks/structure.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `content-quality` | File exists at `.opencode/skills/spec-auditor/tasks/content-quality.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `traceability` | File exists at `.opencode/skills/spec-auditor/tasks/traceability.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `operational` | File exists at `.opencode/skills/spec-auditor/tasks/operational.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `fidelity` | File exists at `.opencode/skills/spec-auditor/tasks/fidelity.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `concerns` | File exists at `.opencode/skills/spec-auditor/tasks/concerns.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `operational-flow` | File exists at `.opencode/skills/spec-auditor/tasks/operational-flow.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `determinism` | File exists at `.opencode/skills/spec-auditor/tasks/determinism.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `error-recovery` | File exists at `.opencode/skills/spec-auditor/tasks/error-recovery.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `principles` | File exists at `.opencode/skills/spec-auditor/tasks/principles.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `ground-truth` | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `sub-issue-fidelity` | File exists at `.opencode/skills/spec-auditor/tasks/sub-issue-fidelity.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `concern-coverage` | File exists at `.opencode/skills/spec-auditor/tasks/concern-coverage.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `prose-structure` | File exists at `.opencode/skills/spec-auditor/tasks/prose-structure.md` | MISSING-TRACEABILITY if missing |
-| Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
-| Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |
-| Described behavior of `programming-principles` | Matches actual SKILL.md: defines engineering principles | CONFLICTING if mismatched |
-| `brainstorming` invocation in Invocation section | Skill has corresponding invocation entry | MISSING-TRACEABILITY if missing |
-| `spec-creation` invocation context | Skill describes creation-time discipline for traceability | CONFLICTING if mismatched |
-
-**Verification Procedure:**
-
-Before invoking any cross-referenced skill:
-1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
-2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
-3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
-
-**Classification on failure:**
-
-| Failure | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
-| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
-| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
-| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
-
-## Cross-References
-
-- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles), `verification-enforcement` (pre-generation verification gate that prevents the problems spec-auditor would find)
-- Related guidelines: `000-critical-rules.md` (auditor enforcement), `140-planning-spec-creation.md`
-- Label state machine: `141-planning-status-tracking.md §10` (add `needs-revision` when audit requires changes; replace with `needs-approval` on re-submission)
-- Delegated from: `plan-fidelity-auditor` (now `fidelity` and `sub-issue-fidelity` subtasks), `concern-separation-auditor` (now `concerns` and `concern-coverage` subtasks)
-
-## Key Differences from v1
-
-| v1 (Fixed Chain) | v2 (Orchestrator) | v3 (Auto-Fix Orchestrator) | v4 (Content-Aware) |
-|------------------|-------------------|---------------------------|-------------------|
-| Three separate auditor skills | Single orchestrator with subtasks | Single orchestrator with subtasks | Single orchestrator with subtasks |
-| All auditors always run | Agent decides conditional subtasks | Agent decides conditional subtasks | Agent decides conditional subtasks per document type |
-| Baseline runs every time | Baseline always runs (fresh-start, structure, fidelity) | Baseline always runs (fresh-start, structure, fidelity) | Baseline varies by document type |
-| Auto-fixes applied automatically | Findings reported, agent decides | Three-tier classification: auto-fix, conditional, flag-for-review | Three-tier classification (unchanged) |
-| No traceability check | `traceability` subtask (NEW) | `traceability` subtask | `traceability` subtask |
-| No operational requirements check | `operational` subtask (NEW) | `operational` subtask | `operational` subtask |
-| plan-fidelity-auditor invoked directly | `fidelity` subtask delegated | `fidelity` subtask delegated | `fidelity` subtask delegated |
-| concern-separation-auditor invoked directly | `concerns` subtask delegated | `concerns` subtask delegated | `concerns` subtask delegated |
-| No principle compliance check | — | — | `principles` subtask (NEW) — baseline for all types |
-| No ground-truth verification | — | — | `ground-truth` subtask (NEW) — baseline for all types |
-| No executive summary | No executive summary | Chat executive summary mandatory | Chat executive summary mandatory, includes document type |
-| Report format: Recommendation field | Report format: Recommendation field | Report format: Classification + Fix Action fields | Report format: Classification + Fix Action fields |
-| Issue-only input | Issue-only input | Issue-only input | `--issue`, `--file`, `--url` input |
-| No type detection | No type detection | No type detection | Signal-based autodetection + `--type` override |
-| Spec-only auditing | Spec-only auditing | Spec-only auditing | Multi-type: spec, plan, process-flow, runbook, checklist, reference-doc |
-
-Co-authored with AI: <AI-Name> (<model-id>)
-
-## Symbolic Engine Integration
-
-**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
-
-```bash
-./.opencode/tools/symbolic states
-./.opencode/tools/symbolic flow
-```
-
-- `sym-states`: Validates state machines extracted from yaml+symbolic blocks — checks reachability from start_state, detects dead/unreachable states, flags dangling references in transitions.
-- `sym-flow`: Builds a networkx DiGraph from rule triggers/requires and detects flow anomalies — unreachable nodes, cycles, orphan nodes with no edges.
-
-Results are used as **evidence** (not verdict) — they supplement prose-only analysis with formal state machine and flow validation.
-
-**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.
-
-**Import interface (for in-process usage):**
-```python
-import types, sys
-from pathlib import Path
-impl_dir = Path(".opencode/tools/impl")
-source = (impl_dir / "sym-states").read_text()
-mod = types.ModuleType("symstates")
-mod.__file__ = str(impl_dir / "sym-states")
-sys.modules["symstates"] = mod
-exec(compile(source, str(impl_dir / "sym-states"), "exec"), mod.__dict__)
-anomalies = mod.validate_state_machines(state_machines, rules)
+Issue Location: Success Criteria section
+Problem class: VERIFICATION-GAP
+...
 ```
