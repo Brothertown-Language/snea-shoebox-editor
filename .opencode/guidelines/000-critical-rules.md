@@ -172,7 +172,7 @@ The format applies to ALL halt points where implementation is reported complete:
 
 <Compare URL or Issue URL>
 
-🤖 <AgentName> (<ModelID>) <status>
+🤖 <AgentName> (<ModelID>) <status-icon> <status>
 ```
 
 - 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any element (summary, outcome, URL, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent
@@ -304,7 +304,7 @@ When any condition is NOT met, the action reverts to requiring an approved spec 
 
 Progress executive summaries go to **chat ONLY**, not GitHub Issue comments. Issue comments are for **substantive, stakeholder-meaningful information** only.
 
-Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelID>) <status>`
+Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelID>) <status-icon> <status>`
 
 **See `github-comments` skill for Issue comment requirements and the complete channel routing table.**
 

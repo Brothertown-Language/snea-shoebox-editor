@@ -18,7 +18,7 @@ Reply to review comments after changes have been made, providing clear documenta
 **Response:** Fixed
 **Details:** [What was changed and where]
 
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 ```
 
 ### For Explained Comments (Not Fixed)
@@ -27,7 +27,7 @@ Reply to review comments after changes have been made, providing clear documenta
 **Response:** Explained
 **Details:** [Why this was not changed — rationale for keeping current approach]
 
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 ```
 
 ### For Declined Comments
@@ -36,7 +36,7 @@ Reply to review comments after changes have been made, providing clear documenta
 **Response:** Declined
 **Details:** [Respectful reasoning for disagreeing with the suggestion]
 
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelID>) ✅ completed
 ```
 
 ## Important Notes

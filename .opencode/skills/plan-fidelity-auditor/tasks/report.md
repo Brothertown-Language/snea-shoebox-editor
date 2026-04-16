@@ -61,7 +61,7 @@ When significant gaps are found (3+ HIGH-severity findings or any VAGUE_PROBLEM 
 
 ---
 
-🤖 <AgentName> (<ModelID>) updated
+🤖 <AgentName> (<ModelID>) 📝 updated
 ```
 
 ## Audit Log Requirement

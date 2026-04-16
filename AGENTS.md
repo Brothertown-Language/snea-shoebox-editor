@@ -5,8 +5,8 @@
 The AI agent must determine its identity from the system prompt on EVERY session:
 
 1. **Detect AI agent and model** from your system context
-2. **Report identity** in byline format: `🤖 <AgentName> (<ModelID>)` (note `🤖` prefix and `<ModelID>` in parentheses)
-3. **Examples**: `🤖 OpenCode (ollama-cloud/glm-5)`, `🤖 OpenCode Desktop (ollama-cloud/glm-5)`, `🤖 Claude (claude-3-5-sonnet)`
+2. **Report identity** in byline format: `🤖 <AI-Name> (<ModelID>) <status-icon> <status>`
+3. **Examples**: `🤖 OpenCode (ollama-cloud/glm-5) ✅ completed`, `🤖 OpenCode (ollama-cloud/glm-5) 🔄 working`
 
 **WHY**: Different agents/loaders provide different context. System prompt tells you what you are.
 
