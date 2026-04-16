@@ -26,7 +26,7 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
 
    Before mapping file structure, evaluate whether to combine the plan into the spec issue body or create a separate [PLAN] issue. This decision must be made early because it affects how the plan content is structured and where it is stored.
 
-   **Input:** The `single_task_determination` passed from `github-issue-creation/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
+   **Input:** The `single_task_determination` passed from `issue-operations/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
 
    **Decision logic — agent intelligence, no hardcoded thresholds:**
 
@@ -122,7 +122,7 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
 
       These annotations enable `assemble-batch` to compose accurate `concern_boundaries_crossed` in the dispatch context, so sub-agents understand the architectural transitions they are participating in. Concern boundary annotations should be woven into the phase description naturally, not as separate structured fields.
 
-      After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `github-sub-issues --task create-sub-issue`.
+      After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `issue-operations --task link-sub-issue`.
 
 7. **Self-review:**
 
@@ -172,8 +172,8 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
     ```bash
     # Verify approval-gate dispatch chain
     ls .opencode/skills/approval-gate/SKILL.md && grep -c "verify-authorization" .opencode/skills/approval-gate/SKILL.md
-    # Verify github-sub-issues task
-    ls .opencode/skills/github-sub-issues/SKILL.md && grep -c "create-sub-issue" .opencode/skills/github-sub-issues/SKILL.md
+    # Verify issue-operations task
+    ls .opencode/skills/issue-operations/SKILL.md && grep -c "link-sub-issue" .opencode/skills/issue-operations/SKILL.md
     # Verify spec-creation exists
     ls .opencode/skills/spec-creation/SKILL.md
     # Verify brainstorming exists

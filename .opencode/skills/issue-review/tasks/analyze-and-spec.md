@@ -20,7 +20,7 @@ Perform root cause analysis on a bug report and auto-create a fix spec sub-issue
 
 - Root cause analysis documented in chat
 - Impact assessment completed
-- Fix spec sub-issue created via `github-issue-creation` skill
+- Fix spec sub-issue created via `issue-operations` skill
 - Fix spec sub-issue linked to bug report parent via `github_sub_issue_write`
 - Smart checkpoint decision made (auto-proceed or HALT)
 
@@ -65,7 +65,7 @@ Evaluate the bug's scope:
 
 ### Step 4: Generate Fix Spec
 
-Create a fix spec using the `github-issue-creation` skill. The fix spec must include:
+Create a fix spec using the `issue-operations` skill. The fix spec must include:
 
 1. **Title**: `[SPEC] Fix: <brief bug description>`
 2. **Body** (minimum required sections):
@@ -92,7 +92,7 @@ Before creating the fix spec sub-issue, evaluate clarity:
 
 ### Step 6: Create Fix Spec Sub-Issue
 
-Invoke `github-issue-creation` skill to create the fix spec:
+Invoke `issue-operations` skill to create the fix spec:
 
 ```
 github_issue_write(
@@ -182,7 +182,7 @@ Before classifying a closed bug report as `already-handled` or `stale`:
 
 ## Cross-References
 
-- `github-issue-creation`: Called for fix spec creation
+- `issue-operations`: Called for fix spec creation
 - `systematic-debugging`: Root cause analysis overlaps with `diagnose` task; this task is for issue-review context, not active debugging
 - `approval-gate`: Fix spec requires authorization before code changes proceed
 - `067-context-completeness.md`: All comments read before analysis

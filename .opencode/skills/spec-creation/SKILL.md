@@ -217,7 +217,7 @@ session_vars:
 
 ## Cross-References
 
-- **Calls:** `github-issue-creation` (spec persistence — `write` task invokes pre-creation → single-task-check → creation)
+- **Calls:** `issue-operations` (spec persistence — `write` task invokes pre-creation → single-task-check → creation)
 - **Preceded by:** `brainstorming` (exploration only — Steps 7-9 moved here)
 - **Followed by:** `spec-auditor` (quality audit — verifies what this skill produces)
 - **Parallel with:** `approval-gate` (authorization — waits for spec to be approved)

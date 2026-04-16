@@ -316,7 +316,7 @@ After the audit session completes, findings are acted on per the auto-fix model:
 1. **Audit** → run subtasks, collect findings
 2. **Classify** → assign each finding to auto-fix, conditional, or flag-for-review
 3. **Act** → apply auto-fixes directly; apply conditional fixes after safety checks; leave flag-for-review findings for developer action
-4. **Comment ONLY for substantive revisions** → if the combined auto-fixes and conditional fixes change requirements, phases, success criteria, or scope, post one revision comment following `github-comments` skill format. Non-substantive changes (STATUS markers, boilerplate additions, numbering fixes, trace links) get NO comment.
+4. **Comment ONLY for substantive revisions** → if the combined auto-fixes and conditional fixes change requirements, phases, success criteria, or scope, post one revision comment following `issue-operations` skill `comment` task format. Non-substantive changes (STATUS markers, boilerplate additions, numbering fixes, trace links) get NO comment.
 5. **Post executive summary to chat** → per the `Chat Executive Summary` section below
 
 **When NO comment is posted:**
@@ -325,7 +325,7 @@ After the audit session completes, findings are acted on per the auto-fix model:
 - Flag-for-review findings exist but no substantive changes made — no comment (flagged in executive summary instead)
 
 **When a comment IS posted:**
-- Agent makes substantive spec changes (adding/removing phases, changing requirements, altering approach) — post one revision comment per `github-comments` skill
+- Agent makes substantive spec changes (adding/removing phases, changing requirements, altering approach) — post one revision comment per `issue-operations` skill `comment` task
 
 **Session scratch space:** Findings may be written to `./tmp/audit-spec-YYYYMMDD.md` for session-level reference. This file is NOT posted anywhere and is deleted after the session ends.
 

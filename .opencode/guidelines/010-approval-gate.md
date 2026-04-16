@@ -222,12 +222,12 @@ Key rules:
 | Editing test files | Yes | `000-critical-rules.md` §Implementation Without Spec |
 | Creating new files of any type | Yes | `000-critical-rules.md` §Implementation Without Spec |
 | **Graph reconciliation** | On approval/re-approval, `reconcile-issue-graph` auto-closes verified-complete tickets and reopens verified-incomplete tickets in the reachable issue graph |
-| Creating new GitHub Issue (spec/plan) | No auth, but mandatory `github-issue-creation` skill | `github-issue-creation` skill |
+| Creating new GitHub Issue (spec/plan) | No auth, but mandatory `issue-operations` skill | `issue-operations` skill |
 | Updating existing issue spec text (revision) | No auth — spec revision ≠ implementation | `010-approval-gate.md` §Revision ≠ Implementation |
 | Updating issue spec to match code reality (drift sync) | No auth — administrative sync | `130-authority-source.md` §Documentation Drift Protocol |
 | Moving issue labels | No auth | (explicit classification) |
 | Running lint/typecheck/format commands | No auth | (existing practice, now explicit) |
-| Posting progress comments to GitHub | No auth | `github-comments` skill |
+| Posting progress comments to GitHub | No auth | `issue-operations` skill (`comment` task) |
 | Creating feature branch | No auth, but mandatory worktree | `git-workflow` skill pre-work |
 | Merging PR | Forbidden — human-only | Tier 0: Human-only merge |
 | Closing issues | Only after PR merge confirmed | `git-workflow` skill cleanup |
@@ -266,7 +266,7 @@ Key rules:
 | `000-critical-rules.md` | Critical violations and auditor enforcement |
 | `020-go-prohibitions.md` | GO command restrictions |
 | `140-planning-spec-creation.md` | Spec creation and plan-bridge hierarchy |
-| `github-sub-issues` skill | Sub-issue creation and hierarchy tracking (verification superseded by `approval-gate --task verify-authorization`) |
+| `issue-operations` skill | Sub-issue creation and hierarchy tracking via `link-sub-issue` task (verification superseded by `approval-gate --task verify-authorization`) |
 | `git-workflow` skill `cleanup` task | Post-merge closure workflow |
 | `pr-creation-workflow` skill | PR creation timing |
 | `writing-plans` skill | Plan creation from approved spec |
@@ -403,7 +403,7 @@ rules:
       - RESTRUCTURE(move sub-issues to plan)
     conflicts_with: []
     requires: []
-    triggers: [github-sub-issues]
+    triggers: [issue-operations]
     source: "010-approval-gate.md §Multi-Task Plan Authorization"
 
   - id: approval-gate-008

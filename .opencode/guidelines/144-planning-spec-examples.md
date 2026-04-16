@@ -163,7 +163,7 @@ When a spec has multiple phases/tasks, each phase SHOULD be tracked as a separat
 
 **Single-task exemption:** When a spec has exactly one task, no sub-issues are required.
 
-**See `github-sub-issues` skill for the complete auto-create workflow and phase-level structure.**
+**See `issue-operations` skill → `link-sub-issue` task for the complete auto-create workflow and phase-level structure.**
 
 ______________________________________________________________________
 

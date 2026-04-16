@@ -36,7 +36,7 @@ COMPARE_URL="${GITBUCKET_HTML_URL:-https://github.com/}${GIT_OWNER}/${GIT_REPO}/
 
 ### 3. Post Status Comment (Substantive Only)
 
-Before posting, evaluate whether the comment is substantive per the `github-comments` Substantive Comment Gate:
+Before posting, evaluate whether the comment is substantive per the `issue-operations` `comment` task Substantive Comment Gate:
 
 ```python
 # ONLY post if the comment conveys stakeholder-meaningful information
@@ -69,5 +69,5 @@ Chat output is idempotent by nature. Always produce:
 | -- | -- | -- |
 | Push branch | Check `git log origin/..HEAD` before pushing | Git workflows only |
 | Generate URL | Check if URL already generated; compare URL for pushes, action URL for creation workflows | All workflows |
-| Post status comment | Substantiveness gate (per `github-comments` skill) | Workflows with issue context |
+| Post status comment | Substantiveness gate (per `issue-operations` skill `comment` task) | Workflows with issue context |
 | Report executive summary + URL | Always run; idempotent by nature | All workflows |

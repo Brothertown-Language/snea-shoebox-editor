@@ -260,7 +260,7 @@ Before sending the chat report, verify ALL elements are present and correctly or
 **Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are MISSING-ELEMENT (auto-fix). Missing URL when required → generate URL. URL included when not applicable → STRUCTURE-VIOLATION, remove URL and reorder. Wrong ordering is STRUCTURE-VIOLATION (auto-fix). Elements are auto-fixed before output is sent — NOT reported after the fact.
 
 **Issue comments:**
-Post completion comment on each issue ONLY if substantive (per `github-comments` skill Substantive Comment Gate). Skip comment for non-substantive completions.
+Post completion comment on each issue ONLY if substantive (per `issue-operations` skill `comment` task Substantive Comment Gate). Skip comment for non-substantive completions.
 
 **HALT condition:**
 

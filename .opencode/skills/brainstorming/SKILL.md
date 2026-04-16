@@ -48,7 +48,7 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 6. **Visual companion conditional:** Offered only when topic involves visual decisions. Do NOT offer by default for this backend/Python project.
 
 7. **Terminal state is three-path:**
-   - **Path A (spec NOT yet a GitHub Issue):** Invoke `github-issue-creation` skill to create the spec as a GitHub Issue with `needs-approval` label → HALT for review.
+   - **Path A (spec NOT yet a GitHub Issue):** Invoke `issue-operations` skill to create the spec as a GitHub Issue with `needs-approval` label → HALT for review.
    - **Path B (spec already a GitHub Issue AND approved):** Transition directly to `writing-plans` skill.
    - **Path C (user declines spec/plan → FAILURE):** If the user declines both creating a new spec and selecting an existing candidate (from the search-prompt-fail workflow), this is a FAILURE state. Report: "Spec/Plan Required → Cannot proceed without a spec or plan to track this work." HALT.
 
@@ -66,7 +66,7 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 ```
 brainstorming (mandatory)
-  ├─ Path A: spec NOT yet GitHub Issue → github-issue-creation → HALT for review
+   ├─ Path A: spec NOT yet GitHub Issue → issue-operations → HALT for review
   ├─ Path B: spec already GitHub Issue AND approved → writing-plans → executing-plans
   └─ Path C: user declines spec/plan → FAILURE: Spec/Plan Required → HALT
 ```
@@ -123,7 +123,7 @@ Findings from authorization verification follow the three-tier model:
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `spec-creation` (spec structuring and writing), `github-issue-creation` (spec-as-issue creation), `writing-plans` (plan creation)
+- Related skills: `approval-gate` (authorization), `spec-creation` (spec structuring and writing), `issue-operations` (spec-as-issue creation), `writing-plans` (plan creation)
 - Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol), `065-verification-honesty.md` (evidence artifacts)
 - Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)
 - Source: Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md)

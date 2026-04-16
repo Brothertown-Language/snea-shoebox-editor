@@ -78,7 +78,7 @@ STATUS: 1.1 (REVISED - NEEDS APPROVAL)
 
 1. Add `(REVISED - NEEDS APPROVAL)` suffix to STATUS
 2. Add `needs-approval` label to the issue
-3. Post chat output with exec summary + spec URL + byline (per `github-comments` skill → Spec Revision Chat Output)
+3. Post chat output with exec summary + spec URL + byline (per `issue-operations` skill → `comment` task)
 4. HALT — do NOT proceed with implementation
 5. Wait for fresh explicit approval
 
@@ -134,7 +134,7 @@ When updating status:
 2. **Edit STATUS field ONLY** (change `STATUS: in progress — {concern}, Step N` or `STATUS: 1.1` for backward compatibility)
 3. **Never rewrite the entire body** to change status
 
-See `123-github-ai-identity.md` and `github-comments` skill → "Issue Body Update Rules" section for complete rules.
+See `123-github-ai-identity.md` and `issue-operations` skill → `comment` task for complete rules.
 
 ### Missing Status Header
 
@@ -294,7 +294,7 @@ Skills that change issue state MUST consult this section (`§10`) before adding 
 | Skill | Task(s) | Label Actions |
 | -- | -- | -- |
 | `approval-gate` | `verify-authorization`, `verify-blockers`, `verify-already-implemented`, `completion` | Remove `needs-approval` on approval; add `needs-revision` on revision; remove `needs-approval` on autoclose |
-| `github-issue-creation` | `creation`, `completion` | Add `needs-approval` on creation |
+| `issue-operations` | `creation`, `completion` | Add `needs-approval` on creation |
 | `spec-auditor` | `structure` | Add `needs-revision` when audit requires changes |
 | `git-workflow` | `cleanup` | No label changes (issues closed, labels no longer relevant) |
 | `writing-plans` | `create` | No label changes (plan is a sub-issue) |

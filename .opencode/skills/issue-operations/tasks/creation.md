@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Create GitHub Issue with proper title format, labels, and byline after validation passes.
+Create issue with proper title format, labels, and byline after validation passes. Routes to appropriate platform sub-skill.
 
 ## Operating Protocol
 
@@ -17,7 +17,7 @@ Create GitHub Issue with proper title format, labels, and byline after validatio
 
 ## Exit Criteria
 
-- Issue created in GitHub
+- Issue created via platform sub-skill
 - `needs-approval` label applied
 - Creation byline included in issue body footer
 - Issue number available for sub-issue linking
@@ -33,18 +33,34 @@ Create GitHub Issue with proper title format, labels, and byline after validatio
 | Enhancement | `[SPEC-ENHANCEMENT] <Enhancement>` | `[SPEC-ENHANCEMENT] Add Rate Limiting` |
 | Task | `[Task: #<parent>] <Task Description>` | `[Task: #100] Create user tables` |
 
-### Step 2: Create Issue
+### Step 2: Create Issue (Platform Routing)
 
+**GitHub platform:**
 ```python
 github_issue_write(
     method="create",
     owner=owner,
     repo=repo,
-    title=title,  # Format: [SPEC] <Description>
-    body=body,    # Full spec content
+    title=title,
+    body=body,
     labels=["needs-approval"]
 )
 ```
+
+**GitBucket platform:**
+```python
+from skills.gitbucket_api.tools import GitBucketAPI
+api = GitBucketAPI()
+api.create_issue(
+    owner=owner,
+    repo=repo,
+    title=title,
+    body=body,
+    labels=["needs-approval"]
+)
+```
+
+**Note (GitBucket):** Labels can ONLY be set during creation. Post-creation label changes do not work.
 
 **Response includes:**
 - `number`: Issue number (database ID)
@@ -70,9 +86,9 @@ Report: "Created issue #<number>. Next step: Invoke auditors before approval."
 **If spec has multiple phases:**
 
 1. After creating parent issue
-2. Invoke `github-sub-issues` skill
+2. Invoke `issue-operations --task link-sub-issue`
 3. Create phase-level sub-issues
-4. Link each via `github_sub_issue_write(method="add")`
+4. Link each via platform sub-skill (GitHub: `github_sub_issue_write(method="add")`; GitBucket: comment-based linking)
 
 **Single-task exemption:**
 - If spec has ONE task, skip sub-issue creation
@@ -92,6 +108,6 @@ Before proceeding, verify ALL:
 
 ## Context Required
 
-- Related tasks: `pre-creation` (runs first), `post-creation` (runs next)
-- Related skills: `github-comments` (byline format), `github-sub-issues` (sub-issue creation)
+- Related tasks: `pre-creation` (runs first), `post-creation` (runs next), `link-sub-issue` (sub-issue creation)
+- Platform routing: `../platforms/github-mcp/` or `../platforms/gitbucket-api/`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-approval` on creation; GitHub `labels` parameter replaces all labels)

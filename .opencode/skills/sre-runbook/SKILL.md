@@ -134,7 +134,7 @@ If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
 ## Cross-References
 
-- Related skills: `systematic-debugging` (root cause analysis discipline), `verification-before-completion` (evidence gates), `github-issue-creation` (issue creation discipline)
+- Related skills: `systematic-debugging` (root cause analysis discipline), `verification-before-completion` (evidence gates), `issue-operations` (issue creation discipline)
 - Related guidelines: `010-approval-gate.md` (authorization), `000-critical-rules.md` (no implementation without spec)
 
 ## Platform Compatibility

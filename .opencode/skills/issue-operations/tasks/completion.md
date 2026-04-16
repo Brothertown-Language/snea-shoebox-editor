@@ -1,13 +1,13 @@
 # Task: completion
 
-Idempotent completion subtask for github-issue-creation. Ensures mandatory steps run regardless of where the workflow halted.
+Idempotent completion subtask for issue-operations. Ensures mandatory steps run regardless of where the workflow halted.
 
 ## State Check Phase
 
-1. **Issue created:** Check if the GitHub Issue already exists
-   - Search by title or check recent issue list
+1. **Issue created:** Check if the issue already exists
+   - Search by title or check recent issue list (via platform sub-skill)
 2. **Labels applied:** Check if `needs-approval` label is present
-3. **Sub-issues created:** Check if multi-task spec has sub-issues (via `get_sub_issues`)
+3. **Sub-issues created:** Check if multi-task spec has sub-issues (via platform sub-skill `get_sub_issues` or comment-based tracking)
 4. **Auditor invoked:** Check if spec-auditor has been run on the issue (via session records or `./tmp/` files)
 
 ## Skill-Specific Completion
@@ -23,7 +23,7 @@ Idempotent completion subtask for github-issue-creation. Ensures mandatory steps
     - If missing: invoke spec-auditor
 3. **Create sub-issues** (if multi-task and not already created):
     - Check `get_sub_issues` result
-    - If empty and spec is multi-task: invoke `github-sub-issues` skill
+    - If empty and spec is multi-task: invoke `issue-operations --task link-sub-issue`
 
 ## Shared Completion Delegation
 

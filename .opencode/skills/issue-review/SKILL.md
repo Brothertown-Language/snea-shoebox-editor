@@ -158,9 +158,9 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 | -- | -- | -- |
 | `spec-auditor` in Cross-References and Audit Path | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `approval-gate` in Cross-References and gather task | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `github-comments` in Cross-References section | File exists at `.opencode/skills/github-comments/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` comment task in Cross-References section | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `systematic-debugging` in Cross-References section | File exists at `.opencode/skills/systematic-debugging/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `github-issue-creation` in Cross-References section | File exists at `.opencode/skills/github-issue-creation/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-operations` in Cross-References section | File exists at `.opencode/skills/issue-operations/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `gather` | File exists at `.opencode/skills/issue-review/tasks/gather.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `triage` | File exists at `.opencode/skills/issue-review/tasks/triage.md` | MISSING-TRACEABILITY if missing |
@@ -169,7 +169,7 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 | Task table entry `analyze-and-spec` | File exists at `.opencode/skills/issue-review/tasks/analyze-and-spec.md` | MISSING-TRACEABILITY if missing |
 | `spec-auditor` audit delegation behavior | Matches actual SKILL.md: `audit` task delegates to spec-auditor with triage hints | CONFLICTING if mismatched |
 | `approval-gate` authorization check behavior | Matches actual SKILL.md: `verify-authorization` task for authorization status | CONFLICTING if mismatched |
-| `github-comments` comment posting behavior | Matches actual SKILL.md: comment format and routing rules | CONFLICTING if mismatched |
+| `issue-operations` comment posting behavior | Matches actual SKILL.md: `comment` task format and routing rules | CONFLICTING if mismatched |
 
 **Verification Procedure:**
 
@@ -224,7 +224,7 @@ Action: [auto-fix|conditional|flag-for-review]
 - `spec-auditor`: Called by `audit` task for spec quality checks
 - `approval-gate`: Referenced for authorization status in `gather`; verifies fix spec for bug reports
 - `systematic-debugging`: Invokes `analyze-and-spec` after bug report creation
-- `github-issue-creation`: Called by `analyze-and-spec` for fix spec creation
+- `issue-operations`: Called by `analyze-and-spec` for fix spec creation
 - `programming-principles`: Principle context for audit path delegation
 
 Base directory for this skill: `.opencode/skills/issue-review/`

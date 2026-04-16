@@ -81,7 +81,7 @@ When user provides explicit authorization, it **OVERRIDES** the needs-approval l
 
 ### Step 5: Verify Sub-Issue Structure (for Plan Approval)
 
-**This gate is the SINGLE AUTHORITATIVE verification point for sub-issue readiness.** The `github-sub-issues` skill's verification gate is superseded — all sub-issue verification logic lives here.
+**This gate is the SINGLE AUTHORITATIVE verification point for sub-issue readiness.** The `issue-operations` `link-sub-issue` task's verification logic is superseded — all sub-issue verification logic lives here.
 
 #### 5.1 Determine Plan Type
 
@@ -110,7 +110,7 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
 if not sub_issues:
     # Auto-create sub-issues under the plan
     # Plan approval covers sub-issue creation — no separate auth needed
-    # See github-sub-issues --task create-sub-issue for creation procedure
+    # See issue-operations --task link-sub-issue for creation procedure
     pass
 
 # Verify sub-issue structure matches plan phases
@@ -576,7 +576,7 @@ For plan issues (detected in Step 5):
 ## Context Required
 
 - Related tasks: `verify-sub-issues` (delegated sub-issue verification detail), `verify-codebase`
-- Sub-issue verification gate: This task (Step 5) is the SINGLE AUTHORITATIVE verification point. `github-sub-issues` skill's verification gate is superseded by this gate.
+- Sub-issue verification gate: This task (Step 5) is the SINGLE AUTHORITATIVE verification point. `issue-operations` `link-sub-issue` verification logic is superseded by this gate.
 - Auto-dispatch targets: `writing-plans` (spec approval), `executing-plans` (plan approval)
 - Dispatch context for plan approval: pass `plan_issue=#N` and `spec_issue=#M` (extracted from plan body)
 - Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval`, add `in-progress` on approval)

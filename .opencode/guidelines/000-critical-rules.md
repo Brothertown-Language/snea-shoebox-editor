@@ -341,13 +341,13 @@ Progress executive summaries go to **chat ONLY**, not GitHub Issue comments. Iss
 
 Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelID>) <status-icon> <status>`
 
-**See `github-comments` skill for Issue comment requirements and the complete channel routing table.**
+**See `issue-operations` skill for Issue comment requirements and the complete channel routing table.**
 
 ## Critical Violation: Ignoring Issue Comments
 
 **⚠️ Failing to respond to user comments on GitHub Issues is a CRITICAL GUIDELINE VIOLATION.**
 
-**MANDATORY: Read issue comments and respond publicly. See `github-comments` skill → "Responding to User Comments (MANDATORY)".**
+**MANDATORY: Read issue comments and respond publicly. See `issue-operations` skill → `comment` task → "Responding to User Comments (MANDATORY)".**
 
 ## Critical Violation: Sub-issue Structure Bypass — Multi-task Plans
 
@@ -357,7 +357,7 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 - ✅ REQUIRED: Sub-issues at PHASE level under the plan (not the spec); each linked via `github_sub_issue_write method=add`; single-task plans exempt; auto-create as pre-implementation setup
 - ✅ REQUIRED: Plan is the parent of implementation sub-issues; spec references plan via body linked reference, NOT GitHub sub-issue link
 
-**See `github-sub-issues` skill for complete workflow including single-task exemption, auto-create workflow, and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
+**See `issue-operations` skill → `link-sub-issue` task for complete workflow including single-task exemption, auto-create workflow, and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 
@@ -411,7 +411,7 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 **⚠️ Implementing a stale or superseded spec without revision is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `github-issue-creation` skill `--task pre-creation` for the complete superseded/stale spec check procedure.**
+**See `issue-operations` skill `--task pre-creation` for the complete superseded/stale spec check procedure.**
 
 - If superseding issue exists: SILENTLY HALT, report conflict, wait for direction
 - If stale: REVISE spec, report revision, HALT for approval — never implement stale without revision
