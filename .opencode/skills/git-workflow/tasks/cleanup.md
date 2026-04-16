@@ -86,6 +86,152 @@ After verifying the PR merge and before switching to dev, rebase all other open 
 
 **Invoke as:** `/skill git-workflow --task rebase-pending`
 
+### Step 2.7: Hierarchical Issue Closure (MANDATORY)
+
+**GitHub autoclose (`Fixes #N`/`Closes #N`) is inert for this repo — all PRs merge to `dev`, not `main`. The cleanup task is the SOLE closure mechanism. Every issue that should be closed must be explicitly closed via GitHub API.**
+
+#### Step 2.7.1: Collect All Referenced Issues from PR Body
+
+Parse the PR body for all issue reference patterns. Build the initial closure list.
+
+| Pattern | Matches | Purpose |
+| -- | -- | -- |
+| `Spec:\s*#(\d+)` | `Spec: #959` | Plan→Spec upward |
+| `Plan:\s*#(\d+)` | `Plan: #960` | Spec→Plan downward |
+| `Fixes\s*#(\d+)` | `Fixes #968` | Cross-reference |
+| `Implements\s*#(\d+)` | `Implements #866` | Informational reference |
+| `Related\s*#(\d+)` | `Related #100` | Weak reference (evaluate only) |
+
+```python
+import re
+
+patterns = {
+    "spec_ref": r"Spec:\s*#(\d+)",
+    "plan_ref": r"Plan:\s*#(\d+)",
+    "fixes": r"Fixes\s*#(\d+)",
+    "implements": r"Implements\s*#(\d+)",
+    "related": r"Related\s*#(\d+)",
+}
+
+closure_candidates = set()
+for pattern_name, pattern in patterns.items():
+    for match in re.finditer(pattern, pr_body):
+        issue_num = int(match.group(1))
+        closure_candidates.add(issue_num)
+```
+
+#### Step 2.7.2: Classify Each Issue
+
+For each issue in the closure candidates, determine its type from labels or title prefix:
+
+| Classification | Detection | Closure Path |
+| -- | -- | -- |
+| Plan | Has `[PLAN]` label or `[PLAN]` title prefix | Plan closure path (Step 2.7.3) |
+| Spec / Spec-Fix | Has `[SPEC]` or `[SPEC-FIX]` label or title prefix | Spec closure path (Step 2.7.4) |
+| Other | No plan/spec labels | Direct close |
+
+```python
+for issue_num in closure_candidates:
+    issue = github_issue_read(method="get", issue_number=issue_num)
+    labels = [l["name"] for l in issue.get("labels", [])]
+    title = issue.get("title", "")
+
+    if "PLAN" in labels or title.startswith("[PLAN]"):
+        plan_closure_path(issue_num, issue)
+    elif "SPEC" in labels or "SPEC-FIX" in labels or title.startswith("[SPEC"):
+        spec_closure_path(issue_num, issue)
+    else:
+        direct_close(issue_num)
+```
+
+#### Step 2.7.3: Plan Closure Path
+
+1. Parse plan body for spec reference using regex `Spec:\s*#(\d+)` or `For spec:\s*#(\d+)`
+2. If found, add spec to closure candidates
+3. Check `get_sub_issues` API for task sub-issues under the plan
+4. Close task sub-issues first (plan work is merged → tasks complete)
+5. Close the plan issue
+
+```python
+def plan_closure_path(plan_num, plan_issue):
+    plan_body = plan_issue.get("body", "")
+
+    spec_match = re.search(r"(?:Spec|For spec):\s*#(\d+)", plan_body)
+    if spec_match:
+        spec_num = int(spec_match.group(1))
+        closure_candidates.add(spec_num)
+
+    sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_num)
+
+    for sub in sub_issues:
+        sub_detail = github_issue_read(method="get", issue_number=sub["number"])
+        if sub_detail.get("state") == "open":
+            github_issue_write(method="update", issue_number=sub["number"],
+                              state="closed", state_reason="completed")
+
+    plan_detail = github_issue_read(method="get", issue_number=plan_num)
+    if plan_detail.get("state") == "open":
+        github_issue_write(method="update", issue_number=plan_num,
+                          state="closed", state_reason="completed")
+```
+
+#### Step 2.7.4: Spec Closure Path
+
+1. Search `github_search_issues(query="Spec: #{spec_number} repo:{GIT_OWNER}/{GIT_REPO}")` for plans referencing this spec
+2. For each plan found, verify it is closed
+3. If ALL plans for the spec are closed → close the spec
+4. If ANY plan is still open → do NOT close the spec
+
+```python
+def spec_closure_path(spec_num, spec_issue):
+    plans = github_search_issues(
+        query=f"Spec: #{spec_num} repo:{GIT_OWNER}/{GIT_REPO}"
+    )
+
+    open_plans = []
+    for plan in plans:
+        plan_detail = github_issue_read(method="get", issue_number=plan["number"])
+        if plan_detail.get("state") == "open":
+            open_plans.append(plan)
+
+    if not open_plans:
+        spec_detail = github_issue_read(method="get", issue_number=spec_num)
+        if spec_detail.get("state") == "open":
+            github_issue_write(method="update", issue_number=spec_num,
+                              state="closed", state_reason="completed")
+    else:
+        pass
+```
+
+#### Step 2.7.5: Cross-Reference Closure
+
+For bug reports with `[SPEC-FIX]`, parse body for `Fixes #N`, `Related #N`. Evaluate linked issues.
+
+```python
+def cross_reference_closure(issue_num, issue):
+    body = issue.get("body", "")
+    related = re.findall(r"(?:Fixes|Related)\s*#(\d+)", body)
+
+    for related_num in related:
+        related_detail = github_issue_read(method="get", issue_number=int(related_num))
+        if related_detail.get("state") == "open":
+            pass
+```
+
+#### Step 2.7.6: Batch PR Handling
+
+Apply above for every issue in PR body. After processing all, re-check specs with multiple plans.
+
+```python
+for issue_num in closure_candidates:
+    classify_and_close(issue_num)
+
+for spec_num in [i for i in closure_candidates if is_spec(i)]:
+    spec_closure_path(spec_num, None)
+```
+
+**Safety rule: NEVER close an issue that still has open children or open linked plans.**
+
 ### Step 3: Switch to Dev and Sync
 
 **Three-Branch Workflow:** After feature PR merge, switch to `dev` (not `main`) and sync with remote.
@@ -238,14 +384,13 @@ After a batch PR is confirmed merged:
    git remote prune origin
    ```
 
-6. **Verify all issues closed by platform:**
+6. **Close all referenced issues via API:**
 
    ```python
-   # For each issue in the batch:
    for issue_number in batch_issues:
        issue = github_issue_read(method="get", issue_number=issue_number)
        if issue.get("state") != "closed":
-           # Edge case: Platform failed to auto-close
+           # Close all referenced issues via API — platform autoclose is inert for dev-branch merges
            github_issue_write(method="update", issue_number=issue_number,
                              state="closed", state_reason="completed")
    ```
@@ -527,14 +672,14 @@ Before ANY branch deletion:
 
 ### ✅ REQUIRED WORKFLOW
 
-**The platform (GitBucket/GitHub) closes issues automatically via "Fixes #N" annotations.**
+**GitHub autoclose is inert for this repo (PRs merge to `dev`, not `main`). The cleanup task is the SOLE closure mechanism. All issues must be closed via API after PR merge verification.**
 
-1. **Implement sub-issue** → Create PR with `Fixes #N` in description
+1. **Implement sub-issue** → Create PR with `Fixes #N` in description (informational label for human readers)
 2. **PR created** → Report URL, HALT
-3. **Human merges PR** → Platform automatically closes sub-issue
-4. **User confirms "pr merged"** → Agent verifies merge via GitHub API
+3. **Human merges PR** → Issues are NOT automatically closed
+4. **User confirms "pr merged"** → Agent verifies merge via GitHub API → Agent closes ALL referenced issues via API
 5. **Agent verifies sub-issues are closed** → API check (`state: "closed"`)
-6. **If sub-issue still open (edge case)** → Agent closes it manually
+6. **If sub-issue still open** → Agent closes it manually (standard procedure, not edge case)
 7. **All sub-issues closed?** → Close parent issue
 
 ### Verification Sequence
@@ -545,12 +690,11 @@ pr = github_pull_request_read(method="get", owner=..., repo=..., pullNumber=...)
 if pr.get("merged_at") is None:
     halt("PR not merged yet")
 
-# Step 2: Check all sub-issues are closed (platform should have done this)
+# Step 2: Close all sub-issues via API — platform autoclose is inert for dev-branch merges
 children = github_issue_read(method="get_sub_issues", issue_number=parent)
 open_children = [c for c in children if c["state"] == "open"]
 
 if open_children:
-    # Edge case: Platform failed to auto-close
     for child in open_children:
         github_issue_write(method="update", issue_number=child["number"], 
                           state="closed", state_reason="completed")
@@ -577,10 +721,10 @@ This enables automatic closure by GitBucket/GitHub.
 
 | Scenario | Action |
 | -- | -- |
-| Platform fails to auto-close sub-issue | Agent closes manually after PR merge verification |
+| Sub-issue still open after merge | Agent closes manually via API (standard procedure — autoclose is inert for dev merges) |
 | PR closed without merge | Sub-issues remain open (correct behavior) |
 | Draft PR | Sub-issues remain open until PR is merged (correct behavior) |
-| Multiple sub-issues in one PR | Include all in "Fixes #N, #M, #P" annotation |
+| Multiple sub-issues in one PR | Close all via API after merge verification |
 
 ## Pre-Closure Sub-Issue Verification Gate (CRITICAL)
 
@@ -787,7 +931,7 @@ if open_issues:
 | Branch not in `--merged dev` list | VERIFICATION-GAP | conditional | Sync dev with `git pull origin dev`, recheck |
 | Merge commit not in dev log | MISSING-ELEMENT | conditional | `git pull origin dev` then recheck |
 | Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason, may need reopen |
-| Sub-issue still open after merge | VERIFICATION-GAP | conditional | Wait for platform auto-close, or manually close after verifying |
+| Sub-issue still open after merge | VERIFICATION-GAP | conditional | Close manually via API — autoclose is inert for dev merges |
 
 **PR merge verification via API is MANDATORY. Trusting local git state alone is a CRITICAL GUIDELINE VIOLATION. Local `git pull` or fast-forward checks are NOT sufficient — they cannot distinguish between "merged via PR" and "locally merged without review."**
 

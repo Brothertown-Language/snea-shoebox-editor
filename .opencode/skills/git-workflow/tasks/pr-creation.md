@@ -719,13 +719,13 @@ autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 
 No sub-issues needed. Include only parent issue.
 
-**⚠️ CRITICAL: Sub-issues are closed by the platform, NOT by the agent.**
+**⚠️ CRITICAL: Sub-issues are closed by the cleanup task via API, NOT by autoclose.**
 
-- The "Fixes #N" annotation in PR body triggers automatic closure
-- Agent does NOT manually close sub-issues after implementation
-- Agent does NOT close sub-issues after PR creation
+- GitHub autoclose is inert for PRs merging into `dev`
+- The `Fixes #N` annotation in PR body is an informational label for human readers
+- The cleanup task (`git-workflow --task cleanup`) closes all issues via API after PR merge verification
+- Agent does NOT close sub-issues after implementation or after PR creation
 - Agent verifies closure AFTER PR merge via GitHub API
-- Only in edge case (platform fails) does agent manually close
 
 ### Step 6: Create PR (Platform-Agnostic)
 
@@ -788,7 +788,7 @@ Fixes #<child2>
 
 **PR Body Requirements:**
 
-- Must include `Fixes #<issue-number>` for autoclose
+- Must include `Fixes #<issue-number>` for issue tracking (informational label — autoclose is inert for `dev`-branch merges)
 - Include ALL sub-issues for multi-task specs
 - **MUST use executive summary format** (see Critical Violation: Wrong PR Body Format in `000-critical-rules.md`)
 - `Summary:` section — 1-2 sentences describing stakeholder value and business impact (NOT implementation details)
@@ -1044,11 +1044,13 @@ Every squash commit MUST include:
 
 ## Sub-Issue Autoclose
 
+**Note:** GitHub autoclose is inert for PRs merging into `dev`. The cleanup task (`git-workflow --task cleanup`) handles all issue closure via API. PR body keywords (`Fixes #N`) are informational labels for human readers.
+
 | Spec Type | PR Body Format |
 | -- | -- |
 | Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
 | Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
-| Batch | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\n## Batch Issues\n\nImplements #<issue1>\nImplements #<issue2>\n\nFixes #<parent1>\nFixes #<child1>\nFixes #<parent2>` |
+| Batch | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\n## Batch Issues\n\n#<issue1>\n#<issue2>\n\nFixes #<parent1>\nFixes #<child1>\nFixes #<parent2>` |
 
 **Example Multi-Task PR Body:**
 
@@ -1074,9 +1076,9 @@ Unified five approved issues into a single batch implementation, eliminating for
 
 ## Batch Issues
 
-Implements #660 — Add pre-implementation analysis task
-Implements #662 — Fix batch branch squash verification
-Implements #621 — Collapse executing-plans into divide-and-conquer
+#660 — Add pre-implementation analysis task
+#662 — Fix batch branch squash verification
+#621 — Collapse executing-plans into divide-and-conquer
 
 Fixes #660
 Fixes #662
