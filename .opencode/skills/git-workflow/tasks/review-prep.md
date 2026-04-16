@@ -564,6 +564,25 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 
 **These verifications are MANDATORY. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
 
+### PR Body Keyword Discipline (CRITICAL)
+
+**GitHub's `Fixes #N` and `Closes #N` keywords auto-close the referenced issue on PR merge.** This bypasses all verification gates. For multi-task plans with sub-issues, this creates orphaned sub-issues because GitHub does NOT cascade closure to children.
+
+#### Keyword Selection Rules
+
+| Keyword | Auto-Closes Issue? | Use When |
+|---------|-------------------|----------|
+| `Fixes #N` | YES — GitHub auto-closes #N on merge | Single-issue specs with NO sub-issues |
+| `Closes #N` | YES — GitHub auto-closes #N on merge | Same as `Fixes` — prefer `Fixes` for bugs, `Closes` for features |
+| `Implements #N` | NO — informational reference only | Multi-task plans, specs with sub-issues, any issue where graph may be incomplete |
+| `Related #N` | NO — weak reference | Tangentially related issues |
+
+**Rule of thumb:** If the issue has sub-issues or is part of a plan-bridge hierarchy (spec → plan → sub-issues), use `Implements` instead of `Fixes`. The cleanup task's graph reconciliation step will handle proper closure after verifying the entire graph.
+
+**Exception:** `Fixes` is acceptable for leaf issues (no sub-issues, no cross-references) where auto-closure is safe.
+
+**When in doubt:** Use `Implements`. It's always safe — it never auto-closes, and the cleanup task handles closure properly.
+
 ## Context Required
 
 - Related skills: `pr-creation-workflow` (PR timing)

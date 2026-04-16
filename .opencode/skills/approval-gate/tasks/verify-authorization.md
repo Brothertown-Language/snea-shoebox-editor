@@ -209,6 +209,111 @@ The "Already implemented" row in the Auto-Dispatch table (Step 6) MUST NOT skip 
 | Closed as "duplicate" | MISSING-TRACEABILITY | conditional | Verify duplicate target exists and covers scope |
 | Closed state unclear (no reason) | VERIFICATION-GAP | flag-for-review | Do NOT skip — verify implementation manually |
 
+#### 5.5 Transitive Issue Graph Verification (MANDATORY on Authorization and Re-Approval)
+
+**When any issue is authorized (approved, re-approved, or `Fixes`-closed), the agent MUST traverse the entire reachable issue graph to verify every node is in a consistent state.** Single-issue verification is insufficient — an authorized issue may have open sub-issues, dangling cross-references, or linked issues in an inconsistent state.
+
+##### Three Edge Types Traversed
+
+| Edge Type | Source | Example | API Access |
+|-----------|--------|---------|------------|
+| **Sub-issue** | GitHub sub-issue link | Plan → Phase sub-issue | `github_issue_read(method=get_sub_issues, issue_number=N)` |
+| **Cross-reference** | Issue body references | `Spec: #M`, `Plan: #N`, `Implements #K` | Parse body text + `github_issue_read(method=get, issue_number=M)` |
+| **Linked issue** | PR/closure references | `Fixes #N`, `Closes #N`, `Related #N` | Parse body text + `github_issue_read(method=get, issue_number=N)` |
+
+##### Graph Traversal Algorithm
+
+```python
+def traverse_issue_graph(root_issue_number, depth_limit=5):
+    """
+    Transitively traverse the issue graph from a root issue.
+    Follows sub-issue, cross-reference, and linked-issue edges.
+    Returns a verification report for every node in the reachable graph.
+    """
+    visited = set()
+    queue = [(root_issue_number, 0)]  # (issue_number, current_depth)
+    findings = []
+
+    while queue:
+        issue_number, depth = queue.pop(0)
+
+        if issue_number in visited:
+            continue
+        visited.add(issue_number)
+
+        if depth > depth_limit:
+            findings.append({
+                "issue": issue_number,
+                "depth": depth,
+                "result": "DEPTH_LIMIT_REACHED",
+                "action": "flag-for-review"
+            })
+            continue
+
+        # Step 1: Read the issue
+        issue = github_issue_read(method="get", issue_number=issue_number)
+
+        # Step 2: Verify the issue's state
+        # (reuse verify-closed-issue logic for closed issues)
+        if issue["state"] == "closed":
+            # Run closed-issue verification (Steps 1-6 of verify-closed-issue)
+            # Record finding
+            pass
+
+        # Step 3: Follow sub-issue edges
+        sub_issues = github_issue_read(method="get_sub_issues", issue_number=issue_number)
+        for sub in sub_issues:
+            queue.append((sub["number"], depth + 1))
+
+        # Step 4: Parse body for cross-references
+        body = issue.get("body", "")
+        for pattern in [r"Spec:\s*#(\d+)", r"Plan:\s*#(\d+)", r"Implements\s*#(\d+)",
+                        r"Fixes\s*#(\d+)", r"Closes\s*#(\d+)", r"Related\s*#(\d+)",
+                        r"Duplicate\s+of\s*#(\d+)"]:
+            for match in re.finditer(pattern, body):
+                ref_num = int(match.group(1))
+                if ref_num not in visited:
+                    queue.append((ref_num, depth + 1))
+
+    return findings
+```
+
+##### When to Traverse
+
+| Trigger | When | Depth Limit |
+|---------|------|-------------|
+| Issue approved/re-approved | `verify-authorization` receives explicit authorization | 5 |
+| Issue closed by `Fixes` keyword (post-merge) | `cleanup` processes merged PR | 5 |
+| Issue being verified as already-implemented | `verify-already-implemented` encounters a closed issue | 3 |
+| Issue encountered during triage | `triage` classifies a closed issue | 3 |
+
+##### Finding Classification for Graph Verification
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| All nodes verified (closed with merged PR or open and consistent) | VERIFIED | auto-proceed | Graph is consistent |
+| Open sub-issue on closed parent | VERIFICATION-GAP | flag-for-review | Parent closure may be premature |
+| Cross-reference to open/closed mismatch | CONFLICTING | flag-for-review | Spec closed but plan open, or vice versa |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Premature sub-issue closure |
+| Depth limit reached | VERIFICATION-GAP | flag-for-review | Graph too deep — investigate manually |
+| Cross-reference 404 | MISSING-TRACEABILITY | flag-for-review | Referenced issue does not exist |
+
+##### Evidence Requirement
+
+Every node in the reachable graph MUST produce an evidence artifact — a `github_issue_read` tool call result. Graph traversal without per-node evidence is a verification honesty violation.
+
+**Report format:**
+
+```
+Issue Graph Verification Report for #<root>
+Nodes visited: <N>
+Max depth: <D>
+Findings:
+  - #<issue>: <state> — <finding> (<classification>)
+  ...
+Overall: CONSISTENT / HAS_FLAGS
+```
+
 #### Finding Classification for Sub-Issue Verification
 
 | Finding | Problem Class | Classification | Action |
