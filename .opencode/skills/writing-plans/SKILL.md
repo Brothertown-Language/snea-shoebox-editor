@@ -50,6 +50,55 @@ Spec #N (approved)
 - No sub-issues (single-task by definition)
 - Approval follows spec approval status (no separate plan approval needed)
 
+## Combined Spec+Plan (Single-Task Specs)
+
+When a spec is single-task with simple implementation, the plan may be combined into the spec issue body instead of creating a separate [PLAN] issue. The decision is made at the Step 1.5 decision gate in `tasks/create.md`.
+
+### When to Combine vs Keep Separate
+
+| Condition | Recommendation |
+|-----------|---------------|
+| Single-task, ≤ few TDD steps, plan content flows naturally after spec | **Combine** — one document aids review |
+| Single-task, many TDD steps, or spec body already long/dense | **Separate** — readability degrades with combined content |
+| Multi-task (multiple phases, mixed concerns) | **Always separate** — sub-issue tracking required |
+
+### Combined Document Structure
+
+When combined, the spec issue body has this structure:
+
+```
+[Existing spec content: objectives, requirements, success criteria, etc.]
+
+---
+
+## Implementation Plan
+
+**Goal:** <one-line goal>
+**Architecture:** <architectural approach>
+**Tech Stack:** <technologies used>
+
+### File Structure
+- `path/to/file1.py` — <responsibility>
+- `path/to/file2.py` — <responsibility>
+
+### Phase 1: [Concern Name]
+#### Task 1: [Component Name]
+- Step 1: Write the failing test
+- Step 2: Run test to verify it fails
+- Step 3: Write minimal implementation
+- Step 4: Run test to verify it passes
+- Step 5: Commit
+```
+
+### Approval Cascade
+
+The spec-to-plan approval cascade still applies to combined plans:
+
+- If the spec was already approved when the plan is appended, the combined plan inherits the spec's approval
+- No separate plan approval is needed — the plan content is part of the already-approved spec
+- If the spec has not been approved, the combined plan requires the spec to be approved (single approval covers both)
+- Spec revision invalidates the `## Implementation Plan` section — see Spec Revision Revocation below
+
 ## Tasks
 
 | Task | Purpose | Words |
@@ -111,6 +160,7 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 |-----------|--------|---------|
 | `spec_issue` | Issue number from `verify-authorization` | Identifies the approved spec to plan from |
 | `single_task_determination` | From `github-issue-creation/tasks/post-creation` (via `single-task-check`) | Informs combined vs separate plan decision (`single-task` or `multi-task`) |
+| `single_task` | Boolean from `github-issue-creation/tasks/post-creation` (via `single-task-check`) | `true` for single-task, `false` for multi-task — shorthand for decision gate |
 | `GIT_OWNER` | Session init | Repository owner for API calls |
 | `GIT_REPO` | Session init | Repository name for API calls |
 | `WORKTREE_PATH` | Session / worktree setup | Base directory for file operations |
@@ -163,12 +213,12 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 ## Operating Protocol
 
 1. Read approved spec from GitHub Issue
-2. Map file structure (all files to create/modify with responsibilities)
-3. Plan phase structure by judgment (prose-driven)
-4. Define tasks within each phase using TDD step structure
-5. Write plan document header (Goal, Architecture, Tech Stack)
-6. **Decision gate:** Evaluate combined vs separate plan using `single_task_determination` input and agent intelligence — see `tasks/create.md` Step 6
-7. If combined: append `## Implementation Plan` to spec issue body; if separate: create `[PLAN]` GitHub Issue with sub-issues via `github-sub-issues` skill
+2. **Decision gate:** Evaluate combined vs separate plan using `single_task_determination` and `single_task` inputs — see `tasks/create.md` Step 1.5
+3. Map file structure (all files to create/modify with responsibilities)
+4. Plan phase structure by judgment (prose-driven)
+5. Define tasks within each phase using TDD step structure
+6. Write plan document header (Goal, Architecture, Tech Stack)
+7. Store plan document: if combined, append `## Implementation Plan` to spec issue body; if separate, create `[PLAN]` GitHub Issue with sub-issues via `github-sub-issues` skill
 8. Self-review (coverage, placeholders, type consistency)
 9. Validate (no placeholders, TDD structure, actionable steps)
 10. Chat output with URL — Report plan creation (combined or separate) using exec summary + URL + byline format per `000-critical-rules.md`

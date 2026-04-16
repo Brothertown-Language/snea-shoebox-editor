@@ -29,7 +29,7 @@ Invoke auditors and trigger plan creation for multi-task specs after issue creat
 - Single-task spec (ONE phase, plan optional per agent intelligence)
 - Multi-task spec (multiple phases, requires plan issue)
 
-**Export the determination** as `single_task_determination` with value `single-task` or `multi-task`. This value is passed to `writing-plans --task create` so the decision gate can evaluate combined vs separate plan without re-running the single-task analysis.
+**Export the determination** as `single_task_determination` with value `single-task` or `multi-task`. Also export `single_task` as a boolean (`true` for single-task, `false` for multi-task). These values are passed to `writing-plans --task create` so the decision gate can evaluate combined vs separate plan without re-running the single-task analysis.
 
 ### Step 2: Trigger Plan Creation (All Specs)
 
@@ -45,8 +45,8 @@ The writing-plans decision gate evaluates whether to combine the plan into the s
 
 ```python
 # Post-creation triggers writing-plans with single-task determination:
-# writing-plans --task create --context single_task_determination=single-task|multi-task
-#   → decision gate evaluates combined vs separate
+# writing-plans --task create --context single_task_determination=single-task|multi-task single_task=true|false
+#   → decision gate at Step 1.5 evaluates combined vs separate
 #   → if separate: creates [PLAN] issue + sub-issues
 #   → if combined: appends ## Implementation Plan to spec body
 ```
@@ -83,7 +83,7 @@ Previous workflow (DEPRECATED):
 
 **If single-task:**
 - Plan strategy is determined by writing-plans decision gate (combined spec+plan or separate plan)
-- Writing-plans receives `single_task_determination=single-task` and evaluates the best document structure
+- Writing-plans receives `single_task_determination=single-task` and `single_task=true` and evaluates the best document structure
 - If combined: no sub-issues, plan content lives in spec body under `## Implementation Plan`
 - If separate: standard [PLAN] issue with sub-issues
 - Proceed to auditor invocation
@@ -93,10 +93,10 @@ Previous workflow (DEPRECATED):
 Before proceeding, verify ALL:
 
 - Auditors invoked (spec-auditor orchestrator — determines subtasks automatically)
-- Plan creation triggered via writing-plans (for all specs, with single_task_determination passed)
+- Plan creation triggered via writing-plans (for all specs, with `single_task_determination` and `single_task` passed)
 
 **If ANY check fails → HALT and report.**
 
 ## Context Required
 
-- Related tasks: `creation` (runs first), `single-task-check` (determination logic), `writing-plans --task create` (plan creation — decision gate handles combined vs separate)
+- Related tasks: `creation` (runs first), `single-task-check` (determination logic), `writing-plans --task create` (plan creation — decision gate at Step 1.5 handles combined vs separate)

@@ -18,6 +18,47 @@ Create an implementation plan from an approved spec. For single-task specs the a
    - Extract objectives, constraints, success criteria
    - Identify affected files and dependencies
 
+1.5. **Combined vs Separate Plan Decision Gate:**
+
+   Before mapping file structure, evaluate whether to combine the plan into the spec issue body or create a separate [PLAN] issue. This decision must be made early because it affects how the plan content is structured and where it is stored.
+
+   **Input:** The `single_task_determination` passed from `github-issue-creation/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
+
+   **Decision logic — agent intelligence, no hardcoded thresholds:**
+
+   | Condition | Outcome |
+   |-----------|---------|
+   | Multi-task spec (multiple phases, mixed concerns, deployment independence) | **Always separate** — create [PLAN] issue with sub-issues (current behavior) |
+   | Single-task spec AND spec body can absorb plan content without becoming unwieldy | **Candidate for combined** — agent evaluates readability and coherence |
+   | Single-task spec AND combining would make document hard to read or mix concerns | **Separate** — create [PLAN] issue (current behavior) |
+
+   **Agent evaluation for combined candidates — consider:**
+
+   - How many TDD steps the plan would add
+   - Whether the spec body is already long or dense
+   - Whether the plan content flows naturally after the spec content
+   - Whether keeping everything in one document aids or hinders review
+
+   **Decision output (MANDATORY):** The agent MUST document its decision in chat before proceeding:
+
+   ```
+   Plan structure decision: combined/separate
+   Reason: <brief justification referencing the evaluation criteria>
+   ```
+
+   **If COMBINED:**
+
+   - Append `## Implementation Plan` section to the spec issue body
+   - The section contains the plan header, file structure, and TDD tasks
+   - The issue retains its `[SPEC]` title prefix (not changed to `[PLAN]`)
+   - No sub-issues needed (single-task by definition)
+   - Remove `needs-approval` label if the spec was already approved (plan inherits approval via spec-to-plan cascade)
+   - Proceed to Step 2 (Map file structure) — plan content will be appended to spec body after all steps complete
+
+   **If SEPARATE:**
+
+   - Proceed to Step 2 (Map file structure) — plan content will be stored in a separate [PLAN] issue created at Step 6a
+
 2. **Map file structure:**
 
    - List all files that will be created or modified
@@ -40,41 +81,18 @@ Create an implementation plan from an approved spec. For single-task specs the a
 
    - Goal, Architecture, Tech Stack
 
-6. **Decision gate — combined vs separate plan:**
+6. **Store plan document (depends on Step 1.5 decision):**
 
-   Before creating the plan document, evaluate whether to combine the plan into the spec issue body or create a separate [PLAN] issue.
-
-   **Input:** The `single_task_determination` passed from `github-issue-creation/tasks/post-creation` (values: `single-task` or `multi-task`). If not provided, evaluate using the same criteria as `single-task-check` (one phase, single concern, no decomposition needed).
-
-   **Decision logic — agent intelligence, no hardcoded thresholds:**
-
-   | Condition | Outcome |
-   |-----------|---------|
-   | Multi-task spec (multiple phases, mixed concerns, deployment independence) | **Always separate** — create [PLAN] issue with sub-issues (current behavior) |
-   | Single-task spec AND spec body can absorb plan content without becoming unwieldy | **Candidate for combined** — agent evaluates readability and coherence |
-   | Single-task spec AND combining would make document hard to read or mix concerns | **Separate** — create [PLAN] issue (current behavior) |
-
-   **Agent evaluation for combined candidates — consider:**
-
-   - How many TDD steps the plan would add
-   - Whether the spec body is already long or dense
-   - Whether the plan content flows naturally after the spec content
-   - Whether keeping everything in one document aids or hinders review
-
-   **If COMBINED:**
+   **If COMBINED (decision from Step 1.5):**
 
    - Append `## Implementation Plan` section to the spec issue body
-   - The section contains the plan header, file structure, and TDD tasks
-   - The issue retains its `[SPEC]` title prefix (not changed to `[PLAN]`)
-   - No sub-issues needed (single-task by definition)
-   - Remove `needs-approval` label if the spec was already approved (plan inherits approval via spec-to-plan cascade)
    - Proceed to Step 7 (Self-review)
 
-   **If SEPARATE:**
+   **If SEPARATE (decision from Step 1.5):**
 
-   - Continue to Step 6a (Create separate plan issue) — current behavior
+   - Continue to Step 6a (Create separate plan issue)
 
-6a. **Create separate plan issue:**
+6a. **Create separate plan issue (only if SEPARATE):**
 
    - Title: `[PLAN] <Feature Name>`
       - Labels: `plan` + `needs-approval`
