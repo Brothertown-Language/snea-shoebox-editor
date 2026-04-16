@@ -95,6 +95,113 @@ Developer confirms "PR merged"
 cleanup: Verify merge via API → Close issues
 ```
 
+## Sub-Agent Tasks
+
+### Execution Mode Table
+
+| Task | Words | Mode |
+|------|-------|------|
+| `cleanup` | 6,457 | sub-agent |
+| `pr-creation` | 5,312 | sub-agent |
+| `review-prep` | 4,241 | sub-agent |
+| `provenance` | 3,664 | sub-agent |
+| `pre-work` | 1,898 | sub-agent |
+| `release-promotion` | 1,811 | sub-agent |
+| `rebase-pending` | 1,666 | sub-agent |
+| `implementation` | ~400 | inline |
+| `completion` | ~200 | inline |
+| `check-pr` | ~50 | inline |
+
+### Result Contracts (Sub-Agent Tasks)
+
+#### pre-work
+
+```yaml
+status: DONE | BLOCKED
+task: pre-work
+worktree_path: <path>
+branch_name: <str>
+branch_created: bool
+setup_complete: bool
+tests_passing: bool
+```
+
+#### review-prep
+
+```yaml
+status: DONE
+task: review-prep
+branch_pushed: bool
+compare_url: <url>
+commits_count: <int>
+```
+
+#### pr-creation
+
+```yaml
+status: DONE | BLOCKED
+task: pr-creation
+pr_number: <N|null>
+pr_url: <url|null>
+squash_performed: bool
+```
+
+#### cleanup
+
+```yaml
+status: DONE
+task: cleanup
+branches_deleted: [<name>]
+issues_closed: [<N>]
+stashes_preserved: [<name>]
+sub_issues_verified: bool
+```
+
+#### provenance
+
+```yaml
+status: DONE
+task: provenance
+tier_used: 1 | 2 | 3
+issues_created: [<N>]
+prs_created: [<N>]
+submodules_processed: [<name>]
+```
+
+#### release-promotion
+
+```yaml
+status: DONE | BLOCKED
+task: release-promotion
+tag_created: bool
+tag_name: <str>
+release_url: <url|null>
+submodules_promoted: [<name>]
+```
+
+#### rebase-pending
+
+```yaml
+status: DONE | BLOCKED
+task: rebase-pending
+rebased_prs: [<N>]
+conflicts_detected: [{pr: <N>, tier: 1|2|3}]
+conflicts_resolved: [<N>]
+```
+
+### Dispatch Context Schema
+
+```yaml
+branch_name: <str>
+worktree_path: <path>
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
+
 ## Sub-Agent Spawning
 
 This skill is a **heavy skill** — its task files contain significant detail that pollutes context. When the main agent needs git-workflow execution, consider spawning a sub-agent via the `task` tool:
