@@ -153,7 +153,41 @@ for issue_num in closure_candidates:
 5. Close the plan issue
 
 ```python
-def plan_closure_path(plan_num, plan_issue):
+def check_deliverables_in_pr(sub_detail, pr_files):
+    """
+    Check whether a sub-issue's deliverables are covered by
+    the merged PR's file list.
+    """
+    body = sub_detail.get("body", "") or ""
+    title = sub_detail.get("title", "") or ""
+    deliverable_patterns = re.findall(
+        r"(?:deliverable|file|path|modif(?:y|ied|ication)):\s*`?([^\s`*#]+)`?",
+        body,
+        re.IGNORECASE,
+    )
+    title_paths = re.findall(r"`([^`]+)`", title)
+
+    candidates = deliverable_patterns + title_paths
+
+    if not candidates:
+        # No explicit deliverables — check if sub-issue number
+        # appears in PR body (Fixes #N, Implements #N, etc.)
+        sub_num = sub_detail.get("number")
+        if sub_num and any(
+            f"#{sub_num}" in (ref or "")
+            for ref in [pr_body]
+        ):
+            return True
+        # No deliverables and not referenced in PR — cannot verify
+        return False
+
+    for candidate in candidates:
+        if any(candidate in f for f in pr_files):
+            return True
+
+    return False
+
+def plan_closure_path(plan_num, plan_issue, pr_files=None, merged_pr_number=None):
     plan_body = plan_issue.get("body", "")
 
     spec_match = re.search(r"(?:Spec|For spec):\s*#(\d+)", plan_body)
@@ -166,8 +200,29 @@ def plan_closure_path(plan_num, plan_issue):
     for sub in sub_issues:
         sub_detail = github_issue_read(method="get", issue_number=sub["number"])
         if sub_detail.get("state") == "open":
-            github_issue_write(method="update", issue_number=sub["number"],
-                              state="closed", state_reason="completed")
+            deliverables_covered = (
+                pr_files is not None
+                and check_deliverables_in_pr(sub_detail, pr_files)
+            )
+
+            if deliverables_covered:
+                github_issue_write(
+                    method="update", issue_number=sub["number"],
+                    state="closed", state_reason="completed"
+                )
+                github_add_issue_comment(
+                    issue_number=sub["number"],
+                    body=f"Closing: deliverables verified in merged PR #{merged_pr_number}. "
+                         f"Parent #{plan_num} was closed by the same PR."
+                )
+            else:
+                # Flag for review — do NOT auto-close
+                github_add_issue_comment(
+                    issue_number=sub["number"],
+                    body=f"⚠️ Deliverables for this sub-issue were NOT found in "
+                         f"merged PR #{merged_pr_number}. Parent #{plan_num} was closed, "
+                         f"but this sub-issue remains open pending developer review."
+                )
 
     plan_detail = github_issue_read(method="get", issue_number=plan_num)
     if plan_detail.get("state") == "open":
@@ -231,6 +286,82 @@ for spec_num in [i for i in closure_candidates if is_spec(i)]:
 ```
 
 **Safety rule: NEVER close an issue that still has open children or open linked plans.**
+
+#### Step 2.7.7: Transitive Graph Reconciliation
+
+**After processing all closure candidates, traverse the issue graph for consistency.** This step catches orphaned sub-issues, dangling cross-references, and other graph inconsistencies that the per-issue closure paths miss.
+
+```python
+def reconcile_issue_graph(merged_pr_number, pr_files):
+    """
+    After closing issues referenced in PR body, traverse the entire
+    reachable graph to find and reconcile orphaned nodes.
+    """
+    root_issues = closure_candidates  # Already collected in Step 2.7.1
+    visited = set()
+    queue = [(issue_num, 0) for issue_num in root_issues]
+    orphaned = []
+    reconciled = []
+
+    while queue:
+        issue_num, depth = queue.pop(0)
+        if issue_num in visited or depth > 5:
+            continue
+        visited.add(issue_num)
+
+        issue = github_issue_read(method="get", issue_number=issue_num)
+
+        # Check sub-issues of this node
+        sub_issues = github_issue_read(method="get_sub_issues", issue_number=issue_num)
+        for sub in sub_issues:
+            sub_detail = github_issue_read(method="get", issue_number=sub["number"])
+
+            if sub_detail["state"] == "open" and issue["state"] == "closed":
+                # Open sub-issue on closed parent — potential orphan
+                # Check if deliverables are in PR file list
+                deliverables_covered = check_deliverables_in_pr(
+                    sub_detail, pr_files
+                )
+                if deliverables_covered:
+                    # Close sub-issue with evidence
+                    github_issue_write(
+                        method="update", issue_number=sub["number"],
+                        state="closed", state_reason="completed"
+                    )
+                    github_add_issue_comment(
+                        issue_number=sub["number"],
+                        body=f"Closing: deliverables verified in merged PR #{merged_pr_number}. " +
+                             f"Parent #{issue_num} was closed by the same PR."
+                    )
+                    reconciled.append(sub["number"])
+                else:
+                    orphaned.append(sub["number"])
+
+            # Recurse into sub-issue's own graph
+            queue.append((sub["number"], depth + 1))
+
+        # Parse cross-references
+        body = issue.get("body", "")
+        for pattern in [r"Spec:\s*#(\d+)", r"Plan:\s*#(\d+)",
+                        r"Fixes\s*#(\d+)", r"Implements\s*#(\d+)"]:
+            for match in re.finditer(pattern, body):
+                ref = int(match.group(1))
+                if ref not in visited:
+                    queue.append((ref, depth + 1))
+
+    return {"orphaned": orphaned, "reconciled": reconciled, "visited": visited}
+```
+
+**Reporting:** After reconciliation, report to chat:
+
+```
+Issue Graph Reconciliation:
+Reconciled (closed with PR evidence): #<n1>, #<n2>, ...
+Orphaned (still open — deliverables not in PR): #<m1>, #<m2>, ...
+Total nodes visited: <N>
+```
+
+**If orphaned sub-issues remain:** Do NOT close them. Report them as verification gaps requiring developer attention.
 
 ### Step 3: Switch to Dev and Sync
 

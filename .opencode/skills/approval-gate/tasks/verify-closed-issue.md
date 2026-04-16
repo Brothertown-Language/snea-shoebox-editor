@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Verify that a closed issue was legitimately closed — checking that a merged PR exists and that no premature closure occurred. This task enforces the rule that "closed" does NOT mean "verified" without evidence.
+Verify that a closed issue was legitimately closed — checking that a merged PR exists and that no premature closure occurred. Verification is transitive: it traverses sub-issues, cross-references, and linked issues recursively to ensure the entire reachable graph is in a consistent state. This task enforces the rule that "closed" does NOT mean "verified" without evidence.
 
 ## Pre-Conditions
 
@@ -182,6 +182,96 @@ body = issue.get("body", "")
 
 **This step is optional and does NOT block the verification result.** It provides additional evidence for downstream callers.
 
+### Step 8: Transitive Graph Traversal (MANDATORY)
+
+**Verification of a single issue is insufficient.** The verified issue may be part of a graph — sub-issues, cross-references, and linked issues must also be verified for consistency. This step traverses the reachable graph from the root issue and verifies every node.
+
+#### 8.1 Collect Adjacent Issues
+
+From the root issue (already verified in Steps 1-7), collect all adjacent issues:
+
+```python
+adjacent = set()
+
+# Edge type 1: Sub-issues
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=root_issue_number)
+for sub in sub_issues:
+    adjacent.add(sub["number"])
+
+# Edge type 2: Cross-references in body
+body = root_issue.get("body", "")
+for pattern in [r"Spec:\s*#(\d+)", r"Plan:\s*#(\d+)", r"Implements\s*#(\d+)",
+                r"Fixes\s*#(\d+)", r"Closes\s*#(\d+)", r"Related\s*#(\d+)",
+                r"Duplicate\s+of\s*#(\d+)"]:
+    for match in re.finditer(pattern, body):
+        adjacent.add(int(match.group(1)))
+
+# Edge type 3: Linked issues from merged PR body
+if merged_pr_found:
+    pr_body = pr_detail.get("body", "")
+    for pattern in [r"Fixes\s*#(\d+)", r"Closes\s*#(\d+)", r"Implements\s*#(\d+)"]:
+        for match in re.finditer(pattern, pr_body):
+            adjacent.add(int(match.group(1)))
+```
+
+#### 8.2 Recursively Verify Each Adjacent Issue
+
+For each issue collected, verify it (recursively) with depth limit:
+
+```python
+visited = set()
+max_depth = 5
+
+def verify_recursive(issue_number, depth):
+    if issue_number in visited or depth > max_depth:
+        return
+    visited.add(issue_number)
+
+    issue = github_issue_read(method="get", issue_number=issue_number)
+
+    # If closed: verify closure (reuse Steps 1-7)
+    if issue["state"] == "closed":
+        result = run_steps_1_through_7(issue_number)
+
+    # If open: check if it SHOULD be closed
+    # (e.g., sub-issue of a closed parent with deliverables in merged PR)
+
+    # Collect further adjacent issues from this node
+    new_adjacent = collect_adjacent(issue_number)
+    for adj in new_adjacent:
+        verify_recursive(adj, depth + 1)
+
+for adj_issue in adjacent:
+    verify_recursive(adj_issue, 1)
+```
+
+#### 8.3 Graph Verification Findings
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| Open sub-issue on closed parent where PR covers deliverables | VERIFICATION-GAP | conditional | Close sub-issue with comment referencing PR |
+| Open sub-issue on closed parent where PR does NOT cover deliverables | VERIFICATION-GAP | flag-for-review | Report — sub-issue work remains |
+| Cross-reference to open issue when parent is closed | CONFLICTING | flag-for-review | Chain incomplete — report |
+| Closed issue without merged PR | VERIFICATION-GAP | flag-for-review | Premature closure |
+| Depth limit reached | VERIFICATION-GAP | flag-for-review | Graph too deep |
+
+#### 8.4 Report
+
+After traversal, produce a graph verification report:
+
+```
+Transitive Graph Verification Report:
+Root: #<root_issue>
+Nodes visited: <N> (of which <M> closed, <K> open)
+Max depth reached: <D>
+Findings:
+  - #<issue>: VERIFICATION-GAP — <description>
+  ...
+Overall: CONSISTENT / HAS_FLAGS
+```
+
+**Evidence requirement:** Every node in the graph MUST have a corresponding `github_issue_read` tool call artifact. Graph breadth determines the number of API calls required — this is expected and necessary for thorough verification.
+
 ## Verification Result Types
 
 | Result | Meaning | Action for Callers |
@@ -192,6 +282,8 @@ body = issue.get("body", "")
 | `NOT_PLANNED_CLOSURE` | Closed as "not_planned" | Work was intentionally skipped — may need reopening |
 | `DUPLICATE_OF` | Closed as duplicate of another issue | Verify target issue covers the scope |
 | `BLOCKED_BY_SUB_ISSUE` | Parent cannot close because a sub-issue has a verification gap | Resolve sub-issue verification first |
+| `GRAPH_HAS_FLAGS` | Graph traversal found one or more verification gaps | Resolve flagged issues or acknowledge accepted risk |
+| `GRAPH_CONSISTENT` | All nodes in reachable graph are in a consistent state | Safe to treat as verified — no action needed |
 
 ## Finding Classification
 
@@ -215,6 +307,8 @@ This task is invoked by:
 4. **`cleanup` pre-closure gate** — Before closing parent issues in post-merge workflow
 5. **`verify-fix-spec`** — Before skipping closed bug reports
 
+This task now performs transitive graph traversal (Step 8). Callers should handle `GRAPH_HAS_FLAGS` and `GRAPH_CONSISTENT` result types in addition to the single-issue result types.
+
 ## Context Required
 
 - Issue number to verify
@@ -228,3 +322,4 @@ This task is invoked by:
 - `approval-gate/tasks/verify-authorization.md` Step 5.4: Closed-issue verification gate
 - `approval-gate/tasks/verify-already-implemented.md`: Pre-autoclose sub-issue verification
 - `git-workflow/tasks/cleanup.md`: Pre-closure sub-issue verification gate
+- `010-approval-gate.md §Assuming Closed Issues Are Verified`: Graph traversal prevents this violation
