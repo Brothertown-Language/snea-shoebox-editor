@@ -245,6 +245,51 @@ When `WORKTREE_PATH` is set:
 
 If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
+## Sub-Agent Tasks
+
+### Execution Mode Table
+
+| Task | Words | Mode |
+|------|-------|------|
+| `assemble-batch` | 2,782 | sub-agent |
+| `orchestrate` | ~400 | inline |
+| `assess` | ~300 | inline |
+| `decompose` | ~300 | inline |
+| `dispatch` | ~250 | inline |
+| `completion-checkpoint` | ~300 | inline |
+| `overflow-signal` | ~200 | inline |
+| `merge` | ~150 | inline |
+| `context-passing` | ~200 | inline |
+| `purification-and-enforcement` | ~250 | inline |
+| `completion` | ~150 | inline |
+
+### Result Contracts (Sub-Agent Tasks)
+
+#### assemble-batch
+
+```yaml
+status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW
+task: assemble-batch
+issues_dispatched: [<N>]
+issues_completed: [<N>]
+issues_failed: [<N>]
+batch_branch: <branch_name>
+batch_state_file: <path>
+results: [{issue: <N>, status: <str>, summary: <str>}]
+```
+
+### Dispatch Context Schema
+
+```yaml
+batch_state_file: <path>
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
+
 ## Sub-Agent Spawning
 
 This skill is a **heavy skill** — its orchestration logic can run in isolation. When the main agent needs divide-and-conquer execution, spawn a sub-agent via the `task` tool:

@@ -30,7 +30,8 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ~250 |
 | `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ~300 |
 | `verify-closed-issue` | Verify that a closed issue was legitimately closed via merged PR; enforce "closed ≠ verified" rule | ~350 |
-| `pre-implementation-analysis` | Analyze interdependencies and expand sub-issues for all approved issues (single or batch), producing flat item list for assemble-batch | ~500 |
+| `screen-issue` | Per-issue screening for pre-implementation analysis (Gate 1 + Gate 2 + screening categories); dispatched as parallel sub-agents | ~3,000 |
+| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-batch | ~500 |
 | `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ~350 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
@@ -48,6 +49,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-closed-issue` - Verify closed issue was legitimately closed via merged PR
 - `/skill approval-gate --task verify-schema-api-knowledge` - Verify schema/API/code knowledge before claims
 - `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-batch
+- `/skill approval-gate --task screen-issue` - Per-issue screening (dispatched as sub-agent from pre-implementation-analysis)
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate --task completion` - Invoke when workflow halts at any point
 - `/skill approval-gate` - Overview only
@@ -160,18 +162,158 @@ This check is invoked:
 4. HALT — do NOT create PR without explicit instruction
 5. WAIT for "create a PR" instruction
 
-## Sub-Agent Spawning
+## Sub-Agent Tasks
 
-This skill is a **heavy skill** — its task files contain significant detail that pollutes context. When the main agent needs authorization verification with re-evaluation, consider spawning a sub-agent via the `task` tool:
+### Execution Mode Table
 
-1. Main agent loads this dispatch document (~597 words)
-2. Main agent identifies the needed task
-3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use approval-gate skill --task <task-name> with context: issue=#N, <session-context>")`
-4. Sub-agent loads: this SKILL.md + relevant task file + required guidelines
-5. Sub-agent executes verification in isolation, returns authorization result
-6. Main agent receives result — no full approval-gate content in main context
+| Task | Words | Mode |
+|------|-------|------|
+| `verify-authorization` | 3,319 | sub-agent |
+| `verify-qa-mode` | 2,188 | sub-agent |
+| `verify-already-implemented` | 1,902 | sub-agent |
+| `verify-closed-issue` | 1,763 | sub-agent |
+| `verify-sub-issues` | 1,449 | sub-agent |
+| `post-implementation` | 1,183 | sub-agent |
+| `screen-issue` | 3,037 | sub-agent |
+| `pre-implementation-analysis` | ~3,100 | sub-agent (receives screen-issue results) |
+| `verify-fix-spec` | 1,017 | sub-agent |
+| `verify-blockers` | 722 | inline |
+| `verify-codebase` | 726 | inline |
+| `verify-open-questions` | 531 | inline |
+| `completion` | 769 | inline |
+| `search-prompt-fail` | ~300 | inline |
+| `verify-schema-api-knowledge` | ~350 | inline |
 
-**Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
+### Result Contracts (Sub-Agent Tasks)
+
+#### screen-issue
+
+```yaml
+status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW
+task: screen-issue
+issue_number: <N>
+classification: included | excluded | scope-reduced
+category: <already-implemented|superseded|moot|partially-implemented|meta-non-code|null>
+exclude_reason: <reason|null>
+reduce_reason: <reason|null>
+reduced_scope: {completed_phases: [], remaining_phases: []}
+flat_items: [{issue: <N>, title: <str>, phase: <str>}]
+gate_evidence: {gate1_called: bool, gate1_sub_issues_verified: bool, gate1_closure_legitimacy: bool, gate2_criteria_extracted: bool, gate2_criteria_verified: bool, final_classification: <str>}
+requires_developer: bool
+developer_reason: <reason|null>
+file_references: [<path>]
+symbol_references: [<name>]
+concerns: [<str>]
+```
+
+#### verify-authorization
+
+```yaml
+status: DONE | BLOCKED
+task: verify-authorization
+issue_number: <N>
+authorization_result: authorized | unauthorized | needs_approval
+cascade_applied: bool
+sub_issues_verified: bool
+gates_passed: [gate_name]
+blocking_reason: <reason|null>
+```
+
+#### verify-qa-mode
+
+```yaml
+status: DONE
+task: verify-qa-mode
+mode: qa_mode | implementation_mode
+spec_found: bool
+spec_candidates: [<issue_number>]
+routing: <next_task|null>
+```
+
+#### verify-already-implemented
+
+```yaml
+status: DONE
+task: verify-already-implemented
+issue_number: <N>
+classification: already_implemented | partially_implemented | not_implemented
+evidence_summary: <str>
+auto_close_performed: bool
+```
+
+#### verify-closed-issue
+
+```yaml
+status: DONE
+task: verify-closed-issue
+issue_number: <N>
+legitimate: bool
+state_reason: <str>
+merged_pr_evidence: <url|null>
+action: none | reopen | flag
+```
+
+#### verify-sub-issues
+
+```yaml
+status: DONE
+task: verify-sub-issues
+parent_issue: <N>
+sub_issues_count: <int>
+all_verified: bool
+missing_sub_issues: [<phase>]
+auto_created: bool
+```
+
+#### post-implementation
+
+```yaml
+status: DONE
+task: post-implementation
+branch_pushed: bool
+compare_url: <url>
+issues_reported: [<N>]
+```
+
+#### pre-implementation-analysis
+
+```yaml
+status: DONE | BLOCKED
+task: pre-implementation-analysis
+screening_results_count: <int>
+included: [<issue_number>]
+excluded: [{issue: <N>, reason: <str>}]
+scope_reduced: [{issue: <N>, remaining_phases: []}]
+dependency_graph: {serial: [<N>], parallel_groups: [[<N>]]}
+execution_plan_presented: bool
+requires_developer: bool
+developer_reason: <str|null>
+batch_state_file: <path>
+```
+
+#### verify-fix-spec
+
+```yaml
+status: DONE
+task: verify-fix-spec
+bug_report: <N>
+fix_spec_exists: bool
+fix_spec_issue: <N|null>
+action: none | create_fix_spec
+```
+
+### Dispatch Context Schema (All Sub-Agent Tasks)
+
+```yaml
+issue_number: <N>
+batch_peers: [<N>]  # screen-issue only
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
 
 ## Adversarial Verification Requirements
 

@@ -232,6 +232,43 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 - Plan approved and complete → PROCEED to implementation
 - Combined spec+plan → plan inherits spec approval status; no separate plan approval needed
 
+## Sub-Agent Tasks
+
+### Execution Mode Table
+
+| Task | Words | Mode |
+|------|-------|------|
+| `create` | 1,598 | sub-agent |
+| `validate` | ~500 | inline |
+| `retroactive` | ~600 | inline |
+| `clean-room` | ~500 | inline |
+
+### Result Contract (create)
+
+```yaml
+status: DONE | OVERFLOW
+task: create
+plan_issue: <N|null>
+plan_url: <url|null>
+combined: bool
+sub_issues_created: [<N>]
+self_review_passed: bool
+```
+
+### Dispatch Context Schema
+
+```yaml
+spec_issue: <N>
+single_task: bool
+single_task_determination: <str>
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
+
 ## Cross-Reference Verification (MANDATORY)
 
 **🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**

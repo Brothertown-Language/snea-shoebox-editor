@@ -387,6 +387,56 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 - **Backward compatibility:** `--issue N` produces identical results to previous behavior
 - **Worktree awareness check:** Skills that perform git operations, read/write files, or dispatch sub-agents MUST include a "Worktree Mode" section and pass `WORKTREE_PATH` in sub-agent dispatch contexts. Missing worktree awareness is a medium-severity finding.
 
+## Sub-Agent Tasks
+
+### Execution Mode Table
+
+| Task | Words | Mode |
+|------|-------|------|
+| `structure` | ~400 | inline |
+| `content-quality` | ~500 | inline |
+| `traceability` | ~300 | inline |
+| `operational` | ~300 | inline |
+| `fidelity` | ~600 | sub-agent |
+| `concerns` | ~400 | inline |
+| `operational-flow` | ~400 | inline |
+| `determinism` | ~300 | inline |
+| `error-recovery` | ~350 | inline |
+| `principles` | ~350 | inline |
+| `ground-truth` | ~500 | sub-agent |
+| `sub-issue-fidelity` | ~350 | inline |
+| `concern-coverage` | ~350 | inline |
+| `prose-structure` | ~250 | inline |
+| `fresh-start` | ~400 | inline |
+
+**Note:** Individual subtasks are lightweight. Sub-agent dispatch is recommended for the full audit (all subtasks per document type) when running 3+ subtasks together, not for individual subtasks.
+
+### Dispatch Context Schema (Full Audit as Sub-Agent)
+
+```yaml
+source: {type: issue|file|url, identifier: <str>}
+document_type: <auto|spec|plan|process-flow|runbook|checklist|reference-doc>
+subtasks: [<task_name>]
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
+
+### Result Contract (Full Audit)
+
+```yaml
+status: DONE | DONE_WITH_CONCERNS | OVERFLOW
+task: spec-auditor
+document_type: <str>
+confidence: High | Medium | Low
+changes_made: [{subtask: <str>, problem_class: <str>, fix: <str>, classification: auto-fix|conditional}]
+findings_not_acted_on: [{subtask: <str>, problem_class: <str>, reason: <str>}]
+issue_url: <url|null>
+```
+
 ## Sub-Agent Spawning
 
 This skill is a **heavy skill** — quality audits with all subtasks consume significant context. When the main agent needs a spec audit, consider spawning a sub-agent via the `task` tool:

@@ -118,6 +118,41 @@ When matching STATUS to sub-issues, match the concern name in the STATUS to the 
 - Treating sub-issue creation as a separate implementation phase
 - Implementing a phase that exists only as text in plan issue body
 
+## Sub-Agent Tasks
+
+### Execution Mode Table
+
+| Task | Words | Mode |
+|------|-------|------|
+| `create-sub-issue` | ~300 | inline |
+| `link-sub-issue` | ~200 | inline |
+| `track-hierarchy` | ~250 | inline |
+
+**Note:** All tasks are under 1,000 words — inline execution. No sub-agent dispatch needed for individual sub-issue operations. However, bulk creation (3+ sub-issues at once) benefits from sub-agent dispatch to keep creation API responses out of main context.
+
+### Dispatch Context Schema (Bulk Creation)
+
+```yaml
+parent_plan: <N>
+phases: [{title: <str>, body: <str>, labels: [<str>]}]
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
+
+### Result Contract (Bulk Creation)
+
+```yaml
+status: DONE
+task: create-sub-issues
+sub_issues_created: [<N>]
+sub_issues_linked: [<N>]
+parent_issue: <N>
+```
+
 ## Cross-Reference Verification (MANDATORY)
 
 **🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**

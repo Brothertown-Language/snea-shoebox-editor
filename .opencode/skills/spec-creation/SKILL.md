@@ -177,6 +177,44 @@ Findings from evidence verification follow the three-tier model:
 | conditional | Requires scope/safety check before applying (traceability gap, STATUS claim) | Verify scope, then apply if safe |
 | flag-for-review | Requires domain judgment (contradictions, ambiguous STATUS exemption) | Report in findings, do not apply |
 
+## Sub-Agent Tasks
+
+### Execution Mode Table
+
+| Task | Words | Mode |
+|------|-------|------|
+| `write` | 1,410 | sub-agent |
+| `requirements` | ~500 | inline |
+| `decompose` | ~400 | inline |
+| `traceability` | ~300 | inline |
+| `risk` | ~400 | inline |
+| `change-control` | ~300 | inline |
+
+### Result Contract (write)
+
+```yaml
+status: DONE | OVERFLOW
+task: write
+issue_number: <N>
+issue_url: <url>
+spec_created: bool
+self_review_passed: bool
+needs_approval_label_added: bool
+```
+
+### Dispatch Context Schema
+
+```yaml
+spec_content: <structured outputs from prerequisite tasks>
+exploration_results: <brainstorming output reference>
+session_vars:
+  GIT_OWNER: <from-session>
+  GIT_REPO: <from-session>
+  DEV_NAME: <from-session>
+  DEV_EMAIL: <from-session>
+  WORKTREE_PATH: <from-session>
+```
+
 ## Cross-References
 
 - **Calls:** `github-issue-creation` (spec persistence — `write` task invokes pre-creation → single-task-check → creation)

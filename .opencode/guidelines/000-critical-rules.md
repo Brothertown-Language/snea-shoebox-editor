@@ -676,6 +676,17 @@ When an agent receives an implementation instruction but cannot find an associat
 
 **See `020-go-prohibitions.md` §1 "NEVER DO" and "ALWAYS DO" for the search procedure, and `approval-gate` skill → `verify-qa-mode` task → Step 2.5 for the mandatory search step.** **AUTHORITY: `020-go-prohibitions.md` §1** (this line is a reference only)
 
+## Sub-Agent Extraction Pattern
+
+Skill task files exceeding 1,000 words are extracted into sub-agent execution per the pattern established by spec #984. Each SKILL.md contains a "Sub-Agent Tasks" section with execution mode tables, result contract schemas, and dispatch context schemas. The main agent loads only SKILL.md files and reads compact result contracts (~100-500 words), never loading task files >1,000 words directly.
+
+- Tasks >1,000 words → sub-agent dispatch via `task(subagent_type="general")`
+- Tasks ≤1,000 words → inline execution (spawning overhead exceeds inline cost)
+- Result contracts reference task files as source of truth (no duplication)
+- Dispatch context MUST include `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+
+**See each skill's SKILL.md → "Sub-Agent Tasks" section for execution mode tables and result contract schemas.**
+
 ______________________________________________________________________
 
 **Search guidelines:** Use `srclight_search_symbols` or `grep` to find relevant guidelines.
