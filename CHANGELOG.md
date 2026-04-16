@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/946-closed-issue-verification
+
+- **Closed Issue Verification Gates** (#946) - Fixed "closed = verified" assumption across 8 skill files and 1 guideline. Closed issues are no longer trusted without merged PR evidence. Added `verify-closed-issue` task with 7-step verification procedure, pre-closure sub-issue verification gate in cleanup, closed-issue verification in auto-dispatch, and critical violation in `000-critical-rules.md`.
+
 ### batch/apr-15-enforcement-batch
 
 - **Byline Format Drift Audit** (#866) - Audited and corrected `<AI-Name>`/`<ModelID>` placeholder tokens across all guidelines and skills. Replaced hardcoded agent/model references with runtime-resolvable placeholders. Added critical violation for hardcoded identity values in `000-critical-rules.md`.

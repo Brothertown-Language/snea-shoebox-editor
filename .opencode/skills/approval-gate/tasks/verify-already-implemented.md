@@ -105,6 +105,90 @@ When `verify-already-implemented` identifies issues that were already implemente
 
 **⚠️ CRITICAL:** Do NOT close issues without verifying PR merge via the GitHub API. Assuming a PR was merged without API confirmation is a verification dishonesty violation per `065-verification-honesty.md`.
 
+## Pre-Autoclose Sub-Issue Verification
+
+**🚫 CRITICAL: Before autoclosing an issue as "already implemented," verify that ALL sub-issues (if any) are also legitimately closed. A parent issue cannot be autoclosed if any sub-issue was closed without a merged PR.**
+
+### Step AC-1: Check for Sub-Issues
+
+```
+sub_issues = github_issue_read(method="get_sub_issues", issue_number=issue_number)
+
+if sub_issues:
+    # Parent has sub-issues — each must be verified before autoclose
+    for sub_issue in sub_issues:
+        verify sub_issue is legitimately closed (see Step AC-2)
+else:
+    # No sub-issues — proceed to standard autoclose verification
+    PROCEED to Step 4
+```
+
+### Step AC-2: Verify Each Sub-Issue Closure Reason
+
+```
+For each sub-issue:
+  child = github_issue_read(method="get", issue_number=sub_issue_number)
+
+  if child.state == "closed":
+    state_reason = child.get("state_reason", "")
+
+    if state_reason == "not_planned":
+      # Sub-issue was intentionally not implemented
+      # Parent CANNOT be autoclosed — some work was deliberately skipped
+      VERIFICATION-GAP — flag-for-review
+      HALT autoclose
+
+    elif state_reason == "completed":
+      # Verify a merged PR exists for this sub-issue
+      prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+      merged_pr_found = False
+      for pr in prs:
+        pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+        if pr_detail.get("merged_at") is not None:
+          merged_pr_found = True
+          break
+
+      if not merged_pr_found:
+        # Closed as "completed" but no merged PR — may be premature closure
+        VERIFICATION-GAP — flag-for-review
+        HALT autoclose
+
+    else:
+      # Closed without clear reason
+      VERIFICATION-GAP — flag-for-review
+      HALT autoclose
+
+  elif child.state == "open":
+    # Open sub-issue — parent CANNOT be autoclosed
+    MISSING-ELEMENT — proceed to normal implementation
+    HALT autoclose
+```
+
+### Step AC-3: Verify Cross-References
+
+```
+For each sub-issue verified as legitimately closed:
+  # Verify the sub-issue's scope is covered by the parent's success criteria
+  child_body = github_issue_read(method="get", issue_number=sub_issue_number)["body"]
+  parent_body = github_issue_read(method="get", issue_number=issue_number)["body"]
+
+  # If sub-issue covers scope not in parent's success criteria:
+  #   The parent may be "implemented" but the sub-issue's specific concern was not addressed
+  #   This is unlikely for autoclose scenarios but should be flagged if detected
+```
+
+### Pre-Autoclose Verification Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| All sub-issues closed via merged PR | VERIFIED | auto-proceed | Proceed to autoclose |
+| Sub-issue closed as "not_planned" | VERIFICATION-GAP | flag-for-review | Do NOT autoclose parent — work was intentionally skipped |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Do NOT autoclose — may be premature closure |
+| Sub-issue still open | MISSING-ELEMENT | conditional | Do NOT autoclose — open sub-issues mean parent is not complete |
+| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve missing sub-issue |
+
+**Only proceed to Step 4 (autoclose) when ALL sub-issues are verified as legitimately closed via merged PR.**
+
 ## What This Is NOT
 
 This task does NOT replace:

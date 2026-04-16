@@ -582,6 +582,70 @@ This enables automatic closure by GitBucket/GitHub.
 | Draft PR | Sub-issues remain open until PR is merged (correct behavior) |
 | Multiple sub-issues in one PR | Include all in "Fixes #N, #M, #P" annotation |
 
+## Pre-Closure Sub-Issue Verification Gate (CRITICAL)
+
+**🚫 CRITICAL: Before closing ANY issue, verify that closed sub-issues were legitimately closed via merged PR. A closed state alone does NOT mean work is done.**
+
+This verification gate runs BEFORE the sub-issue double-check (which verifies open sub-issues remain). This gate verifies that already-closed sub-issues were legitimately closed.
+
+### Verification Procedure
+
+```
+For each sub-issue of the parent issue:
+  child = github_issue_read(method="get", issue_number=sub_issue_number)
+
+  if child.state == "closed":
+    state_reason = child.get("state_reason", "")
+
+    # Verify closure is legitimate (not premature)
+    prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+    merged_pr_found = False
+    for pr in prs:
+      pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+      if pr_detail.get("merged_at") is not None:
+        merged_pr_found = True
+        break
+
+    if state_reason == "completed" and merged_pr_found:
+      # Legitimate closure — sub-issue was implemented and merged
+      PROCEED — sub-issue verified
+
+    elif state_reason == "completed" and not merged_pr_found:
+      # Closed as "completed" but NO merged PR — likely premature closure
+      VERIFICATION-GAP — flag-for-review
+      # Do NOT close parent — investigate this sub-issue first
+
+    elif state_reason == "not_planned":
+      # Intentionally not implemented — acceptable if documented
+      # Parent CAN be closed if remaining sub-issues are legitimate
+      NOTE — sub-issue was intentionally skipped
+
+    elif state_reason == "duplicate":
+      # Closed as duplicate — verify target issue exists and covers scope
+      # Check if the duplicate target is also legitimately closed
+      VERIFICATION-GAP — conditional (verify duplicate covers scope)
+
+    else:
+      # No clear closure reason
+      VERIFICATION-GAP — flag-for-review
+
+  elif child.state == "open":
+    # Open sub-issue — handled by Sub-Issue Double-Check below
+    PASS — handled by next section
+```
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| Closed + merged PR | VERIFIED | auto-proceed | Sub-issue verified as legitimately closed |
+| Closed "completed" + no merged PR | VERIFICATION-GAP | flag-for-review | Investigate — may be premature closure |
+| Closed "not_planned" | VERIFIED | auto-proceed | Intentionally skipped — parent can close remaining scope |
+| Closed "duplicate" | VERIFICATION-GAP | conditional | Verify duplicate target covers scope |
+| Open sub-issue | MISSING-ELEMENT | conditional | Handled by Sub-Issue Double-Check below |
+
+**Only proceed to parent closure after ALL closed sub-issues are verified as legitimately closed or intentionally skipped.**
+
 ## Sub-Issue Double-Check (CRITICAL)
 
 After closing child issues addressed by PR, ALWAYS verify remaining sub-issues before closing parent.

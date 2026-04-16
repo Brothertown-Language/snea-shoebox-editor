@@ -59,10 +59,52 @@ Examine sub-issues for:
 
 | Case | Handling |
 |------|----------|
-| Bug report is already closed with merged PR | Skip check — already resolved |
+| Bug report is already closed | **Do NOT skip — verify closure is legitimate via merged PR.** See "Closed Bug Report Verification" below |
 | Bug report has multiple fix spec sub-issues | Report all; this is valid for multiple root causes |
 | Sub-issue exists but is not a fix spec | Ignore for this check; still need a proper fix spec |
 | Issue was misclassified as bug | Skip this check; not applicable |
+
+### Closed Bug Report Verification
+
+**🚫 CRITICAL: A closed bug report does NOT mean the fix is already resolved.** Before skipping verification for a closed bug report, verify that the closure is legitimate:
+
+```
+if bug_report.state == "closed":
+    # Do NOT assume closed = resolved. Verify closure reason.
+
+    # Step 1: Check closure reason
+    state_reason = bug_report.get("state_reason", "")
+
+    if state_reason == "not_planned":
+        # Bug was intentionally not fixed — may still need a fix spec
+        # Do NOT skip; the bug may need to be reopened or a new fix spec created
+        REPORT: "Bug closed as not_planned — fix spec still needed if bug is valid"
+        PROCEED to Step 2 (fix spec verification)
+
+    elif state_reason == "completed":
+        # Verify a merged PR exists that fixes this bug
+        prs = github_search_pull_requests(query=f"Fixes #{bug_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+        merged_pr_found = False
+        for pr in prs:
+            pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+            if pr_detail.get("merged_at") is not None:
+                merged_pr_found = True
+                break
+
+        if merged_pr_found:
+            # Bug was closed via merged PR — legitimate closure
+            # Still check for fix spec sub-issue (it may exist from before the fix)
+            PROCEED to Step 2 (fix spec verification)
+        else:
+            # Closed as "completed" but no merged PR — suspicious closure
+            REPORT: "Bug closed as completed but no merged PR found — verification gap"
+            PROCEED to Step 2 (fix spec may still be needed)
+
+    else:
+        # State reason unclear
+        REPORT: "Bug closed without clear reason — verification gap"
+        PROCEED to Step 2 (fix spec verification)
+```
 
 ## Cross-References
 

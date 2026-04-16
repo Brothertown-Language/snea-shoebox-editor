@@ -38,14 +38,14 @@ Scan gathered data for these signals:
 | Body has "Edge Cases" section | `audit` |
 | Body has "Affected Files" table | `audit` |
 | Body has "Risk Assessment" table | `audit` |
-| Comments contain "approved" or "go" | Check if also implemented → `already-handled` |
+| Comments contain "approved" or "go" | Check if also implemented AND sub-issues verified closed AND cross-references resolved → `already-handled` |
 | Comments contain audit finding patterns | `just-review` (if no new non-audit comments) |
 | `needs-approval` label present, no explicit auth | `just-review` (report auth status) |
 | Body uses bug report language ("crash", "error", "broken") | `analyze-and-spec` |
 | Body contains "steps to reproduce" | `analyze-and-spec` |
 | Body describes unexpected behavior or regression | `analyze-and-spec` |
 | `bug` label present | `analyze-and-spec` (unless content clearly is not a bug) |
-| Issue is closed AND PR merged | `already-handled` |
+| Issue is closed AND PR merged AND sub-issues verified closed AND cross-references resolved | `already-handled` |
 | Body is unclear, vague, or request for information (not a bug) | `qa` |
 | Title has `[SPEC]` but body is a bug report | `analyze-and-spec` (content over prefix) |
 
@@ -101,6 +101,19 @@ Verification: Bug language detected, but root cause unclear — may need clarifi
 
 Each sub-issue gets its own independent triage decision. A parent may be `audit` while a sub-issue is `qa`.
 
+## Closed Issue Verification in Triage
+
+**Before classifying any closed issue as `already-handled`, verify:**
+
+1. **Sub-issues resolved:** `github_issue_read(method="get_sub_issues", issue_number=N)` — all sub-issues must be closed
+2. **Cross-references resolved:** Spec → plan chain must be complete (plan closed, all sub-issues under plan closed)
+3. **Closure correctness:** `state_reason == "completed"` AND merged PR exists (search PRs referencing the issue)
+
+If any verification fails, do NOT classify as `already-handled`. Instead:
+- Route to `analyze-and-spec` (if bug report with open fix spec)
+- Route to `audit` (if spec with open sub-issues)
+- Report as `flag-for-review` with specific verification failures
+
 ## Confidence Levels
 
 | Level | Meaning |
@@ -115,7 +128,7 @@ Each sub-issue gets its own independent triage decision. A parent may be `audit`
 |------|----------|
 | No comments, no phases, no bug language | `qa` (unclear intent, ask for clarification) |
 | No comments, but bug language present | `analyze-and-spec` (bug language is sufficient) |
-| Issue is closed | Check if `already-handled` or stale |
+| Issue is closed | Verify sub-issues closed, cross-references resolved, closure correctness → then classify as `already-handled` or `stale` |
 | Mixed signals (phases + bug language) | AI verification breaks tie; document reasoning |
 | Title says spec but body is bug | Redirect to `analyze-and-spec` |
 | Body lacks formal sections but clear feature | Redirect to `audit` |
