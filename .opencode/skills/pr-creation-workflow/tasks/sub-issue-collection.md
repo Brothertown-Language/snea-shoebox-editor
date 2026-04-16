@@ -18,6 +18,8 @@ ls .opencode/tmp/batch-*.md 2>/dev/null
 # If not exists → single/multi-task PR format
 ```
 
+**Note:** GitHub autoclose (`Fixes #N`/`Closes #N`) does NOT trigger for PRs merging into `dev`. The cleanup task (`git-workflow --task cleanup`) is the sole closure mechanism. PR body keywords are informational labels for human readers.
+
 ### Single-Task Spec
 
 If the spec has no sub-issues (single-task), include only the parent issue in the PR body:
@@ -54,8 +56,8 @@ For batch PRs (assembled from multiple issues via `assemble-batch`):
 
 1. **Read batch state file** (`.opencode/tmp/batch-*.md`) to get list of all issues in the batch
 2. **Build both sections:**
-   - `## Batch Issues` section listing each issue with its description and `Implements #N` annotations
-   - `Fixes #N` annotations for all issues (parent and children) at the bottom
+   - `## Batch Issues` section listing each issue with its description
+   - `Fixes #N` annotations for all issues at the bottom
 
 ```markdown
 **Summary:**
@@ -66,9 +68,9 @@ For batch PRs (assembled from multiple issues via `assemble-batch`):
 
 ## Batch Issues
 
-Implements #660 — Add pre-implementation analysis task
-Implements #662 — Fix batch branch squash verification
-Implements #621 — Collapse executing-plans into divide-and-conquer
+#660 — Add pre-implementation analysis task
+#662 — Fix batch branch squash verification
+#621 — Collapse executing-plans into divide-and-conquer
 
 Fixes #660
 Fixes #662
@@ -110,9 +112,9 @@ Unified five approved issues into a single batch implementation, eliminating for
 
 ## Batch Issues
 
-Implements #660 — Add pre-implementation analysis task
-Implements #662 — Fix batch branch squash verification
-Implements #621 — Collapse executing-plans into divide-and-conquer
+#660 — Add pre-implementation analysis task
+#662 — Fix batch branch squash verification
+#621 — Collapse executing-plans into divide-and-conquer
 
 Fixes #660
 Fixes #662
