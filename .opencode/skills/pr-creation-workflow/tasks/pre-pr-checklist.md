@@ -26,9 +26,14 @@ Mandatory checks that must pass before creating ANY PR. No exceptions.
 # Check if this is a work branch (assembly by assemble-work)
 ls .opencode/tmp/work-*.md 2>/dev/null
 
+# Read scope fields from work state file if present
+# authorization_scope, halt_at, pr_strategy
+
 # Check commit count between dev and HEAD
 git log origin/dev..HEAD --oneline
 ```
+
+**Scope check:** If `pr_strategy == none` or `halt_at < pr_created`, HALT — PR creation is not authorized by the current scope. The scope boundary is a hard wall.
 
 **Single-issue branch (no work state file):**
 
@@ -90,6 +95,20 @@ Verify commit message includes BOTH trailers:
 
 - Single-task: Include `Fixes #<parent>` in PR body
 - Multi-task: Include `Fixes #<parent>` AND `Fixes #<child>` for EACH sub-issue
+
+**7. Dispatch Chain Completion (MANDATORY — Zero Tolerance)**
+
+Before creating a PR, verify that ALL post-implementation dispatch chain steps were completed. These steps are listed in `approval-gate/SKILL.md` §Dispatch Order and are MANDATORY before PR creation.
+
+| Step | Evidence to Verify | On Missing |
+| -- | -- | -- |
+| `verification-before-completion` | Success criteria verification results exist in chat output | HALT and invoke `verification-before-completion` before proceeding |
+| `finishing-a-development-branch --task checklist` | All checklist items verified via tool-call artifacts (see checklist.md Live Verification table) | HALT and invoke `--task checklist` before proceeding |
+| `git-workflow --task review-prep` | Compare URL generated and reported in chat with mandatory format (summary → outcome → URL → byline) | HALT and invoke `--task review-prep` before proceeding |
+
+**If ANY dispatch chain step is missing evidence, the agent MUST invoke the missing step before proceeding with PR creation.** This is a belt-and-suspenders check: even if a step was skipped earlier, this gate catches the omission before the PR is created.
+
+Skipping this verification is a CRITICAL GUIDELINE VIOLATION per `approval-gate/SKILL.md` §Enforcement checkpoint rules.
 
 ## CRITICAL Violations
 

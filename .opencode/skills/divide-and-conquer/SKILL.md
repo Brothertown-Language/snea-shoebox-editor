@@ -112,6 +112,9 @@ branch: "spec/<short-name>"
 spec: "<full spec body or relevant section>"
 plan_issue: <number or empty>
 authorization: "User approved #<N> on <date>"
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
 depth: <current decomposition depth, starting at 0>
 max_depth: <DIVIDE_AND_CONQUER_MAX_DEPTH or 3>
 prior_context: "<AI-composed intent and context from prior sub-agents>"
@@ -289,6 +292,9 @@ results: [{issue: <N>, status: <str>, summary: <str>}]
 
 ```yaml
 work_state_file: <path>
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
 session_vars:
   github.owner: <from-session>
   github.repo: <from-session>

@@ -32,6 +32,9 @@ context:
   phases: [Core Skills, Dispatch Table, Quality Gates, '...']
   current_phase: 1
   authorization_comment: approved
+  authorization_scope: standard
+  halt_at: review_prep
+  pr_strategy: individual
 ```
 
 **Action:**
@@ -47,6 +50,9 @@ context:
 ```yaml
 authorization: confirmed
 issue: 77
+authorization_scope: standard
+halt_at: review_prep
+pr_strategy: individual
 working_tree_status: checked
 ```
 

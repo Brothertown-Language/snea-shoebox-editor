@@ -5,7 +5,8 @@
 > - Spec + authorization requirements
 > - Plan approval gate
 > - Sub-issue verification gate (under plan) — consolidated into `approval-gate --task verify-authorization` Step 5
-> - Single-task exemption
+> - Scope-horizon authorization model
+> - Gap-fill cascade for pipeline-scoped authorization
 > - Re-evaluation checklist
 > - Bug report response
 
@@ -29,6 +30,8 @@
 | **PR timing** | PRs require explicit `"create a PR"` instruction |
 | **Issue closure** | Close issues ONLY after PR merge confirmed |
 | **Spec-to-Plan cascade** | When a spec is approved and a plan already exists, the plan is automatically approved. Manual plan approval is only required when no plan exists at the time of spec approval |
+| **Pipeline-scoped authorization** | Authorization phrases ("approved #N to PR", "approved #N for plan") specify a scope horizon — pipeline stages where authorization extends. See Authorization Scope Model below |
+| **Hard HALT at scope boundary** | Agent MUST NOT proceed past `halt_at` pipeline stage without re-authorization |
 
 ### Spec-to-Plan Approval Cascade (Critical)
 
@@ -92,12 +95,55 @@ The `needs-approval` label is a **tracking tool**, not a permanent gate. Its pur
 - **Revision ≠ implementation**: Spec updates don't authorize code changes; spec revision revokes linked plan approvals
 - **Reference ≠ authorization cascade**: Issue mentions in body/comments do NOT cascade authorization; spec references plan via body text, not sub-issue link
 - **Confirmation ≠ authorization**: Confirming an observation does NOT authorize implementation
+- **Pipeline-scoped**: Authorization phrases specify scope horizon — everything below is gap-filled, everything above is unauthorized
 
 **🚫 CRITICAL: Old authorizations do NOT apply:**
 
 - "Approved #332" in previous session → NOT VALID for new session
 - Previous session authorization → NOT VALID for new issue/spec
 - Authorization is ZERO-BASED — every task needs NEW authorization
+
+### Authorization Scope Model (CRITICAL)
+
+Authorization phrases carry implicit scope — the pipeline stage the developer expects work to reach. The scope horizon determines where the agent MUST stop, and what intermediate artifacts are gap-filled.
+
+**See `approval-gate` skill → "Authorization Scope Model" for the complete table of scope values, verb-prefix parsing, gap-fill actions, and PR strategy derivation.**
+
+#### Key Scope Values
+
+| Scope | Meaning | HALT After | Gap-Fill | PR Strategy |
+|-------|---------|------------|----------|--------------|
+| `standard` | Default: all artifacts must pre-exist | review-prep | None | individual |
+| `for_spec` | Through spec creation | spec_created | None | none |
+| `for_plan` | Through plan creation | plan_created | auto-create spec | none |
+| `for_implementation` | Through implementation | implementation_complete | auto-create spec+plan, auto-approve | individual |
+| `for_code_review` | Through code review | code_review_ready | auto-create spec+plan, auto-approve | individual |
+| `for_pr` | Full pipeline through PR creation | pr_created | auto-create spec+plan, auto-approve, auto-PR | stacked |
+| `pr_only` | PR creation only | pr_created | None | stacked |
+| `review_only` | Code review only | code_review_ready | None | individual |
+
+#### Unified Dispatch Path (Work-of-1)
+
+Every authorization follows the same pipeline regardless of issue count. There is no single-task exemption — the dispatch chain is unified:
+
+```
+verify-authorization → gap-fill (if scope >= for_plan) → git-workflow pre-work
+→ pre-implementation-analysis → divide-and-conquer/assemble-work
+→ verification-before-completion → finishing-a-development-branch checklist
+→ git-workflow review-prep → [HALT at halt_at or continue to PR creation]
+```
+
+#### Scope-Dependent PR Strategy
+
+PR strategy is derived from scope, NOT from issue count. `standard` scope = individual PRs per issue; `for_pr`/`pr_only` scope = single stacked PR; `for_spec`/`for_plan` scope = no PR creation.
+
+#### Gap-Fill Cascade
+
+When `authorization_scope >= for_plan`, missing intermediate artifacts are gap-filled automatically:
+- Spec missing → `brainstorming --task explore` creates it
+- Plan missing → `writing-plans --task create` creates it
+- Plan needs approval → auto-approved via pipeline scope
+- `for_pr` scope → PR creation is part of gap-fill
 
 ### Multi-Task Plan Authorization (CRITICAL)
 
@@ -253,7 +299,7 @@ Key rules:
 - Spec + approval requirements details
 - Re-evaluation checklist
 - Pre-implementation verification steps
-- Single-task exemption logic
+- Scope-horizon authorization model and gap-fill cascade
 - Authorization scope rules
 - Workflow decision tree
 
@@ -434,9 +480,60 @@ rules:
     triggers: [spec-auditor]
     source: "010-approval-gate.md §Audit Auto-Fix Exemption"
 
+  - id: approval-gate-010
+    title: "Pipeline-scoped authorization extends to scope horizon"
+    conditions:
+      all:
+        - "authorization_scope != 'standard'"
+    actions:
+      - GAP_FILL(scope)
+      - PROCEED_TO(halt_at)
+      - HALT_AT(halt_at)
+    conflicts_with: []
+    requires: [approval-gate-002]
+    triggers: [approval-gate, divide-and-conquer]
+    source: "010-approval-gate.md §Authorization Scope Model"
+
+  - id: approval-gate-011
+    title: "Hard HALT at scope boundary without re-authorization"
+    conditions:
+      all:
+        - "pipeline_stage > halt_at"
+    actions:
+      - HALT
+    conflicts_with: []
+    requires: [approval-gate-010]
+    triggers: [approval-gate, divide-and-conquer, git-workflow]
+    source: "010-approval-gate.md §Authorization Scope Model"
+
+  - id: approval-gate-012
+    title: "Unified dispatch path — no single-task exemption"
+    conditions:
+      all:
+        - "has_approved_plan == true"
+    actions:
+      - INVOKE(divide-and-conquer)
+    conflicts_with: []
+    requires: [approval-gate-001b]
+    triggers: [divide-and-conquer]
+    source: "010-approval-gate.md §Unified Dispatch Path"
+
+  - id: approval-gate-013
+    title: "PR strategy is scope-dependent, not count-dependent"
+    conditions:
+      any:
+        - "authorization_scope == 'for_pr'"
+        - "authorization_scope == 'pr_only'"
+    actions:
+      - SET(pr_strategy=stacked)
+    conflicts_with: []
+    requires: [approval-gate-010]
+    triggers: [git-workflow, pr-creation-workflow]
+    source: "010-approval-gate.md §Scope-Dependent PR Strategy"
+
 state_machines:
   - id: approval-lifecycle
-    states: [draft, spec_approved, plan_created, plan_approved, implementing, pr_created, merged, closed]
+    states: [draft, spec_approved, plan_created, plan_approved, implementing, code_review_ready, pr_created, merged, closed]
     start_state: draft
     transitions:
       - from: draft
@@ -460,9 +557,13 @@ state_machines:
         guard: "plan_approved == true"
         action: INVOKE(divide-and-conquer)
       - from: implementing
-        to: pr_created
+        to: code_review_ready
         guard: "implementation_complete == true"
-        action: INVOKE(git-workflow)
+        action: INVOKE(verification-before-completion)
+      - from: code_review_ready
+        to: pr_created
+        guard: "halt_at >= pr_created OR pr_strategy != none"
+        action: INVOKE(git-workflow_pr-creation)
       - from: pr_created
         to: merged
         guard: "pr_approved == true"
@@ -471,4 +572,26 @@ state_machines:
         to: closed
         guard: "all_plan_sub_issues_closed == true"
         action: PROCEED
+    scope_transitions:
+      - scope: for_spec
+        halt_at: spec_created
+        action: HALT_AFTER_SPEC_CREATED
+      - scope: for_plan
+        halt_at: plan_created
+        action: HALT_AFTER_PLAN_CREATED
+      - scope: for_implementation
+        halt_at: implementation_complete
+        action: HALT_AFTER_IMPLEMENTATION
+      - scope: for_code_review
+        halt_at: code_review_ready
+        action: HALT_AFTER_CODE_REVIEW
+      - scope: for_pr
+        halt_at: pr_created
+        action: CONTINUE_THROUGH_PR
+      - scope: pr_only
+        halt_at: pr_created
+        action: CONTINUE_THROUGH_PR
+      - scope: standard
+        halt_at: review_prep
+        action: HALT_AFTER_REVIEW_PREP
 ```
