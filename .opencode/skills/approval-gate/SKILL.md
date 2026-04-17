@@ -1,6 +1,6 @@
 ---
 name: approval-gate
-description: Use when user says "approved", "go", or any implementation instruction, or when authorization needs verification. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label, batch approval, multiple issues approved, interdependency analysis.
+description: Use when user says "approved", "go", or any implementation instruction, or when authorization needs verification. Triggers on: approval, authorized, implement, start work, go ahead, needs-approval label, authorization set, multiple issues approved, interdependency analysis.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -31,7 +31,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ~300 |
 | `verify-closed-issue` | Verify that a closed issue was legitimately closed via merged PR; enforce "closed ≠ verified" rule | ~350 |
 | `screen-issue` | Per-issue screening for pre-implementation analysis (Gate 1 + Gate 2 + screening categories); dispatched as parallel sub-agents | ~3,000 |
-| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-batch | ~500 |
+| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-work | ~500 |
 | `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ~350 |
 | `reconcile-issue-graph` | Act on graph traversal findings: auto-close verified-complete, reopen verified-incomplete, flag uncertain | ~600 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
@@ -50,7 +50,7 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task verify-closed-issue` - Verify closed issue was legitimately closed via merged PR
 - `/skill approval-gate --task verify-schema-api-knowledge` - Verify schema/API/code knowledge before claims
 - `/skill approval-gate --task reconcile-issue-graph` - Act on graph traversal findings
-- `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-batch
+- `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-work
 - `/skill approval-gate --task screen-issue` - Per-issue screening (dispatched as sub-agent from pre-implementation-analysis)
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate --task completion` - Invoke when workflow halts at any point
@@ -83,14 +83,14 @@ Spec approved (existing plan found)
   → Step 5b: cascade approval to existing plan (remove needs-approval, add comment)
   → Plan is now approved → skip to plan-approved dispatch path
   → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
-  → pre-implementation-analysis → divide-and-conquer/assemble-batch → ...
+  → pre-implementation-analysis → divide-and-conquer/assemble-work → ...
 
 Plan approved
   → verify-authorization (all gates pass)
   → git-workflow --task pre-work (MANDATORY: worktree creation and environment setup)
   → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
   → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
-  → divide-and-conquer/assemble-batch (dispatch sub-agents, squash-merge into batch branch)
+  → divide-and-conquer/assemble-work (dispatch sub-agents, squash-merge into work branch)
   → verification-before-completion
   → finishing-a-development-branch
   → git-workflow/review-prep
@@ -127,7 +127,7 @@ Already implemented
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
 | **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
 | **Output lineage cascade** | When user approves an investigation/review issue whose sole deliverable is creating a spec, approval cascades to the spec. See `verify-authorization.md` Step 2.1 for the complete cascade procedure. |
-| **Pipeline authorization ("to PR")** | When user says "approved #N to PR" (or equivalent pipeline-authorization phrasing), authorization covers the FULL pipeline from issue approval through PR creation — including plan creation, plan auto-approval, and all intermediate steps. The spec-to-plan cascade and batch carry-forward rules apply automatically. No separate plan approval gate is required. |
+| **Pipeline authorization ("to PR")** | When user says "approved #N to PR" (or equivalent pipeline-authorization phrasing), authorization covers the FULL pipeline from issue approval through PR creation — including plan creation, plan auto-approval, and all intermediate steps. The spec-to-plan cascade and work carry-forward rules apply automatically. No separate plan approval gate is required. |
 
 ## Fix Spec Verification for Bug Reports
 
@@ -158,7 +158,7 @@ This check is invoked:
 | **Reference ≠ cascade** | Issue mentions in body/comments do NOT cascade |
 | **Confirmation ≠ authorization** | Confirming an observation does NOT authorize implementation |
 | **Discussion conclusion ≠ authorization** | Verbal agreement, consensus, or opinion expressed in discussion does NOT constitute explicit authorization — see `020-go-prohibitions.md` §1 |
-| **Batch carry-forward** | Authorization carries forward within a batch via persisted batch state file; no re-authorization needed between issues |
+| **Work carry-forward** | Authorization carries forward within a work set via persisted work state file; no re-authorization needed between issues |
 | **Pipeline authorization ("to PR")** | "Approved #N to PR" pre-authorizes all steps in the dispatch chain including plan creation and plan approval. The two-gate model is satisfied by the user's explicit pipeline instruction. |
 
 ## Post-Implementation Workflow
@@ -298,7 +298,7 @@ dependency_graph: {serial: [<N>], parallel_groups: [[<N>]]}
 execution_plan_presented: bool
 requires_developer: bool
 developer_reason: <str|null>
-batch_state_file: <path>
+work_state_file: <path>
 ```
 
 #### verify-fix-spec
@@ -329,7 +329,7 @@ nodes_visited: <N>
 
 ```yaml
 issue_number: <N>
-batch_peers: [<N>]  # screen-issue only
+work_peers: [<N>]  # screen-issue only
 session_vars:
   GitOwner: <from-session>
   GitRepo: <from-session>
@@ -353,7 +353,7 @@ Every task in this skill that reads a metadata claim (label, comment, STATUS mar
 | Authorization currency | Verify spec has not been revised after most recent authorization comment | `github_issue_read(method=get_comments)` → compare revision timestamps | STRUCTURE-VIOLATION |
 | Sub-issue state (open/closed) | Verify sub-issue state via GitHub API, not from cached or claimed state | `github_issue_read(method=get, issue_number=N)` → check `state` field | VERIFICATION-GAP |
 | Fix spec existence | Verify fix spec sub-issue exists and has correct labels/STATUS for its maturity | `github_issue_read(method=get_sub_issues)` → verify each child | MISSING-TRACEABILITY |
-| Batch screening dispatch (>3 issues) | Verify `screen-issue` sub-agents were dispatched (not inline screening) when batch size > 3 | Check for `task(subagent_type="general")` dispatch calls per issue | STRUCTURE-VIOLATION |
+| Work screening dispatch (>3 issues) | Verify `screen-issue` sub-agents were dispatched (not inline screening) when work set size > 3 | Check for `task(subagent_type="general")` dispatch calls per issue | STRUCTURE-VIOLATION |
 
 ### Evidence Artifacts
 

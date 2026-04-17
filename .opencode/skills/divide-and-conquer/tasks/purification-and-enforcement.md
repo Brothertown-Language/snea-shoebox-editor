@@ -103,7 +103,7 @@ Co-authored with AI: <AgentName> (<ModelId>)
 
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
-| "Authorization context preserved" | Verify batch state contains auth | Read batch state file for auth section | STRUCTURE-VIOLATION |
+| "Authorization context preserved" | Verify work state contains auth | Read work state file for auth section | STRUCTURE-VIOLATION |
 | "All commits made" | Verify clean working tree | `git status --porcelain` | VERIFICATION-GAP |
 | "Verification passed" | Verify evidence artifacts exist | `glob(pattern="./tmp/verification-*")` | MISSING-ELEMENT |
 | "Checklist completed" | Verify branch readiness | `git status --porcelain` and test execution | VERIFICATION-GAP |

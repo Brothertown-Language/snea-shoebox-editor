@@ -622,7 +622,7 @@ Then continue to Step 3 (squash).
 | Branch Type | Squash Strategy |
 | -- | -- |
 | **Single-issue branch** | All commits squashed to ONE commit |
-| **Batch branch** | One commit per implementation item (N commits is correct) |
+| **Work branch** | One commit per implementation item (N commits is correct) |
 
 #### Single-Issue Branch (Default)
 
@@ -635,21 +635,21 @@ git commit -m "<descriptive message>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
 
-#### Batch Branch
+#### Work Branch
 
-A batch branch already has one squash-merged commit per implementation item from `assemble-batch`. These commits are correct — do NOT squash them further.
+A work branch already has one squash-merged commit per implementation item from `assemble-work`. These commits are correct — do NOT squash them further.
 
-**Detect batch branch:** If the branch was created by `assemble-batch` (branch name typically starts with `batch/` or the batch state file exists at `.opencode/tmp/batch-*.md`), it is a batch branch with correctly-structured commits.
+**Detect work branch:** If the branch was created by `assemble-work` (branch name typically starts with `work/` or the work state file exists at `.opencode/tmp/work-*.md`), it is a work branch with correctly-structured commits.
 
-**For batch branches, skip squash.** The commit history from `assemble-batch` is the intended final state.
+**For work branches, skip squash.** The commit history from `assemble-work` is the intended final state.
 
-**Verify batch branch commits:**
+**Verify work branch commits:**
 
 ```bash
-# Check if batch state file exists
-ls .opencode/tmp/batch-*.md 2>/dev/null
+# Check if work state file exists
+ls .opencode/tmp/work-*.md 2>/dev/null
 
-# If exists, this is a batch branch — skip squash
+# If exists, this is a work branch — skip squash
 # If not exists, treat as single-issue branch — squash to one commit
 ```
 
@@ -1017,7 +1017,7 @@ git push origin feature/recovery
 | Issue | Resolution |
 | -- | -- |
 | Multiple commits (single-issue branch) | Run `git reset --soft origin/dev` and re-commit |
-| Multiple commits (batch branch) | Expected — N commits = N implementation items. Do NOT re-squash. |
+| Multiple commits (work branch) | Expected — N commits = N implementation items. Do NOT re-squash. |
 | PR body missing Fixes | Verify sub-issues, add all to body |
 | Branch conflicts | Rebase on dev: `git rebase origin/dev` |
 | Wrong base branch | Close PR, create new one with `base="dev"` |
@@ -1050,7 +1050,7 @@ Every squash commit MUST include:
 | -- | -- |
 | Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
 | Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
-| Batch | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\n## Batch Issues\n\n#<issue1>\n#<issue2>\n\nFixes #<parent1>\nFixes #<child1>\nFixes #<parent2>` |
+| Work | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\n## Work Items\n\n#<issue1>\n#<issue2>\n\nFixes #<parent1>\nFixes #<child1>\nFixes #<parent2>` |
 
 **Example Multi-Task PR Body:**
 
@@ -1065,19 +1065,19 @@ Fixes #469
 Fixes #470
 ```
 
-**Example Batch PR Body:**
+**Example Work PR Body:**
 
 ```markdown
 **Summary:**
 
-Unified five approved issues into a single batch implementation, eliminating forked execution paths.
+Unified five approved issues into a single work execution, eliminating forked execution paths.
 
-**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-batch → batch branch → single PR.
+**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-work → work branch → single PR.
 
-## Batch Issues
+## Work Items
 
 #660 — Add pre-implementation analysis task
-#662 — Fix batch branch squash verification
+#662 — Fix work branch squash verification
 #621 — Collapse executing-plans into divide-and-conquer
 
 Fixes #660

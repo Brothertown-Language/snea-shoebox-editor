@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Analyze interdependencies and determine execution order for all approved issues — whether one or many — producing a flat item list for `assemble-batch` dispatch. Every approval follows this unified path: sub-issue expansion → flat item list → assemble-batch → batch branch → pr-creation → one PR.
+Analyze interdependencies and determine execution order for all approved issues — whether one or many — producing a flat item list for `assemble-work` dispatch. Every approval follows this unified path: sub-issue expansion → flat item list → assemble-work → work branch → pr-creation → one PR.
 
 **Per-issue screening is performed by the `screen-issue` task**, dispatched as parallel sub-agents (one per issue). This task receives N screening result contracts and performs cross-issue merge + dependency graph building.
 
@@ -22,11 +22,11 @@ Analyze interdependencies and determine execution order for all approved issues 
 - Dependency graph produced with execution order
 - Parallel-safe groups identified
 - Execution plan presented in chat (informative only — no confirmation)
-- Agent proceeds immediately to `assemble-batch`
+- Agent proceeds immediately to `assemble-work`
 
 ## Procedure
 
-### Step -1: Batch Size Check and Dispatch Decision (MANDATORY FIRST)
+### Step -1: Work Set Size Check and Dispatch Decision (MANDATORY FIRST)
 
 Before reading ANY issue body:
 
@@ -34,7 +34,7 @@ Before reading ANY issue body:
 2. If count ≤ 3: inline screening is PERMITTED (proceed to Step 0)
 3. If count > 3: sub-agent dispatch is MANDATORY — do NOT read any issue body into orchestrator context
 
-**⚠️ CRITICAL VIOLATION:** Reading issue bodies for >3 issues into orchestrator context before sub-agent dispatch is a CRITICAL GUIDELINE VIOLATION per `000-critical-rules.md` §Inline Screening of Batch Approvals. The orchestrator's context window must stay clean for cross-issue merge and dependency graph building — not consumed by raw issue bodies.
+**⚠️ CRITICAL VIOLATION:** Reading issue bodies for >3 issues into orchestrator context before sub-agent dispatch is a CRITICAL GUIDELINE VIOLATION per `000-critical-rules.md` §Inline Screening of Authorization Sets. The orchestrator's context window must stay clean for cross-issue merge and dependency graph building — not consumed by raw issue bodies.
 
 ### Step 0: Collect Screening Results
 
@@ -52,7 +52,7 @@ For each approved issue:
 
 ```yaml
 issue_number: <N>
-batch_peers: [<list of all approved issue numbers except this one>]
+work_peers: [<list of all approved issue numbers except this one>]
 session_vars:
   GitOwner: <from-session>
   GitRepo: <from-session>
@@ -168,7 +168,7 @@ Analyze cross-issue relationships using file/symbol references from screening re
    - Exception: isolated sub-issues with no file overlap → dispatch to own sub-agent
    - Edge case: parent excluded but sub-issues included → include independently
 
-1. **Merge-time conflict risk:** Issues touching the same file in different sections. Noted in execution plan for `assemble-batch` handling. Do NOT block execution.
+1. **Merge-time conflict risk:** Issues touching the same file in different sections. Noted in execution plan for `assemble-work` handling. Do NOT block execution.
 
 ### Step 3: Classify Each Issue
 
@@ -245,7 +245,7 @@ Create a directed graph where:
 Format:
 
 ```markdown
-## Batch Approval — Dependency Analysis
+## Authorization Set — Dependency Analysis
 
 **Approved Issues:** #660, #662, #621, #614, #630
 
@@ -295,29 +295,29 @@ Each parallel issue includes dispatch context:
 Proceeding with execution plan.
 ```
 
-**Checkpoint (MANDATORY):** Before proceeding to `assemble-batch`, verify NO `question` tool calls have been made at ANY point during the pre-implementation-analysis flow (not just since plan presentation). If any were made, remove them and proceed autonomously. The execution plan is presented for informational purposes — no confirmation is requested or awaited. If any were made, the answers are irrelevant — the agent should have resolved the questions autonomously.
+**Checkpoint (MANDATORY):** Before proceeding to `assemble-work`, verify NO `question` tool calls have been made at ANY point during the pre-implementation-analysis flow (not just since plan presentation). If any were made, remove them and proceed autonomously. The execution plan is presented for informational purposes — no confirmation is requested or awaited. If any were made, the answers are irrelevant — the agent should have resolved the questions autonomously.
 
 #### Post-Analysis Dispatch (MANDATORY)
 
-After producing the execution plan and dependency graph, the agent MUST proceed directly to the next step in the dispatch chain (typically `assemble-batch`). The analysis result IS the decision — no separate user confirmation is required. Key rules:
+After producing the execution plan and dependency graph, the agent MUST proceed directly to the next step in the dispatch chain (typically `assemble-work`). The analysis result IS the decision — no separate user confirmation is required. Key rules:
 
 1. **Presentation is a status report, not a decision prompt.** The execution plan presentation (Step 6) is informational. It does NOT create a decision point.
 2. **No HALT after analysis unless `requires_developer: true`.** The only valid halt after pre-implementation-analysis is when screening sub-agents returned `requires_developer: true` per the exhaustive 5-condition list in `screen-issue.md`. When `requires_developer: false`, proceed without halting.
-3. **"Yield" means "produce output and continue," NOT "present output and wait."** The dispatch chain from pre-implementation-analysis to assemble-batch is automatic. No user interaction is expected or allowed between them.
+3. **"Yield" means "produce output and continue," NOT "present output and wait."** The dispatch chain from pre-implementation-analysis to assemble-work is automatic. No user interaction is expected or allowed between them.
 4. **Halting to "present" results as a decision point is functionally identical to asking a question** — both violate `000-critical-rules.md` §"Pushing Agent Intelligence Decisions to the User" and `020-go-prohibitions.md` §1.
 
 #### Prohibited Actions
 
 - **No `question` tool invocation** after plan presentation
-- **No HALT** between plan presentation and `assemble-batch`
+- **No HALT** between plan presentation and `assemble-work`
 - **No "Proceed?" / "Shall I?" / any confirmation solicitation**
 - **No "awaiting approval" / "waiting for GO" / any pending-state marker**
 
 #### Developer Involvement Triggers
 
-The ONLY conditions requiring developer input during batch approval analysis:
+The ONLY conditions requiring developer input during authorization set analysis:
 
-- **Unresolvable conflicts**: Contradictory success criteria between issues in batch
+- **Unresolvable conflicts**: Contradictory success criteria between issues in the authorization set
 - **Stale spec assumptions (different intent)**: Issue A references code that Issue B deletes, and A's intent differs from B's
 - **Ambiguous supersession**: Two issues partially overlap, unclear which supersedes which
 - **Uncertain reconciliation findings**: `reconcile-issue-graph` (Step 0.7) produced `requires_dev_action` entries with conflicting signals that prevent confident classification
@@ -378,20 +378,20 @@ The `dev_base_hash` ensures all parallel worktrees start from the same base comm
   spec_version: "current revised body"
 ```
 
-### Step 9: Write Batch State File
+### Step 9: Write Work State File
 
-After the execution plan is presented, write a batch state file that persists the plan for sub-agent dispatch:
+After the execution plan is presented, write a work state file that persists the plan for sub-agent dispatch:
 
 ```bash
 mkdir -p .opencode/tmp
 ```
 
-**File:** `.opencode/tmp/batch-<timestamp>.md`
+**File:** `.opencode/tmp/work-<timestamp>.md`
 
 **Contents:**
 
 ```markdown
-# Batch Execution Plan
+# Work Execution Plan
 
 **Session:** <timestamp>
 **Authorized Issues:** #A, #B, #C
@@ -437,31 +437,31 @@ mkdir -p .opencode/tmp
 - Session-scoped via timestamp — stale files are detectable
 - Survives context turnover — agent can re-read after HALT
 - Hybrid: in-line context passed to each sub-agent + file backup for recovery
-- Cleaned up after batch completes (or on new session start)
+- Cleaned up after work set completes (or on new session start)
 
 ### Step 10: Execute Immediately
 
-After presenting the plan, proceed immediately to `assemble-batch`. Do not HALT. Do not ask for confirmation. Do not wait.
+After presenting the plan, proceed immediately to `assemble-work`. Do not HALT. Do not ask for confirmation. Do not wait.
 
-Yield control to `divide-and-conquer --task assemble-batch`:
+Yield control to `divide-and-conquer --task assemble-work`:
 
 ```text
-/skill divide-and-conquer --task assemble-batch
+/skill divide-and-conquer --task assemble-work
 ```
 
-**assemble-batch** reads the batch state file and handles:
+**assemble-work** reads the work state file and handles:
 
-- Creating worktrees for the batch
+- Creating worktrees for the work set
 - Dispatching sub-agents for each issue
-- Collecting results and updating batch state
+- Collecting results and updating work state
 - Running review-prep after all issues complete
 
 This handoff ensures:
 
-- No HALTs between issues in the batch
+- No HALTs between issues in the work set
 - Each sub-agent gets isolated context
 - The orchestrator stays clean — no implementation pollution
-- Batch state survives context turnover
+- Work state survives context turnover
 
 ## Classification Detail
 
@@ -503,7 +503,7 @@ An issue is meta/non-code when:
 
 ### Superseded Detection
 
-Issue A is superseded by batch peer B when:
+Issue A is superseded by work peer B when:
 
 - B's file list is a superset of A's file list
 - B's scope description fully encompasses A's scope
@@ -531,7 +531,7 @@ An issue is partially implemented when:
 
 An issue has stale assumptions when:
 
-- Its spec references specific function names, class names, or file paths that another issue in the batch modifies or deletes
+- Its spec references specific function names, class names, or file paths that another issue in the work set modifies or deletes
 - The reference is integral to the issue's implementation instructions (not just background context)
 
 **Same intent (auto-resolvable):** Both issues want the same outcome for the referenced code.
@@ -542,7 +542,7 @@ An issue has stale assumptions when:
 A cross-issue sub-issue pair exists when:
 
 - Issue A is a parent issue with sub-issues
-- One or more of A's sub-issues are also in the approved batch
+- One or more of A's sub-issues are also in the approved work set
 - Detected via `flat_items` from screening results
 
 ### Merge-Time Conflict Detection
@@ -606,7 +606,7 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - Assume all issues are independent without analysis
 - Execute must-precede issues out of order
 - Use `question` tool after presenting the execution plan
-- HALT between plan presentation and `assemble-batch`
+- HALT between plan presentation and `assemble-work`
 - Ask "Proceed?", "Shall I?", or any confirmation solicitation after plan presentation
 - Auto-re-stage issues with different-intent stale assumptions
 - Skip gate evidence audit table assembly from screening results
@@ -624,7 +624,7 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - Group independent issues for parallel dispatch
 - Exclude non-actionable issues with explicit reason
 - Report each issue's classification in the execution plan
-- Proceed immediately to `assemble-batch` after presenting the plan
+- Proceed immediately to `assemble-work` after presenting the plan
 - Auto-detect partially-implemented issues (no developer input needed)
 - HALT for developer review only for unresolvable conflicts, different-intent stale assumptions, ambiguous supersession, and uncertain reconciliation findings
 - Verify screening result `requires_developer` field and HALT if true (after reconciliation runs)

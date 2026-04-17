@@ -69,7 +69,7 @@ When the orchestrator dispatches a sub-agent for a phase that follows a prior ph
 
 **Phase progress is prose-driven.** The requirement is that the information travels — the agent composing the context decides how to encode it. The following information must be present:
 
-- **Completed phases by concern name.** Each completed phase should be identified by the concern it addresses, not just a phase number. For example: "dispatch context schema" rather than "Phase 1", "assemble-batch phase progress" rather than "Phase 3". The concern name makes the progress meaningful to the receiving sub-agent.
+- **Completed phases by concern name.** Each completed phase should be identified by the concern it addresses, not just a phase number. For example: "dispatch context schema" rather than "Phase 1", "assemble-work phase progress" rather than "Phase 3". The concern name makes the progress meaningful to the receiving sub-agent.
 
 - **Concern boundaries crossed.** When the current phase's work transitions from one architectural concern to another (e.g., from data layer to UI, from orchestration to enforcement, from schema definition to runtime behavior), this transition must be documented. The boundary description should explain what concern the previous phase addressed and what concern the current phase enters.
 
@@ -121,7 +121,7 @@ Co-authored with AI: <AgentName> (<ModelId>)
 |-------|-------------------|-----------|---------------|
 | "WORKTREE_PATH correct" | Verify path exists | `ls -d <path>` | STRUCTURE-VIOLATION |
 | "Session vars current" | Verify vars match session init | Check against session values | VERIFICATION-GAP |
-| "Prior results accurate" | Verify result contracts from prior sub-agents | Read batch state file | VERIFICATION-GAP |
+| "Prior results accurate" | Verify result contracts from prior sub-agents | Read work state file | VERIFICATION-GAP |
 
 **Evidence artifact:** Path verification and session var check results.
 

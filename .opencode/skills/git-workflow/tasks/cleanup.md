@@ -273,7 +273,7 @@ def cross_reference_closure(issue_num, issue):
             pass
 ```
 
-#### Step 2.7.6: Batch PR Handling
+#### Step 2.7.6: Work PR Handling
 
 Apply above for every issue in PR body. After processing all, re-check specs with multiple plans.
 
@@ -458,54 +458,54 @@ git remote prune origin
 
 **Why `git remote prune origin` is mandatory:** After a remote branch is deleted (either by GitHub auto-deletion or explicit `git push origin --delete`), the local remote-tracking reference (`refs/remotes/origin/<branch>`) becomes stale. `git fetch --prune` only prunes refs for remote branches that no longer exist AND have no upstream tracking, while `git remote prune origin` explicitly removes all stale remote-tracking branches. Skipping this leaves ghost references that cause confusion in `git branch -a` output and can interfere with new branch creation.
 
-### Step 5.5: Batch Branch Cleanup
+### Step 5.5: Work Branch Cleanup
 
-**When the merged branch was a batch branch (created by `assemble-batch`), additional cleanup is required.**
+**When the merged branch was a work branch (created by `assemble-work`), additional cleanup is required.**
 
-#### Detecting a Batch Branch
+#### Detecting a Work Branch
 
-A batch branch has these characteristics:
-- Branch name typically starts with `batch/` or was identified in the batch state file
-- Batch state file exists at `.opencode/tmp/batch-*.md`
-- Multiple implementation commits in the branch (one per issue in the batch)
+A work branch has these characteristics:
+- Branch name typically starts with `work/` or was identified in the work state file
+- Work state file exists at `.opencode/tmp/work-*.md`
+- Multiple implementation commits in the branch (one per issue in the work execution)
 
-#### Batch Cleanup Procedure
+#### Work Cleanup Procedure
 
-After a batch PR is confirmed merged:
+After a work PR is confirmed merged:
 
-1. **Delete individual feature branches that were squash-merged into the batch branch:**
+1. **Delete individual feature branches that were squash-merged into the work branch:**
 
    ```bash
-   # Extract feature branch names from batch state file
+   # Extract feature branch names from work state file
    # Each line like "- [ ] #A — branch: spec/<name>, status: done"
    # gives us the branch names to delete
 
-   # For each feature branch listed in batch state:
+   # For each feature branch listed in work state:
    git branch -d spec/<feature-branch-name>
    git push origin --delete spec/<feature-branch-name> 2>/dev/null || echo "Remote already deleted"
    ```
 
-2. **Delete the batch branch itself:**
+2. **Delete the work branch itself:**
 
    ```bash
-   git branch -d <batch-branch-name>
-   git push origin --delete <batch-branch-name> 2>/dev/null || echo "Remote already deleted"
+   git branch -d <work-branch-name>
+   git push origin --delete <work-branch-name> 2>/dev/null || echo "Remote already deleted"
    ```
 
 3. **Remove individual feature worktrees:**
 
    ```bash
-   # For each feature worktree listed in batch state:
+   # For each feature worktree listed in work state:
    git worktree remove .worktrees/spec-<feature-name>
 
-   # Remove batch worktree if it exists:
-   git worktree remove .worktrees/<batch-worktree-name>
+   # Remove work worktree if it exists:
+   git worktree remove .worktrees/<work-worktree-name>
    ```
 
-4. **Remove batch state file:**
+4. **Remove work state file:**
 
    ```bash
-   rm .opencode/tmp/batch-*.md
+   rm .opencode/tmp/work-*.md
    ```
 
 5. **Prune remote references:**
@@ -518,7 +518,7 @@ After a batch PR is confirmed merged:
 6. **Close all referenced issues via API:**
 
    ```python
-   for issue_number in batch_issues:
+   for issue_number in work_issues:
        issue = github_issue_read(method="get", issue_number=issue_number)
        if issue.get("state") != "closed":
            # Close all referenced issues via API — platform autoclose is inert for dev-branch merges
@@ -526,16 +526,16 @@ After a batch PR is confirmed merged:
                              state="closed", state_reason="completed")
    ```
 
-#### Batch Cleanup Safety Checks
+#### Work Cleanup Safety Checks
 
 | Check | Purpose |
 | -- | -- |
-| Batch PR is merged (verified via API) | Prevents deleting unmerged work |
-| Each feature branch is an ancestor of the batch branch | Ensures no work was lost |
+| Work PR is merged (verified via API) | Prevents deleting unmerged work |
+| Each feature branch is an ancestor of the work branch | Ensures no work was lost |
 | Working tree clean on main repo | No uncommitted changes before cleanup |
 | Feature worktrees removed before branch deletion | Prevents dangling worktree references |
 
-**⚠️ CRITICAL: Never delete a batch branch or its feature branches until the batch PR is confirmed merged via GitHub API (`merged_at` is not None).**
+**⚠️ CRITICAL: Never delete a work branch or its feature branches until the work PR is confirmed merged via GitHub API (`merged_at` is not None).**
 
 ### Step 6: Clean Other Merged Branches
 

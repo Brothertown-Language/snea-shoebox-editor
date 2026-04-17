@@ -229,7 +229,7 @@ When the orchestrating agent detects abnormal termination via the Sub-Agent Comp
   1. Uncommitted changes represent ≤50 lines of diff
   2. Changes touch a single file only
   3. Changes are fully correct and complete against the dispatch spec
-  4. No remaining sub-agent dispatches in the batch (this is the last sub-agent)
+  4. No remaining sub-agent dispatches in the work set (this is the last sub-agent)
 - **Action:** Commit and push the changes, then run verification (`verification-before-completion --task verify`)
 - **⚠️ Context window risk:** Manual completion consumes orchestrator context window. Even a "small" manual completion (reading diffs, composing commits) can push an already-loaded context toward overflow. This risk is WHY manual completion is strongly discouraged — the orchestrator's context window is a scarce resource that must be preserved for orchestration duties. Re-dispatching to a fresh sub-agent is context-free for the orchestrator.
 - **If ANY condition is NOT met → use Option A (Undo and Re-dispatch)**
@@ -339,7 +339,7 @@ Action: [auto-fix|conditional|flag-for-review]
 | Prior PR not merged | CONFLICTING | flag-for-review | HALT — dependent branch may need to be stacked differently |
 | Authorization missing | VERIFICATION-GAP | conditional | Re-verify authorization before dispatching |
 | Branch out of date | VERIFICATION-GAP | auto-fix | Rebase or merge as needed |
-| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update batch state to reflect actual state |
+| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update work state to reflect actual state |
 | Referenced file/issue missing | MISSING-TRACEABILITY | conditional | Search alternates before proceeding |
 
 ## Cross-Reference Verification (MANDATORY)

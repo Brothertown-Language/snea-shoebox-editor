@@ -95,7 +95,7 @@ If any sub-agent returned `verification_passed: false`, HALT. Do NOT proceed. Re
 
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
-| "Feature branch merged into batch branch" | Verify merge commit exists | `git log --oneline --merges` | VERIFICATION-GAP |
+| "Feature branch merged into work branch" | Verify merge commit exists | `git log --oneline --merges` | VERIFICATION-GAP |
 | "No conflicts remaining" | Verify clean merge | `git status --porcelain` → check for conflict markers | CONFLICTING |
 | "All sub-agent changes included" | Verify diff matches expected | `git diff dev --name-only` | VERIFICATION-GAP |
 

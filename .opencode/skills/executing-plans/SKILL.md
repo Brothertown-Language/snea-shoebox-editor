@@ -10,11 +10,11 @@ compatibility: opencode
 
 ## Overview
 
-Plan execution skill that dispatches to `divide-and-conquer/assemble-batch` for implementation. This skill is a thin dispatch layer — all implementation logic flows through the unified batch workflow. It receives plan context from `approval-gate` after plan approval.
+Plan execution skill that dispatches to `divide-and-conquer/assemble-work` for implementation. This skill is a thin dispatch layer — all implementation logic flows through the unified work workflow. It receives plan context from `approval-gate` after plan approval.
 
-**Every approval follows one path:** `executing-plans` → `divide-and-conquer/assemble-batch` → batch branch → pr-creation → one PR.
+**Every approval follows one path:** `executing-plans` → `divide-and-conquer/assemble-work` → work branch → pr-creation → one PR.
 
-**There is no single-issue bypass.** Single issue = batch of one = one sub-agent.
+**There is no single-issue bypass.** Single issue = work of one = one sub-agent.
 
 ## Received Context
 
@@ -34,13 +34,13 @@ phase_progress:
 
 **Verification:** If `plan_issue` is not present in the dispatch context, HALT — this skill requires plan context to track progress against the correct issue.
 
-**Phase progress composition:** Before dispatching to `divide-and-conquer`, `executing-plans` reads the Plan STATUS marker and concern boundary annotations to compose the initial `phase_progress`. If no phases are complete yet, the field notes that explicitly. The `assemble-batch` task then maintains and extends phase progress as each sub-agent completes.
+**Phase progress composition:** Before dispatching to `divide-and-conquer`, `executing-plans` reads the Plan STATUS marker and concern boundary annotations to compose the initial `phase_progress`. If no phases are complete yet, the field notes that explicitly. The `assemble-work` task then maintains and extends phase progress as each sub-agent completes.
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `start` | Dispatch to divide-and-conquer/assemble-batch for implementation | ~200 |
+| `start` | Dispatch to divide-and-conquer/assemble-work for implementation | ~200 |
 | `step` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
 | `progress` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
 | `verify` | Redirects to verification-before-completion | ~100 |
@@ -49,7 +49,7 @@ phase_progress:
 ## Invocation
 
 - `/skill executing-plans` — Overview only
-- `/skill executing-plans --task start` — Dispatch to divide-and-conquer/assemble-batch
+- `/skill executing-plans --task start` — Dispatch to divide-and-conquer/assemble-work
 - `/skill executing-plans --task step` — Redirects to divide-and-conquer/orchestrate
 - `/skill executing-plans --task progress` — Redirects to divide-and-conquer/orchestrate
 - `/skill executing-plans --task verify` — Redirects to verification-before-completion
@@ -59,11 +59,11 @@ phase_progress:
 
 1. **Verify plan context:** Before dispatching, confirm `plan_issue` is present in received context. If missing, HALT and report.
 
-2. **Dispatch to divide-and-conquer:** The `start` task invokes `divide-and-conquer --task assemble-batch` which handles all implementation — single issue or batch — through the unified workflow. Pass `plan_issue` in the dispatch context.
+2. **Dispatch to divide-and-conquer:** The `start` task invokes `divide-and-conquer --task assemble-work` which handles all implementation — single issue or work — through the unified workflow. Pass `plan_issue` in the dispatch context.
 
 3. **No direct implementation:** This skill does not implement directly. It dispatches.
 
-4. **Single issue = batch of one:** There is no separate path for single issues. The `assemble-batch` task handles single-issue dispatch as the default code path.
+4. **Single issue = work of one:** There is no separate path for single issues. The `assemble-work` task handles single-issue dispatch as the default code path.
 
 5. **Progress reports against plan:** All progress tracking references the plan issue (not the spec issue). The plan is the implementation tracking artifact; the spec is the requirements artifact.
 
@@ -72,7 +72,7 @@ phase_progress:
 ```
 Plan approved (approval-gate)
   → executing-plans --task start
-  → divide-and-conquer --task assemble-batch
+  → divide-and-conquer --task assemble-work
   → verification-before-completion
   → finishing-a-development-branch
   → git-workflow/review-prep
@@ -97,7 +97,7 @@ Plan approved (approval-gate)
 | Task table entry `progress` | File exists at `.opencode/skills/executing-plans/tasks/progress.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `verify` | File exists at `.opencode/skills/executing-plans/tasks/verify.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `completion` | File exists at `.opencode/skills/executing-plans/tasks/completion.md` | MISSING-TRACEABILITY if missing |
-| `divide-and-conquer` dispatch behavior | Matches actual SKILL.md: `assemble-batch` task handles implementation | CONFLICTING if mismatched |
+| `divide-and-conquer` dispatch behavior | Matches actual SKILL.md: `assemble-work` task handles implementation | CONFLICTING if mismatched |
 | `approval-gate` dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `executing-plans` | CONFLICTING if mismatched |
 | `verification-before-completion` redirect | Matches actual SKILL.md: `verify` task exists and redirects | CONFLICTING if mismatched |
 

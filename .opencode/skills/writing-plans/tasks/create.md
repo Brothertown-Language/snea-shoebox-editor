@@ -143,7 +143,7 @@ Before mapping file structure, check whether existing plans already reference th
       - What concern the phase is entering (the new concern's scope)
       - What information the new concern needs from the prior concern (the handoff point)
 
-      These annotations enable `assemble-batch` to compose accurate `concern_boundaries_crossed` in the dispatch context, so sub-agents understand the architectural transitions they are participating in. Concern boundary annotations should be woven into the phase description naturally, not as separate structured fields.
+      These annotations enable `assemble-work` to compose accurate `concern_boundaries_crossed` in the dispatch context, so sub-agents understand the architectural transitions they are participating in. Concern boundary annotations should be woven into the phase description naturally, not as separate structured fields.
 
       After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `issue-operations --task link-sub-issue`.
 

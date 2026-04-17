@@ -180,7 +180,7 @@ The format applies to ALL halt points where implementation is reported complete:
 - **Sub-agent result reports** from divide-and-conquer dispatch
 - **Phase boundary halts** (merge gates between phases)
 - **Approval-gate post-implementation** reports
-- **Batch orchestration** reports (assemble-batch Step 6)
+- **Work orchestration** reports (assemble-work Step 6)
 - **Completion task** reports (approval-gate completion)
 - **Any completion message** where the agent reports work done and halts
 
@@ -213,7 +213,7 @@ The format applies to ALL halt points where implementation is reported complete:
 - 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any required element (summary, outcome, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent; including a URL when no relevant URL exists; label-format mismatch (e.g., "Compare URL" with `pull/N` URL or "PR URL" with `compare/dev...` URL)
 - ✅ REQUIRED: Verify chat output format before sending at every halt point; auto-fix missing or misordered elements before output is sent; summary first, outcome after summary, URL if relevant (omit if not), byline last; label and URL format MUST match context (pre-PR → "Compare URL" + `compare/dev...`; post-PR → "PR URL" + `pull/N`); each verification checkpoint MUST produce a tool-call artifact as evidence
 
-**See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples. See `approval-gate/tasks/post-implementation.md` Step 4.5, `approval-gate/tasks/completion.md`, `divide-and-conquer/tasks/assemble-batch.md` Step 6, `finishing-a-development-branch/tasks/checklist.md` §Chat Output Format, and `git-workflow/tasks/review-prep.md` §Live Verification for the verification checkpoints.**
+**See `git-workflow` skill → "Chat Output Format (CRITICAL)" for complete format requirements and examples. See `approval-gate/tasks/post-implementation.md` Step 4.5, `approval-gate/tasks/completion.md`, `divide-and-conquer/tasks/assemble-work.md` Step 6, `finishing-a-development-branch/tasks/checklist.md` §Chat Output Format, and `git-workflow/tasks/review-prep.md` §Live Verification for the verification checkpoints.**
 
 ## Critical Violation: Wrong PR Body Format
 
@@ -420,12 +420,12 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 **⚠️ The main agent implementing files directly instead of dispatching to sub-agents is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `divide-and-conquer` skill `--task assemble-batch` for the complete sub-agent dispatch workflow.**
+**See `divide-and-conquer` skill `--task assemble-work` for the complete sub-agent dispatch workflow.**
 
-- 🚫 FORBIDDEN: Main agent editing implementation files directly during batch orchestration
-- 🚫 FORBIDDEN: Bypassing assemble-batch for single-issue dispatch
-- 🚫 FORBIDDEN: Code-path divergence between single and batch issue handling
-- ✅ REQUIRED: All implementation dispatches through `assemble-batch` — single issue is a single-item batch
+- 🚫 FORBIDDEN: Main agent editing implementation files directly during work orchestration
+- 🚫 FORBIDDEN: Bypassing assemble-work for single-issue dispatch
+- 🚫 FORBIDDEN: Code-path divergence between single and work-order issue handling
+- ✅ REQUIRED: All implementation dispatches through `assemble-work` — single issue is a work-of-1
 - ✅ REQUIRED: Main agent only orchestrates — never edits implementation files
 - ✅ REQUIRED: Context window stays clean for orchestration decisions
 
@@ -436,7 +436,7 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 The approval-gate dispatch chain defines a mandatory sequence after plan approval:
 
 1. `git-workflow --task pre-work` — Create worktree, set `WORKTREE_PATH`, verify branch state
-2. `divide-and-conquer --task assemble-batch` — Dispatch sub-agents for implementation
+2. `divide-and-conquer --task assemble-work` — Dispatch sub-agents for implementation
 3. `verification-before-completion` — Verify success criteria before marking complete
 4. `finishing-a-development-branch --task checklist` — Final branch readiness check
 5. `git-workflow --task review-prep` — Push branch, generate compare URL
@@ -607,7 +607,7 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 **See `approval-gate` skill → `pre-implementation-analysis` task for the complete procedure, classification heuristics, and output format.**
 
 - 🚫 FORBIDDEN: Processing issues one-by-one without analysis; assuming independence without checking; hiding analysis in reasoning
-- ✅ REQUIRED: Invoke `pre-implementation-analysis` for all approvals (single or batch); expand sub-issues; classify each issue; build dependency graph; present analysis in chat; execute in dependency order
+- ✅ REQUIRED: Invoke `pre-implementation-analysis` for all approvals (single or authorization set); expand sub-issues; classify each issue; build dependency graph; present analysis in chat; execute in dependency order
 
 ## Critical Violation: Treating Branch Stacking as Optional
 
@@ -618,7 +618,7 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - 🚫 FORBIDDEN: Dispatching sub-agents in parallel when stacking is the appropriate approach
 - 🚫 FORBIDDEN: Choosing parallel execution because it "saves time" without verifying circumstances genuinely allow it
 - ✅ REQUIRED: Sequential branch stacking as the prerequisite execution model
-- ✅ REQUIRED: Explicit documented justification in batch state if parallel execution is chosen (opportunistic only)
+- ✅ REQUIRED: Explicit documented justification in work state if parallel execution is chosen (opportunistic only)
 - ✅ REQUIRED: Stack branches via `git merge <prior-branch>` into dependent branches before implementation
 - ✅ REQUIRED: When in doubt, stack — parallel execution is never the starting assumption
 
@@ -663,17 +663,17 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 
 **See `approval-gate` skill → `verify-already-implemented` task → "Auto-Close Procedure" for the post-merge issue closure workflow. See `finishing-a-development-branch` skill → `checklist` task for issue-closure verification steps.**
 
-## Critical Violation: Inline Screening of Batch Approvals
+## Critical Violation: Inline Screening of Authorization Sets
 
-**⚠️ When more than 3 issues are approved in a batch, the agent MUST dispatch `screen-issue` sub-agents for per-issue screening. Loading all issue bodies into the orchestrator's own context is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ When more than 3 issues are approved at once, the agent MUST dispatch `screen-issue` sub-agents for per-issue screening. Loading all issue bodies into the orchestrator's own context is a CRITICAL GUIDELINE VIOLATION.**
 
 - 🚫 FORBIDDEN: Fetching all approved issue bodies into orchestrator context before sub-agent dispatch
-- 🚫 FORBIDDEN: Running screening logic inline when batch size > 3
+- 🚫 FORBIDDEN: Running screening logic inline when approval set size > 3
 - ✅ REQUIRED: Dispatch one `screen-issue` sub-agent per approved issue
 - ✅ REQUIRED: Orchestrator receives only compact result contracts (~100-500 words each)
 - ✅ REQUIRED: Cross-issue merge and dependency graph built from result contracts, not raw issue bodies
 
-**Why 3 as the threshold:** Single approvals and pairs can reasonably be screened inline. Three or more issues risk context exhaustion and require sub-agent isolation. The `screen-issue` sub-agent architecture exists precisely to prevent the orchestrator from blowing out its context window on batch approvals.
+**Why 3 as the threshold:** Single approvals and pairs can reasonably be screened inline. Three or more issues risk context exhaustion and require sub-agent isolation. The `screen-issue` sub-agent architecture exists precisely to prevent the orchestrator from blowing out its context window on authorization sets.
 
 **AUTHORITY:** `approval-gate/tasks/pre-implementation-analysis.md` Step -1
 

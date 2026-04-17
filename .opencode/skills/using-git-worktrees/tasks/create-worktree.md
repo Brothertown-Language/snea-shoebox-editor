@@ -16,14 +16,14 @@ State clearly: "Using the using-git-worktrees skill to set up an isolated worksp
 
 ### 2. Sync with Base Branch
 
-Create worktrees from an up-to-date base branch. The default base is `dev`, but for batch workflows where a batch branch already exists, the base can be the batch branch or another feature branch:
+Create worktrees from an up-to-date base branch. The default base is `dev`, but for work execution workflows where a work branch already exists, the base can be the work branch or another feature branch:
 
 ```bash
 git checkout $BASE_BRANCH
 git pull origin $BASE_BRANCH
 ```
 
-**BASE_BRANCH defaults to `dev`** for standalone branches. In batch workflows, `BASE_BRANCH` may be set to a prior feature branch (for dependency merge) or the batch branch.
+**BASE_BRANCH defaults to `dev`** for standalone branches. In work execution workflows, `BASE_BRANCH` may be set to a prior feature branch (for dependency merge) or the work branch.
 
 ### 3. Detect Project Name
 
@@ -77,14 +77,14 @@ git worktree add .worktrees/$BRANCH_NAME -b $BRANCH_NAME $BASE_BRANCH
 **BASE_BRANCH** determines the starting point for the new branch:
 
 - Default: `dev` (for standalone feature branches)
-- Batch workflow: may be `dev`, a prior issue's feature branch (dependency chain), or the batch branch
+- Work execution: may be `dev`, a prior issue's feature branch (dependency chain), or the work branch
 - Agent decides the base branch at creation time based on context
 
 Branch naming conventions:
 
 - `spec/<short-name>` for spec-driven work
 - `feature/<description>` for general feature work
-- `batch/<short-name>` for batch aggregation branches
+- `work/<short-name>` for work execution branches
 
 ### 5. Verify Worktree Creation
 
@@ -148,5 +148,5 @@ These environment variables are consumed by:
 - `git-workflow` tasks (review-prep, pr-creation, cleanup)
 - `finishing-a-development-branch` skill
 - `divide-and-conquer` dispatch context
-- `divide-and-conquer` assemble-batch task
+- `divide-and-conquer` assemble-work task
 - `pre-implementation-analysis` execution plan

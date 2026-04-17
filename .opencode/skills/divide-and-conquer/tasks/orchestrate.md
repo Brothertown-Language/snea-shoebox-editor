@@ -81,31 +81,31 @@ If ANY check fails → HALT and report. Do NOT proceed.
 /skill divide-and-conquer --task assess
 ```
 
-**Assessment yields workload sizing context only** — it informs the dispatch but does NOT change the workflow path. All implementation goes through `assemble-batch`:
+**Assessment yields workload sizing context only** — it informs the dispatch but does NOT change the workflow path. All implementation goes through `assemble-work`:
 
-- **Small workload** → `assemble-batch` dispatches one sub-agent (batch of one)
-- **Large workload** → `assemble-batch` dispatches multiple sub-agents (batch of N)
+- **Small workload** → `assemble-work` dispatches one sub-agent (work-of-1)
+- **Large workload** → `assemble-work` dispatches multiple sub-agents
 
-**The unified path is: `orchestrate` → `assemble-batch` → sub-agent(s) → verification → review-prep.** There is no IMPLEMENT_DIRECTLY shortcut.
+**The unified path is: `orchestrate` → `assemble-work` → sub-agent(s) → verification → review-prep.** There is no IMPLEMENT_DIRECTLY shortcut.
 
-### Step 4: Dispatch to Assemble-Batch (Unified Path)
+### Step 4: Dispatch to Assemble-Work (Unified Path)
 
-**Every implementation — single issue or batch — follows this path.**
+**Every implementation — single issue or work set — follows this path.**
 
-1. **Invoke assemble-batch task:**
+1. **Invoke assemble-work task:**
 
    ```
-   /skill divide-and-conquer --task assemble-batch
+   /skill divide-and-conquer --task assemble-work
    ```
 
    This handles:
    - Branch-per-issue creation and worktrees
    - Sub-agent dispatch per issue (single issue = one sub-agent)
-   - Squash-merge each feature branch into batch branch
+   - Squash-merge each feature branch into work branch
    - Dependency merge protocol (Tier 1-2 auto-resolve, Tier 3 HALT)
    - Frozen branch enforcement
 
-2. **After assemble-batch completes**, proceed to Step 5
+2. **After assemble-work completes**, proceed to Step 5
 
 ### Step 5: Verification Gate (MANDATORY, NO DECISION POINT)
 
@@ -314,7 +314,7 @@ Co-authored with AI: <AgentName> (<ModelId>)
 |-------|-------------------|-----------|---------------|
 | "Workflow step completed" | Verify step was actually executed | Check for step output in context | VERIFICATION-GAP |
 | "Sub-agent dispatch correct" | Verify dispatch context includes WORKTREE_PATH | Review dispatch prompt | STRUCTURE-VIOLATION |
-| "Batch state current" | Verify batch state file reflects latest state | `glob(pattern="./tmp/batch-*.md")` | VERIFICATION-GAP |
+| "Work state current" | Verify work state file reflects latest state | `glob(pattern="./tmp/work-*.md")` | VERIFICATION-GAP |
 | "No skipped steps" | Verify all mandatory steps were invoked | Check for tool-call artifacts per step | MISSING-ELEMENT |
 
 **Evidence artifact:** Tool call results and context inspection confirming orchestration accuracy.
@@ -325,5 +325,5 @@ Co-authored with AI: <AgentName> (<ModelId>)
 |--------|---------------|----------------|--------|
 | Step claimed but no artifact | VERIFICATION-GAP | conditional | Re-execute step |
 | WORKTREE_PATH missing from dispatch | STRUCTURE-VIOLATION | auto-fix | Re-dispatch with correct context |
-| Batch state stale | VERIFICATION-GAP | auto-fix | Re-read and verify |
+| Work state stale | VERIFICATION-GAP | auto-fix | Re-read and verify |
 | Mandatory step skipped | MISSING-ELEMENT | conditional | Execute skipped step now |

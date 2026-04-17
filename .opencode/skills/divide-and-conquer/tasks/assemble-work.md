@@ -1,10 +1,10 @@
-# Task: assemble-batch
+# Task: assemble-work
 
-Migrated from `implementation-workflow` task batch-orchestrate.
+Migrated from `implementation-workflow` task work-orchestrate.
 
 ## Purpose
 
-Orchestrate batch implementation by dispatching sub-agents for each approved issue, using branch-per-issue with merge-based dependency resolution. This task makes the main agent a pure orchestrator that never edits implementation files directly.
+Orchestrate work execution by dispatching sub-agents for each approved issue, using branch-per-issue with merge-based dependency resolution. This task makes the main agent a pure orchestrator that never edits implementation files directly.
 
 ## Entry Criteria
 
@@ -14,9 +14,9 @@ Orchestrate batch implementation by dispatching sub-agents for each approved iss
 
 ## Exit Criteria
 
-- All issues in batch have been implemented via sub-agents in separate branches
+- All issues in the work set have been implemented via sub-agents in separate branches
 - Each sub-agent ran verification + finishing before returning
-- All feature branches squash-merged into a single batch branch
+- All feature branches squash-merged into a single work branch
 - Compare URL generated, executive summary in chat
 - HALT after review-prep (no PR creation without explicit instruction)
 
@@ -24,26 +24,26 @@ Orchestrate batch implementation by dispatching sub-agents for each approved iss
 
 ### Step 1: Verify Gate Evidence Audit and Determine Execution Order
 
-**🚫 CRITICAL PREREQUISITE: Before determining execution order, verify the Gate Evidence Audit Table exists in the batch state file (`.opencode/tmp/batch-*.md`).**
+**🚫 CRITICAL PREREQUISITE: Before determining execution order, verify the Gate Evidence Audit Table exists in the work state file (`.opencode/tmp/work-*.md`).**
 
-- Read the batch state file from `pre-implementation-analysis` (`.opencode/tmp/batch-*.md`)
+- Read the work state file from `pre-implementation-analysis` (`.opencode/tmp/work-*.md`)
 - **If the Gate Evidence Audit Table is missing** AND any issues were classified as "already-implemented" during screening: HALT and return to `pre-implementation-analysis` Step 0.5 to complete the audit. The table is a mandatory structural artifact — its absence means Gate 1 and Gate 2 evidence was not verified.
 - **If the Gate Evidence Audit Table exists** AND has ❌ entries for any issue: those issues were already downgraded during pre-implementation-analysis. Verify the downgraded classifications are reflected in the execution plan. If not, return to `pre-implementation-analysis`.
 - **If NO issues were classified as "already-implemented":** The Gate Evidence Audit Table is not required. Proceed normally.
 
 - For multi-issue: use dependency order from `pre-implementation-analysis`
-- For single issue: treat as batch of one — no special casing, no shortcuts
+- For single issue: treat as work-of-1 — no special casing, no shortcuts
 - Determine complexity level for each issue (simple/moderate/complex)
 
-**Single issue = batch of one.** There is no separate code path. The `assemble-batch` task handles single-issue dispatch as the default. This eliminates forked execution paths.
+**Work-of-1.** There is no separate code path. The `assemble-work` task handles single-issue dispatch as the default. This eliminates forked execution paths.
 
 ### Step 2: Create Feature Branches and Worktrees
 
-For each issue in the batch:
+For each issue in the work set:
 
 1. Create a worktree with feature branch using `using-git-worktrees --task create-worktree`
-2. `BASE_BRANCH` defaults to `dev` for the first/only issue in the batch
-3. For dependent issues: `BASE_BRANCH` is set to the prior issue's feature branch (the merged branch, not the batch branch)
+2. `BASE_BRANCH` defaults to `dev` for the first/only issue in the work set
+3. For dependent issues: `BASE_BRANCH` is set to the prior issue's feature branch (the merged branch, not the work branch)
 4. Record each issue's branch name and worktree path
 
 ### Step 3: Execute Issues in Dependency Order
@@ -74,9 +74,9 @@ For each issue in execution order:
      Phase progress is prose-driven: state what information must travel, trust the orchestrator to decide how to encode it. Completed phases should be named by the concern they address (e.g., "dispatch context schema" rather than "Phase 1"), concern boundaries should describe the architectural transition point, and verification evidence should summarize what was confirmed.
 
      ```yaml
-     batch:
-       authorized_issues: [#A, #B, #C]
-       completed_issues: [<completed>]
+      work_set:
+        authorized_issues: [#A, #B, #C]
+        completed_issues: [<completed>]
      issue: #<current>
      sub_issue_body: "<phase prose from sub-issue body, not just parent reference>"
      spec: "<full spec body from GitHub Issue>"
@@ -158,18 +158,18 @@ For each issue in execution order:
    - For independent issues: continue to next issue
    - For must-precede chains: skip dependent issues, report both
 
-### Step 4: Batch Assembly
+### Step 4: Work Assembly
 
-After ALL issues in the batch complete:
+After ALL issues in the work set complete:
 
-1. **Create a batch branch** (name chosen by agent at creation time, e.g., `batch/<short-name>` or `spec/<short-name>`):
+1. **Create a work branch** (name chosen by agent at creation time, e.g., `work/<short-name>` or `spec/<short-name>`):
 
    ```bash
    git checkout dev
-   git checkout -b <batch-branch-name>
+   git checkout -b <work-branch-name>
    ```
 
-2. **Squash-merge each feature branch** into the batch branch, one commit per issue:
+2. **Squash-merge each feature branch** into the work branch, one commit per issue:
 
    ```bash
    git merge --squash spec/issue-a
@@ -185,28 +185,28 @@ After ALL issues in the batch complete:
    - Dependents reference their dependencies
    - Example: `Implement #703: add reprocessing logic (#698 dependency)`
 
-### Step 5: Post-Batch Review-Prep
+### Step 5: Post-Work Review-Prep
 
 1. **Verify all results** — check git log for all expected commits
-2. **Run git-workflow --task review-prep** for the batch branch
+2. **Run git-workflow --task review-prep** for the work branch
 3. **Collect compare URL**
 
 ### Step 5.5: Pre-PR Checklist (MANDATORY before any PR creation)
 
 Before creating ANY pull request, verify:
 
-1. Batch state file exists at `.opencode/tmp/batch-*.md`
-2. All feature branches listed in batch state have been squash-merged into the batch branch
-3. The batch branch has exactly one squash-merge commit per issue
+1. Work state file exists at `.opencode/tmp/work-*.md`
+2. All feature branches listed in work state have been squash-merged into the work branch
+3. The work branch has exactly one squash-merge commit per issue
 4. Working tree is clean (no uncommitted changes)
 
 If any check fails:
 
-- If batch state file missing → the agent skipped pre-implementation-analysis; HALT
-- If squash-merges missing → complete Step 4 (Batch Assembly) first
+- If work state file missing → the agent skipped pre-implementation-analysis; HALT
+- If squash-merges missing → complete Step 4 (Work Assembly) first
 - If working tree dirty → commit or stash changes first
 
-**🚫 CRITICAL: Individual PR creation for batch-approved issues is FORBIDDEN. All issues in a batch MUST be squash-merged into a single batch branch, then ONE PR created from that branch.**
+**🚫 CRITICAL: Individual PR creation for work-approved issues is FORBIDDEN. All issues in a work set MUST be squash-merged into a single work branch, then ONE PR created from that branch.**
 
 ### Step 6: Report and HALT
 
@@ -215,7 +215,7 @@ If any check fails:
 ```markdown
 **Summary:**
 
-Implemented <N> issues via branch-per-issue batch orchestration.
+Implemented <N> issues via branch-per-issue work orchestration.
 
 **Outcome:**
 
@@ -223,9 +223,9 @@ Implemented <N> issues via branch-per-issue batch orchestration.
 - #B: <summary> ✅
 - #C: <summary> ⚠️ (partial — see details)
 
-Compare URL: https://github.com/<owner>/<repo>/compare/dev...<batch-branch>
+Compare URL: https://github.com/<owner>/<repo>/compare/dev...<work-branch>
 
-**If a PR has been created for this batch, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
+**If a PR has been created for this work set, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
 
 ```
 PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
@@ -253,7 +253,7 @@ Before sending the chat report, verify ALL elements are present and correctly or
 
 | Scenario | URL Required? | Label | URL Format |
 | -- | -- | -- | -- |
-| Branches pushed, no PR yet | ✅ Yes | Compare URL | `compare/dev...<batch-branch>` |
+| Branches pushed, no PR yet | ✅ Yes | Compare URL | `compare/dev...<work-branch>` |
 | PR already created | ✅ Yes | PR URL | `pull/<PR-number>` |
 | No branches pushed | ❌ No | (omit) | Omit URL element entirely |
 
@@ -307,7 +307,7 @@ Once a prior issue's branch is merged into a dependent branch, it is **frozen**:
 ### Sub-Agent Failure
 
 ```
-assemble-batch:
+assemble-work:
     → Dispatch sub-agent for #B
         → Sub-agent fails (error/timeout)
         → Record failure
@@ -321,14 +321,14 @@ assemble-batch:
 ### Sub-Agent Discovers Bug
 
 ```
-assemble-batch:
+assemble-work:
     → Dispatch sub-agent for #B
         → Sub-agent discovers bug per bug-discovery protocol
         → Sub-agent reports bug as finding (read-only)
         → Sub-agent HALTs implementation for #B
         → Records: "#B halted — bug discovered at <location>"
     → Continue to next independent issue
-    → Report bug in batch summary
+    → Report bug in work summary
 ```
 
 ### Tier 3 Conflict During Dependency Merge
@@ -338,18 +338,18 @@ assemble-batch:
 - Do NOT attempt to resolve intent conflicts automatically
 - Wait for developer review per `conflict-resolution` skill
 
-### Session Restart Mid-Batch
+### Session Restart Mid-Work
 
-- Use `git log --oneline` on the batch branch to determine completed issues
-- Each squash-merged commit in the batch branch corresponds to one completed issue
+- Use `git log --oneline` on the work branch to determine completed issues
+- Each squash-merged commit in the work branch corresponds to one completed issue
 - Resume from the first incomplete issue by checking which issue numbers appear in commit messages
 - Feature branches still contain the individual issue work for reference
 
 ### Parallel-Safe Issues (No Dependencies) — Opportunistic Only
 
 - Even independent issues SHOULD be stacked sequentially. Parallel execution is opportunistic — it depends on circumstances genuinely allowing it (no shared files, no logical coupling, no hidden dependencies).
-- "Independent" in a batch context means "no declared dependency," not "safe to run in parallel." Stacking catches hidden dependencies automatically.
-- If parallel execution is chosen for an independent issue, document the justification in the batch state file with explicit reasoning (why stacking was bypassed, what makes the issue genuinely independent).
+- "Independent" in a work context means "no declared dependency," not "safe to run in parallel." Stacking catches hidden dependencies automatically.
+- If parallel execution is chosen for an independent issue, document the justification in the work state file with explicit reasoning (why stacking was bypassed, what makes the issue genuinely independent).
 
 ## Mandatory Rules
 
@@ -359,34 +359,34 @@ assemble-batch:
 04. **Dependency resolution via git merge** — later issues merge prior branches, not branch-from-prior
 05. **Frozen branches after merge** — no rebasing or amending a merged branch
 06. **No HALTs between issues** — all issues complete before single HALT
-07. **Single batch PR** — squash-merge each feature branch into batch branch, then one PR
+07. **Single work PR** — squash-merge each feature branch into work branch, then one PR
 08. **Intent-and-context metadata** — AI-composed, no fixed template, focus on why not what
 09. **Conflict resolution tiers** — auto-resolve 1-2, HALT on tier 3 during dependency merges
-10. **Always batch mode** — single issue = batch of one, no special-case path
+10. **Always work mode** — single issue = work-of-1, no special-case path
 11. **Decision Log persistence** — after each sub-agent returns, append `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. Decision Log uses comments (not body edits) for lightweight, append-only, session-surviving persistence
 
 Co-authored with AI: <AgentName> (<ModelId>)
 
-## Live Verification: Batch State Claims (MANDATORY)
+## Live Verification: Work State Claims (MANDATORY)
 
-**Each batch state claim MUST be verified against actual git and GitHub state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+**Each work state claim MUST be verified against actual git and GitHub state. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
 
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
-| "Batch state file exists" | Verify batch state file in `./tmp/` | `glob(pattern="./tmp/batch-*.md")` | MISSING-ELEMENT |
+| "Work state file exists" | Verify work state file in `./tmp/` | `glob(pattern="./tmp/work-*.md")` | MISSING-ELEMENT |
 | "All sub-agents returned" | Verify result contracts collected | Check for all expected result contracts | VERIFICATION-GAP |
-| "Branch merged into batch branch" | Verify merge commit exists | `git log --oneline batch-branch` → check merge messages | VERIFICATION-GAP |
+| "Branch merged into work branch" | Verify merge commit exists | `git log --oneline work-branch` → check merge messages | VERIFICATION-GAP |
 | "Decision log persisted" | Verify comment on Plan issue | `github_issue_read(method=get_comments)` → search for decision log | MISSING-ELEMENT |
-| "Authorization carries forward" | Verify batch state contains auth context | Read batch state file for auth section | STRUCTURE-VIOLATION |
+| "Authorization carries forward" | Verify work state contains auth context | Read work state file for auth section | STRUCTURE-VIOLATION |
 
-**Evidence artifact:** Tool call results confirming batch state accuracy.
+**Evidence artifact:** Tool call results confirming work state accuracy.
 
 ### Finding Classification
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
-| Batch state file missing | MISSING-ELEMENT | auto-fix | Create or locate batch state file |
+| Work state file missing | MISSING-ELEMENT | auto-fix | Create or locate work state file |
 | Sub-agent result missing | VERIFICATION-GAP | conditional | Wait for or re-dispatch sub-agent |
-| Merge not in batch branch | VERIFICATION-GAP | conditional | Re-merge feature branch |
+| Merge not in work branch | VERIFICATION-GAP | conditional | Re-merge feature branch |
 | Decision log not persisted | MISSING-ELEMENT | auto-fix | Post decision log comment now |
-| Auth context missing from batch state | STRUCTURE-VIOLATION | conditional | Re-read auth from approval-gate |
+| Auth context missing from work state | STRUCTURE-VIOLATION | conditional | Re-read auth from approval-gate |

@@ -23,14 +23,14 @@ Mandatory checks that must pass before creating ANY PR. No exceptions.
 **Detect branch type first:**
 
 ```bash
-# Check if this is a batch branch (assembly by assemble-batch)
-ls .opencode/tmp/batch-*.md 2>/dev/null
+# Check if this is a work branch (assembly by assemble-work)
+ls .opencode/tmp/work-*.md 2>/dev/null
 
 # Check commit count between dev and HEAD
 git log origin/dev..HEAD --oneline
 ```
 
-**Single-issue branch (no batch state file):**
+**Single-issue branch (no work state file):**
 
 ```bash
 # If MORE THAN ONE commit shown, SQUASH NOW:
@@ -43,16 +43,16 @@ git push --force-with-lease origin <branch>
 
 Single-issue PRs must have EXACTLY ONE commit. No exceptions.
 
-**Batch branch (batch state file exists):**
+**Work branch (work state file exists):**
 
-Batch branches have one commit per implementation item (N commits). This is correct — do NOT re-squash. The `assemble-batch` task already squash-merged each feature branch into the batch branch with proper individual commit messages.
+Work branches have one commit per implementation item (N commits). This is correct — do NOT re-squash. The `assemble-work` task already squash-merged each feature branch into the work branch with proper individual commit messages.
 
 ```bash
-# Verify batch branch has expected commits (one per implementation item)
-# Do NOT squash — N commits is correct for batch branches
+# Verify work branch has expected commits (one per implementation item)
+# Do NOT squash — N commits is correct for work branches
 ```
 
-Batch PRs correctly have N commits where N = number of implementation items.
+Work PRs correctly have N commits where N = number of implementation items.
 
 **2. Changelog Generated**
 

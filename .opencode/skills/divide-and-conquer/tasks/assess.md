@@ -4,7 +4,7 @@
 
 Pre-flight context-fit assessment. Determine workload sizing for sub-agent dispatch — how many sub-agents and how much context each needs.
 
-**All implementation goes through `assemble-batch`.** There is no IMPLEMENT_DIRECTLY path. Assessment informs sizing (single sub-agent vs multiple), not whether to dispatch.
+**All implementation goes through `assemble-work`.** There is no IMPLEMENT_DIRECTLY path. Assessment informs sizing (single sub-agent vs multiple), not whether to dispatch.
 
 ## Entry Criteria
 
@@ -40,7 +40,7 @@ The agent holistically evaluates context sizing for sub-agent dispatch. Consider
 | Context load | All needed context fits comfortably | Agent feels "dense" or risks losing track |
 | Dependencies | None or shallow | Deep call chains, type hierarchies |
 
-**Both paths go through `assemble-batch`.** Single sub-agent = batch of one. Multiple sub-agents = batch of N.
+**Both paths go through `assemble-work`.** Single sub-agent = work-of-1. Multiple sub-agents = work set of N.
 
 ### Step 3: Document Assessment
 
@@ -59,12 +59,12 @@ assessment:
 
 ### No Direct Implementation Exception
 
-**There is no IMPLEMENT_DIRECTLY path.** All implementation goes through sub-agent dispatch in `assemble-batch`. The assessment only determines sizing:
+**There is no IMPLEMENT_DIRECTLY path.** All implementation goes through sub-agent dispatch in `assemble-work`. The assessment only determines sizing:
 
-- `single_sub_agent` → assemble-batch dispatches one sub-agent
-- `multi_sub_agent` → assemble-batch dispatches multiple sub-agents
+- `single_sub_agent` → assemble-work dispatches one sub-agent
+- `multi_sub_agent` → assemble-work dispatches multiple sub-agents
 
-Even trivial changes (typo fixes, one-line configs) are dispatched through assemble-batch as a batch of one. This eliminates forked code paths and ensures consistent execution flow.
+Even trivial changes (typo fixes, one-line configs) are dispatched through assemble-work as work-of-1. This eliminates forked code paths and ensures consistent execution flow.
 
 ## Edge Cases
 
@@ -73,7 +73,7 @@ Even trivial changes (typo fixes, one-line configs) are dispatched through assem
 If during implementation the scope expands beyond what was assessed:
 1. Sub-agent signals OVERFLOW per the overflow-signal contract
 2. Orchestrator decomposes further and dispatches additional sub-agents
-3. Continues through assemble-batch workflow
+3. Continues through assemble-work workflow
 
 ### Assessment Says Multiple for Simple Work
 
