@@ -44,6 +44,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 | `check-drift` | Detect drift between masters and copies | Periodic validation, before syncs |
 | `status-report` | Show sync status for all fragments | Overview of fragment health |
 | `resolve-conflict` | Handle merge conflicts | When drift is detected |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -51,6 +52,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 - `/skill fragment-manager --task sync-fragment` - Sync master to destinations
 - `/skill fragment-manager --task check-drift` - Detect drift
 - `/skill fragment-manager --task status-report` - Overview
+- `/skill fragment-manager --task completion` - Invoke when workflow halts at any point
 - `/skill fragment-manager` - Skill overview only
 
 ## Operating Protocol
@@ -130,3 +132,5 @@ fragments:
 ## Edge Cases
 
 See individual task files for edge case handling protocols.
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

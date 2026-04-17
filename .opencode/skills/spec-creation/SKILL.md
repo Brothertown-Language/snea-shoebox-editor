@@ -30,6 +30,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 | `risk` | Analyze risk, blast radius, failure propagation, operational needs | #8, #9 | Only for simple bug fixes with no deployment impact |
 | `write` | Assemble spec, create GitHub Issue, output exec summary + URL + byline | #4, #6, #10 | No — mandatory assembly step |
 | `change-control` | Version spec, document rationale and impact analysis for changes | #12 | Only for initial spec creation (not revisions) |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | — | No — mandatory completion |
 
 ## Invocation
 
@@ -37,6 +38,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 - `/skill spec-creation --task requirements` — Requirements extraction only
 - `/skill spec-creation --task write` — Assemble spec from structured outputs only
 - `/skill spec-creation --task change-control` — Version/reason a spec revision
+- `/skill spec-creation --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -228,3 +230,5 @@ session_vars:
 - **Related subtask:** `spec-auditor --task ground-truth` (adversarial metadata verification model)
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

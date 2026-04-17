@@ -26,12 +26,14 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 | -- | -- | -- |
 | `explore` | Full conversational exploration workflow (default) | ~1000 |
 | `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ~600 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill brainstorming` — Start exploration workflow
 - `/skill brainstorming --task explore` — Same as above
 - `/skill brainstorming --task enforcement` — Enforcement rules and completion criteria
+- `/skill brainstorming --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -131,3 +133,5 @@ Findings from authorization verification follow the three-tier model:
 - Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol), `065-verification-honesty.md` (evidence artifacts)
 - Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)
 - Source: Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

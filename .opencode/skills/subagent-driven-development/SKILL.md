@@ -23,11 +23,13 @@ Execute an approved implementation plan by dispatching fresh subagents per task,
 | `spec-reviewer-prompt` | Dispatch spec compliance reviewer subagent | ~300 |
 | `code-quality-reviewer-prompt` | Dispatch code quality reviewer subagent | ~300 |
 | `batch-execution` | Accept batch execution plans with branch-per-issue and merge-based dependency resolution | ~500 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill subagent-driven-development` - Overview only
 - `/skill subagent-driven-development --task batch-execution` - For batch approval plans
+- `/skill subagent-driven-development --task completion` — Invoke when workflow halts at any point
 
 ## When to Use This Skill vs Divide-and-Conquer
 
@@ -137,3 +139,5 @@ This skill is a **heavy skill** — task dispatching and orchestration can run i
 - Related skills: `approval-gate` (authorization), `git-workflow` (git ops), `divide-and-conquer` (primary orchestration, context window safety), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation with BASE_BRANCH)
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

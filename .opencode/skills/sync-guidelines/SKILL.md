@@ -20,6 +20,7 @@ Intelligently synchronizes guidelines, skills, and tools between repositories th
 | `sync-push` | Push core changes to target repository | ~300 |
 | `sync-pull` | Pull core changes into local repository | ~300 |
 | `issue-format` | Template for sync issue content | ~350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -28,6 +29,7 @@ Intelligently synchronizes guidelines, skills, and tools between repositories th
 - `/skill sync-guidelines --task sync-push` — Push changes to target repo
 - `/skill sync-guidelines --task sync-pull` — Pull changes from source repo
 - `/skill sync-guidelines --task issue-format` — Get issue template
+- `/skill sync-guidelines --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -141,3 +143,5 @@ Before invoking any cross-referenced skill:
 
 - Related skills: `git-workflow` (branch management, commit workflow), `coherence-auditor` (drift detection and verification after sync)
 - Related guidelines: `000-critical-rules.md` (no vibe coding, scope autonomy)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

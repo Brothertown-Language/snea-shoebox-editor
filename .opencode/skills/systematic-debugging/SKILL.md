@@ -20,12 +20,14 @@ Systematic debugging process that enforces root cause analysis, hypothesis testi
 |------|---------|-------|
 | `diagnose` | Systematic bug diagnosis workflow | ~400 |
 | `fix` | Minimal targeted fix after diagnosis | ~350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill systematic-debugging` — Overview only
 - `/skill systematic-debugging --task diagnose` — Diagnose a bug
 - `/skill systematic-debugging --task fix` — Apply minimal fix
+- `/skill systematic-debugging --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -114,6 +116,7 @@ Action: [auto-fix|conditional|flag-for-review]
 | `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
 | Task table entry `diagnose` | File exists at `.opencode/skills/systematic-debugging/tasks/diagnose.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `fix` | File exists at `.opencode/skills/systematic-debugging/tasks/fix.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/systematic-debugging/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 
 **Verification Procedure:**
 
@@ -143,3 +146,5 @@ Before invoking any cross-referenced skill:
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Use Python client from gitbucket-api skill
 - **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

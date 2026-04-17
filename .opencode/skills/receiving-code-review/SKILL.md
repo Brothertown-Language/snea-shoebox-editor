@@ -20,12 +20,14 @@ Workflow for responding to code review feedback on pull requests. Ensures all re
 |------|---------|-------|
 | `address` | Address all review comments | ~350 |
 | `respond` | Reply to review comments | ~250 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill receiving-code-review` — Overview only
 - `/skill receiving-code-review --task address` — Address review feedback
 - `/skill receiving-code-review --task respond` — Reply to comments
+- `/skill receiving-code-review --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -105,3 +107,5 @@ Before invoking any cross-referenced skill:
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Use Python client from gitbucket-api skill
 - **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

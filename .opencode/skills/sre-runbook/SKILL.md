@@ -24,12 +24,14 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 |------|---------|-------|
 | `generate` | Generate an operational runbook for a given domain and scenario | ~900 |
 | `track` | Track an incident or change via GitHub Issue with structured labels | ~450 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill sre-runbook` — Overview only
 - `/skill sre-runbook --task generate` — Generate an operational runbook
 - `/skill sre-runbook --task track` — Track an incident or change via GitHub Issue
+- `/skill sre-runbook --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -180,6 +182,7 @@ Action: [auto-fix|conditional|flag-for-review]
 | `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
 | Task table entry `generate` | File exists at `.opencode/skills/sre-runbook/tasks/generate.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `track` | File exists at `.opencode/skills/sre-runbook/tasks/track.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/sre-runbook/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 
 **Verification Procedure:**
 

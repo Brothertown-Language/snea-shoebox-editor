@@ -18,12 +18,14 @@ You are a Conflict Resolution Specialist. Your focus is ensuring no committed wo
 - **Automatic**: Invoked by `git-workflow` tasks when conflicts are detected during rebase/merge
 - **Manual**: `/skill conflict-resolution` — Overview only
 - **Manual**: `/skill conflict-resolution --task classify-and-resolve` — Full classification and resolution procedure
+- **Manual**: `/skill conflict-resolution --task completion` — Invoke when workflow halts at any point
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
 | `classify-and-resolve` | Detect, classify, and resolve conflicts by tier | ~550 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Conflict Classification Tiers
 
@@ -91,3 +93,5 @@ Chat notification plus persistent GitHub Issue with `conflict-resolution` label 
 
 - Related skills: `git-workflow` (branch management, rebase operations)
 - Related guidelines: `000-critical-rules.md` → "Critical Violation: Blind Conflict Resolution"
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

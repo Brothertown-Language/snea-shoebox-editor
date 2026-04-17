@@ -18,11 +18,13 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 |------|---------|-------|
 | `pre-pr-checklist` | Mandatory checks before PR creation (squash, changelog, branch state) | ~500 |
 | `sub-issue-collection` | Fetch and include sub-issues in PR body for autoclose | ~300 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill pr-creation-workflow --task pre-pr-checklist` - Run mandatory pre-PR checks
 - `/skill pr-creation-workflow --task sub-issue-collection` - Collect sub-issues for PR body
+- `/skill pr-creation-workflow --task completion` - Invoke when workflow halts at any point
 - `/skill pr-creation-workflow` - Overview only
 
 ## Authorization Boundary (CRITICAL)
@@ -152,3 +154,5 @@ Before invoking any cross-referenced skill:
 | `git-workflow` skill | Post-merge workflow including issue closure |
 | `spec-auditor` (ground-truth subtask) | Adversarial verification of authorization and PR state claims |
 | `065-verification-honesty.md` | Metadata verification extension for PR readiness claims |
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.
