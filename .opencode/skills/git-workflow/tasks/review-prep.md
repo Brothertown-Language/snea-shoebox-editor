@@ -447,6 +447,17 @@ After a PR has been created, the chat output MUST use **"PR URL"** with the `pul
 - Wait for developer's next explicit instruction
 - If developer says "approved" or "go" again → STILL WAIT for "create a PR"
 
+### ⚠️ Post-Merge Reminder (MANDATORY)
+
+**After PR merge confirmation, run `git-workflow --task cleanup` to close issues, clean branches, and verify sub-issue closure.**
+
+This reminder is part of the review-prep HALT output to ensure the cleanup workflow is not skipped after merge. The cleanup task handles:
+
+- Verifying PR merge via GitHub API
+- Closing sub-issues and parent issues with proper verification
+- Deleting merged branches (local and remote)
+- Running transitive graph reconciliation for orphaned sub-issues
+
 ### ⚠️ CRITICAL: Implementation Must Push Before Review-Prep
 
 **If review-prep is invoked but branch is NOT pushed:**

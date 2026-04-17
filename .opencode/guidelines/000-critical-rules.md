@@ -695,6 +695,18 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 
 **See `approval-gate` skill → `verify-already-implemented` task → "Auto-Close Procedure" for the post-merge issue closure workflow. See `finishing-a-development-branch` skill → `checklist` task for issue-closure verification steps.**
 
+## Critical Violation: Sub-issue Linkage Verification — Phase Count Mismatch
+
+**⚠️ `get_sub_issues` count MUST match plan body phase count before implementation proceeds. If counts don't match, block implementation and offer remediation via `issue-operations --task link-sub-issue`.**
+
+**This enforcement point is `approval-gate --task verify-authorization` Step 5, specifically the phase-count cross-reference check (Step 5.2.1).** **AUTHORITY: `approval-gate/tasks/verify-authorization.md` Step 5.2.1** (this line is a reference only)
+
+- 🚫 FORBIDDEN: Proceeding with implementation when a multi-task plan has fewer formal sub-issues than phases in its body; treating markdown headings as equivalent to formal sub-issue linkage; skipping the phase-count cross-reference check
+- ✅ REQUIRED: Parse plan body for `### Phase N:` or `#### Task N:` heading patterns to count expected phases; compare count against `github_issue_read(method=get_sub_issues)` result count; if plan body has N > 1 phases and `get_sub_issues` returns fewer than N sub-issues, report STRUCTURE-VIOLATION and block implementation with a remediation offer to run `issue-operations --task link-sub-issue`
+- ✅ REQUIRED: Single-task plans (0 or 1 phases expected) skip the count check and pass automatically
+
+**See `020-go-prohibitions.md` §5 for multi-task plan sub-issue requirements.** **AUTHORITY: `020-go-prohibitions.md` §5** (this line is a reference only)
+
 ## Critical Violation: Inline Screening of Authorization Sets
 
 **⚠️ The agent MUST ALWAYS dispatch `screen-issue` sub-agents for per-issue screening, regardless of approval set size. Loading issue bodies into the orchestrator's own context is a CRITICAL GUIDELINE VIOLATION.**

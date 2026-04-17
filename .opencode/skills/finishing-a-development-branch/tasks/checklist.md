@@ -72,6 +72,9 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 ### Issue Closure Verification
 - [ ] Verify all issues referenced by the merged PR are closed on GitHub
 - [ ] If issues remain open after verified merge, close them with a comment referencing the merged PR
+
+### Sub-Issue Linkage Verification
+- [ ] If the plan has multiple phases, verify that `get_sub_issues` count on the plan issue matches the number of phases in the plan body. If counts don't match, run `issue-operations --task link-sub-issue` to create missing linkages before proceeding to review-prep
 ```
 
 ## What Skills MUST Check
