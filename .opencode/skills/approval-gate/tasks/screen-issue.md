@@ -425,6 +425,31 @@ session_vars:
 
 **DEFAULT FAILSAFE:** If a screening sub-agent encounters a scenario not covered by conditions 1-5, it must RESOLVE autonomously (classify with best judgment) rather than defaulting to `requires_developer: true`. Escalating undefined scenarios to the developer is the "Pushing Agent Intelligence Decisions" anti-pattern. Set `requires_developer: true` ONLY when the developer's intent is genuinely ambiguous and cannot be inferred from context.
 
+### Autonomous Resolution
+
+**Reference: `000-critical-rules.md` §"Pushing Agent Intelligence Decisions to the User"**
+
+Screening classification decisions are agent intelligence concerns, not developer judgment calls. The `requires_developer: true` field in the result contract MUST be set to `true` ONLY for the exhaustive conditions listed in the Red Flags section (conditions 1-5). All other scenarios are resolved autonomously.
+
+**PROHIBITED questions (agent MUST decide, never ask):**
+
+- "Should this be single-task or multi-task?" → agent decides based on scope
+- "Is this a small change or a big one?" → agent assesses from screening
+- "Do you want this as one spec or multiple?" → agent classifies
+- "How should we handle this partially-implemented issue?" → scope-reduce and continue
+- "Should we re-plan?" → yes, if authorization says "re-plan as needed"
+- "How should we close this already-implemented issue?" → via verify-already-implemented or via referenced spec-fix
+
+**When `requires_developer: true` is genuinely needed (exhaustive list):**
+
+1. **Unresolvable conflicts:** Contradictory success criteria between issues in the authorization set
+2. **Different-intent stale assumptions:** Issue A references code Issue B deletes, with different goals
+3. **Ambiguous supersession:** Partial scope overlap where it is unclear which spec is canonical
+4. **Uncertain reconciliation findings:** `reconcile-issue-graph` produced `requires_dev_action` with conflicting signals
+5. **Authorization scope gap:** User approves an issue but the implementable target is unclear AND output lineage cascade does NOT apply
+
+**DEFAULT FAILSAFE:** If a scenario is NOT covered by conditions 1-5, RESOLVE autonomously (classify with best judgment) rather than defaulting to `requires_developer: true`. Per `000-critical-rules.md` §"Pushing Agent Intelligence Decisions to the User," structural decisions are agent intelligence concerns.
+
 ### Screening Results Are Not Decision Points
 
 Screening sub-agents produce result contracts that feed into `pre-implementation-analysis`. The orchestrator assembles results and proceeds to the dispatch chain automatically. Key rules:

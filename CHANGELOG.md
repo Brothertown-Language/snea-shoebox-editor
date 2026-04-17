@@ -12,6 +12,11 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec-fix/1042-1043-approval-gate-autonomous-classification
+
+- **Remove Conditional Sub-Agent Dispatch Threshold** (#1043) - Removed the ≤3 inline screening threshold from approval-gate. Screen-issue sub-agent dispatch is now mandatory for ALL approval set sizes, regardless of count. Replaced conditional logic in 000-critical-rules.md, pre-implementation-analysis.md, and SKILL.md verification table. Added "Common Misconception" sections explaining why the threshold was removed.
+- **Add Autonomous Classification Resolution** (#1042) - Added classification decision table to pre-implementation-analysis.md (Step 0.15) mapping screening results to autonomous actions. Added "Autonomous Resolution" section to screen-issue.md with prohibited questions and genuine escalation criteria. Added pre-implementation-analysis classification decisions as prohibited questions in 000-critical-rules.md §Pushing Agent Intelligence Decisions to the User.
+
 ### spec/sub-agent-extraction
 
 - **Sub-Agent Extraction for Heavy Skill Tasks** (#984, #985, #986, #987, #988) - Extracted task files over 1,000 words into sub-agent execution pattern, reducing main agent context consumption by ~88%. Created `screen-issue` task for per-issue screening, revised `pre-implementation-analysis` from 5,635w to 3,137w, and added Sub-Agent Tasks sections with execution mode tables and result contracts to 7 SKILL.md files.

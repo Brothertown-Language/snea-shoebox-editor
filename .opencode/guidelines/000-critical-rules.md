@@ -642,11 +642,14 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 - 🚫 FORBIDDEN: "Should this be a single-task spec or broken into phases?" — the agent decides
 - 🚫 FORBIDDEN: "Is this a small change or a big one?" — the agent assesses
 - 🚫 FORBIDDEN: "Do you want this as one spec or multiple?" — the agent classifies
+- 🚫 FORBIDDEN: "How should we handle this partially-implemented issue?" — scope-reduce and continue
+- 🚫 FORBIDDEN: "Should we re-plan?" — yes, if authorization says "re-plan as needed"
+- 🚫 FORBIDDEN: "How should we close this already-implemented issue?" — via verify-already-implemented or via referenced spec-fix
 - 🚫 FORBIDDEN: Any question where the answer is determinable from context, codebase, or request analysis
 - ✅ REQUIRED: Classify autonomously and state the classification as part of the design proposal
 - ✅ REQUIRED: Only ask when multiple valid structures exist with genuinely ambiguous trade-offs (e.g., 3+ subsystems with unclear boundaries)
 
-**See `brainstorming` skill → `explore` task → "Autonomous Structural Classification" for the complete criteria.**
+**See `brainstorming` skill → `explore` task → "Autonomous Structural Classification" for the complete criteria. See `approval-gate/tasks/pre-implementation-analysis.md` Step 0.15 for the classification decision table that maps screening results to autonomous actions. See `approval-gate/tasks/screen-issue.md` §"Autonomous Resolution" for the exhaustive `requires_developer: true` conditions.**
 
 ## Critical Violation: Process Gaps Are Bugs — Completed Issues Not Auto-Closed
 
@@ -665,17 +668,26 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 
 ## Critical Violation: Inline Screening of Authorization Sets
 
-**⚠️ When more than 3 issues are approved at once, the agent MUST dispatch `screen-issue` sub-agents for per-issue screening. Loading all issue bodies into the orchestrator's own context is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ The agent MUST ALWAYS dispatch `screen-issue` sub-agents for per-issue screening, regardless of approval set size. Loading issue bodies into the orchestrator's own context is a CRITICAL GUIDELINE VIOLATION.**
 
-- 🚫 FORBIDDEN: Fetching all approved issue bodies into orchestrator context before sub-agent dispatch
-- 🚫 FORBIDDEN: Running screening logic inline when approval set size > 3
-- ✅ REQUIRED: Dispatch one `screen-issue` sub-agent per approved issue
+- 🚫 FORBIDDEN: Fetching approved issue bodies into orchestrator context before sub-agent dispatch
+- 🚫 FORBIDDEN: Running screening logic inline for ANY approval set size
+- ✅ REQUIRED: Dispatch one `screen-issue` sub-agent for EVERY approved issue — no count threshold
 - ✅ REQUIRED: Orchestrator receives only compact result contracts (≈100-500 words each)
 - ✅ REQUIRED: Cross-issue merge and dependency graph built from result contracts, not raw issue bodies
 
-**Why 3 as the threshold:** Single approvals and pairs can reasonably be screened inline. Three or more issues risk context exhaustion and require sub-agent isolation. The `screen-issue` sub-agent architecture exists precisely to prevent the orchestrator from blowing out its context window on authorization sets.
-
 **AUTHORITY:** `approval-gate/tasks/pre-implementation-analysis.md` Step -1
+
+### Common Misconception: "Small approval sets can be screened inline"
+
+**This is INCORRECT.** There is no inline screening path. Every approved issue — whether 1, 2, or 20 — MUST be screened by a `screen-issue` sub-agent dispatched via `task(subagent_type="general")`. The count threshold was removed because:
+
+1. Inline screening creates a forked code path that agents exploit to skip sub-agents
+2. Even a single issue can consume significant context (long spec, many comments, sub-issues)
+3. Sub-agent dispatch has near-zero cost but guarantees consistent execution
+4. The "context savings" of inline screening for ≤3 issues never materialized in practice
+
+**DO NOT re-introduce a count threshold.** This is a structural invariant, not a performance optimization.
 
 ## Critical Violation: Silent Halt Without Prompt — No Spec/Plan Search Before Stopping
 
