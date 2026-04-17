@@ -45,6 +45,9 @@ out/
 .junie/memory.md
 .opencode/package-lock.json
 
+# Opt-in issue probe (developers create this file to enable Tier 3 network probes)
+.opencode-issue-probe
+
 # Cloudflare / Wrangler
 .wrangler/
 wrangler.toml.bak
