@@ -5,13 +5,33 @@
 # ///
 """Session initialization script for AI agents.
 
-Outputs Key: value pairs for LLM consumption on stdout. Key names match
-the canonical PascalCase names referenced in guidelines and skills (GitOwner,
-GitRepo, GitPlatform, DevName, DevEmail, BranchName, WorktreePath, WorktreeFatal,
-GitHubHtmlUrl, GitBucketHtmlUrl, GitBucketSshUrl, GitBucketHasCredentials,
-AgentName, ModelId).
-Agents must use these key names directly — do NOT infer values from git
-remotes or other sources.
+Outputs key:value pairs for LLM consumption on stdout. Key names use
+the dotted scope.param convention where the prefix is the tool scope
+(github, gitbucket, srclight, dev, worktree) and the suffix is the
+exact parameter name the MCP tool or API expects. A convention comment
+at the top teaches the agent the rule.
+
+Session-init and env-loader are TWO INDEPENDENT PIPELINES:
+- Session-init (this script): stdout → LLM system prompt (dotted names)
+- env-loader.ts: output.env → bash environment (UPPER_CASE names, unchanged)
+
+Changing session-init output names does NOT require changes to env-loader.
+Agents read dotted names from session-init; bash scripts read UPPER_CASE
+names from env-loader. Never couple these pipelines.
+
+Canonical session-init variable names (dotted, LLM context):
+github.owner, github.repo, github.platform, github.html_url,
+gitbucket.owner, gitbucket.repo, gitbucket.html_url, gitbucket.ssh_url,
+gitbucket.has_credentials, srclight.project, dev.name, dev.email,
+branch, worktree.path, worktree.fatal, AgentName, ModelId
+
+Canonical env-loader variable names (UPPER_CASE, bash environment — separate pipeline):
+GIT_OWNER, GIT_REPO, GIT_PLATFORM, GITHUB_HTML_URL, GITBUCKET_HTML_URL,
+GITBUCKET_SSH_URL, GITBUCKET_HAS_CREDENTIALS, DEV_NAME, DEV_EMAIL,
+BRANCH_NAME, WORKTREE_PATH, WORKTREE_FATAL
+
+Agents must use dotted session-init names for MCP parameters — do NOT
+infer values from git remotes or other sources.
 
 Human-readable diagnostic lines (Remote:, Srclight:, Hooks path:) are preserved
 for developer diagnostics but are NOT referenced by guidelines as variables.
@@ -650,28 +670,31 @@ def main() -> int:
     wt_display = get_worktree_display()
     hooks_path = get_hooks_path()
 
-    print(f"GitOwner: {owner}")
-    print(f"GitRepo: {repo}")
-    print(f"GitPlatform: {platform}")
+    print("# Convention: dotted prefix = tool scope, suffix = MCP/API parameter name")
+    print("# Use scope.param directly as the tool parameter value.")
+    print("# Example: github_issue_read(owner=github.owner, repo=github.repo)")
+    print(f"github.owner: {owner}")
+    print(f"github.repo: {repo}")
+    print(f"github.platform: {platform}")
     print("AgentName: ")
     print("ModelId: ")
-    print(f"DevName: {user_name}")
-    print(f"DevEmail: {user_email}")
-    print(f"BranchName: {current_branch}")
+    print(f"dev.name: {user_name}")
+    print(f"dev.email: {user_email}")
+    print(f"branch: {current_branch}")
     print(f"Remote: {remote_url}")
 
     if platform == "github":
-        print("GitHubHtmlUrl: https://github.com/")
+        print("github.html_url: https://github.com/")
 
     if platform == "gitbucket":
         base_url, _, _ = parse_gitbucket_url(remote_url)
         if base_url:
-            print(f"GitBucketHtmlUrl: {base_url}")
+            print(f"gitbucket.html_url: {base_url}")
         else:
             print("GITBUCKET_HTML_URL not found in .env — URL generation unavailable", file=sys.stderr)
         ssh_url = extract_ssh_url(remote_url)
         if ssh_url:
-            print(f"GitBucketSshUrl: {ssh_url}")
+            print(f"gitbucket.ssh_url: {ssh_url}")
         has_credentials = False
         try:
             env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -683,22 +706,23 @@ def main() -> int:
                     )
         except OSError:
             pass
-        print(f"GitBucketHasCredentials: {'true' if has_credentials else 'false'}")
+        print(f"gitbucket.has_credentials: {'true' if has_credentials else 'false'}")
 
     if in_wt and wt_path and main_repo:
-        print(f"WorktreePath: {wt_path}")
+        print(f"worktree.path: {wt_path}")
     elif worktree_ok:
         if wt_display:
             print(wt_display)
         else:
             print("Worktrees: available")
     else:
-        print("WorktreeFatal: 1")
+        print("worktree.fatal: 1")
 
     if hooks_path:
         print(f"Hooks path: {hooks_path}")
 
     if srclight_status == "indexed":
+        print(f"srclight.project: {repo}")
         print("Srclight: indexed")
     else:
         print("Srclight: NOT indexed — tell the developer to run: uvx srclight index --embed qwen3-embedding")

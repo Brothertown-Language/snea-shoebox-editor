@@ -97,9 +97,9 @@ When the verification-enforcement workflow halts — whether after a successful 
 
 ## Worktree Mode
 
-When `WORKTREE_PATH` is set:
-- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
-- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
-- Sub-agent dispatch prompts MUST include `WORKTREE_PATH: <value>`
+When `worktree.path` is set:
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
+- Sub-agent dispatch prompts MUST include `worktree.path: <value>`
 
 Co-authored with AI: <AgentName> (<ModelId>)

@@ -54,11 +54,11 @@ For each approved issue:
 issue_number: <N>
 work_peers: [<list of all approved issue numbers except this one>]
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```
 
 **After all sub-agents return**, assemble screening results.
@@ -347,12 +347,12 @@ branch: "spec/<short-name>"
 worktree_path: ".worktrees/spec-<short-name>"
 dev_base_hash: "<7-char-sha>"
 env_vars:
-  WORKTREE_PATH: ".worktrees/spec-<short-name>"
-  BRANCH_NAME: "spec/<short-name>"
-  GitOwner: "<from-session>"
-  GitRepo: "<from-session>"
-  DevName: "<from-session>"
-  DevEmail: "<from-session>"
+  worktree.path: ".worktrees/spec-<short-name>"
+  branch: "spec/<short-name>"
+  github.owner: "<from-session>"
+  github.repo: "<from-session>"
+  dev.name: "<from-session>"
+  dev.email: "<from-session>"
 ```
 
 The `worktree_path` is derived from the branch name by replacing `/` with `-`:

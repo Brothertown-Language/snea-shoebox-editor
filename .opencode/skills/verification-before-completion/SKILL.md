@@ -77,10 +77,10 @@ When invoked, this skill requires the following guidelines to be loaded on-deman
 
 ## Worktree Mode
 
-When invoked from a worktree context (`WORKTREE_PATH` is set):
+When invoked from a worktree context (`worktree.path` is set):
 
-- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
-- ALL `read`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
 - Test/lint/typecheck commands MUST run from the worktree directory
 - `./tmp/` paths MUST resolve within the worktree, not the main repo
 
@@ -88,9 +88,9 @@ When invoked from a worktree context (`WORKTREE_PATH` is set):
 ```bash
 git -C $WORKTREE_PATH rev-parse --show-toplevel
 ```
-If the result does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
+If the result does NOT match `worktree.path`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
 
-If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+If `worktree.path` is NOT set, operate normally from the project root.
 
 ## Live Verification: Completion Claims (MANDATORY)
 
@@ -164,7 +164,7 @@ Before invoking any cross-referenced skill:
 
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Use Python client from gitbucket-api skill (MCP tools removed)
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+- **Platform Detection:** Uses `github.platform` environment variable
 
 ## Source Attribution
 

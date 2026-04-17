@@ -7,7 +7,7 @@ Idempotent completion subtask for changelog-generator. Ensures mandatory steps r
 1. **CHANGELOG.md update:** Changelog file updated with new entries
 2. **No duplicate entries:** No duplicate entries introduced
 3. **Categorization consistency:** Branch headers and categories applied consistently
-4. **Correct location:** Changes written to correct path (worktree if WORKTREE_PATH set)
+4. **Correct location:** Changes written to correct path (worktree if worktree.path set)
 
 ## Skill-Specific Completion
 
@@ -24,8 +24,8 @@ Idempotent completion subtask for changelog-generator. Ensures mandatory steps r
    - If inconsistent: re-categorize per branch prefix table in SKILL.md
 
 4. **Location verification** (if not already performed):
-   - If WORKTREE_PATH is set: confirm changes written to `${WORKTREE_PATH}/CHANGELOG.md`
-   - If WORKTREE_PATH not set: confirm changes written to project root `CHANGELOG.md`
+   - If worktree.path is set: confirm changes written to `${WORKTREE_PATH}/CHANGELOG.md`
+   - If worktree.path not set: confirm changes written to project root `CHANGELOG.md`
    - If wrong location: move changes to correct path
 
 ## Shared Completion Delegation

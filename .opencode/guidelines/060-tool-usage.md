@@ -66,17 +66,17 @@ When a platform has a dedicated API client (e.g., `GitBucketAPI`, GitHub MCP), t
 
 ### ⚠️ Worktree Path Resolution for File Operation Tools (CRITICAL)
 
-When working in a git worktree (`WORKTREE_PATH` is set), TIER 1 file operation tools (`read`, `edit`, `write`, `glob`, `grep`) do **NOT** have a `workdir` parameter. Relative paths like `src/main.py` resolve to the **main repo**, not the worktree. This causes silent file operation errors — edits go to the wrong file.
+When working in a git worktree (`worktree.path` is set), TIER 1 file operation tools (`read`, `edit`, `write`, `glob`, `grep`) do **NOT** have a `workdir` parameter. Relative paths like `src/main.py` resolve to the **main repo**, not the worktree. This causes silent file operation errors — edits go to the wrong file.
 
-**When `WORKTREE_PATH` is set, ALL file operations MUST prefix paths with the worktree path:**
+**When `worktree.path` is set, ALL file operations MUST prefix paths with the worktree path:**
 
 | Tool | Wrong (operates on main repo) | Correct (targets worktree) |
 | -- | -- | -- |
-| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
-| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
-| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
-| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` |
-| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` |
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{worktree.path}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{worktree.path}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{worktree.path}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=worktree.path)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{worktree.path}/src/")` |
 
 **When NOT in a worktree** (working in main repo): Relative paths are correct and function as expected.
 

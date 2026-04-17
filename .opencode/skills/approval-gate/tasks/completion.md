@@ -44,7 +44,7 @@ Generate executive summary in chat:
 
 **Outcome:** <What the result means for stakeholders>
 
-Issue URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/issues/<number>
+Issue URL: <gitbucket.html_url><github.owner>/<github.repo>/issues/<number>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```

@@ -95,9 +95,9 @@ Strongly encourage sub-agents and sub-tasks for skill operations that risk consu
 
 ### Required in every skill that:
 
-1. **Performs git operations** — Must include a "Worktree Mode" section explaining how to handle `WORKTREE_PATH`
-2. **Dispatches sub-agents** — Must pass `WORKTREE_PATH` in the dispatch context/prompt
-3. **Reads or writes files** — Must document path prefixing rules when `WORKTREE_PATH` is set
+1. **Performs git operations** — Must include a "Worktree Mode" section explaining how to handle `worktree.path`
+2. **Dispatches sub-agents** — Must pass `worktree.path` in the dispatch context/prompt
+3. **Reads or writes files** — Must document path prefixing rules when `worktree.path` is set
 
 ### Worktree Mode Template
 
@@ -106,12 +106,12 @@ Every skill SKILL.md should include (adapt as appropriate for the skill's operat
 ```markdown
 ## Worktree Mode
 
-When `WORKTREE_PATH` is set:
-- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
-- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
+When `worktree.path` is set:
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
 - `git` commands run from the worktree directory, NOT the main repo
 
-If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+If `worktree.path` is NOT set, operate normally from the project root.
 ```
 
 ### Sub-Agent Dispatch Template
@@ -119,15 +119,15 @@ If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 When a skill dispatches sub-agents, the prompt MUST include:
 
 ```
-WORKTREE_PATH: <value or 'not set'>
-If WORKTREE_PATH is set, all file operations and git commands MUST use it as the base directory.
+worktree.path: <value or 'not set'>
+If worktree.path is set, all file operations and git commands MUST use it as the base directory.
 ```
 
 ### Validation Gate
 
 The `validate` task (`quick_validate.py`) SHOULD check for:
 - Skills with `bash` or `git` operations that lack a "Worktree Mode" section
-- Skills that dispatch sub-agents but don't pass `WORKTREE_PATH` in context
+- Skills that dispatch sub-agents but don't pass `worktree.path` in context
 
 **Rationale:** Sub-agents that don't receive worktree context silently modify the main repo instead of the feature branch. This is a context window safety issue (see #741).
 
@@ -138,8 +138,8 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 ### Required in every skill that:
 
 1. **References AI agents** — MUST use `<AgentName>` and `<ModelId>` placeholders in byline contexts, never specific agent names or model IDs
-2. **References developers** — MUST use `<DevName>` and `<DevEmail>` placeholders in angle-bracket form, matching `DEV_NAME` and `DEV_EMAIL` from session init
-3. **References organizations/repos** — MUST use `<GitOwner>` and `<GitRepo>` placeholders in angle-bracket form, matching `GIT_OWNER` and `GIT_REPO` from session init
+2. **References developers** — MUST use `<dev.name>` and `<dev.email>` placeholders in angle-bracket form, matching `dev.name` and `dev.email` from session init
+3. **References organizations/repos** — MUST use `<github.owner>` and `<github.repo>` (or `<gitbucket.owner>` and `<gitbucket.repo>` for GitBucket contexts) placeholders in angle-bracket form, matching `github.owner` and `github.repo` from session init
 4. **Contains bylines or attribution** — MUST use `🤖 <AgentName> (<ModelId>) <status-icon> <status>` format, never specific agent/model combinations
 
 ### Validation Gate
@@ -148,7 +148,7 @@ The `validate` task (`quick_validate.py`) SHOULD check for and flag:
 - Specific agent names in SKILL.md or task files — must use `<AgentName>` placeholder token
 - Specific model IDs in SKILL.md or task files — must use `<ModelId>` placeholder token
 - Specific developer names or emails in SKILL.md or task files
-- Specific org/repo names in SKILL.md or task files (except in examples using the `<GitOwner>/<GitRepo>` pattern)
+- Specific org/repo names in SKILL.md or task files (except in examples using the `<github.owner>/<github.repo>` pattern)
 - Specific platform URLs in SKILL.md or task files (except in examples using session init variable references)
 
 ### Placeholder Reference
@@ -157,25 +157,35 @@ The `validate` task (`quick_validate.py`) SHOULD check for and flag:
 |-----------|-------------|--------|
 | AI agent name | `<AgentName>` | System prompt identity detection |
 | AI model ID | `<ModelId>` | System prompt identity detection |
-| Developer name | `<DevName>` | Session init (`DEV_NAME`) |
-| Developer email | `<DevEmail>` | Session init (`DEV_EMAIL`) |
-| Organization | `<GitOwner>` | Session init (`GIT_OWNER`) |
-| Repository | `<GitRepo>` | Session init (`GIT_REPO`) |
-| Platform | `GIT_PLATFORM` | Session init |
-| GitHub URL | `GITHUB_HTML_URL` | Session init |
-| GitBucket URL | `GITBUCKET_HTML_URL` | Session init |
+| Developer name | `<dev.name>` | Session init (`dev.name`) |
+| Developer email | `<dev.email>` | Session init (`dev.email`) |
+| Organization | `<github.owner>` or `<gitbucket.owner>` | Session init (dotted names) |
+| Repository | `<github.repo>` or `<gitbucket.repo>` | Session init (dotted names) |
+| Platform | `github.platform` or `gitbucket.platform` | Session init |
+| GitHub URL | `github.html_url` | Session init |
+| GitBucket URL | `gitbucket.html_url` | Session init |
+
+## Two Independent Pipelines
+
+Session-init and env-loader are **two independent pipelines with zero cross-coupling**:
+
+- **Session-init** (`.opencode/tools/session-init`): stdout → LLM system prompt. Uses dotted `scope.param` names. Agents read these values directly as MCP tool parameters.
+- **Env-loader** (`.opencode/plugins/env-loader.ts`): `output.env[]` → bash environment. Uses UPPER_CASE names. Shell commands and Python scripts read these from `os.environ`.
+
+Changing session-init output names does NOT require changes to env-loader. Adding a new LLM-facing variable goes in session-init only. Adding a new bash-facing variable goes in env-loader only. Add to the correct pipeline based on which consumers need the variable.
 
 ## Session Init Variable Alignment Requirement
 
-Skills and guidelines reference session-init variables by exact name (e.g., `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`). These names MUST match the `KEY: value` output of `.opencode/tools/session-init` exactly 1:1.
+Skills and guidelines reference session-init variables by exact dotted name (e.g., `github.owner`, `github.repo`, `gitbucket.html_url`). These names MUST match the `key: value` output of `.opencode/tools/session-init` exactly 1:1.
 
 **When creating or updating a skill that references session-init variables:**
 
-1. **Use canonical variable names only** — never invent new names or use prose labels (e.g., use `GIT_OWNER`, not `Owner:`)
-2. **Verify new variable references exist in session-init output** — if a skill needs a session-init variable that doesn't appear in `.opencode/tools/session-init`, the variable MUST be added to both `.opencode/tools/session-init` and `env-loader.ts` before the skill ships
-3. **The canonical variable list is:** `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`
+1. **Use canonical dotted variable names only** — never invent new names or use prose labels (e.g., use `github.owner`, not `Owner:`)
+2. **Verify new variable references exist in session-init output** — if a skill needs a session-init variable that doesn't appear in `.opencode/tools/session-init`, it MUST be added to session-init only (NOT env-loader, unless bash consumers also need it)
+3. **The canonical session-init variable list (dotted names, LLM context):** `github.owner`, `github.repo`, `github.platform`, `github.html_url`, `gitbucket.owner`, `gitbucket.repo`, `gitbucket.html_url`, `gitbucket.ssh_url`, `gitbucket.has_credentials`, `srclight.project`, `dev.name`, `dev.email`, `branch`, `worktree.path`, `worktree.fatal`, `AgentName`, `ModelId`
+4. **The canonical env-loader variable list (UPPER_CASE, bash environment — separate pipeline):** `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`
 
-**Why:** Agents extract values from session init output by matching variable names. A name mismatch (e.g., guideline says `GIT_OWNER` but session-init outputs `Owner:`) causes agents to fall back to inferring values from git remotes, which is a critical rule violation.
+**Why:** Agents extract values from session-init output by matching variable names. A name mismatch (e.g., guideline says `GIT_OWNER` but session-init outputs `github.owner`) causes agents to fall back to inferring values from git remotes, which is a critical rule violation.
 
 ## Correctness-First Economics
 

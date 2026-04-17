@@ -48,7 +48,7 @@ Generate executive summary in chat:
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/compare/dev...<branch>
+Compare URL: <gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.

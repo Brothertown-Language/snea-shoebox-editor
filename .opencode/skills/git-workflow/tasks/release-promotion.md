@@ -209,7 +209,7 @@ Invoke: /skill git-workflow --task provenance --mode=promotion
 
 | Parameter | Value |
 | -- | -- |
-| parent_repo | `<GitOwner>/<GitRepo>` from session init |
+| parent_repo | `<github.owner>/<github.repo>` from session init |
 | parent_branch | The branch being released (commonly `main` or `dev`) |
 | parent_issue | Issue number from the release spec |
 | submodule_path | Path of the promoted submodule |
@@ -337,7 +337,7 @@ git push origin main --tags
 Use GitHub MCP to create release:
 
 ```
-github_get_latest_release(owner=<GitOwner>, repo=<GitRepo>)
+github_get_latest_release(owner=<github.owner>, repo=<github.repo>)
 ```
 
 Then create release via GitHub API with:

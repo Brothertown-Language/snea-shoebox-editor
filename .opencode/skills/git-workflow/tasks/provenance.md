@@ -348,7 +348,7 @@ Post a comment on the parent issue (<parent-issue>) in the parent repo:
   <AgentName> (<ModelId>)
 ```
 
-- For GitHub: github_add_issue_comment(owner=<GitOwner>, repo=<GitRepo>, issue_number=<parent-issue>, body=...)
+- For GitHub: github_add_issue_comment(owner=<github.owner>, repo=<github.repo>, issue_number=<parent-issue>, body=...)
 - For GitBucket: POST /api/v3/repos/<owner>/<repo>/issues/<number>/comments
 
 When Tier 3 is used, no parent issue comment is posted (no submodule issue exists to reference).
@@ -407,8 +407,8 @@ When invoking provenance from review-prep, pass these parameters:
 
 | Parameter | Source |
 | -- | -- |
-| parent_repo | `<GitOwner>/<GitRepo>` from session init |
-| parent_branch | Current feature branch name (BRANCH_NAME) |
+| parent_repo | `<github.owner>/<github.repo>` from session init |
+| parent_branch | Current feature branch name (branch) |
 | parent_issue | Issue number from the implementation spec |
 | submodule_path | Path of the pushed submodule within parent repo |
 | change_description | Brief description of what changed |
@@ -564,7 +564,7 @@ Post a comment on the parent issue (<parent-issue>) in the parent repo:
 
   <AgentName> (<ModelId>)
 
-- For GitHub: github_add_issue_comment(owner=<GitOwner>, repo=<GitRepo>, issue_number=<parent-issue>, body=...)
+- For GitHub: github_add_issue_comment(owner=<github.owner>, repo=<github.repo>, issue_number=<parent-issue>, body=...)
 - For GitBucket: POST /api/v3/repos/<owner>/<repo>/issues/<number>/comments
 ```
 
@@ -627,7 +627,7 @@ When invoking provenance for promotion, pass these parameters:
 
 | Parameter | Source |
 | -- | -- |
-| parent_repo | `<GitOwner>/<GitRepo>` from session init |
+| parent_repo | `<github.owner>/<github.repo>` from session init |
 | parent_branch | The branch being released (commonly `main` or `dev`) |
 | parent_issue | Issue number from the release spec |
 | submodule_path | Path of the promoted submodule within parent repo |
@@ -679,7 +679,7 @@ When Tier 1 or Tier 2 succeeds:
 
    <AgentName> (<ModelId>)
 
- 2. For GitHub: github_add_issue_comment(owner=<GitOwner>, repo=<GitRepo>, issue_number=<parent-issue>, body=...)
+ 2. For GitHub: github_add_issue_comment(owner=<github.owner>, repo=<github.repo>, issue_number=<parent-issue>, body=...)
 3. For GitBucket: POST /api/v3/repos/<owner>/<repo>/issues/<number>/comments
 ```
 
@@ -699,7 +699,7 @@ When Tier 1 or Tier 2 succeeds:
 
    <AgentName> (<ModelId>)
 
- 2. For GitHub: github_add_issue_comment(owner=<GitOwner>, repo=<GitRepo>, issue_number=<parent-issue>, body=...)
+ 2. For GitHub: github_add_issue_comment(owner=<github.owner>, repo=<github.repo>, issue_number=<parent-issue>, body=...)
 3. For GitBucket: POST /api/v3/repos/<owner>/<repo>/issues/<number>/comments
 ```
 

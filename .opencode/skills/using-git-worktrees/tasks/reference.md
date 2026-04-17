@@ -22,7 +22,7 @@ If NOT ignored:
 | `.worktrees/` exists | Use it |
 | `.worktrees/` not ignored | Add to `.gitignore` |
 | `.worktrees/` missing | Create it and add to `.gitignore` |
-| `WORKTREE_FATAL=1` in session init | HALT and report to developer |
+| `worktree.fatal=1` in session init | HALT and report to developer |
 | Tests fail during baseline | Report failures + ask |
 | No `pyproject.toml` | Skip dependency install |
 
@@ -37,7 +37,7 @@ If NOT ignored:
 
 ## Fatal Error Protocol
 
-If `WORKTREE_FATAL=1` appears in session init output or worktree creation fails:
+If `worktree.fatal=1` appears in session init output or worktree creation fails:
 
 1. HALT immediately — do NOT proceed with any implementation
 2. Report the fatal error to the developer
@@ -94,4 +94,4 @@ This cleanup happens as part of the standard `git-workflow --task cleanup` seque
 - Announce worktree creation at start
 - Create branch from `dev` (not `main`)
 - Verify clean test baseline
-- HALT immediately if `WORKTREE_FATAL=1` appears in session init
+- HALT immediately if `worktree.fatal=1` appears in session init

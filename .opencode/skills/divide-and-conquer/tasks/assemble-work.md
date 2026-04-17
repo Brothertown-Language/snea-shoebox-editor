@@ -89,12 +89,12 @@ For each issue in execution order:
        verification_evidence: "<prose summary of what was verified in prior phases and the outcomes>"
      dependency_branches: ["spec/<prior-branch>"]
      env_vars:
-        WorktreePath: ".worktrees/spec-<name>"
-        BRANCH_NAME: "spec/<name>"
-        GitOwner: "<from-session>"
-        GitRepo: "<from-session>"
-        DevName: "<from-session>"
-        DevEmail: "<from-session>"
+         worktree.path: ".worktrees/spec-<name>"
+         branch: "spec/<name>"
+        github.owner: "<from-session>"
+        github.repo: "<from-session>"
+        dev.name: "<from-session>"
+        dev.email: "<from-session>"
      ```
 
 3. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`

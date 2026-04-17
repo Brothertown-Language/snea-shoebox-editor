@@ -119,20 +119,20 @@ The AI-parseable blocks provide structure for automation; the operational proced
 
 ## Worktree Mode
 
-When invoked from a worktree context (`WORKTREE_PATH` is set):
+When invoked from a worktree context (`worktree.path` is set):
 
-- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
-- ALL `read`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
-- ALL `write`/`edit` tool calls MUST prefix `filePath` with `WORKTREE_PATH/`
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
+- ALL `write`/`edit` tool calls MUST prefix `filePath` with `worktree.path/`
 - Runbook output files MUST resolve within the worktree, not the main repo
 
 **Verification guard:** Before running any command, verify:
 ```bash
 git -C $WORKTREE_PATH rev-parse --show-toplevel
 ```
-If the result does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
+If the result does NOT match `worktree.path`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
 
-If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+If `worktree.path` is NOT set, operate normally from the project root.
 
 ## Live Verification: Runbook Claims (MANDATORY)
 
@@ -210,7 +210,7 @@ Before invoking any cross-referenced skill:
 
 - **GitHub:** Use GitHub MCP tools for issue tracking
 - **GitBucket:** Use Python client from gitbucket-api skill
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+- **Platform Detection:** Uses `github.platform` environment variable
 
 ## Source Attribution
 

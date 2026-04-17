@@ -83,10 +83,10 @@ if bug_report.state == "closed":
 
     elif state_reason == "completed":
         # Verify a merged PR exists that fixes this bug
-        prs = github_search_pull_requests(query=f"Fixes #{bug_issue_number} repo:{<GitOwner>}/{<GitRepo>}")
+        prs = github_search_pull_requests(query=f"Fixes #{bug_issue_number} repo:{<github.owner>}/{<github.repo>}")
         merged_pr_found = False
         for pr in prs:
-            pr_detail = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"])
+            pr_detail = github_pull_request_read(method="get", owner=<github.owner>, repo=<github.repo>, pullNumber=pr["number"])
             if pr_detail.get("merged_at") is not None:
                 merged_pr_found = True
                 break

@@ -33,17 +33,17 @@ sub_task:
   scope: "<files, modules, functions>"
   boundaries: "<what is OUT of scope>"
 env_vars:
-  WorktreePath: "<worktree path>"
-  BRANCH_NAME: "<branch name>"
-  GitOwner: "<from-session>"
-  GitRepo: "<from-session>"
-  DevName: "<from-session>"
-  DevEmail: "<from-session>"
+  worktree.path: "<worktree path>"
+  branch: "<branch name>"
+  github.owner: "<from-session>"
+  github.repo: "<from-session>"
+  dev.name: "<from-session>"
+  dev.email: "<from-session>"
 ```
 
 **MANDATORY verification items before dispatch:**
-- `WORKTREE_PATH` is non-empty — FATAL if missing
-- `BRANCH_NAME` matches the feature branch for this sub-task
+- `worktree.path` is non-empty — FATAL if missing
+- `branch` matches the feature branch for this sub-task
 - `depth` is less than `max_depth`
 
 ### Step 2: Spawn Sub-agent
@@ -54,8 +54,8 @@ task(
     prompt="""
 Use divide-and-conquer skill with context:
 
-WORKTREE_PATH: <value>
-If WORKTREE_PATH is set, all file operations and git commands MUST use it as the base directory.
+worktree.path: <value>
+If worktree.path is set, all file operations and git commands MUST use it as the base directory.
 
 Sub-task: <description from dispatch context>
 Scope: <scope>
@@ -105,7 +105,7 @@ After collecting the sub-agent result, the orchestrator MUST perform a completio
    - `BLOCKED` → HALT and report blocker
 
 2. **If sub-agent returned NO result** (timeout, crash, empty response) — this is **ABNORMAL TERMINATION**:
-   a. Run `git status` in the worktree (`workdir=WORKTREE_PATH`)
+   a. Run `git status` in the worktree (`workdir=worktree.path`)
    b. If working tree is clean → sub-agent didn't start → re-dispatch (return to Step 2)
    c. If working tree has uncommitted changes → assess the changes:
       - `git diff` and `git diff --cached` to see what was modified
@@ -160,7 +160,7 @@ Sub-agent reports bug as finding (read-only), HALTs implementation for its sub-t
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
 | "Sub-agent completed" | Verify result contract returned | Check for result contract in context | VERIFICATION-GAP |
-| "WORKTREE_PATH passed" | Verify worktree path in dispatch context | Check dispatch prompt for WORKTREE_PATH | STRUCTURE-VIOLATION |
+| "worktree.path passed" | Verify worktree path in dispatch context | Check dispatch prompt for worktree.path | STRUCTURE-VIOLATION |
 | "Sub-agent stayed in worktree" | Verify sub-agent didn't modify main repo | `git -C <main-repo> status --porcelain` | CONFLICTING |
 
 **Evidence artifact:** Result contract presence and main repo cleanliness check.

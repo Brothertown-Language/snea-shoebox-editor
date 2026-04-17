@@ -22,8 +22,8 @@ Verify that a PR has actually been merged before closing associated issues. Prev
 ```python
 pr = github_pull_request_read(
     method="get",
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     pullNumber=N
 )
 merged = pr.get("merged", False)
@@ -34,7 +34,7 @@ state = pr.get("state", "unknown")
 ```python
 from skills.gitbucket_api.tools import GitBucketAPI
 api = GitBucketAPI()
-pr = api.get_pull_request(owner=<GitOwner>, repo=<GitRepo>, pull_number=N)
+pr = api.get_pull_request(owner=<github.owner>, repo=<github.repo>, pull_number=N)
 merged = pr.get("merged", False)
 state = pr.get("state", "unknown")
 ```
@@ -59,7 +59,7 @@ When searching for a PR that fixes a specific issue on GitBucket (no search API)
 ```python
 from skills.gitbucket_api.tools import GitBucketAPI
 api = GitBucketAPI()
-prs = api.list_pull_requests(owner=<GitOwner>, repo=<GitRepo>, state="closed")
+prs = api.list_pull_requests(owner=<github.owner>, repo=<github.repo>, state="closed")
 matching_pr = None
 for pr in prs:
     if f"#{issue_number}" in pr.get("body", "") or f"Fixes #{issue_number}" in pr.get("body", ""):
@@ -78,7 +78,7 @@ for pr in prs:
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO, GIT_PLATFORM
+- Session values: github.owner, github.repo, github.platform
 - Related tasks: `close` (uses merge verification before closing)
 
 ## Live Verification: Merge Evidence (MANDATORY)

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document records discovered API deficiencies between the OpenAPI specification and actual GitBucket API behavior. These deficiencies were discovered through testing against `<GitOwner>/<GitRepo>` repository.
+This document records discovered API deficiencies between the OpenAPI specification and actual GitBucket API behavior. These deficiencies were discovered through testing against `<github.owner>/<github.repo>` repository.
 
 **Testing Date:** 2026-04-06
 **GitBucket Version:** v4.42.1 (per OpenAPI spec)
@@ -12,7 +12,7 @@ This document records discovered API deficiencies between the OpenAPI specificat
 
 **Test Script:** `.opencode/skills/gitbucket-api/tests/verify_api.py` (permanent test suite)
 
-**Test Repository:** `<GitOwner>/<GitRepo>`
+**Test Repository:** `<github.owner>/<github.repo>`
 
 **How to Retest:**
 ```bash
@@ -87,7 +87,7 @@ Response: 200 OK with empty array []
 
 **Post-Upgrade Test (2026-04-06):**
 ```bash
-Testing POST https://<GITBUCKET_HOST>/gitbucket/api/v3/repos/<GitOwner>/<GitRepo>/issues/6/labels
+Testing POST https://<GITBUCKET_HOST>/gitbucket/api/v3/repos/<github.owner>/<github.repo>/issues/6/labels
    Labels to add: ['test-label-1', 'test-label-2']
    Status: 200
    Response: []
@@ -98,7 +98,7 @@ Testing POST https://<GITBUCKET_HOST>/gitbucket/api/v3/repos/<GitOwner>/<GitRepo
 
 **Workaround FAILED:** `replace_issue_labels()` also returns empty array.
 ```
-Testing PUT https://<GITBUCKET_HOST>/gitbucket/api/v3/repos/<GitOwner>/<GitRepo>/issues/7/labels
+Testing PUT https://<GITBUCKET_HOST>/gitbucket/api/v3/repos/<github.owner>/<github.repo>/issues/7/labels
    Labels to set: ['replace-test-1', 'replace-test-2']
    Status: 200
    Response: []
@@ -144,7 +144,7 @@ These deficiencies are documented in `SKILL.md` under "API Deficiencies Document
 
 ## Testing Methodology
 
-**Test Repository:** `<GitOwner>/<GitRepo>`
+**Test Repository:** `<github.owner>/<github.repo>`
 
 **Test Script:** See `./tmp/test_gitbucket_api_operations.py` (temporary, deleted after testing)
 

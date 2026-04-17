@@ -59,7 +59,7 @@ LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work to
 
 When running in maintenance mode, the coherence auditor SHOULD verify:
 
-1. All session-init variable names referenced in `.opencode/guidelines/` and `.opencode/skills/` (e.g., `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`) appear as `KEY:` prefixes in `.opencode/tools/session-init` stdout output
+1. All session-init variable names referenced in `.opencode/guidelines/` and `.opencode/skills/` (e.g., `github.owner`, `github.repo`, `github.platform`, `dev.name`, `dev.email`, `branch`, `worktree.path`, `worktree.fatal`, `github.html_url`, `gitbucket.html_url`, `gitbucket.ssh_url`, `gitbucket.has_credentials`) appear as `KEY:` prefixes in `.opencode/tools/session-init` stdout output
 2. `.opencode/tools/session-init` does NOT output prose-only labels (e.g., `Owner:`, `Repository:`) for variables referenced by canonical names in guidelines
 3. `env-loader.ts` `output.env` keys match the same canonical names
 

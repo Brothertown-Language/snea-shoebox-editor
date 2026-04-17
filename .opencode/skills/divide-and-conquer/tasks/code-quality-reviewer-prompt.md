@@ -18,9 +18,9 @@ Task tool (general-purpose):
 
     ## Worktree Context
 
-    WORKTREE_PATH: <WORKTREE_PATH value or 'not set'>
+    worktree.path: <worktree.path value or 'not set'>
 
-    If WORKTREE_PATH is set, ALL file reads MUST prefix paths with WORKTREE_PATH/. ALL bash commands MUST use workdir=WORKTREE_PATH. If WORKTREE_PATH is not set, use project root.
+    If worktree.path is set, ALL file reads MUST prefix paths with worktree.path/. ALL bash commands MUST use workdir=worktree.path. If worktree.path is not set, use project root.
 
     ## What Was Requested
 

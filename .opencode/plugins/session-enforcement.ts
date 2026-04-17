@@ -180,7 +180,7 @@ function buildWorktreeBlock(input: PluginInput): string {
   const worktreeDir = input?.worktree || "";
 
   if (worktreeDir && worktreeDir !== mainRepoDir) {
-    return `WORKTREE_PATH: ${worktreeDir}\nAll file operations (read, edit, write, glob, grep) MUST use paths prefixed with WORKTREE_PATH. Relative paths resolve to the main repo, not the worktree.`;
+    return `worktree.path: ${worktreeDir}\nAll file operations (read, edit, write, glob, grep) MUST use paths prefixed with worktree.path. Relative paths resolve to the main repo, not the worktree.`;
   }
 
   return "";

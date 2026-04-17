@@ -210,11 +210,11 @@ needs_approval_label_added: bool
 spec_content: <structured outputs from prerequisite tasks>
 exploration_results: <brainstorming output reference>
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```
 
 ## Cross-References

@@ -78,4 +78,4 @@ TDD is invoked contextually — not mandatory for all development.
 
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Use Python client from gitbucket-api skill
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+- **Platform Detection:** Uses `github.platform` environment variable

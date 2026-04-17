@@ -34,7 +34,7 @@ For each code reference:
 
 ```python
 # Query for later issues that may supersede
-issues = github_list_issues(owner=<GitOwner>, repo=<GitRepo>, state="open")
+issues = github_list_issues(owner=<github.owner>, repo=<github.repo>, state="open")
 for issue in issues:
     if "[SPEC]" in issue["title"] and issue["number"] > current_spec:
         # Check if superseding
@@ -67,7 +67,7 @@ If staleness detected:
 ```
 For each file mentioned in the spec:
   - Use glob or read tool to verify the file actually exists at the specified path
-  - If file path includes WORKTREE_PATH prefix → verify in worktree
+  - If file path includes worktree.path prefix → verify in worktree
   - If file does not exist → VERIFICATION-GAP (flag-for-review: may be planned but not created, or path may have changed)
   - If file path has changed since spec was written → MISSING-TRACEABILITY (conditional: update spec with correct path)
 ```

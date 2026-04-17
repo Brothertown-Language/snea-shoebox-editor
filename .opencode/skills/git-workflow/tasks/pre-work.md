@@ -125,10 +125,10 @@ Invoke `using-git-worktrees` skill (ALWAYS, for ANY feature branch):
 
 1. Invoke `using-git-worktrees` skill
 2. The skill creates the worktree: `git worktree add .worktrees/spec-<name> -b spec/<name> dev`
-3. The skill exports `WORKTREE_PATH`, `BRANCH_NAME`, `DEV_BASE_HASH` as environment variables
-4. If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT**
+3. The skill exports `worktree.path`, `branch`, `DEV_BASE_HASH` as environment variables
+4. If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT**
 
-**If worktree creation fails or `WORKTREE_FATAL=1` is detected:**
+**If worktree creation fails or `worktree.fatal=1` is detected:**
 
 - HALT immediately
 - Report the fatal error to the developer
@@ -339,7 +339,7 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 | Current branch | `git branch --show-current` | Feature branch name (not `main`, `dev`) | STRUCTURE-VIOLATION → HALT |
 | Working tree clean | `git status --porcelain` | Empty output | VERIFICATION-GAP → stash or commit first |
 | Worktree location | `git rev-parse --show-toplevel` | Worktree path (not main repo path) | STRUCTURE-VIOLATION → HALT |
-| WORKTREE_PATH set | `echo $WORKTREE_PATH` (or equivalent) | Non-empty, matches worktree dir | STRUCTURE-VIOLATION → HALT (fatal) |
+| worktree.path set | `echo $WORKTREE_PATH` (or equivalent) | Non-empty, matches worktree dir | STRUCTURE-VIOLATION → HALT (fatal) |
 | Dev base hash | `git rev-parse --short dev` | Valid 7-char SHA | MISSING-ELEMENT → sync dev first |
 
 ### Verification Procedure
@@ -350,7 +350,7 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 1. git branch --show-current → EVIDENCE: <branch-name>
 2. git status --porcelain → EVIDENCE: <output or "(empty)">
 3. git rev-parse --show-toplevel → EVIDENCE: <path>
-4. WORKTREE_PATH → EVIDENCE: <path or "(empty)">
+4. worktree.path → EVIDENCE: <path or "(empty)">
 ```
 
 **Classification on failure:**
@@ -360,7 +360,7 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 | On `main` or `dev` branch | CONFLICTING | flag-for-review | HALT — must create worktree first |
 | Dirty working tree in worktree | VERIFICATION-GAP | conditional | Stash or commit before implementation |
 | `rev-parse` returns main repo path | STRUCTURE-VIOLATION | auto-fix | Not in worktree — re-invoke using-git-worktrees |
-| WORKTREE_PATH empty | STRUCTURE-VIOLATION | auto-fix | FATAL — cannot safely do file operations |
+| worktree.path empty | STRUCTURE-VIOLATION | auto-fix | FATAL — cannot safely do file operations |
 | dev hash stale | MISSING-ELEMENT | conditional | Re-run `git pull origin dev` |
 
 **These verifications are MANDATORY. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
@@ -376,7 +376,7 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 
 - ✅ Authorization received (explicit `approved`, `go`, or `"#N approved"`)
 - ✅ Worktree created (not on `main` or `dev`)
-- ✅ `WORKTREE_PATH` environment variable is set and non-empty (FATAL ERROR if empty)
+- ✅ `worktree.path` environment variable is set and non-empty (FATAL ERROR if empty)
 - ✅ `git branch --show-current` in worktree shows feature branch
 - ✅ Feature branch created from `dev`
 

@@ -5,7 +5,7 @@ Idempotent completion subtask for using-git-worktrees. Ensures mandatory steps r
 ## State Check Phase
 
 1. **Worktree creation:** Worktree was created and verified to exist
-2. **Environment export:** WORKTREE_PATH, BRANCH_NAME, DEV_BASE_HASH exported
+2. **Environment export:** worktree.path, branch, DEV_BASE_HASH exported
 3. **Gitignore:** `.worktrees/` directory is gitignored
 4. **Test baseline:** Clean test baseline established after setup
 
@@ -16,7 +16,7 @@ Idempotent completion subtask for using-git-worktrees. Ensures mandatory steps r
    - If missing: invoke `create-worktree` task as remediation
 
 2. **Environment variable verification** (if not already performed):
-   - Check evidence for WORKTREE_PATH, BRANCH_NAME, DEV_BASE_HASH being set/output
+   - Check evidence for worktree.path, branch, DEV_BASE_HASH being set/output
    - If missing: re-export from worktree state as remediation
 
 3. **Gitignore verification** (if not already performed):

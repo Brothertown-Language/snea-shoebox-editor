@@ -36,8 +36,8 @@ Invoke `verify-merge` task to confirm PR is actually merged before closing any i
 ```python
 github_issue_write(
     method="update",
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     issue_number=N,
     state="closed",
     state_reason="completed"
@@ -51,8 +51,8 @@ github_issue_write(
 from skills.gitbucket_api.tools import GitBucketAPI
 api = GitBucketAPI()
 api.add_issue_comment(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     issue_number=N,
     body="Closing: PR merged and implementation verified."
 )
@@ -86,7 +86,7 @@ All tasks complete from this specification.
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO, GIT_PLATFORM
+- Session values: github.owner, github.repo, github.platform
 - Related tasks: `verify-merge` (runs first), `comment` (format for closure comment)
 - Parent/child closure order per `010-approval-gate.md`
 

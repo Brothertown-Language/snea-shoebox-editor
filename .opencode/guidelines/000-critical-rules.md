@@ -20,7 +20,7 @@ These mandates protect the integrity of the codebase and repository. They **NEVE
 | Human-only merge | Agents must never merge PRs |
 | No `/tmp/` usage — `./tmp/` only | Prevents system-level temp file leakage |
 | Path rules in worktree context | Prevents silent file operation errors across worktrees |
-| Sub-agents must receive `WORKTREE_PATH` | Prevents sub-agents from mutating main repo |
+| Sub-agents must receive `worktree.path` | Prevents sub-agents from mutating main repo |
 | Human-only branch deletion | Unmerged branches must never be force-deleted by agents |
 | Agents must never self-authorize | Authorization comes from developers, never from agent reasoning |
 
@@ -57,8 +57,8 @@ When developer authorization conflicts with a mandate:
 
 Worktrees are ALWAYS mandatory for feature branch creation. **See `using-git-worktrees` skill for the complete worktree creation procedure. See `060-tool-usage.md` §1-2 for tool priority hierarchy and path resolution rules.** **AUTHORITY: `060-tool-usage.md` §1-2** (this line is a reference only)
 
-- 🚫 FORBIDDEN: `git checkout -b`, `stash + checkout`, operating in main working directory, ignoring `WORKTREE_FATAL=1`
-- ✅ REQUIRED: `using-git-worktrees` skill for every feature branch; HALT if `WORKTREE_FATAL=1` or `WORKTREE_PATH` empty
+- 🚫 FORBIDDEN: `git checkout -b`, `stash + checkout`, operating in main working directory, ignoring `worktree.fatal=1`
+- ✅ REQUIRED: `using-git-worktrees` skill for every feature branch; HALT if `worktree.fatal=1` or `worktree.path` empty
 
 ## Critical Violation: Skipping Git Pre-Check Before ANY Work
 
@@ -69,21 +69,21 @@ Worktrees are ALWAYS mandatory for feature branch creation. **See `using-git-wor
 
 ## Critical Violation: Relative File Paths in Worktree Context
 
-**⚠️ Using relative paths with `read`/`edit`/`write`/`glob`/`grep` tools when `WORKTREE_PATH` is set is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Using relative paths with `read`/`edit`/`write`/`glob`/`grep` tools when `worktree.path` is set is a CRITICAL GUIDELINE VIOLATION.**
 
 **See `060-tool-usage.md` §2 "Path Rules (ZERO TOLERANCE)" for the complete tool-by-tool table showing wrong vs correct path resolution, and the `using-git-worktrees` skill → "Tool Usage Compliance" section for worktree-specific guidance.** **AUTHORITY: `060-tool-usage.md` §2** (this line is a reference only)
 
-- 🚫 FORBIDDEN: Relative paths with file operation tools when `WORKTREE_PATH` is set; assuming tools respect `workdir`
-- ✅ REQUIRED: Prefix ALL paths with `WORKTREE_PATH` when in worktree context
+- 🚫 FORBIDDEN: Relative paths with file operation tools when `worktree.path` is set; assuming tools respect `workdir`
+- ✅ REQUIRED: Prefix ALL paths with `worktree.path` when in worktree context
 
 ## Critical Violation: Sub-Agents Ignoring Worktree Context
 
 **⚠️ Sub-agents that modify the main repo instead of the worktree are a CRITICAL GUIDELINE VIOLATION.**
 
-When a main agent is operating in a worktree and dispatches a sub-agent, the sub-agent MUST receive `WORKTREE_PATH` in its dispatch context and use it as the base directory for ALL file operations and git commands.
+When a main agent is operating in a worktree and dispatches a sub-agent, the sub-agent MUST receive `worktree.path` in its dispatch context and use it as the base directory for ALL file operations and git commands.
 
-- 🚫 FORBIDDEN: Spawning sub-agents without `WORKTREE_PATH` when operating in a worktree; sub-agents that stage/commit to the main repo's working directory; skills that perform git or file operations without a "Worktree Mode" section
-- ✅ REQUIRED: Pass `WORKTREE_PATH` in ALL sub-agent dispatch prompts when set; sub-agents verify `git rev-parse --show-toplevel` matches `WORKTREE_PATH` before mutating state; all new skills MUST include worktree awareness per `skill-creator` skill requirements
+- 🚫 FORBIDDEN: Spawning sub-agents without `worktree.path` when operating in a worktree; sub-agents that stage/commit to the main repo's working directory; skills that perform git or file operations without a "Worktree Mode" section
+- ✅ REQUIRED: Pass `worktree.path` in ALL sub-agent dispatch prompts when set; sub-agents verify `git rev-parse --show-toplevel` matches `worktree.path` before mutating state; all new skills MUST include worktree awareness per `skill-creator` skill requirements
 
 ## Critical Violation: Implementing Without Verifying Against Live Documentation
 
@@ -239,14 +239,14 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 **⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.** All URLs must be constructed from session-enforcement plugin output. No exceptions.
 
 - 🚫 FORBIDDEN: Hard-coding domains; using "known correct" URLs from previous sessions; guessing from git remotes; caching URL bases across sessions
-- ✅ REQUIRED: Extract `<GitBucketHtmlUrl>` from session init; construct all URLs from that value; HALT if session init missing
+- ✅ REQUIRED: Extract `<gitbucket.html_url>` from session init; construct all URLs from that value; HALT if session init missing
 
 ## Critical Violation: Inferring GitHub Owner from File Paths/Usernames
 
 **⚠️ Inferring GitHub owner from file paths or usernames is a CRITICAL GUIDELINE VIOLATION.**
 
 - 🚫 FORBIDDEN: Inferring owner from file paths, `$USER`, `git config user.name`, cached values; making GitHub MCP calls without session init values
-- ✅ REQUIRED: Use `GIT_OWNER` and `GIT_REPO` from session init for EVERY GitHub MCP call
+- ✅ REQUIRED: Use `github.owner` and `github.repo` from session init for EVERY GitHub MCP call
 
 ## Critical Violation: Missing AI Co-Authored Attribution
 
@@ -283,13 +283,13 @@ All identity values MUST use placeholder tokens that are resolved at runtime fro
 - 🚫 FORBIDDEN: `<specific-model-id>` (e.g., `ollama-cloud/glm-5`, `claude-3-5-sonnet`) in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `example-developer`, `example-dev-alias`, or any specific developer name/email in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `example-org`, `example-repo`, or any specific org/repo name in skill files, guidelines, or task files
-- ✅ REQUIRED: Use `<AgentName>`, `<ModelId>`, `<DevName>`, `<DevEmail>`, `<GitOwner>`, `<GitRepo>`, `<GitBucketHtmlUrl>` placeholders everywhere
+- ✅ REQUIRED: Use `<AgentName>`, `<ModelId>`, `<dev.name>`, `<dev.email>`, `<github.owner>`, `<github.repo>`, `<gitbucket.html_url>` placeholders everywhere
 - ✅ REQUIRED: Skill-creator MUST validate that no hardcoded identity values appear in generated skill files
 - ✅ REQUIRED: Spec-auditor MUST flag hardcoded identity values as STRUCTURE-VIOLATION auto-fix findings
 
 **Applies to:** SKILL.md files, task/*.md files, guideline files, agent configuration files, code comments that serve as templates or examples.
 
-**Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<GitOwner>/<GitRepo>` pattern.
+**Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<github.owner>/<github.repo>` pattern.
 
 **See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.** **AUTHORITY: `080-code-standards.md`** (this line is a reference only)
 
@@ -435,7 +435,7 @@ If you think something ELSE should be changed: 1) STOP, 2) Comment on the issue,
 
 The approval-gate dispatch chain defines a mandatory sequence after plan approval:
 
-1. `git-workflow --task pre-work` — Create worktree, set `WORKTREE_PATH`, verify branch state
+1. `git-workflow --task pre-work` — Create worktree, set `worktree.path`, verify branch state
 2. `divide-and-conquer --task assemble-work` — Dispatch sub-agents for implementation
 3. `verification-before-completion` — Verify success criteria before marking complete
 4. `finishing-a-development-branch --task checklist` — Final branch readiness check
@@ -450,7 +450,7 @@ The approval-gate dispatch chain defines a mandatory sequence after plan approva
 - 🚫 FORBIDDEN: Generating compare URL without invoking `git-workflow --task review-prep`
 - ✅ REQUIRED: Follow the approval-gate dispatch chain in order after plan approval
 - ✅ REQUIRED: Invoke each mandatory skill in sequence
-- ✅ REQUIRED: Verify `WORKTREE_PATH` is set before any file modification
+- ✅ REQUIRED: Verify `worktree.path` is set before any file modification
 - ✅ REQUIRED: Use `divide-and-conquer` to dispatch sub-agents for all file modifications on multi-task plans
 
 **See `approval-gate/SKILL.md` → "Dispatch Order" for the complete mandatory sequence. See `using-git-worktrees` skill → `create-worktree` task for worktree creation procedure.**
@@ -716,7 +716,7 @@ Skill task files exceeding 1,000 words are extracted into sub-agent execution pe
 - Tasks >1,000 words → sub-agent dispatch via `task(subagent_type="general")`
 - Tasks ≤1,000 words → inline execution (spawning overhead exceeds inline cost)
 - Result contracts reference task files as source of truth (no duplication)
-- Dispatch context MUST include `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL`
+- Dispatch context MUST include `worktree.path`, `github.owner`, `github.repo`, `dev.name`, `dev.email`
 
 **See each skill's SKILL.md → "Sub-Agent Tasks" section for execution mode tables and result contract schemas.**
 

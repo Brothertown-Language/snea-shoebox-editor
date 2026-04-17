@@ -36,14 +36,14 @@ Branch completion workflow that ensures a feature branch is fully ready for PR c
 1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when implementation completes on a feature branch, when the user says "done" or "finished" or "ready for PR", or before review-prep task in git-workflow.
 2. **Verification-first approach:** All changes must be committed. All tests must pass. All lint/typecheck must pass. Branch must be pushed to remote.
 3. **Exit conditions:** Branch is READY when all checklist items pass, compare URL is generated, and agent HALTs to report readiness.
-4. **Worktree mandatory:** All feature branches operate in worktrees. If `WORKTREE_PATH` is not set: FATAL ERROR → FLAG DEV → HALT.
+4. **Worktree mandatory:** All feature branches operate in worktrees. If `worktree.path` is not set: FATAL ERROR → FLAG DEV → HALT.
 
 ## Worktree Mode (MANDATORY)
 
-If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
-- All `bash` tool calls use `workdir="{{WORKTREE_PATH}}"`
-- All `read`/`edit`/`write`/`glob`/`grep` tool calls prefix paths with `{{WORKTREE_PATH}}/`
+- All `bash` tool calls use `workdir="{{worktree.path}}"`
+- All `read`/`edit`/`write`/`glob`/`grep` tool calls prefix paths with `{{worktree.path}}/`
 - NEVER operate in the main working directory during implementation
 
 ## Lazy-Loaded Guidelines
@@ -86,7 +86,7 @@ Implementation tracks against **plan sub-issues**, not spec sub-issues. The hier
 | "Tests pass" | Verify by running tests | `bash` to run `uv run pytest test/` → confirm exit code 0 | VERIFICATION-GAP |
 | "Lint passes" | Verify by running linter | `bash` to run `uvx ruff check src/ test/` → confirm no errors | VERIFICATION-GAP |
 | "Branch pushed to remote" | Verify remote branch exists | `bash` to run `git log origin/<branch>..HEAD` → confirm empty | MISSING-ELEMENT |
-| "All files in worktree" | Verify all changed files are under WORKTREE_PATH | `bash` to run `git diff --name-only HEAD~1` → check paths | STRUCTURE-VIOLATION |
+| "All files in worktree" | Verify all changed files are under worktree.path | `bash` to run `git diff --name-only HEAD~1` → check paths | STRUCTURE-VIOLATION |
 
 **Evidence format:**
 
@@ -152,4 +152,4 @@ Before invoking any cross-referenced skill:
 
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Fully supported — uses GitBucket compare URL format
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+- **Platform Detection:** Uses `github.platform` environment variable

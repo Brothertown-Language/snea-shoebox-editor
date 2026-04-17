@@ -204,8 +204,8 @@ For each submodule that was pushed in the Per-Submodule Push Sequence above:
 ```
 1. Invoke: /skill git-workflow --task provenance --mode=dev-push
    with parameters:
-     - parent_repo: <GitOwner>/<GitRepo>
-     - parent_branch: <BRANCH_NAME>
+     - parent_repo: <github.owner>/<github.repo>
+     - parent_branch: <branch>
      - parent_issue: <issue number from current implementation>
      - submodule_path: <path of the pushed submodule>
      - change_description: <brief description of what changed>
@@ -316,10 +316,10 @@ git rebase origin/dev
 
 All feature branches operate in worktrees. There is no alternative — worktree is the only method.
 
-If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
-1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
-2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{WORKTREE_PATH}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
+1. All `bash` tool calls MUST use `workdir="{{worktree.path}}"`
+2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{worktree.path}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
 3. Before any push/squash/rebase operation, verify:
    ```bash
    git branch --show-current
@@ -352,26 +352,26 @@ git push -u origin <branch-name>
 
 **⚠️ CRITICAL: URLs must be constructed from session init values ONLY. Never hardcode domains.**
 
-Using session values (<GitOwner>, <GitRepo>, GIT_PLATFORM, <GitBucketHtmlUrl>):
+Using session values (<github.owner>, <github.repo>, github.platform, <gitbucket.html_url>):
 
-**For GitBucket (GIT_PLATFORM=gitbucket):**
-
-```
-<GitBucketHtmlUrl><GitOwner>/<GitRepo>/compare/dev...<branch-name>
-```
-
-Where `<GitBucketHtmlUrl>` comes from session init (read from `.env`).
-
-**For GitHub (GIT_PLATFORM=github):**
+**For GitBucket (github.platform=gitbucket):**
 
 ```
-https://github.com/<GitOwner>/<GitRepo>/compare/dev...<branch-name>
+<gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch-name>
 ```
 
-**If <GitBucketHtmlUrl> is empty (not in .env):**
+Where `<gitbucket.html_url>` comes from session init (read from `.env`).
+
+**For GitHub (github.platform=github):**
+
+```
+https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>
+```
+
+**If <gitbucket.html_url> is empty (not in .env):**
 
 1. REFUSE to generate any URL
-2. Report: "Cannot generate URL — <GitBucketHtmlUrl> not configured in .env"
+2. Report: "Cannot generate URL — <gitbucket.html_url> not configured in .env"
 3. HALT — do not guess or fabricate a URL
 
 ### Step 4: Report Completion (Chat Only)
@@ -387,12 +387,12 @@ Report to chat (exec summary + URL + AI byline):
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/compare/dev...<branch-name>
+Compare URL: <gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch-name>
 
 🤖 <AgentName> (<ModelId>) completed
 ```
 
-(GitBucket example — for GitHub use `https://github.com/<GitOwner>/<GitRepo>/compare/dev...<branch-name>`)
+(GitBucket example — for GitHub use `https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>`)
 
 **URL Label Context:**
 
@@ -509,7 +509,7 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 | Executive summary present | Review chat output | First element is `**Summary:**` block | MISSING-ELEMENT → add before proceeding |
 | Outcome present | Review chat output | `**Outcome:**` line follows summary | MISSING-ELEMENT → add before proceeding |
 | URL label context-appropriate | Review chat output | Pre-PR: "Compare URL" with `compare/dev...`; Post-PR: "PR URL" with `pull/N`; label-format mismatch = critical violation | STRUCTURE-VIOLATION → fix label and format to match context |
-| URL present | Review chat output | URL starts with `https://github.com/` or `<GitBucketHtmlUrl>` | MISSING-ELEMENT → generate URL before proceeding |
+| URL present | Review chat output | URL starts with `https://github.com/` or `<gitbucket.html_url>` | MISSING-ELEMENT → generate URL before proceeding |
 | AI byline present | Review chat output | Ends with `🤖 <AgentName> (<ModelId>)` line | MISSING-ELEMENT → add before proceeding |
 | No URL before summary | Review chat output | URL appears AFTER summary, not before | STRUCTURE-VIOLATION → reorder output |
 | No byline before URL | Review chat output | Byline appears AFTER URL, not before | STRUCTURE-VIOLATION → reorder output |
@@ -525,7 +525,7 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: https://github.com/<GitOwner>/<GitRepo>/compare/dev...<branch-name>
+Compare URL: https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```
@@ -533,7 +533,7 @@ Compare URL: https://github.com/<GitOwner>/<GitRepo>/compare/dev...<branch-name>
 **After a PR has been created**, replace "Compare URL" with "PR URL" and use the `pull/N` format:
 
 ```
-PR URL: https://github.com/<GitOwner>/<GitRepo>/pull/<PR-number>
+PR URL: https://github.com/<github.owner>/<github.repo>/pull/<PR-number>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```
@@ -742,7 +742,7 @@ Updated git-workflow skill to push feature branches after implementation and pro
 
 **Ready for Review:**
 
-<GitBucketHtmlUrl><GitOwner>/<GitRepo>/compare/dev...<branch-name>
+<gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch-name>
 
 ---
 🤖 <AgentName> (<ModelId>) completed

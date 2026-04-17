@@ -18,12 +18,12 @@ List all PRs (open and merged) for the repository. If merged PRs with uncleaned 
 ```python
 # List open PRs
 open_prs = github_list_pull_requests(
-    owner=<GitOwner>, repo=<GitRepo>, state="open", perPage=50
+    owner=<github.owner>, repo=<github.repo>, state="open", perPage=50
 )
 
 # List merged PRs
 merged_prs = github_list_pull_requests(
-    owner=<GitOwner>, repo=<GitRepo>, state="closed", perPage=50
+    owner=<github.owner>, repo=<github.repo>, state="closed", perPage=50
 )
 # Note: GitHub "closed" includes both merged and unmerged; filter by merged_at
 merged_prs = [pr for pr in merged_prs if pr.get("merged_at") is not None]

@@ -313,7 +313,7 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
 | "Workflow step completed" | Verify step was actually executed | Check for step output in context | VERIFICATION-GAP |
-| "Sub-agent dispatch correct" | Verify dispatch context includes WORKTREE_PATH | Review dispatch prompt | STRUCTURE-VIOLATION |
+| "Sub-agent dispatch correct" | Verify dispatch context includes worktree.path | Review dispatch prompt | STRUCTURE-VIOLATION |
 | "Work state current" | Verify work state file reflects latest state | `glob(pattern="./tmp/work-*.md")` | VERIFICATION-GAP |
 | "No skipped steps" | Verify all mandatory steps were invoked | Check for tool-call artifacts per step | MISSING-ELEMENT |
 
@@ -324,6 +324,6 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
 | Step claimed but no artifact | VERIFICATION-GAP | conditional | Re-execute step |
-| WORKTREE_PATH missing from dispatch | STRUCTURE-VIOLATION | auto-fix | Re-dispatch with correct context |
+| worktree.path missing from dispatch | STRUCTURE-VIOLATION | auto-fix | Re-dispatch with correct context |
 | Work state stale | VERIFICATION-GAP | auto-fix | Re-read and verify |
 | Mandatory step skipped | MISSING-ELEMENT | conditional | Execute skipped step now |

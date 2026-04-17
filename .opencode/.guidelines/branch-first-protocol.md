@@ -45,8 +45,8 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 # 1. Sync dev: git checkout dev && git pull origin dev
 # 2. Create worktree: git worktree add .worktrees/spec-my-change -b spec/my-change dev
 # 3. Work in .worktrees/spec-my-change/ (using workdir parameter on bash commands)
-# IMPORTANT: For read/edit/write/glob/grep tools, prefix filePath with WORKTREE_PATH:
-#   read(filePath=f"{WORKTREE_PATH}/src/main.py")  — NOT read(filePath="src/main.py")
+# IMPORTANT: For read/edit/write/glob/grep tools, prefix filePath with worktree.path:
+#   read(filePath=f"{worktree.path}/src/main.py")  — NOT read(filePath="src/main.py")
 ```
 
 ### 🚫 NEVER DO
@@ -66,7 +66,7 @@ git checkout -b spec/my-change dev
 
 Worktrees provide complete isolation — no stash is needed. Each worktree has its own working directory, so main tree changes are never affected.
 
-**If `WORKTREE_PATH` is not set or empty after worktree creation: FATAL ERROR → FLAG DEV → HALT.**
+**If `worktree.path` is not set or empty after worktree creation: FATAL ERROR → FLAG DEV → HALT.**
 
 <!--
 Fragment ID: branch-first-protocol

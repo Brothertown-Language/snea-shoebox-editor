@@ -1,6 +1,6 @@
 ---
 name: using-git-worktrees
-description: Use when creating a feature branch or worktree for implementation. Always invoke before git-workflow pre-work. Triggers on: branch, worktree, feature branch, create worktree, pre-work, WORKTREE_PATH.
+description: Use when creating a feature branch or worktree for implementation. Always invoke before git-workflow pre-work. Triggers on: branch, worktree, feature branch, create worktree, pre-work, worktree.path.
 type: discipline-enforcing
 license: MIT
 ---
@@ -45,9 +45,9 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 1. **Always use `.worktrees/` directory** — stash+checkout is FORBIDDEN.
 1. **Verify `.worktrees/` is gitignored** before creating worktree. If not, add it and commit.
 1. **Check for name collisions** before creating — reuse existing worktree for same branch, HALT on mismatch.
-1. **Export `WORKTREE_PATH`, `BRANCH_NAME`, `DEV_BASE_HASH`** after creation — downstream skills require these.
-1. **If `WORKTREE_FATAL=1`** appears in session init: HALT immediately, report to developer, do NOT proceed.
-1. **If `WORKTREE_PATH` is empty after creation**: FATAL ERROR → FLAG DEV → HALT.
+1. **Export `worktree.path`, `branch`, `DEV_BASE_HASH`** after creation — downstream skills require these.
+1. **If `worktree.fatal=1`** appears in session init: HALT immediately, report to developer, do NOT proceed.
+1. **If `worktree.path` is empty after creation**: FATAL ERROR → FLAG DEV → HALT.
 1. **Verify clean test baseline** after setup — report failures, get explicit permission to proceed.
 1. **Cleanup** is handled by `finishing-a-development-branch`, not by this skill.
 

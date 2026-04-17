@@ -236,10 +236,10 @@ branch_name = subprocess.check_output(['git', 'branch', '--show-current'], text=
 
 # List PRs for this branch
 prs = github_list_pull_requests(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     state="all",
-    head=f"{<GitOwner>}:{branch_name}"
+    head=f"{<github.owner>}:{branch_name}"
 )
 ```
 
@@ -359,7 +359,7 @@ For OPEN PRs, check the `mergeable` attribute from GitHub API:
 ```python
 # For existing open PRs
 if pr_state == "open":
-    pr_details = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr_number)
+    pr_details = github_pull_request_read(method="get", owner=<github.owner>, repo=<github.repo>, pullNumber=pr_number)
     mergeable = pr_details.get("mergeable")  # True, False, or None
     mergeable_state = pr_details.get("mergeable_state")  # "clean", "dirty", "unknown", etc.
 ```
@@ -683,10 +683,10 @@ git rebase origin/dev
 
 All feature branches operate in worktrees. There is no alternative — worktree is the only method.
 
-If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
-1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
-2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{WORKTREE_PATH}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
+1. All `bash` tool calls MUST use `workdir="{{worktree.path}}"`
+2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{worktree.path}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
 3. Before any push/squash/rebase operation, verify:
    ```bash
    git branch --show-current
@@ -729,7 +729,7 @@ No sub-issues needed. Include only parent issue.
 
 ### Step 6: Create PR (Platform-Agnostic)
 
-**Detect platform from session init (`GIT_PLATFORM`) and use appropriate tool:**
+**Detect platform from session init (`github.platform`) and use appropriate tool:**
 
 **Three-Branch Workflow Target:**
 
@@ -737,12 +737,12 @@ No sub-issues needed. Include only parent issue.
 - Releases PR from `dev` to `main` (human-triggered, not by AI)
 - Hotfixes PR to both `dev` and `main` (paired issues)
 
-#### GitHub (GIT_PLATFORM=github)
+#### GitHub (github.platform=github)
 
 ```python
 github_create_pull_request(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     title="[SPEC] <description>",
     body="""**Summary:**
 
@@ -760,15 +760,15 @@ Fixes #<child2>
 )
 ```
 
-#### GitBucket (GIT_PLATFORM=gitbucket)
+#### GitBucket (github.platform=gitbucket)
 
 ```python
 from skills.gitbucket_api.tools import GitBucketAPI
 
 api = GitBucketAPI()
 pr = api.create_pull_request(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     title="[SPEC] <description>",
     body="""**Summary:**
 
@@ -843,7 +843,7 @@ Fixes #505
 
 **Outcome:** <What changed for stakeholders>
 
-**PR URL:** <GitBucketHtmlUrl><GitOwner>/<GitRepo>/pull/<number>
+**PR URL:** <gitbucket.html_url><github.owner>/<github.repo>/pull/<number>
 
 Wait for human to merge.
 ```
@@ -1038,8 +1038,8 @@ Every squash commit MUST include:
 **Human Trailer:**
 
 - Use session values from the session-enforcement plugin
-- `<DevName>`: Human's name
-- `<DevEmail>`: Human's email
+- `<dev.name>`: Human's name
+- `<dev.email>`: Human's email
 - Format: `Co-authored-by: <Human-Name> <human-email>`
 
 ## Sub-Issue Autoclose
