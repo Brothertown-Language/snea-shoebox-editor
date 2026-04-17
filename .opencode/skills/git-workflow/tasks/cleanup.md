@@ -363,6 +363,58 @@ Total nodes visited: <N>
 
 **If orphaned sub-issues remain:** Do NOT close them. Report them as verification gaps requiring developer attention.
 
+### Step 2.7.8: Orphaned Task Issues (Unlinked Sub-issues)
+
+For issues with `[Task: #N]` or `Phase N:` patterns in their title that reference the parent plan but are not formal sub-issues (i.e., not returned by `get_sub_issues`), include them in closure candidates by searching the issue body and PR body for these references.
+
+```python
+def find_orphaned_task_issues(parent_issue_number, pr_body, pr_files):
+    """
+    Find issues that reference a parent plan in their title but
+    are not linked via formal sub-issue relationships.
+    """
+    sub_issues = github_issue_read(
+        method="get_sub_issues", issue_number=parent_issue_number
+    )
+    linked_numbers = {sub["number"] for sub in sub_issues}
+
+    title_patterns = [
+        r"\[Task:\s*#(\d+)\]",
+        r"Phase\s+\d+",
+    ]
+
+    orphaned_candidates = []
+
+    search_sources = [pr_body]
+    parent_issue = github_issue_read(method="get", issue_number=parent_issue_number)
+    if parent_issue.get("body"):
+        search_sources.append(parent_issue["body"])
+
+    for source in search_sources:
+        for match in re.finditer(r"#(\d+)", source):
+            ref_num = int(match.group(1))
+            if ref_num == parent_issue_number:
+                continue
+            if ref_num in linked_numbers:
+                continue
+
+            ref_issue = github_issue_read(method="get", issue_number=ref_num)
+            ref_title = ref_issue.get("title", "")
+
+            for pattern in title_patterns:
+                if re.search(pattern, ref_title):
+                    orphaned_candidates.append({
+                        "number": ref_num,
+                        "title": ref_title,
+                        "state": ref_issue.get("state"),
+                    })
+                    break
+
+    return orphaned_candidates
+```
+
+For each orphaned task issue found, apply the same closure verification logic as formal sub-issues (check deliverables against PR file list, verify merged PR evidence). Orphaned issues with verified deliverables should be closed; those without should be flagged for developer review.
+
 ### Step 3: Switch to Dev and Sync (Fast-Forward Only)
 
 **Three-Branch Workflow:** After feature PR merge, switch to `dev` (not `main`) and sync with remote.

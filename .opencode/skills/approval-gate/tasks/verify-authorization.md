@@ -214,6 +214,56 @@ for sub_issue in sub_issues:
         pass
 ```
 
+#### 5.2.1 Phase-Count Cross-Reference Check
+
+**For multi-task plans, verify that the number of sub-issues matches the number of phases in the plan body.** A mismatch indicates incomplete sub-issue linkage — phases exist in the plan but lack corresponding formal GitHub sub-issues.
+
+```python
+import re
+
+def count_plan_phases(plan_body: str) -> int:
+    heading_patterns = [
+        r"^###\s+Phase\s+\d+",
+        r"^####\s+Task\s+\d+",
+        r"^##\s+Phase\s+\d+",
+    ]
+    phase_count = 0
+    for line in plan_body.splitlines():
+        for pattern in heading_patterns:
+            if re.match(pattern, line.strip()):
+                phase_count += 1
+                break
+    return phase_count
+
+expected_phases = count_plan_phases(plan_body)
+actual_sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
+actual_count = len(actual_sub_issues)
+
+if expected_phases > 1 and actual_count < expected_phases:
+    # STRUCTURE-VIOLATION: Plan has N phases but fewer than N sub-issues
+    # Block implementation and offer remediation
+    findings.append({
+        "finding": f"Plan has {expected_phases} phases but only {actual_count} sub-issues",
+        "problem_class": "STRUCTURE-VIOLATION",
+        "classification": "auto-fix",
+        "action": "block_implementation",
+        "remediation": "issue-operations --task link-sub-issue"
+    })
+elif expected_phases <= 1:
+    # Single-task plan — skip count check, pass
+    pass
+```
+
+**Finding Classification:**
+
+| Finding | Problem Class | Classification | Action |
+|---------|---------------|----------------|--------|
+| Plan has N > 1 phases, sub-issues < N | STRUCTURE-VIOLATION | auto-fix | Block implementation; offer `issue-operations --task link-sub-issue` to create missing linkages |
+| Plan has N > 1 phases, sub-issues >= N | VERIFIED | auto-proceed | Phase count matches; continue verification |
+| Plan has 0 or 1 phases | VERIFIED | auto-proceed | Single-task plan; count check skipped |
+
+**Evidence artifact:** `count_plan_phases()` result and `github_issue_read(method=get_sub_issues)` count MUST be recorded in the verification report.
+
 #### 5.3 Adversarial Verification of Sub-Issue State
 
 **Before trusting any sub-issue claim, verify against actual GitHub API state.**
