@@ -22,6 +22,32 @@ If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** D
 4. `git rev-parse --show-toplevel` MUST return the worktree path
 5. NEVER operate in the main working directory during implementation
 
+## Step 0: Sync Dev Branch (Fast-Forward Only)
+
+**Before running quality checks, ensure local dev is current.** If dev has been updated by other merges since this branch was created, running checks on a stale base produces incorrect results.
+
+```bash
+git fetch origin dev
+git pull origin dev --ff-only
+```
+
+**The `--ff-only` flag is MANDATORY.** A plain `git pull origin dev` can silently succeed with a merge commit, hiding divergence. The `--ff-only` flag ensures dev fast-forwards cleanly.
+
+**If `--ff-only` pull fails (diverged history):**
+
+```bash
+# HALT and report. Suggest manual resolution:
+echo "ERROR: local dev has diverged from origin/dev"
+echo "Suggest: git pull --rebase origin dev"
+echo "Or manual resolution required"
+# HALT — do NOT proceed with stale codebase
+# Do NOT create merge commits on dev
+```
+
+**If dev is already up to date:** The ff-only pull is a no-op and proceeds instantly.
+
+**Worktree context:** If running from a worktree, `git pull` must target the main working tree's dev, not the worktree. Use `git -C /path/to/main/repo pull origin dev --ff-only` to ensure operations target the main tree.
+
 ## Prepare Branch Workflow
 
 ### Step 1: Verify All Changes Committed

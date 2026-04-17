@@ -77,7 +77,7 @@ Two plugins run at session start:
 
 Session context output includes:
 
-- **Identity section** (always): `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, credential status
+- **Identity section** (always): `github.owner`, `github.repo`, `github.platform`, credential status
 - **Trigger alerts** (when detected): `on_main_branch`, `protected_branch_with_changes`, `pair_mode_resume`, `uncommitted_work`, `stale_stash`, `merge_conflict`, `unpushed_commits`, `orphaned_worktrees`
 - **Tier 3 probes** (opt-in via `.opencode-issue-probe`): `open_pr_on_branch`, `ci_failure`, `stale_pr`
 
