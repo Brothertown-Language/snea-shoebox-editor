@@ -24,9 +24,17 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `explore` | Full conversational exploration workflow (default) | ~1000 |
-| `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ~600 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `explore` | Full conversational exploration workflow (default) | ≈1000 |
+| `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ≈600 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `explore` | ≈1000 |
+| `enforcement` | ≈600 |
+| `completion` | ≈200 |
 
 ## Invocation
 

@@ -16,11 +16,11 @@ Intelligently synchronizes guidelines, skills, and tools between repositories th
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `classify` | Classify files as core or project-specific | ~250 |
-| `sync-push` | Push core changes to target repository | ~300 |
-| `sync-pull` | Pull core changes into local repository | ~300 |
-| `issue-format` | Template for sync issue content | ~350 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `classify` | Classify files as core or project-specific | ≈250 |
+| `sync-push` | Push core changes to target repository | ≈300 |
+| `sync-pull` | Pull core changes into local repository | ≈300 |
+| `issue-format` | Template for sync issue content | ≈350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

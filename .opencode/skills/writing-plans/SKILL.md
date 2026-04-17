@@ -103,11 +103,11 @@ The spec-to-plan approval cascade still applies to combined plans:
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `create` | Create plan from approved spec; report in chat | ~800 |
-| `validate` | Check for placeholders and completeness | ~500 |
-| `retroactive` | Create plan for existing spec | ~600 |
-| `clean-room` | Generate independent plan from problem statement only | ~500 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `create` | Create plan from approved spec; report in chat | ≈800 |
+| `validate` | Check for placeholders and completeness | ≈500 |
+| `retroactive` | Create plan for existing spec | ≈600 |
+| `clean-room` | Generate independent plan from problem statement only | ≈500 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 
@@ -237,14 +237,14 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `create` | 1,598 | sub-agent |
-| `validate` | ~500 | inline |
-| `retroactive` | ~600 | inline |
-| `clean-room` | ~500 | inline |
+| Task | Words |
+|------|-------|
+| `create` | 1,598 |
+| `validate` | ≈500 |
+| `retroactive` | ≈600 |
+| `clean-room` | ≈500 |
 
 ### Result Contract (create)
 

@@ -18,9 +18,9 @@ Systematic debugging process that enforces root cause analysis, hypothesis testi
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `diagnose` | Systematic bug diagnosis workflow | ~400 |
-| `fix` | Minimal targeted fix after diagnosis | ~350 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `diagnose` | Systematic bug diagnosis workflow | ≈400 |
+| `fix` | Minimal targeted fix after diagnosis | ≈350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

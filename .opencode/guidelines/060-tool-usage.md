@@ -159,4 +159,4 @@ Invoke skills when their trigger keywords match the current task. Each skill def
 | **Priority ordering** | Process skills (approval-gate, brainstorming, writing-plans, systematic-debugging) before implementation skills |
 | **No speculative loading** | Do not load skills "just in case" — load when triggers match |
 | **Skill self-describes boundary** | Each SKILL.md defines what it covers; when in doubt, check `Triggers on:` line |
-| **Sub-agent dispatch priority** | When a SKILL.md Sub-Agent Tasks section marks a task as `sub-agent`, the main agent dispatches via `task()` instead of loading the task file inline. This keeps heavy task files out of the main agent context. Result contracts (~100-500 words) are read instead of the full task file (>1,000 words) |
+| **Sub-agent dispatch priority** | When a SKILL.md Sub-Agent Tasks section marks a task as `sub-agent`, the main agent dispatches via `task()` instead of loading the task file inline. This keeps heavy task files out of the main agent context. Result contracts (≈100-500 words) are read instead of the full task file (>1,000 words) |

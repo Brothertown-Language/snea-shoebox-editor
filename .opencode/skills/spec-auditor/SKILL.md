@@ -26,22 +26,22 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `fresh-start` | Self-containment checks | ~400 |
-| `structure` | STATUS headers, numbering, markers | ~400 |
-| `content-quality` | Reasoning, ambiguity, conflicts, scope | ~500 |
-| `traceability` | Orphan requirements/features detection | ~300 |
-| `operational` | Logging, metrics, deployment completeness | ~300 |
-| `fidelity` | Clean-room plan comparison | ~600 |
-| `concerns` | Phase structure, deployment independence | ~400 |
-| `operational-flow` | Process flow / runbook operational checks | ~400 |
-| `determinism` | Deterministic behavior and state dependency checks | ~300 |
-| `error-recovery` | Runbook error recovery and rollback checks | ~350 |
-| `principles` | Engineering principle violations from programming-principles skill | ~350 |
-| `ground-truth` | Adversarial verification of metadata claims against direct evidence | ~500 |
-| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) | ~350 |
-| `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ~350 |
-| `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ~250 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `fresh-start` | Self-containment checks | ≈400 |
+| `structure` | STATUS headers, numbering, markers | ≈400 |
+| `content-quality` | Reasoning, ambiguity, conflicts, scope | ≈500 |
+| `traceability` | Orphan requirements/features detection | ≈300 |
+| `operational` | Logging, metrics, deployment completeness | ≈300 |
+| `fidelity` | Clean-room plan comparison | ≈600 |
+| `concerns` | Phase structure, deployment independence | ≈400 |
+| `operational-flow` | Process flow / runbook operational checks | ≈400 |
+| `determinism` | Deterministic behavior and state dependency checks | ≈300 |
+| `error-recovery` | Runbook error recovery and rollback checks | ≈350 |
+| `principles` | Engineering principle violations from programming-principles skill | ≈350 |
+| `ground-truth` | Adversarial verification of metadata claims against direct evidence | ≈500 |
+| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) | ≈350 |
+| `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ≈350 |
+| `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ≈250 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 
@@ -391,26 +391,26 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `structure` | ~400 | inline |
-| `content-quality` | ~500 | inline |
-| `traceability` | ~300 | inline |
-| `operational` | ~300 | inline |
-| `fidelity` | ~600 | sub-agent |
-| `concerns` | ~400 | inline |
-| `operational-flow` | ~400 | inline |
-| `determinism` | ~300 | inline |
-| `error-recovery` | ~350 | inline |
-| `principles` | ~350 | inline |
-| `ground-truth` | ~500 | sub-agent |
-| `sub-issue-fidelity` | ~350 | inline |
-| `concern-coverage` | ~350 | inline |
-| `prose-structure` | ~250 | inline |
-| `fresh-start` | ~400 | inline |
-| `completion` | ~200 | inline |
+| Task | Words |
+|------|-------|
+| `structure` | ≈400 |
+| `content-quality` | ≈500 |
+| `traceability` | ≈300 |
+| `operational` | ≈300 |
+| `fidelity` | ≈600 |
+| `concerns` | ≈400 |
+| `operational-flow` | ≈400 |
+| `determinism` | ≈300 |
+| `error-recovery` | ≈350 |
+| `principles` | ≈350 |
+| `ground-truth` | ≈500 |
+| `sub-issue-fidelity` | ≈350 |
+| `concern-coverage` | ≈350 |
+| `prose-structure` | ≈250 |
+| `fresh-start` | ≈400 |
+| `completion` | ≈200 |
 
 **Note:** Individual subtasks are lightweight. Sub-agent dispatch is recommended for the full audit (all subtasks per document type) when running 3+ subtasks together, not for individual subtasks.
 
@@ -444,7 +444,7 @@ issue_url: <url|null>
 
 This skill is a **heavy skill** — quality audits with all subtasks consume significant context. When the main agent needs a spec audit, consider spawning a sub-agent via the `task` tool:
 
-1. Main agent loads this dispatch document (~1,278 words)
+1. Main agent loads this dispatch document (≈1,278 words)
 2. Main agent identifies which subtasks to run (baseline + conditional)
 3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use spec-auditor skill --issue N --task <subtask> with context: <session-context>")`
 4. Sub-agent loads: this SKILL.md + relevant task file(s) + required guidelines

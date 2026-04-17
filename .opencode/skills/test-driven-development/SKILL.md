@@ -18,9 +18,9 @@ Test-driven development (TDD) workflow that enforces writing tests before implem
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `red` | Write failing test for new behavior | ~200 |
-| `green` | Write minimal implementation to pass test | ~150 |
-| `refactor` | Clean up while keeping tests green | ~200 |
+| `red` | Write failing test for new behavior | ≈200 |
+| `green` | Write minimal implementation to pass test | ≈150 |
+| `refactor` | Clean up while keeping tests green | ≈200 |
 
 ## Invocation
 

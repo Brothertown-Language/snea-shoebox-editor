@@ -22,10 +22,10 @@ You are the Verification Gatekeeper. Your job is to ensure that no content ships
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `verify` | Pre-generation verification gate — dispatch section-based sub-agents to collect evidence artifacts | ~300 |
-| `revisit` | Post-generation verification pass — scan for unverified markers and attempt resolution | ~250 |
-| `enforce` | Orchestrator evidence gate — verify sub-agent output includes evidence artifacts | ~200 |
-| `completion` | Completion guarantee — document results, produce status report | ~150 |
+| `verify` | Pre-generation verification gate — dispatch section-based sub-agents to collect evidence artifacts | ≈300 |
+| `revisit` | Post-generation verification pass — scan for unverified markers and attempt resolution | ≈250 |
+| `enforce` | Orchestrator evidence gate — verify sub-agent output includes evidence artifacts | ≈200 |
+| `completion` | Completion guarantee — document results, produce status report | ≈150 |
 
 ## Invocation
 

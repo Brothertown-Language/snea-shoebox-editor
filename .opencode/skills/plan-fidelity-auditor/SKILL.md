@@ -22,10 +22,10 @@ Plan Fidelity Auditor generates a clean-room plan from the spec's problem statem
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `audit` | Full audit workflow (default) | ~600 |
-| `compare` | Compare clean-room plan against existing plan | ~500 |
-| `report` | Report findings (renamed from auto-fix) | ~300 |
-| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases | ~350 |
+| `audit` | Full audit workflow (default) | ≈600 |
+| `compare` | Compare clean-room plan against existing plan | ≈500 |
+| `report` | Report findings (renamed from auto-fix) | ≈300 |
+| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases | ≈350 |
 
 ## Invocation
 

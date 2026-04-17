@@ -75,7 +75,7 @@
 
 - For datasets exceeding 1,000 rows: use pagination (offset/keyset) for reads and batched commits for writes.
 - **CORRECTNESS OVER PERFORMANCE**: Always prioritize correct operation over insertion speeds or other optimizations. A smaller batch size that works reliably is better than a larger batch size that fails.
-- **POSTGRESQL PARAMETER LIMIT**: Batch operations using parameterized queries must stay under PostgreSQL's 65,535 parameter limit. With N columns per row, batch size must satisfy: `batch_size × N < 65535`. For 10-column inserts, maximum safe batch size is ~6,500 (use 5,000 for safety margin).
+- **POSTGRESQL PARAMETER LIMIT**: Batch operations using parameterized queries must stay under PostgreSQL's 65,535 parameter limit. With N columns per row, batch size must satisfy: `batch_size × N < 65535`. For 10-column inserts, maximum safe batch size is ≈6,500 (use 5,000 for safety margin).
 - **ESTABLISH WORKING BATCH SIZES FIRST**: Start with conservative batch sizes (500-1,000 rows). Only increase after verifying correctness at scale. Never assume large batch sizes work without testing.
 - **VALIDATE BATCH CONTENTS**: Before upserting a batch, validate that data structures match schema expectations. Catch errors early rather than mid-transaction.
 

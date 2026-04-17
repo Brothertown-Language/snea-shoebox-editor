@@ -16,9 +16,9 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `pre-pr-checklist` | Mandatory checks before PR creation (squash, changelog, branch state) | ~500 |
-| `sub-issue-collection` | Fetch and include sub-issues in PR body for autoclose | ~300 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `pre-pr-checklist` | Mandatory checks before PR creation (squash, changelog, branch state) | ≈500 |
+| `sub-issue-collection` | Fetch and include sub-issues in PR body for autoclose | ≈300 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

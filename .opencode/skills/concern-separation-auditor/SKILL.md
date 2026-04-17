@@ -18,9 +18,9 @@ Concern Separation Auditor analyzes spec phase structures to identify deployment
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `audit-phases` | Analyze phase structure for concern quality | ~400 |
-| `check-independence` | Validate deployment independence between phases | ~300 |
-| `concern-coverage` | Verify sub-issue bodies reflect Plan concern boundaries | ~350 |
+| `audit-phases` | Analyze phase structure for concern quality | ≈400 |
+| `check-independence` | Validate deployment independence between phases | ≈300 |
+| `concern-coverage` | Verify sub-issue bodies reflect Plan concern boundaries | ≈350 |
 
 ## Invocation
 

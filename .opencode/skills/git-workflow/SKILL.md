@@ -20,16 +20,16 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `pre-work` | Verify authorization, create worktree | ~420 |
-| `implementation` | Handle WIP commits during implementation | ~400 |
-| `review-prep` | Push branch, generate compare URL for review | ~560 |
-| `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
-| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ~550 |
-| `cleanup` | Delete merged branches, clean stale refs | ~800 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
-| `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ~500 |
-| `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ~50 |
-| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ~600 |
+| `pre-work` | Verify authorization, create worktree | ≈420 |
+| `implementation` | Handle WIP commits during implementation | ≈400 |
+| `review-prep` | Push branch, generate compare URL for review | ≈560 |
+| `pr-creation` | Squash, push, create PR via GitHub MCP | ≈640 |
+| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ≈550 |
+| `cleanup` | Delete merged branches, clean stale refs | ≈800 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
+| `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ≈500 |
+| `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ≈50 |
+| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ≈600 |
 
 ## Invocation
 
@@ -97,20 +97,20 @@ cleanup: Verify merge via API → Close issues
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `cleanup` | 6,457 | sub-agent |
-| `pr-creation` | 5,312 | sub-agent |
-| `review-prep` | 4,241 | sub-agent |
-| `provenance` | 3,664 | sub-agent |
-| `pre-work` | 1,898 | sub-agent |
-| `release-promotion` | 1,811 | sub-agent |
-| `rebase-pending` | 1,666 | sub-agent |
-| `implementation` | ~400 | inline |
-| `completion` | ~200 | inline |
-| `check-pr` | ~50 | inline |
+| Task | Words |
+|------|-------|
+| `cleanup` | 6,457 |
+| `pr-creation` | 5,312 |
+| `review-prep` | 4,241 |
+| `provenance` | 3,664 |
+| `pre-work` | 1,898 |
+| `release-promotion` | 1,811 |
+| `rebase-pending` | 1,666 |
+| `implementation` | ≈400 |
+| `completion` | ≈200 |
+| `check-pr` | ≈50 |
 
 ### Result Contracts (Sub-Agent Tasks)
 
@@ -206,7 +206,7 @@ session_vars:
 
 This skill is a **heavy skill** — its task files contain significant detail that pollutes context. When the main agent needs git-workflow execution, consider spawning a sub-agent via the `task` tool:
 
-1. Main agent loads this dispatch document (~570 words)
+1. Main agent loads this dispatch document (≈570 words)
 2. Main agent identifies the needed task (e.g., `pre-work`, `cleanup`)
 3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use git-workflow skill --task <task-name> with context: <session-context>")`
 4. Sub-agent loads: this SKILL.md + relevant task file + required guidelines

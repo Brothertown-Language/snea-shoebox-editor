@@ -18,9 +18,17 @@ Branch completion workflow that ensures a feature branch is fully ready for PR c
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `prepare` | Prepare branch for PR creation | ~450 |
-| `checklist` | Run completion checklist | ~350 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
+| `prepare` | Prepare branch for PR creation | ≈450 |
+| `checklist` | Run completion checklist | ≈350 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `prepare` | ≈450 |
+| `checklist` | ≈350 |
+| `completion` | ≈200 |
 
 ## Invocation
 
@@ -86,7 +94,7 @@ Implementation tracks against **plan sub-issues**, not spec sub-issues. The hier
 | "Tests pass" | Verify by running tests | `bash` to run `uv run pytest test/` → confirm exit code 0 | VERIFICATION-GAP |
 | "Lint passes" | Verify by running linter | `bash` to run `uvx ruff check src/ test/` → confirm no errors | VERIFICATION-GAP |
 | "Branch pushed to remote" | Verify remote branch exists | `bash` to run `git log origin/<branch>..HEAD` → confirm empty | MISSING-ELEMENT |
-| "All files in worktree" | Verify all changed files are under worktree.path | `bash` to run `git diff --name-only HEAD~1` → check paths | STRUCTURE-VIOLATION |
+| "All files in worktree" | Verify all changed files are under worktree.path | `bash` to run `git diff --name-only HEAD≈1` → check paths | STRUCTURE-VIOLATION |
 
 **Evidence format:**
 

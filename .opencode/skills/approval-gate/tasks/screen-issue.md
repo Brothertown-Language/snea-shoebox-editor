@@ -16,7 +16,7 @@ Per-issue screening for pre-implementation analysis. Screen a single approved is
 - Issue classified into one screening category
 - Gate 1 (sub-issue enumeration) executed if applicable
 - Gate 2 (success criteria verification) executed if applicable
-- Compact result contract produced (~100-500 words, YAML-structured)
+- Compact result contract produced (≈100-500 words, YAML-structured)
 
 ## Procedure
 
@@ -329,7 +329,7 @@ For each file path or symbol mentioned in the issue:
 
 ### Step 10: Produce Result Contract
 
-The result contract MUST be YAML-structured, compact (~100-500 words):
+The result contract MUST be YAML-structured, compact (≈100-500 words):
 
 ```yaml
 status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW

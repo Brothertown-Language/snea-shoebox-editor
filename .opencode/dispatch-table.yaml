@@ -395,10 +395,10 @@ sub_task_invocation:
   - examples:
       - skill: "git-workflow"
         task: "pre-work"
-        description: "Load only pre-work task (~80 lines)"
+        description: "Load only pre-work task (≈80 lines)"
       - skill: "git-workflow"
         task: "pr-creation"
-        description: "Load only PR creation task (~80 lines)"
+        description: "Load only PR creation task (≈80 lines)"
   - rationale: "Reduces context window pollution by loading only relevant workflow phases"
   - usage: "/skill <skill-name> --task <task-name> for sub-task invocation"
   - overview: "/skill <skill-name> (no --task) for skill overview only"

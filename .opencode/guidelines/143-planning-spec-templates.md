@@ -61,7 +61,7 @@ This minimal spec works because the change is small and self-explanatory. Separa
 >
 > **Problem:** Article metadata API calls average 150ms response time, causing slow page loads. 85% cache hit potential identified.
 >
-> **Context:** Current queries hit PostgreSQL directly. Most queries target the same ~1000 recently-published articles. Article metadata changes infrequently. Redis already deployed per infra team.
+> **Context:** Current queries hit PostgreSQL directly. Most queries target the same ≈1000 recently-published articles. Article metadata changes infrequently. Redis already deployed per infra team.
 >
 > **Fix Approach:** Redis as cache layer with 1-hour TTL. Fallback to DB when Redis unavailable.
 >
@@ -106,7 +106,7 @@ ______________________________________________________________________
 
 ### Standard Bug Fix Spec (needs investigation context)
 
-> **Problem:** OAuth2 refresh_token fails on expiry, causing unexpected logout for ~15% of users who don't log in for more than 7 days.
+> **Problem:** OAuth2 refresh_token fails on expiry, causing unexpected logout for ≈15% of users who don't log in for more than 7 days.
 >
 > **Expected Behavior:** Automatically re-authenticate using stored credentials when refresh token expires.
 >

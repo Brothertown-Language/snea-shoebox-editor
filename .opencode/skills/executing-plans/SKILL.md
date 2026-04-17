@@ -40,11 +40,11 @@ phase_progress:
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `start` | Dispatch to divide-and-conquer/assemble-work for implementation | ~200 |
-| `step` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
-| `progress` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
-| `verify` | Redirects to verification-before-completion | ~100 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `start` | Dispatch to divide-and-conquer/assemble-work for implementation | ≈200 |
+| `step` | Legacy — redirects to divide-and-conquer/orchestrate | ≈100 |
+| `progress` | Legacy — redirects to divide-and-conquer/orchestrate | ≈100 |
+| `verify` | Redirects to verification-before-completion | ≈100 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

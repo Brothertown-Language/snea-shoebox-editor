@@ -26,8 +26,8 @@ compatibility: opencode
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `principles` | Complete reference for all 20 principles with enforcement levels, apply/relax context, and tradeoff notes | ~2,200 |
-| `application-guide` | How to apply principles during design, implementation, and review; context prioritization table and red flags | ~400 |
+| `principles` | Complete reference for all 20 principles with enforcement levels, apply/relax context, and tradeoff notes | ≈2,200 |
+| `application-guide` | How to apply principles during design, implementation, and review; context prioritization table and red flags | ≈400 |
 
 ## Invocation
 

@@ -18,9 +18,9 @@ Creating skills IS Test-Driven Development applied to process documentation. Wri
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `init` | Create new skill from template using init_skill.py | ~200 |
-| `package` | Package skill into distributable zip | ~150 |
-| `validate` | Validate skill structure and format | ~100 |
+| `init` | Create new skill from template using init_skill.py | ≈200 |
+| `package` | Package skill into distributable zip | ≈150 |
+| `validate` | Validate skill structure and format | ≈100 |
 
 ## Invocation
 
@@ -87,7 +87,7 @@ Strongly encourage sub-agents and sub-tasks for skill operations that risk consu
 - **Sub-task isolation:** Skills that perform analysis, audits, or multi-step workflows should dispatch work to sub-tasks. The main session receives a minimal result, not intermediate reasoning.
 - **Why:** LLM context windows are finite. A skill that consumes 2000 words of intermediate reasoning in the main session leaves less room for subsequent work. Sub-tasks isolate that consumption.
 - **Pattern:** Skill invocation spawns a sub-task → sub-task processes and produces compact result → main session receives result only.
-- **When to use sub-tasks:** Any skill task exceeding ~300 words of output, any multi-file analysis, any workflow with 3+ sequential operations.
+- **When to use sub-tasks:** Any skill task producing output, any multi-file analysis, any workflow with 3+ sequential operations. Sub-agent-first dispatch is mandatory — all task dispatches go through sub-agents, no inline exceptions.
 
 ## Worktree Awareness Requirement
 

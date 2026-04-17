@@ -50,12 +50,12 @@ GitBucket platform implementation using Python client. Implements a GitHub-compa
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `issue-operations` | Issue CRUD patterns, create/update/list workarounds | ~500 |
-| `label-operations` | Label CRUD, auto-creation, post-creation limitations | ~400 |
-| `error-recovery` | Error handling, retry logic, credential failures | ~320 |
-| `mcp-operations` | MCP tool mapping, alternative API paths | ~250 |
-| `repository-operations` | Repository CRUD, branch operations | ~300 |
-| `session-integration` | Session init integration, env var detection | ~200 |
+| `issue-operations` | Issue CRUD patterns, create/update/list workarounds | ≈500 |
+| `label-operations` | Label CRUD, auto-creation, post-creation limitations | ≈400 |
+| `error-recovery` | Error handling, retry logic, credential failures | ≈320 |
+| `mcp-operations` | MCP tool mapping, alternative API paths | ≈250 |
+| `repository-operations` | Repository CRUD, branch operations | ≈300 |
+| `session-integration` | Session init integration, env var detection | ≈200 |
 
 ## Authentication
 

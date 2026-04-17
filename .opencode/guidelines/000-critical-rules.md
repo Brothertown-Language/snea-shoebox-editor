@@ -670,7 +670,7 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 - 🚫 FORBIDDEN: Fetching all approved issue bodies into orchestrator context before sub-agent dispatch
 - 🚫 FORBIDDEN: Running screening logic inline when approval set size > 3
 - ✅ REQUIRED: Dispatch one `screen-issue` sub-agent per approved issue
-- ✅ REQUIRED: Orchestrator receives only compact result contracts (~100-500 words each)
+- ✅ REQUIRED: Orchestrator receives only compact result contracts (≈100-500 words each)
 - ✅ REQUIRED: Cross-issue merge and dependency graph built from result contracts, not raw issue bodies
 
 **Why 3 as the threshold:** Single approvals and pairs can reasonably be screened inline. Three or more issues risk context exhaustion and require sub-agent isolation. The `screen-issue` sub-agent architecture exists precisely to prevent the orchestrator from blowing out its context window on authorization sets.
@@ -711,14 +711,14 @@ API calls that mutate state must use the platform's dedicated API client (e.g., 
 
 ## Sub-Agent Extraction Pattern
 
-Skill task files exceeding 1,000 words are extracted into sub-agent execution per the pattern established by spec #984. Each SKILL.md contains a "Sub-Agent Tasks" section with execution mode tables, result contract schemas, and dispatch context schemas. The main agent loads only SKILL.md files and reads compact result contracts (~100-500 words), never loading task files >1,000 words directly.
+All skill task dispatches follow a sub-agent-first paradigm. The main agent is a pure orchestrator that never loads task files directly — it dispatches every task via `task(subagent_type="general")` and receives compact result contracts. Each SKILL.md contains a "Sub-Agent Tasks" section with word-count context, result contract schemas, and dispatch context schemas. The main agent loads only SKILL.md files and reads compact result contracts (≈100-500 words), never loading task files directly.
 
-- Tasks >1,000 words → sub-agent dispatch via `task(subagent_type="general")`
-- Tasks ≤1,000 words → inline execution (spawning overhead exceeds inline cost)
+- All tasks → sub-agent dispatch via `task(subagent_type="general")`
+- Word counts in tables are for context estimation only, not dispatch selection
 - Result contracts reference task files as source of truth (no duplication)
 - Dispatch context MUST include `worktree.path`, `github.owner`, `github.repo`, `dev.name`, `dev.email`
 
-**See each skill's SKILL.md → "Sub-Agent Tasks" section for execution mode tables and result contract schemas.**
+**See each skill's SKILL.md → "Sub-Agent Tasks" section for word-count context and result contract schemas.**
 
 ______________________________________________________________________
 

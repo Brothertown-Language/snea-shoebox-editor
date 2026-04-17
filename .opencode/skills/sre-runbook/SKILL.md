@@ -22,9 +22,9 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `generate` | Generate an operational runbook for a given domain and scenario | ~900 |
-| `track` | Track an incident or change via GitHub Issue with structured labels | ~450 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `generate` | Generate an operational runbook for a given domain and scenario | ≈900 |
+| `track` | Track an incident or change via GitHub Issue with structured labels | ≈450 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

@@ -20,22 +20,22 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `verify-qa-mode` | Detect spec-less implementation requests, switch to Q/A mode | ~800 |
-| `verify-authorization` | Check explicit auth and needs-approval label; delegates branch creation to `git-workflow --task pre-work` | ~400 |
-| `verify-sub-issues` | Verify sub-issue structure for multi-task specs | ~480 |
-| `verify-codebase` | Re-evaluate codebase state, detect staleness | ~400 |
-| `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ~400 |
-| `verify-blockers` | Check for blocking issues/dependencies | ~320 |
-| `verify-open-questions` | Check for unresolved questions in spec | ~370 |
-| `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ~250 |
-| `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ~300 |
-| `verify-closed-issue` | Verify that a closed issue was legitimately closed via merged PR; enforce "closed ≠ verified" rule | ~350 |
-| `screen-issue` | Per-issue screening for pre-implementation analysis (Gate 1 + Gate 2 + screening categories); dispatched as parallel sub-agents | ~3,000 |
-| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-work | ~500 |
-| `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ~350 |
-| `reconcile-issue-graph` | Act on graph traversal findings: auto-close verified-complete, reopen verified-incomplete, flag uncertain | ~600 |
-| `post-implementation` | Push branch, generate compare URL, HALT | ~480 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
+| `verify-qa-mode` | Detect spec-less implementation requests, switch to Q/A mode | ≈800 |
+| `verify-authorization` | Check explicit auth and needs-approval label; delegates branch creation to `git-workflow --task pre-work` | ≈400 |
+| `verify-sub-issues` | Verify sub-issue structure for multi-task specs | ≈480 |
+| `verify-codebase` | Re-evaluate codebase state, detect staleness | ≈400 |
+| `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ≈400 |
+| `verify-blockers` | Check for blocking issues/dependencies | ≈320 |
+| `verify-open-questions` | Check for unresolved questions in spec | ≈370 |
+| `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ≈250 |
+| `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ≈300 |
+| `verify-closed-issue` | Verify that a closed issue was legitimately closed via merged PR; enforce "closed ≠ verified" rule | ≈350 |
+| `screen-issue` | Per-issue screening for pre-implementation analysis (Gate 1 + Gate 2 + screening categories); dispatched as parallel sub-agents | ≈3,000 |
+| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-work | ≈500 |
+| `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ≈350 |
+| `reconcile-issue-graph` | Act on graph traversal findings: auto-close verified-complete, reopen verified-incomplete, flag uncertain | ≈600 |
+| `post-implementation` | Push branch, generate compare URL, HALT | ≈480 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈150 |
 
 ## Invocation
 
@@ -171,26 +171,26 @@ This check is invoked:
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `verify-authorization` | 3,319 | sub-agent |
-| `verify-qa-mode` | 2,188 | sub-agent |
-| `verify-already-implemented` | 1,902 | sub-agent |
-| `verify-closed-issue` | 1,763 | sub-agent |
-| `verify-sub-issues` | 1,449 | sub-agent |
-| `post-implementation` | 1,183 | sub-agent |
-| `screen-issue` | 3,037 | sub-agent |
-| `pre-implementation-analysis` | ~3,100 | sub-agent (receives screen-issue results) |
-| `verify-fix-spec` | 1,017 | sub-agent |
-| `verify-blockers` | 722 | inline |
-| `verify-codebase` | 726 | inline |
-| `verify-open-questions` | 531 | inline |
-| `reconcile-issue-graph` | ~600 | inline |
-| `completion` | 769 | inline |
-| `search-prompt-fail` | ~300 | inline |
-| `verify-schema-api-knowledge` | ~350 | inline |
+| Task | Words |
+|------|-------|
+| `verify-authorization` | 3,319 |
+| `verify-qa-mode` | 2,188 |
+| `verify-already-implemented` | 1,902 |
+| `verify-closed-issue` | 1,763 |
+| `verify-sub-issues` | 1,449 |
+| `post-implementation` | 1,183 |
+| `screen-issue` | 3,037 |
+| `pre-implementation-analysis` | ≈3,100 |
+| `verify-fix-spec` | 1,017 |
+| `verify-blockers` | 722 |
+| `verify-codebase` | 726 |
+| `verify-open-questions` | 531 |
+| `reconcile-issue-graph` | ≈600 |
+| `completion` | 769 |
+| `search-prompt-fail` | ≈300 |
+| `verify-schema-api-knowledge` | ≈350 |
 
 ### Result Contracts (Sub-Agent Tasks)
 

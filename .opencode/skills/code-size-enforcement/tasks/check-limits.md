@@ -22,7 +22,7 @@ For word counts, use `wc -w` on specific function ranges.
 # Count total words
 wc -w src/module.py
 
-# Count non-blank words (for ~750-word limit)
+# Count non-blank words (for ≈750-word limit)
 grep -c '.' src/module.py
 ```
 
@@ -34,9 +34,9 @@ Use `the-notebook-mcp_notebook_get_outline` to see cell structure, then `the-not
 
 | Artifact | Limit | Measurement |
 |----------|-------|-------------|
-| **Python functions** | ~100 words | Excluding docstrings, imports, blank lines |
-| **Notebook cells** | ~120 words | Including whitespace, excluding cell header |
-| **Source files** | ~750 words | Total file, excluding blank lines and file-start comments |
+| **Python functions** | ≈100 words | Excluding docstrings, imports, blank lines |
+| **Notebook cells** | ≈120 words | Including whitespace, excluding cell header |
+| **Source files** | ≈750 words | Total file, excluding blank lines and file-start comments |
 
 ## What Counts Toward Limits
 

@@ -181,16 +181,16 @@ Findings from evidence verification follow the three-tier model:
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `write` | 1,410 | sub-agent |
-| `requirements` | ~500 | inline |
-| `decompose` | ~400 | inline |
-| `traceability` | ~300 | inline |
-| `risk` | ~400 | inline |
-| `change-control` | ~300 | inline |
+| Task | Words |
+|------|-------|
+| `write` | 1,410 |
+| `requirements` | ≈500 |
+| `decompose` | ≈400 |
+| `traceability` | ≈300 |
+| `risk` | ≈400 |
+| `change-control` | ≈300 |
 
 ### Result Contract (write)
 
