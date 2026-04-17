@@ -22,9 +22,17 @@ You are a Verification Gatekeeper. Your focus is ensuring NO completion claim wi
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `verify` | Verify all success criteria have evidence | ~700 |
-| `collect` | Collect evidence for incomplete criteria | ~500 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
+| `verify` | Verify all success criteria have evidence | ≈700 |
+| `collect` | Collect evidence for incomplete criteria | ≈500 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈150 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `verify` | ≈700 |
+| `collect` | ≈500 |
+| `completion` | ≈150 |
 
 ## Invocation
 

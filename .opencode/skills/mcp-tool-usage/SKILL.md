@@ -16,7 +16,7 @@ Tool Priority Enforcer ensuring all operations use the correct tool according to
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `selection-guide` | Decision trees for Python code, file ops, notebooks | ~500 |
+| `selection-guide` | Decision trees for Python code, file ops, notebooks | ≈500 |
 
 ## Invocation
 

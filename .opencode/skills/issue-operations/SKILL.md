@@ -47,16 +47,16 @@ issue-operations/                     # Dispatcher — workflow logic, platform 
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `pre-creation` | Validate before creating issue (conflicts, superseded, staleness) | ~240 |
-| `single-task-check` | Determine if spec needs a plan issue (multi-task) or is single-task | ~160 |
-| `creation` | Create issue with proper title, labels, byline via platform routing | ~200 |
-| `post-creation` | Invoke auditors, trigger plan creation for multi-task specs | ~180 |
-| `comment` | Channel routing — substantive comment gate, format, posting | ~400 |
-| `close` | Post-merge closure with parent/child verification | ~250 |
-| `link-sub-issue` | Sub-issue linking via platform API or comment-based fallback | ~200 |
-| `verify-merge` | Verify PR merge before closing issues | ~200 |
-| `capabilities` | Probe platform capabilities (dynamic MCP query or static manifest) | ~150 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
+| `pre-creation` | Validate before creating issue (conflicts, superseded, staleness) | ≈240 |
+| `single-task-check` | Determine if spec needs a plan issue (multi-task) or is single-task | ≈160 |
+| `creation` | Create issue with proper title, labels, byline via platform routing | ≈200 |
+| `post-creation` | Invoke auditors, trigger plan creation for multi-task specs | ≈180 |
+| `comment` | Channel routing — substantive comment gate, format, posting | ≈400 |
+| `close` | Post-merge closure with parent/child verification | ≈250 |
+| `link-sub-issue` | Sub-issue linking via platform API or comment-based fallback | ≈200 |
+| `verify-merge` | Verify PR merge before closing issues | ≈200 |
+| `capabilities` | Probe platform capabilities (dynamic MCP query or static manifest) | ≈150 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
 
 ## Invocation
 
@@ -299,22 +299,20 @@ For the provenance issue body format and tier-specific details, see `git-workflo
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `pre-creation` | ~240 | inline |
-| `single-task-check` | ~160 | inline |
-| `creation` | ~200 | inline |
-| `post-creation` | ~180 | inline |
-| `comment` | ~400 | inline |
-| `close` | ~250 | inline |
-| `link-sub-issue` | ~200 | inline |
-| `verify-merge` | ~200 | inline |
-| `capabilities` | ~150 | inline |
-| `completion` | ~200 | inline |
-
-All tasks are under 1,000 words — inline execution. No sub-agent dispatch needed.
+| Task | Words |
+|------|-------|
+| `pre-creation` | ≈240 |
+| `single-task-check` | ≈160 |
+| `creation` | ≈200 |
+| `post-creation` | ≈180 |
+| `comment` | ≈400 |
+| `close` | ≈250 |
+| `link-sub-issue` | ≈200 |
+| `verify-merge` | ≈200 |
+| `capabilities` | ≈150 |
+| `completion` | ≈200 |
 
 ## Live Verification: Issue Operations Evidence (MANDATORY)
 

@@ -10,14 +10,14 @@ compatibility: opencode
 
 ## Overview
 
-Ensures code artifacts stay within size limits for maintainability and readability. Covers Python functions (~100 words), notebook cells (~120 words), and source files (~750 words). Grandfather policy exempts existing files; only new and modified files must comply.
+Ensures code artifacts stay within size limits for maintainability and readability. Covers Python functions (≈100 words), notebook cells (≈120 words), and source files (≈750 words). Grandfather policy exempts existing files; only new and modified files must comply.
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `check-limits` | Measure and verify size limits before commit | ~300 |
-| `decompose` | Decompose oversized functions, cells, or files | ~400 |
+| `check-limits` | Measure and verify size limits before commit | ≈300 |
+| `decompose` | Decompose oversized functions, cells, or files | ≈400 |
 
 ## Invocation
 
@@ -29,9 +29,9 @@ Ensures code artifacts stay within size limits for maintainability and readabili
 
 | Artifact | Limit | Measurement |
 |----------|-------|-------------|
-| **Python functions** | ~100 words | `wc -w` on function body, excluding docstrings, imports, blank lines |
-| **Notebook cells** | ~120 words | `wc -w` on cell source, excluding cell header |
-| **Source files** | ~750 words | `wc -w` on file, excluding blank lines and file-start comments |
+| **Python functions** | ≈100 words | `wc -w` on function body, excluding docstrings, imports, blank lines |
+| **Notebook cells** | ≈120 words | `wc -w` on cell source, excluding cell header |
+| **Source files** | ≈750 words | `wc -w` on file, excluding blank lines and file-start comments |
 
 ## What Counts and Doesn't Count
 
@@ -55,9 +55,9 @@ Ensures code artifacts stay within size limits for maintainability and readabili
 
 | Pattern | Limit |
 |---------|-------|
-| Monolithic functions | > ~100 words |
-| Monolithic notebook cells | > ~120 words |
-| Monolithic files | > ~750 words |
+| Monolithic functions | > ≈100 words |
+| Monolithic notebook cells | > ≈120 words |
+| Monolithic files | > ≈750 words |
 | Deep nesting | > 3 levels |
 | God classes/files | Single file importing many unrelated modules |
 

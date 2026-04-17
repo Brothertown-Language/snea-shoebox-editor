@@ -64,6 +64,37 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
   }
 }
 
+let cachedContextOutput: string | null = null;
+let contextCacheTimestamp = 0;
+
+async function runSessionContext($: PluginInput["$"]): Promise<string> {
+  if (cachedContextOutput && Date.now() - contextCacheTimestamp < CACHE_TTL_MS) {
+    return cachedContextOutput;
+  }
+
+  try {
+    const result = await $.nothrow()`uv run .opencode/scripts/session_context.py`;
+    const stdout = result.text();
+
+    if (result.exitCode !== 0) {
+      console.error(`[session-enforcement] session_context.py exited with code ${result.exitCode}: ${result.stderr.toString()}`);
+      return "";
+    }
+
+    if (!stdout || stdout.trim().length === 0) {
+      return "";
+    }
+
+    cachedContextOutput = stdout;
+    contextCacheTimestamp = Date.now();
+
+    return stdout;
+  } catch (err) {
+    console.error("[session-enforcement] Failed to run session_context.py:", err);
+    return "";
+  }
+}
+
 interface ProjectMetadata {
   name: string;
   version: string;
@@ -467,6 +498,12 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       const warning = buildFrontmatterWarning(frontmatterErrors);
       if (warning) {
         output.system.push(warning);
+      }
+
+      // Inject session context (identity + triggers) from session_context.py
+      const contextOutput = await runSessionContext(input.$);
+      if (contextOutput) {
+        output.system.push(contextOutput);
       }
     },
 

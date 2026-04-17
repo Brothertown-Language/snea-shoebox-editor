@@ -20,16 +20,21 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `pre-work` | Verify authorization, create worktree | ~420 |
-| `implementation` | Handle WIP commits during implementation | ~400 |
-| `review-prep` | Push branch, generate compare URL for review | ~560 |
-| `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
-| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ~550 |
-| `cleanup` | Delete merged branches, clean stale refs | ~800 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~200 |
-| `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ~500 |
-| `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ~50 |
-| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ~600 |
+| `pre-work` | Verify authorization, create worktree | ≈420 |
+| `implementation` | Handle WIP commits during implementation | ≈400 |
+| `review-prep` | Push branch, generate compare URL for review | ≈560 |
+| `pr-creation` | Squash, push, create PR via GitHub MCP | ≈640 |
+| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ≈550 |
+| `cleanup` | Delete merged branches, clean stale refs | ≈800 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
+| `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ≈500 |
+| `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ≈50 |
+| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ≈600 |
+| `pair-pre-work` | Detect pair mode, WIP-commit switch instead of worktree | ≈400 |
+| `pair-commit` | Commit with [pair-mode] co-author trailers, issue association | ≈350 |
+| `pair-pr-creation` | Squash + PR with [pair-mode] trailers targeting dev | ≈300 |
+| `pair-cleanup` | Branch deletion after merge, stash cleanup | ≈350 |
+| `pair-mode-resume` | Detect and report on pair-* branch at session start | ≈300 |
 
 ## Invocation
 
@@ -43,6 +48,11 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 - `/skill git-workflow --task check-pr` - When user says "check pr" / "check prs" / "check pull request(s)"
 - `/skill git-workflow --task provenance` - Create provenance tracking in submodule repos
 - `/skill git-workflow --task completion` - Invoke when workflow halts at any point
+- `/skill git-workflow --task pair-pre-work` - Detect pair mode from branch prefix, WIP-commit switch
+- `/skill git-workflow --task pair-commit` - Commit with [pair-mode] co-author trailers
+- `/skill git-workflow --task pair-pr-creation` - Squash + create PR with [pair-mode] trailers
+- `/skill git-workflow --task pair-cleanup` - Cleanup after pair-mode PR merge
+- `/skill git-workflow --task pair-mode-resume` - Resume pair mode session on existing pair-* branch
 - `/skill git-workflow` - Overview only
 
 **⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (status report, URL, verification gates) are never skipped. It is idempotent and safe to invoke multiple times.
@@ -97,20 +107,25 @@ cleanup: Verify merge via API → Close issues
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `cleanup` | 6,457 | sub-agent |
-| `pr-creation` | 5,312 | sub-agent |
-| `review-prep` | 4,241 | sub-agent |
-| `provenance` | 3,664 | sub-agent |
-| `pre-work` | 1,898 | sub-agent |
-| `release-promotion` | 1,811 | sub-agent |
-| `rebase-pending` | 1,666 | sub-agent |
-| `implementation` | ~400 | inline |
-| `completion` | ~200 | inline |
-| `check-pr` | ~50 | inline |
+| Task | Words |
+|------|-------|
+| `cleanup` | 6,457 |
+| `pr-creation` | 5,312 |
+| `review-prep` | 4,241 |
+| `provenance` | 3,664 |
+| `pre-work` | 1,898 |
+| `release-promotion` | 1,811 |
+| `rebase-pending` | 1,666 |
+| `implementation` | ≈400 |
+| `pair-pre-work` | ≈400 |
+| `pair-commit` | ≈350 |
+| `pair-pr-creation` | ≈300 |
+| `pair-cleanup` | ≈350 |
+| `pair-mode-resume` | ≈300 |
+| `completion` | ≈200 |
+| `check-pr` | ≈50 |
 
 ### Result Contracts (Sub-Agent Tasks)
 
@@ -189,6 +204,60 @@ conflicts_detected: [{pr: <N>, tier: 1|2|3}]
 conflicts_resolved: [<N>]
 ```
 
+#### pair-pre-work
+
+```yaml
+status: DONE | BLOCKED
+task: pair-pre-work
+pair_mode: bool
+branch_name: <str>
+wip_commit_created: bool
+working_directory: <path>
+```
+
+#### pair-commit
+
+```yaml
+status: DONE | BLOCKED
+task: pair-commit
+commit_hash: <sha>
+issue_referenced: <N|null>
+pair_mode: true
+```
+
+#### pair-pr-creation
+
+```yaml
+status: DONE | BLOCKED
+task: pair-pr-creation
+pr_number: <N|null>
+pr_url: <url|null>
+squash_performed: bool
+pair_mode: true
+```
+
+#### pair-cleanup
+
+```yaml
+status: DONE
+task: pair-cleanup
+branches_deleted: [<name>]
+stashes_preserved: [<name>]
+pr_merge_verified: bool
+```
+
+#### pair-mode-resume
+
+```yaml
+status: DONE | SKIP
+task: pair-mode-resume
+pair_branch: <str|null>
+issue_number: <N|null>
+changes_summary: <str>
+uncommitted_count: <int>
+unpushed_count: <int>
+```
+
 ### Dispatch Context Schema
 
 ```yaml
@@ -206,7 +275,7 @@ session_vars:
 
 This skill is a **heavy skill** — its task files contain significant detail that pollutes context. When the main agent needs git-workflow execution, consider spawning a sub-agent via the `task` tool:
 
-1. Main agent loads this dispatch document (~570 words)
+1. Main agent loads this dispatch document (≈570 words)
 2. Main agent identifies the needed task (e.g., `pre-work`, `cleanup`)
 3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use git-workflow skill --task <task-name> with context: <session-context>")`
 4. Sub-agent loads: this SKILL.md + relevant task file + required guidelines
@@ -304,6 +373,64 @@ Before provenance tracking, each submodule's host platform is detected from its 
 - Unknown → Tier 3 (no API available)
 
 Detection results are cached for the session to avoid redundant API calls.
+
+## Pair Mode
+
+### Mode Detection
+
+Pair mode is detected from the branch name prefix:
+
+| Branch Pattern | Mode | Working Directory |
+|---|---|---|
+| `pair-feature/123-xyz` | Dev-pair | Main project dir |
+| `pair-spec/456-abc` | Dev-pair | Main project dir |
+| `feature/789-xyz` | Autonomous | `.worktrees/` |
+| `spec/789-abc` | Autonomous | `.worktrees/` |
+| `dev` or `main` | None | Prompt to create/switch |
+
+The `pair-` prefix IS the mode signal. No state files needed — branch name carries everything.
+
+### Pair Mode vs Autonomous Mode
+
+| Aspect | Autonomous Mode | Pair Mode |
+|--------|----------------|-----------|
+| Branch prefix | `feature/`, `spec/` | `pair-` |
+| Working directory | `.worktrees/` | Main project dir |
+| Branch switching | Worktree per branch | WIP commit + checkout |
+| Worktree safety | Tier 1 mandate | Tier 2 — developer present |
+| Commit trailers | Standard co-author | `[pair-mode]` tag |
+| PR workflow | Same squash workflow | Same squash workflow |
+
+### Pair Mode Branch Discipline
+
+1. **Always use `pair-` prefix** — no exceptions
+2. **Never operate in `.worktrees/`** when pair mode is active
+3. **WIP commits before branch switches** — never leave uncommitted changes on a branch switch
+4. **Commit trailers always include `[pair-mode]`** — distinguishes from autonomous commits
+5. **PR body uses `Implements #N`** — never `Fixes` or `Closes` (avoids premature closure)
+
+### Pair Mode Session Start
+
+The `session_context.py` plugin detects pair mode at session start and injects context:
+- Identity section (always): GIT_OWNER, GIT_REPO, GIT_PLATFORM, credential status
+- Pair mode resume context: branch name, related issue, diff summary
+- Trigger warnings: on_main_branch, protected_branch_with_changes, uncommitted_work
+
+### Pair Mode Task Sequence
+
+```
+Session start → pair-mode-resume detects pair-* branch
+    ↓
+pair-pre-work: WIP-commit switch (no worktree)
+    ↓
+(pair-commits as needed during work)
+    ↓
+pair-pr-creation: Squash → Push → Create PR
+    ↓
+(Developer merges PR)
+    ↓
+pair-cleanup: Delete branch, clean stashes
+```
 
 ## Cross-References
 

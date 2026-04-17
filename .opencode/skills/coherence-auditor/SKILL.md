@@ -19,11 +19,11 @@ LLM Coherence Auditor ensuring guidelines, skills, and AI agent behavior work to
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `extract-scan` | Scan guidelines for skill candidates | ~450 |
-| `extract-analyze` | Calculate metrics and rank candidates | ~380 |
-| `maintenance-detect` | Detect drift from baseline | ~370 |
-| `maintenance-verify` | Verify guideline-skill references | ~310 |
-| `create-report` | Generate and attach audit report | ~400 |
+| `extract-scan` | Scan guidelines for skill candidates | ≈450 |
+| `extract-analyze` | Calculate metrics and rank candidates | ≈380 |
+| `maintenance-detect` | Detect drift from baseline | ≈370 |
+| `maintenance-verify` | Verify guideline-skill references | ≈310 |
+| `create-report` | Generate and attach audit report | ≈400 |
 
 ## Invocation
 

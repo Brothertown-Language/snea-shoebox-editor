@@ -44,7 +44,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 | `check-drift` | Detect drift between masters and copies | Periodic validation, before syncs |
 | `status-report` | Show sync status for all fragments | Overview of fragment health |
 | `resolve-conflict` | Handle merge conflicts | When drift is detected |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

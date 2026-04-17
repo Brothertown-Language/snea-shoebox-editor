@@ -24,15 +24,26 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `explore` | Full conversational exploration workflow (default) | ~1000 |
-| `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ~600 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `explore` | Full conversational exploration workflow (default) | ≈1000 |
+| `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ≈600 |
+| `cross-scope` | Cross-spec scope search — check for overlapping specs before exploration | ≈350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `explore` | ≈1000 |
+| `enforcement` | ≈600 |
+| `cross-scope` | ≈350 |
+| `completion` | ≈200 |
 
 ## Invocation
 
 - `/skill brainstorming` — Start exploration workflow
 - `/skill brainstorming --task explore` — Same as above
 - `/skill brainstorming --task enforcement` — Enforcement rules and completion criteria
+- `/skill brainstorming --task cross-scope` — Cross-spec scope search (check for overlapping specs before exploration)
 - `/skill brainstorming --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol

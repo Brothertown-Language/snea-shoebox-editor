@@ -22,7 +22,7 @@ Validate spec before creating GitHub Issue to prevent conflicts, superseded issu
 
 ## Procedure
 
-### Step 1: Check for Superseding Issues
+### Step 1: Check for Superseding Issues and Overlap
 
 **Query for all open `[SPEC]`, `[SPEC-FIX]`, and `[SPEC-ENHANCEMENT]` issues:**
 
@@ -30,16 +30,57 @@ Validate spec before creating GitHub Issue to prevent conflicts, superseded issu
 github_list_issues(owner, repo, state="open")
 ```
 
+For each open spec issue, perform overlap analysis at three levels:
+
+#### 1a: Title/Objective Overlap (Quick Filter)
+
+Compare title and objectives with the new spec title. This is a fast initial filter.
+
+#### 1b: File/Symbol/Concern-Level Overlap (Mandatory Deep Analysis)
+
+For specs that pass the quick filter, extract and compare:
+
+- **File references:** Extract file paths from affected-files, file_references, or code path sections
+- **Symbol references:** Extract function, class, and module names referenced in the spec body
+- **Concern boundaries:** Extract the concern area each phase addresses (what problem each phase solves)
+
+Use `srclight_get_dependents` or `srclight_get_callers` where possible to verify actual dependencies overlap, not just spec-claimed overlap.
+
+#### 1c: Classify Overlap Using Four-Tier Model
+
+| Classification | Criteria | Pre-creation Action |
+|---------------|----------|-------------------|
+| **FULL-SUPERSESSION** | Existing spec B's scope entirely covers the new spec's scope (B's files ⊇ new files, B's concerns ⊇ new concerns, all new success criteria ⊇ B's) | **BLOCK creation** — HALT and report: "Existing spec #N fully covers this scope. Use that spec instead of creating a new one." |
+| **PARTIAL-OVERLAP** | Existing spec shares file_references or symbol_references with the new spec, but has different core concerns | **Surface to user** — Report: "Spec #N partially overlaps — shared files: [list]. Consider scoping the new spec to avoid overlap." |
+| **CONFLICT-RISK** | Existing spec modifies same files in conflicting ways (different intent for same code) | **Surface to user** — Report: "Spec #N conflicts on [files]. Coordinate before creating." |
+| **INDEPENDENT** | No meaningful overlap in files, symbols, or concerns | **Proceed** — No action needed |
+
+**Evidence artifacts (MANDATORY):**
+
+```
+Check: [existing spec #N overlap with new spec]
+Tool: github_issue_read(method=get, issue_number=N) + srclight_get_dependents/srclight_get_callers
+Result: [shared files, shared symbols, overlap classification]
+Classification: [FULL-SUPERSESSION|PARTIAL-OVERLAP|CONFLICT-RISK|INDEPENDENT]
+Action: [BLOCK|surface|surface|proceed]
+```
+
+**Key change from previous behavior:** Title/objective overlap alone is insufficient. File, symbol, and concern-level analysis MUST be performed before classifying overlap. The four-tier model (FULL-SUPERSESSION, PARTIAL-OVERLAP, CONFLICT-RISK, INDEPENDENT) replaces the previous binary overlap/superseded classification.
+
 For each open spec issue:
-1. Compare title/objectives with new spec
-2. If superseding issue found:
+1. Compare file references, symbol references, and concern boundaries with new spec
+2. If FULL-SUPERSESSION found:
    - HALT
-   - Report conflict: "Later issue #N supersedes this spec"
-   - Do NOT proceed with creation
-3. If overlapping/conflicting issue found:
+   - Report: "Existing spec #N fully covers this scope" with overlapping file/symbol/concern evidence
+   - Do NOT proceed with creation — recommend using the existing spec
+3. If PARTIAL-OVERLAP found:
+   - WARN
+   - Report: "Spec #N partially overlaps — shared files: [list], shared symbols: [list]"
+   - Suggest resolution: scope the new spec to avoid overlapping concerns
+4. If CONFLICT-RISK found:
    - HALT
-   - Report conflict: "Issue #N has overlapping objectives"
-   - Suggest resolution
+   - Report: "Spec #N conflicts on [files/symbols] with different intent"
+   - Suggest resolution: coordinate before creating
 
 ### Step 2: Check for Staleness
 
@@ -109,8 +150,9 @@ The check is content-coverage, not structural conformity. A spec that covers all
 
 | Issue | Resolution |
 |-------|------------|
-| Superseding issue found | HALT, report conflict, suggest closing superseded spec |
-| Conflicting objectives | HALT, suggest reconciling or splitting scopes |
+| Superseding spec found (FULL-SUPERSESSION) | HALT, report full scope overlap, recommend using existing spec |
+| Partially overlapping spec found (PARTIAL-OVERLAP) | WARN, report shared files/symbols/concerns, suggest scoping to avoid overlap |
+| Conflicting spec found (CONFLICT-RISK) | HALT, report conflicting intent, suggest coordination |
 | Missing content coverage | HALT, require spec update before creation |
 | Stale open spec detected | HALT, suggest updating or closing stale spec |
 

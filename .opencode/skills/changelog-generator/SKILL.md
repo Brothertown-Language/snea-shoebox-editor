@@ -20,10 +20,10 @@ This skill transforms technical git commits into polished, user-friendly changel
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `since-last-release` | Generate changelog for commits since last CHANGELOG.md update | ~170 |
-| `date-range` | Generate changelog for commits within specific date range | ~90 |
-| `backfill` | One-time historical backfill of missing changelog entries | ~120 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `since-last-release` | Generate changelog for commits since last CHANGELOG.md update | ≈170 |
+| `date-range` | Generate changelog for commits within specific date range | ≈90 |
+| `backfill` | One-time historical backfill of missing changelog entries | ≈120 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

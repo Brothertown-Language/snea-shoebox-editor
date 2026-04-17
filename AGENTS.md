@@ -59,9 +59,44 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 - `docs/`: Documentation and specifications
 - `.opencode/`: Skills, guidelines, and agent tools
   - `tools/`: Agent utility scripts (guidelines, md, memory, py, jupyter, etc.)
+  - `scripts/`: Session context scripts (session_context.py)
   - `skills/`: Self-contained skills (no guideline dependencies)
   - `guidelines/`: Core zero-tolerance rules only
+  - `hooks/`: Git hooks (copied to .git/hooks/ by install-hooks.sh)
+  - `plugins/`: TypeScript plugins (session-enforcement.ts, env-loader.ts)
   - `.guidelines/registry.yaml`: Registry of migrated content
+
+---
+
+## Session Context
+
+Two plugins run at session start:
+
+1. **session-init** (`tools/session-init`): Emits session variables silently (owner, repo, platform, hooks)
+2. **session_context.py** (`scripts/session_context.py`): Conditionally emits identity + trigger alerts
+
+Session context output includes:
+
+- **Identity section** (always): `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, credential status
+- **Trigger alerts** (when detected): `on_main_branch`, `protected_branch_with_changes`, `pair_mode_resume`, `uncommitted_work`, `stale_stash`, `merge_conflict`, `unpushed_commits`, `orphaned_worktrees`
+- **Tier 3 probes** (opt-in via `.opencode-issue-probe`): `open_pr_on_branch`, `ci_failure`, `stale_pr`
+
+Credential status values: `verified` (token exists + API ping succeeds), `present` (token exists, liveness unchecked), `missing` (no token found), `stale` (token rejected by API), `unavailable` (platform unknown).
+
+---
+
+## Pair Mode
+
+When the current branch starts with `pair-`, the agent operates in **dev-pair mode**: working directly in the main project directory alongside the developer, using WIP-commit switching instead of worktrees.
+
+| Branch Pattern | Mode | Working Directory |
+|---|---|---|
+| `pair-feature/123-xyz` | Dev-pair | Main project dir |
+| `pair-spec/456-abc` | Dev-pair | Main project dir |
+| `feature/789-xyz` | Autonomous | `.worktrees/` |
+| `spec/789-abc` | Autonomous | `.worktrees/` |
+
+Pair mode tasks: `pair-pre-work`, `pair-commit`, `pair-pr-creation`, `pair-cleanup`, `pair-mode-resume`. See `git-workflow` skill for full task documentation.
 
 ---
 

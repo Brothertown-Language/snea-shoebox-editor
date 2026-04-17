@@ -20,20 +20,20 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 
 | Task | Purpose | Words |
 | -- | -- | -- |
-| `assess` | Pre-flight context-fit assessment — determine workload sizing for sub-agent dispatch | ~300 |
-| `decompose` | Split a task into sub-tasks with dispatch context, preserve spec boundaries | ~300 |
-| `dispatch` | Spawn sub-agent with scoped instructions and collect structured result | ~250 |
-| `completion-checkpoint` | Post-dispatch verification: detect abnormal termination, assess work, recover | ~300 |
-| `overflow-signal` | Structured OVERFLOW response protocol for sub-agents that can't fit the work | ~200 |
-| `merge` | Combine sub-agent results into final output, pure aggregation | ~150 |
-| `context-passing` | Reference for dispatch context shapes between orchestrator and sub-agents | ~200 |
-| `purification-and-enforcement` | Scope boundaries and enforcement rules for the orchestration layer | ~250 |
-| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
-| `orchestrate` | Full workflow: assess → decompose → dispatch → merge → completion | ~400 |
-| `assemble-work` | Work set assembly: squash-merge feature branches into work branch | ~200 |
-| `implementer-prompt` | Sub-agent prompt template: implementation context and instructions | ~250 |
-| `spec-reviewer-prompt` | Spec review stage prompt: two-stage review for spec compliance | ~200 |
-| `code-quality-reviewer-prompt` | Code quality review stage prompt: two-stage review for code quality | ~200 |
+| `assess` | Pre-flight context-fit assessment — determine workload sizing for sub-agent dispatch | ≈300 |
+| `decompose` | Split a task into sub-tasks with dispatch context, preserve spec boundaries | ≈300 |
+| `dispatch` | Spawn sub-agent with scoped instructions and collect structured result | ≈250 |
+| `completion-checkpoint` | Post-dispatch verification: detect abnormal termination, assess work, recover | ≈300 |
+| `overflow-signal` | Structured OVERFLOW response protocol for sub-agents that can't fit the work | ≈200 |
+| `merge` | Combine sub-agent results into final output, pure aggregation | ≈150 |
+| `context-passing` | Reference for dispatch context shapes between orchestrator and sub-agents | ≈200 |
+| `purification-and-enforcement` | Scope boundaries and enforcement rules for the orchestration layer | ≈250 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈150 |
+| `orchestrate` | Full workflow: assess → decompose → dispatch → merge → completion | ≈400 |
+| `assemble-work` | Work set assembly: squash-merge feature branches into work branch | ≈200 |
+| `implementer-prompt` | Sub-agent prompt template: implementation context and instructions | ≈250 |
+| `spec-reviewer-prompt` | Spec review stage prompt: two-stage review for spec compliance | ≈200 |
+| `code-quality-reviewer-prompt` | Code quality review stage prompt: two-stage review for code quality | ≈200 |
 
 ## Invocation
 
@@ -251,24 +251,24 @@ If `worktree.path` is NOT set, operate normally from the project root.
 
 ## Sub-Agent Tasks
 
-### Execution Mode Table
+### Sub-Agent Tasks
 
-| Task | Words | Mode |
-|------|-------|------|
-| `assemble-work` | 2,782 | sub-agent |
-| `orchestrate` | ~400 | inline |
-| `assess` | ~300 | inline |
-| `decompose` | ~300 | inline |
-| `dispatch` | ~250 | inline |
-| `completion-checkpoint` | ~300 | inline |
-| `overflow-signal` | ~200 | inline |
-| `merge` | ~150 | inline |
-| `context-passing` | ~200 | inline |
-| `purification-and-enforcement` | ~250 | inline |
-| `completion` | ~150 | inline |
-| `implementer-prompt` | ~250 | inline |
-| `spec-reviewer-prompt` | ~200 | inline |
-| `code-quality-reviewer-prompt` | ~200 | inline |
+| Task | Words |
+|------|-------|
+| `assemble-work` | 2,782 |
+| `orchestrate` | ≈400 |
+| `assess` | ≈300 |
+| `decompose` | ≈300 |
+| `dispatch` | ≈250 |
+| `completion-checkpoint` | ≈300 |
+| `overflow-signal` | ≈200 |
+| `merge` | ≈150 |
+| `context-passing` | ≈200 |
+| `purification-and-enforcement` | ≈250 |
+| `completion` | ≈150 |
+| `implementer-prompt` | ≈250 |
+| `spec-reviewer-prompt` | ≈200 |
+| `code-quality-reviewer-prompt` | ≈200 |
 
 ### Result Contracts (Sub-Agent Tasks)
 
@@ -301,7 +301,7 @@ session_vars:
 
 This skill is a **heavy skill** — its orchestration logic can run in isolation. When the main agent needs divide-and-conquer execution, spawn a sub-agent via the `task` tool:
 
-1. Main agent loads this dispatch document (~650 words)
+1. Main agent loads this dispatch document (≈650 words)
 2. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use divide-and-conquer skill with context: issue=#N, branch=<name>, <session-context>")`
 3. Sub-agent loads: this SKILL.md + relevant task files + required guidelines
 4. Sub-agent executes: assess → decompose → dispatch → merge → completion

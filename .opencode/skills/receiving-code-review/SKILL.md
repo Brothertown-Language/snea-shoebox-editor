@@ -18,9 +18,9 @@ Workflow for responding to code review feedback on pull requests. Ensures all re
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `address` | Address all review comments | ~350 |
-| `respond` | Reply to review comments | ~250 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `address` | Address all review comments | ≈350 |
+| `respond` | Reply to review comments | ≈250 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

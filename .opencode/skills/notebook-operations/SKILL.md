@@ -16,10 +16,10 @@ Ensures ALL notebook operations use `the-notebook-mcp` tools exclusively. This i
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `permitted-operations` | Complete tool reference table (all 25 operations) | ~500 |
-| `cell-labels` | Cell labeling convention and metadata handling | ~250 |
-| `swap-reorder` | Composed workflows for swap and reorder operations | ~300 |
-| `production-data` | Execution restrictions and production data prohibition | ~350 |
+| `permitted-operations` | Complete tool reference table (all 25 operations) | ≈500 |
+| `cell-labels` | Cell labeling convention and metadata handling | ≈250 |
+| `swap-reorder` | Composed workflows for swap and reorder operations | ≈300 |
+| `production-data` | Execution restrictions and production data prohibition | ≈350 |
 
 ## Invocation
 

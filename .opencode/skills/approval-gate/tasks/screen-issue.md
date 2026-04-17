@@ -16,7 +16,7 @@ Per-issue screening for pre-implementation analysis. Screen a single approved is
 - Issue classified into one screening category
 - Gate 1 (sub-issue enumeration) executed if applicable
 - Gate 2 (success criteria verification) executed if applicable
-- Compact result contract produced (~100-500 words, YAML-structured)
+- Compact result contract produced (≈100-500 words, YAML-structured)
 
 ## Procedure
 
@@ -38,32 +38,47 @@ Check each category in order:
 | **Already implemented** | Merged PR references issue + Gate 1 passed (sub-issue enumeration gate) + Gate 2 passed (success criteria verification gate) + cross-references consistent | Exclude, mark "already-implemented" | No |
 | **Not implemented despite closure** | `state: closed` + merged PR exists + Gate 1 OR Gate 2 FAILED (sub-issues open/unverified, or success criteria not met) | Reopen or include remaining work, mark "not-implemented-despite-closure — premature closure" | No |
 | **Partially implemented** | Merged PR references issue + some success criteria met, some remaining | Include remaining phases only, mark "partially-implemented (phases X,Y done by PR #M)" | No |
-| **Superseded by work peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
+| **Superseded by work peer** | FULL-SUPERSESSION: Issue B's file_references ⊇ A's, B's scope fully encompasses A's, all A's success criteria ⊇ B's | EXCLUDE A, note "superseded by #B" | No |
+| **Overlap with work peer** | PARTIAL-OVERLAP: Shared file_references or symbol_references, different core concerns | INCLUDE both, flag for merge-time coordination | No |
+| **Conflict with work peer** | CONFLICT-RISK: Same files modified with conflicting intent | Serialize, flag for resolution order; ONLY HALT if success criteria are contradictory | No (auto-resolvable) / Yes (contradictory criteria) |
+| **Independent** | INDEPENDENT: No meaningful file/symbol/concern overlap | Include independently | No |
 | **Moot** | Referenced files/code restructured since spec creation; no remaining success criteria are achievable | Exclude, mark "moot" with reason | No |
 | **Stale assumptions** | Issue A references code/functions/files that Issue B modifies or deletes | Re-stage A after B only if same intent; otherwise HALT for developer | Yes (if different intent) / No (if same intent) |
-| **Conflicting (auto-resolvable)** | Issues touch same files, can be serialized | Serialize in correct order | No |
+| **Conflicting (auto-resolvable)** | Issues touch same files, can be serialized (different intent, serializable) | Serialize in correct order | No |
 | **Conflicting (unresolvable)** | Contradictory success criteria | Cannot auto-resolve | **Yes** — HALT |
 | **Meta/Non-code** | No code changes required | Exclude, mark "no code changes" | No |
 | **Revision status** | STATUS contains `REVISED - NEEDS APPROVAL` | Flag in execution plan, remove `needs-approval` label | No |
 
 #### Screening Outcomes
 
-- **EXCLUDE**: already-implemented (verified via merged PR + sub-issues closed via merged PR + success criteria verified), superseded, moot, meta/non-code
+- **INCLUDE**: independent (no meaningful overlap), overlap-with-work-peer (partially overlapping, coordinated via merge-time ordering)
+- **EXCLUDE**: already-implemented (verified via merged PR + sub-issues closed via merged PR + success criteria verified), superseded (FULL-SUPERSESSION), moot, meta/non-code
 - **REOPEN/RE-CLASSIFY**: not-implemented-despite-closure (closed but Gate 1 or Gate 2 failed — include remaining work)
 - **REDUCE SCOPE**: partially-implemented (include remaining phases only)
 - **RECONCILE**: status inconsistencies detected (issue state contradicts verified implementation state) — set `requires_reconciliation: true` in result contract; `pre-implementation-analysis` Step 0.7 invokes `reconcile-issue-graph` to auto-correct; developer is NOT asked
 - **SERIALIZE**: same-intent stale assumptions, auto-resolvable conflicts
 - **HALT**: different-intent stale assumptions, unresolvable conflicts
 
-#### Superseded Detection
+#### Superseded Detection (Four-Tier Classification)
 
-Issue A is superseded by work peer B when:
+Issue A is superseded by work peer B when overlap is detected. Classify the overlap:
 
-- B's file list is a superset of A's file list
-- B's scope description fully encompasses A's scope
-- All of A's success criteria would be met by implementing B
+| Classification | Criteria | Action |
+|---------------|----------|--------|
+| **FULL-SUPERSESSION** | B's file_references ⊇ A's, B's scope description fully encompasses A's, all A's success criteria ⊇ B's | EXCLUDE A, note "superseded by #B" — autonomous, no developer needed |
+| **PARTIAL-OVERLAP** | A and B share file_references or symbol_references but have different core concerns | INCLUDE both, flag for merge-time coordination — note shared files in execution plan |
+| **CONFLICT-RISK** | A and B modify same files in conflicting ways (same section, different intent) | INCLUDE both, serialize in execution plan, flag for resolution order |
+| **INDEPENDENT** | No meaningful file/symbol/concern overlap | INCLUDE both independently |
 
-**Ambiguous supersession** (partial overlap, unclear which is canonical): HALT for developer review.
+**Previous behavior (superseded detection):** Previously, the only action for overlapping issues was "superseded" or "HALT for developer review." The four-tier model provides autonomous classification:
+- FULL-SUPERSESSION replaces the old binary "superseded → exclude"
+- PARTIAL-OVERLAP replaces the old "overlapping/conflicting → HALT for developer" — the agent now classifies and coordinates
+- CONFLICT-RISK replaces the old "conflicting (unresolvable) → HALT" — only genuinely unresolvable conflicts (contradictory success criteria that cannot be serialized) escalate to the developer
+- INDEPENDENT is the new explicit classification for zero overlap
+
+**Ambiguous supersession** (partial overlap where it is unclear which spec is canonical): This remains a HALT condition for the developer. When FULL-SUPERSESSION cannot be determined because neither spec fully covers the other, the agent cannot decide which is canonical.
+
+**Overlap analysis uses file_references, symbol_references, and concern boundaries — NOT just titles/objectives.** This is the key improvement over the previous behavior: overlap is detected at the code/scope level, not just the prose level.
 
 #### Moot Detection
 
@@ -329,7 +344,7 @@ For each file path or symbol mentioned in the issue:
 
 ### Step 10: Produce Result Contract
 
-The result contract MUST be YAML-structured, compact (~100-500 words):
+The result contract MUST be YAML-structured, compact (≈100-500 words):
 
 ```yaml
 status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW

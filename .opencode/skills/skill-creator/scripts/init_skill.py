@@ -79,7 +79,7 @@ Word count is the universal unit for skill size measurement. Use `wc -w` as the 
 Strongly encourage sub-agents and sub-tasks for skill operations that risk consuming significant context.
 
 - **Sub-task isolation:** Dispatch analysis, audits, or multi-step workflows to sub-tasks. Main session receives minimal result, not intermediate reasoning.
-- **When to use sub-tasks:** Any skill task exceeding ~300 words of output, any multi-file analysis, any workflow with 3+ sequential operations.
+- **When to use sub-tasks:** Any skill task producing output, any multi-file analysis, any workflow with 3+ sequential operations. Sub-agent-first dispatch is mandatory — all task dispatches go through sub-agents, no inline exceptions.
 
 ## Correctness-First Economics
 

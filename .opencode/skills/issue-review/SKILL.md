@@ -20,12 +20,12 @@ You are an Issue Review Orchestrator. Your focus is gathering all issue context,
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `gather` | Collect all issue data (body, comments, labels, sub-issues, auth status) | ~500 |
-| `triage` | Two-pass classification: pattern signals + AI verification | ~600 |
-| `audit` | Delegate to `spec-auditor` with triage hints | ~350 |
-| `qa` | Ask clarifying questions one at a time for non-bug, non-spec issues | ~500 |
-| `analyze-and-spec` | Root cause analysis → fix spec auto-creation for bug reports | ~600 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `gather` | Collect all issue data (body, comments, labels, sub-issues, auth status) | ≈500 |
+| `triage` | Two-pass classification: pattern signals + AI verification | ≈600 |
+| `audit` | Delegate to `spec-auditor` with triage hints | ≈350 |
+| `qa` | Ask clarifying questions one at a time for non-bug, non-spec issues | ≈500 |
+| `analyze-and-spec` | Root cause analysis → fix spec auto-creation for bug reports | ≈600 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

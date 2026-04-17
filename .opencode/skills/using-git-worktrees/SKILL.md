@@ -25,10 +25,10 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `create-worktree` | Full worktree creation workflow: sync, verify, setup, export env | ~600 |
-| `tool-usage` | File operation and bash tool compliance rules for worktrees | ~250 |
-| `reference` | Quick reference, common mistakes, fatal errors, integration | ~450 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `create-worktree` | Full worktree creation workflow: sync, verify, setup, export env | ≈600 |
+| `tool-usage` | File operation and bash tool compliance rules for worktrees | ≈250 |
+| `reference` | Quick reference, common mistakes, fatal errors, integration | ≈450 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 

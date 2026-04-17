@@ -170,6 +170,32 @@ Analyze cross-issue relationships using file/symbol references from screening re
 
 1. **Merge-time conflict risk:** Issues touching the same file in different sections. Noted in execution plan for `assemble-work` handling. Do NOT block execution.
 
+#### Cross-Spec Overlap Check Against Open Specs/Plans Outside the Batch
+
+**In addition to cross-issue analysis within the approved batch, check for overlap with open specs/plans NOT in the batch.** This prevents the pipeline from implementing work that conflicts with or duplicates open specs outside the authorization set.
+
+**Procedure:**
+
+1. **Query open issues:** Use `github_list_issues(owner, repo, state="open")` to retrieve all open issues.
+2. **Filter for specs/plans outside the batch:** Select issues with `[SPEC]`, `[PLAN]`, or `[SPEC-FIX]` title prefix that are NOT in the current approved batch.
+3. **Extract scope signals from each external spec:** For each external spec/plan, extract:
+   - File references (from affected-files, file_references sections)
+   - Symbol references (function/class/module names)
+   - Concern boundaries (phase descriptions and problem areas)
+4. **Compare with each issue in the batch:** For each approved issue, compare its file_references, symbol_references, and concerns against each external spec's extracted references.
+5. **Classify overlap using the four-tier model:**
+
+   | Classification | Criteria | Action |
+   |---------------|----------|--------|
+   | **FULL-SUPERSESSION** | External spec entirely covers an approved issue's scope | Flag in execution plan: "Issue #N may be superseded by open spec #M" — do NOT exclude (external spec is not approved), but surface the overlap for awareness |
+   | **PARTIAL-OVERLAP** | External spec shares files/symbols with an approved issue | Flag in execution plan: "Issue #N overlaps with open spec #M on files [list]" — aware for merge-time coordination |
+   | **CONFLICT-RISK** | External spec modifies same files as an approved issue with conflicting intent | Flag in execution plan: "Issue #N conflicts with open spec #M on [files/symbols]" — serialize accordingly |
+   | **INDEPENDENT** | No meaningful overlap | No action |
+
+6. **Key difference from batch-internal overlap:** For external specs, FULL-SUPERSESSION does NOT exclude the approved issue (the external spec is not in the authorization set). It only produces a warning flag in the execution plan for awareness. The approved issue proceeds with implementation.
+
+**Overlap with external specs is advisory, not blocking.** The approved batch has authorization; external specs do not. The check surfaces awareness for merge-time coordination but does not halt implementation.
+
 ### Step 3: Classify Each Issue
 
 Determine each issue's category based on cross-issue analysis:

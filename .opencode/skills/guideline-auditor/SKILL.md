@@ -56,7 +56,7 @@ Verification signal: <changed|blocked|no change required> — <one-line evidence
 
 When reviewing each guideline file, also check for potential context overflow issues:
 
-- **Overly long directives**: A single rule or bullet that exceeds ~3 sentences or ~50 words without adding distinct
+- **Overly long directives**: A single rule or bullet that exceeds ≈3 sentences or ≈50 words without adding distinct
   meaning. Flag with `CONTEXT-OVERFLOW`.
 - **Wordy preamble or rationale**: Explanatory prose embedded in a directive file that could be trimmed or moved to a
   separate reference doc, freeing context budget for actionable rules.
@@ -104,7 +104,7 @@ Detection:
 ### 4. Context Overflow
 
 Detection:
-- Single rule exceeds ~3 sentences or ~50 words without adding meaning
+- Single rule exceeds ≈3 sentences or ≈50 words without adding meaning
 - Wordy preamble that could be trimmed
 - Same constraint restated multiple times in slightly different words
 

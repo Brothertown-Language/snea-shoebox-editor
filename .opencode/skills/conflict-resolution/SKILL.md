@@ -24,8 +24,8 @@ You are a Conflict Resolution Specialist. Your focus is ensuring no committed wo
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `classify-and-resolve` | Detect, classify, and resolve conflicts by tier | ~550 |
-| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
+| `classify-and-resolve` | Detect, classify, and resolve conflicts by tier | ≈550 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Conflict Classification Tiers
 

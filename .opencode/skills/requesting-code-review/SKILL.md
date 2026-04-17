@@ -18,8 +18,8 @@ Workflow for preparing and requesting code reviews. Ensures PR descriptions have
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `prepare` | Prepare PR for review | ~400 |
-| `request` | Submit review request | ~250 |
+| `prepare` | Prepare PR for review | ≈400 |
+| `request` | Submit review request | ≈250 |
 
 ## Invocation
 
