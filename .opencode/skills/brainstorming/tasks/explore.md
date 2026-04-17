@@ -49,6 +49,32 @@ Action: [auto-fix|conditional|flag-for-review]
 
 **These verifications are MANDATORY. Asserting "I checked" without tool-call artifacts is a VERIFICATION-GAP finding. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
 
+## Step 0.5: Cross-Spec Scope Search (MANDATORY)
+
+**Before exploring project context, search for open specs/plans that may overlap with the proposed work.** This prevents creating duplicate or overlapping specs — the process gap that cross-spec overlap detection addresses at audit time should also be caught earlier, during exploration.
+
+**Search procedure:**
+
+1. **Query open issues:** Use `github_list_issues(owner, repo, state="open")` to retrieve all open issues.
+2. **Filter for specs/plans:** Select issues with `[SPEC]`, `[PLAN]`, or `[SPEC-FIX]` title prefix.
+3. **Extract scope signals from the user's request and compare:** For each open spec/plan:
+   - Compare **file references**: Does the user's request mention the same files?
+   - Compare **symbol references**: Does the user's request reference the same functions/classes?
+   - Compare **concern boundaries**: Does the user's request address the same problem domain?
+4. **Classify overlap using the four-tier model:**
+
+   | Classification | Criteria | Action |
+   |---------------|----------|--------|
+   | **FULL-SUPERSESSION** | An existing spec entirely covers the user's request | Report: "Existing spec #N covers this scope. Consider using that spec instead of creating a new one." |
+   | **PARTIAL-OVERLAP** | Existing spec shares files/symbols but has different core concerns | Report: "Spec #N partially overlaps — shared files: [list]. Your new spec should be scoped to avoid the shared concern." |
+   | **CONFLICT-RISK** | Existing spec modifies same files with conflicting intent | Report: "Spec #N conflicts with your request on [files]. Coordinate before creating." |
+   | **INDEPENDENT** | No meaningful overlap | Proceed normally |
+
+5. **Present findings to the user:** If any overlap is found (PARTIAL-OVERLAP, CONFLICT-RISK, or FULL-SUPERSESSION), inform the user before proceeding to Step 1. For FULL-SUPERSESSION, strongly recommend using the existing spec instead of creating a new one.
+6. **If no overlap found:** Proceed silently to Step 1 — no need to report absence of overlap.
+
+**This step prevents the process gap where overlapping specs are created that should have been detected earlier in the pipeline.**
+
 ## Process Flow
 
 <!-- Original dot digraph below is superseded by the yaml+symbolic state machine block at the end of this file. -->
@@ -238,6 +264,7 @@ state_machines:
   - id: brainstorming-flow
     states:
       - "Pre-spec code inspection"
+      - "Cross-Spec Scope Search"
       - "Explore project context"
       - "Scope check"
       - "Decompose project"
@@ -250,16 +277,25 @@ state_machines:
       - "Invoke spec-creation"
       - "HALT: batch-dump detected"
       - "HALT: insufficient interactive turns"
+      - "HALT: full supersession detected"
     start_state: "Pre-spec code inspection"
     transitions:
       - from: "Pre-spec code inspection"
-        to: "Explore project context"
+        to: "Cross-Spec Scope Search"
         guard: "checklist_completed == true OR exempt == true"
         action: PROCEED
       - from: "Pre-spec code inspection"
         to: "HALT"
         guard: "checklist_completed == false AND exempt == false"
         action: WARN
+      - from: "Cross-Spec Scope Search"
+        to: "Explore project context"
+        guard: "overlap_class != 'FULL-SUPERSESSION'"
+        action: REPORT_OVERLAP_IF_FOUND
+      - from: "Cross-Spec Scope Search"
+        to: "HALT: full supersession detected"
+        guard: "overlap_class == 'FULL-SUPERSESSION'"
+        action: RECOMMEND_EXISTING_SPEC
       - from: "Explore project context"
         to: "Scope check"
         guard: "context_gathered == true"

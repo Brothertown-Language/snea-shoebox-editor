@@ -12,27 +12,41 @@ history are secondary and potentially transient or outdated.
 
 2. **Check for Superseding Issues AND Staleness First**: Before implementing OR revising any spec, check for:
 
-   **Superseding Issues**: Later GitHub Issues that may supersede, invalidate, or contradict the active spec.
-   Implementation of a superseded spec is wasted work.
+    **Superseding Issues**: Later GitHub Issues that may supersede, invalidate, or contradict the active spec.
+    Implementation of a superseded spec is wasted work.
 
-   - Query all open `[SPEC]` issues and check for conflicting/overlapping objectives
-   - Look for `[SPEC-FIX]` or `[SPEC-ENHANCEMENT]` issues that may render the active spec obsolete
-   - If a later issue exists, SILENTLY HALT and report the conflict — do NOT proceed with superseded spec
+    - Query all open `[SPEC]` issues and check for conflicting/overlapping objectives
+    - Look for `[SPEC-FIX]` or `[SPEC-ENHANCEMENT]` issues that may render the active spec obsolete
+    - If a later issue exists, SILENTLY HALT and report the conflict — do NOT proceed with superseded spec
 
-   **Staleness from Implemented Specs**: Other specs that were implemented while this spec was pending,
-   making the active spec stale or partially obsolete.
+    **Staleness from Implemented Specs**: Other specs that were implemented while this spec was pending,
+    making the active spec stale or partially obsolete.
 
-   - Check for merged PRs that implemented related functionality
-   - Check if referenced code locations have been modified since spec creation
-   - Check if referenced dependencies/libraries have changed
-   - Check if the problem statement still applies (may have been fixed by another implementation)
-   - If staleness detected, REVISE the spec before implementation:
-     1. Update problem statement if context changed
-     2. Update affected files/lines if code locations changed
-     3. Update success criteria if requirements shifted
-     4. Update dependencies if integration points changed
-     5. Report the revision and HALT — wait for approval before proceeding
-   - NEVER implement a stale spec as-is — always revise first
+    - Check for merged PRs that implemented related functionality
+    - Check if referenced code locations have been modified since spec creation
+    - Check if referenced dependencies/libraries have changed
+    - Check if the problem statement still applies (may have been fixed by another implementation)
+    - If staleness detected, REVISE the spec before implementation:
+      1. Update problem statement if context changed
+      2. Update affected files/lines if code locations changed
+      3. Update success criteria if requirements shifted
+      4. Update dependencies if integration points changed
+      5. Report the revision and HALT — wait for approval before proceeding
+    - NEVER implement a stale spec as-is — always revise first
+
+    **Overlap Detection Checklist (MANDATORY when checking for superseding issues):**
+
+    Title/objective comparison alone is insufficient. Before classifying overlap, perform the following checklist:
+
+    - [ ] **File-level search:** Extract all file paths mentioned in the active spec's affected-files or file_references sections. For each open `[SPEC]`/`[PLAN]`/`[SPEC-FIX]` issue, compare file paths. Shared files → potential overlap.
+    - [ ] **Symbol-level search:** Extract all function, class, and module names referenced in the active spec body. For each overlapping open issue, compare symbol names. Shared symbols → potential overlap.
+    - [ ] **Concern boundary comparison:** Extract the concern area each phase addresses (what problem each phase solves). For each overlapping open issue, compare concern boundaries. Shared concerns → potential overlap.
+    - [ ] **Four-tier classification:** Based on file, symbol, and concern overlap, classify using:
+      - **FULL-SUPERSESSION:** Another spec's scope entirely covers this spec's scope → HALT, report full scope overlap, recommend using existing spec
+      - **PARTIAL-OVERLAP:** Specs share files/symbols but have different core concerns → Surface to developer, suggest scoping to avoid overlap
+      - **CONFLICT-RISK:** Same files modified with conflicting intent → HALT, suggest coordination
+      - **INDEPENDENT:** No meaningful overlap → Proceed normally
+    - [ ] **Evidence artifacts:** For each overlap classification, record: `{Check: overlap search, Tool: github_list_issues + srclight_get_dependents, Result: shared files/symbols/concerns, Classification: FULL-SUPERSESSION|PARTIAL-OVERLAP|CONFLICT-RISK|INDEPENDENT, Action: HALT|surface|surface|proceed}`
 
 3. **Documentation Drift Protocol**:
 

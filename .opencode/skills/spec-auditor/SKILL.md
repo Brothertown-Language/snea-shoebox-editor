@@ -42,6 +42,8 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ≈350 |
 | `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ≈250 |
 | `decomposition` | Flag specs meeting 2+ of 5 criteria for splitting into independent specs | ≈350 |
+| `cross-spec-overlap` | Detect overlap between spec and other open specs/plans via file, symbol, and concern comparison | ≈350 |
+| `cross-spec-overlap` | Detect overlap between spec and other open specs/plans | ≈350 |
 | `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
@@ -59,6 +61,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task concern-coverage` — Sub-issue concern boundary checks only
 - `/skill spec-auditor --issue N --task prose-structure` — Anti-prose drift checks only
 - `/skill spec-auditor --issue N --task decomposition` — Decomposition heuristic check only
+- `/skill spec-auditor --issue N --task cross-spec-overlap` — Cross-spec overlap detection only
 - `/skill spec-auditor --task completion` — Invoke when workflow halts at any point
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
@@ -113,8 +116,8 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
     | Document Type | Baseline Subtasks | Conditional Subtasks |
     |---------------|-------------------|---------------------|
-     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition` |
-      | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition` |
+ | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition`, `cross-spec-overlap` |
+       | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition`, `cross-spec-overlap` |
     | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
     | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
     | Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | — |
@@ -131,9 +134,10 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
     | Spec with many files or phases | Baseline + `decomposition` |
     | Spec with external dependencies | Baseline + `traceability` + `operational` |
     | Single-task spec (no phases) | Baseline (skip `concerns`) |
-    | Spec with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
-    | Plan with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
-    | Spec or Plan with anti-prose patterns | Baseline + `prose-structure` |
+     | Spec with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
+     | Plan with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
+     | Spec or Plan with anti-prose patterns | Baseline + `prose-structure` |
+     | Spec or Plan with potential overlap with other specs | Baseline + `cross-spec-overlap` |
 
 4. **All findings are classified and acted on per the auto-fix model.** Safe findings are fixed directly; ambiguous findings are flagged for developer review.
 
@@ -226,6 +230,8 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | CONCERN_SCOPE_NARROWER | Narrower scope may be valid scoping decision |
 | CONCERN_SCOPE_WIDER | Wider scope may intentionally group coupled tasks |
 | CONCERN_BOUNDARY_CROSSED | Cross-boundary tasks may reflect legitimate dependencies |
+| CROSS-SPEC-OVERLAP | Shared files/symbols with different core concerns require developer judgment about resolution |
+| CROSS-SPEC-OVERLAP (CONFLICT-RISK) | Same files modified with conflicting intent require developer judgment |
 
 **Reporting format (v3 — includes Classification and Fix Action):**
 ```
@@ -266,6 +272,7 @@ spec-auditor (orchestrator)
 └── concern-coverage.md     — Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) (NEW)
 └── prose-structure.md      — Anti-prose drift detection (NEW)
 └── decomposition.md       — Decomposition heuristic: flag specs that should be split (NEW)
+└── cross-spec-overlap.md  — Cross-spec overlap detection: compare file/symbol/concern boundaries (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -304,6 +311,7 @@ Existing classes remain, plus additions noted with `(NEW)`:
 | **PRINCIPLE_VIOLATION** | Any of the 20 engineering principles violated without documented tradeoff note (fallback) |
 | **PLAN-BLEED** | Spec prescribing HOW instead of WHAT; implementation details belong in the plan |
 | **PLAN-BLEED-AMBIGUOUS** | Content that could be either a requirement or implementation detail; requires domain judgment |
+| **FULL-SUPERSESSION** | Add cross-reference note noting superseding spec; propose closing superseded spec | Overlap detection is mechanical; cross-reference note doesn't change semantics |
 | **GROUND-TRUTH-MISMATCH** | Metadata claim (STATUS, label, cross-ref, code ref, auth) contradicts actual state |
 | **MISSING_SUB_ISSUE** | Plan phase has no corresponding sub-issue (from sub-issue-fidelity) |
 | **MISMATCHED_PHASE_NAME** | Sub-issue name doesn't semantically match Plan phase name (from sub-issue-fidelity) |
@@ -313,6 +321,8 @@ Existing classes remain, plus additions noted with `(NEW)`:
 | **CONCERN_SCOPE_WIDER** | Sub-issue body includes tasks outside Plan phase's concern boundary (from concern-coverage) |
 | **CONCERN_BOUNDARY_CROSSED** | Sub-issue body mixes tasks from multiple Plan phase concerns (from concern-coverage) |
 | **DECOMPOSITION-CANDIDATE** | Spec meets 2+ decomposition criteria; consider splitting into multiple specs with dependency notes (from decomposition) |
+| **CROSS-SPEC-OVERLAP** | Overlap detected between this spec and one or more other open specs/plans (PARTIAL-OVERLAP or CONFLICT-RISK) (from cross-spec-overlap) |
+| **FULL-SUPERSESSION** | Another open spec entirely covers this spec's scope; propose superseding (from cross-spec-overlap) |
 | **ANTI-PROSE-DRIFT** | Rigid enumeration, tabular mapping, or fixed checklist where flowing prose is expected (from prose-structure) |
 
 ## Audit Findings Handling
@@ -416,6 +426,7 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 | `concern-coverage` | ≈350 |
 | `prose-structure` | ≈250 |
 | `decomposition` | ≈350 |
+| `cross-spec-overlap` | ≈350 |
 | `fresh-start` | ≈400 |
 | `completion` | ≈200 |
 
@@ -489,6 +500,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | Task table entry `concern-coverage` | File exists at `.opencode/skills/spec-auditor/tasks/concern-coverage.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `prose-structure` | File exists at `.opencode/skills/spec-auditor/tasks/prose-structure.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `decomposition` | File exists at `.opencode/skills/spec-auditor/tasks/decomposition.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `cross-spec-overlap` | File exists at `.opencode/skills/spec-auditor/tasks/cross-spec-overlap.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `completion` | File exists at `.opencode/skills/spec-auditor/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 | Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
 | Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |
