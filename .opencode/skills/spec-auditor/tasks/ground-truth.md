@@ -17,6 +17,7 @@ Adversarial verification of metadata claims against direct evidence. Do not trus
 | Cross-reference match | CONFLICTING | Verify cross-referenced issues contain content matching the reference's claimed topic |
 | Code reference existence | VERIFICATION-GAP | Verify all file paths, function names, and code references in spec exist in the actual codebase |
 | Authorization currency | STRUCTURE-VIOLATION | Check whether authorization claims have been superseded by spec revisions |
+| Already-implemented detection | GROUND-TRUTH-MISMATCH (already-implemented) | Verify all success criteria are satisfied in the current codebase, indicating the spec describes work already done |
 
 ## Content Maturity Classification
 
@@ -73,11 +74,25 @@ Adversarial verification of metadata claims against direct evidence. Do not trus
    - If any spec revision occurred after the most recent authorization → STRUCTURE-VIOLATION (auto-fix: add re-approval note)
    - Evidence artifact: Comment history showing authorization date and revision date
 
+6. **Already-implemented detection (GROUND-TRUTH-MISMATCH):**
+   - Extract all success criteria from the spec
+   - For each criterion, verify it is satisfied in the current codebase:
+     - File/path existence: use `glob`, `srclight_search_symbols`, or `srclight_get_signature`
+     - Code behavior: use `srclight_get_symbol` or `read` to confirm implementation
+     - Absence of removed items: verify directories/files that should be deleted don't exist
+     - Cross-reference cleanliness: `grep` for references that should no longer exist
+   - Classify the finding based on verification results:
+     - **ALL success criteria verified**: → GROUND-TRUTH-MISMATCH (already-implemented) — conditional auto-fix
+     - **SOME criteria not met**: → flag-for-review with details of which are met and which are not
+     - **NONE met**: Do not classify as already-implemented (the spec is simply not implemented yet)
+   - For already-implemented findings, post a verification summary comment on the issue documenting evidence for each success criterion, then recommend closure via `approval-gate --task verify-already-implemented`
+   - Evidence artifact: Per-criterion verification results with tool call evidence
+
 ## Report Format
 
 ```
 Subtask: ground-truth
-Finding: [STRUCTURE-VIOLATION|MISSING-ELEMENT|MISSING-TRACEABILITY|CONFLICTING|VERIFICATION-GAP] - [summary]
+Finding: [STRUCTURE-VIOLATION|MISSING-ELEMENT|MISSING-TRACEABILITY|CONFLICTING|VERIFICATION-GAP|GROUND-TRUTH-MISMATCH] - [summary]
 Location: [section of spec]
 Context: [why this claim is unverified or mismatched]
 Evidence: [tool call or command that produced the evidence]
@@ -86,17 +101,36 @@ Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
+**For GROUND-TRUTH-MISMATCH (already-implemented) findings, use this extended format:**
+
+```
+Subtask: ground-truth
+Finding: GROUND-TRUTH-MISMATCH (already-implemented) - [summary]
+Location: Success Criteria section
+Context: All success criteria are verified as satisfied in the current codebase
+Evidence:
+  - SC1: [criterion] — [tool call result confirming met]
+  - SC2: [criterion] — [tool call result confirming met]
+  - ...
+Classification: conditional
+Fix Action: Posted verification summary comment; recommended closure via verify-already-implemented
+Severity: MEDIUM
+```
+
 ## Auto-Fix Classification
 
 | Problem Class | Classification | Fix Action |
 |---------------|---------------|------------|
 | STRUCTURE-VIOLATION (STATUS mismatch - conservative) | auto-fix | Update STATUS marker to reflect actual content maturity |
 | STRUCTURE-VIOLATION (authorization superseded) | auto-fix | Add re-approval note to document body |
+| GROUND-TRUTH-MISMATCH (already-implemented) | conditional | Post verification summary comment with evidence for each success criterion; close issue as completed |
 | MISSING-ELEMENT (stale needs-approval label) | conditional | Verify auth scope, then remove label if confirmed |
 | MISSING-TRACEABILITY (cross-ref to non-existent issue) | flag-for-review | Cannot create missing issues; developer must resolve |
 | CONFLICTING (cross-ref to mismatched content) | flag-for-review | Intent of reference requires domain judgment |
 | CONFLICTING (STATUS says COMPLETE but content is immature) | flag-for-review | May indicate intentional tracking; developer must judge |
 | VERIFICATION-GAP (code reference to non-existent file/function) | flag-for-review | Code may be planned but not yet implemented; developer must confirm |
+
+**Conditional safety check for already-implemented:** Closing an issue requires verifying ALL success criteria are met — partial implementation does NOT qualify. Each criterion must have independent evidence from a tool call or command invocation. If any criterion lacks clear evidence, the finding is downgraded to flag-for-review.
 
 ## When to Run
 

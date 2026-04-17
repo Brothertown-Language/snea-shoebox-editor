@@ -203,6 +203,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | SOC_VIOLATION (phase split) | Verify split preserves all step content | Splitting phases could lose cross-concern context |
 | DECOMPOSITION-CANDIDATE | Verify decomposition preserves all requirements and dependencies | Splitting a spec requires domain judgment about priorities and coupling |
 | GROUND-TRUTH-MISMATCH (stale label) | Verify auth scope covers current document before removing label | Removing label without confirming auth scope could misrepresent approval state |
+| GROUND-TRUTH-MISMATCH (already-implemented) | Verify ALL success criteria are satisfied in the codebase with independent evidence for each criterion; partial implementation does NOT qualify | Closing an issue requires confirming every criterion is met; missing evidence downgrades to flag-for-review |
 
 **Flag-for-review findings:**
 
@@ -313,6 +314,7 @@ Existing classes remain, plus additions noted with `(NEW)`:
 | **PLAN-BLEED-AMBIGUOUS** | Content that could be either a requirement or implementation detail; requires domain judgment |
 | **FULL-SUPERSESSION** | Add cross-reference note noting superseding spec; propose closing superseded spec | Overlap detection is mechanical; cross-reference note doesn't change semantics |
 | **GROUND-TRUTH-MISMATCH** | Metadata claim (STATUS, label, cross-ref, code ref, auth) contradicts actual state |
+| **GROUND-TRUTH-MISMATCH (already-implemented)** | All success criteria verified as satisfied in the current codebase; spec describes work already done |
 | **MISSING_SUB_ISSUE** | Plan phase has no corresponding sub-issue (from sub-issue-fidelity) |
 | **MISMATCHED_PHASE_NAME** | Sub-issue name doesn't semantically match Plan phase name (from sub-issue-fidelity) |
 | **INCOMPLETE_SUB_ISSUE_BODY** | Sub-issue body missing substantial Plan phase content (from sub-issue-fidelity) |
