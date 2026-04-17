@@ -11,7 +11,7 @@ Analyze interdependencies and determine execution order for all approved issues 
 - One or more issues approved (e.g., `Approved: #660`, `Approved: #660, #662, #621`)
 - Each issue has been verified by `verify-authorization`
 - User has explicitly authorized implementation
-- **Per-issue screening results available** (from `screen-issue` sub-agents or inline execution)
+- **Per-issue screening results available** (from `screen-issue` sub-agents — mandatory parallel dispatch)
 
 ## Exit Criteria
 
@@ -26,27 +26,30 @@ Analyze interdependencies and determine execution order for all approved issues 
 
 ## Procedure
 
-### Step -1: Work Set Size Check and Dispatch Decision (MANDATORY FIRST)
+### Step -1: Mandatory Sub-Agent Dispatch (MANDATORY FIRST)
 
 Before reading ANY issue body:
 
-1. COUNT the number of approved issues
-2. If count ≤ 3: inline screening is PERMITTED (proceed to Step 0)
-3. If count > 3: sub-agent dispatch is MANDATORY — do NOT read any issue body into orchestrator context
+1. Dispatch `screen-issue` sub-agents for EVERY approved issue — no count check, no inline path
+2. Do NOT read any issue body into orchestrator context
 
-**⚠️ CRITICAL VIOLATION:** Reading issue bodies for >3 issues into orchestrator context before sub-agent dispatch is a CRITICAL GUIDELINE VIOLATION per `000-critical-rules.md` §Inline Screening of Authorization Sets. The orchestrator's context window must stay clean for cross-issue merge and dependency graph building — not consumed by raw issue bodies.
+**⚠️ CRITICAL VIOLATION:** Reading issue bodies into orchestrator context before sub-agent dispatch is a CRITICAL GUIDELINE VIOLATION per `000-critical-rules.md` §Inline Screening of Authorization Sets. The orchestrator's context window must stay clean for cross-issue merge and dependency graph building — not consumed by raw issue bodies.
+
+**There is no inline screening path.** Every approved issue — whether 1, 2, or 20 — MUST be screened by a `screen-issue` sub-agent dispatched via `task(subagent_type="general")`. The count threshold was removed because inline screening creates a forked code path that agents exploit to skip sub-agents. See `000-critical-rules.md` §"Common Misconception: Small approval sets can be screened inline" for the rationale.
 
 ### Step 0: Collect Screening Results
 
-Collect per-issue screening results from `screen-issue` sub-agents (parallel) or inline execution.
+Collect per-issue screening results from `screen-issue` sub-agents (mandatory parallel dispatch).
 
-If screening results are NOT already available from sub-agent dispatch, dispatch `screen-issue` sub-agents:
+All approved issues have been dispatched to `screen-issue` sub-agents in Step -1. Collect the result contracts:
 
 ```
 For each approved issue:
-  Dispatch sub-agent: task(subagent_type="general", prompt="Use screen-issue task for issue #N with dispatch context: ...")
-  Collect result contract
+  Collect result contract from dispatched screen-issue sub-agent
+  Assemble into screening results
 ```
+
+**If screening results are NOT available** (e.g., sub-agent dispatch failed), HALT and report the failure — do NOT fall back to inline screening.
 
 **Dispatch context per sub-agent:**
 
@@ -73,6 +76,52 @@ If the agent encounters a scenario not covered by existing rules:
 1. Apply the closest applicable rule by analogy
 2. If no analogy exists, resolve with best judgment and document the reasoning in the execution plan
 3. Do NOT escalate to the developer unless the scenario matches one of the five `requires_developer: true` conditions from `screen-issue`
+
+### Step 0.15: Autonomous Classification Resolution (MANDATORY)
+
+When screening results return classifications, the orchestrator MUST resolve them autonomously using the decision table below. These are deterministic mappings — not judgment calls requiring developer input.
+
+#### Classification Decision Table
+
+| Screening Classification | Autonomous Action | Rationale |
+|---|---|---|
+| `already-implemented` | Exclude from work set; add to auto-close list via `verify-already-implemented` | All success criteria met; no work remaining |
+| `partially-implemented` | Scope-reduce to remaining phases; continue with gap work only | Completed phases require no action; remaining gaps are the scope |
+| `scope-reduced` | Continue with remaining phases only | Same as partially-implemented — the completed phases are done |
+| `null` (fresh spec) | Include fully in work set | No prior implementation exists |
+| `superseded` | Exclude from work set; flag in execution plan report | Another spec fully encompasses this one |
+| `moot` | Exclude from work set; flag in execution plan report | Problem no longer exists or references restructured/removed code |
+
+#### Re-Planning Decision
+
+When the authorization text contains phrases like "re-plan as needed" or "revise as needed":
+
+| Authorization Phrase | Autonomous Action |
+|---|---|
+| "re-plan as needed" | Re-plan the spec against the current codebase before implementing |
+| "revise as needed" | Re-plan the spec against the current codebase before implementing |
+| "update the spec" | Re-plan the spec against the current codebase before implementing |
+| No re-planning phrase | Implement the spec as written, even if partially implemented |
+
+#### Already-Implemented Closure Decision
+
+| Scenario | Autonomous Action |
+|---|---|
+| Already-implemented issue referenced by another spec-fix | Close via the spec-fix's procedure (e.g., #1037 Phase 2 closes #1025) |
+| Already-implemented with no referencing spec-fix | Close via `verify-already-implemented` auto-close procedure |
+| Partially-implemented issue | Scope-reduce, do NOT close |
+
+#### `requires_developer: true` Escalation Criteria
+
+The ONLY conditions where screening results warrant developer escalation:
+
+1. **Multiple valid structures with genuinely ambiguous trade-offs** (3+ subsystems with unclear boundaries — not a preference between two equivalent approaches)
+2. **Legal/compliance concerns** requiring human judgment
+3. **Developer must choose between mutually exclusive approaches** (not a choice between equivalent options)
+4. **Unresolvable conflicts** between issues in the authorization set (contradictory success criteria)
+5. **Different-intent stale assumptions** (Issue A references code that Issue B deletes, and their intents conflict)
+
+All other scenarios — including classification decisions, re-planning, scope-reducing, and closure — are resolved autonomously per this decision table.
 
 ### Step 0.5: Assemble Gate Evidence Audit Table
 
@@ -488,6 +537,17 @@ This handoff ensures:
 - Each sub-agent gets isolated context
 - The orchestrator stays clean — no implementation pollution
 - Work state survives context turnover
+
+## Common Misconception: "Small approval sets can be screened inline"
+
+**This is INCORRECT.** There is no inline screening path. Every approved issue — whether 1, 2, or 20 — MUST be screened by a `screen-issue` sub-agent dispatched via `task(subagent_type="general")`. The count threshold was removed because:
+
+1. Inline screening creates a forked code path that agents exploit to skip sub-agents
+2. Even a single issue can consume significant context (long spec, many comments, sub-issues)
+3. Sub-agent dispatch has near-zero cost but guarantees consistent execution
+4. The "context savings" of inline screening for ≤3 issues never materialized in practice
+
+**DO NOT re-introduce a count threshold.** This is a structural invariant, not a performance optimization.
 
 ## Classification Detail
 

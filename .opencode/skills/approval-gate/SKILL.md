@@ -353,7 +353,7 @@ Every task in this skill that reads a metadata claim (label, comment, STATUS mar
 | Authorization currency | Verify spec has not been revised after most recent authorization comment | `github_issue_read(method=get_comments)` → compare revision timestamps | STRUCTURE-VIOLATION |
 | Sub-issue state (open/closed) | Verify sub-issue state via GitHub API, not from cached or claimed state | `github_issue_read(method=get, issue_number=N)` → check `state` field | VERIFICATION-GAP |
 | Fix spec existence | Verify fix spec sub-issue exists and has correct labels/STATUS for its maturity | `github_issue_read(method=get_sub_issues)` → verify each child | MISSING-TRACEABILITY |
-| Work screening dispatch (>3 issues) | Verify `screen-issue` sub-agents were dispatched (not inline screening) when work set size > 3 | Check for `task(subagent_type="general")` dispatch calls per issue | STRUCTURE-VIOLATION |
+| Work screening dispatch | Verify `screen-issue` sub-agents were dispatched for EVERY approved issue — no count threshold | Check for `task(subagent_type="general")` dispatch calls per issue | STRUCTURE-VIOLATION |
 
 ### Evidence Artifacts
 
