@@ -53,7 +53,7 @@ state_reason = issue.get("state_reason", "")
 ```python
 # Search for PRs that reference this issue
 prs = github_search_pull_requests(
-    query=f"Fixes #{N} repo:{<GitOwner>}/{<GitRepo>}"
+    query=f"Fixes #{N} repo:{<github.owner>}/{<github.repo>}"
 )
 
 merged_pr_found = False
@@ -61,7 +61,7 @@ merged_prs = []
 
 for pr in prs:
     pr_detail = github_pull_request_read(
-        method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"]
+        method="get", owner=<github.owner>, repo=<github.repo>, pullNumber=pr["number"]
     )
     if pr_detail.get("merged_at") is not None:
         merged_pr_found = True
@@ -318,7 +318,7 @@ This task now performs transitive graph traversal (Step 8). Callers should handl
 ## Context Required
 
 - Issue number to verify
-- `<GitOwner>` and `<GitRepo>` from session
+- `<github.owner>` and `<github.repo>` from session
 - Downstream callers should handle the result type to make appropriate decisions
 
 ## Cross-References

@@ -71,7 +71,7 @@ Before mapping file structure, check whether existing plans already reference th
 
 1. Using `github_search_issues`, search for issues labeled `plan` in the repository:
    ```
-   github_search_issues(query="label:plan", owner=<GitOwner>, repo=<GitRepo>, state="open")
+   github_search_issues(query="label:plan", owner=<github.owner>, repo=<github.repo>, state="open")
    ```
 2. Filter results for those whose body contains `Spec: #<spec_number>` referencing the current spec number.
 3. If one or more existing plans are found:
@@ -177,13 +177,13 @@ Before mapping file structure, check whether existing plans already reference th
       Example (separate plan):
 
       Created separate implementation plan for #771 (branch stacking prerequisite). 7 tasks across 6 files (3 skills + 3 guidelines).
-      https://github.com/<GitOwner>/<GitRepo>/issues/772
+      https://github.com/<github.owner>/<github.repo>/issues/772
       🤖 <AgentName> (<ModelId>)
 
       Example (combined spec+plan):
 
       Created combined spec+plan for #771 (simple configuration change). Plan appended under `## Implementation Plan`.
-      https://github.com/<GitOwner>/<GitRepo>/issues/771
+      https://github.com/<github.owner>/<github.repo>/issues/771
       🤖 <AgentName> (<ModelId>)
 
       Sub-issues are linked under the plan issue for separate plans, NOT under the spec. Combined plans have no sub-issues.

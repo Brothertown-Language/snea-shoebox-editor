@@ -10,7 +10,7 @@ compatibility: opencode
 
 ## Overview
 
-GitBucket platform implementation using Python client. Implements a GitHub-compatible API v3 with known deficiencies. This is a platform sub-skill under `issue-operations` — the dispatcher routes GitBucket operations here when `GIT_PLATFORM=gitbucket`.
+GitBucket platform implementation using Python client. Implements a GitHub-compatible API v3 with known deficiencies. This is a platform sub-skill under `issue-operations` — the dispatcher routes GitBucket operations here when `github.platform=gitbucket`.
 
 ## Capability Manifest (v4.46.0, empirically probed)
 

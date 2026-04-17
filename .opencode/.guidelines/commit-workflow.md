@@ -24,7 +24,7 @@ The developer will say "commit" or "create a PR" when they want git operations. 
 - **Re-run discovery** (`git status`, `git diff`) before any commit workflow
 - **If `pyproject.toml` changed, include `uv.lock`** — this is an application/CI repo
 - **Use dynamic AI identity** — the AI knows its own name and email
-- **Use cached human identity** — from session start values (`DEV_NAME`, `DEV_EMAIL`)
+- **Use cached human identity** — from session start values (`dev.name`, `dev.email`)
 
 <!--
 Fragment ID: commit-workflow

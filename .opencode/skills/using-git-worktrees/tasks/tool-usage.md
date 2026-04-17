@@ -14,16 +14,16 @@ Per AGENTS.md and `060-tool-usage.md`, `cd` commands are a zero-tolerance violat
 
 ## File Operation Tools (filePath parameter) — CRITICAL
 
-The `read`, `edit`, `write`, `glob`, and `grep` tools do NOT have a `workdir` parameter. When `WORKTREE_PATH` is set, relative paths resolve to the **main repo**, causing silent errors — edits go to the wrong file.
+The `read`, `edit`, `write`, `glob`, and `grep` tools do NOT have a `workdir` parameter. When `worktree.path` is set, relative paths resolve to the **main repo**, causing silent errors — edits go to the wrong file.
 
 | Tool | WRONG (main repo) | CORRECT (worktree) |
 |------|-------------------|---------------------|
-| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
-| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
-| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
-| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` |
-| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` |
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{worktree.path}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{worktree.path}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{worktree.path}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=worktree.path)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{worktree.path}/src/")` |
 
-**Rule:** When `WORKTREE_PATH` is set, every file operation tool call MUST prefix paths with the worktree path. No exceptions.
+**Rule:** When `worktree.path` is set, every file operation tool call MUST prefix paths with the worktree path. No exceptions.
 
 When NOT in a worktree (working in main repo), relative paths function correctly as-is.

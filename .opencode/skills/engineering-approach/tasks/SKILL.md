@@ -70,7 +70,7 @@ Execute implementation after design is approved, following established design de
 
 ## Context Required
 
-- Session values: <GitOwner>, <GitRepo>, <DevName>, <DevEmail>
+- Session values: <github.owner>, <github.repo>, <dev.name>, <dev.email>
 - Related tasks: `verify-understanding`, `verify-design`
 
 ## Live Verification: Engineering Claims (MANDATORY)

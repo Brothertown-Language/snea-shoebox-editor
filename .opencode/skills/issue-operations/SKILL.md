@@ -1,6 +1,6 @@
 ---
 name: issue-operations
-description: Platform-agnostic issue operations dispatcher. Routes to GitHub MCP or GitBucket API based on GIT_PLATFORM. Triggers on: create issue, new issue, spec creation, submit issue, issue, bug report, comment, progress update, issue comment, PR comment, post to GitHub, byline, status indicator, sub-issue, phase issue, multi-task, create sub issue, link issue, task breakdown, subtask, parent issue, close issue, verify merge.
+description: Platform-agnostic issue operations dispatcher. Routes to GitHub MCP or GitBucket API based on github.platform. Triggers on: create issue, new issue, spec creation, submit issue, issue, bug report, comment, progress update, issue comment, PR comment, post to GitHub, byline, status indicator, sub-issue, phase issue, multi-task, create sub issue, link issue, task breakdown, subtask, parent issue, close issue, verify merge.
 type: technique
 license: MIT
 compatibility: opencode
@@ -10,7 +10,7 @@ compatibility: opencode
 
 ## Overview
 
-Platform-agnostic Issue Operations dispatcher. Detects `GIT_PLATFORM` from session init and routes all issue tracking operations to the appropriate platform sub-skill. Absorbs and replaces `github-issue-creation`, `github-comments`, and `github-sub-issues`.
+Platform-agnostic Issue Operations dispatcher. Detects `github.platform` from session init and routes all issue tracking operations to the appropriate platform sub-skill. Absorbs and replaces `github-issue-creation`, `github-comments`, and `github-sub-issues`.
 
 ## Persona
 
@@ -78,9 +78,9 @@ issue-operations/                     # Dispatcher — workflow logic, platform 
 
 ### Detection
 
-The dispatcher detects `GIT_PLATFORM` from session init output:
+The dispatcher detects `github.platform` from session init output:
 
-| `GIT_PLATFORM` | Platform Sub-Skill |
+| `github.platform` | Platform Sub-Skill |
 |----------------|-------------------|
 | `github` | `platforms/github-mcp/` |
 | `gitbucket` | `platforms/gitbucket-api/` |
@@ -92,7 +92,7 @@ The dispatcher detects `GIT_PLATFORM` from session init output:
 target:
   owner:     # overridden for submodules
   repo:        # overridden for submodules
-  platform:   # rarely overridden (defaults to session GIT_PLATFORM)
+  platform:   # rarely overridden (defaults to session github.platform)
 ```
 
 ### Capability Resolution (Hybrid)
@@ -328,7 +328,7 @@ All tasks are under 1,000 words — inline execution. No sub-agent dispatch need
 | "Issue has `needs-approval` label" | Verify label presence | `github_issue_read(method="get_labels", issue_number=N)` | VERIFICATION-GAP |
 | "All sub-issues closed" | Verify each sub-issue state | `github_issue_read(method="get_sub_issues", issue_number=N)` → check each closed | VERIFICATION-GAP |
 | "No conflicting spec exists" | Search for overlapping issues | `github_search_issues(query="label:spec <keyword>")` | CONFLICTING |
-| "Session init has <GitOwner>/<GitRepo>" | Verify session values | Check session init output | MISSING-ELEMENT |
+| "Session init has <github.owner>/<github.repo>" | Verify session values | Check session init output | MISSING-ELEMENT |
 
 **Evidence artifact:** Tool call results for each claim before the operation proceeds.
 

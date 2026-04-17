@@ -14,11 +14,11 @@ Prepare a feature branch for PR creation by ensuring all changes are committed, 
 
 All feature branches operate in worktrees. There is no alternative.
 
-If `WORKTREE_PATH` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
-1. All `bash` tool calls MUST use `workdir="{{WORKTREE_PATH}}"`
-2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{WORKTREE_PATH}}/`
-3. Before any push/squash/rebase: `git branch --show-current` MUST match BRANCH_NAME
+1. All `bash` tool calls MUST use `workdir="{{worktree.path}}"`
+2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{worktree.path}}/`
+3. Before any push/squash/rebase: `git branch --show-current` MUST match branch
 4. `git rev-parse --show-toplevel` MUST return the worktree path
 5. NEVER operate in the main working directory during implementation
 

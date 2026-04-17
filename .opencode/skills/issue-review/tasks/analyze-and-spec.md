@@ -97,8 +97,8 @@ Invoke `issue-operations` skill to create the fix spec:
 ```
 github_issue_write(
     method="create",
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     title="[SPEC] Fix: <brief bug description>",
     body="<fix spec body from Step 4>",
     labels=["spec", "needs-approval"]
@@ -112,8 +112,8 @@ Link the newly created fix spec as a sub-issue of the bug report:
 ```
 github_sub_issue_write(
     method="add",
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     issue_number=<bug_report_number>,
     sub_issue_id=<fix_spec_database_id>
 )
@@ -127,8 +127,8 @@ Add a comment to the bug report summarizing the analysis and linking the fix spe
 
 ```
 github_add_issue_comment(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     issue_number=<bug_report_number>,
     body="Root cause analysis complete. Fix spec created: #<fix_spec_number>"
 )

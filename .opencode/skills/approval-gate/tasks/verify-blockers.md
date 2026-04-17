@@ -34,7 +34,7 @@ elif has_label and not explicit_authorization:
 
 ```python
 # Query for issues that may supersede current spec
-issues = github_list_issues(owner=<GitOwner>, repo=<GitRepo>, state="open")
+issues = github_list_issues(owner=<github.owner>, repo=<github.repo>, state="open")
 for issue in issues:
     if issue_supersedes_current(issue, current_spec):
         HALT("Superseding issue: #{}".format(issue["number"]))

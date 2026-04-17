@@ -163,9 +163,9 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 | `spec_issue` | Issue number from `verify-authorization` | Identifies the approved spec to plan from |
 | `single_task_determination` | From `issue-operations/tasks/post-creation` (via `single-task-check`) | Informs combined vs separate plan decision (`single-task` or `multi-task`) |
 | `single_task` | Boolean from `issue-operations/tasks/post-creation` (via `single-task-check`) | `true` for single-task, `false` for multi-task — shorthand for decision gate |
-| `<GitOwner>` | Session init | Repository owner for API calls |
-| `<GitRepo>` | Session init | Repository name for API calls |
-| `WORKTREE_PATH` | Session / worktree setup | Base directory for file operations |
+| `<github.owner>` | Session init | Repository owner for API calls |
+| `<github.repo>` | Session init | Repository name for API calls |
+| `worktree.path` | Session / worktree setup | Base directory for file operations |
 
 **Spec-to-plan approval cascade:** When `writing-plans --task create` is invoked for a spec that is already approved, the newly created plan inherits the spec's approval status. The `needs-approval` label is removed from the plan and a comment documents the cascade — see Step 11 in `tasks/create.md` for the complete post-creation cascade procedure. This handles the case where plan creation happens AFTER spec approval in the same session.
 
@@ -265,11 +265,11 @@ spec_issue: <N>
 single_task: bool
 single_task_determination: <str>
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```
 
 ## Cross-Reference Verification (MANDATORY)

@@ -29,7 +29,7 @@ git status
 
 **If on `main` or `dev`:** This is expected — feature branches are created in worktrees, not by switching branches in the main tree. Proceed to Step 2.
 
-**If on a feature branch already:** Verify you're in the correct worktree. Check `WORKTREE_PATH` environment variable.
+**If on a feature branch already:** Verify you're in the correct worktree. Check `worktree.path` environment variable.
 
 **🚫 CRITICAL: Do NOT create branches directly in verify-authorization.**
 
@@ -176,10 +176,10 @@ For each closed issue encountered during verification:
 
     # Check 1: Was it closed via merged PR?
     # Search for PRs referencing this issue
-    prs = github_search_pull_requests(query=f"Fixes #{closed_issue_number} repo:{<GitOwner>}/{<GitRepo>}")
+    prs = github_search_pull_requests(query=f"Fixes #{closed_issue_number} repo:{<github.owner>}/{<github.repo>}")
     merged_pr_found = False
     for pr in prs:
-      pr_detail = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"])
+      pr_detail = github_pull_request_read(method="get", owner=<github.owner>, repo=<github.repo>, pullNumber=pr["number"])
       if pr_detail.get("merged_at") is not None:
         merged_pr_found = True
         break
@@ -388,7 +388,7 @@ if not is_spec:
 # Search for plans referencing this spec
 spec_number = issue["number"]
 plan_issues = github_search_issues(
-    query=f"open label:plan Spec: #{spec_number} repo:{<GitOwner>}/{<GitRepo>}"
+    query=f"open label:plan Spec: #{spec_number} repo:{<github.owner>}/{<github.repo>}"
 )
 ```
 
@@ -470,12 +470,12 @@ elif not plan_issues:
 **Before any sub-agent dispatch or file modification, the agent MUST invoke `git-workflow --task pre-work` to:**
 
 1. Create the feature branch in a worktree (`.worktrees/`)
-2. Set the `WORKTREE_PATH` environment variable
+2. Set the `worktree.path` environment variable
 3. Verify branch state and working tree cleanliness
 
 **This step is MANDATORY and CANNOT be skipped.** If the worktree already exists from a previous session, verify it and proceed. If worktree creation fails, HALT — do not proceed without a valid worktree.
 
-**Evidence requirement:** `git worktree list` must show the feature branch worktree, and `WORKTREE_PATH` must be set before any `divide-and-conquer` dispatch.
+**Evidence requirement:** `git worktree list` must show the feature branch worktree, and `worktree.path` must be set before any `divide-and-conquer` dispatch.
 
 After all verification gates pass, determine the approval context and auto-dispatch:
 
@@ -498,11 +498,11 @@ After all verification gates pass, determine the approval context and auto-dispa
    - Plan detection is via `plan` label or `[PLAN]` prefix in title (NOT via sub-issue relationship to spec)
 2. **If spec approval:** Invoke `writing-plans --task create` with context:
    - `spec_issue=#N` (the approved spec issue number)
-   - `<GitOwner>`, `<GitRepo>`, `<WorktreePath>` from session
+   - `<github.owner>`, `<github.repo>`, `<worktree.path>` from session
 5. **If plan approval:** Invoke `executing-plans --task start` with context:
    - `plan_issue=#N` (the approved plan issue number)
    - `spec_issue=#M` (extracted from plan body — the spec reference)
-   - `<GitOwner>`, `<GitRepo>`, `<WorktreePath>` from session
+   - `<github.owner>`, `<github.repo>`, `<worktree.path>` from session
 4. **Chat output:** Clearly indicate the transition:
    - Spec approval: "Verification passed → Creating implementation plan"
    - Plan approval: "Verification passed → Starting implementation"

@@ -28,7 +28,7 @@ The developer will say "commit" or "create a PR" when they want git operations. 
 - **Re-run discovery** (`git status`, `git diff`) before any commit workflow
 - **If `pyproject.toml` changed, include `uv.lock`** — this is an application/CI repo
 - **Use dynamic AI identity** — the AI knows its own name and email
-- **Use cached human identity** — from session start values (`<DevName>`, `<DevEmail>`)
+- **Use cached human identity** — from session start values (`<dev.name>`, `<dev.email>`)
 
 ## Operating Protocol
 
@@ -113,13 +113,13 @@ Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>
 
 ### Human Collaborator Trailer
 
-- **Use cached values from session start** — `<DevName>` and `<DevEmail>`
+- **Use cached values from session start** — `<dev.name>` and `<dev.email>`
 - **Do NOT re-run `git config`** — use stored session values
 
 **Example:**
 
 ```
-Co-authored-by: <DevName> <DevEmail>
+Co-authored-by: <dev.name> <dev.email>
 ```
 
 ### Complete Example
@@ -127,7 +127,7 @@ Co-authored-by: <DevName> <DevEmail>
 ```bash
 git commit -m "feat: Add user authentication" \
     --trailer "Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>" \
-    --trailer "Co-authored-by: <DevName> <DevEmail>"
+    --trailer "Co-authored-by: <dev.name> <dev.email>"
 ```
 
 ## When Commits Happen

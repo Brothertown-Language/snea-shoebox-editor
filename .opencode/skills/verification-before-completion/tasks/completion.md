@@ -28,7 +28,7 @@ Generate executive summary in chat:
 
 **Outcome:** <What stakeholders know — task is verified/not verified>
 
-Issue URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/issues/<number>
+Issue URL: <gitbucket.html_url><github.owner>/<github.repo>/issues/<number>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.

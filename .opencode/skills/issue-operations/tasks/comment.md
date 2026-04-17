@@ -91,8 +91,8 @@ Stakeholders need understanding, not commit logs. GitHub diffs already show what
 **GitHub platform:**
 ```python
 github_add_issue_comment(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     issue_number=N,
     body=formatted_comment
 )
@@ -103,8 +103,8 @@ github_add_issue_comment(
 from skills.gitbucket_api.tools import GitBucketAPI
 api = GitBucketAPI()
 api.add_issue_comment(
-    owner=<GitOwner>,
-    repo=<GitRepo>,
+    owner=<github.owner>,
+    repo=<github.repo>,
     issue_number=N,
     body=formatted_comment
 )
@@ -131,6 +131,6 @@ api.add_issue_comment(
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO, GIT_PLATFORM
+- Session values: github.owner, github.repo, github.platform
 - Related tasks: `close` (uses comment for closure), `link-sub-issue` (uses comment for fallback)
 - Platform routing: `../platforms/github-mcp/` or `../platforms/gitbucket-api/`

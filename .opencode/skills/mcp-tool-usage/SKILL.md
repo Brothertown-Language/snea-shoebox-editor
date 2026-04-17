@@ -79,19 +79,19 @@ Bash/shell commands ONLY when no other tool covers the operation or it's inheren
 
 ## Owner Inference Prohibition (ZERO TOLERANCE)
 
-**DO NOT infer GitHub owner from file paths, usernames, or cached values.** Use ONLY values from session-enforcement plugin output (`<GitOwner>`, `<GitRepo>`).
+**DO NOT infer GitHub owner from file paths, usernames, or cached values.** Use ONLY values from session-enforcement plugin output (`<github.owner>`, `<github.repo>`).
 
 ## Worktree Path Resolution
 
-When `WORKTREE_PATH` is set, ALL file operations MUST prefix paths with the worktree path. TIER 1 tools (`read`, `edit`, `write`, `glob`, `grep`) resolve relative paths to the **main repo**, NOT the worktree.
+When `worktree.path` is set, ALL file operations MUST prefix paths with the worktree path. TIER 1 tools (`read`, `edit`, `write`, `glob`, `grep`) resolve relative paths to the **main repo**, NOT the worktree.
 
 | Tool | Wrong (main repo) | Correct (worktree) |
 |------|-------------------|---------------------|
-| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
-| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
-| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
-| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` |
-| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` |
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{worktree.path}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{worktree.path}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{worktree.path}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=worktree.path)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{worktree.path}/src/")` |
 
 For `bash` tool calls, continue using the `workdir` parameter.
 

@@ -110,7 +110,7 @@ Report understanding verification to chat (NOT as GitHub Issue comment). The und
 
 ## Context Required
 
-- Session values: <GitOwner>, <GitRepo>
+- Session values: <github.owner>, <github.repo>
 - Related tasks: `verify-design` (next step), `verify-implementation` (final step)
 
 ## Live Verification: Understanding Claims (MANDATORY)

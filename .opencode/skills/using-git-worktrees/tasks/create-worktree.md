@@ -5,7 +5,7 @@ Create a git worktree for a feature branch, following the full creation workflow
 ## Prerequisites
 
 - Session init has been run
-- `WORKTREE_FATAL` is NOT `1` (if it is, HALT immediately)
+- `worktree.fatal` is NOT `1` (if it is, HALT immediately)
 - Authorization received for the feature branch
 
 ## Steps
@@ -141,7 +141,7 @@ export BASE_BRANCH="${BASE_BRANCH:-dev}"
 export DEV_BASE_HASH=$(git rev-parse --short 7 origin/dev)
 ```
 
-**If `WORKTREE_PATH` is not set or empty after this step: FATAL ERROR → FLAG DEV → HALT.** There is no alternative — worktree is the only method for feature branches.
+**If `worktree.path` is not set or empty after this step: FATAL ERROR → FLAG DEV → HALT.** There is no alternative — worktree is the only method for feature branches.
 
 These environment variables are consumed by:
 

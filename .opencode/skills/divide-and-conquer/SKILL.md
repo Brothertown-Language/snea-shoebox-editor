@@ -72,13 +72,13 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 **Before dispatching any sub-agent, the main agent MUST verify:**
 
 1. **Worktree exists:** `git worktree list` shows the feature branch worktree
-2. **WORKTREE_PATH is set:** `echo $WORKTREE_PATH` returns a non-empty path inside the repository (`.worktrees/`)
+2. **worktree.path is set:** `echo $WORKTREE_PATH` returns a non-empty path inside the repository (`.worktrees/`)
 3. **git-workflow --task pre-work was invoked:** The worktree was created by the mandatory skill, not manually
 4. **Feature branch is checked out:** The worktree shows the correct branch name
 
 **If ANY check fails:** HALT and invoke `git-workflow --task pre-work` before proceeding.
 
-**Evidence requirement:** Record `git worktree list` output and `WORKTREE_PATH` value before dispatching any sub-agent.
+**Evidence requirement:** Record `git worktree list` output and `worktree.path` value before dispatching any sub-agent.
 
 ## Overflow Signal Contract
 
@@ -125,17 +125,17 @@ sub_task:
   scope: "<files, modules, functions>"
   boundaries: "<what is OUT of scope>"
 env_vars:
-  WorktreePath: "<worktree path>"
-  BRANCH_NAME: "<branch name>"
-  GitOwner: "<from-session>"
-  GitRepo: "<from-session>"
-  DevName: "<from-session>"
-  DevEmail: "<from-session>"
+  worktree.path: "<worktree path>"
+  branch: "<branch name>"
+  github.owner: "<from-session>"
+  github.repo: "<from-session>"
+  dev.name: "<from-session>"
+  dev.email: "<from-session>"
 ```
 
 **Phase progress is prose-driven.** The `phase_progress` section communicates what information must travel between phases — completed phases should be named by the concern they address, concern boundaries should describe the architectural transition point, and verification evidence should summarize what was confirmed and the outcome. The agent composing the context decides how to encode this; the requirement is the information, not the format.
 
-**Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` is composed by the orchestrator from prior sub-agent results and the Plan STATUS marker — it accumulates across the work set as each issue completes.
+**Invariants:** `worktree.path` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` is composed by the orchestrator from prior sub-agent results and the Plan STATUS marker — it accumulates across the work set as each issue completes.
 
 ## Sub-Agent Completion Checkpoint
 
@@ -242,12 +242,12 @@ When the orchestrating agent detects abnormal termination via the Sub-Agent Comp
 
 ## Worktree Mode
 
-When `WORKTREE_PATH` is set:
-- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
-- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
+When `worktree.path` is set:
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
 - `git` commands run from the worktree directory, NOT the main repo
 
-If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+If `worktree.path` is NOT set, operate normally from the project root.
 
 ## Sub-Agent Tasks
 
@@ -290,11 +290,11 @@ results: [{issue: <N>, status: <str>, summary: <str>}]
 ```yaml
 work_state_file: <path>
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```
 
 ## Sub-Agent Spawning
@@ -308,7 +308,7 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 5. Sub-agent returns structured result per Sub-agent Result Contract
 6. Main agent receives result — no orchestration detail in main context
 
-**Sub-agent context parameters:** Pass `<WorktreePath>`, `BRANCH_NAME`, `<GitOwner>`, `<GitRepo>`, `<DevName>`, `<DevEmail>` from session init.
+**Sub-agent context parameters:** Pass `<worktree.path>`, `branch`, `<github.owner>`, `<github.repo>`, `<dev.name>`, `<dev.email>` from session init.
 
 ## Live Verification: Work State (MANDATORY)
 

@@ -178,20 +178,20 @@ guidelines from CHANGELOG_STYLE.md
 
 ## Worktree Mode
 
-When invoked from a worktree context (`WORKTREE_PATH` is set):
+When invoked from a worktree context (`worktree.path` is set):
 
-- ALL `bash` tool calls MUST use `workdir` parameter set to `WORKTREE_PATH`
-- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
 - `git` commands run from the worktree directory, NOT the main repo
-- `CHANGELOG.md` path MUST be prefixed with `WORKTREE_PATH/`
+- `CHANGELOG.md` path MUST be prefixed with `worktree.path/`
 
 **Verification guard:** Before any git operation, run:
 ```bash
 git rev-parse --show-toplevel
 ```
-If the output does NOT match `WORKTREE_PATH`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
+If the output does NOT match `worktree.path`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
 
-If `WORKTREE_PATH` is NOT set, operate normally from the project root.
+If `worktree.path` is NOT set, operate normally from the project root.
 
 ## Cross-Reference Verification (MANDATORY)
 

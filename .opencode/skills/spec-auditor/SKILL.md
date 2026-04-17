@@ -359,7 +359,7 @@ After the audit session completes, findings are acted on per the auto-fix model:
 - Changes Made lists ALL auto-fix and conditional fix actions in summary form
 - Findings Not Acted On lists ALL flag-for-review findings with the specific reason they weren't auto-fixed
 - If audit finds zero issues, output: `## Content Audit: [source] — [title] — No findings. Type: [type] (confidence: [level]). Issue: [URL if applicable]`
-- Issue URL is constructed from session init values (`<GitOwner>`, `<GitRepo>`)
+- Issue URL is constructed from session init values (`<github.owner>`, `<github.repo>`)
 
 ## Mandatory Invocation
 
@@ -387,7 +387,7 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 - Document type autodetection uses signal scoring; Low confidence requires user confirmation before proceeding
 - None confidence (empty/unparseable content) produces an error — cannot audit
 - **Backward compatibility:** `--issue N` produces identical results to previous behavior
-- **Worktree awareness check:** Skills that perform git operations, read/write files, or dispatch sub-agents MUST include a "Worktree Mode" section and pass `WORKTREE_PATH` in sub-agent dispatch contexts. Missing worktree awareness is a medium-severity finding.
+- **Worktree awareness check:** Skills that perform git operations, read/write files, or dispatch sub-agents MUST include a "Worktree Mode" section and pass `worktree.path` in sub-agent dispatch contexts. Missing worktree awareness is a medium-severity finding.
 
 ## Sub-Agent Tasks
 
@@ -421,11 +421,11 @@ source: {type: issue|file|url, identifier: <str>}
 document_type: <auto|spec|plan|process-flow|runbook|checklist|reference-doc>
 subtasks: [<task_name>]
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```
 
 ### Result Contract (Full Audit)
@@ -451,7 +451,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 5. Sub-agent executes audit in isolation, returns findings as structured report
 6. Main agent receives findings — no full audit content in main context
 
-**Sub-agent context parameters:** Pass issue number, `<WorktreePath>`, `<GitOwner>`, `<GitRepo>` from session init. When `<WorktreePath>` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
+**Sub-agent context parameters:** Pass issue number, `<worktree.path>`, `<github.owner>`, `<github.repo>` from session init. When `<worktree.path>` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
 
 ## Cross-Reference Verification (MANDATORY)
 

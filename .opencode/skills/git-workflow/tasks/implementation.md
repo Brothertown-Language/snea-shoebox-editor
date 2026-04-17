@@ -37,15 +37,15 @@ git commit -m "WIP: <descriptive message>"
 
 ### ⚠️ CRITICAL: File Operation Tool Paths in Worktree
 
-When `WORKTREE_PATH` is set, ALL file operation tool calls (`read`, `edit`, `write`, `glob`, `grep`) MUST prefix paths with the worktree path. These tools have NO `workdir` parameter — relative paths resolve to the main repo, causing silent errors.
+When `worktree.path` is set, ALL file operation tool calls (`read`, `edit`, `write`, `glob`, `grep`) MUST prefix paths with the worktree path. These tools have NO `workdir` parameter — relative paths resolve to the main repo, causing silent errors.
 
 | Tool | Wrong (operates on main repo) | Correct (targets worktree) |
 | -- | -- | -- |
-| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{WORKTREE_PATH}/src/main.py")` |
-| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{WORKTREE_PATH}/src/main.py", ...)` |
-| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{WORKTREE_PATH}/src/new.py", ...)` |
-| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=WORKTREE_PATH)` |
-| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{WORKTREE_PATH}/src/")` |
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{worktree.path}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{worktree.path}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{worktree.path}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=worktree.path)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{worktree.path}/src/")` |
 
 **For `bash` tool:** Continue using `workdir` parameter as documented in `using-git-worktrees` skill.
 

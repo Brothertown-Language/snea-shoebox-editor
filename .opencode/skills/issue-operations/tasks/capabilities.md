@@ -6,7 +6,7 @@ Probe platform capabilities at runtime. Determines what operations the current p
 
 ## Entry Criteria
 
-- `GIT_PLATFORM` detected from session init
+- `github.platform` detected from session init
 - Platform sub-skill available
 
 ## Exit Criteria
@@ -19,7 +19,7 @@ Probe platform capabilities at runtime. Determines what operations the current p
 ### Step 1: Detect Platform
 
 ```
-GIT_PLATFORM environment variable:
+github.platform session value:
   "github"    → platforms/github-mcp/
   "gitbucket"  → platforms/gitbucket-api/
   (unset)      → platforms/github-mcp/ (default)
@@ -82,7 +82,7 @@ When the GitBucket MCP plugin implements missing endpoints, the capability lands
 
 ## Context Required
 
-- Session values: GIT_PLATFORM
+- Session values: github.platform
 - Platform sub-skill: `../platforms/github-mcp/SKILL.md` or `../platforms/gitbucket-api/SKILL.md`
 
 ## Live Verification: Capabilities Evidence (MANDATORY)
@@ -91,7 +91,7 @@ When the GitBucket MCP plugin implements missing endpoints, the capability lands
 
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
-| "GIT_PLATFORM is X" | Verify session init value | Check session init output | MISSING-ELEMENT |
+| "github.platform is X" | Verify session init value | Check session init output | MISSING-ELEMENT |
 | "Platform supports operation Y" | Probe platform SKILL.md or MCP | `read(path=".opencode/skills/issue-operations/platforms/<platform>/SKILL.md")` | CONFLICTING |
 | "MCP plugin present" | Check for platform MCP tools | `grep(pattern="gitbucket_", path=".opencode/skills/issue-operations/platforms/")` | VERIFICATION-GAP |
 

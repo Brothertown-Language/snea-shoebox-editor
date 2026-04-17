@@ -195,11 +195,11 @@ conflicts_resolved: [<N>]
 branch_name: <str>
 worktree_path: <path>
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```
 
 ## Sub-Agent Spawning
@@ -213,9 +213,9 @@ This skill is a **heavy skill** — its task files contain significant detail th
 5. Sub-agent executes task in isolation, returns structured result
 6. Main agent receives result summary — no full git-workflow content in main context
 
-**Sub-agent context parameters:** Pass `<WorktreePath>`, `BRANCH_NAME`, `<GitOwner>`, `<GitRepo>`, `<DevName>`, `<DevEmail>` from session init.
+**Sub-agent context parameters:** Pass `<worktree.path>`, `branch`, `<github.owner>`, `<github.repo>`, `<dev.name>`, `<dev.email>` from session init.
 
-**⚠️ Worktree pass-through is MANDATORY:** When spawning sub-agents from a worktree context, `WORKTREE_PATH` MUST be included in the dispatch prompt. Sub-agents that perform git operations without `WORKTREE_PATH` will silently modify the main repo — this is a CRITICAL GUIDELINE VIOLATION (see #741).
+**⚠️ Worktree pass-through is MANDATORY:** When spawning sub-agents from a worktree context, `worktree.path` MUST be included in the dispatch prompt. Sub-agents that perform git operations without `worktree.path` will silently modify the main repo — this is a CRITICAL GUIDELINE VIOLATION (see #741).
 
 ## Live Verification Requirements
 
@@ -254,7 +254,7 @@ This skill is a **heavy skill** — its task files contain significant detail th
 | `merged_at` is None (no merge) | CONFLICTING | flag-for-review | HALT — do not close issues |
 | Tracking branch missing | MISSING-ELEMENT | auto-fix | Push with `-u` to establish tracking |
 | Unpushed commits detected | VERIFICATION-GAP | conditional | Push before generating compare URL |
-| WORKTREE_PATH empty/not set | STRUCTURE-VIOLATION | auto-fix | HALT — fatal error, cannot proceed safely |
+| worktree.path empty/not set | STRUCTURE-VIOLATION | auto-fix | HALT — fatal error, cannot proceed safely |
 | Staged changes differ from expected | CONFLICTING | flag-for-review | Verify staging matches intent before commit |
 | Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason, may need reopen |
 

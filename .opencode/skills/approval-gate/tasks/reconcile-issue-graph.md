@@ -6,7 +6,7 @@ Act on findings from the issue graph traversal performed by `verify-authorizatio
 
 - Graph traversal complete via `verify-authorization` §5.5
 - Findings list available from traversal output
-- `<GitOwner>` and `<GitRepo>` from session context
+- `<github.owner>` and `<github.repo>` from session context
 
 ## Entry Criteria
 
@@ -38,9 +38,9 @@ For each finding from the traversal list, classify into one of six categories:
 
 For each sub-issue finding in the traversal list:
 
-1. **Identify the parent plan** — call `github_issue_read(method=get_sub_issues, owner=<GitOwner>, repo=<GitRepo>, issue_number=<N>)` on each finding's parent to confirm the plan relationship. Record the parent plan issue number.
-2. **Read the parent plan body** — call `github_issue_read(method=get, owner=<GitOwner>, repo=<GitRepo>, issue_number=<plan_N>)` and extract the spec reference using the pattern `Spec: #N`.
-3. **Search for other plans referencing the same spec** — call `github_search_issues(query="label:plan \"Spec: #<spec_N>\" in:body repo:<GitOwner>/<GitRepo>", owner=<GitOwner>, repo=<GitRepo>)`. Collect all plan issue numbers returned.
+1. **Identify the parent plan** — call `github_issue_read(method=get_sub_issues, owner=<github.owner>, repo=<github.repo>, issue_number=<N>)` on each finding's parent to confirm the plan relationship. Record the parent plan issue number.
+2. **Read the parent plan body** — call `github_issue_read(method=get, owner=<github.owner>, repo=<github.repo>, issue_number=<plan_N>)` and extract the spec reference using the pattern `Spec: #N`.
+3. **Search for other plans referencing the same spec** — call `github_search_issues(query="label:plan \"Spec: #<spec_N>\" in:body repo:<github.owner>/<github.repo>", owner=<github.owner>, repo=<github.repo>)`. Collect all plan issue numbers returned.
 4. **Compare plan scopes for overlap** — for each additional plan found, call `github_issue_read(method=get)` to read its body. Extract phase titles and compare with the current plan's phases. Record overlapping phase titles.
 5. **If overlap exists**: Add a finding to the `uncertain` classification with reason `"duplicate plan track — requires dev action to determine which plan owns deliverables"`. Record: spec number, all plan numbers referencing that spec, and the overlapping phase titles.
 
@@ -65,7 +65,7 @@ Candidates without evidence artifacts are reclassified as `uncertain` with reaso
 
 For each `auto-close` candidate, scan all comments on the issue for conflicting signals that would prevent confident auto-closure.
 
-1. Call `github_issue_read(method=get_comments, owner=<GitOwner>, repo=<GitRepo>, issue_number=<N>)` for each candidate.
+1. Call `github_issue_read(method=get_comments, owner=<github.owner>, repo=<github.repo>, issue_number=<N>)` for each candidate.
 2. For each comment, check for conflict phrases within 24 hours of the reconciliation run timestamp: `"needs work"`, `"verification gap"`, `"not complete"`, `"partial"`, `"⚠️"`.
 3. If any comment posted within the 24-hour window contains a conflict phrase, reclassify the candidate from `auto-close` to `uncertain` with reason `"comment-content conflict: issue comments flag incomplete work"`. Record the conflicting comment ID and phrase.
 4. If no conflicting comments are found within the 24-hour window, the candidate passes this gate.
@@ -165,9 +165,9 @@ Every action MUST produce a live tool-call artifact:
 root_issue_number: <N>
 findings: [{issue: <N>, state: <str>, classification: <str>, evidence_summary: <str>}]
 session_vars:
-  GitOwner: <from-session>
-  GitRepo: <from-session>
-  DevName: <from-session>
-  DevEmail: <from-session>
-  WorktreePath: <from-session>
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
 ```

@@ -71,10 +71,10 @@ This pushes the branch WITHOUT creating a PR.
 
 ### Step 3: Generate Compare URL
 
-Using session values (<GitOwner>, <GitRepo>):
+Using session values (<github.owner>, <github.repo>):
 
 ```
-https://github.com/<GitOwner>/<GitRepo>/compare/dev...<branch-name>
+https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>
 ```
 
 ### Step 4: Report Completion
@@ -177,7 +177,7 @@ git log origin/dev..HEAD --oneline
 ```
 After generating compare URL:
   - Verify URL uses correct base branch (dev, not main)
-  - Verify URL uses session init values for <GitOwner> and <GitRepo> (not hardcoded)
+  - Verify URL uses session init values for <github.owner> and <github.repo> (not hardcoded)
   - If URL contains wrong base → STRUCTURE-VIOLATION (auto-fix: regenerate with correct base)
 ```
 
@@ -208,7 +208,7 @@ Before sending chat message in Step 4:
 
 ## Context Required
 
-- Session values: <GitOwner>, <GitRepo>, branch name
+- Session values: <github.owner>, <github.repo>, branch name
 - Related tasks: `pr-creation` (PR)
 
 ## Why This Task Is Critical

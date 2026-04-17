@@ -75,12 +75,12 @@ json=["bug", "enhancement"]  # ✅
 Session init script (`.opencode/tools/session-init`) detects GitBucket from remote URL and outputs:
 
 ```
-GIT_PLATFORM=gitbucket
-GITBUCKET_HTML_URL=https://gitbucket.example.com/gitbucket/
-GITBUCKET_HAS_CREDENTIALS=true
+github.platform: gitbucket
+gitbucket.html_url: https://gitbucket.example.com/gitbucket/
+gitbucket.has_credentials: true
 ```
 
-**If `GITBUCKET_HAS_CREDENTIALS=false`**, token is missing from `.env`.
+**If `gitbucket.has_credentials=false`**, token is missing from `.env`.
 
 ## Token Validation
 

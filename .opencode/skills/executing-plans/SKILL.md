@@ -23,9 +23,9 @@ When dispatched from `approval-gate` after plan approval, the following context 
 ```yaml
 plan_issue: <number>
 spec_issue: <number, extracted from plan body>
-GitOwner: "<from-session>"
-GitRepo: "<from-session>"
-WorktreePath: "<worktree path>"
+github.owner: "<from-session>"
+github.repo: "<from-session>"
+worktree.path: "<worktree path>"
 phase_progress:
   completed_phases: "<prose listing of completed phases by concern name, from Plan STATUS>"
   concern_boundaries_crossed: "<prose description of architectural concern transitions from plan>"

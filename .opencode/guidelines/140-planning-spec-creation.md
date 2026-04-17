@@ -82,7 +82,7 @@ ______________________________________________________________________
 
 ### Platform Routing
 
-| `GIT_PLATFORM` | Platform Sub-Skill |
+| `github.platform` | Platform Sub-Skill |
 |----------------|-------------------|
 | `github` | `issue-operations/platforms/github-mcp/` |
 | `gitbucket` | `issue-operations/platforms/gitbucket-api/` |
