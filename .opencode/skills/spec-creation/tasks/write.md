@@ -144,7 +144,7 @@ Invoke `issue-operations` skill to persist the spec as a GitHub Issue:
 
 <issue URL>
 
-🤖 <AgentName> (<ModelID>) created
+🤖 <AgentName> (<ModelId>) created
 ```
 
 **🚫 NEVER:**

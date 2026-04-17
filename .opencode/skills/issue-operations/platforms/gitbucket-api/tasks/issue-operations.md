@@ -224,7 +224,7 @@ api.add_issue_comment(
     owner="org",
     repo="project",
     issue_number=14,
-    body="""🤖 <AgentName> (<ModelID>) ✅ completed
+    body="""🤖 <AgentName> (<ModelId>) ✅ completed
 
 **Summary:**
 

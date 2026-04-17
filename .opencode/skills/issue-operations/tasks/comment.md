@@ -34,13 +34,13 @@ Before posting, evaluate: Does this comment convey information a stakeholder nee
 | Completion | Task finished | completed | ✅ |
 | Update | Modified existing content | updated | 📝 |
 | Rejection | Cannot proceed | rejected | ❌ |
-| Copy Editor | Posting on behalf of user | `🤖 ✎📝 on behalf of <AI-Name>` | ✎ |
+| Copy Editor | Posting on behalf of user | `🤖 ✎📝 on behalf of <AgentName>` | ✎ |
 
 ### Step 3: Apply Format Template
 
 **Invariant byline format (all types):**
 ```
-🤖 <AI-Name> (<ModelID>) <status-icon> <status>
+🤖 <AgentName> (<ModelId>) <status-icon> <status>
 ```
 
 **Completion Template:**
@@ -54,7 +54,7 @@ Before posting, evaluate: Does this comment convey information a stakeholder nee
 All tasks complete from this specification.
 
 ---
-🤖 <AI-Name> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 **Update Template:**
@@ -66,7 +66,7 @@ All tasks complete from this specification.
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 <AI-Name> (<ModelID>) 📝 updated
+🤖 <AgentName> (<ModelId>) 📝 updated
 ```
 
 ### Prose-Driven Comment Bodies (CRITICAL)
@@ -91,8 +91,8 @@ Stakeholders need understanding, not commit logs. GitHub diffs already show what
 **GitHub platform:**
 ```python
 github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     issue_number=N,
     body=formatted_comment
 )
@@ -103,8 +103,8 @@ github_add_issue_comment(
 from skills.gitbucket_api.tools import GitBucketAPI
 api = GitBucketAPI()
 api.add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     issue_number=N,
     body=formatted_comment
 )

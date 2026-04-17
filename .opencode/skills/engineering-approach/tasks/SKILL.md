@@ -51,7 +51,7 @@ Execute implementation after design is approved, following established design de
 **Outcome:** <What changed>
 
 ---
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelId>) completed
 ```
 
 ### Step 5: HALT
@@ -70,7 +70,7 @@ Execute implementation after design is approved, following established design de
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL
+- Session values: <GitOwner>, <GitRepo>, <DevName>, <DevEmail>
 - Related tasks: `verify-understanding`, `verify-design`
 
 ## Live Verification: Engineering Claims (MANDATORY)

@@ -58,4 +58,4 @@ Structure choices are context-dependent:
 
 All structure findings are reported for agent review. The agent decides whether to apply changes.
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

@@ -41,7 +41,7 @@ Before posting, evaluate whether the comment is substantive per the `issue-opera
 ```python
 # ONLY post if the comment conveys stakeholder-meaningful information
 if is_substantive:
-    github_add_issue_comment(owner=GIT_OWNER, repo=GIT_REPO, issue_number=N, body="...")
+    github_add_issue_comment(owner=<GitOwner>, repo=<GitRepo>, issue_number=N, body="...")
 else:
     # Skip posting — progress goes to chat only
     pass

@@ -216,7 +216,7 @@ Before invoking any cross-referenced skill:
 
 This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces reasoning-first runbook generation to prevent template-filling anti-patterns.
 
-Key adaptations for <AI-Name>:
+Key adaptations for <AgentName>:
 - Integration with existing systematic-debugging and verification-before-completion skills
 - GitBucket platform support via MCP tools
 - Dual-output contract (AI-parseable + human-readable)

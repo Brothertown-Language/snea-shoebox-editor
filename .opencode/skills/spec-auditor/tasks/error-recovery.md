@@ -60,4 +60,4 @@ Severity: [HIGH|MEDIUM|LOW]
 | ERROR-RECOVERY-GAP (missing version/date) | auto-fix | Add `Last Validated: [date]` header |
 | ERROR-RECOVERY-GAP (missing validation gate) | auto-fix | Add "## Validation" stub with success criteria template |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

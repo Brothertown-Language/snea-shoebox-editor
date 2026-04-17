@@ -76,7 +76,7 @@ Format per `000-critical-rules.md`:
 
 <exec summary>
 
-🤖 <AgentName> (<ModelID>) analysis
+🤖 <AgentName> (<ModelId>) analysis
 ```
 
 ## Cross-References

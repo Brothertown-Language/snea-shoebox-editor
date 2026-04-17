@@ -19,7 +19,7 @@ This task dispatches plan execution to `divide-and-conquer --task assemble-batch
 /skill divide-and-conquer --task assemble-batch
 ```
 
-When dispatching, the `executing-plans` skill passes `phase_progress` alongside `plan_issue`, `spec_issue`, `GIT_OWNER`, `GIT_REPO`, and `WORKTREE_PATH`. The `assemble-batch` task then maintains and extends phase progress as each sub-agent completes, feeding it forward into subsequent dispatch contexts.
+When dispatching, the `executing-plans` skill passes `phase_progress` alongside `plan_issue`, `spec_issue`, `<GitOwner>`, `<GitRepo>`, and `<WorktreePath>`. The `assemble-batch` task then maintains and extends phase progress as each sub-agent completes, feeding it forward into subsequent dispatch contexts.
 
 The phase progress information comes from two sources:
 - The Plan STATUS marker (which phases are marked complete with ☑)

@@ -176,10 +176,10 @@ For each closed issue encountered during verification:
 
     # Check 1: Was it closed via merged PR?
     # Search for PRs referencing this issue
-    prs = github_search_pull_requests(query=f"Fixes #{closed_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+    prs = github_search_pull_requests(query=f"Fixes #{closed_issue_number} repo:{<GitOwner>}/{<GitRepo>}")
     merged_pr_found = False
     for pr in prs:
-      pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+      pr_detail = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"])
       if pr_detail.get("merged_at") is not None:
         merged_pr_found = True
         break
@@ -305,8 +305,8 @@ findings = traverse_issue_graph(root_issue_number)
 reconcile_result = reconcile_issue_graph(
     root_issue_number=root_issue_number,
     findings=findings,
-    GIT_OWNER=GIT_OWNER,
-    GIT_REPO=GIT_REPO
+    GitOwner=GitOwner,
+    GitRepo=GitRepo
 )
 ```
 
@@ -388,7 +388,7 @@ if not is_spec:
 # Search for plans referencing this spec
 spec_number = issue["number"]
 plan_issues = github_search_issues(
-    query=f"open label:plan Spec: #{spec_number} repo:{GIT_OWNER}/{GIT_REPO}"
+    query=f"open label:plan Spec: #{spec_number} repo:{<GitOwner>}/{<GitRepo>}"
 )
 ```
 
@@ -498,11 +498,11 @@ After all verification gates pass, determine the approval context and auto-dispa
    - Plan detection is via `plan` label or `[PLAN]` prefix in title (NOT via sub-issue relationship to spec)
 2. **If spec approval:** Invoke `writing-plans --task create` with context:
    - `spec_issue=#N` (the approved spec issue number)
-   - `GIT_OWNER`, `GIT_REPO`, `WORKTREE_PATH` from session
-3. **If plan approval:** Invoke `executing-plans --task start` with context:
+   - `<GitOwner>`, `<GitRepo>`, `<WorktreePath>` from session
+5. **If plan approval:** Invoke `executing-plans --task start` with context:
    - `plan_issue=#N` (the approved plan issue number)
    - `spec_issue=#M` (extracted from plan body — the spec reference)
-   - `GIT_OWNER`, `GIT_REPO`, `WORKTREE_PATH` from session
+   - `<GitOwner>`, `<GitRepo>`, `<WorktreePath>` from session
 4. **Chat output:** Clearly indicate the transition:
    - Spec approval: "Verification passed → Creating implementation plan"
    - Plan approval: "Verification passed → Starting implementation"

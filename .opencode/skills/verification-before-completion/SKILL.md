@@ -170,7 +170,7 @@ Before invoking any cross-referenced skill:
 
 This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces evidence-based verification to prevent premature completion claims.
 
-Key adaptations for <AI-Name>:
+Key adaptations for <AgentName>:
 - Integration with existing executing-plans and git-workflow skills
 - GitBucket platform support via MCP tools
 - Dispatch table integration for mandatory invocation

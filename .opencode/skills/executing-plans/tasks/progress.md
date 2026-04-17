@@ -46,7 +46,7 @@ From plan's verification methods:
 **Next:** Step N+1 - [Next concern]
 
 ---
-🤖 <AgentName> (<ModelID>) 🔄 working
+🤖 <AgentName> (<ModelId>) 🔄 working
 ```
 
 ## Multi-Step Execution Example
@@ -66,7 +66,7 @@ From plan's verification methods:
 **Evidence:** Migration test passed
 
 ---
-🤖 <AgentName> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 
 ## Step 2: API Endpoints
 - ☐ Create login endpoint
@@ -74,5 +74,5 @@ From plan's verification methods:
 - ☐ Create refresh endpoint
 
 ---
-🤖 <AgentName> (<ModelID>) 🔄 working
+🤖 <AgentName> (<ModelId>) 🔄 working
 ```

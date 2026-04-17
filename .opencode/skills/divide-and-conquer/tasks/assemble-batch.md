@@ -89,12 +89,12 @@ For each issue in execution order:
        verification_evidence: "<prose summary of what was verified in prior phases and the outcomes>"
      dependency_branches: ["spec/<prior-branch>"]
      env_vars:
-       WORKTREE_PATH: ".worktrees/spec-<name>"
-       BRANCH_NAME: "spec/<name>"
-       GIT_OWNER: "<from-session>"
-       GIT_REPO: "<from-session>"
-       DEV_NAME: "<from-session>"
-       DEV_EMAIL: "<from-session>"
+        WorktreePath: ".worktrees/spec-<name>"
+        BRANCH_NAME: "spec/<name>"
+        GitOwner: "<from-session>"
+        GitRepo: "<from-session>"
+        DevName: "<from-session>"
+        DevEmail: "<from-session>"
      ```
 
 3. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
@@ -233,7 +233,7 @@ PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
 
 **NEVER use the wrong label for the wrong URL format.** Label-format mismatch (e.g., "Compare URL" with `pull/N` URL, or "PR URL" with `compare/dev...` URL) is a critical violation.
 
-🤖 <AgentName> (<ModelID>) <status>
+🤖 <AgentName> (<ModelId>) <status>
 ```
 
 **Chat Output Format Verification (MANDATORY — Zero Tolerance)**
@@ -365,7 +365,7 @@ assemble-batch:
 10. **Always batch mode** — single issue = batch of one, no special-case path
 11. **Decision Log persistence** — after each sub-agent returns, append `decision_log_entry` as a dedicated GitHub Issue comment on the Plan issue. Decision Log uses comments (not body edits) for lightweight, append-only, session-surviving persistence
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Batch State Claims (MANDATORY)
 

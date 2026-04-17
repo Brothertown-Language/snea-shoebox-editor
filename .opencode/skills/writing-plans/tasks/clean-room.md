@@ -162,4 +162,4 @@ affected_files_count: K
 - Related tasks: `create` (standard plan creation), `validate` (plan validation)
 - Related skills: `spec-auditor` (orchestrator), `brainstorming` (recommended when gaps found)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

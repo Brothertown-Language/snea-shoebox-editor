@@ -72,4 +72,4 @@ This aligns with the v2 design philosophy from `concern-separation-auditor/SKILL
 - Single-task specs (no phases to analyze)
 - Simple bug fixes with one phase
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

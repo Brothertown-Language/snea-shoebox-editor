@@ -165,7 +165,7 @@ Every spec file MUST include:
 4. **Numbered Phases**: Phase 1, Phase 2, Phase 3...
 5. **Numbered Steps**: 1, 2, 3 within each phase
 6. **Status Markers**: `☐`/`↻`/`☑`/`☒` for each step
-7. **Byline Footer**: A footer line with AI attribution: `🤖 <AgentName> (<ModelID>) created`
+7. **Byline Footer**: A footer line with AI attribution: `🤖 <AgentName> (<ModelId>) created`
 
 ## 8. Phase Naming Quality (MANDATORY)
 

@@ -210,11 +210,11 @@ needs_approval_label_added: bool
 spec_content: <structured outputs from prerequisite tasks>
 exploration_results: <brainstorming output reference>
 session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+  GitOwner: <from-session>
+  GitRepo: <from-session>
+  DevName: <from-session>
+  DevEmail: <from-session>
+  WorktreePath: <from-session>
 ```
 
 ## Cross-References
@@ -229,6 +229,6 @@ session_vars:
 - **Authorization classification:** See `010-approval-gate.md` §Action Authorization Classification
 - **Related subtask:** `spec-auditor --task ground-truth` (adversarial metadata verification model)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 **⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

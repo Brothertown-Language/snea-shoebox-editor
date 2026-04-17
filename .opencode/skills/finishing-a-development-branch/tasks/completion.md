@@ -46,7 +46,7 @@ Generate executive summary in chat:
 
 **Outcome:** <What stakeholders get — branch is ready/not ready for PR>
 
-Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch>
+Compare URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/compare/dev...<branch>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.

@@ -33,12 +33,12 @@ sub_task:
   scope: "<files, modules, functions>"
   boundaries: "<what is OUT of scope>"
 env_vars:
-  WORKTREE_PATH: "<worktree path>"
+  WorktreePath: "<worktree path>"
   BRANCH_NAME: "<branch name>"
-  GIT_OWNER: "<from-session>"
-  GIT_REPO: "<from-session>"
-  DEV_NAME: "<from-session>"
-  DEV_EMAIL: "<from-session>"
+  GitOwner: "<from-session>"
+  GitRepo: "<from-session>"
+  DevName: "<from-session>"
+  DevEmail: "<from-session>"
 ```
 
 **MANDATORY verification items before dispatch:**

@@ -48,4 +48,4 @@ Severity: [HIGH|MEDIUM|LOW]
 | DETERMINISM-VIOLATION (undocumented state dependency) | auto-fix | Add explicit state dependency note between steps |
 | DETERMINISM-VIOLATION (non-deterministic step) | flag-for-review | Non-determinism may be intentional; requires domain judgment |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

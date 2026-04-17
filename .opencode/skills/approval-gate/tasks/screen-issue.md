@@ -9,7 +9,7 @@ Per-issue screening for pre-implementation analysis. Screen a single approved is
 - Single issue number to screen (passed via dispatch context)
 - Issue has been verified by `verify-authorization`
 - User has explicitly authorized implementation
-- `GIT_OWNER` and `GIT_REPO` available from dispatch context
+- `<GitOwner>` and `<GitRepo>` available from dispatch context
 
 ## Exit Criteria
 
@@ -130,7 +130,7 @@ This gate ensures the agent cannot skip the sub-issue traversal. The section bel
 
 1. **ENUMERATE:** Call `github_issue_read(method=get_sub_issues, issue_number=<candidate>)` — no exceptions, no shortcuts
 2. **VERIFY EACH CHILD:** For EVERY sub-issue returned, call `github_issue_read(method=get, issue_number=<sub_issue_number>)` — do NOT trust cached state; verify against live GitHub API
-3. **CHECK CLOSURE LEGITIMACY:** For each closed sub-issue, search for merged PR evidence via `github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")`. If closed without merged PR and `state_reason != "not_planned"` → DOWNGRADE to "partially-implemented"
+3. **CHECK CLOSURE LEGITIMACY:** For each closed sub-issue, search for merged PR evidence via `github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{<GitOwner>}/{<GitRepo>}")`. If closed without merged PR and `state_reason != "not_planned"` → DOWNGRADE to "partially-implemented"
 4. **CHECK OPEN SUB-ISSUES:** If ANY sub-issue is open → the parent CANNOT be "already-implemented" — DOWNGRADE to "partially-implemented"
 5. **PRODUCE EVIDENCE:** Each sub-issue MUST produce a tool-call artifact showing its state was verified. Blanket assertions ("all sub-issues checked") WITHOUT per-sub-issue tool-call evidence are VERIFICATION-GAP findings
 
@@ -142,10 +142,10 @@ For each sub-issue of the candidate "already implemented" issue:
 
   if child.state == "closed":
     state_reason = child.get("state_reason", "")
-    prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+    prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{<GitOwner>}/{<GitRepo>}")
     merged_pr_found = False
     for pr in prs:
-      pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+      pr_detail = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"])
       if pr_detail.get("merged_at") is not None:
         merged_pr_found = True
         break
@@ -371,11 +371,11 @@ concerns:
 issue_number: <N>
 batch_peers: [<list of other issue numbers in batch>]
 session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+  GitOwner: <from-session>
+  GitRepo: <from-session>
+  DevName: <from-session>
+  DevEmail: <from-session>
+  WorktreePath: <from-session>
 ```
 
 ## Red Flags

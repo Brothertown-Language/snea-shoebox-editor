@@ -48,12 +48,12 @@ Generate executive summary in chat:
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch>
+Compare URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/compare/dev...<branch>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Completion State (MANDATORY)
 

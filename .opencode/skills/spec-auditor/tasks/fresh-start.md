@@ -57,4 +57,4 @@ Per guidelines `045-open-questions.md` and `140-planning-spec-creation.md`:
 - File references must use stable anchors
 - Cross-references must include summaries
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

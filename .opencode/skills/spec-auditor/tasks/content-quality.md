@@ -82,4 +82,4 @@ Severity: [HIGH|MEDIUM|LOW]
 | PLAN-BLEED | auto-fix | Replace code/DDL/algorithms with requirements tables; note moved content for plan |
 | PLAN-BLEED-AMBIGUOUS | flag-for-review | Content could be requirement or implementation detail; requires domain judgment |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

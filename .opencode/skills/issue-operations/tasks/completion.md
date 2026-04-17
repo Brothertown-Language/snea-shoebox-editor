@@ -47,7 +47,7 @@ Generate executive summary in chat:
 
 **Outcome:** <What stakeholders get from the new issue>
 
-Issue URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/issues/<number>
+Issue URL: <GitBucketHtmlUrl><GitOwner>/<GitRepo>/issues/<number>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.

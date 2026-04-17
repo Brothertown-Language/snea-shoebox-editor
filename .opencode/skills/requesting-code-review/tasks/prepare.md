@@ -86,7 +86,7 @@ uv run pyright src/
 Fixes #[issue-number]
 
 ---
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 ```
 
 ## Anti-Patterns

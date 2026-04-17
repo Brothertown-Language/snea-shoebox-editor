@@ -95,7 +95,7 @@ NEVER proceed to PR creation without explicit "create a PR":
 | Finishing checklist fails | HALT and report issues (lint, tests, uncommitted); do NOT proceed to review-prep |
 | Review-prep HALTs prematurely | Correct behavior - wait for "create a PR" |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Enforcement Claims (MANDATORY)
 

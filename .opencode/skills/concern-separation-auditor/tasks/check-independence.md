@@ -50,7 +50,7 @@ Recommendation: [merge phases OR make dependency explicit OR uncouple]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Dependency Claims (MANDATORY)
 

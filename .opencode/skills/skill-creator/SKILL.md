@@ -137,30 +137,30 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 ### Required in every skill that:
 
-1. **References AI agents** — MUST use `<AI-Name>` and `<ModelID>` placeholders in byline contexts, never specific agent names or model IDs
-2. **References developers** — MUST use `DEV_NAME` and `DEV_EMAIL` from session init, never specific names like `<DEV_NAME>`
-3. **References organizations/repos** — MUST use `GIT_OWNER` and `GIT_REPO` from session init, never specific names like `<GIT_OWNER>`
-4. **Contains bylines or attribution** — MUST use `🤖 <AI-Name> (<ModelID>) <status-icon> <status>` format, never specific agent/model combinations
+1. **References AI agents** — MUST use `<AgentName>` and `<ModelId>` placeholders in byline contexts, never specific agent names or model IDs
+2. **References developers** — MUST use `<DevName>` and `<DevEmail>` placeholders in angle-bracket form, matching `DEV_NAME` and `DEV_EMAIL` from session init
+3. **References organizations/repos** — MUST use `<GitOwner>` and `<GitRepo>` placeholders in angle-bracket form, matching `GIT_OWNER` and `GIT_REPO` from session init
+4. **Contains bylines or attribution** — MUST use `🤖 <AgentName> (<ModelId>) <status-icon> <status>` format, never specific agent/model combinations
 
 ### Validation Gate
 
 The `validate` task (`quick_validate.py`) SHOULD check for and flag:
-- Specific agent names (e.g., `<AI-Name>`) in SKILL.md or task files — must use placeholder tokens
-- Specific model IDs (e.g., `<ModelID>`) in SKILL.md or task files — must use placeholder tokens
+- Specific agent names in SKILL.md or task files — must use `<AgentName>` placeholder token
+- Specific model IDs in SKILL.md or task files — must use `<ModelId>` placeholder token
 - Specific developer names or emails in SKILL.md or task files
-- Specific org/repo names in SKILL.md or task files (except in examples using the `<GIT_OWNER>/<GIT_REPO>` pattern)
+- Specific org/repo names in SKILL.md or task files (except in examples using the `<GitOwner>/<GitRepo>` pattern)
 - Specific platform URLs in SKILL.md or task files (except in examples using session init variable references)
 
 ### Placeholder Reference
 
 | Value Type | Placeholder | Source |
 |-----------|-------------|--------|
-| AI agent name | `<AI-Name>` | System prompt identity detection |
-| AI model ID | `<ModelID>` | System prompt identity detection |
-| Developer name | `DEV_NAME` | Session init |
-| Developer email | `DEV_EMAIL` | Session init |
-| Organization | `GIT_OWNER` | Session init |
-| Repository | `GIT_REPO` | Session init |
+| AI agent name | `<AgentName>` | System prompt identity detection |
+| AI model ID | `<ModelId>` | System prompt identity detection |
+| Developer name | `<DevName>` | Session init (`DEV_NAME`) |
+| Developer email | `<DevEmail>` | Session init (`DEV_EMAIL`) |
+| Organization | `<GitOwner>` | Session init (`GIT_OWNER`) |
+| Repository | `<GitRepo>` | Session init (`GIT_REPO`) |
 | Platform | `GIT_PLATFORM` | Session init |
 | GitHub URL | `GITHUB_HTML_URL` | Session init |
 | GitBucket URL | `GITBUCKET_HTML_URL` | Session init |

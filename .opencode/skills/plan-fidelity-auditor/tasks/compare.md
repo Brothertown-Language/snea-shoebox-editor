@@ -64,7 +64,7 @@ phases_missing: K
 phases_extra: L
 ```
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Comparison Claims (MANDATORY)
 

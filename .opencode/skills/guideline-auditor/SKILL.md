@@ -122,7 +122,7 @@ AI: Agent 📝 Update: Added new rule
 
 **RIGHT:**
 ```
-🤖 <AgentName> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 
 **Summary:**
 <impact and stakeholder value>
@@ -201,7 +201,7 @@ Per `000-critical-rules.md` and `issue-operations` skill, ALL completion comment
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 <AgentName> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 **Required Elements:**
@@ -225,7 +225,7 @@ Fixed DRY violation where same rule appeared in three files with slightly differ
 **Outcome:** Single source of truth for "never use echo redirects" rule.
 
 ---
-🤖 <AgentName> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 ---

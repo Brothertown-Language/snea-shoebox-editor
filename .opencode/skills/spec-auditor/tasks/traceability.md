@@ -62,4 +62,4 @@ Creation-time traceability is enforced by the `spec-creation` skill's `traceabil
 
 **Finding pattern:** `MISSING-TRACEABILITY` — Spec lacks creation-time traceability. Was `spec-creation --task traceability` used?
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

@@ -95,8 +95,8 @@ def test_core_endpoints() -> dict:
     results["/users"] = test_endpoint("GET", "/users")
 
     # Repository endpoints (use current repo)
-    owner = os.environ.get("GIT_OWNER", "<GIT_OWNER>")
-    repo = os.environ.get("GIT_REPO", "<GIT_REPO>")
+    owner = os.environ.get("GIT_OWNER", "<GitOwner>")
+    repo = os.environ.get("GIT_REPO", "<GitRepo>")
 
     results[f"/repos/{owner}/{repo}"] = test_endpoint("GET", f"/repos/{owner}/{repo}")
     results[f"/repos/{owner}/{repo}/issues"] = test_endpoint("GET", f"/repos/{owner}/{repo}/issues")
@@ -116,8 +116,8 @@ def test_core_endpoints() -> dict:
 def test_label_operations() -> bool:
     """Test label CRUD operations."""
     print("\n=== Testing Label Operations ===")
-    owner = os.environ.get("GIT_OWNER", "<GIT_OWNER>")
-    repo = os.environ.get("GIT_REPO", "<GIT_REPO>")
+    owner = os.environ.get("GIT_OWNER", "<GitOwner>")
+    repo = os.environ.get("GIT_REPO", "<GitRepo>")
 
     # Create test label
     test_label = f"test-api-{os.urandom(4).hex()}"

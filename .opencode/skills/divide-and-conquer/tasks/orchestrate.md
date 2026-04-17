@@ -226,21 +226,21 @@ Created 4 core skills for brainstorming, planning, execution, and verification.
 
 Compare URL: https://github.com/owner/repo/compare/dev...branch
 
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelId>) completed
 ```
 
 **Format verification (MANDATORY — check before posting):**
 
 - [ ] Executive summary present as first element
 - [ ] Compare URL present as last element before byline
-- [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelID>) <status>`
+- [ ] AI byline present after URL in format `🤖 <AgentName> (<ModelId>) <status>`
 - [ ] No URL before executive summary
 - [ ] No byline before URL
 
 **Issue comment:**
 
 ```markdown
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelId>) completed
 
 **Summary:**
 
@@ -304,7 +304,7 @@ divide-and-conquer/orchestrate:
     → Continues with implementation...
 ```
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Orchestration Claims (MANDATORY)
 

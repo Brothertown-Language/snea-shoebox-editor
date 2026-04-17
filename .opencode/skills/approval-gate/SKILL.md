@@ -331,11 +331,11 @@ nodes_visited: <N>
 issue_number: <N>
 batch_peers: [<N>]  # screen-issue only
 session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+  GitOwner: <from-session>
+  GitRepo: <from-session>
+  DevName: <from-session>
+  DevEmail: <from-session>
+  WorktreePath: <from-session>
 ```
 
 ## Adversarial Verification Requirements

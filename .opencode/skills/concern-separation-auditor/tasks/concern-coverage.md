@@ -106,7 +106,7 @@ All findings are reported for agent review. The agent decides whether to adjust 
 - Does NOT modify sub-issue scope or content (flag-for-review only)
 - Must use GitHub MCP tools for all issue operations
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Concern Scope Claims (MANDATORY)
 

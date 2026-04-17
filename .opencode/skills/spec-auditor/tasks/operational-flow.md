@@ -52,4 +52,4 @@ Severity: [HIGH|MEDIUM|LOW]
 | OPERATIONAL-FLOW-GAP (wrong order) | flag-for-review | Reordering steps requires understanding intent |
 | OPERATIONAL-FLOW-GAP (no rollback) | flag-for-review | Rollback design requires domain expertise |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

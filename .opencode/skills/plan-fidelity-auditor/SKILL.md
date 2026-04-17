@@ -193,4 +193,4 @@ Action: [auto-fix|conditional|flag-for-review]
 - Related skills: `writing-plans` (clean-room generation), `brainstorming` (recommended for gaps), `programming-principles` (design principle alignment for clean-room comparison context)
 - Related guidelines: `065-verification-honesty.md` (metadata verification extension)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

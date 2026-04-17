@@ -5,11 +5,12 @@
 # ///
 """Session initialization script for AI agents.
 
-Outputs KEY: value pairs for LLM consumption on stdout. Variable names match
-the canonical names referenced in guidelines and skills (GIT_OWNER, GIT_REPO,
-GIT_PLATFORM, DEV_NAME, DEV_EMAIL, BRANCH_NAME, WORKTREE_PATH, WORKTREE_FATAL,
-GITHUB_HTML_URL, GITBUCKET_HTML_URL, GITBUCKET_SSH_URL, GITBUCKET_HAS_CREDENTIALS).
-Agents must use these variable names directly — do NOT infer values from git
+Outputs Key: value pairs for LLM consumption on stdout. Key names match
+the canonical PascalCase names referenced in guidelines and skills (GitOwner,
+GitRepo, GitPlatform, DevName, DevEmail, BranchName, WorktreePath, WorktreeFatal,
+GitHubHtmlUrl, GitBucketHtmlUrl, GitBucketSshUrl, GitBucketHasCredentials,
+AgentName, ModelId).
+Agents must use these key names directly — do NOT infer values from git
 remotes or other sources.
 
 Human-readable diagnostic lines (Remote:, Srclight:, Hooks path:) are preserved
@@ -649,26 +650,28 @@ def main() -> int:
     wt_display = get_worktree_display()
     hooks_path = get_hooks_path()
 
-    print(f"GIT_OWNER: {owner}")
-    print(f"GIT_REPO: {repo}")
-    print(f"GIT_PLATFORM: {platform}")
-    print(f"DEV_NAME: {user_name}")
-    print(f"DEV_EMAIL: {user_email}")
-    print(f"BRANCH_NAME: {current_branch}")
+    print(f"GitOwner: {owner}")
+    print(f"GitRepo: {repo}")
+    print(f"GitPlatform: {platform}")
+    print("AgentName: ")
+    print("ModelId: ")
+    print(f"DevName: {user_name}")
+    print(f"DevEmail: {user_email}")
+    print(f"BranchName: {current_branch}")
     print(f"Remote: {remote_url}")
 
     if platform == "github":
-        print("GITHUB_HTML_URL: https://github.com/")
+        print("GitHubHtmlUrl: https://github.com/")
 
     if platform == "gitbucket":
         base_url, _, _ = parse_gitbucket_url(remote_url)
         if base_url:
-            print(f"GITBUCKET_HTML_URL: {base_url}")
+            print(f"GitBucketHtmlUrl: {base_url}")
         else:
             print("GITBUCKET_HTML_URL not found in .env — URL generation unavailable", file=sys.stderr)
         ssh_url = extract_ssh_url(remote_url)
         if ssh_url:
-            print(f"GITBUCKET_SSH_URL: {ssh_url}")
+            print(f"GitBucketSshUrl: {ssh_url}")
         has_credentials = False
         try:
             env_path = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env")
@@ -680,17 +683,17 @@ def main() -> int:
                     )
         except OSError:
             pass
-        print(f"GITBUCKET_HAS_CREDENTIALS: {'true' if has_credentials else 'false'}")
+        print(f"GitBucketHasCredentials: {'true' if has_credentials else 'false'}")
 
     if in_wt and wt_path and main_repo:
-        print(f"WORKTREE_PATH: {wt_path}")
+        print(f"WorktreePath: {wt_path}")
     elif worktree_ok:
         if wt_display:
             print(wt_display)
         else:
             print("Worktrees: available")
     else:
-        print("WORKTREE_FATAL: 1")
+        print("WorktreeFatal: 1")
 
     if hooks_path:
         print(f"Hooks path: {hooks_path}")

@@ -94,7 +94,7 @@ Severity: [HIGH|MEDIUM|LOW]
 - Does NOT rename sub-issues (MISMATCHED_PHASE_NAME is flag-for-review)
 - Must use GitHub MCP tools for all issue operations
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Sub-Issue Alignment Claims (MANDATORY)
 

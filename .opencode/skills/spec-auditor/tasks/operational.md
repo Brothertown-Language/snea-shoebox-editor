@@ -66,4 +66,4 @@ Creation-time operational requirements are enforced by the `spec-creation` skill
 
 **Finding pattern:** `MISSING-OPERATIONAL` — Spec lacks creation-time operational requirements. Was `spec-creation --task risk` used?
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

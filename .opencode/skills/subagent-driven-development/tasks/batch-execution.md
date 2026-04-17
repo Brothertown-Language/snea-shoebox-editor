@@ -196,10 +196,10 @@ dependency_branches: ["spec/<prior-branch>"]
 env_vars:
   WORKTREE_PATH: ".worktrees/spec-<short-name>"
   BRANCH_NAME: "spec/<short-name>"
-  GIT_OWNER: "<from-session>"
-  GIT_REPO: "<from-session>"
-  DEV_NAME: "<from-session>"
-  DEV_EMAIL: "<from-session>"
+  GitOwner: "<from-session>"
+  GitRepo: "<from-session>"
+  DevName: "<from-session>"
+  DevEmail: "<from-session>"
 ```
 
 **Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → FLAG DEV → HALT.

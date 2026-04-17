@@ -79,7 +79,7 @@ If during implementation the scope expands beyond what was assessed:
 
 A conservative assessment (multi-sub-agent for work that could be done by one) is acceptable. The decomposition overhead is small compared to the risk of overflow. Do not second-gauge a multi-sub-agent decision.
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Assessment Claims (MANDATORY)
 
