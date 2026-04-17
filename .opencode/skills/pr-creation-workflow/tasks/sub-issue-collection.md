@@ -18,11 +18,13 @@ ls .opencode/tmp/work-*.md 2>/dev/null
 # If not exists → single/multi-task PR format
 ```
 
+**PR strategy check (from scope fields):** Read `pr_strategy` from the work state file. When `pr_strategy == stacked`, use work PR format regardless. When `pr_strategy == individual`, separate PRs per issue. When `pr_strategy == none`, HALT — PR creation not authorized.
+
 **Note:** GitHub autoclose (`Fixes #N`/`Closes #N`) does NOT trigger for PRs merging into `dev`. The cleanup task (`git-workflow --task cleanup`) is the sole closure mechanism. PR body keywords are informational labels for human readers.
 
-### Single-Task Spec
+### Single-Task / Unified Dispatch Path
 
-If the spec has no sub-issues (single-task), include only the parent issue in the PR body:
+All specs follow the unified dispatch path (work-of-1). Include parent issue in the PR body. Sub-issues are included when they exist under the plan:
 
 ```
 Fixes #<parent>

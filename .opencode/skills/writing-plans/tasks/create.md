@@ -9,6 +9,7 @@ Create an implementation plan from an approved spec. For single-task specs the a
 1. Approved spec (verified by approval-gate)
 2. Spec stored as GitHub Issue
 3. Spec has explicit approval (`approved` or `go`)
+4. (Optional) `authorization_scope` from verify-authorization Step 2.0 — if scope >= `for_plan`, plan auto-approval is triggered
 
 ## Creation Steps
 
@@ -207,9 +208,32 @@ Before mapping file structure, check whether existing plans already reference th
 
     If any verification fails: flag as MISSING-TRACEABILITY or CONFLICTING and note in plan creation output.
 
-11. **Post-creation approval cascade check (MANDATORY):**
+11. **Post-creation approval cascade check and scope-aware auto-approval (MANDATORY):**
 
      After the plan is created (either combined or separate), check whether the spec that triggered plan creation was already approved. If yes, the plan inherits the spec's approval status.
+
+     **Scope-aware auto-approval:** When `authorization_scope >= for_plan` (from verify-authorization Step 2.0), the plan is auto-approved without requiring a separate approval gate. The user's pipeline authorization covers plan creation and approval. Remove `needs-approval` label and add cascade comment.
+
+     ```python
+     # Scope-aware auto-approval check
+     scope = authorization_scope  # from verify-authorization Step 2.0
+     SCOPE_LEVELS = {"standard": 0, "for_spec": 1, "for_plan": 2, "for_implementation": 3, "for_code_review": 4, "for_pr": 5, "pr_only": 5, "review_only": 4}
+     scope_level = SCOPE_LEVELS.get(scope, 0)
+
+     if scope_level >= SCOPE_LEVELS["for_plan"]:
+         # Pipeline authorization covers plan approval — auto-approve
+         github_issue_write(
+             method="update",
+             issue_number=plan_issue_number,
+             labels=[l for l in plan_labels if l != "needs-approval"],
+         )
+         github_add_issue_comment(
+             issue_number=plan_issue_number,
+             body=f"Plan auto-approved via pipeline scope (authorization_scope={scope}). Plan creation covered by '{scope}' authorization.",
+         )
+     ```
+
+     **If `halt_at == plan_created`:** After plan creation and auto-approval, HALT. Do NOT proceed to implementation. The scope horizon stops at plan creation.
 
      **For combined spec+plan:** The spec issue already has the plan content appended. If the spec was already approved, no further approval action is needed — the combined document inherits the spec's approval. Do NOT remove `needs-approval` if it is still present on the spec (the spec itself may still be pending approval). If the spec was already approved AND `needs-approval` is absent, the combined plan is auto-approved.
 
@@ -228,7 +252,7 @@ Before mapping file structure, check whether existing plans already reference th
      spec_labels = [l["name"] for l in spec_issue["labels"]]
      label_already_removed = "needs-approval" not in spec_labels
 
-     if has_approval or label_already_removed:
+     if has_approval or label_already_removed or scope_level >= SCOPE_LEVELS["for_plan"]:
          github_issue_write(
              method="update",
              issue_number=plan_issue_number,
@@ -240,7 +264,7 @@ Before mapping file structure, check whether existing plans already reference th
          )
      ```
 
-      This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval).
+     This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval) — unless `authorization_scope >= for_plan`, in which case the plan auto-approval applies regardless.
 
 ## Live Verification: Plan Creation Evidence (MANDATORY)
 

@@ -56,6 +56,9 @@ For each approved issue:
 ```yaml
 issue_number: <N>
 work_peers: [<list of all approved issue numbers except this one>]
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
 session_vars:
   github.owner: <from-session>
   github.repo: <from-session>
@@ -471,6 +474,16 @@ mkdir -p .opencode/tmp
 **Session:** <timestamp>
 **Authorized Issues:** #A, #B, #C
 **Authorization Context:** User said "approved" on <date>
+**Authorization Scope:** <scope_value> (parsed from authorization text)
+**HALT At:** <pipeline_stage> (derived from scope horizon)
+**PR Strategy:** stacked | individual | none (derived from scope)
+
+## Scope Fields
+
+- **authorization_scope:** <scope_value>
+- **halt_at:** <pipeline_stage>
+- **pr_strategy:** <stacked|individual|none>
+- **gap_fill:** <list of gap-fill actions executed or pending>
 
 ## Pre-Analysis Results
 

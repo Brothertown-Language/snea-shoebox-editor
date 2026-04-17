@@ -34,6 +34,8 @@ Orchestrate work execution by dispatching sub-agents for each approved issue, us
 - For multi-issue: use dependency order from `pre-implementation-analysis`
 - For single issue: treat as work-of-1 — no special casing, no shortcuts
 - Determine complexity level for each issue (simple/moderate/complex)
+- **Read scope fields from work state file:** `authorization_scope`, `halt_at`, `pr_strategy`
+- **If `halt_at` is reached before all issues complete:** HALT at scope boundary, report what was completed
 
 **Work-of-1.** There is no separate code path. The `assemble-work` task handles single-issue dispatch as the default. This eliminates forked execution paths.
 
@@ -73,29 +75,32 @@ For each issue in execution order:
 
      Phase progress is prose-driven: state what information must travel, trust the orchestrator to decide how to encode it. Completed phases should be named by the concern they address (e.g., "dispatch context schema" rather than "Phase 1"), concern boundaries should describe the architectural transition point, and verification evidence should summarize what was confirmed.
 
-     ```yaml
-      work_set:
-        authorized_issues: [#A, #B, #C]
-        completed_issues: [<completed>]
-     issue: #<current>
-     sub_issue_body: "<phase prose from sub-issue body, not just parent reference>"
-     spec: "<full spec body from GitHub Issue>"
-     authorization: "User approved #A, #B, #C on <date>"
-      prior_context: "<AI-composed intent and context from prior issues>"
-      decision_log_reference: "<URL or reference to the Decision Log on the Plan issue — the sub-agent can retrieve full decision history from this reference>"
-      phase_progress:
-       completed_phases: "<prose listing of completed phases by concern name, accumulated from prior sub-agent results and Plan STATUS>"
-       concern_boundaries_crossed: "<prose description of architectural concern transitions between the prior sub-agent's work and this sub-agent's work>"
-       verification_evidence: "<prose summary of what was verified in prior phases and the outcomes>"
-     dependency_branches: ["spec/<prior-branch>"]
-     env_vars:
-         worktree.path: ".worktrees/spec-<name>"
-         branch: "spec/<name>"
-        github.owner: "<from-session>"
-        github.repo: "<from-session>"
-        dev.name: "<from-session>"
-        dev.email: "<from-session>"
-     ```
+      ```yaml
+       work_set:
+         authorized_issues: [#A, #B, #C]
+         completed_issues: [<completed>]
+      issue: #<current>
+      sub_issue_body: "<phase prose from sub-issue body, not just parent reference>"
+      spec: "<full spec body from GitHub Issue>"
+      authorization: "User approved #A, #B, #C on <date>"
+      authorization_scope: <scope_value>
+      halt_at: <pipeline_stage>
+      pr_strategy: stacked | individual | none
+       prior_context: "<AI-composed intent and context from prior issues>"
+       decision_log_reference: "<URL or reference to the Decision Log on the Plan issue — the sub-agent can retrieve full decision history from this reference>"
+       phase_progress:
+        completed_phases: "<prose listing of completed phases by concern name, accumulated from prior sub-agent results and Plan STATUS>"
+        concern_boundaries_crossed: "<prose description of architectural concern transitions between the prior sub-agent's work and this sub-agent's work>"
+        verification_evidence: "<prose summary of what was verified in prior phases and the outcomes>"
+      dependency_branches: ["spec/<prior-branch>"]
+      env_vars:
+          worktree.path: ".worktrees/spec-<name>"
+          branch: "spec/<name>"
+         github.owner: "<from-session>"
+         github.repo: "<from-session>"
+         dev.name: "<from-session>"
+         dev.email: "<from-session>"
+      ```
 
 3. **Spawn sub-agent** via `task(subagent_type="general", prompt=...)`
 
@@ -206,7 +211,17 @@ If any check fails:
 - If squash-merges missing → complete Step 4 (Work Assembly) first
 - If working tree dirty → commit or stash changes first
 
-**🚫 CRITICAL: Individual PR creation for work-approved issues is FORBIDDEN. All issues in a work set MUST be squash-merged into a single work branch, then ONE PR created from that branch.**
+**🚫 CRITICAL: Individual PR creation for work-approved issues is FORBIDDEN when `pr_strategy = stacked`.** All issues in a work set MUST be squash-merged into a single work branch, then ONE PR created from that branch.
+
+**Scope-dependent PR strategy:**
+
+| `pr_strategy` | PR Behavior |
+|----------------|------------|
+| `stacked` | One PR for the entire work set (single stacked PR) |
+| `individual` | Separate PR per issue after squash-merge into work branch |
+| `none` | No PR creation — `halt_at` is before `pr_created` stage |
+
+**If `halt_at < pr_created`:** Do NOT proceed to PR creation. HALT at scope boundary after review-prep.
 
 ### Step 6: Report and HALT
 
@@ -264,9 +279,10 @@ Post completion comment on each issue ONLY if substantive (per `issue-operations
 
 **HALT condition:**
 
-- Do NOT create PR
+- Do NOT create PR unless `pr_strategy != none` AND `halt_at >= pr_created`
 - Do NOT close issues
-- Wait for explicit "create a PR" instruction
+- **If `halt_at < pr_created`:** HALT at scope boundary — do NOT create PR
+- Wait for explicit "create a PR" instruction when scope does not include PR creation
 
 ## Intent-and-Context Metadata
 

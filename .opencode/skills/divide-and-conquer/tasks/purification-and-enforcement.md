@@ -76,11 +76,23 @@ Each subtask MUST yield structured context before HALT:
 
 #### ⚠️ CRITICAL: HALT After Review-Prep
 
-NEVER proceed to PR creation without explicit "create a PR":
+NEVER proceed to PR creation without explicit "create a PR" — UNLESS pipeline scope authorizes it:
 
 - review-prep yields URL for CHAT
 - HALT and wait
 - Only "create a PR" triggers pr-creation
+- **Exception:** When `authorization_scope >= for_pr` or scope is `pr_only`, pipeline scope authorizes PR creation. Proceed if `pr_strategy != none` AND `halt_at >= pr_created`.
+- **When `halt_at < pr_created` or `pr_strategy == none`:** Do NOT create PR regardless of explicit instruction — the scope boundary is a hard wall.
+
+#### ⚠️ CRITICAL: Scope Boundary Enforcement
+
+The `halt_at` field from verify-authorization Step 2.0 defines a hard boundary. The dispatch chain MUST NOT proceed past this stage:
+
+- `halt_at == spec_created` → HALT after spec creation
+- `halt_at == plan_created` → HALT after plan creation
+- `halt_at == implementation_complete` → HALT after implementation, no PR
+- `halt_at == pr_created` → PR creation is authorized
+- `halt_at == review_prep` → Standard flow, PR requires explicit instruction
 
 ## Edge Cases
 

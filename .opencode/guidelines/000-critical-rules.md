@@ -354,10 +354,9 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 **⚠️ Implementing a multi-task plan without sub-issues is a CRITICAL GUIDELINE VIOLATION.**
 
 - 🚫 FORBIDDEN: Implementing phases without sub-issue structure; assuming markdown checkboxes = tracking; creating step-level sub-issues
-- ✅ REQUIRED: Sub-issues at PHASE level under the plan (not the spec); each linked via `github_sub_issue_write method=add`; single-task plans exempt; auto-create as pre-implementation setup
-- ✅ REQUIRED: Plan is the parent of implementation sub-issues; spec references plan via body linked reference, NOT GitHub sub-issue link
+- ✅ REQUIRED: Sub-issues at PHASE level under the plan (not the spec); each linked via `github_sub_issue_write method=add`; auto-create as pre-implementation setup
 
-**See `issue-operations` skill → `link-sub-issue` task for complete workflow including single-task exemption, auto-create workflow, and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
+**See `issue-operations` skill → `link-sub-issue` task for complete workflow including auto-create workflow and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 
@@ -622,7 +621,37 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - ✅ REQUIRED: Stack branches via `git merge <prior-branch>` into dependent branches before implementation
 - ✅ REQUIRED: When in doubt, stack — parallel execution is never the starting assumption
 
-## Critical Violation: Stale Todowrite State After Task Completion
+## Critical Violation: Pipeline-Scoped Authorization with Hard HALT at Scope Boundary
+
+**⚠️ Proceeding past the scope horizon specified in the authorization phrase is a CRITICAL GUIDELINE VIOLATION.**
+
+When a user says "approved #N to PR" (or any pipeline-scoped phrase), authorization extends ONLY to the pipeline stage specified. Everything below is gap-filled and auto-approved; everything above is unauthorized.
+
+- 🚫 FORBIDDEN: Proceeding past `halt_at` without re-authorization
+- 🚫 FORBIDDEN: Creating a PR when `halt_at < pr_created`
+- 🚫 FORBIDDEN: Implementing when `halt_at == plan_created`
+- 🚫 FORBIDDEN: Treating pipeline scope as a "soft suggestion" rather than a hard wall
+- ✅ REQUIRED: Parse authorization text for scope qualifiers (regex-based, priority order)
+- ✅ REQUIRED: HALT at the specified pipeline stage and report completion
+- ✅ REQUIRED: Pass `authorization_scope`, `halt_at`, and `pr_strategy` through the entire dispatch chain
+
+**See `approval-gate` skill → "Authorization Scope Model" for the complete scope values, verb-prefix parsing table, and gap-fill actions.** **AUTHORITY: `approval-gate` skill Authorization Scope Model**
+
+## Critical Violation: Unified Dispatch Path — No Single-Task Exemption
+
+**⚠️ Bypassing the unified dispatch path for single-issue work is a CRITICAL GUIDELINE VIOLATION.**
+
+Every authorization follows the same pipeline regardless of issue count: `verify-authorization → pre-implementation-analysis → divide-and-conquer/assemble-work → verification-before-completion → finishing-a-development-branch → git-workflow/review-prep`. There is no single-task exemption or separate code path.
+
+- 🚫 FORBIDDEN: Skipping `divide-and-conquer/assemble-work` for single issues
+- 🚫 FORBIDDEN: Implementing directly as the main agent for single issues
+- 🚫 FORBIDDEN: Creating individual PRs for single issues in a work set (PR strategy is scope-dependent, not count-dependent)
+- 🚫 FORBIDDEN: Bypassing any dispatch chain step for "small" or "simple" work
+- ✅ REQUIRED: Dispatch single issues through `assemble-work` as work-of-1 (single sub-agent)
+- ✅ REQUIRED: Use `authorization_scope` and `pr_strategy` to determine PR behavior, not issue count
+- ✅ REQUIRED: Follow the complete dispatch chain for every authorization
+
+**See `approval-gate` skill → "Unified Dispatch Path (Work-of-1)" and `divide-and-conquer` skill → `assemble-work` task for the complete dispatch procedure.**
 
 **⚠️ Leaving stale or uncleared todowrite state after task completion is a CRITICAL GUIDELINE VIOLATION.**
 

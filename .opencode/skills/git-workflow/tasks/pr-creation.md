@@ -715,9 +715,17 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=<parent>)
 autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 ```
 
-**For single-task specs:**
+**For all specs (unified dispatch path):**
 
-No sub-issues needed. Include only parent issue.
+Include parent issue. Sub-issues are included when they exist under the plan.
+
+**Scope-dependent PR strategy:**
+
+| `pr_strategy` | PR Behavior |
+|----------------|------------|
+| `stacked` | Single PR for all issues in work set |
+| `individual` | Standard PR per branch |
+| `none` | No PR creation — halt_at boundary is before PR stage |
 
 **⚠️ CRITICAL: Sub-issues are closed by the cleanup task via API, NOT by autoclose.**
 

@@ -48,6 +48,73 @@ Check that authorization is:
 - Explicit ("approved", "go", "approved: N.M")
 - For the CURRENT issue (not old session)
 
+#### Step 2.0: Authorization Scope Parsing
+
+**Parse the authorization phrase to determine scope horizon and gap-fill actions.**
+
+Authorization phrases carry implicit scope — the pipeline stage the developer expects work to reach. The scope horizon determines where the agent MUST stop, and what intermediate artifacts are gap-filled.
+
+##### Scope Detection (Regex-Based)
+
+```python
+import re
+
+SCOPE_PRIORITY = [
+    ("for_pr",          r"(?:to\s+PR|for\s+PR|up\s+to\s+PR|through\s+PR)\b"),
+    ("for_code_review", r"(?:to\s+(?:code\s*)?review|for\s+(?:code\s*)?review|through\s+(?:code\s*)?review)\b"),
+    ("for_implementation", r"(?:to\s+implementation|for\s+implementation|through\s+implementation)\b"),
+    ("for_plan",        r"(?:to\s+plan|for\s+plan|through\s+plan)\b"),
+    ("for_spec",        r"(?:to\s+spec|for\s+spec|through\s+spec)\b"),
+    ("pr_only",         r"\bPR\s+(?:only|just)\b"),
+    ("review_only",     r"\b(?:code\s*)?review\s+(?:only|just)\b"),
+    ("standard",        r"\bapproved\b|\bgo\b"),
+]
+
+def parse_authorization_scope(authorization_text: str) -> dict:
+    """
+    Parse authorization text to determine scope horizon.
+    Returns the FIRST matching scope by priority order.
+    """
+    text_lower = authorization_text.lower()
+    for scope, pattern in SCOPE_PRIORITY:
+        if re.search(pattern, text_lower, re.IGNORECASE):
+            return {
+                "authorization_scope": scope,
+                "scope_source": "parsed",
+            }
+    return {
+        "authorization_scope": "standard",
+        "scope_source": "default",
+    }
+```
+
+##### Scope Values and Pipeline Stages
+
+| Scope | Pipeline Stage Reached | Gap-Fill Actions | HALT After |
+|-------|----------------------|------------------|------------|
+| `standard` | Full pipeline | None (all artifacts must exist upfront) | After review-prep (default) |
+| `for_spec` | Spec creation only | None | Spec created |
+| `for_plan` | Through plan approval | Auto-create spec if missing | Plan created |
+| `for_implementation` | Through implementation | Auto-create spec+plan if missing | Implementation complete |
+| `for_code_review` | Through code review | Auto-create spec+plan, auto-approve plan | Review-ready |
+| `for_pr` | Through PR creation | Auto-create spec+plan, auto-approve plan, auto-create PR | PR created |
+| `pr_only` | PR creation only | None (assumes code exists on branch) | PR created |
+| `review_only` | Code review only | None (assumes code exists) | Review posted |
+
+##### Scope Result Fields
+
+After parsing, add these fields to the verification result:
+
+```yaml
+authorization_scope: <scope_value>
+scope_source: parsed | default
+halt_at: <pipeline_stage>  # Derived from scope horizon
+gap_fill_actions: [<action_list>]  # Derived from scope
+pr_strategy: stacked | individual | none  # Derived from scope
+```
+
+**Evidence artifact:** The parsed authorization text, matched regex pattern, and resulting scope fields MUST be recorded in the verification report.
+
 #### Step 2.1: Authorization Cascade by Output Lineage
 
 When user approves issue #P, and #P's body or comments explicitly state that it created issue #C (e.g., "Spec created: #966"), authorization cascades from #P to #C if ALL conditions are met:
@@ -112,16 +179,15 @@ plan_issue = github_issue_read(method="get", issue_number=N)
 is_plan = "plan" in [l["name"] for l in plan_issue["labels"]] or plan_issue["title"].startswith("[PLAN]")
 
 if is_plan:
-    # Determine work-of-1 vs multi-task
+    # All plans use unified dispatch path (work-of-1)
     phases = parse_phases_from_plan_body(plan_issue["body"])
-    is_single_task = len(phases) == 1
 ```
 
-#### 5.2 Verify Sub-Issues Under Plan (Multi-Task Only)
+#### 5.2 Verify Sub-Issues Under Plan (All Plans)
 
-**work-of-1 exemption:** If the plan has exactly ONE implementation phase with no decomposition, skip sub-issue verification entirely.
+**All plans follow the unified dispatch path (work-of-1).** There is no single-task exemption — sub-issue verification applies to every plan regardless of phase count.
 
-For multi-task plans:
+For all plans:
 
 ```python
 sub_issues = github_issue_read(method="get_sub_issues", issue_number=plan_issue)
@@ -461,7 +527,103 @@ elif not plan_issues:
 
 **Evidence artifact:** `github_search_issues` response showing plan issues referencing the spec, and `github_issue_write` response confirming label removal and comment posting.
 
-### Step 6: Auto-Dispatch After Successful Verification
+### Step 5c: Scope-Aware Gap-Fill Cascade
+
+**When `authorization_scope` from Step 2.0 is >= `for_plan`, missing intermediate artifacts are gap-filled automatically.** This eliminates the "catch-22" where pipeline authorization says "go to PR" but the plan doesn't exist yet — the scope horizon authorizes its creation.
+
+#### 5c.1 Detect Scope Horizon
+
+```python
+SCOPE_HORIZON = {
+    "standard":         "review_prep",
+    "for_spec":         "spec_created",
+    "for_plan":         "plan_created",
+    "for_implementation": "implementation_complete",
+    "for_code_review":  "code_review_ready",
+    "for_pr":           "pr_created",
+    "pr_only":          "pr_created",
+    "review_only":      "code_review_ready",
+}
+
+# From Step 2.0 result
+scope = verification_result["authorization_scope"]
+halt_at = SCOPE_HORIZON[scope]
+```
+
+#### 5c.2 Gap-Fill Actions by Scope
+
+```python
+GAP_FILL = {
+    "for_spec": [],  # Spec is the target; no upstream gap
+    "for_plan": ["auto_create_spec"],  # Missing spec is gap-filled
+    "for_implementation": ["auto_create_spec", "auto_create_plan", "auto_approve_plan"],
+    "for_code_review": ["auto_create_spec", "auto_create_plan", "auto_approve_plan"],
+    "for_pr": ["auto_create_spec", "auto_create_plan", "auto_approve_plan", "auto_create_pr"],
+    "pr_only": [],  # Assumes branch exists; no gap-fill
+    "review_only": [],  # Assumes code exists; no gap-fill
+    "standard": [],  # No gap-fill; all artifacts must pre-exist
+}
+```
+
+#### 5c.3 Execute Gap-Fill
+
+```python
+def execute_gap_fill(scope, issue_number, issue_labels, issue_title):
+    """Auto-create missing artifacts when scope authorizes it."""
+    actions = GAP_FILL.get(scope, [])
+    results = []
+
+    if "auto_create_spec" in actions:
+        # Check if spec already exists
+        is_spec = "spec" in [l["name"] for l in issue_labels] or issue_title.startswith("[SPEC")
+        if not is_spec:
+            # Invoke brainstorming --task explore to create spec
+            results.append({"action": "auto_create_spec", "status": "dispatched", "target": "brainstorming"})
+        else:
+            results.append({"action": "auto_create_spec", "status": "skipped", "reason": "spec_exists"})
+
+    if "auto_create_plan" in actions:
+        # Check if plan already exists
+        is_plan = "plan" in [l["name"] for l in issue_labels] or issue_title.startswith("[PLAN]")
+        if not is_plan:
+            # Invoke writing-plans --task create to create plan
+            # Plan auto-approval handled by writing-plans scope awareness
+            results.append({"action": "auto_create_plan", "status": "dispatched", "target": "writing-plans"})
+        else:
+            results.append({"action": "auto_create_plan", "status": "skipped", "reason": "plan_exists"})
+
+    if "auto_approve_plan" in actions:
+        # Cascade approval already handled by Step 5b for existing plans
+        # For gap-filled plans, writing-plans auto-approves when scope >= for_plan
+        results.append({"action": "auto_approve_plan", "status": "delegated", "target": "writing-plans"})
+
+    if "auto_create_pr" in actions:
+        # PR creation is handled by git-workflow scope awareness after implementation
+        results.append({"action": "auto_create_pr", "status": "deferred", "target": "git-workflow"})
+
+    return results
+```
+
+#### 5c.4 PR Strategy Determination
+
+PR strategy is derived from scope, NOT from issue count:
+
+```python
+PR_STRATEGY = {
+    "standard":         "individual",   # Separate PR per issue
+    "for_spec":         "none",         # Spec creation only, no PR
+    "for_plan":         "none",         # Plan creation only, no PR
+    "for_implementation": "individual",  # Implementation done, standard PR
+    "for_code_review":  "individual",   # Code review needs PR
+    "for_pr":           "stacked",      # Single stacked PR for all issues
+    "pr_only":          "stacked",      # Single PR for existing code
+    "review_only":      "individual",   # Review existing PRs
+}
+```
+
+**Evidence artifact:** Gap-fill actions dispatched, their results, and the derived PR strategy MUST be recorded in the verification report.
+
+### Step 6: Scope-Aware Auto-Dispatch After Successful Verification
 
 **🚫 CRITICAL: This step runs ONLY when ALL prior verification gates (Steps 1-5) pass. If ANY gate fails, HALT — do NOT dispatch.**
 
@@ -483,11 +645,28 @@ After all verification gates pass, determine the approval context and auto-dispa
 
 | Approval Context | How to Detect | Auto-Dispatch Target |
 |------------------|---------------|----------------------|
-| **Spec approval** | Issue title contains `[SPEC` or has `spec` label | `writing-plans --task create` |
+| **Spec approval** | Issue title contains `[SPEC` or has `spec` label | `writing-plans --task create` (or `brainstorming --task explore` if gap-fill) |
 | **Plan approval** | Issue has `plan` label or `[PLAN]` prefix in title | `executing-plans --task start` |
 | **Already implemented** | `verify-already-implemented` returns positive (after closed-issue verification in Step 5.4 confirms legitimate closure) | No dispatch — auto-close instead |
 | **Reconciled during verification** | reconcile-issue-graph returned auto-closed or reopened tickets | Include reconciled tickets in chat output; proceed with dispatch |
 | **Closed but NOT verified** | Step 5.4 closed-issue verification finds closure without merged PR evidence | flag-for-review — do NOT autoclose |
+
+#### Scope-Aware Dispatch Targets
+
+The dispatch target is modified by `authorization_scope` from Step 2.0:
+
+| Scope | Dispatch Target | HALT After |
+|-------|----------------|------------|
+| `standard` | Existing dispatch path (spec→writing-plans, plan→executing-plans) | After review-prep (default) |
+| `for_spec` | `brainstorming --task explore` (gap-fill: create spec) | Spec created |
+| `for_plan` | `brainstorming --task explore` then `writing-plans --task create` | Plan created |
+| `for_implementation` | Full pipeline (gap-fill spec+plan, then executing-plans) | Implementation complete |
+| `for_code_review` | Full pipeline through implementation | Code review ready |
+| `for_pr` | Full pipeline through PR creation | PR created |
+| `pr_only` | `git-workflow --task pr-creation` (skip implementation) | PR created |
+| `review_only` | `requesting-code-review` (skip implementation) | Review posted |
+
+**🚫 HARD HALT AT SCOPE BOUNDARY:** The agent MUST NOT proceed past the pipeline stage specified by `halt_at`. If the dispatch chain reaches the `halt_at` stage, the agent reports completion and STOPS. Proceeding past `halt_at` without re-authorization is a CRITICAL GUIDELINE VIOLATION.
 
 #### Auto-Dispatch Procedure
 
@@ -496,16 +675,20 @@ After all verification gates pass, determine the approval context and auto-dispa
    - Issue title format: `[PLAN]` prefix = plan approval
    - Labels: presence of `spec` or `plan` labels
    - Plan detection is via `plan` label or `[PLAN]` prefix in title (NOT via sub-issue relationship to spec)
-2. **If spec approval:** Invoke `writing-plans --task create` with context:
+2. Determine scope from Step 2.0 result (`authorization_scope`, `halt_at`, `pr_strategy`)
+3. Execute gap-fill from Step 5c if scope >= `for_plan`
+4. **If spec approval:** Invoke `writing-plans --task create` with context:
    - `spec_issue=#N` (the approved spec issue number)
+   - `authorization_scope=<scope>` and `halt_at=<stage>`
    - `<github.owner>`, `<github.repo>`, `<worktree.path>` from session
 5. **If plan approval:** Invoke `executing-plans --task start` with context:
    - `plan_issue=#N` (the approved plan issue number)
    - `spec_issue=#M` (extracted from plan body — the spec reference)
+   - `authorization_scope=<scope>`, `halt_at=<stage>`, `pr_strategy=<strategy>`
    - `<github.owner>`, `<github.repo>`, `<worktree.path>` from session
-4. **Chat output:** Clearly indicate the transition:
-   - Spec approval: "Verification passed → Creating implementation plan"
-   - Plan approval: "Verification passed → Starting implementation"
+6. **Chat output:** Clearly indicate the transition and scope:
+   - Spec approval: "Verification passed → Creating implementation plan (scope: <scope>)"
+   - Plan approval: "Verification passed → Starting implementation (scope: <scope>, halt_at: <stage>)"
 
 #### Spec Revision Revocation Detection
 
@@ -523,6 +706,8 @@ Numeric format: `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`
 - **Spec already has a plan:** `writing-plans --task create` handles this (skips or updates per its existing logic)
 - **Multi-task plan with missing sub-issues:** Step 5 sub-issue verification gate fails → HALT, no dispatch
 - **Authorization set dispatch:** Each plan in the work set gets its own dispatch cycle after work state is established
+- **Scope requires gap-fill but artifact exists:** Skip gap-fill for that artifact (check before creating)
+- **`pr_only` or `review_only` scope with no existing branch/PR:** HALT and report — these scopes assume existing work
 
 ### Step 2.5: Adversarial Verification — Verify Authorization Against Actual State
 

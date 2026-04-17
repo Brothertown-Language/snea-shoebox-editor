@@ -22,6 +22,9 @@ Reference document for yield-back context patterns between subtasks in the divid
 ```yaml
 authorization: confirmed (bool)
 issue_number: int
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
 ```
 
 ### What Implementation Needs FROM Pre-Work

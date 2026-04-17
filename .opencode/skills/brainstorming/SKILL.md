@@ -93,6 +93,7 @@ brainstorming (mandatory)
 - Exploration is a PRE-REQUISITE to spec creation
 - Approval gate checks for spec existence AFTER exploration
 - Exploration does NOT require approval (exploration phase)
+- **Gap-fill invocation:** When `authorization_scope >= for_spec` (from verify-authorization Step 2.0), brainstorming is invoked as part of the gap-fill cascade — the agent creates the spec automatically as part of pipeline authorization. The exploration workflow still applies (one question at a time, per-item confirmation), but the context is gap-fill rather than standalone exploration.
 
 ## Adversarial Verification: Authorization Claims
 

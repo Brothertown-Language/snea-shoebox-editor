@@ -26,9 +26,14 @@ Mandatory checks that must pass before creating ANY PR. No exceptions.
 # Check if this is a work branch (assembly by assemble-work)
 ls .opencode/tmp/work-*.md 2>/dev/null
 
+# Read scope fields from work state file if present
+# authorization_scope, halt_at, pr_strategy
+
 # Check commit count between dev and HEAD
 git log origin/dev..HEAD --oneline
 ```
+
+**Scope check:** If `pr_strategy == none` or `halt_at < pr_created`, HALT — PR creation is not authorized by the current scope. The scope boundary is a hard wall.
 
 **Single-issue branch (no work state file):**
 

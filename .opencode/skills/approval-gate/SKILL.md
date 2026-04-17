@@ -157,7 +157,6 @@ Before proceeding to the next step in the dispatch chain, the agent MUST confirm
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
 | **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
 | **Output lineage cascade** | When user approves an investigation/review issue whose sole deliverable is creating a spec, approval cascades to the spec. See `verify-authorization.md` Step 2.1 for the complete cascade procedure. |
-| **Pipeline authorization ("to PR")** | When user says "approved #N to PR" (or equivalent pipeline-authorization phrasing), authorization covers the FULL pipeline from issue approval through PR creation — including plan creation, plan auto-approval, and all intermediate steps. The spec-to-plan cascade and work carry-forward rules apply automatically. No separate plan approval gate is required. |
 
 ## Fix Spec Verification for Bug Reports
 
@@ -189,15 +188,70 @@ This check is invoked:
 | **Confirmation ≠ authorization** | Confirming an observation does NOT authorize implementation |
 | **Discussion conclusion ≠ authorization** | Verbal agreement, consensus, or opinion expressed in discussion does NOT constitute explicit authorization — see `020-go-prohibitions.md` §1 |
 | **Work carry-forward** | Authorization carries forward within a work set via persisted work state file; no re-authorization needed between issues |
-| **Pipeline authorization ("to PR")** | "Approved #N to PR" pre-authorizes all steps in the dispatch chain including plan creation and plan approval. The two-gate model is satisfied by the user's explicit pipeline instruction. |
+| **Pipeline authorization (scope-horizon)** | Authorization phrases specify a scope horizon — the pipeline stage where work stops. Everything below is gap-filled and auto-approved. Everything above is unauthorized. See Authorization Scope Model below. |
+| **Hard HALT at scope boundary** | Agent MUST NOT proceed past `halt_at` pipeline stage without re-authorization. Scope boundary is a hard wall, not a soft suggestion. |
+
+## Authorization Scope Model
+
+### Scope Values
+
+| Scope | Meaning | HALT After | Gap-Fill | PR Strategy |
+|-------|---------|------------|----------|--------------|
+| `standard` | Default: all artifacts must pre-exist | review-prep | None | individual |
+| `for_spec` | Authorization extends through spec creation | spec_created | None | none |
+| `for_plan` | Authorization extends through plan creation | plan_created | auto-create spec | none |
+| `for_implementation` | Authorization extends through implementation | implementation_complete | auto-create spec+plan, auto-approve plan | individual |
+| `for_code_review` | Authorization extends through code review | code_review_ready | auto-create spec+plan, auto-approve plan | individual |
+| `for_pr` | Full pipeline authorization, including PR creation | pr_created | auto-create spec+plan, auto-approve plan, auto-create PR | stacked |
+| `pr_only` | PR creation only (assumes code exists on branch) | pr_created | None | stacked |
+| `review_only` | Code review only (assumes code/PR exists) | code_review_ready | None | individual |
+
+### Scope Detection (Verb-Prefix Parsing)
+
+| Verb Pattern | Detected Scope |
+|---------------|---------------|
+| "approved #N to PR" / "approved #N for PR" / "approved #N through PR" | `for_pr` |
+| "approved #N to review" / "approved #N for review" / "approved #N through review" | `for_code_review` |
+| "approved #N to implementation" / "approved #N for implementation" | `for_implementation` |
+| "approved #N to plan" / "approved #N for plan" | `for_plan` |
+| "approved #N to spec" / "approved #N for spec" | `for_spec` |
+| "PR only" / "PR just" | `pr_only` |
+| "review only" / "review just" | `review_only` |
+| "approved" / "go" / "approved #N" (no scope qualifier) | `standard` |
+
+### Unified Dispatch Path (Work-of-1)
+
+**Every authorization follows the same pipeline regardless of issue count.** There is no single-task exemption — the dispatch chain is unified:
+
+```
+verify-authorization → gap-fill (if scope >= for_plan) → git-workflow pre-work
+→ pre-implementation-analysis → divide-and-conquer/assemble-work
+→ verification-before-completion → finishing-a-development-branch checklist
+→ git-workflow review-prep → [HALT at halt_at or continue to PR creation]
+```
+
+Whether the plan has 1 sub-issue or 10, the same skills are invoked. The `pr_strategy` field determines PR creation behavior, not issue count.
+
+### PR Strategy Is Scope-Dependent
+
+| Scope | PR Strategy | Behavior |
+|-------|-------------|----------|
+| `standard`, `for_implementation`, `for_code_review` | individual | Separate PR per issue |
+| `for_pr`, `pr_only` | stacked | Single stacked PR for all issues in work set |
+| `for_spec`, `for_plan` | none | No PR (spec/plan creation only) |
+| `review_only` | individual | Review existing PRs |
+
+When `halt_at < pr_created`, no PR is created — the agent halts before reaching the PR creation stage.
 
 ## Post-Implementation Workflow
 
 1. Push feature branch to remote
 2. Generate compare URL for review
 3. Report completion to issue (NO URL) and URL in chat
-4. HALT — do NOT create PR without explicit instruction
-5. WAIT for "create a PR" instruction
+4. **If `pr_strategy != none` AND `halt_at >= pr_created`:** Proceed to PR creation per `pr_strategy`
+5. **If `halt_at < pr_created`:** HALT at scope boundary — do NOT create PR
+6. **If `pr_strategy == none`:** HALT — do NOT create PR without explicit instruction
+7. WAIT for "create a PR" instruction when scope does not include PR creation
 
 ## Sub-Agent Tasks
 
@@ -257,6 +311,11 @@ gates_passed: [gate_name]
 blocking_reason: <reason|null>
 cascade_type: plan_cascade | output_lineage_cascade | none
 cascade_parent: <issue_number | null>
+authorization_scope: standard | for_spec | for_plan | for_implementation | for_code_review | for_pr | pr_only | review_only
+scope_source: parsed | default
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
+gap_fill_actions: [<action_list>]
 ```
 
 #### verify-qa-mode
@@ -329,6 +388,10 @@ execution_plan_presented: bool
 requires_developer: bool
 developer_reason: <str|null>
 work_state_file: <path>
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
+per_issue_gap_fill: [{issue: <N>, gap_fill: [<action>]}]
 ```
 
 #### verify-fix-spec
@@ -360,6 +423,9 @@ nodes_visited: <N>
 ```yaml
 issue_number: <N>
 work_peers: [<N>]  # screen-issue only
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
 session_vars:
   github.owner: <from-session>
   github.repo: <from-session>

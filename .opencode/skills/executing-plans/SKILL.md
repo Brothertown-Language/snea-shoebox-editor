@@ -23,6 +23,9 @@ When dispatched from `approval-gate` after plan approval, the following context 
 ```yaml
 plan_issue: <number>
 spec_issue: <number, extracted from plan body>
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
 github.owner: "<from-session>"
 github.repo: "<from-session>"
 worktree.path: "<worktree path>"
@@ -66,6 +69,8 @@ phase_progress:
 4. **Single issue = work of one:** There is no separate path for single issues. The `assemble-work` task handles single-issue dispatch as the default code path.
 
 5. **Progress reports against plan:** All progress tracking references the plan issue (not the spec issue). The plan is the implementation tracking artifact; the spec is the requirements artifact.
+
+6. **halt_at boundary enforcement:** If `halt_at` from the authorization scope is set, the dispatch chain MUST NOT proceed past that pipeline stage. When `halt_at == implementation_complete`, the workflow stops after implementation and does NOT proceed to PR creation.
 
 ## Dispatch Order
 

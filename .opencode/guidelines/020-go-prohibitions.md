@@ -42,11 +42,14 @@
 
 - **"GO" requires unambiguous scope; clarify only when ambiguous.** If the user types "GO" (or equivalent), treat it as valid authorization ONLY when the immediate session context identifies exactly one plan/scope target.
 - **Clarification gate for ambiguous "GO" only.** Ask for scope clarification only when more than one plausible plan file, phase, or implementation scope is active.
+- **Pipeline-scoped "GO" phrases specify scope horizon.** "Approved #N to PR", "#N approved for plan", "approved #N through implementation" — these carry implicit scope. Parse per `approval-gate` skill → "Authorization Scope Model" and HALT at the specified pipeline stage.
 
 ### ✅ ALWAYS DO
 
 - **Verify actual codebase state before acting.** When a GO names a specific phase, verify the actual codebase state of that phase's deliverables before taking any action — regardless of plan markers.
 - **SILENTLY HALT after a verified-complete phase.** If verification confirms a named phase is already fully and correctly implemented, report the verified findings and HALT without prompting.
+- **HARD HALT at scope boundary.** When `halt_at` is set from pipeline-scoped authorization, the agent MUST stop at that pipeline stage. `halt_at == plan_created` means stop after plan creation; `halt_at == pr_created` means PR creation is authorized. Proceeding past `halt_at` without re-authorization is a critical violation.
+- **Parse authorization phrases for scope.** "Approved #N" (no scope qualifier) = `standard`. "Approved #N to PR" = `for_pr`. "Approved #N for plan" = `for_plan`. See `approval-gate` skill → "Authorization Scope Model" for the complete verb-prefix parsing table.
 - **Every halt MUST produce a status message.** If the agent stops, it MUST output what was completed, what was attempted, and why it stopped. Zero output before stopping is a critical violation.
 - **Search issues before halting on missing spec/plan.** When an implementation request lacks a matching spec or plan:
   1. Search GitHub Issues using label filters: `[SPEC]`, `[PLAN]`, `[SPEC-FIX]`
@@ -221,4 +224,35 @@ rules:
     requires: [approval-gate-010]
     triggers: [approval-gate, brainstorming]
     source: "020-go-prohibitions.md §1 NEVER DO, ALWAYS DO"
+
+  - id: go-prohibitions-008
+    title: "Hard HALT at scope boundary without re-authorization"
+    conditions:
+      all:
+        - "pipeline_stage > halt_at"
+        - "re_authorization_received == false"
+    actions:
+      - HALT
+      - REPORT(scope_boundary_reached)
+    conflicts_with: []
+    requires: [approval-gate-010]
+    triggers: [approval-gate, divide-and-conquer, git-workflow]
+    source: "020-go-prohibitions.md §1 ALWAYS DO"
+
+  - id: go-prohibitions-009
+    title: "Pipeline-scoped GO phrases must be parsed for scope horizon"
+    conditions:
+      any:
+        - "authorization_text matches 'to PR'"
+        - "authorization_text matches 'for plan'"
+        - "authorization_text matches 'to implementation'"
+        - "authorization_text matches 'for spec'"
+        - "authorization_text matches 'for review'"
+    actions:
+      - PARSE_SCOPE(authorization_text)
+      - SET(halt_at, pr_strategy, gap_fill_actions)
+    conflicts_with: []
+    requires: []
+    triggers: [approval-gate]
+    source: "020-go-prohibitions.md §1 ASK FIRST"
 ```

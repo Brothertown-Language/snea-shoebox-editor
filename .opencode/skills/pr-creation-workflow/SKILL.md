@@ -29,18 +29,22 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 
 ## Authorization Boundary (CRITICAL)
 
-### What Authorizes Implementation (BUT NOT PR)
+### What Authorizes Implementation (BUT NOT PR — Unless Pipeline Scope Applies)
 
 | Authorization | Meaning | PR Authorized? |
 |---------------|---------|----------------|
-| `approved` | Begin implementation | ❌ NO |
-| `go` | Proceed to next task | ❌ NO |
-| `approved: 1` | Implement Phase 1 | ❌ NO |
-| `proceed` | Continue with plan | ❌ NO |
+| `approved` | Begin implementation | ❌ NO (unless scope >= for_pr) |
+| `go` | Proceed to next task | ❌ NO (unless scope >= for_pr) |
+| `approved: 1` | Implement Phase 1 | ❌ NO (unless scope >= for_pr) |
+| `proceed` | Continue with plan | ❌ NO (unless scope >= for_pr) |
+| `approved #N to PR` / `for PR` | Pipeline authorization through PR | ✅ YES (scope >= for_pr) |
+| `pr_only` | PR creation only | ✅ YES |
 
 ### What Authorizes PR Creation
 
 "create a PR", "make a PR", "push and create PR", "let's get a PR up", "create a pull request", "PR" (bare), "PR #NNN"
+
+**Pipeline scope authorization:** When `authorization_scope >= for_pr` or scope is `pr_only`, the user's pipeline instruction authorizes PR creation as part of the scope. No separate "create a PR" instruction is required.
 
 ## Operating Protocol
 
@@ -58,7 +62,7 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 - Branch state: working tree clean
 - Push verification: no unpushed commits
 - Co-author trailers: both AI and human trailers included
-- Issue references: `Fixes #<parent>` for single-task, `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue; for work PRs include `## Work Issues` section listing all implemented issues
+- Issue references: `Fixes #<parent>` for parent, `Fixes #<child>` for each sub-issue; for work PRs include `## Work Issues` section listing all implemented issues; PR strategy determines whether single stacked PR or individual PRs
 
 ## After PR Creation
 
