@@ -38,7 +38,7 @@ Check each category in order:
 | **Already implemented** | Merged PR references issue + Gate 1 passed (sub-issue enumeration gate) + Gate 2 passed (success criteria verification gate) + cross-references consistent | Exclude, mark "already-implemented" | No |
 | **Not implemented despite closure** | `state: closed` + merged PR exists + Gate 1 OR Gate 2 FAILED (sub-issues open/unverified, or success criteria not met) | Reopen or include remaining work, mark "not-implemented-despite-closure — premature closure" | No |
 | **Partially implemented** | Merged PR references issue + some success criteria met, some remaining | Include remaining phases only, mark "partially-implemented (phases X,Y done by PR #M)" | No |
-| **Superseded by batch peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
+| **Superseded by work peer** | Issue B's scope fully covers issue A's scope | Exclude A, note "superseded by #B" | No (if unambiguous) / Yes (if ambiguous) |
 | **Moot** | Referenced files/code restructured since spec creation; no remaining success criteria are achievable | Exclude, mark "moot" with reason | No |
 | **Stale assumptions** | Issue A references code/functions/files that Issue B modifies or deletes | Re-stage A after B only if same intent; otherwise HALT for developer | Yes (if different intent) / No (if same intent) |
 | **Conflicting (auto-resolvable)** | Issues touch same files, can be serialized | Serialize in correct order | No |
@@ -57,7 +57,7 @@ Check each category in order:
 
 #### Superseded Detection
 
-Issue A is superseded by batch peer B when:
+Issue A is superseded by work peer B when:
 
 - B's file list is a superset of A's file list
 - B's scope description fully encompasses A's scope
@@ -77,7 +77,7 @@ An issue is moot when:
 
 An issue has stale assumptions when:
 
-- Its spec references specific function names, class names, or file paths that another issue in the batch modifies or deletes
+- Its spec references specific function names, class names, or file paths that another issue in the work set modifies or deletes
 - The reference is integral to the issue's implementation instructions (not just background context)
 
 **Same intent (auto-resolvable):** Both issues want the same outcome for the referenced code.
@@ -280,7 +280,7 @@ Expand the issue into its sub-issues (flat item list):
 
 1. **Query sub-issues:** `github_issue_read(method="get_sub_issues", issue_number=N)`
 2. **If sub-issues exist:** Expand the parent into its sub-issues as individual implementation items. The parent's spec body provides context; each sub-issue defines a phase.
-3. **If no sub-issues (single-task):** The issue IS the flat item — no expansion needed.
+3. **If no sub-issues (work-of-1):** The issue IS the flat item — no expansion needed.
 4. **Build the flat item list:** Each sub-issue (or single issue) becomes one flat item. This is the input to the merge phase.
 
 **Expansion rules:**
@@ -289,13 +289,13 @@ Expand the issue into its sub-issues (flat item list):
 |-----------|-------------------|
 | Single-task spec (no sub-issues) | Item = the issue itself |
 | Multi-task spec (has sub-issues) | Items = each sub-issue (parent provides context) |
-| Multi-task spec with some sub-issues NOT in batch | Items = sub-issues in batch only |
+| Multi-task spec with some sub-issues NOT in work set | Items = sub-issues in work set only |
 
 ### Step 8: Cross-Issue Sub-Issue Handling
 
-When both a parent and its sub-issues are in the approved batch:
+When both a parent and its sub-issues are in the approved work set:
 
-1. **Detect:** If any sub-issue number is also in `batch_peers`, flag the pair.
+1. **Detect:** If any sub-issue number is also in `work_peers`, flag the pair.
 
 1. **Default behavior:** Omit sub-issues from execution plan — parent's cascade covers them. Sub-agent for parent receives the full spec including all phases.
 
@@ -369,7 +369,7 @@ concerns:
 
 ```yaml
 issue_number: <N>
-batch_peers: [<list of other issue numbers in batch>]
+work_peers: [<list of other issue numbers in work set>]
 session_vars:
   GitOwner: <from-session>
   GitRepo: <from-session>
@@ -402,7 +402,7 @@ session_vars:
 - Auto-detect partially-implemented issues (no developer input needed)
 - Set `requires_reconciliation: true` (NOT `requires_developer: true`) when issue state contradicts verified implementation state — `reconcile-issue-graph` handles this deterministically
 - Set `requires_developer: true` ONLY for the following conditions (exhaustive list):
-  1. Unresolvable conflicts: contradictory success criteria between batch issues
+  1. Unresolvable conflicts: contradictory success criteria between issues in authorization set
   2. Different-intent stale assumptions: Issue A references code Issue B deletes, with different goals
   3. Ambiguous supersession: partial scope overlap, unclear which is canonical
   4. `Uncertain` reconciliation findings after `reconcile-issue-graph` runs
@@ -414,7 +414,7 @@ session_vars:
 
 Screening sub-agents produce result contracts that feed into `pre-implementation-analysis`. The orchestrator assembles results and proceeds to the dispatch chain automatically. Key rules:
 
-1. **Screening results are data, not decisions.** The result contract is consumed by `pre-implementation-analysis` which auto-dispatches to `assemble-batch`. No human review of screening results is required unless `requires_developer: true`.
+1. **Screening results are data, not decisions.** The result contract is consumed by `pre-implementation-analysis` which auto-dispatches to `assemble-work`. No human review of screening results is required unless `requires_developer: true`.
 2. **Individual screen-issue sub-agents MUST NOT halt the orchestrator.** They return result contracts and terminate. The orchestrator processes all contracts before any action.
 3. **The orchestrator assembles results and proceeds.** Presentation of assembled results is informational — not a gate, not a decision point, not a halt point. See `pre-implementation-analysis.md` §"Post-Analysis Dispatch (MANDATORY)" for enforcement.
 

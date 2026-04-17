@@ -41,7 +41,7 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 ## Operating Protocol
 
 1. **Announce intent** at start: "Using the using-git-worktrees skill to set up an isolated workspace."
-1. **Default base branch is `dev`** — never from `main`. For batch workflows, `BASE_BRANCH` may be a prior feature branch or batch branch. Feature branches target `dev`.
+1. **Default base branch is `dev`** — never from `main`. For work execution workflows, `BASE_BRANCH` may be a prior feature branch or work branch. Feature branches target `dev`.
 1. **Always use `.worktrees/` directory** — stash+checkout is FORBIDDEN.
 1. **Verify `.worktrees/` is gitignored** before creating worktree. If not, add it and commit.
 1. **Check for name collisions** before creating — reuse existing worktree for same branch, HALT on mismatch.
@@ -60,13 +60,13 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 | No project setup step | Auto-detect and run `uv sync` |
 | No cleanup integration | Integrates with `finishing-a-development-branch` |
 
-Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>` for general feature work, `batch/<short-name>` for batch aggregation branches.
+Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>` for general feature work, `work/<short-name>` for work execution branches.
 
-**BASE_BRANCH parameter:** The `create-worktree` task supports creating worktrees from branches other than `dev`. Defaults to `dev` for standalone branches. In batch workflows, set to a prior feature branch (for dependency merge) or the batch branch. Agent decides at creation time based on context.
+**BASE_BRANCH parameter:** The `create-worktree` task supports creating worktrees from branches other than `dev`. Defaults to `dev` for standalone branches. In work execution workflows, set to a prior feature branch (for dependency merge) or the work branch. Agent decides at creation time based on context.
 
 ## Cross-References
 
-- **Called by:** `brainstorming` (Phase 4), `subagent-driven-development`, `executing-plans`
+- **Called by:** `brainstorming` (Phase 4), `divide-and-conquer`, `executing-plans`
 - **Pairs with:** `finishing-a-development-branch` (cleanup), `git-workflow` (branch/PR management)
 - **Related guidelines:** `000-critical-rules.md` (worktree bypass violation), `060-tool-usage.md` (path rules)
 

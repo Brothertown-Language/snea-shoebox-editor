@@ -15,7 +15,7 @@ Verify sub-issue structure and STATUS gate for multi-task plans before implement
 
 ## Exit Criteria
 
-- Sub-issues verified present under plan (multi-task) OR exemption confirmed (single-task/single-phase)
+- Sub-issues verified present under plan (multi-task) OR exemption confirmed (work-of-1)
 - STATUS in plan matches requested subtask number
 - Auto-create performed if needed
 

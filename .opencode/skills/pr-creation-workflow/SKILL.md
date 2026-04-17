@@ -51,14 +51,14 @@ PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT aut
 
 ## Pre-PR Creation Checklist (MANDATORY)
 
-- Squash verification: ONE commit for single-issue branches; N commits (one per item) for batch branches
-- Batch branch detection: Check for `.opencode/tmp/batch-*.md` — if present, skip re-squashing
-- Batch state guard: If `.opencode/tmp/batch-*.md` exists, individual feature branch PRs are FORBIDDEN. Only the batch branch may have a PR created. HALT if attempting to create an individual PR during batch execution.
+- Squash verification: ONE commit for single-issue branches; N commits (one per item) for work branches
+- Work branch detection: Check for `.opencode/tmp/work-*.md` — if present, skip re-squashing
+- Work state guard: If `.opencode/tmp/work-*.md` exists, individual feature branch PRs are FORBIDDEN. Only the work branch may have a PR created. HALT if attempting to create an individual PR during work execution.
 - Changelog generated (all platforms, no exceptions)
 - Branch state: working tree clean
 - Push verification: no unpushed commits
 - Co-author trailers: both AI and human trailers included
-- Issue references: `Fixes #<parent>` for single-task, `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue; for batch PRs include `## Batch Issues` section listing all implemented issues
+- Issue references: `Fixes #<parent>` for single-task, `Fixes #<parent>` AND `Fixes #<child>` for each sub-issue; for work PRs include `## Work Issues` section listing all implemented issues
 
 ## After PR Creation
 

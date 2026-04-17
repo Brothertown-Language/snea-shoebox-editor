@@ -116,21 +116,21 @@ Key rules:
 
 **Exception:** User explicitly names a phase (e.g., "approved: 1.2" or "Phase 2 only") → complete that phase ONLY, then HALT.
 
-### Batch Authorization Carry-Forward
+### Authorization Set Carry-Forward
 
-**When multiple issues are approved together:** authorization carries forward within the batch via the persisted batch state file.
+**When multiple issues are approved together:** authorization carries forward within the work set via the persisted work state file.
 
-**See `divide-and-conquer` skill `--task assemble-batch` for the complete batch orchestration workflow.**
+**See `divide-and-conquer` skill `--task assemble-work` for the complete work orchestration workflow.**
 
 Key rules:
 
-- 🚫 DO NOT re-authorize between issues in a batch
-- 🚫 DO NOT HALT between issues in a batch
-- ✅ Batch state file (`.opencode/tmp/batch-<timestamp>.md`) carries authorization context forward
+- 🚫 DO NOT re-authorize between issues in a work set
+- 🚫 DO NOT HALT between issues in a work set
+- ✅ Work state file (`.opencode/tmp/work-<timestamp>.md`) carries authorization context forward
 - ✅ Each sub-agent receives `prior_results` from preceding issues
-- ✅ Authorization is issue-bound but batch-carries-forward within the same approval
+- ✅ Authorization is issue-bound but carries forward within the same approval
 
-**This replaces the old "session-bound" limitation for batch approvals.** Within a batch, authorization persists via the batch state file, not via ephemeral chat context.
+**This replaces the old "session-bound" limitation for authorization sets.** Within a work set, authorization persists via the work state file, not via ephemeral chat context.
 
 ### Revision Revokes Approval (MANDATORY)
 

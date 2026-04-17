@@ -152,7 +152,7 @@ Record failure with details. For independent sub-tasks, continue to next. For de
 
 ### Sub-agent Discovers Bug
 
-Sub-agent reports bug as finding (read-only), HALTs implementation for its sub-task. Orchestrator records and reports in batch summary. Bug discovery does NOT authorize fixing.
+Sub-agent reports bug as finding (read-only), HALTs implementation for its sub-task. Orchestrator records and reports in work summary. Bug discovery does NOT authorize fixing.
 ## Live Verification: Dispatch Claims (MANDATORY)
 
 **Verify dispatch state claims against actual sub-agent results per `065-verification-honesty.md`.**

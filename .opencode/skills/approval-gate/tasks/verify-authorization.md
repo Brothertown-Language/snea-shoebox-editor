@@ -112,14 +112,14 @@ plan_issue = github_issue_read(method="get", issue_number=N)
 is_plan = "plan" in [l["name"] for l in plan_issue["labels"]] or plan_issue["title"].startswith("[PLAN]")
 
 if is_plan:
-    # Determine single-task vs multi-task
+    # Determine work-of-1 vs multi-task
     phases = parse_phases_from_plan_body(plan_issue["body"])
     is_single_task = len(phases) == 1
 ```
 
 #### 5.2 Verify Sub-Issues Under Plan (Multi-Task Only)
 
-**Single-task exemption:** If the plan has exactly ONE implementation phase with no decomposition, skip sub-issue verification entirely.
+**work-of-1 exemption:** If the plan has exactly ONE implementation phase with no decomposition, skip sub-issue verification entirely.
 
 For multi-task plans:
 
@@ -522,7 +522,7 @@ Numeric format: `STATUS: 1.1 (REVISED - NEEDS APPROVAL)`
 
 - **Spec already has a plan:** `writing-plans --task create` handles this (skips or updates per its existing logic)
 - **Multi-task plan with missing sub-issues:** Step 5 sub-issue verification gate fails → HALT, no dispatch
-- **Batch approval:** Each plan in batch gets its own dispatch cycle after batch state is established
+- **Authorization set dispatch:** Each plan in the work set gets its own dispatch cycle after work state is established
 
 ### Step 2.5: Adversarial Verification — Verify Authorization Against Actual State
 

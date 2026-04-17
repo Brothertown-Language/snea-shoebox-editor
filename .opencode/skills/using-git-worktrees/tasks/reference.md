@@ -57,7 +57,7 @@ Fix the worktree infrastructure, then proceed. Stash+checkout is FORBIDDEN.
 ### Called By
 
 - **brainstorming** (Phase 4) — REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** (#555) — REQUIRED before executing any tasks
+- **divide-and-conquer** — REQUIRED before executing any tasks
 - **executing-plans** — REQUIRED before executing any tasks
 - Any skill needing isolated workspace
 

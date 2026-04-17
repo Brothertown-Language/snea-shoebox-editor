@@ -8,13 +8,13 @@ Fetch sub-issues for a parent issue and build the autoclose list for the PR body
 
 ### Detect Branch Type
 
-First, detect whether this is a single-issue or batch PR:
+First, detect whether this is a single-issue or work PR:
 
 ```bash
-# Check if batch state file exists
-ls .opencode/tmp/batch-*.md 2>/dev/null
+# Check if work state file exists
+ls .opencode/tmp/work-*.md 2>/dev/null
 
-# If exists → batch PR format
+# If exists → work PR format
 # If not exists → single/multi-task PR format
 ```
 
@@ -50,26 +50,26 @@ Fixes #<parent>
    Fixes #<child2>
    ```
 
-### Batch PR
+### Work PR
 
-For batch PRs (assembled from multiple issues via `assemble-batch`):
+For work PRs (assembled from multiple issues via `assemble-work`):
 
-1. **Read batch state file** (`.opencode/tmp/batch-*.md`) to get list of all issues in the batch
+1. **Read work state file** (`.opencode/tmp/work-*.md`) to get list of all issues in the work
 2. **Build both sections:**
-   - `## Batch Issues` section listing each issue with its description
+   - `## Work Issues` section listing each issue with its description
    - `Fixes #N` annotations for all issues at the bottom
 
 ```markdown
 **Summary:**
 
-<1-2 sentences describing the overall impact of the batch>
+<1-2 sentences describing the overall impact of the work>
 
-**Outcome:** <What changed for stakeholders>
+**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-work → work branch → single PR.
 
-## Batch Issues
+## Work Issues
 
 #660 — Add pre-implementation analysis task
-#662 — Fix batch branch squash verification
+#662 — Fix work branch squash verification
 #621 — Collapse executing-plans into divide-and-conquer
 
 Fixes #660
@@ -102,18 +102,19 @@ Fixes #102
 Fixes #103
 ```
 
-**Batch:**
+**Work:**
 ```markdown
 **Summary:**
 
-Unified five approved issues into a single batch implementation, eliminating forked execution paths.
+Unified five approved issues into a single work implementation, eliminating forked execution paths.
 
-**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-batch → batch branch → single PR.
+**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-work → work branch → single PR.
 
-## Batch Issues
+
+## Work Issues
 
 #660 — Add pre-implementation analysis task
-#662 — Fix batch branch squash verification
+#662 — Fix work branch squash verification
 #621 — Collapse executing-plans into divide-and-conquer
 
 Fixes #660

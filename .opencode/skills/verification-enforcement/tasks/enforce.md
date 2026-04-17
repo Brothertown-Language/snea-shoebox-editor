@@ -26,5 +26,5 @@ The enforce task runs at the orchestrator level, not at the content-generator le
 
 ## Context Required
 
-- Invoked by: orchestrator skills (divide-and-conquer, batch execution)
+- Invoked by: orchestrator skills (divide-and-conquer, work execution)
 - Related tasks: `verify` (pre-generation gate), `revisit` (post-generation pass)

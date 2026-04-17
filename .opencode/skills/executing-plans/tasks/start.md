@@ -1,10 +1,10 @@
 # Task: start
 
-Dispatch to divide-and-conquer/assemble-batch for implementation.
+Dispatch to divide-and-conquer/assemble-work for implementation.
 
 ## Purpose
 
-This task dispatches plan execution to `divide-and-conquer --task assemble-batch`, which handles all implementation through the unified batch workflow.
+This task dispatches plan execution to `divide-and-conquer --task assemble-work`, which handles all implementation through the unified work workflow.
 
 ## Dispatch Procedure
 
@@ -16,10 +16,10 @@ This task dispatches plan execution to `divide-and-conquer --task assemble-batch
 4. **Dispatch to divide-and-conquer:**
 
 ```
-/skill divide-and-conquer --task assemble-batch
+/skill divide-and-conquer --task assemble-work
 ```
 
-When dispatching, the `executing-plans` skill passes `phase_progress` alongside `plan_issue`, `spec_issue`, `<GitOwner>`, `<GitRepo>`, and `<WorktreePath>`. The `assemble-batch` task then maintains and extends phase progress as each sub-agent completes, feeding it forward into subsequent dispatch contexts.
+When dispatching, the `executing-plans` skill passes `phase_progress` alongside `plan_issue`, `spec_issue`, `<GitOwner>`, `<GitRepo>`, and `<WorktreePath>`. The `assemble-work` task then maintains and extends phase progress as each sub-agent completes, feeding it forward into subsequent dispatch contexts.
 
 The phase progress information comes from two sources:
 - The Plan STATUS marker (which phases are marked complete with ☑)
@@ -27,14 +27,14 @@ The phase progress information comes from two sources:
 
 Phase progress is prose-driven — the orchestrating agent describes progress in natural prose. The requirement is that the information travels, not that it follows a rigid schema.
 
-The `assemble-batch` task handles:
+The `assemble-work` task handles:
 
 - Creating feature branches and worktrees
 - Sub-agent dispatch for each implementation item
-- Squash-merging feature branches into batch branch
+- Squash-merging feature branches into work branch
 - Verification gates (verification-before-completion, finishing-a-development-branch)
 
-**There is no single-issue bypass.** Single issue = batch of one = one sub-agent.
+**There is no single-issue bypass.** Single issue = work of one = one sub-agent.
 
 ## Legacy Task Redirects
 

@@ -308,7 +308,7 @@ This task is invoked by:
 
 1. **`verify-authorization` Step 5.4** — Before skipping closed issues in auto-dispatch
 2. **`verify-already-implemented`** — Before autoclosing as "already implemented"
-3. **`pre-implementation-analysis` Step 0** — Before excluding "already implemented" issues from batch
+3. **`pre-implementation-analysis` Step 0** — Before excluding "already implemented" issues from work set
 4. **`cleanup` pre-closure gate** — Before closing parent issues in post-merge workflow
 5. **`verify-fix-spec`** — Before skipping closed bug reports
 6. **`reconcile-issue-graph`** — Acts on findings from graph traversal (auto-close, reopen, flag uncertain)

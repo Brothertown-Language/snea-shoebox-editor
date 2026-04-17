@@ -1,6 +1,6 @@
 ---
 name: divide-and-conquer
-description: Use when implementing an approved spec, orchestrating sub-agents, or when a task risks context window overflow. Triggers on: implement, build, orchestrate, context overflow, decompose, dispatch subagent, batch execution.
+description: Use when implementing an approved spec, orchestrating sub-agents, or when a task risks context window overflow. Triggers on: implement, build, orchestrate, context overflow, decompose, dispatch subagent, work execution.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -12,7 +12,7 @@ compatibility: opencode
 
 Enforces context window safety by mandating pre-flight assessment before non-trivial implementation. When a task risks overflow, it MUST be decomposed into sub-tasks and dispatched to sub-agents. The orchestrator is a pure coordinator — it never edits implementation files directly. Only trivial single-file fixes skip assessment.
 
-**Source Attribution:** This skill addresses the context window overflow patterns identified in issue #734. Decomposition and dispatch patterns adapted from `implementation-workflow` (batch-orchestrate, context-passing, purification-and-enforcement).
+**Source Attribution:** This skill addresses the context window overflow patterns identified in issue #734. Decomposition and dispatch patterns adapted from `implementation-workflow` (work-orchestrate, context-passing, purification-and-enforcement).
 
 **Persona:** You are a Divide and Conquer Orchestrator. Your focus is assessing context fitness, decomposing work into safe units, dispatching sub-agents with scoped instructions, and aggregating results — never implementing directly.
 
@@ -30,7 +30,10 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 | `purification-and-enforcement` | Scope boundaries and enforcement rules for the orchestration layer | ~250 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ~150 |
 | `orchestrate` | Full workflow: assess → decompose → dispatch → merge → completion | ~400 |
-| `assemble-batch` | Batch assembly: squash-merge feature branches into batch branch | ~200 |
+| `assemble-work` | Work set assembly: squash-merge feature branches into work branch | ~200 |
+| `implementer-prompt` | Sub-agent prompt template: implementation context and instructions | ~250 |
+| `spec-reviewer-prompt` | Spec review stage prompt: two-stage review for spec compliance | ~200 |
+| `code-quality-reviewer-prompt` | Code quality review stage prompt: two-stage review for code quality | ~200 |
 
 ## Invocation
 
@@ -44,14 +47,15 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 - `/skill divide-and-conquer --task purification-and-enforcement` - Reference boundaries
 - `/skill divide-and-conquer --task completion` - Invoke when workflow halts
 - `/skill divide-and-conquer --task orchestrate` - Full workflow
-- `/skill divide-and-conquer --task assemble-batch` - Batch branch assembly
+- `/skill divide-and-conquer --task assemble-work` - Work set branch assembly
+- `/skill divide-and-conquer --task two-stage-review` - Optional two-stage review pipeline (spec + code quality)
 
 **COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 
 1. **Pre-flight assessment is MANDATORY** before any non-trivial task. Run `--task assess` first. Skipping assessment for non-trivial work is a CRITICAL violation.
-2. **No direct implementation** — the orchestrator NEVER implements directly. All implementation goes through `assemble-batch` as sub-agent dispatch. Single issue = batch of one sub-agent. No IMPLEMENT_DIRECTLY path.
+2. **No direct implementation** — the orchestrator NEVER implements directly. All implementation goes through `assemble-work` as sub-agent dispatch. Single issue = work set of one sub-agent. No IMPLEMENT_DIRECTLY path.
 3. **AI-driven sizing** — assessment informs workload sizing (single sub-agent vs multiple), not whether to dispatch. All work goes through sub-agents.
 4. **Recursive sub-delegation** — sub-agents receiving decomposed work CAN signal OVERFLOW if their portion still exceeds capacity. The orchestrator receives the signal and decomposes further.
 5. **Depth limit** — maximum decomposition depth configurable via `DIVIDE_AND_CONQUER_MAX_DEPTH` (default: 3). At max depth, HALT and report to user. Depth is tracked in the Dispatch Context Contract.
@@ -131,7 +135,7 @@ env_vars:
 
 **Phase progress is prose-driven.** The `phase_progress` section communicates what information must travel between phases — completed phases should be named by the concern they address, concern boundaries should describe the architectural transition point, and verification evidence should summarize what was confirmed and the outcome. The agent composing the context decides how to encode this; the requirement is the information, not the format.
 
-**Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` is composed by the orchestrator from prior sub-agent results and the Plan STATUS marker — it accumulates across the batch as each issue completes.
+**Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` is composed by the orchestrator from prior sub-agent results and the Plan STATUS marker — it accumulates across the work set as each issue completes.
 
 ## Sub-Agent Completion Checkpoint
 
@@ -225,7 +229,7 @@ When the orchestrating agent detects abnormal termination via the Sub-Agent Comp
   1. Uncommitted changes represent ≤50 lines of diff
   2. Changes touch a single file only
   3. Changes are fully correct and complete against the dispatch spec
-  4. No remaining sub-agent dispatches in the batch (this is the last sub-agent)
+  4. No remaining sub-agent dispatches in the work set (this is the last sub-agent)
 - **Action:** Commit and push the changes, then run verification (`verification-before-completion --task verify`)
 - **⚠️ Context window risk:** Manual completion consumes orchestrator context window. Even a "small" manual completion (reading diffs, composing commits) can push an already-loaded context toward overflow. This risk is WHY manual completion is strongly discouraged — the orchestrator's context window is a scarce resource that must be preserved for orchestration duties. Re-dispatching to a fresh sub-agent is context-free for the orchestrator.
 - **If ANY condition is NOT met → use Option A (Undo and Re-dispatch)**
@@ -251,7 +255,7 @@ If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 
 | Task | Words | Mode |
 |------|-------|------|
-| `assemble-batch` | 2,782 | sub-agent |
+| `assemble-work` | 2,782 | sub-agent |
 | `orchestrate` | ~400 | inline |
 | `assess` | ~300 | inline |
 | `decompose` | ~300 | inline |
@@ -262,26 +266,29 @@ If `WORKTREE_PATH` is NOT set, operate normally from the project root.
 | `context-passing` | ~200 | inline |
 | `purification-and-enforcement` | ~250 | inline |
 | `completion` | ~150 | inline |
+| `implementer-prompt` | ~250 | inline |
+| `spec-reviewer-prompt` | ~200 | inline |
+| `code-quality-reviewer-prompt` | ~200 | inline |
 
 ### Result Contracts (Sub-Agent Tasks)
 
-#### assemble-batch
+#### assemble-work
 
 ```yaml
 status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW
-task: assemble-batch
+task: assemble-work
 issues_dispatched: [<N>]
 issues_completed: [<N>]
 issues_failed: [<N>]
-batch_branch: <branch_name>
-batch_state_file: <path>
+work_branch: <branch_name>
+work_state_file: <path>
 results: [{issue: <N>, status: <str>, summary: <str>}]
 ```
 
 ### Dispatch Context Schema
 
 ```yaml
-batch_state_file: <path>
+work_state_file: <path>
 session_vars:
   GitOwner: <from-session>
   GitRepo: <from-session>
@@ -303,15 +310,15 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 
 **Sub-agent context parameters:** Pass `<WorktreePath>`, `BRANCH_NAME`, `<GitOwner>`, `<GitRepo>`, `<DevName>`, `<DevEmail>` from session init.
 
-## Live Verification: Batch State (MANDATORY)
+## Live Verification: Work State (MANDATORY)
 
-**🚫 CRITICAL: When this skill reads batch state (prior results, authorization, branch status), it MUST verify against live GitHub/git state. Trusting batch file claims without verification is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
+**🚫 CRITICAL: When this skill reads work state (prior results, authorization, branch status), it MUST verify against live GitHub/git state. Trusting work state file claims without verification is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
 
-| Batch State Claim | Verification Action | Tool Call | Problem Class |
+| Work State Claim | Verification Action | Tool Call | Problem Class |
 |------------------|-------------------|-----------|---------------|
-| "Prior issue completed" in batch file | Verify prior issue PR was actually merged | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+| "Prior issue completed" in work state file | Verify prior issue PR was actually merged | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
 | "Authorization cascades" | Verify authorization comment exists on parent issue | `github_issue_read(method=get_comments, issue_number=N)` → find auth comment | VERIFICATION-GAP |
-| "Batch branch is current" | Verify branch tip matches expected state | `bash` to run `git log -1 --oneline <branch>` | VERIFICATION-GAP |
+| "Work branch is current" | Verify branch tip matches expected state | `bash` to run `git log -1 --oneline <branch>` | VERIFICATION-GAP |
 | "Sub-issue phase complete" | Verify sub-issue state is actually closed (if applicable) | `github_issue_read(method=get, issue_number=N)` → check `state` | CONFLICTING |
 | "Prior results reference" | Verify referenced files/issues still exist | `glob(pattern="**/file")` or `github_issue_read(method=get, issue_number=N)` | MISSING-TRACEABILITY |
 
@@ -332,7 +339,7 @@ Action: [auto-fix|conditional|flag-for-review]
 | Prior PR not merged | CONFLICTING | flag-for-review | HALT — dependent branch may need to be stacked differently |
 | Authorization missing | VERIFICATION-GAP | conditional | Re-verify authorization before dispatching |
 | Branch out of date | VERIFICATION-GAP | auto-fix | Rebase or merge as needed |
-| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update batch state to reflect actual state |
+| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update work state to reflect actual state |
 | Referenced file/issue missing | MISSING-TRACEABILITY | conditional | Search alternates before proceeding |
 
 ## Cross-Reference Verification (MANDATORY)
@@ -341,7 +348,7 @@ Action: [auto-fix|conditional|flag-for-review]
 
 | Reference | Verification | Finding Class |
 | -- | -- | -- |
-| `subagent-driven-development` in Cross-References | File exists at `.opencode/skills/subagent-driven-development/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `divide-and-conquer` two-stage review tasks | Files exist in `.opencode/skills/divide-and-conquer/tasks/` | MISSING-TRACEABILITY if missing |
 | `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `approval-gate` in Cross-References | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `verification-before-completion` in Cross-References | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
@@ -349,9 +356,12 @@ Action: [auto-fix|conditional|flag-for-review]
 | `using-git-worktrees` in Cross-References | File exists at `.opencode/skills/using-git-worktrees/SKILL.md` | MISSING-TRACEABILITY if missing |
 | `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
 | `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
-| Task table entry `assemble-batch` | File exists at `.opencode/skills/divide-and-conquer/tasks/assemble-batch.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `assemble-work` | File exists at `.opencode/skills/divide-and-conquer/tasks/assemble-work.md` (renamed from `assemble-batch.md`) | MISSING-TRACEABILITY if missing |
 | Task table entry `assess` | File exists at `.opencode/skills/divide-and-conquer/tasks/assess.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `completion` | File exists at `.opencode/skills/divide-and-conquer/tasks/completion.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `implementer-prompt` | File exists at `.opencode/skills/divide-and-conquer/tasks/implementer-prompt.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `spec-reviewer-prompt` | File exists at `.opencode/skills/divide-and-conquer/tasks/spec-reviewer-prompt.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `code-quality-reviewer-prompt` | File exists at `.opencode/skills/divide-and-conquer/tasks/code-quality-reviewer-prompt.md` | MISSING-TRACEABILITY if missing |
 | `implementation-workflow` in Adapted From | Skill directory exists or was renamed to this skill | MISSING-TRACEABILITY if missing |
 
 **Verification Procedure:**
@@ -370,13 +380,27 @@ Before invoking any cross-referenced skill:
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
 
-**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency and sub-issue state. When this skill encounters batch state claims that smell wrong (e.g., "authorization cascades" but no auth comment found, "sub-issue closed" but no merged PR), invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency and sub-issue state. When this skill encounters work state claims that smell wrong (e.g., "authorization cascades" but no auth comment found, "sub-issue closed" but no merged PR), invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
+## Two-Stage Review Pipeline
+
+The divide-and-conquer skill supports an optional two-stage review pipeline for sub-agent output quality:
+
+1. **Spec reviewer stage** (`spec-reviewer-prompt`): Reviews sub-agent implementation against the spec's success criteria before accepting results. Invoked by the orchestrator after a sub-agent returns its result.
+
+2. **Code quality reviewer stage** (`code-quality-reviewer-prompt`): Reviews sub-agent implementation for code quality, testing coverage, and adherence to project conventions. Invoked after the spec review stage passes.
+
+3. **Implementer prompt** (`implementer-prompt`): Provides the sub-agent dispatch context template for two-stage review workflows.
+
+**When to use two-stage review:** Invoke when the spec has complex success criteria that benefit from independent verification, or when the orchestrator wants an additional quality gate beyond the sub-agent's self-verification. Single-issue work sets with straightforward success criteria may skip two-stage review.
+
+**Invocation:** Add `--task two-stage-review` to the divide-and-conquer skill call. The orchestrator includes the review stages in the sub-agent dispatch context.
 
 ## Cross-References
 
-- Related skills: `subagent-driven-development` (task-level isolation with two-stage review), `git-workflow` (git ops), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation), `spec-auditor` (ground-truth adversarial verification)
+- Related skills: `git-workflow` (git ops), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation), `spec-auditor` (ground-truth adversarial verification)
 - Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md` (metadata verification extension)
 - Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
-- Adapted from: `implementation-workflow` (batch-orchestrate, context-passing, purification-and-enforcement, completion)
+- Adapted from: `implementation-workflow` (work-orchestrate, context-passing, purification-and-enforcement, completion)
 
 Co-authored with AI: <AgentName> (<ModelId>)
