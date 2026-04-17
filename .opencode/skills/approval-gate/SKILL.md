@@ -91,15 +91,45 @@ Plan approved
   → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
   → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
   → divide-and-conquer/assemble-work (dispatch sub-agents, squash-merge into work branch)
+  ── VERIFICATION GATE ──────────────────────────────────────────────────
+  → Confirm assemble-work completed: work state file exists, all sub-agents returned
+  → If skipped: INVOKE assemble-work before proceeding (MANDATORY, no bypass)
+  ──────────────────────────────────────────────────────────────────────
   → verification-before-completion
-  → finishing-a-development-branch
-  → git-workflow/review-prep
+  ── VERIFICATION GATE ──────────────────────────────────────────────────
+  → Confirm VbC completed: success criteria verification results exist
+  → If skipped: INVOKE verification-before-completion before proceeding (MANDATORY, no bypass)
+  ──────────────────────────────────────────────────────────────────────
+  → finishing-a-development-branch --task checklist
+  ── VERIFICATION GATE ──────────────────────────────────────────────────
+  → Confirm checklist completed: all checklist items verified via tool calls
+  → If skipped: INVOKE checklist before proceeding (MANDATORY, no bypass)
+  ──────────────────────────────────────────────────────────────────────
+  → git-workflow --task review-prep
+  ── VERIFICATION GATE ──────────────────────────────────────────────────
+  → Confirm review-prep completed: compare URL generated and reported in correct format
+  → If skipped: INVOKE review-prep before proceeding (MANDATORY, no bypass)
+  ──────────────────────────────────────────────────────────────────────
 
 Already implemented
   → verify-authorization (all gates pass)
   → verify-already-implemented (detects implementation)
   → Auto-close (no dispatch)
 ```
+
+**Enforcement checkpoint rules (MANDATORY):**
+
+Before proceeding to the next step in the dispatch chain, the agent MUST confirm the previous step was completed by checking for its output artifacts. If any step was skipped, the agent MUST invoke it before proceeding — no step may be bypassed.
+
+| Step | Output Artifacts to Confirm | On Missing |
+| -- | -- | -- |
+| `git-workflow --task pre-work` | `worktree.path` set, feature branch exists | HALT and invoke pre-work |
+| `divide-and-conquer/assemble-work` | Work state file (`.opencode/tmp/work-*.md`), all sub-agents returned | HALT and invoke assemble-work |
+| `verification-before-completion` | Success criteria verification results exist in chat output | HALT and invoke VbC |
+| `finishing-a-development-branch --task checklist` | All checklist items verified via tool-call artifacts | HALT and invoke checklist |
+| `git-workflow --task review-prep` | Compare URL generated and reported in correct format | HALT and invoke review-prep |
+
+**Skipping any verification gate is a CRITICAL GUIDELINE VIOLATION.** The dispatch order is mandatory, not informational. An agent that proceeds past a gate without confirming the prior step's completion is violating the approval-gate enforcement protocol.
 
 **Spec approval dispatches to plan creation, NOT implementation.** The plan then requires its own approval before implementation begins — **unless the cascade applies** (spec approved + existing plan = plan inherits approval). See `verify-authorization.md` Step 5b for cascade conditions.
 
