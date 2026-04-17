@@ -297,6 +297,15 @@ Proceeding with execution plan.
 
 **Checkpoint (MANDATORY):** Before proceeding to `assemble-batch`, verify NO `question` tool calls have been made at ANY point during the pre-implementation-analysis flow (not just since plan presentation). If any were made, remove them and proceed autonomously. The execution plan is presented for informational purposes — no confirmation is requested or awaited. If any were made, the answers are irrelevant — the agent should have resolved the questions autonomously.
 
+#### Post-Analysis Dispatch (MANDATORY)
+
+After producing the execution plan and dependency graph, the agent MUST proceed directly to the next step in the dispatch chain (typically `assemble-batch`). The analysis result IS the decision — no separate user confirmation is required. Key rules:
+
+1. **Presentation is a status report, not a decision prompt.** The execution plan presentation (Step 6) is informational. It does NOT create a decision point.
+2. **No HALT after analysis unless `requires_developer: true`.** The only valid halt after pre-implementation-analysis is when screening sub-agents returned `requires_developer: true` per the exhaustive 5-condition list in `screen-issue.md`. When `requires_developer: false`, proceed without halting.
+3. **"Yield" means "produce output and continue," NOT "present output and wait."** The dispatch chain from pre-implementation-analysis to assemble-batch is automatic. No user interaction is expected or allowed between them.
+4. **Halting to "present" results as a decision point is functionally identical to asking a question** — both violate `000-critical-rules.md` §"Pushing Agent Intelligence Decisions to the User" and `020-go-prohibitions.md` §1.
+
 #### Prohibited Actions
 
 - **No `question` tool invocation** after plan presentation
@@ -620,3 +629,11 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - HALT for developer review only for unresolvable conflicts, different-intent stale assumptions, ambiguous supersession, and uncertain reconciliation findings
 - Verify screening result `requires_developer` field and HALT if true (after reconciliation runs)
 - Invoke `reconcile-issue-graph` (Step 0.7) for all issues with status inconsistencies before assembling the flat item list
+
+## Cross-References
+
+- `000-critical-rules.md` §"Pushing Agent Intelligence Decisions to the User" — structural decisions (execution order, plan structure, sub-issue creation) are agent intelligence concerns, not developer decisions
+- `020-go-prohibitions.md` §1 — no prompts for authorization; "approved to PR" covers the full pipeline
+- The analysis output IS the decision artifact — presenting it as a question OR as a halt-point both violate these rules
+- `screen-issue.md` — exhaustive `requires_developer: true` conditions (5 items + default failsafe)
+- `approval-gate/SKILL.md` §"Dispatch Order" — "MUST auto-dispatch" after analysis completes

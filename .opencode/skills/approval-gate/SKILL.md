@@ -112,6 +112,8 @@ Already implemented
 
 **Circular dispatch prevention:** Spec approval dispatches to `writing-plans`, which creates a plan. Plan approval dispatches to `executing-plans`. The plan requires its own approval before `executing-plans` can run.
 
+**⚠️ AUTO-DISPATCH ENFORCEMENT:** After `pre-implementation-analysis` completes with `requires_developer: false`, the agent MUST proceed to the next step in the dispatch chain without halting. "Yield" means "produce output and continue," NOT "present output and wait." The only valid halt after analysis is when a screening sub-agent returned `requires_developer: true` per the exhaustive conditions in `screen-issue.md`.
+
 ## Authorization Requirements
 
 | Requirement | Description |
@@ -125,6 +127,7 @@ Already implemented
 | **Fix spec for bug reports** | Bug reports must have a fix spec sub-issue before closure (per `000-critical-rules.md`) |
 | **Implementation includes** | All file modifications that alter behavior: source code, skill files, guideline files, config files, test files, TypeScript plugins |
 | **Output lineage cascade** | When user approves an investigation/review issue whose sole deliverable is creating a spec, approval cascades to the spec. See `verify-authorization.md` Step 2.1 for the complete cascade procedure. |
+| **Pipeline authorization ("to PR")** | When user says "approved #N to PR" (or equivalent pipeline-authorization phrasing), authorization covers the FULL pipeline from issue approval through PR creation — including plan creation, plan auto-approval, and all intermediate steps. The spec-to-plan cascade and batch carry-forward rules apply automatically. No separate plan approval gate is required. |
 
 ## Fix Spec Verification for Bug Reports
 
@@ -156,6 +159,7 @@ This check is invoked:
 | **Confirmation ≠ authorization** | Confirming an observation does NOT authorize implementation |
 | **Discussion conclusion ≠ authorization** | Verbal agreement, consensus, or opinion expressed in discussion does NOT constitute explicit authorization — see `020-go-prohibitions.md` §1 |
 | **Batch carry-forward** | Authorization carries forward within a batch via persisted batch state file; no re-authorization needed between issues |
+| **Pipeline authorization ("to PR")** | "Approved #N to PR" pre-authorizes all steps in the dispatch chain including plan creation and plan approval. The two-gate model is satisfied by the user's explicit pipeline instruction. |
 
 ## Post-Implementation Workflow
 

@@ -409,4 +409,13 @@ session_vars:
   5. Authorization scope gap: user approves an issue but the implementable target is unclear AND output lineage cascade (Step 2.1) does NOT apply
 
 **DEFAULT FAILSAFE:** If a screening sub-agent encounters a scenario not covered by conditions 1-5, it must RESOLVE autonomously (classify with best judgment) rather than defaulting to `requires_developer: true`. Escalating undefined scenarios to the developer is the "Pushing Agent Intelligence Decisions" anti-pattern. Set `requires_developer: true` ONLY when the developer's intent is genuinely ambiguous and cannot be inferred from context.
+
+### Screening Results Are Not Decision Points
+
+Screening sub-agents produce result contracts that feed into `pre-implementation-analysis`. The orchestrator assembles results and proceeds to the dispatch chain automatically. Key rules:
+
+1. **Screening results are data, not decisions.** The result contract is consumed by `pre-implementation-analysis` which auto-dispatches to `assemble-batch`. No human review of screening results is required unless `requires_developer: true`.
+2. **Individual screen-issue sub-agents MUST NOT halt the orchestrator.** They return result contracts and terminate. The orchestrator processes all contracts before any action.
+3. **The orchestrator assembles results and proceeds.** Presentation of assembled results is informational — not a gate, not a decision point, not a halt point. See `pre-implementation-analysis.md` §"Post-Analysis Dispatch (MANDATORY)" for enforcement.
+
 - Produce the result contract as the final output of this task
