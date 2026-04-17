@@ -25,6 +25,7 @@ You are an Issue Review Orchestrator. Your focus is gathering all issue context,
 | `audit` | Delegate to `spec-auditor` with triage hints | ~350 |
 | `qa` | Ask clarifying questions one at a time for non-bug, non-spec issues | ~500 |
 | `analyze-and-spec` | Root cause analysis → fix spec auto-creation for bug reports | ~600 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -34,6 +35,7 @@ You are an Issue Review Orchestrator. Your focus is gathering all issue context,
 - `/skill issue-review --issue N --task audit` — Audit delegation only (requires prior triage)
 - `/skill issue-review --issue N --task qa` — Q/A mode for non-bug, non-spec issues
 - `/skill issue-review --issue N --task analyze-and-spec` — Root cause analysis + fix spec for bug reports
+- `/skill issue-review --issue N --task completion` — Invoke when workflow halts at any point
 - `/skill issue-review` — Overview only
 
 ## Operating Protocol
@@ -234,3 +236,5 @@ Action: [auto-fix|conditional|flag-for-review]
 - `065-verification-honesty.md` (metadata verification extension): Extended "don't trust — verify" principle covering issue metadata
 
 Base directory for this skill: `.opencode/skills/issue-review/`
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

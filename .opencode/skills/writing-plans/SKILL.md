@@ -107,6 +107,7 @@ The spec-to-plan approval cascade still applies to combined plans:
 | `validate` | Check for placeholders and completeness | ~500 |
 | `retroactive` | Create plan for existing spec | ~600 |
 | `clean-room` | Generate independent plan from problem statement only | ~500 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -115,6 +116,7 @@ The spec-to-plan approval cascade still applies to combined plans:
 - `/skill writing-plans --task validate` — Validate existing plan
 - `/skill writing-plans --task retroactive` — Create plan for existing spec
 - `/skill writing-plans --task clean-room` — Generate clean-room plan (for comparison by spec-auditor)
+- `/skill writing-plans --task completion` — Invoke when workflow halts at any point
 
 ## Hybrid Structure: Phases + TDD Steps
 
@@ -286,6 +288,7 @@ session_vars:
 | Task table entry `validate` | File exists at `.opencode/skills/writing-plans/tasks/validate.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `retroactive` | File exists at `.opencode/skills/writing-plans/tasks/retroactive.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `clean-room` | File exists at `.opencode/skills/writing-plans/tasks/clean-room.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/writing-plans/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 | `approval-gate` auto-dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `writing-plans` | CONFLICTING if mismatched |
 | `issue-operations` dispatch behavior | Matches actual SKILL.md: `link-sub-issue` task for sub-issue linking | CONFLICTING if mismatched |
 | `spec-auditor` clean-room invocation | Matches actual SKILL.md: `fidelity` subtask invokes `writing-plans --task clean-room` | CONFLICTING if mismatched |
@@ -340,3 +343,5 @@ Action: [auto-fix|conditional|flag-for-review]
 
 - Related skills: `brainstorming` (pre-spec), `approval-gate` (authorization), `executing-plans` (implementation), `spec-auditor` (fidelity subtask uses clean-room), `issue-operations` (sub-issue creation via `link-sub-issue` task), `spec-creation` (spec creation discipline)
 - Source: adapted from [obra/superpowers `writing-plans`](https://github.com/obra/superpowers/blob/main/skills/writing-plans/SKILL.md)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

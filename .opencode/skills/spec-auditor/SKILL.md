@@ -41,6 +41,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) | ~350 |
 | `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ~350 |
 | `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ~250 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -56,6 +57,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task sub-issue-fidelity` — Sub-issue alignment with Plan phases only
 - `/skill spec-auditor --issue N --task concern-coverage` — Sub-issue concern boundary checks only
 - `/skill spec-auditor --issue N --task prose-structure` — Anti-prose drift checks only
+- `/skill spec-auditor --task completion` — Invoke when workflow halts at any point
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
 - `/skill spec-auditor` — Overview only
@@ -408,6 +410,7 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 | `concern-coverage` | ~350 | inline |
 | `prose-structure` | ~250 | inline |
 | `fresh-start` | ~400 | inline |
+| `completion` | ~200 | inline |
 
 **Note:** Individual subtasks are lightweight. Sub-agent dispatch is recommended for the full audit (all subtasks per document type) when running 3+ subtasks together, not for individual subtasks.
 
@@ -478,6 +481,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | Task table entry `sub-issue-fidelity` | File exists at `.opencode/skills/spec-auditor/tasks/sub-issue-fidelity.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `concern-coverage` | File exists at `.opencode/skills/spec-auditor/tasks/concern-coverage.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `prose-structure` | File exists at `.opencode/skills/spec-auditor/tasks/prose-structure.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/spec-auditor/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 | Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
 | Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |
 | Described behavior of `programming-principles` | Matches actual SKILL.md: defines engineering principles | CONFLICTING if mismatched |
@@ -528,6 +532,8 @@ Before invoking any cross-referenced skill:
 | Spec-only auditing | Spec-only auditing | Spec-only auditing | Multi-type: spec, plan, process-flow, runbook, checklist, reference-doc |
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Symbolic Engine Integration
 

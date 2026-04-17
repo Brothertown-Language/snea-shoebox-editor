@@ -28,6 +28,7 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 | `create-worktree` | Full worktree creation workflow: sync, verify, setup, export env | ~600 |
 | `tool-usage` | File operation and bash tool compliance rules for worktrees | ~250 |
 | `reference` | Quick reference, common mistakes, fatal errors, integration | ~450 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -35,6 +36,7 @@ You are a Worktree Setup Specialist. Your focus is creating safe, isolated git w
 - `/skill using-git-worktrees --task create-worktree` — Create a new worktree
 - `/skill using-git-worktrees --task tool-usage` — Tool usage compliance rules
 - `/skill using-git-worktrees --task reference` — Quick reference and troubleshooting
+- `/skill using-git-worktrees --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -67,3 +69,5 @@ Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>`
 - **Called by:** `brainstorming` (Phase 4), `subagent-driven-development`, `executing-plans`
 - **Pairs with:** `finishing-a-development-branch` (cleanup), `git-workflow` (branch/PR management)
 - **Related guidelines:** `000-critical-rules.md` (worktree bypass violation), `060-tool-usage.md` (path rules)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

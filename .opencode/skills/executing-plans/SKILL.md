@@ -44,6 +44,7 @@ phase_progress:
 | `step` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
 | `progress` | Legacy — redirects to divide-and-conquer/orchestrate | ~100 |
 | `verify` | Redirects to verification-before-completion | ~100 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
@@ -52,6 +53,7 @@ phase_progress:
 - `/skill executing-plans --task step` — Redirects to divide-and-conquer/orchestrate
 - `/skill executing-plans --task progress` — Redirects to divide-and-conquer/orchestrate
 - `/skill executing-plans --task verify` — Redirects to verification-before-completion
+- `/skill executing-plans --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
@@ -94,6 +96,7 @@ Plan approved (approval-gate)
 | Task table entry `step` | File exists at `.opencode/skills/executing-plans/tasks/step.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `progress` | File exists at `.opencode/skills/executing-plans/tasks/progress.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `verify` | File exists at `.opencode/skills/executing-plans/tasks/verify.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/executing-plans/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 | `divide-and-conquer` dispatch behavior | Matches actual SKILL.md: `assemble-batch` task handles implementation | CONFLICTING if mismatched |
 | `approval-gate` dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `executing-plans` | CONFLICTING if mismatched |
 | `verification-before-completion` redirect | Matches actual SKILL.md: `verify` task exists and redirects | CONFLICTING if mismatched |
@@ -119,3 +122,5 @@ Before invoking any cross-referenced skill:
 - Related skills: `divide-and-conquer` (implementation orchestration), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `git-workflow` (branch/PR/cleanup), `writing-plans` (plan creation)
 
 Co-authored with AI: <AI-Name> (<model-id>)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

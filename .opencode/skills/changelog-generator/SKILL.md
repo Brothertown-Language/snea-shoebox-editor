@@ -23,12 +23,14 @@ This skill transforms technical git commits into polished, user-friendly changel
 | `since-last-release` | Generate changelog for commits since last CHANGELOG.md update | ~170 |
 | `date-range` | Generate changelog for commits within specific date range | ~90 |
 | `backfill` | One-time historical backfill of missing changelog entries | ~120 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ~200 |
 
 ## Invocation
 
 - `/skill changelog-generator --task since-last-release` - Normal PR workflow (after PR creation)
 - `/skill changelog-generator --task date-range --from DATE --to DATE` - Weekly/monthly updates
 - `/skill changelog-generator --task backfill` - One-time historical catchup
+- `/skill changelog-generator --task completion` - Invoke when workflow halts at any point
 - `/skill changelog-generator` - Overview only
 
 ## When to Use This Skill
@@ -238,3 +240,5 @@ Before invoking any cross-referenced skill:
 - Writing app store update descriptions
 - Generating email updates for users
 - Creating social media announcement posts
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.
