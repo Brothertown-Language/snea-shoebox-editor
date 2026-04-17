@@ -333,9 +333,11 @@ After the audit session completes, findings are acted on per the auto-fix model:
 
 1. **Audit** → run subtasks, collect findings
 2. **Classify** → assign each finding to auto-fix, conditional, or flag-for-review
-3. **Act** → apply auto-fixes directly; apply conditional fixes after safety checks; leave flag-for-review findings for developer action
-4. **Comment ONLY for substantive revisions** → if the combined auto-fixes and conditional fixes change requirements, phases, success criteria, or scope, post one revision comment following `issue-operations` skill `comment` task format. Non-substantive changes (STATUS markers, boilerplate additions, numbering fixes, trace links) get NO comment.
-5. **Post executive summary to chat** → per the `Chat Executive Summary` section below
+3. **Apply auto-fixes** → apply all auto-fix findings to the source document using `github_issue_write(method=update)` for `--issue` or file write for `--file`. This step MUST complete before proceeding.
+4. **Verify application (CRITICAL)** → re-read the document via `github_issue_read(method=get)` for `--issue` or `read` for `--file` to confirm each auto-fix was actually applied. If any auto-fix is absent from the re-read, re-apply it. Only proceed after all auto-fixes are confirmed present. Each confirmed auto-fix gets a `✓ Applied` marker in the tracking list.
+5. **Act on conditionals** → apply conditional fixes after safety checks; leave flag-for-review findings for developer action
+6. **Comment ONLY for substantive revisions** → if the combined auto-fixes and conditional fixes change requirements, phases, success criteria, or scope, post one revision comment following `issue-operations` skill `comment` task format. Non-substantive changes (STATUS markers, boilerplate additions, numbering fixes, trace links) get NO comment.
+7. **Post executive summary to chat** → per the `Chat Executive Summary` section below
 
 **When NO comment is posted:**
 - Audit finds zero issues (all PASS) — move on, no comment
@@ -346,6 +348,58 @@ After the audit session completes, findings are acted on per the auto-fix model:
 - Agent makes substantive spec changes (adding/removing phases, changing requirements, altering approach) — post one revision comment per `issue-operations` skill `comment` task
 
 **Session scratch space:** Findings may be written to `./tmp/audit-spec-YYYYMMDD.md` for session-level reference. This file is NOT posted anywhere and is deleted after the session ends.
+
+## Auto-Fix Application Examples
+
+**FRESH-START-VIOLATION (inline cross-reference context):**
+
+Before:
+```
+## Changes
+This spec extends the work from #1022 to add...
+```
+
+After (auto-fix applied via `github_issue_write(method=update)`):
+```
+## Changes
+This spec extends the work from #1022 (add dictionary lookup API) to add...
+```
+
+Executive summary entry: `fresh-start FRESH-START-VIOLATION: Inlined #1022 cross-reference with summary (auto-fix) ✓ Applied`
+
+**STRUCTURE-VIOLATION (add STATUS header):**
+
+Before:
+```
+## Goal
+Refactor the data layer...
+```
+
+After:
+```
+STATUS: DRAFT
+## Goal
+Refactor the data layer...
+```
+
+Executive summary entry: `structure STRUCTURE-VIOLATION: Added STATUS: DRAFT header (auto-fix) ✓ Applied`
+
+**MISSING-ELEMENT (add CREATED date):**
+
+Before:
+```
+## Goal
+Add auto-fix checkpoint...
+```
+
+After:
+```
+CREATED: 2026-04-17
+## Goal
+Add auto-fix checkpoint...
+```
+
+Executive summary entry: `structure MISSING-ELEMENT: Added CREATED date (auto-fix) ✓ Applied`
 
 ## Chat Executive Summary
 
@@ -359,8 +413,8 @@ After the audit session completes, findings are acted on per the auto-fix model:
 **Source:** [--issue N|--file path|--url URL]
 
 **Changes Made:**
-- [subtask] [problem-class]: [what was fixed] (auto-fix)
-- [subtask] [problem-class]: [what was fixed after safety check] (conditional)
+- [subtask] [problem-class]: [what was fixed] (auto-fix) ✓ Applied
+- [subtask] [problem-class]: [what was fixed after safety check] (conditional) ✓ Applied
 - (or "No changes made" if no auto-fixes or conditional fixes applied)
 
 **Findings Not Acted On:**
