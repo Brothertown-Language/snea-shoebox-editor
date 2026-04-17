@@ -231,7 +231,7 @@ Create a directed graph where:
 | Strategy | When | How |
 |----------|------|-----|
 | **Sequential** | Must-precede chain exists | Execute in dependency order |
-| **Parallel** | Independent issues | Dispatch via `subagent-driven-development` |
+| **Parallel** | Independent issues | Dispatch via `divide-and-conquer` |
 | **Hybrid** | Mix of both | Serial for must-precede, parallel for independent groups |
 | **Exclude** | Meta/non-code, already-implemented, superseded, moot | Report exclusion with reason |
 | **Reduce scope** | Partially-implemented | Include remaining phases only |

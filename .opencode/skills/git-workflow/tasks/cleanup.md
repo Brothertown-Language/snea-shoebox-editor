@@ -425,7 +425,7 @@ fi
 - In parallel sub-agent mode, other agents may still be working in their worktrees
 - Premature `git worktree prune` could corrupt active worktrees
 - Only prune when ALL parallel work is confirmed complete
-- The orchestrator (per `subagent-driven-development` skill) runs `git worktree prune` after ALL sub-agents complete
+- The orchestrator (per `divide-and-conquer` skill) runs `git worktree prune` after ALL sub-agents complete
 
 **Individual agent (during parallel work):**
 

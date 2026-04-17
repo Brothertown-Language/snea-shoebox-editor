@@ -123,12 +123,12 @@ issue_pr_workflow:
     note: "Starts step-by-step implementation with evidence collection"
     
   - trigger: "Executing plan with independent tasks via subagents"
-    skill: "subagent-driven-development"
+    skill: "divide-and-conquer"
     purpose: "Dispatch fresh subagents per task with two-stage review"
     note: "Alternative to executing-plans for plans with independent tasks"
 
   - trigger: "Implementing approved spec with subagent dispatch"
-    skill: "subagent-driven-development"
+    skill: "divide-and-conquer"
     purpose: "Dispatch implementer → spec review → code quality review per task"
     note: "Integrates with approval-gate, git-workflow, verification-before-completion"
     

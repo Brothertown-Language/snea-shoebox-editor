@@ -66,7 +66,7 @@ Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>`
 
 ## Cross-References
 
-- **Called by:** `brainstorming` (Phase 4), `subagent-driven-development`, `executing-plans`
+- **Called by:** `brainstorming` (Phase 4), `divide-and-conquer`, `executing-plans`
 - **Pairs with:** `finishing-a-development-branch` (cleanup), `git-workflow` (branch/PR management)
 - **Related guidelines:** `000-critical-rules.md` (worktree bypass violation), `060-tool-usage.md` (path rules)
 
