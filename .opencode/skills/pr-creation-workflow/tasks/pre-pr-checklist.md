@@ -36,7 +36,7 @@ git log origin/dev..HEAD --oneline
 # If MORE THAN ONE commit shown, SQUASH NOW:
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <AgentName> (<ModelId>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 git push --force-with-lease origin <branch>
 ```
@@ -83,7 +83,7 @@ git log origin/<branch>..HEAD --oneline
 **5. Co-Author Trailers**
 
 Verify commit message includes BOTH trailers:
-- AI Author: `Co-authored-by: <AI-Name> (<model-id>) <ai-email>`
+- AI Author: `Co-authored-by: <AgentName> (<ModelId>) <ai-email>`
 - Human Collaborator: `Co-authored-by: <Human-Name> <human-email>`
 
 **6. Issue References**
@@ -107,7 +107,7 @@ If you accidentally create a PR with multiple commits:
     ```bash
     git reset --soft origin/main
     git commit -m "<descriptive message>" \
-        --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+        --trailer "Co-authored-by: <AgentName> (<ModelId>) <ai-email>" \
         --trailer "Co-authored-by: <Human-Name> <human-email>"
     git push --force-with-lease origin <branch>
     ```

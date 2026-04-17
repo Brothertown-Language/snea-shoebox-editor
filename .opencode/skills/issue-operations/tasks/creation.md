@@ -72,7 +72,7 @@ api.create_issue(
 **The issue body must already include a byline footer** (added during spec drafting):
 
 ```
-🤖 <AgentName> (<ModelID>) created
+🤖 <AgentName> (<ModelId>) created
 ```
 
 **No separate comment needed.** The byline is part of the issue body content, not a standalone comment.

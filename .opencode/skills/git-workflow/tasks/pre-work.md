@@ -275,7 +275,7 @@ The orchestration layer (`divide-and-conquer`) receives this yield and passes re
 **Example Comment:**
 
 ```markdown
-🤖 <AgentName> (<ModelID>) completed
+🤖 <AgentName> (<ModelId>) completed
 
 **Summary:**
 

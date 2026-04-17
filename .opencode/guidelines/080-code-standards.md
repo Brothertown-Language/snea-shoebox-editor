@@ -169,10 +169,10 @@ AI co-authorship applies to **creative, original content authored by AI**:
 
 | File Type | Attribution Location | Format |
 | -- | -- | -- |
-| Python files (`.py`) | Module docstring | `"""Co-authored with AI: AI-Name (model-id)"""` |
+| Python files (`.py`) | Module docstring | `"""Co-authored with AI: <AgentName> (<ModelId>)"""` |
 | README files | Footer section | `## Co-Authored With AI` section |
 | New repositories | README.md | AI co-authored section (see below) |
-| Original docs | Footer | `*Co-authored with AI: AI-Name (model-id)*` |
+| Original docs | Footer | `*Co-authored with AI: <AgentName> (<ModelId>)*` |
 
 ### Files NOT Requiring Attribution
 
@@ -188,13 +188,13 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### Attribution Format
 
 ```
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 ```
 
 **Example:**
 
 ```
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 ```
 
 ### Repository Creation
@@ -206,8 +206,8 @@ When creating a new repository, the README MUST include:
 
 This repository was created with assistance from AI:
 
-- **AI Agent**: <AI-Name>
-- **Model**: <model-id>
+- **AI Agent**: <AgentName>
+- **Model**: <ModelId>
 - **Date**: YYYY-MM-DD
 ```
 
@@ -220,7 +220,7 @@ Every Python file with original AI-authored code MUST include attribution in the
 ```python
 """Module description.
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 """
 ```
 

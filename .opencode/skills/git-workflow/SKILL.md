@@ -195,11 +195,11 @@ conflicts_resolved: [<N>]
 branch_name: <str>
 worktree_path: <path>
 session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+  GitOwner: <from-session>
+  GitRepo: <from-session>
+  DevName: <from-session>
+  DevEmail: <from-session>
+  WorktreePath: <from-session>
 ```
 
 ## Sub-Agent Spawning
@@ -213,7 +213,7 @@ This skill is a **heavy skill** — its task files contain significant detail th
 5. Sub-agent executes task in isolation, returns structured result
 6. Main agent receives result summary — no full git-workflow content in main context
 
-**Sub-agent context parameters:** Pass `WORKTREE_PATH`, `BRANCH_NAME`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL` from session init.
+**Sub-agent context parameters:** Pass `<WorktreePath>`, `BRANCH_NAME`, `<GitOwner>`, `<GitRepo>`, `<DevName>`, `<DevEmail>` from session init.
 
 **⚠️ Worktree pass-through is MANDATORY:** When spawning sub-agents from a worktree context, `WORKTREE_PATH` MUST be included in the dispatch prompt. Sub-agents that perform git operations without `WORKTREE_PATH` will silently modify the main repo — this is a CRITICAL GUIDELINE VIOLATION (see #741).
 

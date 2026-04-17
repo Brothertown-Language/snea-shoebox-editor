@@ -121,12 +121,12 @@ sub_task:
   scope: "<files, modules, functions>"
   boundaries: "<what is OUT of scope>"
 env_vars:
-  WORKTREE_PATH: "<worktree path>"
+  WorktreePath: "<worktree path>"
   BRANCH_NAME: "<branch name>"
-  GIT_OWNER: "<from-session>"
-  GIT_REPO: "<from-session>"
-  DEV_NAME: "<from-session>"
-  DEV_EMAIL: "<from-session>"
+  GitOwner: "<from-session>"
+  GitRepo: "<from-session>"
+  DevName: "<from-session>"
+  DevEmail: "<from-session>"
 ```
 
 **Phase progress is prose-driven.** The `phase_progress` section communicates what information must travel between phases — completed phases should be named by the concern they address, concern boundaries should describe the architectural transition point, and verification evidence should summarize what was confirmed and the outcome. The agent composing the context decides how to encode this; the requirement is the information, not the format.
@@ -283,11 +283,11 @@ results: [{issue: <N>, status: <str>, summary: <str>}]
 ```yaml
 batch_state_file: <path>
 session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+  GitOwner: <from-session>
+  GitRepo: <from-session>
+  DevName: <from-session>
+  DevEmail: <from-session>
+  WorktreePath: <from-session>
 ```
 
 ## Sub-Agent Spawning
@@ -301,7 +301,7 @@ This skill is a **heavy skill** — its orchestration logic can run in isolation
 5. Sub-agent returns structured result per Sub-agent Result Contract
 6. Main agent receives result — no orchestration detail in main context
 
-**Sub-agent context parameters:** Pass `WORKTREE_PATH`, `BRANCH_NAME`, `GIT_OWNER`, `GIT_REPO`, `DEV_NAME`, `DEV_EMAIL` from session init.
+**Sub-agent context parameters:** Pass `<WorktreePath>`, `BRANCH_NAME`, `<GitOwner>`, `<GitRepo>`, `<DevName>`, `<DevEmail>` from session init.
 
 ## Live Verification: Batch State (MANDATORY)
 
@@ -379,4 +379,4 @@ Before invoking any cross-referenced skill:
 - Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 - Adapted from: `implementation-workflow` (batch-orchestrate, context-passing, purification-and-enforcement, completion)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

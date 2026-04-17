@@ -57,7 +57,7 @@ Severity: [HIGH|MEDIUM|LOW]
 | Phase with <3 steps | Too small to split cleanly | No split needed |
 | Already separated | Analysis shows single concern | No change needed |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Boundary Claims (MANDATORY)
 

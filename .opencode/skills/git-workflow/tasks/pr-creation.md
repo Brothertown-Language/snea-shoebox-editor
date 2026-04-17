@@ -236,10 +236,10 @@ branch_name = subprocess.check_output(['git', 'branch', '--show-current'], text=
 
 # List PRs for this branch
 prs = github_list_pull_requests(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    state="all",  # Include open, closed, merged
-    head=f"{GIT_OWNER}:{branch_name}"
+    owner=<GitOwner>,
+    repo=<GitRepo>,
+    state="all",
+    head=f"{<GitOwner>}:{branch_name}"
 )
 ```
 
@@ -359,7 +359,7 @@ For OPEN PRs, check the `mergeable` attribute from GitHub API:
 ```python
 # For existing open PRs
 if pr_state == "open":
-    pr_details = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr_number)
+    pr_details = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr_number)
     mergeable = pr_details.get("mergeable")  # True, False, or None
     mergeable_state = pr_details.get("mergeable_state")  # "clean", "dirty", "unknown", etc.
 ```
@@ -631,7 +631,7 @@ Squash ALL implementation commits into ONE clean commit:
 ```bash
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <AgentName> (<ModelId>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
 
@@ -741,8 +741,8 @@ No sub-issues needed. Include only parent issue.
 
 ```python
 github_create_pull_request(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     title="[SPEC] <description>",
     body="""**Summary:**
 
@@ -767,8 +767,8 @@ from skills.gitbucket_api.tools import GitBucketAPI
 
 api = GitBucketAPI()
 pr = api.create_pull_request(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     title="[SPEC] <description>",
     body="""**Summary:**
 
@@ -843,7 +843,7 @@ Fixes #505
 
 **Outcome:** <What changed for stakeholders>
 
-**PR URL:** ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/pull/<number>
+**PR URL:** <GitBucketHtmlUrl><GitOwner>/<GitRepo>/pull/<number>
 
 Wait for human to merge.
 ```
@@ -1032,14 +1032,14 @@ Every squash commit MUST include:
 **AI Trailer Format:**
 
 - Use dynamic model detection at runtime
-- Format: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
-- Example: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
+- Format: `Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>`
+- Example: `Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>`
 
 **Human Trailer:**
 
 - Use session values from the session-enforcement plugin
-- `DEV_NAME`: Human's name
-- `DEV_EMAIL`: Human's email
+- `<DevName>`: Human's name
+- `<DevEmail>`: Human's email
 - Format: `Co-authored-by: <Human-Name> <human-email>`
 
 ## Sub-Issue Autoclose

@@ -51,7 +51,7 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 - [ ] Outcome line present after summary
 - [ ] URL label is context-appropriate: "Compare URL" (pre-PR, `compare/dev...`) or "PR URL" (post-PR, `pull/N`) — label and URL format MUST match; mismatch is a critical violation
 - [ ] URL present (after summary, before byline)
-- [ ] AI byline in format `🤖 <AgentName> (<ModelID>) <status>` appears **last** (after URL)
+- [ ] AI byline in format `🤖 <AgentName> (<ModelId>) <status>` appears **last** (after URL)
 - [ ] No URL before executive summary (CRITICAL VIOLATION if violated)
 - [ ] No byline before URL (CRITICAL VIOLATION if violated)
 

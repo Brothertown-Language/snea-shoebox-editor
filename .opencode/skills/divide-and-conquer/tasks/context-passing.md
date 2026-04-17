@@ -112,7 +112,7 @@ For the first sub-agent dispatched (no prior phases completed), `phase_progress`
 
 Pre-work receives context from orchestrator — no re-authorization check needed. If pre-work prompts for auth, it received stale context. Re-invoke with fresh context from approval-gate.
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 ## Live Verification: Context Accuracy (MANDATORY)
 
 **Verify dispatch context accuracy before sending to sub-agents.**

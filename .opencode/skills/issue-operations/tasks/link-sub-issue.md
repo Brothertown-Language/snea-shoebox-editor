@@ -47,8 +47,8 @@ Read the full plan issue body and locate the section for the target phase. Extra
 ```python
 sub_issue = github_issue_write(
     method="create",
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     title=f"[Task: #{M}] {phase_description}",
     body=f"**Parent Plan:** #{M}\n\n{phase_prose}",
     labels=["task"]
@@ -60,8 +60,8 @@ sub_issue = github_issue_write(
 from skills.gitbucket_api.tools import GitBucketAPI
 api = GitBucketAPI()
 sub_issue = api.create_issue(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     title=f"[Task: #{M}] {phase_description}",
     body=f"**Parent Plan:** #{M}\n\n{phase_prose}",
     labels=["task"]
@@ -74,8 +74,8 @@ sub_issue = api.create_issue(
 ```python
 github_sub_issue_write(
     method="add",
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     issue_number=M,
     sub_issue_id=sub_issue["id"]
 )
@@ -86,8 +86,8 @@ CRITICAL: Use database ID (`.id`), not issue number.
 **GitBucket platform (comment-based fallback):**
 ```python
 api.add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     issue_number=M,
     body=f"**Sub-issue linked:** #{sub_issue['number']} — {phase_description}"
 )

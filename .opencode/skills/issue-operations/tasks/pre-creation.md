@@ -82,7 +82,7 @@ The check is content-coverage, not structural conformity. A spec that covers all
 
 1. Using `github_search_issues`, search for issues labeled `plan` in the repository:
    ```
-   github_search_issues(query="label:plan", owner=GIT_OWNER, repo=GIT_REPO, state="open")
+   github_search_issues(query="label:plan", owner=<GitOwner>, repo=<GitRepo>, state="open")
    ```
 2. Filter results for those whose body contains `Spec: #<spec_number>` referencing the spec that will be planned.
 3. If one or more existing plans are found:

@@ -34,7 +34,7 @@ For each code reference:
 
 ```python
 # Query for later issues that may supersede
-issues = github_list_issues(owner=GIT_OWNER, repo=GIT_REPO, state="open")
+issues = github_list_issues(owner=<GitOwner>, repo=<GitRepo>, state="open")
 for issue in issues:
     if "[SPEC]" in issue["title"] and issue["number"] > current_spec:
         # Check if superseding

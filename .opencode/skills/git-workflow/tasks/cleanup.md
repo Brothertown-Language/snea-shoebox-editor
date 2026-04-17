@@ -232,7 +232,7 @@ def plan_closure_path(plan_num, plan_issue, pr_files=None, merged_pr_number=None
 
 #### Step 2.7.4: Spec Closure Path
 
-1. Search `github_search_issues(query="Spec: #{spec_number} repo:{GIT_OWNER}/{GIT_REPO}")` for plans referencing this spec
+1. Search `github_search_issues(query="Spec: #{spec_number} repo:{<GitOwner>}/{<GitRepo>}")` for plans referencing this spec
 2. For each plan found, verify it is closed
 3. If ALL plans for the spec are closed → close the spec
 4. If ANY plan is still open → do NOT close the spec
@@ -240,7 +240,7 @@ def plan_closure_path(plan_num, plan_issue, pr_files=None, merged_pr_number=None
 ```python
 def spec_closure_path(spec_num, spec_issue):
     plans = github_search_issues(
-        query=f"Spec: #{spec_num} repo:{GIT_OWNER}/{GIT_REPO}"
+        query=f"Spec: #{spec_num} repo:{<GitOwner>}/{<GitRepo>}"
     )
 
     open_plans = []
@@ -743,7 +743,7 @@ Before closing any issue (SPEC or Task), the AI agent MAY provide a final summar
 - **Superseded/Not Implemented**: The "Phase 3: Circuit breaker" was deferred to a follow-up issue #165.
 
 ---
-🤖 <AgentName> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 ### When to Close
@@ -873,10 +873,10 @@ For each sub-issue of the parent issue:
     state_reason = child.get("state_reason", "")
 
     # Verify closure is legitimate (not premature)
-    prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+    prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{<GitOwner>}/{<GitRepo>}")
     merged_pr_found = False
     for pr in prs:
-      pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+      pr_detail = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"])
       if pr_detail.get("merged_at") is not None:
         merged_pr_found = True
         break
@@ -1001,7 +1001,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 3. Or close as "not planned" with explanation if intentionally skipped
 
 ---
-🤖 <AgentName> (<ModelID>) 🚫 blocking
+🤖 <AgentName> (<ModelId>) 🚫 blocking
 ```
 
 ## Live Verification (MANDATORY)
@@ -1024,7 +1024,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 
 ```python
 # PR merge verification — MANDATORY, NOT OPTIONAL
-pr = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=N)
+pr = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=N)
 
 # Evidence artifacts:
 # EVIDENCE: merged_at = pr.get("merged_at")  # Must be non-None

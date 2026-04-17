@@ -195,7 +195,7 @@ The format applies to ALL halt points where implementation is reported complete:
 
 <Compare URL or Issue URL>
 
-🤖 <AgentName> (<ModelID>) <status-icon> <status>
+🤖 <AgentName> (<ModelId>) <status-icon> <status>
 ```
 
 **Mandatory format (without URL — when no relevant URL exists):**
@@ -207,7 +207,7 @@ The format applies to ALL halt points where implementation is reported complete:
 
 **Outcome:** <What changed for stakeholders>
 
-🤖 <AgentName> (<ModelID>) <status-icon> <status>
+🤖 <AgentName> (<ModelId>) <status-icon> <status>
 ```
 
 - 🚫 FORBIDDEN: Producing casual one-liner summaries at halt points; omitting any required element (summary, outcome, byline); wrong ordering (URL before summary, byline before URL); reporting missing elements after the fact instead of auto-fixing before output is sent; including a URL when no relevant URL exists; label-format mismatch (e.g., "Compare URL" with `pull/N` URL or "PR URL" with `compare/dev...` URL)
@@ -239,7 +239,7 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 **⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.** All URLs must be constructed from session-enforcement plugin output. No exceptions.
 
 - 🚫 FORBIDDEN: Hard-coding domains; using "known correct" URLs from previous sessions; guessing from git remotes; caching URL bases across sessions
-- ✅ REQUIRED: Extract `GITBUCKET_HTML_URL`/`GITBUCKET_URL` from session init; construct all URLs from those values; HALT if session init missing
+- ✅ REQUIRED: Extract `<GitBucketHtmlUrl>` from session init; construct all URLs from that value; HALT if session init missing
 
 ## Critical Violation: Inferring GitHub Owner from File Paths/Usernames
 
@@ -254,7 +254,7 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 
 - **Requires attribution**: Python docstrings, READMEs, new repos, original docs
 - **Exempt**: Standard licenses, copy-pasted code, auto-generated files, framework boilerplate, minor edits
-- **Format**: `Co-authored with AI: <AI-Name> (<model-id>)`
+- **Format**: `Co-authored with AI: <AgentName> (<ModelId>)`
 
 **See `080-code-standards.md` for complete attribution requirements (file types, formats, exceptions).** **AUTHORITY: `080-code-standards.md`** (this line is a reference only)
 
@@ -283,13 +283,13 @@ All identity values MUST use placeholder tokens that are resolved at runtime fro
 - 🚫 FORBIDDEN: `<specific-model-id>` (e.g., `ollama-cloud/glm-5`, `claude-3-5-sonnet`) in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `example-developer`, `example-dev-alias`, or any specific developer name/email in skill files, guidelines, or task files
 - 🚫 FORBIDDEN: `example-org`, `example-repo`, or any specific org/repo name in skill files, guidelines, or task files
-- ✅ REQUIRED: Use `<AI-Name>`, `<model-id>`, `<AgentName>`, `<ModelID>`, `DEV_NAME`, `DEV_EMAIL`, `GIT_OWNER`, `GIT_REPO` placeholders everywhere
+- ✅ REQUIRED: Use `<AgentName>`, `<ModelId>`, `<DevName>`, `<DevEmail>`, `<GitOwner>`, `<GitRepo>`, `<GitBucketHtmlUrl>` placeholders everywhere
 - ✅ REQUIRED: Skill-creator MUST validate that no hardcoded identity values appear in generated skill files
 - ✅ REQUIRED: Spec-auditor MUST flag hardcoded identity values as STRUCTURE-VIOLATION auto-fix findings
 
 **Applies to:** SKILL.md files, task/*.md files, guideline files, agent configuration files, code comments that serve as templates or examples.
 
-**Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<GIT_OWNER>/<GIT_REPO>` pattern.
+**Exempt from placeholders (concrete values are OK):** Python source code runtime strings, test fixtures, historical changelog entries, repository URLs in examples that use `<GitOwner>/<GitRepo>` pattern.
 
 **See `080-code-standards.md` for the complete placeholder reference and `skill-creator/SKILL.md` for the validation gate.** **AUTHORITY: `080-code-standards.md`** (this line is a reference only)
 
@@ -339,7 +339,7 @@ When any condition is NOT met, the action reverts to requiring an approved spec 
 
 Progress executive summaries go to **chat ONLY**, not GitHub Issue comments. Issue comments are for **substantive, stakeholder-meaningful information** only.
 
-Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelID>) <status-icon> <status>`
+Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI byline LAST — `🤖 <AgentName> (<ModelId>) <status-icon> <status>`
 
 **See `issue-operations` skill for Issue comment requirements and the complete channel routing table.**
 

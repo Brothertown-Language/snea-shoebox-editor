@@ -359,7 +359,7 @@ After the audit session completes, findings are acted on per the auto-fix model:
 - Changes Made lists ALL auto-fix and conditional fix actions in summary form
 - Findings Not Acted On lists ALL flag-for-review findings with the specific reason they weren't auto-fixed
 - If audit finds zero issues, output: `## Content Audit: [source] — [title] — No findings. Type: [type] (confidence: [level]). Issue: [URL if applicable]`
-- Issue URL is constructed from session init values (`GIT_OWNER`, `GIT_REPO`)
+- Issue URL is constructed from session init values (`<GitOwner>`, `<GitRepo>`)
 
 ## Mandatory Invocation
 
@@ -421,11 +421,11 @@ source: {type: issue|file|url, identifier: <str>}
 document_type: <auto|spec|plan|process-flow|runbook|checklist|reference-doc>
 subtasks: [<task_name>]
 session_vars:
-  GIT_OWNER: <from-session>
-  GIT_REPO: <from-session>
-  DEV_NAME: <from-session>
-  DEV_EMAIL: <from-session>
-  WORKTREE_PATH: <from-session>
+  GitOwner: <from-session>
+  GitRepo: <from-session>
+  DevName: <from-session>
+  DevEmail: <from-session>
+  WorktreePath: <from-session>
 ```
 
 ### Result Contract (Full Audit)
@@ -451,7 +451,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 5. Sub-agent executes audit in isolation, returns findings as structured report
 6. Main agent receives findings — no full audit content in main context
 
-**Sub-agent context parameters:** Pass issue number, `WORKTREE_PATH`, `GIT_OWNER`, `GIT_REPO` from session init. When `WORKTREE_PATH` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
+**Sub-agent context parameters:** Pass issue number, `<WorktreePath>`, `<GitOwner>`, `<GitRepo>` from session init. When `<WorktreePath>` is set, sub-agents MUST receive it and use it as the base directory for all file operations and git commands.
 
 ## Cross-Reference Verification (MANDATORY)
 
@@ -531,7 +531,9 @@ Before invoking any cross-referenced skill:
 | No type detection | No type detection | No type detection | Signal-based autodetection + `--type` override |
 | Spec-only auditing | Spec-only auditing | Spec-only auditing | Multi-type: spec, plan, process-flow, runbook, checklist, reference-doc |
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.
 
 **⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.
 

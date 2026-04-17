@@ -102,4 +102,4 @@ When `WORKTREE_PATH` is set:
 - ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `WORKTREE_PATH/`
 - Sub-agent dispatch prompts MUST include `WORKTREE_PATH: <value>`
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

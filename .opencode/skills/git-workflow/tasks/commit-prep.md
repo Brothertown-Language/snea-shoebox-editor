@@ -28,7 +28,7 @@ The developer will say "commit" or "create a PR" when they want git operations. 
 - **Re-run discovery** (`git status`, `git diff`) before any commit workflow
 - **If `pyproject.toml` changed, include `uv.lock`** — this is an application/CI repo
 - **Use dynamic AI identity** — the AI knows its own name and email
-- **Use cached human identity** — from session start values (`DEV_NAME`, `DEV_EMAIL`)
+- **Use cached human identity** — from session start values (`<DevName>`, `<DevEmail>`)
 
 ## Operating Protocol
 
@@ -75,11 +75,11 @@ Write to `./tmp/commit-<branch>.sh`:
 ```bash
 #!/bin/bash
 # Commit script for <branch-name>
-# 🤖 <AgentName> (<ModelID>) ➕ created
+# 🤖 <AgentName> (<ModelId>) ➕ created
 
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <AgentName> (<ModelId>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
 
@@ -108,26 +108,26 @@ Every implementation commit MUST include:
 **Example:**
 
 ```
-Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>
+Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>
 ```
 
 ### Human Collaborator Trailer
 
-- **Use cached values from session start** — `DEV_NAME` and `DEV_EMAIL`
+- **Use cached values from session start** — `<DevName>` and `<DevEmail>`
 - **Do NOT re-run `git config`** — use stored session values
 
 **Example:**
 
 ```
-Co-authored-by: <DEV_NAME> <DEV_EMAIL>
+Co-authored-by: <DevName> <DevEmail>
 ```
 
 ### Complete Example
 
 ```bash
 git commit -m "feat: Add user authentication" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>" \
-    --trailer "Co-authored-by: <DEV_NAME> <DEV_EMAIL>"
+    --trailer "Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>" \
+    --trailer "Co-authored-by: <DevName> <DevEmail>"
 ```
 
 ## When Commits Happen

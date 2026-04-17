@@ -72,7 +72,7 @@ git branch -vv
 ### Step 5: Generate Compare URL
 
 ```
-https://<GITBUCKET_HOST>/gitbucket/<owner>/<repo>/compare/<base>...<branch>
+https://<GitBucketHost>/gitbucket/<owner>/<repo>/compare/<base>...<branch>
 ```
 
 - URL must be accessible

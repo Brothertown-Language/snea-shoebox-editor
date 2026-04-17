@@ -328,7 +328,7 @@ All tasks are under 1,000 words — inline execution. No sub-agent dispatch need
 | "Issue has `needs-approval` label" | Verify label presence | `github_issue_read(method="get_labels", issue_number=N)` | VERIFICATION-GAP |
 | "All sub-issues closed" | Verify each sub-issue state | `github_issue_read(method="get_sub_issues", issue_number=N)` → check each closed | VERIFICATION-GAP |
 | "No conflicting spec exists" | Search for overlapping issues | `github_search_issues(query="label:spec <keyword>")` | CONFLICTING |
-| "Session init has GIT_OWNER/GIT_REPO" | Verify session values | Check session init output | MISSING-ELEMENT |
+| "Session init has <GitOwner>/<GitRepo>" | Verify session values | Check session init output | MISSING-ELEMENT |
 
 **Evidence artifact:** Tool call results for each claim before the operation proceeds.
 

@@ -156,7 +156,7 @@ Action: [auto-fix|conditional|flag-for-review]
 - Related skills: `spec-auditor` (orchestrator), `writing-plans` (clean-room for fidelity), `programming-principles` (principle definitions for SoC and Blast Radius — this subtask checks structural separation, that skill defines the underlying principles)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `065-verification-honesty.md` (metadata verification extension), `142-planning-archive-workflow.md`
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Symbolic Engine Integration
 

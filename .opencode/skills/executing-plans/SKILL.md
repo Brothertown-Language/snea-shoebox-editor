@@ -23,9 +23,9 @@ When dispatched from `approval-gate` after plan approval, the following context 
 ```yaml
 plan_issue: <number>
 spec_issue: <number, extracted from plan body>
-GIT_OWNER: "<from-session>"
-GIT_REPO: "<from-session>"
-WORKTREE_PATH: "<worktree path>"
+GitOwner: "<from-session>"
+GitRepo: "<from-session>"
+WorktreePath: "<worktree path>"
 phase_progress:
   completed_phases: "<prose listing of completed phases by concern name, from Plan STATUS>"
   concern_boundaries_crossed: "<prose description of architectural concern transitions from plan>"
@@ -121,6 +121,6 @@ Before invoking any cross-referenced skill:
 
 - Related skills: `divide-and-conquer` (implementation orchestration), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `git-workflow` (branch/PR/cleanup), `writing-plans` (plan creation)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 **⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

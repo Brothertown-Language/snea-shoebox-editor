@@ -102,4 +102,4 @@ All concern-coverage findings are flag-for-review because:
 - Does NOT modify sub-issue scope or content (flag-for-review only)
 - Must use GitHub MCP tools for all issue operations
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

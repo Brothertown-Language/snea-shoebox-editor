@@ -97,8 +97,8 @@ Invoke `issue-operations` skill to create the fix spec:
 ```
 github_issue_write(
     method="create",
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     title="[SPEC] Fix: <brief bug description>",
     body="<fix spec body from Step 4>",
     labels=["spec", "needs-approval"]
@@ -112,8 +112,8 @@ Link the newly created fix spec as a sub-issue of the bug report:
 ```
 github_sub_issue_write(
     method="add",
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     issue_number=<bug_report_number>,
     sub_issue_id=<fix_spec_database_id>
 )
@@ -127,8 +127,8 @@ Add a comment to the bug report summarizing the analysis and linking the fix spe
 
 ```
 github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<GitOwner>,
+    repo=<GitRepo>,
     issue_number=<bug_report_number>,
     body="Root cause analysis complete. Fix spec created: #<fix_spec_number>"
 )
@@ -145,7 +145,7 @@ Produce prose exec summary for chat:
 <impact assessment>
 <fix spec created: #N>
 
-🤖 <AgentName> (<ModelID>) 🔍 analysis
+🤖 <AgentName> (<ModelId>) 🔍 analysis
 ```
 
 ## Edge Cases

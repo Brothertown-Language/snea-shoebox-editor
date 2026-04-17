@@ -99,4 +99,4 @@ Severity: [HIGH|MEDIUM|LOW]
 - Does NOT create or delete sub-issues (MISSING_SUB_ISSUE is flag-for-review)
 - Does NOT rename sub-issues (MISMATCHED_PHASE_NAME is flag-for-review)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

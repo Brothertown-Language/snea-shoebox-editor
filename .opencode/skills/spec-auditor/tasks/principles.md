@@ -82,4 +82,4 @@ The `concerns` subtask and `principles` subtask may produce overlapping findings
 
 Both findings should be reported. An agent can correlate findings from two separate reports.
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

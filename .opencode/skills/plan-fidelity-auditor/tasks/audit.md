@@ -38,7 +38,7 @@ If the writing-plans subtask fails:
 - Clean-room plan is a comparison artifact only
 - Must use GitHub MCP tools for all issue operations
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Live Verification: Fidelity Audit Claims (MANDATORY)
 

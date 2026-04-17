@@ -57,7 +57,7 @@ Post replies to each review comment:
 **Details:** [What was changed or why not]
 
 ---
-🤖 <AgentName> (<ModelID>) ✅ completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 ## Anti-Patterns

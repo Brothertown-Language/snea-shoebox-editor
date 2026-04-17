@@ -94,10 +94,10 @@ dependency_branches: ["spec/<prior-branch>"]
 env_vars:
   WORKTREE_PATH: ".worktrees/spec-<short-name>"
   BRANCH_NAME: "spec/<short-name>"
-  GIT_OWNER: "<from-session>"
-  GIT_REPO: "<from-session>"
-  DEV_NAME: "<from-session>"
-  DEV_EMAIL: "<from-session>"
+  GitOwner: "<from-session>"
+  GitRepo: "<from-session>"
+  DevName: "<from-session>"
+  DevEmail: "<from-session>"
 ```
 
 **Invariants:** `WORKTREE_PATH` is MANDATORY — no exceptions. If empty: FATAL ERROR → FLAG DEV → HALT.
@@ -138,6 +138,6 @@ This skill is a **heavy skill** — task dispatching and orchestration can run i
 
 - Related skills: `approval-gate` (authorization), `git-workflow` (git ops), `divide-and-conquer` (primary orchestration, context window safety), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation with BASE_BRANCH)
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 **⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

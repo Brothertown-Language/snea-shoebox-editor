@@ -45,7 +45,7 @@ HEADERS = {
 }
 
 # Test repository
-OWNER = os.environ.get("GIT_OWNER", "<GIT_OWNER>")
+OWNER = os.environ.get("GIT_OWNER", "<GitOwner>")
 REPO = "ai-agent-testing"
 
 

@@ -54,5 +54,5 @@ Retain the audit log in `./tmp/` for session reference. Do NOT delete — it may
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO
+- Session values: <GitOwner>, <GitRepo>
 - Related tasks: All tasks feed into this report

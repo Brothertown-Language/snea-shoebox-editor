@@ -79,7 +79,7 @@ Bash/shell commands ONLY when no other tool covers the operation or it's inheren
 
 ## Owner Inference Prohibition (ZERO TOLERANCE)
 
-**DO NOT infer GitHub owner from file paths, usernames, or cached values.** Use ONLY values from session-enforcement plugin output (`GIT_OWNER`, `GIT_REPO`).
+**DO NOT infer GitHub owner from file paths, usernames, or cached values.** Use ONLY values from session-enforcement plugin output (`<GitOwner>`, `<GitRepo>`).
 
 ## Worktree Path Resolution
 

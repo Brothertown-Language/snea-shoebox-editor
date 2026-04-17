@@ -94,7 +94,7 @@ When ALL success criteria are verified as already met:
 4. **Post chat output** with executive summary:
    - What happened: Spec #N approved but all success criteria already met
    - Outcome: Issue autoclosed as already implemented
-   - Byline: `🤖 <AgentName> (<ModelID>) completed`
+   - Byline: `🤖 <AgentName> (<ModelId>) completed`
 
 5. **HALT** — no branch, no PR, no implementation needed
 
@@ -129,7 +129,7 @@ When `verify-already-implemented` identifies issues that were already implemente
 4. **Report closure in chat output** — Include:
    - Which issues were closed
    - The merged PR that verified the implementation
-   - Byline: `🤖 <AgentName> (<ModelID>) completed`
+   - Byline: `🤖 <AgentName> (<ModelId>) completed`
 
 **⚠️ CRITICAL:** Do NOT close issues without verifying PR merge via the GitHub API. Assuming a PR was merged without API confirmation is a verification dishonesty violation per `065-verification-honesty.md`.
 
@@ -168,10 +168,10 @@ For each sub-issue:
 
     elif state_reason == "completed":
       # Verify a merged PR exists for this sub-issue
-      prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{GIT_OWNER}/{GIT_REPO}")
+      prs = github_search_pull_requests(query=f"Fixes #{sub_issue_number} repo:{<GitOwner>}/{<GitRepo>}")
       merged_pr_found = False
       for pr in prs:
-        pr_detail = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr["number"])
+        pr_detail = github_pull_request_read(method="get", owner=<GitOwner>, repo=<GitRepo>, pullNumber=pr["number"])
         if pr_detail.get("merged_at") is not None:
           merged_pr_found = True
           break

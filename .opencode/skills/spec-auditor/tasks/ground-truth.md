@@ -108,4 +108,4 @@ Always. This is a baseline subtask for all document types. Every document has me
 - `010-approval-gate.md` — Authorization rules; this subtask verifies authorization claims against actual state
 - `fresh-start` subtask — Self-containment checks; ground-truth complements by verifying metadata, not content references
 
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)

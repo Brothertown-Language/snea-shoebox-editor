@@ -141,7 +141,7 @@ All outputs follow prose format per `000-critical-rules.md`:
 
 <URL if relevant>
 
-🤖 <AgentName> (<ModelID>) <status>
+🤖 <AgentName> (<ModelId>) <status>
 ```
 
 No template files. No structured schema output. Prose throughout.
