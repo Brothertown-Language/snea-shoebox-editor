@@ -11,7 +11,7 @@ Pair mode commits include `[pair-mode]` tag in co-author trailers:
 
 <optional body>
 
-Co-authored-by: <DEV_NAME> <<DEV_EMAIL>> [pair-mode]
+Co-authored-by: <dev.name> <<dev.email>> [pair-mode]
 Co-authored-by: AI: <AGENT_NAME> (<MODEL_ID>) [pair-mode]
 ```
 
@@ -40,7 +40,7 @@ When branch has no issue number or ambiguous:
 
    <body if needed>
 
-   Co-authored-by: <DEV_NAME> <<DEV_EMAIL>> [pair-mode]
+   Co-authored-by: <dev.name> <<dev.email>> [pair-mode]
    Co-authored-by: AI: <AGENT_NAME> (<MODEL_ID>) [pair-mode]"
    ```
 
@@ -50,7 +50,7 @@ When branch has no issue number or ambiguous:
 
    Implements #<issue>
 
-   Co-authored-by: <DEV_NAME> <<DEV_EMAIL>> [pair-mode]
+   Co-authored-by: <dev.name> <<dev.email>> [pair-mode]
    Co-authored-by: AI: <AGENT_NAME> (<MODEL_ID>) [pair-mode]"
    ```
 

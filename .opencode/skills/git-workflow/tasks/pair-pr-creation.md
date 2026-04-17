@@ -19,7 +19,7 @@ Pair mode uses the same squash workflow as autonomous mode:
 
    Implements #<issue>
 
-   Co-authored-by: <DEV_NAME> <<DEV_EMAIL>> [pair-mode]
+   Co-authored-by: <dev.name> <<dev.email>> [pair-mode]
    Co-authored-by: AI: <AGENT_NAME> (<MODEL_ID>) [pair-mode]"
    ```
 
@@ -45,7 +45,7 @@ Pair mode uses the same squash workflow as autonomous mode:
 
      Implements #<issue>
 
-     Co-authored-by: <DEV_NAME> <<DEV_EMAIL>> [pair-mode]
+     Co-authored-by: <dev.name> <<dev.email>> [pair-mode]
      Co-authored-by: AI: <AGENT_NAME> (<MODEL_ID>) [pair-mode]
    ```
 

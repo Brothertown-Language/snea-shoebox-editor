@@ -363,24 +363,41 @@ Total nodes visited: <N>
 
 **If orphaned sub-issues remain:** Do NOT close them. Report them as verification gaps requiring developer attention.
 
-### Step 3: Switch to Dev and Sync
+### Step 3: Switch to Dev and Sync (Fast-Forward Only)
 
 **Three-Branch Workflow:** After feature PR merge, switch to `dev` (not `main`) and sync with remote.
 
 ```bash
 git checkout dev
-git pull origin dev
+git pull origin dev --ff-only
 ```
+
+**🚫 CRITICAL: The `--ff-only` flag is MANDATORY.** A plain `git pull origin dev` can silently succeed with a merge commit, hiding divergence issues. The `--ff-only` flag ensures dev fast-forwards to the remote tip without creating merge commits.
+
+**If `--ff-only` pull fails (diverged history):**
+
+```bash
+# HALT and report. Suggest manual resolution:
+echo "ERROR: local dev has diverged from origin/dev"
+echo "Suggest: git pull --rebase origin dev"
+echo "Or manual resolution required"
+# HALT — do NOT proceed with stale codebase
+```
+
+**⚠️ DO NOT create merge commits on dev.** If ff-only fails, HALT and report to the developer. Suggest `git pull --rebase origin dev` or manual resolution.
 
 **Verify local dev matches the merge commit:**
 
 ```bash
-git log --oneline -5
+git log --oneline -1 origin/dev
+git log --oneline -1 dev
 ```
 
-The merge commit from the merged PR MUST be visible in the recent log. If the merge commit is NOT visible, `git pull origin dev` may have failed silently — re-run `git pull origin dev` and verify again.
+The two commit hashes MUST match. If they differ, the pull did not succeed — re-run `git pull origin dev --ff-only` and verify again.
 
-**Why this verification matters:** Without confirming local `dev` is synced, the next session starts with a stale local branch, causing `git pull` failures from untracked files and merge conflicts when creating new feature branches.
+**Why this verification matters:** Without confirming local `dev` is synced, the next session starts with a stale local branch, causing `git pull` failures from untracked files and merge conflicts when creating new feature branches. The `--ff-only` flag prevents silent merge commits that obscure divergence.
+
+**Worktree context:** If running from a worktree, `git checkout dev` and `git pull` must operate on the main working tree, not the worktree. Use `git -C /path/to/main/repo checkout dev && git -C /path/to/main/repo pull origin dev --ff-only` to ensure operations target the main tree.
 
 ### Step 4: Remove Feature Worktree
 

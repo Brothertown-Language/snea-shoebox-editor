@@ -9,7 +9,7 @@ Called after session_init.py. Probes git state, validates credentials,
 and conditionally emits a reply injection for trigger states.
 
 Identity section (always-emit):
-  GIT_OWNER, GIT_REPO, GIT_PLATFORM, _CREDENTIALS=
+  github.owner, github.repo, github.platform, _CREDENTIALS=
 
 Trigger conditions (appended when detected):
   on_main_branch, protected_branch_with_changes, pair_mode_resume,
@@ -328,9 +328,9 @@ def has_orphaned_worktrees() -> list[str]:
 def build_identity_section(owner: str, repo: str, platform: str, credential_status: str) -> str:
     lines = [
         "## Repository Identity",
-        f"- GIT_OWNER={owner}",
-        f"- GIT_REPO={repo}",
-        f"- GIT_PLATFORM={platform}",
+        f"- github.owner={owner}",
+        f"- github.repo={repo}",
+        f"- github.platform={platform}",
     ]
     cred_key = f"{platform.upper()}_CREDENTIALS" if platform != "unknown" else "CREDENTIALS"
     lines.append(f"- {cred_key}={credential_status}")

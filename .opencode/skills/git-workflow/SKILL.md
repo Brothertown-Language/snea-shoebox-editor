@@ -412,7 +412,7 @@ The `pair-` prefix IS the mode signal. No state files needed — branch name car
 ### Pair Mode Session Start
 
 The `session_context.py` plugin detects pair mode at session start and injects context:
-- Identity section (always): GIT_OWNER, GIT_REPO, GIT_PLATFORM, credential status
+- Identity section (always): github.owner, github.repo, github.platform, credential status
 - Pair mode resume context: branch name, related issue, diff summary
 - Trigger warnings: on_main_branch, protected_branch_with_changes, uncommitted_work
 
