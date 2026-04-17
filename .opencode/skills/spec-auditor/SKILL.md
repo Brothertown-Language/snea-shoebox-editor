@@ -41,6 +41,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) | ≈350 |
 | `concern-coverage` | Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) | ≈350 |
 | `prose-structure` | Anti-prose drift detection — flag rigid structure where prose is expected | ≈250 |
+| `decomposition` | Flag specs meeting 2+ of 5 criteria for splitting into independent specs | ≈350 |
 | `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
@@ -57,6 +58,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task sub-issue-fidelity` — Sub-issue alignment with Plan phases only
 - `/skill spec-auditor --issue N --task concern-coverage` — Sub-issue concern boundary checks only
 - `/skill spec-auditor --issue N --task prose-structure` — Anti-prose drift checks only
+- `/skill spec-auditor --issue N --task decomposition` — Decomposition heuristic check only
 - `/skill spec-auditor --task completion` — Invoke when workflow halts at any point
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
@@ -111,8 +113,8 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
     | Document Type | Baseline Subtasks | Conditional Subtasks |
     |---------------|-------------------|---------------------|
-     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure` |
-     | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure` |
+     | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition` |
+      | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition` |
     | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
     | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
     | Checklist | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | — |
@@ -126,6 +128,7 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
     | Feature with phases | Baseline + `concerns` |
     | Infrastructure change | Baseline + `operational` + `concerns` |
     | Complex multi-phase spec | All subtasks |
+    | Spec with many files or phases | Baseline + `decomposition` |
     | Spec with external dependencies | Baseline + `traceability` + `operational` |
     | Single-task spec (no phases) | Baseline (skip `concerns`) |
     | Spec with sub-issues | Baseline + `sub-issue-fidelity` + `concern-coverage` |
@@ -194,6 +197,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | CONTEXT-OVERFLOW | Verify section reduction preserves all requirements | Shortening sections could lose critical details |
 | YAGNI_VIOLATION | Verify removed features/abstractions have no dependents | Removing unrequired features could orphan other steps |
 | SOC_VIOLATION (phase split) | Verify split preserves all step content | Splitting phases could lose cross-concern context |
+| DECOMPOSITION-CANDIDATE | Verify decomposition preserves all requirements and dependencies | Splitting a spec requires domain judgment about priorities and coupling |
 | GROUND-TRUTH-MISMATCH (stale label) | Verify auth scope covers current document before removing label | Removing label without confirming auth scope could misrepresent approval state |
 
 **Flag-for-review findings:**
@@ -261,13 +265,14 @@ spec-auditor (orchestrator)
 ├── sub-issue-fidelity.md   — Verify sub-issue alignment with Plan phases (delegated from plan-fidelity-auditor) (NEW)
 └── concern-coverage.md     — Verify sub-issue concern boundaries match Plan phases (delegated from concern-separation-auditor) (NEW)
 └── prose-structure.md      — Anti-prose drift detection (NEW)
+└── decomposition.md       — Decomposition heuristic: flag specs that should be split (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
 
 ## Problem Classes
 
-Existing classes remain, plus two new ones:
+Existing classes remain, plus additions noted with `(NEW)`:
 
 | Class | Description |
 |-------|-------------|
@@ -307,6 +312,7 @@ Existing classes remain, plus two new ones:
 | **CONCERN_SCOPE_NARROWER** | Sub-issue body omits tasks within Plan phase's concern boundary (from concern-coverage) |
 | **CONCERN_SCOPE_WIDER** | Sub-issue body includes tasks outside Plan phase's concern boundary (from concern-coverage) |
 | **CONCERN_BOUNDARY_CROSSED** | Sub-issue body mixes tasks from multiple Plan phase concerns (from concern-coverage) |
+| **DECOMPOSITION-CANDIDATE** | Spec meets 2+ decomposition criteria; consider splitting into multiple specs with dependency notes (from decomposition) |
 | **ANTI-PROSE-DRIFT** | Rigid enumeration, tabular mapping, or fixed checklist where flowing prose is expected (from prose-structure) |
 
 ## Audit Findings Handling
@@ -409,6 +415,7 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 | `sub-issue-fidelity` | ≈350 |
 | `concern-coverage` | ≈350 |
 | `prose-structure` | ≈250 |
+| `decomposition` | ≈350 |
 | `fresh-start` | ≈400 |
 | `completion` | ≈200 |
 
@@ -481,6 +488,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | Task table entry `sub-issue-fidelity` | File exists at `.opencode/skills/spec-auditor/tasks/sub-issue-fidelity.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `concern-coverage` | File exists at `.opencode/skills/spec-auditor/tasks/concern-coverage.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `prose-structure` | File exists at `.opencode/skills/spec-auditor/tasks/prose-structure.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `decomposition` | File exists at `.opencode/skills/spec-auditor/tasks/decomposition.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `completion` | File exists at `.opencode/skills/spec-auditor/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 | Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
 | Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |
