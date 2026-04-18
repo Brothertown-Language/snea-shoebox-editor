@@ -451,6 +451,29 @@ The two commit hashes MUST match. If they differ, the pull did not succeed — r
 
 **Worktree context:** If running from a worktree, `git checkout dev` and `git pull` must operate on the main working tree, not the worktree. Use `git -C /path/to/main/repo checkout dev && git -C /path/to/main/repo pull origin dev --ff-only` to ensure operations target the main tree.
 
+### Step 3.5: Dev Sync Verification Gate (MANDATORY — ZERO TOLERANCE)
+
+**After Step 3 (merge verification) and BEFORE any branch deletion, worktree removal, or issue closure:**
+
+This gate is a HARD BLOCK, not a checklist item. No downstream operation may proceed until local dev HEAD matches origin/dev HEAD.
+
+**Procedure:**
+
+1. Run: `git checkout dev && git pull origin dev --ff-only`
+2. Capture local hash: `git log --oneline -1 dev`
+3. Capture remote hash: `git log --oneline -1 origin/dev`
+4. Compare hashes — they MUST match exactly
+5. If hashes differ → re-pull and verify again (maximum 3 attempts)
+6. If still different after 3 attempts → HALT and report to developer
+
+**Evidence artifact (MANDATORY):** The tool-call output showing matching hashes MUST be present in chat before proceeding. This is a verification gate, not a checklist item.
+
+**Why this is a hard gate:** Without confirming local dev is synced, the next session starts with a stale local branch. This causes `git pull` failures from untracked files and merge conflicts when creating new feature branches. The `--ff-only` flag prevents silent merge commits that obscure divergence.
+
+**🚫 FORBIDDEN:** Proceeding past this gate without matching hash evidence. Branch deletion, worktree removal, and issue closure ALL require this gate to pass first.
+
+**Worktree context:** If running from a worktree, the dev sync MUST operate on the main working tree. Use absolute paths: `git -C /path/to/main/repo checkout dev && git -C /path/to/main/repo pull origin dev --ff-only`. The worktree has already been removed in some flows — the main tree must be synced before proceeding.
+
 ### Step 4: Remove Feature Worktree
 
 Feature worktrees must be cleaned up after PR merge.
@@ -1084,6 +1107,7 @@ This parent issue cannot be closed because the following sub-issue(s) remain inc
 | PR merge status | `github_pull_request_read(method=get, ...)` | `merged_at` is not None | CONFLICTING → HALT, do not close issues |
 | Merged by | `github_pull_request_read(method=get, ...)` | `merged_by` populated | VERIFICATION-GAP → investigate |
 | Branch merged into dev | `git branch --merged dev` | Feature branch listed | VERIFICATION-GAP → may need manual merge |
+| Local dev synced | `git log --oneline -1 dev` equals `git log --oneline -1 origin/dev` | Hashes match exactly | VERIFICATION-GAP → re-pull and re-verify |
 | Dev has merge commit | `git log --oneline -5 dev` | Merge commit visible | MISSING-ELEMENT → sync dev first |
 | Sub-issues closed | `github_issue_read(method=get_sub_issues, ...)` | All sub-issues state=closed | VERIFICATION-GAP → close remaining or investigate |
 

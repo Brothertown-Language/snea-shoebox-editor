@@ -92,11 +92,11 @@ When combined, the spec issue body has this structure:
 
 ### Approval Cascade
 
-The spec-to-plan approval cascade still applies to combined plans:
+The spec-to-plan approval cascade applies differently based on authorization scope:
 
-- If the spec was already approved when the plan is appended, the combined plan inherits the spec's approval
-- No separate plan approval is needed — the plan content is part of the already-approved spec
-- If the spec has not been approved, the combined plan requires the spec to be approved (single approval covers both)
+- `standard` scope: The combined plan section requires separate plan approval, even though the spec was already approved. The cascade does NOT apply to newly created plans in standard scope — it only applies to EXISTING plans (per approval-gate Step 5b).
+- Pipeline scope (`for_plan` or higher): The combined plan inherits the spec's approval. No separate plan approval needed — the pipeline authorization covers plan creation and approval.
+- If the spec has not been approved, the combined plan requires the spec to be approved (single approval covers both, but only when scope >= for_plan)
 - Spec revision invalidates the `## Implementation Plan` section — see Spec Revision Revocation below
 
 ## Tasks
@@ -167,7 +167,12 @@ approval-gate --task verify-authorization (all gates pass for spec approval)
 | `<github.repo>` | Session init | Repository name for API calls |
 | `worktree.path` | Session / worktree setup | Base directory for file operations |
 
-**Spec-to-plan approval cascade:** When `writing-plans --task create` is invoked for a spec that is already approved, the newly created plan inherits the spec's approval status. The `needs-approval` label is removed from the plan and a comment documents the cascade — see Step 11 in `tasks/create.md` for the complete post-creation cascade procedure. This handles the case where plan creation happens AFTER spec approval in the same session.
+**Spec-to-plan approval cascade (scope-aware):** When `writing-plans --task create` is invoked for a spec that is already approved, the cascade behavior depends on authorization scope:
+
+- `standard` scope: The newly created plan RETAINS the `needs-approval` label. Spec approval authorizes plan creation (first gate), but plan approval requires separate authorization (second gate). The cascade does NOT apply to newly created plans — it only applies to EXISTING plans per approval-gate Step 5b.
+- Pipeline scope (`for_plan` or higher): The newly created plan inherits the spec's approval. The `needs-approval` label is removed and a comment documents the cascade — see Step 11 in `tasks/create.md` for the complete post-creation cascade procedure.
+
+This scope-aware distinction prevents the gateway bypass where a newly created plan is auto-approved in standard scope, skipping the second gate of the two-gate authorization model.
 
 **Manual invocation still works:** `writing-plans --task create` can be invoked directly at any time. Auto-dispatch is additive — it eliminates the silent gap between approval and plan creation, but does not replace manual invocation.
 
@@ -233,7 +238,8 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 - Plan approved but has placeholders → REJECT plan
 - Plan approved but missing TDD steps → REJECT plan
 - Plan approved and complete → PROCEED to implementation
-- Combined spec+plan → plan inherits spec approval status; no separate plan approval needed
+- Combined spec+plan (scope >= for_plan) → plan inherits spec approval status; no separate plan approval needed
+- Combined spec+plan (standard scope) → plan requires separate approval; cascade does NOT apply to newly created plans
 
 ## Sub-Agent Tasks
 
@@ -264,6 +270,7 @@ self_review_passed: bool
 spec_issue: <N>
 single_task: bool
 single_task_determination: <str>
+authorization_scope: <standard|for_spec|for_plan|for_implementation|for_code_review|for_pr|pr_only|review_only>
 session_vars:
   github.owner: <from-session>
   github.repo: <from-session>
