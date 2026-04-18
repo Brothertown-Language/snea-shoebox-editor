@@ -597,6 +597,26 @@ No feature creep: implement ONLY what is in the approved spec. No unapproved wor
 - 🚫 FORBIDDEN: Producing zero output before stopping; silently failing without error message; context overflow without reporting the overflow; tool failure without reporting the failure; ending a session with no summary of work done
 - ✅ REQUIRED: Every HALT MUST be preceded by a status message; every failure MUST be reported with the specific error; every context overflow MUST be reported with the specific cause; every completed task MUST produce an executive summary
 
+### Post-Dispatch Output Guarantee
+
+After EVERY `task(subagent_type="general")` dispatch, the agent MUST produce output — never transition directly from dispatch to halt without output.
+
+| After Dispatch | Agent MUST |
+|----------------|-----------|
+| Sub-agent returned valid result | Report result or proceed to next step (existing behavior, no change) |
+| Sub-agent returned empty result | FALLBACK to inline execution + report warning in chat |
+| Sub-agent returned error | FALLBACK to inline execution + report error in chat |
+| Inline fallback also failed | Report double-failure + invoke `--task completion` + HALT with status message + byline |
+
+| Violation Pattern | Classification |
+|-------------------|----------------|
+| Empty sub-agent result → zero output → silent halt | Critical: Silent Agent Termination |
+| Empty sub-agent result → fallback attempt → status message in chat | Acceptable: self-corrected |
+| Empty sub-agent result → inline succeeds → chain continues | Acceptable: self-corrected |
+| Error sub-agent result → zero output → silent halt | Critical: Silent Agent Termination |
+
+**This guarantee supplements the existing Silent Agent Termination rule by specifying the post-dispatch scenario explicitly.** The existing rule covers general halts; this adds the specific case where the agent dispatches a sub-agent, gets an empty result, and has no code path to recovery or reporting.
+
 **See `020-go-prohibitions.md` for the complete halt requirements and `finishing-a-development-branch` skill for completion guarantees.** **AUTHORITY: `020-go-prohibitions.md`** (this line is a reference only)
 
 ## Critical Violation: Skipping Interdependency Analysis for Batch Approvals

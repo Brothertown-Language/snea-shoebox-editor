@@ -24,6 +24,7 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 | `decompose` | Split a task into sub-tasks with dispatch context, preserve spec boundaries | ≈300 |
 | `dispatch` | Spawn sub-agent with scoped instructions and collect structured result | ≈250 |
 | `completion-checkpoint` | Post-dispatch verification: detect abnormal termination, assess work, recover | ≈300 |
+| `result-validation` | Post-dispatch result validation: empty/malformed result detection and fallback | ≈200 |
 | `overflow-signal` | Structured OVERFLOW response protocol for sub-agents that can't fit the work | ≈200 |
 | `merge` | Combine sub-agent results into final output, pure aggregation | ≈150 |
 | `context-passing` | Reference for dispatch context shapes between orchestrator and sub-agents | ≈200 |
@@ -46,6 +47,7 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 - `/skill divide-and-conquer --task context-passing` - Reference dispatch context shapes
 - `/skill divide-and-conquer --task purification-and-enforcement` - Reference boundaries
 - `/skill divide-and-conquer --task completion` - Invoke when workflow halts
+- `/skill divide-and-conquer --task result-validation` - Post-dispatch result validation and fallback
 - `/skill divide-and-conquer --task orchestrate` - Full workflow
 - `/skill divide-and-conquer --task assemble-work` - Work set branch assembly
 - `/skill divide-and-conquer --task two-stage-review` - Optional two-stage review pipeline (spec + code quality)
@@ -243,6 +245,50 @@ When the orchestrating agent detects abnormal termination via the Sub-Agent Comp
 
 **Cross-reference:** See `000-critical-rules.md` → "Pushing Agent Intelligence Decisions to the User" for the rule that structural decisions (including recovery strategy) are agent intelligence concerns, not user decisions.
 
+## Sub-Agent Result Validation (MANDATORY)
+
+After every `task(subagent_type="general")` dispatch, the agent MUST validate the result before acting on it. This gate prevents silent agent termination when a sub-agent returns an empty or malformed result.
+
+### Validation Rules
+
+| Condition | Action |
+|-----------|--------|
+| Result is empty string or whitespace-only | FALLBACK: perform task inline; report warning in chat |
+| Result is non-empty but not valid result contract | TRY: parse available content; FALLBACK if unparseable |
+| Result is valid result contract with `status: DONE` | PROCEED to next step (existing behavior) |
+| Result is valid result contract with `status: DONE_WITH_CONCERNS` | Review concerns, proceed if scope OK (existing behavior) |
+| Result is valid result contract with `status: BLOCKED` | HALT with status message (existing behavior) |
+| Result is valid result contract with `status: OVERFLOW` | Re-dispatch with reduced scope per `overflow-signal` task (existing behavior) |
+| Result contains error/exception trace | FALLBACK: perform task inline; report error in chat |
+
+### FALLBACK Procedure
+
+When a sub-agent result triggers the FALLBACK action:
+
+1. Report warning in chat: `⚠️ Sub-agent for <task_name> returned empty/invalid result, performing inline`
+2. Perform the task inline using direct tool calls (the orchestrator executes the sub-agent's intended work itself)
+3. Continue the dispatch chain from the inline result — do not re-dispatch the same sub-agent
+
+### Double-Failure Protocol
+
+If the inline fallback also fails:
+
+1. Report in chat: `❌ Sub-agent and inline fallback both failed for <task_name>. Unable to continue.`
+2. Invoke `--task completion` on the current skill (idempotent, safe)
+3. HALT with status message + byline (per chat output format rules)
+4. NEVER produce zero output before halting
+
+### Integration with Completion Checkpoint
+
+This validation gate runs BEFORE the Sub-Agent Completion Checkpoint. The sequence is:
+
+1. Dispatch sub-agent via `task()`
+2. **Result Validation (this gate)** — check for empty/malformed result
+3. Completion Checkpoint — check for abnormal termination (existing)
+4. If both pass: accept result, proceed
+
+If the Result Validation gate triggers FALLBACK and inline succeeds, the Completion Checkpoint is skipped (inline execution produces its own result). If inline fails, the Double-Failure Protocol runs instead.
+
 ## Worktree Mode
 
 When `worktree.path` is set:
@@ -264,6 +310,7 @@ If `worktree.path` is NOT set, operate normally from the project root.
 | `decompose` | ≈300 |
 | `dispatch` | ≈250 |
 | `completion-checkpoint` | ≈300 |
+| `result-validation` | ≈200 |
 | `overflow-signal` | ≈200 |
 | `merge` | ≈150 |
 | `context-passing` | ≈200 |
