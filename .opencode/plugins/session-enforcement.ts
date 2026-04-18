@@ -40,7 +40,7 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
   }
 
   try {
-    const result = await $.nothrow()`uv run .opencode/tools/session-init`;
+    const result = await $.nothrow()`uv run --script .opencode/tools/session-init`;
     const stdout = result.text();
 
     if (!stdout || stdout.trim().length === 0) {
@@ -73,7 +73,7 @@ async function runSessionContext($: PluginInput["$"]): Promise<string> {
   }
 
   try {
-    const result = await $.nothrow()`uv run .opencode/scripts/session_context.py`;
+    const result = await $.nothrow()`uv run --script .opencode/scripts/session_context.py`;
     const stdout = result.text();
 
     if (result.exitCode !== 0) {
