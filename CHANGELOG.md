@@ -12,9 +12,16 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+<<<<<<< HEAD
+### spec-fix/1066-1067-byline-enforcement-gaps
+
+- **External Repository Byline Requirement** (#1066) - Added "Posted Content Requiring Attribution" table to 080-code-standards.md covering issue comments, PR comments, PR bodies, and issue bodies on any repository. Clarified that external posts have HIGHER attribution priority than internal content.
+- **Standalone Byline Correction Prohibition** (#1067) - Added "Standalone Byline Correction — FORBIDDEN" section to 080-code-standards.md with correction procedure (edit/delete+repost/accept omission). Added Step 3.5 (Byline Verification) to issue-operations comment task with mandatory pre-post byline check and standalone correction comment prohibition.
+
 ### spec-fix/1053-simple-work-dispatch-path
 
 - **Add Simple Work Dispatch Path** (#1053, #1063, #1064) - Added lightweight dispatch path for "clearly simple work" (docs, runbooks, minor config) that resolves agent contention between Tier 1 safety mandates and Tier 2 process waivers. Simple work now follows: pre-work → implement → VbC → checklist → review-prep, preserving worktree mandates while skipping spec/plan requirements. Added "Simple Work Dispatch Path (Tier 2 Waiver)" section to 000-critical-rules.md with classification table, "Decision Table: Simple Work + File Modifications" to 010-approval-gate.md, simple-work dispatch branch to approval-gate/SKILL.md, and "Simple Work Worktree" section to using-git-worktrees/SKILL.md.
+>>>>>>> origin/dev
 
 ### spec-fix/1042-1043-approval-gate-autonomous-classification
 
