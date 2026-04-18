@@ -770,28 +770,8 @@ Fixes #<child2>
 
 #### GitBucket (github.platform=gitbucket)
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-pr = api.create_pull_request(
-    owner=<github.owner>,
-    repo=<github.repo>,
-    title="[SPEC] <description>",
-    body="""**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value>
-
-**Outcome:** <What changed for stakeholders>
-
-Fixes #<parent>
-Fixes #<child1>
-Fixes #<child2>
-...
-""",
-    head=branch_name,
-    base="dev"
-)
+```bash
+./.opencode/tools/gitbucket-api create-pr <github.owner> <github.repo> "[SPEC] <description>" <branch-name> dev --body "<PR body>"
 ```
 
 **PR Body Requirements:**

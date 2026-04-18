@@ -10,7 +10,7 @@ the actual API behavior. It tests authentication, endpoint availability,
 and response schemas.
 
 Usage:
-    uv run python .opencode/skills/gitbucket-api/tests/verify_api.py
+    ./.opencode/skills/issue-operations/platforms/gitbucket-api/tests/verify_api.py
 
 Requirements:
     - .env file with GITBUCKET_URL and GITBUCKET_TOKEN

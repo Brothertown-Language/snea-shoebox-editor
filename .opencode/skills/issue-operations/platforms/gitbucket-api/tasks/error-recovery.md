@@ -84,22 +84,9 @@ gitbucket.has_credentials: true
 
 ## Token Validation
 
-```python
-def validate_token():
-    """Verify GitBucket token works."""
-    response = requests.get(
-        f"{GITBUCKET_URL}api/v3/user",
-        headers={"Authorization": f"token {GITBUCKET_TOKEN}"}
-    )
-    if response.status_code == 200:
-        print("Token valid")
-        return True
-    if response.status_code == 401:
-        print("Token invalid or expired")
-        return False
-    if response.status_code == 404:
-        print("Wrong endpoint or GitBucket URL")
-        return False
+```bash
+./.opencode/tools/gitbucket-api check-auth
+# Outputs: authentication status and user info if valid
 ```
 
 ## Fallback Strategy

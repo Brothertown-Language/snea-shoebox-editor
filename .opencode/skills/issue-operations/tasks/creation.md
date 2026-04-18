@@ -48,16 +48,8 @@ github_issue_write(
 ```
 
 **GitBucket platform:**
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()
-api.create_issue(
-    owner=owner,
-    repo=repo,
-    title=title,
-    body=body,
-    labels=["needs-approval"]
-)
+```bash
+./.opencode/tools/gitbucket-api create-issue <github.owner> <github.repo> "<title>" --body "<body>" --labels needs-approval
 ```
 
 **Note (GitBucket):** Labels can ONLY be set during creation. Post-creation label changes do not work.

@@ -25,9 +25,9 @@ Creating skills IS Test-Driven Development applied to process documentation. Wri
 ## Invocation
 
 - `/skill skill-creator` - Overview and skill creation process
-- `uv run python .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>` - Initialize new skill
-- `uv run python .opencode/skills/skill-creator/scripts/package_skill.py <skill-folder> [output-dir]` - Package skill
-- `uv run python .opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Validate skill
+- `./.opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>` - Initialize new skill
+- `./.opencode/skills/skill-creator/scripts/package_skill.py <skill-folder> [output-dir]` - Package skill
+- `./.opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Validate skill
 
 ## Skill Type Taxonomy
 

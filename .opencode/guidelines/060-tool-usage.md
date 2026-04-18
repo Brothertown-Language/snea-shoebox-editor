@@ -32,7 +32,7 @@ ABSOLUTE EXCEPTION: .ipynb files → the-notebook-mcp MANDATORY (zero tolerance,
 
 ### API Client Mandatory (ZERO TOLERANCE)
 
-When a platform has a dedicated API client (e.g., `GitBucketAPI`, GitHub MCP), the agent MUST use it for ALL operations. If the client lacks a needed method:
+When a platform has a dedicated API client (e.g., `gitbucket-api` CLI tool at `.opencode/tools/gitbucket-api`, GitHub MCP), the agent MUST use it for ALL operations. If the client lacks a needed method:
 
 1. HALT
 2. Report: executive summary of what was needed, the missing method name, possible resolution

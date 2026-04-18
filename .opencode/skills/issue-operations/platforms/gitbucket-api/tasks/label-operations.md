@@ -2,7 +2,7 @@
 
 ## Overview
 
-GitBucket label operations using Python API tools.
+GitBucket label operations using the `gitbucket-api` CLI tool at `.opencode/tools/gitbucket-api`.
 
 ## Add Labels to Issue
 
@@ -10,32 +10,15 @@ GitBucket label operations using Python API tools.
 
 The GitBucket API endpoint `POST /repos/{owner}/{repo}/issues/{number}/labels` returns HTTP 200 with an empty array but does NOT add labels to the issue.
 
-**Workaround:** Add labels during issue creation with `create_issue(labels=[...])`.
+**Workaround:** Add labels during issue creation with `create-issue --labels`.
 
-### Python API (Only Option)
+### CLI (Only Option)
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-
-# ❌ BROKEN: Labels NOT added, returns empty array
-labels = api.add_labels_to_issue(
-    owner="org",
-    repo="project",
-    issue_number=14,
-    labels=["bug", "enhancement"]
-)
-# Returns: [] — labels are NOT added to the issue
+```bash
+# ❌ BROKEN: No CLI command for post-creation label addition
 
 # ✅ WORKAROUND: Add labels during issue creation
-issue = api.create_issue(
-    owner="org",
-    repo="project",
-    title="Bug report",
-    body="Description",
-    labels=["bug", "enhancement"]  # ✅ Auto-creates and attaches labels
-)
+./.opencode/tools/gitbucket-api create-issue org project "Bug report" --body "Description" --labels bug,enhancement
 ```
 
 ## Replace All Labels
@@ -44,122 +27,63 @@ issue = api.create_issue(
 
 The GitBucket API endpoint `PUT /repos/{owner}/{repo}/issues/{number}/labels` returns HTTP 200 with an empty array but does NOT set labels on the issue.
 
-**Workaround:** Add labels during issue creation with `create_issue(labels=[...])`.
+**Workaround:** Add labels during issue creation with `create-issue --labels`.
 
-### Python API (Only Option)
+### CLI (Only Option)
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-
-# ❌ BROKEN: Labels NOT set, returns empty array
-labels = api.replace_issue_labels(
-    owner="org",
-    repo="project",
-    issue_number=14,
-    labels=["priority", "review"]
-)
-# Returns: [] — labels are NOT set on the issue
+```bash
+# ❌ BROKEN: No CLI command for label replacement
 
 # ✅ WORKAROUND: Add labels during issue creation
-issue = api.create_issue(
-    owner="org",
-    repo="project",
-    title="Bug report",
-    body="Description",
-    labels=["priority", "review"]  # ✅ Works, auto-creates labels
-)
+./.opencode/tools/gitbucket-api create-issue org project "Bug report" --body "Description" --labels priority,review
 ```
 
 ## Remove Specific Label
 
-### Python API (Only Option)
+### Python API (Only Option — not available via CLI)
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-
-# Remove one label
-api.remove_label_from_issue(
-    owner="org",
-    repo="project",
-    issue_number=14,
-    label_name="bug"
-)
-```
+Post-creation label removal is available via the Python API but not exposed as a CLI command.
 
 ## Remove All Labels
 
-### Python API (Only Option)
+### Python API (Only Option — not available via CLI)
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-
-# Remove all labels
-api.remove_all_labels_from_issue(
-    owner="org",
-    repo="project",
-    issue_number=14
-)
-```
+All-labels removal is available via the Python API but not exposed as a CLI command.
 
 ## Repository Labels
 
 ### List Labels
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-labels = api.list_labels(owner="org", repo="project")
+```bash
+./.opencode/tools/gitbucket-api labels org project
 ```
 
 ### Create Label
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-label = api.create_label(
-    owner="org",
-    repo="project",
-    name="bug",
-    color="ff0000"
-)
-```
+Label creation happens automatically when labels are specified during `create-issue`. For explicit label creation, use the Python API directly.
 
 ## Tool Selection
 
-| Operation | Python API |
-|-----------|------------|
-| Add labels | `api.add_labels_to_issue()` | ⚠️ BROKEN (returns `[]`) |
-| Replace labels | `api.replace_issue_labels()` | ⚠️ BROKEN (returns `[]`) |
-| Remove label | `api.remove_label_from_issue()` |
-| Remove all labels | `api.remove_all_labels_from_issue()` |
-| List labels | `api.list_labels()` |
-| Create label | `api.create_label()` |
+| Operation | CLI Command | Status |
+|-----------|------------|--------|
+| Add labels | N/A | ⚠️ BROKEN (returns `[]`) |
+| Replace labels | N/A | ⚠️ BROKEN (returns `[]`) |
+| Remove label | N/A | Python API only |
+| Remove all labels | N/A | Python API only |
+| List labels | `gitbucket-api labels <owner> <repo>` | ✅ |
+| Create label | N/A | Auto-created via create-issue |
 
-**Note:** GitBucket Python API is the primary tool for all label operations.
+**Note:** The `gitbucket-api` CLI tool is the primary tool for label operations that work. Broken operations are not exposed via CLI.
 
 ## Error Handling
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-from skills.gitbucket_api.tools.exceptions import ValidationError
-
-api = GitBucketAPI()
-
-try:
-    api.add_labels_to_issue(...)
-except ValidationError as e:
-    # 422 - Invalid label name or format
-    print(f"Validation error: {e.message}")
+```bash
+# 422 - Invalid label name or format
+./.opencode/tools/gitbucket-api create-issue org project "Test" --labels "invalid label!"
+# Error output will indicate validation failure
 ```
 
 ## Source Code
 
-- `tools/gitbucket_api.py` - `add_labels_to_issue()`, `replace_issue_labels()`, `remove_label_from_issue()`, `remove_all_labels_from_issue()`, `list_labels()`, `create_label()`
+- `.opencode/tools/gitbucket-api` - CLI entry point
+- `.opencode/skills/issue-operations/platforms/gitbucket-api/tools/impl/` - Python implementation

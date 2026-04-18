@@ -61,16 +61,33 @@ GitBucket platform implementation using Python client. Implements a GitHub-compa
 
 Token authentication ONLY. Basic auth is broken in GitBucket (returns "Bad credentials" for all requests).
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()  # Reads GITBUCKET_HTML_URL and GITBUCKET_TOKEN from .env
+```bash
+./.opencode/tools/gitbucket-api check-auth
 ```
 
-## Python Client
+## CLI Tool
 
-**Use `from skills.gitbucket_api.tools import GitBucketAPI` for all operations.** The client handles both array and object responses correctly. See task files for endpoint-specific patterns.
+**Use `./.opencode/tools/gitbucket-api <command>` for all GitBucket operations.** The CLI tool handles authentication, response parsing, and error handling. See task files for command-specific patterns.
 
-**CRITICAL: Agent MUST use `GitBucketAPI` for ALL API calls on GitBucket platform. If a needed method is missing, the agent MUST HALT and report: executive summary, exact error/missing method, possible resolution, byline. NEVER fall back to inline `requests` scripts or `python -c` strings.**
+**CRITICAL: Agent MUST use the `gitbucket-api` CLI tool for ALL API calls on GitBucket platform. If a needed command is missing, the agent MUST HALT and report: executive summary, exact error/missing command, possible resolution, byline. NEVER fall back to inline `requests` scripts or `python -c` strings.**
+
+### Command Reference
+
+| Command | Description |
+|---------|-------------|
+| `me` | Get current user |
+| `issues <owner> <repo> [--state open\|closed\|all]` | List issues |
+| `issue <owner> <repo> <number>` | Get single issue |
+| `create-issue <owner> <repo> <title> [--body ...] [--labels ...]` | Create issue |
+| `add-comment <owner> <repo> <number> <body>` | Add comment |
+| `prs <owner> <repo> [--state ...] [--head ...]` | List pull requests |
+| `create-pr <owner> <repo> <title> <head> <base> [--body ...]` | Create pull request |
+| `labels <owner> <repo>` | List labels |
+| `branches <owner> <repo>` | List branches |
+| `repos [--user ...]` | List repositories |
+| `repo <owner> <repo>` | Get repository |
+| `init-config [--path ...]` | Initialize configuration |
+| `check-auth` | Validate authentication |
 
 ## Response Schema
 
