@@ -8,21 +8,13 @@ Session init script (`.opencode/tools/session-init`) provides GitBucket credenti
 
 Credentials are loaded in this order:
 
-1. **Explicit parameters** - Highest priority
-   ```python
-   api = GitBucketAPI(
-       url="https://gitbucket.example.com/gitbucket/",
-       token="your-token"
-   )
-   ```
-
-2. **Environment variables**
+1. **Environment variables**
    ```bash
    export GITBUCKET_HTML_URL=https://gitbucket.example.com/gitbucket/
    export GITBUCKET_TOKEN=your-token
    ```
 
-3. **Project .env file** (`<project>/.env`)
+2. **Project .env file** (`<project>/.env`)
    ```bash
    # .env
    GITBUCKET_HTML_URL=https://gitbucket.example.com/gitbucket/
@@ -32,29 +24,18 @@ Credentials are loaded in this order:
    # GITBUCKET_PASSWORD=password
    ```
 
-4. **User config file** (platform-specific)
+3. **User config file** (platform-specific)
    - **Linux/macOS**: `~/.config/gitbucket/secrets.toml`
    - **Windows**: `%APPDATA%/gitbucket/secrets.toml`
 
 ## Create Config Template
 
-If `secrets.toml` doesn't exist, create it automatically:
+If `secrets.toml` doesn't exist, create it using the CLI:
 
-```python
-from skills.gitbucket_api.tools import create_config_file
-
-# Create platform-specific config file
-config_path = create_config_file()
-print(f"Config file created at: {config_path}")
-```
-
-**Or with API initialization:**
-
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-# Create config template if missing
-api = GitBucketAPI(create_config_if_missing=True)
+```bash
+./.opencode/tools/gitbucket-api init-config
+# Or specify a custom path:
+./.opencode/tools/gitbucket-api init-config --path /custom/path/secrets.toml
 ```
 
 **Template content:**
@@ -95,16 +76,9 @@ Note: Follows XDG Base Directory Specification. Respects `XDG_CONFIG_HOME` envir
 
 ## Extract Credentials
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-# Method 1: GitBucketAPI auto-detects
-api = GitBucketAPI()  # Reads from .env, secrets.toml, env
-
-# Method 2: Explicit create config
-from skills.gitbucket_api.tools import create_config_file
-config_path = create_config_file()
-# Prints: "Created config at /home/user/.config/gitbucket/secrets.toml"
+```bash
+# Validate credentials work
+./.opencode/tools/gitbucket-api check-auth
 ```
 
 ## Environment Variables
@@ -124,45 +98,16 @@ GITBUCKET_TOKEN=your-personal-access-token
 | Token | All operations | `GITBUCKET_TOKEN` | ✅ Working |
 | Basic | Admin endpoints | `GITBUCKET_USERNAME`, `GITBUCKET_PASSWORD` | ❌ Broken |
 
-## Error Handling
-
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-from skills.gitbucket_api.tools.exceptions import AuthenticationError
-
-try:
-    api = GitBucketAPI()  # Auto-detect from env/secrets.toml
-except ValueError as e:
-    # Missing GITBUCKET_URL
-    print(f"Error: {e}")
-    
-try:
-    api.get_current_user()
-except AuthenticationError as e:
-    # Invalid or expired token
-    print(f"Auth failed: {e.message}")
-```
-
 ## Credential Validation
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-
+```bash
 # Validate token works
-try:
-    user = api.get_current_user()
-    print(f"Authenticated as {user['login']}")
-except AuthenticationError:
-    print("Token invalid or expired")
-except NotFoundError:
-    print("Wrong endpoint or GitBucket URL")
+./.opencode/tools/gitbucket-api check-auth
 ```
 
 ## Best Practices
 
-1. **Use config file** - Create `secrets.toml` with `create_config_file()` for persistent credentials
+1. **Use config file** - Run `init-config` to create `secrets.toml` for persistent credentials
 2. **Token auth ONLY** - Basic auth is broken in GitBucket, use token for all operations
-3. **Error handling** - Catch specific exceptions (AuthenticationError, NotFoundError, etc.)
+3. **Error handling** - Check `check-auth` output for specific error types
 4. **Cross-platform** - Config locations work on Linux, macOS, Windows

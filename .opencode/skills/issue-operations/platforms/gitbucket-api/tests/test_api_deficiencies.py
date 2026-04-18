@@ -14,7 +14,7 @@ Test Coverage:
   - Deficiency #3: replace_issue_labels (returns empty array, labels NOT set)
 
 Usage:
-    uv run python .opencode/skills/gitbucket-api/tests/test_api_deficiencies.py
+    ./.opencode/skills/issue-operations/platforms/gitbucket-api/tests/test_api_deficiencies.py
 
 Requirements:
     - .env file with GITBUCKET_URL and GITBUCKET_TOKEN

@@ -1,9 +1,7 @@
+#!/usr/bin/env -S uv run --script
 # /// script
-# requires-python = ">=3.12"
+# requires-python = "~=3.12"
 # dependencies = []
-#
-# [tool.uv]
-# exclude-newer = "2026-04-14T00:00:00Z"
 # ///
 
 import argparse

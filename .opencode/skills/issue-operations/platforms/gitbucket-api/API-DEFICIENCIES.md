@@ -16,7 +16,7 @@ This document records discovered API deficiencies between the OpenAPI specificat
 
 **How to Retest:**
 ```bash
-uv run python .opencode/skills/gitbucket-api/tests/verify_api.py
+./.opencode/skills/issue-operations/platforms/gitbucket-api/tests/verify_api.py
 ```
 
 ## Deficiencies Discovered (Post-Upgrade Status)

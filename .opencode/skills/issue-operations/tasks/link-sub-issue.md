@@ -56,16 +56,8 @@ sub_issue = github_issue_write(
 ```
 
 **GitBucket platform:**
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()
-sub_issue = api.create_issue(
-    owner=<github.owner>,
-    repo=<github.repo>,
-    title=f"[Task: #{M}] {phase_description}",
-    body=f"**Parent Plan:** #{M}\n\n{phase_prose}",
-    labels=["task"]
-)
+```bash
+./.opencode/tools/gitbucket-api create-issue <github.owner> <github.repo> "[Task: #<M>] <phase_description>" --body "**Parent Plan:** #<M>\n\n<phase_prose>" --labels task
 ```
 
 ### Step 5: Link Sub-Issue to Parent
@@ -84,13 +76,8 @@ github_sub_issue_write(
 CRITICAL: Use database ID (`.id`), not issue number.
 
 **GitBucket platform (comment-based fallback):**
-```python
-api.add_issue_comment(
-    owner=<github.owner>,
-    repo=<github.repo>,
-    issue_number=M,
-    body=f"**Sub-issue linked:** #{sub_issue['number']} — {phase_description}"
-)
+```bash
+./.opencode/tools/gitbucket-api add-comment <github.owner> <github.repo> <M> "**Sub-issue linked:** #<sub_issue_number> — <phase_description>"
 ```
 
 The dispatcher records which method was used (formal link vs comment) for later closure operations.

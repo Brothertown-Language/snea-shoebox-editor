@@ -47,10 +47,20 @@ check_python_version_pinned() {
 
 check_no_old_references() {
     local matches
-    matches=$(grep -rn "uv run python .opencode/tools" .opencode/guidelines/ AGENTS.md .opencode/skills/ 2>/dev/null | grep -v "Do NOT use" || true)
+    matches=$(grep -rn "uv run python .opencode" .opencode/guidelines/ AGENTS.md .opencode/skills/ 2>/dev/null | grep -v "Do NOT use" || true)
     if [ -n "$matches" ]; then
-        echo "FAIL: Old 'uv run python .opencode/tools' references found:"
+        echo "FAIL: Old 'uv run python .opencode' references found:"
         echo "$matches"
+        FAIL=$((FAIL + 1))
+    else
+        PASS=$((PASS + 1))
+    fi
+
+    local md_matches
+    md_matches=$(grep -rn 'uv run python ' .opencode/ --include='*.md' 2>/dev/null | grep -v '# Do NOT use' | grep -v 'Do NOT use' | grep -v 'FORBIDDEN' | grep -v 'python -m unittest' || true)
+    if [ -n "$md_matches" ]; then
+        echo "FAIL: Old 'uv run python' references found in .md files:"
+        echo "$md_matches"
         FAIL=$((FAIL + 1))
     else
         PASS=$((PASS + 1))
@@ -67,6 +77,7 @@ check_python_script() {
 ENTRY_POINTS=(
     guidelines memory md py jupyter help file-exists
     schema-version jupyter-start jupyter-stop symbolic session-init
+    gitbucket-api
 )
 
 for tool in "${ENTRY_POINTS[@]}"; do
@@ -116,6 +127,20 @@ check_plugin_invocations() {
 }
 
 check_plugin_invocations
+
+check_no_python_imports() {
+    local import_matches
+    import_matches=$(grep -rn 'from skills.gitbucket_api' .opencode/ 2>/dev/null | grep -v 'test-pep723-tools.sh' || true)
+    if [ -n "$import_matches" ]; then
+        echo "FAIL: Old 'from skills.gitbucket_api' import references found (should use CLI tool):"
+        echo "$import_matches"
+        FAIL=$((FAIL + 1))
+    else
+        PASS=$((PASS + 1))
+    fi
+}
+
+check_no_python_imports
 
 echo ""
 echo "Results: $PASS passed, $FAIL failed"

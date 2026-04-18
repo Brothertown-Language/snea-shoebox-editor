@@ -757,10 +757,10 @@ Any API mutation (PR creation, issue creation, branch creation) MUST be idempote
 
 **⚠️ API calls that mutate state (POST, PUT, PATCH) inlined in `python -c '...'` strings are a CRITICAL GUIDELINE VIOLATION.**
 
-API calls that mutate state must use the platform's dedicated API client (e.g., `GitBucketAPI`, GitHub MCP). If the client lacks the method, HALT — do NOT work around it with inline scripts. Shell interpolation corrupts inline Python, POST calls succeed but parsing crashes, and agents retry the entire call creating duplicates.
+API calls that mutate state must use the platform's dedicated API client (e.g., `gitbucket-api` CLI tool, GitHub MCP). If the client lacks the method, HALT — do NOT work around it with inline scripts. Shell interpolation corrupts inline Python, POST calls succeed but parsing crashes, and agents retry the entire call creating duplicates.
 
 - 🚫 FORBIDDEN: `uv run python -c '...'` for any POST/PUT/PATCH operation; raw `requests.post()` / `requests.put()` / `requests.patch()` outside the dedicated API client; any inline script containing a mutation HTTP method
-- ✅ REQUIRED: Use `GitBucketAPI.create_pull_request()`, `GitBucketAPI.create_issue()`, etc. for all mutations; if the client lacks a needed method, HALT and report the gap; use the API client's built-in error handling and response parsing
+- ✅ REQUIRED: Use `./.opencode/tools/gitbucket-api create-pr`, `./.opencode/tools/gitbucket-api create-issue`, etc. for all GitBucket mutations; use GitHub MCP for GitHub mutations; if a needed command is missing, HALT and report the gap; use the tool's built-in error handling and response parsing
 
 ## Sub-Agent Extraction Pattern
 

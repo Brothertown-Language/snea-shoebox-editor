@@ -45,17 +45,10 @@ github_issue_write(
 ```
 
 **GitBucket platform (PATCH fallback):**
-```python
+```bash
 # PATCH /issues/:number returns 404 on GitBucket
 # Post closure comment instead
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()
-api.add_issue_comment(
-    owner=<github.owner>,
-    repo=<github.repo>,
-    issue_number=N,
-    body="Closing: PR merged and implementation verified."
-)
+./.opencode/tools/gitbucket-api add-comment <github.owner> <github.repo> <issue-number> "Closing: PR merged and implementation verified."
 ```
 
 ### Step 4: Post Closure Comment (if substantive)

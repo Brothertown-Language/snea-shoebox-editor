@@ -99,15 +99,8 @@ github_add_issue_comment(
 ```
 
 **GitBucket platform:**
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()
-api.add_issue_comment(
-    owner=<github.owner>,
-    repo=<github.repo>,
-    issue_number=N,
-    body=formatted_comment
-)
+```bash
+./.opencode/tools/gitbucket-api add-comment <github.owner> <github.repo> <issue-number> "<formatted_comment>"
 ```
 
 ## Live Verification: Comment Claims (MANDATORY)

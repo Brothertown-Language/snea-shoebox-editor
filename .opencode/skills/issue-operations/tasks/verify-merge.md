@@ -31,12 +31,9 @@ state = pr.get("state", "unknown")
 ```
 
 **GitBucket platform:**
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()
-pr = api.get_pull_request(owner=<github.owner>, repo=<github.repo>, pull_number=N)
-merged = pr.get("merged", False)
-state = pr.get("state", "unknown")
+```bash
+# Get PR details and parse merged/state fields
+./.opencode/tools/gitbucket-api prs <github.owner> <github.repo> --state all | jq '.[] | select(.number == N)'
 ```
 
 ### Step 2: Verify Merge
@@ -56,15 +53,10 @@ When searching for a PR that fixes a specific issue on GitBucket (no search API)
 3. Stop on first match
 4. Paginate only if no match found on first page
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-api = GitBucketAPI()
-prs = api.list_pull_requests(owner=<github.owner>, repo=<github.repo>, state="closed")
-matching_pr = None
-for pr in prs:
-    if f"#{issue_number}" in pr.get("body", "") or f"Fixes #{issue_number}" in pr.get("body", ""):
-        matching_pr = pr
-        break
+```bash
+# List closed PRs and scan bodies for issue reference
+./.opencode/tools/gitbucket-api prs <github.owner> <github.repo> --state closed
+# Then check each PR body for the issue reference pattern
 ```
 
 ## Common Issues
