@@ -108,8 +108,18 @@ Plan approved
   → git-workflow --task review-prep
   ── VERIFICATION GATE ──────────────────────────────────────────────────
   → Confirm review-prep completed: compare URL generated and reported in correct format
-  → If skipped: INVOKE review-prep before proceeding (MANDATORY, no bypass)
-  ──────────────────────────────────────────────────────────────────────
+   → If skipped: INVOKE review-prep before proceeding (MANDATORY, no bypass)
+   ──────────────────────────────────────────────────────────────────────
+
+Clearly simple work (Tier 2 waiver)
+  → git-workflow --task pre-work (MANDATORY: worktree creation)
+  → Direct implementation in worktree (no sub-agent dispatch for single-file changes)
+  → verification-before-completion (simplified for docs/config)
+  → finishing-a-development-branch --task checklist
+  → git-workflow --task review-prep
+  → HALT (compare URL output)
+
+  **Classification check:** Before using this dispatch path, verify work meets ALL "clearly simple" criteria per `000-critical-rules.md` → "Simple Work Dispatch Path (Tier 2 Waiver)" → "Classification: Clearly Simple Work" table. If ANY criterion fails, use the full dispatch chain instead.
 
 Already implemented
   → verify-authorization (all gates pass)

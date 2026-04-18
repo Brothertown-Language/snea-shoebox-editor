@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec-fix/1053-simple-work-dispatch-path
+
+- **Add Simple Work Dispatch Path** (#1053, #1063, #1064) - Added lightweight dispatch path for "clearly simple work" (docs, runbooks, minor config) that resolves agent contention between Tier 1 safety mandates and Tier 2 process waivers. Simple work now follows: pre-work → implement → VbC → checklist → review-prep, preserving worktree mandates while skipping spec/plan requirements. Added "Simple Work Dispatch Path (Tier 2 Waiver)" section to 000-critical-rules.md with classification table, "Decision Table: Simple Work + File Modifications" to 010-approval-gate.md, simple-work dispatch branch to approval-gate/SKILL.md, and "Simple Work Worktree" section to using-git-worktrees/SKILL.md.
+
 ### spec-fix/1042-1043-approval-gate-autonomous-classification
 
 - **Remove Conditional Sub-Agent Dispatch Threshold** (#1043) - Removed the ≤3 inline screening threshold from approval-gate. Screen-issue sub-agent dispatch is now mandatory for ALL approval set sizes, regardless of count. Replaced conditional logic in 000-critical-rules.md, pre-implementation-analysis.md, and SKILL.md verification table. Added "Common Misconception" sections explaining why the threshold was removed.

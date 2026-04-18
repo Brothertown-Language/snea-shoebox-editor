@@ -60,6 +60,17 @@ The interaction between developer authorization and process mandates follows the
 | Developer authorization + Tier 1 safety mandate | Safety mandate wins | Worktree and branch protection protect repository integrity regardless of authorization |
 | No developer authorization + any mandate | Mandate holds | Authorization is always required for implementation |
 
+#### Decision Table: Simple Work + File Modifications
+
+| Authorization | Work Type | File Mods? | Dispatch Path |
+|---------------|-----------|-------------|---------------|
+| Explicit (approved/go) | Clearly simple | Yes | `pre-work → implement → VbC → checklist → review-prep` (simple work dispatch path) |
+| Explicit (approved/go) | Clearly simple | No | Create issue only, no worktree needed |
+| Explicit (approved/go) | Complex | Yes | Full dispatch chain |
+| None | Any | Any | HALT — wait for authorization |
+
+Key insight: "Simple" describes the PROCESS burden (no spec/plan), not the SAFETY mechanism. Worktrees protect repository integrity regardless of task complexity.
+
 **For clearly simple work** (documentation, runbooks, minor configuration edits, single-file non-behavioral changes), developer authorization IS sufficient process — no separate spec/plan is required. The developer's explicit "approved" or "go" serves as both the authorization and the process justification.
 
 **For complex work** (new features, behavioral changes, multi-file modifications), developer authorization means "you may begin the process." The spec/plan workflow still produces value (traceability, review trail, edge case discovery) even when authorization exists. The agent should proceed through spec/plan creation as part of the authorized work.
