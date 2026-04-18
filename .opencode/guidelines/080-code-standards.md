@@ -165,7 +165,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 
 **Rationale:** AI attribution is about transparency in creative work. Copying a standard MIT license, copying code from Stack Overflow, or copy-pasting documentation from another project requires no AI creativity - those sources hold their own copyrights. Only genuinely original content created by AI deserves AI co-authorship attribution.
 
-### Files Requiring Attribution
+### Files Requiring Attribution (In-Repository)
 
 | File Type | Attribution Location | Format |
 | -- | -- | -- |
@@ -173,6 +173,31 @@ AI co-authorship applies to **creative, original content authored by AI**:
 | README files | Footer section | `## Co-Authored With AI` section |
 | New repositories | README.md | AI co-authored section (see below) |
 | Original docs | Footer | `*Co-authored with AI: <AgentName> (<ModelId>)*` |
+
+### Posted Content Requiring Attribution
+
+| Content Type | Attribution Location | Format |
+| -- | -- | -- |
+| Issue comments (any repository) | Last line of comment body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+| PR comments (any repository) | Last line of comment body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+| PR bodies (AI-authored) | Last line before horizontal rule or end of body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+| Issue bodies (AI-authored) | Last line of issue body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+
+External repository posts have HIGHER attribution priority than internal content. External posts represent the project to third parties — attribution is a transparency and ethical requirement, not optional.
+
+### Standalone Byline Correction — FORBIDDEN
+
+**Adding a standalone comment whose sole purpose is to append a byline to a previous comment is ABSOLUTELY FORBIDDEN.**
+
+When a byline is missing from AI-authored posted content:
+
+| Option | When | Action |
+|--------|------|--------|
+| **Edit the comment** | Platform supports edit + agent has edit permission | Edit the original comment, append byline as last line |
+| **Delete + repost** | Agent has delete permission | Delete original, repost with byline included |
+| **Accept the omission** | No edit/delete permission | Leave it. Do NOT add a separate byline comment. |
+
+The byline must be **part of the content body**, never a separate message.
 
 ### Files NOT Requiring Attribution
 

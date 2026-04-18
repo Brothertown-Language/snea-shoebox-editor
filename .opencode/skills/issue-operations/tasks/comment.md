@@ -75,7 +75,28 @@ All tasks complete from this specification.
 
 Stakeholders need understanding, not commit logs. GitHub diffs already show what changed; comments explain WHY.
 
-### Step 4: Validate Format
+### Step 3.5: Byline Verification (MANDATORY)
+
+Before posting any AI-authored comment, verify the byline is present:
+
+| If | Action |
+|----|--------|
+| Body ends with `🤖 Co-authored with AI: <AgentName> (<ModelId>)` | ✅ Proceed to Step 5 |
+| Body contains byline elsewhere | ✅ Proceed to Step 5 |
+| Body has no byline | **Append byline as last line before posting** |
+| Comment is not AI-authored (copy-pasted or human-authored) | ✅ Skip — no byline needed |
+
+**This check applies regardless of target repository** (home repo or external). External posts have higher attribution priority, not lower.
+
+**Standalone byline correction comments are ABSOLUTELY FORBIDDEN.** If a byline was missing from a previously posted comment:
+
+| Option | When | Action |
+|--------|------|--------|
+| Edit the comment | Platform supports edit + agent has edit permission | Edit original, append byline as last line |
+| Delete + repost | Agent has delete permission | Delete original, repost with byline |
+| Accept the omission | No edit/delete permission | Leave it — never add a separate byline comment |
+
+### Step 5: Validate Format
 
 **CRITICAL: Emoji must be PLAIN TEXT (not inside italic/bold formatting)**
 
@@ -86,7 +107,7 @@ Stakeholders need understanding, not commit logs. GitHub diffs already show what
 - Horizontal rule separates summary from byline
 - Body is prose-driven, not rigid bullet lists
 
-### Step 5: Post Comment (Platform Routing)
+### Step 6: Post Comment (Platform Routing)
 
 **GitHub platform:**
 ```python
@@ -127,3 +148,4 @@ github_add_issue_comment(
 - Session values: github.owner, github.repo, github.platform
 - Related tasks: `close` (uses comment for closure), `link-sub-issue` (uses comment for fallback)
 - Platform routing: `../platforms/github-mcp/` or `../platforms/gitbucket-api/`
+- Byline verification (Step 3.5) applies to ALL repositories — external posts have higher attribution priority

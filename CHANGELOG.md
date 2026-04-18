@@ -12,6 +12,11 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec-fix/1066-1067-byline-enforcement-gaps
+
+- **External Repository Byline Requirement** (#1066) - Added "Posted Content Requiring Attribution" table to 080-code-standards.md covering issue comments, PR comments, PR bodies, and issue bodies on any repository. Clarified that external posts have HIGHER attribution priority than internal content.
+- **Standalone Byline Correction Prohibition** (#1067) - Added "Standalone Byline Correction — FORBIDDEN" section to 080-code-standards.md with correction procedure (edit/delete+repost/accept omission). Added Step 3.5 (Byline Verification) to issue-operations comment task with mandatory pre-post byline check and standalone correction comment prohibition.
+
 ### spec-fix/1042-1043-approval-gate-autonomous-classification
 
 - **Remove Conditional Sub-Agent Dispatch Threshold** (#1043) - Removed the ≤3 inline screening threshold from approval-gate. Screen-issue sub-agent dispatch is now mandatory for ALL approval set sizes, regardless of count. Replaced conditional logic in 000-critical-rules.md, pre-implementation-analysis.md, and SKILL.md verification table. Added "Common Misconception" sections explaining why the threshold was removed.
