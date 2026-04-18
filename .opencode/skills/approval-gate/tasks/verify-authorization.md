@@ -18,6 +18,30 @@ Check for explicit authorization and needs-approval label status before implemen
 
 ## Procedure
 
+### Step 0: Sub-Agent Result Guard
+
+When `verify-authorization` is executed inline after a sub-agent dispatch returns an empty result, this step provides the fallback path.
+
+**Trigger condition:** After dispatching a `screen-issue` or other sub-agent via `task()`, if the result is empty or whitespace-only:
+
+```python
+if not result or not result.strip():
+    # Sub-agent returned empty — perform inline verification
+    report_warning("Sub-agent for verify-authorization returned empty result, performing inline")
+    # Execute Steps 1-6 of this verify-authorization procedure inline
+    # Continue the dispatch chain as if verify-authorization completed normally
+```
+
+**Fallback execution:** When this guard activates, the agent executes the full verify-authorization procedure (Steps 1-6) inline using direct tool calls rather than dispatching another sub-agent. The inline execution follows the same steps and produces the same result contract format.
+
+**Double-failure protocol:** If inline verification also fails:
+
+1. Report: `"Sub-agent and inline verification both failed for verify-authorization"`
+2. Invoke `--task completion` on the `approval-gate` skill
+3. HALT with status message + byline
+
+**No regression:** When sub-agent returns a valid result, this guard is not triggered — Steps 1-6 execute normally from the sub-agent's result.
+
 ### Step 1: Verify Git State (MANDATORY FIRST)
 
 **🚫 CRITICAL: This check MUST happen BEFORE any other work.**
