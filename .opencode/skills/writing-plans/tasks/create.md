@@ -57,7 +57,7 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
    - The section contains the plan header, file structure, and TDD tasks
    - The issue retains its `[SPEC]` title prefix (not changed to `[PLAN]`)
    - No sub-issues needed (single-task by definition)
-   - Remove `needs-approval` label if the spec was already approved (plan inherits approval via spec-to-plan cascade)
+   - Remove `needs-approval` label only when `authorization_scope >= for_plan`. In `standard` scope, the combined plan section requires separate approval even though the spec was already approved.
    - Proceed to Step 2 (Map file structure) — plan content will be appended to spec body after all steps complete
 
    **If SEPARATE:**
@@ -210,7 +210,7 @@ Before mapping file structure, check whether existing plans already reference th
 
 11. **Post-creation approval cascade check and scope-aware auto-approval (MANDATORY):**
 
-     After the plan is created (either combined or separate), check whether the spec that triggered plan creation was already approved. If yes, the plan inherits the spec's approval status.
+     After the plan is created (either combined or separate), apply scope-aware approval logic. The cascade behavior depends on authorization scope — see success criteria for the complete matrix.
 
      **Scope-aware auto-approval:** When `authorization_scope >= for_plan` (from verify-authorization Step 2.0), the plan is auto-approved without requiring a separate approval gate. The user's pipeline authorization covers plan creation and approval. Remove `needs-approval` label and add cascade comment.
 
@@ -235,36 +235,27 @@ Before mapping file structure, check whether existing plans already reference th
 
      **If `halt_at == plan_created`:** After plan creation and auto-approval, HALT. Do NOT proceed to implementation. The scope horizon stops at plan creation.
 
-     **For combined spec+plan:** The spec issue already has the plan content appended. If the spec was already approved, no further approval action is needed — the combined document inherits the spec's approval. Do NOT remove `needs-approval` if it is still present on the spec (the spec itself may still be pending approval). If the spec was already approved AND `needs-approval` is absent, the combined plan is auto-approved.
+      **For combined spec+plan:** The spec issue already has the plan content appended. Do NOT remove `needs-approval` if `authorization_scope < for_plan`. The combined plan section requires separate plan approval in `standard` scope. Only auto-remove `needs-approval` when `scope_level >= SCOPE_LEVELS['for_plan']`.
 
-     **For separate plan:** Apply the existing cascade logic:
+      **For separate plan:** Apply scope-aware cascade logic:
 
-     ```python
-     spec_issue = github_issue_read(method="get", issue_number=spec_number)
-     spec_comments = github_issue_read(method="get_comments", issue_number=spec_number)
+      ```python
+       spec_labels = [l["name"] for l in spec_issue["labels"]]
 
-     has_approval = any(
-         "approved" in comment["body"].lower() or comment["body"].strip().lower() == "go"
-         for comment in spec_comments
-         if comment["author_association"] in ("MEMBER", "OWNER", "COLLABORATOR")
-     )
+       if scope_level >= SCOPE_LEVELS["for_plan"]:
+           # Pipeline authorization covers plan approval — auto-approve
+           github_issue_write(
+               method="update",
+               issue_number=plan_issue_number,
+               labels=[l for l in plan_labels if l != "needs-approval"],
+           )
+           github_add_issue_comment(
+               issue_number=plan_issue_number,
+               body=f"Plan auto-approved via pipeline scope (authorization_scope={scope}). Plan creation covered by '{scope}' authorization.",
+           )
+      ```
 
-     spec_labels = [l["name"] for l in spec_issue["labels"]]
-     label_already_removed = "needs-approval" not in spec_labels
-
-     if has_approval or label_already_removed or scope_level >= SCOPE_LEVELS["for_plan"]:
-         github_issue_write(
-             method="update",
-             issue_number=plan_issue_number,
-             labels=[l for l in plan_labels if l != "needs-approval"],
-         )
-         github_add_issue_comment(
-             issue_number=plan_issue_number,
-             body=f"Approval cascaded from spec #{spec_number}. Plan created for an already-approved spec — plan inherits approval status automatically.",
-         )
-     ```
-
-     This handles the case where plan creation happens AFTER spec approval in the same session. If the spec still has `needs-approval`, the new plan retains its `needs-approval` label and follows the standard flow (requires explicit plan approval) — unless `authorization_scope >= for_plan`, in which case the plan auto-approval applies regardless.
+      In `standard` scope, the newly created plan retains its `needs-approval` label and requires separate plan approval — the spec-to-plan cascade does NOT apply to newly created plans. In pipeline scope (`for_plan` or higher), the plan is auto-approved because the pipeline authorization covers plan creation and approval.
 
 ## Live Verification: Plan Creation Evidence (MANDATORY)
 

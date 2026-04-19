@@ -141,7 +141,8 @@ Content generation — producing specs, plans, runbooks, documentation, or corre
 **⚠️ Failing to invoke `verification-before-completion` and `finishing-a-development-branch` after implementation is a CRITICAL GUIDELINE VIOLATION.**
 
 - 🚫 FORBIDDEN: Claiming complete without invoking verification skills; manually executing skill steps; skipping verification because "changes look correct"
-- ✅ REQUIRED: See `verification-before-completion` skill `--task verify` for evidence requirements; `finishing-a-development-branch` skill `--task checklist` for branch readiness; `git-workflow` skill `--task review-prep` for post-implementation workflow
+- ✅ REQUIRED: See `verification-before-completion` skill `--task verify` for evidence requirements; `finishing-a-development-branch` skill `--task checklist` for branch readiness; `git-workflow` skill `--task review-prep` for post-implementation workflow; `git-workflow --task cleanup` Step 3.5 for dev sync verification gate before any branch deletion, worktree removal, or issue closure
+- **`git-workflow --task cleanup` Step 3.5** — Dev sync verification gate before any branch deletion, worktree removal, or issue closure. Local dev HEAD MUST match origin/dev HEAD before proceeding.
 
 ## Critical Violation: Skipping review-prep After Implementation
 
