@@ -38,6 +38,8 @@ SCENARIOS["implement-request"]="implement the skill invocation enforcement plugi
 SCENARIOS["post-merge-cleanup"]="PR merged, the work is done"
 SCENARIOS["symptom-patch"]="I found a bug where the cleanup step was skipped, let me just add a close-issue call to fix it"
 SCENARIOS["incremental-build-guideline"]="Does the file .opencode/guidelines/091-incremental-build.md exist with sections for mandate, scope classification, top-down decomposition, bottom-up design, per-item TDD, and anti-patterns?"
+SCENARIOS["monolithic-implementation-violation"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Monolithic Implementation skipping item decomposition that references 091-incremental-build.md?"
+SCENARIOS["item-decomposition-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 4.5 for item decomposition verification?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -48,6 +50,8 @@ EXPECTED_SKILLS["implement-request"]="approval-gate"
 EXPECTED_SKILLS["post-merge-cleanup"]="git-workflow"
 EXPECTED_SKILLS["symptom-patch"]="issue-review"
 EXPECTED_SKILLS["incremental-build-guideline"]=""
+EXPECTED_SKILLS["monolithic-implementation-violation"]=""
+EXPECTED_SKILLS["item-decomposition-step"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -60,7 +64,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -184,6 +188,68 @@ if [ -f "$GUIDELINE_FILE" ]; then
 else
     echo "  091-incremental-build.md: MISSING"
     echo "- **091-incremental-build.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify Monolithic Implementation critical violation section
+CRITICAL_RULES_FILE="$PROJECT_DIR/.opencode/guidelines/000-critical-rules.md"
+if [ -f "$CRITICAL_RULES_FILE" ]; then
+    MONO_COUNT=$(grep -c "Monolithic Implementation" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+    if [ "$MONO_COUNT" -ge 1 ]; then
+        echo "  Monolithic Implementation section: FOUND"
+        echo "- **Monolithic Implementation section:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  Monolithic Implementation section: MISSING"
+        echo "- **Monolithic Implementation section:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    # Verify cross-reference to 091-incremental-build.md
+    XREF_COUNT=$(grep -c "091-incremental-build" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+    if [ "$XREF_COUNT" -ge 1 ]; then
+        echo "  Cross-reference to 091-incremental-build.md: FOUND"
+        echo "  - **Cross-reference to 091-incremental-build.md:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  Cross-reference to 091-incremental-build.md: MISSING"
+        echo "  - **Cross-reference to 091-incremental-build.md:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  000-critical-rules.md: MISSING"
+    echo "- **000-critical-rules.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify Step 4.5 item decomposition verification
+VERIFY_AUTH_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/tasks/verify-authorization.md"
+if [ -f "$VERIFY_AUTH_FILE" ]; then
+    STEP45_COUNT=$(grep -c "Step 4.5" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+    if [ "$STEP45_COUNT" -ge 1 ]; then
+        echo "  Step 4.5 item decomposition: FOUND"
+        echo "- **Step 4.5 item decomposition:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  Step 4.5 item decomposition: MISSING"
+        echo "- **Step 4.5 item decomposition:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    # Verify reference to 091-incremental-build.md
+    IBLD_XREF=$(grep -c "091-incremental-build" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+    if [ "$IBLD_XREF" -ge 1 ]; then
+        echo "  verify-authorization cross-ref to 091: FOUND"
+        echo "  - **verify-authorization cross-ref to 091:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  verify-authorization cross-ref to 091: MISSING"
+        echo "  - **verify-authorization cross-ref to 091:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  verify-authorization.md: MISSING"
+    echo "- **verify-authorization.md:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
