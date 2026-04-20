@@ -259,6 +259,41 @@ AI co-authored attribution:
 4. Helps identify AI-generated content for review
 5. **Respects copyright** - only claims co-authorship on genuinely original AI work
 
+## Enforcement Test Mandate for Guideline and Skill Changes
+
+Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills/*/SKILL.md`, `.opencode/skills/*/tasks/*.md`) are enforcement-critical documents that control AI agent behavior. Changes to these files MUST be accompanied by corresponding enforcement test updates.
+
+### 🚫 PROHIBITED
+
+- Adding a critical violation section without an enforcement test that checks for it
+- Adding a verification step to a skill without an enforcement test that validates it
+- Creating a new guideline without an enforcement test that confirms its key sections exist
+- Modifying a guideline or skill without updating the corresponding enforcement test
+- Running `opencode-cli run` directly without the `with-test-home` wrapper
+
+### ✅ REQUIRED
+
+- Every guideline/skill change comes with an enforcement test scenario
+- Add the test scenario FIRST (RED), then make the change (GREEN) — TDD for rules
+- Run the enforcement suite: `bash .opencode/tests/test-enforcement.sh`
+- Use `bash .opencode/tests/with-test-home opencode-cli run '<message>'` for all opencode-cli testing — never run bare `opencode-cli run`
+- Clean up test homes after testing: `bash .opencode/tests/with-test-home --clean-all`
+
+### Per-Change TDD Pattern
+
+| TDD Phase | Action |
+|-----------|--------|
+| **RED** | Add enforcement test scenario to `test-enforcement.sh` that checks for the change (expect failure — change doesn't exist yet) |
+| **GREEN** | Make the guideline/skill change that makes the test pass |
+| **REFACTOR** | Clean up test scenario, add cross-reference checks |
+| **COMMIT** | Both the test addition and the guideline change committed together |
+
+### Why This Matters
+
+Enforcement tests are the verification layer that proves agent guidelines are actually enforceable. A guideline without a test is a suggestion, not a rule. A skill without a test is documentation, not enforcement. The `with-test-home` wrapper prevents SQLite session conflicts between the desktop app and CLI tests.
+
+**See `090-incremental-build.md` for the incremental implementation discipline that governs HOW these changes are delivered.** **See `.opencode/tests/README.md` for the enforcement test template and usage guide.**
+
 ## Cross-Reference Standards
 
 **Cross-references in specs, issues, and documentation MUST use stable anchors, NOT line numbers.**
