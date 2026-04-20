@@ -356,4 +356,30 @@ state_machines:
         to: "Invoke spec-creation"
         guard: "user_approved == true"
         action: INVOKE(spec-creation)
-```
+    ```
+
+## Top-Down Analysis Output (Per `091-incremental-build.md`)
+
+When exploration reaches the point where requirements are clear enough for a spec, the exploration output MUST include a top-down decomposition section that feeds into `writing-plans --task create`. This section is produced during the `explore` task and attached to the spec's brainstorming output.
+
+### Scope Classification
+
+Determine the scope before producing decomposition output:
+
+| Scope | Top-Down Starts From | Input Artifact |
+|-------|---------------------|---------------|
+| GREENFIELD | Project spec (no existing code) | New project specification |
+| NEW_FEATURE | Existing code + feature request | Feature spec with acceptance criteria |
+| FIX | Existing code + bug report | Bug report with root cause analysis |
+| ENHANCEMENT | Existing code + change request | Enhancement spec with change scope |
+
+### Required Top-Down Output
+
+The exploration output MUST include:
+
+1. **Item enumeration** — List every implementation unit as a discrete item with name, scope, and deliverable
+2. **Dependency graph** — Show which items depend on which, producing a dependency order
+3. **Acceptance criteria per item** — Each item has testable criteria that can be verified independently
+4. **Concern boundary annotations** — Flag items that cross architectural concerns with explicit transition notes
+
+This structure feeds directly into `writing-plans --task create` for bottom-up design per item. The top-down decomposition is verified at the approval gate (`approval-gate --task verify-authorization` Step 4.5).

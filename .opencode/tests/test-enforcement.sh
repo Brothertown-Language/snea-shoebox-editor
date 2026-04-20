@@ -40,6 +40,10 @@ SCENARIOS["symptom-patch"]="I found a bug where the cleanup step was skipped, le
 SCENARIOS["incremental-build-guideline"]="Does the file .opencode/guidelines/091-incremental-build.md exist with sections for mandate, scope classification, top-down decomposition, bottom-up design, per-item TDD, and anti-patterns?"
 SCENARIOS["monolithic-implementation-violation"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Monolithic Implementation skipping item decomposition that references 091-incremental-build.md?"
 SCENARIOS["item-decomposition-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 4.5 for item decomposition verification?"
+SCENARIOS["brainstorming-top-down"]="Does .opencode/skills/brainstorming/SKILL.md reference the top-down-analysis task?"
+SCENARIOS["writing-plans-bottom-up"]="Does .opencode/skills/writing-plans/SKILL.md contain per-item bottom-up design sections?"
+SCENARIOS["executing-plans-tdd"]="Does .opencode/skills/executing-plans/SKILL.md reference the per-item TDD cycle?"
+SCENARIOS["divide-conquer-tdd"]="Does .opencode/skills/divide-and-conquer/SKILL.md dispatch context include tdd_phase?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -52,6 +56,10 @@ EXPECTED_SKILLS["symptom-patch"]="issue-review"
 EXPECTED_SKILLS["incremental-build-guideline"]=""
 EXPECTED_SKILLS["monolithic-implementation-violation"]=""
 EXPECTED_SKILLS["item-decomposition-step"]=""
+EXPECTED_SKILLS["brainstorming-top-down"]=""
+EXPECTED_SKILLS["writing-plans-bottom-up"]=""
+EXPECTED_SKILLS["executing-plans-tdd"]=""
+EXPECTED_SKILLS["divide-conquer-tdd"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -64,7 +72,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -250,6 +258,86 @@ if [ -f "$VERIFY_AUTH_FILE" ]; then
 else
     echo "  verify-authorization.md: MISSING"
     echo "- **verify-authorization.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify brainstorming top-down-analysis task reference
+BRAINSTORMING_SKILL="$PROJECT_DIR/.opencode/skills/brainstorming/SKILL.md"
+if [ -f "$BRAINSTORMING_SKILL" ]; then
+    TD_COUNT=$(grep -c "top-down-analysis" "$BRAINSTORMING_SKILL" 2>/dev/null || echo "0")
+    if [ "$TD_COUNT" -ge 1 ]; then
+        echo "  brainstorming top-down-analysis: FOUND"
+        echo "- **brainstorming top-down-analysis:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  brainstorming top-down-analysis: MISSING"
+        echo "- **brainstorming top-down-analysis:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  brainstorming/SKILL.md: MISSING"
+    echo "- **brainstorming/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify writing-plans bottom-up design sections
+WRITING_PLANS_SKILL="$PROJECT_DIR/.opencode/skills/writing-plans/SKILL.md"
+if [ -f "$WRITING_PLANS_SKILL" ]; then
+    BU_COUNT=$(grep -c "bottom-up\|Bottom-Up" "$WRITING_PLANS_SKILL" 2>/dev/null || echo "0")
+    if [ "$BU_COUNT" -ge 1 ]; then
+        echo "  writing-plans bottom-up design: FOUND"
+        echo "- **writing-plans bottom-up design:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  writing-plans bottom-up design: MISSING"
+        echo "- **writing-plans bottom-up design:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  writing-plans/SKILL.md: MISSING"
+    echo "- **writing-plans/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify executing-plans TDD cycle reference
+EXEC_PLANS_SKILL="$PROJECT_DIR/.opencode/skills/executing-plans/SKILL.md"
+if [ -f "$EXEC_PLANS_SKILL" ]; then
+    TDD_EXEC=$(grep -c "per-item TDD\|TDD cycle\|091-incremental-build" "$EXEC_PLANS_SKILL" 2>/dev/null || echo "0")
+    if [ "$TDD_EXEC" -ge 1 ]; then
+        echo "  executing-plans TDD cycle: FOUND"
+        echo "- **executing-plans TDD cycle:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  executing-plans TDD cycle: MISSING"
+        echo "- **executing-plans TDD cycle:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  executing-plans/SKILL.md: MISSING"
+    echo "- **executing-plans/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify divide-and-conquer TDD phase in dispatch context
+DC_SKILL="$PROJECT_DIR/.opencode/skills/divide-and-conquer/SKILL.md"
+if [ -f "$DC_SKILL" ]; then
+    TDD_DC=$(grep -c "tdd_phase" "$DC_SKILL" 2>/dev/null || echo "0")
+    if [ "$TDD_DC" -ge 1 ]; then
+        echo "  divide-and-conquer tdd_phase: FOUND"
+        echo "- **divide-and-conquer tdd_phase:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  divide-and-conquer tdd_phase: MISSING"
+        echo "- **divide-and-conquer tdd_phase:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  divide-and-conquer/SKILL.md: MISSING"
+    echo "- **divide-and-conquer/SKILL.md:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

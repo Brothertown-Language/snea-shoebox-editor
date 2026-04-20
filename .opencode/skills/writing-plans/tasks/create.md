@@ -93,23 +93,33 @@ Before mapping file structure, check whether existing plans already reference th
    - Define each file's responsibility
    - Ensure decomposition has clear boundaries
 
-3. **Plan phase structure by judgment:**
+3. **Enforce item decomposition (per `091-incremental-build.md`):**
+
+   Before writing the plan document, verify that the decomposition includes:
+   - Item enumeration — Every implementation unit listed with name, scope, and deliverable
+   - Dependency ordering — Items ordered so dependencies are satisfied by preceding items
+   - Acceptance criteria per item — Each item has testable criteria verifiable independently
+   - Concern boundary annotations — Items crossing architectural concerns are flagged
+
+   This verification is the same check performed by `approval-gate --task verify-authorization` Step 4.5. If the plan lacks item decomposition, it will fail verification.
+
+4. **Plan phase structure by judgment:**
 
    - Determine which phases the plan needs
    - Organize by concern flow, not template order
    - Write prose for phase descriptions
 
-4. **Define tasks within each phase:**
+5. **Define tasks within each phase:**
 
    - Each task uses the TDD step structure
    - Each step is one action (2-5 minutes)
    - Exact code, exact commands, exact file paths
 
-5. **Write plan document header:**
+6. **Write plan document header:**
 
    - Goal, Architecture, Tech Stack
 
-6. **Store plan document (depends on Step 1.5 decision):**
+7. **Store plan document (depends on Step 1.5 decision):**
 
    **If COMBINED (decision from Step 1.5):**
 
@@ -148,14 +158,14 @@ Before mapping file structure, check whether existing plans already reference th
 
       After plan issue is created, create sub-issues under the plan (not the spec) for each phase via `issue-operations --task link-sub-issue`.
 
-7. **Self-review:**
+8. **Self-review:**
 
    - Spec coverage check
    - Placeholder scan
    - Type consistency check
    - Fix any issues found
 
-8. **Validate plan:**
+9. **Validate plan:**
 
    - Check for TBD/TODO placeholders
    - Verify all steps are actionable
@@ -163,11 +173,11 @@ Before mapping file structure, check whether existing plans already reference th
 
    **Prose-structure check:** Phase descriptions and plan headers should remain prose. TDD steps within tasks are naturally structured and exempt — their numbered format serves direct implementation guidance, not narrative communication. If a phase description reads as a rigid checklist rather than an explanation of the concern it addresses, rewrite it as flowing prose.
 
-9. **Post-Validation: Verification Revisit (MANDATORY):**
+10. **Post-Validation: Verification Revisit (MANDATORY):**
 
    Invoke `verification-enforcement --task revisit`. This pass scans the plan for any remaining `⚠️ UNVERIFIED` markers and attempts to resolve them using domain-appropriate tools. Claims that cannot be resolved are escalated to the developer. The plan must not be stored or reported as complete while unverified claims remain without developer acknowledgment.
 
-10. **Report plan creation in chat (MANDATORY):**
+11. **Report plan creation in chat (MANDATORY):**
 
      Produce chat output in the mandatory format per `000-critical-rules.md`:
 
@@ -189,7 +199,7 @@ Before mapping file structure, check whether existing plans already reference th
 
       Sub-issues are linked under the plan issue for separate plans, NOT under the spec. Combined plans have no sub-issues.
 
-10. **Cross-reference verification (MANDATORY before plan creation):**
+12. **Cross-reference verification (MANDATORY before plan creation):**
 
     Before creating the plan issue, verify that all referenced skills exist and their described behaviors match actual skill content:
 
@@ -208,7 +218,7 @@ Before mapping file structure, check whether existing plans already reference th
 
     If any verification fails: flag as MISSING-TRACEABILITY or CONFLICTING and note in plan creation output.
 
-11. **Post-creation approval cascade check and scope-aware auto-approval (MANDATORY):**
+13. **Post-creation approval cascade check and scope-aware auto-approval (MANDATORY):**
 
      After the plan is created (either combined or separate), apply scope-aware approval logic. The cascade behavior depends on authorization scope — see success criteria for the complete matrix.
 

@@ -134,6 +134,9 @@ env_vars:
   branch: "<branch name>"
   github.owner: "<from-session>"
   github.repo: "<from-session>"
+tdd_phase: "RED|GREEN|REFACTOR|COMMIT"
+current_item: "<item name from top-down decomposition>"
+top_down_items: "<list of all items with dependencies>"
   dev.name: "<from-session>"
   dev.email: "<from-session>"
 ```

@@ -134,6 +134,16 @@ Phase 1: [Concern Name]
 
 Phase-level sections are prose (agent decides content). Task-level steps are TDD-granular with exact code and commands.
 
+### Per-Item Bottom-Up Design (Per `091-incremental-build.md`)
+
+Within each task, the plan MUST specify bottom-up design elements as required by the incremental build discipline (`091-incremental-build.md`):
+
+1. **Classes/modules** — What code components will be created or modified
+2. **Interfaces** — Function signatures, API contracts, data formats
+3. **Test contracts** — What the enforcement test or verification will check before implementation
+
+This bottom-up design per item is part of the TDD cycle: RED (write test) → GREEN (implement) → REFACTOR (clean up) → COMMIT. Each item in the plan MUST follow this cycle.
+
 ## No-Placeholders Rule (CRITICAL)
 
 Every step must contain actual content. These are **plan failures**: `TBD`, `TODO`, `[to be determined]`, `[needs investigation]`, `[placeholder]`, `[requires research]`, `implement later`, `fill in details`, `Add appropriate error handling`, `Add validation`, `Write tests for the above`, `Similar to Task N`, or steps describing what to do without showing how.
