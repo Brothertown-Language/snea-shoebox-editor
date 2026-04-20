@@ -18,7 +18,7 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 
 | Series | Category | Files |
 |--------|----------|-------|
-| 000-099 | Core Rules | critical-rules, session-enforcement, approval-gate, go-prohibitions, scope-autonomy, tool-usage, environment |
+| 000-099 | Core Rules | critical-rules, session-enforcement, approval-gate, go-prohibitions, scope-autonomy, tool-usage, environment, incremental-build |
 | 200-209 | Error Handling | exception-handling, missing-data, logging-vs-raising |
 
 **Registry of migrated content**: `.opencode/.guidelines/registry.yaml` tracks content moved from guidelines to skills.

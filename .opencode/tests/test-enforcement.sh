@@ -44,6 +44,7 @@ SCENARIOS["brainstorming-top-down"]="Does .opencode/skills/brainstorming/SKILL.m
 SCENARIOS["writing-plans-bottom-up"]="Does .opencode/skills/writing-plans/SKILL.md contain per-item bottom-up design sections?"
 SCENARIOS["executing-plans-tdd"]="Does .opencode/skills/executing-plans/SKILL.md reference the per-item TDD cycle?"
 SCENARIOS["divide-conquer-tdd"]="Does .opencode/skills/divide-and-conquer/SKILL.md dispatch context include tdd_phase?"
+SCENARIOS["agents-md-incremental"]="Does AGENTS.md list incremental-build in the guidelines table?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -60,6 +61,7 @@ EXPECTED_SKILLS["brainstorming-top-down"]=""
 EXPECTED_SKILLS["writing-plans-bottom-up"]=""
 EXPECTED_SKILLS["executing-plans-tdd"]=""
 EXPECTED_SKILLS["divide-conquer-tdd"]=""
+EXPECTED_SKILLS["agents-md-incremental"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -72,7 +74,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -338,6 +340,26 @@ if [ -f "$DC_SKILL" ]; then
 else
     echo "  divide-and-conquer/SKILL.md: MISSING"
     echo "- **divide-and-conquer/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify AGENTS.md lists incremental-build
+AGENTS_FILE="$PROJECT_DIR/AGENTS.md"
+if [ -f "$AGENTS_FILE" ]; then
+    IBL_AGENTS=$(grep -c "incremental-build" "$AGENTS_FILE" 2>/dev/null || echo "0")
+    if [ "$IBL_AGENTS" -ge 1 ]; then
+        echo "  AGENTS.md incremental-build reference: FOUND"
+        echo "- **AGENTS.md incremental-build reference:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  AGENTS.md incremental-build reference: MISSING"
+        echo "- **AGENTS.md incremental-build reference:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  AGENTS.md: MISSING"
+    echo "- **AGENTS.md:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
