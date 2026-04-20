@@ -151,6 +151,16 @@ Content generation — producing specs, plans, runbooks, documentation, or corre
 - 🚫 FORBIDDEN: Marking complete without commit/push/URL; skipping review-prep for any reason; proceeding without URL in chat
 - ✅ REQUIRED: See `git-workflow` skill `--task review-prep` for mandatory commit, push, compare URL, and HALT protocol
 
+## Critical Violation: Skipping Post-Merge Cleanup
+
+**⚠️ Failing to invoke `git-workflow --task cleanup` after confirming PR merge is a CRITICAL GUIDELINE VIOLATION.** The cleanup task is the sole mechanism for deleting merged branches, closing issues, and syncing the local dev branch. Skipping it leaves stale branches and open issues.
+
+- 🚫 FORBIDDEN: Assuming cleanup is optional after PR merge; manually closing issues without running cleanup; leaving merged branches undeleted; skipping cleanup because "the work is done"
+- ✅ REQUIRED: Invoke `git-workflow --task cleanup` after every confirmed PR merge; verify branch deletion and issue closure via cleanup task result; ensure local dev HEAD matches origin/dev before proceeding
+- ✅ REQUIRED: `git-workflow --task cleanup` Step 2.7 performs hierarchical issue closure — this is the ONLY authorized closure mechanism when PRs merge to `dev` (GitHub autoclose is inert for non-main targets)
+
+**See `git-workflow` skill → `cleanup` task for the complete post-merge workflow.** **AUTHORITY: `git-workflow/tasks/cleanup.md`**
+
 ## Critical Violation: Wrong Chat Output at Halt Points
 
 **⚠️ Producing casual summaries at halt points instead of the mandatory format (exec summary → outcome → URL → byline) is a CRITICAL GUIDELINE VIOLATION.**
@@ -519,6 +529,27 @@ Trigger words: "audit this spec", "review this issue", "revisit this task", "che
 
 - 🚫 FORBIDDEN: Editing source code after discovering a bug; creating branches without approved spec; treating discovery as authorization
 - ✅ REQUIRED: Create bug report issue (permitted without auth); invoke `issue-review --task analyze-and-spec` for root cause analysis; perform read-only analysis; HALT and wait for authorization
+
+## Critical Violation: Symptom-Only Fix-Specs — Patches Without Root Cause Analysis
+
+**⚠️ Creating fix-specs that address only the observed symptom without identifying and targeting the root cause is a CRITICAL GUIDELINE VIOLATION.**
+
+Fix-specs exist to ensure bugs are fixed at their source, not patched at their surface. A symptom-only fix-spec proposes changes that mask the bug's effects without eliminating its cause — the bug will recur or manifest differently.
+
+**See `issue-review` skill → `analyze-and-spec` task for the complete root cause analysis and fix spec creation workflow.** **AUTHORITY: `issue-review/tasks/analyze-and-spec.md`**
+
+| Anti-Pattern | Root Cause Fix | Symptom-Only Patch (FORBIDDEN) |
+| -- | -- | -- |
+| Process gap: "just add the missing close call" | Add enforcement rule + enforcement test mandate | Add one line of code that closes the issue |
+| Data corruption: query returns wrong results | Fix the query logic producing bad data | Filter out wrong results in the UI |
+| State mismatch: stale cache serves old values | Invalidate cache on state change | Increase cache timeout |
+| Missing validation: invalid input causes crash | Add input validation at the entry point | Catch the exception and return empty result |
+| Missing step: workflow skips cleanup | Add mandatory cleanup step to the workflow | Close the issue manually without fixing the workflow |
+
+- 🚫 FORBIDDEN: Creating fix-specs that patch symptoms without root cause analysis; closing bug reports with "add close call" patches that don't prevent recurrence; proposing tactical fixes that mask effects instead of eliminating causes
+- ✅ REQUIRED: Use `issue-review --task analyze-and-spec` for root cause analysis before creating any fix spec; every fix spec MUST include a "Root Cause" section identifying the underlying cause; the "Fix Approach" section MUST target the root cause, not just the symptom; if root cause is unclear, HALT and request developer input per the smart checkpoint in `analyze-and-spec`
+
+**Why this matters:** The entire purpose of the fix-spec workflow is to prevent recurring bugs. A symptom-only fix is the opposite — it closes the issue while leaving the root cause active, guaranteeing the bug will resurface. The `analyze-and-spec` task enforces root cause analysis as MANDATORY before any fix spec creation.
 
 ## Critical Violation: Conflating Issue References with Authorization Cascade
 

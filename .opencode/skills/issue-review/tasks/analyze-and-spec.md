@@ -69,11 +69,21 @@ Create a fix spec using the `issue-operations` skill. The fix spec must include:
 
 1. **Title**: `[SPEC] Fix: <brief bug description>`
 2. **Body** (minimum required sections):
-   - **Root Cause**: Prose description of the identified root cause
-   - **Fix Approach**: Minimal targeted fix targeting root cause (not symptoms)
+   - **Root Cause**: Prose description of the identified root cause. This section is MANDATORY — a fix spec without a "Root Cause" section that identifies the underlying cause is a CRITICAL GUIDELINE VIOLATION (see `000-critical-rules.md` → "Symptom-Only Fix-Specs"). The root cause must explain WHY the bug occurs, not just WHAT the bug is.
+   - **Fix Approach**: Minimal targeted fix targeting root cause (not symptoms). If the fix approach only masks the symptom without eliminating the root cause, it is a symptom-only patch and a CRITICAL GUIDELINE VIOLATION. Every fix approach MUST explain how it eliminates the root cause, not just how it hides the symptom.
    - **Success Criteria**: Testable conditions confirming the fix works
    - **Affected Files**: Files that need modification
    - **Risk Assessment**: Potential regression areas
+
+**Root Cause Anti-Patterns (FORBIDDEN):**
+
+| Anti-Pattern | Root Cause Fix (REQUIRED) | Symptom-Only Patch (FORBIDDEN) |
+| -- | -- | -- |
+| Process gap | Add enforcement rule + enforcement test | Add one line of code |
+| Data corruption | Fix the query/data logic producing bad data | Filter out bad results in the UI |
+| State mismatch | Invalidate cache on state change | Increase cache timeout |
+| Missing validation | Add input validation at entry point | Catch the exception and return empty |
+| Missing workflow step | Add mandatory step to workflow | Manual close without fixing workflow |
 
 ### Step 5: Smart Checkpoint
 
@@ -186,4 +196,4 @@ Before classifying a closed bug report as `already-handled` or `stale`:
 - `systematic-debugging`: Root cause analysis overlaps with `diagnose` task; this task is for issue-review context, not active debugging
 - `approval-gate`: Fix spec requires authorization before code changes proceed
 - `067-context-completeness.md`: All comments read before analysis
-- `000-critical-rules.md`: Bug reports must have fix spec before closure
+- `000-critical-rules.md`: Bug reports must have fix spec before closure; symptom-only fix-specs are a CRITICAL GUIDELINE VIOLATION

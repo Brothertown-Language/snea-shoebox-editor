@@ -96,9 +96,13 @@ Hints inform but do not override — `spec-auditor` retains its own subtask sele
 
 Invoke `analyze-and-spec` task for root cause analysis and fix spec auto-creation. See `tasks/analyze-and-spec.md` for full procedure.
 
+**CRITICAL: Symptom-only fix-specs are a CRITICAL GUIDELINE VIOLATION.** Every fix spec created through this path MUST include a "Root Cause" section identifying the underlying cause, and the "Fix Approach" section MUST target the root cause — not just the observed symptom. See `000-critical-rules.md` → "Symptom-Only Fix-Specs" for the complete rule and anti-pattern table.
+
 **Key behavior:**
 - Bug language triggers this path (NOT `qa` anymore)
-- Root cause analysis is read-only
+- Root cause analysis is read-only and MANDATORY — never skip to a quick fix
+- Fix spec MUST include "Root Cause" and "Fix Approach" sections targeting the root cause
+- Symptom-only patches (e.g., "just add the missing close call" without enforcement) are FORBIDDEN
 - Fix spec sub-issue created and linked to bug report parent
 - Smart checkpoint: auto-proceed if clear, HALT if ambiguous
 - Fix spec still requires explicit authorization before code changes

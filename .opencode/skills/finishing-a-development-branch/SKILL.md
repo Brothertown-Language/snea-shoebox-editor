@@ -152,7 +152,7 @@ Before invoking any cross-referenced skill:
 
 ## Cross-References
 
-- Related skills: `git-workflow` (branch management), `verification-before-completion` (evidence), `pr-creation-workflow` (PR timing), `spec-auditor` (ground-truth adversarial verification)
+- Related skills: `git-workflow` (branch management, mandatory post-merge cleanup), `verification-before-completion` (evidence), `pr-creation-workflow` (PR timing), `spec-auditor` (ground-truth adversarial verification)
 - Related guidelines: `000-critical-rules.md` (review-prep required), `060-tool-usage.md` (build/lint commands), `065-verification-honesty.md` (metadata verification extension)
 - Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 
