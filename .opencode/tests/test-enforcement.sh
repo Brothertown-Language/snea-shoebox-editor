@@ -35,6 +35,8 @@ SCENARIOS["bug-report"]="I have a bug - my database query returns wrong results"
 SCENARIOS["create-spec"]="I want to create a new feature spec for user authentication"
 SCENARIOS["simple-question"]="What does the session-enforcement plugin do?"
 SCENARIOS["implement-request"]="implement the skill invocation enforcement plugin"
+SCENARIOS["post-merge-cleanup"]="PR merged, the work is done"
+SCENARIOS["symptom-patch"]="I found a bug where the cleanup step was skipped, let me just add a close-issue call to fix it"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -42,6 +44,8 @@ EXPECTED_SKILLS["bug-report"]="systematic-debugging"
 EXPECTED_SKILLS["create-spec"]="brainstorming"
 EXPECTED_SKILLS["simple-question"]=""
 EXPECTED_SKILLS["implement-request"]="approval-gate"
+EXPECTED_SKILLS["post-merge-cleanup"]="git-workflow"
+EXPECTED_SKILLS["symptom-patch"]="issue-review"
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -54,7 +58,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -93,7 +97,7 @@ for scenario_name in bug-report create-spec simple-question implement-request; d
     fi
     # Fallback: check stdout for skill names
     if [ -z "$SKILL_INVOKED" ] && [ -f "$SCENARIO_OUT" ]; then
-        SKILL_INVOKED=$(grep -oiE "(systematic-debugging|brainstorming|approval-gate|git-workflow|spec-auditor|writing-plans)" "$SCENARIO_OUT" 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' || echo "")
+        SKILL_INVOKED=$(grep -oiE "(systematic-debugging|brainstorming|approval-gate|git-workflow|spec-auditor|writing-plans|issue-review)" "$SCENARIO_OUT" 2>/dev/null | sort -u | tr '\n' ',' | sed 's/,$//' || echo "")
     fi
 
     echo "**Results:**" >> "$RESULTS_FILE"
