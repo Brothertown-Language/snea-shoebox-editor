@@ -274,6 +274,25 @@ When the agent identifies a problem and the fix is clear, the ONLY permitted nex
 
 **Why this matters:** The offer-to-edit pattern is a rationalization bypass. The agent reasons: "I'm not *doing* the edit, I'm just *offering* — so I'm not violating the rule." But the offer normalizes direct edits and creates social pressure to authorize without a spec. The spec-first workflow exists precisely to prevent this.
 
+## Critical Violation: Enforcement Test Updates — Guideline and Skill Changes Without Test Scenarios
+
+**⚠️ Modifying guideline files or skill files without adding or updating corresponding enforcement test scenarios is a CRITICAL GUIDELINE VIOLATION.**
+
+Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills/*/SKILL.md`, `.opencode/skills/*/tasks/*.md`) are enforcement-critical documents. A guideline without a test is a suggestion, not a rule. A skill without a test is documentation, not enforcement.
+
+- 🚫 FORBIDDEN: Adding a critical violation section without an enforcement test that checks for it
+- 🚫 FORBIDDEN: Adding a verification step to a skill without an enforcement test that validates it
+- 🚫 FORBIDDEN: Creating a new guideline without an enforcement test that confirms its key sections exist
+- 🚫 FORBIDDEN: Modifying a guideline or skill without updating the corresponding enforcement test
+- 🚫 FORBIDDEN: Running `opencode-cli run` directly without the `with-test-home` wrapper
+- ✅ REQUIRED: Every guideline/skill change comes with an enforcement test scenario
+- ✅ REQUIRED: Add the test scenario FIRST (RED), then make the change (GREEN) — TDD for rules
+- ✅ REQUIRED: Run `bash .opencode/tests/test-enforcement.sh` to verify
+- ✅ REQUIRED: Use `bash .opencode/tests/with-test-home opencode-cli run '<message>'` for all opencode-cli testing
+- ✅ REQUIRED: Clean up test homes after testing: `bash .opencode/tests/with-test-home --clean-all`
+
+**See `080-code-standards.md` → "Enforcement Test Mandate" for the complete per-change TDD pattern. See `.opencode/tests/README.md` for the enforcement test template and usage guide.**
+
 ## Critical Violation: Hardcoded Identity Values in Skills and Guidelines
 
 **⚠️ Hardcoding agent names, model IDs, developer names, developer emails, org names, repo names, or platform names in skill files, guideline files, task files, or any AI agent configuration is a CRITICAL GUIDELINE VIOLATION.**

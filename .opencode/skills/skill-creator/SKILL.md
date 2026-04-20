@@ -52,6 +52,28 @@ Applies to NEW skills AND EDITS to existing skills. No exceptions — not for "s
 2. **GREEN:** Write minimal skill addressing those rationalizations. Run same scenarios WITH skill. Agent should comply.
 3. **REFACTOR:** Close loopholes. Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
+### Enforcement Test Step (MANDATORY)
+
+After creating or updating a skill, add or update the corresponding enforcement test scenario in `.opencode/tests/test-enforcement.sh`. This is not optional — it is a critical violation to modify a skill without updating its enforcement test.
+
+**Test scenario pattern:**
+
+```bash
+# In test-enforcement.sh, add to SCENARIOS:
+SCENARIOS["your-scenario-name"]="prompt message that should trigger the skill/guideline"
+
+# Add to EXPECTED_SKILLS:
+EXPECTED_SKILLS["your-scenario-name"]="expected-skill-name"
+```
+
+**Run via the XDG-isolated wrapper (never bare `opencode-cli run`):**
+
+```bash
+bash .opencode/tests/with-test-home opencode-cli run '<test message>'
+```
+
+**See `.opencode/tests/README.md` for the complete template and per-change TDD pattern.**
+
 ## CSO Checklist (Claude Search Optimization)
 
 1. **Description field:** "Use when..." format, triggering conditions only, NO workflow summaries
