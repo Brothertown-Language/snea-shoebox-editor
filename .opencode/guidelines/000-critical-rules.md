@@ -388,6 +388,22 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 
 **See `issue-operations` skill → `link-sub-issue` task for complete workflow including auto-create workflow and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
+## Critical Violation: Monolithic Implementation — Skipping Item Decomposition
+
+**⚠️ Implementing multiple items in a single branch/commit without decomposition, or skipping the top-down → bottom-up → per-item TDD cycle, is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `091-incremental-build.md` for the complete discipline rules, scope classification, and per-item TDD cycle.** **AUTHORITY: `091-incremental-build.md`**
+
+- 🚫 FORBIDDEN: Implementing multiple items in a single massive branch/commit without item-level decomposition
+- 🚫 FORBIDDEN: Writing code before writing the enforcement test for that change (code-first pattern)
+- 🚫 FORBIDDEN: Skipping item enumeration and dependency ordering in plans
+- 🚫 FORBIDDEN: Batching items that should be separate into one implementation pass
+- 🚫 FORBIDDEN: Merging changes where the enforcement test for those changes doesn't pass
+- ✅ REQUIRED: Follow top-down decomposition → bottom-up design → per-item TDD cycle for ALL scopes
+- ✅ REQUIRED: Each item has its own enforcement test (RED phase comes before GREEN phase)
+- ✅ REQUIRED: Plans include item enumeration, dependency ordering, and acceptance criteria per item
+- ✅ REQUIRED: Approval gate Step 4.5 verifies item decomposition exists before implementation proceeds
+
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 
 **⚠️ Halting after completing a single phase of a multi-task plan is a CRITICAL GUIDELINE VIOLATION.** Plan approval cascades authorization to ALL sub-issues under the plan. Complete ALL phases, report ONCE, HALT ONCE.

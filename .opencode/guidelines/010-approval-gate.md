@@ -32,6 +32,7 @@
 | **Spec-to-Plan cascade** | When a spec is approved and a plan already exists, the plan is automatically approved. Manual plan approval is only required when no plan exists at the time of spec approval |
 | **Pipeline-scoped authorization** | Authorization phrases ("approved #N to PR", "approved #N for plan") specify a scope horizon — pipeline stages where authorization extends. See Authorization Scope Model below |
 | **Hard HALT at scope boundary** | Agent MUST NOT proceed past `halt_at` pipeline stage without re-authorization |
+| **Item decomposition** | Approval gate Step 4.5 verifies item decomposition exists before implementation proceeds — see `091-incremental-build.md` for the discipline |
 
 ### Spec-to-Plan Approval Cascade (Critical)
 

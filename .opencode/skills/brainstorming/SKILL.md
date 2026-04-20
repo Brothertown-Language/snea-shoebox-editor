@@ -25,6 +25,7 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 | Task | Purpose | Words |
 | -- | -- | -- |
 | `explore` | Full conversational exploration workflow (default) | ≈1000 |
+| `top-down-analysis` | Top-down decomposition output: item enumeration, dependency graph, ordering, acceptance criteria | ≈400 |
 | `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ≈600 |
 | `cross-scope` | Cross-spec scope search — check for overlapping specs before exploration | ≈350 |
 | `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
@@ -34,6 +35,7 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 | Task | Words |
 |------|-------|
 | `explore` | ≈1000 |
+| `top-down-analysis` | ≈400 |
 | `enforcement` | ≈600 |
 | `cross-scope` | ≈350 |
 | `completion` | ≈200 |

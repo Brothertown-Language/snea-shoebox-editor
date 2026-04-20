@@ -39,6 +39,19 @@ phase_progress:
 
 **Phase progress composition:** Before dispatching to `divide-and-conquer`, `executing-plans` reads the Plan STATUS marker and concern boundary annotations to compose the initial `phase_progress`. If no phases are complete yet, the field notes that explicitly. The `assemble-work` task then maintains and extends phase progress as each sub-agent completes.
 
+## Per-Item TDD Cycle (Per `091-incremental-build.md`)
+
+Each implementation item dispatched by `executing-plans` follows the per-item TDD cycle mandated by `091-incremental-build.md`:
+
+| TDD Phase | Action | Purpose |
+|-----------|--------|---------|
+| **RED** | Add enforcement test scenario | Verify the change is testable before implementation |
+| **GREEN** | Make the `.md` file change | The actual guideline, skill, or configuration modification |
+| **REFACTOR** | Clean up cross-references | Ensure no broken references between files |
+| **COMMIT** | Both test and change committed together | One working slice per item |
+
+The `divide-and-conquer` dispatch context includes `tdd_phase` to track which phase the sub-agent is executing. Sub-agents MUST follow this cycle per item — monolithic implementation (skipping the TDD cycle) is a critical violation per `000-critical-rules.md`.
+
 ## Tasks
 
 | Task | Purpose | Words |
