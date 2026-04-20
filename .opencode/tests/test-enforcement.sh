@@ -45,6 +45,7 @@ SCENARIOS["writing-plans-bottom-up"]="Does .opencode/skills/writing-plans/SKILL.
 SCENARIOS["executing-plans-tdd"]="Does .opencode/skills/executing-plans/SKILL.md reference the per-item TDD cycle?"
 SCENARIOS["divide-conquer-tdd"]="Does .opencode/skills/divide-and-conquer/SKILL.md dispatch context include tdd_phase?"
 SCENARIOS["agents-md-incremental"]="Does AGENTS.md list incremental-build in the guidelines table?"
+SCENARIOS["worktree-handoff-step"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Step 2.5 for worktree handoff after push?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -62,6 +63,7 @@ EXPECTED_SKILLS["writing-plans-bottom-up"]=""
 EXPECTED_SKILLS["executing-plans-tdd"]=""
 EXPECTED_SKILLS["divide-conquer-tdd"]=""
 EXPECTED_SKILLS["agents-md-incremental"]=""
+EXPECTED_SKILLS["worktree-handoff-step"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -74,7 +76,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -360,6 +362,18 @@ if [ -f "$AGENTS_FILE" ]; then
 else
     echo "  AGENTS.md: MISSING"
     echo "- **AGENTS.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+WORKTREE_HANDOFF_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/review-prep.md"
+WH_COUNT=$(grep -c "Step 2.5" "$WORKTREE_HANDOFF_FILE" 2>/dev/null || echo "0")
+if [ "$WH_COUNT" -ge 1 ]; then
+    echo "  review-prep Step 2.5 worktree handoff: FOUND"
+    echo "- **review-prep Step 2.5 worktree handoff:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  review-prep Step 2.5 worktree handoff: MISSING"
+    echo "- **review-prep Step 2.5 worktree handoff:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

@@ -348,7 +348,93 @@ git push -u origin <branch-name>
 
 **This ensures compare URL will work correctly.**
 
-### Step 3: Generate Compare URL
+### Step 2.5: Worktree Handoff (CONDITIONAL)
+
+**After pushing, hand the branch back to the developer's normal working environment.**
+
+**This step ONLY runs when `worktree.path` is set (autonomous mode). Skip entirely when:**
+
+- `worktree.path` is empty or not set (pair mode — developer already in main repo)
+- Branch is on `dev` or `main` (no worktree to remove)
+
+**If skipping:** Report "Worktree handoff skipped (no worktree)" and proceed to Step 3.
+
+#### Worktree Handoff Sequence
+
+When `worktree.path` IS set, perform the following sequence inside the **main repo** (not the worktree):
+
+```bash
+# Run from main repo working directory
+cd <main-repo-path>
+
+# 1. Remove the worktree
+git worktree remove <worktree.path>
+
+# 1a. Force fallback (if worktree has locked files or stale state)
+git worktree remove --force <worktree.path>
+```
+
+**Worktree removal failure handling:**
+
+| Failure | Action |
+| -- | -- |
+| `already locked` or stale state | `git worktree remove --force <worktree.path>` |
+| Directory not recognized as worktree | `rm -rf <worktree.path>` (directory is orphaned) |
+| Any other error | HALT — report error, do not force-remove |
+
+#### Checkout to Feature Branch
+
+After worktree removal, switch the main repo to the feature branch so the developer can review code in their normal environment:
+
+```bash
+# 2. Checkout the feature branch in the main repo
+git checkout <branch-name>
+```
+
+**Stash + retry fallback (if checkout fails due to dirty working tree):**
+
+```bash
+# 2a. Stash uncommitted changes in main repo
+git stash push -m "auto-stash before worktree-handoff to <branch-name>"
+
+# 2b. Retry checkout
+git checkout <branch-name>
+```
+
+**Stash preservation:** The auto-stash is preserved — do NOT auto-pop it. The developer decides when to restore it.
+
+#### Branch Not Found Locally
+
+If the feature branch does not exist in the main repo's local refs (possible when the worktree was the only place it existed):
+
+```bash
+# 3. Fetch branch from remote
+git fetch origin <branch-name>
+
+# 3a. Create local tracking branch
+git checkout -b <branch-name> origin/<branch-name>
+```
+
+#### Clear worktree.path Session Variable
+
+After successful handoff, clear the session variable:
+
+```
+worktree.path = ""  (cleared — agent no longer references worktree)
+```
+
+**This prevents subsequent tool calls from targeting the removed worktree directory.**
+
+#### Rollback Guarantee
+
+| Scenario | State Before | State After | Rollback |
+| -- | -- | -- | -- |
+| Successful handoff | Worktree exists, main on `dev` | Worktree removed, main on `<branch>` | `git checkout dev && git worktree add <path> -b <branch>` |
+| Checkout fails (dirty tree) | Worktree removed, stash created | Main on `<branch>`, stash available | `git stash pop` restores changes |
+| Branch not found locally | Worktree removed | Branch fetched, main on `<branch>` | N/A (branch exists on remote) |
+| Worktree removal fails | Worktree locked | HALT — report error | Worktree still intact, no state change |
+
+**⚠️ The worktree path is removed from the filesystem after this step. ALL subsequent file operations MUST use the main repo path (relative paths from project root).**
 
 **⚠️ CRITICAL: URLs must be constructed from session init values ONLY. Never hardcode domains.**
 

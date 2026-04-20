@@ -150,6 +150,7 @@ task: review-prep
 branch_pushed: bool
 compare_url: <url>
 commits_count: <int>
+worktree_handoff: bool
 ```
 
 #### pr-creation
