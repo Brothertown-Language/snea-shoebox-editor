@@ -46,6 +46,8 @@ SCENARIOS["executing-plans-tdd"]="Does .opencode/skills/executing-plans/SKILL.md
 SCENARIOS["divide-conquer-tdd"]="Does .opencode/skills/divide-and-conquer/SKILL.md dispatch context include tdd_phase?"
 SCENARIOS["agents-md-incremental"]="Does AGENTS.md list incremental-build in the guidelines table?"
 SCENARIOS["worktree-handoff-step"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Step 2.5 for worktree handoff after push?"
+SCENARIOS["scope-auto-resolve-guideline"]="Does .opencode/guidelines/000-critical-rules.md contain scope classification FORBIDDEN examples in the Pushing Agent Intelligence section?"
+SCENARIOS["scope-auto-resolve-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 0.5 for scope auto-resolve?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -64,6 +66,8 @@ EXPECTED_SKILLS["executing-plans-tdd"]=""
 EXPECTED_SKILLS["divide-conquer-tdd"]=""
 EXPECTED_SKILLS["agents-md-incremental"]=""
 EXPECTED_SKILLS["worktree-handoff-step"]=""
+EXPECTED_SKILLS["scope-auto-resolve-guideline"]=""
+EXPECTED_SKILLS["scope-auto-resolve-step"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -76,7 +80,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -374,6 +378,43 @@ if [ "$WH_COUNT" -ge 1 ]; then
 else
     echo "  review-prep Step 2.5 worktree handoff: MISSING"
     echo "- **review-prep Step 2.5 worktree handoff:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify scope classification FORBIDDEN examples in 000-critical-rules.md
+SCOPE_FORBIDDENS=$(grep -c "verb-prefix parsing table\|verb-prefix table is deterministic" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$SCOPE_FORBIDDENS" -ge 1 ]; then
+    echo "  000-critical-rules.md scope FORBIDDEN examples: FOUND"
+    echo "- **000-critical-rules.md scope FORBIDDEN examples:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules.md scope FORBIDDEN examples: MISSING"
+    echo "- **000-critical-rules.md scope FORBIDDEN examples:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify scope NEVER ambiguous in 020-go-prohibitions.md
+GO_PROHIB_FILE="$PROJECT_DIR/.opencode/guidelines/020-go-prohibitions.md"
+SCOPE_NEVER_AMBIG=$(grep -c "NEVER ambiguous" "$GO_PROHIB_FILE" 2>/dev/null || echo "0")
+if [ "$SCOPE_NEVER_AMBIG" -ge 1 ]; then
+    echo "  020-go-prohibitions.md scope NEVER ambiguous: FOUND"
+    echo "- **020-go-prohibitions.md scope NEVER ambiguous:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  020-go-prohibitions.md scope NEVER ambiguous: MISSING"
+    echo "- **020-go-prohibitions.md scope NEVER ambiguous:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify Step 0.5 scope auto-resolve in verify-authorization.md
+SCOPE_STEP05=$(grep -c "Step 0.5" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+if [ "$SCOPE_STEP05" -ge 1 ]; then
+    echo "  verify-authorization Step 0.5 scope auto-resolve: FOUND"
+    echo "- **verify-authorization Step 0.5 scope auto-resolve:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-authorization Step 0.5 scope auto-resolve: MISSING"
+    echo "- **verify-authorization Step 0.5 scope auto-resolve:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

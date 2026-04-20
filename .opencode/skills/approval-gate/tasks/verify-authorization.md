@@ -42,6 +42,33 @@ if not result or not result.strip():
 
 **No regression:** When sub-agent returns a valid result, this guard is not triggered — Steps 1-6 execute normally from the sub-agent's result.
 
+### Step 0.5: Scope Auto-Resolve (MANDATORY BEFORE ANY HUMAN-FACING OUTPUT)
+
+**This step MUST execute before Step 1, Step 2.0, and before any screen-issue dispatch.**
+
+**The agent MUST resolve `authorization_scope` from the authorization phrase using the verb-prefix parsing table BEFORE asking any question or dispatching any sub-agent.** Scope detection is NEVER ambiguous — the parsing table is deterministic. Per `000-critical-rules.md` → "Pushing Agent Intelligence Decisions" and `020-go-prohibitions.md` §1 "ASK FIRST", scope detection via parsing table is NEVER ambiguous.
+
+**Under NO circumstances does the agent ask the user to classify scope.** The verb-prefix parsing table in Step 2.0 is the sole authority. Every possible authorization phrase maps to exactly one scope:
+
+| Authorization Phrase | Resolved Scope |
+|----------------------|---------------|
+| "approved #N" (no qualifier) | `standard` |
+| "approved #N to PR" / "for PR" | `for_pr` |
+| "approved #N to implementation" / "for implementation" | `for_implementation` |
+| "approved #N to plan" / "for plan" | `for_plan` |
+| "approved #N for review" | `for_code_review` |
+| "approved #N to spec" / "for spec" | `for_spec` |
+
+**Procedure:**
+
+1. Parse the authorization text using the verb-prefix regex patterns from the approval-gate skill → Authorization Scope Model → Scope Detection (Verb-Prefix Parsing) table
+2. If a qualifier matches, set `authorization_scope` to the corresponding scope value with `scope_source = "parsed"`
+3. If no qualifier matches, set `authorization_scope = "standard"` with `scope_source = "default"`
+4. Derive `halt_at`, `pr_strategy`, and `gap_fill_actions` from the resolved scope per the Authorization Scope Model
+5. Record the parsed result as an evidence artifact — no human input is solicited
+
+**Evidence artifact:** The parsed authorization text, matched regex pattern (or default fallback), and resulting `(authorization_scope, scope_source, halt_at, pr_strategy, gap_fill_actions)` tuple MUST be recorded in the verification report without soliciting human input.
+
 ### Step 1: Verify Git State (MANDATORY FIRST)
 
 **🚫 CRITICAL: This check MUST happen BEFORE any other work.**
