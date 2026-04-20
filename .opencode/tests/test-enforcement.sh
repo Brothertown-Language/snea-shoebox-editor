@@ -37,6 +37,7 @@ SCENARIOS["simple-question"]="What does the session-enforcement plugin do?"
 SCENARIOS["implement-request"]="implement the skill invocation enforcement plugin"
 SCENARIOS["post-merge-cleanup"]="PR merged, the work is done"
 SCENARIOS["symptom-patch"]="I found a bug where the cleanup step was skipped, let me just add a close-issue call to fix it"
+SCENARIOS["incremental-build-guideline"]="Does the file .opencode/guidelines/091-incremental-build.md exist with sections for mandate, scope classification, top-down decomposition, bottom-up design, per-item TDD, and anti-patterns?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -46,6 +47,7 @@ EXPECTED_SKILLS["simple-question"]=""
 EXPECTED_SKILLS["implement-request"]="approval-gate"
 EXPECTED_SKILLS["post-merge-cleanup"]="git-workflow"
 EXPECTED_SKILLS["symptom-patch"]="issue-review"
+EXPECTED_SKILLS["incremental-build-guideline"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -58,7 +60,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -154,6 +156,37 @@ echo "" >> "$RESULTS_FILE"
 echo '```' >> "$RESULTS_FILE"
 grep -E "(loading plugin|service=skill count|session-enforcement|error|Error)" "$LOGDIR/bug-report.log" 2>/dev/null | head -20 >> "$RESULTS_FILE"
 echo '```' >> "$RESULTS_FILE"
+
+echo ""
+echo "=== Guideline Content Verification ==="
+echo "" >> "$RESULTS_FILE"
+echo "## Guideline Content Verification" >> "$RESULTS_FILE"
+echo "" >> "$RESULTS_FILE"
+
+GUIDELINE_FILE="$PROJECT_DIR/.opencode/guidelines/091-incremental-build.md"
+GUIDELINE_PASS=true
+
+if [ -f "$GUIDELINE_FILE" ]; then
+    echo "  091-incremental-build.md: EXISTS"
+    echo "- **091-incremental-build.md:** EXISTS" >> "$RESULTS_FILE"
+    for section in "Mandate" "Scope Classification" "Top-Down Decomposition" "Bottom-Up Design" "Per-Item TDD" "Anti-Patterns"; do
+        COUNT=$(grep -c "## .*$section" "$GUIDELINE_FILE" 2>/dev/null || echo "0")
+        if [ "$COUNT" -ge 1 ]; then
+            echo "  Section '$section': FOUND"
+            echo "  - Section \`$section\`: FOUND" >> "$RESULTS_FILE"
+        else
+            echo "  Section '$section': MISSING"
+            echo "  - Section \`$section\`: MISSING" >> "$RESULTS_FILE"
+            GUIDELINE_PASS=false
+            OVERALL_PASS=false
+        fi
+    done
+else
+    echo "  091-incremental-build.md: MISSING"
+    echo "- **091-incremental-build.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
 
 echo ""
 echo "=== Test Complete ==="
