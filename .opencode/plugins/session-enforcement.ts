@@ -206,6 +206,28 @@ This is a CRITICAL rule. Violations result in incorrect guidance and broken impl
 </TRAINING_STALENESS_CRITICAL>`;
 }
 
+function buildPlatformReportBlock(scriptOutput: string): string {
+  const platformMatch = scriptOutput.match(/^github\.platform:\s*(.+)$/m);
+  const ownerMatch = scriptOutput.match(/^github\.owner:\s*(.+)$/m);
+  const repoMatch = scriptOutput.match(/^github\.repo:\s*(.+)$/m);
+
+  const platform = platformMatch?.[1]?.trim() || "unknown";
+  const owner = ownerMatch?.[1]?.trim() || "unknown";
+  const repo = repoMatch?.[1]?.trim() || "unknown";
+
+  if (platform === "unknown" && owner === "unknown" && repo === "unknown") {
+    return "";
+  }
+
+  return `<PLATFORM_REPORT>
+At the very start of the session, before doing anything else, you MUST report the platform info to the user in this exact format on a single line:
+
+Platform: ${platform}, Org: ${owner}, Repo: ${repo}
+
+This is a mandatory startup report. Output this line before any other response.
+</PLATFORM_REPORT>`;
+}
+
 function buildWorktreeBlock(input: PluginInput): string {
   const mainRepoDir = input?.directory || "";
   const worktreeDir = input?.worktree || "";
@@ -477,6 +499,14 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       const scriptOutput = await runSessionInit(input.$);
       if (scriptOutput) {
         output.system.push(scriptOutput);
+      }
+
+      // Inject platform report block (instructs agent to report platform/org/repo at session start)
+      if (scriptOutput) {
+        const platformBlock = buildPlatformReportBlock(scriptOutput);
+        if (platformBlock) {
+          output.system.push(platformBlock);
+        }
       }
 
       // Inject worktree context when session is operating in a worktree
