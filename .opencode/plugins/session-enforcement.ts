@@ -294,6 +294,19 @@ This is a CRITICAL rule. Violations result in incorrect guidance and broken impl
 </TRAINING_STALENESS_CRITICAL>`;
 }
 
+function buildLanguagePreferenceBlock(): string {
+  return `<LANGUAGE_PREFERENCE>
+All communications MUST use **formal/business/professional Southeastern United States English**.
+
+This means:
+- Use Southern US English spelling, vocabulary, and phrasing conventions
+- Maintain a formal, professional, and business-appropriate register
+- Prefer clarity and directness with Southern politeness conventions
+- Avoid regional colloquialisms that sacrifice professionalism
+- Use "y'all" only in informal context; prefer "you" or "your team" in formal writing
+</LANGUAGE_PREFERENCE>`;
+}
+
 function buildWorktreeBlock(input: PluginInput): string {
   const mainRepoDir = input?.directory || "";
   const worktreeDir = input?.worktree || "";
@@ -600,6 +613,9 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
 
       // Inject training staleness warning (verifying everything is mandatory)
       output.system.push(buildTrainingStalenessBlock());
+
+      // Inject language preference (Southeastern US English mandate)
+      output.system.push(buildLanguagePreferenceBlock());
 
       // Inject frontmatter validation warning if any skills have broken frontmatter
       const warning = buildFrontmatterWarning(frontmatterErrors);
