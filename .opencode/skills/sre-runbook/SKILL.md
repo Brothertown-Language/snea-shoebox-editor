@@ -212,6 +212,10 @@ Before invoking any cross-referenced skill:
 - **GitBucket:** Use Python client from gitbucket-api skill
 - **Platform Detection:** Uses `github.platform` environment variable
 
+## Reference Data
+
+- **Directnic DNS record types:** `reference/directnic-record-types.md` — supported record types (A, AAAA, ALIAS, CNAME, TXT, SRV, MX) and apex/CNAME constraints
+
 ## Source Attribution
 
 This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces reasoning-first runbook generation to prevent template-filling anti-patterns.
