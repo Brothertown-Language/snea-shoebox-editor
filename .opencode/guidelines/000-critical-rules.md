@@ -801,9 +801,13 @@ Structural decisions — single-task vs multi-task classification, phase decompo
 - 🚫 FORBIDDEN: "How should we handle this partially-implemented issue?" — scope-reduce and continue
 - 🚫 FORBIDDEN: "Should we re-plan?" — yes, if authorization says "re-plan as needed"
 - 🚫 FORBIDDEN: "How should we close this already-implemented issue?" — via verify-already-implemented or via referenced spec-fix
+- 🚫 FORBIDDEN: "Should this be standard scope or for_implementation?" — the verb-prefix parsing table resolves this
+- 🚫 FORBIDDEN: "What scope of authorization?" — the verb-prefix table is deterministic
+- 🚫 FORBIDDEN: "Is this approved to PR or just to implementation?" — parse the phrase, don't ask
 - 🚫 FORBIDDEN: Any question where the answer is determinable from context, codebase, or request analysis
 - ✅ REQUIRED: Classify autonomously and state the classification as part of the design proposal
 - ✅ REQUIRED: Only ask when multiple valid structures exist with genuinely ambiguous trade-offs (e.g., 3+ subsystems with unclear boundaries)
+- ✅ REQUIRED: Authorization scope MUST be auto-resolved from the verb-prefix parsing table per the approval-gate skill → Authorization Scope Model
 
 **See `brainstorming` skill → `explore` task → "Autonomous Structural Classification" for the complete criteria. See `approval-gate/tasks/pre-implementation-analysis.md` Step 0.15 for the classification decision table that maps screening results to autonomous actions. See `approval-gate/tasks/screen-issue.md` §"Autonomous Resolution" for the exhaustive `requires_developer: true` conditions.**
 

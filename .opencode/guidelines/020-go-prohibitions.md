@@ -43,6 +43,7 @@
 - **"GO" requires unambiguous scope; clarify only when ambiguous.** If the user types "GO" (or equivalent), treat it as valid authorization ONLY when the immediate session context identifies exactly one plan/scope target.
 - **Clarification gate for ambiguous "GO" only.** Ask for scope clarification only when more than one plausible plan file, phase, or implementation scope is active.
 - **Pipeline-scoped "GO" phrases specify scope horizon.** "Approved #N to PR", "#N approved for plan", "approved #N through implementation" — these carry implicit scope. Parse per `approval-gate` skill → "Authorization Scope Model" and HALT at the specified pipeline stage.
+- **Scope detection via the verb-prefix parsing table is NEVER ambiguous — the table maps every possible phrase to exactly one scope.** Do not ask the user to classify scope. "Approved #N" (no qualifier) → ALWAYS `standard` scope. No clarification needed. "Approved #N to PR" → ALWAYS `for_pr` scope. The parsing table in `approval-gate` skill → Authorization Scope Model is the sole authority for scope determination.
 
 ### ✅ ALWAYS DO
 
