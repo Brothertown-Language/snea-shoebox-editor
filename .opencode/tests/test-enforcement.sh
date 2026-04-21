@@ -49,6 +49,7 @@ SCENARIOS["worktree-handoff-step"]="Does .opencode/skills/git-workflow/tasks/rev
 SCENARIOS["scope-auto-resolve-guideline"]="Does .opencode/guidelines/000-critical-rules.md contain scope classification FORBIDDEN examples in the Pushing Agent Intelligence section?"
 SCENARIOS["scope-auto-resolve-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 0.5 for scope auto-resolve?"
 SCENARIOS["sre-verification-gate"]="Does .opencode/skills/sre-runbook/SKILL.md contain a Verification-Failure Enforcement Gate section with gate failure examples and DNS-Specific Validation?"
+SCENARIOS["sre-format-taxonomy"]="Does .opencode/skills/sre-runbook/SKILL.md contain a Runbook Type Taxonomy section with one-off-config, periodic-procedure, troubleshooting, and incident-response types, and a Format-Matching Rule?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -70,6 +71,7 @@ EXPECTED_SKILLS["worktree-handoff-step"]=""
 EXPECTED_SKILLS["scope-auto-resolve-guideline"]=""
 EXPECTED_SKILLS["scope-auto-resolve-step"]=""
 EXPECTED_SKILLS["sre-verification-gate"]=""
+EXPECTED_SKILLS["sre-format-taxonomy"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -82,7 +84,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step sre-verification-gate; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step sre-verification-gate sre-format-taxonomy; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -454,6 +456,39 @@ if [ -f "$SRE_SKILL_FILE" ]; then
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
+    # Verify Runbook Type Taxonomy in SKILL.md
+    TYPE_TAX_COUNT=$(grep -c "Runbook Type Taxonomy\|one-off-config\|periodic-procedure" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$TYPE_TAX_COUNT" -ge 1 ]; then
+        echo "  sre-runbook Runbook Type Taxonomy: FOUND"
+        echo "- **sre-runbook Runbook Type Taxonomy:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  sre-runbook Runbook Type Taxonomy: MISSING"
+        echo "- **sre-runbook Runbook Type Taxonomy:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    # Verify format-matching rule in SKILL.md
+    FMT_MATCH_COUNT=$(grep -c "Format-matching rule\|Format-Matching Rule" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$FMT_MATCH_COUNT" -ge 1 ]; then
+        echo "  sre-runbook Format-Matching Rule: FOUND"
+        echo "- **sre-runbook Format-Matching Rule:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  sre-runbook Format-Matching Rule: MISSING"
+        echo "- **sre-runbook Format-Matching Rule:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    # Verify conditional dual-output contract in SKILL.md
+    COND_DUAL=$(grep -c "steps-only format with NO YAML\|One-off-config and periodic-procedure" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$COND_DUAL" -ge 1 ]; then
+        echo "  sre-runbook conditional dual-output contract: FOUND"
+        echo "- **sre-runbook conditional dual-output contract:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  sre-runbook conditional dual-output contract: MISSING"
+        echo "- **sre-runbook conditional dual-output contract:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
 else
     echo "  sre-runbook/SKILL.md: MISSING"
     echo "- **sre-runbook/SKILL.md:** MISSING" >> "$RESULTS_FILE"
@@ -501,6 +536,28 @@ if [ -f "$GENERATE_TASK_FILE" ]; then
     else
         echo "  generate.md VERIFICATION-GAP annotation checklist item: MISSING"
         echo "- **generate.md VERIFICATION-GAP annotation checklist item:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    # Verify type-aware format dispatch in generate.md
+    GEN_TYPEDISPATCH=$(grep -c "Type-Aware Format Dispatch\|runbook_type\|steps-only\|dual-output" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_TYPEDISPATCH" -ge 1 ]; then
+        echo "  generate.md type-aware format dispatch: FOUND"
+        echo "- **generate.md type-aware format dispatch:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  generate.md type-aware format dispatch: MISSING"
+        echo "- **generate.md type-aware format dispatch:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    # Verify format-specific output contracts in generate.md
+    GEN_STEPSONLY_OUTPUT=$(grep -c "Steps-Only Output\|steps-only format\|one-off-config" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_STEPSONLY_OUTPUT" -ge 1 ]; then
+        echo "  generate.md steps-only output contract: FOUND"
+        echo "- **generate.md steps-only output contract:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  generate.md steps-only output contract: MISSING"
+        echo "- **generate.md steps-only output contract:** MISSING" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi

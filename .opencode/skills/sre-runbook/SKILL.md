@@ -22,7 +22,7 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `generate` | Generate an operational runbook for a given domain and scenario | ≈900 |
+| `generate` | Generate an operational runbook — dispatches format based on runbook type | ≈1000 |
 | `track` | Track an incident or change via GitHub Issue with structured labels | ≈450 |
 | `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
@@ -96,14 +96,45 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - **Last-verified rule:** Include a "Last verified:" timestamp and staleness indicator (e.g., "Verified against Proxmox 8.1 on 2026-04-15").
 - **Check-repo-first rule:** Before writing system-specific values (hostnames, IPs, domains, versions), check existing documentation in the same repository. If data exists locally, use it — never guess from training data.
 - **Check-reference-data rule:** Before generating DNS record instructions, check `reference/` subdirectory in the skill directory for provider-specific record type and constraint data. If reference data exists for the target provider, use it — never invent record type support from training data.
+- **Format-matching rule:** Before generating a runbook, search the repository (and sibling repos if accessible) for existing runbooks. If an established format exists, match it. Do not invent a new format when a proven one is available. If existing runbooks use steps-only format, use steps-only format — do not add YAML enforcement blocks.
 
 ### Self-Review Step (MANDATORY)
 
 After generating a runbook, the agent MUST validate the output against ALL enforcement rules BEFORE presenting it. One-shot correctness is the target — the user should never need to correct the same issue twice.
 
-## Dual-Output Contract
+## Runbook Type Taxonomy
 
-Every runbook MUST contain BOTH:
+Not all runbooks need the same format. The skill classifies runbooks into four types, each with a different output contract:
+
+| Type | Purpose | Format | YAML Blocks? | Example |
+|------|---------|--------|-------------|----------|
+| **one-off-config** | Apply a known configuration (DNS, SSL, users) | steps-only | No | "Set these 8 DNS records, verify with dig" |
+| **periodic-procedure** | Scheduled operational task (backups, rotations) | steps-only | No | "Run these 5 commands in order" |
+| **troubleshooting** | Diagnose an unknown problem from symptoms | dual-output | Yes | "Site is down, work through these diagnostic steps" |
+| **incident-response** | Active outage requiring rapid mitigation and postmortem | dual-output | Yes | "Service X is returning 500s, mitigate then diagnose" |
+
+### Type Selection Rules
+
+1. **Classify at invocation.** When `generate` is invoked, the agent MUST determine the runbook type (or prompt the user if unclear from context) before generating any content.
+2. **Default to one-off-config.** If the type cannot be determined, default to `one-off-config` (steps-only) — it is the least operator-hostile format.
+3. **Format-matching rule.** Before generating a runbook, search the repository (and sibling repos if accessible) for existing runbooks. If an established format exists, match it. Do not invent a new format when a proven one is available. If existing runbooks use steps-only format, use steps-only format — do not add YAML enforcement blocks.
+
+### Steps-Only Format (one-off-config and periodic-procedure)
+
+For `one-off-config` and `periodic-procedure` runbooks, the output contract is:
+
+1. **Metadata header** — plain text (domain, provider, date, source), NOT YAML
+2. **Prerequisites** — log in, navigate, open elevated session
+3. **Numbered steps** — each step with exact field values and a verify command after each step
+4. **Reference table** — all records/fields in one place for quick lookup
+5. **Verification script** — one command to check everything at once
+6. **Troubleshooting table** — if X fails, do Y
+
+No YAML enforcement blocks. No symptom catalog. No diagnosis map. No postmortem template. The operator needs to "just do the job."
+
+### Dual-Output Format (troubleshooting and incident-response)
+
+For `troubleshooting` and `incident-response` runbooks, the output contract requires BOTH:
 
 1. **AI-parseable enforcement blocks** — `yaml+symbolic` sections with structured data:
    - Environment context (interface, tools, versions, OS)
@@ -120,7 +151,9 @@ Every runbook MUST contain BOTH:
    - Verification commands
    - Postmortem template with timeline and action items
 
-The AI-parseable blocks provide structure for automation; the operational procedures provide executable steps for humans. Neither alone is sufficient.
+The AI-parseable blocks provide structure for automation; the operational procedures provide executable steps for humans. Neither alone is sufficient for troubleshooting and incident-response types.
+
+**One-off-config and periodic-procedure runbooks use steps-only format with NO YAML enforcement blocks.**
 
 ## Worktree Mode
 
@@ -309,7 +342,10 @@ This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch
 Key adaptations for <AgentName>:
 - Integration with existing systematic-debugging and verification-before-completion skills
 - GitBucket platform support via MCP tools
-- Dual-output contract (AI-parseable + human-readable)
+- Runbook type taxonomy (one-off-config, periodic-procedure, troubleshooting, incident-response)
+- Conditionally-applied dual-output contract (YAML blocks only for troubleshooting/incident-response)
+- Steps-only format for one-off-config and periodic-procedure runbooks
+- Format-matching rule to match existing runbook formats before inventing new ones
 - Completion guarantee integration
 - Environment-context-first discipline (interface preference, tool verification, live docs)
 - Operational-procedure focus (steps-only, single-path, real values, minimum-necessary)
