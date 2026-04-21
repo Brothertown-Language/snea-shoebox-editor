@@ -143,6 +143,7 @@ The AI byline is MANDATORY in ALL correspondence produced by this skill. It MUST
 
 The byline MUST NOT be removed on subsequent edits.
 
+<<<<<<< HEAD
 ### Matching Original Format (MANDATORY)
 
 When replying to an existing email thread:
@@ -153,6 +154,31 @@ When replying to an existing email thread:
 
 <<<<<<< HEAD
 =======
+=======
+### Content-Type Propagation (MANDATORY)
+
+When generating a reply to existing communication, the output format MUST match the source communication's content type. This is a **verification step**, not a formatting preference — the agent MUST inspect the content type of the source before drafting the reply.
+
+**General rule:** If the source is HTML multipart, the reply is HTML multipart. If the source is plain text, the reply is plain text. If the source is structured data (JSON, YAML), the reply follows that schema. The agent must not default to markdown when the source uses a different format, because markdown renders as raw text in non-markdown contexts.
+
+**Email-specific rule:** Read the `Content-Type` header of the source `.eml` file before drafting any reply:
+
+| Source Content-Type | Required Reply Format | Verification Step |
+|---------------------|-----------------------|-------------------|
+| `multipart/alternative` or `text/html` | Multipart/alternative with text/plain + text/html parts | `read` the `.eml` file, grep for `Content-Type:` header |
+| `text/plain` (no HTML part) | Plain text only (no markdown syntax) | `read` the `.eml` file, grep for `Content-Type:` header |
+| Markdown-formatted email (rare) | Markdown is acceptable only if the source uses it | Verify source contains markdown formatting |
+
+**Never use markdown syntax inside an email body unless the source email uses markdown.** Markdown renders as raw text (`**bold**` appears as literal `**bold**` text, `---` appears as a literal horizontal rule characters) in all standard email clients. This is not an email-client rendering issue — it is a content-type mismatch.
+
+**Protocol:**
+
+1. **Inspect BEFORE drafting.** Read the original communication's content type before writing any reply content. This inspection is mandatory, not optional.
+2. **Match the format.** Produce output in the same content type as the source. HTML source → HTML reply. Plain text source → plain text reply. JSON source → JSON reply.
+3. **Never downgrade.** If the source uses HTML, the reply MUST include HTML. Never downgrade an HTML thread to plain text with markdown syntax.
+4. **Preserve thread context.** Include relevant context from the original communication (quoted or summarized) in the reply.
+
+>>>>>>> spec/1098-fix
 ### Attribution Verification (MANDATORY)
 
 When correspondence attributes an action to a person (e.g., "completed by Person X", "Person X renewed the domain"), the attribution MUST be verified against source evidence before inclusion. This is a specialized application of the verification-enforcement attribution domain to correspondence.
@@ -169,7 +195,10 @@ When correspondence attributes an action to a person (e.g., "completed by Person
 
 **Attribution rule:** If the source does not explicitly state who performed an action, the agent MUST NOT attribute — either omit the person's name entirely or write "completed per [reference]" without naming an individual. Inferring "who did what" from role proximity (e.g., "the tech person must have done the tech work") is prohibited.
 
+<<<<<<< HEAD
 >>>>>>> spec/1097-fix
+=======
+>>>>>>> spec/1098-fix
 ### Verification-Enforcement Integration (MANDATORY)
 
 The verification-enforcement skill applies to email correspondence the same way it applies to specs, plans, and runbooks:
@@ -184,6 +213,11 @@ After drafting email correspondence, the agent MUST validate against ALL of the 
 
 - [ ] Both text/plain and text/html parts are present
 - [ ] HTML part uses proper structural markup (no markdown syntax in email body)
+<<<<<<< HEAD
+=======
+- [ ] Content-type propagation verified: source Content-Type header inspected before drafting, reply format matches source format
+- [ ] No markdown syntax in email body unless source email uses markdown
+>>>>>>> spec/1098-fix
 - [ ] Summary section is 1-2 sentences maximum
 - [ ] Outcome section states what changed for stakeholders
 - [ ] AI byline appears in both text/plain and text/html parts
@@ -191,9 +225,13 @@ After drafting email correspondence, the agent MUST validate against ALL of the 
 - [ ] No internal ops details appear in external-facing correspondence
 - [ ] No runbook paths, step numbers, internal IPs, or internal tool names in external content
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 - [ ] All person-action attributions verified against source evidence (no role-proximity inference)
 >>>>>>> spec/1097-fix
+=======
+- [ ] All person-action attributions verified against source evidence (no role-proximity inference)
+>>>>>>> spec/1098-fix
 - [ ] Verification-enforcement verify task was invoked before drafting
 - [ ] Verification-enforcement revisit task was invoked after self-review
 - [ ] All `⚠️ UNVERIFIED` markers resolved or escalated

@@ -55,6 +55,11 @@ The verification domains represent the kinds of factual claims that content gene
 
 API signatures and function parameters are verified against live source code using `srclight_get_signature`, `srclight_get_symbol`, or direct file reads. Config schemas and environment variables are verified against schema definitions, `.env.example` files, or configuration documentation. Code behavior — what a function does, what it returns, how classes interact — is verified by reading source code or using `srclight_get_symbol` and `srclight_get_type_hierarchy`. Documentation references are verified by fetching the referenced document and confirming the claims match. External tool commands and flags are verified by running `--help` or checking official vendor documentation.
 
+<<<<<<< HEAD
+=======
+**Content-type propagation** — matching the output format to the source communication's format — is verified by inspecting the source communication's Content-Type header or format before drafting a reply. For emails, this means reading the `.eml` file and confirming its `Content-Type` value. For structured data, it means confirming the source format (JSON, YAML, etc.) and producing output in that format. The verification step is: before generating reply content, the agent MUST confirm what format the source uses and produce output in that same format. A reply in markdown to an HTML email, or a reply in plain text with markdown syntax to a multipart/alternative email, is a verification failure — the content type was not propagated.
+
+>>>>>>> spec/1098-fix
 **Attribution** — who performed an action — is verified against the source communication. When content states "completed by Person X" or "Person X did Y", the attribution must be traced to evidence: email From/Sender headers, GitHub commit authors, PR creators, issue comment authors, or explicit statements in the source material. Attribution evidence sources include: `github_issue_read(method=get)` for issue authors and commenters, `github_pull_request_read(method=get)` for PR creators, `srclight_blame_symbol` for commit authors, and direct file reads of email headers or forwarded messages. If the source does not explicitly state who did something, the agent must not attribute — it must either omit the name or write "completed per [reference]" without naming an individual. Inferring "who did what" from role proximity (e.g., "tech person → did the tech work") without source evidence is an attribution hallucination and is prohibited.
 
 The agent selects verification tools based on the domain, not by following a lookup table, but by reasoning about what evidence source would authoritatively confirm the claim. A claim about a Python function's parameters calls for `srclight_get_signature`; a claim about a CLI flag calls for running the command with `--help`; a claim about a GUI path calls for checking vendor documentation. When multiple sources are available, the most authoritative and most recent source wins.
@@ -69,7 +74,11 @@ The evidence artifact format is:
 
 ```
 Claim: <what the content asserts>
+<<<<<<< HEAD
 Domain: <verification domain — API, config, code behavior, docs, CLI, attribution>
+=======
+Domain: <verification domain — API, config, code behavior, docs, CLI, attribution, content-type>
+>>>>>>> spec/1098-fix
 Source: <tool call or document that provided the evidence>
 Verified: <yes|no>
 Marker: <if no, ⚠️ UNVERIFIED>
@@ -107,6 +116,7 @@ When verifying a claim that something was completed or is in a specific state, t
 - `spec-auditor` — Post-creation quality audits; verification-enforcement prevents the problems that spec-auditor would find
 - `skill-creator` — Must invoke verification-enforcement when creating or updating skill files
 - `divide-and-conquer` — Orchestrators use `verification-enforcement --task enforce` to validate sub-agent output
+- `correspondence` — Content-type propagation domain applies to reply-generation workflows; correspondence skill's Content-Type Propagation rule is verified through this domain
 - `065-verification-honesty.md` — Reactive honesty during conversation; verification-enforcement supersedes for content generation workflows
 
 ## Completion Guarantee

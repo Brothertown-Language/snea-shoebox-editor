@@ -55,6 +55,7 @@ SCENARIOS["correspondence-html-template"]="Does .opencode/skills/correspondence/
 SCENARIOS["correspondence-internal-ops-leakage"]="Does .opencode/skills/correspondence/SKILL.md explicitly prohibit runbook paths, step numbers, internal IPs, and internal tool names in external-facing correspondence?"
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 SCENARIOS["ve-correspondence-mandatory"]="Does .opencode/skills/verification-enforcement/SKILL.md list correspondence in its Skill Invocation Enforcement section as a mandatory content-generating skill?"
 SCENARIOS["ve-plan-not-execution"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a Plan ≠ Execution Evidence Rule section with anti-pattern examples?"
@@ -65,6 +66,12 @@ SCENARIOS["critical-rules-plan-not-execution"]="Does .opencode/guidelines/000-cr
 SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an attribution verification domain that specifies evidence sources (email headers, commit authors, PR creators, issue comment authors) and prohibits role-proximity inference?"
 SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
 >>>>>>> spec/1097-fix
+=======
+SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an attribution verification domain that specifies evidence sources (email headers, commit authors, PR creators, issue comment authors) and prohibits role-proximity inference?"
+SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
+SCENARIOS["correspondence-content-type-propagation"]="Does .opencode/skills/correspondence/SKILL.md contain a Content-Type Propagation section that requires inspecting the source communication's content type before drafting a reply and matching the reply format to the source format?"
+SCENARIOS["ve-content-type-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a content-type propagation verification domain that specifies inspecting source Content-Type headers before drafting replies?"
+>>>>>>> spec/1098-fix
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -92,6 +99,7 @@ EXPECTED_SKILLS["correspondence-html-template"]=""
 EXPECTED_SKILLS["correspondence-internal-ops-leakage"]=""
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 EXPECTED_SKILLS["ve-correspondence-mandatory"]=""
 EXPECTED_SKILLS["ve-plan-not-execution"]=""
@@ -102,6 +110,12 @@ EXPECTED_SKILLS["critical-rules-plan-not-execution"]=""
 EXPECTED_SKILLS["ve-attribution-domain"]=""
 EXPECTED_SKILLS["correspondence-attribution-rule"]=""
 >>>>>>> spec/1097-fix
+=======
+EXPECTED_SKILLS["ve-attribution-domain"]=""
+EXPECTED_SKILLS["correspondence-attribution-rule"]=""
+EXPECTED_SKILLS["correspondence-content-type-propagation"]=""
+EXPECTED_SKILLS["ve-content-type-domain"]=""
+>>>>>>> spec/1098-fix
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -116,6 +130,7 @@ OVERALL_PASS=true
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage; do
 =======
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-correspondence-mandatory ve-plan-not-execution critical-rules-correspondence-ve critical-rules-plan-not-execution; do
@@ -123,6 +138,9 @@ for scenario_name in bug-report create-spec simple-question implement-request po
 =======
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule; do
 >>>>>>> spec/1097-fix
+=======
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule correspondence-content-type-propagation ve-content-type-domain; do
+>>>>>>> spec/1098-fix
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -462,6 +480,7 @@ else
 fi
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Verify verification-enforcement SKILL.md lists correspondence as mandatory
 VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
@@ -472,6 +491,8 @@ else
     echo "  verification-enforcement correspondence mandatory: MISSING"
     echo "- **verification-enforcement correspondence mandatory:** MISSING" >> "$RESULTS_FILE"
 =======
+=======
+>>>>>>> spec/1098-fix
 # Verify verification-enforcement attribution domain
 VE_SKILL="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 if [ -f "$VE_SKILL" ]; then
@@ -490,11 +511,15 @@ if [ -f "$VE_SKILL" ]; then
 else
     echo "  verification-enforcement/SKILL.md: MISSING"
     echo "- **verification-enforcement/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+<<<<<<< HEAD
 >>>>>>> spec/1097-fix
+=======
+>>>>>>> spec/1098-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # Verify verification-enforcement SKILL.md has Plan ≠ Execution Evidence Rule
 VE_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|plan .≠. execution\|instructions were executed" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
@@ -529,6 +554,8 @@ else
     echo "  000-critical-rules.md Plan ≠ Execution section: MISSING"
     echo "- **000-critical-rules.md Plan ≠ Execution section:** MISSING" >> "$RESULTS_FILE"
 =======
+=======
+>>>>>>> spec/1098-fix
 # Verify correspondence skill attribution rule
 CORR_SKILL="$PROJECT_DIR/.opencode/skills/correspondence/SKILL.md"
 if [ -f "$CORR_SKILL" ]; then
@@ -546,7 +573,51 @@ if [ -f "$CORR_SKILL" ]; then
 else
     echo "  correspondence/SKILL.md: MISSING"
     echo "- **correspondence/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+<<<<<<< HEAD
 >>>>>>> spec/1097-fix
+=======
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify correspondence content-type propagation rule
+if [ -f "$CORR_SKILL" ]; then
+    CORR_CT_PROP=$(grep -c "Content-Type Propagation\|content-type propagation" "$CORR_SKILL" 2>/dev/null || echo "0")
+    CORR_CT_VERIFY=$(grep -c "Inspect BEFORE drafting\|inspect.*content.*type\|Content-Type header" "$CORR_SKILL" 2>/dev/null || echo "0")
+    CORR_NO_DOWNGRADE=$(grep -c "Never downgrade\|never downgrade" "$CORR_SKILL" 2>/dev/null || echo "0")
+    if [ "$CORR_CT_PROP" -ge 1 ] && [ "$CORR_CT_VERIFY" -ge 1 ] && [ "$CORR_NO_DOWNGRADE" -ge 1 ]; then
+        echo "  correspondence content-type propagation rule: FOUND"
+        echo "- **correspondence content-type propagation rule:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  correspondence content-type propagation rule: MISSING (propagation=$CORR_CT_PROP, verify=$CORR_CT_VERIFY, no-downgrade=$CORR_NO_DOWNGRADE)"
+        echo "- **correspondence content-type propagation rule:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  correspondence/SKILL.md: MISSING (for content-type check)"
+    echo "- **correspondence/SKILL.md:** MISSING (for content-type check)" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify VE content-type propagation domain
+if [ -f "$VE_SKILL" ]; then
+    VE_CT_DOMAIN=$(grep -c "content-type propagation\|Content-type propagation\|Content-Type Propagation" "$VE_SKILL" 2>/dev/null || echo "0")
+    VE_CT_INSPECT=$(grep -c "Content-Type header\|content type.*before drafting\|format.*source.*communication" "$VE_SKILL" 2>/dev/null || echo "0")
+    if [ "$VE_CT_DOMAIN" -ge 1 ] && [ "$VE_CT_INSPECT" -ge 1 ]; then
+        echo "  verification-enforcement content-type domain: FOUND"
+        echo "- **verification-enforcement content-type domain:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  verification-enforcement content-type domain: MISSING (domain=$VE_CT_DOMAIN, inspect=$VE_CT_INSPECT)"
+        echo "- **verification-enforcement content-type domain:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  verification-enforcement/SKILL.md: MISSING (for content-type check)"
+    echo "- **verification-enforcement/SKILL.md:** MISSING (for content-type check)" >> "$RESULTS_FILE"
+>>>>>>> spec/1098-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
