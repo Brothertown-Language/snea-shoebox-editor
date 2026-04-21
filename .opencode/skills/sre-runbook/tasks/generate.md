@@ -460,6 +460,12 @@ After generating the runbook, the agent MUST validate the output against ALL enf
 25. ✅ For steps-only: reference table and troubleshooting table included?
 26. ✅ For steps-only: each step has exact field values and verify command?
 27. ✅ For steps-only: metadata header is plain text, NOT YAML?
+<<<<<<< HEAD
+=======
+28. ✅ One target per runbook file — no "Repeat for X" compression, no multi-domain sections? If multiple targets with different values exist, invoke generate separately per target producing separate runbook files.
+29. ✅ Single command per CLI code block — no `&&` chaining, no `\` line continuation? Each `dig`, `curl`, or equivalent verification command is in its own code block with its own expected output.
+30. ✅ Verification steps produce individual commands, each in its own code block with its own expected output?
+>>>>>>> spec/1096-sre-repeat-antipattern
 
 If ANY check fails, fix the runbook before presenting. The user should never need to correct the same issue twice.
 
@@ -513,6 +519,64 @@ Before writing ANY DNS record instructions, validate:
 
 If DNS validation fails (RFC-level constraint violated), HALT and correct the record type before proceeding. If provider capabilities are unconfirmed, HALT and prompt user.
 
+<<<<<<< HEAD
+=======
+### One-Target-Per-File Gate (MANDATORY)
+
+**🚫 CRITICAL: A runbook file covers exactly one target (domain, host, service instance). "Repeat for X" compression is prohibited.**
+
+Before writing a runbook file:
+
+```
+1. Identify all targets that the operator needs to configure/fix
+2. If only one target → proceed with single runbook file
+3. If multiple targets with different values (different domains, different hostnames, different record values):
+   a. Each target gets its own runbook file
+   b. Invoke generate separately for each target
+   c. File naming: <target-specific-name>-<scenario>.md
+4. Same-domain multi-node iteration IS acceptable:
+   - "For each node in the cluster" where all nodes have the same procedure and same values → single runbook
+   - "Repeat for videoconcerthall.net" where the domain, ALIAS targets, and MX records differ → MUST split
+5. The "repeat for X" pattern ALWAYS produces wrong values from compression and missing per-step verification. It is never acceptable.
+```
+
+### Single-Command-Per-Block Gate (MANDATORY)
+
+**🚫 CRITICAL: Each CLI code block in a runbook contains exactly one command. `&&` chaining and `\` line continuation are prohibited.**
+
+Before finalizing any runbook step containing CLI commands:
+
+```
+1. For each code block in the runbook:
+   a. Count the number of commands in the block
+   b. If the block contains && or \ → REJECT the block
+   c. Split multi-command blocks into individual blocks
+
+2. Correct pattern — each command in its own block:
+   Step 5: Verify A record
+   ```bash
+   dig videoconcerthall.com A +short
+   ```
+   Expected: 192.0.2.1
+
+   Step 6: Verify CNAME record
+   ```bash
+   dig www.videoconcerthall.com CNAME +short
+   ```
+   Expected: www.newsrx.com.
+
+3. WRONG pattern — chained block (PROHIBITED):
+   ```bash
+   echo "=== videoconcerthall.com ===" && \
+   dig videoconcerthall.com A +short && \
+   dig www.videoconcerthall.com CNAME +short
+   ```
+   This is paste-hostile, has a single-point-of-failure (one typo breaks everything), and obscures which command produced which output.
+
+4. Section headers and formatting echo commands are NOT part of CLI code blocks. They belong in the step description or expected output, not in the command itself.
+```
+
+>>>>>>> spec/1096-sre-repeat-antipattern
 ### Prose-Structure Check Note
 
 Non-operational sections of the generated runbook — the environment header, symptom descriptions, diagnosis reasoning, and postmortem narrative — should remain prose. These sections communicate context and reasoning; rigid enumeration or tabular structure in them reduces readability. Operational steps (numbered commands, mitigation actions, verification commands) are naturally structured and exempt from the prose check. When a section mixes operational commands with surrounding reasoning, the reasoning stays prose while the commands stay structured.
