@@ -351,12 +351,61 @@ After generating the runbook, the agent MUST validate the output against ALL enf
 15. ✅ Existing repo documentation checked for hostnames/IPs/domains?
 16. ✅ No training-knowledge commands presented as verified?
 17. ✅ Evidence collection failure handled (HALT, not fallback)?
+18. ✅ Verification-failure gate passed for EVERY section with operational steps? (If ALL sources failed for any section, was the section blocked and user prompted?)
+19. ✅ DNS record types validated against RFC constraints and provider capabilities? (If DNS runbook: no CNAME at apex, no unsupported record types)
+20. ✅ VERIFICATION-GAP annotations explicit (provider name, claims unconfirmed, sources attempted)?
 
 If ANY check fails, fix the runbook before presenting. The user should never need to correct the same issue twice.
 
 ### Post-Self-Review: Verification Revisit (MANDATORY)
 
 After the self-review step, invoke `verification-enforcement --task revisit`. This pass scans the generated runbook for any remaining `⚠️ UNVERIFIED` markers and attempts to resolve them using domain-appropriate tools. Claims that cannot be resolved are escalated to the developer. The runbook must not ship as complete while unverified claims remain without developer acknowledgment.
+
+### Verification-Failure Gate: Runbook-Section Blocking (MANDATORY)
+
+**🚫 CRITICAL: Before presenting any section containing operational steps, verify that at least ONE live source confirmed the claims in that section. If ALL sources failed, the section MUST be blocked.**
+
+For each section with operational steps:
+
+```
+1. Count verification attempts and results for that section's claims
+2. If AT LEAST ONE source confirmed → proceed (note source in evidence block)
+3. If ALL sources failed or were unreachable:
+   a. Replace the section's operational steps with a VERIFICATION-GAP block:
+      "VERIFICATION-GAP: <provider> documentation unreachable — <claims> unconfirmed.
+       Please confirm: (a) <first unverified claim>, (b) <second unverified claim>"
+   b. Do NOT present the unverified instructions as operational steps
+   c. Record the gap in the runbook metadata:
+      verification_gaps:
+        - section: "<section name>"
+          provider: "<provider>"
+          claims_unconfirmed: ["<claim 1>", "<claim 2>"]
+          sources_attempted:
+            - source: "<URL or tool>"
+              result: "<error>"
+          user_action_required: true
+```
+
+### DNS Record Validation Gate (MANDATORY for DNS runbooks)
+
+Before writing ANY DNS record instructions, validate:
+
+```
+1. Check reference/ directory for provider-specific DNS constraint data
+   - If reference data exists AND confirms the proposed record type → proceed
+   - If reference data exists AND contradicts the proposed record type → adjust the record type
+   - If no reference data exists → HALT and request provider DNS details from user
+
+2. Apply RFC-level DNS constraints (hard rules, non-negotiable):
+   a. CNAME at zone apex → FORBIDDEN (RFC 1034). Use ALIAS/ANAME or A record.
+   b. CNAME with other records at same name → FORBIDDEN (RFC 1034). CNAME must be the only record type at a name.
+
+3. Flag provider-level fragility (soft warnings, proceed with annotation):
+   a. A record to third-party IP → flag as FRAGILE with explanation
+   b. Provider defects reported by user → include as KNOWN-DEFECT annotation
+```
+
+If DNS validation fails (RFC-level constraint violated), HALT and correct the record type before proceeding. If provider capabilities are unconfirmed, HALT and prompt user.
 
 ### Prose-Structure Check Note
 

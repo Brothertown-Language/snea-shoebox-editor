@@ -75,6 +75,8 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - Referencing CLI commands, GUI paths, or API calls without verifying against live documentation
 - Annotating unverified information with "(unverified)" instead of excluding it
 - Falling back to training knowledge when live verification fails
+- Proceeding past a section when ALL verification sources for that section's claims returned errors or were unreachable
+- Producing operational steps for a domain without confirming the available mechanisms (e.g., DNS record types at apex, provider-specific capabilities)
 
 ### ✅ REQUIRED
 
@@ -87,10 +89,13 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - **Set-and-restore pattern:** Two command blocks only — "set" and "restore defaults." No "check first, then decide" flow.
 - **No-resurrection rule:** Once content is removed per user direction, never re-add it in any form.
 - **Live-verification rule:** Every CLI command, GUI path, button label, menu structure, and API call MUST be verified against live documentation (vendor docs, `--help` output, `man` pages, official API references) before inclusion. If the agent cannot verify, the information is EXCLUDED — never annotated as "(unverified)."
-- **Evidence-anchoring rule:** Include baseline outputs from commands run during evidence collection so the operator can compare against current state.
+- **Verification-gate enforcement rule:** If ALL live verification sources for a claim return errors (transport errors, 404s, timeouts) or are unreachable, the agent MUST HALT before presenting operational steps for that section. The runbook MUST NOT proceed with unverified claims presented as verified instructions. Instead, mark the section with an explicit `VERIFICATION-GAP` annotation and prompt the user for confirmation.
+- **DNS validation rule:** For DNS runbooks, the agent MUST validate record type constraints against RFC rules and provider capabilities before including any DNS record instructions. CNAME at apex is RFC-invalid per RFC 1034. A records pointing to third-party IPs must be flagged as fragile. The agent MUST check `reference/` data in the skill directory for provider-specific constraints.
+- **Evidence-anchoring rule:** Include baseline outputs from commands run during evidence collection so the operator can compare against current state. When live verification fails, include an explicit `VERIFICATION-GAP:` annotation naming the specific unavailable source and what could not be confirmed — e.g., `VERIFICATION-GAP: Directnic documentation unreachable — record types unconfirmed`.
 - **Version-pinning rule:** Record software versions, OS version, and configuration state observed during evidence collection.
 - **Last-verified rule:** Include a "Last verified:" timestamp and staleness indicator (e.g., "Verified against Proxmox 8.1 on 2026-04-15").
 - **Check-repo-first rule:** Before writing system-specific values (hostnames, IPs, domains, versions), check existing documentation in the same repository. If data exists locally, use it — never guess from training data.
+- **Check-reference-data rule:** Before generating DNS record instructions, check `reference/` subdirectory in the skill directory for provider-specific record type and constraint data. If reference data exists for the target provider, use it — never invent record type support from training data.
 
 ### Self-Review Step (MANDATORY)
 
@@ -168,6 +173,87 @@ Action: [auto-fix|conditional|flag-for-review]
 | Service name wrong | CONFLICTING | auto-fix | Update with actual service name |
 | Package version mismatch | VERIFICATION-GAP | auto-fix | Update with actual version |
 | Step chain broken | STRUCTURE-VIOLATION | flag-for-review | HALT — rework step connection |
+| ALL verification sources unreachable for a section's claims | VERIFICATION-GAP | flag-for-review | HALT — block section, do NOT present operational steps |
+
+## Verification-Failure Enforcement Gate (MANDATORY)
+
+**🚫 CRITICAL: When ALL live verification sources for a section's claims fail (transport errors, 404s, timeouts, unreachable), the agent MUST HALT before presenting operational steps for that section. Producing unverified instructions as verified runbook content is a CRITICAL VIOLATION.**
+
+### Gate Procedure
+
+For each runbook section containing operational steps:
+
+```
+1. Attempt verification against ALL available sources:
+   - Live system query or --help output
+   - Official vendor documentation (webfetch)
+   - Man pages
+   - Reference data in skill's reference/ directory
+   - Existing runbooks in repository
+
+2. Evaluate verification results:
+   a. AT LEAST ONE source confirmed → proceed with verified instructions
+   b. ALL sources failed or unreachable → FAIL the gate
+
+3. On gate failure:
+   a. Do NOT present operational steps as verified instructions
+   b. Insert explicit VERIFICATION-GAP annotation:
+      "VERIFICATION-GAP: <provider/system> documentation unreachable — <specific claims> unconfirmed"
+   c. HALT and prompt the user:
+      "I cannot verify [specific claims] against live documentation. Please confirm:
+       (a) [first unverified claim]
+       (b) [second unverified claim]
+       ..."
+   d. Do NOT silently fall back to training knowledge
+```
+
+### Evidence Anchoring on Verification Failure
+
+When the verification gate fails, the runbook MUST include an explicit evidence block:
+
+```yaml
+verification_gap:
+  provider: "<provider name>"
+  sources_attempted:
+    - source: "<URL or tool call>"
+      result: "<error type — 404, transport error, timeout>"
+  claims_unconfirmed:
+    - "<specific claim that could not be verified>"
+    - "<specific claim that could not be verified>"
+  user_action_required: "Please confirm the above claims manually"
+  timestamp: "<ISO date>"
+```
+
+### DNS-Specific Validation (MANDATORY for DNS runbooks)
+
+When generating DNS runbooks, the agent MUST perform these pre-checks BEFORE writing any DNS record instructions:
+
+```
+1. Check reference/ directory for provider-specific DNS data:
+   - glob(pattern=".opencode/skills/sre-runbook/reference/*.md")
+   - If reference data exists for the target provider, USE IT
+   - If no reference data exists, HALT and request provider DNS details from the user
+
+2. Validate record type constraints:
+   a. CNAME at zone apex → RFC-invalid per RFC 1034 (conflicts with SOA/NS at root)
+   b. A record pointing to third-party IP → flag as FRAGILE (IP changes break the record)
+   c. Provider-specific apex resolution → check if ALIAS/ANAME is supported
+
+3. Flag provider-specific defects:
+   - If user reports a provider defect (e.g., "URL redirector doesn't handle non-SSL"),
+     include this in the runbook as a KNOWN-DEFECT annotation
+   - Never assume provider capabilities from training data
+```
+
+### Gate Failure Examples
+
+| Scenario | Gate Action |
+|----------|-------------|
+| Directnic docs return 404s for ALL DNS help pages | HALT: "VERIFICATION-GAP: Directnic documentation unreachable — supported record types, GUI paths, and redirector capabilities unconfirmed" |
+| `--help` returns error AND man page missing AND no vendor docs | HALT: "VERIFICATION-GAP: <command> verification failed — no sources confirmed the command syntax" |
+| DNS runbook proposes CNAME at apex | REJECT: "CNAME at zone apex is RFC-invalid per RFC 1034. Use ALIAS or A record instead." |
+| DNS runbook proposes A record to third-party IP | FLAG: "FRAGILE: A record to <IP> — upstream IP changes will break this record. Confirm this IP is stable." |
+| One source confirms but another contradicts | INVESTIGATE: resolve contradiction, use confirmed source, flag disagreement |
 
 ## Cross-Reference Verification (MANDATORY)
 

@@ -48,6 +48,7 @@ SCENARIOS["agents-md-incremental"]="Does AGENTS.md list incremental-build in the
 SCENARIOS["worktree-handoff-step"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Step 2.5 for worktree handoff after push?"
 SCENARIOS["scope-auto-resolve-guideline"]="Does .opencode/guidelines/000-critical-rules.md contain scope classification FORBIDDEN examples in the Pushing Agent Intelligence section?"
 SCENARIOS["scope-auto-resolve-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 0.5 for scope auto-resolve?"
+SCENARIOS["sre-verification-gate"]="Does .opencode/skills/sre-runbook/SKILL.md contain a Verification-Failure Enforcement Gate section with gate failure examples and DNS-Specific Validation?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -68,6 +69,7 @@ EXPECTED_SKILLS["agents-md-incremental"]=""
 EXPECTED_SKILLS["worktree-handoff-step"]=""
 EXPECTED_SKILLS["scope-auto-resolve-guideline"]=""
 EXPECTED_SKILLS["scope-auto-resolve-step"]=""
+EXPECTED_SKILLS["sre-verification-gate"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -80,7 +82,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step sre-verification-gate; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -415,6 +417,96 @@ if [ "$SCOPE_STEP05" -ge 1 ]; then
 else
     echo "  verify-authorization Step 0.5 scope auto-resolve: MISSING"
     echo "- **verify-authorization Step 0.5 scope auto-resolve:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify sre-runbook verification-failure enforcement gate
+SRE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/sre-runbook/SKILL.md"
+if [ -f "$SRE_SKILL_FILE" ]; then
+    VFGATE_COUNT=$(grep -c "Verification-Failure Enforcement Gate" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$VFGATE_COUNT" -ge 1 ]; then
+        echo "  sre-runbook Verification-Failure Enforcement Gate: FOUND"
+        echo "- **sre-runbook Verification-Failure Enforcement Gate:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  sre-runbook Verification-Failure Enforcement Gate: MISSING"
+        echo "- **sre-runbook Verification-Failure Enforcement Gate:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    DNS_VAL_COUNT=$(grep -c "DNS-Specific Validation" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$DNS_VAL_COUNT" -ge 1 ]; then
+        echo "  sre-runbook DNS-Specific Validation: FOUND"
+        echo "- **sre-runbook DNS-Specific Validation:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  sre-runbook DNS-Specific Validation: MISSING"
+        echo "- **sre-runbook DNS-Specific Validation:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    GATE_FAIL_COUNT=$(grep -c "Gate Failure Examples" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$GATE_FAIL_COUNT" -ge 1 ]; then
+        echo "  sre-runbook Gate Failure Examples: FOUND"
+        echo "- **sre-runbook Gate Failure Examples:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  sre-runbook Gate Failure Examples: MISSING"
+        echo "- **sre-runbook Gate Failure Examples:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  sre-runbook/SKILL.md: MISSING"
+    echo "- **sre-runbook/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify generate.md has verification-failure gate and DNS validation
+GENERATE_TASK_FILE="$PROJECT_DIR/.opencode/skills/sre-runbook/tasks/generate.md"
+if [ -f "$GENERATE_TASK_FILE" ]; then
+    GEN_VFGATE=$(grep -c "Verification-Failure Gate.*Runbook-Section Blocking" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_VFGATE" -ge 1 ]; then
+        echo "  generate.md Verification-Failure Gate section: FOUND"
+        echo "- **generate.md Verification-Failure Gate section:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  generate.md Verification-Failure Gate section: MISSING"
+        echo "- **generate.md Verification-Failure Gate section:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    GEN_DNS=$(grep -c "DNS Record Validation Gate" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_DNS" -ge 1 ]; then
+        echo "  generate.md DNS Record Validation Gate: FOUND"
+        echo "- **generate.md DNS Record Validation Gate:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  generate.md DNS Record Validation Gate: MISSING"
+        echo "- **generate.md DNS Record Validation Gate:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    GEN_CHECKLIST=$(grep -c "Verification-failure gate passed" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_CHECKLIST" -ge 1 ]; then
+        echo "  generate.md verification-failure gate checklist item: FOUND"
+        echo "- **generate.md verification-failure gate checklist item:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  generate.md verification-failure gate checklist item: MISSING"
+        echo "- **generate.md verification-failure gate checklist item:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    GEN_VGGAP=$(grep -c "VERIFICATION-GAP annotation" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_VGGAP" -ge 1 ]; then
+        echo "  generate.md VERIFICATION-GAP annotation checklist item: FOUND"
+        echo "- **generate.md VERIFICATION-GAP annotation checklist item:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  generate.md VERIFICATION-GAP annotation checklist item: MISSING"
+        echo "- **generate.md VERIFICATION-GAP annotation checklist item:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  generate.md: MISSING"
+    echo "- **generate.md:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
