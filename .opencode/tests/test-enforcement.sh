@@ -48,47 +48,7 @@ SCENARIOS["agents-md-incremental"]="Does AGENTS.md list incremental-build in the
 SCENARIOS["worktree-handoff-step"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Step 2.5 for worktree handoff after push?"
 SCENARIOS["scope-auto-resolve-guideline"]="Does .opencode/guidelines/000-critical-rules.md contain scope classification FORBIDDEN examples in the Pushing Agent Intelligence section?"
 SCENARIOS["scope-auto-resolve-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 0.5 for scope auto-resolve?"
-<<<<<<< HEAD
-SCENARIOS["correspondence-skill-exists"]="Does .opencode/skills/correspondence/SKILL.md exist with sections for Email Format Template, Stakeholder Content Rules, Audience-Awareness Rules, and Verification-Enforcement Integration?"
-SCENARIOS["correspondence-draft-task"]="Does .opencode/skills/correspondence/tasks/draft.md contain steps for Audience Classification, Pre-Draft Verification Gate, Content Filtering, Format Template Application, Self-Review Checklist, and Post-Draft Verification Gate?"
-SCENARIOS["correspondence-completion-task"]="Does .opencode/skills/correspondence/tasks/completion.md exist with a State Check Phase and Format Verification Before Halt checklist?"
-SCENARIOS["correspondence-html-template"]="Does .opencode/skills/correspondence/SKILL.md contain a text/html part template with proper HTML structural markup?"
-SCENARIOS["correspondence-internal-ops-leakage"]="Does .opencode/skills/correspondence/SKILL.md explicitly prohibit runbook paths, step numbers, internal IPs, and internal tool names in external-facing correspondence?"
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-SCENARIOS["ve-correspondence-mandatory"]="Does .opencode/skills/verification-enforcement/SKILL.md list correspondence in its Skill Invocation Enforcement section as a mandatory content-generating skill?"
-SCENARIOS["ve-plan-not-execution"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a Plan ≠ Execution Evidence Rule section with anti-pattern examples?"
-SCENARIOS["critical-rules-correspondence-ve"]="Does .opencode/guidelines/000-critical-rules.md explicitly mention correspondence and email drafting in the verification-enforcement critical violation section?"
-SCENARIOS["critical-rules-plan-not-execution"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Plan ≠ Execution or treating documentation as evidence of completion?"
->>>>>>> spec/1095-fix
-=======
-SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an attribution verification domain that specifies evidence sources (email headers, commit authors, PR creators, issue comment authors) and prohibits role-proximity inference?"
-SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
->>>>>>> spec/1097-fix
-=======
-=======
->>>>>>> spec/1099-fix
-SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an attribution verification domain that specifies evidence sources (email headers, commit authors, PR creators, issue comment authors) and prohibits role-proximity inference?"
-SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
-SCENARIOS["correspondence-content-type-propagation"]="Does .opencode/skills/correspondence/SKILL.md contain a Content-Type Propagation section that requires inspecting the source communication's content type before drafting a reply and matching the reply format to the source format?"
-SCENARIOS["ve-content-type-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a content-type propagation verification domain that specifies inspecting source Content-Type headers before drafting replies?"
-<<<<<<< HEAD
->>>>>>> spec/1098-fix
-=======
-SCENARIOS["correspondence-audience-separation"]="Does .opencode/skills/correspondence/SKILL.md contain an Audience Separation Principle section with stakeholder and operator tiers and a default to stakeholder tier?"
-SCENARIOS["ve-audience-separation-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an audience separation verification domain that scans for internal artifacts in stakeholder-tier content?"
-SCENARIOS["critical-rules-audience-separation"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Audience Separation that leaks internal artifacts to stakeholders?"
->>>>>>> spec/1099-fix
-=======
-SCENARIOS["exact-match-verification-critical"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Soft-Passing Verification Mismatches?"
-SCENARIOS["exact-match-comparison-semantics"]="Does .opencode/guidelines/065-verification-honesty.md contain a Verification Comparison Semantics section?"
-SCENARIOS["exact-match-vbc-skill"]="Does .opencode/skills/verification-before-completion/SKILL.md contain a Comparison Modes section?"
-SCENARIOS["exact-match-sre-runbook"]="Does .opencode/skills/sre-runbook/SKILL.md contain a row-by-row exact comparison template?"
-SCENARIOS["exact-match-review-prep"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain exact-match verification checklist items?"
->>>>>>> spec/fix-1088
+SCENARIOS["release-promotion-no-direct-merge"]="Does .opencode/skills/git-workflow/tasks/release-promotion.md prohibit direct merge to main and require PR-based promotion?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -109,47 +69,7 @@ EXPECTED_SKILLS["agents-md-incremental"]=""
 EXPECTED_SKILLS["worktree-handoff-step"]=""
 EXPECTED_SKILLS["scope-auto-resolve-guideline"]=""
 EXPECTED_SKILLS["scope-auto-resolve-step"]=""
-<<<<<<< HEAD
-EXPECTED_SKILLS["correspondence-skill-exists"]=""
-EXPECTED_SKILLS["correspondence-draft-task"]=""
-EXPECTED_SKILLS["correspondence-completion-task"]=""
-EXPECTED_SKILLS["correspondence-html-template"]=""
-EXPECTED_SKILLS["correspondence-internal-ops-leakage"]=""
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-=======
-EXPECTED_SKILLS["ve-correspondence-mandatory"]=""
-EXPECTED_SKILLS["ve-plan-not-execution"]=""
-EXPECTED_SKILLS["critical-rules-correspondence-ve"]=""
-EXPECTED_SKILLS["critical-rules-plan-not-execution"]=""
->>>>>>> spec/1095-fix
-=======
-EXPECTED_SKILLS["ve-attribution-domain"]=""
-EXPECTED_SKILLS["correspondence-attribution-rule"]=""
->>>>>>> spec/1097-fix
-=======
-=======
->>>>>>> spec/1099-fix
-EXPECTED_SKILLS["ve-attribution-domain"]=""
-EXPECTED_SKILLS["correspondence-attribution-rule"]=""
-EXPECTED_SKILLS["correspondence-content-type-propagation"]=""
-EXPECTED_SKILLS["ve-content-type-domain"]=""
-<<<<<<< HEAD
->>>>>>> spec/1098-fix
-=======
-EXPECTED_SKILLS["correspondence-audience-separation"]=""
-EXPECTED_SKILLS["ve-audience-separation-domain"]=""
-EXPECTED_SKILLS["critical-rules-audience-separation"]=""
->>>>>>> spec/1099-fix
-=======
-EXPECTED_SKILLS["exact-match-verification-critical"]=""
-EXPECTED_SKILLS["exact-match-comparison-semantics"]=""
-EXPECTED_SKILLS["exact-match-vbc-skill"]=""
-EXPECTED_SKILLS["exact-match-sre-runbook"]=""
-EXPECTED_SKILLS["exact-match-review-prep"]=""
->>>>>>> spec/fix-1088
+EXPECTED_SKILLS["release-promotion-no-direct-merge"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -162,27 +82,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage; do
-=======
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-correspondence-mandatory ve-plan-not-execution critical-rules-correspondence-ve critical-rules-plan-not-execution; do
->>>>>>> spec/1095-fix
-=======
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule; do
->>>>>>> spec/1097-fix
-=======
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule correspondence-content-type-propagation ve-content-type-domain; do
->>>>>>> spec/1098-fix
-=======
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule correspondence-content-type-propagation ve-content-type-domain correspondence-audience-separation ve-audience-separation-domain critical-rules-audience-separation; do
->>>>>>> spec/1099-fix
-=======
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step exact-match-verification-critical exact-match-comparison-semantics exact-match-vbc-skill exact-match-sre-runbook exact-match-review-prep; do
->>>>>>> spec/fix-1088
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step release-promotion-no-direct-merge; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -521,358 +421,30 @@ else
     OVERALL_PASS=false
 fi
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Verify verification-enforcement SKILL.md lists correspondence as mandatory
-VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
-VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
-if [ "$VE_CORR_COUNT" -ge 1 ]; then
-    echo "  verification-enforcement correspondence mandatory: FOUND"
-    echo "- **verification-enforcement correspondence mandatory:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  verification-enforcement correspondence mandatory: MISSING"
-    echo "- **verification-enforcement correspondence mandatory:** MISSING" >> "$RESULTS_FILE"
-=======
-=======
->>>>>>> spec/1098-fix
-=======
->>>>>>> spec/1099-fix
-# Verify verification-enforcement attribution domain
-VE_SKILL="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
-if [ -f "$VE_SKILL" ]; then
-    VE_ATTR_COUNT=$(grep -c "attribution" "$VE_SKILL" 2>/dev/null || echo "0")
-    VE_ROLE_PROX=$(grep -c "role proximity" "$VE_SKILL" 2>/dev/null || echo "0")
-    VE_EMAIL_HDR=$(grep -c "email.*header\|From.*Sender" "$VE_SKILL" 2>/dev/null || echo "0")
-    if [ "$VE_ATTR_COUNT" -ge 1 ] && [ "$VE_ROLE_PROX" -ge 1 ] && [ "$VE_EMAIL_HDR" -ge 1 ]; then
-        echo "  verification-enforcement attribution domain: FOUND"
-        echo "- **verification-enforcement attribution domain:** FOUND" >> "$RESULTS_FILE"
+# Verify release-promotion.md has no direct merge and requires PR-based promotion
+RELEASE_PROMO_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/release-promotion.md"
+if [ -f "$RELEASE_PROMO_FILE" ]; then
+    TIER1_WARN=$(grep -c "TIER 1 MANDATE.*Human-Only Merge\|Human-Only Merge" "$RELEASE_PROMO_FILE" 2>/dev/null || echo "0")
+    NO_DIRECT_MERGE=$(grep -c "^\s*git merge" "$RELEASE_PROMO_FILE" 2>/dev/null || echo "0")
+    HAS_PR_STEP=$(grep -c "Create PR Targeting\|Create PR\|PR targeting" "$RELEASE_PROMO_FILE" 2>/dev/null || echo "0")
+    HAS_HALT=$(grep -c "HALT.*Wait for Human" "$RELEASE_PROMO_FILE" 2>/dev/null || echo "0")
+    if [ "$TIER1_WARN" -ge 1 ] && [ "$NO_DIRECT_MERGE" -eq 0 ] && [ "$HAS_PR_STEP" -ge 1 ] && [ "$HAS_HALT" -ge 1 ]; then
+        echo "  release-promotion.md no direct merge + PR-based: PASS"
+        echo "- **release-promotion.md no direct merge + PR-based:** PASS" >> "$RESULTS_FILE"
     else
-        echo "  verification-enforcement attribution domain: MISSING (attribution=$VE_ATTR_COUNT, role-proximity=$VE_ROLE_PROX, email-headers=$VE_EMAIL_HDR)"
-        echo "- **verification-enforcement attribution domain:** MISSING" >> "$RESULTS_FILE"
+        echo "  release-promotion.md no direct merge + PR-based: FAIL (tier1_warn=$TIER1_WARN, direct_merge_refs=$NO_DIRECT_MERGE, pr_step=$HAS_PR_STEP, halt_step=$HAS_HALT)"
+        echo "- **release-promotion.md no direct merge + PR-based:** FAIL" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
 else
-    echo "  verification-enforcement/SKILL.md: MISSING"
-    echo "- **verification-enforcement/SKILL.md:** MISSING" >> "$RESULTS_FILE"
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> spec/1097-fix
-=======
->>>>>>> spec/1098-fix
-=======
->>>>>>> spec/1099-fix
-=======
-# Verify count-based dispatch thresholds removed (#1077)
-echo ""
-echo "  --- Count-based dispatch threshold verification (#1077) ---"
-echo "" >> "$RESULTS_FILE"
-echo "### Count-based dispatch threshold removal (#1077)" >> "$RESULTS_FILE"
-echo "" >> "$RESULTS_FILE"
-
-# 1. 000-critical-rules.md: "File count" row removed from Simple Work table
-COUNT_FILE_COUNT=$(grep -c "File count" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
-SCOPE_LOCAL=$(grep -c "Scope localization" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
-if [ "$COUNT_FILE_COUNT" -eq 0 ] && [ "$SCOPE_LOCAL" -ge 1 ]; then
-    echo "  000-critical-rules.md: File count row replaced with Scope localization: PASS"
-    echo "- **000-critical-rules.md: File count → Scope localization:** PASS" >> "$RESULTS_FILE"
-else
-    echo "  000-critical-rules.md: File count row still present or Scope localization missing: FAIL"
-    echo "- **000-critical-rules.md: File count → Scope localization:** FAIL" >> "$RESULTS_FILE"
->>>>>>> spec/1077-count-branching
-=======
-# Verify Soft-Passing Verification Mismatches section in 000-critical-rules.md
-EXACT_MATCH_CR=$(grep -c "Soft-Passing Verification Mismatches" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
-if [ "$EXACT_MATCH_CR" -ge 1 ]; then
-    echo "  000-critical-rules.md Soft-Passing Verification Mismatches: FOUND"
-    echo "- **000-critical-rules.md Soft-Passing Verification Mismatches:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  000-critical-rules.md Soft-Passing Verification Mismatches: MISSING"
-    echo "- **000-critical-rules.md Soft-Passing Verification Mismatches:** MISSING" >> "$RESULTS_FILE"
->>>>>>> spec/fix-1088
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Verify verification-enforcement SKILL.md has Plan ≠ Execution Evidence Rule
-VE_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|plan .≠. execution\|instructions were executed" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
-if [ "$VE_PLAN_EXEC" -ge 1 ]; then
-    echo "  verification-enforcement Plan ≠ Execution rule: FOUND"
-    echo "- **verification-enforcement Plan ≠ Execution rule:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  verification-enforcement Plan ≠ Execution rule: MISSING"
-    echo "- **verification-enforcement Plan ≠ Execution rule:** MISSING" >> "$RESULTS_FILE"
-=======
-# 2. spec-creation/SKILL.md: ≤2 files removed from simplicity heuristic
-SPEC_CREATION_FILE="$PROJECT_DIR/.opencode/skills/spec-creation/SKILL.md"
-SPEC_FILE_COUNT=$(grep -c "≤2 files" "$SPEC_CREATION_FILE" 2>/dev/null || echo "0")
-SPEC_SINGLE_CONCERN=$(grep -c "single concern" "$SPEC_CREATION_FILE" 2>/dev/null || echo "0")
-if [ "$SPEC_FILE_COUNT" -eq 0 ] && [ "$SPEC_SINGLE_CONCERN" -ge 1 ]; then
-    echo "  spec-creation/SKILL.md: ≤2 files replaced with single concern: PASS"
-    echo "- **spec-creation/SKILL.md: ≤2 files → single concern:** PASS" >> "$RESULTS_FILE"
-else
-    echo "  spec-creation/SKILL.md: ≤2 files still present or single concern missing: FAIL"
-    echo "- **spec-creation/SKILL.md: ≤2 files → single concern:** FAIL" >> "$RESULTS_FILE"
->>>>>>> spec/1077-count-branching
-=======
-# Verify Verification Comparison Semantics section in 065-verification-honesty.md
-VH_FILE="$PROJECT_DIR/.opencode/guidelines/065-verification-honesty.md"
-VH_COMPARISON=$(grep -c "Verification Comparison Semantics" "$VH_FILE" 2>/dev/null || echo "0")
-if [ "$VH_COMPARISON" -ge 1 ]; then
-    echo "  065-verification-honesty.md Verification Comparison Semantics: FOUND"
-    echo "- **065-verification-honesty.md Verification Comparison Semantics:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  065-verification-honesty.md Verification Comparison Semantics: MISSING"
-    echo "- **065-verification-honesty.md Verification Comparison Semantics:** MISSING" >> "$RESULTS_FILE"
->>>>>>> spec/fix-1088
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Verify 000-critical-rules.md explicitly mentions correspondence in verification-enforcement section
-CR_CORR_VE=$(grep -c "correspondence.*verification-enforcement\|verification-enforcement.*correspondence\|including emails and stakeholder communications\|email/correspondence drafting" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
-if [ "$CR_CORR_VE" -ge 1 ]; then
-    echo "  000-critical-rules.md correspondence in VE section: FOUND"
-    echo "- **000-critical-rules.md correspondence in VE section:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  000-critical-rules.md correspondence in VE section: MISSING"
-    echo "- **000-critical-rules.md correspondence in VE section:** MISSING" >> "$RESULTS_FILE"
-=======
-# 3. single-task-check.md: phase count replaced as primary classifier
-STC_FILE="$PROJECT_DIR/.opencode/skills/issue-operations/tasks/single-task-check.md"
-STC_PHASE_PRIMARY=$(grep -c "One phase.*Spec has exactly" "$STC_FILE" 2>/dev/null || echo "0")
-STC_COHESIVE=$(grep -c "One cohesive concern" "$STC_FILE" 2>/dev/null || echo "0")
-STC_SIGNAL=$(grep -c "signal, not a gate" "$STC_FILE" 2>/dev/null || echo "0")
-if [ "$STC_PHASE_PRIMARY" -eq 0 ] && [ "$STC_COHESIVE" -ge 1 ] && [ "$STC_SIGNAL" -ge 1 ]; then
-    echo "  single-task-check.md: phase count replaced with semantic classifier: PASS"
-    echo "- **single-task-check.md: phase count → semantic classifier:** PASS" >> "$RESULTS_FILE"
-else
-    echo "  single-task-check.md: phase count still primary or semantic classifier missing: FAIL"
-    echo "- **single-task-check.md: phase count → semantic classifier:** FAIL" >> "$RESULTS_FILE"
->>>>>>> spec/1077-count-branching
-=======
-# Verify Comparison Modes section in verification-before-completion SKILL.md
-VBC_SKILL="$PROJECT_DIR/.opencode/skills/verification-before-completion/SKILL.md"
-VBC_COMPARISON=$(grep -c "Comparison Modes" "$VBC_SKILL" 2>/dev/null || echo "0")
-if [ "$VBC_COMPARISON" -ge 1 ]; then
-    echo "  verification-before-completion Comparison Modes: FOUND"
-    echo "- **verification-before-completion Comparison Modes:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  verification-before-completion Comparison Modes: MISSING"
-    echo "- **verification-before-completion Comparison Modes:** MISSING" >> "$RESULTS_FILE"
->>>>>>> spec/fix-1088
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Verify 000-critical-rules.md has Plan ≠ Execution critical violation
-CR_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|treating documentation as evidence" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
-if [ "$CR_PLAN_EXEC" -ge 1 ]; then
-    echo "  000-critical-rules.md Plan ≠ Execution section: FOUND"
-    echo "- **000-critical-rules.md Plan ≠ Execution section:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  000-critical-rules.md Plan ≠ Execution section: MISSING"
-    echo "- **000-critical-rules.md Plan ≠ Execution section:** MISSING" >> "$RESULTS_FILE"
-=======
-=======
->>>>>>> spec/1098-fix
-=======
->>>>>>> spec/1099-fix
-# Verify correspondence skill attribution rule
-CORR_SKILL="$PROJECT_DIR/.opencode/skills/correspondence/SKILL.md"
-if [ -f "$CORR_SKILL" ]; then
-    CORR_ATTR_COUNT=$(grep -c "Attribution Verification\|attribution.*verification" "$CORR_SKILL" 2>/dev/null || echo "0")
-    CORR_ROLE_PROX=$(grep -c "role proximity\|role-proximity" "$CORR_SKILL" 2>/dev/null || echo "0")
-    if [ "$CORR_ATTR_COUNT" -ge 1 ] && [ "$CORR_ROLE_PROX" -ge 1 ]; then
-        echo "  correspondence attribution verification rule: FOUND"
-        echo "- **correspondence attribution verification rule:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  correspondence attribution verification rule: MISSING (attribution=$CORR_ATTR_COUNT, role-proximity=$CORR_ROLE_PROX)"
-        echo "- **correspondence attribution verification rule:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-else
-    echo "  correspondence/SKILL.md: MISSING"
-    echo "- **correspondence/SKILL.md:** MISSING" >> "$RESULTS_FILE"
-<<<<<<< HEAD
-<<<<<<< HEAD
->>>>>>> spec/1097-fix
-=======
-=======
->>>>>>> spec/1099-fix
-=======
-# 4. writing-plans/tasks/create.md: "multiple phases" removed from multi-task condition
-WP_FILE="$PROJECT_DIR/.opencode/skills/writing-plans/tasks/create.md"
-WP_MULTI_PHASE=$(grep -c "multiple phases, mixed concerns" "$WP_FILE" 2>/dev/null || echo "0")
-WP_SEMANTIC=$(grep -c "mixed concerns or deployment independence" "$WP_FILE" 2>/dev/null || echo "0")
-if [ "$WP_MULTI_PHASE" -eq 0 ] && [ "$WP_SEMANTIC" -ge 1 ]; then
-    echo "  writing-plans/create.md: multiple phases removed from multi-task: PASS"
-    echo "- **writing-plans/create.md: multi-task semantic:** PASS" >> "$RESULTS_FILE"
-else
-    echo "  writing-plans/create.md: multiple phases still in multi-task or semantic missing: FAIL"
-    echo "- **writing-plans/create.md: multi-task semantic:** FAIL" >> "$RESULTS_FILE"
->>>>>>> spec/1077-count-branching
-=======
-# Verify row-by-row exact comparison template in sre-runbook SKILL.md
-SRE_SKILL="$PROJECT_DIR/.opencode/skills/sre-runbook/SKILL.md"
-SRE_EXACT=$(grep -c "row-by-row exact comparison" "$SRE_SKILL" 2>/dev/null || echo "0")
-if [ "$SRE_EXACT" -ge 1 ]; then
-    echo "  sre-runbook row-by-row exact comparison template: FOUND"
-    echo "- **sre-runbook row-by-row exact comparison template:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  sre-runbook row-by-row exact comparison template: MISSING"
-    echo "- **sre-runbook row-by-row exact comparison template:** MISSING" >> "$RESULTS_FILE"
->>>>>>> spec/fix-1088
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-<<<<<<< HEAD
-<<<<<<< HEAD
-# Verify correspondence content-type propagation rule
-if [ -f "$CORR_SKILL" ]; then
-    CORR_CT_PROP=$(grep -c "Content-Type Propagation\|content-type propagation" "$CORR_SKILL" 2>/dev/null || echo "0")
-    CORR_CT_VERIFY=$(grep -c "Inspect BEFORE drafting\|inspect.*content.*type\|Content-Type header" "$CORR_SKILL" 2>/dev/null || echo "0")
-    CORR_NO_DOWNGRADE=$(grep -c "Never downgrade\|never downgrade" "$CORR_SKILL" 2>/dev/null || echo "0")
-    if [ "$CORR_CT_PROP" -ge 1 ] && [ "$CORR_CT_VERIFY" -ge 1 ] && [ "$CORR_NO_DOWNGRADE" -ge 1 ]; then
-        echo "  correspondence content-type propagation rule: FOUND"
-        echo "- **correspondence content-type propagation rule:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  correspondence content-type propagation rule: MISSING (propagation=$CORR_CT_PROP, verify=$CORR_CT_VERIFY, no-downgrade=$CORR_NO_DOWNGRADE)"
-        echo "- **correspondence content-type propagation rule:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-else
-    echo "  correspondence/SKILL.md: MISSING (for content-type check)"
-    echo "- **correspondence/SKILL.md:** MISSING (for content-type check)" >> "$RESULTS_FILE"
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-# Verify VE content-type propagation domain
-if [ -f "$VE_SKILL" ]; then
-    VE_CT_DOMAIN=$(grep -c "content-type propagation\|Content-type propagation\|Content-Type Propagation" "$VE_SKILL" 2>/dev/null || echo "0")
-    VE_CT_INSPECT=$(grep -c "Content-Type header\|content type.*before drafting\|format.*source.*communication" "$VE_SKILL" 2>/dev/null || echo "0")
-    if [ "$VE_CT_DOMAIN" -ge 1 ] && [ "$VE_CT_INSPECT" -ge 1 ]; then
-        echo "  verification-enforcement content-type domain: FOUND"
-        echo "- **verification-enforcement content-type domain:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  verification-enforcement content-type domain: MISSING (domain=$VE_CT_DOMAIN, inspect=$VE_CT_INSPECT)"
-        echo "- **verification-enforcement content-type domain:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-else
-    echo "  verification-enforcement/SKILL.md: MISSING (for content-type check)"
-    echo "- **verification-enforcement/SKILL.md:** MISSING (for content-type check)" >> "$RESULTS_FILE"
-<<<<<<< HEAD
->>>>>>> spec/1098-fix
-=======
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-# Verify correspondence audience separation principle
-if [ -f "$CORR_SKILL" ]; then
-    AUD_SEP_PRINCIPLE=$(grep -c "Audience Separation Principle" "$CORR_SKILL" 2>/dev/null || echo "0")
-    AUD_SEP_STAKEHOLDER=$(grep -c "Stakeholder tier\|stakeholder tier" "$CORR_SKILL" 2>/dev/null || echo "0")
-    AUD_SEP_OPERATOR=$(grep -c "Operator tier\|operator tier" "$CORR_SKILL" 2>/dev/null || echo "0")
-    AUD_SEP_DEFAULT=$(grep -c "assume stakeholder\|default.*stakeholder" "$CORR_SKILL" 2>/dev/null || echo "0")
-    if [ "$AUD_SEP_PRINCIPLE" -ge 1 ] && [ "$AUD_SEP_STAKEHOLDER" -ge 1 ] && [ "$AUD_SEP_OPERATOR" -ge 1 ] && [ "$AUD_SEP_DEFAULT" -ge 1 ]; then
-        echo "  correspondence audience separation principle: FOUND"
-        echo "- **correspondence audience separation principle:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  correspondence audience separation principle: MISSING (principle=$AUD_SEP_PRINCIPLE, stakeholder=$AUD_SEP_STAKEHOLDER, operator=$AUD_SEP_OPERATOR, default=$AUD_SEP_DEFAULT)"
-        echo "- **correspondence audience separation principle:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-else
-    echo "  correspondence/SKILL.md: MISSING (for audience separation check)"
-    echo "- **correspondence/SKILL.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-# Verify VE audience separation domain
-if [ -f "$VE_SKILL" ]; then
-    VE_AUD_SEP=$(grep -c "audience separation\|Audience Separation\|audience-tier\|stakeholder-tier" "$VE_SKILL" 2>/dev/null || echo "0")
-    VE_INTERNAL_ARTIFACTS=$(grep -c "internal artifact\|runbook path\|step number" "$VE_SKILL" 2>/dev/null || echo "0")
-    if [ "$VE_AUD_SEP" -ge 1 ] && [ "$VE_INTERNAL_ARTIFACTS" -ge 1 ]; then
-        echo "  verification-enforcement audience separation domain: FOUND"
-        echo "- **verification-enforcement audience separation domain:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  verification-enforcement audience separation domain: MISSING (aud_sep=$VE_AUD_SEP, artifacts=$VE_INTERNAL_ARTIFACTS)"
-        echo "- **verification-enforcement audience separation domain:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-else
-    echo "  verification-enforcement/SKILL.md: MISSING (for audience separation check)"
-    echo "- **verification-enforcement/SKILL.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
-    GUIDELINE_PASS=false
-    OVERALL_PASS=false
-fi
-
-# Verify 000-critical-rules.md audience separation violation section
-if [ -f "$CRITICAL_RULES_FILE" ]; then
-    CR_AUD_SEP=$(grep -c "Audience Separation\|audience separation\|Leaking Internal Artifacts\|leaking internal artifacts" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
-    if [ "$CR_AUD_SEP" -ge 1 ]; then
-        echo "  000-critical-rules.md audience separation section: FOUND"
-        echo "- **000-critical-rules.md audience separation section:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  000-critical-rules.md audience separation section: MISSING"
-        echo "- **000-critical-rules.md audience separation section:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-else
-    echo "  000-critical-rules.md: MISSING (for audience separation check)"
-    echo "- **000-critical-rules.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
->>>>>>> spec/1099-fix
-=======
-# 5. divide-and-conquer/tasks/assess.md: numeric ranges replaced with semantic descriptions
-ASSESS_FILE="$PROJECT_DIR/.opencode/skills/divide-and-conquer/tasks/assess.md"
-ASSESS_NUMERIC=$(grep -c "1-2, localized\|3+, cross-cutting\|1-2, simple\|3+, with dependencies" "$ASSESS_FILE" 2>/dev/null || echo "0")
-ASSESS_SEMANTIC=$(grep -c "Localized to one area\|Simple, single concern" "$ASSESS_FILE" 2>/dev/null || echo "0")
-if [ "$ASSESS_NUMERIC" -eq 0 ] && [ "$ASSESS_SEMANTIC" -ge 1 ]; then
-    echo "  divide-and-conquer/assess.md: numeric ranges replaced with semantic: PASS"
-    echo "- **divide-and-conquer/assess.md: semantic sizing:** PASS" >> "$RESULTS_FILE"
-else
-    echo "  divide-and-conquer/assess.md: numeric ranges still present or semantic missing: FAIL"
-    echo "- **divide-and-conquer/assess.md: semantic sizing:** FAIL" >> "$RESULTS_FILE"
->>>>>>> spec/1077-count-branching
-=======
-# Verify exact-match verification checklist items in review-prep.md
-RP_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/review-prep.md"
-RP_EXACT=$(grep -c "exact-match" "$RP_FILE" 2>/dev/null || echo "0")
-if [ "$RP_EXACT" -ge 1 ]; then
-    echo "  review-prep exact-match verification checklist: FOUND"
-    echo "- **review-prep exact-match verification checklist:** FOUND" >> "$RESULTS_FILE"
-else
-    echo "  review-prep exact-match verification checklist: MISSING"
-    echo "- **review-prep exact-match verification checklist:** MISSING" >> "$RESULTS_FILE"
->>>>>>> spec/fix-1088
+    echo "  release-promotion.md: MISSING"
+    echo "- **release-promotion.md:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
 echo ""
-echo "=== Test Complete ==="
 echo "Results: $RESULTS_FILE"
 echo "Log directory: $LOGDIR"
 
