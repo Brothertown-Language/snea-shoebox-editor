@@ -50,11 +50,9 @@ SCENARIOS["scope-auto-resolve-guideline"]="Does .opencode/guidelines/000-critica
 SCENARIOS["scope-auto-resolve-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 0.5 for scope auto-resolve?"
 SCENARIOS["sre-verification-gate"]="Does .opencode/skills/sre-runbook/SKILL.md contain a Verification-Failure Enforcement Gate section with gate failure examples and DNS-Specific Validation?"
 SCENARIOS["sre-format-taxonomy"]="Does .opencode/skills/sre-runbook/SKILL.md contain a Runbook Type Taxonomy section with one-off-config, periodic-procedure, troubleshooting, and incident-response types, and a Format-Matching Rule?"
-<<<<<<< HEAD
-=======
-SCENARIOS["sre-one-target-per-file"]="Does .opencode/skills/sre-runbook/SKILL.md contain a one-target-per-file rule that prohibits multi-target compression in a single runbook file?"
-SCENARIOS["sre-single-command-per-block"]="Does .opencode/skills/sre-runbook/SKILL.md contain a single-command-per-block rule that prohibits && chaining and backslash line continuation in runbook code blocks?"
->>>>>>> spec/1096-sre-repeat-antipattern
+SCENARIOS["sre-comm-scope"]="Does .opencode/skills/sre-runbook/SKILL.md contain a Communication Scope section separating operational steps from status communications with a Communication Scope table?"
+SCENARIOS["sre-byline-rule"]="Does .opencode/skills/sre-runbook/SKILL.md contain an AI Byline Rule with on behalf of and copy editor for byline semantics?"
+SCENARIOS["sre-gen-byline-checklist"]="Does .opencode/skills/sre-runbook/tasks/generate.md contain checklist items for communication scope and AI byline?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -77,11 +75,9 @@ EXPECTED_SKILLS["scope-auto-resolve-guideline"]=""
 EXPECTED_SKILLS["scope-auto-resolve-step"]=""
 EXPECTED_SKILLS["sre-verification-gate"]=""
 EXPECTED_SKILLS["sre-format-taxonomy"]=""
-<<<<<<< HEAD
-=======
-EXPECTED_SKILLS["sre-one-target-per-file"]=""
-EXPECTED_SKILLS["sre-single-command-per-block"]=""
->>>>>>> spec/1096-sre-repeat-antipattern
+EXPECTED_SKILLS["sre-comm-scope"]=""
+EXPECTED_SKILLS["sre-byline-rule"]=""
+EXPECTED_SKILLS["sre-gen-byline-checklist"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -94,11 +90,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-<<<<<<< HEAD
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step sre-verification-gate sre-format-taxonomy; do
-=======
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step sre-verification-gate sre-format-taxonomy sre-one-target-per-file sre-single-command-per-block; do
->>>>>>> spec/1096-sre-repeat-antipattern
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step sre-verification-gate sre-format-taxonomy sre-comm-scope sre-byline-rule sre-gen-byline-checklist; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -503,42 +495,39 @@ if [ -f "$SRE_SKILL_FILE" ]; then
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
-<<<<<<< HEAD
-=======
-    # Verify one-target-per-file rule in SKILL.md
-    OTPF_RULE=$(grep -c "One-target-per-file rule\|one-target-per-file\|One target per runbook file" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
-    if [ "$OTPF_RULE" -ge 1 ]; then
-        echo "  sre-runbook one-target-per-file rule: FOUND"
-        echo "- **sre-runbook one-target-per-file rule:** FOUND" >> "$RESULTS_FILE"
+    # Verify Communication Scope section in SKILL.md (#1100)
+    COMM_SCOPE_COUNT=$(grep -c "Communication Scope" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$COMM_SCOPE_COUNT" -ge 1 ]; then
+        echo "  sre-runbook Communication Scope section: FOUND"
+        echo "- **sre-runbook Communication Scope section:** FOUND" >> "$RESULTS_FILE"
     else
-        echo "  sre-runbook one-target-per-file rule: MISSING"
-        echo "- **sre-runbook one-target-per-file rule:** MISSING" >> "$RESULTS_FILE"
+        echo "  sre-runbook Communication Scope section: MISSING"
+        echo "- **sre-runbook Communication Scope section:** MISSING" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
-    # Verify single-command-per-block rule in SKILL.md
-    SCB_RULE=$(grep -c "Single-command-per-block rule\|single-command-per-block\|Single command per CLI code block" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
-    if [ "$SCB_RULE" -ge 1 ]; then
-        echo "  sre-runbook single-command-per-block rule: FOUND"
-        echo "- **sre-runbook single-command-per-block rule:** FOUND" >> "$RESULTS_FILE"
+    # Verify AI Byline Rule in SKILL.md (#1100)
+    BYLINE_RULE_COUNT=$(grep -c "AI Byline Rule" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$BYLINE_RULE_COUNT" -ge 1 ]; then
+        echo "  sre-runbook AI Byline Rule: FOUND"
+        echo "- **sre-runbook AI Byline Rule:** FOUND" >> "$RESULTS_FILE"
     else
-        echo "  sre-runbook single-command-per-block rule: MISSING"
-        echo "- **sre-runbook single-command-per-block rule:** MISSING" >> "$RESULTS_FILE"
+        echo "  sre-runbook AI Byline Rule: MISSING"
+        echo "- **sre-runbook AI Byline Rule:** MISSING" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
-    # Verify "Repeat for X" prohibited in SKILL.md
-    REPEAT_PROHIB=$(grep -c "Repeat for.*compression\|repeat for X.*prohibited\|one target per runbook file.*always" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
-    if [ "$REPEAT_PROHIB" -ge 1 ]; then
-        echo "  sre-runbook repeat-for-X prohibition: FOUND"
-        echo "- **sre-runbook repeat-for-X prohibition:** FOUND" >> "$RESULTS_FILE"
+    # Verify on-behalf-of byline semantics in SKILL.md (#1100)
+    ON_BEHALF_COUNT=$(grep -c "on behalf of" "$SRE_SKILL_FILE" 2>/dev/null || echo "0")
+    if [ "$ON_BEHALF_COUNT" -ge 1 ]; then
+        echo "  sre-runbook on-behalf-of byline semantics: FOUND"
+        echo "- **sre-runbook on-behalf-of byline semantics:** FOUND" >> "$RESULTS_FILE"
     else
-        echo "  sre-runbook repeat-for-X prohibition: MISSING"
-        echo "- **sre-runbook repeat-for-X prohibition:** MISSING" >> "$RESULTS_FILE"
+        echo "  sre-runbook on-behalf-of byline semantics: MISSING"
+        echo "- **sre-runbook on-behalf-of byline semantics:** MISSING" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
->>>>>>> spec/1096-sre-repeat-antipattern
 else
     echo "  sre-runbook/SKILL.md: MISSING"
     echo "- **sre-runbook/SKILL.md:** MISSING" >> "$RESULTS_FILE"
@@ -611,53 +600,28 @@ if [ -f "$GENERATE_TASK_FILE" ]; then
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
-<<<<<<< HEAD
-=======
-    # Verify one-target-per-file gate in generate.md
-    GEN_ONE_TARGET=$(grep -c "One-Target-Per-File" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
-    if [ "$GEN_ONE_TARGET" -ge 1 ]; then
-        echo "  generate.md One-Target-Per-File Gate: FOUND"
-        echo "- **generate.md One-Target-Per-File Gate:** FOUND" >> "$RESULTS_FILE"
+    # Verify communication scope checklist in generate.md (#1100)
+    GEN_COMM_SCOPE=$(grep -c "Communication scope correct\|full narrative context" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_COMM_SCOPE" -ge 1 ]; then
+        echo "  generate.md communication scope checklist: FOUND"
+        echo "- **generate.md communication scope checklist:** FOUND" >> "$RESULTS_FILE"
     else
-        echo "  generate.md One-Target-Per-File Gate: MISSING"
-        echo "- **generate.md One-Target-Per-File Gate:** MISSING" >> "$RESULTS_FILE"
+        echo "  generate.md communication scope checklist: MISSING"
+        echo "- **generate.md communication scope checklist:** MISSING" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
-    # Verify single-command-per-block gate in generate.md
-    GEN_SINGLE_CMD=$(grep -c "Single-Command-Per-Block" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
-    if [ "$GEN_SINGLE_CMD" -ge 1 ]; then
-        echo "  generate.md Single-Command-Per-Block Gate: FOUND"
-        echo "- **generate.md Single-Command-Per-Block Gate:** FOUND" >> "$RESULTS_FILE"
+    # Verify byline checklist in generate.md (#1100)
+    GEN_BYLINE=$(grep -c "AI byline present\|Byline semantics correct" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
+    if [ "$GEN_BYLINE" -ge 1 ]; then
+        echo "  generate.md byline checklist: FOUND"
+        echo "- **generate.md byline checklist:** FOUND" >> "$RESULTS_FILE"
     else
-        echo "  generate.md Single-Command-Per-Block Gate: MISSING"
-        echo "- **generate.md Single-Command-Per-Block Gate:** MISSING" >> "$RESULTS_FILE"
+        echo "  generate.md byline checklist: MISSING"
+        echo "- **generate.md byline checklist:** MISSING" >> "$RESULTS_FILE"
         GUIDELINE_PASS=false
         OVERALL_PASS=false
     fi
-    # Verify one-target-per-file checklist item in generate.md
-    GEN_OTPF_CHECKLIST=$(grep -c "One target per runbook file" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
-    if [ "$GEN_OTPF_CHECKLIST" -ge 1 ]; then
-        echo "  generate.md one-target-per-file checklist item: FOUND"
-        echo "- **generate.md one-target-per-file checklist item:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  generate.md one-target-per-file checklist item: MISSING"
-        echo "- **generate.md one-target-per-file checklist item:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
-    # Verify single-command-per-block checklist item in generate.md
-    GEN_SCB_CHECKLIST=$(grep -c "Single command per CLI code block" "$GENERATE_TASK_FILE" 2>/dev/null || echo "0")
-    if [ "$GEN_SCB_CHECKLIST" -ge 1 ]; then
-        echo "  generate.md single-command-per-block checklist item: FOUND"
-        echo "- **generate.md single-command-per-block checklist item:** FOUND" >> "$RESULTS_FILE"
-    else
-        echo "  generate.md single-command-per-block checklist item: MISSING"
-        echo "- **generate.md single-command-per-block checklist item:** MISSING" >> "$RESULTS_FILE"
-        GUIDELINE_PASS=false
-        OVERALL_PASS=false
-    fi
->>>>>>> spec/1096-sre-repeat-antipattern
 else
     echo "  generate.md: MISSING"
     echo "- **generate.md:** MISSING" >> "$RESULTS_FILE"

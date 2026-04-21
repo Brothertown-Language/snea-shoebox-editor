@@ -77,11 +77,6 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - Falling back to training knowledge when live verification fails
 - Proceeding past a section when ALL verification sources for that section's claims returned errors or were unreachable
 - Producing operational steps for a domain without confirming the available mechanisms (e.g., DNS record types at apex, provider-specific capabilities)
-<<<<<<< HEAD
-=======
-- "Repeat for X" compression — stuffing a second target into the same runbook file as a compressed bullet list or abbreviated section
-- Chained CLI code blocks using `&&` or `\` line continuation in operational steps — runbooks are for humans, not scripts
->>>>>>> spec/1096-sre-repeat-antipattern
 
 ### ✅ REQUIRED
 
@@ -101,11 +96,6 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - **Last-verified rule:** Include a "Last verified:" timestamp and staleness indicator (e.g., "Verified against Proxmox 8.1 on 2026-04-15").
 - **Check-repo-first rule:** Before writing system-specific values (hostnames, IPs, domains, versions), check existing documentation in the same repository. If data exists locally, use it — never guess from training data.
 - **Check-reference-data rule:** Before generating DNS record instructions, check `reference/` subdirectory in the skill directory for provider-specific record type and constraint data. If reference data exists for the target provider, use it — never invent record type support from training data.
-<<<<<<< HEAD
-=======
-- **One-target-per-file rule:** One domain/target per runbook file, always. "Repeat for X" compression — stuffing a second target into the same runbook as a compressed bullet list — is prohibited regardless of whether values differ. Each target gets its own runbook file: `videoconcerthall-com-dns-correction.md` and `videoconcerthall-net-dns-correction.md`, not a single `videoconcerthall-dns-correction.md` with "Repeat for .net" at the end. Same-domain multi-node iteration (e.g., "for each node in the cluster") is acceptable; different-domain compression is not.
-- **Single-command-per-block rule:** Each CLI code block contains exactly one command. `&&` chaining and `\` line continuation are prohibited in runbook code blocks. Runbooks are for humans typing at terminals — each command must be independently copy-pasteable and independently verifiable. If one command fails, the operator knows exactly which one. Formatting echo headers and section labels belong in the expected output description, not in the command itself.
->>>>>>> spec/1096-sre-repeat-antipattern
 - **Format-matching rule:** Before generating a runbook, search the repository (and sibling repos if accessible) for existing runbooks. If an established format exists, match it. Do not invent a new format when a proven one is available. If existing runbooks use steps-only format, use steps-only format — do not add YAML enforcement blocks.
 
 ### Self-Review Step (MANDATORY)
@@ -164,6 +154,55 @@ For `troubleshooting` and `incident-response` runbooks, the output contract requ
 The AI-parseable blocks provide structure for automation; the operational procedures provide executable steps for humans. Neither alone is sufficient for troubleshooting and incident-response types.
 
 **One-off-config and periodic-procedure runbooks use steps-only format with NO YAML enforcement blocks.**
+
+## Communication Scope
+
+The steps-only rule applies ONLY to the operational procedures section of a runbook. The skill produces three distinct output types, each with different context requirements:
+
+| Output Type | Context Required | Byline | Example |
+|-------------|-----------------|--------|---------|
+| **Operational steps** | Steps only — no explanations, no background, no conditional logic. A sysop copies, pastes, done. | Not applicable | "1. Add A record: Type=A, Name=@, Value=192.0.2.1" |
+| **Status communications** (email replies, incident notifications, stakeholder updates) | Full narrative — what happened and why, who did it, what was broken before, what was changed after, current live state, references to supporting documents | Mandatory — context-appropriate attribution (see Byline Rule below) | "DirectNIC replaced DNS records with parking page A records when the domains expired..." |
+| **Postmortem narrative** (incident-response postmortem section) | Full narrative — timeline, root cause, contributing factors, action items | Mandatory — context-appropriate attribution | Postmortem template with timeline and action items |
+
+### Prose Style for Status Communications
+
+Status communications follow the structure that the content demands, not a template. The prose pattern that works:
+
+1. **Opening:** One or two sentences stating what happened and who did what (incident cause and attribution)
+2. **What was wrong:** Specific broken state — the exact records, services, or components that were affected, not a vague summary
+3. **What was corrected:** Before and after for each affected component, showing the specific changes made
+4. **Current state:** Confirmation of the live state after correction
+5. **References:** Supporting documents, runbooks, or systems referenced
+
+This structure follows from the content — do not force content into a rigid template when the incident does not warrant all five elements.
+
+### AI Byline Rule (MANDATORY)
+
+The AI-authored byline is MANDATORY on any communication the agent generates. This applies to:
+
+- Status emails and email replies
+- Incident notifications
+- Stakeholder updates
+- Any prose the agent authors or substantially edits
+
+**The byline MUST appear in both plain-text and HTML sections** of dual-format communications (e.g., MIME multipart emails).
+
+**The byline MUST NOT be removed on subsequent edits.** If the agent re-edits a communication it previously generated, the byline stays.
+
+**Byline semantics:**
+
+| Agent's Role | Byline Format | Example |
+|---------------|---------------|---------|
+| Agent authored the communication | `— <AgentName> (<ModelId>)` | `— OpenCode (ollama-cloud/glm-5.1)` |
+| Agent drafted on behalf of a user who provided direct message/instructions | `on behalf of <dev.name>` or `copy editor for <dev.name>` (context-dependent) | `— OpenCode on behalf of Michael Conrad` |
+| Agent edited/formatting-only on user's direct content | `copy editor for <dev.name>` | `— OpenCode, copy editor for C.W. Henderson` |
+
+When the user provides a direct message or provides direct instructions for a message's contents, the byline reflects the user's authorship — "on behalf of" or "copy editor for" — not a bare `<status>` token. The phrasing depends on context: "on behalf of" when the agent drafted the communication from the user's instructions, "copy editor for" when the agent primarily formatted or polished the user's own words.
+
+### Scope of Steps-Only Rule
+
+The steps-only rule (enforcement rule "Steps-only rule") applies to **operational runbook procedures ONLY**. It does NOT apply to status communications, incident notifications, postmortem narratives, or any prose addressed to stakeholders who were not present for the work and need full context.
 
 ## Worktree Mode
 
