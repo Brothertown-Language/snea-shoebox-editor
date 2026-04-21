@@ -6,39 +6,43 @@ from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / ".opencode" / "scripts"))
 
-from session_context import (
+from session_context_identity import (
     _parse_env_token,
     _parse_env_var_token,
     _parse_secrets_toml_token,
     build_identity_section,
-    build_main_branch_warning,
-    build_pair_mode_resume,
     detect_platform,
-    is_on_main_branch,
-    is_on_protected_branch,
-    is_pair_mode_branch,
     parse_owner_repo,
     probe_credentials_tier1,
     probe_credentials_tier3,
-    run_git,
+)
+from session_context_identity import (
+    run_git as run_git_identity,
+)
+from session_context_triggers import (
+    build_main_branch_warning,
+    build_pair_mode_resume,
+    is_on_main_branch,
+    is_on_protected_branch,
+    is_pair_mode_branch,
 )
 
 
-class TestRunGit:
+class TestRunGitIdentity:
     def test_returns_stripped_stdout_on_success(self):
         with patch.object(subprocess, "run") as mock_run:
             mock_run.return_value = MagicMock(returncode=0, stdout="  hello  \n")
-            result = run_git(["status"])
+            result = run_git_identity(["status"])
             assert result == "hello"
 
     def test_returns_none_on_nonzero_exit(self):
         with patch.object(subprocess, "run") as mock_run:
             mock_run.return_value = MagicMock(returncode=1, stdout="", stderr="error")
-            assert run_git(["status"]) is None
+            assert run_git_identity(["status"]) is None
 
     def test_returns_none_on_exception(self):
         with patch.object(subprocess, "run", side_effect=subprocess.SubprocessError):
-            assert run_git(["status"]) is None
+            assert run_git_identity(["status"]) is None
 
 
 class TestDetectPlatform:

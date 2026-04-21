@@ -8,10 +8,12 @@ Create issue with proper title format, labels, and byline after validation passe
 
 1. **Run after `pre-creation` validation passes.**
 2. **DO NOT skip validation.**
+3. **HALT if Step 0.5 dedup gate evidence is missing.**
 
 ## Entry Criteria
 
 - Pre-creation validation passed
+- Step 0.5 dedup gate evidence available (OR Step 0.75 runtime search fallback completed)
 - Single-task vs multi-task determination complete
 - User has authorized creation
 
@@ -23,6 +25,68 @@ Create issue with proper title format, labels, and byline after validation passe
 - Issue number available for sub-issue linking
 
 ## Procedure
+
+### Step 0.5: Dedup Evidence Gate
+
+**MANDATORY before proceeding to any creation step.**
+
+Verify that the `pre-creation` task's Step 0.5 title dedup gate was executed. This step MUST produce evidence that dedup was performed before the creation API call is allowed.
+
+**Required evidence (from `pre-creation` Step 0.5 output):**
+
+```
+Check: Title dedup gate for "<proposed title>"
+Tool: github_search_issues / gitbucket-api issues
+Result: [N candidates found, match levels classified]
+Classification: [EXACT-DUPLICATE|NEAR-DUPLICATE|CLOSED-IN-ERROR|RELATED-BUT-DISTINCT|FALSE-POSITIVE]
+Action: [auto-resolved strategy | proceed | HALT]
+```
+
+**Gate logic:**
+
+| Evidence Present? | Result Classified Non-Duplicate? | Action |
+|-------------------|----------------------------------|--------|
+| Yes | Yes | Proceed to Step 1 |
+| Yes | No (EXACT-DUPLICATE / NEAR-DUPLICATE) | HALT — do not create duplicate |
+| No | — | Proceed to Step 0.75 (runtime search fallback) |
+
+**If Step 0.5 evidence is missing and runtime search fallback (Step 0.75) also fails → HALT with:**
+
+```
+Cannot create issue: Step 0.5 dedup gate evidence missing. Run pre-creation task first.
+```
+
+### Step 0.75: Runtime Search Fallback
+
+**When Step 0.5 evidence is unavailable, perform a lightweight dedup search before allowing creation.**
+
+This fallback catches the scenario where `pre-creation` was not run or its output is not in the current session context.
+
+1. Extract significant keywords from the proposed title (remove stop words, prefixes like `[SPEC]`, `[SPEC-FIX]`, `[Task:]`)
+2. Search for existing issues via platform API:
+   - **GitHub:** `github_search_issues(query="<keywords> repo:<owner>/<repo>", owner=<owner>, repo=<repo>)`
+   - **GitBucket:** `./.opencode/tools/gitbucket-api issues --state open` + `--state closed` (filter client-side by keyword match)
+3. Collect candidate matches (issues whose titles share ≥2 significant keywords with proposed title)
+4. For each candidate, classify match level per `pre-creation.md` Step 0.5 Phase 2 classification table
+5. If any EXACT-DUPLICATE or NEAR-DUPLICATE found → HALT, report conflict
+6. If all candidates are RELATED-BUT-DISTINCT or FALSE-POSITIVE → generate runtime search evidence artifact, proceed to Step 1
+
+**Evidence artifact (MANDATORY):**
+
+```
+Check: Runtime search fallback for "<proposed title>"
+Tool: github_search_issues / gitbucket-api issues
+Result: [N candidates found, match levels classified]
+Classification: [EXACT-DUPLICATE|NEAR-DUPLICATE|CLOSED-IN-ERROR|RELATED-BUT-DISTINCT|FALSE-POSITIVE]
+Action: [HALT | proceed with runtime evidence]
+Fallthrough reason: Step 0.5 evidence unavailable
+```
+
+**If this fallback also fails (search API unavailable or returns error) → HALT with:**
+
+```
+Cannot create issue: Step 0.5 dedup gate evidence missing and runtime search fallback failed. Run pre-creation task first.
+```
 
 ### Step 1: Determine Title Format
 
@@ -91,6 +155,7 @@ Report: "Created issue #<number>. Next step: Invoke auditors before approval."
 
 Before proceeding, verify ALL:
 
+- Step 0.5 dedup evidence present OR Step 0.75 runtime search fallback completed
 - Pre-creation validation passed
 - Title follows proper format
 - `needs-approval` label applied
@@ -110,7 +175,7 @@ Before proceeding, verify ALL:
 
 | Claim | Verification Action | Tool Call | Problem Class |
 |-------|-------------------|-----------|---------------|
-| "Title dedup gate performed" | Verify dedup was run before creation | Check pre-creation output for Step 0.5 evidence | MISSING-ELEMENT |
+| "Title dedup gate performed" | Verify dedup was run before creation | Check pre-creation output for Step 0.5 evidence; if missing, run Step 0.75 runtime search fallback | MISSING-ELEMENT → HALT |
 | "Pre-creation validation passed" | Verify validation result exists | Check pre-creation output in session | MISSING-ELEMENT |
 | "No conflicting spec exists" | Search for overlapping issues | `github_search_issues(query="label:spec <keyword>")` | CONFLICTING |
 | "Title follows format" | Verify title prefix | Check `[SPEC]`, `[SPEC-FIX]`, `[SPEC-ENHANCEMENT]`, `[Task:` prefix | STRUCTURE-VIOLATION |
@@ -124,6 +189,8 @@ Before proceeding, verify ALL:
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
+| Step 0.5 dedup evidence missing | MISSING-ELEMENT | HALT | HALT — "Cannot create issue: Step 0.5 dedup gate evidence missing. Run pre-creation task first." |
+| Step 0.75 runtime search found duplicate | CONFLICTING | HALT | HALT — report duplicate, do not create |
 | Pre-creation not run | MISSING-ELEMENT | flag-for-review | HALT — run pre-creation first |
 | Conflicting spec found | CONFLICTING | flag-for-review | HALT — report conflict |
 | Wrong title format | STRUCTURE-VIOLATION | auto-fix | Correct title before creation |

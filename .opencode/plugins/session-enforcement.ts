@@ -121,20 +121,20 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
   }
 }
 
-let cachedContextOutput: string | null = null;
-let contextCacheTimestamp = 0;
+let cachedIdentityOutput: string | null = null;
+let identityCacheTimestamp = 0;
 
-async function runSessionContext($: PluginInput["$"]): Promise<string> {
-  if (cachedContextOutput && Date.now() - contextCacheTimestamp < CACHE_TTL_MS) {
-    return cachedContextOutput;
+async function runSessionContextIdentity($: PluginInput["$"]): Promise<string> {
+  if (cachedIdentityOutput && Date.now() - identityCacheTimestamp < CACHE_TTL_MS) {
+    return cachedIdentityOutput;
   }
 
   try {
-    const result = await $.nothrow()`./.opencode/scripts/session_context.py`;
+    const result = await $.nowrap()`./.opencode/scripts/session_context_identity.py`;
     const stdout = result.text();
 
     if (result.exitCode !== 0) {
-      console.error(`[session-enforcement] session_context.py exited with code ${result.exitCode}: ${result.stderr.toString()}`);
+      console.error(`[session-enforcement] session_context_identity.py exited with code ${result.exitCode}: ${result.stderr.toString()}`);
       return "";
     }
 
@@ -142,12 +142,43 @@ async function runSessionContext($: PluginInput["$"]): Promise<string> {
       return "";
     }
 
-    cachedContextOutput = stdout;
-    contextCacheTimestamp = Date.now();
+    cachedIdentityOutput = stdout;
+    identityCacheTimestamp = Date.now();
 
     return stdout;
   } catch (err) {
-    console.error("[session-enforcement] Failed to run session_context.py:", err);
+    console.error("[session-enforcement] Failed to run session_context_identity.py:", err);
+    return "";
+  }
+}
+
+let cachedTriggersOutput: string | null = null;
+let triggersCacheTimestamp = 0;
+
+async function runSessionContextTriggers($: PluginInput["$"]): Promise<string> {
+  if (cachedTriggersOutput && Date.now() - triggersCacheTimestamp < CACHE_TTL_MS) {
+    return cachedTriggersOutput;
+  }
+
+  try {
+    const result = await $.nothrow()`./.opencode/scripts/session_context_triggers.py`;
+    const stdout = result.text();
+
+    if (result.exitCode !== 0) {
+      console.error(`[session-enforcement] session_context_triggers.py exited with code ${result.exitCode}: ${result.stderr.toString()}`);
+      return "";
+    }
+
+    if (!stdout || stdout.trim().length === 0) {
+      return "";
+    }
+
+    cachedTriggersOutput = stdout;
+    triggersCacheTimestamp = Date.now();
+
+    return stdout;
+  } catch (err) {
+    console.error("[session-enforcement] Failed to run session_context_triggers.py:", err);
     return "";
   }
 }
@@ -261,28 +292,6 @@ function buildTrainingStalenessBlock(): string {
 
 This is a CRITICAL rule. Violations result in incorrect guidance and broken implementations.
 </TRAINING_STALENESS_CRITICAL>`;
-}
-
-function buildPlatformReportBlock(scriptOutput: string): string {
-  const platformMatch = scriptOutput.match(/^github\.platform:\s*(.+)$/m);
-  const ownerMatch = scriptOutput.match(/^github\.owner:\s*(.+)$/m);
-  const repoMatch = scriptOutput.match(/^github\.repo:\s*(.+)$/m);
-
-  const platform = platformMatch?.[1]?.trim() || "unknown";
-  const owner = ownerMatch?.[1]?.trim() || "unknown";
-  const repo = repoMatch?.[1]?.trim() || "unknown";
-
-  if (platform === "unknown" && owner === "unknown" && repo === "unknown") {
-    return "";
-  }
-
-  return `<PLATFORM_REPORT>
-At the very start of the session, before doing anything else, you MUST report the platform info to the user in this exact format on a single line:
-
-Platform: ${platform}, Org: ${owner}, Repo: ${repo}
-
-This is a mandatory startup report. Output this line before any other response.
-</PLATFORM_REPORT>`;
 }
 
 function buildWorktreeBlock(input: PluginInput): string {
@@ -542,6 +551,22 @@ Invoke relevant skills BEFORE any response or action. Even a 1% chance means inv
 </EXTREMELY_IMPORTANT>`;
 }
 
+function buildIdentityEchoDirective(): string {
+  return `<IDENTITY_ECHO>
+Before doing anything else, you MUST echo your platform identity as your very first output. Read the values from the system prompt dotted pairs (github.platform, github.owner, github.repo) and output them in this exact format:
+
+Platform: <platform>, Org: <owner>, Repo: <repo>
+🤖 <AgentName> (<ModelId>) <status-icon> <status>
+
+Example: Platform: github, Org: Brothertown-Language, Repo: snea-shoebox-editor
+🤖 OpenCode (ollama-cloud/glm-5) ✅ ready
+
+The directive does NOT contain actual values — you MUST read github.platform, github.owner, and github.repo from the system prompt dotted pairs above. This ensures you have read and acknowledged the correct owner/repo before making any API calls.
+
+After the identity echo, acknowledge any trigger warnings from the SESSION_TRIGGERS block above.
+</IDENTITY_ECHO>`;
+}
+
 export default async function sessionEnforcementPlugin(input: PluginInput): Promise<Hooks> {
   // Determine skills directory and project directory
   const projectDir = input?.directory || process.cwd();
@@ -559,14 +584,6 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       const scriptOutput = await runSessionInit(input.$);
       if (scriptOutput) {
         output.system.push(scriptOutput);
-      }
-
-      // Inject platform report block (instructs agent to report platform/org/repo at session start)
-      if (scriptOutput) {
-        const platformBlock = buildPlatformReportBlock(scriptOutput);
-        if (platformBlock) {
-          output.system.push(platformBlock);
-        }
       }
 
       // Inject worktree context when session is operating in a worktree
@@ -590,31 +607,48 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         output.system.push(warning);
       }
 
-      // Inject session context (identity + triggers) from session_context.py
-      const contextOutput = await runSessionContext(input.$);
-      if (contextOutput) {
-        output.system.push(contextOutput);
+      // Inject identity section from session_context_identity.py
+      const identityOutput = await runSessionContextIdentity(input.$);
+      if (identityOutput) {
+        output.system.push(identityOutput);
       }
     },
 
     // Inject enforcement content into first user message (adapted from obra/superpowers)
-    // AND detect bare #N issue references in last user message
-    "experimental.chat.messages.transform": async (_input, output) => {
-      if (!output.messages || !output.messages.length) return;
+      // AND detect bare #N issue references in last user message
+      // AND inject identity-echo directive + trigger warnings into first user message
+      "experimental.chat.messages.transform": async (_input, output) => {
+        if (!output.messages || !output.messages.length) return;
 
-      const userMessages = output.messages.filter(m => m.info?.role === "user");
-      if (!userMessages.length) return;
+        const userMessages = output.messages.filter(m => m.info?.role === "user");
+        if (!userMessages.length) return;
 
-      const firstUser = userMessages[0];
+        const firstUser = userMessages[0];
 
-      // --- Enforcement injection into FIRST user message ---
-      const enforcementContent = buildEnforcementContent(skillDescriptions);
-      if (enforcementContent && firstUser.parts?.length) {
-        if (!firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) {
-          const ref = firstUser.parts[0];
-          firstUser.parts.unshift({ ...ref, type: "text", text: enforcementContent });
+        // --- Enforcement injection into FIRST user message ---
+        const enforcementContent = buildEnforcementContent(skillDescriptions);
+        if (enforcementContent && firstUser.parts?.length) {
+          if (!firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) {
+            const ref = firstUser.parts[0];
+            firstUser.parts.unshift({ ...ref, type: "text", text: enforcementContent });
+          }
         }
-      }
+
+        // --- Identity-echo directive + trigger warnings injection into FIRST user message ---
+        const triggersOutput = await runSessionContextTriggers(input.$);
+        const identityBlock = buildIdentityEchoDirective();
+        const triggerBlock = triggersOutput ? `<SESSION_TRIGGERS>\n${triggersOutput}\n</SESSION_TRIGGERS>` : "";
+
+        const echoParts: string[] = [];
+        if (identityBlock) {
+          echoParts.push(identityBlock);
+        }
+        if (triggerBlock) {
+          echoParts.push(triggerBlock);
+        }
+        if (echoParts.length > 0 && firstUser.parts?.length) {
+          firstUser.parts.unshift({ type: "text", text: echoParts.join("\n\n") });
+        }
 
       // --- Bare issue pipeline detection on LAST user message ---
       const lastUser = userMessages[userMessages.length - 1];

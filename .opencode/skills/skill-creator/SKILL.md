@@ -150,6 +150,7 @@ If worktree.path is set, all file operations and git commands MUST use it as the
 The `validate` task (`quick_validate.py`) SHOULD check for:
 - Skills with `bash` or `git` operations that lack a "Worktree Mode" section
 - Skills that dispatch sub-agents but don't pass `worktree.path` in context
+- New or updated SKILL.md and task/*.md files containing 0-based counting patterns (`Step 0`, `Phase 0`, `Step 0.`, `Phase 0.`) outside of code blocks, code-fenced examples, or inline code references — flag as validation error requiring correction before skill can be approved
 
 **Rationale:** Sub-agents that don't receive worktree context silently modify the main repo instead of the feature branch. This is a context window safety issue (see #741).
 
