@@ -10,12 +10,14 @@ Usage: ./.opencode/tools/symbolic conflicts
 
 from __future__ import annotations
 import os as _os
+import subprocess
 import sys
 from dataclasses import dataclass
 from pathlib import Path
 
 IMPL_DIR = Path(__file__).resolve().parent
-BASE_DIR = IMPL_DIR.parent.parent.parent
+CDUP = subprocess.check_output(["git", "-C", str(IMPL_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+BASE_DIR = (IMPL_DIR / CDUP).resolve()
 
 from sympy import Symbol
 from sympy.logic.inference import satisfiable

@@ -32,15 +32,18 @@ if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     )
     __import__("sys").exit(1)
 import re
+import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+GUIDELINES_DIR = PROJECT_ROOT / ".opencode" / "guidelines"
 
 
 def _resolve_path(name: str) -> Path:
-    opencode_dir = BASE_DIR / ".opencode"
+    opencode_dir = PROJECT_ROOT / ".opencode"
     if len(name) == 3 and name.isdigit():
         matches = sorted(
             path for path in GUIDELINES_DIR.glob(f"{name}*.md") if path.is_file()

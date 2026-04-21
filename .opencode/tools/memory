@@ -14,7 +14,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 
 ACTIONS = {
     "read": "memory-read",
@@ -48,7 +50,7 @@ def main() -> None:
         print("Available actions:")
         seen_scripts: set[str] = set()
         for action, script in ACTIONS.items():
-            script_path = BASE_DIR / ".opencode" / "tools" / "impl" / script
+            script_path = PROJECT_ROOT / ".opencode" / "tools" / "impl" / script
             print(f"  {action:<20} → .opencode/tools/impl/{script}")
             if script not in seen_scripts:
                 seen_scripts.add(script)
@@ -93,7 +95,7 @@ def main() -> None:
                 file=sys.stderr,
             )
             sys.exit(1)
-    script = BASE_DIR / ".opencode" / "tools" / "impl" / ACTIONS[action]
+    script = PROJECT_ROOT / ".opencode" / "tools" / "impl" / ACTIONS[action]
     sys.exit(_run_action(script, args[1:], f"OK: .opencode/tools/memory {action} completed."))
 
 

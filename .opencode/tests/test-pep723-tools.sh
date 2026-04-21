@@ -142,6 +142,72 @@ check_no_python_imports() {
 
 check_no_python_imports
 
+check_no_depth_counting_root_resolution() {
+    local depth_matches
+    depth_matches=$(grep -rn 'Path(__file__).resolve().parent.parent' .opencode/tools/ 2>/dev/null || true)
+    if [ -n "$depth_matches" ]; then
+        echo "FAIL: Depth-counting Path.root resolution found (use git rev-parse --show-cdup per 210-scripting.md):"
+        echo "$depth_matches"
+        FAIL=$((FAIL + 1))
+    else
+        PASS=$((PASS + 1))
+    fi
+
+    local dirname_matches
+    dirname_matches=$(grep -rn 'os.path.dirname(os.path.dirname' .opencode/tools/ 2>/dev/null || true)
+    if [ -n "$dirname_matches" ]; then
+        echo "FAIL: Depth-counting os.path.dirname root resolution found (use git rev-parse --show-cdup per 210-scripting.md):"
+        echo "$dirname_matches"
+        FAIL=$((FAIL + 1))
+    else
+        PASS=$((PASS + 1))
+    fi
+
+    local script_files
+    script_files=$(find .opencode/tools -name '*.py' -o -type f -executable 2>/dev/null | grep -v '__pycache__' || true)
+    for sf in $script_files; do
+        [ -f "$sf" ] || continue
+        if grep -q 'Path(__file__).resolve().parent' "$sf"; then
+            if ! grep -q 'rev-parse.*--show-cdup' "$sf"; then
+                echo "FAIL: $sf uses Path(__file__).resolve().parent without git rev-parse --show-cdup"
+                FAIL=$((FAIL + 1))
+            else
+                PASS=$((PASS + 1))
+            fi
+        fi
+    done
+
+    local entry_scripts
+    entry_scripts=$(find .opencode/tools -maxdepth 1 -type f -executable 2>/dev/null || true)
+    for es in $entry_scripts; do
+        [ -f "$es" ] || continue
+        if grep -q 'Path(__file__).resolve().parent' "$es"; then
+            if ! grep -q 'rev-parse.*--show-cdup' "$es"; then
+                echo "FAIL: $es uses Path(__file__).resolve().parent without git rev-parse --show-cdup"
+                FAIL=$((FAIL + 1))
+            else
+                PASS=$((PASS + 1))
+            fi
+        fi
+    done
+
+    local impl_scripts
+    impl_scripts=$(find .opencode/tools/impl -type f 2>/dev/null || true)
+    for is in $impl_scripts; do
+        [ -f "$is" ] || continue
+        if grep -q 'Path(__file__).resolve().parent' "$is"; then
+            if ! grep -q 'rev-parse.*--show-cdup' "$is"; then
+                echo "FAIL: $is uses Path(__file__).resolve().parent without git rev-parse --show-cdup"
+                FAIL=$((FAIL + 1))
+            else
+                PASS=$((PASS + 1))
+            fi
+        fi
+    done
+}
+
+check_no_depth_counting_root_resolution
+
 echo ""
 echo "Results: $PASS passed, $FAIL failed"
 [ "$FAIL" -eq 0 ]
