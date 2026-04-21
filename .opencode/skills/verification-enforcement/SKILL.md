@@ -55,6 +55,8 @@ The verification domains represent the kinds of factual claims that content gene
 
 API signatures and function parameters are verified against live source code using `srclight_get_signature`, `srclight_get_symbol`, or direct file reads. Config schemas and environment variables are verified against schema definitions, `.env.example` files, or configuration documentation. Code behavior — what a function does, what it returns, how classes interact — is verified by reading source code or using `srclight_get_symbol` and `srclight_get_type_hierarchy`. Documentation references are verified by fetching the referenced document and confirming the claims match. External tool commands and flags are verified by running `--help` or checking official vendor documentation.
 
+**Attribution** — who performed an action — is verified against the source communication. When content states "completed by Person X" or "Person X did Y", the attribution must be traced to evidence: email From/Sender headers, GitHub commit authors, PR creators, issue comment authors, or explicit statements in the source material. Attribution evidence sources include: `github_issue_read(method=get)` for issue authors and commenters, `github_pull_request_read(method=get)` for PR creators, `srclight_blame_symbol` for commit authors, and direct file reads of email headers or forwarded messages. If the source does not explicitly state who did something, the agent must not attribute — it must either omit the name or write "completed per [reference]" without naming an individual. Inferring "who did what" from role proximity (e.g., "tech person → did the tech work") without source evidence is an attribution hallucination and is prohibited.
+
 The agent selects verification tools based on the domain, not by following a lookup table, but by reasoning about what evidence source would authoritatively confirm the claim. A claim about a Python function's parameters calls for `srclight_get_signature`; a claim about a CLI flag calls for running the command with `--help`; a claim about a GUI path calls for checking vendor documentation. When multiple sources are available, the most authoritative and most recent source wins.
 
 ## Enforcement Rules
@@ -67,7 +69,7 @@ The evidence artifact format is:
 
 ```
 Claim: <what the content asserts>
-Domain: <verification domain — API, config, code behavior, docs, CLI>
+Domain: <verification domain — API, config, code behavior, docs, CLI, attribution>
 Source: <tool call or document that provided the evidence>
 Verified: <yes|no>
 Marker: <if no, ⚠️ UNVERIFIED>

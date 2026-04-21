@@ -151,6 +151,25 @@ When replying to an existing email thread:
 2. **Match original structure.** If the original email uses HTML formatting, the reply MUST also use HTML formatting. Never downgrade an HTML thread to plain text.
 3. **Preserve thread context.** Include relevant context from the original email (quoted or summarized) in the reply.
 
+<<<<<<< HEAD
+=======
+### Attribution Verification (MANDATORY)
+
+When correspondence attributes an action to a person (e.g., "completed by Person X", "Person X renewed the domain"), the attribution MUST be verified against source evidence before inclusion. This is a specialized application of the verification-enforcement attribution domain to correspondence.
+
+**Attribution evidence sources:**
+
+| Source Type | Evidence Tool | What It Proves |
+|-------------|--------------|----------------|
+| Email From/Sender header | `read` on email file or source | Who sent the email |
+| GitHub commit author | `srclight_blame_symbol` or `github_list_commits` | Who committed the change |
+| PR creator | `github_pull_request_read(method=get)` | Who created the PR |
+| Issue comment author | `github_issue_read(method=get_comments)` | Who wrote the comment |
+| Explicit statement in source material | `read` or `grep` on source document | Who was named as performing the action |
+
+**Attribution rule:** If the source does not explicitly state who performed an action, the agent MUST NOT attribute — either omit the person's name entirely or write "completed per [reference]" without naming an individual. Inferring "who did what" from role proximity (e.g., "the tech person must have done the tech work") is prohibited.
+
+>>>>>>> spec/1097-fix
 ### Verification-Enforcement Integration (MANDATORY)
 
 The verification-enforcement skill applies to email correspondence the same way it applies to specs, plans, and runbooks:
@@ -171,6 +190,10 @@ After drafting email correspondence, the agent MUST validate against ALL of the 
 - [ ] Content is filtered by audience classification (internal vs. external)
 - [ ] No internal ops details appear in external-facing correspondence
 - [ ] No runbook paths, step numbers, internal IPs, or internal tool names in external content
+<<<<<<< HEAD
+=======
+- [ ] All person-action attributions verified against source evidence (no role-proximity inference)
+>>>>>>> spec/1097-fix
 - [ ] Verification-enforcement verify task was invoked before drafting
 - [ ] Verification-enforcement revisit task was invoked after self-review
 - [ ] All `⚠️ UNVERIFIED` markers resolved or escalated

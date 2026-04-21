@@ -54,12 +54,17 @@ SCENARIOS["correspondence-completion-task"]="Does .opencode/skills/correspondenc
 SCENARIOS["correspondence-html-template"]="Does .opencode/skills/correspondence/SKILL.md contain a text/html part template with proper HTML structural markup?"
 SCENARIOS["correspondence-internal-ops-leakage"]="Does .opencode/skills/correspondence/SKILL.md explicitly prohibit runbook paths, step numbers, internal IPs, and internal tool names in external-facing correspondence?"
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 SCENARIOS["ve-correspondence-mandatory"]="Does .opencode/skills/verification-enforcement/SKILL.md list correspondence in its Skill Invocation Enforcement section as a mandatory content-generating skill?"
 SCENARIOS["ve-plan-not-execution"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a Plan ≠ Execution Evidence Rule section with anti-pattern examples?"
 SCENARIOS["critical-rules-correspondence-ve"]="Does .opencode/guidelines/000-critical-rules.md explicitly mention correspondence and email drafting in the verification-enforcement critical violation section?"
 SCENARIOS["critical-rules-plan-not-execution"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Plan ≠ Execution or treating documentation as evidence of completion?"
 >>>>>>> spec/1095-fix
+=======
+SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an attribution verification domain that specifies evidence sources (email headers, commit authors, PR creators, issue comment authors) and prohibits role-proximity inference?"
+SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
+>>>>>>> spec/1097-fix
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -86,12 +91,17 @@ EXPECTED_SKILLS["correspondence-completion-task"]=""
 EXPECTED_SKILLS["correspondence-html-template"]=""
 EXPECTED_SKILLS["correspondence-internal-ops-leakage"]=""
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 EXPECTED_SKILLS["ve-correspondence-mandatory"]=""
 EXPECTED_SKILLS["ve-plan-not-execution"]=""
 EXPECTED_SKILLS["critical-rules-correspondence-ve"]=""
 EXPECTED_SKILLS["critical-rules-plan-not-execution"]=""
 >>>>>>> spec/1095-fix
+=======
+EXPECTED_SKILLS["ve-attribution-domain"]=""
+EXPECTED_SKILLS["correspondence-attribution-rule"]=""
+>>>>>>> spec/1097-fix
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -105,10 +115,14 @@ echo "" >> "$RESULTS_FILE"
 OVERALL_PASS=true
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage; do
 =======
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-correspondence-mandatory ve-plan-not-execution critical-rules-correspondence-ve critical-rules-plan-not-execution; do
 >>>>>>> spec/1095-fix
+=======
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule; do
+>>>>>>> spec/1097-fix
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -447,6 +461,7 @@ else
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 # Verify verification-enforcement SKILL.md lists correspondence as mandatory
 VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
@@ -456,10 +471,31 @@ if [ "$VE_CORR_COUNT" -ge 1 ]; then
 else
     echo "  verification-enforcement correspondence mandatory: MISSING"
     echo "- **verification-enforcement correspondence mandatory:** MISSING" >> "$RESULTS_FILE"
+=======
+# Verify verification-enforcement attribution domain
+VE_SKILL="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
+if [ -f "$VE_SKILL" ]; then
+    VE_ATTR_COUNT=$(grep -c "attribution" "$VE_SKILL" 2>/dev/null || echo "0")
+    VE_ROLE_PROX=$(grep -c "role proximity" "$VE_SKILL" 2>/dev/null || echo "0")
+    VE_EMAIL_HDR=$(grep -c "email.*header\|From.*Sender" "$VE_SKILL" 2>/dev/null || echo "0")
+    if [ "$VE_ATTR_COUNT" -ge 1 ] && [ "$VE_ROLE_PROX" -ge 1 ] && [ "$VE_EMAIL_HDR" -ge 1 ]; then
+        echo "  verification-enforcement attribution domain: FOUND"
+        echo "- **verification-enforcement attribution domain:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  verification-enforcement attribution domain: MISSING (attribution=$VE_ATTR_COUNT, role-proximity=$VE_ROLE_PROX, email-headers=$VE_EMAIL_HDR)"
+        echo "- **verification-enforcement attribution domain:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  verification-enforcement/SKILL.md: MISSING"
+    echo "- **verification-enforcement/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/1097-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 # Verify verification-enforcement SKILL.md has Plan ≠ Execution Evidence Rule
 VE_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|plan .≠. execution\|instructions were executed" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
 if [ "$VE_PLAN_EXEC" -ge 1 ]; then
@@ -492,6 +528,25 @@ if [ "$CR_PLAN_EXEC" -ge 1 ]; then
 else
     echo "  000-critical-rules.md Plan ≠ Execution section: MISSING"
     echo "- **000-critical-rules.md Plan ≠ Execution section:** MISSING" >> "$RESULTS_FILE"
+=======
+# Verify correspondence skill attribution rule
+CORR_SKILL="$PROJECT_DIR/.opencode/skills/correspondence/SKILL.md"
+if [ -f "$CORR_SKILL" ]; then
+    CORR_ATTR_COUNT=$(grep -c "Attribution Verification\|attribution.*verification" "$CORR_SKILL" 2>/dev/null || echo "0")
+    CORR_ROLE_PROX=$(grep -c "role proximity\|role-proximity" "$CORR_SKILL" 2>/dev/null || echo "0")
+    if [ "$CORR_ATTR_COUNT" -ge 1 ] && [ "$CORR_ROLE_PROX" -ge 1 ]; then
+        echo "  correspondence attribution verification rule: FOUND"
+        echo "- **correspondence attribution verification rule:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  correspondence attribution verification rule: MISSING (attribution=$CORR_ATTR_COUNT, role-proximity=$CORR_ROLE_PROX)"
+        echo "- **correspondence attribution verification rule:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  correspondence/SKILL.md: MISSING"
+    echo "- **correspondence/SKILL.md:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/1097-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
