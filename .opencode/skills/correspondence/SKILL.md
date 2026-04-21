@@ -39,9 +39,15 @@ Three distinct failures occur when drafting email correspondence without this sk
 
 2. **Format template REQUIRED.** Every email draft MUST use the multipart/alternative template defined in the `draft` task. No exceptions. The text/plain part uses the Summary/Outcome/byline format. The text/html part renders that same format in proper HTML with structural markup.
 
+<<<<<<< HEAD
 3. **Stakeholder content rules REQUIRED.** Content must be filtered through audience-awareness rules before inclusion. Internal ops details are PROHIBITED in external-facing correspondence.
 
 4. **Audience classification FIRST.** Before drafting, the agent MUST classify the audience as internal or external. This classification drives content filtering rules.
+=======
+3. **Audience separation REQUIRED.** Content must be filtered through the Audience Separation Principle (stakeholder tier vs. operator tier) before inclusion. Internal artifacts are PROHIBITED in stakeholder-tier correspondence.
+
+4. **Audience classification FIRST.** Before drafting, the agent MUST classify the audience using the Audience Separation Principle (stakeholder tier vs. operator tier). Default to stakeholder tier when audience is unclear or mixed.
+>>>>>>> spec/1099-fix
 
 5. **Verification gate AFTER drafting.** The agent MUST invoke `verification-enforcement --task revisit` after self-review. Any claims that could not be verified must be marked `⚠️ UNVERIFIED` and escalated to the developer.
 
@@ -102,9 +108,15 @@ The HTML part renders the same content with proper structural HTML markup:
 | Internal system names/identifiers | ⚠️ Include with context | 🚫 PROHIBITED — rephrase generically |
 | Error messages and stack traces | ✅ Include | 🚫 PROHIBITED — summarize impact only |
 
+<<<<<<< HEAD
 #### Prohibited Content in External-Facing Email
 
 The following content types are ABSOLUTELY PROHIBITED in emails to external stakeholders:
+=======
+#### Prohibited Content in Stakeholder-Tier Correspondence
+
+The following content types are ABSOLUTELY PROHIBITED in stakeholder-tier correspondence (external clients, customers, vendors, partners, internal executives):
+>>>>>>> spec/1099-fix
 
 - **Runbook file paths** (e.g., `docs/runbooks/videoconcerthall-dns-correction.md`)
 - **Step numbers from internal procedures** (e.g., "repeat Steps 2-6")
@@ -117,6 +129,7 @@ The following content types are ABSOLUTELY PROHIBITED in emails to external stak
 
 When a stakeholder email MUST reference technical details, rephrase them in stakeholder-relevant terms. Instead of "repeat Steps 2-6 of the runbook," say "the standard DNS correction procedure was applied." Instead of "parking IP 10.0.0.5," say "the registrar's parking page."
 
+<<<<<<< HEAD
 ### Audience-Awareness Rules (MANDATORY)
 
 Before drafting, the agent MUST classify the correspondence audience:
@@ -130,6 +143,28 @@ Before drafting, the agent MUST classify the correspondence audience:
 | Mixed (internal + external on same thread) | Conservative | Apply external rules — assume the most restrictive audience |
 
 **Conservative default rule:** When the audience is mixed or unclear, apply external-stakeholder rules. It is always safer to under-share than to leak internal details.
+=======
+### Audience Separation Principle (MANDATORY)
+
+All generated content has an implicit audience. The agent MUST identify the audience before generating content and filter information accordingly. Two tiers exist:
+
+- **Stakeholder tier:** Outcome-focused. What changed, what is the current state, what remains. No internal artifacts — runbook paths, step numbers, internal IPs (unless the IPs are the subject of the report), file paths, debugging output, internal documentation references, internal tool names, configuration paths, CLI commands for internal operations.
+- **Operator tier:** Procedure-focused. Full runbook references, step numbers, exact IPs, verification commands, rollback procedures, internal tool names, configuration paths, CLI commands.
+
+**Default:** When the audience is not explicitly stated, assume stakeholder tier. Only escalate to operator tier when the communication is explicitly between ops team members or the recipient asks for operator-level detail.
+
+#### Audience Classification Table
+
+| Audience | Tier | Content Level |
+|----------|------|---------------|
+| External client or customer | Stakeholder | Outcome-only: what happened, what was fixed, current state |
+| External vendor or partner | Stakeholder | Outcome-only: relevant facts about the interaction only |
+| Internal team members | Operator | Full context: technical details, commands, internal references |
+| Internal stakeholders (execs, managers) | Stakeholder | Business-level context: outcomes, timelines, decisions needed |
+| Mixed (internal + external on same thread) | Stakeholder | Apply stakeholder tier — assume the most restrictive audience |
+
+**Conservative default rule:** When the audience is mixed or unclear, apply stakeholder tier. It is always safer to under-share than to leak internal details. Escalating to operator tier requires explicit authorization — either the communication is clearly between ops team members, or the recipient has explicitly requested operator-level detail.
+>>>>>>> spec/1099-fix
 
 ### AI Byline Rule (MANDATORY)
 
@@ -144,6 +179,7 @@ The AI byline is MANDATORY in ALL correspondence produced by this skill. It MUST
 The byline MUST NOT be removed on subsequent edits.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 ### Matching Original Format (MANDATORY)
 
 When replying to an existing email thread:
@@ -155,6 +191,8 @@ When replying to an existing email thread:
 <<<<<<< HEAD
 =======
 =======
+=======
+>>>>>>> spec/1099-fix
 ### Content-Type Propagation (MANDATORY)
 
 When generating a reply to existing communication, the output format MUST match the source communication's content type. This is a **verification step**, not a formatting preference — the agent MUST inspect the content type of the source before drafting the reply.
@@ -178,7 +216,10 @@ When generating a reply to existing communication, the output format MUST match 
 3. **Never downgrade.** If the source uses HTML, the reply MUST include HTML. Never downgrade an HTML thread to plain text with markdown syntax.
 4. **Preserve thread context.** Include relevant context from the original communication (quoted or summarized) in the reply.
 
+<<<<<<< HEAD
 >>>>>>> spec/1098-fix
+=======
+>>>>>>> spec/1099-fix
 ### Attribution Verification (MANDATORY)
 
 When correspondence attributes an action to a person (e.g., "completed by Person X", "Person X renewed the domain"), the attribution MUST be verified against source evidence before inclusion. This is a specialized application of the verification-enforcement attribution domain to correspondence.
@@ -196,9 +237,12 @@ When correspondence attributes an action to a person (e.g., "completed by Person
 **Attribution rule:** If the source does not explicitly state who performed an action, the agent MUST NOT attribute — either omit the person's name entirely or write "completed per [reference]" without naming an individual. Inferring "who did what" from role proximity (e.g., "the tech person must have done the tech work") is prohibited.
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> spec/1097-fix
 =======
 >>>>>>> spec/1098-fix
+=======
+>>>>>>> spec/1099-fix
 ### Verification-Enforcement Integration (MANDATORY)
 
 The verification-enforcement skill applies to email correspondence the same way it applies to specs, plans, and runbooks:
@@ -213,6 +257,7 @@ After drafting email correspondence, the agent MUST validate against ALL of the 
 
 - [ ] Both text/plain and text/html parts are present
 - [ ] HTML part uses proper structural markup (no markdown syntax in email body)
+<<<<<<< HEAD
 <<<<<<< HEAD
 =======
 - [ ] Content-type propagation verified: source Content-Type header inspected before drafting, reply format matches source format
@@ -232,6 +277,17 @@ After drafting email correspondence, the agent MUST validate against ALL of the 
 =======
 - [ ] All person-action attributions verified against source evidence (no role-proximity inference)
 >>>>>>> spec/1098-fix
+=======
+- [ ] Content-type propagation verified: source Content-Type header inspected before drafting, reply format matches source format
+- [ ] No markdown syntax in email body unless source email uses markdown
+- [ ] Summary section is 1-2 sentences maximum
+- [ ] Outcome section states what changed for stakeholders
+- [ ] AI byline appears in both text/plain and text/html parts
+- [ ] Content is filtered by audience classification (stakeholder vs. operator tier per Audience Separation Principle)
+- [ ] No internal ops details appear in stakeholder-tier correspondence
+- [ ] No runbook paths, step numbers, internal IPs, or internal tool names in stakeholder-tier content
+- [ ] All person-action attributions verified against source evidence (no role-proximity inference)
+>>>>>>> spec/1099-fix
 - [ ] Verification-enforcement verify task was invoked before drafting
 - [ ] Verification-enforcement revisit task was invoked after self-review
 - [ ] All `⚠️ UNVERIFIED` markers resolved or escalated

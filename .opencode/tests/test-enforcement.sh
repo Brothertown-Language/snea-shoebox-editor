@@ -56,6 +56,7 @@ SCENARIOS["correspondence-internal-ops-leakage"]="Does .opencode/skills/correspo
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 SCENARIOS["ve-correspondence-mandatory"]="Does .opencode/skills/verification-enforcement/SKILL.md list correspondence in its Skill Invocation Enforcement section as a mandatory content-generating skill?"
 SCENARIOS["ve-plan-not-execution"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a Plan ≠ Execution Evidence Rule section with anti-pattern examples?"
@@ -67,11 +68,19 @@ SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforceme
 SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
 >>>>>>> spec/1097-fix
 =======
+=======
+>>>>>>> spec/1099-fix
 SCENARIOS["ve-attribution-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an attribution verification domain that specifies evidence sources (email headers, commit authors, PR creators, issue comment authors) and prohibits role-proximity inference?"
 SCENARIOS["correspondence-attribution-rule"]="Does .opencode/skills/correspondence/SKILL.md contain an Attribution Verification section that requires source evidence for person-action attributions and prohibits role-proximity inference?"
 SCENARIOS["correspondence-content-type-propagation"]="Does .opencode/skills/correspondence/SKILL.md contain a Content-Type Propagation section that requires inspecting the source communication's content type before drafting a reply and matching the reply format to the source format?"
 SCENARIOS["ve-content-type-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a content-type propagation verification domain that specifies inspecting source Content-Type headers before drafting replies?"
+<<<<<<< HEAD
 >>>>>>> spec/1098-fix
+=======
+SCENARIOS["correspondence-audience-separation"]="Does .opencode/skills/correspondence/SKILL.md contain an Audience Separation Principle section with stakeholder and operator tiers and a default to stakeholder tier?"
+SCENARIOS["ve-audience-separation-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an audience separation verification domain that scans for internal artifacts in stakeholder-tier content?"
+SCENARIOS["critical-rules-audience-separation"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Audience Separation that leaks internal artifacts to stakeholders?"
+>>>>>>> spec/1099-fix
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -100,6 +109,7 @@ EXPECTED_SKILLS["correspondence-internal-ops-leakage"]=""
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 EXPECTED_SKILLS["ve-correspondence-mandatory"]=""
 EXPECTED_SKILLS["ve-plan-not-execution"]=""
@@ -111,11 +121,19 @@ EXPECTED_SKILLS["ve-attribution-domain"]=""
 EXPECTED_SKILLS["correspondence-attribution-rule"]=""
 >>>>>>> spec/1097-fix
 =======
+=======
+>>>>>>> spec/1099-fix
 EXPECTED_SKILLS["ve-attribution-domain"]=""
 EXPECTED_SKILLS["correspondence-attribution-rule"]=""
 EXPECTED_SKILLS["correspondence-content-type-propagation"]=""
 EXPECTED_SKILLS["ve-content-type-domain"]=""
+<<<<<<< HEAD
 >>>>>>> spec/1098-fix
+=======
+EXPECTED_SKILLS["correspondence-audience-separation"]=""
+EXPECTED_SKILLS["ve-audience-separation-domain"]=""
+EXPECTED_SKILLS["critical-rules-audience-separation"]=""
+>>>>>>> spec/1099-fix
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -131,6 +149,7 @@ OVERALL_PASS=true
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage; do
 =======
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-correspondence-mandatory ve-plan-not-execution critical-rules-correspondence-ve critical-rules-plan-not-execution; do
@@ -141,6 +160,9 @@ for scenario_name in bug-report create-spec simple-question implement-request po
 =======
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule correspondence-content-type-propagation ve-content-type-domain; do
 >>>>>>> spec/1098-fix
+=======
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule correspondence-content-type-propagation ve-content-type-domain correspondence-audience-separation ve-audience-separation-domain critical-rules-audience-separation; do
+>>>>>>> spec/1099-fix
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -481,6 +503,7 @@ fi
 
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Verify verification-enforcement SKILL.md lists correspondence as mandatory
 VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
@@ -493,6 +516,8 @@ else
 =======
 =======
 >>>>>>> spec/1098-fix
+=======
+>>>>>>> spec/1099-fix
 # Verify verification-enforcement attribution domain
 VE_SKILL="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 if [ -f "$VE_SKILL" ]; then
@@ -512,13 +537,17 @@ else
     echo "  verification-enforcement/SKILL.md: MISSING"
     echo "- **verification-enforcement/SKILL.md:** MISSING" >> "$RESULTS_FILE"
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> spec/1097-fix
 =======
 >>>>>>> spec/1098-fix
+=======
+>>>>>>> spec/1099-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 # Verify verification-enforcement SKILL.md has Plan ≠ Execution Evidence Rule
@@ -556,6 +585,8 @@ else
 =======
 =======
 >>>>>>> spec/1098-fix
+=======
+>>>>>>> spec/1099-fix
 # Verify correspondence skill attribution rule
 CORR_SKILL="$PROJECT_DIR/.opencode/skills/correspondence/SKILL.md"
 if [ -f "$CORR_SKILL" ]; then
@@ -574,8 +605,11 @@ else
     echo "  correspondence/SKILL.md: MISSING"
     echo "- **correspondence/SKILL.md:** MISSING" >> "$RESULTS_FILE"
 <<<<<<< HEAD
+<<<<<<< HEAD
 >>>>>>> spec/1097-fix
 =======
+=======
+>>>>>>> spec/1099-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
@@ -617,7 +651,71 @@ if [ -f "$VE_SKILL" ]; then
 else
     echo "  verification-enforcement/SKILL.md: MISSING (for content-type check)"
     echo "- **verification-enforcement/SKILL.md:** MISSING (for content-type check)" >> "$RESULTS_FILE"
+<<<<<<< HEAD
 >>>>>>> spec/1098-fix
+=======
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify correspondence audience separation principle
+if [ -f "$CORR_SKILL" ]; then
+    AUD_SEP_PRINCIPLE=$(grep -c "Audience Separation Principle" "$CORR_SKILL" 2>/dev/null || echo "0")
+    AUD_SEP_STAKEHOLDER=$(grep -c "Stakeholder tier\|stakeholder tier" "$CORR_SKILL" 2>/dev/null || echo "0")
+    AUD_SEP_OPERATOR=$(grep -c "Operator tier\|operator tier" "$CORR_SKILL" 2>/dev/null || echo "0")
+    AUD_SEP_DEFAULT=$(grep -c "assume stakeholder\|default.*stakeholder" "$CORR_SKILL" 2>/dev/null || echo "0")
+    if [ "$AUD_SEP_PRINCIPLE" -ge 1 ] && [ "$AUD_SEP_STAKEHOLDER" -ge 1 ] && [ "$AUD_SEP_OPERATOR" -ge 1 ] && [ "$AUD_SEP_DEFAULT" -ge 1 ]; then
+        echo "  correspondence audience separation principle: FOUND"
+        echo "- **correspondence audience separation principle:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  correspondence audience separation principle: MISSING (principle=$AUD_SEP_PRINCIPLE, stakeholder=$AUD_SEP_STAKEHOLDER, operator=$AUD_SEP_OPERATOR, default=$AUD_SEP_DEFAULT)"
+        echo "- **correspondence audience separation principle:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  correspondence/SKILL.md: MISSING (for audience separation check)"
+    echo "- **correspondence/SKILL.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify VE audience separation domain
+if [ -f "$VE_SKILL" ]; then
+    VE_AUD_SEP=$(grep -c "audience separation\|Audience Separation\|audience-tier\|stakeholder-tier" "$VE_SKILL" 2>/dev/null || echo "0")
+    VE_INTERNAL_ARTIFACTS=$(grep -c "internal artifact\|runbook path\|step number" "$VE_SKILL" 2>/dev/null || echo "0")
+    if [ "$VE_AUD_SEP" -ge 1 ] && [ "$VE_INTERNAL_ARTIFACTS" -ge 1 ]; then
+        echo "  verification-enforcement audience separation domain: FOUND"
+        echo "- **verification-enforcement audience separation domain:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  verification-enforcement audience separation domain: MISSING (aud_sep=$VE_AUD_SEP, artifacts=$VE_INTERNAL_ARTIFACTS)"
+        echo "- **verification-enforcement audience separation domain:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  verification-enforcement/SKILL.md: MISSING (for audience separation check)"
+    echo "- **verification-enforcement/SKILL.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify 000-critical-rules.md audience separation violation section
+if [ -f "$CRITICAL_RULES_FILE" ]; then
+    CR_AUD_SEP=$(grep -c "Audience Separation\|audience separation\|Leaking Internal Artifacts\|leaking internal artifacts" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+    if [ "$CR_AUD_SEP" -ge 1 ]; then
+        echo "  000-critical-rules.md audience separation section: FOUND"
+        echo "- **000-critical-rules.md audience separation section:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  000-critical-rules.md audience separation section: MISSING"
+        echo "- **000-critical-rules.md audience separation section:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  000-critical-rules.md: MISSING (for audience separation check)"
+    echo "- **000-critical-rules.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
+>>>>>>> spec/1099-fix
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

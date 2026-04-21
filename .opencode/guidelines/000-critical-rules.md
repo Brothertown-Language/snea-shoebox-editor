@@ -138,6 +138,17 @@ A plan describes what should be done. Execution evidence confirms what was done.
 - 🚫 FORBIDDEN: Citing a runbook, checklist, or procedure document as evidence that a task was completed; asserting "DNS updated" because correction steps exist in a runbook; claiming "deployment complete" because CI configuration is present; writing "done" or "complete" in correspondence without live-verification tool calls confirming the claimed state
 - ✅ REQUIRED: Verify claimed states against live data before asserting them in any content; use `dig`, `curl`, CLI queries, or other live-verification tools to confirm system state; collect evidence artifacts from live sources, not from procedural documentation; treat "there is a plan for X" and "X was executed" as distinct claims requiring distinct evidence
 
+## Critical Violation: Audience Separation — Leaking Internal Artifacts to Stakeholders
+
+**⚠️ Including internal operations artifacts in stakeholder-facing correspondence is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `correspondence` skill → "Audience Separation Principle" for the complete two-tier model (stakeholder vs operator) and prohibited content list. See `verification-enforcement` skill → `revisit` task → "Audience Separation Check" for the post-generation filtering procedure.** **AUTHORITY: `correspondence` skill Audience Separation Principle**
+
+The audience separation principle requires that the agent identify the audience tier before generating content and filter information accordingly. Stakeholder-tier content must not include internal artifacts: runbook paths, step numbers, internal IP addresses, file paths, configuration paths, internal tool names, CLI commands, debugging output, or internal documentation references.
+
+- 🚫 FORBIDDEN: Including runbook paths in stakeholder-facing emails; referencing step numbers from internal procedures in external communications; exposing internal IP addresses (unless subject of report); including internal file paths or configuration paths in stakeholder content; mentioning internal tool or script names in external communications; failing to classify audience tier before drafting correspondence; defaulting to operator tier without explicit authorization
+- ✅ REQUIRED: Classify audience as stakeholder or operator tier before generating correspondence content; default to stakeholder tier when audience is unclear or mixed; filter all stakeholder-tier content for internal artifacts during the revisit pass; rephrase internal artifacts in stakeholder-relevant terms (e.g., "the standard DNS correction procedure" instead of "Steps 2-6 of the runbook"); escalate to operator tier only when communication is explicitly between ops team members or recipient requests operator-level detail
+
 ## Critical Violation: Acting on Resources Without Reading All Comments
 
 **⚠️ Acting on a GitHub/GitBucket resource without reading ALL comments is a CRITICAL GUIDELINE VIOLATION.**

@@ -49,12 +49,16 @@ For email correspondence, the verification domains are:
 | Quoted content from original email | Verify original email content matches | `read` original email file |
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 | Person-action attribution (who did what) | Verify against email headers, commit authors, PR/issue creators, or explicit source statements | `read` email headers, `srclight_blame_symbol`, `github_pull_request_read`, `github_issue_read` |
 >>>>>>> spec/1097-fix
 =======
 | Person-action attribution (who did what) | Verify against email headers, commit authors, PR/issue creators, or explicit source statements | `read` email headers, `srclight_blame_symbol`, `github_pull_request_read`, `github_issue_read` |
 >>>>>>> spec/1098-fix
+=======
+| Person-action attribution (who did what) | Verify against email headers, commit authors, PR/issue creators, or explicit source statements | `read` email headers, `srclight_blame_symbol`, `github_pull_request_read`, `github_issue_read` |
+>>>>>>> spec/1099-fix
 
 **Evidence artifacts must be collected before drafting proceeds.**
 
@@ -166,12 +170,16 @@ After drafting, validate against ALL of the following:
 - [ ] No runbook paths, step numbers, internal IPs, or internal tool names in external content
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 - [ ] All person-action attributions verified against source evidence (no role-proximity inference)
 >>>>>>> spec/1097-fix
 =======
 - [ ] All person-action attributions verified against source evidence (no role-proximity inference)
 >>>>>>> spec/1098-fix
+=======
+- [ ] All person-action attributions verified against source evidence (no role-proximity inference)
+>>>>>>> spec/1099-fix
 - [ ] Original email format matched (multipart reply to multipart, etc.)
 - [ ] Email thread context preserved (quoted or summarized)
 
@@ -207,6 +215,7 @@ Present the completed email draft to the calling context with:
 | Agent drafted on behalf of user | Use "on behalf of" byline format |
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 =======
 | Attribution uncertain (who did what) | Omit the person's name or write "completed per [reference]" without naming an individual — never infer from role proximity |
 | Source contradicts assumed attribution | Use the source evidence, not the assumption — correct the attribution or omit it |
@@ -215,6 +224,10 @@ Present the completed email draft to the calling context with:
 | Attribution uncertain (who did what) | Omit the person's name or write "completed per [reference]" without naming an individual — never infer from role proximity |
 | Source contradicts assumed attribution | Use the source evidence, not the assumption — correct the attribution or omit it |
 >>>>>>> spec/1098-fix
+=======
+| Attribution uncertain (who did what) | Omit the person's name or write "completed per [reference]" without naming an individual — never infer from role proximity |
+| Source contradicts assumed attribution | Use the source evidence, not the assumption — correct the attribution or omit it |
+>>>>>>> spec/1099-fix
 
 ## Context Required
 

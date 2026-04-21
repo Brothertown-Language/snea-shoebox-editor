@@ -26,6 +26,26 @@ If claims remain unverifiable after the revisit pass, the agent must not remove 
 
 The revisit pass is the safety net that catches what the initial verify pass missed. It exists because some verifications only become possible after the content exists in full context, and because a second attempt with different tools or queries sometimes succeeds where the first failed.
 
+## Audience Separation Check
+
+After scanning for `⚠️ UNVERIFIED` markers, the revisit pass MUST also scan generated content for audience separation violations. This check enforces the correspondence skill's Audience Separation Principle and Prohibited Content rules:
+
+1. **Identify audience tier.** Determine whether the content is stakeholder-tier or operator-tier based on the correspondence skill's audience classification table.
+2. **Scan for internal artifacts in stakeholder-tier content.** If the content is classified as stakeholder-tier, check for the following operator-tier artifacts:
+   - Runbook paths (e.g., `docs/runbooks/...`)
+   - Step numbers from internal procedures (e.g., "Steps 2-6")
+   - Internal IP addresses (unless the IPs are the subject of the report)
+   - Internal file paths (e.g., `/etc/nginx/sites-available/...`)
+   - Configuration paths
+   - Internal tool or script names (e.g., `sync-dns.sh`, `deploy-stack.yml`)
+   - CLI commands for internal operations (e.g., `systemctl restart nginx`)
+   - Debugging output
+   - Internal documentation references
+3. **Rephrase or remove.** When an internal artifact appears in stakeholder-tier content, rephrase it in stakeholder-relevant terms. Instead of "repeat Steps 2-6 of the runbook," write "the standard DNS correction procedure was applied." Instead of "parking IP 10.0.0.5," write "the registrar's parking page."
+4. **Flag unresolved violations.** If an internal artifact cannot be rephrased without losing essential meaning, mark it with `⚠️ AUDIENCE-SEPARATION` and escalate to the developer.
+
+The audience separation check is mandatory for all correspondence content and for any content where the audience has been classified as stakeholder-tier.
+
 ## Context Required
 
 - Invoked by: content-generating skills after their self-review or quality-check step
