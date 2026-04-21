@@ -122,10 +122,21 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 **See `verification-enforcement` skill for the complete procedural workflow including section-based sub-agent dispatch, evidence artifact collection, unverified marker resolution, and escalation procedure.** **AUTHORITY: `verification-enforcement` skill** (this line is a reference only)
 
-Content generation — producing specs, plans, runbooks, documentation, or correspondence — must pass through the verification-enforcement gate before and after generation. This gate ensures that every factual claim in generated content is backed by evidence artifacts collected from live sources. Skipping the gate means content ships with unverified claims, which is the generative equivalent of reporting memory as verified.
+Content generation — producing specs, plans, runbooks, documentation, or correspondence (including emails and stakeholder communications) — must pass through the verification-enforcement gate before and after generation. This gate ensures that every factual claim in generated content is backed by evidence artifacts collected from live sources. Skipping the gate means content ships with unverified claims, which is the generative equivalent of reporting memory as verified. Correspondence and email drafting are not exempt from this gate — they are content-generating workflows that make factual claims about system state, project status, or completed actions, and those claims require the same live-source verification as specs and plans.
 
-- 🚫 FORBIDDEN: Generating content without invoking `verification-enforcement --task verify` first; skipping the `revisit` task after generation; accepting sub-agent output without evidence artifacts; removing `⚠️ UNVERIFIED` markers without verification; treating verification-enforcement as optional for "small" content
-- ✅ REQUIRED: Invoke `verification-enforcement --task verify` before content generation; invoke `verification-enforcement --task revisit` after self-review; require evidence artifacts for all factual claims; escalate unresolvable claims to the developer
+- 🚫 FORBIDDEN: Generating content without invoking `verification-enforcement --task verify` first; skipping the `revisit` task after generation; accepting sub-agent output without evidence artifacts; removing `⚠️ UNVERIFIED` markers without verification; treating verification-enforcement as optional for "small" content; treating email/correspondence drafting as exempt from the verification gate; claiming a task is "complete" or "done" in correspondence without live-verification tool calls confirming the claimed state
+- ✅ REQUIRED: Invoke `verification-enforcement --task verify` before content generation (including emails and correspondence); invoke `verification-enforcement --task revisit` after self-review; require evidence artifacts for all factual claims; escalate unresolvable claims to the developer; verify claimed states against live data before asserting them in correspondence
+
+## Critical Violation: Plan ≠ Execution — Treating Documentation as Evidence of Completion
+
+**⚠️ Treating the existence of a runbook, plan, or set of instructions as evidence that the instructions were executed is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `verification-enforcement` skill → "Plan ≠ Execution Evidence Rule" for the complete rule, anti-pattern table, and evidence requirements.** **AUTHORITY: `verification-enforcement` skill Plan ≠ Execution Evidence Rule** (this line is a reference only)
+
+A plan describes what should be done. Execution evidence confirms what was done. These are fundamentally different sources. Conflating them leads to correspondence hallucination — claiming tasks are complete based on the existence of instructions rather than live verification of the resulting state.
+
+- 🚫 FORBIDDEN: Citing a runbook, checklist, or procedure document as evidence that a task was completed; asserting "DNS updated" because correction steps exist in a runbook; claiming "deployment complete" because CI configuration is present; writing "done" or "complete" in correspondence without live-verification tool calls confirming the claimed state
+- ✅ REQUIRED: Verify claimed states against live data before asserting them in any content; use `dig`, `curl`, CLI queries, or other live-verification tools to confirm system state; collect evidence artifacts from live sources, not from procedural documentation; treat "there is a plan for X" and "X was executed" as distinct claims requiring distinct evidence
 
 ## Critical Violation: Acting on Resources Without Reading All Comments
 

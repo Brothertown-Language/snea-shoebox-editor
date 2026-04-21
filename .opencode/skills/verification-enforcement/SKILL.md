@@ -77,11 +77,27 @@ The unverified marker format is `⚠️ UNVERIFIED`, placed inline after the cla
 
 ## Skill Invocation Enforcement
 
-Skills that generate content must invoke verification-enforcement. The content-generating skills in this codebase include: `spec-creation` (its `write` task), `writing-plans` (its `create` task), `sre-runbook` (its `generate` task), and `skill-creator` (when creating or updating skill files). Each of these must add `verification-enforcement --task verify` before their content-generation step and `verification-enforcement --task revisit` after their quality-check step.
+Skills that generate content must invoke verification-enforcement. The content-generating skills in this codebase include: `spec-creation` (its `write` task), `writing-plans` (its `create` task), `sre-runbook` (its `generate` task), `skill-creator` (when creating or updating skill files), and `correspondence` (its `draft` task). Each of these must add `verification-enforcement --task verify` before their content-generation step and `verification-enforcement --task revisit` after their quality-check step.
 
 Additionally, `spec-auditor` gains a prose-structure audit subtask that checks generated specs and plans for anti-prose drift — rigid enumeration where prose is expected, tabular structure that should be prose description, and fixed checklists that replace flowing narrative. Findings from this subtask are classified as STRUCTURE-VIOLATION with auto-fix classification, since mechanical rewriting from structure to prose is safe.
 
 The invocation flow for a content-generating skill is: `verification-enforcement --task verify` → content generation steps → self-review or quality-check → `verification-enforcement --task revisit` → output. The verify and revisit tasks are bookends around the content generation, not replacements for the skill's own quality checks.
+
+## Plan ≠ Execution Evidence Rule
+
+The existence of a runbook, plan, or set of instructions is **never** evidence that the instructions were executed. Content claiming a task is "complete" or "done" requires evidence of execution — live system state, tool output, or developer confirmation — not the existence of documentation describing what should be done. This distinction is critical because an agent that conflates "there is a plan" with "the plan was executed" will ship false claims in correspondence and reports, presenting instructions as completed actions.
+
+When verifying a claim that something was completed or is in a specific state, the evidence artifact must come from a live verification source — a tool call that queries the current state, a developer's explicit confirmation, or a log showing the action was performed. A runbook, checklist, or procedural document is evidence of **intent**, not evidence of **execution**.
+
+**Anti-pattern examples:**
+
+| Claim | Insufficient Evidence (plan, not execution) | Sufficient Evidence (execution, not plan) |
+| -- | -- | -- |
+| "DNS records updated" | Runbook exists with correction steps | `dig` output shows correct records |
+| "Deployment complete" | CI pipeline configuration present | CI run log shows successful deployment |
+| "Database migrated" | Migration script in repository | `SHOW TABLES` or migration status query confirms applied |
+| "Configuration corrected" | Correct config values documented in spec | Live query of config endpoint returns correct values |
+| "Email sent to stakeholders" | Draft email in correspondence log | Sent-mail folder or delivery receipt confirms transmission |
 
 ## Cross-References
 

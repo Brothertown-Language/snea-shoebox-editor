@@ -53,6 +53,13 @@ SCENARIOS["correspondence-draft-task"]="Does .opencode/skills/correspondence/tas
 SCENARIOS["correspondence-completion-task"]="Does .opencode/skills/correspondence/tasks/completion.md exist with a State Check Phase and Format Verification Before Halt checklist?"
 SCENARIOS["correspondence-html-template"]="Does .opencode/skills/correspondence/SKILL.md contain a text/html part template with proper HTML structural markup?"
 SCENARIOS["correspondence-internal-ops-leakage"]="Does .opencode/skills/correspondence/SKILL.md explicitly prohibit runbook paths, step numbers, internal IPs, and internal tool names in external-facing correspondence?"
+<<<<<<< HEAD
+=======
+SCENARIOS["ve-correspondence-mandatory"]="Does .opencode/skills/verification-enforcement/SKILL.md list correspondence in its Skill Invocation Enforcement section as a mandatory content-generating skill?"
+SCENARIOS["ve-plan-not-execution"]="Does .opencode/skills/verification-enforcement/SKILL.md contain a Plan ≠ Execution Evidence Rule section with anti-pattern examples?"
+SCENARIOS["critical-rules-correspondence-ve"]="Does .opencode/guidelines/000-critical-rules.md explicitly mention correspondence and email drafting in the verification-enforcement critical violation section?"
+SCENARIOS["critical-rules-plan-not-execution"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Plan ≠ Execution or treating documentation as evidence of completion?"
+>>>>>>> spec/1095-fix
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -78,6 +85,13 @@ EXPECTED_SKILLS["correspondence-draft-task"]=""
 EXPECTED_SKILLS["correspondence-completion-task"]=""
 EXPECTED_SKILLS["correspondence-html-template"]=""
 EXPECTED_SKILLS["correspondence-internal-ops-leakage"]=""
+<<<<<<< HEAD
+=======
+EXPECTED_SKILLS["ve-correspondence-mandatory"]=""
+EXPECTED_SKILLS["ve-plan-not-execution"]=""
+EXPECTED_SKILLS["critical-rules-correspondence-ve"]=""
+EXPECTED_SKILLS["critical-rules-plan-not-execution"]=""
+>>>>>>> spec/1095-fix
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -90,7 +104,11 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
+<<<<<<< HEAD
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage; do
+=======
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-correspondence-mandatory ve-plan-not-execution critical-rules-correspondence-ve critical-rules-plan-not-execution; do
+>>>>>>> spec/1095-fix
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -425,6 +443,55 @@ if [ "$SCOPE_STEP05" -ge 1 ]; then
 else
     echo "  verify-authorization Step 0.5 scope auto-resolve: MISSING"
     echo "- **verify-authorization Step 0.5 scope auto-resolve:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify verification-enforcement SKILL.md lists correspondence as mandatory
+VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
+VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
+if [ "$VE_CORR_COUNT" -ge 1 ]; then
+    echo "  verification-enforcement correspondence mandatory: FOUND"
+    echo "- **verification-enforcement correspondence mandatory:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verification-enforcement correspondence mandatory: MISSING"
+    echo "- **verification-enforcement correspondence mandatory:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify verification-enforcement SKILL.md has Plan ≠ Execution Evidence Rule
+VE_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|plan .≠. execution\|instructions were executed" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
+if [ "$VE_PLAN_EXEC" -ge 1 ]; then
+    echo "  verification-enforcement Plan ≠ Execution rule: FOUND"
+    echo "- **verification-enforcement Plan ≠ Execution rule:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verification-enforcement Plan ≠ Execution rule: MISSING"
+    echo "- **verification-enforcement Plan ≠ Execution rule:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify 000-critical-rules.md explicitly mentions correspondence in verification-enforcement section
+CR_CORR_VE=$(grep -c "correspondence.*verification-enforcement\|verification-enforcement.*correspondence\|including emails and stakeholder communications\|email/correspondence drafting" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$CR_CORR_VE" -ge 1 ]; then
+    echo "  000-critical-rules.md correspondence in VE section: FOUND"
+    echo "- **000-critical-rules.md correspondence in VE section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules.md correspondence in VE section: MISSING"
+    echo "- **000-critical-rules.md correspondence in VE section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify 000-critical-rules.md has Plan ≠ Execution critical violation
+CR_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|treating documentation as evidence" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$CR_PLAN_EXEC" -ge 1 ]; then
+    echo "  000-critical-rules.md Plan ≠ Execution section: FOUND"
+    echo "- **000-critical-rules.md Plan ≠ Execution section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules.md Plan ≠ Execution section: MISSING"
+    echo "- **000-critical-rules.md Plan ≠ Execution section:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
