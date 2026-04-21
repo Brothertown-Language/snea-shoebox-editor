@@ -132,6 +132,8 @@ All enumeration lists, numbered sections, and step sequences in documentation MU
 
 **Rationale:** Documentation is for humans. Natural counting matches human cognition.
 
+**Grandfather clause:** Existing skill files, guideline files, and documentation that use 0-based counting (Step 0, Phase 0) are exempt from this rule. Only newly created or substantially updated files must comply. When updating an existing file that uses 0-based counting, only new or changed sections need to comply — existing 0-based sections are preserved.
+
 ## AI Co-Authored Attribution (MANDATORY)
 
 **AI-generated creative content MUST include co-authored attribution where the content format supports it.**

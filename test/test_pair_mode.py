@@ -6,7 +6,7 @@ from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / ".opencode" / "scripts"))
 
-from session_context import is_pair_mode_branch
+from session_context_triggers import is_pair_mode_branch
 
 
 class TestPairModeDetection:

@@ -233,11 +233,13 @@ When platform PATCH endpoint is broken (returns 404):
 - Create sub-issues directly under spec (sub-issues go under plan)
 - Post non-substantive comments to issues
 - Create an issue without checking for existing matches first
+- Create an issue via `creation` task without Step 0.5 dedup evidence
 
 ### ALWAYS DO
 
 - Invoke `pre-creation` task before creating issue
 - Run Step 0.5 title dedup gate before any issue creation
+- Verify Step 0.5 dedup evidence before proceeding to `creation` task
 - Apply `needs-approval` label to new specs
 - Add creation byline in issue body footer
 - Invoke auditors before approval

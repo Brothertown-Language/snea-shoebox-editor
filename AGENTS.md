@@ -59,7 +59,7 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 - `docs/`: Documentation and specifications
 - `.opencode/`: Skills, guidelines, and agent tools
   - `tools/`: Agent utility scripts (guidelines, md, memory, py, jupyter, etc.)
-  - `scripts/`: Session context scripts (session_context.py)
+  - `scripts/`: Session context scripts (session_context_identity.py, session_context_triggers.py)
   - `skills/`: Self-contained skills (no guideline dependencies)
   - `guidelines/`: Core zero-tolerance rules only
   - `hooks/`: Git hooks (auto-installed to .git/hooks/ by session-enforcement.ts at session start)
@@ -73,12 +73,14 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 Two plugins run at session start:
 
 1. **session-init** (`tools/session-init`): Emits session variables silently (owner, repo, platform, hooks)
-2. **session_context.py** (`scripts/session_context.py`): Conditionally emits identity + trigger alerts
+2. **session_context_identity.py** (`scripts/session_context_identity.py`): Emits identity section (owner, repo, platform, credentials) into system prompt
+3. **session_context_triggers.py** (`scripts/session_context_triggers.py`): Emits trigger warnings into first user message
 
 Session context output includes:
 
-- **Identity section** (always): `github.owner`, `github.repo`, `github.platform`, credential status
-- **Trigger alerts** (when detected): `on_main_branch`, `protected_branch_with_changes`, `pair_mode_resume`, `uncommitted_work`, `stale_stash`, `merge_conflict`, `unpushed_commits`, `orphaned_worktrees`
+- **Identity section** (always, in system prompt): `github.owner`, `github.repo`, `github.platform`, credential status
+- **Identity-echo directive** (always, in first user message): mandatory identity echo at session start
+- **Trigger alerts** (when detected, in first user message): `on_main_branch`, `protected_branch_with_changes`, `pair_mode_resume`, `uncommitted_work`, `stale_stash`, `merge_conflict`, `unpushed_commits`, `orphaned_worktrees`
 - **Tier 3 probes** (opt-in via `.opencode-issue-probe`): `open_pr_on_branch`, `ci_failure`, `stale_pr`
 
 Credential status values: `verified` (token exists + API ping succeeds), `present` (token exists, liveness unchecked), `missing` (no token found), `stale` (token rejected by API), `unavailable` (platform unknown).
