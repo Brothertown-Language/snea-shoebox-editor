@@ -232,10 +232,12 @@ When platform PATCH endpoint is broken (returns 404):
 - Create issues with conflicting/overlapping objectives
 - Create sub-issues directly under spec (sub-issues go under plan)
 - Post non-substantive comments to issues
+- Create an issue without checking for existing matches first
 
 ### ALWAYS DO
 
 - Invoke `pre-creation` task before creating issue
+- Run Step 0.5 title dedup gate before any issue creation
 - Apply `needs-approval` label to new specs
 - Add creation byline in issue body footer
 - Invoke auditors before approval

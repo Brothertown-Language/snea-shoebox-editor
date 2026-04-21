@@ -22,6 +22,49 @@ Validate spec before creating GitHub Issue to prevent conflicts, superseded issu
 
 ## Procedure
 
+### Step 0.5: Title Dedup Gate
+
+**Input:** Proposed issue title, proposed issue body, repository (owner/repo)
+
+#### Phase 1 — Keyword Title Search
+
+1. Extract significant keywords from proposed title (remove stop words, prefixes like `[SPEC]`, `[SPEC-FIX]`, `[Task:]`)
+2. Search for existing issues:
+   - **GitHub:** `github_search_issues(query="<keywords> repo:<owner>/<repo>", owner=<owner>, repo=<repo>)` for both open and closed states
+   - **GitBucket:** `./.opencode/tools/gitbucket-api issues --state open` + `--state closed` (filter client-side by keyword match + recency)
+3. Determine recency window for closed issues based on context (issue type, topic stability, org activity)
+4. Collect candidate matches (issues whose titles share ≥2 significant keywords with proposed title)
+
+#### Phase 2 — Body Content Verification
+
+For each candidate from Phase 1:
+
+1. Read candidate issue body
+2. Compare body content with proposed issue body for topical overlap
+3. Classify the match:
+
+| Match Level | Criteria | Action |
+|-------------|----------|--------|
+| EXACT-DUPLICATE | Same topic, same scope, title nearly identical | Auto-resolve: use existing issue |
+| NEAR-DUPLICATE | Same topic, overlapping scope, different detail level | Auto-resolve: merge into original |
+| CLOSED-IN-ERROR | Match is closed but issue persists | Auto-resolve: reopen + update |
+| RELATED-BUT-DISTINCT | Same topic, different scope or intent | Create with cross-reference |
+| FALSE-POSITIVE | Keywords overlap but topic differs | Proceed normally |
+
+#### Phase 3 — Auto-Resolve or Report
+
+For ambiguous matches where match level cannot be determined with confidence: HALT and present candidates to the developer.
+
+**Evidence artifacts (MANDATORY):**
+
+```
+Check: Title dedup gate for "<proposed title>"
+Tool: github_search_issues / gitbucket-api issues
+Result: [N candidates found, match levels classified]
+Classification: [EXACT-DUPLICATE|NEAR-DUPLICATE|CLOSED-IN-ERROR|RELATED-BUT-DISTINCT|FALSE-POSITIVE]
+Action: [auto-resolved strategy | proceed | HALT]
+```
+
 ### Step 1: Check for Superseding Issues and Overlap
 
 **Query for all open `[SPEC]`, `[SPEC-FIX]`, and `[SPEC-ENHANCEMENT]` issues:**
