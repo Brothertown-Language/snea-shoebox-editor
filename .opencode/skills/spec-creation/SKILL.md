@@ -67,7 +67,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
    | Spec Complexity | Tasks | Example |
    |-----------------|-------|---------|
-   | Simple (≤2 files, no architectural impact, obvious fix) | requirements + write | Bug fix with clear solution |
+    | Simple (single concern, no architectural impact, obvious fix) | requirements + write | Bug fix with clear solution |
    | Moderate (multiple requirements, some interfaces) | + decompose + traceability | Feature addition |
    | Complex (architectural change, deployment impact, multi-phase) | All tasks | New subsystem |
 
@@ -77,7 +77,7 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
 ## Simplicity Heuristic
 
-**Simple specs** (affects ≤2 files, no architectural impact, single-requirement, bug fix with obvious fix):
+**Simple specs** (single concern, no architectural impact, single-requirement, bug fix with obvious fix):
 - Skip: `decompose`, `traceability`, `risk`, `change-control`
 - Required: `requirements`, `write`
 

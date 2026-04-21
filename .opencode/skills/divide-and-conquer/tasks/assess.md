@@ -34,8 +34,8 @@ The agent holistically evaluates context sizing for sub-agent dispatch. Consider
 
 | Signal | Single Sub-Agent | Multiple Sub-Agents |
 | -- | -- | -- |
-| Files affected | 1-2, localized | 3+, cross-cutting |
-| Spec requirements | 1-2, simple | 3+, with dependencies |
+| Files affected | Localized to one area | Cross-cutting, touches multiple areas |
+| Spec requirements | Simple, single concern | Multiple concerns with dependencies |
 | Change complexity | Obvious, pattern-following | Novel, requires design reasoning |
 | Context load | All needed context fits comfortably | Agent feels "dense" or risks losing track |
 | Dependencies | None or shallow | Deep call chains, type hierarchies |

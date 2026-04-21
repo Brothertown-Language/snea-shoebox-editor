@@ -790,7 +790,7 @@ Work qualifies as "clearly simple" when ALL criteria are met:
 
 | Criterion | Qualifies | Does Not Qualify |
 |-----------|-----------|------------------|
-| File count | ≤2 files | 3+ files |
+| Scope localization | Changes limited to a single concern | Changes span multiple concerns |
 | Behavioral change | None (docs, config, runbooks) | Any behavioral change |
 | Architectural impact | None | Any impact on architecture |
 | Existing code interaction | None (new files, minor edits) | Modified function signatures, APIs |

@@ -504,6 +504,7 @@ fi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Verify verification-enforcement SKILL.md lists correspondence as mandatory
 VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
@@ -543,10 +544,29 @@ else
 >>>>>>> spec/1098-fix
 =======
 >>>>>>> spec/1099-fix
+=======
+# Verify count-based dispatch thresholds removed (#1077)
+echo ""
+echo "  --- Count-based dispatch threshold verification (#1077) ---"
+echo "" >> "$RESULTS_FILE"
+echo "### Count-based dispatch threshold removal (#1077)" >> "$RESULTS_FILE"
+echo "" >> "$RESULTS_FILE"
+
+# 1. 000-critical-rules.md: "File count" row removed from Simple Work table
+COUNT_FILE_COUNT=$(grep -c "File count" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+SCOPE_LOCAL=$(grep -c "Scope localization" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$COUNT_FILE_COUNT" -eq 0 ] && [ "$SCOPE_LOCAL" -ge 1 ]; then
+    echo "  000-critical-rules.md: File count row replaced with Scope localization: PASS"
+    echo "- **000-critical-rules.md: File count → Scope localization:** PASS" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules.md: File count row still present or Scope localization missing: FAIL"
+    echo "- **000-critical-rules.md: File count → Scope localization:** FAIL" >> "$RESULTS_FILE"
+>>>>>>> spec/1077-count-branching
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -558,10 +578,23 @@ if [ "$VE_PLAN_EXEC" -ge 1 ]; then
 else
     echo "  verification-enforcement Plan ≠ Execution rule: MISSING"
     echo "- **verification-enforcement Plan ≠ Execution rule:** MISSING" >> "$RESULTS_FILE"
+=======
+# 2. spec-creation/SKILL.md: ≤2 files removed from simplicity heuristic
+SPEC_CREATION_FILE="$PROJECT_DIR/.opencode/skills/spec-creation/SKILL.md"
+SPEC_FILE_COUNT=$(grep -c "≤2 files" "$SPEC_CREATION_FILE" 2>/dev/null || echo "0")
+SPEC_SINGLE_CONCERN=$(grep -c "single concern" "$SPEC_CREATION_FILE" 2>/dev/null || echo "0")
+if [ "$SPEC_FILE_COUNT" -eq 0 ] && [ "$SPEC_SINGLE_CONCERN" -ge 1 ]; then
+    echo "  spec-creation/SKILL.md: ≤2 files replaced with single concern: PASS"
+    echo "- **spec-creation/SKILL.md: ≤2 files → single concern:** PASS" >> "$RESULTS_FILE"
+else
+    echo "  spec-creation/SKILL.md: ≤2 files still present or single concern missing: FAIL"
+    echo "- **spec-creation/SKILL.md: ≤2 files → single concern:** FAIL" >> "$RESULTS_FILE"
+>>>>>>> spec/1077-count-branching
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 # Verify 000-critical-rules.md explicitly mentions correspondence in verification-enforcement section
 CR_CORR_VE=$(grep -c "correspondence.*verification-enforcement\|verification-enforcement.*correspondence\|including emails and stakeholder communications\|email/correspondence drafting" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
 if [ "$CR_CORR_VE" -ge 1 ]; then
@@ -570,10 +603,24 @@ if [ "$CR_CORR_VE" -ge 1 ]; then
 else
     echo "  000-critical-rules.md correspondence in VE section: MISSING"
     echo "- **000-critical-rules.md correspondence in VE section:** MISSING" >> "$RESULTS_FILE"
+=======
+# 3. single-task-check.md: phase count replaced as primary classifier
+STC_FILE="$PROJECT_DIR/.opencode/skills/issue-operations/tasks/single-task-check.md"
+STC_PHASE_PRIMARY=$(grep -c "One phase.*Spec has exactly" "$STC_FILE" 2>/dev/null || echo "0")
+STC_COHESIVE=$(grep -c "One cohesive concern" "$STC_FILE" 2>/dev/null || echo "0")
+STC_SIGNAL=$(grep -c "signal, not a gate" "$STC_FILE" 2>/dev/null || echo "0")
+if [ "$STC_PHASE_PRIMARY" -eq 0 ] && [ "$STC_COHESIVE" -ge 1 ] && [ "$STC_SIGNAL" -ge 1 ]; then
+    echo "  single-task-check.md: phase count replaced with semantic classifier: PASS"
+    echo "- **single-task-check.md: phase count → semantic classifier:** PASS" >> "$RESULTS_FILE"
+else
+    echo "  single-task-check.md: phase count still primary or semantic classifier missing: FAIL"
+    echo "- **single-task-check.md: phase count → semantic classifier:** FAIL" >> "$RESULTS_FILE"
+>>>>>>> spec/1077-count-branching
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 # Verify 000-critical-rules.md has Plan ≠ Execution critical violation
 CR_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|treating documentation as evidence" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
 if [ "$CR_PLAN_EXEC" -ge 1 ]; then
@@ -610,10 +657,23 @@ else
 =======
 =======
 >>>>>>> spec/1099-fix
+=======
+# 4. writing-plans/tasks/create.md: "multiple phases" removed from multi-task condition
+WP_FILE="$PROJECT_DIR/.opencode/skills/writing-plans/tasks/create.md"
+WP_MULTI_PHASE=$(grep -c "multiple phases, mixed concerns" "$WP_FILE" 2>/dev/null || echo "0")
+WP_SEMANTIC=$(grep -c "mixed concerns or deployment independence" "$WP_FILE" 2>/dev/null || echo "0")
+if [ "$WP_MULTI_PHASE" -eq 0 ] && [ "$WP_SEMANTIC" -ge 1 ]; then
+    echo "  writing-plans/create.md: multiple phases removed from multi-task: PASS"
+    echo "- **writing-plans/create.md: multi-task semantic:** PASS" >> "$RESULTS_FILE"
+else
+    echo "  writing-plans/create.md: multiple phases still in multi-task or semantic missing: FAIL"
+    echo "- **writing-plans/create.md: multi-task semantic:** FAIL" >> "$RESULTS_FILE"
+>>>>>>> spec/1077-count-branching
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 # Verify correspondence content-type propagation rule
 if [ -f "$CORR_SKILL" ]; then
     CORR_CT_PROP=$(grep -c "Content-Type Propagation\|content-type propagation" "$CORR_SKILL" 2>/dev/null || echo "0")
@@ -716,6 +776,18 @@ else
     echo "  000-critical-rules.md: MISSING (for audience separation check)"
     echo "- **000-critical-rules.md:** MISSING (for audience separation check)" >> "$RESULTS_FILE"
 >>>>>>> spec/1099-fix
+=======
+# 5. divide-and-conquer/tasks/assess.md: numeric ranges replaced with semantic descriptions
+ASSESS_FILE="$PROJECT_DIR/.opencode/skills/divide-and-conquer/tasks/assess.md"
+ASSESS_NUMERIC=$(grep -c "1-2, localized\|3+, cross-cutting\|1-2, simple\|3+, with dependencies" "$ASSESS_FILE" 2>/dev/null || echo "0")
+ASSESS_SEMANTIC=$(grep -c "Localized to one area\|Simple, single concern" "$ASSESS_FILE" 2>/dev/null || echo "0")
+if [ "$ASSESS_NUMERIC" -eq 0 ] && [ "$ASSESS_SEMANTIC" -ge 1 ]; then
+    echo "  divide-and-conquer/assess.md: numeric ranges replaced with semantic: PASS"
+    echo "- **divide-and-conquer/assess.md: semantic sizing:** PASS" >> "$RESULTS_FILE"
+else
+    echo "  divide-and-conquer/assess.md: numeric ranges still present or semantic missing: FAIL"
+    echo "- **divide-and-conquer/assess.md: semantic sizing:** FAIL" >> "$RESULTS_FILE"
+>>>>>>> spec/1077-count-branching
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

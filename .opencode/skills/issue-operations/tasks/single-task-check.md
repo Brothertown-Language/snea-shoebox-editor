@@ -27,9 +27,10 @@ Determine if a spec is single-task (plan optional) or multi-task (requires plan 
 
 **Read spec body and identify:**
 
-1. Number of phases (`## Phase N:` sections)
-2. Number of tasks within each phase
-3. Complexity of implementation
+1. Concern boundaries — what distinct responsibilities does the spec address?
+2. Whether steps mix implementation, verification, and review
+3. Whether changes are localized or cross-cutting
+4. Number of phases (`## Phase N:` sections) — as a signal, not the primary classifier
 
 ### Step 2: Apply Single-Task Criteria
 
@@ -37,19 +38,21 @@ Determine if a spec is single-task (plan optional) or multi-task (requires plan 
 
 | Criterion | Description |
 |-----------|-------------|
-| **One phase** | Spec has exactly one `## Phase 1:` section |
-| **Implementation only** | Phase contains implementation steps, not verification/review |
-| **Single concern** | All steps address ONE concern (not multiple distinct concerns) |
+| **One cohesive concern** | All steps address ONE concern (not multiple distinct concerns) |
+| **Implementation only** | Steps contain implementation, not verification/review |
+| **Localized impact** | Changes are confined to a single area of responsibility |
 | **No decomposition needed** | Task can be implemented as one atomic unit |
 
 **A spec is MULTI-TASK if ANY of these are true:**
 
 | Criterion | Description |
 |-----------|-------------|
-| **Multiple phases** | Spec has `## Phase 2:`, `## Phase 3:`, etc. |
-| **Mixed concern types** | Phases include implementation + verification + review |
-| **Distinct concerns** | Phases address different architectural concerns |
-| **Deployment independence** | Phases can be deployed separately |
+| **Multiple concerns** | Steps address different architectural concerns |
+| **Mixed concern types** | Steps include implementation + verification + review |
+| **Cross-cutting impact** | Changes span multiple areas of responsibility |
+| **Deployment independence** | Parts can be deployed separately |
+
+**Phase count is a signal, not a gate:** If the spec has multiple `## Phase N:` sections, that _suggests_ multi-task, but the agent evaluates semantic concerns to confirm. A multi-phase spec with one cohesive concern may still be single-task. A single-phase spec with mixed concerns is multi-task.
 
 ### Step 3: Determine Plan Strategy
 
@@ -104,8 +107,8 @@ Next: Pass single_task_determination to post-creation → writing-plans
 ```
 
 **Analysis:**
-- Single phase → Could be single-task
-- BUT: includes review steps → Multiple concerns
+- Single phase
+- BUT: includes review steps → Mixed concern types (implementation + verification)
 
 **Determination:** MULTI-TASK (verification concern separate from implementation)
 
@@ -118,13 +121,13 @@ Next: Pass single_task_determination to post-creation → writing-plans
 ```
 
 **Analysis:**
-- Two phases
+- Two phases (signal suggests multi-task)
 - Same concern (database schema)
-- Second is verification of first
+- Second is verification of first → Mixed concern types
 
 **Determination:** MULTI-TASK (verification is separate concern) → plan needed
 
-### Edge Case 3: Large Single Phase
+### Edge Case 3: Single Cohesive Concern
 
 **Spec:**
 ```
@@ -136,12 +139,12 @@ Next: Pass single_task_determination to post-creation → writing-plans
 
 **Analysis:**
 - Single phase
-- All steps for ONE feature
-- No verification phase
+- All steps for ONE feature (one cohesive concern)
+- Testing is integrated, not a separate verification concern
 
 **Determination:** SINGLE-TASK (plan optional)
 
-### Edge Case 4: Single-Phase Plan
+### Edge Case 4: Cross-Cutting Single Phase
 
 **Plan:**
 ```
@@ -151,8 +154,8 @@ Next: Pass single_task_determination to post-creation → writing-plans
 ```
 
 **Analysis:**
-- Single phase in plan
-- Multiple files but single concern
+- Single phase
+- Multiple files but single concern (skill update)
 
 **Determination:** Single-phase plan — no sub-issues needed under the plan
 
@@ -161,7 +164,6 @@ Next: Pass single_task_determination to post-creation → writing-plans
 Before proceeding, verify ALL:
 
 - Spec structure correctly parsed
-- Phase count accurate
 - Concern boundaries identified
 
 **If ambiguous → Default to MULTI-TASK (safer).**
