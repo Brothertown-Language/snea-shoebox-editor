@@ -31,27 +31,18 @@ class TestHooksDirectory:
 
 
 class TestInstallHooksScript:
-    def test_install_hooks_script_exists(self):
+    def test_install_hooks_script_removed(self):
         script_path = Path(__file__).resolve().parent.parent / "scripts" / "install-hooks.sh"
-        assert script_path.is_file(), "scripts/install-hooks.sh must exist"
+        assert not script_path.is_file(), "scripts/install-hooks.sh must not exist (auto-installed by session-enforcement.ts)"
 
-    def test_install_hooks_script_is_executable(self):
-        script_path = Path(__file__).resolve().parent.parent / "scripts" / "install-hooks.sh"
-        if script_path.is_file():
-            assert os.access(script_path, os.X_OK), "install-hooks.sh must be executable"
 
-    def test_install_hooks_uses_hooks_dir_not_githooks(self):
-        script_path = Path(__file__).resolve().parent.parent / "scripts" / "install-hooks.sh"
-        content = script_path.read_text()
-        assert ".opencode/hooks" in content
-        has_removal = "Remove" in content or "remove" in content.lower() or "unset" in content.lower()
-        if "core.hooksPath" in content:
-            assert has_removal, "Must remove core.hooksPath, not configure it"
-
-    def test_install_hooks_copies_to_git_hooks(self):
-        script_path = Path(__file__).resolve().parent.parent / "scripts" / "install-hooks.sh"
-        content = script_path.read_text()
-        assert ".git/hooks" in content or "DEST_DIR" in content, "install-hooks.sh must copy hooks to .git/hooks/"
+class TestSessionEnforcementAutoInstall:
+    def test_session_enforcement_has_ensure_hooks(self):
+        plugin_path = Path(__file__).resolve().parent.parent / ".opencode" / "plugins" / "session-enforcement.ts"
+        assert plugin_path.is_file(), "session-enforcement.ts must exist"
+        content = plugin_path.read_text()
+        assert "ensureHooksInstalled" in content, "session-enforcement.ts must contain ensureHooksInstalled function"
+        assert ".opencode" in content and "hooks" in content, "ensureHooksInstalled must reference .opencode/hooks"
 
 
 class TestGitHooksConfig:
