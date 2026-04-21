@@ -62,7 +62,7 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
   - `scripts/`: Session context scripts (session_context.py)
   - `skills/`: Self-contained skills (no guideline dependencies)
   - `guidelines/`: Core zero-tolerance rules only
-  - `hooks/`: Git hooks (copied to .git/hooks/ by install-hooks.sh)
+  - `hooks/`: Git hooks (auto-installed to .git/hooks/ by session-enforcement.ts at session start)
   - `plugins/`: TypeScript plugins (session-enforcement.ts, env-loader.ts)
   - `.guidelines/registry.yaml`: Registry of migrated content
 

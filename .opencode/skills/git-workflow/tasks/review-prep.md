@@ -714,6 +714,9 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 - ✅ Compare URL generated correctly (using session init base URL + `compare/dev...branch`)
 - ✅ Chat output format correct (summary BEFORE URL)
 - ✅ Issue comment posted (NO URL in issue comment) → Report to chat only (no issue comment per substantive-only policy)
+- ✅ All verification comparisons use exact-match semantics (per `065-verification-honesty.md` → "Verification Comparison Semantics")
+- ✅ No "close enough" or "functionally equivalent" reasoning applied during verification
+- ✅ Every FAIL is reported as FAIL, not downgraded to PASS or hedged
 
 **These checks are MANDATORY. If ANY check fails → STOP and report.**
 

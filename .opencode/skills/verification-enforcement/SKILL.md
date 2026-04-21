@@ -55,6 +55,20 @@ The verification domains represent the kinds of factual claims that content gene
 
 API signatures and function parameters are verified against live source code using `srclight_get_signature`, `srclight_get_symbol`, or direct file reads. Config schemas and environment variables are verified against schema definitions, `.env.example` files, or configuration documentation. Code behavior — what a function does, what it returns, how classes interact — is verified by reading source code or using `srclight_get_symbol` and `srclight_get_type_hierarchy`. Documentation references are verified by fetching the referenced document and confirming the claims match. External tool commands and flags are verified by running `--help` or checking official vendor documentation.
 
+<<<<<<< HEAD
+<<<<<<< HEAD
+=======
+**Content-type propagation** — matching the output format to the source communication's format — is verified by inspecting the source communication's Content-Type header or format before drafting a reply. For emails, this means reading the `.eml` file and confirming its `Content-Type` value. For structured data, it means confirming the source format (JSON, YAML, etc.) and producing output in that format. The verification step is: before generating reply content, the agent MUST confirm what format the source uses and produce output in that same format. A reply in markdown to an HTML email, or a reply in plain text with markdown syntax to a multipart/alternative email, is a verification failure — the content type was not propagated.
+
+>>>>>>> spec/1098-fix
+=======
+**Content-type propagation** — matching the output format to the source communication's format — is verified by inspecting the source communication's Content-Type header or format before drafting a reply. For emails, this means reading the `.eml` file and confirming its `Content-Type` value. For structured data, it means confirming the source format (JSON, YAML, etc.) and producing output in that format. The verification step is: before generating reply content, the agent MUST confirm what format the source uses and produce output in that same format. A reply in markdown to an HTML email, or a reply in plain text with markdown syntax to a multipart/alternative email, is a verification failure — the content type was not propagated.
+
+**Audience separation** — ensuring generated content does not leak internal artifacts to stakeholders — is verified during the revisit pass by scanning for operator-tier content in stakeholder-tier communications. The agent identifies the audience tier from the correspondence skill's audience classification, then scans the generated content for internal artifacts that violate the audience separation principle: runbook paths, step numbers from internal procedures, internal IP addresses (unless subject of report), internal file paths, configuration paths, internal tool or script names, CLI commands for internal operations, debugging output, and internal documentation references. When such artifacts appear in stakeholder-tier content, they must be rephrased in stakeholder-relevant terms or removed. This domain is closely related to the correspondence skill's Audience Separation Principle and Prohibited Content rules — the revisit pass enforces them after generation, just as the verify pass enforces verification before generation.
+
+>>>>>>> spec/1099-fix
+**Attribution** — who performed an action — is verified against the source communication. When content states "completed by Person X" or "Person X did Y", the attribution must be traced to evidence: email From/Sender headers, GitHub commit authors, PR creators, issue comment authors, or explicit statements in the source material. Attribution evidence sources include: `github_issue_read(method=get)` for issue authors and commenters, `github_pull_request_read(method=get)` for PR creators, `srclight_blame_symbol` for commit authors, and direct file reads of email headers or forwarded messages. If the source does not explicitly state who did something, the agent must not attribute — it must either omit the name or write "completed per [reference]" without naming an individual. Inferring "who did what" from role proximity (e.g., "tech person → did the tech work") without source evidence is an attribution hallucination and is prohibited.
+
 The agent selects verification tools based on the domain, not by following a lookup table, but by reasoning about what evidence source would authoritatively confirm the claim. A claim about a Python function's parameters calls for `srclight_get_signature`; a claim about a CLI flag calls for running the command with `--help`; a claim about a GUI path calls for checking vendor documentation. When multiple sources are available, the most authoritative and most recent source wins.
 
 ## Enforcement Rules
@@ -67,7 +81,15 @@ The evidence artifact format is:
 
 ```
 Claim: <what the content asserts>
-Domain: <verification domain — API, config, code behavior, docs, CLI>
+<<<<<<< HEAD
+<<<<<<< HEAD
+Domain: <verification domain — API, config, code behavior, docs, CLI, attribution>
+=======
+Domain: <verification domain — API, config, code behavior, docs, CLI, attribution, content-type>
+>>>>>>> spec/1098-fix
+=======
+Domain: <verification domain — API, config, code behavior, docs, CLI, attribution, content-type>
+>>>>>>> spec/1099-fix
 Source: <tool call or document that provided the evidence>
 Verified: <yes|no>
 Marker: <if no, ⚠️ UNVERIFIED>
@@ -77,11 +99,27 @@ The unverified marker format is `⚠️ UNVERIFIED`, placed inline after the cla
 
 ## Skill Invocation Enforcement
 
-Skills that generate content must invoke verification-enforcement. The content-generating skills in this codebase include: `spec-creation` (its `write` task), `writing-plans` (its `create` task), `sre-runbook` (its `generate` task), and `skill-creator` (when creating or updating skill files). Each of these must add `verification-enforcement --task verify` before their content-generation step and `verification-enforcement --task revisit` after their quality-check step.
+Skills that generate content must invoke verification-enforcement. The content-generating skills in this codebase include: `spec-creation` (its `write` task), `writing-plans` (its `create` task), `sre-runbook` (its `generate` task), `skill-creator` (when creating or updating skill files), and `correspondence` (its `draft` task). Each of these must add `verification-enforcement --task verify` before their content-generation step and `verification-enforcement --task revisit` after their quality-check step.
 
 Additionally, `spec-auditor` gains a prose-structure audit subtask that checks generated specs and plans for anti-prose drift — rigid enumeration where prose is expected, tabular structure that should be prose description, and fixed checklists that replace flowing narrative. Findings from this subtask are classified as STRUCTURE-VIOLATION with auto-fix classification, since mechanical rewriting from structure to prose is safe.
 
 The invocation flow for a content-generating skill is: `verification-enforcement --task verify` → content generation steps → self-review or quality-check → `verification-enforcement --task revisit` → output. The verify and revisit tasks are bookends around the content generation, not replacements for the skill's own quality checks.
+
+## Plan ≠ Execution Evidence Rule
+
+The existence of a runbook, plan, or set of instructions is **never** evidence that the instructions were executed. Content claiming a task is "complete" or "done" requires evidence of execution — live system state, tool output, or developer confirmation — not the existence of documentation describing what should be done. This distinction is critical because an agent that conflates "there is a plan" with "the plan was executed" will ship false claims in correspondence and reports, presenting instructions as completed actions.
+
+When verifying a claim that something was completed or is in a specific state, the evidence artifact must come from a live verification source — a tool call that queries the current state, a developer's explicit confirmation, or a log showing the action was performed. A runbook, checklist, or procedural document is evidence of **intent**, not evidence of **execution**.
+
+**Anti-pattern examples:**
+
+| Claim | Insufficient Evidence (plan, not execution) | Sufficient Evidence (execution, not plan) |
+| -- | -- | -- |
+| "DNS records updated" | Runbook exists with correction steps | `dig` output shows correct records |
+| "Deployment complete" | CI pipeline configuration present | CI run log shows successful deployment |
+| "Database migrated" | Migration script in repository | `SHOW TABLES` or migration status query confirms applied |
+| "Configuration corrected" | Correct config values documented in spec | Live query of config endpoint returns correct values |
+| "Email sent to stakeholders" | Draft email in correspondence log | Sent-mail folder or delivery receipt confirms transmission |
 
 ## Cross-References
 
@@ -89,6 +127,7 @@ The invocation flow for a content-generating skill is: `verification-enforcement
 - `spec-auditor` — Post-creation quality audits; verification-enforcement prevents the problems that spec-auditor would find
 - `skill-creator` — Must invoke verification-enforcement when creating or updating skill files
 - `divide-and-conquer` — Orchestrators use `verification-enforcement --task enforce` to validate sub-agent output
+- `correspondence` — Content-type propagation domain applies to reply-generation workflows; correspondence skill's Content-Type Propagation rule is verified through this domain
 - `065-verification-honesty.md` — Reactive honesty during conversation; verification-enforcement supersedes for content generation workflows
 
 ## Completion Guarantee

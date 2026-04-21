@@ -145,6 +145,32 @@ GitBucket does NOT implement `PATCH /repos/{owner}/{repo}/issues/{issue_number}`
 ./.opencode/tools/gitbucket-api add-comment org project <dup-number> "**Closing as duplicate of #14**\n\nThis issue is a duplicate and is being closed. Please continue discussion on #14."
 ```
 
+### Workflow 6: Title Dedup Search (GitBucket Fallback)
+
+**Scenario:** Pre-creation Step 0.5 title dedup gate when search API is unavailable (GitBucket search is BROKEN).
+
+When the platform lacks a search API, use iterative listing with client-side keyword filtering:
+
+```bash
+# Step 1: List open issues (most recent first)
+./.opencode/tools/gitbucket-api issues org project --state open
+
+# Step 2: List closed issues (most recent first)
+./.opencode/tools/gitbucket-api issues org project --state closed
+
+# Step 3: Client-side keyword filter — extract significant keywords from proposed title
+# Remove stop words and prefixes like [SPEC], [SPEC-FIX], [Task:]
+# Match issues whose titles share ≥2 significant keywords with proposed title
+
+# Step 4: For each candidate match, read the full body
+./.opencode/tools/gitbucket-api issue org project <candidate-number>
+
+# Step 5: Classify match (EXACT-DUPLICATE, NEAR-DUPLICATE, CLOSED-IN-ERROR, RELATED-BUT-DISTINCT, FALSE-POSITIVE)
+# Follow Phase 2 and Phase 3 of pre-creation Step 0.5
+```
+
+**Key difference from GitHub:** GitHub uses `github_search_issues` with a keyword query for server-side filtering. GitBucket requires fetching all issues and filtering client-side by keyword match and recency. Paginate only if no match found on first page.
+
 ## Error Handling
 
 The CLI tool outputs structured error information:

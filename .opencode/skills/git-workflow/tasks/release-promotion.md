@@ -1,13 +1,20 @@
 # Task: release-promotion
 
+## ⚠️ TIER 1 MANDATE: Human-Only Merge
+
+Agents MUST NOT execute `git merge` into `main`, `master`, or any protected branch.
+All promotions MUST go through PR-based merge. The agent prepares the release;
+a human reviews and merges the PR. Direct merge to a protected branch is a
+CRITICAL GUIDELINE VIOLATION per `000-critical-rules.md`.
+
 ## Purpose
 
-Automate dev → main promotion, semver tagging, and release creation. Supports both submodule-based repos (promote each submodule in lockstep) and non-submodule repos (direct promotion, tagging, and release).
+Prepare dev → main promotion, semver tagging, and release creation via PR-based workflow. Supports both submodule-based repos (promote each submodule in lockstep) and non-submodule repos. The agent creates the release PR; a human must merge it. Tags and releases are created post-merge.
 
 ## Operating Protocol
 
-1. **Submodule repos:** When parent repo promotes dev → main, all submodules must be promoted in lockstep
-2. **Non-submodule repos:** Merge dev → main, tag, push, and create release directly
+1. **Submodule repos:** When parent repo promotes dev → main, all submodules must be promoted in lockstep via PR
+2. **Non-submodule repos:** Create release PR from dev targeting main, HALT for human merge, then tag and release
 3. **Explicit trigger:** Developer can instruct promotion of individual submodules
 4. **Tag validation:** All semver tags must pass `validate-release-tags.sh --semver` before parent promotion proceeds
 
@@ -15,23 +22,26 @@ Automate dev → main promotion, semver tagging, and release creation. Supports 
 
 - Repository is promoting dev → main (automatic or explicit), OR
 - Developer has explicitly instructed "promote submodule <X>" or "push submodule <Y>"
+- Post-merge: Human has merged the release PR and developer wants tagging + release creation
 
 ## Exit Criteria
 
 ### Submodule Path
 
-- All promoted submodules have main merged from dev
-- Each promoted submodule has an annotated semver tag (auto-incremented patch or developer-specified)
-- Each promoted submodule has a GitHub/GitBucket release created
-- Parent submodule refs updated to tagged SHAs
+- All promoted submodules have a release PR created targeting main
+- Agent has HALTed for human merge of each submodule PR
+- After human merge: each promoted submodule has an annotated semver tag on main (auto-incremented patch or developer-specified)
+- After human merge: each promoted submodule has a GitHub/GitBucket release created
+- After human merge: parent submodule refs updated to tagged SHAs
 - `validate-release-tags.sh --semver` exits 0
 
 ### Non-Submodule Path
 
-- Main merged from dev
-- Annotated semver tag created on main (auto-incremented patch or developer-specified)
-- Main and tags pushed to origin
-- GitHub/GitBucket release created
+- Release PR created targeting main from release branch
+- Agent has HALTed for human merge
+- After human merge: Annotated semver tag created on main (auto-incremented patch or developer-specified)
+- After human merge: Tags pushed to origin
+- After human merge: GitHub/GitBucket release created
 
 ## Procedure
 
@@ -117,36 +127,18 @@ git config --file .gitmodules --get-regexp path | awk '{print $2}'
 
 For each submodule `<path>`:
 
-#### 2a: Enter Submodule and Switch to Main
-
-```bash
-cd <path>
-git checkout main
-```
-
-#### 2b: Merge Dev into Main
-
-```bash
-git merge dev
-```
-
-If merge conflicts occur, classify per `conflict-resolution` skill:
-- Tier 1 (Trivial): whitespace/formatting → auto-resolve, silent
-- Tier 2 (Textual but safe): same intent, different text → auto-resolve, note in chat
-- Tier 3 (Intent conflict): different goals → HALT, flag for developer review
-
-#### 2c: Determine Next Semver Tag
+#### 2a: Determine Next Semver Tag
 
 **Auto-increment patch version:**
 
 ```bash
-# Get the highest existing tag
+cd <path>
 LATEST_TAG=$(git tag --sort=-v:refname | head -1)
+cd ..
 
 if [ -z "$LATEST_TAG" ]; then
     NEXT_TAG="v0.1.0"
 else
-    # Strip v-prefix, increment patch
     VERSION=${LATEST_TAG#v}
     MAJOR=$(echo "$VERSION" | cut -d. -f1)
     MINOR=$(echo "$VERSION" | cut -d. -f2)
@@ -157,30 +149,74 @@ fi
 
 **Developer-specified version:** If developer provided an explicit version (e.g., "promote submodule X as v2.0.0"), use that version instead of auto-increment.
 
-#### 2d: Create Annotated Tag
+#### 2b: Create Release Branch from Dev
 
 ```bash
-git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG: promoted from dev #<parent-issue>"
+cd <path>
+RELEASE_BRANCH="release/dev-to-main-v${NEXT_TAG#v}"
+git checkout dev
+git checkout -b "$RELEASE_BRANCH"
+cd ..
 ```
 
-#### 2e: Push Submodule Main and Tags
+#### 2c: Push Release Branch
 
 ```bash
-git push origin main --tags
+cd <path>
+git push origin "$RELEASE_BRANCH"
+cd ..
 ```
 
-#### 2f: Create Platform Release
+#### 2d: Create PR Targeting Main
+
+Create a release PR in the submodule repo targeting `main` (or `master`):
 
 **For GitHub:**
 
-```python
-github_create_or_update_file = None  # Not applicable
-# Use GitHub API to create release:
-github_get_latest_release(owner=..., repo=...)  # To check existing
-# Then use GitHub release creation via MCP or API
+```
+github_create_pull_request(
+    owner=<sub-owner>,
+    repo=<sub-repo>,
+    title="Release $NEXT_TAG: promote dev → main",
+    head="$RELEASE_BRANCH",
+    base="main",
+    body="Release $NEXT_TAG\n\nAutomated submodule promotion from dev → main.\n\n⚠️ This PR was prepared by an AI agent. Human review required before merge."
+)
 ```
 
 **For GitBucket:** Use GitBucket API per `gitbucket-api` skill.
+
+#### 2e: HALT — Wait for Human Merge
+
+Report the PR URL to chat. HALT and wait for the human to merge the PR.
+
+After human merges the PR, proceed to post-merge steps (2f-2h). These may be invoked in a subsequent session using `--task release-promotion --post-merge`.
+
+#### 2f: (Post-merge) Tag Main with Semver Tag
+
+```bash
+cd <path>
+git checkout main
+git pull origin main
+git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG: promoted from dev #<parent-issue>"
+cd ..
+```
+
+#### 2g: (Post-merge) Push Tags and Create Platform Release
+
+```bash
+cd <path>
+git push origin main --tags
+cd ..
+```
+
+**For GitHub:**
+
+Use GitHub MCP to create release:
+
+```
+github_get_latest_release(owner=<sub-owner>, repo=<sub-repo>)
+```
 
 **Release body template:**
 
@@ -190,14 +226,16 @@ Release $NEXT_TAG
 Automated submodule promotion from dev → main.
 ```
 
-#### 2g: Return to Parent and Update Ref
+**For GitBucket:** Use GitBucket API per `gitbucket-api` skill.
+
+#### 2h: Return to Parent and Update Ref
 
 ```bash
 cd <parent-repo-root>
 git add <path>
 ```
 
-#### 2h: Create Provenance Tracking
+#### 2i: Create Provenance Tracking
 
 After promoting a submodule, invoke provenance tracking with inline fallback:
 
@@ -213,7 +251,7 @@ Invoke: /skill git-workflow --task provenance --mode=promotion
 | parent_branch | The branch being released (commonly `main` or `dev`) |
 | parent_issue | Issue number from the release spec |
 | submodule_path | Path of the promoted submodule |
-| tag_name | The semver tag created in Step 2d |
+| tag_name | The semver tag created in Step 2f |
 | source_branch | The branch promoted (typically `dev`) |
 | change_description | Brief description of changes in this submodule |
 | parent_release_ref | Parent release tag or issue reference |
@@ -260,7 +298,7 @@ After promotion provenance issue creation succeeds (Tier 1 or Tier 2 only):
 
 ### Step 3: Validate Tags
 
-After all submodules are promoted and tagged:
+After all submodules are promoted and tagged (post-merge):
 
 ```bash
 ./.opencode/scripts/validate-release-tags.sh --semver
@@ -274,31 +312,13 @@ After all submodules are promoted and tagged:
 
 ### Step 4: Proceed with Parent Promotion
 
-After Step 3 passes, the parent repository may proceed with its own dev → main promotion.
+After Step 3 passes, the parent repository may proceed with its own dev → main promotion via the Non-Submodule Path below.
 
 ---
 
 ## Non-Submodule Path
 
-### Step N1: Switch to Main
-
-```bash
-git checkout main
-git pull origin main
-```
-
-### Step N2: Merge Dev into Main
-
-```bash
-git merge dev
-```
-
-If merge conflicts occur, classify per `conflict-resolution` skill:
-- Tier 1 (Trivial): whitespace/formatting → auto-resolve, silent
-- Tier 2 (Textual but safe): same intent, different text → auto-resolve, note in chat
-- Tier 3 (Intent conflict): different goals → HALT, flag for developer review
-
-### Step N3: Determine Next Semver Tag
+### Step N1: Determine Next Semver Tag
 
 **Auto-increment patch version:**
 
@@ -318,19 +338,60 @@ fi
 
 **Developer-specified version:** If developer provided an explicit version (e.g., "promote as v2.0.0"), use that version instead of auto-increment.
 
-### Step N4: Create Annotated Tag
+### Step N2: Create Release Branch from Dev
 
 ```bash
+RELEASE_BRANCH="release/dev-to-master-v${NEXT_TAG#v}"
+git checkout dev
+git checkout -b "$RELEASE_BRANCH"
+```
+
+### Step N3: Push Release Branch
+
+```bash
+git push origin "$RELEASE_BRANCH"
+```
+
+### Step N4: Create PR Targeting Master
+
+Create a release PR targeting `master` (or `main`):
+
+**For GitHub:**
+
+```
+github_create_pull_request(
+    owner=<github.owner>,
+    repo=<github.repo>,
+    title="Release $NEXT_TAG: promote dev → main",
+    head="$RELEASE_BRANCH",
+    base="master",
+    body="Release $NEXT_TAG\n\nAutomated dev → main promotion.\n\n⚠️ This PR was prepared by an AI agent. Human review required before merge."
+)
+```
+
+**For GitBucket:** Use GitBucket API per `gitbucket-api` skill.
+
+### Step N5: HALT — Wait for Human Merge
+
+Report the PR URL to chat. HALT and wait for the human to merge the PR.
+
+After human merges the PR, proceed to post-merge steps (N6-N8). These may be invoked in a subsequent session using `--task release-promotion --post-merge`.
+
+### Step N6: (Post-merge) Tag Master with Semver Tag
+
+```bash
+git checkout master
+git pull origin master
 git tag -a "$NEXT_TAG" -m "Release $NEXT_TAG"
 ```
 
-### Step N5: Push Main and Tags
+### Step N7: (Post-merge) Push Tags
 
 ```bash
-git push origin main --tags
+git push origin master --tags
 ```
 
-### Step N6: Create Platform Release
+### Step N8: (Post-merge) Create Platform Release
 
 **For GitHub:**
 
@@ -376,28 +437,29 @@ Developers can target individual submodules without promoting all:
 
 | ID | Criterion |
 | -- | -- |
-| T19 | Submodule dev → main promotion is automated when parent promotes dev → main |
+| T19 | Submodule dev → main PR is created; human merges |
 | T20 | Semver tag is auto-incremented (patch version) when no developer-specified version |
-| T21 | GitHub release is created for each promoted submodule |
-| T22 | Parent submodule refs are updated to tagged SHAs after promotion |
+| T21 | GitHub/GitBucket release is created post-merge for each promoted submodule |
+| T22 | Parent submodule refs are updated to tagged SHAs after human merge |
 | T23 | `validate-release-tags.sh --semver` passes after automated promotion |
 | T24 | Developer can explicitly instruct push or promotion of individual submodules |
 | T25 | Submodule SHAs are locked (no `--remote` flag) during release promotion |
-| T26 | Non-submodule repos: dev → main merge is automated |
-| T27 | Non-submodule repos: semver tag is auto-incremented and pushed |
-| T28 | Non-submodule repos: platform release is created on GitHub/GitBucket |
+| T26 | Non-submodule repos: agent creates release PR; human merges |
+| T27 | Non-submodule repos: semver tag is created post-merge and pushed |
+| T28 | Non-submodule repos: platform release is created post-merge |
 
 ## Common Issues
 
 | Issue | Resolution |
 | -- | -- |
-| Merge conflict during dev → main | Classify per conflict-resolution skill; Tier 3 → HALT |
+| PR has merge conflicts | Classify per conflict-resolution skill; Tier 3 → HALT for developer |
 | Tag already exists | Report error; developer must specify a different version |
 | `validate-release-tags.sh` fails | HALT; report which submodule failed and why |
 | No previous tag exists | Default to `v0.1.0` as first release tag |
 | Submodule has no dev branch | HALT; report that dev branch must exist before promotion |
-| Non-submodule repo: merge conflict | Classify per conflict-resolution skill; Tier 3 → HALT |
-| Non-submodule repo: tag already exists | Report error; developer must specify a different version |
+| Human merges but forgets to tag | Re-invoke `--task release-promotion --post-merge` for tagging + release |
+| Release branch name collision | Append timestamp or short SHA to branch name |
+| Pre-merge hook blocks direct merge | N/A — PR-based approach avoids this; skill never directs direct merge |
 
 ## Context Required
 

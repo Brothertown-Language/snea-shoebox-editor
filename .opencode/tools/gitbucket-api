@@ -15,8 +15,10 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
-IMPL = BASE_DIR / ".opencode" / "tools" / "impl" / "gitbucket_api.py"
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+IMPL = PROJECT_ROOT / ".opencode" / "tools" / "impl" / "gitbucket_api.py"
 
 
 def _get_description() -> str:

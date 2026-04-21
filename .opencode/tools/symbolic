@@ -14,7 +14,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 
 ACTIONS = {
     "extract": "sym-extract",
@@ -61,7 +63,7 @@ def main() -> None:
         print(__doc__)
         print("Available actions:")
         for action, script in ACTIONS.items():
-            desc = _get_description(BASE_DIR / ".opencode" / "tools" / "impl" / script)
+            desc = _get_description(PROJECT_ROOT / ".opencode" / "tools" / "impl" / script)
             print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → .opencode/tools/impl/{script}")
         print(f"CWD: {os.getcwd()}")
         sys.exit(0)
@@ -69,7 +71,7 @@ def main() -> None:
     if action not in ACTIONS:
         print(f"Error: unknown action {action!r}. Available: {', '.join(ACTIONS)}", file=sys.stderr)
         sys.exit(1)
-    script = BASE_DIR / ".opencode" / "tools" / "impl" / ACTIONS[action]
+    script = PROJECT_ROOT / ".opencode" / "tools" / "impl" / ACTIONS[action]
     sys.exit(_run_action(script, args[1:], f"OK: .opencode/tools/symbolic {action} completed."))
 
 

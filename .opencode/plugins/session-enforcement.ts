@@ -28,11 +28,68 @@
 import type { Hooks, PluginInput } from "@opencode-ai/plugin";
 import fs from "fs";
 import path from "path";
+import { execSync } from "child_process";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
 let cachedOutput: string | null = null;
 let cacheTimestamp = 0;
+
+function resolveGitDir(projectDir: string): string | null {
+  try {
+    const result = execSync("git rev-parse --git-dir", {
+      cwd: projectDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    if (path.isAbsolute(result)) return result;
+    return path.resolve(projectDir, result);
+  } catch {
+    return null;
+  }
+}
+
+function ensureHooksInstalled(projectDir: string): void {
+  const hooksSourceDir = path.join(projectDir, ".opencode", "hooks");
+  if (!fs.existsSync(hooksSourceDir)) {
+    console.error("[session-enforcement] .opencode/hooks/ directory missing — repo integrity problem");
+    return;
+  }
+
+  const gitDir = resolveGitDir(projectDir);
+  if (!gitDir) {
+    console.error("[session-enforcement] Could not resolve .git directory for hooks installation");
+    return;
+  }
+
+  const hooksTargetDir = path.join(gitDir, "hooks");
+  fs.mkdirSync(hooksTargetDir, { recursive: true });
+
+  const sourceEntries = fs.readdirSync(hooksSourceDir);
+  for (const hookName of sourceEntries) {
+    const sourcePath = path.join(hooksSourceDir, hookName);
+    if (!fs.statSync(sourcePath).isFile()) continue;
+    if (hookName.endsWith(".sample")) continue;
+
+    const targetPath = path.join(hooksTargetDir, hookName);
+    let needsCopy = false;
+
+    if (!fs.existsSync(targetPath)) {
+      needsCopy = true;
+    } else {
+      const sourceContent = fs.readFileSync(sourcePath, "utf8");
+      const targetContent = fs.readFileSync(targetPath, "utf8");
+      if (sourceContent !== targetContent) {
+        needsCopy = true;
+      }
+    }
+
+    if (needsCopy) {
+      fs.copyFileSync(sourcePath, targetPath);
+      fs.chmodSync(targetPath, 0o755);
+    }
+  }
+}
 
 async function runSessionInit($: PluginInput["$"]): Promise<string> {
   if (cachedOutput && Date.now() - cacheTimestamp < CACHE_TTL_MS) {
@@ -204,6 +261,28 @@ function buildTrainingStalenessBlock(): string {
 
 This is a CRITICAL rule. Violations result in incorrect guidance and broken implementations.
 </TRAINING_STALENESS_CRITICAL>`;
+}
+
+function buildPlatformReportBlock(scriptOutput: string): string {
+  const platformMatch = scriptOutput.match(/^github\.platform:\s*(.+)$/m);
+  const ownerMatch = scriptOutput.match(/^github\.owner:\s*(.+)$/m);
+  const repoMatch = scriptOutput.match(/^github\.repo:\s*(.+)$/m);
+
+  const platform = platformMatch?.[1]?.trim() || "unknown";
+  const owner = ownerMatch?.[1]?.trim() || "unknown";
+  const repo = repoMatch?.[1]?.trim() || "unknown";
+
+  if (platform === "unknown" && owner === "unknown" && repo === "unknown") {
+    return "";
+  }
+
+  return `<PLATFORM_REPORT>
+At the very start of the session, before doing anything else, you MUST report the platform info to the user in this exact format on a single line:
+
+Platform: ${platform}, Org: ${owner}, Repo: ${repo}
+
+This is a mandatory startup report. Output this line before any other response.
+</PLATFORM_REPORT>`;
 }
 
 function buildWorktreeBlock(input: PluginInput): string {
@@ -471,12 +550,23 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
   // Pre-load skill descriptions and frontmatter validation at plugin startup
   const { skills: skillDescriptions, errors: frontmatterErrors } = loadSkillDescriptions(skillsDir);
 
+  // Ensure git hooks from .opencode/hooks/ are installed into .git/hooks/
+  ensureHooksInstalled(projectDir);
+
   return {
     // Inject session context into system prompt (from session-init + PluginInput augmentations)
     "experimental.chat.system.transform": async (_input, output) => {
       const scriptOutput = await runSessionInit(input.$);
       if (scriptOutput) {
         output.system.push(scriptOutput);
+      }
+
+      // Inject platform report block (instructs agent to report platform/org/repo at session start)
+      if (scriptOutput) {
+        const platformBlock = buildPlatformReportBlock(scriptOutput);
+        if (platformBlock) {
+          output.system.push(platformBlock);
+        }
       }
 
       // Inject worktree context when session is operating in a worktree

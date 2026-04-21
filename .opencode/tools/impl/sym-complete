@@ -11,13 +11,15 @@ Usage: ./.opencode/tools/symbolic complete
 from __future__ import annotations
 import os as _os
 import re
+import subprocess
 import sys
 import types
 from dataclasses import dataclass
 from pathlib import Path
 
 IMPL_DIR = Path(__file__).resolve().parent
-BASE_DIR = IMPL_DIR.parent.parent.parent
+CDUP = subprocess.check_output(["git", "-C", str(IMPL_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+BASE_DIR = (IMPL_DIR / CDUP).resolve()
 NORMATIVE_RE = re.compile(r"\b(MUST|SHALL|NEVER|ALWAYS|REQUIRED|FORBIDDEN)\b")
 YAML_FENCE_RE = re.compile(r"```yaml\+symbolic\n.*?```", re.DOTALL)
 

@@ -122,10 +122,32 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 
 **See `verification-enforcement` skill for the complete procedural workflow including section-based sub-agent dispatch, evidence artifact collection, unverified marker resolution, and escalation procedure.** **AUTHORITY: `verification-enforcement` skill** (this line is a reference only)
 
-Content generation — producing specs, plans, runbooks, documentation, or correspondence — must pass through the verification-enforcement gate before and after generation. This gate ensures that every factual claim in generated content is backed by evidence artifacts collected from live sources. Skipping the gate means content ships with unverified claims, which is the generative equivalent of reporting memory as verified.
+Content generation — producing specs, plans, runbooks, documentation, or correspondence (including emails and stakeholder communications) — must pass through the verification-enforcement gate before and after generation. This gate ensures that every factual claim in generated content is backed by evidence artifacts collected from live sources. Skipping the gate means content ships with unverified claims, which is the generative equivalent of reporting memory as verified. Correspondence and email drafting are not exempt from this gate — they are content-generating workflows that make factual claims about system state, project status, or completed actions, and those claims require the same live-source verification as specs and plans.
 
-- 🚫 FORBIDDEN: Generating content without invoking `verification-enforcement --task verify` first; skipping the `revisit` task after generation; accepting sub-agent output without evidence artifacts; removing `⚠️ UNVERIFIED` markers without verification; treating verification-enforcement as optional for "small" content
-- ✅ REQUIRED: Invoke `verification-enforcement --task verify` before content generation; invoke `verification-enforcement --task revisit` after self-review; require evidence artifacts for all factual claims; escalate unresolvable claims to the developer
+- 🚫 FORBIDDEN: Generating content without invoking `verification-enforcement --task verify` first; skipping the `revisit` task after generation; accepting sub-agent output without evidence artifacts; removing `⚠️ UNVERIFIED` markers without verification; treating verification-enforcement as optional for "small" content; treating email/correspondence drafting as exempt from the verification gate; claiming a task is "complete" or "done" in correspondence without live-verification tool calls confirming the claimed state
+- ✅ REQUIRED: Invoke `verification-enforcement --task verify` before content generation (including emails and correspondence); invoke `verification-enforcement --task revisit` after self-review; require evidence artifacts for all factual claims; escalate unresolvable claims to the developer; verify claimed states against live data before asserting them in correspondence
+
+## Critical Violation: Plan ≠ Execution — Treating Documentation as Evidence of Completion
+
+**⚠️ Treating the existence of a runbook, plan, or set of instructions as evidence that the instructions were executed is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `verification-enforcement` skill → "Plan ≠ Execution Evidence Rule" for the complete rule, anti-pattern table, and evidence requirements.** **AUTHORITY: `verification-enforcement` skill Plan ≠ Execution Evidence Rule** (this line is a reference only)
+
+A plan describes what should be done. Execution evidence confirms what was done. These are fundamentally different sources. Conflating them leads to correspondence hallucination — claiming tasks are complete based on the existence of instructions rather than live verification of the resulting state.
+
+- 🚫 FORBIDDEN: Citing a runbook, checklist, or procedure document as evidence that a task was completed; asserting "DNS updated" because correction steps exist in a runbook; claiming "deployment complete" because CI configuration is present; writing "done" or "complete" in correspondence without live-verification tool calls confirming the claimed state
+- ✅ REQUIRED: Verify claimed states against live data before asserting them in any content; use `dig`, `curl`, CLI queries, or other live-verification tools to confirm system state; collect evidence artifacts from live sources, not from procedural documentation; treat "there is a plan for X" and "X was executed" as distinct claims requiring distinct evidence
+
+## Critical Violation: Audience Separation — Leaking Internal Artifacts to Stakeholders
+
+**⚠️ Including internal operations artifacts in stakeholder-facing correspondence is a CRITICAL GUIDELINE VIOLATION.**
+
+**See `correspondence` skill → "Audience Separation Principle" for the complete two-tier model (stakeholder vs operator) and prohibited content list. See `verification-enforcement` skill → `revisit` task → "Audience Separation Check" for the post-generation filtering procedure.** **AUTHORITY: `correspondence` skill Audience Separation Principle**
+
+The audience separation principle requires that the agent identify the audience tier before generating content and filter information accordingly. Stakeholder-tier content must not include internal artifacts: runbook paths, step numbers, internal IP addresses, file paths, configuration paths, internal tool names, CLI commands, debugging output, or internal documentation references.
+
+- 🚫 FORBIDDEN: Including runbook paths in stakeholder-facing emails; referencing step numbers from internal procedures in external communications; exposing internal IP addresses (unless subject of report); including internal file paths or configuration paths in stakeholder content; mentioning internal tool or script names in external communications; failing to classify audience tier before drafting correspondence; defaulting to operator tier without explicit authorization
+- ✅ REQUIRED: Classify audience as stakeholder or operator tier before generating correspondence content; default to stakeholder tier when audience is unclear or mixed; filter all stakeholder-tier content for internal artifacts during the revisit pass; rephrase internal artifacts in stakeholder-relevant terms (e.g., "the standard DNS correction procedure" instead of "Steps 2-6 of the runbook"); escalate to operator tier only when communication is explicitly between ops team members or recipient requests operator-level detail
 
 ## Critical Violation: Acting on Resources Without Reading All Comments
 
@@ -768,7 +790,7 @@ Work qualifies as "clearly simple" when ALL criteria are met:
 
 | Criterion | Qualifies | Does Not Qualify |
 |-----------|-----------|------------------|
-| File count | ≤2 files | 3+ files |
+| Scope localization | Changes limited to a single concern | Changes span multiple concerns |
 | Behavioral change | None (docs, config, runbooks) | Any behavioral change |
 | Architectural impact | None | Any impact on architecture |
 | Existing code interaction | None (new files, minor edits) | Modified function signatures, APIs |
@@ -892,6 +914,25 @@ API calls that mutate state must use the platform's dedicated API client (e.g., 
 
 - 🚫 FORBIDDEN: `uv run python -c '...'` for any POST/PUT/PATCH operation; raw `requests.post()` / `requests.put()` / `requests.patch()` outside the dedicated API client; any inline script containing a mutation HTTP method
 - ✅ REQUIRED: Use `./.opencode/tools/gitbucket-api create-pr`, `./.opencode/tools/gitbucket-api create-issue`, etc. for all GitBucket mutations; use GitHub MCP for GitHub mutations; if a needed command is missing, HALT and report the gap; use the tool's built-in error handling and response parsing
+
+## Critical Violation: Soft-Passing Verification Mismatches
+
+**⚠️ Reporting a verification mismatch as "passing," "functionally equivalent," "minor difference," or "semantically close" — instead of FAIL — is a CRITICAL GUIDELINE VIOLATION.**
+
+Verifying live state against a specification requires exact match. Any deviation — no matter how "functionally equivalent" — is a FAIL. The agent must NEVER apply its own judgment about whether a mismatch "matters" during verification.
+
+- 🚫 FORBIDDEN: Reporting a mismatched value as "passing," "verified," or "PASS"
+- 🚫 FORBIDDEN: Rationalizing a mismatch as "functionally equivalent," "minor difference," "works the same," or "semantically close"
+- 🚫 FORBIDDEN: Downgrading a FAIL to a PASS based on the agent's judgment about whether the mismatch "matters"
+- 🚫 FORBIDDEN: Hiding discrepancies in footnotes, notes, or secondary annotations instead of surfacing them as FAIL in the primary verification table
+- 🚫 FORBIDDEN: Comparing multi-field records as a whole instead of comparing each field independently (e.g., SRV priority AND weight are separate comparisons)
+- ✅ REQUIRED: Each field in a multi-field record is compared independently — all fields must match exactly for the record to PASS
+- ✅ REQUIRED: Verification results are reported as a pass/fail table with no hedging language
+- ✅ REQUIRED: If the stakeholder wants to accept a deviation, that is their decision — not the agent's
+- ✅ REQUIRED: The default comparison mode for ALL external verifications (DNS records, configuration values, API responses, infrastructure state) is `exact` — character-for-character match
+- ✅ REQUIRED: `semantic` comparison mode is ONLY for code behavior where multiple implementations achieve the same spec intent, and requires explicit per-field justification
+
+**AUTHORITY:** `065-verification-honesty.md` → "Verification Comparison Semantics" section, `verification-before-completion` skill → "Comparison Modes" section
 
 ## Sub-Agent Extraction Pattern
 

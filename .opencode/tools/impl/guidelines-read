@@ -20,16 +20,19 @@ if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
         file=__import__("sys").stderr,
     )
     __import__("sys").exit(1)
+import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
-SKILLS_DIR = BASE_DIR / ".opencode" / "skills"
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+GUIDELINES_DIR = PROJECT_ROOT / ".opencode" / "guidelines"
+SKILLS_DIR = PROJECT_ROOT / ".opencode" / "skills"
 
 
 def _resolve_guideline_path(name: str) -> Path | None:
-    opencode_dir = BASE_DIR / ".opencode"
+    opencode_dir = PROJECT_ROOT / ".opencode"
     candidates: list[Path] = [
         GUIDELINES_DIR / name,
         opencode_dir / name,
@@ -99,7 +102,7 @@ def main() -> None:
 
         print(f"Error: skill file not found: {name}", file=sys.stderr)
         print(
-            f"Available skills in {SKILLS_DIR.relative_to(BASE_DIR)}:", file=sys.stderr
+            f"Available skills in {SKILLS_DIR.relative_to(PROJECT_ROOT)}:", file=sys.stderr
         )
         for f in sorted(SKILLS_DIR.glob("*/SKILL.md")):
             print(f"  {f.parent.name}/SKILL.md", file=sys.stderr)
@@ -109,7 +112,7 @@ def main() -> None:
     if path is None:
         print(f"Error: guideline file not found: {name}", file=sys.stderr)
         print(
-            f"Available files in {GUIDELINES_DIR.relative_to(BASE_DIR)}:",
+            f"Available files in {GUIDELINES_DIR.relative_to(PROJECT_ROOT)}:",
             file=sys.stderr,
         )
         for f in sorted(GUIDELINES_DIR.glob("*.md")):

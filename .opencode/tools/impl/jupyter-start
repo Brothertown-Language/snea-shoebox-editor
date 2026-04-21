@@ -23,9 +23,11 @@ import sys
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent  # project root
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 PORT = 18888
-LOG_FILE = BASE_DIR / "tmp" / "jupyter.log"
+LOG_FILE = PROJECT_ROOT / "tmp" / "jupyter.log"
 
 
 def is_port_listening(port: int) -> bool:
@@ -72,7 +74,7 @@ def main() -> None:
         ],
         stdout=log_handle,
         stderr=log_handle,
-        cwd=str(BASE_DIR),
+        cwd=str(PROJECT_ROOT),
     )
 
     # Wait up to 8 seconds for the port to open

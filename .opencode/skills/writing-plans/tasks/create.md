@@ -33,9 +33,9 @@ Before reading the approved spec, invoke `verification-enforcement --task verify
 
    | Condition | Outcome |
    |-----------|---------|
-   | Multi-task spec (multiple phases, mixed concerns, deployment independence) | **Always separate** — create [PLAN] issue with sub-issues (current behavior) |
-   | Single-task spec AND spec body can absorb plan content without becoming unwieldy | **Candidate for combined** — agent evaluates readability and coherence |
-   | Single-task spec AND combining would make document hard to read or mix concerns | **Separate** — create [PLAN] issue (current behavior) |
+    | Multi-task spec (mixed concerns or deployment independence) | **Always separate** — create [PLAN] issue with sub-issues (current behavior) |
+    | Single-task spec (one cohesive concern, localized deployment) AND spec body can absorb plan content without becoming unwieldy | **Candidate for combined** — agent evaluates readability and coherence |
+    | Single-task spec AND combining would make document hard to read or mix concerns | **Separate** — create [PLAN] issue (current behavior) |
 
    **Agent evaluation for combined candidates — consider:**
 

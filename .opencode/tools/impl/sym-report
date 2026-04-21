@@ -10,17 +10,18 @@ Usage: ./.opencode/tools/symbolic report [--output PATH] [--format html|text]
 
 from __future__ import annotations
 import os as _os
+import subprocess
 import sys
 import types
 import json
 import shutil
-import subprocess
 from pathlib import Path
 
 import networkx as nx
 
 IMPL_DIR = Path(__file__).resolve().parent
-BASE_DIR = IMPL_DIR.parent.parent.parent
+CDUP = subprocess.check_output(["git", "-C", str(IMPL_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+BASE_DIR = (IMPL_DIR / CDUP).resolve()
 DEFAULT_OUTPUT = BASE_DIR / "tmp"
 
 

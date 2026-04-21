@@ -930,8 +930,8 @@ User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES c
 
 | Layer | Mechanism | Scope | Bypassable? |
 | -- | -- | -- | -- |
-| **Local** | `.githooks/pre-commit` | Blocks commit to main/master/dev | No |
-| **Local** | `.githooks/post-commit` | Warns after commit to main/master/dev | N/A (post) |
+| **Local** | `.opencode/hooks/pre-commit` | Blocks commit to main/master/dev | No |
+| **Local** | `.opencode/hooks/post-commit` | Warns after commit to main/master/dev | N/A (post) |
 | **GitBucket** | Branch protection rules | Requires PR for dev/main | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:

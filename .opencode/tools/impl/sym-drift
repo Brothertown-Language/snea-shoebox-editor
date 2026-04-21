@@ -11,12 +11,15 @@ Usage: ./.opencode/tools/symbolic drift
 from __future__ import annotations
 import os as _os
 import re
+import subprocess
 import sys
 from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 FENCE_PATTERN = re.compile(r"```yaml\+symbolic\n(.*?)```", re.DOTALL)
 
 
@@ -94,7 +97,7 @@ def main() -> None:
     import argparse
 
     parser = argparse.ArgumentParser(description="Drift detection")
-    parser.add_argument("--dir", type=str, default=str(BASE_DIR / ".opencode"))
+    parser.add_argument("--dir", type=str, default=str(PROJECT_ROOT / ".opencode"))
     args = parser.parse_args()
 
     entries = detect_drift(Path(args.dir))

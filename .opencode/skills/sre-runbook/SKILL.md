@@ -22,7 +22,7 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `generate` | Generate an operational runbook for a given domain and scenario | ≈900 |
+| `generate` | Generate an operational runbook — dispatches format based on runbook type | ≈1000 |
 | `track` | Track an incident or change via GitHub Issue with structured labels | ≈450 |
 | `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
@@ -75,30 +75,103 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - Referencing CLI commands, GUI paths, or API calls without verifying against live documentation
 - Annotating unverified information with "(unverified)" instead of excluding it
 - Falling back to training knowledge when live verification fails
+<<<<<<< HEAD
+- Proceeding past a section when ALL verification sources for that section's claims returned errors or were unreachable
+- Producing operational steps for a domain without confirming the available mechanisms (e.g., DNS record types at apex, provider-specific capabilities)
+=======
+- Reporting verification mismatches as "functionally equivalent" or "minor difference" instead of FAIL
+>>>>>>> spec/fix-1088
 
 ### ✅ REQUIRED
 
 - **Single-path rule:** ONE method per operation. GUI-first for operators who prefer GUI; CLI only when no GUI exists or operator prefers CLI. Never present alternatives side by side.
 - **Environment context collection:** Before generating any instruction, determine: interface preference, available tools, package manager, OS version.
 - **Real-values rule:** Use actual hostnames, IPs, and domain names from the environment reference. Zero generic placeholders. Check existing documentation in the repository first.
+- **Exact-match verification rule:** When verifying DNS records, configuration values, API responses, or infrastructure state against a specification, each value must be compared exactly. The verification section MUST use the row-by-row comparison template (see below). Footnotes and notes about "minor differences" are FORBIDDEN — if it does not match, it is FAIL.
 - **Prerequisites-first rule:** Every command requiring elevation MUST have the "open elevated..." step before it.
 - **Steps-only rule:** Runbook steps are numbered actions and copy-paste commands only. No explanations of why, no background context, no conditional logic.
 - **Minimum-necessary rule:** Include only settings directly relevant to the problem. No tangential parameters.
 - **Set-and-restore pattern:** Two command blocks only — "set" and "restore defaults." No "check first, then decide" flow.
 - **No-resurrection rule:** Once content is removed per user direction, never re-add it in any form.
 - **Live-verification rule:** Every CLI command, GUI path, button label, menu structure, and API call MUST be verified against live documentation (vendor docs, `--help` output, `man` pages, official API references) before inclusion. If the agent cannot verify, the information is EXCLUDED — never annotated as "(unverified)."
-- **Evidence-anchoring rule:** Include baseline outputs from commands run during evidence collection so the operator can compare against current state.
+- **Verification-gate enforcement rule:** If ALL live verification sources for a claim return errors (transport errors, 404s, timeouts) or are unreachable, the agent MUST HALT before presenting operational steps for that section. The runbook MUST NOT proceed with unverified claims presented as verified instructions. Instead, mark the section with an explicit `VERIFICATION-GAP` annotation and prompt the user for confirmation.
+- **DNS validation rule:** For DNS runbooks, the agent MUST validate record type constraints against RFC rules and provider capabilities before including any DNS record instructions. CNAME at apex is RFC-invalid per RFC 1034. A records pointing to third-party IPs must be flagged as fragile. The agent MUST check `reference/` data in the skill directory for provider-specific constraints.
+- **Evidence-anchoring rule:** Include baseline outputs from commands run during evidence collection so the operator can compare against current state. When live verification fails, include an explicit `VERIFICATION-GAP:` annotation naming the specific unavailable source and what could not be confirmed — e.g., `VERIFICATION-GAP: Directnic documentation unreachable — record types unconfirmed`.
 - **Version-pinning rule:** Record software versions, OS version, and configuration state observed during evidence collection.
 - **Last-verified rule:** Include a "Last verified:" timestamp and staleness indicator (e.g., "Verified against Proxmox 8.1 on 2026-04-15").
 - **Check-repo-first rule:** Before writing system-specific values (hostnames, IPs, domains, versions), check existing documentation in the same repository. If data exists locally, use it — never guess from training data.
+- **Check-reference-data rule:** Before generating DNS record instructions, check `reference/` subdirectory in the skill directory for provider-specific record type and constraint data. If reference data exists for the target provider, use it — never invent record type support from training data.
+- **Format-matching rule:** Before generating a runbook, search the repository (and sibling repos if accessible) for existing runbooks. If an established format exists, match it. Do not invent a new format when a proven one is available. If existing runbooks use steps-only format, use steps-only format — do not add YAML enforcement blocks.
 
 ### Self-Review Step (MANDATORY)
 
 After generating a runbook, the agent MUST validate the output against ALL enforcement rules BEFORE presenting it. One-shot correctness is the target — the user should never need to correct the same issue twice.
 
-## Dual-Output Contract
+<<<<<<< HEAD
+## Runbook Type Taxonomy
+=======
+## Verification Row-by-Row Exact Comparison Template (MANDATORY)
 
-Every runbook MUST contain BOTH:
+When the runbook includes a verification section that compares live values against a specification, each value MUST be compared exactly using this row-by-row template:
+
+```markdown
+### Verification Results
+
+| Field | Expected (from source) | Actual (live) | Result |
+|-------|----------------------|---------------|--------|
+| <field_name> | <specification_value> | <live_query_value> | ✅ PASS / ❌ FAIL |
+```
+
+**Requirements:**
+
+- Each field in a multi-field record is compared independently (e.g., SRV priority AND weight are separate rows)
+- The source of truth for "Expected" values must be cited (e.g., "from issue #N," "from email dated YYYY-MM-DD")
+- Result is binary: ✅ PASS (exact match) or ❌ FAIL (any difference)
+- Footnotes and notes about "minor differences" are FORBIDDEN — if it does not match, it is ❌ FAIL
+- "Functionally equivalent," "works the same," and "semantically close" are FORBIDDEN as verification outcomes
+
+**Prohibited patterns in verification sections:**
+
+| Prohibited Pattern | Correct Pattern |
+|-------------------|----------------|
+| "Priority and weight are swapped but functionally equivalent" | ❌ FAIL for priority, ❌ FAIL for weight |
+| "Minor difference in value, does not affect behavior" | ❌ FAIL for that field |
+| "Close enough to the specification" | ❌ FAIL — exact match required |
+
+## Dual-Output Contract
+>>>>>>> spec/fix-1088
+
+Not all runbooks need the same format. The skill classifies runbooks into four types, each with a different output contract:
+
+| Type | Purpose | Format | YAML Blocks? | Example |
+|------|---------|--------|-------------|----------|
+| **one-off-config** | Apply a known configuration (DNS, SSL, users) | steps-only | No | "Set these 8 DNS records, verify with dig" |
+| **periodic-procedure** | Scheduled operational task (backups, rotations) | steps-only | No | "Run these 5 commands in order" |
+| **troubleshooting** | Diagnose an unknown problem from symptoms | dual-output | Yes | "Site is down, work through these diagnostic steps" |
+| **incident-response** | Active outage requiring rapid mitigation and postmortem | dual-output | Yes | "Service X is returning 500s, mitigate then diagnose" |
+
+### Type Selection Rules
+
+1. **Classify at invocation.** When `generate` is invoked, the agent MUST determine the runbook type (or prompt the user if unclear from context) before generating any content.
+2. **Default to one-off-config.** If the type cannot be determined, default to `one-off-config` (steps-only) — it is the least operator-hostile format.
+3. **Format-matching rule.** Before generating a runbook, search the repository (and sibling repos if accessible) for existing runbooks. If an established format exists, match it. Do not invent a new format when a proven one is available. If existing runbooks use steps-only format, use steps-only format — do not add YAML enforcement blocks.
+
+### Steps-Only Format (one-off-config and periodic-procedure)
+
+For `one-off-config` and `periodic-procedure` runbooks, the output contract is:
+
+1. **Metadata header** — plain text (domain, provider, date, source), NOT YAML
+2. **Prerequisites** — log in, navigate, open elevated session
+3. **Numbered steps** — each step with exact field values and a verify command after each step
+4. **Reference table** — all records/fields in one place for quick lookup
+5. **Verification script** — one command to check everything at once
+6. **Troubleshooting table** — if X fails, do Y
+
+No YAML enforcement blocks. No symptom catalog. No diagnosis map. No postmortem template. The operator needs to "just do the job."
+
+### Dual-Output Format (troubleshooting and incident-response)
+
+For `troubleshooting` and `incident-response` runbooks, the output contract requires BOTH:
 
 1. **AI-parseable enforcement blocks** — `yaml+symbolic` sections with structured data:
    - Environment context (interface, tools, versions, OS)
@@ -115,7 +188,58 @@ Every runbook MUST contain BOTH:
    - Verification commands
    - Postmortem template with timeline and action items
 
-The AI-parseable blocks provide structure for automation; the operational procedures provide executable steps for humans. Neither alone is sufficient.
+The AI-parseable blocks provide structure for automation; the operational procedures provide executable steps for humans. Neither alone is sufficient for troubleshooting and incident-response types.
+
+**One-off-config and periodic-procedure runbooks use steps-only format with NO YAML enforcement blocks.**
+
+## Communication Scope
+
+The steps-only rule applies ONLY to the operational procedures section of a runbook. The skill produces three distinct output types, each with different context requirements:
+
+| Output Type | Context Required | Byline | Example |
+|-------------|-----------------|--------|---------|
+| **Operational steps** | Steps only — no explanations, no background, no conditional logic. A sysop copies, pastes, done. | Not applicable | "1. Add A record: Type=A, Name=@, Value=192.0.2.1" |
+| **Status communications** (email replies, incident notifications, stakeholder updates) | Full narrative — what happened and why, who did it, what was broken before, what was changed after, current live state, references to supporting documents | Mandatory — context-appropriate attribution (see Byline Rule below) | "DirectNIC replaced DNS records with parking page A records when the domains expired..." |
+| **Postmortem narrative** (incident-response postmortem section) | Full narrative — timeline, root cause, contributing factors, action items | Mandatory — context-appropriate attribution | Postmortem template with timeline and action items |
+
+### Prose Style for Status Communications
+
+Status communications follow the structure that the content demands, not a template. The prose pattern that works:
+
+1. **Opening:** One or two sentences stating what happened and who did what (incident cause and attribution)
+2. **What was wrong:** Specific broken state — the exact records, services, or components that were affected, not a vague summary
+3. **What was corrected:** Before and after for each affected component, showing the specific changes made
+4. **Current state:** Confirmation of the live state after correction
+5. **References:** Supporting documents, runbooks, or systems referenced
+
+This structure follows from the content — do not force content into a rigid template when the incident does not warrant all five elements.
+
+### AI Byline Rule (MANDATORY)
+
+The AI-authored byline is MANDATORY on any communication the agent generates. This applies to:
+
+- Status emails and email replies
+- Incident notifications
+- Stakeholder updates
+- Any prose the agent authors or substantially edits
+
+**The byline MUST appear in both plain-text and HTML sections** of dual-format communications (e.g., MIME multipart emails).
+
+**The byline MUST NOT be removed on subsequent edits.** If the agent re-edits a communication it previously generated, the byline stays.
+
+**Byline semantics:**
+
+| Agent's Role | Byline Format | Example |
+|---------------|---------------|---------|
+| Agent authored the communication | `— <AgentName> (<ModelId>)` | `— OpenCode (ollama-cloud/glm-5.1)` |
+| Agent drafted on behalf of a user who provided direct message/instructions | `on behalf of <dev.name>` or `copy editor for <dev.name>` (context-dependent) | `— OpenCode on behalf of Michael Conrad` |
+| Agent edited/formatting-only on user's direct content | `copy editor for <dev.name>` | `— OpenCode, copy editor for C.W. Henderson` |
+
+When the user provides a direct message or provides direct instructions for a message's contents, the byline reflects the user's authorship — "on behalf of" or "copy editor for" — not a bare `<status>` token. The phrasing depends on context: "on behalf of" when the agent drafted the communication from the user's instructions, "copy editor for" when the agent primarily formatted or polished the user's own words.
+
+### Scope of Steps-Only Rule
+
+The steps-only rule (enforcement rule "Steps-only rule") applies to **operational runbook procedures ONLY**. It does NOT apply to status communications, incident notifications, postmortem narratives, or any prose addressed to stakeholders who were not present for the work and need full context.
 
 ## Worktree Mode
 
@@ -168,6 +292,87 @@ Action: [auto-fix|conditional|flag-for-review]
 | Service name wrong | CONFLICTING | auto-fix | Update with actual service name |
 | Package version mismatch | VERIFICATION-GAP | auto-fix | Update with actual version |
 | Step chain broken | STRUCTURE-VIOLATION | flag-for-review | HALT — rework step connection |
+| ALL verification sources unreachable for a section's claims | VERIFICATION-GAP | flag-for-review | HALT — block section, do NOT present operational steps |
+
+## Verification-Failure Enforcement Gate (MANDATORY)
+
+**🚫 CRITICAL: When ALL live verification sources for a section's claims fail (transport errors, 404s, timeouts, unreachable), the agent MUST HALT before presenting operational steps for that section. Producing unverified instructions as verified runbook content is a CRITICAL VIOLATION.**
+
+### Gate Procedure
+
+For each runbook section containing operational steps:
+
+```
+1. Attempt verification against ALL available sources:
+   - Live system query or --help output
+   - Official vendor documentation (webfetch)
+   - Man pages
+   - Reference data in skill's reference/ directory
+   - Existing runbooks in repository
+
+2. Evaluate verification results:
+   a. AT LEAST ONE source confirmed → proceed with verified instructions
+   b. ALL sources failed or unreachable → FAIL the gate
+
+3. On gate failure:
+   a. Do NOT present operational steps as verified instructions
+   b. Insert explicit VERIFICATION-GAP annotation:
+      "VERIFICATION-GAP: <provider/system> documentation unreachable — <specific claims> unconfirmed"
+   c. HALT and prompt the user:
+      "I cannot verify [specific claims] against live documentation. Please confirm:
+       (a) [first unverified claim]
+       (b) [second unverified claim]
+       ..."
+   d. Do NOT silently fall back to training knowledge
+```
+
+### Evidence Anchoring on Verification Failure
+
+When the verification gate fails, the runbook MUST include an explicit evidence block:
+
+```yaml
+verification_gap:
+  provider: "<provider name>"
+  sources_attempted:
+    - source: "<URL or tool call>"
+      result: "<error type — 404, transport error, timeout>"
+  claims_unconfirmed:
+    - "<specific claim that could not be verified>"
+    - "<specific claim that could not be verified>"
+  user_action_required: "Please confirm the above claims manually"
+  timestamp: "<ISO date>"
+```
+
+### DNS-Specific Validation (MANDATORY for DNS runbooks)
+
+When generating DNS runbooks, the agent MUST perform these pre-checks BEFORE writing any DNS record instructions:
+
+```
+1. Check reference/ directory for provider-specific DNS data:
+   - glob(pattern=".opencode/skills/sre-runbook/reference/*.md")
+   - If reference data exists for the target provider, USE IT
+   - If no reference data exists, HALT and request provider DNS details from the user
+
+2. Validate record type constraints:
+   a. CNAME at zone apex → RFC-invalid per RFC 1034 (conflicts with SOA/NS at root)
+   b. A record pointing to third-party IP → flag as FRAGILE (IP changes break the record)
+   c. Provider-specific apex resolution → check if ALIAS/ANAME is supported
+
+3. Flag provider-specific defects:
+   - If user reports a provider defect (e.g., "URL redirector doesn't handle non-SSL"),
+     include this in the runbook as a KNOWN-DEFECT annotation
+   - Never assume provider capabilities from training data
+```
+
+### Gate Failure Examples
+
+| Scenario | Gate Action |
+|----------|-------------|
+| Directnic docs return 404s for ALL DNS help pages | HALT: "VERIFICATION-GAP: Directnic documentation unreachable — supported record types, GUI paths, and redirector capabilities unconfirmed" |
+| `--help` returns error AND man page missing AND no vendor docs | HALT: "VERIFICATION-GAP: <command> verification failed — no sources confirmed the command syntax" |
+| DNS runbook proposes CNAME at apex | REJECT: "CNAME at zone apex is RFC-invalid per RFC 1034. Use ALIAS or A record instead." |
+| DNS runbook proposes A record to third-party IP | FLAG: "FRAGILE: A record to <IP> — upstream IP changes will break this record. Confirm this IP is stable." |
+| One source confirms but another contradicts | INVESTIGATE: resolve contradiction, use confirmed source, flag disagreement |
 
 ## Cross-Reference Verification (MANDATORY)
 
@@ -212,6 +417,10 @@ Before invoking any cross-referenced skill:
 - **GitBucket:** Use Python client from gitbucket-api skill
 - **Platform Detection:** Uses `github.platform` environment variable
 
+## Reference Data
+
+- **Directnic DNS record types:** `reference/directnic-record-types.md` — supported record types (A, AAAA, ALIAS, CNAME, TXT, SRV, MX) and apex/CNAME constraints
+
 ## Source Attribution
 
 This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces reasoning-first runbook generation to prevent template-filling anti-patterns.
@@ -219,7 +428,10 @@ This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch
 Key adaptations for <AgentName>:
 - Integration with existing systematic-debugging and verification-before-completion skills
 - GitBucket platform support via MCP tools
-- Dual-output contract (AI-parseable + human-readable)
+- Runbook type taxonomy (one-off-config, periodic-procedure, troubleshooting, incident-response)
+- Conditionally-applied dual-output contract (YAML blocks only for troubleshooting/incident-response)
+- Steps-only format for one-off-config and periodic-procedure runbooks
+- Format-matching rule to match existing runbook formats before inventing new ones
 - Completion guarantee integration
 - Environment-context-first discipline (interface preference, tool verification, live docs)
 - Operational-procedure focus (steps-only, single-path, real values, minimum-necessary)

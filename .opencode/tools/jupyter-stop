@@ -18,7 +18,9 @@ import sys
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent  # project root
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 PORT = 18888
 
 

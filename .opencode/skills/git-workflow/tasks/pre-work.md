@@ -317,8 +317,8 @@ If found, report collision and HALT — do not reuse another branch's worktree.
 
 | Layer | Mechanism | Scope | Bypassable? |
 | -- | -- | -- | -- |
-| **Local** | `.githooks/pre-commit` | Blocks commit to main | No |
-| **Local** | `.githooks/post-commit` | Warns after commit to main | N/A (post) |
+| **Local** | `.opencode/hooks/pre-commit` | Blocks commit to main | No |
+| **Local** | `.opencode/hooks/post-commit` | Warns after commit to main | N/A (post) |
 | **GitHub** | Branch protection rules | Requires PR | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
