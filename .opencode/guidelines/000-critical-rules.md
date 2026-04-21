@@ -915,6 +915,25 @@ API calls that mutate state must use the platform's dedicated API client (e.g., 
 - 🚫 FORBIDDEN: `uv run python -c '...'` for any POST/PUT/PATCH operation; raw `requests.post()` / `requests.put()` / `requests.patch()` outside the dedicated API client; any inline script containing a mutation HTTP method
 - ✅ REQUIRED: Use `./.opencode/tools/gitbucket-api create-pr`, `./.opencode/tools/gitbucket-api create-issue`, etc. for all GitBucket mutations; use GitHub MCP for GitHub mutations; if a needed command is missing, HALT and report the gap; use the tool's built-in error handling and response parsing
 
+## Critical Violation: Soft-Passing Verification Mismatches
+
+**⚠️ Reporting a verification mismatch as "passing," "functionally equivalent," "minor difference," or "semantically close" — instead of FAIL — is a CRITICAL GUIDELINE VIOLATION.**
+
+Verifying live state against a specification requires exact match. Any deviation — no matter how "functionally equivalent" — is a FAIL. The agent must NEVER apply its own judgment about whether a mismatch "matters" during verification.
+
+- 🚫 FORBIDDEN: Reporting a mismatched value as "passing," "verified," or "PASS"
+- 🚫 FORBIDDEN: Rationalizing a mismatch as "functionally equivalent," "minor difference," "works the same," or "semantically close"
+- 🚫 FORBIDDEN: Downgrading a FAIL to a PASS based on the agent's judgment about whether the mismatch "matters"
+- 🚫 FORBIDDEN: Hiding discrepancies in footnotes, notes, or secondary annotations instead of surfacing them as FAIL in the primary verification table
+- 🚫 FORBIDDEN: Comparing multi-field records as a whole instead of comparing each field independently (e.g., SRV priority AND weight are separate comparisons)
+- ✅ REQUIRED: Each field in a multi-field record is compared independently — all fields must match exactly for the record to PASS
+- ✅ REQUIRED: Verification results are reported as a pass/fail table with no hedging language
+- ✅ REQUIRED: If the stakeholder wants to accept a deviation, that is their decision — not the agent's
+- ✅ REQUIRED: The default comparison mode for ALL external verifications (DNS records, configuration values, API responses, infrastructure state) is `exact` — character-for-character match
+- ✅ REQUIRED: `semantic` comparison mode is ONLY for code behavior where multiple implementations achieve the same spec intent, and requires explicit per-field justification
+
+**AUTHORITY:** `065-verification-honesty.md` → "Verification Comparison Semantics" section, `verification-before-completion` skill → "Comparison Modes" section
+
 ## Sub-Agent Extraction Pattern
 
 All skill task dispatches follow a sub-agent-first paradigm. The main agent is a pure orchestrator that never loads task files directly — it dispatches every task via `task(subagent_type="general")` and receives compact result contracts. Each SKILL.md contains a "Sub-Agent Tasks" section with word-count context, result contract schemas, and dispatch context schemas. The main agent loads only SKILL.md files and reads compact result contracts (≈100-500 words), never loading task files directly.

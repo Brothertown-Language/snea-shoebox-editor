@@ -75,14 +75,19 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - Referencing CLI commands, GUI paths, or API calls without verifying against live documentation
 - Annotating unverified information with "(unverified)" instead of excluding it
 - Falling back to training knowledge when live verification fails
+<<<<<<< HEAD
 - Proceeding past a section when ALL verification sources for that section's claims returned errors or were unreachable
 - Producing operational steps for a domain without confirming the available mechanisms (e.g., DNS record types at apex, provider-specific capabilities)
+=======
+- Reporting verification mismatches as "functionally equivalent" or "minor difference" instead of FAIL
+>>>>>>> spec/fix-1088
 
 ### ✅ REQUIRED
 
 - **Single-path rule:** ONE method per operation. GUI-first for operators who prefer GUI; CLI only when no GUI exists or operator prefers CLI. Never present alternatives side by side.
 - **Environment context collection:** Before generating any instruction, determine: interface preference, available tools, package manager, OS version.
 - **Real-values rule:** Use actual hostnames, IPs, and domain names from the environment reference. Zero generic placeholders. Check existing documentation in the repository first.
+- **Exact-match verification rule:** When verifying DNS records, configuration values, API responses, or infrastructure state against a specification, each value must be compared exactly. The verification section MUST use the row-by-row comparison template (see below). Footnotes and notes about "minor differences" are FORBIDDEN — if it does not match, it is FAIL.
 - **Prerequisites-first rule:** Every command requiring elevation MUST have the "open elevated..." step before it.
 - **Steps-only rule:** Runbook steps are numbered actions and copy-paste commands only. No explanations of why, no background context, no conditional logic.
 - **Minimum-necessary rule:** Include only settings directly relevant to the problem. No tangential parameters.
@@ -102,7 +107,39 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 
 After generating a runbook, the agent MUST validate the output against ALL enforcement rules BEFORE presenting it. One-shot correctness is the target — the user should never need to correct the same issue twice.
 
+<<<<<<< HEAD
 ## Runbook Type Taxonomy
+=======
+## Verification Row-by-Row Exact Comparison Template (MANDATORY)
+
+When the runbook includes a verification section that compares live values against a specification, each value MUST be compared exactly using this row-by-row template:
+
+```markdown
+### Verification Results
+
+| Field | Expected (from source) | Actual (live) | Result |
+|-------|----------------------|---------------|--------|
+| <field_name> | <specification_value> | <live_query_value> | ✅ PASS / ❌ FAIL |
+```
+
+**Requirements:**
+
+- Each field in a multi-field record is compared independently (e.g., SRV priority AND weight are separate rows)
+- The source of truth for "Expected" values must be cited (e.g., "from issue #N," "from email dated YYYY-MM-DD")
+- Result is binary: ✅ PASS (exact match) or ❌ FAIL (any difference)
+- Footnotes and notes about "minor differences" are FORBIDDEN — if it does not match, it is ❌ FAIL
+- "Functionally equivalent," "works the same," and "semantically close" are FORBIDDEN as verification outcomes
+
+**Prohibited patterns in verification sections:**
+
+| Prohibited Pattern | Correct Pattern |
+|-------------------|----------------|
+| "Priority and weight are swapped but functionally equivalent" | ❌ FAIL for priority, ❌ FAIL for weight |
+| "Minor difference in value, does not affect behavior" | ❌ FAIL for that field |
+| "Close enough to the specification" | ❌ FAIL — exact match required |
+
+## Dual-Output Contract
+>>>>>>> spec/fix-1088
 
 Not all runbooks need the same format. The skill classifies runbooks into four types, each with a different output contract:
 

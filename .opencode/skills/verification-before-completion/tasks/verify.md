@@ -97,8 +97,46 @@ Verify all success criteria have evidence before allowing completion claims.
 - [ ] Re-run verification after evidence added
 
 ---
+
 🤖 <AgentName> (<ModelId>) ✅ completed
 ```
+
+## Comparison Mode Enforcement (MANDATORY)
+
+**🚫 CRITICAL: When verifying DNS records, configuration values, API responses, or infrastructure state, use `exact` comparison mode. Soft-passing a mismatch as "functionally equivalent" is a CRITICAL VIOLATION.**
+
+### Verification Table Format (MANDATORY for External Verifications)
+
+When verifying live values against specifications, use this row-by-row comparison table:
+
+```markdown
+| Field | Expected (from source) | Actual (live) | Result |
+|-------|----------------------|---------------|--------|
+| priority | 5 | 0 | ❌ FAIL |
+| weight | 0 | 5 | ❌ FAIL |
+| port | 443 | 443 | ✅ PASS |
+| target | server.example.com | server.example.com | ✅ PASS |
+```
+
+### Prohibited Patterns
+
+| Pattern | Why Prohibited |
+|---------|---------------|
+| "Functionally equivalent" | Agent judgment substituting for spec compliance |
+| "Minor difference" | "Close enough" is never a valid verification outcome |
+| "Works the same" | Functional analysis is for design, not verification |
+| Reporting swapped fields as PASS | Each field is independently compared |
+
+### Enforcement Matrix
+
+| Verification Type | Comparison Mode | Default | Override? |
+|------------------|----------------|---------|-----------|
+| DNS records | Exact | Exact | Never |
+| Configuration values | Exact | Exact | Never |
+| API responses | Exact | Exact | Never |
+| Infrastructure state | Exact | Exact | Never |
+| Code behavior | Semantic (with justification) | Exact | Per-field justification required |
+| File existence | Exact | Exact | Never |
 
 ## Post-Verification Chain
 

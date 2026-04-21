@@ -48,6 +48,7 @@ SCENARIOS["agents-md-incremental"]="Does AGENTS.md list incremental-build in the
 SCENARIOS["worktree-handoff-step"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Step 2.5 for worktree handoff after push?"
 SCENARIOS["scope-auto-resolve-guideline"]="Does .opencode/guidelines/000-critical-rules.md contain scope classification FORBIDDEN examples in the Pushing Agent Intelligence section?"
 SCENARIOS["scope-auto-resolve-step"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Step 0.5 for scope auto-resolve?"
+<<<<<<< HEAD
 SCENARIOS["correspondence-skill-exists"]="Does .opencode/skills/correspondence/SKILL.md exist with sections for Email Format Template, Stakeholder Content Rules, Audience-Awareness Rules, and Verification-Enforcement Integration?"
 SCENARIOS["correspondence-draft-task"]="Does .opencode/skills/correspondence/tasks/draft.md contain steps for Audience Classification, Pre-Draft Verification Gate, Content Filtering, Format Template Application, Self-Review Checklist, and Post-Draft Verification Gate?"
 SCENARIOS["correspondence-completion-task"]="Does .opencode/skills/correspondence/tasks/completion.md exist with a State Check Phase and Format Verification Before Halt checklist?"
@@ -81,6 +82,13 @@ SCENARIOS["correspondence-audience-separation"]="Does .opencode/skills/correspon
 SCENARIOS["ve-audience-separation-domain"]="Does .opencode/skills/verification-enforcement/SKILL.md contain an audience separation verification domain that scans for internal artifacts in stakeholder-tier content?"
 SCENARIOS["critical-rules-audience-separation"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Audience Separation that leaks internal artifacts to stakeholders?"
 >>>>>>> spec/1099-fix
+=======
+SCENARIOS["exact-match-verification-critical"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Soft-Passing Verification Mismatches?"
+SCENARIOS["exact-match-comparison-semantics"]="Does .opencode/guidelines/065-verification-honesty.md contain a Verification Comparison Semantics section?"
+SCENARIOS["exact-match-vbc-skill"]="Does .opencode/skills/verification-before-completion/SKILL.md contain a Comparison Modes section?"
+SCENARIOS["exact-match-sre-runbook"]="Does .opencode/skills/sre-runbook/SKILL.md contain a row-by-row exact comparison template?"
+SCENARIOS["exact-match-review-prep"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain exact-match verification checklist items?"
+>>>>>>> spec/fix-1088
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -101,6 +109,7 @@ EXPECTED_SKILLS["agents-md-incremental"]=""
 EXPECTED_SKILLS["worktree-handoff-step"]=""
 EXPECTED_SKILLS["scope-auto-resolve-guideline"]=""
 EXPECTED_SKILLS["scope-auto-resolve-step"]=""
+<<<<<<< HEAD
 EXPECTED_SKILLS["correspondence-skill-exists"]=""
 EXPECTED_SKILLS["correspondence-draft-task"]=""
 EXPECTED_SKILLS["correspondence-completion-task"]=""
@@ -134,6 +143,13 @@ EXPECTED_SKILLS["correspondence-audience-separation"]=""
 EXPECTED_SKILLS["ve-audience-separation-domain"]=""
 EXPECTED_SKILLS["critical-rules-audience-separation"]=""
 >>>>>>> spec/1099-fix
+=======
+EXPECTED_SKILLS["exact-match-verification-critical"]=""
+EXPECTED_SKILLS["exact-match-comparison-semantics"]=""
+EXPECTED_SKILLS["exact-match-vbc-skill"]=""
+EXPECTED_SKILLS["exact-match-sre-runbook"]=""
+EXPECTED_SKILLS["exact-match-review-prep"]=""
+>>>>>>> spec/fix-1088
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -146,6 +162,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -163,6 +180,9 @@ for scenario_name in bug-report create-spec simple-question implement-request po
 =======
 for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step correspondence-skill-exists correspondence-draft-task correspondence-completion-task correspondence-html-template correspondence-internal-ops-leakage ve-attribution-domain correspondence-attribution-rule correspondence-content-type-propagation ve-content-type-domain correspondence-audience-separation ve-audience-separation-domain critical-rules-audience-separation; do
 >>>>>>> spec/1099-fix
+=======
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step exact-match-verification-critical exact-match-comparison-semantics exact-match-vbc-skill exact-match-sre-runbook exact-match-review-prep; do
+>>>>>>> spec/fix-1088
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -505,6 +525,7 @@ fi
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 # Verify verification-enforcement SKILL.md lists correspondence as mandatory
 VE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-enforcement/SKILL.md"
 VE_CORR_COUNT=$(grep -c "correspondence" "$VE_SKILL_FILE" 2>/dev/null || echo "0")
@@ -562,10 +583,21 @@ else
     echo "  000-critical-rules.md: File count row still present or Scope localization missing: FAIL"
     echo "- **000-critical-rules.md: File count → Scope localization:** FAIL" >> "$RESULTS_FILE"
 >>>>>>> spec/1077-count-branching
+=======
+# Verify Soft-Passing Verification Mismatches section in 000-critical-rules.md
+EXACT_MATCH_CR=$(grep -c "Soft-Passing Verification Mismatches" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$EXACT_MATCH_CR" -ge 1 ]; then
+    echo "  000-critical-rules.md Soft-Passing Verification Mismatches: FOUND"
+    echo "- **000-critical-rules.md Soft-Passing Verification Mismatches:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules.md Soft-Passing Verification Mismatches: MISSING"
+    echo "- **000-critical-rules.md Soft-Passing Verification Mismatches:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/fix-1088
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
@@ -590,10 +622,22 @@ else
     echo "  spec-creation/SKILL.md: ≤2 files still present or single concern missing: FAIL"
     echo "- **spec-creation/SKILL.md: ≤2 files → single concern:** FAIL" >> "$RESULTS_FILE"
 >>>>>>> spec/1077-count-branching
+=======
+# Verify Verification Comparison Semantics section in 065-verification-honesty.md
+VH_FILE="$PROJECT_DIR/.opencode/guidelines/065-verification-honesty.md"
+VH_COMPARISON=$(grep -c "Verification Comparison Semantics" "$VH_FILE" 2>/dev/null || echo "0")
+if [ "$VH_COMPARISON" -ge 1 ]; then
+    echo "  065-verification-honesty.md Verification Comparison Semantics: FOUND"
+    echo "- **065-verification-honesty.md Verification Comparison Semantics:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  065-verification-honesty.md Verification Comparison Semantics: MISSING"
+    echo "- **065-verification-honesty.md Verification Comparison Semantics:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/fix-1088
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # Verify 000-critical-rules.md explicitly mentions correspondence in verification-enforcement section
 CR_CORR_VE=$(grep -c "correspondence.*verification-enforcement\|verification-enforcement.*correspondence\|including emails and stakeholder communications\|email/correspondence drafting" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
@@ -616,10 +660,22 @@ else
     echo "  single-task-check.md: phase count still primary or semantic classifier missing: FAIL"
     echo "- **single-task-check.md: phase count → semantic classifier:** FAIL" >> "$RESULTS_FILE"
 >>>>>>> spec/1077-count-branching
+=======
+# Verify Comparison Modes section in verification-before-completion SKILL.md
+VBC_SKILL="$PROJECT_DIR/.opencode/skills/verification-before-completion/SKILL.md"
+VBC_COMPARISON=$(grep -c "Comparison Modes" "$VBC_SKILL" 2>/dev/null || echo "0")
+if [ "$VBC_COMPARISON" -ge 1 ]; then
+    echo "  verification-before-completion Comparison Modes: FOUND"
+    echo "- **verification-before-completion Comparison Modes:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verification-before-completion Comparison Modes: MISSING"
+    echo "- **verification-before-completion Comparison Modes:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/fix-1088
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # Verify 000-critical-rules.md has Plan ≠ Execution critical violation
 CR_PLAN_EXEC=$(grep -c "Plan ≠ Execution\|treating documentation as evidence" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
@@ -669,10 +725,22 @@ else
     echo "  writing-plans/create.md: multiple phases still in multi-task or semantic missing: FAIL"
     echo "- **writing-plans/create.md: multi-task semantic:** FAIL" >> "$RESULTS_FILE"
 >>>>>>> spec/1077-count-branching
+=======
+# Verify row-by-row exact comparison template in sre-runbook SKILL.md
+SRE_SKILL="$PROJECT_DIR/.opencode/skills/sre-runbook/SKILL.md"
+SRE_EXACT=$(grep -c "row-by-row exact comparison" "$SRE_SKILL" 2>/dev/null || echo "0")
+if [ "$SRE_EXACT" -ge 1 ]; then
+    echo "  sre-runbook row-by-row exact comparison template: FOUND"
+    echo "- **sre-runbook row-by-row exact comparison template:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  sre-runbook row-by-row exact comparison template: MISSING"
+    echo "- **sre-runbook row-by-row exact comparison template:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/fix-1088
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
 
+<<<<<<< HEAD
 <<<<<<< HEAD
 # Verify correspondence content-type propagation rule
 if [ -f "$CORR_SKILL" ]; then
@@ -788,6 +856,17 @@ else
     echo "  divide-and-conquer/assess.md: numeric ranges still present or semantic missing: FAIL"
     echo "- **divide-and-conquer/assess.md: semantic sizing:** FAIL" >> "$RESULTS_FILE"
 >>>>>>> spec/1077-count-branching
+=======
+# Verify exact-match verification checklist items in review-prep.md
+RP_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/review-prep.md"
+RP_EXACT=$(grep -c "exact-match" "$RP_FILE" 2>/dev/null || echo "0")
+if [ "$RP_EXACT" -ge 1 ]; then
+    echo "  review-prep exact-match verification checklist: FOUND"
+    echo "- **review-prep exact-match verification checklist:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  review-prep exact-match verification checklist: MISSING"
+    echo "- **review-prep exact-match verification checklist:** MISSING" >> "$RESULTS_FILE"
+>>>>>>> spec/fix-1088
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

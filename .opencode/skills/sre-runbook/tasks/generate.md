@@ -303,6 +303,18 @@ verification:
     fail_action: "<what to do if verification fails>"
 ```
 
+**Verification comparison format (MANDATORY):** When verification involves comparing live values against a specification, the output MUST include a row-by-row exact comparison table:
+
+```markdown
+### Verification Results
+
+| Field | Expected (from source) | Actual (live) | Result |
+|-------|----------------------|---------------|--------|
+| <field_name> | <specification_value> | <live_query_value> | ✅ PASS / ❌ FAIL |
+```
+
+Each field in a multi-field record is compared independently. Result is binary: ✅ PASS (exact match) or ❌ FAIL (any difference). Footnotes and notes about "minor differences" are FORBIDDEN. The source of truth for "Expected" values must be cited.
+
 **Verification gate:** Confirm each criterion maps to a symptom. If verification fails, return to Step 2 (re-diagnose) — do NOT proceed to postmortem.
 
 ### Step 5: Postmortem Template

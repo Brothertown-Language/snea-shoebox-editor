@@ -163,6 +163,39 @@ Before invoking any cross-referenced skill:
 
 **Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including completion markers, STATUS markers, and authorization currency. When this skill encounters a "complete" claim that smells wrong (e.g., STATUS says COMPLETE but content is incomplete, or a completion claim on a spec that was revised after authorization), invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
 
+## Comparison Modes
+
+**🚫 CRITICAL: The default comparison mode for all external verifications is `exact` — character-for-character match. Soft-passing a mismatch as "functionally equivalent" is a CRITICAL VIOLATION per `065-verification-honesty.md` → "Verification Comparison Semantics".**
+
+### Exact Mode (DEFAULT — Mandatory for External Verifications)
+
+When verifying DNS records, configuration values, API responses, or infrastructure state against a specification, each value must be compared exactly. The ONLY valid PASS is an exact, character-for-character match between the specification value and the live value.
+
+**Verification domains requiring exact mode:**
+
+| Domain | Examples | Why Exact |
+|--------|---------|-----------|
+| DNS records | SRV priority/weight, TXT content, A/AAAA values | Swapped fields change behavior |
+| Configuration values | Port numbers, timeout values, feature flags | "Close enough" masks misconfigurations |
+| API responses | Status codes, response fields, error messages | Field order and values have semantics |
+| Infrastructure state | Service versions, cluster membership, storage paths | Partial matches hide drift |
+
+### Semantic Mode (EXCEPTION — Code Behavior Only)
+
+`semantic` comparison mode applies ONLY when verifying code behavior where multiple implementations achieve the same spec intent (e.g., different sorting algorithms producing the same ordered result).
+
+**Requirements for semantic mode:**
+
+1. Explicit per-field justification for why semantic comparison applies
+2. Documentation of what "same intent" means for that specific field
+3. Default is ALWAYS `exact` — semantic mode must be explicitly chosen
+
+### Enforcement
+
+- Verification reports MUST use the row-by-row comparison table format from `065-verification-honesty.md`
+- Every FAIL must be reported as FAIL — no downgrading, no hedging, no footnotes
+- If the stakeholder wants to accept a deviation, that is their decision — the agent reports FAIL and waits
+
 ## Cross-References
 
 - Related skills: `executing-plans` (implementation), `git-workflow` (branch push), `approval-gate` (authorization), `spec-auditor` (ground-truth adversarial verification)
