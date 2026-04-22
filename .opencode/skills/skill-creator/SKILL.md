@@ -20,7 +20,7 @@ Creating skills IS Test-Driven Development applied to process documentation. Wri
 |------|---------|-------|
 | `init` | Create new skill from template using init_skill.py | ≈200 |
 | `package` | Package skill into distributable zip | ≈150 |
-| `validate` | Validate skill structure and format | ≈100 |
+| `validate` | Agent-driven semantic review of all skill cards (script sensor + intelligent corrections, conflict/ambiguity detection) | ≈100 |
 
 ## Invocation
 
@@ -28,6 +28,7 @@ Creating skills IS Test-Driven Development applied to process documentation. Wri
 - `./.opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>` - Initialize new skill
 - `./.opencode/skills/skill-creator/scripts/package_skill.py <skill-folder> [output-dir]` - Package skill
 - `./.opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Validate skill
+- `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py --json` - Validate with JSON output for programmatic consumption
 
 ## Skill Type Taxonomy
 
@@ -147,7 +148,7 @@ If worktree.path is set, all file operations and git commands MUST use it as the
 
 ### Validation Gate
 
-The `validate` task (`quick_validate.py`) SHOULD check for:
+The `validate` task provides comprehensive checks via `validate_skill_cards.py` for multi-skill reviews and conflict/ambiguity detection, while `quick_validate.py` is for single-skill quick structural checks. Validation SHOULD check for:
 - Skills with `bash` or `git` operations that lack a "Worktree Mode" section
 - Skills that dispatch sub-agents but don't pass `worktree.path` in context
 - New or updated SKILL.md and task/*.md files containing 0-based counting patterns (`Step 0`, `Phase 0`, `Step 0.`, `Phase 0.`) outside of code blocks, code-fenced examples, or inline code references — flag as validation error requiring correction before skill can be approved
@@ -167,7 +168,7 @@ The `validate` task (`quick_validate.py`) SHOULD check for:
 
 ### Validation Gate
 
-The `validate` task (`quick_validate.py`) SHOULD check for and flag:
+The `validate` task uses `validate_skill_cards.py` for comprehensive cross-skill placeholder checks (conflict/ambiguity detection across all skill cards) and `quick_validate.py` for single-skill quick structural checks. Validation SHOULD check for and flag:
 - Specific agent names in SKILL.md or task files — must use `<AgentName>` placeholder token
 - Specific model IDs in SKILL.md or task files — must use `<ModelId>` placeholder token
 - Specific developer names or emails in SKILL.md or task files
