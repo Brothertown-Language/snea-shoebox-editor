@@ -51,6 +51,12 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 - [ ] Module docstrings present
 - [ ] No narration print statements
 
+### URL Extraction (MANDATORY — Zero Tolerance)
+- [ ] If outputting a post-creation URL (PR URL, Issue URL), the URL field MUST be copied verbatim from the API response's `html_url` field
+- [ ] Do NOT retype, reconstruct, or assemble the URL from known values (org, repo, number)
+- [ ] Paste the URL exactly as returned by the API — character for character
+- [ ] Verification checkpoint: Compare the pasted URL character-by-character against the `html_url` field in the API response before sending
+
 ### Chat Output Format (MANDATORY — Zero Tolerance)
 - [ ] Executive summary present as **first** chat output element (before any URL)
 - [ ] Outcome line present after summary

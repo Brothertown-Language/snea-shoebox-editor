@@ -60,6 +60,13 @@ sub_issue = github_issue_write(
 ./.opencode/tools/gitbucket-api create-issue <github.owner> <github.repo> "[Task: #<M>] <phase_description>" --body "**Parent Plan:** #<M>\n\n<phase_prose>" --labels task
 ```
 
+### Step 4.5: EXTRACT URL FROM API RESPONSE
+
+1. The sub-issue URL MUST be copied verbatim from the `github_issue_write` API response's `html_url` field.
+2. Do NOT retype, reconstruct, or assemble the URL from known values (org, repo, number).
+3. Paste the URL exactly as returned. If the API response is `{ "html_url": "https://github.com/Org/Repo/issues/42" }`, the output URL is `https://github.com/Org/Repo/issues/42` — character for character.
+4. Verification checkpoint: Compare the pasted URL character-by-character against the `html_url` field in the API response before sending.
+
 ### Step 5: Link Sub-Issue to Parent
 
 **GitHub platform (formal link):**

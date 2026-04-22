@@ -123,6 +123,15 @@ github_issue_write(
 - `id`: Database ID for sub-issue linking
 - `html_url`: Issue URL
 
+**Post-Creation URL Extraction (MANDATORY — per `000-critical-rules.md` §URL Sourcing):**
+
+The Issue URL MUST be extracted from the API response `html_url` field — NEVER constructed from template variables:
+
+1. After the creation API call, extract the `html_url` field from the response
+2. Use this exact value as the Issue URL for all subsequent references (chat output, cross-references, sub-issue linking reports)
+3. **Template construction is FORBIDDEN for post-creation URLs** — do NOT assemble from `<gitbucket.html_url>`, `<github.owner>`, `<github.repo>`, or issue number
+4. If `html_url` is not available in the API response: HALT and report
+
 ### Step 3: Verify Byline in Issue Body
 
 **The issue body must already include a byline footer** (added during spec drafting):

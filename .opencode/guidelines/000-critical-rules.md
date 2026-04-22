@@ -278,6 +278,18 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 
 For URLs to resources that have been **created by an API call** (PR URL, Issue URL), the agent MUST extract the `html_url` field from the API response — never construct from template variables.
 
+**Procedural enforcement in skill tasks:** The following skill task files contain mandatory URL extraction steps that enforce this rule at the point of use:
+
+- `git-workflow/tasks/pr-creation.md` Step 7 — PR URL extraction from `github_create_pull_request`
+- `git-workflow/tasks/review-prep.md` — PR URL extraction after PR creation
+- `approval-gate/tasks/post-implementation.md` — PR URL extraction after PR creation
+- `issue-operations/tasks/link-sub-issue.md` Step 4 — Sub-issue URL extraction from `github_issue_write`
+- `issue-operations/tasks/creation.md` — Issue URL extraction from `github_issue_write`
+- `issue-operations/tasks/completion.md` — Issue URL extraction from `github_issue_write`
+- `verification-before-completion/tasks/completion.md` — Issue URL extraction from `github_issue_write`
+- `divide-and-conquer/tasks/assemble-work.md` — PR URL extraction after PR creation
+- `finishing-a-development-branch/tasks/checklist.md` — URL extraction checklist verification
+
 - **PR URL:** Extract from `github_create_pull_request` response `html_url` field
 - **Issue URL:** Extract from `github_issue_write` response `html_url` field
 - **Template construction is FORBIDDEN** for post-creation URLs

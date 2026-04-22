@@ -38,6 +38,13 @@ Before adding or removing labels in completion, consult `141-planning-status-tra
 
 ## Report Phase
 
+### Step N: EXTRACT URL FROM API RESPONSE
+
+1. The Issue URL MUST be copied verbatim from the `github_issue_write` API response's `html_url` field.
+2. Do NOT retype, reconstruct, or assemble the URL from known values (org, repo, number).
+3. Paste the URL exactly as returned. If the API response is `{ "html_url": "https://github.com/Org/Repo/issues/42" }`, the output URL is `https://github.com/Org/Repo/issues/42` — character for character.
+4. Verification checkpoint: Compare the pasted URL character-by-character against the `html_url` field in the API response before sending.
+
 Generate executive summary in chat:
 
 ```
