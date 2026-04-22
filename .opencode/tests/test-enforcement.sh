@@ -91,6 +91,11 @@ SCENARIOS["red-phase-gate-writing-plans"]="Does .opencode/skills/writing-plans/t
 SCENARIOS["red-phase-gate-writing-plans-skillmd"]="Does .opencode/skills/writing-plans/SKILL.md document that plans must include RED verification checkpoints (Step 2) between writing the test and implementing?"
 SCENARIOS["red-phase-enforcement-incremental-build"]="Does .opencode/guidelines/091-incremental-build.md contain an Enforcement Mechanism section requiring RED test verification before implementation?"
 SCENARIOS["red-phase-enforcement-critical-rules-xref"]="Does .opencode/guidelines/000-critical-rules.md reference the Enforcement Mechanism section in 091-incremental-build.md for RED phase verification?"
+SCENARIOS["dispatch-chain-enforcement-gate"]="Does .opencode/skills/approval-gate/SKILL.md contain an Enforcement checkpoint rules section in the Dispatch Order that requires verification of each mandatory step's output artifacts with specific artifact types and evidence requirements?"
+SCENARIOS["dispatch-artifact-requirements"]="Does .opencode/guidelines/000-critical-rules.md §Bypassing Mandatory Skill Invocations contain artifact verification requirements referencing specific output artifacts for each dispatch chain step?"
+SCENARIOS["review-prep-format-self-check"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Format verification section that requires checking URL label context, URL format context, and element ordering before sending chat output?"
+SCENARIOS["checklist-chat-output-format"]="Does .opencode/skills/finishing-a-development-branch/tasks/checklist.md contain a Chat Output Format section that requires verifying executive summary, outcome, URL label, URL presence, AI byline, and correct ordering?"
+SCENARIOS["dispatch-checkpoint-live-verification"]="Does .opencode/skills/approval-gate/SKILL.md contain an evidence requirement that mandates tool-call artifact evidence for each dispatch chain verification gate?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -154,6 +159,11 @@ EXPECTED_SKILLS["red-phase-gate-writing-plans"]=""
 EXPECTED_SKILLS["red-phase-gate-writing-plans-skillmd"]=""
 EXPECTED_SKILLS["red-phase-enforcement-incremental-build"]=""
 EXPECTED_SKILLS["red-phase-enforcement-critical-rules-xref"]=""
+EXPECTED_SKILLS["dispatch-chain-enforcement-gate"]=""
+EXPECTED_SKILLS["dispatch-artifact-requirements"]=""
+EXPECTED_SKILLS["review-prep-format-self-check"]=""
+EXPECTED_SKILLS["checklist-chat-output-format"]=""
+EXPECTED_SKILLS["dispatch-checkpoint-live-verification"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -166,7 +176,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref dispatch-chain-enforcement-gate dispatch-artifact-requirements review-prep-format-self-check checklist-chat-output-format dispatch-checkpoint-live-verification; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -850,9 +860,71 @@ else
     OVERALL_PASS=false
 fi
 
+# Dispatch chain enforcement gate in approval-gate SKILL.md
+AGATE_SKILL_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/SKILL.md"
+DISPATCH_GATE=$(grep -c "Enforcement checkpoint rules.*MANDATORY\|evidence requirement.*MANDATORY\|tool-call artifact evidence" "$AGATE_SKILL_FILE" 2>/dev/null || echo "0")
+if [ "$DISPATCH_GATE" -ge 1 ]; then
+    echo "  dispatch chain enforcement gate with evidence: FOUND"
+    echo "- **dispatch chain enforcement gate with evidence:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  dispatch chain enforcement gate with evidence: MISSING"
+    echo "- **dispatch chain enforcement gate with evidence:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Dispatch chain artifact verification requirements in 000-critical-rules.md
+DISPATCH_ARTIFACT=$(grep -c "Artifact verification.*MANDATORY\|Required Evidence Artifact" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$DISPATCH_ARTIFACT" -ge 1 ]; then
+    echo "  000-critical-rules dispatch artifact requirements: FOUND"
+    echo "- **000-critical-rules dispatch artifact requirements:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules dispatch artifact requirements: MISSING"
+    echo "- **000-critical-rules dispatch artifact requirements:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# review-prep format self-check
+REVIEW_PREP_FORMAT_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/review-prep.md"
+RP_FORMAT=$(grep -c "Format verification.*MANDATORY\|Chat Output Format.*MANDATORY\|format verification.*check before posting\|Live Verification.*Chat Output Format" "$REVIEW_PREP_FORMAT_FILE" 2>/dev/null || echo "0")
+if [ "$RP_FORMAT" -ge 1 ]; then
+    echo "  review-prep format self-check: FOUND"
+    echo "- **review-prep format self-check:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  review-prep format self-check: MISSING"
+    echo "- **review-prep format self-check:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# checklist chat output format
+FINISHING_CHECKLIST_FILE="$PROJECT_DIR/.opencode/skills/finishing-a-development-branch/tasks/checklist.md"
+CL_FORMAT=$(grep -c "Chat Output Format" "$FINISHING_CHECKLIST_FILE" 2>/dev/null || echo "0")
+if [ "$CL_FORMAT" -ge 1 ]; then
+    echo "  checklist Chat Output Format section: FOUND"
+    echo "- **checklist Chat Output Format section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  checklist Chat Output Format section: MISSING"
+    echo "- **checklist Chat Output Format section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Dispatch checkpoint live verification / evidence requirement in approval-gate SKILL.md
+AG_EVIDENCE=$(grep -c "evidence requirement.*MANDATORY\|tool-call artifact.*evidence\|MUST.*explicitly.*invoke.*verification\|tool-call artifact.*confirm" "$AGATE_SKILL_FILE" 2>/dev/null || echo "0")
+if [ "$AG_EVIDENCE" -ge 1 ]; then
+    echo "  dispatch chain evidence requirement: FOUND"
+    echo "- **dispatch chain evidence requirement:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  dispatch chain evidence requirement: MISSING"
+    echo "- **dispatch chain evidence requirement:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
 echo ""
 echo "" >> "$RESULTS_FILE"
-echo "## Skill Card Validation" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
 
 SKILL_CARD_SCRIPT="$PROJECT_DIR/.opencode/skills/skill-creator/scripts/validate_skill_cards.py"
