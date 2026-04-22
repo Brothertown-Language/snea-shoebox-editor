@@ -62,6 +62,76 @@ def is_on_protected_branch() -> bool:
     return branch in ("main", "master", "dev")
 
 
+def get_diff_summary() -> dict[str, int | list[str]] | None:
+    diff_output = run_git(["diff", "--stat"])
+    if not diff_output:
+        return None
+    lines = diff_output.strip().splitlines()
+    if not lines:
+        return None
+    stat_line = lines[-1].strip() if lines else ""
+    file_count = len([entry for entry in lines[:-1] if entry.strip()])
+    key_files: list[str] = []
+    for line in lines[:-1]:
+        parts = line.split("|")
+        if parts:
+            filepath = parts[0].strip()
+            if filepath and not any(
+                pat in filepath for pat in ("package-lock.json", "pnpm-lock.yaml", "yarn.lock", ".lock")
+            ):
+                key_files.append(filepath)
+    key_files = key_files[:5]
+    insertions = 0
+    deletions = 0
+    ins_match = re.search(r"(\d+) insertion", stat_line)
+    del_match = re.search(r"(\d+) deletion", stat_line)
+    if ins_match:
+        insertions = int(ins_match.group(1))
+    if del_match:
+        deletions = int(del_match.group(1))
+    return {
+        "file_count": file_count,
+        "insertions": insertions,
+        "deletions": deletions,
+        "key_files": key_files,
+    }
+
+
+def get_stash_analysis() -> list[dict[str, str]]:
+    stash_list = run_git(["stash", "list"])
+    if not stash_list:
+        return []
+    analyses: list[dict[str, str]] = []
+    for line in stash_list.splitlines():
+        if not line.strip():
+            continue
+        parts = line.split(":", 2)
+        if len(parts) < 2:
+            continue
+        stash_ref = parts[0].strip()
+        branch_match = re.search(r"On ([^:]+)", line)
+        branch = branch_match.group(1) if branch_match else ""
+        message = parts[2].strip() if len(parts) >= 3 else ""
+        issue_match = re.search(r"#(\d+)", message)
+        issue_ref = issue_match.group(1) if issue_match else ""
+        file_summary = ""
+        show_output = run_git(["stash", "show", stash_ref])
+        if show_output:
+            file_summary = show_output.strip()
+        analyses.append(
+            {
+                "stash_ref": stash_ref,
+                "branch": branch,
+                "message": message,
+                "issue_ref": issue_ref,
+                "file_summary": file_summary,
+            }
+        )
+        if len(analyses) >= 5:
+            break
+    return analyses
+
+
 def has_uncommitted_changes() -> tuple[bool, list[str]]:
     result = run_git(["status", "--porcelain"])
     if not result:
@@ -179,11 +249,11 @@ def build_main_branch_warning(has_changes: bool, changed_files: list[str]) -> st
             lines.append(f"  - `{filepath}`: modified")
         if len(changed_files) > 10:
             lines.append(f"  - ... and {len(changed_files) - 10} more")
-        lines.append("- Suggest: WIP commit + switch to `dev`, then create a feature branch")
+        lines.append("- Action: WIP commit + switch to `dev`, then create a feature branch")
     else:
         lines.append(f"- Branch: `{branch}` (production)")
         lines.append("- WARNING: All work must happen on feature branches, not on `main`")
-        lines.append("- Suggest: switch to `dev` first, then create a feature branch")
+        lines.append("- Action: switch to `dev` first, then create a feature branch")
     return "\n".join(lines)
 
 
@@ -192,8 +262,23 @@ def build_protected_branch_warning(changed_files: list[str]) -> str:
     lines = [
         "## Protected Branch with Uncommitted Changes",
         f"- Branch: `{branch}` with {len(changed_files)} uncommitted changes",
-        "- Suggest: create a feature branch before making changes",
     ]
+    diff_summary = get_diff_summary()
+    if diff_summary:
+        lines.append(f"- Files changed: {diff_summary['file_count']}")
+        lines.append(f"- Lines: +{diff_summary['insertions']} / -{diff_summary['deletions']}")
+        if diff_summary["key_files"]:
+            lines.append("- Key files:")
+            for kf in diff_summary["key_files"]:
+                lines.append(f"  - `{kf}`")
+    for cf in changed_files[:5]:
+        _status = cf[:2].strip() if len(cf) >= 2 else "?"
+        filepath = cf[3:].strip() if len(cf) >= 3 else cf
+        if not diff_summary or filepath not in diff_summary.get("key_files", []):
+            lines.append(f"  - `{filepath}`: modified")
+    if len(changed_files) > 5:
+        lines.append(f"  - ... and {len(changed_files) - 5} more")
+    lines.append("- Diff summary available: analyze changes to suggest pair mode entry")
     return "\n".join(lines)
 
 
@@ -221,7 +306,7 @@ def build_uncommitted_work_warning(changed_files: list[str]) -> str:
     lines = [
         "## Uncommitted Work",
         f"- {len(changed_files)} uncommitted change(s) detected",
-        "- Suggest: commit or stash changes before switching branches",
+        "- Action: commit or stash changes before switching branches",
     ]
     return "\n".join(lines)
 
@@ -230,11 +315,19 @@ def build_stale_stash_warning(stashes: list[str]) -> str:
     lines = [
         "## Stale Stash Found",
     ]
-    for s in stashes[:3]:
-        lines.append(f"- `{s}`")
+    stash_analyses = get_stash_analysis()
+    for analysis in stash_analyses[:3]:
+        lines.append(f"- `{analysis['stash_ref']}`: branch={analysis['branch'] or 'unknown'}")
+        if analysis["issue_ref"]:
+            lines.append(f"  Related issue: #{analysis['issue_ref']}")
+        if analysis["message"]:
+            lines.append(f"  Message: {analysis['message']}")
+        if analysis["file_summary"]:
+            for fs_line in analysis["file_summary"].splitlines()[:3]:
+                lines.append(f"  {fs_line}")
     if len(stashes) > 3:
         lines.append(f"- ... and {len(stashes) - 3} more")
-    lines.append("- Suggest: resume or clean up the stash")
+    lines.append("- Stash analysis available: review contents to recommend resume/drop/issue")
     return "\n".join(lines)
 
 
@@ -247,7 +340,7 @@ def build_merge_conflict_warning(files: list[str]) -> str:
         lines.append(f"  - `{f}`")
     if len(files) > 5:
         lines.append(f"  - ... and {len(files) - 5} more")
-    lines.append("- Suggest: resolve conflicts before proceeding")
+    lines.append("- Action: resolve conflicts before proceeding")
     return "\n".join(lines)
 
 
@@ -255,7 +348,7 @@ def build_unpushed_commits_warning(count: int) -> str:
     lines = [
         "## Unpushed Commits",
         f"- {count} commit(s) ahead of remote",
-        "- Suggest: push when ready with `git push`",
+        "- Action: push when ready with `git push`",
     ]
     return "\n".join(lines)
 
@@ -268,7 +361,7 @@ def build_orphaned_worktrees_warning(wt_list: list[str]) -> str:
         lines.append(f"- {w}")
     if len(wt_list) > 3:
         lines.append(f"- ... and {len(wt_list) - 3} more")
-    lines.append("- Suggest: clean up with `git worktree remove <path>`")
+    lines.append("- Action: clean up with `git worktree remove <path>`")
     return "\n".join(lines)
 
 

@@ -10,9 +10,12 @@ from session_context_triggers import (
     build_merge_conflict_warning,
     build_orphaned_worktrees_warning,
     build_pair_mode_resume,
+    build_protected_branch_warning,
     build_stale_stash_warning,
     build_uncommitted_work_warning,
     build_unpushed_commits_warning,
+    get_diff_summary,
+    get_stash_analysis,
     is_on_main_branch,
     is_on_protected_branch,
     is_pair_mode_branch,
@@ -115,6 +118,164 @@ class TestBuildUncommittedWorkWarning:
     def test_warning_output(self):
         result = build_uncommitted_work_warning(["file1.py", "file2.py"])
         assert "2 uncommitted change(s)" in result
+
+
+class TestGetDiffSummary:
+    def test_returns_structured_data_when_changes_exist(self):
+        diff_stat_output = (
+            " .opencode/scripts/session_context_triggers.py |  5 +++--\n"
+            " .opencode/guidelines/117-session-trigger-behavior.md | 42 +++++++++++++++++++\n"
+            " 2 files changed, 37 insertions(+), 10 deletions(-)"
+        )
+        with patch("session_context_triggers.run_git", return_value=diff_stat_output):
+            result = get_diff_summary()
+        assert result is not None
+        assert result["file_count"] == 2
+        assert result["insertions"] == 37
+        assert result["deletions"] == 10
+        assert len(result["key_files"]) == 2
+
+    def test_returns_none_when_no_changes(self):
+        with patch("session_context_triggers.run_git", return_value=None):
+            result = get_diff_summary()
+        assert result is None
+
+    def test_excludes_lockfiles_from_key_files(self):
+        diff_stat_output = (
+            " package-lock.json | 500 ++++++\n"
+            " src/main.py         |  10 +- \n"
+            " 2 files changed, 500 insertions(+), 5 deletions(-)"
+        )
+        with patch("session_context_triggers.run_git", return_value=diff_stat_output):
+            result = get_diff_summary()
+        assert result is not None
+        assert "package-lock.json" not in result["key_files"]
+        assert "src/main.py" in result["key_files"]
+
+    def test_limits_key_files_to_five(self):
+        lines = [f" src/file{i}.py |  5 +- \n" for i in range(10)]
+        diff_stat_output = "\n".join(lines) + "\n 10 files changed, 50 insertions(+), 50 deletions(-)"
+        with patch("session_context_triggers.run_git", return_value=diff_stat_output):
+            result = get_diff_summary()
+        assert result is not None
+        assert len(result["key_files"]) <= 5
+
+
+class TestGetStashAnalysis:
+    def test_parses_stash_with_issue_reference(self):
+        stash_show_output = " src/triggers.py | 3 ++-\n 1 file changed, 2 insertions(+), 1 deletion(-)"
+        with patch("session_context_triggers.run_git") as mock_git:
+            mock_git.side_effect = [
+                "stash@{0}: On main: WIP: #931 spec-auditor ground-truth changes\nstash@{1}: On dev: old work",
+                stash_show_output,
+                "old.py | 1 +\n 1 file changed, 1 insertion(+)",
+            ]
+            result = get_stash_analysis()
+        assert len(result) >= 1
+        first = result[0]
+        assert first["stash_ref"] == "stash@{0}"
+        assert first["branch"] == "main"
+        assert first["issue_ref"] == "931"
+        assert "spec-auditor" in first["message"]
+
+    def test_parses_stash_without_issue_reference(self):
+        stash_list_output = "stash@{0}: On feature/xyz: some work in progress"
+        with patch("session_context_triggers.run_git") as mock_git:
+            mock_git.side_effect = [stash_list_output, "file.py | 1 +\n 1 file changed, 1 insertion(+)"]
+            result = get_stash_analysis()
+        assert len(result) == 1
+        assert result[0]["issue_ref"] == ""
+
+    def test_returns_empty_when_no_stashes(self):
+        with patch("session_context_triggers.run_git", return_value=""):
+            result = get_stash_analysis()
+        assert result == []
+
+    def test_limits_analysis_to_five_stashes(self):
+        stash_lines = [f"stash@{{{i}}}: On dev: work {i}" for i in range(10)]
+        stash_list = "\n".join(stash_lines)
+        with patch("session_context_triggers.run_git") as mock_git:
+            mock_git.side_effect = [stash_list] + ["f.py | 1 +\n 1 file changed"] * 10
+            result = get_stash_analysis()
+        assert len(result) <= 5
+
+
+class TestBuildProtectedBranchWarningUpdated:
+    def test_includes_diff_summary(self):
+        with patch("session_context_triggers.get_current_branch", return_value="dev"):
+            with patch(
+                "session_context_triggers.get_diff_summary",
+                return_value={
+                    "file_count": 3,
+                    "insertions": 42,
+                    "deletions": 7,
+                    "key_files": ["src/main.py", "src/triggers.py", "test/test_triggers.py"],
+                },
+            ):
+                result = build_protected_branch_warning(
+                    ["M src/main.py", "A src/triggers.py", "M test/test_triggers.py"]
+                )
+        assert "Protected Branch with Uncommitted Changes" in result
+        assert "3 uncommitted changes" in result
+        assert "Files changed: 3" in result
+        assert "+42 / -7" in result
+        assert "Key files:" in result
+
+    def test_no_suggest_line(self):
+        with patch("session_context_triggers.get_current_branch", return_value="dev"):
+            with patch(
+                "session_context_triggers.get_diff_summary",
+                return_value={"file_count": 1, "insertions": 5, "deletions": 2, "key_files": ["src/main.py"]},
+            ):
+                result = build_protected_branch_warning(["M src/main.py"])
+        assert "Suggest:" not in result
+        assert "Diff summary available" in result
+
+    def test_no_diff_summary_when_none(self):
+        with patch("session_context_triggers.get_current_branch", return_value="dev"):
+            with patch("session_context_triggers.get_diff_summary", return_value=None):
+                result = build_protected_branch_warning(["M src/main.py"])
+        assert "Files changed:" not in result
+        assert "1 uncommitted changes" in result
+
+
+class TestBuildStaleStashWarningUpdated:
+    def test_includes_stash_analysis(self):
+        analyses = [
+            {
+                "stash_ref": "stash@{0}",
+                "branch": "main",
+                "message": "WIP: #931 spec-auditor ground-truth changes",
+                "issue_ref": "931",
+                "file_summary": "src/triggers.py | 3 ++-\n 1 file changed, 2 insertions(+), 1 deletion(-)",
+            }
+        ]
+        with patch("session_context_triggers.get_stash_analysis", return_value=analyses):
+            result = build_stale_stash_warning(["stash@{0}: On main: WIP: #931 ..."])
+        assert "Stale Stash" in result
+        assert "#931" in result
+        assert "Related issue:" in result
+        assert "branch=main" in result
+
+    def test_no_suggest_line(self):
+        with patch("session_context_triggers.get_stash_analysis", return_value=[]):
+            result = build_stale_stash_warning(["stash@{0}: On main: old work"])
+        assert "Suggest:" not in result
+        assert "Stash analysis available" in result
+
+    def test_shows_file_summary(self):
+        analyses = [
+            {
+                "stash_ref": "stash@{0}",
+                "branch": "feature",
+                "message": "work in progress",
+                "issue_ref": "",
+                "file_summary": "src/main.py | 2 ++\nsrc/util.py | 4 ++--",
+            }
+        ]
+        with patch("session_context_triggers.get_stash_analysis", return_value=analyses):
+            result = build_stale_stash_warning(["stash@{0}: On feature: work in progress"])
+        assert "src/main.py" in result
 
 
 class TestBuildStaleStashWarning:

@@ -52,11 +52,22 @@ Never `Fixes` or `Closes` — avoids premature issue closure. Use `Implements #N
 
 ## Session Detection
 
-The `session_context.py` plugin detects pair mode at session start when the current branch starts with `pair-`. It emits:
+The `session_context_triggers.py` script detects pair mode at session start when the current branch starts with `pair-`. It emits:
 
 - Identity section (always): `github.owner`, `github.repo`, `github.platform`, credential status
 - Pair mode resume context: branch name, related issue, diff summary
 - Trigger warnings: `on_main_branch`, `protected_branch_with_changes`, `uncommitted_work`
+
+### Pair Mode Suggestion Protocol
+
+When the agent detects uncommitted changes on a protected branch (`dev` or `main`) — not just when on a `pair-` branch — it MUST suggest entering pair mode as the default workflow:
+
+1. The agent analyzes the diff summary and produces an executive summary of pending changes
+2. The agent suggests entering pair mode with a concrete issue reference (if inferable from branch name, commit messages, or diff content) or prompts to create an issue
+3. The agent suggests a branch name: `pair-feature/<issue>-<description>` or `pair-spec/<issue>-<description>`
+4. The developer confirms or declines — pair mode entry requires developer confirmation (constraint C4)
+
+This is a behavioral trigger from `<SESSION_TRIGGERS>`, not a `pair-` branch detection. See `117-session-trigger-behavior.md` for the complete trigger behavior map.
 
 ## Task Sequence
 
