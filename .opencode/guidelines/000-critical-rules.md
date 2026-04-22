@@ -158,6 +158,15 @@ The audience separation principle requires that the agent identify the audience 
 - 🚫 FORBIDDEN: Acting after reading only the issue body; reviewing PRs without reading comments; assuming "no new comments"; caching comment state
 - ✅ REQUIRED: Read ALL comments before any action; show evidence of having read them; re-read before significant actions; use `github_issue_read` with `method=get_comments`
 
+## Critical Violation: Session Trigger Echo — Parroting Triggers in Agent Output
+
+**⚠️ Parroting `<SESSION_TRIGGERS>` content verbatim in agent output is a CRITICAL GUIDELINE VIOLATION.** Triggers drive internal agent behavior, not chat output.
+
+**See `117-session-trigger-behavior.md` for the complete trigger behavior map, diff analysis requirement, stash analysis protocol, and suppression rule.** **AUTHORITY: `117-session-trigger-behavior.md`** (this line is a reference only)
+
+- 🚫 FORBIDDEN: Printing trigger section headings (e.g., "Protected Branch with Uncommitted Changes") in agent responses; echoing trigger data verbatim (e.g., "3 uncommitted changes on dev"); printing "Suggest:" lines from trigger output; acknowledging triggers with a "Session triggers acknowledged" section
+- ✅ REQUIRED: Process triggers internally and take appropriate action; analyze diff data when `protected_branch_with_changes` fires; analyze stash contents when `stale_stash` fires; suggest pair mode with concrete issue reference; suppress triggers that don't drive meaningful action
+
 ## Critical Violation: Skipping Post-Implementation Verification Skills
 
 **⚠️ Failing to invoke `verification-before-completion` and `finishing-a-development-branch` after implementation is a CRITICAL GUIDELINE VIOLATION.**
