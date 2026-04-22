@@ -32,6 +32,70 @@ import { execSync } from "child_process";
 
 const CACHE_TTL_MS = 5 * 60 * 1000;
 
+interface PluginDiagnostic {
+  source: string;
+  level: "error" | "warning" | "info";
+  message: string;
+  exitCode?: number;
+}
+
+const DIAGNOSTICS_PATH = path.join(".opencode", "tmp", "plugin-diagnostics.jsonl");
+
+function writeDiagnostic(projectDir: string, diagnostic: PluginDiagnostic): void {
+  const fullPath = path.join(projectDir, DIAGNOSTICS_PATH);
+  const dir = path.dirname(fullPath);
+  if (!fs.existsSync(dir)) {
+    fs.mkdirSync(dir, { recursive: true });
+  }
+  const line = JSON.stringify(diagnostic) + "\n";
+  fs.appendFileSync(fullPath, line, "utf8");
+}
+
+function collectDiagnostics(projectDir: string): PluginDiagnostic[] {
+  const fullPath = path.join(projectDir, DIAGNOSTICS_PATH);
+  if (!fs.existsSync(fullPath)) {
+    return [];
+  }
+  try {
+    const content = fs.readFileSync(fullPath, "utf8");
+    const diagnostics: PluginDiagnostic[] = [];
+    for (const line of content.split("\n")) {
+      const trimmed = line.trim();
+      if (!trimmed) continue;
+      try {
+        diagnostics.push(JSON.parse(trimmed));
+      } catch {
+        // Skip malformed lines
+      }
+    }
+    // Clear the file after reading
+    fs.writeFileSync(fullPath, "", "utf8");
+    return diagnostics;
+  } catch {
+    return [];
+  }
+}
+
+function buildDiagnosticBlock(diagnostics: PluginDiagnostic[]): string {
+  if (diagnostics.length === 0) return "";
+
+  const entries = diagnostics.map(d => {
+    let line = `- [${d.level.toUpperCase()}] ${d.source}: ${d.message}`;
+    if (d.exitCode !== undefined) {
+      line += ` (exit code ${d.exitCode})`;
+    }
+    return line;
+  }).join("\n");
+
+  return `<PLUGIN_DIAGNOSTICS>
+⚠️ The following plugin diagnostics were collected during session startup:
+
+${entries}
+
+Review these diagnostics. For errors, investigate the source script. For warnings, assess whether action is needed.
+</PLUGIN_DIAGNOSTICS>`;
+}
+
 let cachedOutput: string | null = null;
 let cacheTimestamp = 0;
 
@@ -53,12 +117,22 @@ function ensureHooksInstalled(projectDir: string): void {
   const hooksSourceDir = path.join(projectDir, ".opencode", "hooks");
   if (!fs.existsSync(hooksSourceDir)) {
     console.error("[session-enforcement] .opencode/hooks/ directory missing — repo integrity problem");
+    writeDiagnostic(projectDir, {
+      source: "session-enforcement",
+      level: "error",
+      message: ".opencode/hooks/ directory missing — repo integrity problem",
+    });
     return;
   }
 
   const gitDir = resolveGitDir(projectDir);
   if (!gitDir) {
     console.error("[session-enforcement] Could not resolve .git directory for hooks installation");
+    writeDiagnostic(projectDir, {
+      source: "session-enforcement",
+      level: "error",
+      message: "Could not resolve .git directory for hooks installation",
+    });
     return;
   }
 
@@ -91,7 +165,7 @@ function ensureHooksInstalled(projectDir: string): void {
   }
 }
 
-async function runSessionInit($: PluginInput["$"]): Promise<string> {
+async function runSessionInit($: PluginInput["$"], projectDir: string): Promise<string> {
   if (cachedOutput && Date.now() - cacheTimestamp < CACHE_TTL_MS) {
     return cachedOutput;
   }
@@ -99,16 +173,45 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
   try {
     const result = await $.nothrow()`./.opencode/tools/session-init`;
     const stdout = result.text();
+    const stderr = result.stderr.toString();
 
     if (!stdout || stdout.trim().length === 0) {
       console.error("[session-enforcement] Script returned empty output");
+      writeDiagnostic(projectDir, {
+        source: "session-init",
+        level: "error",
+        message: "Script returned empty output",
+        exitCode: result.exitCode,
+      });
+      if (stderr.trim()) {
+        writeDiagnostic(projectDir, {
+          source: "session-init",
+          level: "error",
+          message: stderr.trim(),
+          exitCode: result.exitCode,
+        });
+      }
       return "";
     }
 
     if (result.exitCode !== 0) {
-      const stderr = result.stderr.toString();
       console.error(`[session-enforcement] Script exited with code ${result.exitCode}: ${stderr}`);
+      writeDiagnostic(projectDir, {
+        source: "session-init",
+        level: "error",
+        message: stderr.trim() || "Script exited with non-zero code",
+        exitCode: result.exitCode,
+      });
       return "";
+    }
+
+    if (stderr.trim()) {
+      writeDiagnostic(projectDir, {
+        source: "session-init",
+        level: "warning",
+        message: stderr.trim(),
+        exitCode: result.exitCode,
+      });
     }
 
     cachedOutput = stdout;
@@ -117,6 +220,11 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
     return stdout;
   } catch (err) {
     console.error("[session-enforcement] Failed to run session-init:", err);
+    writeDiagnostic(projectDir, {
+      source: "session-init",
+      level: "error",
+      message: `Failed to run session-init: ${err}`,
+    });
     return "";
   }
 }
@@ -124,7 +232,7 @@ async function runSessionInit($: PluginInput["$"]): Promise<string> {
 let cachedIdentityOutput: string | null = null;
 let identityCacheTimestamp = 0;
 
-async function runSessionContextIdentity($: PluginInput["$"]): Promise<string> {
+async function runSessionContextIdentity($: PluginInput["$"], projectDir: string): Promise<string> {
   if (cachedIdentityOutput && Date.now() - identityCacheTimestamp < CACHE_TTL_MS) {
     return cachedIdentityOutput;
   }
@@ -132,14 +240,30 @@ async function runSessionContextIdentity($: PluginInput["$"]): Promise<string> {
   try {
     const result = await $.nowrap()`./.opencode/scripts/session_context_identity.py`;
     const stdout = result.text();
+    const stderr = result.stderr.toString();
 
     if (result.exitCode !== 0) {
-      console.error(`[session-enforcement] session_context_identity.py exited with code ${result.exitCode}: ${result.stderr.toString()}`);
+      console.error(`[session-enforcement] session_context_identity.py exited with code ${result.exitCode}: ${stderr}`);
+      writeDiagnostic(projectDir, {
+        source: "session_context_identity.py",
+        level: "error",
+        message: stderr.trim() || "Script exited with non-zero code",
+        exitCode: result.exitCode,
+      });
       return "";
     }
 
     if (!stdout || stdout.trim().length === 0) {
       return "";
+    }
+
+    if (stderr.trim()) {
+      writeDiagnostic(projectDir, {
+        source: "session_context_identity.py",
+        level: "warning",
+        message: stderr.trim(),
+        exitCode: result.exitCode,
+      });
     }
 
     cachedIdentityOutput = stdout;
@@ -148,6 +272,11 @@ async function runSessionContextIdentity($: PluginInput["$"]): Promise<string> {
     return stdout;
   } catch (err) {
     console.error("[session-enforcement] Failed to run session_context_identity.py:", err);
+    writeDiagnostic(projectDir, {
+      source: "session_context_identity.py",
+      level: "error",
+      message: `Failed to run session_context_identity.py: ${err}`,
+    });
     return "";
   }
 }
@@ -155,7 +284,7 @@ async function runSessionContextIdentity($: PluginInput["$"]): Promise<string> {
 let cachedTriggersOutput: string | null = null;
 let triggersCacheTimestamp = 0;
 
-async function runSessionContextTriggers($: PluginInput["$"]): Promise<string> {
+async function runSessionContextTriggers($: PluginInput["$"], projectDir: string): Promise<string> {
   if (cachedTriggersOutput && Date.now() - triggersCacheTimestamp < CACHE_TTL_MS) {
     return cachedTriggersOutput;
   }
@@ -163,14 +292,38 @@ async function runSessionContextTriggers($: PluginInput["$"]): Promise<string> {
   try {
     const result = await $.nothrow()`./.opencode/scripts/session_context_triggers.py`;
     const stdout = result.text();
+    const stderr = result.stderr.toString();
 
     if (result.exitCode !== 0) {
-      console.error(`[session-enforcement] session_context_triggers.py exited with code ${result.exitCode}: ${result.stderr.toString()}`);
+      console.error(`[session-enforcement] session_context_triggers.py exited with code ${result.exitCode}: ${stderr}`);
+      writeDiagnostic(projectDir, {
+        source: "session_context_triggers.py",
+        level: "error",
+        message: stderr.trim() || "Script exited with non-zero code",
+        exitCode: result.exitCode,
+      });
       return "";
     }
 
     if (!stdout || stdout.trim().length === 0) {
+      if (stderr.trim()) {
+        writeDiagnostic(projectDir, {
+          source: "session_context_triggers.py",
+          level: "warning",
+          message: stderr.trim(),
+          exitCode: result.exitCode,
+        });
+      }
       return "";
+    }
+
+    if (stderr.trim()) {
+      writeDiagnostic(projectDir, {
+        source: "session_context_triggers.py",
+        level: "warning",
+        message: stderr.trim(),
+        exitCode: result.exitCode,
+      });
     }
 
     cachedTriggersOutput = stdout;
@@ -179,6 +332,11 @@ async function runSessionContextTriggers($: PluginInput["$"]): Promise<string> {
     return stdout;
   } catch (err) {
     console.error("[session-enforcement] Failed to run session_context_triggers.py:", err);
+    writeDiagnostic(projectDir, {
+      source: "session_context_triggers.py",
+      level: "error",
+      message: `Failed to run session_context_triggers.py: ${err}`,
+    });
     return "";
   }
 }
@@ -695,7 +853,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
   return {
     // Inject session context into system prompt (from session-init + PluginInput augmentations)
     "experimental.chat.system.transform": async (_input, output) => {
-      const scriptOutput = await runSessionInit(input.$);
+      const scriptOutput = await runSessionInit(input.$, projectDir);
       if (scriptOutput) {
         output.system.push(scriptOutput);
       }
@@ -728,7 +886,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       }
 
       // Inject identity section from session_context_identity.py
-      const identityOutput = await runSessionContextIdentity(input.$);
+      const identityOutput = await runSessionContextIdentity(input.$, projectDir);
       if (identityOutput) {
         output.system.push(identityOutput);
       }
@@ -737,6 +895,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
     // Inject enforcement content into first user message (adapted from obra/superpowers)
       // AND detect bare #N issue references in last user message
       // AND inject identity-echo directive + trigger warnings into first user message
+      // AND inject plugin diagnostics block into first user message
       "experimental.chat.messages.transform": async (_input, output) => {
         if (!output.messages || !output.messages.length) return;
 
@@ -755,7 +914,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         }
 
         // --- Identity-echo directive + trigger warnings injection into FIRST user message ---
-        const triggersOutput = await runSessionContextTriggers(input.$);
+        const triggersOutput = await runSessionContextTriggers(input.$, projectDir);
         const knownPlatform = extractValue(cachedIdentityOutput, "github.platform");
         const knownOwner = extractValue(cachedIdentityOutput, "github.owner");
         const knownRepo = extractValue(cachedIdentityOutput, "github.repo");
@@ -771,6 +930,13 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         }
         if (echoParts.length > 0 && firstUser.parts?.length) {
           firstUser.parts.unshift({ type: "text", text: echoParts.join("\n\n") });
+        }
+
+        // --- Plugin diagnostics injection into FIRST user message ---
+        const diagnostics = collectDiagnostics(projectDir);
+        const diagnosticBlock = buildDiagnosticBlock(diagnostics);
+        if (diagnosticBlock && firstUser.parts?.length) {
+          firstUser.parts.push({ type: "text", text: diagnosticBlock });
         }
 
       // --- Bare issue pipeline detection on LAST user message ---
