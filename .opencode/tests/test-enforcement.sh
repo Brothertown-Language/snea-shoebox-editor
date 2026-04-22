@@ -440,6 +440,35 @@ else
 fi
 
 echo ""
+echo "=== Skill Card Validation ==="
+echo "" >> "$RESULTS_FILE"
+echo "## Skill Card Validation" >> "$RESULTS_FILE"
+echo "" >> "$RESULTS_FILE"
+
+SKILL_CARD_SCRIPT="$PROJECT_DIR/.opencode/skills/skill-creator/scripts/validate_skill_cards.py"
+SKILL_CARD_PASS=true
+
+if [ -f "$SKILL_CARD_SCRIPT" ]; then
+    SKILL_CARD_OUTPUT=$(uv run "$SKILL_CARD_SCRIPT" 2>&1) || SKILL_CARD_RC=$? || SKILL_CARD_RC=0
+    if [ "${SKILL_CARD_RC:-0}" -eq 0 ]; then
+        echo "  Skill Card Validation: PASS"
+        echo "- **Skill Card Validation:** PASS" >> "$RESULTS_FILE"
+    else
+        echo "  Skill Card Validation: FAIL"
+        echo "- **Skill Card Validation:** FAIL" >> "$RESULTS_FILE"
+        SKILL_CARD_PASS=false
+        OVERALL_PASS=false
+    fi
+    echo "$SKILL_CARD_OUTPUT" | while IFS= read -r line; do
+        echo "  $line"
+        echo "  $line" >> "$RESULTS_FILE"
+    done
+else
+    echo "  Skill Card Validation: SKIP (script not found)"
+    echo "- **Skill Card Validation:** SKIP (script not found)" >> "$RESULTS_FILE"
+fi
+
+echo ""
 echo "=== Test Complete ==="
 echo "Results: $RESULTS_FILE"
 echo "Log directory: $LOGDIR"
