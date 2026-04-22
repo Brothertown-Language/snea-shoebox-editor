@@ -76,6 +76,20 @@ These patterns are critical violations per `000-critical-rules.md`:
 
 These anti-patterns are also documented as the "Monolithic Implementation" critical violation in `000-critical-rules.md`.
 
+## Enforcement Mechanism
+
+The RED phase is enforced at multiple checkpoints to prevent GREEN-without-RED violations. Each enforcement point requires tool-call evidence that the test was verified to fail before implementation proceeds.
+
+**Checkpoint 1 — executing-plans/tasks/start.md Step 5.5:** Before dispatching to divide-and-conquer, the agent MUST verify that RED test artifacts exist for each item. If no RED test artifact exists, the agent MUST HALT and require the RED phase to be completed.
+
+**Checkpoint 2 — writing-plans/tasks/create.md Step 2:** Plans MUST include a RED verification step that produces tool-call evidence of test failure. The plan template requires a step between writing the test and implementing the change where the agent runs the test and captures the failure output as evidence.
+
+**Checkpoint 3 — Git log order verification:** The test file commit must precede the implementation commit for each task. `git log` order is checked during review-prep to confirm that the RED phase commit came before the GREEN phase commit.
+
+**Checkpoint 4 — Approval gate Step 4.6:** The approval gate verifies that each enforcement test assertion was written before the implementation commit for its corresponding item. This prevents retroactive test creation that was never in RED state.
+
+**HALT requirement:** If no RED test artifact exists at any checkpoint, the agent MUST HALT and require the RED phase. Proceeding without RED evidence is a critical violation per `000-critical-rules.md` → "Monolithic Implementation" section.
+
 ## SC-Specific TDD Mandate
 
 The per-item TDD cycle's RED phase MUST include SC-specific test assertions, not just general enforcement assertions. For each spec SC that applies to a given item, the enforcement test assertion for that SC must be in RED state (exists and fails) before the item's implementation commit.
@@ -85,6 +99,7 @@ SC test assertions MUST be in RED state (exist and fail) before the item's imple
 ## Cross-References
 
 - `000-critical-rules.md` → "Monolithic Implementation" critical violation section (authoritative enforcement)
+- `000-critical-rules.md` → "Enforcement Mechanism" section (RED phase verification requirements)
 - `010-approval-gate.md` → Step 4.5 item decomposition verification (gate enforcement)
 - `brainstorming/SKILL.md` → `top-down-analysis` task (decomposition generation)
 - `writing-plans/SKILL.md` → Per-item bottom-up design sections (design generation)

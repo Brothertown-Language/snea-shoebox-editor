@@ -50,6 +50,15 @@ Each implementation item dispatched by `executing-plans` follows the per-item TD
 | **REFACTOR** | Clean up cross-references | Ensure no broken references between files |
 | **COMMIT** | Both test and change committed together | One working slice per item |
 
+**RED Phase Verification Checkpoint (Step 5.5 in start task):** Before dispatching to `divide-and-conquer/assemble-work`, the `start` task includes a mandatory checkpoint that verifies RED test artifacts exist for each TDD-marked implementation item. This checkpoint requires:
+
+1. Confirming an enforcement test scenario exists for each implementation item
+2. Confirming the enforcement test has been run and is in RED state (failing)
+3. Halting if no RED test artifact exists — the RED phase must be completed first
+4. Producing a tool-call artifact proving the check was performed
+
+This checkpoint ensures that no implementation proceeds without a corresponding RED test, enforcing the TDD discipline per `091-incremental-build.md` and `000-critical-rules.md`.
+
 The `divide-and-conquer` dispatch context includes `tdd_phase` to track which phase the sub-agent is executing. Sub-agents MUST follow this cycle per item — monolithic implementation (skipping the TDD cycle) is a critical violation per `000-critical-rules.md`.
 
 ## Tasks

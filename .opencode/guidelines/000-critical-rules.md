@@ -460,7 +460,7 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 
 **⚠️ Implementing multiple items in a single branch/commit without decomposition, or skipping the top-down → bottom-up → per-item TDD cycle, is a CRITICAL GUIDELINE VIOLATION.**
 
-**See `091-incremental-build.md` for the complete discipline rules, scope classification, and per-item TDD cycle.** **AUTHORITY: `091-incremental-build.md`**
+**See `091-incremental-build.md` for the complete discipline rules, scope classification, and per-item TDD cycle. See `091-incremental-build.md` → "Enforcement Mechanism" section for RED phase verification requirements, execution checkpoint references, and plan template checkpoint references.** **AUTHORITY: `091-incremental-build.md`**
 
 - 🚫 FORBIDDEN: Implementing multiple items in a single massive branch/commit without item-level decomposition
 - 🚫 FORBIDDEN: Writing code before writing the enforcement test for that change (code-first pattern)
