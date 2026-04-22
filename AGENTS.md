@@ -130,3 +130,4 @@ When parent issue has sub-issues, authorization cascades to ALL sub-issues:
 - Use `/tmp/` — only use `./tmp/`
 - Assume cached values from previous sessions
 - HALT after each phase of multi-task spec (see Multi-Task Spec Workflow above)
+- Write spec/plan content directly to chat as the final deliverable — ALWAYS invoke brainstorming → spec-creation → issue-operations to persist specs as GitHub Issues

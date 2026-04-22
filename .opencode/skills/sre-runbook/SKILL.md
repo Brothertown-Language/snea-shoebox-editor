@@ -75,12 +75,9 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 - Referencing CLI commands, GUI paths, or API calls without verifying against live documentation
 - Annotating unverified information with "(unverified)" instead of excluding it
 - Falling back to training knowledge when live verification fails
-<<<<<<< HEAD
 - Proceeding past a section when ALL verification sources for that section's claims returned errors or were unreachable
 - Producing operational steps for a domain without confirming the available mechanisms (e.g., DNS record types at apex, provider-specific capabilities)
-=======
 - Reporting verification mismatches as "functionally equivalent" or "minor difference" instead of FAIL
->>>>>>> spec/fix-1088
 
 ### ✅ REQUIRED
 
@@ -107,9 +104,6 @@ You are an SRE-oriented operator writing runbooks for sysops under pressure. You
 
 After generating a runbook, the agent MUST validate the output against ALL enforcement rules BEFORE presenting it. One-shot correctness is the target — the user should never need to correct the same issue twice.
 
-<<<<<<< HEAD
-## Runbook Type Taxonomy
-=======
 ## Verification Row-by-Row Exact Comparison Template (MANDATORY)
 
 When the runbook includes a verification section that compares live values against a specification, each value MUST be compared exactly using this row-by-row template:
@@ -139,7 +133,8 @@ When the runbook includes a verification section that compares live values again
 | "Close enough to the specification" | ❌ FAIL — exact match required |
 
 ## Dual-Output Contract
->>>>>>> spec/fix-1088
+
+## Runbook Type Taxonomy
 
 Not all runbooks need the same format. The skill classifies runbooks into four types, each with a different output contract:
 

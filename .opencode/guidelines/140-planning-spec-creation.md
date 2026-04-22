@@ -162,6 +162,12 @@ Vague verification methods are FORBIDDEN in success criteria. A verification met
 
 **The key principle: every content area must be addressed, but agents choose the format that matches the spec's complexity.**
 
+## Spec Creation Skill Chain (MANDATORY)
+
+To create a spec, invoke: brainstorming (`--task explore`) → spec-creation (`--task write`) → issue-operations (`--task creation`).
+
+Never write a spec directly in chat. Always persist via this skill chain. The brainstorming skill explores the problem and produces raw design output; the spec-creation skill structures that output into a formal spec; the issue-operations skill persists the spec as a GitHub Issue. Skipping any link in this chain produces specs that lack discipline or traceability.
+
 ______________________________________________________________________
 
 ## 1.2. Fresh-Start Context Requirements
