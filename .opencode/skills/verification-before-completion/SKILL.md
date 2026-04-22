@@ -110,6 +110,7 @@ If `worktree.path` is NOT set, operate normally from the project root.
 | "Tests pass" | Verify by actually running tests, not from memory | `bash` to run `uv run pytest test/` | VERIFICATION-GAP |
 | "Files implemented per spec" | Verify files exist and contain expected changes | `glob(pattern="**/file")` + `srclight_get_symbol(name="symbol")` | MISSING-ELEMENT |
 | "Issue ready to close" | Verify PR actually merged via GitHub API, not just claimed | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+| "Per-SC evidence table complete" | Verify every SC has PASS row in evidence table | Check per-SC evidence table for PASS/FAIL/MISSING rows | VERIFICATION-GAP |
 
 **Evidence format:**
 
@@ -129,6 +130,7 @@ Action: [auto-fix|conditional|flag-for-review]
 | Tests claimed passing but actually failing | CONFLICTING | flag-for-review | HALT — do not mark complete |
 | Expected files missing | MISSING-ELEMENT | conditional | Implement missing files before completion |
 | PR not actually merged | CONFLICTING | flag-for-review | HALT — wait for merge confirmation |
+| Per-SC table has FAIL or MISSING rows | VERIFICATION-GAP | conditional | Re-verify with actual tool call |
 
 ## Cross-Reference Verification (MANDATORY)
 

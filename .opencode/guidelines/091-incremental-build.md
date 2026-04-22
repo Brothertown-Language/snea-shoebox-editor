@@ -11,7 +11,7 @@ This discipline applies to ALL scopes — GREENFIELD, NEW_FEATURE, FIX, and ENHA
 ## Scope Classification
 
 | Scope | Top-Down Starts From | Input Artifact |
-|-------|---------------------|---------------|
+| -- | -- | -- |
 | GREENFIELD | Project spec (no existing code) | New project specification |
 | NEW_FEATURE | Existing code + feature request | Feature spec with acceptance criteria |
 | FIX | Existing code + bug report | Bug report with root cause analysis |
@@ -45,18 +45,20 @@ Bottom-up design is performed during plan creation (`writing-plans --task create
 Each implementation item MUST follow:
 
 | Phase | Action | Guideline Change |
-|-------|--------|-----------------|
-| **RED** | Add enforcement test scenario that verifies the change (expect failure — change doesn't exist yet) | Test scenario committed alongside the `.md` change it tests |
+| -- | -- | -- |
+| **RED** | Add enforcement test scenario that verifies the change (expect failure — change doesn't exist yet). For each spec SC that applies to this item, the enforcement test assertion for that SC MUST be in RED state (exists and fails) before the item's implementation commit. | Test scenario committed alongside the `.md` change it tests; SC-specific test assertions with `# SC-N:` comments |
 | **GREEN** | Make the `.md` file change that makes the test pass | The actual guideline, skill, or AGENTS.md modification |
 | **REFACTOR** | Clean up cross-references, verify consistency with other files | Ensure no broken references between files |
 | **COMMIT** | Both the test addition and the `.md` change committed together as one working slice | Commit message references the item number |
 
 **Enforcement test runner:**
+
 ```
 bash .opencode/tests/with-test-home opencode-cli run '<scenario>'
 ```
 
 **Full suite verification:**
+
 ```
 bash .opencode/tests/test-enforcement.sh
 bash .opencode/tests/with-test-home --clean-all
@@ -73,6 +75,12 @@ These patterns are critical violations per `000-critical-rules.md`:
 - **Merging without tests** — Submitting changes where the enforcement test for that change doesn't pass
 
 These anti-patterns are also documented as the "Monolithic Implementation" critical violation in `000-critical-rules.md`.
+
+## SC-Specific TDD Mandate
+
+The per-item TDD cycle's RED phase MUST include SC-specific test assertions, not just general enforcement assertions. For each spec SC that applies to a given item, the enforcement test assertion for that SC must be in RED state (exists and fails) before the item's implementation commit.
+
+SC test assertions MUST be in RED state (exist and fail) before the item's implementation commit. If an SC test assertion is written after implementation (GREEN-without-RED), the test never verified that the SC was actually unmet before implementation — it only verified that the implementation makes the test pass, which is circular.
 
 ## Cross-References
 

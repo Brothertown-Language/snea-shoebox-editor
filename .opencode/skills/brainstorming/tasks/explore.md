@@ -9,7 +9,7 @@ Full conversational exploration workflow for requirements gathering before spec 
 ### Checklist Evidence Requirements
 
 | Checklist Item | Verification Action | Tool Call | Problem Class |
-|----------------|-------------------|-----------|---------------|
+| -- | -- | -- | -- |
 | 1. Trace call paths | Verify actual import/call relationships for the target code | `srclight_get_callers(symbol_name="target")` and `srclight_get_callees(symbol_name="target")` | VERIFICATION-GAP |
 | 2. Verify imports | Confirm actual import path matches assumed path | `srclight_get_symbol(name="module.symbol")` → check file location | VERIFICATION-GAP |
 | 3. Detect dead code | Verify referenced symbols are actually used | `srclight_get_dependents(symbol_name="symbol")` → check if non-empty | MISSING-ELEMENT |
@@ -20,7 +20,7 @@ Full conversational exploration workflow for requirements gathering before spec 
 ### Exploration Context Evidence (Step 1)
 
 | Context Item | Verification Action | Tool Call | Problem Class |
-|-------------|-------------------|-----------|---------------|
+| -- | -- | -- | -- |
 | Recent commits | Verify claimed recent activity actually exists | `srclight_recent_changes(n=10)` → confirm commits | VERIFICATION-GAP |
 | Existing patterns | Verify referenced patterns exist in codebase | `srclight_search_symbols(query="pattern")` → confirm results | MISSING-ELEMENT |
 | Documentation files | Verify claimed documentation exists | `glob(pattern="docs/**/*.md")` → confirm file paths | MISSING-ELEMENT |
@@ -56,21 +56,26 @@ Action: [auto-fix|conditional|flag-for-review]
 **Search procedure:**
 
 1. **Query open issues:** Use `github_list_issues(owner, repo, state="open")` to retrieve all open issues.
+
 2. **Filter for specs/plans:** Select issues with `[SPEC]`, `[PLAN]`, or `[SPEC-FIX]` title prefix.
+
 3. **Extract scope signals from the user's request and compare:** For each open spec/plan:
+
    - Compare **file references**: Does the user's request mention the same files?
    - Compare **symbol references**: Does the user's request reference the same functions/classes?
    - Compare **concern boundaries**: Does the user's request address the same problem domain?
+
 4. **Classify overlap using the four-tier model:**
 
    | Classification | Criteria | Action |
-   |---------------|----------|--------|
+   | -- | -- | -- |
    | **FULL-SUPERSESSION** | An existing spec entirely covers the user's request | Report: "Existing spec #N covers this scope. Consider using that spec instead of creating a new one." |
-   | **PARTIAL-OVERLAP** | Existing spec shares files/symbols but has different core concerns | Report: "Spec #N partially overlaps — shared files: [list]. Your new spec should be scoped to avoid the shared concern." |
-   | **CONFLICT-RISK** | Existing spec modifies same files with conflicting intent | Report: "Spec #N conflicts with your request on [files]. Coordinate before creating." |
+   | **PARTIAL-OVERLAP** | Existing spec shares files/symbols but has different core concerns | Report: "Spec #N partially overlaps — shared files: \[list\]. Your new spec should be scoped to avoid the shared concern." |
+   | **CONFLICT-RISK** | Existing spec modifies same files with conflicting intent | Report: "Spec #N conflicts with your request on \[files\]. Coordinate before creating." |
    | **INDEPENDENT** | No meaningful overlap | Proceed normally |
 
 5. **Present findings to the user:** If any overlap is found (PARTIAL-OVERLAP, CONFLICT-RISK, or FULL-SUPERSESSION), inform the user before proceeding to Step 1. For FULL-SUPERSESSION, strongly recommend using the existing spec instead of creating a new one.
+
 6. **If no overlap found:** Proceed silently to Step 1 — no need to report absence of overlap.
 
 **This step prevents the process gap where overlapping specs are created that should have been detected earlier in the pipeline.**
@@ -138,16 +143,19 @@ Before asking detailed questions, assess scope:
 Structural classification — single-task vs multi-task, phase decomposition — is an **agent intelligence concern**. Resolve it autonomously. Do NOT ask the user to make this decision.
 
 **Ask the user when**: Multiple valid structures exist with meaningful trade-offs that only the user can resolve:
+
 - 3+ subsystems with unclear boundaries or interdependencies
 - Ambiguity about whether a subsystem is in-scope or out-of-scope
 - Multiple valid decomposition orders where business priority is genuinely unclear
 
 **Do NOT ask the user when**: One structure is clearly appropriate:
+
 - Focused rule addition, single-file change, or bug fix with obvious scope → single-task, no question
 - Request naturally decomposes into sequential phases with clear boundaries → multi-task with phased structure, no question
 - The agent can determine scope from context, codebase, or the request itself → autonomous decision, no question
 
 **Prohibited questions** (examples of what NOT to ask):
+
 - "Should this be a single-task spec or broken into phases?"
 - "Is this a small change or a big one?"
 - "Do you want this as one spec or multiple?"
@@ -191,6 +199,7 @@ After each significant finding discovered during Q&A, the agent MUST:
 **The agent MUST NOT accumulate unconfirmed findings and present them as a batch.** Each significant discovery is confirmed individually before the next question.
 
 **Prohibited patterns:**
+
 - Listing multiple findings then asking "Does this all look right?" — each finding needs its own confirmation
 - Presenting a complete investigation result without having confirmed individual findings during the conversation
 - Proceeding with a pre-determined list of requirements without checking each one against the developer's actual answers
@@ -198,6 +207,7 @@ After each significant finding discovered during Q&A, the agent MUST:
 **Turn tracking:** Each Q&A exchange (one agent question + one developer response with real content) counts as one interactive turn. The minimum threshold for proceeding to Step 5 is **2 interactive turns**. "Yes"/"No"/"OK" responses without substance do NOT count as interactive turns.
 
 **Deep analysis expectation:** The agent should explore pros, cons, what-ifs, howevers, and counterpoints for each significant finding. Brainstorming is not merely listing requirements — it is a thorough back-and-forth considering both wanted and unwanted outcomes. The agent should:
+
 - Challenge assumptions ("What happens if this fails?" / "What about when X occurs?")
 - Explore edge cases and second-order effects
 - Present counterarguments to its own proposals
@@ -256,7 +266,7 @@ The `spec-creation` skill handles:
 
 This separation ensures exploration (brainstorming) and structuring (spec-creation) are distinct concerns with distinct discipline.
 
-```yaml+symbolic
+````yaml+symbolic
 schema_version: "1.0"
 last_updated: "2026-04-16T12:00:00Z"
 rules: []
@@ -383,3 +393,17 @@ The exploration output MUST include:
 4. **Concern boundary annotations** — Flag items that cross architectural concerns with explicit transition notes
 
 This structure feeds directly into `writing-plans --task create` for bottom-up design per item. The top-down decomposition is verified at the approval gate (`approval-gate --task verify-authorization` Step 4.5).
+
+### Verification-Mechanics Prompting (Conversational)
+
+When a requirement that will produce a success criterion is identified during Q&A, the agent's next question should naturally follow from the developer's answer by prompting about verifiability. This is NOT a separate checklist step — it is a conversational enrichment of the per-item confirmation gate.
+
+**Pattern:** After the developer confirms a requirement, the agent adds a verification-mechanics follow-up:
+
+- Developer: "The script should exit with an error code when validation fails."
+- Agent: "Got it. What would you check to confirm this works as intended? For instance, would you run a specific command and check for a particular exit code?"
+
+This prompting is conversational — it follows from the developer's answer about a requirement, not from a predetermined checklist. The goal is to ensure verification mechanics are considered early, preventing the later gap where the write task has to invent verification methods from scratch.
+
+**The verification-mechanics question follows from the developer's answer** — it does not precede it, and it is not asked about every requirement, only about requirements that will produce success criteria.
+````

@@ -103,6 +103,14 @@ Before mapping file structure, check whether existing plans already reference th
 
    This verification is the same check performed by `approval-gate --task verify-authorization` Step 4.5. If the plan lacks item decomposition, it will fail verification.
 
+### Step 3.5: Preserve Semantic Intent from Spec (MANDATORY)
+
+When referencing a spec's success criteria in the plan (file structure, TDD steps, or acceptance criteria per item), the plan MUST preserve or restate the semantic intent of each SC. The plan should not copy the SC table verbatim — it should translate each SC's intent into the implementation context, explaining WHY a specific test assertion checks for "exit code 2" rather than just "an error."
+
+This prevents the plan from reducing semantic intent back into a checklist. Plans naturally compress specs into action items. Without a semantic intent requirement, the compression loses the "why" and retains only the "what" — TDD step 1 becomes "write test that --fix exits with error" instead of "write test that --fix exits with code 2 specifically (not code 1 which means validation failure)."
+
+**TDD step guidance:** Each TDD step that references a spec SC MUST explain why the test checks for the specific exact value, not just what it checks. This is the semantic intent translated into the TDD context.
+
 4. **Plan phase structure by judgment:**
 
    - Determine which phases the plan needs

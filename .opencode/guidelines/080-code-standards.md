@@ -194,7 +194,7 @@ External repository posts have HIGHER attribution priority than internal content
 When a byline is missing from AI-authored posted content:
 
 | Option | When | Action |
-|--------|------|--------|
+| -- | -- | -- |
 | **Edit the comment** | Platform supports edit + agent has edit permission | Edit the original comment, append byline as last line |
 | **Delete + repost** | Agent has delete permission | Delete original, repost with byline included |
 | **Accept the omission** | No edit/delete permission | Leave it. Do NOT add a separate byline comment. |
@@ -284,7 +284,7 @@ Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills
 ### Per-Change TDD Pattern
 
 | TDD Phase | Action |
-|-----------|--------|
+| -- | -- |
 | **RED** | Add enforcement test scenario to `test-enforcement.sh` that checks for the change (expect failure — change doesn't exist yet) |
 | **GREEN** | Make the guideline/skill change that makes the test pass |
 | **REFACTOR** | Clean up test scenario, add cross-reference checks |
@@ -295,6 +295,30 @@ Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills
 Enforcement tests are the verification layer that proves agent guidelines are actually enforceable. A guideline without a test is a suggestion, not a rule. A skill without a test is documentation, not enforcement. The `with-test-home` wrapper prevents SQLite session conflicts between the desktop app and CLI tests.
 
 **See `090-incremental-build.md` for the incremental implementation discipline that governs HOW these changes are delivered.** **See `.opencode/tests/README.md` for the enforcement test template and usage guide.**
+
+### SC-to-Test Traceability (MANDATORY)
+
+Every spec success criterion MUST have at least one corresponding enforcement test assertion that references the SC ID. The assertion must include a comment linking it to the specific SC:
+
+```
+# SC-2: --fix exits with code 2
+assert exit_code == 2
+```
+
+The SC ID comment convention is now a REQUIREMENT, not a convention. Every enforcement test that verifies a spec success criterion MUST include a `# SC-N:` comment prefix identifying which SC it covers.
+
+### RED-Phase Ordering (MANDATORY)
+
+The enforcement test assertion for each SC MUST exist and FAIL before implementation of that SC begins. This is the TDD RED-GREEN cycle applied to spec success criteria:
+
+1. **RED**: Write the enforcement test assertion that verifies the SC (the test fails because the change doesn't exist yet)
+2. **GREEN**: Implement the change that makes the test pass
+3. **REFACTOR**: Clean up, verify cross-references
+4. **COMMIT**: Both the test and the change committed together
+
+Writing tests AFTER implementation means the test was never RED — it never caught the gap between the spec and the implementation. The #1128 root cause was exactly this: the agent implemented first and verified second, but no gate checked whether the verification tests existed before implementation began.
+
+If SC-to-test traceability is missing for any SC, or if test assertions were written after implementation (GREEN-without-RED), implementation MUST NOT proceed until the tests are added and shown to fail first.
 
 ## Cross-Reference Standards
 
@@ -348,7 +372,7 @@ See `"Cross-Reference Standards"` section in `guidelines.md` for the rule.
 Session-init and env-loader are two independent pipelines with separate naming conventions:
 
 | Pipeline | Source | Output Format | Consumer | Example |
-|----------|--------|---------------|----------|---------|
+| -- | -- | -- | -- | -- |
 | LLM context | session-init (Python) | Dotted `scope.param` | Agent system prompt | `github.owner` |
 | Bash environment | env-loader.ts (TypeScript) | UPPER_CASE | Shell commands, Python scripts | `GIT_OWNER` |
 

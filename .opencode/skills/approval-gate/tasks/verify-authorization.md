@@ -51,7 +51,7 @@ if not result or not result.strip():
 **Under NO circumstances does the agent ask the user to classify scope.** The verb-prefix parsing table in Step 2.0 is the sole authority. Every possible authorization phrase maps to exactly one scope:
 
 | Authorization Phrase | Resolved Scope |
-|----------------------|---------------|
+| -- | -- |
 | "approved #N" (no qualifier) | `standard` |
 | "approved #N to PR" / "for PR" | `for_pr` |
 | "approved #N to implementation" / "for implementation" | `for_implementation` |
@@ -87,6 +87,7 @@ git status
 Branch creation is DELEGATED to `git-workflow --task pre-work`, which creates worktrees via the `using-git-worktrees` skill. Creating branches here bypasses worktree isolation — a CRITICAL VIOLATION.
 
 **After git state verification:**
+
 1. Record that git state is verified
 2. Proceed to Step 2 (authorization verification)
 3. After ALL verification steps, invoke `git-workflow --task pre-work` for worktree creation
@@ -95,6 +96,7 @@ Branch creation is DELEGATED to `git-workflow --task pre-work`, which creates wo
 ### Step 2: Verify Authorization Is Explicit
 
 Check that authorization is:
+
 - From user (not agent)
 - Explicit ("approved", "go", "approved: N.M")
 - For the CURRENT issue (not old session)
@@ -142,7 +144,7 @@ def parse_authorization_scope(authorization_text: str) -> dict:
 ##### Scope Values and Pipeline Stages
 
 | Scope | Pipeline Stage Reached | Gap-Fill Actions | HALT After |
-|-------|----------------------|------------------|------------|
+| -- | -- | -- | -- |
 | `standard` | Full pipeline | None (all artifacts must exist upfront) | After review-prep (default) |
 | `for_spec` | Spec creation only | None | Spec created |
 | `for_plan` | Through plan approval | Auto-create spec if missing | Plan created |
@@ -176,11 +178,13 @@ When user approves issue #P, and #P's body or comments explicitly state that it 
 4. No contradictory evidence (e.g., #P's body says "spec rejected, try again")
 
 When cascade applies:
+
 - #C is treated as if the user said "Approved: #C"
 - Add comment to #C: "Authorization cascaded from #P (approvable output of approved issue)"
 - Remove `needs-approval` label from #C
 
 When cascade does NOT apply (conditions not met):
+
 - HALT and inform user: "#P was approved but it is an investigation issue — its spec #C was not named. Please confirm: approve #C?"
 - This is a genuine authorization gap where the developer's intent is ambiguous
 
@@ -202,6 +206,7 @@ if has_label and explicit_authorization:
 ### Step 4: Record Authorization Scope
 
 Authorization applies to:
+
 - Specific issue only
 - Current phase/task only
 - This session only (no carryover)
@@ -211,7 +216,7 @@ Authorization applies to:
 When user provides explicit authorization, it **OVERRIDES** the needs-approval label.
 
 | Scenario | Action |
-|----------|--------|
+| -- | -- |
 | "approved" AND label present | PROCEED - explicit auth wins |
 | "approved" AND no label | PROCEED |
 | NO auth AND label present | HALT - wait for authorization |
@@ -257,6 +262,50 @@ if not has_tdd_steps:
 **Exemption:** Single-task plans (0 or 1 phases) are exempt from the item decomposition check. The check applies ONLY to multi-task plans with more than one phase.
 
 **Cross-reference:** See `091-incremental-build.md` for the complete discipline rules, scope classification, and per-item TDD cycle.
+
+### Step 4.6: Verify SC-to-Test Traceability and RED-Phase Ordering
+
+**Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions and that RED-phase ordering was followed.**
+
+**Verification checks:**
+
+1. **SC-to-test traceability exists** — For each success criterion in the corresponding spec, at least one enforcement test assertion references the SC ID (per `080-code-standards.md` SC-to-Test Traceability requirement)
+2. **RED-phase ordering confirmed** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began)
+
+**Procedure:**
+
+```
+# Read the corresponding spec
+spec_issue = github_issue_read(method="get", issue_number=spec_number)
+spec_body = spec_issue["body"]
+
+# Parse success criteria from spec
+success_criteria = parse_success_criteria(spec_body)
+
+# For each SC, verify:
+for sc in success_criteria:
+    # 1. Traceability: enforcement test exists that references this SC ID
+    has_test = check_enforcement_test_references_sc(sc["id"])
+    if not has_test:
+        # MISSING-TRACEABILITY: No enforcement test for SC
+        finding = f"SC {sc['id']} has no corresponding enforcement test assertion"
+        action = "BLOCK implementation; require test assertion with SC ID comment"
+        severity = "MISSING-TRACEABILITY"
+
+    # 2. RED-phase ordering: test was written before implementation commit
+    if has_test:
+        test_commit = find_earliest_commit_for_test(sc["id"])
+        impl_commit = find_earliest_commit_for_implementation(sc["id"])
+        if test_commit and impl_commit and test_commit > impl_commit:
+            # VERIFICATION-GAP: Test written after implementation (GREEN-without-RED)
+            finding = f"SC {sc['id']}: test written after implementation (GREEN-without-RED)"
+            action = "BLOCK; require test to be written first and shown to fail"
+            severity = "VERIFICATION-GAP"
+```
+
+**Exemption:** Existing SCs that were implemented before this mandate took effect are flagged but not blocked. RED-phase ordering is prospective (per `140-planning-spec-creation.md` constraints).
+
+**Cross-reference:** See `080-code-standards.md` "SC-to-Test Traceability" and "RED-Phase Ordering" sections for the mandate. See `091-incremental-build.md` for the per-item TDD cycle extended to SCs.
 
 ### Step 5: Verify Sub-Issue Structure (for Plan Approval)
 
@@ -349,8 +398,8 @@ elif expected_phases <= 1:
 **Finding Classification:**
 
 | Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
-| Plan has N > 1 phases, sub-issues < N | STRUCTURE-VIOLATION | auto-fix | Block implementation; offer `issue-operations --task link-sub-issue` to create missing linkages |
+| -- | -- | -- | -- |
+| Plan has N > 1 phases, sub-issues \< N | STRUCTURE-VIOLATION | auto-fix | Block implementation; offer `issue-operations --task link-sub-issue` to create missing linkages |
 | Plan has N > 1 phases, sub-issues >= N | VERIFIED | auto-proceed | Phase count matches; continue verification |
 | Plan has 0 or 1 phases | VERIFIED | auto-proceed | Single-task plan; count check skipped |
 
@@ -429,7 +478,7 @@ The "Already implemented" row in the Auto-Dispatch table (Step 6) MUST NOT skip 
 **Finding Classification for Closed-Issue Verification:**
 
 | Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | Closed + merged PR + criteria met | VERIFIED | auto-proceed | Skip to autoclose workflow |
 | Closed + merged PR + criteria NOT met | CONFLICTING | flag-for-review | Investigation needed — PR may not cover full scope |
 | Closed as "completed" + no merged PR | VERIFICATION-GAP | flag-for-review | Manual closure without implementation evidence |
@@ -444,7 +493,7 @@ The "Already implemented" row in the Auto-Dispatch table (Step 6) MUST NOT skip 
 ##### Three Edge Types Traversed
 
 | Edge Type | Source | Example | API Access |
-|-----------|--------|---------|------------|
+| -- | -- | -- | -- |
 | **Sub-issue** | GitHub sub-issue link | Plan → Phase sub-issue | `github_issue_read(method=get_sub_issues, issue_number=N)` |
 | **Cross-reference** | Issue body references | `Spec: #M`, `Plan: #N`, `Implements #K` | Parse body text + `github_issue_read(method=get, issue_number=M)` |
 | **Linked issue** | PR/closure references | `Fixes #N`, `Closes #N`, `Related #N` | Parse body text + `github_issue_read(method=get, issue_number=N)` |
@@ -521,7 +570,7 @@ reconcile_result = reconcile_issue_graph(
 ##### When to Traverse
 
 | Trigger | When | Depth Limit |
-|---------|------|-------------|
+| -- | -- | -- |
 | Issue approved/re-approved | `verify-authorization` receives explicit authorization | 5 |
 | Issue closed by `Fixes` keyword (post-merge) | `cleanup` processes merged PR | 5 |
 | Issue being verified as already-implemented | `verify-already-implemented` encounters a closed issue | 3 |
@@ -530,7 +579,7 @@ reconcile_result = reconcile_issue_graph(
 ##### Finding Classification for Graph Verification
 
 | Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | All nodes verified (closed with merged PR or open and consistent) | VERIFIED | auto-proceed | Graph is consistent |
 | Open + merged PR exists | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
 | Open + code in repo verified | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
@@ -569,7 +618,7 @@ Overall: CONSISTENT / HAS_FLAGS / RECONCILED
 #### Finding Classification for Sub-Issue Verification
 
 | Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | No sub-issues on multi-task plan | MISSING-ELEMENT | auto-create | Auto-create under plan, proceed |
 | Sub-issue linked under spec (not plan) | STRUCTURE-VIOLATION | auto-fix | Re-link under correct parent |
 | Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Report — may be premature closure |
@@ -660,7 +709,7 @@ elif not plan_issues:
 #### 5b.4 Edge Cases
 
 | Edge Case | Handling |
-|-----------|----------|
+| -- | -- |
 | Multiple plans for same spec | Cascade approves the most recent plan by creation date; older plans are superseded |
 | Plan created after spec approval | Handled by `writing-plans --task create` post-creation step (see writing-plans tasks/create.md) |
 | Spec revised after cascade | Existing revocation rules apply — see Step 6 "Spec Revision Revocation Detection" |
@@ -786,7 +835,7 @@ After all verification gates pass, determine the approval context and auto-dispa
 #### Auto-Dispatch Context Differentiation
 
 | Approval Context | How to Detect | Auto-Dispatch Target |
-|------------------|---------------|----------------------|
+| -- | -- | -- |
 | **Spec approval** | Issue title contains `[SPEC` or has `spec` label | `writing-plans --task create` (or `brainstorming --task explore` if gap-fill) |
 | **Plan approval** | Issue has `plan` label or `[PLAN]` prefix in title | `executing-plans --task start` |
 | **Already implemented** | `verify-already-implemented` returns positive (after closed-issue verification in Step 5.4 confirms legitimate closure) | No dispatch — auto-close instead |
@@ -798,7 +847,7 @@ After all verification gates pass, determine the approval context and auto-dispa
 The dispatch target is modified by `authorization_scope` from Step 2.0:
 
 | Scope | Dispatch Target | HALT After |
-|-------|----------------|------------|
+| -- | -- | -- |
 | `standard` | Existing dispatch path (spec→writing-plans, plan→executing-plans) | After review-prep (default) |
 | `for_spec` | `brainstorming --task explore` (gap-fill: create spec) | Spec created |
 | `for_plan` | `brainstorming --task explore` then `writing-plans --task create` | Plan created |
@@ -912,7 +961,7 @@ For plan issues (detected in Step 5):
 #### Finding Classification for Authorization Verification
 
 | Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | Authorization from bot/agent | CONFLICTING | flag-for-review | Reject as authorization source |
 | Authorization scoped to different issue | CONFLICTING | flag-for-review | Reject — not scoped to current issue |
 | Authorization superseded by revision | STRUCTURE-VIOLATION | auto-fix | Mark authorization as stale, require re-approval |

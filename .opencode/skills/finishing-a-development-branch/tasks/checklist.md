@@ -32,6 +32,11 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 - [ ] No skipped tests without reason
 - [ ] New code has test coverage
 
+### SC Verification
+- [ ] Per-SC evidence table produced for all success criteria
+- [ ] All per-SC evidence rows show PASS (no FAIL or MISSING EVIDENCE)
+- [ ] No FORBIDDEN outcomes ("functionally equivalent", "close enough") used in evidence table
+
 ### Branch
 - [ ] Branch pushed to remote
 - [ ] Upstream tracking set
@@ -108,13 +113,13 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 **Each checklist item MUST be verified via tool call, not just checked off. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
 
 | Checklist Item | Verification Action | Tool Call | Problem Class |
-|----------------|-------------------|-----------|---------------|
+| -- | -- | -- | -- |
 | "All changes committed" | Verify clean working tree | `git status --porcelain` → check empty | VERIFICATION-GAP |
 | "Branch pushed to remote" | Verify tracking branch exists | `git branch -vv` → check `[origin/<branch>]` | MISSING-ELEMENT |
 | "Tests passing" | Run actual test command | `uv run pytest test/` → check exit code | VERIFICATION-GAP |
 | "Lint passing" | Run actual lint command | `uvx ruff check src/ test/` → check exit code | VERIFICATION-GAP |
-| "No debug prints" | Search for debug statements | `grep(pattern="print\\(|debugger|breakpoint")` | STRUCTURE-VIOLATION |
-| "No TODO/FIXME" | Search for placeholder comments | `grep(pattern="TODO|FIXME|HACK")` | STRUCTURE-VIOLATION |
+| "No debug prints" | Search for debug statements | \`grep(pattern="print\\( | debugger |
+| "No TODO/FIXME" | Search for placeholder comments | \`grep(pattern="TODO | FIXME |
 | "No unrelated changes" | Verify diff scope matches spec | `git diff dev --name-only` → compare with spec files | CONFLICTING |
 
 **Evidence artifact:** Tool call results for each checklist verification.
@@ -122,7 +127,7 @@ Run the completion checklist to verify a branch is fully ready for PR creation.
 ### Finding Classification
 
 | Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | Uncommitted changes found | VERIFICATION-GAP | conditional | Commit before proceeding |
 | Branch not pushed | MISSING-ELEMENT | auto-fix | Push immediately |
 | Lint/test failures | VERIFICATION-GAP | flag-for-review | HALT — fix issues before PR |
