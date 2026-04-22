@@ -294,6 +294,44 @@ This is a CRITICAL rule. Violations result in incorrect guidance and broken impl
 </TRAINING_STALENESS_CRITICAL>`;
 }
 
+function buildReferencesVerificationBlock(): string {
+  return `<REFERENCES_VERIFICATION_MANDATE>
+⚠️ You MUST NOT assume knowledge of any referenced file, schema, configuration, or artifact without FIRST verifying its contents with a tool call. This applies to ALL activities without exception: coding, spec development, plan creation, implementation, skill book updates, runbook authoring, correspondence, and any other work.
+
+**YOU ARE FORBIDDEN FROM:**
+
+- Assuming you know what a file contains without opening it first
+- Claiming knowledge of a schema's fields without reading the schema
+- Proceeding past a reference to a file, path, or configuration without verifying the reference exists
+- Treating any information as "already known" without a visible tool-call artifact proving you checked
+- Writing documentation, runbooks, or specs that describe files/configs/APIs you have not actually read
+- Skipping verification because "I've seen this file before" or "I know this pattern"
+- Claiming a referenced file or artifact exists without confirming via glob, read, or srclight
+
+**SELF-AUDIT GATE (MANDATORY):**
+
+Before making ANY claim about a file, schema, configuration, or referenced artifact, you MUST produce a tool-call artifact in the conversation proving you verified it. Acceptable artifacts:
+
+- A \`read\` tool call showing the file contents
+- A \`srclight_get_signature\` or \`srclight_get_symbol\` call confirming a function/class signature
+- A \`glob\` or \`grep\` call confirming a file or pattern exists
+- A \`bash\` command output confirming system state
+
+**No tool-call artifact = the claim is FORBIDDEN.** You cannot state "the config has X field" without the read call that confirmed it. You cannot state "the function takes Y parameters" without the signature lookup that verified it. You cannot state "the file exists" without the glob or read that confirmed it.
+
+**SINGLE EXCHANGE WINDOW:** The ONLY exception is a tool call from the immediately preceding exchange (last assistant turn in the same conversation). Any earlier reference requires re-verification.
+
+**THIS IS UNCONDITIONAL:**
+
+- No scope exemption: applies to coding, specs, plans, runbooks, skill updates, correspondence, everything
+- No activity exemption: "just checking" is not verification-free
+- No knowledge exemption: "I already know this" is the specific bypass this rule closes
+- No size exemption: "this is too small to verify" is not valid — verify it
+
+**Authority:** This mandate enforces the principles in guidelines 065-verification-honesty.md (proactive verification, evidence requirement) and 075-docs-verification.md (mandatory live documentation verification). This block does not duplicate those guidelines — it operationalizes their core rules at the system-prompt level, at the exact decision point where the agent decides whether to verify or assume.
+</REFERENCES_VERIFICATION_MANDATE>`;
+}
+
 function buildLanguagePreferenceBlock(): string {
   return `<LANGUAGE_PREFERENCE>
 All communications MUST use **formal/business/professional Southeastern United States English**.
@@ -613,6 +651,9 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
 
       // Inject training staleness warning (verifying everything is mandatory)
       output.system.push(buildTrainingStalenessBlock());
+
+      // Inject references verification mandate (no assuming knowledge without tool-call artifact)
+      output.system.push(buildReferencesVerificationBlock());
 
       // Inject language preference (Southeastern US English mandate)
       output.system.push(buildLanguagePreferenceBlock());
