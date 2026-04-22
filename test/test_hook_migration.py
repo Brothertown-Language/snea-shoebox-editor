@@ -33,7 +33,9 @@ class TestHooksDirectory:
 class TestInstallHooksScript:
     def test_install_hooks_script_removed(self):
         script_path = Path(__file__).resolve().parent.parent / "scripts" / "install-hooks.sh"
-        assert not script_path.is_file(), "scripts/install-hooks.sh must not exist (auto-installed by session-enforcement.ts)"
+        assert not script_path.is_file(), (
+            "scripts/install-hooks.sh must not exist (auto-installed by session-enforcement.ts)"
+        )
 
 
 class TestSessionEnforcementAutoInstall:
