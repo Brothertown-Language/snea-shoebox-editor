@@ -4,13 +4,13 @@
 Infrastructure Service for centralizing Aiven API management,
 network diagnostics, and system inspection.
 """
+
 import os
 import platform
 import shutil
 import socket
 import subprocess
-import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 from urllib.parse import urlparse
 
 import psutil
@@ -30,10 +30,11 @@ class InfrastructureService:
     # ── Aiven API ──────────────────────────────────────────────────────
 
     @staticmethod
-    def get_aiven_config() -> Optional[Dict[str, str]]:
+    def get_aiven_config() -> dict[str, str] | None:
         """Retrieve Aiven configuration from Streamlit secrets."""
         try:
             import streamlit as st
+
             if "aiven" in st.secrets:
                 return {
                     "project": st.secrets["aiven"]["project_name"],
@@ -45,7 +46,7 @@ class InfrastructureService:
         return None
 
     @staticmethod
-    def get_service_info(config: Dict[str, str]) -> Optional[Dict[str, Any]]:
+    def get_service_info(config: dict[str, str]) -> dict[str, Any] | None:
         """Get the full information of the Aiven service."""
         url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}"
         headers = {"Authorization": f"aivenv1 {config['api_token']}"}
@@ -61,13 +62,13 @@ class InfrastructureService:
             return None
 
     @staticmethod
-    def get_service_status(config: Dict[str, str]) -> Optional[str]:
+    def get_service_status(config: dict[str, str]) -> str | None:
         """Get the current state of the Aiven service."""
         info = InfrastructureService.get_service_info(config)
         return info.get("state") if info else None
 
     @staticmethod
-    def start_service(config: Dict[str, str]) -> bool:
+    def start_service(config: dict[str, str]) -> bool:
         """Trigger the Aiven service to start (power on)."""
         url = f"https://api.aiven.io/v1/project/{config['project']}/service/{config['service']}"
         headers = {"Authorization": f"aivenv1 {config['api_token']}"}
@@ -83,7 +84,7 @@ class InfrastructureService:
     # ── Secrets Validation ─────────────────────────────────────────────
 
     @staticmethod
-    def get_missing_secrets() -> List[str]:
+    def get_missing_secrets() -> list[str]:
         """
         Check for missing mandatory secrets.
         Returns a list of missing secret key paths (empty if all present).
@@ -91,7 +92,7 @@ class InfrastructureService:
         import streamlit as st
 
         mandatory_secrets = ["aiven", "github_oauth", "connections"]
-        missing: List[str] = []
+        missing: list[str] = []
 
         for secret in mandatory_secrets:
             try:
@@ -107,7 +108,10 @@ class InfrastructureService:
                             if k not in st.secrets["github_oauth"]:
                                 missing.append(f"github_oauth.{k}")
                     elif secret == "connections":
-                        if "postgresql" not in st.secrets["connections"] or "url" not in st.secrets["connections"]["postgresql"]:
+                        if (
+                            "postgresql" not in st.secrets["connections"]
+                            or "url" not in st.secrets["connections"]["postgresql"]
+                        ):
                             missing.append("connections.postgresql.url")
             except Exception:
                 missing.append(secret)
@@ -117,14 +121,14 @@ class InfrastructureService:
     # ── Database Liveness ──────────────────────────────────────────────
 
     @staticmethod
-    def check_db_alive() -> Tuple[bool, Optional[str]]:
+    def check_db_alive() -> tuple[bool, str | None]:
         """
         Check whether the database is alive and reachable.
         Returns (is_alive, effective_status) where effective_status is the
         Aiven service state (or a synthetic state like 'STARTING_DNS').
         Only meaningful in production; returns (True, 'RUNNING') for local dev.
         """
-        from src.database import is_production
+        from src.database.connection import is_production
 
         if not is_production():
             return True, "RUNNING"
@@ -136,7 +140,8 @@ class InfrastructureService:
         status = InfrastructureService.get_service_status(config)
 
         if status == "RUNNING":
-            from src.database import get_db_url
+            from src.database.connection import get_db_url
+
             url = get_db_url()
             if url:
                 parsed = urlparse(url)
@@ -152,11 +157,12 @@ class InfrastructureService:
     # ── Network / DNS / Socket Checks ──────────────────────────────────
 
     @staticmethod
-    def get_db_host_port() -> Tuple[Optional[str], Optional[int]]:
+    def get_db_host_port() -> tuple[str | None, int | None]:
         """Extract host and port from the database URL."""
         try:
-            from src.database import get_db_url
             import urllib.parse as _urlparse
+
+            from src.database.connection import get_db_url
 
             url = get_db_url()
             if url:
@@ -170,13 +176,13 @@ class InfrastructureService:
         return None, None
 
     @staticmethod
-    def verify_dns(host: str) -> Tuple[bool, str, List[str], List[str]]:
+    def verify_dns(host: str) -> tuple[bool, str, list[str], list[str]]:
         """Verify DNS resolution for the given host (IPv4 and IPv6)."""
         if not host:
             return False, "No host provided", [], []
 
-        ipv4_ips: List[str] = []
-        ipv6_ips: List[str] = []
+        ipv4_ips: list[str] = []
+        ipv6_ips: list[str] = []
 
         try:
             _, _, ipv4_ips = socket.gethostbyname_ex(host)
@@ -194,7 +200,7 @@ class InfrastructureService:
         return False, "DNS Resolution Failed for both IPv4 and IPv6", [], []
 
     @staticmethod
-    def verify_reachability(host: str, port: int) -> Tuple[bool, str, bool, bool]:
+    def verify_reachability(host: str, port: int) -> tuple[bool, str, bool, bool]:
         """
         Verify socket reachability for the given host and port.
         Handles both TCP (host + port) and Unix sockets (path + port=0).
@@ -260,46 +266,49 @@ class InfrastructureService:
         return False, "Socket Connection Failed for both IPv4 and IPv6", False, False
 
     @staticmethod
-    def check_db_connection() -> Tuple[bool, str, Dict[str, bool]]:
+    def check_db_connection() -> tuple[bool, str, dict[str, bool]]:
         """Check the database connection and return status and capabilities."""
         try:
-            from src.database import get_session
+            from src.database.connection import get_session
+
             session = get_session()
             try:
                 session.execute(text("SELECT 1"))
-                pgvector_check = session.execute(
-                    text("SELECT 1 FROM pg_extension WHERE extname = 'vector'")
-                ).fetchone()
+                pgvector_check = session.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'")).fetchone()
                 capabilities = {"pgvector": bool(pgvector_check)}
                 return True, "Connected Successfully", capabilities
             finally:
                 session.close()
-        except Exception as e:
+        except Exception:
             # Database operation failures are fatal; do not swallow.
             raise
 
     # ── System Inspection ──────────────────────────────────────────────
 
     @staticmethod
-    def get_git_info() -> Dict[str, str]:
+    def get_git_info() -> dict[str, str]:
         """Gather information about the current git state."""
-        info: Dict[str, str] = {}
+        info: dict[str, str] = {}
         try:
-            info["Commit"] = subprocess.check_output(
-                ["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.STDOUT
-            ).decode().strip()
-            info["Branch"] = subprocess.check_output(
-                ["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT
-            ).decode().strip()
-            info["Date"] = subprocess.check_output(
-                ["git", "log", "-1", "--format=%cd"], stderr=subprocess.STDOUT
-            ).decode().strip()
+            info["Commit"] = (
+                subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.STDOUT)
+                .decode()
+                .strip()
+            )
+            info["Branch"] = (
+                subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT)
+                .decode()
+                .strip()
+            )
+            info["Date"] = (
+                subprocess.check_output(["git", "log", "-1", "--format=%cd"], stderr=subprocess.STDOUT).decode().strip()
+            )
         except Exception:
             info["Error"] = "Not a git repository or git not installed"
         return info
 
     @staticmethod
-    def get_env_info() -> Dict[str, str]:
+    def get_env_info() -> dict[str, str]:
         """Gather information about the environment."""
         import streamlit as st
 
@@ -318,10 +327,10 @@ class InfrastructureService:
         return info
 
     @staticmethod
-    def get_filesystem_info() -> Dict[str, Dict[str, Any]]:
+    def get_filesystem_info() -> dict[str, dict[str, Any]]:
         """Gather information about the filesystem."""
         paths_to_check = ["/", "/tmp", os.getcwd()]
-        fs_info: Dict[str, Dict[str, Any]] = {}
+        fs_info: dict[str, dict[str, Any]] = {}
         for path in paths_to_check:
             abs_path = os.path.abspath(path)
             try:
@@ -337,14 +346,14 @@ class InfrastructureService:
         return fs_info
 
     @staticmethod
-    def get_hardware_info() -> Dict[str, Any]:
+    def get_hardware_info() -> dict[str, Any]:
         """Gather information about the hardware."""
         try:
             cpu_count = psutil.cpu_count(logical=True)
             cpu_freq = psutil.cpu_freq()
             mem = psutil.virtual_memory()
 
-            info: Dict[str, Any] = {
+            info: dict[str, Any] = {
                 "CPU Count (Logical)": cpu_count,
                 "Memory Total": f"{mem.total / (1024**3):.2f} GB",
                 "Memory Available": f"{mem.available / (1024**3):.2f} GB",

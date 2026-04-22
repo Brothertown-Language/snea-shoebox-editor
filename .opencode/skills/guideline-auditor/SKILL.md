@@ -56,12 +56,12 @@ Verification signal: <changed|blocked|no change required> — <one-line evidence
 
 When reviewing each guideline file, also check for potential context overflow issues:
 
-- **Overly long directives**: A single rule or bullet that exceeds ~3 sentences or ~50 words without adding distinct
+- **Overly long directives**: A single rule or bullet that exceeds ≈3 sentences or ≈50 words without adding distinct
   meaning. Flag with `CONTEXT-OVERFLOW`.
 - **Wordy preamble or rationale**: Explanatory prose embedded in a directive file that could be trimmed or moved to a
   separate reference doc, freeing context budget for actionable rules.
 - **Repetitive elaboration**: The same constraint restated multiple times within a single file in slightly different
-  words, inflating token count without adding clarity.
+  words, inflating word count without adding clarity.
 
 For each `CONTEXT-OVERFLOW` issue, the report must include:
 
@@ -104,7 +104,7 @@ Detection:
 ### 4. Context Overflow
 
 Detection:
-- Single rule exceeds ~3 sentences or ~50 words without adding meaning
+- Single rule exceeds ≈3 sentences or ≈50 words without adding meaning
 - Wordy preamble that could be trimmed
 - Same constraint restated multiple times in slightly different words
 
@@ -112,7 +112,7 @@ Detection:
 
 ### 5. Comment Format Validation
 
-Per `000-critical-rules.md` and `github-comments` skill, all comments MUST use executive summary format.
+Per `000-critical-rules.md` and `issue-operations` skill, all comments MUST use executive summary format.
 
 **WRONG:**
 ```
@@ -122,7 +122,7 @@ AI: Agent 📝 Update: Added new rule
 
 **RIGHT:**
 ```
-AI: <AgentName> <ModelID> ✅ Completed
+🤖 <AgentName> (<ModelId>) ✅ completed
 
 **Summary:**
 <impact and stakeholder value>
@@ -191,7 +191,7 @@ After each fix is applied, the auditor MUST:
 
 ## GitHub Comment Format (MANDATORY)
 
-Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments MUST use executive summary format with byline at the BOTTOM:
+Per `000-critical-rules.md` and `issue-operations` skill, ALL completion comments MUST use executive summary format with byline at the BOTTOM:
 
 ```
 **Summary:**
@@ -201,18 +201,18 @@ Per `000-critical-rules.md` and `github-comments` skill, ALL completion comments
 **Outcome:** <What changed for stakeholders>
 
 ---
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 **Required Elements:**
 - **Summary section** FIRST with executive summary (1-2 sentences, stakeholder value)
 - **Outcome section** describing what changed
 - **Horizontal rule** (`---`) separator
-- **Byline at BOTTOM** with ✅ emoji, agent name, and model ID
+- **Byline at BOTTOM** with agent name and model ID
 
 **FORBIDDEN:**
 - Byline at TOP (belongs at BOTTOM)
-- 📝 emoji for completion comments (use ✅)
+- Status emoji before byline (status goes after model ID in plain text)
 - Missing Summary or Outcome sections
 - Punch-list format (bullet point lists)
 
@@ -225,7 +225,7 @@ Fixed DRY violation where same rule appeared in three files with slightly differ
 **Outcome:** Single source of truth for "never use echo redirects" rule.
 
 ---
-🤖 ✅ Completed by OpenCode (ollama-cloud/glm-5)
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 ---
@@ -279,31 +279,16 @@ Fix applied: <description of fix or "skipped per user request">
 
 ## Fresh-Start Context Preservation (CRITICAL)
 
-**After creating the audit log, ATTACH the content to a GitHub Issue.**
+**After creating the audit log, RETAIN it in `./tmp/` for session reference.**
 
-### Attachment Workflow
+### Retention Workflow
 
 1. **After writing audit log to `./tmp/audit-YYYYMMDD.md`:**
-   - Read the full audit log content
-   - Post as a GitHub Issue comment (use `github_add_issue_comment`)
-   - Delete the temp file: `rm ./tmp/audit-YYYYMMDD.md`
+    - Retain the file in `./tmp/` for session reference
+    - Report findings summary to chat (NOT as GitHub Issue comment)
+    - Audit findings are internal agent guidance — NOT stakeholder communication
 
-2. **Target Issue Selection:**
-   - If auditing guidelines for a specific implementation issue → attach to that issue
-   - If auditing guidelines proactively (no specific issue) → create a summary issue for the audit results
-   - Comment format:
-     ```
-     AI: <AgentName> <ModelID> ✅ Audit Complete
-     
-     **Summary:**
-     <1-2 sentences describing impact and findings>
-     
-     **Outcome:** <What changed in guidelines>
-     
-     <full audit log content>
-     ```
-
-**⚠️ CRITICAL: Always attach to GitHub Issue then delete temp file. No exceptions.**
+**⚠️ CRITICAL: Audit results are internal. Post a comment ONLY for substantive spec revisions that stakeholders need to understand.**
 
 ## Compliance Checkpoint Integration
 
@@ -338,3 +323,32 @@ This auditor skill coordinates with the project's approval gate workflow:
   ignored due to LLM context window pressure. The fix is to trim, rewrite for brevity, or split the content.
 - **REORGANIZE**: The current file/folder/document structure hinders LLM comprehension or compliance — files should be
   combined, split, or rearranged for better performance.
+
+## Symbolic Engine Integration
+
+**Optional pre-step:** Before auditing, invoke the symbolic analysis engine for formal evidence:
+
+```bash
+./.opencode/tools/symbolic drift
+./.opencode/tools/symbolic complete
+```
+
+- `sym-drift`: Detects YAML blocks where the file has been modified after the `last_updated` timestamp, indicating stale formalization.
+- `sym-complete`: Identifies uncovered normative terms (MUST, NEVER, etc.) without corresponding YAML rules, dangling cross-references, and rules without prose backing.
+
+Results are used as **evidence** (not verdict) — they supplement prose-only analysis with formal gap detection.
+
+**Graceful degradation:** If the engine is unavailable or produces no results, fall back to prose-only analysis. Do NOT block the audit if the engine fails.
+
+**Import interface (for in-process usage):**
+```python
+import types, sys
+from pathlib import Path
+impl_dir = Path(".opencode/tools/impl")
+source = (impl_dir / "sym-drift").read_text()
+mod = types.ModuleType("symdrift")
+mod.__file__ = str(impl_dir / "sym-drift")
+sys.modules["symdrift"] = mod
+exec(compile(source, str(impl_dir / "sym-drift"), "exec"), mod.__dict__)
+drift_entries = mod.detect_drift(Path(".opencode"))
+```

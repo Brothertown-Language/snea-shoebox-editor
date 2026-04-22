@@ -20,7 +20,7 @@ Previous version (`auto-fix`) would apply simple discrepancies automatically. Th
 2. **Classify each finding** by severity and type
 3. **For significant gaps**, check if brainstorming should be recommended
 4. **Format all findings** using the standard report format
-5. **Post findings** to the GitHub Issue as a comment
+5. **Report findings** to chat (NOT as GitHub Issue comment)
 6. **Create audit log** in `./tmp/audit-fidelity-YYYYMMDD.md`
 
 ## Finding Format
@@ -61,11 +61,33 @@ When significant gaps are found (3+ HIGH-severity findings or any VAGUE_PROBLEM 
 
 ---
 
-🤖 📝 Updated by <AgentName> (<ModelID>): Plan Fidelity Report
+🤖 <AgentName> (<ModelId>) 📝 updated
 ```
 
 ## Audit Log Requirement
 
-After the audit session, create `./tmp/audit-fidelity-YYYYMMDD.md` with all findings, then attach to the spec issue as a comment and delete the temp file.
+After the audit session, create `./tmp/audit-fidelity-YYYYMMDD.md` with all findings and retain in `./tmp/` for session reference. Do NOT post as GitHub Issue comment — audit findings are internal agent guidance.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)
+
+## Live Verification: Report Finding Claims (MANDATORY)
+
+**Each reported finding MUST be verified against actual source content. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Finding references correct phase" | Verify the phase exists in the Plan issue | `github_issue_read(method=get)` → search for phase name | MISSING-TRACEABILITY |
+| "Severity is accurate" | Verify severity matches finding impact | Re-assess finding against spec/plan content | STRUCTURE-VIOLATION |
+| "Recommendation is actionable" | Verify recommendation targets actual finding | Compare recommendation with finding description | CONFLICTING |
+| "Audit log was created" | Verify audit log file exists | `glob(pattern="./tmp/audit-fidelity-*.md")` | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results or file existence checks confirming each claim.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Phase referenced but not found in Plan | MISSING-TRACEABILITY | flag-for-review | Verify phase name, may be renamed |
+| Severity mismatched with actual impact | STRUCTURE-VIOLATION | auto-fix | Update severity to match impact |
+| Audit log not created | MISSING-ELEMENT | auto-fix | Create audit log now |
+| Finding claim without evidence | VERIFICATION-GAP | conditional | Re-verify with tool calls |

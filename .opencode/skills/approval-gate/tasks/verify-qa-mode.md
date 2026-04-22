@@ -39,6 +39,16 @@ Check if user instruction contains implementation-related keywords:
 - Remove, remove X, delete X
 - Refactor, refactor X, clean up X
 - Optimize, optimize X, improve X
+- Want me to, shall I, I can change, I can update, I can fix, I can modify
+- Edit the skill, update the guideline, fix the skill file, update the guideline file, modify SKILL.md
+
+**Offer-to-Edit Patterns (ALSO require gate):**
+Phrases that offer to make changes without going through the spec workflow:
+- "Want me to update X?" → Redirect to spec creation, HALT
+- "Shall I fix this?" → Redirect to bug report or fix spec, HALT
+- "I can change X to Y" → Redirect to spec creation, HALT
+- "Ready to implement?" → Redirect to spec creation, HALT
+- "I'll just update this" → Redirect to spec creation, HALT
 
 **Spec/Planning Keywords (skip gate):**
 - Create a spec, create an issue, create a bug report
@@ -61,6 +71,24 @@ GATE 2: Is authorization documented (explicit "approved"/"go" comment)?
 GATE 3: Is current branch a feature branch (not main/dev/master)?
 ```
 
+### Step 2.5: Search for Existing Spec/Plan Candidates (MANDATORY before Q/A mode)
+
+**When ANY gate fails (no spec, no authorization, or wrong branch), the agent MUST search GitHub Issues for existing candidates before entering Q/A mode.** A silent halt without searching is a critical violation — see `000-critical-rules.md` §Silent Halt Without Prompt.
+
+**Search Procedure:**
+
+1. **Label search:** Search GitHub Issues with labels `[SPEC]`, `[PLAN]`, `[SPEC-FIX]` in the repository
+2. **Keyword search:** Search GitHub Issues using keywords from the implementation request (e.g., feature name, component, module, bug area)
+3. **Evaluate candidates:** For each result, assess relevance to the request target
+4. **Present candidates:** If candidates found, list them with:
+   - Issue number and title
+   - URL
+   - Brief relevance assessment (why it matches)
+5. **Offer create-or-select:** Present user with options: select an existing candidate OR create a new spec
+6. **Report failure if no candidates:** If search yields no relevant candidates, explicitly state "No existing spec/plan found for [topic]" before offering spec creation
+
+**This step is MANDATORY.** Skipping it and going straight to Q/A mode is a critical violation.
+
 ### Step 3: Evaluate Gate Results
 
 #### Scenario A: All Checks Pass → PROCEED
@@ -73,7 +101,7 @@ GATE 3: Is current branch a feature branch (not main/dev/master)?
 ACTION: Invoke git-workflow --task pre-work
 ```
 
-#### Scenario B: Any Check Fails → Q/A MODE
+#### Scenario B: Any Check Fails → SEARCH → Q/A MODE
 
 ```
 ❌ Gate failed
@@ -83,8 +111,10 @@ ENFORCEMENT:
 2. Do NOT create branch
 3. Do NOT write code
 4. Do NOT commit
-5. Switch to Q/A mode
-6. Ask single question: "What would you like me to do?"
+5. SEARCH GitHub Issues for existing candidates (Step 2.5)
+6. PRESENT candidates or failure state
+7. Switch to Q/A mode
+8. Offer create-or-select before halting
 ```
 
 ### Step 4: Q/A Mode Response Format
@@ -94,14 +124,21 @@ ENFORCEMENT:
 ```
 I see you'd like me to implement [X], but I need clarification first.
 
-[If no spec] There's no GitHub Issue tracking this work. 
+[If search found candidates:]
+I found the following existing specs/plans that may be relevant:
+1. #123 [SPEC] Feature X implementation — <URL>
+2. #456 [PLAN] Feature X rollout — <URL>
+
+Would you like me to work with one of these, or create a new spec?
+
+[If no spec] No existing spec/plan found for [X].
   Would you like me to create a spec first?
 
-[If on main/dev] I'm currently on the [main] branch. 
+[If on main/dev] I'm currently on the [main] branch.
   I need to create a feature branch first, but I need a spec/issue to associate it with.
 
 [If no authorization] This work hasn't been authorized yet.
-  Would you like to create a spec for review first?
+  Would you like to review the spec and authorize it?
 
 What would you like me to do?
 ```
@@ -132,12 +169,30 @@ What would you like me to do?
 **Agent Internal Check:**
 - Keyword: "Fix" = implementation
 - GitHub Issue? NO
-- Action: Q/A Mode
+- Action: Search before Q/A Mode
 
-**Agent Response:**
+**Agent Search:**
+- Label search: `[SPEC]`, `[PLAN]`, `[SPEC-FIX]` for "authentication" or "login"
+- Keyword search: "authentication bug", "login.py"
+
+**Agent Response (if candidates found):**
 ```
 I see you'd like me to fix an authentication bug, but there's no GitHub Issue 
 tracking this work.
+
+I found these existing issues that may be relevant:
+1. #42 [SPEC] Authentication flow improvements — https://github.com/owner/repo/issues/42
+2. #87 [SPEC-FIX] Login timeout bug — https://github.com/owner/repo/issues/87
+
+Would you like me to work with one of these, or create a new spec/bug report?
+
+What would you like me to do?
+```
+
+**Agent Response (if no candidates found):**
+```
+I see you'd like me to fix an authentication bug, but no existing spec/plan 
+was found for this topic.
 
 Would you like me to create a spec/bug report first?
 
@@ -249,6 +304,66 @@ What would you like me to do?
   purpose: "Branch creation and git state"
 ```
 
+## Adversarial Verification: Spec-Less Detection
+
+**Before trusting the three-gate checks (GitHub Issue, authorization, feature branch), verify each gate against actual state — not assumptions or cached values.**
+
+### Verify Issue Exists and Contains Actual Spec Content
+
+```
+If user references an issue number:
+  issue = github_issue_read(method="get", issue_number=N)
+  body = issue["body"]
+  
+  - Verify issue actually exists (404 = no issue → Gate 1 FAILS)
+  - Verify body contains spec content (not empty or placeholder text)
+  - Check if body has STATUS marker — if so, compare against actual content maturity
+  - If STATUS says BRAINSTORM but content is DETAILED/COMPLETE → STRUCTURE-VIOLATION
+    (Gate still passes — issue exists — but NOTE the maturity mismatch)
+  - If body is empty or placeholder → Gate 1 FAILS (no real spec)
+```
+
+**Evidence artifact:** `github_issue_read(method=get)` response showing issue body content and STATUS marker.
+
+### Verify Authorization Against Actual Comment State
+
+```
+If user claims authorization exists:
+  comments = github_issue_read(method="get_comments", issue_number=N)
+  
+  - Search ALL comments for "approved", "go", "authorized"
+  - Verify author is a developer (author_association: MEMBER/OWNER/COLLABORATOR)
+  - Bot/agent "approved" comments are NOT valid authorization
+  - If no valid authorization comment found → Gate 2 FAILS
+  - If authorization comment found but spec was revised after → Gate 2 FAILS (stale auth)
+```
+
+**Evidence artifact:** `github_issue_read(method=get_comments)` response with author details for authorization claims.
+
+### Verify Branch State Against Actual Git State
+
+```
+current_branch = git branch --show-current
+git_status = git status
+
+- If claimed to be on feature branch but actually on main/dev → Gate 3 FAILS
+- If claimed to be clean but has uncommitted changes → VERIFICATION-GAP
+  (uncommitted changes may indicate prior unauthorized work)
+```
+
+**Evidence artifact:** `git branch --show-current` and `git status` output.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must create or reference correct issue |
+| Issue body empty/placeholder | MISSING-ELEMENT | flag-for-review | Spec content must be created before implementation |
+| STATUS maturity mismatch | STRUCTURE-VIOLATION | auto-fix | Note mismatch, recommend STATUS update |
+| Authorization from bot/agent | CONFLICTING | flag-for-review | Reject as authorization, require human approval |
+| Authorization superseded by revision | STRUCTURE-VIOLATION | flag-for-review | Require re-authorization |
+| Unauthorized prior work detected | VERIFICATION-GAP | flag-for-review | Report — may need to `git checkout` to clean state |
+
 ## Edge Cases
 
 ### Edge Case 1: User Bypass Attempt
@@ -310,3 +425,4 @@ What would you like me to do?
 - Related guideline: `010-approval-gate.md`
 - Related task: `verify-authorization.md`
 - Related skill: `git-workflow` (pre-work task)
+- Label state machine: `141-planning-status-tracking.md §10` (label transitions for authorization gates)

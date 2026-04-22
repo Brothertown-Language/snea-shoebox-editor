@@ -10,9 +10,9 @@ compatibility: opencode
 
 ## Overview
 
-Evidence-based verification workflow that prevents premature completion claims. This skill ensures ALL success criteria are verified with actual evidence before ANY task or phase is marked complete. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Evidence-based verification workflow that prevents premature completion claims. This skill ensures ALL success criteria are verified with actual evidence before ANY task or phase is marked complete.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Source Attribution:** Adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Persona
 
@@ -22,18 +22,30 @@ You are a Verification Gatekeeper. Your focus is ensuring NO completion claim wi
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `verify` | Verify all success criteria have evidence | ~800 |
-| `collect` | Collect evidence for incomplete criteria | ~700 |
+| `verify` | Verify all success criteria have evidence | ≈700 |
+| `collect` | Collect evidence for incomplete criteria | ≈500 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈150 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `verify` | ≈700 |
+| `collect` | ≈500 |
+| `completion` | ≈150 |
 
 ## Invocation
 
-- `/skill verification-before-completion` - Overview only
-- `/skill verification-before-completion --task verify` - Verify completion readiness
-- `/skill verification-before-completion --task collect` - Collect missing evidence
+- `/skill verification-before-completion` — Overview only
+- `/skill verification-before-completion --task verify` — Verify completion readiness
+- `/skill verification-before-completion --task collect` — Collect missing evidence
+- `/skill verification-before-completion --task completion` — Invoke when workflow halts at any point
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (verification result comment, status report) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is auto-invoked by dispatch-table.yaml when:
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
    - Agent claims "task complete" or "step complete"
    - Agent marks step as ☑ in plan
    - Agent attempts to close issue or create PR
@@ -50,249 +62,159 @@ You are a Verification Gatekeeper. Your focus is ensuring NO completion claim wi
    - Evidence is posted to plan issue or stored in `./tmp/`
    - HALT and report verification results
 
-## Verification Workflow
-
-### Prerequisites
-- Task or phase claimed complete
-- Plan issue has success criteria defined
-- Evidence collection may still be pending
-
-### Verify Completion
-
-1. **Query success criteria:**
-   - Read plan issue for defined success criteria
-   - Parse each criterion as testable statement
-   - Identify evidence needed for each
-
-2. **Check for evidence:**
-   - Review issue comments for evidence
-   - Check `./tmp/` for artifacts
-   - Verify evidence matches criteria
-
-3. **Mark verified/unverified:**
-   ```markdown
-   ## Success Criteria Verification
-
-   1. ✅ [Criterion] - EVIDENCE: [Link/output]
-   2. ✅ [Criterion] - EVIDENCE: [Link/output]
-   3. ❌ [Criterion] - MISSING EVIDENCE
-   ```
-
-4. **Report status:**
-   - If all verified → Allow completion claim
-   - If any unverified → HALT and require evidence
-
-### Evidence Collection
-
-For each missing criterion:
-
-1. **Identify what evidence is needed:**
-   - Test output? → Run test, capture output
-   - File creation? → Show file path and content hash
-   - Code change? → Show `git diff` output
-   - API response? → Show status code and body
-
-2. **Collect evidence:**
-   - Run required verification commands
-   - Store output in `./tmp/` or post to issue
-   - Verify evidence is complete and accurate
-
-3. **Update verification status:**
-   - Mark criterion as verified
-   - Post evidence to issue
-   - Proceed to next missing criterion
-
-## Evidence Types
-
-### Valid Evidence
-
-| Type | Description | Storage |
-|------|-------------|---------|
-| Test output | `pytest` pass/fail | Issue comment |
-| Lint output | `ruff check` clean | Issue comment |
-| Type check | `pyright` clean | Issue comment |
-| File path | Created file exists | Issue comment + `ls -la` |
-| File content | File content hash | Issue comment + `head -20` |
-| Git diff | Code changes | Issue comment + `git diff` |
-| API response | Status code and body | Issue comment + curl output |
-| Screenshot | Visual verification | Issue comment + attachment |
-
-### Invalid Evidence
-
-| Type | Why Invalid |
-|------|-------------|
-| "Trust me" | No verification |
-| "It should work" | Assumption, not proof |
-| "I checked" | No artifact |
-| "Code is correct" | No test run |
-| Placeholder text | "TBD" or "TODO" |
-
-## Verification Report Format
-
-```markdown
-## Verification Report
-
-**Task:** [Task description]
-**Plan Issue:** #N
-
-### Success Criteria Verification
-
-| Criterion | Status | Evidence |
-|-----------|--------|----------|
-| ✅ Test passed | ✅ VERIFIED | `pytest test/x.py` output |
-| ✅ Lint clean | ✅ VERIFIED | `ruff check src/` output |
-| ✅ File created | ❌ MISSING | Need: `ls -la path/to/file` |
-
-### Missing Evidence
-
-1. **File created**: Need to verify file exists
-   - Expected: `ls -la path/to/file`
-   - Current: No evidence provided
-
-### Required Actions
-
-- [ ] Provide evidence for missing criteria
-- [ ] Re-run verification after evidence added
-
----
-🤖 🔍 Verification by OpenCode (ollama-cloud/glm-5)
-```
-
 ## Enforcement Mechanism
 
-**⚠️ CRITICAL: Skills MUST enforce evidence before completion — guidelines alone are insufficient.**
+Skills MUST enforce evidence before completion — guidelines alone are insufficient.
 
-### What Skills MUST Check
+Before marking complete:
+- Are ALL success criteria defined?
+- Do ALL criteria have evidence?
+- Is evidence verifiable?
 
-1. **Before marking complete:**
-   - Are ALL success criteria defined?
-   - Do ALL criteria have evidence?
-   - Is evidence verifiable?
+Enforcement matrix:
+- All criteria verified → ALLOW completion claim
+- Some criteria unverified → HALT, require evidence
+- No criteria defined → HALT, require success criteria
+- Evidence placeholder → HALT, require real evidence
 
-2. **Enforcement matrix:**
-   - All criteria verified → ALLOW completion claim
-   - Some criteria unverified → HALT, require evidence
-   - No criteria defined → HALT, require success criteria
-   - Evidence placeholder → HALT, require real evidence
+## Lazy-Loaded Guidelines
 
-### Enforcement Messages
+When invoked, this skill requires the following guidelines to be loaded on-demand (they are not permanently loaded):
 
-**Missing evidence:**
-```
-Completion claim rejected. Evidence missing for:
+- **Load guideline:** `.opencode/guidelines/065-verification-honesty.md` — Required before any verification claim (mandatory per verification honesty rule)
 
-- [ ] Success criterion: "[Criterion description]"
-- [ ] Expected: [What evidence to provide]
-- [ ] Current: [What evidence exists]
+## Worktree Mode
 
-Please provide evidence before claiming completion.
-```
+When invoked from a worktree context (`worktree.path` is set):
 
-**Success criteria undefined:**
-```
-Cannot verify completion. Success criteria not defined.
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
+- Test/lint/typecheck commands MUST run from the worktree directory
+- `./tmp/` paths MUST resolve within the worktree, not the main repo
 
-Task: [Task description]
-Plan Issue: #N
-
-Please define success criteria in the plan before execution.
-```
-
-**Evidence placeholder:**
-```
-Evidence placeholder detected. Real evidence required.
-
-- [ ] Placeholder: "TBD" or "TODO"
-- [ ] Expected: Verifiable test output, file path, or code diff
-
-Please replace placeholder with actual evidence.
-```
-
-## Integration with Existing Workflow
-
-### Dispatch Order
-```
-executing-plans → verification-before-completion → (completion claim allowed)
-```
-
-### GitBucket Platform Adaptations
-- Post verification reports to plan issue
-- Store large artifacts in `./tmp/`
-- Link evidence to plan via comments
-
-### Git-Workflow Integration
-- Verification happens BEFORE branch push
-- Evidence collected during execution phase
-- PR created only after all verification passes
-
-## Common Verification Commands
-
-### Code Changes
-
+**Verification guard:** Before running any command, verify:
 ```bash
-# Show changed files
-git diff --name-only
+git -C $WORKTREE_PATH rev-parse --show-toplevel
+```
+If the result does NOT match `worktree.path`, HALT and report: "Worktree mismatch — skill is executing in the wrong directory."
 
-# Show changed content
-git diff
+If `worktree.path` is NOT set, operate normally from the project root.
 
-# Show staged changes
-git diff --cached
+## Live Verification: Completion Claims (MANDATORY)
+
+**🚫 CRITICAL: When this skill verifies completion, it MUST check against live state (not cached or claimed). Completion claims without live verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Completion Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "All success criteria met" | Verify each criterion against actual test/implementation state | `bash` to run tests; `srclight_get_symbol(name="symbol")` for code existence | VERIFICATION-GAP |
+| "Tests pass" | Verify by actually running tests, not from memory | `bash` to run `uv run pytest test/` | VERIFICATION-GAP |
+| "Files implemented per spec" | Verify files exist and contain expected changes | `glob(pattern="**/file")` + `srclight_get_symbol(name="symbol")` | MISSING-ELEMENT |
+| "Issue ready to close" | Verify PR actually merged via GitHub API, not just claimed | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
+| "Per-SC evidence table complete" | Verify every SC has PASS row in evidence table | Check per-SC evidence table for PASS/FAIL/MISSING rows | VERIFICATION-GAP |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
 ```
 
-### Test Verification
+**Classification on failure:**
 
-```bash
-# Run specific test
-uv run pytest test/test_file.py::test_function_name
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Criterion claimed met but test fails | VERIFICATION-GAP | conditional | Re-verify, fix implementation if needed |
+| Tests claimed passing but actually failing | CONFLICTING | flag-for-review | HALT — do not mark complete |
+| Expected files missing | MISSING-ELEMENT | conditional | Implement missing files before completion |
+| PR not actually merged | CONFLICTING | flag-for-review | HALT — wait for merge confirmation |
+| Per-SC table has FAIL or MISSING rows | VERIFICATION-GAP | conditional | Re-verify with actual tool call |
 
-# Run with coverage
-uv run pytest --cov=src/module test/
-```
+## Cross-Reference Verification (MANDATORY)
 
-### Code Quality
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
 
-```bash
-# Lint check
-uv run ruff check --fix src/ test/
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `executing-plans` in Cross-References | File exists at `.opencode/skills/executing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `verify` | File exists at `.opencode/skills/verification-before-completion/tasks/verify.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `collect` | File exists at `.opencode/skills/verification-before-completion/tasks/collect.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/verification-before-completion/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 
-# Format check
-uv run ruff format src/ test/
+**Verification Procedure:**
 
-# Type check
-uv run pyright src/
-```
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
 
-### File Verification
+**Classification on failure:**
 
-```bash
-# File exists
-ls -la path/to/file
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
 
-# File content preview
-head -20 path/to/file
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including completion markers, STATUS markers, and authorization currency. When this skill encounters a "complete" claim that smells wrong (e.g., STATUS says COMPLETE but content is incomplete, or a completion claim on a spec that was revised after authorization), invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
 
-# File hash
-md5sum path/to/file
-```
+## Comparison Modes
+
+**🚫 CRITICAL: The default comparison mode for all external verifications is `exact` — character-for-character match. Soft-passing a mismatch as "functionally equivalent" is a CRITICAL VIOLATION per `065-verification-honesty.md` → "Verification Comparison Semantics".**
+
+### Exact Mode (DEFAULT — Mandatory for External Verifications)
+
+When verifying DNS records, configuration values, API responses, or infrastructure state against a specification, each value must be compared exactly. The ONLY valid PASS is an exact, character-for-character match between the specification value and the live value.
+
+**Verification domains requiring exact mode:**
+
+| Domain | Examples | Why Exact |
+|--------|---------|-----------|
+| DNS records | SRV priority/weight, TXT content, A/AAAA values | Swapped fields change behavior |
+| Configuration values | Port numbers, timeout values, feature flags | "Close enough" masks misconfigurations |
+| API responses | Status codes, response fields, error messages | Field order and values have semantics |
+| Infrastructure state | Service versions, cluster membership, storage paths | Partial matches hide drift |
+
+### Semantic Mode (EXCEPTION — Code Behavior Only)
+
+`semantic` comparison mode applies ONLY when verifying code behavior where multiple implementations achieve the same spec intent (e.g., different sorting algorithms producing the same ordered result).
+
+**Requirements for semantic mode:**
+
+1. Explicit per-field justification for why semantic comparison applies
+2. Documentation of what "same intent" means for that specific field
+3. Default is ALWAYS `exact` — semantic mode must be explicitly chosen
+
+### Enforcement
+
+- Verification reports MUST use the row-by-row comparison table format from `065-verification-honesty.md`
+- Every FAIL must be reported as FAIL — no downgrading, no hedging, no footnotes
+- If the stakeholder wants to accept a deviation, that is their decision — the agent reports FAIL and waits
 
 ## Cross-References
 
-- Related skills: `executing-plans` (implementation), `git-workflow` (branch push), `approval-gate` (authorization)
-- Related guidelines: `000-critical-rules.md` (evidence requirements), `142-planning-archive-workflow.md` (success criteria)
+- Related skills: `executing-plans` (implementation), `git-workflow` (branch push), `approval-gate` (authorization), `spec-auditor` (ground-truth adversarial verification)
+- Related guidelines: `000-critical-rules.md` (evidence requirements), `065-verification-honesty.md` (metadata verification extension), `142-planning-archive-workflow.md` (success criteria)
 
 ## Platform Compatibility
 
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Use Python client from gitbucket-api skill (MCP tools removed)
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+- **Platform Detection:** Uses `github.platform` environment variable
 
 ## Source Attribution
 
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces evidence-based verification to prevent premature completion claims.
+This skill is adapted from the <UPSTREAM_ORG>/<UPSTREAM_REPO> repository (branch: newsrx). The original workflow enforces evidence-based verification to prevent premature completion claims.
 
-**Key adaptations for OpenCode:**
+Key adaptations for <AgentName>:
 - Integration with existing executing-plans and git-workflow skills
 - GitBucket platform support via MCP tools
-- Dispatch table integration for automatic invocation
+- Dispatch table integration for mandatory invocation
 - Structured evidence collection and verification gates

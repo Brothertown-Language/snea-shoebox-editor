@@ -31,6 +31,7 @@ Maintenance contract
 - **Removed table**: verify ``reset_all_sequences()`` still behaves correctly if
   the table had an integer PK named ``id``.
 """
+
 import os
 import sys
 import traceback
@@ -72,6 +73,7 @@ def log_message(msg, to_console=True, pbar=None):
 
 
 from src.database.base import Base
+
 # Critical: this import triggers all ORM model class definitions, which registers
 # every table with Base.metadata. Without it, sorted_tables would be empty and
 # no data would be synced.
@@ -84,10 +86,11 @@ def _ensure_pgserver() -> str:
     Delegates to _start_pgserver_core() in src.database.connection — the
     single authoritative implementation shared with the Streamlit app.
     Always returns a TCP URI (postgresql://postgres:@localhost:5432/postgres)
-    for non-Junie contexts, which is what this script requires.
+    for non-OpenCode contexts, which is what this script requires.
     """
     try:
         from src.database.connection import _get_local_db_path, _start_pgserver_core
+
         db_path = _get_local_db_path()
         log_message(f"Starting pgserver (db_path={db_path})...")
         uri = _start_pgserver_core(db_path)
@@ -255,6 +258,7 @@ def reset_all_sequences(local_engine) -> None:
     and must be added explicitly.
     """
     from sqlalchemy import Integer, inspect as sa_inspect
+
     log_message("Resetting sequences for all integer-PK tables...")
     with local_engine.connect() as conn:
         for table in Base.metadata.sorted_tables:
@@ -263,15 +267,10 @@ def reset_all_sequences(local_engine) -> None:
                 continue
             if not isinstance(id_col.type, Integer):
                 continue
-            seq = conn.execute(
-                text("SELECT pg_get_serial_sequence(:tbl, 'id')"),
-                {"tbl": table.name}
-            ).scalar()
+            seq = conn.execute(text("SELECT pg_get_serial_sequence(:tbl, 'id')"), {"tbl": table.name}).scalar()
             if not seq:
                 continue
-            conn.execute(
-                text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))")
-            )
+            conn.execute(text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))"))
             log_message(f"  Reset sequence for {table.name} ({seq})", to_console=False)
         conn.commit()
     log_message("Sequence reset complete.")

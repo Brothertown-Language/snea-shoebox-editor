@@ -7,16 +7,20 @@
 ## Fail-Fast
 
 - Raise contextual errors immediately; never swallow exceptions.
+
 - **NO FALSE DATA**: Never use proxy/fallback/synthetic data (e.g., `date.today()` for missing historical metadata,
   cross-field assignments like `journal_pub_date = discovery_date`). If metadata is missing, ambiguous, or unexpected (
   `None`, `0`), fail immediately and ask user.
+
 - **NO DEFAULT DATA**: Never assign defaults to fill missing DB fields.
+
 - **NO INVALID DEFAULTS**: Never default parameters that drive deterministic logic (e.g., `processing_date`). Caller
   must provide explicitly.
+
 - **HARD FAIL ON MISSING REQUIRED DATA**: If data required for analysis or downstream processing is missing from a
   source record (e.g., `discovery_date` absent from an XML record), the process MUST raise immediately — never skip,
   suppress, or continue. Missing required data is a data integrity defect, not a filter condition. All fields referenced by the current logic are **required** by default. Any field that is genuinely optional (i.e., its absence is expected and documented in the schema) must be explicitly handled by the logic; otherwise, its absence MUST trigger a hard fail. **The agent is prohibited from using a default placeholder (e.g., '—') to mask a missing field that it has not explicitly confirmed as optional.**
-  
+
   absent without triggering a hard fail.
 
 ## Verify Before Recommend
@@ -56,19 +60,22 @@
 - **STOP AND REPORT ON SEMANTIC LOSS**: If a task (e.g., translating a query to a different syntax, refactoring logic, reformulating a prompt) cannot be completed while preserving exact semantics, you MUST stop immediately and report the discrepancy to the user before proceeding. Never silently approximate.
 
 ## Production Data Protection
+
 - **ABSOLUTE PROHIBITION**: Strictly follow the production data protection rules in `070-environment.md`. Never run code against production data or databases without explicit user instruction in the current session.
 - **NO TESTS AGAINST PRODUCTION**: Tests must NEVER run against production or live data. Always use isolated test fixtures with dedicated test databases. Running tests against production data is prohibited regardless of whether the test is read-only, verification, or diagnostic.
 
 ## No Hardcoded Entity IDs
+
 - Hardcoding domain-specific entity IDs (e.g., PMIDs, database record IDs, foreign keys) in source code or notebooks is **absolutely forbidden**.
 - Such values are tightly coupled to a specific database snapshot and will silently break or produce incorrect results when the database is updated or rebuilt.
 - All entity IDs used in logic must be derived dynamically at runtime (e.g., via query, ranking, or configuration) — never cherry-picked and embedded in code.
 - Existing violations (e.g., `SEED_PM_IDS`) must be removed and replaced with dynamic derivation.
+
 ## Batch Operations
 
 - For datasets exceeding 1,000 rows: use pagination (offset/keyset) for reads and batched commits for writes.
 - **CORRECTNESS OVER PERFORMANCE**: Always prioritize correct operation over insertion speeds or other optimizations. A smaller batch size that works reliably is better than a larger batch size that fails.
-- **POSTGRESQL PARAMETER LIMIT**: Batch operations using parameterized queries must stay under PostgreSQL's 65,535 parameter limit. With N columns per row, batch size must satisfy: `batch_size × N < 65535`. For 10-column inserts, maximum safe batch size is ~6,500 (use 5,000 for safety margin).
+- **POSTGRESQL PARAMETER LIMIT**: Batch operations using parameterized queries must stay under PostgreSQL's 65,535 parameter limit. With N columns per row, batch size must satisfy: `batch_size × N < 65535`. For 10-column inserts, maximum safe batch size is ≈6,500 (use 5,000 for safety margin).
 - **ESTABLISH WORKING BATCH SIZES FIRST**: Start with conservative batch sizes (500-1,000 rows). Only increase after verifying correctness at scale. Never assume large batch sizes work without testing.
 - **VALIDATE BATCH CONTENTS**: Before upserting a batch, validate that data structures match schema expectations. Catch errors early rather than mid-transaction.
 
@@ -81,6 +88,6 @@
 - **200-errors-exception-handling.md** — Zero-tolerance rules for exception handling
 - **201-errors-missing-data.md** — Zero-tolerance rules for missing data
 
----
+______________________________________________________________________
 
 This guideline works with the error handling series (200-203). When in doubt: **raise, don't return.**

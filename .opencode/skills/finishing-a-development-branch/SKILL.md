@@ -10,166 +10,55 @@ compatibility: opencode
 
 ## Overview
 
-Branch completion workflow that ensures a feature branch is fully ready for PR creation. This skill verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Branch completion workflow that ensures a feature branch is fully ready for PR creation. Verifies all changes are committed, tested, pushed, and reviewed before the developer creates a PR. Implementation tracks against plan sub-issues, not spec sub-issues. Adapted from the \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
-
-## Persona
-
-You are a Branch Finalizer. Your focus is ensuring no uncommitted changes, all verifications pass, and the branch is ready for review.
+**Source Attribution:** This skill is adapted from \<UPSTREAM_ORG>/\<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
-| `prepare` | Prepare branch for PR creation | ~800 |
-| `checklist` | Run completion checklist | ~500 |
+| -- | -- | -- |
+| `prepare` | Prepare branch for PR creation | ≈450 |
+| `checklist` | Run completion checklist | ≈350 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `prepare` | ≈450 |
+| `checklist` | ≈350 |
+| `completion` | ≈200 |
 
 ## Invocation
 
-- `/skill finishing-a-development-branch` - Overview only
-- `/skill finishing-a-development-branch --task prepare` - Prepare branch for PR
-- `/skill finishing-a-development-branch --task checklist` - Run completion checklist
+- `/skill finishing-a-development-branch` — Overview only
+- `/skill finishing-a-development-branch --task prepare` — Prepare branch for PR
+- `/skill finishing-a-development-branch --task checklist` — Run completion checklist
+- `/skill finishing-a-development-branch --task completion` — Invoke when workflow halts at any point
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (push, compare URL, status report) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 
-1. **Automatic invocation (strongly recommended):** This skill is auto-invoked by dispatch-table.yaml when:
-   - Implementation completes on a feature branch
-   - User says "done" or "finished" or "ready for PR"
-   - Before review-prep task in git-workflow
-   - DO NOT proceed to PR creation until checklist passes
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when implementation completes on a feature branch, when the user says "done" or "finished" or "ready for PR", or before review-prep task in git-workflow.
+2. **Verification-first approach:** All changes must be committed. All tests must pass. All lint/typecheck must pass. Branch must be pushed to remote.
+3. **Exit conditions:** Branch is READY when all checklist items pass, compare URL is generated, and agent HALTs to report readiness.
+4. **Worktree mandatory:** All feature branches operate in worktrees. If `worktree.path` is not set: FATAL ERROR → FLAG DEV → HALT.
 
-2. **Verification-first approach:**
-   - All changes must be committed
-   - All tests must pass
-   - All lint/typecheck must pass
-   - Branch must be pushed to remote
+## Worktree Mode (MANDATORY)
 
-3. **Exit conditions:** Branch is READY when:
-   - All checklist items pass
-   - Compare URL is generated
-   - HALT and report readiness
+If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
 
-## Prepare Branch Workflow
+- All `bash` tool calls use `workdir="{{worktree.path}}"`
+- All `read`/`edit`/`write`/`glob`/`grep` tool calls prefix paths with `{{worktree.path}}/`
+- NEVER operate in the main working directory during implementation
 
-### Step 1: Verify All Changes Committed
+## Lazy-Loaded Guidelines
 
-```bash
-git status --porcelain
-```
+When invoked, this skill requires the following guidelines to be loaded on-demand (they are not permanently loaded):
 
-- If output is not empty → Stage and commit remaining changes
-- Verify commit messages are descriptive
-- Verify co-authored-by trailers are present
-
-### Step 2: Run Code Quality Checks
-
-```bash
-# Lint
-uv run ruff check --fix src/ test/
-
-# Format
-uv run ruff format src/ test/
-
-# Type check
-uv run pyright src/
-```
-
-- All checks must pass with zero errors
-- Warnings should be addressed but don't block
-
-### Step 3: Run Tests
-
-```bash
-uv run pytest test/ -x
-```
-
-- All tests must pass
-- No skipped tests without documented reason
-
-### Step 4: Verify Branch Pushed
-
-```bash
-git push -u origin <branch>
-git branch -vv
-```
-
-- Branch must have upstream tracking
-- Remote must have latest commits
-
-### Step 5: Generate Compare URL
-
-```
-https://gitbucket.newsrx.com/gitbucket/<owner>/<repo>/compare/<base>...<branch>
-```
-
-- URL must be accessible
-- Diff must show expected changes
-
-## Completion Checklist
-
-```markdown
-## Branch Completion Checklist
-
-### Changes
-- [ ] All changes committed
-- [ ] No untracked files remaining
-- [ ] Commit messages are descriptive
-- [ ] Co-authored-by trailers present
-
-### Code Quality
-- [ ] `ruff check` passes (zero errors)
-- [ ] `ruff format` applied
-- [ ] `pyright` passes (zero errors)
-- [ ] No dead code detected
-
-### Tests
-- [ ] All tests pass
-- [ ] No skipped tests without reason
-- [ ] New code has test coverage
-
-### Branch
-- [ ] Branch pushed to remote
-- [ ] Upstream tracking set
-- [ ] Compare URL generated
-- [ ] Compare URL accessible
-
-### Documentation
-- [ ] AI co-authored attribution in new files
-- [ ] Module docstrings present
-- [ ] No narration print statements
-
-### Ready for PR?
-- [ ] All checklist items pass
-- [ ] Compare URL verified
-```
-
-## Enforcement Mechanism
-
-**⚠️ CRITICAL: Branch must be complete before PR creation.**
-
-### Enforcement Matrix
-
-| Situation | Action |
-|-----------|--------|
-| Uncommitted changes | COMMIT before proceeding |
-| Lint errors | FIX before proceeding |
-| Test failures | FIX before proceeding |
-| Branch not pushed | PUSH before proceeding |
-| Compare URL broken | FIX before proceeding |
-
-### What Skills MUST Check
-
-1. **Before reporting readiness:**
-   - Is working tree clean?
-   - Do all quality checks pass?
-   - Is branch pushed?
-   - Is compare URL accessible?
-
-2. **During preparation:**
-   - Are there leftover debug prints?
-   - Are there TODO/FIXME comments?
-   - Are there unrelated changes?
+- **Load guideline:** `.opencode/guidelines/065-verification-honesty.md` — Required before branch completion verification claims
 
 ## Integration with Existing Workflow
 
@@ -179,11 +68,9 @@ https://gitbucket.newsrx.com/gitbucket/<owner>/<repo>/compare/<base>...<branch>
 executing-plans → verification-before-completion → finishing-a-development-branch → review-prep → (PR creation by user)
 ```
 
-### GitBucket Platform Adaptations
+### Plan Hierarchy Context
 
-- Use GitBucket compare URL format
-- Post completion summary to plan issue
-- Generate compare URL for GitBucket instance
+Implementation tracks against **plan sub-issues**, not spec sub-issues. The hierarchy is: Spec → (linked reference in body) → Plan → Sub-issues. When verifying branch completion, reference the plan issue for tracking status and the spec issue for requirements.
 
 ### Git-Workflow Integration
 
@@ -197,23 +84,80 @@ executing-plans → verification-before-completion → finishing-a-development-b
 - PR creation requires explicit "create a PR" instruction
 - After checklist passes, report readiness and HALT
 
+## Live Verification: Checklist Evidence (MANDATORY)
+
+**🚫 CRITICAL: Each checklist item in the `checklist` task MUST produce a tool-call artifact demonstrating the check was actually performed, not just checked off. Checklist assertions without tool-call evidence are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Checklist Item | Verification Action | Tool Call | Problem Class |
+|---------------|-------------------|-----------|---------------|
+| "All changes committed" | Verify working tree is clean | `bash` to run `git status` → confirm "nothing to commit" | VERIFICATION-GAP |
+| "Tests pass" | Verify by running tests | `bash` to run `uv run pytest test/` → confirm exit code 0 | VERIFICATION-GAP |
+| "Lint passes" | Verify by running linter | `bash` to run `uvx ruff check src/ test/` → confirm no errors | VERIFICATION-GAP |
+| "Branch pushed to remote" | Verify remote branch exists | `bash` to run `git log origin/<branch>..HEAD` → confirm empty | MISSING-ELEMENT |
+| "All files in worktree" | Verify all changed files are under worktree.path | `bash` to run `git diff --name-only HEAD≈1` → check paths | STRUCTURE-VIOLATION |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Uncommitted changes found | VERIFICATION-GAP | auto-fix | Commit remaining changes |
+| Tests failing | VERIFICATION-GAP | flag-for-review | HALT — fix test failures before proceeding |
+| Lint errors found | VERIFICATION-GAP | auto-fix | Run `ruff check --fix` and re-verify |
+| Branch not pushed | MISSING-ELEMENT | auto-fix | Push branch and re-verify |
+| Changes outside worktree | STRUCTURE-VIOLATION | flag-for-review | HALT — investigate, may need worktree re-creation |
+
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `verification-before-completion` in Cross-References | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `pr-creation-workflow` in Cross-References | File exists at `.opencode/skills/pr-creation-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `prepare` | File exists at `.opencode/skills/finishing-a-development-branch/tasks/prepare.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `checklist` | File exists at `.opencode/skills/finishing-a-development-branch/tasks/checklist.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/finishing-a-development-branch/tasks/completion.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` review-prep task | Task exists at `.opencode/skills/git-workflow/tasks/review-prep.md` | MISSING-TRACEABILITY if missing |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| review-prep task missing | MISSING-TRACEABILITY | flag-for-review | git-workflow may have been restructured |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including STATUS markers, labels, and authorization currency. When this skill encounters a checklist "all clear" but the ground-truth model suggests the branch state may be inconsistent, invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
 ## Cross-References
 
-- Related skills: `git-workflow` (branch management), `verification-before-completion` (evidence), `pr-creation-workflow` (PR timing)
-- Related guidelines: `000-critical-rules.md` (review-prep required), `060-tool-usage.md` (build/lint commands)
+- Related skills: `git-workflow` (branch management, mandatory post-merge cleanup), `verification-before-completion` (evidence), `pr-creation-workflow` (PR timing), `spec-auditor` (ground-truth adversarial verification)
+- Related guidelines: `000-critical-rules.md` (review-prep required), `060-tool-usage.md` (build/lint commands), `065-verification-honesty.md` (metadata verification extension)
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
 
 ## Platform Compatibility
 
 - **GitHub:** Not applicable (this repository uses GitBucket)
 - **GitBucket:** Fully supported — uses GitBucket compare URL format
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
-
-## Source Attribution
-
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow ensures branches are fully verified before PR creation.
-
-**Key adaptations for OpenCode:**
-- Integration with existing git-workflow skill
-- GitBucket platform support with compare URL format
-- Dispatch table integration for automatic invocation
-- Quality checklist enforcement
+- **Platform Detection:** Uses `github.platform` environment variable

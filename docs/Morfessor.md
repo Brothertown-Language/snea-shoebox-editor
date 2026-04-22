@@ -64,7 +64,7 @@ Feeding raw Natick forms into Morfessor yields:
 - morpheme-like segments
 - consistent boundaries across the lexicon
 - interpretable units for linguists
-- improved segments for Junie’s evaluation
+- improved segments for AI evaluation
 - better semantic cross-reference link generation
 
 For example, a hypothetical Natick form might be segmented as:

@@ -32,9 +32,7 @@ def log_migration_skip(version: int, description: str, reason: str) -> None:
     logger.info("-" * 60)
 
 
-def log_migration_complete(
-    version: int, description: str, duration_seconds: float | None = None
-) -> None:
+def log_migration_complete(version: int, description: str, duration_seconds: float | None = None) -> None:
     """Log the successful completion of a migration."""
     logger.info("=" * 60)
     if duration_seconds is not None:
@@ -81,16 +79,41 @@ class MigrationManager:
         (8, "_migrate_add_fts_index", "Add GIN FTS index to records for full-text search"),
         (10, "_migrate_add_sort_lx_column", "Add sort_lx column for NFD-aware sorting"),
         (11, "_migrate_upgrade_version_to_bigint", "Upgrade schema_version.version to BigInteger"),
-        (2026021585860, "_migrate_add_search_entries_index", "Add B-tree index to search_entries(term) for prefix matching"),
+        (
+            2026021585860,
+            "_migrate_add_search_entries_index",
+            "Add B-tree index to search_entries(term) for prefix matching",
+        ),
         (2026021585861, "_migrate_add_normalized_search_entries", "Add normalized_term to search_entries and index it"),
         (2026021585862, "_migrate_renormalize_search_entries", "Re-normalize search_entries for diacritics and quotes"),
         (2026021585863, "_migrate_renormalize_sort_lx", "Re-normalize records.sort_lx for diacritics and quotes"),
         (2026030145060, "_migrate_add_record_locking", "Add is_locked, locked_by, locked_at, and lock_note to records"),
-        (2026030206285, "_migrate_ignore_leading_numerals", "Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals"),
-        (2026030207140, "_migrate_reprocess_all_records", "Reprocess all records to synchronize languages, search entries, and metadata"),
-        (20260303080520, "_migrate_renormalize_infinity_symbol", "Re-normalize sort_lx and normalized_term for \u221e and \u2714 symbol sort order"),
-        (20260405140917, "_migrate_create_headword_search_entries", "Create headword_search_entries table for PRIMARY lx and va"),
+        (
+            2026030206285,
+            "_migrate_ignore_leading_numerals",
+            "Re-normalize records.sort_lx and search_entries.normalized_term to ignore leading numerals",
+        ),
+        (
+            2026030207140,
+            "_migrate_reprocess_all_records",
+            "Reprocess all records to synchronize languages, search entries, and metadata",
+        ),
+        (
+            20260303080520,
+            "_migrate_renormalize_infinity_symbol",
+            "Re-normalize sort_lx and normalized_term for \u221e and \u2714 symbol sort order",
+        ),
+        (
+            20260405140917,
+            "_migrate_create_headword_search_entries",
+            "Create headword_search_entries table for PRIMARY lx and va",
+        ),
         (20260405140918, "_migrate_create_gloss_search_entries", "Create gloss_search_entries table for PRIMARY ge"),
+        (
+            20260413120000,
+            "_migrate_add_headword_entry_type_index_and_check",
+            "Add entry_type index and CHECK constraint to headword_search_entries",
+        ),
     ]
 
     def __init__(self, engine):
@@ -111,6 +134,7 @@ class MigrationManager:
         with self._engine.connect() as conn:
             # retry logic for extensions to handle startup recovery
             import time
+
             max_retries = 5
             for attempt in range(max_retries):
                 try:
@@ -119,7 +143,9 @@ class MigrationManager:
                     break
                 except Exception as e:
                     if "shutting down" in str(e).lower() and attempt < max_retries - 1:
-                        logger.warning("DB is shutting down/recovering. Retrying extensions... (%d/%d)", attempt+1, max_retries)
+                        logger.warning(
+                            "DB is shutting down/recovering. Retrying extensions... (%d/%d)", attempt + 1, max_retries
+                        )
                         time.sleep(2)
                         continue
                     raise
@@ -129,12 +155,11 @@ class MigrationManager:
     def _get_current_version(self) -> int:
         """Return the highest applied migration version, or 0 if none."""
         from .models.meta import SchemaVersion
+
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
-            result = session.query(SchemaVersion.version).order_by(
-                SchemaVersion.version.desc()
-            ).first()
+            result = session.query(SchemaVersion.version).order_by(SchemaVersion.version.desc()).first()
             return result[0] if result else 0
         finally:
             session.close()
@@ -142,6 +167,7 @@ class MigrationManager:
     def _record_migration(self, version: int, description: str):
         """Record a successfully applied migration."""
         from .models.meta import SchemaVersion
+
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
@@ -190,24 +216,46 @@ class MigrationManager:
         and ON DELETE RESTRICT to entity foreign keys."""
         with self._engine.connect() as conn:
             # 1. user_activity_log
-            conn.execute(text("ALTER TABLE user_activity_log DROP CONSTRAINT IF EXISTS user_activity_log_user_email_fkey;"))
-            conn.execute(text("ALTER TABLE user_activity_log ADD CONSTRAINT user_activity_log_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(
+                text("ALTER TABLE user_activity_log DROP CONSTRAINT IF EXISTS user_activity_log_user_email_fkey;")
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE user_activity_log ADD CONSTRAINT user_activity_log_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"
+                )
+            )
 
             # 2. matchup_queue
             conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_user_email_fkey;"))
-            conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"
+                )
+            )
 
             # 3. edit_history
             conn.execute(text("ALTER TABLE edit_history DROP CONSTRAINT IF EXISTS edit_history_user_email_fkey;"))
-            conn.execute(text("ALTER TABLE edit_history ADD CONSTRAINT edit_history_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE edit_history ADD CONSTRAINT edit_history_user_email_fkey FOREIGN KEY (user_email) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"
+                )
+            )
 
             # 4. records (updated_by)
             conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_updated_by_fkey;"))
-            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE records ADD CONSTRAINT records_updated_by_fkey FOREIGN KEY (updated_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"
+                )
+            )
 
             # 5. records (reviewed_by)
             conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_reviewed_by_fkey;"))
-            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE records ADD CONSTRAINT records_reviewed_by_fkey FOREIGN KEY (reviewed_by) REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"
+                )
+            )
 
             # 6. records (language_id) - DEPRECATED (dropped in migration 6)
             # conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_language_id_fkey;"))
@@ -215,23 +263,45 @@ class MigrationManager:
 
             # 7. records (source_id)
             conn.execute(text("ALTER TABLE records DROP CONSTRAINT IF EXISTS records_source_id_fkey;"))
-            conn.execute(text("ALTER TABLE records ADD CONSTRAINT records_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE records ADD CONSTRAINT records_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"
+                )
+            )
 
             # 8. search_entries (record_id)
             conn.execute(text("ALTER TABLE search_entries DROP CONSTRAINT IF EXISTS search_entries_record_id_fkey;"))
-            conn.execute(text("ALTER TABLE search_entries ADD CONSTRAINT search_entries_record_id_fkey FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE search_entries ADD CONSTRAINT search_entries_record_id_fkey FOREIGN KEY (record_id) REFERENCES records(id) ON DELETE RESTRICT;"
+                )
+            )
 
             # 9. matchup_queue (source_id)
             conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_source_id_fkey;"))
-            conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"
+                )
+            )
 
             # 10. matchup_queue (suggested_record_id)
-            conn.execute(text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_suggested_record_id_fkey;"))
-            conn.execute(text("ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_suggested_record_id_fkey FOREIGN KEY (suggested_record_id) REFERENCES records(id) ON DELETE RESTRICT;"))
+            conn.execute(
+                text("ALTER TABLE matchup_queue DROP CONSTRAINT IF EXISTS matchup_queue_suggested_record_id_fkey;")
+            )
+            conn.execute(
+                text(
+                    "ALTER TABLE matchup_queue ADD CONSTRAINT matchup_queue_suggested_record_id_fkey FOREIGN KEY (suggested_record_id) REFERENCES records(id) ON DELETE RESTRICT;"
+                )
+            )
 
             # 11. permissions (source_id)
             conn.execute(text("ALTER TABLE permissions DROP CONSTRAINT IF EXISTS permissions_source_id_fkey;"))
-            conn.execute(text("ALTER TABLE permissions ADD CONSTRAINT permissions_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE permissions ADD CONSTRAINT permissions_source_id_fkey FOREIGN KEY (source_id) REFERENCES sources(id) ON DELETE RESTRICT;"
+                )
+            )
 
             conn.commit()
 
@@ -255,7 +325,8 @@ class MigrationManager:
     def _migrate_create_record_languages_table(self):
         """Migration 4: Create record_languages join table."""
         with self._engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 CREATE TABLE IF NOT EXISTS record_languages (
                     id SERIAL PRIMARY KEY,
                     record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE CASCADE,
@@ -263,7 +334,8 @@ class MigrationManager:
                     is_primary BOOLEAN NOT NULL DEFAULT FALSE,
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
                 );
-            """))
+            """)
+            )
             conn.commit()
 
     def _migrate_backfill_record_languages(self):
@@ -290,7 +362,7 @@ class MigrationManager:
                 parsed = parse_mdf(rec.mdf_data)
                 if not parsed:
                     continue
-                lg_entries = parsed[0].get('lg', [])
+                lg_entries = parsed[0].get("lg", [])
 
                 # 2. If no \lg values found in MDF, fallback to existing language_id if it exists
                 # We need to peek at language_id before dropping it in next migration.
@@ -305,8 +377,8 @@ class MigrationManager:
                 else:
                     # Create entries for each parsed \lg
                     for _i, lg in enumerate(lg_entries):
-                        lg_name = lg['name']
-                        lg_code = lg['code']
+                        lg_name = lg["name"]
+                        lg_code = lg["code"]
 
                         # Find or create Language entry
                         lang = session.query(Language).filter_by(name=lg_name).first()
@@ -323,9 +395,7 @@ class MigrationManager:
                             session.flush()
 
                         rl = RecordLanguage(
-                            record_id=rec.id,
-                            language_id=lang.id,
-                            is_primary=lg.get('is_primary', False)
+                            record_id=rec.id, language_id=lang.id, is_primary=lg.get("is_primary", False)
                         )
                         session.add(rl)
             session.commit()
@@ -348,12 +418,14 @@ class MigrationManager:
         """Migration 8: Add GIN FTS index to records table."""
         with self._engine.connect() as conn:
             # Create a generated column for FTS
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 ALTER TABLE records ADD COLUMN IF NOT EXISTS fts_vector tsvector
                 GENERATED ALWAYS AS (
                     to_tsvector('english', coalesce(lx, '') || ' ' || coalesce(ge, '') || ' ' || coalesce(mdf_data, ''))
                 ) STORED;
-            """))
+            """)
+            )
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_fts ON records USING gin (fts_vector);"))
             conn.commit()
 
@@ -400,7 +472,11 @@ class MigrationManager:
         with self._engine.connect() as conn:
             # Drop old index if it exists and create new one on normalized_term
             conn.execute(text("DROP INDEX IF EXISTS idx_search_entries_term;"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_search_entries_normalized_term ON search_entries (normalized_term);"))
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_search_entries_normalized_term ON search_entries (normalized_term);"
+                )
+            )
             # Make the column NOT NULL after backfilling
             conn.execute(text("ALTER TABLE search_entries ALTER COLUMN normalized_term SET NOT NULL;"))
             conn.commit()
@@ -481,14 +557,20 @@ class MigrationManager:
         with self._engine.connect() as conn:
             # Headword (\lx) -> Homonym (\hm) -> Part of Speech (\ps) -> Gloss (\ge)
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_sort_lx ON records (sort_lx);"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_sorting_composite ON records (sort_lx, hm, ps, ge);"))
+            conn.execute(
+                text("CREATE INDEX IF NOT EXISTS idx_records_sorting_composite ON records (sort_lx, hm, ps, ge);")
+            )
             conn.commit()
 
     def _migrate_add_record_locking(self):
         """Migration 2026030145060: Add is_locked, locked_by, locked_at, and lock_note to records."""
         with self._engine.connect() as conn:
             conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS is_locked BOOLEAN NOT NULL DEFAULT FALSE;"))
-            conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS locked_by TEXT REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE records ADD COLUMN IF NOT EXISTS locked_by TEXT REFERENCES users(email) ON UPDATE CASCADE ON DELETE RESTRICT;"
+                )
+            )
             conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS locked_at TIMESTAMP WITH TIME ZONE;"))
             conn.execute(text("ALTER TABLE records ADD COLUMN IF NOT EXISTS lock_note TEXT;"))
             conn.execute(text("CREATE INDEX IF NOT EXISTS idx_records_is_locked ON records(is_locked);"))
@@ -504,7 +586,9 @@ class MigrationManager:
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
-            logger.info("Re-normalizing records.sort_lx and search_entries.normalized_term (ignoring leading numerals)...")
+            logger.info(
+                "Re-normalizing records.sort_lx and search_entries.normalized_term (ignoring leading numerals)..."
+            )
 
             # 1. Update records.sort_lx
             records = session.query(Record).all()
@@ -535,7 +619,9 @@ class MigrationManager:
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
-            logger.info("Re-normalizing records.sort_lx and search_entries.normalized_term (∞ and ✔ symbol sort order)...")
+            logger.info(
+                "Re-normalizing records.sort_lx and search_entries.normalized_term (∞ and ✔ symbol sort order)..."
+            )
 
             # 1. Update records.sort_lx
             records = session.query(Record).all()
@@ -573,6 +659,7 @@ class MigrationManager:
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""
         from .models.core import Record, Source
+
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
@@ -595,43 +682,33 @@ class MigrationManager:
                     "name": "Trumbull 1903",
                     "short_name": "Trumbull (1903)",
                     "description": "Wampanoag [wam]",
-                    "citation_format": "Trumbull, James Hammond. (1903). *Natick Dictionary*. Bureau of American Ethnology Bulletin 25. Washington: Government Printing Office."
+                    "citation_format": "Trumbull, James Hammond. (1903). *Natick Dictionary*. Bureau of American Ethnology Bulletin 25. Washington: Government Printing Office.",
                 },
                 {
                     "name": "Fielding 2012",
                     "short_name": "Fielding (2012)",
                     "description": "Mohegan-Pequot [xpq]",
-                    "citation_format": "Fielding, Stephanie. (2013). *A Modern Mohegan Dictionary*. (D. J. Costa, Ed.). Uncasville, CT: Mohegan Council of Elders."
+                    "citation_format": "Fielding, Stephanie. (2013). *A Modern Mohegan Dictionary*. (D. J. Costa, Ed.). Uncasville, CT: Mohegan Council of Elders.",
                 },
                 {
                     "name": "Anonymous 1647",
                     "short_name": None,
                     "description": "Wampanoag [wam]",
-                    "citation_format": None
+                    "citation_format": None,
                 },
-                {
-                    "name": "Winslow 1624",
-                    "short_name": None,
-                    "description": "Wampanoag [wam]",
-                    "citation_format": None
-                },
-                {
-                    "name": "Wood 1634",
-                    "short_name": None,
-                    "description": "Wampanoag [wam]",
-                    "citation_format": None
-                },
+                {"name": "Winslow 1624", "short_name": None, "description": "Wampanoag [wam]", "citation_format": None},
+                {"name": "Wood 1634", "short_name": None, "description": "Wampanoag [wam]", "citation_format": None},
                 {
                     "name": "Prince-Speck 1904",
                     "short_name": None,
                     "description": "Mohegan-Pequot [xpq]",
-                    "citation_format": None
+                    "citation_format": None,
                 },
                 {
                     "name": "Williams 1643",
                     "short_name": None,
                     "description": "Narragansett [xnt]",
-                    "citation_format": None
+                    "citation_format": None,
                 },
             ]
 
@@ -655,6 +732,7 @@ class MigrationManager:
     def seed_default_permissions(self):
         """Seed default permissions from JSON data file and ensure lowercase normalization."""
         from .models.identity import Permission
+
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
@@ -675,15 +753,11 @@ class MigrationManager:
                     logger.error("Default permissions data file not found at %s", data_file)
                     return
 
-                with open(data_file, encoding='utf-8') as f:
+                with open(data_file, encoding="utf-8") as f:
                     perm_data = json.load(f)
 
                 perm_objects = [
-                    Permission(
-                        github_org=entry["github_org"],
-                        github_team=entry["github_team"],
-                        role=entry["role"]
-                    )
+                    Permission(github_org=entry["github_org"], github_team=entry["github_team"], role=entry["role"])
                     for entry in perm_data
                 ]
                 session.add_all(perm_objects)
@@ -701,6 +775,7 @@ class MigrationManager:
     def seed_iso_639_data(self):
         """Seed ISO 639-3 data from local project file if the table is empty."""
         from .models.iso639 import ISO639_3
+
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
@@ -719,22 +794,22 @@ class MigrationManager:
                     logger.info("Seeding ISO 639-3 data from %s...", data_file)
                     logger.info("Records before seeding: %d", count_before)
 
-                with open(data_file, encoding='utf-8') as f:
+                with open(data_file, encoding="utf-8") as f:
                     content = f.read()
 
-                reader = csv.DictReader(io.StringIO(content), delimiter='\t')
+                reader = csv.DictReader(io.StringIO(content), delimiter="\t")
 
                 iso_entries = []
                 for row in reader:
                     entry = ISO639_3(
-                        id=row['Id'],
-                        part2b=row.get('Part2b') or None,
-                        part2t=row.get('Part2t') or None,
-                        part1=row.get('Part1') or None,
-                        scope=row['Scope'],
-                        language_type=row['Language_Type'],
-                        ref_name=row['Ref_Name'],
-                        comment=row.get('Comment') or None
+                        id=row["Id"],
+                        part2b=row.get("Part2b") or None,
+                        part2t=row.get("Part2t") or None,
+                        part1=row.get("Part1") or None,
+                        scope=row["Scope"],
+                        language_type=row["Language_Type"],
+                        ref_name=row["Ref_Name"],
+                        comment=row.get("Comment") or None,
                     )
                     iso_entries.append(entry)
 
@@ -758,7 +833,8 @@ class MigrationManager:
     def _migrate_create_headword_search_entries(self):
         """Migration 20260405140917: Create headword_search_entries table for PRIMARY lx and va."""
         with self._engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 CREATE TABLE IF NOT EXISTS headword_search_entries (
                     id SERIAL PRIMARY KEY,
                     record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE RESTRICT,
@@ -766,22 +842,57 @@ class MigrationManager:
                     term VARCHAR NOT NULL,
                     normalized_term VARCHAR NOT NULL
                 );
-            """))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_headword_search_entries_normalized_term ON headword_search_entries (normalized_term);"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_headword_search_entries_record_id ON headword_search_entries (record_id);"))
+            """)
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_headword_search_entries_normalized_term ON headword_search_entries (normalized_term);"
+                )
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_headword_search_entries_record_id ON headword_search_entries (record_id);"
+                )
+            )
+            conn.commit()
+
+    def _migrate_add_headword_entry_type_index_and_check(self):
+        """Migration 20260413120000: Add entry_type index and CHECK constraint to headword_search_entries."""
+        with self._engine.connect() as conn:
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_headword_search_entries_entry_type ON headword_search_entries (entry_type);"
+                )
+            )
+            conn.execute(text("ALTER TABLE headword_search_entries DROP CONSTRAINT IF EXISTS chk_headword_entry_type;"))
+            conn.execute(
+                text(
+                    "ALTER TABLE headword_search_entries ADD CONSTRAINT chk_headword_entry_type CHECK (entry_type IN ('lx', 'va'));"
+                )
+            )
             conn.commit()
 
     def _migrate_create_gloss_search_entries(self):
         """Migration 20260405140918: Create gloss_search_entries table for PRIMARY ge."""
         with self._engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text("""
                 CREATE TABLE IF NOT EXISTS gloss_search_entries (
                     id SERIAL PRIMARY KEY,
                     record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE RESTRICT,
                     term VARCHAR NOT NULL,
                     normalized_term VARCHAR NOT NULL
                 );
-            """))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_normalized_term ON gloss_search_entries (normalized_term);"))
-            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_record_id ON gloss_search_entries (record_id);"))
+            """)
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_normalized_term ON gloss_search_entries (normalized_term);"
+                )
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_record_id ON gloss_search_entries (record_id);"
+                )
+            )
             conn.commit()

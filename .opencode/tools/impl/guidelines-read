@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Print the contents of a guideline file from .opencode/guidelines/.
-Usage: uv run python .opencode/tools/guidelines read <filename>
-Example: uv run python .opencode/tools/guidelines read 041
+Usage: ./.opencode/tools/guidelines read <filename>
+Example: ./.opencode/tools/guidelines read 041
 Note: Prefer 3-digit shorthand when available (for example `041` instead of full filename).
 """
 
@@ -11,21 +15,24 @@ import os as _os
 
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     print(
-        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+        "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/guidelines ...). "
         "Direct invocation is not permitted.",
         file=__import__("sys").stderr,
     )
     __import__("sys").exit(1)
+import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
-SKILLS_DIR = BASE_DIR / ".opencode" / "skills"
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+GUIDELINES_DIR = PROJECT_ROOT / ".opencode" / "guidelines"
+SKILLS_DIR = PROJECT_ROOT / ".opencode" / "skills"
 
 
 def _resolve_guideline_path(name: str) -> Path | None:
-    opencode_dir = BASE_DIR / ".opencode"
+    opencode_dir = PROJECT_ROOT / ".opencode"
     candidates: list[Path] = [
         GUIDELINES_DIR / name,
         opencode_dir / name,
@@ -95,7 +102,7 @@ def main() -> None:
 
         print(f"Error: skill file not found: {name}", file=sys.stderr)
         print(
-            f"Available skills in {SKILLS_DIR.relative_to(BASE_DIR)}:", file=sys.stderr
+            f"Available skills in {SKILLS_DIR.relative_to(PROJECT_ROOT)}:", file=sys.stderr
         )
         for f in sorted(SKILLS_DIR.glob("*/SKILL.md")):
             print(f"  {f.parent.name}/SKILL.md", file=sys.stderr)
@@ -105,7 +112,7 @@ def main() -> None:
     if path is None:
         print(f"Error: guideline file not found: {name}", file=sys.stderr)
         print(
-            f"Available files in {GUIDELINES_DIR.relative_to(BASE_DIR)}:",
+            f"Available files in {GUIDELINES_DIR.relative_to(PROJECT_ROOT)}:",
             file=sys.stderr,
         )
         for f in sorted(GUIDELINES_DIR.glob("*.md")):

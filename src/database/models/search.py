@@ -1,23 +1,26 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-from sqlalchemy import Column, Integer, String, ForeignKey
+from sqlalchemy import Column, ForeignKey, Integer, String
 from sqlalchemy.orm import relationship
+
 from ..base import Base
+
 
 class SearchEntry(Base):
     """
     Consolidated lookup table for instant search across all linguistic forms.
-    Indexed for fast lookup; utilizes standard ILIKE matching to remain compatible 
+    Indexed for fast lookup; utilizes standard ILIKE matching to remain compatible
     with the pgserver envelope.
     """
-    __tablename__ = 'search_entries'
-    __table_args__ = {'extend_existing': True}  # Required: prevents re-import errors on Streamlit hot-reload
+
+    __tablename__ = "search_entries"
+    __table_args__ = {"extend_existing": True}  # Required: prevents re-import errors on Streamlit hot-reload
     id = Column(Integer, primary_key=True, autoincrement=True)
-    record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
+    record_id = Column(Integer, ForeignKey("records.id", ondelete="RESTRICT"), nullable=False)
     term = Column(String, nullable=False)  # The searchable form (\lx, \va, \se, etc.)
     normalized_term = Column(String, nullable=False)  # Normalized for punctuation-insensitive prefix search
     entry_type = Column(String, nullable=False)  # Origin tag: 'lx', 'va', 'se', 'cf', 've'
-    
+
     record = relationship("Record", back_populates="search_entries")
 
 
@@ -26,12 +29,13 @@ class HeadwordSearchEntry(Base):
     Headword-level entries only: PRIMARY lx and PRIMARY va.
     Populated during MDF parsing with state tracking.
     """
-    __tablename__ = 'headword_search_entries'
-    __table_args__ = {'extend_existing': True}
+
+    __tablename__ = "headword_search_entries"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
-    entry_type = Column(String, nullable=False)  # 'lx' or 'va'
+    record_id = Column(Integer, ForeignKey("records.id", ondelete="RESTRICT"), nullable=False)
+    entry_type = Column(String, nullable=False)  # 'lx' or 'va' only; enforced by CHECK constraint at DB level
     term = Column(String, nullable=False)
     normalized_term = Column(String, nullable=False)
 
@@ -43,11 +47,12 @@ class GlossSearchEntry(Base):
     Primary gloss entries only: PRIMARY ge.
     Populated during MDF parsing with state tracking.
     """
-    __tablename__ = 'gloss_search_entries'
-    __table_args__ = {'extend_existing': True}
+
+    __tablename__ = "gloss_search_entries"
+    __table_args__ = {"extend_existing": True}
 
     id = Column(Integer, primary_key=True, autoincrement=True)
-    record_id = Column(Integer, ForeignKey('records.id', ondelete='RESTRICT'), nullable=False)
+    record_id = Column(Integer, ForeignKey("records.id", ondelete="RESTRICT"), nullable=False)
     term = Column(String, nullable=False)
     normalized_term = Column(String, nullable=False)
 

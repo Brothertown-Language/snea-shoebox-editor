@@ -8,342 +8,155 @@ compatibility: opencode
 
 # PR Creation Workflow Skill
 
-## Role
+## Overview
 
-You are a PR Creation Workflow enforcer. Your focus is ensuring PRs are created ONLY with explicit developer
-instruction, HALTing after PR creation, and NEVER merging PRs.
+PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT automatic after implementation. "Approved" and "go" authorize implementation ONLY, not PR creation. The developer MUST explicitly say "create a PR" or equivalent.
 
-## Core Principle
+## Tasks
 
-**PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT automatic after implementation.**
+| Task | Purpose | Words |
+|------|---------|-------|
+| `pre-pr-checklist` | Mandatory checks before PR creation (squash, changelog, branch state) | ≈500 |
+| `sub-issue-collection` | Fetch and include sub-issues in PR body for autoclose | ≈300 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
+
+## Invocation
+
+- `/skill pr-creation-workflow --task pre-pr-checklist` - Run mandatory pre-PR checks
+- `/skill pr-creation-workflow --task sub-issue-collection` - Collect sub-issues for PR body
+- `/skill pr-creation-workflow --task completion` - Invoke when workflow halts at any point
+- `/skill pr-creation-workflow` - Overview only
 
 ## Authorization Boundary (CRITICAL)
 
-### What Authorizes Implementation (BUT NOT PR)
+### What Authorizes Implementation (BUT NOT PR — Unless Pipeline Scope Applies)
 
-| Authorization   | Meaning                   | PR Authorized? |
-|-----------------|---------------------------|----------------|
-| `approved`      | Begin implementation      | ❌ NO           |
-| `go`            | Proceed to next task      | ❌ NO           |
-| `approved: 1`   | Implement Phase 1         | ❌ NO           |
-| `approved: 2.3` | Implement Phase 2, Step 3 | ❌ NO           |
-| `proceed`       | Continue with plan        | ❌ NO           |
-
-**None of these authorize PR creation.** They authorize implementation only.
+| Authorization | Meaning | PR Authorized? |
+|---------------|---------|----------------|
+| `approved` | Begin implementation | ❌ NO (unless scope >= for_pr) |
+| `go` | Proceed to next task | ❌ NO (unless scope >= for_pr) |
+| `approved: 1` | Implement Phase 1 | ❌ NO (unless scope >= for_pr) |
+| `proceed` | Continue with plan | ❌ NO (unless scope >= for_pr) |
+| `approved #N to PR` / `for PR` | Pipeline authorization through PR | ✅ YES (scope >= for_pr) |
+| `pr_only` | PR creation only | ✅ YES |
 
 ### What Authorizes PR Creation
 
-| Authorization           | Valid? |
-|-------------------------|--------|
-| "create a PR"           | ✅ YES  |
-| "make a PR"             | ✅ YES  |
-| "push and create PR"    | ✅ YES  |
-| "let's get a PR up"     | ✅ YES  |
-| "create a pull request" | ✅ YES  |
+"create a PR", "make a PR", "push and create PR", "let's get a PR up", "create a pull request", "PR" (bare), "PR #NNN"
 
-**The developer MUST explicitly say one of these phrases (or unambiguous equivalent).**
+**Pipeline scope authorization:** When `authorization_scope >= for_pr` or scope is `pr_only`, the user's pipeline instruction authorizes PR creation as part of the scope. No separate "create a PR" instruction is required.
 
-## PR Creation Workflow
+## Operating Protocol
 
-### Pre-PR Creation Checklist (ALL Platforms)
+1. **After implementation completes:** Report completion, HALT. Do NOT ask about PRs.
+2. **When developer says "create a PR":** Run pre-PR checklist, squash, push, create PR, report URL, HALT.
+3. **Never merge PRs:** Merging is HUMAN-ONLY operation.
+4. **Never create PR without explicit instruction:** "approved" does NOT authorize PR creation.
 
-**Changelog generation is MANDATORY for ALL PRs - GitHub, GitBucket, or any other platform.**
-
-```
-☐ Changelog Generated
-  - Run: /skill changelog-generator --since-last-release
-  - Stage: git add CHANGELOG.md
-  - Verify: git status --porcelain CHANGELOG.md shows "M CHANGELOG.md"
-  - OR: [skip changelog] directive present in commit message or PR title
-```
-
-### After Implementation Completes
-
-1. ✅ Report completion (concise summary)
-2. ✅ HALT — do NOT ask about PRs
-3. ✅ WAIT for explicit "create a PR" instruction
-4. ❌ Do NOT ask "Ready for a PR?" or "Should I create a PR?"
-5. ❌ Do NOT create PR automatically
-
-### When Developer Says "create a PR"
-
-#### ⚠️ MANDATORY: Pre-PR Creation Checklist
-
-**Before creating ANY PR, you MUST verify ALL of the following:**
-
-```markdown
 ## Pre-PR Creation Checklist (MANDATORY)
 
-☐ **Squash Verification**
-  - Run: `git log origin/main..HEAD --oneline`
-  - Verify: EXACTLY ONE commit on branch
-  - If multiple commits: Run `git reset --soft origin/main && git commit`
-  - NEVER proceed with multiple commits
-
-☐ **Changelog Generated (ALL PLATFORMS)**
-  - Run: /skill changelog-generator --since-last-release
-  - Stage: git add CHANGELOG.md
-  - Verify: git status --porcelain CHANGELOG.md shows staged changes
-  - OR: [skip changelog] directive present
-  - NO PLATFORM EXEMPTIONS - GitHub, GitBucket, all platforms require changelog
-
-☐ **Branch State**
-  - Run: `git status`
-  - Verify: Working tree clean (no uncommitted changes)
-  - If dirty: Commit or stash before proceeding
-
-☐ **Push Verification**
-  - Run: `git log origin/<branch>..HEAD --oneline`
-  - Verify: No unpushed commits
-  - If unpushed: Run `git push --force-with-lease origin <branch>`
-
-☐ **Co-Author Trailers**
-  - Verify: Commit message includes BOTH trailers:
-    - AI Author: `Co-authored-by: <AI-Name> (<model-id>) <ai-email>`
-    - Human Collaborator: `Co-authored-by: <Human-Name> <human-email>`
-
-☐ **Issue References**
-  - For single-task: Include `Fixes #<parent>` in PR body
-  - For multi-task: Include `Fixes #<parent>` AND `Fixes #<child>` for EACH sub-issue
-```
-
-**🚫 CRITICAL VIOLATION: Creating PR with multiple commits is FORBIDDEN.**
-
-| Violation | Consequence |
-|-----------|-------------|
-| Multiple commits in PR | PR REJECTED — squash required |
-| Missing PR URL in chat | CRITICAL — communication failure |
-| Premature merge attempt | CRITICAL — HUMAN-ONLY operation |
-
-### Violation Warning
-
-**Creating a PR with multiple commits is a CRITICAL GUIDELINE VIOLATION.**
-
-If you accidentally create a PR with multiple commits:
-
-1. **DO NOT ask user to fix it** — Fix it yourself immediately:
-   ```bash
-   git reset --soft origin/main
-   git commit -m "<descriptive message>" \
-       --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-       --trailer "Co-authored-by: <Human-Name> <human-email>"
-   git push --force-with-lease origin <branch>
-   ```
-
-2. **Close the bad PR** and create a new one if necessary.
-
-3. **Report the violation** in the GitHub issue comment.
-
-**User intervention should NEVER be required to fix squash violations.**
-
-1. **Collect sub-issues** (for multi-task specs):
-   ```python
-   # Fetch all sub-issues for the parent issue
-   sub_issues = github_issue_read(method="get_sub_issues", issue_number=<parent>)
-   
-   # Build autoclose list: parent + all sub-issues
-   autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
-   ```
-
-2. **Squash commits** (MANDATORY):
-   ```bash
-   git reset --soft origin/main
-   git commit -m "<descriptive message>" \
-       --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-       --trailer "Co-authored-by: <Human-Name> <human-email>"
-   ```
-
-3. **Force push**:
-   ```bash
-   git push --force-with-lease origin <branch>
-   ```
-
-4. **Create PR via GitHub MCP**:
-   - Title: `[SPEC] <description>`
-   - Body: Must include `Fixes #<issue-number>` for EACH issue to autoclose
-     - Single-task spec: `Fixes #<parent>`
-     - Multi-task spec: `Fixes #<parent>` AND `Fixes #<child1>` AND `Fixes #<child2>` (all sub-issues)
-   - Head: `<branch-name>`
-   - Base: `main`
-
-5. **Report URL in chat and HALT** — Wait for human to merge
-
-### Sub-Issue Collection (CRITICAL)
-
-**When creating a PR for a multi-task spec with sub-issues:**
-
-1. **Fetch sub-issues** using `github_issue_read method="get_sub_issues"`
-2. **Include ALL sub-issues** in the PR body:
-   ```
-   Fixes #446
-   Fixes #451
-   Fixes #452
-   ```
-3. **GitHub autocloses ALL issues** when PR merges
-
-**Single-task exemption:** If no sub-issues exist, include only the parent issue.
-
-**Example Multi-Task PR Body:**
-```markdown
-## Summary
-Update PR workflow skills to include sub-issue autoclose.
-
-Fixes #446
-Fixes #451
-```
-
-## Developer Must Test Before PR
-
-**Implementation completion does NOT mean "ready for PR".**
-
-### The Developer Needs To:
-
-1. Run human tests that agent cannot run
-2. Verify implementation works in their environment
-3. Request adjustments if something isn't right
-4. Explicitly tell agent to create a PR AFTER verification passes
-
-### Why Testing Matters
-
-- Agent cannot run all tests (e.g., production data tests)
-- Agent cannot verify integration in developer's environment
-- Developer may find issues during testing
-- PR is a single instruction, not a phase transition
+- Squash verification: ONE commit for single-issue branches; N commits (one per item) for work branches
+- Work branch detection: Check for `.opencode/tmp/work-*.md` — if present, skip re-squashing
+- Work state guard: If `.opencode/tmp/work-*.md` exists, individual feature branch PRs are FORBIDDEN. Only the work branch may have a PR created. HALT if attempting to create an individual PR during work execution.
+- Changelog generated (all platforms, no exceptions)
+- Branch state: working tree clean
+- Push verification: no unpushed commits
+- Co-author trailers: both AI and human trailers included
+- Issue references: `Fixes #<parent>` for parent, `Fixes #<child>` for each sub-issue; for work PRs include `## Work Issues` section listing all implemented issues; PR strategy determines whether single stacked PR or individual PRs
 
 ## After PR Creation
 
-### Mandatory HALT
+1. Report URL in chat (NEVER to GitHub Issues)
+2. HALT — wait for human to merge
+3. Never merge PRs — HUMAN-ONLY operation
+4. Delete merged branches AFTER merge confirmation
 
-- Agent MUST report URL in chat
-- Agent MUST HALT — wait for human to merge
-- Agent MUST NOT prompt for merge
-- Agent MUST NOT merge (PROHIBITED)
+## Prohibitions
 
-### Issue Closure Timing
-
-**Issues are closed ONLY AFTER the PR is merged — NEVER before.**
-
-**🚫 FORBIDDEN:**
-- Closing issues when PR is created but not merged
-- Closing parent issues while child issues remain open
-
-**✅ REQUIRED SEQUENCE:**
-1. Create PR → Report URL → HALT
-2. Wait for human to merge
-3. ONLY after merge confirmation → Close issues
-
-**Why:** PRs may be rejected. Premature closure loses visibility.
-
-## PR Merging (PROHIBITED)
-
-### 🚫 NEVER DO
-
-- Call `github_merge_pull_request` (or any merge operation)
-- Merge PRs without human approval
-- Assume "go" authorizes merging
-- Click "Merge" button or equivalent
-
-### ✅ REQUIRED
-
-- Create PRs only
-- Report URL in chat (NEVER to GitHub Issues)
-- Wait for human to merge
-- Delete branches AFTER merge confirmation
-
-## Violation Responses
-
-### If Asked "Should I Create a PR?"
-
-**STOP.** This is a question, not authorization.
-
-**Response:** Report completion concisely, then HALT. Do NOT create PR.
-
-### If Told to Create PR Without Explicit Phrase
-
-**STOP.** Verify the instruction.
-
-If unclear, ask: "Would you like me to create a PR?"
-
-Wait for explicit "yes, create a PR" before proceeding.
-
-## Prohibitions Summary
-
-### 🚫 NEVER DO
-
-- Create PRs autonomously
-- Create PRs after "approved" or "go"
+- Create PRs autonomously or after "approved"/"go"
 - Ask "Ready for a PR?" or "Should I create a PR?"
-- Merge PRs (HUMAN-ONLY)
+- Merge PRs
 - Submit PR without squashing to single commit
+- Close issues before PR merge
 
-### ✅ ALWAYS DO
+## Live Verification: PR State Claims (MANDATORY)
 
-- Wait for explicit "create a PR" instruction
-- Squash to single commit before PR
-- Report URL in chat (NEVER to GitHub Issues)
-- HALT after PR creation
-- Wait for human to merge
+**🚫 CRITICAL: When this skill verifies PR readiness, it MUST check against live git/GitHub state (not cached or claimed). PR readiness claims without live verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
 
-## Integration With Guidelines
+| PR Readiness Claim | Verification Action | Tool Call | Problem Class |
+|--------------------|-------------------|-----------|---------------|
+| "All changes committed" | Verify working tree is clean | `bash` to run `git status` → confirm "nothing to commit" | VERIFICATION-GAP |
+| "Branch pushed to remote" | Verify remote tracking branch exists | `bash` to run `git log origin/<branch>..HEAD` → confirm empty | MISSING-ELEMENT |
+| "Squash is clean (single commit)" | Verify commit count on branch | `bash` to run `git log --oneline dev..HEAD \| wc -l` | STRUCTURE-VIOLATION |
+| "Changelog generated" | Verify changelog file exists and is current | `glob(pattern="**/CHANGELOG*")` | MISSING-ELEMENT |
+| "Co-author trailers present" | Verify commit message contains trailers | `bash` to run `git log -1 --format="%B"` → check trailers | MISSING-ELEMENT |
+| "Sub-issues included in PR body" | Verify PR body after creation references sub-issues | `github_pull_request_read(method=get)` → check body | VERIFICATION-GAP |
 
-| Guideline                | Content                                           |
-|--------------------------|---------------------------------------------------|
-| `113-git-pr-workflow.md` | Full PR workflow (timing rules consolidated here) |
-| `000-critical-rules.md`  | Critical violation: PRs without instruction       |
-| `020-go-prohibitions.md` | GO does not authorize PR                          |
-| `010-approval-gate.md`   | PR timing requirements                            |
-| `git-workflow` skill  | Post-merge workflow including issue closure       |
-
-## Example Workflows
-
-### Implementation Complete — No PR authorized
+**Evidence format:**
 
 ```
-User: "approved: 1" for Phase 1
-
-Agent:
-→ Implements Phase 1
-→ Reports: "Phase 1 complete. Files: [list]"
-→ HALTS (no prompt, no PR)
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
 ```
 
-### Developer Requests PR
+**Classification on failure:**
 
-```
-User: "create a PR"
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Uncommitted changes | VERIFICATION-GAP | auto-fix | Commit remaining changes |
+| Branch not pushed | MISSING-ELEMENT | auto-fix | Push branch and re-verify |
+| Multiple commits not squashed | STRUCTURE-VIOLATION | auto-fix | Squash commits |
+| Changelog missing | MISSING-ELEMENT | auto-fix | Generate changelog |
+| Co-author trailers missing | MISSING-ELEMENT | auto-fix | Amend commit with trailers |
+| Sub-issues not in PR body | VERIFICATION-GAP | auto-fix | Update PR body |
 
-Agent:
-→ Squashes commits to single commit
-→ Adds co-author trailers
-→ Pushes to remote
-→ Creates PR via GitHub MCP
-→ Reports: "PR created: https://github.com/owner/repo/pull/123"
-→ HALTS (waits for merge)
-```
+## Cross-Reference Verification (MANDATORY)
 
-### Wrong Pattern — PR Not Authorized
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
 
-```
-User: "approved" for spec
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` pr-creation task | Task exists at `.opencode/skills/git-workflow/tasks/pr-creation.md` | MISSING-TRACEABILITY if missing |
+| `000-critical-rules.md` in Cross-References | Guideline exists at `.opencode/guidelines/000-critical-rules.md` | MISSING-TRACEABILITY if missing |
+| `020-go-prohibitions.md` in Cross-References | Guideline exists at `.opencode/guidelines/020-go-prohibitions.md` | MISSING-TRACEABILITY if missing |
+| `010-approval-gate.md` in Cross-References | Guideline exists at `.opencode/guidelines/010-approval-gate.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `pre-pr-checklist` | File exists at `.opencode/skills/pr-creation-workflow/tasks/pre-pr-checklist.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sub-issue-collection` | File exists at `.opencode/skills/pr-creation-workflow/tasks/sub-issue-collection.md` | MISSING-TRACEABILITY if missing |
 
-Agent:
-→ Implements all tasks
-→ WRONG: Creates PR automatically
-→ WRONG: Reports PR URL
+**Verification Procedure:**
 
-CORRECT:
-→ Implements all tasks
-→ Reports completion
-→ HALTS (waits for "create a PR")
-```
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
 
-## Quick Reference Card
+**Classification on failure:**
 
-| Situation                    | Action                             |
-|------------------------------|------------------------------------|
-| Developer says "approved"    | Implement → Report → HALT          |
-| Developer says "go"          | Next task → Report → HALT          |
-| Developer says "create a PR" | Squash → Push → Create PR → HALT   |
-| Developer says "merge it"    | ❌ FORBIDDEN — humans merge         |
-| After PR created             | Report URL → HALT → Wait for merge |
-| PR merged                    | Delete branches → Report complete  |
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Referenced guideline missing | MISSING-TRACEABILITY | flag-for-review | Guideline may have been renumbered |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency. When this skill encounters PR readiness claims that may be based on stale state (e.g., claiming "all changes committed" based on a previous check), it MUST verify against live git state. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
+## Cross-References
+
+| Guideline | Content |
+|-----------|---------|
+| `git-workflow` skill `pr-creation` task | Full PR workflow |
+| `000-critical-rules.md` | Critical violation: PRs without instruction |
+| `020-go-prohibitions.md` | GO does not authorize PR |
+| `010-approval-gate.md` | PR timing requirements |
+| `git-workflow` skill | Post-merge workflow including issue closure |
+| `spec-auditor` (ground-truth subtask) | Adversarial verification of authorization and PR state claims |
+| `065-verification-honesty.md` | Metadata verification extension for PR readiness claims |
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

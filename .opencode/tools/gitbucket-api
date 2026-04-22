@@ -1,0 +1,46 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
+"""
+DESCRIPTION: GitBucket API CLI client. Usage: ./.opencode/tools/gitbucket-api <command> [args...]
+Commands: me, issues, issue, create-issue, add-comment, prs, create-pr, labels, branches, repos, repo, init-config, check-auth
+Example: ./.opencode/tools/gitbucket-api issues Brothertown-Language snea-shoebox-editor --state open
+         ./.opencode/tools/gitbucket-api check-auth
+"""
+from __future__ import annotations
+import os
+import subprocess
+import sys
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+IMPL = PROJECT_ROOT / ".opencode" / "tools" / "impl" / "gitbucket_api.py"
+
+
+def _get_description() -> str:
+    return "GitBucket API CLI client with 13 subcommands"
+
+
+def main() -> None:
+    args = sys.argv[1:]
+    if not args or args[0] in ("-h", "--help", "help"):
+        print(__doc__)
+        print(f"CWD: {os.getcwd()}")
+        print(f"Impl: {IMPL}")
+        print()
+        print("Run with --help to see subcommands, or pass any subcommand directly.")
+        sys.exit(0)
+
+    result = subprocess.run(
+        ["uv", "run", "--script", str(IMPL)] + args,
+        env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
+    )
+    sys.exit(result.returncode)
+
+
+if __name__ == "__main__":
+    main()

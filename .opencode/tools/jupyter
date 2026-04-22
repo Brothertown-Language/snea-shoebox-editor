@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
-DESCRIPTION: Jupyter server tools dispatcher. Usage: uv run python .opencode/tools/jupyter <action> [args...]
+DESCRIPTION: Jupyter server tools dispatcher. Usage: ./.opencode/tools/jupyter <action> [args...]
 Actions: start, stop
-Example: uv run python .opencode/tools/jupyter start
+Example: ./.opencode/tools/jupyter start
 """
 from __future__ import annotations
 import os
@@ -10,7 +14,9 @@ import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 
 ACTIONS = {
     "start": "jupyter-start",
@@ -20,7 +26,7 @@ ACTIONS = {
 
 def _run_action(script: Path, forwarded_args: list[str], summary: str) -> int:
     result = subprocess.run(
-        [sys.executable, str(script)] + forwarded_args,
+        ["uv", "run", str(script)] + forwarded_args,
         capture_output=True,
         text=True,
         env={**os.environ, "OPENCODE_TOOLS_DISPATCHER": "1"},
@@ -50,7 +56,7 @@ def main() -> None:
         print(__doc__)
         print("Available actions:")
         for action, script in ACTIONS.items():
-            desc = _get_description(BASE_DIR / ".opencode" / "tools" / "impl" / script)
+            desc = _get_description(PROJECT_ROOT / ".opencode" / "tools" / "impl" / script)
             print(f"  {action:<20} — {desc}" if desc else f"  {action:<20} → .opencode/tools/{script}")
         print(f"CWD: {os.getcwd()}")
         sys.exit(0)
@@ -58,7 +64,7 @@ def main() -> None:
     if action not in ACTIONS:
         print(f"Error: unknown action {action!r}. Available: {', '.join(ACTIONS)}", file=sys.stderr)
         sys.exit(1)
-    script = BASE_DIR / ".opencode" / "tools" / "impl" / ACTIONS[action]
+    script = PROJECT_ROOT / ".opencode" / "tools" / "impl" / ACTIONS[action]
     sys.exit(_run_action(script, args[1:], f"OK: .opencode/tools/jupyter {action} completed."))
 
 

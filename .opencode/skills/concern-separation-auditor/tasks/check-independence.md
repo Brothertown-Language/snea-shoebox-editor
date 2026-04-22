@@ -50,4 +50,26 @@ Recommendation: [merge phases OR make dependency explicit OR uncouple]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)
+
+## Live Verification: Dependency Claims (MANDATORY)
+
+**Each phase dependency/independence claim MUST be verified against actual code. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Phases are independent" | Verify no import/call dependency exists | `srclight_get_callers(symbol_name="target")` → check cross-phase calls | CONFLICTING |
+| "Phase A depends on Phase B" | Verify actual code dependency exists | `srclight_get_callees(symbol_name="target")` → check outputs | VERIFICATION-GAP |
+| "No circular dependency" | Verify no bidirectional imports | `srclight_get_dependents(symbol_name="target")` → check for cycles | CONFLICTING |
+| "Implicit dependency" | Verify unstated dependency in code | `srclight_get_callers` + compare to spec-declared dependencies | MISSING-ELEMENT |
+
+**Evidence artifact:** Tool call results confirming or refuting dependency claims.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Independence claimed but code dependency exists | CONFLICTING | flag-for-review | Report — phases may need merging or re-ordering |
+| Dependency claimed but no code evidence | VERIFICATION-GAP | auto-fix | Remove unverified dependency from findings |
+| Circular dependency found | CONFLICTING | flag-for-review | Report — requires architectural decision |
+| Unstated code dependency found | MISSING-ELEMENT | conditional | Add to dependency matrix |

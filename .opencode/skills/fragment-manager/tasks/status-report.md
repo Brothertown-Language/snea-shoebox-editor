@@ -22,6 +22,7 @@ Parse all fragments.
 ### Step 2: Run Quick Drift Check
 
 For each fragment:
+
 - Calculate master hash
 - Check if master hash matches registry
 - Flag fragments that need verification
@@ -95,19 +96,10 @@ Include last modified dates, hash values, line ranges.
 ### JSON Export
 
 ```bash
-uv run python -c "
-import yaml
-import json
-
-with open('.opencode/.guidelines/registry.yaml') as f:
-    registry = yaml.safe_load(f)
-
-print(json.dumps({
-    'total': len(registry['fragments']),
-    'synchronized': sum(1 for f in registry['fragments'] if f.get('sync_status') == 'synchronized'),
-    'drifted': sum(1 for f in registry['fragments'] if f.get('sync_status') == 'drifted'),
-}, indent=2))
-"
+# Use the registry tool for structured output, or parse YAML directly:
+./.opencode/tools/guidelines search fragment-status
+# For programmatic access, write a script to ./tmp/ and run it:
+./tmp/registry-export.py
 ```
 
 ## Edge Cases
@@ -115,6 +107,7 @@ print(json.dumps({
 ### Empty Registry
 
 If no fragments defined:
+
 ```
 Fragment Registry Status Report
 ==============================
@@ -128,6 +121,7 @@ Run 'create-fragment' to add the first fragment master.
 ### Registry Corrupted
 
 If YAML parsing fails:
+
 1. STOP - do not proceed
 2. Report: "Registry YAML parse error: {error}"
 3. Recommend: Manual inspection and repair

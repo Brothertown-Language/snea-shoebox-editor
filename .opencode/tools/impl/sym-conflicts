@@ -1,0 +1,225 @@
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = ["sympy>=1.12"]
+# ///
+"""
+DESCRIPTION: Contradiction detection via sympy boolean satisfiability. Checks overlapping conditions with conflicting actions.
+Usage: ./.opencode/tools/symbolic conflicts
+"""
+
+from __future__ import annotations
+import os as _os
+import subprocess
+import sys
+from dataclasses import dataclass
+from pathlib import Path
+
+IMPL_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(IMPL_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+BASE_DIR = (IMPL_DIR / CDUP).resolve()
+
+from sympy import Symbol
+from sympy.logic.inference import satisfiable
+
+import types
+
+
+def _load_extract():
+    source = (IMPL_DIR / "sym-extract").read_text()
+    mod = types.ModuleType("symextract")
+    mod.__file__ = str(IMPL_DIR / "sym-extract")
+    sys.modules["symextract"] = mod
+    exec(compile(source, str(IMPL_DIR / "sym-extract"), "exec"), mod.__dict__)
+    return mod
+
+
+CONFLICT_ACTIONS = {
+    frozenset({"HALT", "PROCEED"}),
+    frozenset({"HALT", "WARN"}),
+}
+
+SEVERITY_MAP = {
+    frozenset({"HALT", "PROCEED"}): "CRITICAL",
+    frozenset({"HALT", "WARN"}): "HIGH",
+}
+
+
+@dataclass
+class Conflict:
+    rule_a: str
+    rule_b: str
+    overlap: str
+    description: str
+    severity: str = "MEDIUM"
+
+    def to_dict(self) -> dict:
+        return {
+            "rule_a": self.rule_a,
+            "rule_b": self.rule_b,
+            "overlap": self.overlap,
+            "description": self.description,
+            "severity": self.severity,
+        }
+
+
+def _parse_condition_expr(cond_str: str):
+    try:
+        cleaned = cond_str.strip()
+        cleaned = cleaned.replace("==", "__EQ__")
+        cleaned = cleaned.replace("!=", "__NE__")
+        cleaned = cleaned.replace(" AND ", " & ")
+        cleaned = cleaned.replace(" OR ", " | ")
+        for token in cleaned.split():
+            base = token.replace("(", "").replace(")", "").replace("&", "").replace("|", "")
+            base = base.replace("__EQ__", "").replace("__NE__", "")
+            base = base.strip("'\"")
+            if base and not base.startswith("__") and base.isidentifier():
+                Symbol(base)
+        cleaned = cleaned.replace("__EQ__", "==")
+        cleaned = cleaned.replace("__NE__", "!=")
+        return cleaned
+    except Exception:
+        return None
+
+
+def _conditions_to_sympy(rule):
+    all_conds = rule.conditions_all
+    any_conds = rule.conditions_any
+    if not all_conds and not any_conds:
+        return True
+    parts = []
+    for c in all_conds:
+        try:
+            expr = _parse_condition_expr(c)
+            if expr is not None and expr is not True:
+                parts.append(expr)
+        except Exception:
+            pass
+    any_parts = []
+    for c in any_conds:
+        try:
+            expr = _parse_condition_expr(c)
+            if expr is not None and expr is not True:
+                any_parts.append(expr)
+        except Exception:
+            pass
+    if any_parts:
+        parts.append(" | ".join(f"({p})" for p in any_parts))
+    if not parts:
+        return True
+    return " & ".join(f"({p})" for p in parts)
+
+
+def detect_conflicts(rules: list) -> list[Conflict]:
+    conflicts: list[Conflict] = []
+
+    for i, rule_a in enumerate(rules):
+        for rule_b in rules[i + 1:]:
+            explicit = False
+            if rule_b.id in rule_a.conflicts_with:
+                explicit = True
+            elif rule_a.id in rule_b.conflicts_with:
+                explicit = True
+            if not explicit:
+                if not rule_a.conflicts_with and not rule_b.conflicts_with:
+                    continue
+
+            actions_a = set(rule_a.actions)
+            actions_b = set(rule_b.actions)
+            action_conflict = None
+            for pair in CONFLICT_ACTIONS:
+                if pair & actions_a and pair & actions_b:
+                    action_conflict = pair
+                    break
+
+            if not action_conflict:
+                continue
+
+            cond_a = _conditions_to_sympy(rule_a)
+            cond_b = _conditions_to_sympy(rule_b)
+
+            if cond_a is True or cond_b is True:
+                if cond_a is True and cond_b is True:
+                    overlap_desc = "always"
+                elif cond_a is True:
+                    overlap_desc = f"when ({cond_b})"
+                else:
+                    overlap_desc = f"when ({cond_a})"
+                sev = SEVERITY_MAP.get(frozenset(action_conflict), "MEDIUM")
+                conflicts.append(Conflict(
+                    rule_a=rule_a.id,
+                    rule_b=rule_b.id,
+                    overlap=overlap_desc,
+                    description=f"{rule_a.id} {','.join(actions_a)} but {rule_b.id} {','.join(actions_b)} under overlapping conditions",
+                    severity=sev,
+                ))
+            else:
+                try:
+                    combined_str = f"({cond_a}) & ({cond_b})"
+                    symbols_needed = set()
+                    import re
+                    for r in rules:
+                        for c in r.conditions_all + r.conditions_any:
+                            for m in re.findall(r'[a-zA-Z_]\w*', c):
+                                symbols_needed.add(m.split("__")[0].split("==")[0].split("!=")[0].strip("'\""))
+                    sym_dict = {s: Symbol(s) for s in symbols_needed}
+                    combined_expr = eval(combined_str, {"__builtins__": {}}, sym_dict)
+                    is_satisfiable = False
+                    if isinstance(combined_expr, bool):
+                        is_satisfiable = True
+                    elif satisfiable(combined_expr):
+                        is_satisfiable = True
+                    if is_satisfiable:
+                        sev = SEVERITY_MAP.get(frozenset(action_conflict), "MEDIUM")
+                        conflicts.append(Conflict(
+                            rule_a=rule_a.id,
+                            rule_b=rule_b.id,
+                            overlap=combined_str,
+                            description=f"{rule_a.id} {','.join(actions_a)} but {rule_b.id} {','.join(actions_b)} when conditions overlap",
+                            severity=sev,
+                        ))
+                except Exception:
+                    conflicts.append(Conflict(
+                        rule_a=rule_a.id,
+                        rule_b=rule_b.id,
+                        overlap=f"{cond_a} & {cond_b}",
+                        description=f"Potential conflict between {rule_a.id} and {rule_b.id} (conditions unparseable)",
+                        severity="LOW",
+                    ))
+
+    return conflicts
+
+
+def main() -> None:
+    if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
+        print(
+            "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/symbolic ...). "
+            "Direct invocation is not permitted.",
+            file=sys.stderr,
+        )
+        sys.exit(1)
+
+    import argparse
+
+    parser = argparse.ArgumentParser(description="Detect conflicts")
+    parser.add_argument("--dir", type=str, default=str(BASE_DIR / ".opencode"))
+    args = parser.parse_args()
+
+    mod = _load_extract()
+    result = mod.extract_yaml_blocks(Path(args.dir))
+    if not result.rules:
+        print("No rules found. Run extract first or seed yaml+symbolic blocks.")
+        sys.exit(0)
+
+    conflicts = detect_conflicts(result.rules)
+    if conflicts:
+        print(f"Found {len(conflicts)} conflicts:")
+        for c in conflicts:
+            print(f"  [{c.severity}] {c.rule_a} ↔ {c.rule_b}: {c.description}")
+    else:
+        print("No conflicts detected.")
+
+
+if __name__ == "__main__":
+    main()

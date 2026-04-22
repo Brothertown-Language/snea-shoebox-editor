@@ -15,31 +15,35 @@ Create new fragment master from existing content in skills.
 ### Step 1: Extract Content from Source
 
 1. Identify duplicate content in skill file:
+
    ```bash
    # Find content in skill file
    grep -n "## Critical Rule" .opencode/skills/some-skill/SKILL.md
    ```
 
 2. Extract exact line range:
+
    - Start: Section header or marker
    - End: End of content block (before next section)
 
 ### Step 2: Create Fragment Master File
 
 1. Create file in `.opencode/.guidelines/`:
+
    ```bash
    touch .opencode/.guidelines/fragment-id.md
    ```
 
 2. Write content with fragment metadata:
+
    ```markdown
    # Fragment: Fragment Name
-   
+
    [Content block extracted from skill]
-   
+
    <!--
    Fragment ID: fragment-id
-   Estimated tokens: NNN
+    Estimated words: NNN
    Type: text-block
    Sync status: synchronized
    -->
@@ -69,8 +73,8 @@ fragments:
       lines: NN
     content:
       type: text-block
-      estimated_tokens: NNN
-      description: "Fragment description"
+      estimated_words: NNN
+      description: Fragment description
     destinations:
       - path: .opencode/skills/some-skill/SKILL.md
         hash: sha256:abc123...
@@ -80,7 +84,7 @@ fragments:
         verified_date: YYYY-MM-DDTHH:MM:SSZ
     sync_status: synchronized
     last_sync: YYYY-MM-DDTHH:MM:SSZ
-    notes: "Fragment notes"
+    notes: Fragment notes
 ```
 
 ### Step 5: Verify Entry
@@ -101,6 +105,7 @@ fragments:
 ### Multiple Destinations
 
 If fragment appears in multiple skills:
+
 1. Add all destinations to registry entry
 2. Each destination has its own line_range
 3. Verify each destination has same hash
@@ -108,6 +113,7 @@ If fragment appears in multiple skills:
 ### Fragment Already Exists
 
 If fragment ID already in registry:
+
 1. STOP - do not create duplicate
 2. Ask user: "Fragment with ID '{id}' already exists. Choose a different ID or update the existing fragment."
 3. If updating, use `update-fragment` task instead

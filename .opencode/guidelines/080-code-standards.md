@@ -18,39 +18,30 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
   handles data consistency. Flag the rerun requirement to the user after making such changes. Redundant "safety-net"
   updates in downstream notebooks prohibited.
 
-## Design Principles — ENFORCED UNIVERSALLY
+## Design Principles
 
-> **See `code-size-enforcement` skill for complete size limit enforcement rules, detection methods, and violation recovery.**
+> **For design principles (KISS, DRY, SRP, SoC, cohesion, YAGNI, Fail Fast, Defensive Programming, and all 20 programming principles), see the `programming-principles` skill.** That skill is the single authoritative source for both enforcement rules and design judgment (apply strongly when / relax when). This guideline retains only project-specific conventions below.
 
-- **KISS (Keep It Simple, Stupid)**: Simplest correct solution. No unnecessary abstraction or cleverness. Prefer straightforward, readable code over "clever" optimizations.
-- **DRY (Don't Repeat Yourself)**: No duplicated logic. Extract shared functionality into reusable functions/modules. If you copy-paste code, you're doing it wrong.
+The following project-specific code structure rules are enforced in this repository:
+
 - **Non-Monolithic**: Break large blocks into cohesive, independent components. Notebooks should have focused cells — cells that do "one thing."
-- **Modular**: Each function, class, module, notebook cell, and document section should have a single clear purpose and minimal dependencies.
 - **Single Function Methods**: Every function/method performs exactly ONE task. If a function has multiple responsibilities, split it. Decompose ALL tasks, plans, and algorithms into discrete single-function methods. This applies to:
   - Python functions in `.py` files
   - Notebook cells (each cell should do ONE thing)
   - LaTeX/XeLaTeX environments and macros (one purpose each)
   - Scripts and configuration files
 - **No Monoliths**: Long procedural blocks are prohibited. If a function exceeds 40 lines, decompose it. If a notebook cell exceeds 50 lines, split it into multiple cells.
-- **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named
-  constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only
-  acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).
+- **No Magic Strings or Numbers**: All literal strings and numbers that carry domain meaning must be extracted to named constants (`UPPER_SNAKE_CASE` at module level, or class-level `ClassVar`) before use. Inline literals are only acceptable for truly universal values (e.g., `0`, `1`, `""`, `True`, `False`, HTTP status `200`).
 - **No Re-exports** (ABSOLUTE PROHIBITION):
   - NEVER add `from X import Y` or `__all__` to `__init__.py` files.
   - `__init__.py` must contain ONLY a module docstring describing the package purpose.
-  - All imports must reference concrete module paths (e.g., `from commons.mesh.validator import MeshValidator`,
-    NOT `from commons.mesh import MeshValidator`).
+  - All imports must reference concrete module paths (e.g., `from commons.mesh.validator import MeshValidator`, NOT `from commons.mesh import MeshValidator`).
   - Rationale: Re-exports break IDE "Find Usages" and "Go to Definition" by creating false source locations.
   - Existing `__all__` entries in legacy files are assumed approved — do not remove them without explicit instruction.
-  - When creating a NEW `__init__.py`, it must be docstring-only. When editing an existing `__init__.py`, do not add
-    any imports or `__all__` entries.
-- **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the
-  package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two
-  concise sentences — enough for `.opencode/tools/py ls` to display alongside the filename.
+  - When creating a NEW `__init__.py`, it must be docstring-only. When editing an existing `__init__.py`, do not add any imports or `__all__` entries.
+- **Top-Level Documentation**: Every Python source file must include a brief top-level comment identifying the package's or class's purpose. Use a module docstring (preferred) or a leading `#` comment. Keep it to one or two concise sentences — enough for `.opencode/tools/py ls` to display alongside the filename.
 - **Docstring/Comment Determinism**: Pydoc/docstrings and code comments must use deterministic wording. Avoid ambiguous hedge/alternative phrasing such as `maybe`, `if ... or ...`, `and/or`, or `A + B or C` when describing required behavior, validation paths, or implementation intent.
-- **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered
-  configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause
-  edit failures. Reference items by label, not by positional index.
+- **Labels Over Index Numbers**: When editing structured artifacts (notebooks, migration lists, cell arrays, ordered configs), add and use stable labels/names so that inserts, deletes, and moves which change index numbers do not cause edit failures. Reference items by label, not by positional index.
 
 ## Modern Python
 
@@ -69,7 +60,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 - All DB/system ops use existing project libraries. Direct data file manipulation prohibited unless instructed.
 - Use `ConfigurationManager` for all data file paths — never hardcode or assume data file locations.
   `project-config.ini` is located at project root; initialize `ConfigurationManager` with the project root path (
-  resolved via root resolution per `120-scripting.md`).
+  resolved via root resolution per `210-scripting.md`).
 
 ## Print Statements & Output
 
@@ -95,7 +86,7 @@ These standards apply to **ALL code artifacts**: Python modules, Jupyter noteboo
 **DO NOT run Python tools on non-Python files:**
 
 | Tool | Python Files | Markdown Files |
-|------|--------------|----------------|
+| -- | -- | -- |
 | `ruff` | ✅ REQUIRED | 🚫 PROHIBITED |
 | `pyright` | ✅ REQUIRED | 🚫 PROHIBITED |
 | `vulture` | ✅ OPTIONAL | 🚫 PROHIBITED |
@@ -107,6 +98,7 @@ Running `ruff check` or `ruff format` on `.md` files is a **CRITICAL GUIDELINE V
 ### Correct Tool Usage
 
 **Python files (`.py`):**
+
 ```bash
 uvx ruff check --fix src/ test/   # Lint + auto-fix
 uvx ruff format src/ test/        # Format
@@ -115,6 +107,7 @@ uvx vulture src/                  # Dead code scan
 ```
 
 **Markdown files (`.md`):**
+
 ```bash
 uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/   # Lint
 uvx mdformat .opencode/guidelines/ docs/                # Format
@@ -127,15 +120,19 @@ uvx mdformat .opencode/guidelines/ docs/                # Format
 All enumeration lists, numbered sections, and step sequences in documentation MUST use **natural counting** (starting at 1).
 
 **Prohibited:**
+
 - Zero-indexed numbered lists (`0. First item`, `1. Second item`)
 - Step 0 in procedures (use Step 1 as the first step)
 - Phase 0 in specs (use Phase 1 as the first phase)
 
 **Exceptions:**
+
 - Code comments explaining 0-indexed array access
 - Technical documentation explicitly explaining zero-based indexing concepts
 
 **Rationale:** Documentation is for humans. Natural counting matches human cognition.
+
+**Grandfather clause:** Existing skill files, guideline files, and documentation that use 0-based counting (Step 0, Phase 0) are exempt from this rule. Only newly created or substantially updated files must comply. When updating an existing file that uses 0-based counting, only new or changed sections need to comply — existing 0-based sections are preserved.
 
 ## AI Co-Authored Attribution (MANDATORY)
 
@@ -144,6 +141,7 @@ All enumeration lists, numbered sections, and step sequences in documentation MU
 ### What Counts as AI-Generated Content
 
 AI co-authorship applies to **creative, original content authored by AI**:
+
 - Original code written by AI
 - Original documentation written by AI
 - Original designs/architectures conceived by AI
@@ -152,6 +150,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### What Does NOT Require AI Attribution
 
 **Standard/boilerplate content does NOT require AI attribution:**
+
 - Standard licenses (MIT, Apache, GPL, etc.) - these are established legal templates
 - Auto-generated files (lock files, build artifacts, `__pycache__`)
 - Framework boilerplate (default configs, standard project structures)
@@ -159,6 +158,7 @@ AI co-authorship applies to **creative, original content authored by AI**:
 - Files with no creative content (empty `__init__.py`, pure config)
 
 **Copy-pasted content from ANY external source does NOT get AI attribution:**
+
 - Code copied from Stack Overflow, blogs, tutorials
 - Code copied from other projects/repositories
 - Documentation copied from official sources
@@ -167,19 +167,44 @@ AI co-authorship applies to **creative, original content authored by AI**:
 
 **Rationale:** AI attribution is about transparency in creative work. Copying a standard MIT license, copying code from Stack Overflow, or copy-pasting documentation from another project requires no AI creativity - those sources hold their own copyrights. Only genuinely original content created by AI deserves AI co-authorship attribution.
 
-### Files Requiring Attribution
+### Files Requiring Attribution (In-Repository)
 
 | File Type | Attribution Location | Format |
-|-----------|---------------------|--------|
-| Python files (`.py`) | Module docstring | `"""Co-authored with AI: AI-Name (model-id)"""` |
+| -- | -- | -- |
+| Python files (`.py`) | Module docstring | `"""Co-authored with AI: <AgentName> (<ModelId>)"""` |
 | README files | Footer section | `## Co-Authored With AI` section |
 | New repositories | README.md | AI co-authored section (see below) |
-| Original docs | Footer | `*Co-authored with AI: AI-Name (model-id)*` |
+| Original docs | Footer | `*Co-authored with AI: <AgentName> (<ModelId>)*` |
+
+### Posted Content Requiring Attribution
+
+| Content Type | Attribution Location | Format |
+| -- | -- | -- |
+| Issue comments (any repository) | Last line of comment body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+| PR comments (any repository) | Last line of comment body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+| PR bodies (AI-authored) | Last line before horizontal rule or end of body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+| Issue bodies (AI-authored) | Last line of issue body | `🤖 Co-authored with AI: <AgentName> (<ModelId>)` |
+
+External repository posts have HIGHER attribution priority than internal content. External posts represent the project to third parties — attribution is a transparency and ethical requirement, not optional.
+
+### Standalone Byline Correction — FORBIDDEN
+
+**Adding a standalone comment whose sole purpose is to append a byline to a previous comment is ABSOLUTELY FORBIDDEN.**
+
+When a byline is missing from AI-authored posted content:
+
+| Option | When | Action |
+| -- | -- | -- |
+| **Edit the comment** | Platform supports edit + agent has edit permission | Edit the original comment, append byline as last line |
+| **Delete + repost** | Agent has delete permission | Delete original, repost with byline included |
+| **Accept the omission** | No edit/delete permission | Leave it. Do NOT add a separate byline comment. |
+
+The byline must be **part of the content body**, never a separate message.
 
 ### Files NOT Requiring Attribution
 
 | File Type | Reason |
-|-----------|--------|
+| -- | -- |
 | LICENSE files | Standard legal templates (MIT, Apache, etc.) |
 | `pyproject.toml`, `setup.py` | Boilerplate configuration |
 | Lock files (`uv.lock`, `package-lock.json`) | Auto-generated |
@@ -190,12 +215,13 @@ AI co-authorship applies to **creative, original content authored by AI**:
 ### Attribution Format
 
 ```
-Co-authored with AI: <AI-Name> (<model-id>)
+Co-authored with AI: <AgentName> (<ModelId>)
 ```
 
 **Example:**
+
 ```
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)
 ```
 
 ### Repository Creation
@@ -207,8 +233,8 @@ When creating a new repository, the README MUST include:
 
 This repository was created with assistance from AI:
 
-- **AI Agent**: OpenCode
-- **Model**: ollama-cloud/glm-5
+- **AI Agent**: <AgentName>
+- **Model**: <ModelId>
 - **Date**: YYYY-MM-DD
 ```
 
@@ -221,18 +247,78 @@ Every Python file with original AI-authored code MUST include attribution in the
 ```python
 """Module description.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)
 """
 ```
 
 ### Why This Matters
 
 AI co-authored attribution:
+
 1. Maintains transparency about content origin
 2. Follows emerging best practices for AI-assisted work
 3. Enables proper credit and traceability
 4. Helps identify AI-generated content for review
 5. **Respects copyright** - only claims co-authorship on genuinely original AI work
+
+## Enforcement Test Mandate for Guideline and Skill Changes
+
+Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills/*/SKILL.md`, `.opencode/skills/*/tasks/*.md`) are enforcement-critical documents that control AI agent behavior. Changes to these files MUST be accompanied by corresponding enforcement test updates.
+
+### 🚫 PROHIBITED
+
+- Adding a critical violation section without an enforcement test that checks for it
+- Adding a verification step to a skill without an enforcement test that validates it
+- Creating a new guideline without an enforcement test that confirms its key sections exist
+- Modifying a guideline or skill without updating the corresponding enforcement test
+- Running `opencode-cli run` directly without the `with-test-home` wrapper
+
+### ✅ REQUIRED
+
+- Every guideline/skill change comes with an enforcement test scenario
+- Add the test scenario FIRST (RED), then make the change (GREEN) — TDD for rules
+- Run the enforcement suite: `bash .opencode/tests/test-enforcement.sh`
+- Use `bash .opencode/tests/with-test-home opencode-cli run '<message>'` for all opencode-cli testing — never run bare `opencode-cli run`
+- Clean up test homes after testing: `bash .opencode/tests/with-test-home --clean-all`
+
+### Per-Change TDD Pattern
+
+| TDD Phase | Action |
+| -- | -- |
+| **RED** | Add enforcement test scenario to `test-enforcement.sh` that checks for the change (expect failure — change doesn't exist yet) |
+| **GREEN** | Make the guideline/skill change that makes the test pass |
+| **REFACTOR** | Clean up test scenario, add cross-reference checks |
+| **COMMIT** | Both the test addition and the guideline change committed together |
+
+### Why This Matters
+
+Enforcement tests are the verification layer that proves agent guidelines are actually enforceable. A guideline without a test is a suggestion, not a rule. A skill without a test is documentation, not enforcement. The `with-test-home` wrapper prevents SQLite session conflicts between the desktop app and CLI tests.
+
+**See `090-incremental-build.md` for the incremental implementation discipline that governs HOW these changes are delivered.** **See `.opencode/tests/README.md` for the enforcement test template and usage guide.**
+
+### SC-to-Test Traceability (MANDATORY)
+
+Every spec success criterion MUST have at least one corresponding enforcement test assertion that references the SC ID. The assertion must include a comment linking it to the specific SC:
+
+```
+# SC-2: --fix exits with code 2
+assert exit_code == 2
+```
+
+The SC ID comment convention is now a REQUIREMENT, not a convention. Every enforcement test that verifies a spec success criterion MUST include a `# SC-N:` comment prefix identifying which SC it covers.
+
+### RED-Phase Ordering (MANDATORY)
+
+The enforcement test assertion for each SC MUST exist and FAIL before implementation of that SC begins. This is the TDD RED-GREEN cycle applied to spec success criteria:
+
+1. **RED**: Write the enforcement test assertion that verifies the SC (the test fails because the change doesn't exist yet)
+2. **GREEN**: Implement the change that makes the test pass
+3. **REFACTOR**: Clean up, verify cross-references
+4. **COMMIT**: Both the test and the change committed together
+
+Writing tests AFTER implementation means the test was never RED — it never caught the gap between the spec and the implementation. The #1128 root cause was exactly this: the agent implemented first and verified second, but no gate checked whether the verification tests existed before implementation began.
+
+If SC-to-test traceability is missing for any SC, or if test assertions were written after implementation (GREEN-without-RED), implementation MUST NOT proceed until the tests are added and shown to fail first.
 
 ## Cross-Reference Standards
 
@@ -241,16 +327,16 @@ AI co-authored attribution:
 ### Required Format
 
 | Reference Type | Format | Example |
-|----------------|--------|---------|
+| -- | -- | -- |
 | Function | `file.py` `function_name()` | `process_data()` in `pubmed_client.py` |
 | Class | `file.py` `ClassName` | `MeshValidator` in `validator.py` |
 | Section | `file.md` `"Section Name"` | `"Cross-Reference Standards"` in `080-code-standards.md` |
-| Code snippet | Include snippet (<20 lines) | See examples below |
+| Code snippet | Include snippet (\<20 lines) | See examples below |
 
 ### Forbidden Format
 
 | Reference Type | Format | Why Forbidden |
-|----------------|--------|---------------|
+| -- | -- | -- |
 | Line number | `file.py:42` | Breaks on every edit |
 | Line range | `file.py:42-48` | Breaks on every edit |
 | Bare number | "line 42" | No context, breaks on edit |
@@ -258,6 +344,7 @@ AI co-authored attribution:
 ### Why This Matters
 
 Line numbers shift when:
+
 - Lines are added above the reference
 - Lines are deleted above the reference
 - Any edit changes file length
@@ -267,13 +354,32 @@ Stable anchors (function names, class names, section headers) remain valid acros
 ### Examples
 
 **❌ WRONG (Line Numbers):**
+
 ```
 See `file.py:42` for the function definition.
 See `guidelines.md:150` for the rule.
 ```
 
 **✅ CORRECT (Stable Anchors):**
+
 ```
 See `process_data()` in `file.py` for the function definition.
 See `"Cross-Reference Standards"` section in `guidelines.md` for the rule.
 ```
+
+## Parameter Naming Convention
+
+Session-init and env-loader are two independent pipelines with separate naming conventions:
+
+| Pipeline | Source | Output Format | Consumer | Example |
+| -- | -- | -- | -- | -- |
+| LLM context | session-init (Python) | Dotted `scope.param` | Agent system prompt | `github.owner` |
+| Bash environment | env-loader.ts (TypeScript) | UPPER_CASE | Shell commands, Python scripts | `GIT_OWNER` |
+
+**Session-init dotted names** (use in skill files, guidelines, dispatch contexts):
+`github.owner`, `github.repo`, `github.platform`, `github.html_url`, `gitbucket.owner`, `gitbucket.repo`, `gitbucket.html_url`, `gitbucket.ssh_url`, `gitbucket.has_credentials`, `srclight.project`, `dev.name`, `dev.email`, `branch`, `worktree.path`, `worktree.fatal`
+
+**Env-loader UPPER_CASE names** (use in bash scripts, Python env reads):
+`GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`
+
+These pipelines are independent. Changing session-init output names does NOT require changes to env-loader, and vice versa.

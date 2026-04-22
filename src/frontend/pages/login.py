@@ -5,6 +5,7 @@ import streamlit as st
 # from src.logging_config import get_logger
 # logger = get_logger("snea.login")
 
+
 @st.dialog("Access Restricted")
 def show_unauthorized_dialog() -> None:
     """Display a non-closable dialog for unauthorized users."""
@@ -28,24 +29,26 @@ def show_unauthorized_dialog() -> None:
     if mastodon_url:
         st.write(
             f"For technical assistance or access requests, please contact "
-            f"Michael Conrad on Mastodon: [{mastodon_url}]({mastodon_url})"
+            f"<MAINTAINER_CONTACT>: [{mastodon_url}]({mastodon_url})"
         )
 
     if st.button("Reload App"):
         # Clear session state
         for key in list(st.session_state.keys()):
             del st.session_state[key]
-        
+
         from src.frontend.ui_utils import reload_page_at_root
+
         reload_page_at_root(delay_ms=100)
         st.stop()
+
 
 def login():
     import streamlit as st
     from streamlit_oauth import OAuth2Component
-    import requests
-    from src.logging_config import get_logger
+
     from src.frontend.ui_utils import apply_standard_layout_css, handle_ui_error
+    from src.logging_config import get_logger
 
     logger = get_logger("snea.login")
     apply_standard_layout_css()
@@ -53,6 +56,7 @@ def login():
     if "cookie_controller" not in st.session_state:
         # Fallback in case streamlit_app.py didn't set it (shouldn't happen with updated streamlit_app.py)
         from streamlit_cookies_controller import CookieController
+
         st.session_state["cookie_controller"] = CookieController()
 
     controller = st.session_state["cookie_controller"]
@@ -64,7 +68,7 @@ def login():
             st.secrets["github_oauth"]["client_secret"],
             st.secrets["github_oauth"]["authorize_url"],
             st.secrets["github_oauth"]["token_url"],
-            st.secrets["github_oauth"]["redirect_uri"]
+            st.secrets["github_oauth"]["redirect_uri"],
         )
     except Exception as e:
         handle_ui_error(e, "Failed to initialize OAuth component.", logger_name="snea.login")
@@ -77,13 +81,13 @@ def login():
     if st.session_state.get("logged_in") and "auth" in st.session_state:
         from src.services.identity_service import IdentityService
         from src.services.navigation_service import NavigationService
-        
+
         if IdentityService.is_identity_synchronized():
             # Use NavigationService to handle any pending redirections
             # We pass PAGE_LOGIN as the current page (though we are already there)
             # handle_redirection will pick up redirect_params or query_params
             NavigationService.handle_redirection(NavigationService.PAGE_LOGIN)
-            
+
             # Default fallback if no redirect happened
             st.switch_page(NavigationService.PAGE_HOME)
             return
@@ -98,41 +102,44 @@ def login():
         except Exception as e:
             handle_ui_error(e, "OAuth authorization failed.", logger_name="snea.login")
             st.stop()
-            
+
         if result:
             logger.debug("OAuth callback received, setting auth session")
             st.session_state["auth"] = result
             st.session_state.logged_in = True
-            
+
             # PERSIST: Store the result in a browser cookie
             from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
+
             controller.set(GH_AUTH_TOKEN_COOKIE, result)
 
             st.success("Login successful! Setting session...")
             import time
+
             time.sleep(1)  # Give the component a moment to set the cookie
             st.rerun()
 
     # If we have auth, ensure user identity (profile, teams, orgs) is fully synchronized.
-    # CRITICAL: Logic now resides in streamlit_app.py for global coverage and to prevent 
-    # race conditions during redirection. We keep this check here as a 
+    # CRITICAL: Logic now resides in streamlit_app.py for global coverage and to prevent
+    # race conditions during redirection. We keep this check here as a
     # secondary fallback to ensure a smooth transition during the login rerun.
     if "auth" in st.session_state:
+        from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
         from src.services.identity_service import IdentityService
         from src.services.navigation_service import NavigationService
         from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
-        
+
         if IdentityService.is_identity_synchronized():
             st.session_state.logged_in = True
             # Use NavigationService to handle any pending redirections
             NavigationService.handle_redirection(NavigationService.PAGE_LOGIN)
-            
+
             # Default fallback if no redirect happened
             st.switch_page(NavigationService.PAGE_HOME)
         else:
             # Fetch user info immediately after obtaining the token
             token = st.session_state["auth"]["token"]["access_token"]
-            
+
             if IdentityService.sync_identity(token):
                 st.session_state.logged_in = True
                 st.rerun()
@@ -146,6 +153,7 @@ def login():
                     except Exception:
                         pass
                 st.rerun()
+
 
 if __name__ == "__main__":
     login()

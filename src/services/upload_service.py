@@ -3,27 +3,32 @@
 """
 Upload Service for MDF file upload, staging, matching, and commit operations.
 """
+
 import difflib
 import re
 import unicodedata
 import uuid
-from typing import Optional
 from collections import defaultdict
+from collections.abc import Callable
+
 from sqlalchemy import func
 
-from src.database import get_session, MatchupQueue, Record, EditHistory, SearchEntry, Source
-from src.services.linguistic_service import LinguisticService
-from src.mdf.parser import parse_mdf, normalize_nt_record, format_mdf_record
+from src.database.connection import get_session
+from src.database.models.core import Record, Source
+from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
+from src.database.models.workflow import EditHistory, MatchupQueue
 from src.logging_config import get_logger
+from src.mdf.parser import format_mdf_record, normalize_nt_record, parse_mdf
 from src.services.audit_service import AuditService
+from src.services.linguistic_service import LinguisticService
 
 logger = get_logger("snea.upload")
 
 
 def _strip_diacritics(text: str) -> str:
     """Strip Unicode diacritics (combining marks) from text for base-form comparison."""
-    nfd = unicodedata.normalize('NFD', text)
-    return ''.join(ch for ch in nfd if unicodedata.category(ch) != 'Mn')
+    nfd = unicodedata.normalize("NFD", text)
+    return "".join(ch for ch in nfd if unicodedata.category(ch) != "Mn")
 
 
 class UploadService:
@@ -31,10 +36,10 @@ class UploadService:
     Service for MDF file upload workflow: parse, stage, match, review, and commit.
     All matchup_queue operations are scoped by batch_id.
 
-    This service handles the "Round-Trip" synchronization workflow where external 
-    MDF files are uploaded, matched against existing records in the database, 
-    and then merged or created as new records. It maintains a staging area 
-    (matchup_queue) to allow linguists to review and override automated matching 
+    This service handles the "Round-Trip" synchronization workflow where external
+    MDF files are uploaded, matched against existing records in the database,
+    and then merged or created as new records. It maintains a staging area
+    (matchup_queue) to allow linguists to review and override automated matching
     decisions before they affect production data.
     """
 
@@ -63,7 +68,7 @@ class UploadService:
         # Store indices to minimize memory overhead during grouping
         groups = defaultdict(list)
         for i, entry in enumerate(entries):
-            base = _strip_diacritics(entry['lx'])
+            base = _strip_diacritics(entry["lx"])
             groups[base].append(i)
 
         for base, indices in groups.items():
@@ -71,13 +76,13 @@ class UploadService:
                 continue
 
             # Identify entries with explicit \hm in their raw MDF data
-            # (hm defaults to 1 in parser, but we only treat it as "explicitly set" 
+            # (hm defaults to 1 in parser, but we only treat it as "explicitly set"
             # if \hm appears in the raw mdf_data of this entry)
             used = set()
             has_explicit_hm = []
             for idx in indices:
                 entry = entries[idx]
-                explicit_val = entry.get('hm') if '\\hm ' in entry['mdf_data'] else None
+                explicit_val = entry.get("hm") if "\\hm " in entry["mdf_data"] else None
                 if explicit_val:
                     used.add(explicit_val)
                     has_explicit_hm.append(True)
@@ -89,41 +94,36 @@ class UploadService:
             for i, idx in enumerate(indices):
                 if has_explicit_hm[i]:
                     continue
-                
+
                 entry = entries[idx]
                 while next_hm in used:
                     next_hm += 1
                 used.add(next_hm)
-                entry['hm'] = next_hm
+                entry["hm"] = next_hm
 
                 # Insert \hm line after \lx in mdf_data
-                entry['mdf_data'] = re.sub(
-                    r'^(\s*\\lx .*)$', 
-                    rf'\1\n\\hm {next_hm}', 
-                    entry['mdf_data'], 
-                    count=1, 
-                    flags=re.MULTILINE
+                entry["mdf_data"] = re.sub(
+                    r"^(\s*\\lx .*)$", rf"\1\n\\hm {next_hm}", entry["mdf_data"], count=1, flags=re.MULTILINE
                 )
                 next_hm += 1
 
         return entries
 
     @staticmethod
-    def stage_entries(user_email: str, source_id: int, entries: list[dict],
-                      filename: Optional[str] = None) -> str:
+    def stage_entries(user_email: str, source_id: int, entries: list[dict], filename: str | None = None) -> str:
         """Stage parsed entries into matchup_queue with a new batch_id.
 
         Returns the generated batch_id (UUID string).
         """
         batch_id = str(uuid.uuid4())
-        
+
         # Log upload start
         AuditService.log_activity(
             user_email=user_email,
             action="upload_start",
             details=f"Starting MDF upload: {filename or 'unknown'} ({len(entries)} entries)",
             session_id=batch_id,
-            session=None  # Explicitly None as we haven't started the session yet
+            session=None,  # Explicitly None as we haven't started the session yet
         )
 
         session = get_session()
@@ -134,20 +134,20 @@ class UploadService:
                     source_id=source_id,
                     batch_id=batch_id,
                     filename=filename,
-                    status='pending',
-                    lx=entry.get('lx', ''),
-                    mdf_data=format_mdf_record(entry['mdf_data']),
+                    status="pending",
+                    lx=entry.get("lx", ""),
+                    mdf_data=format_mdf_record(entry["mdf_data"]),
                 )
                 session.add(row)
             session.commit()
-            
+
             # Log upload staged
             AuditService.log_activity(
                 user_email=user_email,
                 action="upload_staged",
                 details=f"Staged {len(entries)} entries with batch_id {batch_id}",
                 session_id=batch_id,
-                session=session
+                session=session,
             )
         except Exception:
             session.rollback()
@@ -164,16 +164,17 @@ class UploadService:
         Ordered by uploaded_at descending.
         """
         from sqlalchemy import func as sa_func
+
         session = get_session()
         try:
             rows = (
                 session.query(
                     MatchupQueue.batch_id,
                     MatchupQueue.source_id,
-                    Source.name.label('source_name'),
+                    Source.name.label("source_name"),
                     MatchupQueue.filename,
-                    sa_func.count(MatchupQueue.id).label('entry_count'),
-                    sa_func.min(MatchupQueue.created_at).label('uploaded_at'),
+                    sa_func.count(MatchupQueue.id).label("entry_count"),
+                    sa_func.min(MatchupQueue.created_at).label("uploaded_at"),
                 )
                 .join(Source, Source.id == MatchupQueue.source_id)
                 .filter(MatchupQueue.user_email == user_email)
@@ -188,12 +189,12 @@ class UploadService:
             )
             return [
                 {
-                    'batch_id': r.batch_id,
-                    'source_id': r.source_id,
-                    'source_name': r.source_name,
-                    'filename': r.filename,
-                    'entry_count': r.entry_count,
-                    'uploaded_at': r.uploaded_at,
+                    "batch_id": r.batch_id,
+                    "source_id": r.source_id,
+                    "source_name": r.source_name,
+                    "filename": r.filename,
+                    "entry_count": r.entry_count,
+                    "uploaded_at": r.uploaded_at,
                 }
                 for r in rows
             ]
@@ -203,16 +204,16 @@ class UploadService:
     @staticmethod
     def get_cross_source_info(lx: str, current_source_id: int) -> list[str]:
         """Find other sources containing this lexeme (exact or base form).
-        
+
         Returns a sorted list of unique source names.
         """
         if not lx:
             return []
-        
+
         session = get_session()
         try:
             base_lx = _strip_diacritics(lx).lower()
-            
+
             # Query for exact match or base form match in other sources
             matches = (
                 session.query(Source.name)
@@ -220,8 +221,13 @@ class UploadService:
                 .filter(Record.source_id != current_source_id)
                 .filter(Record.is_deleted == False)
                 .filter(
-                    (Record.lx == lx) |
-                    (func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base_lx)
+                    (Record.lx == lx)
+                    | (
+                        func.lower(
+                            func.translate(Record.lx, "áàâäãåāéèêëēíìîïīóòôöõøōúùûüū", "aaaaaaaeeeeeiiiiiooooooouuuuu")
+                        )
+                        == base_lx
+                    )
                 )
                 .distinct()
                 .all()
@@ -231,12 +237,12 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def suggest_matches(batch_id: str, progress_callback: Optional[callable] = None) -> list[dict]:
+    def suggest_matches(batch_id: str, progress_callback: Callable | None = None) -> list[dict]:
         """Run match suggestions for all pending rows in a batch.
 
         Uses a batching approach with targeted SQL queries to avoid OOM
         risks when dealing with large databases or batches.
-        
+
         Returns list of {queue_id, lx, suggested_record_id, suggested_lx,
         match_type, cross_source_matches, record_id_conflict,
         record_id_conflict_sources}.
@@ -247,7 +253,7 @@ class UploadService:
             pending_rows = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id)
-                .filter(MatchupQueue.status.in_(['pending', 'matched']))
+                .filter(MatchupQueue.status.in_(["pending", "matched"]))
                 .order_by(MatchupQueue.id)
                 .all()
             )
@@ -256,63 +262,65 @@ class UploadService:
 
             total = len(pending_rows)
             source_id = pending_rows[0].source_id
-            
+
             # Cache source names (few enough that this is safe)
             sources = session.query(Source.id, Source.name).all()
             source_names = {s.id: s.name for s in sources}
             current_source_name = source_names.get(source_id, str(source_id))
 
             results = []
-            
+
             # Process in chunks to keep memory usage low and query sizes manageable
             chunk_size = 100
             for i in range(0, total, chunk_size):
                 if progress_callback:
                     progress_callback(i, total)
-                chunk = pending_rows[i:i + chunk_size]
-                
+                chunk = pending_rows[i : i + chunk_size]
+
                 # 1. Collect all lx and potential record_ids from the chunk
                 chunk_lxs = set()
                 chunk_base_lxs = set()
                 chunk_uploaded_ids = set()
-                
-                row_data = [] # Store parsed info for this chunk
+
+                row_data = []  # Store parsed info for this chunk
                 for row in chunk:
                     chunk_lxs.add(row.lx)
                     chunk_base_lxs.add(_strip_diacritics(row.lx))
-                    
+
                     uploaded_id = None
                     parsed_hm = None
                     parsed_ge = None
                     parsed_nt = None
-                    for line in row.mdf_data.split('\n'):
+                    for line in row.mdf_data.split("\n"):
                         s = line.lstrip()
-                        if s.startswith('\\nt Record:'):
-                            val = s[len('\\nt Record:'):].strip()
+                        if s.startswith("\\nt Record:"):
+                            val = s[len("\\nt Record:") :].strip()
                             if val.isdigit():
                                 uploaded_id = int(val)
                                 chunk_uploaded_ids.add(uploaded_id)
-                        elif s.startswith('\\hm '):
-                            v = s[len('\\hm '):].strip()
+                        elif s.startswith("\\hm "):
+                            v = s[len("\\hm ") :].strip()
                             if v.isdigit():
                                 parsed_hm = int(v)
-                        elif s.startswith('\\ge '):
-                            parsed_ge = s[len('\\ge '):].strip() or None
-                        elif s.startswith('\\nt ') and parsed_nt is None:
-                            parsed_nt = s[len('\\nt '):].strip() or None
-                    
-                    row_data.append({
-                        'row': row,
-                        'uploaded_id': uploaded_id,
-                        'parsed_hm': parsed_hm,
-                        'parsed_ge': parsed_ge,
-                        'parsed_nt': parsed_nt,
-                    })
+                        elif s.startswith("\\ge "):
+                            parsed_ge = s[len("\\ge ") :].strip() or None
+                        elif s.startswith("\\nt ") and parsed_nt is None:
+                            parsed_nt = s[len("\\nt ") :].strip() or None
+
+                    row_data.append(
+                        {
+                            "row": row,
+                            "uploaded_id": uploaded_id,
+                            "parsed_hm": parsed_hm,
+                            "parsed_ge": parsed_ge,
+                            "parsed_nt": parsed_nt,
+                        }
+                    )
 
                 # 2. Targeted Query for Same-Source Records
                 # Find records in the SAME source that match lx, base_lx, or id
                 # We use a broad query and filter in Python for the small chunk
-                # Optimized diacritics check: we query for exact lx matches 
+                # Optimized diacritics check: we query for exact lx matches
                 # or we just get all records for these lx values.
                 # Since multiple records might have same lx (homonyms), we get them all.
                 same_source_candidates = (
@@ -320,17 +328,17 @@ class UploadService:
                     .filter(
                         Record.source_id == source_id,
                         Record.is_deleted == False,
-                        (Record.lx.in_(chunk_lxs)) | (Record.id.in_(chunk_uploaded_ids))
+                        (Record.lx.in_(chunk_lxs)) | (Record.id.in_(chunk_uploaded_ids)),
                     )
                     .all()
                 )
-                
+
                 # If chunk_base_lxs is large, querying for all base matches might be slow,
                 # but usually it's similar to chunk_lxs.
                 # For safety, let's also fetch records matching base forms if not already fetched.
                 # In PostgreSQL we could use translate, but here we'll just expand the IN clause.
                 # Actually, base-form matching is a fallback, so let's keep it simple.
-                
+
                 # Build local lookup maps for this chunk only
                 chunk_exact_map = defaultdict(list)
                 chunk_id_map = {}
@@ -342,40 +350,32 @@ class UploadService:
                 candidate_ids = {rec.id for rec in same_source_candidates}
                 candidate_mdf_map = {}
                 if candidate_ids:
-                    mdf_rows = (
-                        session.query(Record.id, Record.mdf_data)
-                        .filter(Record.id.in_(candidate_ids))
-                        .all()
-                    )
+                    mdf_rows = session.query(Record.id, Record.mdf_data).filter(Record.id.in_(candidate_ids)).all()
                     candidate_mdf_map = {r.id: r.mdf_data for r in mdf_rows}
 
                 def _normalize(mdf_text: str) -> str:
                     stripped = UploadService._strip_nt_record_lines(mdf_text)
-                    return '\n'.join(line for line in stripped.split('\n') if line.strip())
+                    return "\n".join(line for line in stripped.split("\n") if line.strip())
 
                 def _extract_first_nt(mdf_text: str) -> str | None:
                     """Return the first \\nt value that is not a \\nt Record: line."""
-                    for line in mdf_text.split('\n'):
+                    for line in mdf_text.split("\n"):
                         s = line.lstrip()
-                        if s.startswith('\\nt '):
-                            val = s[len('\\nt '):].strip()
+                        if s.startswith("\\nt "):
+                            val = s[len("\\nt ") :].strip()
                             # Skip \nt Record: <digits> lines
-                            if val.startswith('Record:'):
-                                remainder = val[len('Record:'):].strip()
+                            if val.startswith("Record:"):
+                                remainder = val[len("Record:") :].strip()
                                 if remainder.isdigit():
                                     continue
                             return val or None
                     return None
-                
+
                 # 3. Targeted Query for OTHER Source existence
                 # We want to know if these LXs exist elsewhere
                 other_source_matches_raw = (
                     session.query(Record.lx, Record.source_id)
-                    .filter(
-                        Record.source_id != source_id,
-                        Record.is_deleted == False,
-                        Record.lx.in_(chunk_lxs)
-                    )
+                    .filter(Record.source_id != source_id, Record.is_deleted == False, Record.lx.in_(chunk_lxs))
                     .distinct()
                     .all()
                 )
@@ -387,9 +387,7 @@ class UploadService:
                 other_id_conflicts_raw = (
                     session.query(Record.id, Record.source_id)
                     .filter(
-                        Record.source_id != source_id,
-                        Record.is_deleted == False,
-                        Record.id.in_(chunk_uploaded_ids)
+                        Record.source_id != source_id, Record.is_deleted == False, Record.id.in_(chunk_uploaded_ids)
                     )
                     .all()
                 )
@@ -399,12 +397,12 @@ class UploadService:
 
                 # 4. Process each row in the chunk
                 for data in row_data:
-                    row = data['row']
-                    uploaded_record_id = data['uploaded_id']
-                    parsed_hm = data['parsed_hm']
-                    parsed_ge = data['parsed_ge']
-                    parsed_nt = data['parsed_nt']
-                    
+                    row = data["row"]
+                    uploaded_record_id = data["uploaded_id"]
+                    parsed_hm = data["parsed_hm"]
+                    parsed_ge = data["parsed_ge"]
+                    parsed_nt = data["parsed_nt"]
+
                     suggested_record_id = None
                     suggested_lx = None
                     match_type = None
@@ -414,7 +412,7 @@ class UploadService:
                         rec = chunk_id_map[uploaded_record_id]
                         suggested_record_id = rec.id
                         suggested_lx = rec.lx
-                        match_type = 'exact'
+                        match_type = "exact"
 
                     # B. Exact lx match — combined (hm, ge, nt) scoring
                     # hm defaults to 1 in the DB, so \hm alone is not a reliable tiebreaker.
@@ -423,23 +421,27 @@ class UploadService:
                     # A single exact-lx candidate with a low \ge similarity is rejected so that
                     # the base-form fallback (section C) can find the correct diacritic variant.
                     _GE_ACCEPT_THRESHOLD = 0.4
-                    parsed_ge_lower = (parsed_ge or '').lower()
-                    parsed_nt_lower = (parsed_nt or '').lower()
+                    parsed_ge_lower = (parsed_ge or "").lower()
+                    parsed_nt_lower = (parsed_nt or "").lower()
+
                     def _score_candidate(c):
-                        hm_match = (parsed_hm is not None and c.hm == parsed_hm)
+                        hm_match = parsed_hm is not None and c.hm == parsed_hm
                         ge_score = (
-                            difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or '').lower()).ratio()
-                            if parsed_ge is not None else 0.0
+                            difflib.SequenceMatcher(None, parsed_ge_lower, (c.ge or "").lower()).ratio()
+                            if parsed_ge is not None
+                            else 0.0
                         )
                         nt_score = (
                             difflib.SequenceMatcher(
                                 None,
                                 parsed_nt_lower,
-                                (_extract_first_nt(candidate_mdf_map.get(c.id, '')) or '').lower()
+                                (_extract_first_nt(candidate_mdf_map.get(c.id, "")) or "").lower(),
                             ).ratio()
-                            if parsed_nt is not None else 0.0
+                            if parsed_nt is not None
+                            else 0.0
                         )
                         return (hm_match, ge_score, nt_score)
+
                     if not suggested_record_id and row.lx in chunk_exact_map:
                         candidates = chunk_exact_map[row.lx]
                         best = max(candidates, key=_score_candidate)
@@ -450,7 +452,7 @@ class UploadService:
                         if parsed_ge is None or best_ge_score >= _GE_ACCEPT_THRESHOLD:
                             suggested_record_id = best.id
                             suggested_lx = best.lx
-                            match_type = 'exact'
+                            match_type = "exact"
 
                     # B4. No lx match — try \ge-only match against same-source records.
                     # Skip B4 if base-form (diacritic-stripped) candidates exist: section C
@@ -461,7 +463,12 @@ class UploadService:
                         .filter(
                             Record.source_id == source_id,
                             Record.is_deleted == False,
-                            func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == _base_for_b4.lower()
+                            func.lower(
+                                func.translate(
+                                    Record.lx, "áàâäãåāéèêëēíìîïīóòôöõøōúùûüū", "aaaaaaaeeeeeiiiiiooooooouuuuu"
+                                )
+                            )
+                            == _base_for_b4.lower(),
                         )
                         .first()
                     )
@@ -471,7 +478,7 @@ class UploadService:
                             .filter(
                                 Record.source_id == source_id,
                                 Record.is_deleted == False,
-                                func.lower(Record.ge) == parsed_ge.lower()
+                                func.lower(Record.ge) == parsed_ge.lower(),
                             )
                             .order_by(Record.id)
                             .all()
@@ -480,16 +487,16 @@ class UploadService:
                             if len(ge_matches) == 1:
                                 ge_match = ge_matches[0]
                             else:
-                                upload_lx = (row.lx or '').lower()
+                                upload_lx = (row.lx or "").lower()
                                 ge_match = max(
                                     ge_matches,
                                     key=lambda m: difflib.SequenceMatcher(
-                                        None, upload_lx, (m.lx or '').lower()
-                                    ).ratio()
+                                        None, upload_lx, (m.lx or "").lower()
+                                    ).ratio(),
                                 )
                             suggested_record_id = ge_match.id
                             suggested_lx = ge_match.lx
-                            match_type = 'ge_match'
+                            match_type = "ge_match"
                             suggested_is_locked = ge_match.is_locked
 
                     # C. Diacritics-stripped fallback — fetch all candidates, score and pick best
@@ -500,7 +507,12 @@ class UploadService:
                             .filter(
                                 Record.source_id == source_id,
                                 Record.is_deleted == False,
-                                func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base.lower()
+                                func.lower(
+                                    func.translate(
+                                        Record.lx, "áàâäãåāéèêëēíìîïīóòôöõøōúùûüū", "aaaaaaaeeeeeiiiiiooooooouuuuu"
+                                    )
+                                )
+                                == base.lower(),
                             )
                             .all()
                         )
@@ -513,7 +525,7 @@ class UploadService:
                             best_base = max(base_candidates, key=_score_candidate)
                             suggested_record_id = best_base.id
                             suggested_lx = best_base.lx
-                            match_type = 'base_form'
+                            match_type = "base_form"
                             suggested_is_locked = best_base.is_locked
                         else:
                             suggested_is_locked = False
@@ -529,19 +541,24 @@ class UploadService:
                     if not cross_sources:
                         base_lx = _strip_diacritics(row.lx)
                         other_base_match = (
-                             session.query(Source.id)
-                             .join(Record)
-                             .filter(
-                                 Record.source_id != source_id,
-                                 Record.is_deleted == False,
-                                 func.lower(func.translate(Record.lx, 'áàâäãåāéèêëēíìîïīóòôöõøōúùûüū', 'aaaaaaaeeeeeiiiiiooooooouuuuu')) == base_lx.lower()
-                             )
-                             .distinct()
-                             .all()
+                            session.query(Source.id)
+                            .join(Record)
+                            .filter(
+                                Record.source_id != source_id,
+                                Record.is_deleted == False,
+                                func.lower(
+                                    func.translate(
+                                        Record.lx, "áàâäãåāéèêëēíìîïīóòôöõøōúùûüū", "aaaaaaaeeeeeiiiiiooooooouuuuu"
+                                    )
+                                )
+                                == base_lx.lower(),
+                            )
+                            .distinct()
+                            .all()
                         )
                         for (sid,) in other_base_match:
                             cross_sources.add(source_names.get(sid, str(sid)))
-                    
+
                     cross_source_matches = sorted(cross_sources)
 
                     # E. Record-id conflict check
@@ -562,25 +579,27 @@ class UploadService:
                     # Update the queue row
                     row.suggested_record_id = suggested_record_id
                     if is_identical:
-                        match_type = 'identical'
-                        row.status = 'discard'
+                        match_type = "identical"
+                        row.status = "discard"
                     row.match_type = match_type
 
                     if suggested_is_locked:
-                        row.status = 'locked_conflict'
+                        row.status = "locked_conflict"
 
-                    results.append({
-                        'queue_id': row.id,
-                        'lx': row.lx,
-                        'suggested_record_id': suggested_record_id,
-                        'suggested_lx': suggested_lx,
-                        'match_type': match_type,
-                        'suggested_is_locked': suggested_is_locked,
-                        'cross_source_matches': cross_source_matches,
-                        'record_id_conflict': record_id_conflict,
-                        'record_id_conflict_sources': record_id_conflict_sources,
-                        'is_identical': is_identical,
-                    })
+                    results.append(
+                        {
+                            "queue_id": row.id,
+                            "lx": row.lx,
+                            "suggested_record_id": suggested_record_id,
+                            "suggested_lx": suggested_lx,
+                            "match_type": match_type,
+                            "suggested_is_locked": suggested_is_locked,
+                            "cross_source_matches": cross_source_matches,
+                            "record_id_conflict": record_id_conflict,
+                            "record_id_conflict_sources": record_id_conflict_sources,
+                            "is_identical": is_identical,
+                        }
+                    )
 
             session.commit()
             if progress_callback:
@@ -595,11 +614,11 @@ class UploadService:
     @staticmethod
     def _strip_nt_record_lines(mdf_text: str) -> str:
         """Remove all \\nt Record: lines from MDF text for comparison."""
-        lines = mdf_text.split('\n')
-        return '\n'.join(
-            line for line in lines
-            if not (line.lstrip().startswith('\\nt Record:')
-                    and line.lstrip()[len('\\nt Record:'):].strip().isdigit())
+        lines = mdf_text.split("\n")
+        return "\n".join(
+            line
+            for line in lines
+            if not (line.lstrip().startswith("\\nt Record:") and line.lstrip()[len("\\nt Record:") :].strip().isdigit())
         )
 
     @staticmethod
@@ -619,38 +638,34 @@ class UploadService:
                 .order_by(MatchupQueue.id)
                 .all()
             )
-            
+
             if not all_pending:
-                return {'removed_count': 0, 'headwords': []}
+                return {"removed_count": 0, "headwords": []}
 
             removed_headwords = []
             chunk_size = 100
             for i in range(0, len(all_pending), chunk_size):
-                chunk = all_pending[i:i + chunk_size]
+                chunk = all_pending[i : i + chunk_size]
                 suggested_ids = {row.suggested_record_id for row in chunk if row.suggested_record_id}
-                
+
                 # Bulk fetch records for this chunk
-                records = (
-                    session.query(Record.id, Record.mdf_data)
-                    .filter(Record.id.in_(suggested_ids))
-                    .all()
-                )
+                records = session.query(Record.id, Record.mdf_data).filter(Record.id.in_(suggested_ids)).all()
                 record_map = {r.id: r.mdf_data for r in records}
-                
+
                 for row in chunk:
                     mdf_existing = record_map.get(row.suggested_record_id)
                     if mdf_existing is None:
                         continue
-                        
+
                     uploaded_clean = UploadService._strip_nt_record_lines(row.mdf_data)
                     existing_clean = UploadService._strip_nt_record_lines(mdf_existing)
-                    
+
                     if uploaded_clean == existing_clean:
                         removed_headwords.append(row.lx)
                         session.delete(row)
 
             session.commit()
-            return {'removed_count': len(removed_headwords), 'headwords': removed_headwords}
+            return {"removed_count": len(removed_headwords), "headwords": removed_headwords}
         except Exception:
             session.rollback()
             raise
@@ -660,24 +675,24 @@ class UploadService:
     @staticmethod
     def _strip_nt_record_and_hm_lines(mdf_text: str) -> str:
         """Remove \\nt Record: and \\hm lines from MDF text for comparison."""
-        lines = mdf_text.split('\n')
+        lines = mdf_text.split("\n")
         result = []
         for line in lines:
             stripped = line.lstrip()
-            if stripped.startswith('\\nt Record:') and stripped[len('\\nt Record:'):].strip().isdigit():
+            if stripped.startswith("\\nt Record:") and stripped[len("\\nt Record:") :].strip().isdigit():
                 continue
-            if stripped.startswith('\\hm ') and stripped[len('\\hm '):].strip().isdigit():
+            if stripped.startswith("\\hm ") and stripped[len("\\hm ") :].strip().isdigit():
                 continue
             result.append(line)
-        return '\n'.join(result)
+        return "\n".join(result)
 
     @staticmethod
     def _extract_hm_from_mdf(mdf_text: str):
         """Extract \\hm value from MDF text, or None if absent."""
-        for line in mdf_text.split('\n'):
+        for line in mdf_text.split("\n"):
             stripped = line.lstrip()
-            if stripped.startswith('\\hm '):
-                val = stripped[len('\\hm '):].strip()
+            if stripped.startswith("\\hm "):
+                val = stripped[len("\\hm ") :].strip()
                 if val.isdigit():
                     return int(val)
         return None
@@ -698,47 +713,45 @@ class UploadService:
                 .order_by(MatchupQueue.id)
                 .all()
             )
-            
+
             if not all_pending:
                 return []
 
             flagged = []
             chunk_size = 100
             for i in range(0, len(all_pending), chunk_size):
-                chunk = all_pending[i:i + chunk_size]
+                chunk = all_pending[i : i + chunk_size]
                 suggested_ids = {row.suggested_record_id for row in chunk if row.suggested_record_id}
-                
+
                 # Bulk fetch records for this chunk
-                records = (
-                    session.query(Record.id, Record.mdf_data)
-                    .filter(Record.id.in_(suggested_ids))
-                    .all()
-                )
+                records = session.query(Record.id, Record.mdf_data).filter(Record.id.in_(suggested_ids)).all()
                 record_map = {r.id: r.mdf_data for r in records}
 
                 for row in chunk:
                     mdf_existing = record_map.get(row.suggested_record_id)
                     if mdf_existing is None:
                         continue
-                        
+
                     uploaded_stripped = UploadService._strip_nt_record_and_hm_lines(row.mdf_data)
                     existing_stripped = UploadService._strip_nt_record_and_hm_lines(mdf_existing)
-                    
+
                     if uploaded_stripped != existing_stripped:
                         continue
-                        
+
                     # Content identical excluding \nt Record: and \hm — check if \hm differs
                     uploaded_hm = UploadService._extract_hm_from_mdf(row.mdf_data)
                     existing_hm = UploadService._extract_hm_from_mdf(mdf_existing)
-                    
+
                     if uploaded_hm != existing_hm:
                         detail = f"uploaded \\hm {uploaded_hm}, existing \\hm {existing_hm}"
-                        flagged.append({
-                            'queue_id': row.id,
-                            'lx': row.lx,
-                            'hm_mismatch': True,
-                            'hm_mismatch_detail': detail,
-                        })
+                        flagged.append(
+                            {
+                                "queue_id": row.id,
+                                "lx": row.lx,
+                                "hm_mismatch": True,
+                                "hm_mismatch_detail": detail,
+                            }
+                        )
 
             return flagged
         finally:
@@ -756,11 +769,13 @@ class UploadService:
             curr_row = [i + 1]
             for j, c2 in enumerate(s2):
                 cost = 0 if c1 == c2 else 1
-                curr_row.append(min(
-                    curr_row[j] + 1,
-                    prev_row[j + 1] + 1,
-                    prev_row[j] + cost,
-                ))
+                curr_row.append(
+                    min(
+                        curr_row[j] + 1,
+                        prev_row[j + 1] + 1,
+                        prev_row[j] + cost,
+                    )
+                )
             prev_row = curr_row
         return prev_row[-1]
 
@@ -783,10 +798,10 @@ class UploadService:
             for row in rows:
                 # Only check entries matched via \nt Record: id
                 uploaded_record_id = None
-                for line in row.mdf_data.split('\n'):
+                for line in row.mdf_data.split("\n"):
                     stripped = line.lstrip()
-                    if stripped.startswith('\\nt Record:'):
-                        val = stripped[len('\\nt Record:'):].strip()
+                    if stripped.startswith("\\nt Record:"):
+                        val = stripped[len("\\nt Record:") :].strip()
                         if val.isdigit():
                             uploaded_record_id = int(val)
 
@@ -799,28 +814,28 @@ class UploadService:
 
                 # Compare NFD-normalized forms (diacritics preserved)
                 import unicodedata
-                uploaded_nfd = unicodedata.normalize('NFD', row.lx)
-                existing_nfd = unicodedata.normalize('NFD', record.lx)
+
+                uploaded_nfd = unicodedata.normalize("NFD", row.lx)
+                existing_nfd = unicodedata.normalize("NFD", record.lx)
                 dist = UploadService._levenshtein(uploaded_nfd, existing_nfd)
 
                 if dist > threshold:
-                    detail = (
-                        f"uploaded '{row.lx}', existing '{record.lx}' "
-                        f"— edit distance {dist}"
+                    detail = f"uploaded '{row.lx}', existing '{record.lx}' — edit distance {dist}"
+                    flagged.append(
+                        {
+                            "queue_id": row.id,
+                            "lx": row.lx,
+                            "headword_distance": dist,
+                            "headword_distance_detail": detail,
+                        }
                     )
-                    flagged.append({
-                        'queue_id': row.id,
-                        'lx': row.lx,
-                        'headword_distance': dist,
-                        'headword_distance_detail': detail,
-                    })
 
             return flagged
         finally:
             session.close()
 
     @staticmethod
-    def rematch_batch(batch_id: str, progress_callback: Optional[callable] = None) -> list[dict]:
+    def rematch_batch(batch_id: str, progress_callback: Callable | None = None) -> list[dict]:
         """Re-run match suggestions for an existing batch.
 
         Clears and re-executes matching logic for all pending rows.
@@ -831,11 +846,11 @@ class UploadService:
             rows = (
                 session.query(MatchupQueue)
                 .filter_by(batch_id=batch_id)
-                .filter(MatchupQueue.status != 'committed')
+                .filter(MatchupQueue.status != "committed")
                 .all()
             )
             for row in rows:
-                row.status = 'pending'
+                row.status = "pending"
                 row.suggested_record_id = None
                 row.match_type = None
             session.commit()
@@ -858,26 +873,26 @@ class UploadService:
         try:
             pattern = f"%{query.strip()}%"
             from sqlalchemy import or_
+
             rows = (
                 session.query(Record)
                 .filter_by(source_id=source_id, is_deleted=False)
-                .filter(or_(
-                    Record.lx.ilike(pattern),
-                    Record.ge.ilike(pattern),
-                ))
+                .filter(
+                    or_(
+                        Record.lx.ilike(pattern),
+                        Record.ge.ilike(pattern),
+                    )
+                )
                 .order_by(Record.lx, Record.hm)
                 .limit(limit)
                 .all()
             )
-            return [
-                {"id": r.id, "lx": r.lx, "hm": r.hm or 1, "ge": r.ge or ""}
-                for r in rows
-            ]
+            return [{"id": r.id, "lx": r.lx, "hm": r.hm or 1, "ge": r.ge or ""} for r in rows]
         finally:
             session.close()
 
     @staticmethod
-    def confirm_match(queue_id: int, record_id: Optional[int] = None) -> None:
+    def confirm_match(queue_id: int, record_id: int | None = None) -> None:
         """Mark a matchup_queue row as 'matched'.
 
         If record_id is provided, override the suggestion.
@@ -892,7 +907,7 @@ class UploadService:
                 if not record:
                     raise ValueError(f"Record {record_id} not found")
                 row.suggested_record_id = record_id
-            row.status = 'matched'
+            row.status = "matched"
             session.commit()
         except Exception:
             session.rollback()
@@ -901,10 +916,13 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def approve_all_new_source(batch_id: str, user_email: str,
-                               session_id: str,
-                               progress_callback: Optional[callable] = None,
-                               queue_ids: list[int] | None = None) -> int:
+    def approve_all_new_source(
+        batch_id: str,
+        user_email: str,
+        session_id: str,
+        progress_callback: Callable | None = None,
+        queue_ids: list[int] | None = None,
+    ) -> int:
         """Bulk-approve and apply all pending rows as new records for new sources.
 
         Targets all rows in the batch that are 'pending'. Sets them to
@@ -920,18 +938,15 @@ class UploadService:
         try:
             q = session.query(MatchupQueue).filter_by(
                 batch_id=batch_id,
-                status='pending',
+                status="pending",
             )
             if queue_ids is not None:
                 q = q.filter(MatchupQueue.id.in_(queue_ids))
-            q.update({'status': 'create_new'}, synchronize_session='fetch')
+            q.update({"status": "create_new"}, synchronize_session="fetch")
             session.commit()
 
             # Collect IDs to apply
-            rows_q = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='create_new')
-            )
+            rows_q = session.query(MatchupQueue).filter_by(batch_id=batch_id, status="create_new")
             if queue_ids is not None:
                 rows_q = rows_q.filter(MatchupQueue.id.in_(queue_ids))
             rows = rows_q.all()
@@ -940,26 +955,21 @@ class UploadService:
             applied = 0
             total = len(queue_ids_to_apply)
             for i, qid in enumerate(queue_ids_to_apply, 1):
-                UploadService.apply_single(
-                    queue_id=qid,
-                    user_email=user_email,
-                    session_id=session_id,
-                    session=session
-                )
+                UploadService.apply_single(queue_id=qid, user_email=user_email, session_id=session_id, session=session)
                 applied += 1
-                
+
                 if progress_callback:
                     progress_callback(i, total)
 
             session.commit()
-            
+
             # Log upload committed (bulk new source)
             AuditService.log_activity(
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {applied} records from batch {batch_id} (new source)",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             return applied
@@ -970,10 +980,13 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def approve_all_by_record_match(batch_id: str, user_email: str,
-                                     session_id: str,
-                                     progress_callback: Optional[callable] = None,
-                                     queue_ids: list[int] | None = None) -> int:
+    def approve_all_by_record_match(
+        batch_id: str,
+        user_email: str,
+        session_id: str,
+        progress_callback: Callable | None = None,
+        queue_ids: list[int] | None = None,
+    ) -> int:
         """Bulk-apply matched rows to the records table.
 
         Targets rows with a suggested_record_id and an exact or base_form
@@ -993,22 +1006,26 @@ class UploadService:
         # First ensure all qualifying rows have status='matched'
         session = get_session()
         try:
-            q = session.query(MatchupQueue).filter_by(
-                batch_id=batch_id,
-            ).filter(
-                MatchupQueue.status.in_(['pending', 'matched']),
-                MatchupQueue.match_type.in_(['exact', 'base_form']),
-                MatchupQueue.suggested_record_id.isnot(None),
+            q = (
+                session.query(MatchupQueue)
+                .filter_by(
+                    batch_id=batch_id,
+                )
+                .filter(
+                    MatchupQueue.status.in_(["pending", "matched"]),
+                    MatchupQueue.match_type.in_(["exact", "base_form"]),
+                    MatchupQueue.suggested_record_id.isnot(None),
+                )
             )
             if queue_ids is not None:
                 q = q.filter(MatchupQueue.id.in_(queue_ids))
-            q.update({'status': 'matched'}, synchronize_session='fetch')
+            q.update({"status": "matched"}, synchronize_session="fetch")
             session.commit()
 
             # Collect IDs of matched rows to apply
             matched_q = (
                 session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='matched')
+                .filter_by(batch_id=batch_id, status="matched")
                 .filter(MatchupQueue.suggested_record_id.isnot(None))
             )
             if queue_ids is not None:
@@ -1019,31 +1036,28 @@ class UploadService:
             applied = 0
             total = len(queue_ids_to_apply)
             for i, qid in enumerate(queue_ids_to_apply, 1):
-                UploadService.apply_single(
-                    queue_id=qid,
-                    user_email=user_email,
-                    session_id=session_id,
-                    session=session
-                )
+                UploadService.apply_single(queue_id=qid, user_email=user_email, session_id=session_id, session=session)
                 applied += 1
-                
+
                 if progress_callback:
                     progress_callback(i, total)
 
             session.commit()
-            
+
             # Log upload committed (bulk matched)
             AuditService.log_activity(
                 user_email=user_email,
                 action="upload_batch_committed",
                 details=f"Committed {applied} matched records from batch {batch_id}",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             logger.info(
                 "approve_all_by_record_match: batch=%s, applied %d of %d matched rows",
-                batch_id, applied, len(queue_ids_to_apply),
+                batch_id,
+                applied,
+                len(queue_ids_to_apply),
             )
             return applied
         except Exception:
@@ -1053,10 +1067,13 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def approve_non_matches_as_new(batch_id: str, user_email: str,
-                                    session_id: str,
-                                    progress_callback: Optional[callable] = None,
-                                    queue_ids: list[int] | None = None) -> int:
+    def approve_non_matches_as_new(
+        batch_id: str,
+        user_email: str,
+        session_id: str,
+        progress_callback: Callable | None = None,
+        queue_ids: list[int] | None = None,
+    ) -> int:
         """Bulk-apply unmatched rows as new records.
 
         Targets rows with no suggested_record_id that are still 'pending'
@@ -1075,21 +1092,25 @@ class UploadService:
         # First ensure all qualifying rows have status='create_new'
         session = get_session()
         try:
-            q = session.query(MatchupQueue).filter_by(
-                batch_id=batch_id,
-            ).filter(
-                MatchupQueue.status.in_(['pending', 'create_new']),
-                MatchupQueue.suggested_record_id.is_(None),
+            q = (
+                session.query(MatchupQueue)
+                .filter_by(
+                    batch_id=batch_id,
+                )
+                .filter(
+                    MatchupQueue.status.in_(["pending", "create_new"]),
+                    MatchupQueue.suggested_record_id.is_(None),
+                )
             )
             if queue_ids is not None:
                 q = q.filter(MatchupQueue.id.in_(queue_ids))
-            q.update({'status': 'create_new'}, synchronize_session='fetch')
+            q.update({"status": "create_new"}, synchronize_session="fetch")
             session.commit()
 
             # Collect IDs of create_new rows to apply
             rows_q = (
                 session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='create_new')
+                .filter_by(batch_id=batch_id, status="create_new")
                 .filter(MatchupQueue.suggested_record_id.is_(None))
             )
             if queue_ids is not None:
@@ -1100,14 +1121,9 @@ class UploadService:
             applied = 0
             total = len(queue_ids_to_apply)
             for i, qid in enumerate(queue_ids_to_apply, 1):
-                UploadService.apply_single(
-                    queue_id=qid,
-                    user_email=user_email,
-                    session_id=session_id,
-                    session=session
-                )
+                UploadService.apply_single(queue_id=qid, user_email=user_email, session_id=session_id, session=session)
                 applied += 1
-                
+
                 if progress_callback:
                     progress_callback(i, total)
 
@@ -1119,12 +1135,14 @@ class UploadService:
                 action="upload_batch_committed",
                 details=f"Committed {applied} non-matching records from batch {batch_id} as new",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             logger.info(
                 "approve_non_matches_as_new: batch=%s, applied %d of %d rows",
-                batch_id, applied, len(queue_ids_to_apply),
+                batch_id,
+                applied,
+                len(queue_ids_to_apply),
             )
             return applied
         except Exception:
@@ -1141,7 +1159,7 @@ class UploadService:
             row = session.get(MatchupQueue, queue_id)
             if not row:
                 raise ValueError(f"Queue entry {queue_id} not found")
-            row.status = 'create_homonym'
+            row.status = "create_homonym"
             session.commit()
         except Exception:
             session.rollback()
@@ -1157,7 +1175,7 @@ class UploadService:
             row = session.get(MatchupQueue, queue_id)
             if not row:
                 raise ValueError(f"Queue entry {queue_id} not found")
-            row.status = 'ignored'
+            row.status = "ignored"
             session.commit()
         except Exception:
             session.rollback()
@@ -1173,7 +1191,7 @@ class UploadService:
             row = session.get(MatchupQueue, queue_id)
             if not row:
                 raise ValueError(f"Queue entry {queue_id} not found")
-            row.status = 'discard'
+            row.status = "discard"
             session.commit()
         except Exception:
             session.rollback()
@@ -1184,49 +1202,47 @@ class UploadService:
     @staticmethod
     def _update_record_languages(session, record, lg_entries):
         """Helper to manage record-language associations.
-        
+
         If lg_entries (from MDF parsing) is provided, it finds/creates the
         languages and links them.
         """
-        from src.database.models.core import RecordLanguage, Language
+        from src.database.models.core import Language, RecordLanguage
         from src.database.models.iso639 import ISO639_3
-        
+
         # 1. Clear existing
         session.query(RecordLanguage).filter_by(record_id=record.id).delete()
-        
+
         # 2. Add new from MDF if present
         if lg_entries:
             for i, lg in enumerate(lg_entries):
-                lg_name = lg['name']
-                lg_code = lg['code']
-                
+                lg_name = lg["name"]
+                lg_code = lg["code"]
+
                 # MANDATORY: Validate against ISO 639-3
                 if not lg_code:
                     continue
-                
+
                 iso_entry = session.query(ISO639_3).filter_by(id=lg_code).first()
                 if not iso_entry or iso_entry.ref_name != lg_name:
                     # Both code and ref name must match ISO 639-3 exactly
                     continue
-                
+
                 # Find by code first (canonical)
                 lang = session.query(Language).filter_by(code=lg_code).first()
-                
+
                 if not lang:
                     lang = Language(name=lg_name, code=lg_code)
                     session.add(lang)
                     session.flush()
-                
-                session.add(RecordLanguage(
-                    record_id=record.id,
-                    language_id=lang.id,
-                    is_primary=lg.get('is_primary', False)
-                ))
+
+                session.add(
+                    RecordLanguage(record_id=record.id, language_id=lang.id, is_primary=lg.get("is_primary", False))
+                )
 
     @staticmethod
-    def apply_single(queue_id: int, user_email: str,
-                     session_id: str, session=None,
-                     override_status: str | None = None) -> dict:
+    def apply_single(
+        queue_id: int, user_email: str, session_id: str, session=None, override_status: str | None = None
+    ) -> dict:
         """Apply a single matchup_queue row immediately.
 
         If override_status is provided it is used as the authoritative action
@@ -1238,7 +1254,7 @@ class UploadService:
         _provided_session = session is not None
         if not _provided_session:
             session = get_session()
-        
+
         try:
             row = session.get(MatchupQueue, queue_id)
             if not row:
@@ -1250,27 +1266,26 @@ class UploadService:
 
             effective_status = row.status
 
-            if effective_status in ('pending', 'ignored'):
+            if effective_status in ("pending", "ignored"):
                 raise ValueError(
-                    f"Cannot apply entry with status '{effective_status}'. "
-                    "Set a valid actionable status first."
+                    f"Cannot apply entry with status '{effective_status}'. Set a valid actionable status first."
                 )
 
             # Discard: just remove from queue without creating/updating records
-            if effective_status == 'discard':
+            if effective_status == "discard":
                 lx = row.lx
                 session.delete(row)
                 if not _provided_session:
                     session.commit()
-                return {'action': 'discarded', 'record_id': None, 'lx': lx}
+                return {"action": "discarded", "record_id": None, "lx": lx}
 
-            from src.mdf.parser import parse_mdf as _parse, format_mdf_record, normalize_nt_record
+            from src.mdf.parser import format_mdf_record, normalize_nt_record
+            from src.mdf.parser import parse_mdf as _parse
+
             parsed = _parse(row.mdf_data)
-            entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': '', 'lg': []}
+            entry = parsed[0] if parsed else {"lx": row.lx, "hm": 1, "ps": "", "ge": "", "lg": []}
 
-            from src.database.models.core import RecordLanguage, Language
-
-            if effective_status == 'matched':
+            if effective_status == "matched":
                 record = session.get(Record, row.suggested_record_id)
                 if not record:
                     raise ValueError(f"Suggested record {row.suggested_record_id} not found")
@@ -1278,99 +1293,104 @@ class UploadService:
                 normalized = normalize_nt_record(format_mdf_record(row.mdf_data), record.id)
                 formatted = format_mdf_record(normalized)
                 record.mdf_data = formatted
-                record.lx = entry['lx']
-                record.hm = entry.get('hm', 1)
-                record.ps = entry.get('ps', '')
-                record.ge = entry.get('ge', '')
-                record.source_page = entry.get('source_page', '')
+                record.lx = entry["lx"]
+                record.hm = entry.get("hm", 1)
+                record.ps = entry.get("ps", "")
+                record.ge = entry.get("ge", "")
+                record.source_page = entry.get("source_page", "")
                 record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
                 record.updated_by = user_email
-                
-                UploadService._update_record_languages(session, record, entry.get('lg', []))
+
+                UploadService._update_record_languages(session, record, entry.get("lg", []))
 
                 # current_version is auto-incremented by SQLAlchemy optimistic locking
                 next_version = record.current_version + 1
-                session.add(EditHistory(
-                    record_id=record.id,
-                    user_email=user_email,
-                    session_id=session_id,
-                    version=next_version,
-                    change_summary="MDF upload: updated from matchup_queue",
-                    prev_data=prev_data,
-                    current_data=formatted,
-                ))
+                session.add(
+                    EditHistory(
+                        record_id=record.id,
+                        user_email=user_email,
+                        session_id=session_id,
+                        version=next_version,
+                        change_summary="MDF upload: updated from matchup_queue",
+                        prev_data=prev_data,
+                        current_data=formatted,
+                    )
+                )
                 record_id = record.id
-                action = 'updated'
+                action = "updated"
 
-            elif effective_status == 'create_homonym':
+            elif effective_status == "create_homonym":
                 # Find highest hm for this lx in same source
                 from sqlalchemy import func as sa_func
+
                 max_hm = (
-                    session.query(sa_func.max(Record.hm))
-                    .filter_by(source_id=row.source_id, lx=entry['lx'])
-                    .scalar()
+                    session.query(sa_func.max(Record.hm)).filter_by(source_id=row.source_id, lx=entry["lx"]).scalar()
                 ) or 0
                 new_hm = max_hm + 1
                 new_record = Record(
-                    lx=entry['lx'],
-                    sort_lx=LinguisticService.generate_sort_lx(entry['lx']),
+                    lx=entry["lx"],
+                    sort_lx=LinguisticService.generate_sort_lx(entry["lx"]),
                     hm=new_hm,
-                    ps=entry.get('ps', ''),
-                    ge=entry.get('ge', ''),
-                    source_page=entry.get('source_page', ''),
+                    ps=entry.get("ps", ""),
+                    ge=entry.get("ge", ""),
+                    source_page=entry.get("source_page", ""),
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
-                
-                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
+
+                UploadService._update_record_languages(session, new_record, entry.get("lg", []))
 
                 normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
                 formatted = format_mdf_record(normalized)
                 new_record.mdf_data = formatted
-                session.add(EditHistory(
-                    record_id=new_record.id,
-                    user_email=user_email,
-                    session_id=session_id,
-                    version=1,
-                    change_summary=f"MDF upload: new homonym created (hm {new_hm})",
-                    prev_data=None,
-                    current_data=formatted,
-                ))
+                session.add(
+                    EditHistory(
+                        record_id=new_record.id,
+                        user_email=user_email,
+                        session_id=session_id,
+                        version=1,
+                        change_summary=f"MDF upload: new homonym created (hm {new_hm})",
+                        prev_data=None,
+                        current_data=formatted,
+                    )
+                )
                 record_id = new_record.id
-                action = 'created_homonym'
+                action = "created_homonym"
 
-            elif effective_status == 'create_new':
+            elif effective_status == "create_new":
                 new_record = Record(
-                    lx=entry['lx'],
-                    sort_lx=LinguisticService.generate_sort_lx(entry['lx']),
-                    hm=entry.get('hm', 1),
-                    ps=entry.get('ps', ''),
-                    ge=entry.get('ge', ''),
-                    source_page=entry.get('source_page', ''),
+                    lx=entry["lx"],
+                    sort_lx=LinguisticService.generate_sort_lx(entry["lx"]),
+                    hm=entry.get("hm", 1),
+                    ps=entry.get("ps", ""),
+                    ge=entry.get("ge", ""),
+                    source_page=entry.get("source_page", ""),
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
-                
-                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
+
+                UploadService._update_record_languages(session, new_record, entry.get("lg", []))
 
                 normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
                 formatted = format_mdf_record(normalized)
                 new_record.mdf_data = formatted
-                session.add(EditHistory(
-                    record_id=new_record.id,
-                    user_email=user_email,
-                    session_id=session_id,
-                    version=1,
-                    change_summary="MDF upload: new record created",
-                    prev_data=None,
-                    current_data=formatted,
-                ))
+                session.add(
+                    EditHistory(
+                        record_id=new_record.id,
+                        user_email=user_email,
+                        session_id=session_id,
+                        version=1,
+                        change_summary="MDF upload: new record created",
+                        prev_data=None,
+                        current_data=formatted,
+                    )
+                )
                 record_id = new_record.id
-                action = 'created'
+                action = "created"
             else:
                 raise ValueError(f"Unexpected status '{effective_status}'")
 
@@ -1387,10 +1407,10 @@ class UploadService:
                 action="upload_record_committed",
                 details=f"Record {action}: {entry['lx']} (record_id={record_id})",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
-            return {'action': action, 'record_id': record_id, 'lx': entry['lx']}
+            return {"action": action, "record_id": record_id, "lx": entry["lx"]}
         except Exception:
             if not _provided_session:
                 session.rollback()
@@ -1404,11 +1424,7 @@ class UploadService:
         """Delete all matchup_queue rows for a batch. Returns count deleted."""
         session = get_session()
         try:
-            count = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id)
-                .delete()
-            )
+            count = session.query(MatchupQueue).filter_by(batch_id=batch_id).delete()
             session.commit()
             return count
         except Exception:
@@ -1422,11 +1438,7 @@ class UploadService:
         """Delete all locked_conflict rows for a batch. Returns count deleted."""
         session = get_session()
         try:
-            count = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='locked_conflict')
-                .delete()
-            )
+            count = session.query(MatchupQueue).filter_by(batch_id=batch_id, status="locked_conflict").delete()
             session.commit()
             return count
         except Exception:
@@ -1436,19 +1448,19 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def download_locked_conflicts(batch_id: str) -> Optional[str]:
+    def download_locked_conflicts(batch_id: str) -> str | None:
         """Export all locked_conflict entries for a batch as an MDF fragment."""
         session = get_session()
         try:
             conflicts = (
                 session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='locked_conflict')
+                .filter_by(batch_id=batch_id, status="locked_conflict")
                 .order_by(MatchupQueue.id)
                 .all()
             )
             if not conflicts:
                 return None
-            
+
             # Combine mdf_data with double blank lines between records
             mdf_text = "\n\n".join([c.mdf_data.strip() for c in conflicts])
             return mdf_text
@@ -1458,8 +1470,9 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def discard_marked(batch_id: str, progress_callback: Optional[callable] = None,
-                       queue_ids: list[int] | None = None) -> int:
+    def discard_marked(
+        batch_id: str, progress_callback: Callable | None = None, queue_ids: list[int] | None = None
+    ) -> int:
         """Delete all 'discard' status matchup_queue rows for a batch. Returns count deleted.
 
         When queue_ids is provided, only those queue rows are deleted.
@@ -1467,10 +1480,10 @@ class UploadService:
         """
         session = get_session()
         try:
-            q = session.query(MatchupQueue).filter_by(batch_id=batch_id, status='discard')
+            q = session.query(MatchupQueue).filter_by(batch_id=batch_id, status="discard")
             if queue_ids is not None:
                 q = q.filter(MatchupQueue.id.in_(queue_ids))
-            count = q.delete(synchronize_session='fetch')
+            count = q.delete(synchronize_session="fetch")
             session.commit()
             if progress_callback:
                 progress_callback(count, count)
@@ -1493,7 +1506,7 @@ class UploadService:
             rows = (
                 session.query(MatchupQueue)
                 .filter(MatchupQueue.batch_id == batch_id)
-                .filter(MatchupQueue.status.in_(['pending', 'matched', 'create_new', 'create_homonym', 'ignored']))
+                .filter(MatchupQueue.status.in_(["pending", "matched", "create_new", "create_homonym", "ignored"]))
                 .order_by(MatchupQueue.id)
                 .all()
             )
@@ -1502,17 +1515,13 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def commit_matched(batch_id: str, user_email: str,
-                       session_id: str,
-                       progress_callback: Optional[callable] = None) -> int:
+    def commit_matched(
+        batch_id: str, user_email: str, session_id: str, progress_callback: Callable | None = None
+    ) -> int:
         """Commit all 'matched' rows: update records + edit_history. Returns count."""
         session = get_session()
         try:
-            rows = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='matched')
-                .all()
-            )
+            rows = session.query(MatchupQueue).filter_by(batch_id=batch_id, status="matched").all()
             count = 0
             total = len(rows)
             updated_record_ids = []
@@ -1526,25 +1535,28 @@ class UploadService:
                 record.mdf_data = formatted
                 # Re-parse to update indexed fields
                 from src.mdf.parser import parse_mdf as _parse
+
                 parsed = _parse(row.mdf_data)
                 if parsed:
                     e = parsed[0]
-                    record.lx = e['lx']
-                    record.hm = e.get('hm', 1)
-                    record.ps = e.get('ps', '')
-                    record.ge = e.get('ge', '')
+                    record.lx = e["lx"]
+                    record.hm = e.get("hm", 1)
+                    record.ps = e.get("ps", "")
+                    record.ge = e.get("ge", "")
                 record.updated_by = user_email
                 # current_version is auto-incremented by SQLAlchemy optimistic locking
                 next_version = record.current_version + 1
-                session.add(EditHistory(
-                    record_id=record.id,
-                    user_email=user_email,
-                    session_id=session_id,
-                    version=next_version,
-                    change_summary="MDF upload: updated from matchup_queue",
-                    prev_data=prev_data,
-                    current_data=formatted,
-                ))
+                session.add(
+                    EditHistory(
+                        record_id=record.id,
+                        user_email=user_email,
+                        session_id=session_id,
+                        version=next_version,
+                        change_summary="MDF upload: updated from matchup_queue",
+                        prev_data=prev_data,
+                        current_data=formatted,
+                    )
+                )
                 session.delete(row)
                 updated_record_ids.append(record.id)
                 count += 1
@@ -1562,7 +1574,7 @@ class UploadService:
                 action="upload_batch_committed",
                 details=f"Committed {count} matched records from batch {batch_id}",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             return count
@@ -1573,80 +1585,74 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def commit_homonyms(batch_id: str, user_email: str,
-                        session_id: str,
-                        progress_callback: Optional[callable] = None) -> int:
+    def commit_homonyms(
+        batch_id: str, user_email: str, session_id: str, progress_callback: Callable | None = None
+    ) -> int:
         """Commit all 'create_homonym' rows: create new homonym records. Returns count."""
         session = get_session()
         try:
-            rows = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='create_homonym')
-                .all()
-            )
+            rows = session.query(MatchupQueue).filter_by(batch_id=batch_id, status="create_homonym").all()
             count = 0
             total = len(rows)
             for idx, row in enumerate(rows, 1):
                 from src.mdf.parser import parse_mdf as _parse
+
                 parsed = _parse(row.mdf_data)
-                entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': ''}
+                entry = parsed[0] if parsed else {"lx": row.lx, "hm": 1, "ps": "", "ge": ""}
 
                 from sqlalchemy import func as sa_func
+
                 max_hm = (
-                    session.query(sa_func.max(Record.hm))
-                    .filter_by(source_id=row.source_id, lx=entry['lx'])
-                    .scalar()
+                    session.query(sa_func.max(Record.hm)).filter_by(source_id=row.source_id, lx=entry["lx"]).scalar()
                 ) or 0
                 new_hm = max_hm + 1
 
                 # Ensure existing records without \hm get \hm 1
-                existing_no_hm = (
-                    session.query(Record)
-                    .filter_by(source_id=row.source_id, lx=entry['lx'], hm=1)
-                    .all()
-                )
+                existing_no_hm = session.query(Record).filter_by(source_id=row.source_id, lx=entry["lx"], hm=1).all()
                 for existing in existing_no_hm:
                     if UploadService._extract_hm_from_mdf(existing.mdf_data) is None:
-                        lines = existing.mdf_data.split('\n')
+                        lines = existing.mdf_data.split("\n")
                         new_lines = []
                         inserted = False
                         for line in lines:
                             new_lines.append(line)
-                            if not inserted and line.lstrip().startswith('\\lx '):
-                                new_lines.append('\\hm 1')
+                            if not inserted and line.lstrip().startswith("\\lx "):
+                                new_lines.append("\\hm 1")
                                 inserted = True
-                        existing.mdf_data = '\n'.join(new_lines)
+                        existing.mdf_data = "\n".join(new_lines)
 
                 new_record = Record(
-                    lx=entry['lx'],
+                    lx=entry["lx"],
                     hm=new_hm,
-                    ps=entry.get('ps', ''),
-                    ge=entry.get('ge', ''),
+                    ps=entry.get("ps", ""),
+                    ge=entry.get("ge", ""),
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
 
-                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
+                UploadService._update_record_languages(session, new_record, entry.get("lg", []))
 
                 normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
                 formatted = format_mdf_record(normalized)
                 new_record.mdf_data = formatted
-                session.add(EditHistory(
-                    record_id=new_record.id,
-                    user_email=user_email,
-                    session_id=session_id,
-                    version=1,
-                    change_summary=f"MDF upload: new homonym created (hm {new_hm})",
-                    prev_data=None,
-                    current_data=formatted,
-                ))
+                session.add(
+                    EditHistory(
+                        record_id=new_record.id,
+                        user_email=user_email,
+                        session_id=session_id,
+                        version=1,
+                        change_summary=f"MDF upload: new homonym created (hm {new_hm})",
+                        prev_data=None,
+                        current_data=formatted,
+                    )
+                )
                 session.delete(row)
                 count += 1
                 if progress_callback:
                     progress_callback(idx, total)
-            
+
             # Rebuild search entries
             session.flush()
             homonym_record_ids = [r.id for r in session if isinstance(r, Record) and r.id is not None]
@@ -1661,7 +1667,7 @@ class UploadService:
                 action="upload_batch_committed",
                 details=f"Committed {count} homonym records from batch {batch_id}",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             return count
@@ -1672,54 +1678,51 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def commit_new(batch_id: str, user_email: str,
-                   session_id: str,
-                   progress_callback: Optional[callable] = None) -> int:
+    def commit_new(batch_id: str, user_email: str, session_id: str, progress_callback: Callable | None = None) -> int:
         """Commit all 'create_new' rows: insert new records. Returns count."""
         session = get_session()
         try:
-            rows = (
-                session.query(MatchupQueue)
-                .filter_by(batch_id=batch_id, status='create_new')
-                .all()
-            )
+            rows = session.query(MatchupQueue).filter_by(batch_id=batch_id, status="create_new").all()
             count = 0
             total = len(rows)
             for idx, row in enumerate(rows, 1):
                 from src.mdf.parser import parse_mdf as _parse
+
                 parsed = _parse(row.mdf_data)
-                entry = parsed[0] if parsed else {'lx': row.lx, 'hm': 1, 'ps': '', 'ge': ''}
+                entry = parsed[0] if parsed else {"lx": row.lx, "hm": 1, "ps": "", "ge": ""}
 
                 new_record = Record(
-                    lx=entry['lx'],
-                    hm=entry.get('hm', 1),
-                    ps=entry.get('ps', ''),
-                    ge=entry.get('ge', ''),
+                    lx=entry["lx"],
+                    hm=entry.get("hm", 1),
+                    ps=entry.get("ps", ""),
+                    ge=entry.get("ge", ""),
                     source_id=row.source_id,
                     mdf_data=row.mdf_data,
                 )
                 session.add(new_record)
                 session.flush()
 
-                UploadService._update_record_languages(session, new_record, entry.get('lg', []))
+                UploadService._update_record_languages(session, new_record, entry.get("lg", []))
 
                 normalized = normalize_nt_record(format_mdf_record(row.mdf_data), new_record.id)
                 formatted = format_mdf_record(normalized)
                 new_record.mdf_data = formatted
-                session.add(EditHistory(
-                    record_id=new_record.id,
-                    user_email=user_email,
-                    session_id=session_id,
-                    version=1,
-                    change_summary="MDF upload: new record created",
-                    prev_data=None,
-                    current_data=formatted,
-                ))
+                session.add(
+                    EditHistory(
+                        record_id=new_record.id,
+                        user_email=user_email,
+                        session_id=session_id,
+                        version=1,
+                        change_summary="MDF upload: new record created",
+                        prev_data=None,
+                        current_data=formatted,
+                    )
+                )
                 session.delete(row)
                 count += 1
                 if progress_callback:
                     progress_callback(idx, total)
-            
+
             # Rebuild search entries
             session.flush()
             new_record_ids = [r.id for r in session if isinstance(r, Record) and r.id is not None]
@@ -1734,7 +1737,7 @@ class UploadService:
                 action="upload_batch_committed",
                 details=f"Committed {count} new records from batch {batch_id}",
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             return count
@@ -1758,22 +1761,51 @@ class UploadService:
                     continue
                 # Delete existing search entries
                 session.query(SearchEntry).filter_by(record_id=rid).delete()
+                session.query(HeadwordSearchEntry).filter_by(record_id=rid).delete()
+                session.query(GlossSearchEntry).filter_by(record_id=rid).delete()
 
                 # Re-parse MDF to extract searchable fields
                 from src.mdf.parser import parse_mdf as _parse
+
                 parsed = _parse(record.mdf_data)
                 if not parsed:
                     continue
                 entry = parsed[0]
 
                 # Insert lx
-                if entry.get('lx'):
-                    term = entry['lx']
+                if entry.get("lx"):
+                    term = entry["lx"]
                     norm = LinguisticService.generate_sort_lx(term)
-                    session.add(SearchEntry(record_id=rid, term=term, normalized_term=norm, entry_type='lx'))
+                    session.add(SearchEntry(record_id=rid, term=term, normalized_term=norm, entry_type="lx"))
                     total += 1
                 # Insert va, se, cf, ve lists
-                for field in ('va', 'se', 'cf', 've'):
+                for field in ("va", "se", "cf", "ve"):
+                    for val in entry.get(field, []):
+                        if val:
+                            norm = LinguisticService.generate_sort_lx(val)
+                            session.add(SearchEntry(record_id=rid, term=val, normalized_term=norm, entry_type=field))
+                            total += 1
+
+                # Populate headword_search_entries (PRIMARY lx and va)
+                if entry.get("lx"):
+                    term = entry["lx"]
+                    norm = LinguisticService.generate_sort_lx(term)
+                    session.add(HeadwordSearchEntry(record_id=rid, entry_type="lx", term=term, normalized_term=norm))
+                    total += 1
+                for val in entry.get("va", []):
+                    if val:
+                        norm = LinguisticService.generate_sort_lx(val)
+                        session.add(HeadwordSearchEntry(record_id=rid, entry_type="va", term=val, normalized_term=norm))
+                        total += 1
+
+                # Populate gloss_search_entries (PRIMARY ge)
+                if entry.get("ge"):
+                    term = entry["ge"]
+                    norm = LinguisticService.generate_sort_lx(term)
+                    session.add(GlossSearchEntry(record_id=rid, term=term, normalized_term=norm))
+                    total += 1
+                # Insert va, se, cf, ve lists
+                for field in ("va", "se", "cf", "ve"):
                     for val in entry.get(field, []):
                         if val:
                             norm = LinguisticService.generate_sort_lx(val)
@@ -1792,9 +1824,9 @@ class UploadService:
                 session.close()
 
     @staticmethod
-    def reprocess_all_records(progress_callback: Optional[callable] = None) -> dict:
+    def reprocess_all_records(progress_callback: Callable | None = None) -> dict:
         """Reprocess languages and search entries for all non-deleted records.
-        
+
         This updates:
         - Record metadata fields (lx, hm, ps, ge, source_page, sort_lx)
         - record_languages association table
@@ -1806,41 +1838,42 @@ class UploadService:
             records = session.query(Record).filter_by(is_deleted=False).all()
             total = len(records)
             reprocessed = 0
-            
+
             _logger.info(f"Starting reprocessing of {total} records.")
-            
+
             for i, record in enumerate(records):
                 # 1. Parse MDF
                 from src.mdf.parser import parse_mdf as _parse
+
                 parsed = _parse(record.mdf_data)
                 if not parsed:
                     _logger.warning(f"Failed to parse MDF for record {record.id}")
                     continue
                 entry = parsed[0]
-                
+
                 # 2. Update Record fields from MDF
-                record.lx = entry.get('lx', record.lx)
-                record.hm = entry.get('hm', 1)
-                record.ps = entry.get('ps', '')
-                record.ge = entry.get('ge', '')
-                record.source_page = entry.get('source_page', '')
+                record.lx = entry.get("lx", record.lx)
+                record.hm = entry.get("hm", 1)
+                record.ps = entry.get("ps", "")
+                record.ge = entry.get("ge", "")
+                record.source_page = entry.get("source_page", "")
                 record.sort_lx = LinguisticService.generate_sort_lx(record.lx)
-                
+
                 # 3. Update Languages
-                UploadService._update_record_languages(session, record, entry.get('lg', []))
-                
+                UploadService._update_record_languages(session, record, entry.get("lg", []))
+
                 # 4. Update Search Entries
                 # We pass the existing session to avoid nested transaction issues
                 UploadService.populate_search_entries([record.id], session=session)
-                
+
                 reprocessed += 1
                 if progress_callback and (i + 1) % 10 == 0:
                     progress_callback(i + 1, total)
-            
+
             # Final progress update
             if progress_callback:
                 progress_callback(total, total)
-                
+
             session.commit()
             _logger.info(f"Reprocessing complete. Reprocessed {reprocessed}/{total} records.")
             return {"total": total, "reprocessed": reprocessed}
@@ -1852,27 +1885,22 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def get_session_rollback_mdf(session_id: str) -> Optional[str]:
-        """Generate a single MDF string containing the current state of all records 
+    def get_session_rollback_mdf(session_id: str) -> str | None:
+        """Generate a single MDF string containing the current state of all records
         that would be affected by rolling back the given session_id.
-        
+
         Only includes records that have NOT been superseded.
         """
         session = get_session()
         try:
             # 1. Identify all record_ids touched by this session
-            history_entries = (
-                session.query(EditHistory.record_id)
-                .filter_by(session_id=session_id)
-                .distinct()
-                .all()
-            )
+            history_entries = session.query(EditHistory.record_id).filter_by(session_id=session_id).distinct().all()
             record_ids = [h.record_id for h in history_entries]
             if not record_ids:
                 return None
-            
+
             mdf_blocks = []
-            
+
             # 2. For each record, check if it's still the latest session
             for rid in record_ids:
                 latest_h = (
@@ -1881,24 +1909,25 @@ class UploadService:
                     .order_by(EditHistory.timestamp.desc(), EditHistory.id.desc())
                     .first()
                 )
-                
+
                 if latest_h and latest_h.session_id == session_id:
                     record = session.get(Record, rid)
                     if record and record.mdf_data:
                         mdf_blocks.append(record.mdf_data)
-            
+
             if not mdf_blocks:
                 return None
-            
+
             return "\n\n\n".join([b.strip() for b in mdf_blocks])
         finally:
             session.close()
 
     @staticmethod
-    def rollback_session(session_id: str, user_email: str = "system",
-                         progress_callback: Optional[callable] = None) -> dict:
+    def rollback_session(
+        session_id: str, user_email: str = "system", progress_callback: Callable | None = None
+    ) -> dict:
         """Rollback all changes associated with a session_id.
-        
+
         ONLY rolls back records that have NOT been superseded by later sessions.
         Restores records to prev_data or deletes created records.
         Returns {'rolled_back_count': N, 'deleted_count': M, 'skipped_count': S}.
@@ -1907,25 +1936,22 @@ class UploadService:
         try:
             # 1. Identify all records touched by this session
             history_entries = (
-                session.query(EditHistory)
-                .filter_by(session_id=session_id)
-                .order_by(EditHistory.version.asc())
-                .all()
+                session.query(EditHistory).filter_by(session_id=session_id).order_by(EditHistory.version.asc()).all()
             )
             if not history_entries:
-                return {'rolled_back_count': 0, 'deleted_count': 0, 'skipped_count': 0}
-            
+                return {"rolled_back_count": 0, "deleted_count": 0, "skipped_count": 0}
+
             # Map of record_id to the earliest prev_data in this session
             record_changes = {}
             for h in history_entries:
                 if h.record_id not in record_changes:
                     record_changes[h.record_id] = h.prev_data
-            
+
             rolled_back = 0
             deleted = 0
             skipped = 0
             total = len(record_changes)
-            
+
             # 2. Process each record with supersede check
             for i, (rid, prev_data) in enumerate(record_changes.items(), 1):
                 # Fetch the LATEST session_id for this record
@@ -1935,7 +1961,7 @@ class UploadService:
                     .order_by(EditHistory.timestamp.desc(), EditHistory.id.desc())
                     .first()
                 )
-                
+
                 # If the record has been modified by a LATER session, skip it
                 if not latest_h or latest_h.session_id != session_id:
                     skipped += 1
@@ -1945,56 +1971,57 @@ class UploadService:
 
                 record = session.get(Record, rid)
                 if not record:
-                    skipped += 1 # Should not happen if history exists
+                    skipped += 1  # Should not happen if history exists
                     if progress_callback:
                         progress_callback(i, total)
                     continue
-                
+
                 if prev_data is None:
                     # Record was created in this session -> delete it
                     session.query(SearchEntry).filter_by(record_id=rid).delete()
+                    session.query(HeadwordSearchEntry).filter_by(record_id=rid).delete()
+                    session.query(GlossSearchEntry).filter_by(record_id=rid).delete()
                     session.query(EditHistory).filter_by(record_id=rid).delete()
                     session.delete(record)
                     deleted += 1
                 else:
                     # Record was updated -> restore from prev_data
                     record.mdf_data = prev_data
-                    
+
                     from src.mdf.parser import parse_mdf as _parse
+
                     parsed = _parse(prev_data)
                     if parsed:
                         entry = parsed[0]
-                        record.lx = entry.get('lx')
-                        record.hm = entry.get('hm', 1)
-                        record.ps = entry.get('ps', '')
-                        record.ge = entry.get('ge', '')
-                    
+                        record.lx = entry.get("lx")
+                        record.hm = entry.get("hm", 1)
+                        record.ps = entry.get("ps", "")
+                        record.ge = entry.get("ge", "")
+
                     # Delete history entries for this session for this record
                     session.query(EditHistory).filter_by(session_id=session_id, record_id=rid).delete()
                     rolled_back += 1
-                    
+
                     # Repopulate search entries
                     UploadService.populate_search_entries([rid], session=session)
-                
+
                 if progress_callback:
                     progress_callback(i, total)
-            
+
             session.commit()
-            
+
             AuditService.log_activity(
                 user_email=user_email,
                 action="batch_rollback",
-                details=(f"Rolled back session {session_id}: {rolled_back} updated, "
-                         f"{deleted} deleted, {skipped} skipped (superseded)"),
+                details=(
+                    f"Rolled back session {session_id}: {rolled_back} updated, "
+                    f"{deleted} deleted, {skipped} skipped (superseded)"
+                ),
                 session_id=session_id,
-                session=session
+                session=session,
             )
-            
-            return {
-                'rolled_back_count': rolled_back, 
-                'deleted_count': deleted, 
-                'skipped_count': skipped
-            }
+
+            return {"rolled_back_count": rolled_back, "deleted_count": deleted, "skipped_count": skipped}
         except Exception:
             session.rollback()
             raise
@@ -2002,8 +2029,9 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def revert_batch_changes(session_id: str, user_email: str = "system",
-                             progress_callback: Optional[callable] = None) -> dict:
+    def revert_batch_changes(
+        session_id: str, user_email: str = "system", progress_callback: Callable | None = None
+    ) -> dict:
         """Revert all non-locked post-import edits for records in a session.
 
         For each record touched by the session, restores it to the state it was in
@@ -2022,7 +2050,7 @@ class UploadService:
                 .all()
             )
             if not history_entries:
-                return {'reverted_count': 0, 'skipped_locked': 0, 'already_current': 0}
+                return {"reverted_count": 0, "skipped_locked": 0, "already_current": 0}
 
             # Map record_id -> post-import snapshot (current_data of earliest session entry)
             post_import_snapshots: dict[int, str] = {}
@@ -2063,10 +2091,7 @@ class UploadService:
                 # Check if any later history entries exist after the session entry
                 later_entries_exist = (
                     session.query(EditHistory)
-                    .filter(
-                        EditHistory.record_id == rid,
-                        EditHistory.id > earliest_session_entry.id
-                    )
+                    .filter(EditHistory.record_id == rid, EditHistory.id > earliest_session_entry.id)
                     .first()
                 ) is not None
 
@@ -2082,15 +2107,14 @@ class UploadService:
                 parsed = _parse(post_import_data)
                 if parsed:
                     entry = parsed[0]
-                    record.lx = entry.get('lx')
-                    record.hm = entry.get('hm', 1)
-                    record.ps = entry.get('ps', '')
-                    record.ge = entry.get('ge', '')
+                    record.lx = entry.get("lx")
+                    record.hm = entry.get("hm", 1)
+                    record.ps = entry.get("ps", "")
+                    record.ge = entry.get("ge", "")
 
                 # Delete all history entries after the earliest session entry
                 session.query(EditHistory).filter(
-                    EditHistory.record_id == rid,
-                    EditHistory.id > earliest_session_entry.id
+                    EditHistory.record_id == rid, EditHistory.id > earliest_session_entry.id
                 ).delete()
 
                 UploadService.populate_search_entries([rid], session=session)
@@ -2104,17 +2128,19 @@ class UploadService:
             AuditService.log_activity(
                 user_email=user_email,
                 action="batch_revert_changes",
-                details=(f"Reverted post-import changes for session {session_id}: "
-                         f"{reverted} reverted, {skipped_locked} skipped (locked), "
-                         f"{already_current} already at post-import state"),
+                details=(
+                    f"Reverted post-import changes for session {session_id}: "
+                    f"{reverted} reverted, {skipped_locked} skipped (locked), "
+                    f"{already_current} already at post-import state"
+                ),
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
             return {
-                'reverted_count': reverted,
-                'skipped_locked': skipped_locked,
-                'already_current': already_current,
+                "reverted_count": reverted,
+                "skipped_locked": skipped_locked,
+                "already_current": already_current,
             }
         except Exception:
             session.rollback()
@@ -2142,7 +2168,7 @@ class UploadService:
                 .all()
             )
             if not history_entries:
-                return {'will_revert': 0, 'skipped_locked': 0, 'already_current': 0, 'total': 0}
+                return {"will_revert": 0, "skipped_locked": 0, "already_current": 0, "total": 0}
 
             # Map record_id -> earliest session entry id
             earliest_entry_id: dict[int, int] = {}
@@ -2174,10 +2200,10 @@ class UploadService:
                     already_current += 1
 
             return {
-                'will_revert': will_revert,
-                'skipped_locked': skipped_locked,
-                'already_current': already_current,
-                'total': total,
+                "will_revert": will_revert,
+                "skipped_locked": skipped_locked,
+                "already_current": already_current,
+                "total": total,
             }
         finally:
             session.close()
@@ -2200,22 +2226,20 @@ class UploadService:
                 .first()
             )
             if not earliest_session_entry:
-                return {'will_delete': 0, 'skipped_locked': 0, 'total': 0}
+                return {"will_delete": 0, "skipped_locked": 0, "total": 0}
 
             import_ts = earliest_session_entry.timestamp
             session_record = session.get(Record, earliest_session_entry.record_id)
             if not session_record:
-                return {'will_delete': 0, 'skipped_locked': 0, 'total': 0}
+                return {"will_delete": 0, "skipped_locked": 0, "total": 0}
             source_id = session_record.source_id
 
             # Find all records in this source whose earliest history entry is a creation
             # (prev_data IS NULL) and occurred after the import timestamp
             from sqlalchemy import func as _func
+
             subq = (
-                session.query(
-                    EditHistory.record_id,
-                    _func.min(EditHistory.id).label('min_id')
-                )
+                session.query(EditHistory.record_id, _func.min(EditHistory.id).label("min_id"))
                 .join(Record, Record.id == EditHistory.record_id)
                 .filter(
                     Record.source_id == source_id,
@@ -2244,7 +2268,7 @@ class UploadService:
                     will_delete += 1
 
             total = will_delete + skipped_locked
-            return {'will_delete': will_delete, 'skipped_locked': skipped_locked, 'total': total}
+            return {"will_delete": will_delete, "skipped_locked": skipped_locked, "total": total}
         finally:
             session.close()
 
@@ -2252,13 +2276,14 @@ class UploadService:
     def has_revertible_changes(session_id: str) -> bool:
         """Fast EXISTS check: does the session have any unlocked records with post-import edits?"""
         from sqlalchemy import func as _func
+
         session = get_session()
         try:
             # Find the earliest history id per record for this session
             earliest_subq = (
                 session.query(
                     EditHistory.record_id,
-                    _func.min(EditHistory.id).label('earliest_id'),
+                    _func.min(EditHistory.id).label("earliest_id"),
                 )
                 .filter(EditHistory.session_id == session_id)
                 .group_by(EditHistory.record_id)
@@ -2283,7 +2308,8 @@ class UploadService:
     @staticmethod
     def has_post_import_new_records(session_id: str) -> bool:
         """Fast EXISTS check: does the session's source have any unlocked records created after import?"""
-        from sqlalchemy import func as _func, exists
+        from sqlalchemy import func as _func
+
         session = get_session()
         try:
             earliest_session_entry = (
@@ -2301,10 +2327,7 @@ class UploadService:
             source_id = session_record.source_id
 
             subq = (
-                session.query(
-                    EditHistory.record_id,
-                    _func.min(EditHistory.id).label('min_id')
-                )
+                session.query(EditHistory.record_id, _func.min(EditHistory.id).label("min_id"))
                 .join(Record, Record.id == EditHistory.record_id)
                 .filter(
                     Record.source_id == source_id,
@@ -2329,8 +2352,9 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def delete_post_import_new_records(session_id: str, user_email: str = "system",
-                                       progress_callback: Optional[callable] = None) -> dict:
+    def delete_post_import_new_records(
+        session_id: str, user_email: str = "system", progress_callback: Callable | None = None
+    ) -> dict:
         """Delete records created as new in the same source after the session's import timestamp.
 
         Skips locked records. Audit-logs as batch_delete_new_records.
@@ -2345,20 +2369,18 @@ class UploadService:
                 .first()
             )
             if not earliest_session_entry:
-                return {'deleted_count': 0, 'skipped_locked': 0}
+                return {"deleted_count": 0, "skipped_locked": 0}
 
             import_ts = earliest_session_entry.timestamp
             session_record = session.get(Record, earliest_session_entry.record_id)
             if not session_record:
-                return {'deleted_count': 0, 'skipped_locked': 0}
+                return {"deleted_count": 0, "skipped_locked": 0}
             source_id = session_record.source_id
 
             from sqlalchemy import func as _func
+
             subq = (
-                session.query(
-                    EditHistory.record_id,
-                    _func.min(EditHistory.id).label('min_id')
-                )
+                session.query(EditHistory.record_id, _func.min(EditHistory.id).label("min_id"))
                 .join(Record, Record.id == EditHistory.record_id)
                 .filter(
                     Record.source_id == source_id,
@@ -2393,6 +2415,8 @@ class UploadService:
                     continue
 
                 session.query(SearchEntry).filter_by(record_id=rid).delete()
+                session.query(HeadwordSearchEntry).filter_by(record_id=rid).delete()
+                session.query(GlossSearchEntry).filter_by(record_id=rid).delete()
                 session.query(EditHistory).filter_by(record_id=rid).delete()
                 session.delete(record)
                 deleted += 1
@@ -2405,13 +2429,15 @@ class UploadService:
             AuditService.log_activity(
                 user_email=user_email,
                 action="batch_delete_new_records",
-                details=(f"Deleted post-import new records for session {session_id}: "
-                         f"{deleted} deleted, {skipped_locked} skipped (locked)"),
+                details=(
+                    f"Deleted post-import new records for session {session_id}: "
+                    f"{deleted} deleted, {skipped_locked} skipped (locked)"
+                ),
                 session_id=session_id,
-                session=session
+                session=session,
             )
 
-            return {'deleted_count': deleted, 'skipped_locked': skipped_locked}
+            return {"deleted_count": deleted, "skipped_locked": skipped_locked}
         except Exception:
             session.rollback()
             raise
@@ -2419,7 +2445,7 @@ class UploadService:
             session.close()
 
     @staticmethod
-    def generate_mdf_filename(prefix: str, source_name: str, timestamp, github_username: Optional[str] = None) -> str:
+    def generate_mdf_filename(prefix: str, source_name: str, timestamp, github_username: str | None = None) -> str:
         """Build cross-OS compatible filename for MDF downloads.
         Format: <prefix>_<Source>_<GitHubUsername>_<YYYY-MM-DD>_<SSSSS>.txt
         - prefix: e.g. 'pending' or 'rollback'.
@@ -2428,23 +2454,24 @@ class UploadService:
         - <YYYY-MM-DD>: Date of upload/session.
         - <SSSSS>: Seconds since midnight, zero-padded to 5 digits.
         """
+
         def _safe(s):
             return "".join(c if (c.isalnum() or c in ".@-") else "_" for c in s)
 
         safe_source = _safe(source_name)
-        date_str = timestamp.strftime('%Y-%m-%d')
+        date_str = timestamp.strftime("%Y-%m-%d")
         seconds_since_midnight = (timestamp.hour * 3600) + (timestamp.minute * 60) + timestamp.second
-        
+
         filename_parts = [prefix, safe_source]
         if github_username:
             safe_user = _safe(github_username)
             if safe_user:
                 filename_parts.append(safe_user)
-        
+
         filename_parts.extend([date_str, f"{seconds_since_midnight:05d}"])
         filename = "_".join(filename_parts)
-        
+
         # Collapse multiple underscores into one
-        filename = re.sub(r'_+', '_', filename)
-        
+        filename = re.sub(r"_+", "_", filename)
+
         return filename + ".txt"

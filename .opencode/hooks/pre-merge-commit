@@ -1,0 +1,37 @@
+#!/bin/bash
+# Pre-merge-commit hook: Block merge commits to main and dev branches
+# 
+# Prevents `git merge --no-edit` and `git merge <branch>` from creating
+# commits on protected branches. The pre-commit hook only fires on
+# `git commit`, not `git merge`, so merge commits bypassed branch protection.
+#
+# This hook closes that gap by checking branch protection during merge
+# operations, which is when `git merge` creates commits.
+#
+# Exit 1 to block the merge, exit 0 to allow.
+
+set -e
+
+PROTECTED_BRANCHES="main master dev"
+CURRENT_BRANCH=$(git branch --show-current)
+
+for branch in $PROTECTED_BRANCHES; do
+    if [ "$CURRENT_BRANCH" = "$branch" ]; then
+        echo ""
+        echo "ERROR: Merge commits to '$CURRENT_BRANCH' branch are blocked."
+        echo ""
+        echo "Branch protection policy:"
+        echo "  - main: Production branch (merge from dev only via PR)"
+        echo "  - dev: Integration branch (merge feature branches via PR only)"
+        echo ""
+        echo "To integrate changes:"
+        echo "  1. Create a PR: push your feature branch and create a PR"
+        echo "  2. Or use feature branch: git checkout -b feature/<name>"
+        echo ""
+        echo "AI agent: If OPENCODE=1, relay this message to the developer."
+        echo ""
+        exit 1
+    fi
+done
+
+exit 0

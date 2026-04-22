@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Use when creating a new skill or updating an existing skill that extends AI capabilities with specialized knowledge, workflows, or tool integrations. Triggers on: new skill, update skill, create skill, skill template, skill structure, SKILL.md.
+description: Use when creating a new skill, updating an existing skill, or validating skill cards. Triggers on: new skill, update skill, create skill, skill template, skill structure, SKILL.md, validate skill cards, review skills, skill card review.
 license: Apache-2.0
 compatibility: opencode
 type: technique
@@ -10,42 +10,36 @@ type: technique
 
 ## Overview
 
-**Creating skills IS Test-Driven Development applied to process documentation.**
+Creating skills IS Test-Driven Development applied to process documentation. Write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes). If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
 
-Write test cases (pressure scenarios with subagents), watch them fail (baseline behavior), write the skill (documentation), watch tests pass (agents comply), and refactor (close loopholes).
+**Source attribution:** TDD methodology, CSO principles, rationalization resistance tables, red flags lists, skill type taxonomy, bulletproofing patterns, and anti-patterns adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md).
 
-**Core principle:** If you didn't watch an agent fail without the skill, you don't know if the skill teaches the right thing.
+## Tasks
 
-**Source attribution:** TDD skill creation methodology, CSO principles, rationalization resistance tables, red flags lists, skill type taxonomy, bulletproofing patterns, and anti-patterns adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md). Pressure scenario testing methodology adapted from [obra/superpowers `writing-skills/anthropic-best-practices.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/anthropic-best-practices.md) and [persuasion-principles.md](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md).
+| Task | Purpose | Words |
+|------|---------|-------|
+| `init` | Create new skill from template using init_skill.py | ≈200 |
+| `package` | Package skill into distributable zip | ≈150 |
+| `validate` | Agent-driven semantic review of all skill cards (script sensor + intelligent corrections, conflict/ambiguity detection) | ≈100 |
 
-## Persona
+## Invocation
 
-You are a Skill Design Expert. Your focus is helping users create well-structured skills that extend AI capabilities with specialized knowledge, workflows, and tools.
+- `/skill skill-creator` - Overview and skill creation process
+- `/skill skill-creator --task validate` - Agent-driven semantic review of all skill cards (script sensor + intelligent corrections, conflict/ambiguity detection)
+- `./.opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>` - Initialize new skill
+- `./.opencode/skills/skill-creator/scripts/package_skill.py <skill-folder> [output-dir]` - Package skill
+- `./.opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Quick single-skill frontmatter check
+- `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py` - Mechanical REQ-1/2/3 validation across all skills (sensor only)
+- `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py --json` - Mechanical validation with JSON output for programmatic consumption
 
 ## Skill Type Taxonomy
 
-Every skill falls into one of four types. Type determines how the skill should be written and tested.
-
 | Type | Description | Follow Rigidity | Test Approach |
 |------|-------------|-----------------|---------------|
-| **Discipline-enforcing** | Rules that must be followed exactly (TDD, debugging, verification) | Follow exactly, don't adapt away discipline | Pressure scenarios with combined stresses |
-| **Technique** | Concrete method with steps (condition-based-waiting, root-cause-tracing) | Follow steps, adapt details | Application scenarios, edge cases |
-| **Pattern** | Way of thinking about problems (flatten-with-flags, information-hiding) | Apply principles flexibly | Recognition + application scenarios |
+| **Discipline-enforcing** | Rules followed exactly (TDD, debugging) | Follow exactly | Pressure scenarios with combined stresses |
+| **Technique** | Concrete method with steps | Follow steps, adapt details | Application scenarios, edge cases |
+| **Pattern** | Way of thinking about problems | Apply principles flexibly | Recognition + application scenarios |
 | **Reference** | Lookup tables, API docs, command guides | Find and apply | Retrieval + application scenarios |
-
-**Why type matters:** Discipline-enforcing skills need rationalization resistance tables and red flags lists. Reference skills don't. Applying discipline-level rigor to a reference skill is overengineering; applying reference-level flexibility to a discipline skill invites failure.
-
-**Frontmatter `type` field:** Add `type` to YAML frontmatter to declare the skill type:
-
-```yaml
----
-name: my-tdd-skill
-description: Use when...
-type: discipline-enforcing
----
-```
-
-Valid values: `discipline-enforcing`, `technique`, `pattern`, `reference`. Default: `technique`.
 
 ## The Iron Law
 
@@ -53,451 +47,230 @@ Valid values: `discipline-enforcing`, `technique`, `pattern`, `reference`. Defau
 NO SKILL WITHOUT A FAILING TEST FIRST
 ```
 
-This applies to NEW skills AND EDITS to existing skills.
+Applies to NEW skills AND EDITS to existing skills. No exceptions — not for "simple additions," not for "just adding a section." Write skill before testing? Delete it. Start over.
 
-Write skill before testing? Delete it. Start over.
-Edit skill without testing? Same violation.
+## TDD Cycle for Skills
 
-**No exceptions:**
-- Not for "simple additions"
-- Not for "just adding a section"
-- Not for "documentation updates"
-- Don't keep untested changes as "reference"
-- Don't "adapt" while running tests
-- Delete means delete
+1. **RED:** Write failing test (baseline). Run pressure scenario WITHOUT skill. Document exact behavior, rationalizations, violation triggers.
+2. **GREEN:** Write minimal skill addressing those rationalizations. Run same scenarios WITH skill. Agent should comply.
+3. **REFACTOR:** Close loopholes. Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
 
-## TDD Cycle for Skills (RED-GREEN-REFACTOR)
+### Enforcement Test Step (MANDATORY)
 
-### RED: Write Failing Test (Baseline)
+After creating or updating a skill, add or update the corresponding enforcement test scenario in `.opencode/tests/test-enforcement.sh`. This is not optional — it is a critical violation to modify a skill without updating its enforcement test.
 
-Run pressure scenario with subagent WITHOUT the skill. Document exact behavior:
-- What choices did they make?
-- What rationalizations did they use (verbatim)?
-- Which pressures triggered violations?
+**Test scenario pattern:**
 
-This is "watch the test fail" — you MUST see what agents naturally do before writing the skill.
+```bash
+# In test-enforcement.sh, add to SCENARIOS:
+SCENARIOS["your-scenario-name"]="prompt message that should trigger the skill/guideline"
 
-### GREEN: Write Minimal Skill
-
-Write skill that addresses those specific rationalizations. Don't add extra content for hypothetical cases.
-
-Run same scenarios WITH skill. Agent should now comply.
-
-### REFACTOR: Close Loopholes
-
-Agent found new rationalization? Add explicit counter. Re-test until bulletproof.
-
-## Rationalization Resistance
-
-Skills that enforce discipline need to resist rationalization. Agents are smart and will find loopholes when under pressure.
-
-### Close Every Loophole Explicitly
-
-**Source:** Adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md) and [`using-superpowers`](https://github.com/obra/superpowers/blob/main/skills/using-superpowers/SKILL.md).
-
-Don't just state the rule — forbid specific workarounds:
-
-```markdown
-# ❌ BAD: States rule only
-Write code before test? Delete it.
-
-# ✅ GOOD: Closes loopholes explicitly
-Write code before test? Delete it. Start over.
-
-No exceptions:
-- Don't keep it as "reference"
-- Don't "adapt" it while writing tests
-- Don't look at it
-- Delete means delete
+# Add to EXPECTED_SKILLS:
+EXPECTED_SKILLS["your-scenario-name"]="expected-skill-name"
 ```
 
-### Address "Spirit vs Letter" Arguments
+**Run via the XDG-isolated wrapper (never bare `opencode-cli run`):**
 
-Add foundational principle early:
-
-```markdown
-Violating the letter of the rules IS violating the spirit of the rules.
+```bash
+bash .opencode/tests/with-test-home opencode-cli run '<test message>'
 ```
 
-This cuts off the entire class of "I'm following the spirit" rationalizations.
+**See `.opencode/tests/README.md` for the complete template and per-change TDD pattern.**
 
-### Build Rationalization Table
-
-Capture rationalizations from baseline testing. Every excuse agents make goes in the table:
-
-```markdown
-| Excuse | Reality |
-|--------|---------|
-| "Skill is obviously clear" | Clear to you ≠ clear to other agents. Test it. |
-| "It's just a reference" | References can have gaps. Test retrieval. |
-| "Testing is overkill" | Untested skills have issues. Always. |
-| "I'll test if problems emerge" | Problems = agents can't use skill. Test BEFORE deploying. |
-| "Too tedious to test" | Less tedious than debugging bad skill in production. |
-| "I'm confident it's good" | Overconfidence guarantees issues. Test anyway. |
-| "No time to test" | Deploying untested skill wastes more time fixing it later. |
-```
-
-### Create Red Flags List
-
-Self-check for agents rationalizing:
-
-```markdown
-## Red Flags — STOP and Invoke the Skill
-
-| Thought | Reality |
-|---------|---------|
-| "This is just a simple question" | Questions are tasks. Check for skills. |
-| "I need more context first" | Skill check comes BEFORE clarifying questions. |
-| "This doesn't need a formal skill" | If a skill exists, use it. |
-| "I remember this skill" | Skills evolve. Read current version. |
-```
-
-### Persuasion Principles for Skill Design
-
-**Source:** Adapted from [obra/superpowers `persuasion-principles.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md). Research foundation: Meincke et al. (2025), N=28,000 AI conversations. Persuasion techniques more than doubled compliance rates (33% → 72%, p < .001).
-
-| Principle | Use For | Example |
-|-----------|---------|---------|
-| **Authority** | Discipline-enforcing | "YOU MUST", "Never", "Always", "No exceptions" |
-| **Commitment** | Multi-step processes | Require announcements, force explicit choices, use tracking |
-| **Scarcity** | Immediate verification | "Before proceeding", "Immediately after X" |
-| **Social Proof** | Universal practices | "Every time", "Always", failure patterns |
-| **Unity** | Collaborative workflows | "our codebase", "we're colleagues" |
-| **Reciprocity** | Rarely needed | Use sparingly — can feel manipulative |
-| **Liking** | Never for discipline | Conflicts with honest feedback culture |
-
-**Principle combinations by skill type:**
-
-| Skill Type | Use | Avoid |
-|------------|-----|-------|
-| Discipline-enforcing | Authority + Commitment + Social Proof | Liking, Reciprocity |
-| Technique | Moderate Authority + Unity | Heavy authority |
-| Pattern | Unity + Clarity | Authority |
-| Reference | Clarity only | All persuasion |
-
-## Claude Search Optimization (CSO)
-
-**Source:** Adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md).
-
-### The Description Trap (CRITICAL)
-
-**Description that summarizes workflow causes agents to follow the description instead of reading the full skill.**
-
-When a description says "dispatches subagent per task with code review between tasks," agents follow that shortcut instead of reading the full skill with its flowchart showing two-stage review.
-
-**Description must contain ONLY triggering conditions.**
-
-```yaml
-# ❌ BAD: Summarizes workflow — agents follow description, skip skill body
-description: Use when executing plans - dispatches subagent per task with code review between tasks
-
-# ❌ BAD: Too much process detail
-description: Use for TDD - write test first, watch it fail, write minimal code, refactor
-
-# ✅ GOOD: Just triggering conditions, no workflow summary
-description: Use when executing implementation plans with independent tasks in the current session
-
-# ✅ GOOD: Triggering conditions only
-description: Use when implementing any feature or bugfix, before writing implementation code
-```
-
-### CSO Checklist
+## CSO Checklist (Claude Search Optimization)
 
 1. **Description field:** "Use when..." format, triggering conditions only, NO workflow summaries
 2. **Keyword coverage:** Include error messages, symptoms, synonyms, tool names
-3. **Descriptive naming:** Active voice, verb-first (`creating-skills` not `skill-creation`)
-4. **Gerund convention:** Use gerunds for processes (`creating-skills`, `testing-skills`)
-5. **Third person:** Write descriptions in third person (injected into system prompt)
-6. **Token efficiency:** Move details to references, use cross-references, compress examples
-7. **Target word counts:** getting-started <150, frequently-loaded <200, other skills <500
-
-### What Keywords to Include
-
-- Error messages: "Hook timed out", "ENOTEMPTY", "race condition"
-- Symptoms: "flaky", "hanging", "zombie", "pollution"
-- Synonyms: "timeout/hang/freeze", "cleanup/teardown/afterEach"
-- Tool names: Actual commands, library names, file types
-
-## About Skills
-
-Skills are modular, self-contained packages that extend AI capabilities by providing specialized knowledge, workflows, and tools. Think of them as "onboarding guides" for specific domains or tasks — they transform OpenCode from a general-purpose agent into a specialized agent equipped with procedural knowledge that no model can fully possess.
-
-### What Skills Provide
-
-1. Specialized workflows - Multi-step procedures for specific domains
-2. Tool integrations - Instructions for working with specific file formats or APIs
-3. Domain expertise - Company-specific knowledge, schemas, business logic
-4. Bundled resources - Scripts, references, and assets for complex and repetitive tasks
-
-### Anatomy of a Skill
-
-Every skill consists of a required SKILL.md file and optional bundled resources:
-
-```
-skill-name/
-├── SKILL.md (required)
-│   ├── YAML frontmatter metadata (required)
-│   │   ├── name: (required)
-│   │   ├── description: (required, max 1024 chars)
-│   │   └── type: (optional, default: technique)
-│   └── Markdown instructions (required)
-└── Bundled Resources (optional)
-    ├── scripts/          - Executable code (Python/Bash/etc.)
-    ├── references/       - Documentation intended to be loaded into context as needed
-    └── assets/           - Files used in output (templates, icons, fonts, etc.)
-```
-
-#### SKILL.md (required)
-
-**Metadata Quality:** The `name` and `description` in YAML frontmatter determine when OpenCode will use the skill. Be specific about triggering conditions. Write in third person. Description MUST start with "Use when..." and contain ONLY triggering conditions — NO workflow summaries (see CSO section above).
-
-#### Bundled Resources (optional)
-
-##### Scripts (`scripts/`)
-
-Executable code (Python/Bash/etc.) for tasks that require deterministic reliability or are repeatedly rewritten.
-
-- **When to include**: When the same code is being rewritten repeatedly or deterministic reliability is needed
-- **Example**: `scripts/rotate_pdf.py` for PDF rotation tasks
-- **Benefits**: Token efficient, deterministic, may be executed without loading into context
-- **Note**: Scripts may still need to be read by OpenCode for patching or environment-specific adjustments
-
-##### References (`references/`)
-
-Documentation and reference material intended to be loaded as needed into context to inform OpenCode's process and thinking.
-
-- **When to include**: For documentation that OpenCode should reference while working
-- **Use cases**: Database schemas, API documentation, domain knowledge, company policies, detailed workflow guides
-- **Best practice**: If files are large (>10k words), include grep search patterns in SKILL.md
-- **Avoid duplication**: Information should live in either SKILL.md or references files, not both
-
-##### Assets (`assets/`)
-
-Files not intended to be loaded into context, but rather used within the output OpenCode produces.
-
-- **When to include**: When the skill needs files that will be used in the final output
-- **Use cases**: Templates, images, icons, boilerplate code, fonts, sample documents
-
-### Progressive Disclosure Design Principle
-
-Skills use a three-level loading system to manage context efficiently:
-
-1. **Metadata (name + description)** - Always in context (~100 words)
-2. **SKILL.md body** - When skill triggers (<5k words)
-3. **Bundled resources** - As needed by OpenCode (Unlimited*)
-
-*Unlimited because scripts can be executed without reading into context window.
-
-## Skill Creation Process
-
-### Step 1: Understanding the Skill with Concrete Examples
-
-Skip this step only when the skill's usage patterns are already clearly understood.
-
-To create an effective skill, clearly understand concrete examples of how the skill will be used. This understanding can come from either direct user examples or generated examples that are validated with user feedback.
-
-For example, when building an image-editor skill, relevant questions include:
-
-- "What functionality should the image-editor skill support?"
-- "Can you give some examples of how this skill would be used?"
-- "What would a user say that should trigger this skill?"
-
-To avoid overwhelming users, avoid asking too many questions in a single message.
-
-### Step 2: Planning the Reusable Skill Contents
-
-Analyze each example by:
-1. Considering how to execute on the example from scratch
-2. Identifying what scripts, references, and assets would be helpful when executing these workflows repeatedly
-
-### Step 3: Initializing the Skill
-
-When creating a new skill from scratch, always run the `init_skill.py` script.
-
-```bash
-scripts/init_skill.py <skill-name> --path <output-directory>
-```
-
-The script creates the skill directory, generates a SKILL.md template with proper frontmatter and TODO placeholders, creates example resource directories, and adds example files.
-
-### Step 4: Edit the Skill
-
-**Writing Style:** Write the entire skill using **imperative/infinitive form** (verb-first instructions), not second person. Use objective, instructional language.
-
-To complete SKILL.md, answer:
-1. What is the purpose of the skill, in a few sentences?
-2. When should the skill be used?
-3. How should OpenCode use the skill? Reference all reusable skill contents.
-
-### Step 5: TDD Testing (MANDATORY for Discipline-Enforcing Skills)
-
-**Source:** Adapted from [obra/superpowers `testing-skills-with-subagents.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/testing-skills-with-subagents.md).
-
-For discipline-enforcing skills, follow the RED-GREEN-REFACTOR cycle documented above. For other skill types, test with:
-
-| Skill Type | Test Approach |
-|------------|---------------|
-| Discipline-enforcing | Pressure scenarios (3+ combined stresses) |
-| Technique | Application scenarios, edge cases |
-| Pattern | Recognition + application scenarios |
-| Reference | Retrieval scenarios, gap testing |
-
-#### Pressure Scenarios for Discipline Skills
-
-Create scenarios combining 3+ pressure types:
-
-| Pressure | Example |
-|----------|---------|
-| **Time** | Emergency, deadline, deploy window closing |
-| **Sunk cost** | Hours of work, "waste" to delete |
-| **Authority** | Senior says skip it, manager overrides |
-| **Economic** | Job, promotion, company survival at stake |
-| **Exhaustion** | End of day, already tired, want to go home |
-| **Social** | Looking dogmatic, seeming inflexible |
-| **Pragmatic** | "Being pragmatic vs dogmatic" |
-
-**Best tests combine 3+ pressures.** Force explicit A/B/C choice, not open-ended questions. Make agent act, not hypothesize.
-
-#### Testing Checklist (TDD Adapted)
-
-**RED Phase - Write Failing Test:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios WITHOUT skill - document baseline behavior verbatim
-- [ ] Identify patterns in rationalizations/failures
-
-**GREEN Phase - Write Minimal Skill:**
-- [ ] Name uses only letters, numbers, hyphens (no parentheses/special chars)
-- [ ] YAML frontmatter with required `name` and `description` fields (max 1024 chars)
-- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
-- [ ] Description written in third person
-- [ ] Description contains ONLY triggering conditions (NO workflow summaries)
-- [ ] Keywords throughout for search (errors, symptoms, tools)
-- [ ] Clear overview with core principle
-- [ ] Address specific baseline failures identified in RED phase
-- [ ] One excellent example (not multi-language)
-- [ ] Run scenarios WITH skill - verify agents now comply
-
-**REFACTOR Phase - Close Loopholes:**
-- [ ] Identify NEW rationalizations from testing
-- [ ] Add explicit counters (if discipline skill)
-- [ ] Build rationalization table from all test iterations
-- [ ] Create red flags list
-- [ ] Re-test until bulletproof
-
-**Quality Checks:**
-- [ ] Small flowchart only if decision non-obvious
-- [ ] Quick reference table
-- [ ] Common mistakes section
-- [ ] No narrative storytelling
-- [ ] Supporting files only for tools or heavy reference
-
-### Step 6: Packaging a Skill
-
-```bash
-scripts/package_skill.py <path/to/skill-folder>
-```
-
-The packaging script validates then creates a distributable zip.
-
-### Step 7: Iterate
-
-After testing the skill, users may request improvements.
-
-### Step 8: Register Fragments (If Applicable)
-
-If the skill contains duplicate content that appears in multiple skills, register fragments using the fragment-manager skill.
-
-```yaml
-# In registry.yaml
-fragments:
-  - id: branch-first-protocol
-    master: .opencode/.guidelines/branch-first-protocol.md
-    destinations:
-      - .opencode/skills/git-workflow/tasks/pre-work.md
-```
+3. **Descriptive naming:** Active voice, verb-first
+4. **Word efficiency:** Move details to references, use cross-references
+5. **Target word counts:** getting-started <150, frequently-loaded <200, other skills <500
 
 ## Anti-Patterns
 
-**Source:** Adapted from [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md).
-
 | Anti-Pattern | Why Bad | Better |
 |-------------|---------|--------|
-| Narrative example ("In session 2025-10-03, we found...") | Too specific, not reusable | Generalized pattern |
-| Multi-language dilution (example-js, example-py, example-go) | Mediocre quality, maintenance burden | One excellent example |
-| Code in flowcharts | Can't copy-paste, hard to read | Markdown code blocks |
-| Generic labels (helper1, helper2, step3) | Labels lack semantic meaning | Descriptive names |
-| Workflow in description | Agents follow description, skip skill body | Triggering conditions only |
+| Narrative example | Too specific, not reusable | Generalized pattern |
+| Multi-language dilution | Mediocre quality, maintenance burden | One excellent example |
+| Code in flowcharts | Can't copy-paste | Markdown code blocks |
+| Generic labels | Lack semantic meaning | Descriptive names |
+| Workflow in description | Agents follow description, skip body | Triggering conditions only |
 
-## Skill Creation Checklist (TDD Adapted)
+## Measurement Standard
 
-**IMPORTANT:** Use todo tracking for EACH checklist item.
+Word count is the universal unit for skill size measurement. Use `wc -w` as the canonical measurement method.
 
-**RED Phase - Write Failing Test:**
-- [ ] Create pressure scenarios (3+ combined pressures for discipline skills)
-- [ ] Run scenarios WITHOUT skill - document baseline behavior verbatim
-- [ ] Identify patterns in rationalizations/failures
+- **Why words, not tokens:** Token counts vary by tokenizer, model, and encoding. Word counts are stable, reproducible, and model-agnostic.
+- **Why words, not lines:** Line length varies by formatting conventions. A 40-line function and a 100-word function are not comparable — words measure semantic density.
+- **Measurement command:** `wc -w <file>` — available on every platform, no dependencies.
+- **Skill metadata:** Report size in words (e.g., `| Task | Purpose | Words |` table in SKILL.md).
+- **Size targets:** getting-started <150 words, frequently-loaded <200 words, other skills <500 words.
 
-**GREEN Phase - Write Minimal Skill:**
-- [ ] Name uses only letters, numbers, hyphens
-- [ ] YAML frontmatter with `name` and `description` (max 1024 chars)
-- [ ] `type` field in frontmatter (discipline-enforcing, technique, pattern, reference)
-- [ ] Description starts with "Use when..." and includes specific triggers/symptoms
-- [ ] Description written in third person
-- [ ] Description contains ONLY triggering conditions (NO workflow summaries)
-- [ ] Keywords throughout for search (errors, symptoms, tools)
-- [ ] Clear overview with core principle
-- [ ] Address specific baseline failures identified in RED phase
-- [ ] One excellent example (not multi-language)
-- [ ] Run scenarios WITH skill - verify agents now comply
+## Context Window Hygiene
 
-**REFACTOR Phase - Close Loopholes:**
-- [ ] Identify NEW rationalizations from testing
-- [ ] Add explicit counters (if discipline skill)
-- [ ] Build rationalization table (Excuse | Reality format)
-- [ ] Create red flags list for self-checking
-- [ ] Re-test until bulletproof
+Strongly encourage sub-agents and sub-tasks for skill operations that risk consuming significant context.
 
-**Deployment:**
-- [ ] Commit skill to git and push
-- [ ] Consider contributing back via PR (if broadly useful)
+- **Sub-task isolation:** Skills that perform analysis, audits, or multi-step workflows should dispatch work to sub-tasks. The main session receives a minimal result, not intermediate reasoning.
+- **Why:** LLM context windows are finite. A skill that consumes 2000 words of intermediate reasoning in the main session leaves less room for subsequent work. Sub-tasks isolate that consumption.
+- **Pattern:** Skill invocation spawns a sub-task → sub-task processes and produces compact result → main session receives result only.
+- **When to use sub-tasks:** Any skill task producing output, any multi-file analysis, any workflow with 3+ sequential operations. Sub-agent-first dispatch is mandatory — all task dispatches go through sub-agents, no inline exceptions.
 
-## Tasks
+## Worktree Awareness Requirement
 
-| Task | Purpose | Words |
-|------|---------|-------|
-| `init_skill.py` | Create new skill from template | ~200 |
-| `package_skill.py` | Package skill into distributable zip | ~150 |
-| `quick_validate.py` | Validate skill structure and format | ~100 |
+**All new and updated skills MUST include worktree awareness.** This is a mandatory quality gate for the `validate` task.
 
-## Invocation
+### Required in every skill that:
 
-- `/skill skill-creator` - Overview and skill creation process
-- `uv run python .opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>` - Initialize new skill
-- `uv run python .opencode/skills/skill-creator/scripts/package_skill.py <skill-folder> [output-dir]` - Package skill
-- `uv run python .opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Validate skill
+1. **Performs git operations** — Must include a "Worktree Mode" section explaining how to handle `worktree.path`
+2. **Dispatches sub-agents** — Must pass `worktree.path` in the dispatch context/prompt
+3. **Reads or writes files** — Must document path prefixing rules when `worktree.path` is set
+
+### Worktree Mode Template
+
+Every skill SKILL.md should include (adapt as appropriate for the skill's operations):
+
+```markdown
+## Worktree Mode
+
+When `worktree.path` is set:
+- ALL `bash` tool calls MUST use `workdir` parameter set to `worktree.path`
+- ALL `read`/`write`/`edit`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `worktree.path/`
+- `git` commands run from the worktree directory, NOT the main repo
+
+If `worktree.path` is NOT set, operate normally from the project root.
+```
+
+### Sub-Agent Dispatch Template
+
+When a skill dispatches sub-agents, the prompt MUST include:
+
+```
+worktree.path: <value or 'not set'>
+If worktree.path is set, all file operations and git commands MUST use it as the base directory.
+```
+
+### Validation Gate
+
+The `validate` task provides comprehensive checks via `validate_skill_cards.py` for multi-skill reviews and conflict/ambiguity detection, while `quick_validate.py` is for single-skill quick structural checks. Validation SHOULD check for:
+- Skills with `bash` or `git` operations that lack a "Worktree Mode" section
+- Skills that dispatch sub-agents but don't pass `worktree.path` in context
+- New or updated SKILL.md and task/*.md files containing 0-based counting patterns (`Step 0`, `Phase 0`, `Step 0.`, `Phase 0.`) outside of code blocks, code-fenced examples, or inline code references — flag as validation error requiring correction before skill can be approved
+
+**Rationale:** Sub-agents that don't receive worktree context silently modify the main repo instead of the feature branch. This is a context window safety issue (see #741).
+
+## Placeholder Enforcement Requirement (MANDATORY)
+
+**All new and updated skills MUST NOT contain hardcoded identity values.** This is a mandatory quality gate for the `validate` task.
+
+### Required in every skill that:
+
+1. **References AI agents** — MUST use `<AgentName>` and `<ModelId>` placeholders in byline contexts, never specific agent names or model IDs
+2. **References developers** — MUST use `<dev.name>` and `<dev.email>` placeholders in angle-bracket form, matching `dev.name` and `dev.email` from session init
+3. **References organizations/repos** — MUST use `<github.owner>` and `<github.repo>` (or `<gitbucket.owner>` and `<gitbucket.repo>` for GitBucket contexts) placeholders in angle-bracket form, matching `github.owner` and `github.repo` from session init
+4. **Contains bylines or attribution** — MUST use `🤖 <AgentName> (<ModelId>) <status-icon> <status>` format, never specific agent/model combinations
+
+### Validation Gate
+
+The `validate` task uses `validate_skill_cards.py` for comprehensive cross-skill placeholder checks (conflict/ambiguity detection across all skill cards) and `quick_validate.py` for single-skill quick structural checks. Validation SHOULD check for and flag:
+- Specific agent names in SKILL.md or task files — must use `<AgentName>` placeholder token
+- Specific model IDs in SKILL.md or task files — must use `<ModelId>` placeholder token
+- Specific developer names or emails in SKILL.md or task files
+- Specific org/repo names in SKILL.md or task files (except in examples using the `<github.owner>/<github.repo>` pattern)
+- Specific platform URLs in SKILL.md or task files (except in examples using session init variable references)
+
+### Placeholder Reference
+
+| Value Type | Placeholder | Source |
+|-----------|-------------|--------|
+| AI agent name | `<AgentName>` | System prompt identity detection |
+| AI model ID | `<ModelId>` | System prompt identity detection |
+| Developer name | `<dev.name>` | Session init (`dev.name`) |
+| Developer email | `<dev.email>` | Session init (`dev.email`) |
+| Organization | `<github.owner>` or `<gitbucket.owner>` | Session init (dotted names) |
+| Repository | `<github.repo>` or `<gitbucket.repo>` | Session init (dotted names) |
+| Platform | `github.platform` or `gitbucket.platform` | Session init |
+| GitHub URL | `github.html_url` | Session init |
+| GitBucket URL | `gitbucket.html_url` | Session init |
+
+## Two Independent Pipelines
+
+Session-init and env-loader are **two independent pipelines with zero cross-coupling**:
+
+- **Session-init** (`.opencode/tools/session-init`): stdout → LLM system prompt. Uses dotted `scope.param` names. Agents read these values directly as MCP tool parameters.
+- **Env-loader** (`.opencode/plugins/env-loader.ts`): `output.env[]` → bash environment. Uses UPPER_CASE names. Shell commands and Python scripts read these from `os.environ`.
+
+Changing session-init output names does NOT require changes to env-loader. Adding a new LLM-facing variable goes in session-init only. Adding a new bash-facing variable goes in env-loader only. Add to the correct pipeline based on which consumers need the variable.
+
+## Session Init Variable Alignment Requirement
+
+Skills and guidelines reference session-init variables by exact dotted name (e.g., `github.owner`, `github.repo`, `gitbucket.html_url`). These names MUST match the `key: value` output of `.opencode/tools/session-init` exactly 1:1.
+
+**When creating or updating a skill that references session-init variables:**
+
+1. **Use canonical dotted variable names only** — never invent new names or use prose labels (e.g., use `github.owner`, not `Owner:`)
+2. **Verify new variable references exist in session-init output** — if a skill needs a session-init variable that doesn't appear in `.opencode/tools/session-init`, it MUST be added to session-init only (NOT env-loader, unless bash consumers also need it)
+3. **The canonical session-init variable list (dotted names, LLM context):** `github.owner`, `github.repo`, `github.platform`, `github.html_url`, `gitbucket.owner`, `gitbucket.repo`, `gitbucket.html_url`, `gitbucket.ssh_url`, `gitbucket.has_credentials`, `srclight.project`, `dev.name`, `dev.email`, `branch`, `worktree.path`, `worktree.fatal`, `AgentName`, `ModelId`
+4. **The canonical env-loader variable list (UPPER_CASE, bash environment — separate pipeline):** `GIT_OWNER`, `GIT_REPO`, `GIT_PLATFORM`, `GITHUB_HTML_URL`, `GITBUCKET_HTML_URL`, `GITBUCKET_SSH_URL`, `GITBUCKET_HAS_CREDENTIALS`, `DEV_NAME`, `DEV_EMAIL`, `BRANCH_NAME`, `WORKTREE_PATH`, `WORKTREE_FATAL`
+
+**Why:** Agents extract values from session-init output by matching variable names. A name mismatch (e.g., guideline says `GIT_OWNER` but session-init outputs `github.owner`) causes agents to fall back to inferring values from git remotes, which is a critical rule violation.
+
+## Correctness-First Economics
+
+GPU/CPU billing is flat-rate per inference, not per word. There is no economic incentive to be concise at the expense of correctness.
+
+- **Correctness > conciseness:** A correct 200-word explanation is better than an ambiguous 100-word one. Never sacrifice clarity or completeness to reduce word count.
+- **No per-token cost pressure:** LLM inference is billed per request, not per token generated. Writing more words does not cost more. Writing wrong words costs human time to fix — that IS expensive.
+- **Redundancy for enforcement:** Repetition of critical rules across skill sections is not waste — it is enforcement insurance. An LLM that misses a rule in one section may catch it in another.
+- **Anti-pattern:** Cutting a rule or explanation to "save tokens" when the rule exists because agents violated it without the extra context.
 
 ## Operating Protocol
 
-1. **Understand skill's purpose:** Help users clarify concrete examples of how the skill will be used
-2. **Determine skill type:** Classify as discipline-enforcing, technique, pattern, or reference
-3. **Plan reusable contents:** Identify scripts, references, and assets
-4. **Initialize skill:** Run `init_skill.py` to create skill directory structure
-5. **RED: Write failing test (baseline):** Run pressure scenarios WITHOUT skill, document failures
-6. **GREEN: Write minimal skill:** Address baseline failures, verify compliance WITH skill
-7. **REFACTOR: Close loopholes:** Add rationalization tables and red flags, re-test
-8. **Validate skill:** Run `quick_validate.py` to ensure structure is correct
-9. **Package skill:** Run `package_skill.py` to create distributable zip
+1. Determine skill type (discipline-enforcing, technique, pattern, reference)
+2. Run pressure scenarios WITHOUT skill (RED phase)
+3. Write minimal skill addressing failures (GREEN phase)
+4. Close loopholes, add rationalization tables and red flags (REFACTOR phase)
+5. Validate skill structure with `quick_validate.py`
+6. Package with `package_skill.py`
+
+## Prose-Structure Check
+
+When creating or updating skills, verify the output is prose-first. The SKILL.md overview, operating protocol, enforcement rules, and cross-reference descriptions should read as flowing narrative — not as rigid numbered procedures where prose is expected, not as tabular mappings that should be prose descriptions, and not as fixed checklists that should be flowing narrative. Task files with TDD steps (numbered implementation actions) are naturally structured and exempt from this check. Skill type taxonomy tables, task tables, and word count tables are also exempt as they are structured reference data.
+
+Anti-prose drift patterns to watch for: rigid numbered procedures in the operating protocol where a prose description of the workflow would communicate better; tabular mappings in the overview or persona sections that replace narrative explanation; fixed checklists in enforcement rules that should be prose statements of principle. When these patterns are found, rewrite the affected sections as flowing prose.
+
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `coherence-auditor` in Cross-References section | File exists at `.opencode/skills/coherence-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `init` | File exists at `.opencode/skills/skill-creator/tasks/init.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `package` | File exists at `.opencode/skills/skill-creator/tasks/package.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `validate` | File exists at `.opencode/skills/skill-creator/tasks/validate.md` | MISSING-TRACEABILITY if missing |
+| `coherence-auditor` maintenance behavior | Matches actual SKILL.md: drift detection and verification for skills | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
 ## Cross-References
 
-| Guideline | Section |
-|-----------|---------|
-| `080-code-standards.md` | Code quality standards |
-| `000-critical-rules.md` | Critical violation enforcement |
-
 | External Source | Content Adapted |
 |----------------|-----------------|
-| [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md) | TDD methodology, CSO principles, rationalization resistance, skill types, anti-patterns |
-| [obra/superpowers `testing-skills-with-subagents.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/testing-skills-with-subagents.md) | Pressure scenario testing methodology |
-| [obra/superpowers `persuasion-principles.md`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md) | Persuasion principles for skill design |
-| [obra/superpowers `using-superpowers`](https://github.com/obra/superpowers/blob/main/skills/using-superpowers/SKILL.md) | Red flags table pattern |
+| [obra/superpowers `writing-skills`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md) | TDD methodology, CSO, rationalization resistance, anti-patterns |
+| [obra/superpowers `testing-skills-with-subagents`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/testing-skills-with-subagents.md) | Pressure scenario testing methodology |
+| [obra/superpowers `persuasion-principles`](https://github.com/obra/superpowers/blob/main/skills/writing-skills/persuasion-principles.md) | Persuasion principles for skill design |
+
+Related skills: `coherence-auditor` (drift detection and verification for new/updated skills)

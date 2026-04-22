@@ -50,7 +50,7 @@ Applies to `pubmed_data_3` and all new persistence code.
 - Migration versions: date-based `yyyymmddhhmmss` format in UTC. Simple increments prohibited.
 - **Migration location**: ALL schema migrations are defined inline in `src/commons/persistence/pg/schema.py` as
   `_Migration` entries in the `_MIGRATIONS` list. There is no external migrations directory. Do not search elsewhere.
-  To add a migration, generate a version timestamp with `uv run python .opencode/tools/schema-version` — **immediately before
+  To add a migration, generate a version timestamp with `./.opencode/tools/schema-version` — **immediately before
   adding a migration, not earlier. NEVER run `schema-version` speculatively (analysis, exploration, curiosity, or as
   a side-effect of any other task that does not need a timestamp).** Then append a
   `_Migration(version=..., description=..., statements=[...])` entry to
@@ -65,7 +65,7 @@ Applies to `pubmed_data_3` and all new persistence code.
      before running migrations. Fix the runner logic, not the migration.
   2. For "object does not exist" errors: Either the migration was never needed (remove it) or the migration runner
      needs proper precondition checking.
-  Using `IF NOT EXISTS` / `IF EXISTS` hides bugs and makes migrations unreproducible.
+     Using `IF NOT EXISTS` / `IF EXISTS` hides bugs and makes migrations unreproducible.
 
 ## Schema Migration Runner (CRITICAL)
 
@@ -78,16 +78,19 @@ def initialize_schema(engine: Engine) -> None:
 ```
 
 **Fresh & existing databases follow the same path**:
+
 1. Check `schema_version` table for applied migrations
 2. Run any pending migrations in `_MIGRATIONS` list
 3. Record each applied migration in `schema_version`
 
 **Model-to-Migration Mapping**:
+
 - Every table defined in ORM models MUST have a corresponding CREATE TABLE migration
 - The `schema_version` table creation is the first migration
 - Models are for ORM mapping; migrations are the source of truth for DDL
 
 **Adding a new model**:
+
 1. Add model class to `models.py`
 2. Create migration with CREATE TABLE statement
 3. Update `_CURRENT_SCHEMA_VERSION` to new version

@@ -11,6 +11,7 @@ compatibility: opencode
 ## Overview
 
 Fragment Manager handles duplicate text blocks (fragments) that appear in multiple skills. It provides:
+
 - CRUD operations on fragment master files in `.opencode/.guidelines/`
 - Synchronization from masters to destination copies
 - Drift detection between masters and copies
@@ -19,11 +20,13 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 ## Architecture
 
 **Fragment Registry Schema:**
+
 - `.opencode/.guidelines/registry.yaml` - Tracks fragment masters and destinations
 - `.opencode/.guidelines/*.md` - Fragment master files (golden copies)
 - `.opencode/skills/*/SKILL.md` - Destination copies (embedded in skills)
 
 **Key Principles:**
+
 - Skills remain self-contained (copies, not references)
 - Masters are minimal (content blocks only, no context)
 - Syncs require verification (hash matching)
@@ -32,7 +35,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 ## Tasks
 
 | Task | Purpose | When to Use |
-|------|---------|-------------|
+| -- | -- | -- |
 | `create-fragment` | Create new fragment master from existing content | When duplicate content is found in skills |
 | `read-fragment` | Read fragment master content | When inspecting fragment details |
 | `update-fragment` | Update master content | When master needs changes |
@@ -41,6 +44,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 | `check-drift` | Detect drift between masters and copies | Periodic validation, before syncs |
 | `status-report` | Show sync status for all fragments | Overview of fragment health |
 | `resolve-conflict` | Handle merge conflicts | When drift is detected |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 
@@ -48,6 +52,7 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 - `/skill fragment-manager --task sync-fragment` - Sync master to destinations
 - `/skill fragment-manager --task check-drift` - Detect drift
 - `/skill fragment-manager --task status-report` - Overview
+- `/skill fragment-manager --task completion` - Invoke when workflow halts at any point
 - `/skill fragment-manager` - Skill overview only
 
 ## Operating Protocol
@@ -61,12 +66,14 @@ Fragment Manager handles duplicate text blocks (fragments) that appear in multip
 ## Conflict Resolution Protocol
 
 **When to STOP and ASK:**
+
 1. Destination content differs from master AND master unchanged
 2. File structure changed (lines shifted, sections reorganized)
 3. Registry has conflicts (ambiguous ID, cyclic dependency)
 4. Sync fails for any destination
 
 **Confirmation Format:**
+
 ```
 ⚠️ CONFLICT DETECTED
 
@@ -91,7 +98,7 @@ Your choice:
 
 ```yaml
 version: 2
-schema_version: "2.0.0"
+schema_version: 2.0.0
 last_updated: YYYY-MM-DD
 
 fragments:
@@ -103,8 +110,8 @@ fragments:
       lines: NN
     content:
       type: text-block
-      estimated_tokens: NNN
-      description: "Fragment description"
+      estimated_words: NNN
+      description: Fragment description
     destinations:
       - path: .opencode/skills/skill-name/SKILL.md
         hash: sha256:abc123...
@@ -114,7 +121,7 @@ fragments:
         verified_date: YYYY-MM-DDTHH:MM:SSZ
     sync_status: synchronized
     last_sync: YYYY-MM-DDTHH:MM:SSZ
-    notes: "Fragment notes"
+    notes: Fragment notes
 ```
 
 ## Cross-References
@@ -125,3 +132,5 @@ fragments:
 ## Edge Cases
 
 See individual task files for edge case handling protocols.
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

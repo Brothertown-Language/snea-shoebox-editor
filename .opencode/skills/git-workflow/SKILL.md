@@ -1,6 +1,6 @@
 ---
 name: git-workflow
-description: Use when creating a branch, committing changes, pushing work, or creating a PR. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash.
+description: Use when creating a branch, committing changes, pushing work, or creating a PR. Also use when git rebase/merge produces conflicts — invoke conflict-resolution skill for classification. Also use when user says "check pr" or "check prs" to trigger PR state verification and cleanup if merged. Triggers on: branch, commit, push, PR, pull request, pre-work, review-prep, feature branch, dev branch, squash, conflict, merge conflict, rebase conflict, check pr, check prs, check pull request, check pull requests.
 type: discipline-enforcing
 license: MIT
 compatibility: opencode
@@ -10,704 +10,450 @@ compatibility: opencode
 
 ## Overview
 
-Git Workflow Enforcer ensuring all git operations follow the repository's three-branch workflow: feature → dev → main. AI commits are blocked on `main`/`master`/`dev` branches by local git hooks. All feature branches merge to `dev` (staging/integration), and releases merge from `dev` to `main` via human-triggered workflow. Squashing happens ONLY at PR creation time, not during implementation. Invoked automatically before implementation begins and when PR creation is requested.
-
-## Three-Branch Architecture
-
-**Branch Model:**
-- **Feature branches** (`feature/*` or `spec/*`): Short-lived, one per issue/spec
-- **Dev branch** (`dev`): Evergreen staging/integration branch (never deleted)
-- **Main branch** (`main` or `master`): Production-ready code
-
-**Merge Paths:**
-1. **Feature → Dev**: PR required (squash to single commit, no CI tests required)
-2. **Dev → Main**: Human-triggered release (no approval required, CI tests required)
-
-**AI Restrictions:**
-- AI cannot commit directly to `main`, `master`, or `dev`
-- AI must branch from `dev` for new features (not `main`)
-- AI must sync with `dev` before creating feature branch
+Git Workflow Enforcer ensuring all git operations follow the three-branch model: feature → dev → main. AI commits are blocked on protected branches. All feature branches merge to `dev` via PR. Squashing is ONLY at PR creation time, not during implementation.
 
 ## Persona
 
-You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations follow the repository's three-branch workflow: feature → dev → main. AI commits are blocked on protected branches. Squashing is ONLY for PR creation, not during feature branch development.
-
-## Role in Orchestration Architecture
-
-**⚠️ CRITICAL: Git-workflow is called by implementation-workflow orchestration layer.**
-
-Git-workflow tasks handle **pure git operations only**. Implementation logic is handled by the implementation-workflow orchestrator and implementation subagent.
-
-**Architecture:**
-```
-implementation-workflow (orchestration layer)
-    ├─ calls git-workflow --task pre-work (git ops only)
-    ├─ invokes implementation subagent (does actual work)
-    └─ calls git-workflow --task review-prep (git ops only)
-```
-
-**What git-workflow DOES:**
-- Git operations (stash, branch, commit, push)
-- Git state checks (branch verification, working tree status)
-- Git cleanup (delete merged branches)
-
-**What git-workflow DOES NOT do:**
-- Implementation decisions
-- File editing
-- Spec reading
-- Authorization checks (handled by approval-gate + orchestration layer)
-
-## Authorization Gate (Moved to Implementation-Workflow)
-
-**Previous behavior (REMOVED):** Git-workflow pre-work checked authorization.
-
-**New behavior:** Authorization is verified by `approval-gate` BEFORE implementation-workflow is invoked. Git-workflow tasks receive context from orchestration layer.
-
-### Mandatory Checks (Now in Orchestration Layer)
-
-| Task | Authorization Check Location |
-|------|------------------------------|
-| `pre-work` | `implementation-workflow` receives auth from `approval-gate` |
-| `pr-creation` | `implementation-workflow` checks for explicit "create a PR" |
-| `review-prep` | No authorization needed (implementation complete) |
-| `cleanup` | No authorization needed (PR merged) |
-
-### Authorization Verification Protocol
-
-**For `pre-work` task:**
-1. Get issue context from invocation
-2. Query GitHub Issue for:
-   - Labels: Check for `needs-approval` label
-   - Comments: Check for explicit "approved", "go", or `"#N approved"` in comments
-3. If `needs-approval` label present AND NO explicit authorization:
-   - HALT with message: "Authorization required. Issue has needs-approval label and no explicit 'approved' or 'go' comment."
-4. If explicit authorization found (even with label):
-   - PROCEED (explicit auth overrides label)
-5. If NO label AND NO explicit authorization:
-   - HALT with message: "Authorization required. Please say 'approved' or 'go' to begin implementation."
-
-**For `pr-creation` task:**
-1. Check if user said "create a PR", "make a PR", or similar
-2. If NOT explicit PR instruction:
-   - HALT with message: "PR creation requires explicit instruction. Please say 'create a PR' to proceed."
-3. If explicit PR instruction:
-   - PROCEED with squash and PR creation
-
-### What Counts as Authorization
-
-| Authorization Type | Valid? | Notes |
-|-------------------|--------|-------|
-| `approved` | ✅ YES | Explicit authorization to proceed |
-| `go` | ✅ YES | Explicit authorization to proceed |
-| `#83 approved` | ✅ YES | Explicit authorization for issue #83 |
-| `approved: 1.2` | ✅ YES | Phase-level authorization |
-| `continue` | ❌ NO | Conditional - not explicit authorization |
-| `if you have next steps` | ❌ NO | Conditional - not explicit authorization |
-| `you can proceed` | ⚠️ AMBIGUOUS | Treat as authorization only if clear intent |
-| No comment, no label | ❌ NO | No authorization detected |
-
-### What Does NOT Count as Authorization
-
-| Non-Authorization | Reason |
-|-------------------|--------|
-| `continue` | Ambiguous - could mean "continue analysis" |
-| `proceed with next steps` | Ambiguous - could mean analysis |
-| `if you have next steps, or ask for clarification` | CONDITIONAL - requires agent to have next steps OR ask |
-| `should I do X?` | Question - seeking permission |
-| `would you like me to X?` | Question - seeking permission |
-| Analysis results presented | Analysis is NOT authorization |
-| Spec created | Spec creation is NOT authorization |
-
-### Conditional Phrases Are NOT Authorization
-
-**⚠️ CRITICAL: Conditionals like "if" or "when" are NOT authorization.**
-
-Example violation: User said "Continue if you have next steps, or ask for clarification."
-- This is a CONDITIONAL with two branches
-- Agent interpreted it as authorization and committed/pushed
-- Correct interpretation: HALT and ask for clarification OR present next steps
-
-**Correct handling of conditionals:**
-- "If you have next steps, proceed" → Must present next steps first
-- "When ready, continue" → Must report ready, wait for "continue"
-- "After analysis, proceed" → Must report analysis, wait for "proceed"
+You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations follow the three-branch workflow: feature → dev → main. AI commits are blocked on protected branches. Squashing is ONLY for PR creation, not during feature branch development.
 
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
-| `pre-work` | Verify branch state, stash changes, create feature branch | ~640 |
-| `implementation` | Handle WIP commits during implementation | ~400 |
-| `review-prep` | Push branch, generate compare URL for review | ~560 |
-| `pr-creation` | Squash, push, create PR via GitHub MCP | ~640 |
-| `cleanup` | Delete merged branches, clean stale refs | ~800 |
+| -- | -- | -- |
+| `pre-work` | Verify authorization, create worktree | ≈420 |
+| `implementation` | Handle WIP commits during implementation | ≈400 |
+| `review-prep` | Push branch, generate compare URL for review | ≈560 |
+| `pr-creation` | Squash, push, create PR via GitHub MCP | ≈640 |
+| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ≈550 |
+| `cleanup` | Delete merged branches, clean stale refs | ≈800 |
+| `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
+| `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ≈500 |
+| `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ≈50 |
+| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ≈600 |
+| `pair-pre-work` | Detect pair mode, WIP-commit switch instead of worktree | ≈400 |
+| `pair-commit` | Commit with [pair-mode] co-author trailers, issue association | ≈350 |
+| `pair-pr-creation` | Squash + PR with [pair-mode] trailers targeting dev | ≈300 |
+| `pair-cleanup` | Branch deletion after merge, stash cleanup | ≈350 |
+| `pair-mode-resume` | Detect and report on pair-* branch at session start | ≈300 |
 
 ## Invocation
 
-- `/skill git-workflow --task pre-work` - **BEFORE implementation starts** (automatic via approval-gate)
+- `/skill git-workflow --task pre-work` - BEFORE implementation starts (MUST invoke after approval-gate passes)
 - `/skill git-workflow --task implementation` - During implementation work
-- `/skill git-workflow --task review-prep` - **AFTER implementation done** (automatic, no decision point)
+- `/skill git-workflow --task review-prep` - AFTER implementation done (MUST invoke, no decision point)
 - `/skill git-workflow --task pr-creation` - When user says "create a PR"
+- `/skill git-workflow --task rebase-pending` - After PR merge, before cleanup
 - `/skill git-workflow --task cleanup` - After PR merge confirmed
+- `/skill git-workflow --task release-promotion` - When promoting dev → main (submodule repos: lock SHAs, promote each submodule; non-submodule repos: merge dev → main, tag, push, create release), or explicit "promote/push submodule" instruction
+- `/skill git-workflow --task check-pr` - When user says "check pr" / "check prs" / "check pull request(s)"
+- `/skill git-workflow --task provenance` - Create provenance tracking in submodule repos
+- `/skill git-workflow --task completion` - Invoke when workflow halts at any point
+- `/skill git-workflow --task pair-pre-work` - Detect pair mode from branch prefix, WIP-commit switch
+- `/skill git-workflow --task pair-commit` - Commit with [pair-mode] co-author trailers
+- `/skill git-workflow --task pair-pr-creation` - Squash + create PR with [pair-mode] trailers
+- `/skill git-workflow --task pair-cleanup` - Cleanup after pair-mode PR merge
+- `/skill git-workflow --task pair-mode-resume` - Resume pair mode session on existing pair-* branch
 - `/skill git-workflow` - Overview only
 
-## Automatic Invocation (CRITICAL)
-
-**⚠️ CRITICAL: This skill is ALWAYS invoked automatically. There is NO decision point.**
-
-### When This Skill Is Invoked
-
-| Trigger | Task | Timing |
-|---------|------|--------|
-| User says `approved` or `go` | `pre-work` | BEFORE any file modification |
-| Implementation completes | `review-prep` | AFTER all work done, BEFORE HALT |
-| User says `create a PR` | `pr-creation` | Only after explicit instruction |
-| User confirms `PR merged` | `cleanup` | Only after merge confirmed |
-
-### Automatic Sequence (NO ASKING)
-
-```
-Authorization received
-    ↓
-pre-work invoked AUTOMATICALLY (Phase 1)
-    ↓
-Implementation work done
-    ↓
-review-prep invoked AUTOMATICALLY (Phase 3) ← **MANDATORY, NO DECISION POINT**
-    ↓
-Push branch → Generate URL → HALT
-    ↓
-(Developer reviews)
-    ↓
-Developer says "create a PR" ← EXPLICIT instruction required
-    ↓
-pr-creation: Squash → Create PR → HALT
-```
-
-### 🚫 CRITICAL VIOLATION: Skipping Automatic Invocation
-
-**Skipping `review-prep` after implementation is a CRITICAL GUIDELINE VIOLATION.**
-
-| Wrong Behavior | Correct Behavior |
-|----------------|------------------|
-| Implementation done → HALT | Implementation done → `review-prep` → HALT |
-| Skip push and URL generation | ALWAYS push, ALWAYS generate URL, ALWAYS HALT |
-| "Done implementing" ends work | `review-prep` is part of implementation workflow |
-
-### What "Automatic" Means
-
-- **No asking**: Do not say "Run review-prep?" or "Push branch?"
-- **No prompting**: Do not say "Ready to push?" or "Generate URL?"
-- **No opt-out**: Developer cannot skip this phase
-- **Mandatory sequence**: Implementation → commit → push → review-prep → HALT
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps (status report, URL, verification gates) are never skipped. It is idempotent and safe to invoke multiple times.
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is referenced when:
-   - User says `approved`, `go`, or similar authorization
-   - User says `create a PR`, `make a PR`, or similar PR request
-   - Implementation completes (review-prep task invoked automatically)
-   - DO NOT prompt for invocation - the skill is triggered automatically
+1. **Mandatory invocation (no decision point):** pre-work is invoked after approval-gate passes; review-prep is invoked after implementation completes — the agent MUST invoke both at the appropriate time, never skip them, and never prompt for invocation.
+2. **Phase sequence:** Pre-work (Phase 1) → Implementation (user-driven) → review-prep (Phase 3, MANDATORY, MUST invoke after implementation) → pr-creation (explicit instruction only) → cleanup (after merge).
+3. **review-prep is mandatory:** Skipping it after implementation is a CRITICAL GUIDELINE VIOLATION. The agent MUST invoke `/skill git-workflow --task review-prep` after implementation completes.
+4. **PR requires explicit instruction OR pipeline scope:** "approved"/"go" authorizes implementation ONLY — not PR creation. **Exception:** When `authorization_scope >= for_pr` or `pr_only`, the user's pipeline instruction authorizes PR creation as part of the scope. When `pr_strategy == none` or `halt_at < pr_created`, do NOT create PR regardless of explicit instruction.
+5. **Chat output order:** Executive summary FIRST, URL LAST. Never put URL before summary.
+6. **Compare URLs use `dev` as base:** Feature branches target `dev`, not `main`.
+7. **Squash to single commit before any PR:** No exceptions.
+8. **Never merge PRs:** Human-only operation.
+9. **Post-merge cleanup is MANDATORY:** Skipping `git-workflow --task cleanup` after confirming PR merge is a CRITICAL GUIDELINE VIOLATION. The cleanup task is the sole mechanism for branch deletion, issue closure, and dev sync. Every merged PR MUST be followed by `cleanup`.
 
-2. **Phase sequence:**
-   - Phase 1: Pre-Work (mandatory first) → `pre-work` task
-   - Phase 2: Implementation (user-driven) → agent performs work
-   - Phase 3: Review Prep (mandatory, automatic) → `review-prep` task **NO DECISION POINT**
-   - Phase 4: PR Creation (user-initiated) → `pr-creation` task
-   - Phase 5: Branch Cleanup (after merge) → `cleanup` task
+### PR Body Keyword Discipline
 
-## Chat Output Format (CRITICAL)
+**`Fixes`/`Closes` auto-close issues on merge — bypassing verification gates.** For plans with sub-issues, use `Implements` instead. See `review-prep.md` → "PR Body Keyword Discipline" for the complete rules.
 
-**⚠️ CRITICAL: Chat output MUST have executive summary BEFORE the URL.**
+## Role in Orchestration Architecture
 
-### Correct Format
+Git-workflow handles **pure git operations only**. Implementation logic is handled by `divide-and-conquer` orchestration layer.
 
-```
-**Summary:**
+**What git-workflow DOES:** Git operations (worktree, branch, commit, push), git state checks, git cleanup.
+**What git-workflow DOES NOT do:** Implementation decisions, file editing, spec reading, authorization checks (handled by approval-gate + orchestration layer).
 
-<1-2 sentences describing the impact and stakeholder value.>
+## Edge Case: Already Implemented (No Changes)
 
-**Outcome:** <What changed for stakeholders>
-
-Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
-```
-
-(`BASE_URL` = `GITBUCKET_HTML_URL` for GitBucket, `https://github.com/` for GitHub. Never hardcode.)
-
-### 🚫 WRONG Format (CRITICAL VIOLATION)
-
-```
-Compare URL: ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/compare/dev...<branch-name>
-
-**Summary:**
-...
-```
-
-**Why:** Developer needs context BEFORE clicking URL. Summary explains WHAT changed and WHY it matters.
-
-### Format Rules
-
-| Element | Requirement |
-|---------|-------------|
-| Executive summary | MUST appear first |
-| Outcome line | MUST appear after summary |
-| URL | MUST appear LAST |
-| URL in chat ONLY | NEVER post URL to GitHub Issues |
+When spec investigation reveals ZERO file modifications: skip branch creation, skip PR workflow, close issue directly with verification comment. ANY file modified (including docs/guidelines) requires full PR workflow.
 
 ## Critical Workflow Sequence
-
-**🚫 CRITICAL: Skipping phases or HALT points is a CRITICAL GUIDELINE VIOLATION.**
-
-### Mandatory Sequence (NO EXCEPTIONS)
 
 ```
 Implementation complete
     ↓
-review-prep invoked AUTOMATICALLY (Phase 3)
+review-prep MUST be invoked (Phase 3)
     ↓
 Push branch → Generate compare URL → HALT
-    ↓
-(DEVELOPER REVIEWS VIA GITHUB DIFF)
-    ↓
-Developer says "create a PR"
-    ↓
-pr-creation: Squash → Push → Create PR → HALT
-    ↓
-(DEVELOPER MERGES PR)
-    ↓
-Developer confirms "PR merged"
-    ↓
-cleanup: Verify merge via GitHub API → Close issues
-```
-
-### What HALT Means
-
-**HALT = Stop all further action and wait for explicit instruction.**
-
-| HALT Point | What Agent Does | What Agent WAITS For |
-|------------|----------------|----------------------|
-| After review-prep | Report exec summary + URL in chat, completion comment to issue (NO URL) | "create a PR" instruction |
-| After pr-creation | Report exec summary + PR URL in chat | "PR merged" confirmation |
-| After PR merged | Close issues | Next explicit instruction |
-
-### 🚫 CRITICAL VIOLATIONS
-
-| Violation | Consequence |
-|-----------|-------------|
-| Skip review-prep | No developer visibility, premature PR |
-| Skip HALT after push | Issues closed without PR |
-| Close issues without PR merge | Lost tracking, audit trail broken |
-| Skip GitHub API verification | Closing issues on unmerged PRs |
-| **Close issues directly for doc/guideline changes** | **CRITICAL - docs require full PR workflow** |
-
-## Common Violations (LEARN FROM THESE)
-
-**This exact failure pattern triggered this spec:**
-
-### Violation 1: Skipping review-prep After Implementation
-
-**What Happened:** Agent completed skill creation, marked task complete, but did not invoke `review-prep`.
-
-**Wrong Sequence:**
-```
-Implementation done
-    ↓
-Mark task complete
-    ↓
-HALT (no push, no URL, no review-prep)
-```
-
-**Correct Sequence:**
-```
-Implementation done
-    ↓
-git add -A && git commit (commit changes)
-    ↓
-git push -u origin <branch> (push branch)
-    ↓
-review-prep invoked AUTOMATICALLY
-    ↓
-Generate compare URL
-    ↓
-Report exec summary + URL in chat
-    ↓
-Post completion comment to issue (NO URL)
-    ↓
-HALT
-```
-
-**Why This Failed:**
-- No commit made → No changes tracked
-- No push → No remote branch
-- No URL → Developer cannot review
-- No visibility into what changed
-
-### Violation 2: Wrong Chat Output Format
-
-**What Happened:** Agent reported URL first, then summary.
-
-**Wrong Sequence:**
-```
-Compare URL: ${BASE_URL}owner/repo/compare/dev...branch
-
-**Summary:** Changes to skill files...
-**Outcome:** Added enforcement rules
-```
-
-**Correct Sequence:**
-```
-**Summary:** Updated git-workflow skill to enforce automatic...
-
-**Outcome:** Developers will now see compare URL after every implementation.
-
-Compare URL: ${BASE_URL}owner/repo/compare/dev...branch
-```
-
-**Why This Matters:**
-- Developer needs context before clicking URL
-- Summary explains business impact
-- Outcome states what changed for stakeholders
-- URL appears LAST as actionable link
-
-### Violation 3: Uncommitted/Unpushed Changes After Implementation
-
-**What Happened:** Agent marked complete but `git status` showed uncommitted changes.
-
-**Detection:**
-```bash
-git status --porcelain
-# Shows modified/untracked files
-```
-
-**Resolution:**
-```bash
-git add -A
-git commit -m "message" --trailer "Co-authored-by: ..." --trailer "Co-authored-by: ..."
-git push -u origin <branch>
-```
-
-**Why This Matters:**
-- Uncommitted changes = lost work
-- Unpushed commits = no remote visibility
-- Review URL requires pushed commits
-
-### Violation 4: No Enforcement Checklist
-
-**What Happened:** Agent skipped steps because there was no checklist to verify.
-
-**Fix:** Added enforcement checklist to `review-prep` task:
-- ✅ Branch pushed?
-- ✅ Commits squashed?
-- ✅ Temp files cleaned?
-- ✅ Compare URL generated?
-- ✅ Exec summary + URL in chat?
-- ✅ Completion comment to issue (NO URL)?
-
-### Violation 5: Created PR Without "Create a PR" Instruction (CRITICAL)
-
-**What Happened (2026-04-02):**
-1. User said "fix the skill and guideline" (implementation instruction)
-2. Agent made changes, committed, pushed
-3. Agent created PR directly WITHOUT:
-   - Generating compare URL for review
-   - HALTing for review
-   - Waiting for "create a PR" instruction
-4. Only compare URL was provided AFTER user complained
-
-**Wrong Sequence:**
-```
-User: "fix the skill and guideline"
-    ↓
-Implementation done
-    ↓
-Created PR immediately (SKIPPED review-prep, SKIPPED HALT)
-    ↓
-Reported PR URL
-    ↓
-User: "and yet you still are not using the skills correctly"
-```
-
-**Correct Sequence:**
-```
-User: "fix the skill and guideline"
-    ↓
-Implementation done
-    ↓
-git commit && git push
-    ↓
-review-prep invoked AUTOMATICALLY
-    ↓
-Generate compare URL
-    ↓
-Report exec summary + URL in chat
-    ↓
-Post completion comment to issue (NO URL)
-    ↓
-HALT - Wait for developer review
     ↓
 (Developer reviews via GitHub diff)
     ↓
 Developer says "create a PR"
     ↓
-pr-creation: Squash → Create PR → HALT
-```
-
-**Why This Failed:**
-- Agent treated implementation complete as PR authorization
-- Skipped automatic review-prep phase
-- No HALT for developer review
-- No waiting for explicit "create a PR"
-
-**Fix:** Added explicit enforcement in pr-creation.md Step 0 and strengthened review-prep.md warnings.
-
-### Violation 6: Executed Skill Without Following Its Steps
-
-**What Happened (2026-04-02):**
-1. User said "pr merged" (cleanup confirmation)
-2. Agent invoked git-workflow skill
-3. Agent loaded skill content but did NOT execute cleanup task
-4. Agent just reported completion and HALTed without proper workflow
-
-**Wrong Sequence:**
-```
-User: "pr merged"
+pr-creation: Squash → Push → Create PR → HALT
     ↓
-Agent invokes /skill git-workflow
+(Developer merges PR)
     ↓
-Agent loads skill content
+Developer confirms "PR merged"
     ↓
-Agent HALTs without executing cleanup task
+cleanup: Verify merge via API → Close issues (MANDATORY — Skipping is a CRITICAL VIOLATION)
+```
+
+## Sub-Agent Tasks
+
+### Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `cleanup` | 6,457 |
+| `pr-creation` | 5,312 |
+| `review-prep` | 4,241 |
+| `provenance` | 3,664 |
+| `pre-work` | 1,898 |
+| `release-promotion` | 1,811 |
+| `rebase-pending` | 1,666 |
+| `implementation` | ≈400 |
+| `pair-pre-work` | ≈400 |
+| `pair-commit` | ≈350 |
+| `pair-pr-creation` | ≈300 |
+| `pair-cleanup` | ≈350 |
+| `pair-mode-resume` | ≈300 |
+| `completion` | ≈200 |
+| `check-pr` | ≈50 |
+
+### Result Contracts (Sub-Agent Tasks)
+
+#### pre-work
+
+```yaml
+status: DONE | BLOCKED
+task: pre-work
+worktree_path: <path>
+branch_name: <str>
+branch_created: bool
+setup_complete: bool
+tests_passing: bool
+```
+
+#### review-prep
+
+```yaml
+status: DONE
+task: review-prep
+branch_pushed: bool
+compare_url: <url>
+commits_count: <int>
+worktree_handoff: bool
+```
+
+#### pr-creation
+
+```yaml
+status: DONE | BLOCKED
+task: pr-creation
+pr_number: <N|null>
+pr_url: <url|null>
+squash_performed: bool
+```
+
+#### cleanup
+
+```yaml
+status: DONE
+task: cleanup
+branches_deleted: [<name>]
+issues_closed: [<N>]
+stashes_preserved: [<name>]
+sub_issues_verified: bool
+```
+
+#### provenance
+
+```yaml
+status: DONE
+task: provenance
+tier_used: 1 | 2 | 3
+issues_created: [<N>]
+prs_created: [<N>]
+submodules_processed: [<name>]
+```
+
+#### release-promotion
+
+```yaml
+status: DONE | BLOCKED
+task: release-promotion
+tag_created: bool
+tag_name: <str>
+release_url: <url|null>
+submodules_promoted: [<name>]
+```
+
+#### rebase-pending
+
+```yaml
+status: DONE | BLOCKED
+task: rebase-pending
+rebased_prs: [<N>]
+conflicts_detected: [{pr: <N>, tier: 1|2|3}]
+conflicts_resolved: [<N>]
+```
+
+#### pair-pre-work
+
+```yaml
+status: DONE | BLOCKED
+task: pair-pre-work
+pair_mode: bool
+branch_name: <str>
+wip_commit_created: bool
+working_directory: <path>
+```
+
+#### pair-commit
+
+```yaml
+status: DONE | BLOCKED
+task: pair-commit
+commit_hash: <sha>
+issue_referenced: <N|null>
+pair_mode: true
+```
+
+#### pair-pr-creation
+
+```yaml
+status: DONE | BLOCKED
+task: pair-pr-creation
+pr_number: <N|null>
+pr_url: <url|null>
+squash_performed: bool
+pair_mode: true
+```
+
+#### pair-cleanup
+
+```yaml
+status: DONE
+task: pair-cleanup
+branches_deleted: [<name>]
+stashes_preserved: [<name>]
+pr_merge_verified: bool
+```
+
+#### pair-mode-resume
+
+```yaml
+status: DONE | SKIP
+task: pair-mode-resume
+pair_branch: <str|null>
+issue_number: <N|null>
+changes_summary: <str>
+uncommitted_count: <int>
+unpushed_count: <int>
+```
+
+### Dispatch Context Schema
+
+```yaml
+branch_name: <str>
+worktree_path: <path>
+session_vars:
+  github.owner: <from-session>
+  github.repo: <from-session>
+  dev.name: <from-session>
+  dev.email: <from-session>
+  worktree.path: <from-session>
+```
+
+## Sub-Agent Spawning
+
+This skill is a **heavy skill** — its task files contain significant detail that pollutes context. When the main agent needs git-workflow execution, consider spawning a sub-agent via the `task` tool:
+
+1. Main agent loads this dispatch document (≈570 words)
+2. Main agent identifies the needed task (e.g., `pre-work`, `cleanup`)
+3. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use git-workflow skill --task <task-name> with context: <session-context>")`
+4. Sub-agent loads: this SKILL.md + relevant task file + required guidelines
+5. Sub-agent executes task in isolation, returns structured result
+6. Main agent receives result summary — no full git-workflow content in main context
+
+**Sub-agent context parameters:** Pass `<worktree.path>`, `branch`, `<github.owner>`, `<github.repo>`, `<dev.name>`, `<dev.email>` from session init.
+
+**⚠️ Worktree pass-through is MANDATORY:** When spawning sub-agents from a worktree context, `worktree.path` MUST be included in the dispatch prompt. Sub-agents that perform git operations without `worktree.path` will silently modify the main repo — this is a CRITICAL GUIDELINE VIOLATION (see #741).
+
+## Live Verification Requirements
+
+**🚫 CRITICAL: Every git-workflow task MUST verify actual git/GitHub state via tool calls before acting on claims. Do NOT trust cached values, assumed branch names, or claimed merge status without direct evidence.**
+
+### Verification Matrix
+
+| Verification Point | Tool Call | Expected Evidence | Applies To |
+| -- | -- | -- | -- |
+| **Branch state** | `git branch --show-current` | Current branch name matches expected | pre-work, implementation, rebase-pending |
+| **Working tree cleanliness** | `git status --porcelain` | Empty output (no uncommitted changes) | review-prep, pr-creation |
+| **Worktree location** | `git rev-parse --show-toplevel` | Returns worktree path (not main repo) | pre-work, implementation |
+| **Commit/push state** | `git log dev..HEAD --oneline` | At least one commit ahead of dev | review-prep, pr-creation |
+| **Tracking branch** | `git branch -vv` | `[origin/<branch>]` tracking exists | review-prep |
+| **Unpushed commits** | `git diff @{u} HEAD` | Empty diff (all commits pushed) | review-prep |
+| **PR merge status** | `github_pull_request_read(method=get)` | `merged_at` is not None | cleanup |
+| **Sub-issue closure** | `github_issue_read(method=get_sub_issues)` | All sub-issues state=closed | cleanup |
+| **File existence** | `git status --porcelain` | No uncommitted files (all committed) | pr-creation, implementation |
+| **Staged state** | `git diff --staged` | Expected changes are staged | commit-prep, pr-creation |
+| **Unstaged changes** | `git diff` | Empty (no unstaged changes) | pr-creation |
+| **Worktree environment** | `echo $WORKTREE_PATH` | Non-empty path matching worktree dir | pre-work, implementation |
+| **Stash state** | `git stash list` | Expected number of stashes (usually 0) | cleanup |
+
+### Adversarial Verification Principles
+
+1. **No cached trust:** Re-verify git state before every state-modifying operation (commit, push, squash, rebase)
+2. **Evidence required:** Each verification point MUST produce a tool-call artifact — assertions without evidence are VERIFICATION-GAP findings
+3. **Contradiction detection:** If actual state contradicts expected state, classify as a finding before proceeding
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Branch name doesn't match expected | STRUCTURE-VIOLATION | auto-fix | Report actual branch, verify worktree context |
+| Working tree dirty when should be clean | VERIFICATION-GAP | conditional | Commit or stash before proceeding |
+| `merged_at` is None (no merge) | CONFLICTING | flag-for-review | HALT — do not close issues |
+| Tracking branch missing | MISSING-ELEMENT | auto-fix | Push with `-u` to establish tracking |
+| Unpushed commits detected | VERIFICATION-GAP | conditional | Push before generating compare URL |
+| worktree.path empty/not set | STRUCTURE-VIOLATION | auto-fix | HALT — fatal error, cannot proceed safely |
+| Staged changes differ from expected | CONFLICTING | flag-for-review | Verify staging matches intent before commit |
+| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Investigate closure reason, may need reopen |
+
+## Submodule Provenance
+
+### Three-Tier Model
+
+When a submodule is pushed or promoted from the parent repo, provenance tracking creates a traceable record in the submodule repository. The tier used depends on API availability:
+
+| Tier | Method | When Available | Provenance Record |
+| -- | -- | -- | -- |
+| 1 | Issue + PR in submodule repo | Full API access | Full issue + PR with `Fixes #N` and cross-links |
+| 2 | Issue only in submodule repo | API available, PR creation fails | Issue documenting the change |
+| 3 | Commit message provenance | No API access | Structured commit message with parent context |
+
+### When Each Tier Applies
+
+| Condition | Tier |
+| -- | -- |
+| API responds successfully, full access | Tier 1: Create issue + PR |
+| API responds but PR endpoint fails (403, 405) | Tier 2: Create issue only |
+| API returns 403/404/auth error, or platform is `unknown` | Tier 3: Commit message only |
+
+### Integration Points
+
+| Integration | When Provenance Runs |
+| -- | -- |
+| `review-prep` (Step 0, Submodule Push Automation) | After each submodule is pushed to dev — provenance tracks the dev-push |
+| `release-promotion` (Step 2h) | After each submodule is promoted dev → main — provenance tracks the promotion |
+
+### Fire-and-Forget Semantics
+
+Provenance operations are **fire-and-forget** — they never block git operations:
+
+- All fallbacks are **silent** — no HALT, no developer intervention required
+- If Tier 1 fails, automatically downgrade to Tier 2
+- If Tier 2 fails, automatically downgrade to Tier 3
+- The parent repo push/promotion proceeds **regardless** of provenance outcome
+- Cross-reference comments on the parent issue are non-blocking — failures are logged, not raised
+
+### Platform Detection
+
+Before provenance tracking, each submodule's host platform is detected from its remote URL:
+
+- `github.com` → GitHub API
+- Known GitBucket host patterns → GitBucket API
+- Unknown → Tier 3 (no API available)
+
+Detection results are cached for the session to avoid redundant API calls.
+
+## Pair Mode
+
+### Mode Detection
+
+Pair mode is detected from the branch name prefix:
+
+| Branch Pattern | Mode | Working Directory |
+|---|---|---|
+| `pair-feature/123-xyz` | Dev-pair | Main project dir |
+| `pair-spec/456-abc` | Dev-pair | Main project dir |
+| `feature/789-xyz` | Autonomous | `.worktrees/` |
+| `spec/789-abc` | Autonomous | `.worktrees/` |
+| `dev` or `main` | None | Prompt to create/switch |
+
+The `pair-` prefix IS the mode signal. No state files needed — branch name carries everything.
+
+### Pair Mode vs Autonomous Mode
+
+| Aspect | Autonomous Mode | Pair Mode |
+|--------|----------------|-----------|
+| Branch prefix | `feature/`, `spec/` | `pair-` |
+| Working directory | `.worktrees/` | Main project dir |
+| Branch switching | Worktree per branch | WIP commit + checkout |
+| Worktree safety | Tier 1 mandate | Tier 2 — developer present |
+| Commit trailers | Standard co-author | `[pair-mode]` tag |
+| PR workflow | Same squash workflow | Same squash workflow |
+
+### Pair Mode Branch Discipline
+
+1. **Always use `pair-` prefix** — no exceptions
+2. **Never operate in `.worktrees/`** when pair mode is active
+3. **WIP commits before branch switches** — never leave uncommitted changes on a branch switch
+4. **Commit trailers always include `[pair-mode]`** — distinguishes from autonomous commits
+5. **PR body uses `Implements #N`** — never `Fixes` or `Closes` (avoids premature closure)
+
+### Pair Mode Session Start
+
+The `session_context.py` plugin detects pair mode at session start and injects context:
+- Identity section (always): github.owner, github.repo, github.platform, credential status
+- Pair mode resume context: branch name, related issue, diff summary
+- Trigger warnings: on_main_branch, protected_branch_with_changes, uncommitted_work
+
+### Pair Mode Task Sequence
+
+```
+Session start → pair-mode-resume detects pair-* branch
     ↓
-User: "actually perform the appropriate skill"
-```
-
-**Correct Sequence:**
-```
-User: "pr merged"
+pair-pre-work: WIP-commit switch (no worktree)
     ↓
-Agent invokes /skill git-workflow
+(pair-commits as needed during work)
     ↓
-Agent EXECUTES cleanup task:
-    1. Verify PR merge via GitHub API
-    2. Switch to main
-    3. Delete merged branch
-    4. Clean up stale refs
-    5. Post succinct confirmation
+pair-pr-creation: Squash → Push → Create PR
     ↓
-HALT
+(Developer merges PR)
+    ↓
+pair-cleanup: Delete branch, clean stashes
 ```
-
-**Why This Failed:**
-- Agent treated skill invocation as reading documentation
-- Did not follow procedural steps
-- Skill is executable workflow, not just reference material
-
-**Fix:** Agent must EXECUTE the loaded skill, not just read it.
-
-### Violation 7: PR Status Report Missing Mandatory Info Format (CRITICAL)
-
-**What Happened (2026-04-03):**
-1. Agent created PR successfully
-2. Agent reported PR completion without providing exec summary and outcome
-3. When asked "why didn't you provide this info", agent admitted it was a skill/guideline violation
-4. Agent had to be prompted to provide the mandatory format
-
-**Wrong Output:**
-```
-PR #15 is ready for you to merge (I cannot merge PRs - human-only operation).
-
-Once you've merged it, let me know and I'll start work on Tasks 6-13...
-```
-
-**Correct Output:**
-```
----
-
-## Summary
-
-<1-2 sentences describing the impact and stakeholder value.>
-
-## Outcome
-
-<What changed for stakeholders>
-
-**PR URL:** https://gitbucket.example.com/owner/repo/pull/15
-```
-
-**Why This Matters:**
-- Developer needs context about what changed
-- Summary explains business impact
-- Outcome states what stakeholders get
-- URL is actionable link at the END
-- Format is documented in `git-workflow` skill and AGENTS.md
-
-**Fix:**
-1. After PR creation, ALWAYS report exec summary + outcome FIRST
-2. Then provide PR URL LAST
-3. Never report just the URL without context
-4. Format is documented - follow it exactly
-
-## Critical Rules
-
-### 🚫 NEVER DO
-
-- Edit files on `main` branch
-- `git restore` on externally-modified files
-- Create PR without explicit user instruction
-- Create PR without squashing to SINGLE COMMIT first
-- Merge PRs (HUMAN-ONLY)
-- Use `--no-verify` flag
-- Ask "Ready to commit?" or "Create a PR?"
-- Close issues without PR merge verification
-- **Use hardcoded model IDs** (e.g., `ollama-cloud/glm-5`) - MUST dynamically detect runtime identity
-
-### ✅ ALWAYS DO
-
-- **Stash ALL modifications before branch creation** — Use `git stash push -u` to include untracked files
-- **Verify stash exists** (`git stash list`)
-- **Verify working tree is clean** (`git status --porcelain` must return empty)
-- **These checks are MANDATORY before ANY branch operation**
-- **SQUASH TO SINGLE COMMIT BEFORE ANY PR** — See `pr-creation-workflow` skill for pre-PR checklist
-- **Commit ALL changes before pushing** (`git add -A && git commit`)
-- **Push after committing** - ensures GitHub compare works correctly
-- **Clean temp files before review** (`rm ./tmp/temp_*.py ./tmp/*.json 2>/dev/null`)
-- Include co-author trailers in squash commit
-- **Dynamically detect model ID at runtime** - NEVER copy example IDs from skills/guidelines
-- Wait for human to merge PR
-- Delete merged branches immediately (local AND remote)
-- Report completion and HALT after each phase
-
-### ⚠️ SQUASH IS MANDATORY — NO EXCEPTIONS
-
-**Every PR must have EXACTLY ONE commit. No exceptions.**
-
-**Before creating ANY PR:**
-
-```bash
-# Step 1: Verify commit count
-git log origin/dev..HEAD --oneline
-
-# Step 2: If MORE THAN ONE commit shown, SQUASH NOW
-git reset --soft origin/dev
-git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
-    --trailer "Co-authored-by: <Human-Name> <human-email>"
-
-# Step 3: Force push the single commit
-git push --force-with-lease origin <branch>
-```
-
-**See `pr-creation-workflow` skill for the complete pre-PR checklist.**
-
-### ⚠️ Edge Case: Already Implemented (No Changes)
-
-**When spec investigation reveals all changes are already present:**
-
-**🚫 CRITICAL: This edge case applies ONLY when ZERO file modifications were made.**
-
-| Scenario | Workflow |
-|----------|----------|
-| Zero files modified (all changes already present) | Skip PR workflow, close with verification |
-| ANY file modified (including docs/guidelines) | FULL PR workflow REQUIRED |
-| Guideline/documentation changes | FULL PR workflow REQUIRED |
-
-**When ZERO files modified:**
-
-1. **Skip branch creation entirely:**
-   - Do NOT create feature branch
-   - Do NOT push anything
-   - Do NOT create PR
-
-2. **Close issue directly with verification comment:**
-   ```markdown
-   🤖 ✅ Completed by <AgentName> (<ModelID>)
-
-   **Summary:**
-   
-   Verified all proposed changes were already implemented. No modifications needed.
-   
-   **Verification Results:**
-   
-   - [File:line references for existing content]
-   - [Confirmation of each spec requirement]
-   
-   **Outcome:** Spec verified complete without additional changes.
-   ```
-
-3. **Use `state_reason: "completed"` when closing:**
-   - Indicates successful completion (not cancellation)
-
-4. **Report completion in chat and HALT:**
-   - No further workflow steps needed
-
-**When ANY file modified (including guidelines/docs):**
-
-- MUST follow full PR workflow: commit → push → review-prep → PR creation → merge → cleanup
-- Guidelines and documentation are NOT exempt from PR workflow
-- Branch-first rule applies to ALL file types (code, docs, guidelines, configs)
-
-## Task Dependencies
-
-```
-pre-work → implementation → review-prep → pr-creation → cleanup
-                                             ↓
-                                      (user says "create a PR")
-                                                    ↓
-                                              (user confirms "PR merged")
-```
-
-**Dependency Notes:**
-- `cleanup` waits for human merge confirmation
-- `review-prep` is mandatory after implementation
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation)
-- Related guidelines: `110-git-branch-first.md`, `111-git-commit-workflow.md`, `113-git-pr-workflow.md`, `114-git-branch-cleanup.md`, `124-github-archive-workflow.md`
-- Session init: `.opencode/plugins/session-enforcement.ts` (for GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL)
+- Related skills: `approval-gate` (authorization), `pr-creation-workflow` (PR timing), `changelog-generator` (changelog generation), `conflict-resolution` (conflict classification during rebase/merge)
+- Related guidelines: `000-critical-rules.md`, `115-branch-naming.md`
+- Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
+- Related skill tasks: `git-workflow --task pre-work` (branch creation), `git-workflow --task cleanup` (post-merge), `git-workflow --task pr-creation` (PR workflow), `git-workflow --task provenance` (submodule provenance tracking)
 
-## Changelog Generation (Sub-Task Integration)
-
-**The changelog-generator skill MUST run as a sub-task during PR creation.**
-
-### Why Sub-Task Execution Is Critical
-
-The skill runs in an isolated context for **context isolation**:
-
-| What Happens in Sub-Task | What Returns to Main Context |
-|--------------------------|------------------------------|
-| Git commit analysis | Only: "CHANGELOG.md updated" |
-| Commit categorization logic | NOT: intermediate reasoning |
-| Technical → User-friendly translation | NOT: commit details |
-| Categorization reasoning | NOT: list of changes analyzed |
-| Output formatting | NOT: generated changelog text |
-| Noise filtering decisions | NOT: filtering logic |
-| Thinking tokens | Minimal result token only |
-
-### Sub-Task Invocation
-
+```yaml+symbolic
+schema_version: "1.0"
+last_updated: "2026-04-15T00:00:00Z"
+rules:
+  - id: git-workflow-provenance-001
+    title: "Submodule provenance tracking after push or promotion"
+    conditions:
+      all:
+        - "submodule_pushed == true OR submodule_promoted == true"
+    actions:
+      - INVOKE(git-workflow --task provenance)
+    conflicts_with: []
+    requires: []
+    triggers: [release-promotion, review-prep]
+    source: "git-workflow/SKILL.md Tasks table"
 ```
-/skill changelog-generator --since-last-release
-```
-
-When invoked:
-1. Sub-task loads its own context (skill + task specification)
-2. Sub-task analyzes commits, categorizes, generates changelog
-3. Sub-task writes CHANGELOG.md to filesystem
-4. Sub-task returns minimal result: "CHANGELOG.md updated with N entries"
-5. Main context stages CHANGELOG.md and proceeds with squash
-
-### Skip Directive
-
-Use `[skip changelog]` in commit message or PR title to skip changelog generation:
-- Last commit message (if squashing multiple commits)
-- PR title
-
-### Integration Point
-
-The changelog sub-task is invoked in `pr-creation.md` Step 1, **before** the squash step:
-
-1. Check for `[skip changelog]` directive
-2. Invoke `/skill changelog-generator --since-last-release`
-3. Stage result: `git add CHANGELOG.md`
-4. Continue with squash (includes changelog changes)

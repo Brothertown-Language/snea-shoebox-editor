@@ -32,15 +32,18 @@ Compare to registry `master.hash`.
 For each destination:
 
 1. **Calculate destination hash:**
+
    ```bash
    sha256sum "$dest_path"
    ```
 
 2. **Compare to master hash:**
+
    - If match → `synchronized`
    - If mismatch → `drifted`
 
 3. **Update status in memory:**
+
    ```
    Fragment: fragment-id
    Destination: skill/SKILL.md
@@ -52,6 +55,7 @@ For each destination:
 ### Step 4: Update Registry Status
 
 Update sync_status for fragment:
+
 - If all destinations match master → `synchronized`
 - If any destination differs → `drifted`
 
@@ -98,6 +102,7 @@ DRIFT DETECTED: 1 of 9 fragments have drifted
 ### Master Hash Mismatch
 
 If master file hash differs from registry:
+
 ```
 ⚠️ REGISTRY STALE
 
@@ -114,6 +119,7 @@ c) Both changed (manual investigation needed)
 ### Destination File Missing
 
 If destination file doesn't exist:
+
 1. WARN: "Destination file missing: {path}"
 2. Mark destination as `deleted`
 3. Ask: "Remove from registry or recreate file?"
@@ -121,6 +127,7 @@ If destination file doesn't exist:
 ### Line Range Invalid
 
 If destination file has fewer lines than line_range.end:
+
 1. Content may have been deleted or moved
 2. Report: "Line range exceeds file length"
 3. Recommend: Manual rescan to find new location

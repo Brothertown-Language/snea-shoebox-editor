@@ -6,11 +6,21 @@
   `uv run python`. Package ops: add dependencies by editing `pyproject.toml` then running `uv sync` — never `uv add`. `pip` prohibited. No `sys.path` hacks or manual
   path additions.
 - **Never use `python3` or `python` directly** — always `uv run python`. Never prefix commands with absolute paths or `cd /absolute/path &&`. See `060-tool-usage.md § Python Interpreter` and `§ Path Rules` for the full zero-tolerance rules.
-- Reusable agent scripts live in `.opencode/tools/` (project root). Invoke with `uv run python .opencode/tools/<script>`.
+- Reusable agent scripts live in `.opencode/tools/` (project root). Invoke with `./.opencode/tools/<script>`.
 - When `pyproject.toml` changes, purge `.venv` and run `uv sync` as a standalone command (never embedded in git hooks,
   commit scripts, or automated pipelines).
 - **Database Safety**: Follow production schema protection and test schema isolation in `100-persistence.md`.
   NEVER run test/experimental code against the production schema.
+
+## PEP 723 Self-Contained Scripts (MANDATORY)
+
+All Python entry points in `.opencode/tools/` MUST be self-contained PEP 723 scripts with:
+- Shebang: `#!/usr/bin/env -S uv run --script`
+- PEP 723 `# /// script` metadata block with `requires-python` and `dependencies`
+- Zero dependency on project `pyproject.toml` or `uv.lock`
+- Execute permission (`chmod +x`)
+
+New tools MUST follow this pattern. Do NOT use `uv run python .opencode/tools/X`.
 
 ## Isolated Tool Environments
 
@@ -32,6 +42,7 @@ The `tools/` directory contains its own `pyproject.toml` with only the dependenc
 ### Invocation Methods
 
 **1. Ephemeral (recommended for one-time use):**
+
 ```bash
 # Runs in temp venv, cleaned up after execution
 uvx --from ./tools my-tool [args]
@@ -40,6 +51,7 @@ uvx --from ./tools my-tool [args]
 ```
 
 **2. Persistent (for frequently-used tools):**
+
 ```bash
 # Installs tool globally (available in any directory)
 uv tool install ./tools
@@ -62,12 +74,14 @@ uv tool uninstall my-tool
 ### When to Use
 
 Use isolated tool environments when:
+
 - A local tool needs dependencies that are NOT useful for the main project
 - You want to try a tool without committing it to `pyproject.toml`
 - A tool requires mutually exclusive dependency versions
 - You're developing a standalone utility that could be extracted later
 
 Use direct `pyproject.toml` dependencies when:
+
 - The dependency is needed for production code
 - The dependency is needed by tests that run against production code
 - The dependency is already in the main dependency tree
@@ -75,22 +89,20 @@ Use direct `pyproject.toml` dependencies when:
 ### Example: Local Analysis Tool
 
 **tools/pyproject.toml:**
+
 ```toml
 [project]
 name = "analysis-tool"
 version = "0.1.0"
 requires-python = ">=3.12"
-dependencies = [
-    "pandas>=2.0",
-    "matplotlib>=3.7",
-    "seaborn>=0.12",
-]
+dependencies = [ "pandas>=2.0", "matplotlib>=3.7", "seaborn>=0.12",]
 
 [project.scripts]
 analyze = "analyze:main"
 ```
 
 **tools/analyze.py:**
+
 ```python
 def main():
     import pandas as pd
@@ -99,6 +111,7 @@ def main():
 ```
 
 **Usage:**
+
 ```bash
 # Ephemeral (no install)
 uvx --from ./tools analyze
@@ -115,6 +128,7 @@ This pattern is especially useful for data science tools, analysis scripts, and 
 **DETESTABLE**: Installing Node.js in a Python-only or Java-only environment is absolutely prohibited. This introduces an unnecessary runtime dependency that pollutes the ecosystem and creates maintenance burden.
 
 ### 🚫 NEVER DO
+
 - **NEVER install Node.js globally or locally** on Python-only or Java-only projects.
 - **NEVER use NPX** to run packages — NPX requires Node.js runtime.
 - **NEVER add Node.js-based tools to project dependencies.**
@@ -122,18 +136,22 @@ This pattern is especially useful for data science tools, analysis scripts, and 
 - **NEVER use Node.js-based formatters, linters, or tooling** when native alternatives exist.
 
 ### Context
+
 This rule applies universally to:
+
 - **Python projects**: Use `uv`, `pip`, `ruff`, `pytest` — never npm/pnpm/yarn.
 - **Java projects**: Use Maven/Gradle, JVM tooling — never npm/pnpm/yarn.
 - **Projects with mixed languages**: Isolate Node.js to its designated frontend/service layer.
 
 ### ✅ ALLOWED
+
 - **Docker containers that internally use Node.js** — Node.js runs inside container, not on host.
 - **Pure Python alternatives** — `githubkit` instead of `@octokit/rest`, `httpx` instead of `axios`.
 - **Dedicated frontend repositories** where Node.js IS the correct tool for that codebase.
 - **MCP servers via Docker** — Node.js isolated in container only.
 
 ### Why This Is Critical
+
 - **Security**: Node.js ecosystem has known supply-chain attack vectors.
 - **Dependency bloat**: Adds unnecessary runtime and package manager complexity.
 - **Maintenance burden**: Mixed language projects require additional CI/CD configuration.
@@ -141,6 +159,7 @@ This rule applies universally to:
 - **Team friction**: Requires developers to install/maintain Node.js on their machines.
 
 ## Production System Protection
+
 - **The AI agent is never permitted to run code against production data.** This is an absolute prohibition with no exceptions — not even for verification, inspection, or read-only queries. Any step that would execute code against production data requires explicit user instruction before execution.
 - **DIAGNOSTIC REQUESTS ARE READ-ONLY:** When asked to "check error", "investigate bug", "review logs", or similar diagnostics, the agent MUST:
   1. Look for log files (`.log` files in `./tmp/` or project directories)
@@ -187,7 +206,7 @@ This rule applies universally to:
 - **`.output.txt` files must be placed in `./tmp/` (e.g., `./tmp/.output.txt`), never at the project root (`.output.txt` is a violation).**
 - **Mandatory pre-submit root cleanliness check:** Before calling `submit`, confirm the project root is clean:
   (1) Never create `.output.txt`, `temp_*.py`, or any other temp/diagnostic file at the project root — always use `./tmp/` at time of creation.
-  (2) Run `uv run python .opencode/tools/file-exists .output.txt` — if it exists, move it to `./tmp/.output.txt` immediately (`mv .output.txt ./tmp/.output.txt`).
+  (2) Run `./.opencode/tools/file-exists .output.txt` — if it exists, move it to `./tmp/.output.txt` immediately (`mv .output.txt ./tmp/.output.txt`).
   (3) Check for any `temp_*.py` files at the project root (`ls temp_*.py 2>/dev/null`) — if any exist, move them to `./tmp/` before submitting.
 
 ### ⚠️ MANDATORY: Temp Files Cleanup After Task Completion

@@ -4,54 +4,59 @@
 
 ### Single Combined Byline (CRITICAL)
 
-**ALL comments MUST end with ONE byline that combines status, agent, and model.**
+**ALL substantive comments and issue body footers MUST end with ONE byline that combines agent, model, and status.** Non-substantive comments should not be posted (per `github-comments` skill).
 
-**Format:**
+**Authoritative format (from `000-critical-rules.md`):**
 ```
 <response content>
 
 ---
-🤖 <status-emoji> <status-text> by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelId>) <status-icon> <status>
 ```
 
-**For progress comments:**
+**For completion comments:**
 ```
-🤖 ✅ Completed by <AgentName> (<ModelID>)
-
 **Summary:**
 
 <1-2 sentences describing stakeholder value.>
 
 **Outcome:** <What changed for stakeholders>
+
+---
+🤖 <AgentName> (<ModelId>) ✅ completed
 ```
 
 **Components (supplied dynamically at runtime):**
-- `<status-emoji>`: Status indicator (✅ ✨ 📝 ❌ 🔄 ↻ ⚠️ 🔍 📋 ✎)
-- `<status-text>`: Status description (Completed, Created, Updated, Rejected, Superseded, Working)
 - `<AgentName>`: AI's actual name (e.g., `OpenCode Desktop`, `OpenCode`)
-- `<ModelID>`: Model identifier with provider (e.g., `<ModelID>`)
+- `<ModelId>`: Model identifier with provider (e.g., `<ModelId>`)
+- `<status-icon>`: Status icon from the iconography map (preferred where feasible)
+- `<status>`: Status in plain text (completed, created, updated, rejected, etc.). Use `other` as fallback when no canonical status fits.
 
 **⚠️ CRITICAL: NEVER copy example values literally. Detect your own identity.**
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+**Rule:** Byline = WHO (model) + STATUS (icon + text). Status icons are preferred where feasible. Details belong in comment body, not byline.
 
-### Status Emoji Guide
+### Status Text Guide
 
-| Status | Emoji | Byline Format |
-|--------|-------|---------------|
-| Task Complete | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| In Progress | ↻ | `🤖 ↻ Working by <AgentName> (<ModelID>)` |
-| Created | ✨ | `🤖 ✨ Created by <AgentName> (<ModelID>)` |
-| Updated | 📝 | `🤖 📝 Updated by <AgentName> (<ModelID>)` |
-| Copy Editor | ✎ | `🤖 ✎ on behalf of <UserName>` |
-| Completed | ✅ | `🤖 ✅ Completed by <AgentName> (<ModelID>)` |
-| Rejected | ❌ | `🤖 ❌ Rejected by <AgentName> (<ModelID>)` |
-| Superseded | 🔄 | `🤖 🔄 Superseded by <AgentName> (<ModelID>)` |
-| Blocking | ⚠️ | `🤖 ⚠️ Blocking by <AgentName> (<ModelID>)` |
-| Analysis | 🔍 | `🤖 🔍 Analysis by <AgentName> (<ModelID>)` |
-| Decision | 📋 | `🤖 📋 Decision by <AgentName> (<ModelID>)` |
+| Status | Icon | Byline |
+|--------|------|--------|
+| Task Complete | ✅ | `🤖 <AgentName> (<ModelId>) ✅ completed` |
+| In Progress | 🔄 | `🤖 <AgentName> (<ModelId>) 🔄 working` |
+| Created | ➕ | `🤖 <AgentName> (<ModelId>) ➕ created` |
+| Updated | 📝 | `🤖 <AgentName> (<ModelId>) 📝 updated` |
+| Rejected | ❌ | `🤖 <AgentName> (<ModelId>) ❌ rejected` |
+| Superseded | ⏭️ | `🤖 <AgentName> (<ModelId>) ⏭️ superseded` |
+| Blocking | 🚫 | `🤖 <AgentName> (<ModelId>) 🚫 blocking` |
+| Analysis | 🔍 | `🤖 <AgentName> (<ModelId>) 🔍 analysis` |
+| Decision | ✋ | `🤖 <AgentName> (<ModelId>) ✋ decision` |
+| Other | 🎯 | `🤖 <AgentName> (<ModelId>) 🎯 other` |
+| Copy Editor | ✎ | `🤖 ✎📝 on behalf of <AgentName>` |
 
-**Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline. No extra context.
+When no canonical status matches the agent's current state, use `other` as the status text with the 🎯 icon rather than inventing a new status word. This ensures bylines remain parseable and consistent.
+
+Status icons are preferred where the AI agent can determine the appropriate icon. When in doubt, use the plain-text status alone without an icon. Do not invent new icons.
+
+**Rule:** Byline = WHO (model). Status icons replace plain-text status words to improve visual scanning. Details belong in comment body, not byline.
 
 ### Copy Editor Byline (User-Authored Content)
 
@@ -67,7 +72,7 @@ Use the **Copy Editor** byline when posting content on behalf of users:
 
 Use standard bylines (Created, Completed, Updated) for:
 - Agent creates its own spec/issue for implementation work
-- Agent posts progress comments for its own implementation tasks
+- Agent posts substantive comments for its own implementation tasks
 - Agent creates issues for user-approved specs (those already have user attribution)
 - Agent performs independent implementation work
 
@@ -78,12 +83,13 @@ Use standard bylines (Created, Completed, Updated) for:
 <content posted on behalf of user>
 
 ---
-🤖 ✎ on behalf of <UserName>
+🤖 ✎📝 on behalf of <AgentName>
 ```
 
 **Components:**
 - `✎`: Pencil emoji indicates editing/posting role (not authorship)
-- `on behalf of <UserName>`: The user who requested/owns the content
+- `📝`: Updated icon for copy editor context
+- `on behalf of <AgentName>`: The AI agent posting on behalf of the user
 
 **Rule:** Byline = WHO did WHAT. Details belong in comment body, not byline.
 

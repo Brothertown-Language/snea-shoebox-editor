@@ -8,153 +8,36 @@ compatibility: opencode
 
 # Skill: sync-guidelines
 
-## When to Invoke
+## Overview
 
-This skill is triggered when:
-- User runs `/skill sync-guidelines`
+Intelligently synchronizes guidelines, skills, and tools between repositories through GitHub/GitBucket issues. Files are classified by reading and understanding content — not by pattern matching — to determine what is core (syncable) versus project-specific (protected).
 
-## Role
+## Tasks
 
-You are a Guidelines Sync Manager. Your purpose is to intelligently synchronize guidelines, skills, and tools between repositories through GitHub issues. You classify files by **reading and understanding content**, not by pattern matching.
+| Task | Purpose | Words |
+| -- | -- | -- |
+| `classify` | Classify files as core or project-specific | ≈250 |
+| `sync-push` | Push core changes to target repository | ≈300 |
+| `sync-pull` | Pull core changes into local repository | ≈300 |
+| `issue-format` | Template for sync issue content | ≈350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
+
+## Invocation
+
+- `/skill sync-guidelines` — Overview only
+- `/skill sync-guidelines --task classify` — Classify files as core or project-specific
+- `/skill sync-guidelines --task sync-push` — Push changes to target repo
+- `/skill sync-guidelines --task sync-pull` — Pull changes from source repo
+- `/skill sync-guidelines --task issue-format` — Get issue template
+- `/skill sync-guidelines --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
-### Phase 0: Pre-Work Verification
-
-1. Verify on feature branch (not `main`)
-2. Check for uncommitted changes (`git status`)
-3. Stash if needed
-
-### Phase 1: Discover Files to Sync
-
-1. Detect changed files since last sync
-   - Read the **entire file content**
-   - Analyze semantically what the file does
-   - Determine classification: core or project-specific
-
-### Phase 2: Intelligent Classification
-
-**READ each file and ANALYZE:**
-
-#### Core Indicators (Sync Bidirectionally)
-
-A file is **core** if it:
-- Defines generic workflows (git operations, github MCP usage)
-- Contains universal engineering standards
-- Describes cross-project concepts (approval gates, spec creation, error handling)
-- Has NO project-specific imports, paths, or configuration
-- Can be dropped into ANY project and work without modification
-
-Examples of core content:
-- `## Operating Protocol` - workflow definition
-- `git checkout`, `github_issue_write` - generic operations
-- `## Critical Requirements` - universal standards
-- Generic error handling, data integrity rules
-
-#### Project-Specific Indicators (Never Sync)
-
-A file is **project-specific** if it:
-- References project name in imports or code
-- Contains project-specific database paths
-- Has project-specific API endpoints
-- Contains project-specific configuration
-- Would break if copied to another project
-
-Examples of project-specific content:
-- `pubmed_data_3/` - project database path
-- `<repo>` - project name (from session_init.py)
-- `project_root /` - project-specific path handling
-- Project-specific table names or schemas
-
-#### Uncertain Classification
-
-If classification is unclear:
-- Note the uncertainty in the issue
-- Provide analysis of what was found
-- Let human reviewer decide
-
-### Phase 3: Create GitHub Issue
-
-Use `github_issue_write` to create an issue in target (push) or source (pull) repository:
-
-```
-github_issue_write(
-    method="create",
-    owner=<target_owner>,
-    repo=<target_repo>,
-    title="[SYNC] {direction}: {count} files from {source_repo}",
-    body=<structured issue with inspection analysis>,
-    labels=["sync", "needs-review"]
-)
-```
-
-### Phase 4: Report Completion
-
-Post comment to spec issue documenting:
-- Files analyzed
-- Classification decisions with reasoning
-- Issue URL created
-
-## Issue Content Format
-
-```markdown
-# [SYNC] {direction}: {count} files from {source_repo}
-
-**Source:** {source_owner}/{source_repo}
-**Commit:** [{short_sha}](commit_url)
-**Direction:** Push | Pull
-**Sync Method:** Issue-based (intelligent inspection, no patterns)
-
-## Classification Analysis
-
-### File: {filepath}
-
-**Content Read:** Yes (full file analyzed)
-
-**Analysis:**
-- {finding_1}
-- {finding_2}
-- {finding_3}
-
-**Project-Specific Content Found:**
-- {specific content or "None"}
-
-**Classification:** ✅ Core / 🚫 Project-Specific / ⚠️ Uncertain
-
----
-
-{Repeat for each file}
-
-## Files to Sync (Core Only)
-
-| File | Classification | Key Reason |
-|------|---------------|------------|
-| {path} | Core | {reason} |
-
-## Files Not Synced
-
-| File | Classification | Key Reason |
-|------|---------------|------------|
-| {path} | Project-Specific | {reason} |
-
-## File Contents
-
-### {filename}
-
-```{language}
-{full file content}
-```
-
-## Verification
-
-- Source commit: [{sha[:8]}](url)
-- All files read and analyzed: Yes
-- Pattern-based classification used: No
-
----
-*Created by sync-guidelines skill*
-*Classification via intelligent content inspection*
-```
+1. **Issue-based sync:** All sync operations create GitHub/GitBucket issues as proposals. Direct file modification in target repositories is PROHIBITED.
+2. **Intelligent classification:** Every file MUST be read and analyzed before classification. Pattern-based classification (filename, number ranges) is FORBIDDEN.
+3. **Core vs project-specific:** Core content (generic workflows, universal standards) syncs bidirectionally. Project-specific content (database paths, project names, config) is NEVER synced.
+4. **Human review required:** No auto-merge. Sync issues are proposals for human reviewers to approve and apply.
+5. **Conflict detection:** Before creating sync issues, check whether files exist in target repo and note any conflicts for manual merge resolution.
 
 ## Configuration
 
@@ -163,21 +46,16 @@ Post comment to spec issue documenting:
 ```yaml
 # .opencode/sync-config.yml
 source:
-  owner: <owner>   # From session_init.py output
-  repo: <repo>     # From session_init.py output
-  
+  owner: <owner>
+  repo: <repo>
 target:
-  owner: <owner>   # Target GitHub org/username
-  repo: <repo>     # Target repo name
-
-# Files that are explicitly project-local (never sync)
+  owner: <owner>
+  repo: <repo>
 local_only:
-  - ".opencode/AGENTS.md"
-  - ".opencode/sync-config.yml"
-  - ".opencode/sync-state.yml"
+  - .opencode/AGENTS.md
+  - .opencode/sync-config.yml
+  - .opencode/sync-state.yml
 ```
-
-**NOTE**: Create this file only if syncing guidelines between repositories. The file is project-specific and should not be copied from other projects.
 
 ## Sync State Tracking
 
@@ -189,89 +67,11 @@ last_sync:
     commit: abc123def
     timestamp: 2026-03-30T10:30:00Z
     files:
-      
   pull:
     commit: def456ghi
     timestamp: 2026-03-29T14:20:00Z
     files:
       - guidelines/core/README.md
-```
-
-## Conflict Detection
-
-### Push Conflicts
-
-Before creating push issue:
-1. Check if file exists in target repo (`github_get_file_contents`)
-2. If both modified, note conflict in issue
-3. Recommend manual merge in issue body
-
-### Pull Conflicts
-
-Before creating pull issue:
-1. Read local file content
-2. Analyze for project-specific modifications
-3. If project-specific content found:
-   - SKIP this file
-   - Note as "protected" in issue
-   - Recommend manual review if needed
-4. If safe, proceed with pull proposal
-
-## Tools Required
-
-- **File reading:** Use available file reading tools
-- **GitHub operations:**
-  - `github_get_me` - Identify authenticated user
-  - `github_get_file_contents` - Read remote files
-  - `github_issue_write` - Create issues
-  - `github_list_commits` - Detect changes since last sync
-
-## Integration with git-workflow
-
-1. Execute AFTER changes are committed to feature branch
-2. Create sync issue as proposal (not auto-merge)
-3. Human reviews and merges in target repository
-4. Update sync state after successful sync
-
-## Example Usage
-
-### Manual Sync
-
-```
-User: /skill sync-guidelines
-
-Agent:
-1. Discovers changed files
-2. Reads each file's content
-3. Analyzes and classifies intelligently
-4. Creates issue with analysis
-5. Posts comment to spec issue
-```
-
-### Classification Example
-
-```
-
-Analysis:
-- Defines PEP 8 standards (generic)
-- Defines typing rules (generic)
-- Defines code quality rules (generic)
-- No project name references
-- No project-specific paths
-- No database references
-
-Classification: ✅ Core (sync bidirectionally)
-
----
-
-
-Analysis:
-- Contains "pubmed_data_3" (project-specific database)
-- Contains "project_root" handling (project-specific)
-- Contains project-specific configuration
-- Would break in another project
-
-Classification: 🚫 Project-Specific (never sync)
 ```
 
 ## Prohibitions
@@ -292,3 +92,56 @@ Classification: 🚫 Project-Specific (never sync)
 - Explain classification reasoning in issue
 - Create issues only (never direct edits)
 - Let human reviewer make final decision on uncertain cases
+
+## Tools Required
+
+- **File reading:** Use available file reading tools
+- **GitHub operations:**
+  - `github_get_file_contents` — Read remote files
+  - `github_issue_write` — Create issues
+  - `github_list_commits` — Detect changes since last sync
+
+## Integration with git-workflow
+
+1. Execute AFTER changes are committed to feature branch
+2. Create sync issue as proposal (not auto-merge)
+3. Human reviews and merges in target repository
+4. Update sync state after successful sync
+
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `git-workflow` in Cross-References section | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `coherence-auditor` (implied by sync consistency checking) | File exists at `.opencode/skills/coherence-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `classify` | File exists at `.opencode/skills/sync-guidelines/tasks/classify.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sync-push` | File exists at `.opencode/skills/sync-guidelines/tasks/sync-push.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sync-pull` | File exists at `.opencode/skills/sync-guidelines/tasks/sync-pull.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `issue-format` | File exists at `.opencode/skills/sync-guidelines/tasks/issue-format.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` branch management behavior | Matches actual SKILL.md: branch, commit, PR workflow | CONFLICTING if mismatched |
+| `coherence-auditor` drift detection behavior | Matches actual SKILL.md: detects guideline-skill drift | CONFLICTING if mismatched |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+
+## Cross-References
+
+- Related skills: `git-workflow` (branch management, commit workflow), `coherence-auditor` (drift detection and verification after sync)
+- Related guidelines: `000-critical-rules.md` (no vibe coding, scope autonomy)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

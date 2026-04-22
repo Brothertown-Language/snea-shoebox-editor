@@ -12,8 +12,7 @@ Generate and attach audit report to GitHub Issue for fresh-start context preserv
 ## Exit Criteria
 
 - Audit report created in `./tmp/coherence-audit-YYYYMMDD-<mode>.md`
-- Report attached as GitHub Issue comment
-- Temp file deleted
+- Report retained in `./tmp/` for session reference
 
 ## Procedure
 
@@ -39,30 +38,21 @@ Scope: .opencode/guidelines/[, .opencode/skills/]
 <List each issue with file, issue class, priority, status, action>
 
 ## Baseline Metrics (maintenance mode only)
-- Total guideline tokens: N
-- Total skill tokens: N
-- Combined tokens: N
-- Drift from baseline: <+/-N tokens> (<+/-N%>)
+- Total guideline words: N
+- Total skill words: N
+- Combined words: N
+- Drift from baseline: <+/-N words> (<+/-N%>)
 ```
 
-### Step 2: Attach to GitHub Issue
+### Step 2: Report to Chat
 
-```python
-github_add_issue_comment(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    issue_number=target_issue,
-    body=f"AI: {AgentName} {ModelID} 📝 Coherence Audit: {mode}\n\n{report_content}"
-)
-```
+Report audit findings summary to chat (NOT as GitHub Issue comment). The full audit log is retained in `./tmp/` for session reference.
 
-### Step 3: Delete Temp File
+### Step 3: Retain Temp File
 
-```bash
-rm ./tmp/coherence-audit-YYYYMMDD-<mode>.md
-```
+Retain the audit log in `./tmp/` for session reference. Do NOT delete — it may be needed for follow-up work.
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO
+- Session values: <github.owner>, <github.repo>
 - Related tasks: All tasks feed into this report

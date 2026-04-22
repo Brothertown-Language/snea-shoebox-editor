@@ -1,15 +1,14 @@
 # Fragment: Branch-First Protocol
 
-**🚫 ZERO TOLERANCE: Branch Before Edit**
+**🚫 ZERO TOLERANCE: Branch Before Edit (via Worktree)**
 
-**The agent MUST create a feature branch BEFORE ANY filesystem change.**
+**The agent MUST create a feature worktree BEFORE ANY filesystem change.**
 
 This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any file, creating any file, or making ANY change to the project:
 
-1. **Check current branch**: `git branch --show-current`
-2. **If on `main`**: STOP — you MUST create a feature branch first
-3. **Create branch**: `git checkout -b spec/<short-name>` or `git checkout -b feature/<description>`
-4. **ONLY THEN**: Proceed with file changes
+1. **Invoke `using-git-worktrees` skill** — creates isolated worktree (MANDATORY, no exceptions)
+2. **All work happens in the worktree** — never in the main working directory
+3. **ONLY THEN**: Proceed with file changes inside the worktree
 
 **What Counts as a "Change"?**
 - Editing any file (code, config, docs, tests)
@@ -22,8 +21,8 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - **Using file-editing MCP tools** (`pycharm_replace_text_in_file`, `pycharm_create_new_file`, etc.) — these ARE filesystem changes
 
 **⚠️ MCP Tools Are NOT an Exception**
-- `pycharm_replace_text_in_file` → edits files → MUST be on feature branch
-- `pycharm_create_new_file` → creates files → MUST be on feature branch
+- `pycharm_replace_text_in_file` → edits files → MUST be in worktree
+- `pycharm_create_new_file` → creates files → MUST be in worktree
 - `github_issue_write` → GitHub Issues, NOT local files → NOT a filesystem change
 - `github_add_issue_comment` → GitHub comments → NOT a filesystem change
 
@@ -33,47 +32,45 @@ This is the FIRST and MOST CRITICAL rule. Before writing any code, editing any f
 - No exceptions for docs, tests, configs, or guidelines
 - No exceptions for hotfixes or urgent changes
 - No exceptions for typo fixes or whitespace changes
-- The branch IS the safety net — without it, mistakes have no rollback
+- The worktree IS the safety net — without it, mistakes have no rollback
 
 **Violation = Hard Stop**
 - If you catch yourself about to edit files while on `main`, STOP immediately
-- Report "I need to create a branch first" and wait for the branch creation
-- Never proceed past this checkpoint without a feature branch
+- Report "I need to create a worktree first" and invoke `using-git-worktrees`
+- Never proceed past this checkpoint without an active worktree
 
 ### ✅ ALWAYS DO
 ```
-# Correct order:
-git checkout main && git pull origin main
-git checkout -b spec/my-change      # ← FIRST
-# NOW edit files, write code, etc.   # ← SECOND
+# Correct order (using worktree):
+# 1. Sync dev: git checkout dev && git pull origin dev
+# 2. Create worktree: git worktree add .worktrees/spec-my-change -b spec/my-change dev
+# 3. Work in .worktrees/spec-my-change/ (using workdir parameter on bash commands)
+# IMPORTANT: For read/edit/write/glob/grep tools, prefix filePath with worktree.path:
+#   read(filePath=f"{worktree.path}/src/main.py")  — NOT read(filePath="src/main.py")
 ```
 
 ### 🚫 NEVER DO
 ```
-# WRONG ORDER — VIOLATION:
-# edit files, write code...           # ← WRONG: No branch yet
-git checkout -b spec/my-change        # ← Too late!
+# WRONG — VIOLATION (stash+checkout):
+git stash -u
+git checkout -b spec/my-change
+# Work in main working directory
+
+# WRONG — VIOLATION (checkout without worktree):
+git checkout dev && git pull origin dev
+git checkout -b spec/my-change dev
+# Work in main working directory
 ```
 
-## Preserve External Changes: Stash ALL Unrelated Changes FIRST
+## Worktree Isolation (Replaces Stash)
 
-**When ANY files are modified on `main` (or current branch), the agent MUST stash them BEFORE creating a new branch.**
+Worktrees provide complete isolation — no stash is needed. Each worktree has its own working directory, so main tree changes are never affected.
 
-### ⚠️ MANDATORY: Stash First, Ask Questions Never
-
-**Before ANY branch creation, this sequence is MANDATORY:**
-
-1. `git status` — Check for modifications
-2. **ALWAYS stash ALL pending changes (modified, deleted, untracked):**
-   - `git stash push -u -m "WIP: before <branch-name>"`
-   - **The `-u` flag includes untracked files — MANDATORY.**
-   - `git stash list` — **VERIFY stash was created**
-   - `git status` — **VERIFY working tree is clean** (must show "nothing to commit, working tree clean")
-3. **Then and ONLY then**: Create branch
+**If `worktree.path` is not set or empty after worktree creation: FATAL ERROR → FLAG DEV → HALT.**
 
 <!--
 Fragment ID: branch-first-protocol
-Estimated tokens: 425
+Estimated tokens: 380
 Type: text-block
 Sync status: synchronized
 -->

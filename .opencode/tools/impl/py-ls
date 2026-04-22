@@ -1,23 +1,30 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: List packages and modules under a path (replaces `ls` for Python source trees).
-Usage: uv run python .opencode/tools/py ls [<path>] [--all]
-Example: uv run python .opencode/tools/py ls src/commons
-         uv run python .opencode/tools/py ls src/commons/persistence
-         uv run python .opencode/tools/py ls  (lists top-level packages in src/)
+Usage: ./.opencode/tools/py ls [<path>] [--all]
+Example: ./.opencode/tools/py ls src/commons
+         ./.opencode/tools/py ls src/commons/persistence
+         ./.opencode/tools/py ls  (lists top-level packages in src/)
 Options:
   --all   Include non-package directories and non-.py files too
 """
 from __future__ import annotations
 import os as _os
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+    print("ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/py ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
+import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
 
 
 def is_package(p: Path) -> bool:
@@ -34,17 +41,16 @@ def main() -> None:
     positional = [a for a in args if not a.startswith("--")]
 
     if positional:
-        target = BASE_DIR / positional[0]
+        target = PROJECT_ROOT / positional[0]
     else:
-        # default: src/
-        target = BASE_DIR / "src"
+        target = PROJECT_ROOT / "src"
 
     if not target.exists():
         print(f"Error: path not found: {positional[0] if positional else 'src'}", file=sys.stderr)
         sys.exit(1)
 
     if not target.is_dir():
-        print(f"Error: not a directory: {target.relative_to(BASE_DIR)}", file=sys.stderr)
+        print(f"Error: not a directory: {target.relative_to(PROJECT_ROOT)}", file=sys.stderr)
         sys.exit(1)
 
     entries = sorted(target.iterdir(), key=lambda p: (p.is_file(), p.name))
@@ -67,7 +73,7 @@ def main() -> None:
             printed = True
 
     if not printed:
-        rel = target.relative_to(BASE_DIR)
+        rel = target.relative_to(PROJECT_ROOT)
         print(f"(no Python packages or modules found in {rel})")
 
 

@@ -1,10 +1,12 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-from typing import Optional
-from src.database import get_session, UserPreference
+
+from src.database.connection import get_session
+from src.database.models.identity import UserPreference
 from src.logging_config import get_logger
 
 logger = get_logger("snea.preference_service")
+
 
 class PreferenceService:
     """
@@ -12,7 +14,7 @@ class PreferenceService:
     """
 
     @staticmethod
-    def get_preference(user_email: str, view_name: str, key: str, default: Optional[str] = None) -> Optional[str]:
+    def get_preference(user_email: str, view_name: str, key: str, default: str | None = None) -> str | None:
         """
         Retrieves a saved preference for a user and view.
         Returns the default value if no preference is found or if an error occurs.
@@ -50,13 +52,10 @@ class PreferenceService:
                 pref.preference_value = value
             else:
                 new_pref = UserPreference(
-                    user_email=user_email,
-                    view_name=view_name,
-                    preference_key=key,
-                    preference_value=value
+                    user_email=user_email, view_name=view_name, preference_key=key, preference_value=value
                 )
                 session.add(new_pref)
-            
+
             session.commit()
             return True
         except Exception as e:

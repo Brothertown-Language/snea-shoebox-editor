@@ -17,12 +17,12 @@ Every script/notebook MUST include root resolution:
   CWD.
 - Resolve project root via `git rev-parse --show-cdup` only. `show-toplevel` is **strictly prohibited** because it returns absolute paths, which break portability and leak local filesystem structure. All internal project references must be relative.
 
-
 ## Notebook Operations — MANDATORY MCP
 
 **ALL notebook operations MUST use `the-notebook-mcp` tools.** See `notebook-operations` skill for the complete tool reference.
 
 ### ✅ MANDATORY
+
 - Use `the-notebook-mcp_notebook_read` to read notebook content
 - Use `the-notebook-mcp_notebook_read_cell` to read specific cell source
 - Use `the-notebook-mcp_notebook_edit_cell` to edit cell source
@@ -32,6 +32,7 @@ Every script/notebook MUST include root resolution:
 - Use `the-notebook-mcp_notebook_rename` to move notebooks (for archival)
 
 ### 🚫 FORBIDDEN
+
 - `nbformat` direct access
 - Jupyter Server REST API
 - Any file tool (`read`/`edit`/`write`) on `.ipynb` files
@@ -40,6 +41,7 @@ Every script/notebook MUST include root resolution:
 ### Notebook Cell Edit Workflow
 
 When editing a notebook cell:
+
 1. **Read**: `the-notebook-mcp_notebook_read_cell(notebook_path="...", cell_index=N)` — get current cell source
 2. **Edit**: Modify source as needed
 3. **Update**: `the-notebook-mcp_notebook_edit_cell(notebook_path="...", cell_index=N, source="new source")`
@@ -47,6 +49,7 @@ When editing a notebook cell:
 ### Retiring Notebooks
 
 To retire a notebook:
+
 1. Add a deprecation warning cell using `the-notebook-mcp_notebook_add_cell`
 2. Move notebook to archive directory using `git mv`
 3. Or delete entirely using `the-notebook-mcp_notebook_delete`
@@ -60,4 +63,5 @@ To retire a notebook:
 **If `the-notebook-mcp` is unavailable, REFUSE all notebook operations.** See `notebook-operations` skill for the no-fallback policy and detailed workflows.
 
 ## Command Restrictions
+
 - Strictly follow all command and path restrictions defined in `060-tool-usage.md`.

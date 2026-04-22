@@ -1,61 +1,67 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
-import streamlit as st
-import socket
 import os
 import platform
 import shutil
-import psutil
+import socket
 from urllib.parse import urlparse
+
+import psutil
+import streamlit as st
 from sqlalchemy import text
+
 
 def get_db_host_port():
     """Extracts host and port from Streamlit secrets or environment.
     If it's a Unix socket, host will be the path and port will be 0.
     """
     try:
-        from src.database import get_db_url
+        from src.database.connection import get_db_url
+
         url = get_db_url()
-        
+
         if url:
             parsed = urlparse(url)
             # Handle pgserver/Unix socket style: postgresql://...@/postgres?host=/path/to/socket
             import urllib.parse
+
             query = urllib.parse.parse_qs(parsed.query)
-            if 'host' in query:
-                return query['host'][0], 0
-            
+            if "host" in query:
+                return query["host"][0], 0
+
             # For regular TCP: hostname might be empty for localhost in some URIs
             return parsed.hostname or "localhost", parsed.port or 5432
     except Exception:
         pass
     return None, None
 
+
 def verify_dns(host):
     """Verifies DNS resolution for the given host (IPv4 and IPv6)."""
     if not host:
         return False, "No host provided", [], []
-    
+
     ipv4_ips = []
     ipv6_ips = []
-    
+
     # Try IPv4
     try:
         _, _, ipv4_ips = socket.gethostbyname_ex(host)
     except Exception:
         pass
-        
+
     # Try IPv6
     try:
         addr_info = socket.getaddrinfo(host, None, socket.AF_INET6)
         ipv6_ips = list(set(info[4][0] for info in addr_info))
     except Exception:
         pass
-        
+
     if ipv4_ips or ipv6_ips:
         return True, "DNS Resolution Successful", ipv4_ips, ipv6_ips
     else:
         return False, "DNS Resolution Failed for both IPv4 and IPv6", [], []
+
 
 def verify_reachability(host, port):
     """Verifies socket reachability for the given host and port.
@@ -65,7 +71,7 @@ def verify_reachability(host, port):
         return False, "No host provided", False, False
 
     # Handle Unix Socket
-    if port == 0 or host.startswith('/'):
+    if port == 0 or host.startswith("/"):
         try:
             # Check if host is the direct path to the socket
             socket_path = host
@@ -76,7 +82,7 @@ def verify_reachability(host, port):
                     if item.startswith(".s.PGSQL.") and not item.endswith(".lock"):
                         socket_path = os.path.join(host, item)
                         break
-            
+
             if os.path.exists(socket_path):
                 # Try to connect to see if it's actually a listening socket
                 with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
@@ -93,7 +99,7 @@ def verify_reachability(host, port):
 
     ipv4_ok = False
     ipv6_ok = False
-    
+
     # Check IPv4
     try:
         # socket.create_connection uses the first address returned by getaddrinfo
@@ -130,39 +136,52 @@ def verify_reachability(host, port):
     else:
         return False, "Socket Connection Failed for both IPv4 and IPv6", False, False
 
+
 def check_db_connection():
     """Checks the database connection and returns status and details."""
     try:
-        from src.database import get_session
+        from src.database.connection import get_session
+
         session = get_session()
         try:
             # Simple query to test connection
             session.execute(text("SELECT 1"))
-            
+
             # Check for pgvector
             pgvector_check = session.execute(text("SELECT 1 FROM pg_extension WHERE extname = 'vector'")).fetchone()
             capabilities = {"pgvector": bool(pgvector_check)}
-            
+
             return True, "Connected Successfully", capabilities
         finally:
             session.close()
     except Exception as e:
         return False, str(e), {}
 
+
 def get_git_info():
     """Gathers information about the current git state."""
     import subprocess
+
     info = {}
     try:
         # Commit hash
-        info["Commit"] = subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.STDOUT).decode().strip()
+        info["Commit"] = (
+            subprocess.check_output(["git", "rev-parse", "--short", "HEAD"], stderr=subprocess.STDOUT).decode().strip()
+        )
         # Branch
-        info["Branch"] = subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT).decode().strip()
+        info["Branch"] = (
+            subprocess.check_output(["git", "rev-parse", "--abbrev-ref", "HEAD"], stderr=subprocess.STDOUT)
+            .decode()
+            .strip()
+        )
         # Last commit date
-        info["Date"] = subprocess.check_output(["git", "log", "-1", "--format=%cd"], stderr=subprocess.STDOUT).decode().strip()
+        info["Date"] = (
+            subprocess.check_output(["git", "log", "-1", "--format=%cd"], stderr=subprocess.STDOUT).decode().strip()
+        )
     except Exception:
         info["Error"] = "Not a git repository or git not installed"
     return info
+
 
 def get_env_info():
     """Gathers information about the environment."""
@@ -171,7 +190,7 @@ def get_env_info():
         "Platform": platform.platform(),
         "Processor": platform.processor(),
         "Hostname": socket.gethostname(),
-        "Streamlit Version": st.__version__
+        "Streamlit Version": st.__version__,
     }
     # Add git info
     git = get_git_info()
@@ -194,12 +213,13 @@ def get_filesystem_info():
                 "Total": f"{usage.total / (1024**3):.2f} GB",
                 "Used": f"{usage.used / (1024**3):.2f} GB",
                 "Free": f"{usage.free / (1024**3):.2f} GB",
-                "Writable": os.access(abs_path, os.W_OK)
+                "Writable": os.access(abs_path, os.W_OK),
             }
         except Exception as e:
             fs_info[abs_path] = {"Error": str(e)}
-            
+
     return fs_info
+
 
 def get_hardware_info():
     """Gathers information about the hardware."""
@@ -207,17 +227,17 @@ def get_hardware_info():
         cpu_count = psutil.cpu_count(logical=True)
         cpu_freq = psutil.cpu_freq()
         mem = psutil.virtual_memory()
-        
+
         info = {
             "CPU Count (Logical)": cpu_count,
             "Memory Total": f"{mem.total / (1024**3):.2f} GB",
             "Memory Available": f"{mem.available / (1024**3):.2f} GB",
-            "Memory Percent Used": f"{mem.percent}%"
+            "Memory Percent Used": f"{mem.percent}%",
         }
-        
+
         if cpu_freq:
             info["CPU Frequency"] = f"{cpu_freq.current:.2f} MHz"
-            
+
         return info
     except Exception as e:
         return {"Error": str(e)}

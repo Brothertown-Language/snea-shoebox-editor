@@ -1,5 +1,7 @@
 import unittest
+
 from src.services.linguistic_service import LinguisticService
+
 
 class TestLinguisticNormalization(unittest.TestCase):
     def test_generate_sort_lx_leading_numerals(self):
@@ -29,19 +31,20 @@ class TestLinguisticNormalization(unittest.TestCase):
 
     def test_generate_sort_lx_special_symbols(self):
         # ∞ alone → oozzz
-        self.assertEqual(LinguisticService.generate_sort_lx('∞'), 'oozzz')
+        self.assertEqual(LinguisticService.generate_sort_lx("∞"), "oozzz")
         # -∞- → oozzz- (leading punct stripped, trailing kept)
-        self.assertEqual(LinguisticService.generate_sort_lx('-∞-'), 'oozzz-')
+        self.assertEqual(LinguisticService.generate_sort_lx("-∞-"), "oozzz-")
         # o∞p → ooozzzp (mid-word substitution)
-        self.assertEqual(LinguisticService.generate_sort_lx('o∞p'), 'ooozzzp')
+        self.assertEqual(LinguisticService.generate_sort_lx("o∞p"), "ooozzzp")
         # ✔word → word (check mark stripped)
-        self.assertEqual(LinguisticService.generate_sort_lx('✔word'), 'word')
+        self.assertEqual(LinguisticService.generate_sort_lx("✔word"), "word")
         # Sort order: oo < ∞ < op
-        self.assertLess(LinguisticService.generate_sort_lx('oo'), LinguisticService.generate_sort_lx('∞'))
-        self.assertLess(LinguisticService.generate_sort_lx('∞'), LinguisticService.generate_sort_lx('op'))
+        self.assertLess(LinguisticService.generate_sort_lx("oo"), LinguisticService.generate_sort_lx("∞"))
+        self.assertLess(LinguisticService.generate_sort_lx("∞"), LinguisticService.generate_sort_lx("op"))
         # Sort order: ooy < ∞ < op
-        self.assertLess(LinguisticService.generate_sort_lx('ooy'), LinguisticService.generate_sort_lx('∞'))
-        self.assertLess(LinguisticService.generate_sort_lx('∞'), LinguisticService.generate_sort_lx('op'))
+        self.assertLess(LinguisticService.generate_sort_lx("ooy"), LinguisticService.generate_sort_lx("∞"))
+        self.assertLess(LinguisticService.generate_sort_lx("∞"), LinguisticService.generate_sort_lx("op"))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     unittest.main()

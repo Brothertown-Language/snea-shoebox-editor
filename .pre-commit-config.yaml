@@ -1,10 +1,17 @@
 repos:
 -   repo: https://github.com/astral-sh/ruff-pre-commit
     # Ruff version.
-    rev: v0.1.0
+    rev: v0.11.0
     hooks:
       # Run the linter.
       - id: ruff
         args: [ --fix ]
       # Run the formatter.
       - id: ruff-format
+-   repo: local
+    hooks:
+      - id: detect-secrets
+        name: detect-secrets
+        entry: .opencode/tools/detect-secrets-wrapper.sh
+        language: script
+        stages: [pre-commit]

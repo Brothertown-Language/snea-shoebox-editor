@@ -17,6 +17,7 @@ dependencies = [
     "tqdm>=4.67.1",
 ]
 
+
 [project.optional-dependencies]
 local = [
     "pgserver>=0.1.4",
@@ -29,10 +30,11 @@ dev = [
     "pytest>=9.0.2",
     "sentence-transformers>=3.0.0",
     "playwright>=1.58.0",
+    "pyyaml>=6.0.3",
 ]
 
 [tool.ruff]
-# Match PyCharm defaults (usually PEP 8)
+required-version = ">=0.14.14"
 line-length = 120
 indent-width = 4
 target-version = "py312"

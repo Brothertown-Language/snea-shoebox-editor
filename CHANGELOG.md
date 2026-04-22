@@ -12,6 +12,254 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/1119-ui-sub-agent-skills
+
+- **Self-Identifying UI Sub-Agent Skills** (#1119, #1120, #1121, #1122, #1123) - Added two self-identifying UI sub-agent skills (ui-design with kimi-k2.6:cloud, ui-engineer with glm-5.1:cloud) with three-tier trigger self-identification, 12 task files, 6 PEP 723 scripts (including Playwright-based render/screenshot), 4 templates (SVG wireframe, HTML mockup, YAML interaction spec schema, Streamlit app), and divide-and-conquer enhancement for UI sub-agent routing with model context propagation.
+
+### spec/1115-reference-verification-mandate
+
+- **References Verification Mandate** (#1115, references #1113) - Added `REFERENCES_VERIFICATION_MANDATE` injection block to session-enforcement plugin, closing the "I already know this" rationalization loophole. Names specific bypass patterns as FORBIDDEN, imposes a self-audit gate requiring tool-call artifacts before claims, and is unconditional with no scope, exemption, size, or qualification bypasses.
+
+### config/1112-american-english-mandate
+
+- **Southeastern United States English Language Preference** (#1112) - Added language preference block to session-enforcement.ts system prompt injection. All agent communications now default to formal/business/professional Southeastern United States English, balancing Southern politeness conventions with professional clarity.
+
+### spec-fix/1066-1067-byline-enforcement-gaps
+
+- **External Repository Byline Requirement** (#1066) - Added "Posted Content Requiring Attribution" table to 080-code-standards.md covering issue comments, PR comments, PR bodies, and issue bodies on any repository. Clarified that external posts have HIGHER attribution priority than internal content.
+- **Standalone Byline Correction Prohibition** (#1067) - Added "Standalone Byline Correction — FORBIDDEN" section to 080-code-standards.md with correction procedure (edit/delete+repost/accept omission). Added Step 3.5 (Byline Verification) to issue-operations comment task with mandatory pre-post byline check and standalone correction comment prohibition.
+
+### spec-fix/1053-simple-work-dispatch-path
+
+- **Add Simple Work Dispatch Path** (#1053, #1063, #1064) - Added lightweight dispatch path for "clearly simple work" (docs, runbooks, minor config) that resolves agent contention between Tier 1 safety mandates and Tier 2 process waivers. Simple work now follows: pre-work → implement → VbC → checklist → review-prep, preserving worktree mandates while skipping spec/plan requirements. Added "Simple Work Dispatch Path (Tier 2 Waiver)" section to 000-critical-rules.md with classification table, "Decision Table: Simple Work + File Modifications" to 010-approval-gate.md, simple-work dispatch branch to approval-gate/SKILL.md, and "Simple Work Worktree" section to using-git-worktrees/SKILL.md.
+
+### spec-fix/1042-1043-approval-gate-autonomous-classification
+
+- **Remove Conditional Sub-Agent Dispatch Threshold** (#1043) - Removed the ≤3 inline screening threshold from approval-gate. Screen-issue sub-agent dispatch is now mandatory for ALL approval set sizes, regardless of count. Replaced conditional logic in 000-critical-rules.md, pre-implementation-analysis.md, and SKILL.md verification table. Added "Common Misconception" sections explaining why the threshold was removed.
+- **Add Autonomous Classification Resolution** (#1042) - Added classification decision table to pre-implementation-analysis.md (Step 0.15) mapping screening results to autonomous actions. Added "Autonomous Resolution" section to screen-issue.md with prohibited questions and genuine escalation criteria. Added pre-implementation-analysis classification decisions as prohibited questions in 000-critical-rules.md §Pushing Agent Intelligence Decisions to the User.
+
+### spec/sub-agent-extraction
+
+- **Sub-Agent Extraction for Heavy Skill Tasks** (#984, #985, #986, #987, #988) - Extracted task files over 1,000 words into sub-agent execution pattern, reducing main agent context consumption by ~88%. Created `screen-issue` task for per-issue screening, revised `pre-implementation-analysis` from 5,635w to 3,137w, and added Sub-Agent Tasks sections with execution mode tables and result contracts to 7 SKILL.md files.
+
+### batch/apr-16-enforcement-batch
+
+- **Secret Detection Semaphore Documentation** (#840, #919) - Added `.opencode/docs/secret-detection.md` documenting the detect-secrets semaphore mechanism, configuration options, and opt-in workflow for credential leak prevention.
+- **Byline Format Drift Correction** (#866, #917) - Audited and corrected byline iconography across 16 files. Added `other` catch-all status with 🎯 icon, added iconography column to Status Text Guide, and corrected non-standard status words in 8 skill files.
+- **Dev Branch Auto-Creation** (#861, #922) - Fixed `git-workflow/tasks/pre-work.md` to auto-create `origin/dev` when it doesn't exist, preventing pre-work failures on fresh repositories.
+- **Submodule Provenance Platform Detection** (#783, #921) - Added Step 0.5 platform detection to `release-promotion.md` and Submodule Provenance section to SKILL.md, ensuring cross-platform provenance tracking works correctly.
+- **Sub-Agent Abnormal Termination Recovery** (#871, #915) - Added completion checkpoint protocol to `divide-and-conquer`, post-dispatch verification + self-commit protocol to `dispatch.md`, and abnormal termination detection to `assemble-batch.md`.
+- **Chat Output Format Enforcement** (#869, #916) - Added format verification checkpoints to 3 approval-gate task files and expanded "Wrong Chat Output at Halt Points" in `000-critical-rules.md` with mandatory auto-fix before output.
+- **PR URL vs Compare URL Differentiation** (#876, #923) - Differentiated PR URL (post-PR) from Compare URL (pre-PR) labels across `review-prep.md`, `assemble-batch.md`, `000-critical-rules.md`, and `checklist.md`.
+- **Combined Spec+Plan Decision Gate** (#842, #918) - Added Step 1.5 decision gate to `writing-plans/tasks/create.md` for single combined spec+plan issue on single-task work, with `single_task` parameter in `post-creation.md`.
+- **Verification-Enforcement Skill** (#959, #960) - Created new `verification-enforcement` skill (SKILL.md + 4 task files) enforcing mandatory pre-generation verification gate. Updated 7 existing files with `verify`/`revisit` invocations.
+- **Ground-Truth Adversarial Verification** (#827, #920) - Added adversarial verification to 3 approval-gate task files and live verification sections to 12 remaining skills, closing the "trust without evidence" gap.
+
+### spec/runbook-fix
+
+- **SRE Runbook Operational Discipline** (#943, #955) - Rewrote `sre-runbook` skill to enforce environment-context-first discipline and single-path operational procedures. Runbooks now collect interface preference, available tools, OS version, and repo documentation before generating any instructions. Added 17-point validation checklist, live-verification requirements (verify commands against `--help`/man pages/vendor docs), evidence anchoring, version pinning, and "last verified" timestamps. Skills that cannot verify against live sources now HALT instead of falling back to training knowledge.
+
+### spec/946-closed-issue-verification
+
+- **Closed Issue Verification Gates** (#946) - Fixed "closed = verified" assumption across 8 skill files and 1 guideline. Closed issues are no longer trusted without merged PR evidence. Added `verify-closed-issue` task with 7-step verification procedure, pre-closure sub-issue verification gate in cleanup, closed-issue verification in auto-dispatch, and critical violation in `000-critical-rules.md`.
+
+### batch/apr-15-enforcement-batch
+
+- **Byline Format Drift Audit** (#866) - Audited and corrected `<AI-Name>`/`<ModelID>` placeholder tokens across all guidelines and skills. Replaced hardcoded agent/model references with runtime-resolvable placeholders. Added critical violation for hardcoded identity values in `000-critical-rules.md`.
+- **Question Tool Checkpoint in Batch Approval** (#863) - Added mandatory checkpoint in `assemble-batch.md` Step 3 prohibiting `question` tool usage during sub-agent dispatch. Structural decisions must be resolved autonomously.
+- **Compare URL vs PR URL Labels** (#876) - Differentiated Compare URL (pre-PR) from PR URL (post-PR) labels in `000-critical-rules.md`, `assemble-batch.md`, and `review-prep.md`. Added URL label context table.
+- **Sub-Agent Abnormal Termination Detection** (#871) - Added completion checkpoint in `assemble-batch.md` Step 3.6 and `dispatch.md` Step 4 for detecting sub-agent crashes/timeouts with recovery decision logic.
+- **Chat Output Format Enforcement** (#869) - Added mandatory format verification checklist to `assemble-batch.md` Step 6, `000-critical-rules.md`, and approval-gate tasks. Auto-fix for missing/misordered elements before output.
+- **Combined Spec+Plan for Single-Task Plans** (#842) - Updated `writing-plans` skill to create a single combined spec+plan issue for single-task work. Added `is_single_task` detection and updated workflow.
+- **Auto-Create Dev Branch in Pre-Work** (#861) - Added dev branch auto-creation in `git-workflow/tasks/pre-work.md` when dev branch doesn't exist.
+- **Non-Submodule Release Promotion Path** (#913) - Added `release-promotion.md` task to `git-workflow` skill supporting plain Git repos with version bump, tag, push, and merge-back steps.
+- **Mandate Tiering for Process vs Safety Rules** (#912) - Added Tier 1 (non-yielding, safety-critical) and Tier 2 (authorization-waivable, process) classification to `000-critical-rules.md`. Tier 1 never yields to developer authorization.
+- **Placeholder Identity Resolution** (#905) - Replaced hardcoded identity tokens with runtime-resolvable placeholders (`<AI-Name>`, `<ModelID>`, `DEV_NAME`, `GIT_OWNER`, `GIT_REPO`). Updated `session-init` tool to emit these values.
+- **Batch PR Enforcement** (#904) - Added mandatory rule #07 to `assemble-batch.md` and updated `pr-creation-workflow/SKILL.md` to enforce single PR per batch.
+- **Submodule Provenance Tracking** (#783) - Added `provenance.md` task to `git-workflow` skill. Updated `release-promotion.md` and `review-prep.md` with submodule-aware checkout verification.
+
+### spec/838-active-enforcement
+
+- **Active Spec/Plan Enforcement** (#838) - Added "Silent Halt Without Prompt" critical violation requiring agents to search GitHub Issues for existing spec/plan candidates before halting, present the results to the user, and flag as FAILURE if no spec/plan is created. Updated 7 files: 000-critical-rules.md, 010-approval-gate.md, 020-go-prohibitions.md, approval-gate SKILL.md, verify-qa-mode.md, brainstorming SKILL.md, and spec-creation SKILL.md.
+
+### spec/805-redundant-session-init
+
+- **Remove Redundant Session-Init Execution** (#805) - Removed redundant "Run session init script at session start" instruction from AGENTS.md (plugin already injects this) and cleaned stale references to deleted session.py, auth.py, and exceptions.py from gitbucket-api skill documentation.
+
+### spec/840-credential-leakage
+
+- **Credential Leakage Prevention** (#840) - Added layered defense against credential leaks: gitignore hardening (16 patterns), conditional detect-secrets pre-commit hook (opt-in via `.secrets.baseline`), generalized session-init credential guard (`.env`, `.streamlit/secrets.toml`, `.streamlit/secrets.toml.production`), remediation documentation, and 25 integration tests across 4 test classes.
+
+### spec/814-plan-bleed-ambiguous
+
+- **PLAN-BLEED-AMBIGUOUS Problem Class** (#814) - Added the PLAN-BLEED-AMBIGUOUS problem class to spec-auditor, completing the spec/plan boundary enforcement plan. Ambiguous content that could be either requirement or implementation detail is now flagged for domain judgment instead of being auto-fixed or missed.
+
+### spec/821-template-enforcement
+
+- **Intent-Driven Spec Guidelines** (#821) - Replaced rigid structural templates across 12 guideline and skill files with intent-driven prose guidelines. Auditors now flag issues for review instead of auto-fixing, and spec creation uses content coverage prompts instead of mandatory section checklists.
+
+### spec/592-submodule-release
+
+- **Submodule Release Coordination** (#592) - Implemented automanaged submodule lifecycle: session-start sync with missing dev auto-creation, automated commit/push in review-prep, SHA validation scripts (validate-submodule-refs.sh, enhanced validate-release-tags.sh with --semver/--branch), PR dependency chain enforcement, automated dev→main release promotion, and cross-platform (GitHub + GitBucket) tag verification.
+
+### spec/batch-apr-13-2026
+
+- **Batch Approval Implementation** (#756, #752, #728, #688, #680, #667, #533, #306, #662, #630, #683, #763, #762, #614, #470, #467) - 17 issues implemented in a single batch, including unified batch workflow, mandatory post-implementation invocation, auto-rebase pending PRs, bug analysis auto-spec, discussion-conclusion non-authorization patterns, label state machine cross-references, spec-auditor auto-fix model, branch-header changelog, identity placeholder cleanup, brainstorming terminal state, session enforcement discussion mode, ruff version sync, stale User import fix, byline format standardization, PR trigger check, and template-driven element removal.
+
+### spec/branch-stacking-prerequisite
+
+- **Branch Stacking Prerequisite** (#771) - Established that feature branch stacking is a prerequisite for code correctness, not a preference. Updated 6 documentation files to reframe parallel execution as opportunistic-only with documented justification required. Added critical violation entry for treating stacking as optional.
+
+### Changed
+
+- **Unified Batch Workflow** (#756) - Renamed batch-approval-analysis to pre-implementation-analysis, removed IMPLEMENT_DIRECTLY dispatch path, and unified single/batch issue handling through divide-and-conquer assemble-batch.
+- **Mandatory Post-Implementation Invocation** (#752) - Added mandatory invocation steps to 22 skill files for verification-before-completion and finishing-a-development-branch after implementation completes.
+- **Auto-Rebase Pending PRs** (#728) - Added rebase-pending task to git-workflow with intent-based conflict resolution for PRs that fall behind dev.
+- **Bug Analysis Auto-Spec** (#688) - Added analyze-and-spec and verify-fix-spec tasks to issue-review skill for automatic fix spec creation from bug reports.
+- **Discussion-Conclusion Non-Authorization** (#680) - Added explicit non-authorization patterns for verbal agreement, consensus, and opinion in go-prohibitions guideline.
+- **Label State Machine Cross-References** (#667) - Added YAML symbolic state machines to 12 guideline and skill files for authorization lifecycle tracking.
+- **Spec-Auditor Auto-Fix Model** (#533) - Added three-tier auto-fix model (auto-fix, conditional, flag-for-review) and executive summary output format to spec-auditor skill.
+- **Branch-Header Changelog** (#306) - Implemented branch-header-based changelog with incremental entries, replacing flat category-only format.
+- **Byline Format Standardization** (#614) - Standardized AI byline format across 23 skill files to consistent `AgentName (ModelID)` pattern.
+
+### Fixed
+
+- **PEP 723 Script Execute Permissions** (#1116) - Set execute permission (`chmod +x`) on four PEP 723 session scripts that were missing the executable bit: `session_context_identity.py`, `session_context_triggers.py`, and two GitBucket API test scripts (`test_pr_idempotency.py`, `verify_api.py`). Without execute permission, `#!/usr/bin/env -S uv run --script` shebangs were ignored and script invocation failed.
+
+- **Identity Placeholder Cleanup** (#662) - Replaced hardcoded org/user/identity values with typed placeholders across 15+ skill and guideline files.
+- **Brainstorming Terminal State** (#630) - Added spec-creation path to brainstorming skill terminal state so brainstorming flows into spec creation.
+- **Session Enforcement Discussion Mode** (#683) - Added discussion mode declaration to session-enforcement TypeScript plugin.
+- **Ruff Version Sync** (#763) - Synchronized ruff version across pyproject.toml, .pre-commit-config.yaml, and normalized formatting in 50+ Python files.
+- **Stale User Import** (#762) - Fixed stale User import and missing schema_version table in 4 test files.
+- **PR Trigger Check** (#470) - Added PR creation trigger check to git-workflow skill.
+
+### Removed
+
+- **Template-Driven Elements** (#467) - Removed mechanical template files from skill-creator templates directory and fixed 9 broken cross-references.
+
+### Added
+
+- **Divide-and-Conquer Skill** (#734) - New discipline-enforcing skill that mandates pre-flight context-fit assessment before implementation. Tasks that risk context window overflow are decomposed and dispatched to sub-agents. Sub-agents signal OVERFLOW for recursive decomposition up to a configurable depth limit (default 3). Replaces implementation-workflow with a more general decomposition-first approach.
+
+### Changed
+
+### Fixed
+
+- **Mock Import Paths in Frontend Tests** (#761) - Updated 34 `@patch("src.database.get_session")` mock decorators in `test_upload_mdf_page.py` (15) and `test_upload_review_d1.py` (19) to use `@patch("src.database.connection.get_session")`, matching the post-#758 import path structure.
+
+### Added
+
+- **Hard-Delete Unit Tests** (#698) - Added 5 unit tests for `LinguisticService.hard_delete_record()` covering cleanup of all three search tables (SearchEntry, HeadwordSearchEntry, GlossSearchEntry), EditHistory cleanup, nonexistent record edge case, and MatchupQueue suggestion nullification.
+
+- **Database Import Paths** (#758) - Removed all convenience re-exports from `src/database/__init__.py` and `src/database/models/__init__.py`. All consumer files now use concrete import paths (e.g., `from src.database.models.core import Record` instead of `from src.database import Record`), eliminating IDE confusion and "Find Usages" misdirection.
+- **Environment Variable Rename** (#759) - Renamed `JUNIE_PRIVATE_DB` to `OPENCODE` and replaced all "Junie" references with "OpenCode" across source, tests, scripts, and docs. Legacy AI tool references no longer appear in the codebase.
+- **Database Initialization** (#758) - Added explicit model imports to `init_db()` so SQLAlchemy can resolve foreign keys without relying on `__init__.py` re-exports. Auto-enables `pgvector` extension when using local PostgreSQL (pgserver).
+
+- **PEP 723 Self-Contained Tool Scripts** (#753) - Converted all 13 `.opencode/tools/` entry points (6 dispatchers + 5 standalones + session-init) and 26 impl scripts to self-contained PEP 723 scripts with `#!/usr/bin/env -S uv run --script` shebangs and inline metadata (`requires-python = "~=3.12"`, `dependencies`). Moved session-init from `.opencode/scripts/session_init.py` to `.opencode/tools/session-init`. Removed broken `[project.scripts]` from pyproject.toml. Updated all 6 dispatchers to invoke impl scripts via `uv run` instead of `sys.executable`. Updated session-enforcement.ts plugin to use `uv run .opencode/tools/session-init`. Added PEP 723 mandatory requirement to 070-environment.md. Created validation script `.opencode/tests/test-pep723-tools.sh`.
+
+- **Subagent-Driven-Development** (#734) - Updated to reference divide-and-conquer as primary orchestration skill. Fixed missing YAML frontmatter opening delimiter. Replaced implementation-workflow cross-references.
+- **Batch Orchestration Migration** (#734) - Migrated branch-per-issue, merge dependencies, squash-merge, frozen branches, and intent-and-context metadata from implementation-workflow into divide-and-conquer assemble-batch task.
+- **Cross-Reference Updates** (#734) - Updated all guidelines and skills referencing implementation-workflow or batch-orchestrate to reference divide-and-conquer and assemble-batch respectively.
+
+### Removed
+
+- **Implementation-Workflow Skill** (#734) - Deleted `.opencode/skills/implementation-workflow/` directory; functionality absorbed by divide-and-conquer skill.
+
+### Fixed
+
+- **FK Cascade on Record Deletion** (#698) - Fixed `[23503] FK violation` crash when deleting records. Added explicit `HeadwordSearchEntry`/`GlossSearchEntry` deletes in `hard_delete_record()`, `populate_search_entries()`, `rollback_session()`, and batch delete paths.
+- **Missing Search Entry Index and Constraint** (#698) - Added migration `20260413120000` creating `ix_search_entries_entry_type` index and `ck_search_entries_entry_type` CHECK constraint on `search_entries.entry_type`.
+- **Search Entry Reprocessing Logic** (#698) - Updated `populate_search_entries` to handle all three search entry tables (headword, gloss, and generic) during reprocessing, preventing stale entries.
+- **spec-creation write task now creates GitHub Issue instead of dumping to chat** (#733) - Fix spec-creation skill's write task to invoke github-issue-creation skill and output exec summary + URL + byline instead of dumping full spec content to chat.
+- **Sub-agent worktree dispatch** (#741) - Add worktree awareness to all sub-agent dispatch and skill creation, preventing sub-agents from silently modifying the main repo.
+
+### spec/session-init-batch
+
+- **Session Injection Anti-Hallucination Context + uvx Compatibility + Worktree Detection** (#710, #712, #720, #721, #722, #723) - Rewrite session_init.py output to eliminate LLM hallucination-driven error-retry cycles. Add Remote URL, worktree detection with Working directory/Main repo paths, hooks path (problems-only), and fix bootstrap_worktree_layout for in-worktree execution. Make session_init.py uvx-compatible with proper shebang and pyproject.toml entry point. Switch session-enforcement.ts to uvx invocation. Document env-loader.ts input.$ cwd behavior.
+- FIX: session_init.py "Worktrees: available" replaced with actual path (e.g. .worktrees/main/)
+- FIX: session_init.py bootstrap_worktree_layout() fails when run inside a worktree
+- FIX: session_init.py shebang wrong and no pyproject.toml entry point for uvx
+- FIX: session-enforcement.ts hardcoded relative path breaks in worktrees
+- ADD: Remote URL line in session output (anti-hallucination)
+- ADD: In-worktree detection with Working directory/Main repo paths
+- ADD: Hooks path output only when core.hooksPath is non-standard
+
+### spec/724-batch-approval-fix
+
+- **Batch Approval Analysis: Autonomous Execution + Pre-Analysis Screening + Edge Cases** - Fix batch-approval-analysis to proceed autonomously after authorization (no confirmation prompts), add pre-analysis screening for superseded/moot/conflicting/partially-implemented issues, and handle edge cases (cross-issue sub-issues, stale spec assumptions, merge-time conflicts, revision status)
+- ADD: Step 0 pre-analysis screening with detection categories (already-implemented, partially-implemented, superseded, moot, stale assumptions, conflicting, meta/non-code)
+- UPDATE: Step 5 from confirmation-based to informative-only (agent proceeds immediately)
+- ADD: Prohibited Actions section and Developer Involvement Triggers
+- ADD: Partial implementation detection with auto-detect (no developer input)
+- ADD: Cross-issue sub-issue handling (parent covers default, isolated sub-agent exception)
+- ADD: Stale spec assumption detection (same-intent: serialize; different-intent: HALT)
+- ADD: Merge-time conflict PR ordering
+- ADD: Revision status handling (approval covers revision, flag in plan, remove label)
+- ADD: New classification detail sections (superseded, moot, partial implementation, stale assumption, cross-issue sub-issue, merge-time conflict)
+
+### spec/sub-agent-batch-orchestration
+
+- **Sub-Agent-First Implementation with Batch Orchestration** - Make sub-agent dispatch the default pattern for all implementations, with batch orchestration for multi-issue approvals
+- NEW: `batch-orchestrate` task in implementation-workflow skill for single and multi-issue dispatch
+- UPDATE: `orchestrate` task now dispatches to `batch-orchestrate` instead of implementing directly
+- UPDATE: `batch-approval-analysis` task adds batch state file writing and yield to `batch-orchestrate`
+- ADD: Batch authorization carry-forward rule to `010-approval-gate.md`
+- ADD: "Main Agent Implements Directly" critical violation to `000-critical-rules.md`
+
+### spec/purge-todowrite
+
+- **TodoWrite Purge** - Remove unreliable `todowrite`/`TodoWrite` tracking references from active skills, eliminating stale state issues caused by the tool's unreliable state maintenance
+
+### spec/621-compare-url-base
+
+- **Compare URL Base Branch Fix** - Fix feature branch compare URLs to use `dev` as base instead of `main`, matching the three-branch model (feature→dev→main) and preventing inflated diffs that mislead reviewers
+- Add Wrong Compare URL Base Branch critical violation to 000-critical-rules.md
+
+### spec/676-reference-authorization-cascade
+
+- **Reference ≠ Authorization Cascade** - Add rule that only formal sub-issue links (via `github_sub_issue_write`) trigger authorization cascade, not mere text references in issue bodies or comments
+- Add mandatory verification step requiring `get_sub_issues` check before cascading authorization
+- Add Confirmation ≠ Authorization rule distinguishing observation confirmations from implementation authorization
+- Add both critical violations to 000-critical-rules.md and 010-approval-gate.md
+
+### spec/668-batch-approval
+
+- **Batch Approval Orchestration** - Add interdependency analysis for multiple approved issues, classifying them as must-precede, independent, conflict-risk, or meta/non-code, and producing a dependency graph with parallel-safe group identification before implementation begins
+- Add `batch-approval-analysis` task to approval-gate skill with classification heuristics and dependency graph output format
+- Add `batch-execution` task to subagent-driven-development skill for dispatching subagents according to batch execution plans
+- Add critical violation entry for skipping interdependency analysis when multiple issues are approved together
+- Update approval-gate and subagent-driven-development SKILL.md frontmatter with batch-related trigger keywords
+
+### spec/664-cleanup-sync
+
+- **Cleanup Local Sync Fix** - Add mandatory dev sync verification (git log check after pull) and make git remote prune origin mandatory in cleanup task, preventing stale local branches and ghost remote-tracking references after PR merges
+
+### spec/659-worktrees-standardization
+
+- **Worktrees Directory Standardization** - Standardize all references from `worktrees/` to `.worktrees/` in session_init.py, removing outdated bare directory references and updating .gitignore to remove the redundant bare `worktrees/` entry
+
+### spec/613-worktree-enforcement
+
+- **Worktree Enforcement Gate** - Make worktree usage mandatory when layout is active instead of advisory, remove OR escape hatch from subagent-driven-development, fix cd command violations in using-git-worktrees skill
+- Add Tool Usage Compliance section and verification step to using-git-worktrees skill
+- Add Worktree Gate to git-workflow pre-work task that requires worktrees when layout is active
+
+### spec/600-auto-create-changelog-dev
+
+- **Session Init Guard Checks** - Auto-create missing CHANGELOG.md, .opencode/CHANGELOG.md, and dev branch during session initialization, preventing silent failures from dead links and branch errors
+
+### spec/remove-hardcoded-identity-values
+
+- **Identity Value Cleanup** - Replace hardcoded org/user/identity values with typed placeholders in skills, enabling reuse across different repositories
+
+### spec/594-ban-recursive-flag
+
+- **Recursive Flag Ban** - Prohibit --recursive flag from all git submodule commands in guidelines, preventing unintended nested submodule resolution
+
+### spec/593-git-hooks-bypass
+
+- **Git Hook Protection** - Add pre-merge-commit and prepare-commit-msg hooks to block merges on protected branches, move hooks to .opencode/hooks/, and auto-install into submodule dirs
+
 ### spec/562-brainstorming-conversational-first
 
 - Redesign brainstorming skill from dimension-based exploration to conversational-first approach
@@ -131,6 +379,16 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 - PostgreSQL database integration with pgvector support
 - OAuth authentication via Streamlit OAuth
 - Session management and cookie handling
+
+### Changed
+
+- **Identity Placeholder Sweep** (#770) - Replaced remaining hardcoded org/user/identity values with typed placeholders across skill and tool files, ensuring repository portability.
+- **Mandatory Chat Output in Writing-Plans** (#773) - Added mandatory chat output step to the writing-plans create task, ensuring plan creation always produces a visible executive summary.
+
+### spec/submodule-provenance-tracking
+
+- **Submodule Provenance Tracking** (#783) - New provenance skill tracks submodule changes across parent repositories. Uses 3-tier fallback (issue+PR → issue-only → commit message) to ensure tracking even when PRs aren't available. Supports both dev-push and release-promotion workflows with platform detection for GitHub and GitBucket.
+- **Provenance Workflow Integration** (#783) - Integrated provenance tracking into git-workflow skill: review-prep invokes dev-push provenance after submodule push, and release-promotion invokes promotion provenance after submodule promotion. Cross-reference documentation links parent issues to submodule changes for full traceability.
 
 ## [0.1.0]
 

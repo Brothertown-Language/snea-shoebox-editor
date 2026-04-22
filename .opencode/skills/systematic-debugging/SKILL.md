@@ -10,162 +10,57 @@ compatibility: opencode
 
 ## Overview
 
-Systematic debugging process that enforces root cause analysis, hypothesis testing, and minimal fixes. This skill prevents "vibe debugging" — making random changes without understanding the problem. All bugs must be diagnosed before fixing, and fixes must be minimal and targeted.
+Systematic debugging process that enforces root cause analysis, hypothesis testing, and minimal fixes. Prevents "vibe debugging" — making random changes without understanding the problem. All bugs must be diagnosed before fixing, and fixes must be minimal and targeted.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
-
-## Persona
-
-You are a Debugging Detective. Your focus is finding the true root cause before writing any fix code.
+**Source Attribution:** This skill is adapted from <UPSTREAM_ORG>/<UPSTREAM_REPO> workflow (branch: newsrx).
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `diagnose` | Systematic bug diagnosis workflow | ~800 |
-| `fix` | Minimal targeted fix after diagnosis | ~500 |
+| `diagnose` | Systematic bug diagnosis workflow | ≈400 |
+| `fix` | Minimal targeted fix after diagnosis | ≈350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 
-- `/skill systematic-debugging` - Overview only
-- `/skill systematic-debugging --task diagnose` - Diagnose a bug
-- `/skill systematic-debugging --task fix` - Apply minimal fix
+- `/skill systematic-debugging` — Overview only
+- `/skill systematic-debugging --task diagnose` — Diagnose a bug
+- `/skill systematic-debugging --task fix` — Apply minimal fix
+- `/skill systematic-debugging --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is auto-invoked by dispatch-table.yaml when:
-   - Agent encounters a bug or error during implementation
-   - User reports a bug or error
-   - User says "fix this" or "debug this"
-   - DO NOT start fixing until diagnosis is complete
+1. **Diagnosis-first approach:** All bugs require diagnosis before fix. Diagnosis must identify root cause. Fix must target root cause, not symptoms. Fix must be minimal — no scope creep.
+2. **Mandatory invocation:** The agent MUST invoke this skill when a bug or error is encountered during implementation, or when user reports a bug or says "fix this" or "debug this."
+3. **Exit conditions:** Debugging is COMPLETE when root cause identified and documented, fix applied targeting root cause only, verification confirms fix resolves issue, and no new issues introduced.
+4. **Authorization separation:** Bug diagnosis does NOT require approval (read-only). Bug FIX requires approval (code change). See `approval-gate` skill for authorization workflow.
+5. **Self-correction:** If the agent catches itself editing code without an approved spec, immediately `git checkout -- <affected-files>` and HALT.
 
-2. **Diagnosis-first approach:**
-   - All bugs require diagnosis before fix
-   - Diagnosis must identify root cause
-   - Fix must target root cause, not symptoms
-   - Fix must be minimal — no scope creep
-
-3. **Exit conditions:** Debugging is COMPLETE when:
-   - Root cause identified and documented
-   - Fix applied targeting root cause only
-   - Verification confirms fix resolves issue
-   - No new issues introduced
-
-## Diagnosis Workflow
-
-### Step 1: Reproduce the Bug
-
-- Identify exact reproduction steps
-- Determine if bug is deterministic or intermittent
-- Record environment state (branch, config, data)
-- Document expected vs actual behavior
-
-### Step 2: Narrow the Scope
-
-- Isolate the failing component (module, function, line)
-- Check recent changes (`git log`, `git diff`)
-- Identify the call path leading to failure
-- Determine if bug is in code, config, or data
-
-### Step 3: Form Hypotheses
-
-Generate at least 2 hypotheses for the root cause:
-
-```markdown
-## Hypotheses
-
-| # | Hypothesis | Test | Confidence |
-|---|------------|------|------------|
-| 1 | [Most likely cause] | [How to verify] | High/Medium/Low |
-| 2 | [Alternative cause] | [How to verify] | High/Medium/Low |
-```
-
-### Step 4: Test Hypotheses
-
-- Test each hypothesis in order of confidence
-- Use read-only analysis first (code reading, log analysis)
-- Create isolated test scripts in `./tmp/` if needed
-- Record results for each hypothesis
-
-### Step 5: Document Root Cause
-
-```markdown
-## Root Cause Analysis
-
-**Bug:** [Description of observed behavior]
-**Expected:** [What should happen]
-**Root Cause:** [The actual cause - NOT the symptom]
-**Evidence:** [Code/log output supporting the diagnosis]
-**Confidence:** High/Medium/Low
-**Affected Files:** [List with function anchors]
-```
-
-## Fix Workflow
-
-After diagnosis confirms the root cause:
-
-### Step 1: Design Minimal Fix
-
-- Fix targets root cause ONLY
-- No refactoring, no improvements, no cleanup
-- No "while I'm here" changes
-- Document what the fix changes and why
-
-### Step 2: Apply Fix
-
-- Make the smallest possible change
-- Single purpose — fix one thing
-- No scope expansion
-
-### Step 3: Verify Fix
-
-- Reproduce original bug → confirm it's fixed
-- Run existing tests → confirm no regression
-- Check edge cases → confirm they're handled
-
-## Bug Discovery Guardrail (CRITICAL)
+## Bug Discovery Guardrail
 
 **⚠️ Finding a bug during diagnosis does NOT authorize fixing it.**
 
-This skill handles diagnosis (read-only). Fixing requires separate authorization.
+| Action | Requires Authorization? |
+|--------|------------------------|
+| Diagnosis (read-only analysis) | ❌ No |
+| Fix (code change) | ✅ Yes — requires approved spec or explicit "approved"/"go" |
+| Creating bug report issue | ❌ No — always permitted |
+| Invoking `analyze-and-spec` after bug report | ❌ No — auto-proceeds to fix spec creation |
 
-### Authorization Check Before Fix
+**After creating a bug report issue, invoke `issue-review --task analyze-and-spec` to perform root cause analysis and create a fix spec sub-issue.** This ensures every bug report has a corresponding fix spec before closure.
 
-Before applying ANY fix (`--task fix`):
+### Bug Report → Fix Spec Flow
 
-1. **Check authorization**: Was this bug explicitly authorized for fixing?
-   - Does an approved spec issue exist for this fix?
-   - Did the user explicitly say "approved" or "go" for this fix?
-2. **If NO authorization**: HALT immediately after diagnosis
-   - Report findings to the bug issue
-   - Do NOT apply any code changes
-   - Wait for explicit authorization
+When the `diagnose` task creates a bug report:
 
-### Bug Discovery During Other Work
+1. Bug report issue created (permitted without authorization)
+2. Invoke `/skill issue-review --issue N --task analyze-and-spec` automatically
+3. Root cause analysis performed
+4. Fix spec sub-issue created and linked to bug report
+5. Fix spec requires explicit authorization before code changes proceed
 
-When the `diagnose` task is triggered as a side-effect of other work (not an explicit "debug this" request):
-
-1. **STOP all code changes** — diagnosis is read-only
-2. **Complete diagnosis** — identify root cause
-3. **Create bug report** — file a GitHub/GitBucket issue
-4. **HALT** — do NOT proceed to `--task fix` without explicit authorization
-
-### Self-Correction Protocol
-
-If the agent catches itself about to edit code without an approved spec:
-
-1. **STOP** — do not proceed with the edit
-2. **REVERT** — `git checkout -- <affected-files>` to undo unauthorized changes
-3. **REPORT** — document what happened as a factual observation
-4. **HALT** — wait for explicit authorization
-
-**See `000-critical-rules.md` → "Bug Discovery Does NOT Authorize Bug Fixing" for the complete authorization matrix.**
-
-## Enforcement Mechanism
-
-**⚠️ CRITICAL: Debugging MUST be systematic — no random code changes.**
-
-### Enforcement Matrix
+## Enforcement Matrix
 
 | Situation | Action |
 |-----------|--------|
@@ -175,82 +70,81 @@ If the agent catches itself about to edit code without an approved spec:
 | Fix includes unrelated changes | REJECT scope creep |
 | Fix is refactoring disguised as bug fix | REJECT, require spec |
 
-### What Skills MUST Check
+## Live Verification: Hypothesis Evidence (MANDATORY)
 
-1. **Before any fix:**
-   - Has diagnosis been performed?
-   - Is root cause identified with evidence?
-   - Is the fix minimal and targeted?
+**🚫 CRITICAL: When this skill forms a hypothesis about a bug's root cause, it MUST verify the hypothesis against live code/runtime evidence before proceeding. Hypotheses without verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
 
-2. **During fix:**
-   - Is fix ONLY addressing root cause?
-   - Are there unrelated changes?
-   - Is the fix larger than necessary?
+| Hypothesis Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "Bug is in function X" | Verify function X actually exhibits the buggy behavior (trace execution, read source) | `srclight_get_symbol(name="X")` → read implementation | VERIFICATION-GAP |
+| "Error caused by missing dependency Y" | Verify dependency Y is actually missing or misconfigured | `srclight_get_callers(symbol_name="Y")` → check usage | CONFLICTING |
+| "Code path reaches Z" | Verify actual call path via call graph | `srclight_get_callees(symbol_name="caller")` → trace execution | VERIFICATION-GAP |
+| "Fix is minimal — only change file F" | Verify no other files depend on the changed code | `srclight_get_dependents(symbol_name="symbol")` → check blast radius | CONFLICTING |
+| "No new issues introduced" | Verify by running tests after fix | `bash` to run `uv run pytest test/` → confirm pass | VERIFICATION-GAP |
 
-## Anti-Patterns
-
-### 🚫 Vibe Debugging
-
-```python
-# ❌ WRONG: Random changes without diagnosis
-# "Maybe this will fix it..."
-result = some_function(timeout=30)  # Changed timeout
-# Still broken? Try changing something else...
-result = some_function(timeout=60, retries=3)  # Random parameter tweaks
-```
-
-### ✅ Systematic Debugging
-
-```python
-# ✅ CORRECT: Diagnose first
-# Hypothesis 1: Timeout too short → Test: Log actual execution time
-# Evidence: Function completes in 2 seconds, timeout is 30 seconds
-# Hypothesis 1 REJECTED — timeout is not the issue
-
-# Hypothesis 2: Response parsing fails on large payloads → Test: Log response size
-# Evidence: Response is 15MB, parser fails at 10MB threshold
-# Hypothesis 2 CONFIRMED — root cause is parser size limit
-
-# Fix: Increase parser size limit (minimal fix)
-```
-
-## Integration with Existing Workflow
-
-### Dispatch Order
+**Evidence format:**
 
 ```
-Bug reported → systematic-debugging (diagnose) → systematic-debugging (fix) → verification-before-completion
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
 ```
 
-### GitBucket Platform Adaptations
+**Classification on failure:**
 
-- Post diagnosis to bug issue as comment
-- Post fix summary to bug issue as comment
-- Link fix commit to bug issue
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Bug not in assumed function | VERIFICATION-GAP | conditional | Broaden search, form new hypothesis |
+| Dependency not actually missing | CONFLICTING | conditional | Re-hypothesize root cause |
+| Call path doesn't reach target | VERIFICATION-GAP | conditional | Re-trace actual execution path |
+| Fix has larger blast radius | CONFLICTING | flag-for-review | HALT — fix may need broader scope |
+| Tests fail after fix | VERIFICATION-GAP | flag-for-review | HALT — revert and re-diagnose |
 
-### Approval Gate Integration
+## Cross-Reference Verification (MANDATORY)
 
-- Bug diagnosis does NOT require approval (read-only analysis)
-- Bug FIX requires approval (code change)
-- Create spec for fix if change is non-trivial
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `verification-before-completion` in Cross-References | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `issue-review` in Bug Discovery Guardrail | File exists at `.opencode/skills/issue-review/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+| Task table entry `diagnose` | File exists at `.opencode/skills/systematic-debugging/tasks/diagnose.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `fix` | File exists at `.opencode/skills/systematic-debugging/tasks/fix.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/systematic-debugging/tasks/completion.md` | MISSING-TRACEABILITY if missing |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency and code reference existence. When this skill forms a hypothesis about code behavior, ground-truth verification ensures the referenced code actually exists and behaves as claimed. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
 
 ## Cross-References
 
-- Related skills: `verification-before-completion` (evidence), `approval-gate` (authorization), `git-workflow` (branch)
-- Related guidelines: `050-scope-autonomy.md` (no vibe coding), `090-data-integrity.md` (no synthetic data)
+- Related skills: `verification-before-completion` (evidence), `approval-gate` (authorization), `git-workflow` (branch), `issue-review` (analyze-and-spec for bug reports), `spec-auditor` (ground-truth adversarial verification)
+- Related guidelines: `050-scope-autonomy.md` (no vibe coding), `090-data-integrity.md` (no synthetic data), `065-verification-honesty.md` (metadata verification extension)
+- Related task files: `diagnose.md`, `fix.md`
 
 ## Platform Compatibility
 
 - **GitHub:** Not applicable (this repository uses GitBucket)
-- **GitBucket:** Use Python client from gitbucket-api skill (MCP tools removed)
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
+- **GitBucket:** Use Python client from gitbucket-api skill
+- **Platform Detection:** Uses `github.platform` environment variable
 
-## Source Attribution
-
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces systematic debugging to prevent random code changes and ensure root cause fixes.
-
-**Key adaptations for OpenCode:**
-- Integration with existing approval-gate and git-workflow skills
-- GitBucket platform support via MCP tools
-- Dispatch table integration for automatic invocation
-- Diagnosis-first enforcement with hypothesis testing
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

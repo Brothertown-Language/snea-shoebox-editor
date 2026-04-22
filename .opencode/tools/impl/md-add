@@ -1,13 +1,17 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Insert a new section (header + body) into a markdown file.
-Usage: uv run python .opencode/tools/md add <file.md> --header "New Header" --level N (--content <text> | --content-file <path>) [--after "Header" | --before "Header" | --append] [--help]
+Usage: ./.opencode/tools/md add <file.md> --header "New Header" --level N (--content <text> | --content-file <path>) [--after "Header" | --before "Header" | --append] [--help]
 Default position: --append (add at end of file).
 """
 from __future__ import annotations
 import os as _os
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
-    print("ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+    print("ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/md ...). "
           "Direct invocation is not permitted.", file=__import__('sys').stderr)
     __import__('sys').exit(1)
 import re

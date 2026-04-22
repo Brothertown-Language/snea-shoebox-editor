@@ -10,281 +10,135 @@ compatibility: opencode
 
 ## Overview
 
-Plan execution workflow that implements approved plans step-by-step with verification at each stage. This skill ensures systematic implementation, evidence collection, and quality gates. It is adapted from the NewsRx/opencode-gitbucket-superpowers workflow.
+Plan execution skill that dispatches to `divide-and-conquer/assemble-work` for implementation. This skill is a thin dispatch layer — all implementation logic flows through the unified work workflow. It receives plan context from `approval-gate` after plan approval.
 
-**Source Attribution:** This skill is adapted from NewsRx/opencode-gitbucket-superpowers workflow (branch: newsrx).
+**Every approval follows one path:** `executing-plans` → `divide-and-conquer/assemble-work` → work branch → pr-creation → one PR.
 
-## Persona
+**There is no single-issue bypass.** Single issue = work of one = one sub-agent.
 
-You are an Implementation Executor. Your focus is executing approved plans systematically, collecting evidence, and maintaining progress tracking.
+## Received Context
+
+When dispatched from `approval-gate` after plan approval, the following context is available:
+
+```yaml
+plan_issue: <number>
+spec_issue: <number, extracted from plan body>
+authorization_scope: <scope_value>
+halt_at: <pipeline_stage>
+pr_strategy: stacked | individual | none
+github.owner: "<from-session>"
+github.repo: "<from-session>"
+worktree.path: "<worktree path>"
+phase_progress:
+  completed_phases: "<prose listing of completed phases by concern name, from Plan STATUS>"
+  concern_boundaries_crossed: "<prose description of architectural concern transitions from plan>"
+  verification_evidence: "<prose summary of what was verified and outcomes>"
+```
+
+**Verification:** If `plan_issue` is not present in the dispatch context, HALT — this skill requires plan context to track progress against the correct issue.
+
+**Phase progress composition:** Before dispatching to `divide-and-conquer`, `executing-plans` reads the Plan STATUS marker and concern boundary annotations to compose the initial `phase_progress`. If no phases are complete yet, the field notes that explicitly. The `assemble-work` task then maintains and extends phase progress as each sub-agent completes.
+
+## Per-Item TDD Cycle (Per `091-incremental-build.md`)
+
+Each implementation item dispatched by `executing-plans` follows the per-item TDD cycle mandated by `091-incremental-build.md`:
+
+| TDD Phase | Action | Purpose |
+|-----------|--------|---------|
+| **RED** | Add enforcement test scenario | Verify the change is testable before implementation |
+| **GREEN** | Make the `.md` file change | The actual guideline, skill, or configuration modification |
+| **REFACTOR** | Clean up cross-references | Ensure no broken references between files |
+| **COMMIT** | Both test and change committed together | One working slice per item |
+
+The `divide-and-conquer` dispatch context includes `tdd_phase` to track which phase the sub-agent is executing. Sub-agents MUST follow this cycle per item — monolithic implementation (skipping the TDD cycle) is a critical violation per `000-critical-rules.md`.
 
 ## Tasks
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `start` | Begin plan execution, verify prerequisites | ~700 |
-| `step` | Execute single step, collect evidence | ~900 |
-| `progress` | Report current progress | ~500 |
-| `verify` | Run verification for current step | ~600 |
+| `start` | Dispatch to divide-and-conquer/assemble-work for implementation | ≈200 |
+| `step` | Legacy — redirects to divide-and-conquer/orchestrate | ≈100 |
+| `progress` | Legacy — redirects to divide-and-conquer/orchestrate | ≈100 |
+| `verify` | Redirects to verification-before-completion | ≈100 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
 
-- `/skill executing-plans` - Overview only
-- `/skill executing-plans --task start` - Begin execution
-- `/skill executing-plans --task step` - Execute next step
-- `/skill executing-plans --task progress` - Show progress
-- `/skill executing-plans --task verify` - Verify current step
+- `/skill executing-plans` — Overview only
+- `/skill executing-plans --task start` — Dispatch to divide-and-conquer/assemble-work
+- `/skill executing-plans --task step` — Redirects to divide-and-conquer/orchestrate
+- `/skill executing-plans --task progress` — Redirects to divide-and-conquer/orchestrate
+- `/skill executing-plans --task verify` — Redirects to verification-before-completion
+- `/skill executing-plans --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is auto-invoked by dispatch-table.yaml when:
-   - Plan receives explicit approval (`approved: plan`)
-   - User says `execute plan` or `start implementation`
-   - After writing-plans creates approved plan
-   - DO NOT skip steps or proceed without verification
+1. **Verify plan context:** Before dispatching, confirm `plan_issue` is present in received context. If missing, HALT and report.
 
-2. **Step-by-Step Execution:**
-   - Execute ONE step at a time
-   - Collect evidence for each step
-   - Verify before marking complete
-   - HALT after each step completion
+2. **Dispatch to divide-and-conquer:** The `start` task invokes `divide-and-conquer --task assemble-work` which handles all implementation — single issue or work — through the unified workflow. Pass `plan_issue` in the dispatch context.
 
-3. **Progress Tracking:**
-   - Update plan issue with step status
-   - Post progress comments with evidence
-   - Mark steps as ☑ when verified complete
+3. **No direct implementation:** This skill does not implement directly. It dispatches.
 
-4. **Exit conditions:** Execution HALTS when:
-   - Current step complete → HALT and wait for user
-   - All steps complete → Transition to verification
-   - User says `next step` → Execute next step
+4. **Single issue = work of one:** There is no separate path for single issues. The `assemble-work` task handles single-issue dispatch as the default code path.
 
-## Execution Workflow
+5. **Progress reports against plan:** All progress tracking references the plan issue (not the spec issue). The plan is the implementation tracking artifact; the spec is the requirements artifact.
 
-### Prerequisites
-1. Approved plan (verified by approval-gate)
-2. Plan stored as GitBucket issue
-3. Feature branch created (by git-workflow)
+6. **halt_at boundary enforcement:** If `halt_at` from the authorization scope is set, the dispatch chain MUST NOT proceed past that pipeline stage. When `halt_at == implementation_complete`, the workflow stops after implementation and does NOT proceed to PR creation.
 
-### Start Execution
+## Dispatch Order
 
-1. **Verify plan approval:**
-   - Query GitBucket issue for plan
-   - Check for explicit approval in comments
-   - Verify plan has no placeholders (writing-plans validation)
-
-2. **Verify prerequisites:**
-   - Feature branch exists
-   - Working tree clean
-   - All dependencies ready
-
-3. **Initialize tracking:**
-   - Set current step to 1
-   - Post "Starting execution" comment to plan issue
-   - HALT and wait for `next step` or `continue`
-
-### Execute Step
-
-For each step in the plan:
-
-1. **Read step content:**
-   - Parse step from plan issue
-   - Identify specific tasks
-   - Identify verification method
-
-2. **Execute tasks:**
-   - Perform implementation actions
-   - Collect evidence (logs, outputs, test results)
-   - Run static analysis (lint, typecheck)
-
-3. **Verify step:**
-   - Run step verification method
-   - Check all evidence collected
-   - Update step status to ☑
-
-4. **Report progress:**
-   - Post comment to plan issue with evidence
-   - Update STATUS in plan issue body
-   - HALT and wait for user
-
-5. **Proceed to next:**
-   - User says `next step` → Continue to next step
-   - User says `continue` → Continue to next step
-   - All steps done → Transition to verification
-
-### Progress Reporting
-
-Progress comment format:
-
-```markdown
-**Progress:** Step N of M complete
-
-**Evidence:**
-- [Task 1]: [Evidence]
-- [Task 2]: [Evidence]
-- Verification: [Result]
-
-**Next:** Step N+1 - [Next concern]
-
----
-🤖 ↻ Working by OpenCode (ollama-cloud/glm-5)
+```
+Plan approved (approval-gate)
+  → executing-plans --task start
+  → divide-and-conquer --task assemble-work
+  → verification-before-completion
+  → finishing-a-development-branch
+  → git-workflow/review-prep
 ```
 
-### Evidence Collection
+**Progress is tracked against the plan issue.** The plan references the spec via body text (linked reference), not via GitHub sub-issue link.
 
-**Evidence types:**
+## Cross-Reference Verification (MANDATORY)
 
-| Evidence Type | Collection Method |
-|---------------|-------------------|
-| Code changes | `git diff` output |
-| Test results | Test pass/fail output |
-| Lint check | `ruff check` output |
-| Type check | `pyright` output |
-| File creation | Path and content hash |
-| API response | Status code and body |
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
 
-**Evidence storage:**
-- Post as comment to plan issue (primary)
-- Store artifacts in `./tmp/` (secondary)
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `divide-and-conquer` in Cross-References and Dispatch Order | File exists at `.opencode/skills/divide-and-conquer/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `approval-gate` in Cross-References and Dispatch Order | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `verification-before-completion` in Cross-References and Dispatch Order | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `finishing-a-development-branch` in Cross-References and Dispatch Order | File exists at `.opencode/skills/finishing-a-development-branch/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `git-workflow` in Cross-References and Dispatch Order | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in Received Context | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `start` | File exists at `.opencode/skills/executing-plans/tasks/start.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `step` | File exists at `.opencode/skills/executing-plans/tasks/step.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `progress` | File exists at `.opencode/skills/executing-plans/tasks/progress.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `verify` | File exists at `.opencode/skills/executing-plans/tasks/verify.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `completion` | File exists at `.opencode/skills/executing-plans/tasks/completion.md` | MISSING-TRACEABILITY if missing |
+| `divide-and-conquer` dispatch behavior | Matches actual SKILL.md: `assemble-work` task handles implementation | CONFLICTING if mismatched |
+| `approval-gate` dispatch behavior | Matches actual SKILL.md: `verify-authorization` dispatches to `executing-plans` | CONFLICTING if mismatched |
+| `verification-before-completion` redirect | Matches actual SKILL.md: `verify` task exists and redirects | CONFLICTING if mismatched |
 
-## Verification Methods
+**Verification Procedure:**
 
-### Standard Verifications
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
 
-1. **Code verification:**
-   ```bash
-   uv run ruff check --fix src/ test/
-   uv run ruff format src/ test/
-   uv run pyright src/
-   ```
+**Classification on failure:**
 
-2. **Test verification:**
-   ```bash
-   uv run pytest test/test_file.py::test_function_name
-   ```
-
-3. **File verification:**
-   ```bash
-   ls -la path/to/file
-   head -20 path/to/file
-   ```
-
-### Custom Verifications
-
-From plan's verification methods:
-
-```markdown
-- ☐ Verification: Run unit tests and check coverage
-  → Evidence: `pytest --cov=src/module`
-```
-
-## Enforcement Mechanism
-
-**⚠️ CRITICAL: Skills MUST enforce step-by-step execution — guidelines alone are insufficient.**
-
-### What Skills MUST Check
-
-1. **Before execution:**
-   - Is plan approved?
-   - Is plan free of placeholders?
-   - Is feature branch created?
-
-2. **During execution:**
-   - Is evidence collected for each task?
-   - Is verification run for each step?
-   - Is progress posted to plan issue?
-
-3. **Enforcement matrix:**
-   - No approval → HALT (approval-gate blocks)
-   - Placeholders in plan → HALT (writing-plans blocks)
-   - No feature branch → HALT (git-workflow creates)
-   - Evidence missing for task → REQUIRE evidence before marking complete
-   - Verification not run → RUN verification before marking complete
-
-### Enforcement Messages
-
-**Missing evidence:**
-```
-Step verification requires evidence.
-
-Task: [Task description]
-Expected evidence: [What to collect]
-
-Please provide evidence before marking step complete.
-```
-
-**Verification failed:**
-```
-Step verification failed.
-
-Verification: [Verification method]
-Result: [Failure output]
-
-Fix issues before marking step complete.
-```
-
-## Integration with Existing Workflow
-
-### Dispatch Order
-```
-writing-plans (approved) → approval-gate (plan) → executing-plans → verification-before-completion
-```
-
-### GitBucket Platform Adaptations
-- Post progress comments to plan issue
-- Update STATUS markers in issue body
-- Link evidence to plan via comments
-
-### Git-Workflow Integration
-- Feature branch created by git-workflow
-- Commits pushed branch after each step
-- PR created after all steps complete (by user instruction)
-
-## Multi-Step Execution Example
-
-```markdown
-**Plan Issue #123:**
-
-## Step 1: Database Schema
-- ☑ Create users table
-  Evidence: `users_table_created.sql`
-- ☑ Add authentication fields
-  Evidence: `auth_fields_added.sql`
-- ☑ Write migration script
-  Evidence: `migration_001.py`
-
-**Verification:** Run migration in test environment
-**Evidence:** Migration test passed
-
----
-🤖 ✅ Step 1 Complete by OpenCode (ollama-cloud/glm-5)
-
-## Step 2: API Endpoints
-- ☐ Create login endpoint
-- ☐ Create logout endpoint
-- ☐ Create refresh endpoint
-
----
-🤖 ↻ Working by OpenCode (ollama-cloud/glm-5)
-```
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
 ## Cross-References
 
-- Related skills: `writing-plans` (plan creation), `verification-before-completion` (final verification), `git-workflow` (branch/PR), `subagent-driven-development` (alternative: dispatch fresh subagents per task with two-stage review)
-- Related guidelines: `142-planning-archive-workflow.md` (plan structure), `000-critical-rules.md` (evidence requirements)
+- Related skills: `divide-and-conquer` (implementation orchestration), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `git-workflow` (branch/PR/cleanup), `writing-plans` (plan creation)
 
-## Platform Compatibility
+Co-authored with AI: <AgentName> (<ModelId>)
 
-- **GitHub:** Not applicable (this repository uses GitBucket)
-- **GitBucket:** Use Python client from gitbucket-api skill (MCP tools removed)
-- **Platform Detection:** Uses `GIT_PLATFORM` environment variable
-
-## Source Attribution
-
-This skill is adapted from the NewsRx/opencode-gitbucket-superpowers repository (branch: newsrx). The original workflow enforces systematic step-by-step execution with evidence collection.
-
-**Key adaptations for OpenCode:**
-- Integration with existing git-workflow skill for branch management
-- GitBucket platform support via MCP tools
-- Dispatch table integration for automatic invocation
-- Evidence collection and verification gates
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

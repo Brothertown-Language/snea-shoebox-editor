@@ -1,6 +1,10 @@
-______________________________________________________________________
-
-## name: brainstorming description: Use when creating a spec, planning a feature, or exploring requirements before implementation. Triggers on: spec, plan, feature, brainstorm, explore, requirements, ideate, think through, what should. type: technique license: MIT compatibility: opencode
+---
+name: brainstorming
+description: Use when creating a spec, planning a feature, or exploring requirements before implementation. Triggers on: spec, plan, feature, brainstorm, explore, requirements, ideate, think through, what should.
+type: technique
+license: MIT
+compatibility: opencode
+---
 
 # Skill: brainstorming
 
@@ -8,9 +12,9 @@ ______________________________________________________________________
 
 Conversational-first exploration workflow. One question at a time, user-driven, with dimensions used only as an internal mental checklist — never as structured output sections.
 
-**Source:** Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md). Key adaptations: no visual companion by default (conditional offer only for visual topics), no hard design-approval gate before writing-plans (our pipeline has approval-gate), dimensions used internally never as output sections, terminal state invokes writing-plans.
+**Source:** Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md). Key adaptations: no visual companion by default (conditional offer only for visual topics), no hard design-approval gate before writing-plans (our pipeline has approval-gate), dimensions used internally never as output sections, terminal state invokes spec-creation.
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)
+Co-authored with AI: <AgentName> (<ModelId>)
 
 ## Persona
 
@@ -19,174 +23,53 @@ You are a Requirements Explorer. Your focus is understanding what the user wants
 ## Tasks
 
 | Task | Purpose | Words |
-|------|---------|-------|
-| `explore` | Full conversational exploration workflow (default) | ~800 |
+| -- | -- | -- |
+| `explore` | Full conversational exploration workflow (default) | ≈1000 |
+| `top-down-analysis` | Top-down decomposition output: item enumeration, dependency graph, ordering, acceptance criteria | ≈400 |
+| `enforcement` | Enforcement rules, protocol-compliance verification, and investigation completion criteria | ≈600 |
+| `cross-scope` | Cross-spec scope search — check for overlapping specs before exploration | ≈350 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
+
+## Sub-Agent Tasks
+
+| Task | Words |
+|------|-------|
+| `explore` | ≈1000 |
+| `top-down-analysis` | ≈400 |
+| `enforcement` | ≈600 |
+| `cross-scope` | ≈350 |
+| `completion` | ≈200 |
 
 ## Invocation
 
 - `/skill brainstorming` — Start exploration workflow
 - `/skill brainstorming --task explore` — Same as above
+- `/skill brainstorming --task enforcement` — Enforcement rules and completion criteria
+- `/skill brainstorming --task cross-scope` — Cross-spec scope search (check for overlapping specs before exploration)
+- `/skill brainstorming --task completion` — Invoke when workflow halts at any point
 
 ## Operating Protocol
 
-1. **Automatic invocation (mandatory):** This skill is auto-invoked when:
+1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when user says `spec` or `plan` or similar planning terms, or provides a feature description for planning. DO NOT proceed to spec creation until exploration completes.
 
-   - User says `spec` or `plan` or similar planning terms
-   - User provides a feature description for planning
-   - DO NOT proceed to spec creation until exploration completes
+2. **One question at a time:** STRICTLY one question per message. Questions follow from answers, not a checklist. Dimensions are an internal mental checklist only — never exposed as structured output sections.
 
-1. **Exit condition:** Exploration is COMPLETE when:
+3. **Per-item developer confirmation:** Each significant discovery (requirement, architectural decision, risk, alternative) MUST be confirmed by the developer before it becomes part of the exploration output. The agent MUST NOT batch-dump findings. See `explore` task Step 4 "Per-Item Developer Confirmation Gate" for the complete protocol.
 
-   - All relevant questions asked (driven by user's answers)
-   - User confirms requirements are complete
-   - Spec written and self-reviewed
-   - HALT and wait for explicit approval to proceed to writing-plans
+4. **Protocol-compliance enforcement:** The enforcement task verifies the one-question-at-a-time protocol was actually followed — not just that exploration was invoked. Batch-dump detection, turn tracking, and per-item confirmation are hard gates. An agent that produces findings without interactive discussion is HALTed, not allowed to proceed to spec creation.
 
-## Process Flow
+5. **Exit condition:** Exploration is COMPLETE when all relevant questions have been asked (driven by user's answers), at least 2 interactive Q&A turns have occurred, each significant finding has developer confirmation, and the user confirms requirements are complete. Then apply the **two-path terminal state** (see below).
 
-```dot
-digraph brainstorming {
-    "Explore project context" [shape=box];
-    "Scope check" [shape=diamond];
-    "Decompose project" [shape=box];
-    "Visual questions ahead?" [shape=diamond];
-    "Offer Visual Companion\n(own message)" [shape=box];
-    "Ask clarifying questions\n(one at a time)" [shape=box];
-    "Propose 2-3 approaches\n(significant decisions only)" [shape=box];
-    "Present design incrementally\n(section by section)" [shape=box];
-    "User approves?" [shape=diamond];
-    "Write spec/design doc" [shape=box];
-    "Spec self-review\n(fix inline)" [shape=box];
-    "User reviews spec?" [shape=diamond];
-    "Invoke writing-plans" [shape=doublecircle];
+6. **What does NOT bypass exploration:** "skip brainstorming" is not allowed. "I already know what I want" still requires brief exploration (problem understanding at minimum). User impatience → document partial exploration, ask to proceed.
 
-    "Explore project context" -> "Scope check";
-    "Scope check" -> "Decompose project" [label="multi-subsystem"];
-    "Scope check" -> "Visual questions ahead?" [label="single scope"];
-    "Decompose project" -> "Visual questions ahead?";
-    "Visual questions ahead?" -> "Offer Visual Companion\n(own message)" [label="yes"];
-    "Visual questions ahead?" -> "Ask clarifying questions\n(one at a time)" [label="no"];
-    "Offer Visual Companion\n(own message)" -> "Ask clarifying questions\n(one at a time)";
-    "Ask clarifying questions\n(one at a time)" -> "Propose 2-3 approaches\n(significant decisions only)";
-    "Propose 2-3 approaches\n(significant decisions only)" -> "Present design incrementally\n(section by section)";
-    "Present design incrementally\n(section by section)" -> "User approves?";
-    "User approves?" -> "Present design incrementally\n(section by section)" [label="no, revise"];
-    "User approves?" -> "Write spec/design doc" [label="yes"];
-    "Write spec/design doc" -> "Spec self-review\n(fix inline)";
-    "Spec self-review\n(fix inline)" -> "User reviews spec?";
-    "User reviews spec?" -> "Write spec/design doc" [label="changes requested"];
-    "User reviews spec?" -> "Invoke writing-plans" [label="approved"];
-}
-```
+7. **YAGNI ruthlessly:** Remove unnecessary features from all designs. For simple fixes with one obvious approach, skip alternatives and go straight to design.
 
-## The Process
+8. **Visual companion conditional:** Offered only when topic involves visual decisions. Do NOT offer by default for this backend/Python project.
 
-### Step 1: Explore Project Context
-
-Check the current project state before asking any questions:
-
-- Files, docs, recent commits
-- Existing patterns, reusable components
-- README, CHANGELOG, and relevant documentation
-
-### Step 2: Scope Check
-
-Before asking detailed questions, assess scope:
-
-- If the request describes **multiple independent subsystems** (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately
-- Help the user **decompose into sub-projects**: what are the independent pieces, how do they relate, what order should they be built?
-- Then brainstorm the first sub-project through the normal flow
-- Each sub-project gets its own spec → plan → implementation cycle
-
-### Step 3: Offer Visual Companion (Conditional)
-
-**STRICTLY CONDITIONAL** — only when the topic clearly involves visual decisions (UI layouts, visual mockups, architecture diagrams).
-
-If you anticipate visual questions ahead, offer the companion as **its own message**, combined with nothing else:
-
-> "Some of what we're working on might be easier to explain if I can show it to you in a web browser — mockups, diagrams, comparisons. Want to try that?"
-
-Wait for the user's response. If they decline, proceed with text-only brainstorming.
-
-**For this project** (backend/Python), visual companion will rarely apply. Do NOT offer it by default.
-
-### Step 4: Ask Clarifying Questions — ONE AT A TIME
-
-**STRICTLY ONE question per message.** This is the core behavioral change from the previous version.
-
-Rules:
-
-- One question per message — NEVER ask multiple questions in one message
-- Prefer multiple choice when possible, but open-ended is fine
-- Questions follow from the user's answers, not from a predetermined dimension list
-- Dimensions are an INTERNAL mental checklist only — never exposed as structured output sections
-- Simple fixes skip straight to design without requiring alternatives analysis
-- YAGNI ruthlessly — remove unnecessary features from all designs
-
-**Internal Dimensions Checklist** (reference only, never exposed as output sections):
-
-| Dimension | When to Think About It | When to Skip |
-|-----------|------------------------|--------------|
-| Problem Understanding | Always | Never |
-| User Requirements | When there are end users | Bug fixes with no user-facing change |
-| Alternatives Analysis | When multiple approaches exist | Simple fixes with one obvious fix |
-| Success Criteria | When outcomes are measurable | Exploratory research |
-| Impact Assessment | When change affects other systems | Isolated changes with no blast radius |
-| Operational Requirements | Non-trivial systems | Simple scripts or one-off changes |
-| Interface Investigation | When APIs/UIs are involved | Internal-only refactors |
-
-You use these dimensions internally to decide what to ask about. The user never sees "Dimensions Explored" or "Dimensions Skipped" as output sections.
-
-### Step 5: Propose 2-3 Approaches (Significant Decisions Only)
-
-- For **significant decisions** where multiple approaches exist with meaningful trade-offs, propose 2-3 approaches
-- Present options conversationally with your recommendation and reasoning
-- Lead with your recommended option and explain why
-- For **simple fixes** with one obvious approach, skip alternatives and go straight to design
-- YAGNI — remove unnecessary features from all designs
-
-### Step 6: Present Design Incrementally
-
-- Present the design section by section, asking after each whether it looks right
-- Scale each section to its complexity: a few sentences if straightforward, up to 200-300 words if nuanced
-- Cover: architecture, components, data flow, error handling, testing
-- Be ready to go back and clarify if something doesn't make sense
-- Design for isolation and clarity: each unit should have one clear purpose, well-defined interfaces, and be independently understandable
-
-**Working in existing codebases:**
-
-- Explore current structure before proposing changes
-- Follow existing patterns
-- Include targeted improvements only where they serve the current goal
-- Don't propose unrelated refactoring
-
-### Step 7: Write Spec/Design Doc
-
-- Write the validated design as a GitHub Issue spec
-- Include source attribution when adapting from external sources
-
-### Step 8: Spec Self-Review
-
-After writing the spec, review it with fresh eyes:
-
-1. **Placeholder scan:** Any "TBD", "TODO", incomplete sections, or vague requirements? Fix them.
-1. **Internal consistency:** Do any sections contradict each other? Does the architecture match the feature descriptions?
-1. **Scope check:** Is this focused enough for a single implementation plan, or does it need decomposition?
-1. **Ambiguity check:** Could any requirement be interpreted two different ways? If so, pick one and make it explicit.
-
-Fix any issues inline. No need to re-review — just fix and move on.
-
-### Step 9: User Reviews Spec
-
-Ask the user to review the written spec before proceeding:
-
-> "Spec written. Please review it and let me know if you want to make any changes before we start writing the implementation plan."
-
-Wait for the user's response. If they request changes, make them and re-run the self-review. Only proceed once the user approves.
-
-### Step 10: Transition to writing-plans
-
-**The terminal state is invoking writing-plans.** Do NOT invoke any other implementation skill. The ONLY skill you invoke after brainstorming is writing-plans.
+9. **Terminal state is three-path:**
+   - **Path A (spec NOT yet a GitHub Issue):** Invoke `issue-operations` skill to create the spec as a GitHub Issue with `needs-approval` label → HALT for review.
+   - **Path B (spec already a GitHub Issue AND approved):** Transition directly to `writing-plans` skill.
+   - **Path C (user declines spec/plan → FAILURE):** If the user declines both creating a new spec and selecting an existing candidate (from the search-prompt-fail workflow), this is a FAILURE state. Report: "Spec/Plan Required → Cannot proceed without a spec or plan to track this work." HALT.
 
 ## Key Principles
 
@@ -195,107 +78,74 @@ Wait for the user's response. If they request changes, make them and re-run the 
 - **User-driven exploration** — questions follow from answers, not a checklist
 - **Alternatives for significant decisions only** — simple fixes skip to design
 - **Scope decomposition upfront** — flag multi-subsystem requests before diving in
-- **Visual companion conditional** — offered only when topic involves visual decisions
-- **YAGNI ruthlessly** — remove unnecessary features from all designs
+- **Structural decisions are agent-resolved** — single-task vs multi-task classification, phase decomposition, and scope sizing are agent intelligence concerns; resolve autonomously unless multiple valid structures exist with meaningful trade-offs
 - **Source attribution** — credit external sources in the spec
 
-## What Changed From Previous Version
-
-| Previous (Dimension-Based) | Current (Conversational-First) |
-|----------------------------|-------------------------------|
-| Multiple questions per message | Strictly one question per message |
-| Dimensions as structured output | Dimensions as internal checklist only |
-| Prose exploration summary | Conversational Q&A flow |
-| Alternatives always required | Alternatives for significant decisions only |
-| No scope decomposition | Scope check before diving in |
-| No spec self-review | Self-review checklist before user review |
-| No source attribution | Source attribution required |
-
-## Integration with Existing Workflow
-
-### Dispatch Order
+## Dispatch Order
 
 ```
-brainstorming (mandatory) → spec creation → approval-gate → writing-plans → executing-plans
+brainstorming (mandatory)
+   ├─ Path A: spec NOT yet GitHub Issue → issue-operations → HALT for review
+  ├─ Path B: spec already GitHub Issue AND approved → writing-plans → executing-plans
+  └─ Path C: user declines spec/plan → FAILURE: Spec/Plan Required → HALT
 ```
 
-### Approval Gate Integration
+## Approval Gate Integration
 
 - Exploration is a PRE-REQUISITE to spec creation
 - Approval gate checks for spec existence AFTER exploration
 - Exploration does NOT require approval (exploration phase)
+- **Gap-fill invocation:** When `authorization_scope >= for_spec` (from verify-authorization Step 2.0), brainstorming is invoked as part of the gap-fill cascade — the agent creates the spec automatically as part of pipeline authorization. The exploration workflow still applies (one question at a time, per-item confirmation), but the context is gap-fill rather than standalone exploration.
 
-## Investigation Completion Criteria
+## Adversarial Verification: Authorization Claims
 
-**Before creating a spec, investigation MUST be complete.** This is a hard gate, not optional.
+When this skill detects "approved" or "go" signals in user input or issue comments, it MUST verify against actual GitHub state rather than trusting the claims at face value. This extends the `065-verification-honesty.md` principle to authorization detection during exploration.
 
-| Requirement | Evidence |
-|-------------|----------|
-| Problem understood | Clearly stated problem, context, stakeholders |
-| Codebase explored | Existing patterns, reusable components identified |
-| Alternatives considered | At least 2 approaches for significant decisions |
-| Risks identified | Risk assessment with mitigation strategies |
-| Success criteria defined | Testable, measurable completion criteria |
+### Verification Table
 
-### Permissible Investigation Activities
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "approved" found in issue comments | Verify the comment author is a developer (not bot/agent); verify the comment scope matches the current issue; verify the comment is not superseded by a revision | `github_issue_read(method=get_comments)` → filter by `author_association` | CONFLICTING |
+| "go" signal detected for a spec | Verify the spec actually exists and has `needs-approval` label removed OR an explicit authorization comment | `github_issue_read(method=get_labels)` + `github_issue_read(method=get_comments)` | VERIFICATION-GAP |
+| Spec claimed as "already approved" | Verify approval comment exists and spec has not been revised since that comment | `github_issue_read(method=get_comments)` → find authorization comment, compare timestamps with spec revision | CONFLICTING |
+| Spec claimed as "already a GitHub Issue" | Verify the issue actually exists with proper `[SPEC]` prefix | `github_issue_read(method=get, issue_number=N)` → check title prefix | MISSING-ELEMENT |
 
-| Activity | Allowed? | Notes |
-|----------|----------|-------|
-| Read production code | YES | Read-only exploration |
-| Read production data | YES | Read-only analysis |
-| Create test scripts in `./tmp/` | YES | Isolated from production |
-| Run test scripts in `./tmp/` | YES | No production impact |
-| Run static analysis | YES | Code verification |
-| Modify production code | NO | Requires approved spec |
-| Modify production data | NO | Requires approved spec |
-| Run code against production DB | NO | Requires explicit user authorization |
+### Evidence Artifacts
 
-## Enforcement Mechanism
+Every authorization claim verification MUST produce an evidence artifact — a tool call result demonstrating the verification was performed.
 
-**Skills MUST enforce brainstorming — guidelines alone are insufficient.**
-
-### What Skills MUST Check
-
-1. **Before spec creation:**
-
-   - Has exploration been invoked?
-   - Is exploration output present?
-   - Has problem understanding been explored?
-
-1. **Enforcement matrix:**
-
-   - Exploration NOT invoked → INVOKE brainstorming
-   - Exploration invoked but incomplete (missing problem understanding) → COMPLETE exploration
-   - Exploration complete → PROCEED to spec creation
-
-1. **What does NOT bypass exploration:**
-
-   - "skip brainstorming" → NOT allowed
-   - "I already know what I want" → Still require brief exploration (problem understanding at minimum)
-   - User impatience → Document partial exploration, ask to proceed
-
-### Enforcement Messages
-
-**Missing exploration:**
+**Evidence format:**
 
 ```
-Exploration required before spec creation.
-
-This ensures thorough requirements investigation before planning.
-
-To invoke: Say '/skill brainstorming' or describe your feature to start exploration.
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
 ```
 
-**Incomplete exploration:**
+### Finding Classification
 
-```
-Exploration incomplete. Problem understanding must be explored at minimum.
+Findings from authorization verification follow the three-tier model:
 
-Please complete exploration before proceeding to spec creation.
-```
+| Classification | When | Action |
+|----------------|------|--------|
+| auto-fix | Safe mechanical correction (stale reference, wrong issue number) | Apply fix, note in evidence |
+| conditional | Requires scope/safety check (authorization from wrong person, wrong issue) | Verify scope, then proceed if safe |
+| flag-for-review | Requires domain judgment (conflicting authorization, ambiguous approval) | Report in findings, HALT for human review |
+
+### Enforcement
+
+**When authentication verification fails, do NOT proceed to spec-creation.** Instead:
+- CONFLICTING findings → HALT and report the conflict
+- VERIFICATION-GAP findings → Complete verification before proceeding
+- MISSING-ELEMENT findings → Create the missing artifact first
 
 ## Cross-References
 
-- Related skills: `approval-gate` (authorization), `writing-plans` (plan creation)
-- Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol)
+- Related skills: `approval-gate` (authorization), `spec-creation` (spec structuring and writing), `issue-operations` (spec-as-issue creation), `writing-plans` (plan creation)
+- Related guidelines: `140-planning-spec-creation.md` (spec workflow), `045-open-questions.md` (Q&A protocol), `065-verification-honesty.md` (evidence artifacts)
+- Related subtask: `spec-auditor --task ground-truth` (adversarial metadata verification model)
 - Source: Adapted from [obra/superpowers brainstorming](https://github.com/obra/superpowers/blob/main/skills/brainstorming/SKILL.md)
+
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

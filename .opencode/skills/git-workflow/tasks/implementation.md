@@ -35,11 +35,26 @@ git commit -m "WIP: <descriptive message>"
 
 **No co-author trailers required** during implementation commits - those are added during squash at PR time.
 
+### ⚠️ CRITICAL: File Operation Tool Paths in Worktree
+
+When `worktree.path` is set, ALL file operation tool calls (`read`, `edit`, `write`, `glob`, `grep`) MUST prefix paths with the worktree path. These tools have NO `workdir` parameter — relative paths resolve to the main repo, causing silent errors.
+
+| Tool | Wrong (operates on main repo) | Correct (targets worktree) |
+| -- | -- | -- |
+| `read` | `read(filePath="src/main.py")` | `read(filePath=f"{worktree.path}/src/main.py")` |
+| `edit` | `edit(filePath="src/main.py", ...)` | `edit(filePath=f"{worktree.path}/src/main.py", ...)` |
+| `write` | `write(filePath="src/new.py", ...)` | `write(filePath=f"{worktree.path}/src/new.py", ...)` |
+| `glob` | `glob(pattern="src/**/*.py")` | `glob(pattern="src/**/*.py", path=worktree.path)` |
+| `grep` | `grep(pattern="TODO", path="src/")` | `grep(pattern="TODO", path=f"{worktree.path}/src/")` |
+
+**For `bash` tool:** Continue using `workdir` parameter as documented in `using-git-worktrees` skill.
+
 ### ⚠️ CRITICAL: Commit Before Push
 
 **The most common workflow failure is pushing without committing.**
 
 **Correct sequence:**
+
 ```
 1. Make file changes (edit tool, etc.)
 2. git status (verify changes exist)
@@ -49,6 +64,7 @@ git commit -m "WIP: <descriptive message>"
 ```
 
 **Incorrect sequence (CRITICAL VIOLATION):**
+
 ```
 1. Make file changes
 2. git push (WRONG - uncommitted changes)
@@ -57,6 +73,7 @@ git commit -m "WIP: <descriptive message>"
 ```
 
 **Verification before push:**
+
 - `git status` MUST show "nothing to commit, working tree clean"
 - Local branch MUST have at least one commit ahead of remote
 - If `git status` shows uncommitted changes → COMMIT FIRST
@@ -64,7 +81,7 @@ git commit -m "WIP: <descriptive message>"
 ## Multiple Commits Are Acceptable
 
 | Commit Type | When | Message | Trailers |
-|-------------|------|---------|----------|
+| -- | -- | -- | -- |
 | Implementation commit | During work | `WIP: description` | None |
 | Squash commit | PR creation | Descriptive | Full co-author trailers |
 
@@ -80,9 +97,52 @@ git commit -m "WIP: <descriptive message>"
 - Related skills: `approval-gate` (authorization scope)
 - Related tasks: `pr-creation` (push and PR)
 
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Verify git state via tool calls before each commit during implementation. Assertions without tool-call artifacts are VERIFICATION-GAP findings.**
+
+### Pre-Commit Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| On correct branch | `git branch --show-current` | Feature branch (not `main`/`dev`) | STRUCTURE-VIOLATION → HALT |
+| Worktree location | `git rev-parse --show-toplevel` | Worktree path | STRUCTURE-VIOLATION → HALT |
+| Changes to commit | `git status --porcelain` | Expected modified files listed | MISSING-ELEMENT → no changes found |
+| Staged state matches intent | `git diff --staged` | Intended changes visible | VERIFICATION-GAP → re-stage |
+
+### Verification Procedure
+
+**Before each implementation commit, run:**
+
+```
+1. git branch --show-current → EVIDENCE: <feature-branch-name>
+2. git rev-parse --show-toplevel → EVIDENCE: <worktree-path>
+3. git status --porcelain → EVIDENCE: <modified files or "(empty)">
+4. git diff --staged → EVIDENCE: <staged changes or "(empty)">
+```
+
+**After each implementation commit, verify:**
+
+```
+1. git log --oneline -1 → EVIDENCE: commit hash and message visible
+2. git status --porcelain → EVIDENCE: "(empty)" if all committed
+```
+
+### Finding Classification
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| On `main` or `dev` | CONFLICTING | flag-for-review | HALT — must be in worktree on feature branch |
+| Wrong toplevel path | STRUCTURE-VIOLATION | auto-fix | HALT — not in worktree, re-invoke pre-work |
+| No changes to commit | MISSING-ELEMENT | conditional | Verify changes were saved — may need `git add` |
+| Staged changes don't match intent | VERIFICATION-GAP | conditional | Review diff, adjust staging |
+
+**These verifications are MANDATORY before each commit. Skipping them is a CRITICAL GUIDELINE VIOLATION.**
+
 ## When to Commit During Implementation
 
 Commit when:
+
 - Completing a discrete logical unit of work
 - Reaching a checkpoint that might need rollback
 - Before attempting something risky

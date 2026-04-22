@@ -7,13 +7,14 @@ This guideline defines when to prefer srclight MCP tools vs opencode built-in to
 **Srclight is a code-only indexer using tree-sitter grammars.**
 
 | What Srclight Indexes | What Srclight Does NOT Index |
-|----------------------|------------------------------|
+| -- | -- |
 | Python `.py` files | Markdown `.md` files |
 | Python symbols (classes, functions, etc.) | Documentation |
 | Python imports/dependencies | Config files |
 | Python call graphs | Non-Python files |
 
 **Index verification:**
+
 ```
 Languages: python (117 files, 1139 symbols)
 Config options: --db PATH, --embed TEXT (no include/exclude)
@@ -40,7 +41,7 @@ Is the task about Python code?
 Use srclight tools PREFERENTIALLY for all Python semantic/code analysis tasks:
 
 | Task | Tool | Why |
-|------|------|-----|
+| -- | -- | -- |
 | Find Python symbol by name | `srclight_search_symbols` | Fast FTS + name matching |
 | Find Python symbol by meaning | `srclight_semantic_search` | Embedding-based semantic search |
 | Find Python symbol by keyword | `srclight_hybrid_search` | Best: FTS + embeddings combined |
@@ -61,7 +62,7 @@ Use srclight tools PREFERENTIALLY for all Python semantic/code analysis tasks:
 Use opencode built-in tools for basic file operations:
 
 | Task | Tool |
-|------|------|
+| -- | -- |
 | Read file | `read` |
 | Write file | `write` |
 | Edit file | `edit` |
@@ -73,7 +74,7 @@ Use opencode built-in tools for basic file operations:
 Use JetBrains MCP only for operations with no opencode equivalent:
 
 | Task | Tool |
-|------|------|
+| -- | -- |
 | Semantic rename | `pycharm_rename_refactoring` |
 | Code reformat | `pycharm_reformat_file` |
 | Build project | `pycharm_build_project` |
@@ -87,15 +88,15 @@ Use JetBrains MCP only for operations with no opencode equivalent:
 Use `.opencode/tools/guidelines` commands for searching developer guidelines:
 
 | Task | Command |
-|------|---------|
-| Search guidelines | `uv run python .opencode/tools/guidelines search <term>` |
-| Read guideline | `uv run python .opencode/tools/guidelines read <filename>` |
-| List guidelines | `uv run python .opencode/tools/guidelines read --list` |
+| -- | -- |
+| Search guidelines | `./.opencode/tools/guidelines search <term>` |
+| Read guideline | `./.opencode/tools/guidelines read <filename>` |
+| List guidelines | `./.opencode/tools/guidelines read --list` |
 
 ## Tool Selection Matrix
 
 | Task | Primary Tool | Alternative |
-|------|--------------|-------------|
+| -- | -- | -- |
 | Find Python symbol by name | `srclight_search_symbols` | `pycharm_get_symbol_info` |
 | Find Python symbol by meaning | `srclight_semantic_search` | — |
 | Find Python symbol by keyword | `srclight_hybrid_search` | `grep` |
@@ -173,7 +174,7 @@ pycharm_search_in_files_by_text(searchText="article parsing")
 grep(pattern="MCP", glob="**/*.md")
 
 # ✅ ALSO CORRECT: Use .opencode/tools/guidelines for .opencode/guidelines/
-# Run: uv run python .opencode/tools/guidelines search MCP
+# Run: ./.opencode/tools/guidelines search MCP
 
 # ❌ WRONG: Srclight does not index .md files
 srclight_search_symbols(query="MCP")  # Returns no results for .md files
@@ -200,6 +201,18 @@ pycharm_rename_refactoring(pathInProject="src/main.py", symbolName="foo", newNam
 
 # ❌ WRONG: Using srclight for editing
 # Srclight has NO edit capability
+```
+
+### Worktree Path Resolution
+
+When `worktree.path` is set (working in a git worktree), all file operation tools must prefix paths with the worktree path. See `060-tool-usage.md` for the complete tool-by-tool table.
+
+```
+# ✅ CORRECT: In worktree context, prefix with worktree.path
+edit(filePath=f"{worktree.path}/src/main.py", oldString="foo", newString="bar")
+
+# ❌ WRONG: Relative path in worktree context resolves to main repo
+edit(filePath="src/main.py", oldString="foo", newString="bar")
 ```
 
 ## Edge Cases
@@ -229,7 +242,7 @@ Srclight does not support filename search.
 
 ```
 # For .opencode/guidelines/*.md files:
-# Run: uv run python .opencode/tools/guidelines search <term>
+# Run: ./.opencode/tools/guidelines search <term>
 
 # For other .md files:
 grep(pattern="<term>", glob="**/*.md")
@@ -246,7 +259,7 @@ glob(pattern="**/test_*.py")
 ## Summary
 
 | Category | Tool |
-|----------|------|
+| -- | -- |
 | Python semantic analysis | `srclight_*` (PREFERENTIALLY) |
 | Basic file operations | opencode `read`/`write`/`edit`/`glob`/`grep` (PRIMARY) |
 | Notebook operations | `the-notebook-mcp_*` (MANDATORY for .ipynb) |

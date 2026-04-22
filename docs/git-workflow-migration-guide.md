@@ -110,7 +110,7 @@ After migrating:
 - [ ] PR retargeted from `main` to `dev`
 - [ ] CI passes on `dev`
 - [ ] Local dev Streamlit runs from `dev` branch
-- [ ] Hooks installed (run `./scripts/install-hooks.sh`)
+- [ ] Hooks installed (auto-installed by session-enforcement.ts at session start)
 
 ## Common Issues
 

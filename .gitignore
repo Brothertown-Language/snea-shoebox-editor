@@ -45,6 +45,9 @@ out/
 .junie/memory.md
 .opencode/package-lock.json
 
+# Opt-in issue probe (developers create this file to enable Tier 3 network probes)
+.opencode-issue-probe
+
 # Cloudflare / Wrangler
 .wrangler/
 wrangler.toml.bak
@@ -65,8 +68,15 @@ tmp/
 # Secrets and sensitive files
 .env
 .env.*
+id_rsa
+id_ed25519
+id_ecdsa
+id_dsa
+service-account.json
 .streamlit/*
 !.streamlit/config.toml
+.streamlit/secrets.toml.production
+.secrets.baseline
 *.key
 *.pem
 *.p12
@@ -90,3 +100,4 @@ docker.app/
 /opencode-guidelines-export/
 /opencode-guidelines-export.zip
 .srclight/
+

@@ -16,6 +16,7 @@ def build_report(data: dict):
 **WHY**: If `title` is required, the caller must provide it. Using a default hides the problem until someone notices "Untitled Report" in production.
 
 **CORRECT**:
+
 ```python
 def build_report(data: dict):
     if "title" not in data:
@@ -23,7 +24,7 @@ def build_report(data: dict):
     return Report(title=data["title"], ...)
 ```
 
----
+______________________________________________________________________
 
 #### Placeholder/synthetic data
 
@@ -36,6 +37,7 @@ journal_name = record.get("journal") or "Unknown Journal"  # WRONG
 **WHY**: Placeholder data corrupts downstream analysis. If you don't have real data, surface the gap.
 
 **CORRECT**:
+
 ```python
 discovery_date = record.get("discovery_date")
 if discovery_date is None:
@@ -46,7 +48,7 @@ if not journal_name:
     raise ValueError(f"Missing required field 'journal' in {record_id}")
 ```
 
----
+______________________________________________________________________
 
 #### None returns for required data
 
@@ -62,6 +64,7 @@ def fetch_user(user_id: int) -> User | None:
 **WHY**: Callers often forget to check `None`. Errors propagate invisibly.
 
 **CORRECT**:
+
 ```python
 def fetch_user(user_id: int) -> User:
     user = db.query(User).filter_by(id=user_id).first()
@@ -70,7 +73,7 @@ def fetch_user(user_id: int) -> User:
     return user
 ```
 
----
+______________________________________________________________________
 
 ### ✅ REQUIRED PATTERNS
 
@@ -92,7 +95,7 @@ def process_config(config_path: Path) -> Config:
         raise ValueError(f"Invalid YAML in {config_path}: {e}") from e
 ```
 
----
+______________________________________________________________________
 
 #### Optional data is explicit
 
@@ -116,6 +119,6 @@ def get_user_by_id(user_id: int) -> User:
 
 **WHY**: The type signature tells the caller what to expect. `Optional` signals "might be None". Non-`Optional` signals "will raise if missing".
 
----
+______________________________________________________________________
 
 *Source: Content migrated from `095-never-hide-problems.md`*

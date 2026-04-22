@@ -1,9 +1,13 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Edit a guideline file by replacing a section or appending content.
-Usage: uv run python .opencode/tools/guidelines edit <filename> --find-file <path> --replace-file <path>
-       uv run python .opencode/tools/guidelines edit <filename> --append-file <path>
-       uv run python .opencode/tools/guidelines edit <filename> --find-regex-file <path> --replace-file <path>
+Usage: ./.opencode/tools/guidelines edit <filename> --find-file <path> --replace-file <path>
+       ./.opencode/tools/guidelines edit <filename> --append-file <path>
+       ./.opencode/tools/guidelines edit <filename> --find-regex-file <path> --replace-file <path>
 WARNING: Use file-based options (--find-file, --replace-file, --append-file, --find-regex-file) exclusively.
          Direct text on CLI (--find, --replace, --append, --find-regex) is FORBIDDEN.
 Options:
@@ -22,21 +26,24 @@ import os as _os
 
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     print(
-        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/guidelines ...). "
+        "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/guidelines ...). "
         "Direct invocation is not permitted.",
         file=__import__("sys").stderr,
     )
     __import__("sys").exit(1)
 import re
+import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-GUIDELINES_DIR = BASE_DIR / ".opencode" / "guidelines"
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+GUIDELINES_DIR = PROJECT_ROOT / ".opencode" / "guidelines"
 
 
 def _resolve_path(name: str) -> Path:
-    opencode_dir = BASE_DIR / ".opencode"
+    opencode_dir = PROJECT_ROOT / ".opencode"
     if len(name) == 3 and name.isdigit():
         matches = sorted(
             path for path in GUIDELINES_DIR.glob(f"{name}*.md") if path.is_file()

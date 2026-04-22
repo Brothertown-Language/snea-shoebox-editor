@@ -1,9 +1,8 @@
 ---
 name: using-git-worktrees
-description: Use when starting feature work that needs isolation from current workspace, before executing implementation plans, or when working with multiple agents in parallel. Triggers on: worktree, isolated workspace, parallel agent, worktree setup, branch isolation, concurrent work, set up worktree.
-type: technique
+description: Use when creating a feature branch or worktree for implementation. Always invoke before git-workflow pre-work. Triggers on: branch, worktree, feature branch, create worktree, pre-work, worktree.path.
+type: discipline-enforcing
 license: MIT
-compatibility: opencode
 ---
 
 # Skill: using-git-worktrees
@@ -16,17 +15,43 @@ Git worktrees create isolated workspaces sharing the same repository, allowing w
 
 **Announce at start:** "Using the using-git-worktrees skill to set up an isolated workspace."
 
-**Source attribution:** This skill is adapted from [obra/superpowers `using-git-worktrees`](https://github.com/obra/superpowers/tree/main/skills/using-git-worktrees). Original concepts and structure are used with attribution.
+**Source attribution:** Adapted from [obra/superpowers `using-git-worktrees`](https://github.com/obra/superpowers/tree/main/skills/using-git-worktrees). Original concepts and structure used with attribution.
 
 ## Persona
 
 You are a Worktree Setup Specialist. Your focus is creating safe, isolated git worktrees so agents can work in parallel without conflict.
 
-## Integration with Project Workflow
+## Tasks
 
-### Three-Branch Model Adaptation
+| Task | Purpose | Words |
+|------|---------|-------|
+| `create-worktree` | Full worktree creation workflow: sync, verify, setup, export env | ≈600 |
+| `tool-usage` | File operation and bash tool compliance rules for worktrees | ≈250 |
+| `reference` | Quick reference, common mistakes, fatal errors, integration | ≈450 |
+| `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
-The original obra/superpowers skill assumes a direct-to-main branch model. This adaptation changes:
+## Invocation
+
+- `/skill using-git-worktrees` — Overview only (this document)
+- `/skill using-git-worktrees --task create-worktree` — Create a new worktree
+- `/skill using-git-worktrees --task tool-usage` — Tool usage compliance rules
+- `/skill using-git-worktrees --task reference` — Quick reference and troubleshooting
+- `/skill using-git-worktrees --task completion` — Invoke when workflow halts at any point
+
+## Operating Protocol
+
+1. **Announce intent** at start: "Using the using-git-worktrees skill to set up an isolated workspace."
+1. **Default base branch is `dev`** — never from `main`. For work execution workflows, `BASE_BRANCH` may be a prior feature branch or work branch. Feature branches target `dev`.
+1. **Always use `.worktrees/` directory** — stash+checkout is FORBIDDEN.
+1. **Verify `.worktrees/` is gitignored** before creating worktree. If not, add it and commit.
+1. **Check for name collisions** before creating — reuse existing worktree for same branch, HALT on mismatch.
+1. **Export `worktree.path`, `branch`, `DEV_BASE_HASH`** after creation — downstream skills require these.
+1. **If `worktree.fatal=1`** appears in session init: HALT immediately, report to developer, do NOT proceed.
+1. **If `worktree.path` is empty after creation**: FATAL ERROR → FLAG DEV → HALT.
+1. **Verify clean test baseline** after setup — report failures, get explicit permission to proceed.
+1. **Cleanup** is handled by `finishing-a-development-branch`, not by this skill.
+
+## Three-Branch Model Adaptation
 
 | Original (superpowers) | This Project |
 |------------------------|-------------|
@@ -35,205 +60,36 @@ The original obra/superpowers skill assumes a direct-to-main branch model. This 
 | No project setup step | Auto-detect and run `uv sync` |
 | No cleanup integration | Integrates with `finishing-a-development-branch` |
 
-### Branch Naming
+Branch naming: `spec/<short-name>` for spec-driven work, `feature/<description>` for general feature work, `work/<short-name>` for work execution branches.
 
-Feature branches in worktrees follow existing project conventions:
-- `spec/<short-name>` for spec-driven work
-- `feature/<description>` for general feature work
+**BASE_BRANCH parameter:** The `create-worktree` task supports creating worktrees from branches other than `dev`. Defaults to `dev` for standalone branches. In work execution workflows, set to a prior feature branch (for dependency merge) or the work branch. Agent decides at creation time based on context.
 
-### Cleanup Integration
+## Simple Work Worktree
 
-After work is complete and PR is merged, the worktree cleanup is handled by the `finishing-a-development-branch` skill's cleanup workflow. This skill does NOT handle cleanup.
+When the authorization qualifies as "clearly simple work" (per `000-critical-rules.md` → "Simple Work Dispatch Path (Tier 2 Waiver)"), a worktree is STILL MANDATORY for any file modification. The Tier 1 mandate for worktrees applies regardless of task simplicity.
 
-## Directory Selection Process
+### Simple Work Procedure
 
-Follow this priority order:
+1. **Branch naming:** Use `docs/`, `runbook/`, or `config/` as the branch prefix for clearly simple work
+2. **Worktree creation:** Invoke `git-workflow --task pre-work` as normal — the worktree creation process is identical for simple and complex work
+3. **Direct implementation:** After worktree creation, implement directly in the worktree without sub-agent dispatch (no `divide-and-conquer` needed for single-file or two-file changes)
+4. **Completion steps:** Follow the simple work dispatch path: `verification-before-completion` → `finishing-a-development-branch --task checklist` → `git-workflow --task review-prep`
 
-### 1. Check Existing Directories
+### What Does NOT Change for Simple Work
 
-```bash
-ls -d .worktrees 2>/dev/null     # Preferred (hidden)
-ls -d worktrees 2>/dev/null      # Alternative
-```
+| Step | Simple Work | Complex Work |
+|------|-------------|--------------|
+| Worktree required? | YES (Tier 1) | YES (Tier 1) |
+| No commits to main/dev? | YES (Tier 1) | YES (Tier 1) |
+| Path rules apply? | YES (Tier 1) | YES (Tier 1) |
+| Spec/plan needed? | NO (Tier 2 waiver) | YES (Tier 2) |
+| Sub-agent dispatch? | NO (single concern) | YES (divide-and-conquer) |
+| Pre-implementation analysis? | NO (no plan) | YES (expand sub-issues) |
 
-**If found:** Use that directory. If both exist, `.worktrees` wins.
+## Cross-References
 
-### 2. Check AGENTS.md / Project Config
+- **Called by:** `brainstorming` (Phase 4), `divide-and-conquer`, `executing-plans`
+- **Pairs with:** `finishing-a-development-branch` (cleanup), `git-workflow` (branch/PR management)
+- **Related guidelines:** `000-critical-rules.md` (worktree bypass violation), `060-tool-usage.md` (path rules)
 
-```bash
-# Check for worktree directory preference in project files
-grep -i "worktree" AGENTS.md .opencode/AGENTS.md 2>/dev/null
-```
-
-**If preference specified:** Use it without asking.
-
-### 3. Default to Project-Local
-
-If no directory exists and no preference found, default to `.worktrees/` (project-local, hidden).
-
-## Safety Verification
-
-### For Project-Local Directories (.worktrees or worktrees)
-
-**MUST verify directory is ignored before creating worktree:**
-
-```bash
-git check-ignore -q .worktrees 2>/dev/null
-```
-
-**If NOT ignored:**
-
-1. Add `.worktrees/` to `.gitignore`
-2. Commit the change with message: "chore: add .worktrees/ to gitignore for worktree isolation"
-3. Proceed with worktree creation
-
-**Why critical:** Prevents accidentally committing worktree contents to repository.
-
-## Creation Steps
-
-### 1. Announce Intent
-
-State clearly: "Using the using-git-worktrees skill to set up an isolated workspace."
-
-### 2. Sync with Dev
-
-```bash
-git checkout dev
-git pull origin dev
-```
-
-Always create worktrees from an up-to-date `dev` branch.
-
-### 3. Detect Project Name
-
-```bash
-project=$(basename "$(git rev-parse --show-toplevel)")
-```
-
-### 4. Create Worktree
-
-```bash
-# Determine branch name (spec/<name> or feature/<name>)
-BRANCH_NAME="spec/554-git-worktrees-skill"
-
-# Create worktree with new branch from dev
-git worktree add .worktrees/$BRANCH_NAME -b $BRANCH_NAME dev
-```
-
-### 5. Verify Worktree Creation
-
-```bash
-git worktree list
-# Should show both main worktree and .worktrees/$BRANCH_NAME
-```
-
-### 6. Run Project Setup
-
-Auto-detect and run appropriate setup for this Python project:
-
-```bash
-cd .worktrees/$BRANCH_NAME
-
-# This project uses uv
-if [ -f pyproject.toml ]; then uv sync; fi
-```
-
-### 7. Verify Clean Baseline with Tests
-
-```bash
-cd .worktrees/$BRANCH_NAME
-uv run pytest test/ -x
-```
-
-**If tests fail:** Report failures, ask whether to proceed or investigate.
-
-**If tests pass:** Report ready.
-
-### 8. Report Location
-
-```
-Worktree ready at .worktrees/spec/554-git-worktrees-skill
-Tests passing (<N> tests, 0 failures)
-Branch: spec/554-git-worktrees-skill (from dev)
-Ready to implement <feature-name>
-```
-
-## Quick Reference
-
-| Situation | Action |
-|-----------|--------|
-| `.worktrees/` exists | Use it (verify ignored) |
-| `worktrees/` exists | Use it (verify ignored) |
-| Both exist | Use `.worktrees/` |
-| Neither exists | Create `.worktrees/` and add to `.gitignore` |
-| Directory not ignored | Add to `.gitignore` + commit |
-| Tests fail during baseline | Report failures + ask |
-| No `pyproject.toml` | Skip dependency install |
-
-## Common Mistakes
-
-### Skipping Ignore Verification
-
-- **Problem:** Worktree contents get tracked, pollute git status
-- **Fix:** Always use `git check-ignore` before creating project-local worktree
-
-### Creating Worktree from Wrong Branch
-
-- **Problem:** Worktree based on stale or wrong branch
-- **Fix:** Always `git checkout dev && git pull origin dev` before creating worktree
-
-### Proceeding with Failing Tests
-
-- **Problem:** Can't distinguish new bugs from pre-existing issues
-- **Fix:** Report failures, get explicit permission to proceed
-
-### Not Announcing Worktree Creation
-
-- **Problem:** Other agents unaware of parallel workspace
-- **Fix:** Always announce "Using the using-git-worktrees skill to set up an isolated workspace" at start
-
-## Integration
-
-### Called By
-
-- **brainstorming** (Phase 4) - REQUIRED when design is approved and implementation follows
-- **subagent-driven-development** (#555) - REQUIRED before executing any tasks
-- **executing-plans** - REQUIRED before executing any tasks
-- Any skill needing isolated workspace
-
-### Pairs With
-
-- **finishing-a-development-branch** - REQUIRED for cleanup after work complete
-- **git-workflow** - Branch management and PR creation
-
-### Cleanup After Merge
-
-After the PR is merged, the worktree cleanup is handled by `finishing-a-development-branch` skill:
-
-```bash
-# Remove worktree
-git worktree remove .worktrees/$BRANCH_NAME
-
-# Prune stale worktree references
-git worktree prune
-```
-
-This cleanup happens as part of the standard `git-workflow --task cleanup` sequence.
-
-## Red Flags
-
-**Never:**
-- Create worktree without verifying it's ignored (project-local)
-- Create worktree from `main` (always branch from `dev`)
-- Skip baseline test verification
-- Proceed with failing tests without asking
-- Assume directory location when ambiguous
-- Handle worktree cleanup in this skill (delegated to `finishing-a-development-branch`)
-
-**Always:**
-- Follow directory priority: existing > AGENTS.md > default `.worktrees/`
-- Verify directory is ignored for project-local
-- Auto-detect and run `uv sync` for project setup
-- Announce worktree creation at start
-- Create branch from `dev` (not `main`)
-- Verify clean test baseline
+**⚠️ COMPLETION GUARANTEE:** If this workflow halts at ANY point — including error, failure, or early termination — you MUST invoke `--task completion` before halting. The completion subtask ensures mandatory steps are never skipped. It is idempotent and safe to invoke multiple times.

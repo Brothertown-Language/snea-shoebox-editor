@@ -1,354 +1,170 @@
 # Planning: Spec Examples
 
-## Good vs Bad Spec Context
+## Examples of Different Valid Structures
 
-This document provides examples of good and bad spec context to illustrate the fresh-start requirements.
+This document provides examples of different valid structures for specs at various complexity levels. There is no single "correct" format — the right structure depends on the spec's complexity, domain, and audience.
 
----
+**Key principle:** A spec that covers all required content areas (problem, context, success criteria) is valid regardless of its section headers. A spec with the "correct" headers but missing content is invalid.
 
-## Example 1: Bug Report
+The examples below show how the same content area can be covered at different levels of detail and with different organizational choices.
 
-### ❌ BAD Bug Report (Assumes Memory Context)
+______________________________________________________________________
 
-> **Title:** Fix authentication bug as discussed
->
-> **Description:** Fix the bug in auth where users get logged out. See previous comments for details.
->
-> **Steps:** Implement the fix we talked about.
+## Example 1: Bug Report — Different Complexity Levels
 
-This is BAD because:
-- No context about WHAT bug
-- No WHERE (which file, which function)
-- No WHY (what causes the bug)
-- No HOW to fix (no approach documented)
-- References "previous comments" instead of restating
+### Minimal Bug Report (one-line fix, obvious cause)
 
----
+> **Problem:** `process_data()` crashes on empty input, raising `IndexError` at `src/core/processor.py:42`.
+>
+> **Fix:** Add empty list guard.
+>
+> **Success Criteria:** ✅ Empty input returns empty result. ✅ Non-empty input unchanged.
 
-### ✅ GOOD Bug Report (Self-Contained)
+**Why this works:** The problem, fix, and criteria are obvious. No separate context section needed — it's self-evident. The one-line description is sufficient because any agent can understand the issue from the problem statement alone.
 
-> **Title:** OAuth2 refresh_token fails on expiry, causing unexpected logout
+### Standard Bug Report (needs investigation context)
+
+> **Problem:** OAuth2 refresh_token fails on expiry, causing unexpected logout for ≈15% of users who don't log in for more than 7 days.
 >
-> **Problem:** Users are unexpectedly logged out after 7 days when their OAuth2 refresh token expires. The current implementation does not handle the `TokenExpiredError` and instead propagates the exception, terminating the user session.
+> **Expected Behavior:** Automatically re-authenticate using stored credentials when refresh token expires.
 >
-> **Location:** `refresh_token()` in `src/auth/oauth_client.py`:
-> ```python
-> def refresh_token(self):
->     # BUG: Does not handle expired refresh_token
->     response = self._request_token(self._refresh_token)
->     # Raises TokenExpiredError instead of re-authenticating
->     return response
-> ```
+> **Root Cause:** `refresh_token()` in `src/auth/oauth_client.py` catches `TokenExpiredError` but re-raises instead of calling `authenticate()`.
 >
-> **Root Cause:** When `refresh_token` is called with an expired token, the API returns `TokenExpiredError`. The current code catches this error but simply re-raises it, instead of attempting to re-authenticate using stored credentials.
+> **Fix Approach:** Catch `TokenExpiredError` and call `authenticate()` with stored credentials.
 >
-> **Expected Behavior:** When refresh token expires, automatically re-authenticate using stored credentials (username/password in secure storage) and return a valid token.
->
-> **Context:** This affects ~15% of users who don't log in for more than 7 days. Related to #100 (persistent sessions) and #150 (token rotation strategy).
->
-> **Decision:** Implement re-authentication flow by catching `TokenExpiredError` and calling `authenticate()` with stored credentials.
->
-> **Constraints:**
-> - Must not break existing token refresh logic
-> - Must work with the new credential storage added in #100
-> - Must not expose credentials in logs
->
-> **Edge Cases:**
-> - Credentials no longer valid → prompt user to re-login
-> - Network failure during re-auth → propagate error
-> - Rate limiting on auth API → backoff and retry
->
-> **Related Issues:**
-> | Issue | Summary | Relevance |
-> |-------|---------|-----------|
-> | [#100](https://github.com/owner/repo/issues/100) | Persistent sessions | Credential storage implementation |
-> | [#150](https://github.com/owner/repo/issues/150) | Token rotation | Future improvement for longer sessions |
+> **Side Effects:** None — existing refresh logic unchanged for valid tokens.
 >
 > **Success Criteria:**
-> 1. ✅ Users with expired refresh tokens are automatically re-authenticated
-> 2. ✅ Re-authentication failures surface appropriate error messages
+> 1. ✅ Users with expired refresh tokens auto-re-authenticated
+> 2. ✅ Auth failures surface appropriate error messages
 > 3. ✅ No credentials logged or exposed
 > 4. ✅ Existing refresh logic unchanged for valid tokens
-
-This is GOOD because:
-- ✅ Problem clearly stated with symptom and impact
-- ✅ Exact file/line location provided
-- ✅ Code snippet included
-- ✅ Root cause analysis
-- ✅ Expected behavior specified
-- ✅ Context with related issues linked and explained
-- ✅ Decision rationale documented
-- ✅ Constraints listed
-- ✅ Edge cases identified
-- ✅ Success criteria testable
-
----
-
-## Example 2: Feature Specification
-
-### ❌ BAD Feature Spec (Assumes Memory Context)
-
-> **Title:** Add caching as discussed in yesterday's meeting
 >
-> **Description:** Implement caching for the API. We decided on Redis.
+> **Edge Cases:** Credentials no longer valid → prompt re-login. Network failure → propagate error. Rate limiting → backoff and retry.
 >
-> **Steps:** Add caching layer, update API handlers, add tests.
+> **Related Issues:** #100 (persistent sessions), #150 (token rotation)
 
-This is BAD because:
-- References "yesterday's meeting" without restating decisions
-- No context for WHY caching is needed
-- No details on WHAT to cache
-- No alternatives considered documented
-- No success criteria
-- No constraints or edge cases
+**Why this works:** The problem affects real users, has a non-obvious root cause, and has multiple edge cases. The standard format provides enough structure for an agent to implement correctly without additional context. A fresh agent can pick this up and know exactly what to do.
 
----
+### Comprehensive Bug Report (cross-cutting, multi-system)
 
-### ✅ GOOD Feature Spec (Self-Contained)
+For bugs that involve multiple systems, affect production users significantly, or have complex deployment considerations, use the full spec structure with context section, affected files table, root cause analysis with evidence, detailed edge cases, risk assessment, and phased implementation. The extra structure serves the complexity.
 
-> **Title:** Add Redis caching layer for frequently accessed article metadata
+______________________________________________________________________
+
+## Example 2: Feature Specification — Different Complexity Levels
+
+### Minimal Feature Spec (single-function addition)
+
+> **Objective:** Add `retry_count` parameter to `fetch_data()` in `src/api/client.py` so callers can control retry behavior.
 >
-> **Problem Statement:** Article metadata API calls average 150ms response time, causing slow page loads for article lists. Users report poor experience on mobile devices with slower connections.
+> **Problem:** Currently `fetch_data()` retries indefinitely on transient failures, causing timeout cascades.
 >
-> **Objective:** Reduce API response time from 150ms average to <20ms for article metadata queries by implementing a Redis caching layer.
+> **Success Criteria:**
+> 1. ✅ `fetch_count(retry_count=3)` retries exactly 3 times then raises
+> 2. ✅ Default behavior unchanged
+> 3. ✅ Existing tests pass
 >
-> **Context:**
-> - Current article metadata queries hit PostgreSQL directly
-> - Most queries are for the same ~1000 recently-published articles
-> - Article metadata changes infrequently (title, author, publication date)
-> - Previous analysis showed 85% cache hit potential
+> **Edge Cases:** retry_count=0 means no retries (fail immediately).
+
+**Why this works:** The change is small, localized, and self-explanatory. A single paragraph covers the essential content areas. No need for affected files tables, risk assessments, or phased implementation — those would add noise, not value.
+
+### Standard Feature Spec (multi-file change with dependencies)
+
+> **Objective:** Add Redis caching layer for frequently accessed article metadata.
 >
-> **Decision:** Use Redis as cache layer with 1-hour TTL for article metadata.
+> **Problem:** Article metadata API calls average 150ms response time, causing slow page loads. 85% cache hit potential identified.
 >
-> **Why Redis over Alternatives:**
-> | Option | Pros | Cons | Decision |
-> |--------|------|------|----------|
-> | Redis | Fast, supports TTL, already in infra | Memory-based | ✅ CHOSEN |
-> | Memcached | Simple, fast | No built-in TTL management | ❌ More config needed |
-> | In-process | No network overhead | Lost on restart | ❌ Not suitable for HA |
+> **Context:** Current queries hit PostgreSQL directly. Most queries target the same ≈1000 recently-published articles. Article metadata changes infrequently. Redis already deployed per infra team.
+>
+> **Fix Approach:** Redis as cache layer with 1-hour TTL. Fallback to DB when Redis unavailable.
 >
 > **Affected Files:**
 > | File | Anchor | Changes |
-> |------|--------|--------|
-> | `src/api/articles.py` | `get_article_metadata()` function | Add cache layer |
-> | `src/cache/__init__.py` | new file | New Redis client wrapper |
+> |------|--------|---------|
+> | `src/api/articles.py` | `get_article_metadata()` | Add cache check before DB query |
+> | `src/cache/__init__.py` | new file | Redis client wrapper |
 > | `src/config.py` | "Configuration" section | Add Redis connection config |
 >
-> **Code Context:**
-> Current `get_article_metadata()` in `src/api/articles.py`:
-> ```python
-> def get_article_metadata(article_id: str) -> dict:
->     """Fetch article metadata from database."""
->     # TO BE MODIFIED: Add cache check before DB query
->     result = db.query("SELECT * FROM articles WHERE id = ?", article_id)
->     return result
-> ```
->
-> **Constraints:**
-> - Must not exceed 512MB Redis memory allocation
-> - Cache invalidation required on article updates
-> - Must handle Redis unavailable gracefully (fallback to DB)
-> - TTL of 1 hour (3600 seconds)
->
-> **Assumptions:**
-> - Redis server already deployed (per infra team confirmation)
-> - Article metadata structure stable (no schema changes planned)
+> **Constraints:** Must not exceed 512MB Redis memory. Must handle Redis unavailable gracefully.
 >
 > **Success Criteria:**
-> 1. ✅ API response time <20ms for cached article queries
+> 1. ✅ API response time <20ms for cached queries
 > 2. ✅ Cache hit rate >80%
 > 3. ✅ Graceful fallback when Redis unavailable
-> 4. ✅ Cache invalidation on article update works
+> 4. ✅ Cache invalidation on article update
 >
-> **Edge Cases:**
-> - Redis unavailable → Fallback to DB query (log warning)
-> - Article updated → Invalidate cache entry
-> - Cache full → Redis LRU eviction handles automatically
+> **Edge Cases:** Redis unavailable → fallback to DB. Cache full → LRU eviction. Article updated → invalidate entry.
 >
-> **Dependencies:**
-> - Redis server (already deployed: `redis.internal:6379`)
-> - `redis-py` library (add to requirements)
->
-> **Risk Assessment:**
-> | Risk | Probability | Impact | Mitigation |
-> |------|-------------|--------|------------|
-> | Redis memory limit exceeded | Low | High | Monitor usage, set TTL |
-> | Cache invalidation bugs | Medium | Medium | Tests for update flows |
-> | Increased complexity | Medium | Low | Clear abstraction layer |
->
-> **Related Issues:**
-> | Issue | Summary | Relevance |
-> |-------|---------|-----------|
-> | [#50](https://github.com/owner/repo/issues/50) | Performance audit | Original performance report |
-> | [#200](https://github.com/owner/repo/pull/200) | Redis infra setup | Infrastructure PR |
+> **Risk Assessment:** Redis memory limit (Low prob, High impact). Cache invalidation bugs (Med prob, Med impact).
 
-This is GOOD because:
-- ✅ Problem statement with measurable impact
-- ✅ Context explaining current state and why change is needed
-- ✅ Decision documented with alternatives considered
-- ✅ Affected files with function/section anchors (NOT line numbers)
-- ✅ Code snippets included
-- ✅ Constraints and assumptions listed
-- ✅ Success criteria are testable and measurable
-- ✅ Edge cases identified with handling
-- ✅ Dependencies documented
-- ✅ Risk assessment with mitigations
-- ✅ Related issues with context on why they matter
+**Why this works:** The change touches multiple files and has infrastructure dependencies. The standard format provides affected files, constraints, and risk assessment. Without these, an implementer might miss the Redis unavailable edge case or the memory constraint.
 
----
+### Comprehensive Feature Spec (large, cross-cutting change)
 
-## Example 3: Guideline Update
+For features that span multiple systems, require phased deployment, or have significant risk, use the full structure with phased implementation, extended risk assessment with blast radius analysis, detailed decision rationale with alternatives, and dependencies table. The comprehensive format serves the complexity.
 
-### ❌ BAD Guideline Update
+______________________________________________________________________
 
-> **Title:** Update guidelines
+## Example 3: Guideline Update — Different Complexity Levels
+
+### Minimal Guideline Update (adding a rule)
+
+> **Problem:** Guidelines don't address when to use `--no-verify` with git commands.
 >
-> **Description:** Add the rule we talked about for specs.
+> **Proposed Change:** Add prohibition to `000-critical-rules.md`.
+>
+> **Success Criteria:** Guidelines load correctly. Search finds new content.
 
-This is BAD because:
-- No context on WHAT rule
-- No WHY the rule is needed
-- No WHERE to add it
-- No decision rationale
+**Why this works:** Small change, obvious impact, no architectural implications.
 
----
+### Standard Guideline Update (philosophy or process change)
 
-### ✅ GOOD Guideline Update
-
-> **Title:** Guidelines: Add fresh-start context requirements for all specs
+> **Problem:** Spec templates enforce rigid structure that causes agents to fill in sections mechanically rather than reasoning about what content each spec needs.
 >
-> **Problem Statement:** Specs often assume context from prior conversations. When a new AI agent picks up a spec (or the same agent after context reset), critical information is missing, leading to incorrect implementations or repeated questions.
+> **Current State:** `143-planning-spec-templates.md` presents complete templates as "use this template" and `spec-creation/tasks/write.md` provides a 12-section mandatory list that agents treat as required regardless of spec complexity.
 >
-> **Current State:** Guidelines in the "Mandatory Elements Checklist" section of `144-planning-spec-templates.md` describe requirements analysis but don't mandate self-containment for agent context-loss scenarios.
+> **Proposed Change:** Replace rigid templates with intent-driven prose guidelines and varied examples at different complexity levels.
 >
-> **Proposed Change:** Add new section 1.2 "Fresh-Start Context Requirements" mandating that all specs include full context inline, with no reliance on "see above" or "as discussed" references.
->
-> **Why This Change:**
-> 1. AI agents have no persistent memory between sessions
-> 2. Different agents may work on the same spec at different times
-> 3. Context loss leads to implementation errors
-> 4. Self-contained specs reduce back-and-forth questions
->
-> **Decision Rationale:**
-> - Considered adding to `000-critical-rules.md` — rejected because this is a process improvement, not a zero-tolerance violation
-> - Considered separate file — rejected because spec creation workflow should be in one place
-> - Chosen: Add to `00-spec-creation.md` as section 1.2, after engineering requirements
+> **Decision Rationale:** Templates trigger mechanical filling. Intent descriptions let agents reason about what structure serves each specific spec. The existing prose-driven skills (brainstorming, plan-fidelity-auditor) demonstrate this approach works.
 >
 > **Success Criteria:**
-> 1. ✅ New section added
-> 2. ✅ Checklist template created
-> 3. ✅ Bad/Good examples documented
-> 4. ✅ Guidelines load correctly
+> 1. ✅ No mandatory templates remain
+> 2. ✅ Examples show different valid structures for different complexity levels
+> 3. ✅ Verification uses content-coverage questions, not section header checks
 
-This is GOOD because:
-- ✅ Clear problem statement
-- ✅ Current state with file references
-- ✅ Proposed change described
-- ✅ Decision rationale with alternatives
-- ✅ Success criteria listed
+**Why this works:** The change has philosophical implications across multiple files. The standard format provides current state, proposed change, and decision rationale. A fresh agent can understand both what and why.
 
----
+______________________________________________________________________
 
-## Quick Reference: Fresh-Start Checklist
+## Self-Containment Principles
 
-Before finalizing any spec, verify:
+Regardless of spec format (minimal, standard, or comprehensive), these principles apply to ALL specs:
 
-| Element | Include This |
-|---------|--------------|
-| **Problem** | What and WHY (with context) |
-| **Location** | File path + function/section anchors + snippets |
-| **References** | Issue URL + summary + relevance |
-| **Context** | Background, history, affected systems |
-| **Constraints** | Technical, time, resource limits |
-| **Assumptions** | What might not be true |
-| **Criteria** | Testable success conditions |
-| **Edges** | Boundary conditions |
-| **Deps** | External systems/libraries |
-| **Risks** | What could go wrong |
+| Principle | Why |
+|-----------|-----|
+| No "as discussed above" | A fresh agent has no memory of earlier conversation |
+| Stable anchors, not line numbers | Line numbers break on every edit |
+| Code snippets for key changes | Prevents misunderstandings about what code does |
+| Related issues include summaries | Bare links without context are useless |
+| Decision rationale documented | Without it, implementers may choose different approaches |
 
-**Golden Rule:** If a new agent with no memory context cannot implement the spec correctly from the spec alone, the spec is incomplete.
+**Golden Rule:** If a new agent with no memory context cannot implement the spec correctly from the spec alone, the spec is incomplete — regardless of how well it follows any template.
 
----
+______________________________________________________________________
 
-## Example 4: Sub-issue Structure (Multi-task Spec)
+## Sub-issue Structure (Multi-task Spec)
 
-### ✅ GOOD Multi-task Spec with Sub-issues
+When a spec has multiple phases/tasks, each phase SHOULD be tracked as a separate sub-issue.
 
-When a spec has multiple phases/tasks, each phase MUST be tracked as a separate sub-issue.
+**Parent Issue:** Contains the full spec with all phases.
 
-**Parent Issue:**
-> **Title:** [SPEC] Add user authentication
->
-> **STATUS:** 1.1
->
-> **Objective:** Implement user authentication with OAuth2 and session management.
->
-> **Phases:**
-> 1. Phase 1: Database schema (user tables, indexes)
-> 2. Phase 2: API endpoints (login, logout, refresh)
-> 3. Phase 3: UI components (login form, session handling)
->
-> **Implementation details in body...**
+**Sub-issues CREATED:** One per phase, with descriptive titles referencing the parent.
 
-**Sub-issues CREATED:**
-- `#101: [Task: #100] Create database schema for user authentication`
-- `#102: [Task: #100] Implement authentication API endpoints`
-- `#103: [Task: #100] Build user login UI components`
+**Single-task exemption:** When a spec has exactly one task, no sub-issues are required.
 
-**Why this works:**
-- Each phase is trackable as its own issue
-- Progress visible in GitHub's sub-issue view
-- Agents can verify which phase to implement
-- Clear parent-child hierarchy
+**See `issue-operations` skill → `link-sub-issue` task for the complete auto-create workflow and phase-level structure.**
 
-### ✅ GOOD Single-task Spec (No Sub-issues Needed)
+______________________________________________________________________
 
-When a spec has ONE task, no sub-issues are required.
-
-**The Issue:**
-> **Title:** [SPEC] Fix typo in README
->
-> **STATUS:** 1.1
->
-> **Problem:** README contains " instalation" (missing 'l')
->
-> **Solution:** Fix the typo in the installation section
->
-> **Success Criteria:** Typo corrected
-
-**No sub-issues needed because:**
-- ✅ Exactly ONE implementation task
-- ✅ No decomposition needed
-- ✅ Single unit of work
-- ✅ Can be implemented directly
-
-### Sub-issue Auto-create
-
-**See `github-sub-issues` skill for the complete auto-create workflow, single-task exemption, database ID requirement, and phase-level structure.**
-
----
-
-## Example 5: Issue-First Strategy (No Local Fallback)
-
-### ❌ BAD: Local Plan Files When GitHub Available
-
-> **Title:** [SPEC] Add rate limiting
->
-> **Notes:** Created plan file `plans/SPEC-rate-limiting.md` because GitHub MCP was unavailable.
-
-This is BAD because:
-- Local files fragment tracking
-- No centralized visibility
-- Manual sync required
-- History is not preserved in GitHub
-- Different agents can't see the plan
-
-### ✅ GOOD: GitHub Issues as Sole Mechanism
-
-When GitHub MCP tools are available, GitHub Issues are the ONLY authoritative source.
-
-**See `github-issue-creation` skill for the complete issue creation workflow, `github-sub-issues` skill for sub-issue creation, and the GitHub MCP Required — No Fallback policy.**
-
----
-
-*Source: Created to illustrate fresh-start context requirements*
+*Source: Reframed from template compliance to varied valid structures per spec #821*

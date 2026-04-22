@@ -1,22 +1,62 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 Skill Packager - Creates a distributable zip file of a skill folder
 
-Usage (from project root):
-    uv run python .opencode/skills/skill-creator/scripts/package_skill.py <path/to/skill-folder> [output-directory]
+Usage:
+    uv run .opencode/skills/skill-creator/scripts/package_skill.py <path/to/skill-folder> [output-directory]
 
 Example:
-    uv run python .opencode/skills/skill-creator/scripts/package_skill.py .opencode/skills/my-skill
-    uv run python .opencode/skills/skill-creator/scripts/package_skill.py .opencode/skills/my-skill ./dist
+    uv run .opencode/skills/skill-creator/scripts/package_skill.py .opencode/skills/my-skill
+    uv run .opencode/skills/skill-creator/scripts/package_skill.py .opencode/skills/my-skill ./dist
 """
 
+import re
 import sys
 import zipfile
 from pathlib import Path
 
-# Add scripts directory to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
-from quick_validate import validate_skill
+
+def validate_skill(skill_path):
+    skill_path = Path(skill_path)
+
+    skill_md = skill_path / "SKILL.md"
+    if not skill_md.exists():
+        return False, "SKILL.md not found"
+
+    content = skill_md.read_text()
+    if not content.startswith("---"):
+        return False, "No YAML frontmatter found"
+
+    match = re.match(r"^---\n(.*?)\n---", content, re.DOTALL)
+    if not match:
+        return False, "Invalid frontmatter format"
+
+    frontmatter = match.group(1)
+
+    if "name:" not in frontmatter:
+        return False, "Missing 'name' in frontmatter"
+    if "description:" not in frontmatter:
+        return False, "Missing 'description' in frontmatter"
+
+    name_match = re.search(r"name:\s*(.+)", frontmatter)
+    if name_match:
+        name = name_match.group(1).strip()
+        if not re.match(r"^[a-z0-9-]+$", name):
+            return False, f"Name '{name}' should be hyphen-case (lowercase letters, digits, and hyphens only)"
+        if name.startswith("-") or name.endswith("-") or "--" in name:
+            return False, f"Name '{name}' cannot start/end with hyphen or contain consecutive hyphens"
+
+    desc_match = re.search(r"description:\s*(.+)", frontmatter)
+    if desc_match:
+        description = desc_match.group(1).strip()
+        if "<" in description or ">" in description:
+            return False, "Description cannot contain angle brackets (< or >)"
+
+    return True, "Skill is valid!"
 
 
 def package_skill(skill_path, output_dir=None):
@@ -88,14 +128,17 @@ def package_skill(skill_path, output_dir=None):
 def main():
     if len(sys.argv) < 2:
         print(
-            "Usage: uv run python .opencode/skills/skill-creator/scripts/package_skill.py <path/to/skill-folder> [output-directory]"
+            "Usage: uv run .opencode/skills/skill-creator/scripts/package_skill.py"
+            " <path/to/skill-folder> [output-directory]"
         )
         print("\nExample:")
         print(
-            "  uv run python .opencode/skills/skill-creator/scripts/package_skill.py .opencode/skills/my-skill"
+            "  uv run .opencode/skills/skill-creator/scripts/package_skill.py"
+            " .opencode/skills/my-skill"
         )
         print(
-            "  uv run python .opencode/skills/skill-creator/scripts/package_skill.py .opencode/skills/my-skill ./dist"
+            "  uv run .opencode/skills/skill-creator/scripts/package_skill.py"
+            " .opencode/skills/my-skill ./dist"
         )
         sys.exit(1)
 

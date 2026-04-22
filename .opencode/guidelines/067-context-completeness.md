@@ -13,7 +13,7 @@ The body or description alone is NEVER sufficient context. Comments may contain 
 ## Why This Matters
 
 | What Gets Missed | Consequence |
-|-----------------|-------------|
+| -- | -- |
 | Authorization in a comment | Implementing without approval or missing approval |
 | Direction change in a comment | Implementing the wrong approach |
 | Clarification in a comment | Building on stale or incorrect understanding |
@@ -24,7 +24,7 @@ The body or description alone is NEVER sufficient context. Comments may contain 
 ## Scope of Resources
 
 | Resource | What to Read |
-|----------|-------------|
+| -- | -- |
 | Issues | Issue body + ALL issue comments |
 | Pull Requests | PR description + ALL PR comments + ALL review comments |
 | Discussions | Discussion body + ALL discussion comments |
@@ -32,7 +32,7 @@ The body or description alone is NEVER sufficient context. Comments may contain 
 ## When This Applies
 
 | Action | Must Read Comments First? |
-|--------|---------------------------|
+| -- | -- |
 | Reviewing/auditing a spec | ✅ YES — always |
 | Acting on an issue (implement, revise) | ✅ YES — always |
 | Checking authorization | ✅ YES — authorization lives in comments |
@@ -52,12 +52,14 @@ When the agent reads comments before acting, it MUST show evidence:
 ### What COUNTS as Evidence
 
 ✅ **Evidence Shown:**
+
 - Calling `github_issue_read` with `method=get_comments` and referencing the results
 - Citing specific comment content: "Comment #3 by @dev adds constraint X"
 - Summarizing: "3 comments total — 1 approval, 1 scope change, 1 progress update"
 - Quoting relevant comment text inline
 
 ❌ **NOT Evidence:**
+
 - "I read the comments" without showing what was found
 - Acting on an issue without any comment reference in the response
 - Assuming comments haven't changed since last read

@@ -1,8 +1,12 @@
-#!/usr/bin/env -S uv run python
+#!/usr/bin/env -S uv run --script
+# /// script
+# requires-python = "~=3.12"
+# dependencies = []
+# ///
 """
 DESCRIPTION: Show guideline files with their brief summary header.
-Usage: uv run python .opencode/tools/guidelines show [<file> ...]
-Example: uv run python .opencode/tools/guidelines show 010 040
+Usage: ./.opencode/tools/guidelines show [<file> ...]
+Example: ./.opencode/tools/guidelines show 010 040
 Note: Prefer 3-digit shorthand for guideline files when available (for example `041`).
 """
 
@@ -11,16 +15,19 @@ import os as _os
 
 if _os.environ.get("OPENCODE_TOOLS_DISPATCHER") != "1":
     print(
-        "ERROR: This script must be run via its dispatcher (e.g. uv run python .opencode/tools/nb ...). "
+        "ERROR: This script must be run via its dispatcher (e.g. ./.opencode/tools/guidelines ...). "
         "Direct invocation is not permitted.",
         file=__import__("sys").stderr,
     )
     __import__("sys").exit(1)
+import subprocess
 import sys
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
-OPENCODE_DIR = BASE_DIR / ".opencode"
+BASE_DIR = Path(__file__).resolve().parent
+CDUP = subprocess.check_output(["git", "-C", str(BASE_DIR), "rev-parse", "--show-cdup"], text=True).strip()
+PROJECT_ROOT = (BASE_DIR / CDUP).resolve()
+OPENCODE_DIR = PROJECT_ROOT / ".opencode"
 GUIDELINES_DIR = OPENCODE_DIR / "guidelines"
 
 
@@ -41,14 +48,14 @@ def _resolve_path(name: str) -> Path | None:
             sys.exit(1)
 
     candidates = [
-        BASE_DIR / name,
+        PROJECT_ROOT / name,
         OPENCODE_DIR / name,
         GUIDELINES_DIR / name,
     ]
     if not name.endswith(".md"):
         candidates.extend(
             [
-                BASE_DIR / f"{name}.md",
+                PROJECT_ROOT / f"{name}.md",
                 OPENCODE_DIR / f"{name}.md",
                 GUIDELINES_DIR / f"{name}.md",
             ]
@@ -90,7 +97,7 @@ def main() -> None:
         paths = _iter_default_files()
 
     for path in paths:
-        rel = path.relative_to(BASE_DIR)
+        rel = path.relative_to(PROJECT_ROOT)
         print(f"{rel}: {_brief_header(path)}")
 
 

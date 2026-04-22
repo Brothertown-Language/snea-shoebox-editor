@@ -7,9 +7,9 @@ Create pull request after explicit user instruction. Squash commits to single co
 ## Operating Protocol
 
 1. **User-initiated only:** This task runs when user says "create a PR" or similar
-1. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
-1. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
-1. **HALT after PR creation:** Wait for human to merge
+2. **Squash to single commit:** ALL implementation commits combined into ONE clean commit
+3. **Target `dev` branch:** Feature PRs merge to `dev` (not directly to `main`)
+4. **HALT after PR creation:** Wait for human to merge
 
 ## Entry Criteria
 
@@ -18,6 +18,121 @@ Create pull request after explicit user instruction. Squash commits to single co
 - Developer has reviewed changes via compare URL
 
 ## Procedure
+
+### Step 0: Submodule PR Dependency Check (MANDATORY GATE)
+
+**⚠️ CRITICAL: This gate runs BEFORE all other PR creation steps. If it fails, PR creation is BLOCKED with no override.**
+
+This step enforces the PR dependency chain: submodule changes must be pushed and available on the remote before the parent PR can be created. This prevents broken parent PRs that reference submodule SHAs not yet available on the remote.
+
+#### Step 0.1: Check for .gitmodules
+
+```bash
+test -f .gitmodules && echo "HAS_GITMODULES=true" || echo "HAS_GITMODULES=false"
+```
+
+**If `.gitmodules` does NOT exist:** Skip all submodule steps. Proceed directly to Step 1.
+
+**If `.gitmodules` EXISTS:** Continue to Step 0.2.
+
+#### Step 0.2: Parse Submodule Entries
+
+For each `[submodule "name"]` entry in `.gitmodules`, extract:
+
+- **path**: Submodule directory path
+- **url**: Submodule remote URL
+
+```bash
+git config --file .gitmodules --get-regexp submodule
+```
+
+#### Step 0.3: Verify Committed SHA Against Remote dev HEAD
+
+For each submodule entry:
+
+1. **Get committed SHA** in the parent:
+
+   ```bash
+   git ls-tree HEAD <path> | awk '{print $3}'
+   ```
+
+2. **Get remote dev branch HEAD SHA**:
+
+   ```bash
+   git ls-remote <url> refs/heads/dev | awk '{print $1}'
+   ```
+
+3. **Compare SHAs**:
+
+   | Condition | Action |
+   | -- | -- |
+   | Committed SHA == remote dev HEAD | ✅ Pass — submodule is up to date |
+   | Committed SHA != remote dev HEAD | 🚫 **BLOCK PR creation** — hard gate, no `--force` override |
+
+**If ANY submodule SHA differs from remote dev HEAD:**
+
+```
+⛔ BLOCKED: Submodule '<name>' SHA differs from remote dev.
+  Committed: <committed_sha>
+  Remote dev: <remote_sha>
+  
+  Push the submodule changes to dev first, then update the parent reference.
+  
+  Commands:
+    cd <path> && git push origin dev
+    cd <parent> && git add <path> && git commit -m "chore: update submodule <name>"
+```
+
+**HALT.** Do not proceed to Step 1. The developer must push the submodule first.
+
+#### Step 0.4: Verify Submodule Tags for main-branch PRs (Release Gate)
+
+**This check applies ONLY when the target branch is `main`** (i.e., release PRs from `dev` to `main`).
+
+For each submodule entry:
+
+1. **Get committed SHA** (from Step 0.3):
+
+   ```bash
+   git ls-tree HEAD <path> | awk '{print $3}'
+   ```
+
+2. **Check if SHA is a tagged release**:
+
+   ```bash
+   git -C <path> describe --exact-match --tags <committed_sha> 2>/dev/null
+   ```
+
+   | Condition | Action |
+   | -- | -- |
+   | SHA is a tagged release | ✅ Pass — submodule is on a release tag |
+   | SHA is NOT a tagged release | 🚫 **BLOCK PR creation** — hard gate, no override |
+
+**If ANY submodule is not on a tagged release commit for a main-branch PR:**
+
+```
+⛔ BLOCKED: Submodule '<name>' is not on a tagged release.
+  Committed SHA: <committed_sha>
+  Nearest tag: <tag_from_describe>
+  
+  Tag the submodule release before creating a release PR for the parent.
+  
+  Commands:
+    cd <path> && git tag v<version> <committed_sha> && git push origin v<version>
+```
+
+**HALT.** Do not proceed to Step 1. The developer must tag the submodule release first.
+
+#### Step 0 Enforcement Summary
+
+| Gate | Condition | Action |
+| -- | -- | -- |
+| No .gitmodules | `.gitmodules` absent | Skip all submodule steps |
+| SHA mismatch | Committed SHA ≠ remote dev HEAD | 🚫 BLOCK PR creation |
+| Untagged release | Target is `main` and submodule not tagged | 🚫 BLOCK PR creation |
+| All pass | All SHAs match, all tags valid (if main) | ✅ Proceed to Step 1 |
+
+**There is NO `--force` override for submodule dependency gates.** Submodule changes must be pushed first — this is a correctness guarantee, not a preference.
 
 ### Step 1: Verify PR Instruction (MANDATORY FIRST)
 
@@ -62,7 +177,7 @@ If ANY condition NOT satisfied → STOP and report.
    **What does NOT authorize PR creation (HALT):**
 
    | Phrase | Reason |
-   |--------|--------|
+   | -- | -- |
    | "approved" | Authorizes implementation ONLY, NOT PR creation |
    | "go" | Authorizes implementation ONLY, NOT PR creation |
    | Implementation complete | Does NOT authorize PR - wait for explicit instruction |
@@ -70,20 +185,20 @@ If ANY condition NOT satisfied → STOP and report.
    | "proceed" | Ambiguous - could mean next task |
    | "fix the skill and guideline" | Implementation instruction, NOT PR instruction |
 
-1. **Authorization scope table:**
+2. **Authorization scope table:**
 
    | Authorization | What It Authorizes |
-   |--------------|---------------------|
+   | -- | -- |
    | `approved` / `go` | Implementation ONLY |
    | `approved: X.Y` | Phase X.Y ONLY |
    | Implementation complete | NOTHING - wait for "create a PR" |
    | `create a PR` | PR creation workflow |
    | `create pull request` | PR creation workflow |
 
-1. **Enforcement matrix:**
+3. **Enforcement matrix:**
 
    | Scenario | Action |
-   |----------|--------|
+   | -- | -- |
    | User says "create a PR" | ✅ PROCEED with PR creation |
    | User says "approved" only | ⛔ HALT - "approved authorizes implementation, not PR. Wait for 'create a PR' instruction." |
    | Implementation complete, no PR instruction | ⛔ HALT - report completion, wait for PR instruction |
@@ -121,10 +236,10 @@ branch_name = subprocess.check_output(['git', 'branch', '--show-current'], text=
 
 # List PRs for this branch
 prs = github_list_pull_requests(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    state="all",  # Include open, closed, merged
-    head=f"{GIT_OWNER}:{branch_name}"
+    owner=<github.owner>,
+    repo=<github.repo>,
+    state="all",
+    head=f"{<github.owner>}:{branch_name}"
 )
 ```
 
@@ -148,7 +263,7 @@ merged_at = pr.get("merged_at")  # Timestamp if merged, None otherwise
 **PR State Decision Matrix:**
 
 | State | merged_at | Action |
-|-------|-----------|--------|
+| -- | -- | -- |
 | open | None | ✅ **UPDATE EXISTING PR** - Push new commits, existing PR updates automatically |
 | closed | None | ⚠️ **Check close reason** - May be draft closed, proceed with caution |
 | closed | timestamp | 🔄 **MERGED PR DETECTED** - Go to Step 1.5c |
@@ -165,20 +280,20 @@ merged_at = pr.get("merged_at")  # Timestamp if merged, None otherwise
    git rebase origin/dev
    ```
 
-1. **Check for remaining changes:**
+2. **Check for remaining changes:**
 
    ```bash
    git diff origin/dev
    ```
 
-1. **Decision:**
+3. **Decision:**
 
    | Remaining Changes | Action |
-   |-------------------|--------|
+   | -- | -- |
    | Has differences | Create NEW PR for additional work |
    | No differences | HALT - branch already merged, no new PR needed |
 
-1. **HALT with appropriate message:**
+4. **HALT with appropriate message:**
 
 **If branch has remaining changes:**
 
@@ -244,7 +359,7 @@ For OPEN PRs, check the `mergeable` attribute from GitHub API:
 ```python
 # For existing open PRs
 if pr_state == "open":
-    pr_details = github_pull_request_read(method="get", owner=GIT_OWNER, repo=GIT_REPO, pullNumber=pr_number)
+    pr_details = github_pull_request_read(method="get", owner=<github.owner>, repo=<github.repo>, pullNumber=pr_number)
     mergeable = pr_details.get("mergeable")  # True, False, or None
     mergeable_state = pr_details.get("mergeable_state")  # "clean", "dirty", "unknown", etc.
 ```
@@ -252,7 +367,7 @@ if pr_state == "open":
 **Mergeable State Matrix:**
 
 | mergeable | mergeable_state | Meaning | Action |
-|-----------|-----------------|---------|--------|
+| -- | -- | -- | -- |
 | True | "clean" | No conflicts | ✅ Proceed with PR creation |
 | True | "has_hooks" | No conflicts + hooks | ✅ Proceed (hooks run on merge) |
 | False | "dirty" | Merge conflicts | 🔄 **CONFLICTS DETECTED** - Go to Step 1.5d.2 |
@@ -270,7 +385,7 @@ if pr_state == "open":
    git log --oneline origin/dev..HEAD  # See commits to be merged
    ```
 
-1. **Get conflict files from GitHub API:**
+2. **Get conflict files from GitHub API:**
 
    ```python
    # GitHub doesn't provide conflict files directly via API
@@ -284,11 +399,12 @@ if pr_state == "open":
        ).strip().split('\n')
    ```
 
-1. **Classify conflicts (AI-objective vs AI-subjective):**
+3. **Classify conflicts (AI-objective vs AI-subjective):**
 
 **AI-Objective Conflicts (Auto-Resolve):**
+
 | Conflict Type | Auto-Resolution Strategy |
-|----------------|--------------------------|
+| -- | -- |
 | Import statement changes | Take both import sets |
 | Whitespace/formatting | Apply consistent formatting |
 | Same function moved to different location | Use new location |
@@ -296,8 +412,9 @@ if pr_state == "open":
 | Configuration file additions | Merge sections |
 
 **AI-Subjective Conflicts (Request User Input):**
+
 | Conflict Type | Why Subjective | HALT Action |
-|----------------|----------------|-------------|
+| -- | -- | -- |
 | Logical/behavioral conflicts | Different implementations | Request clarification |
 | Deleted file vs modified file | Need design decision | Request decision |
 | Architectural changes | Multiple valid approaches | Request approach choice |
@@ -341,8 +458,8 @@ def authenticate(user):
 **Please specify which approach to use:**
 
 1. Keep your branch's version: `git checkout --ours src/file.py`
-1. Use main's version: `git checkout --theirs src/file.py`
-1. Provide custom resolution
+2. Use main's version: `git checkout --theirs src/file.py`
+3. Provide custom resolution
 
 **Files with conflicts:**
 
@@ -418,7 +535,7 @@ If `[skip changelog]` is present, proceed directly to Step 3 (skip changelog gen
 **Why This Is Critical:**
 
 - Sub-task execution isolates the skill's thinking from main context
-- Prevents skill output from consuming main session tokens
+- Prevents skill output from consuming main session context window
 - Skill runs in its own context and writes CHANGELOG.md
 - Main context receives minimal confirmation only
 
@@ -483,33 +600,102 @@ PRs #109, #114, #118, #119, #120 merged without changelog updates because Step 1
 This checkpoint ensures:
 
 1. Skill invocation (Step 2.2) actually happened
-1. Staging (Step 2.3) actually happened
-1. Changelog changes ARE in the squash commit
+2. Staging (Step 2.3) actually happened
+3. Changelog changes ARE in the squash commit
 
 #### Context Isolation Benefits
 
 | What Happens in Sub-Task | What Returns to Main Context |
-|--------------------------|------------------------------|
+| -- | -- |
 | Git commit analysis | Minimal confirmation only |
 | Commit categorization | NOT: intermediate reasoning |
 | Technical → User-friendly translation | NOT: commit details analyzed |
 | Noise filtering | NOT: generated text |
-| Thinking tokens consumed | Minimal result token only |
+| Context consumed by sub-task | Minimal result only |
 
 Then continue to Step 3 (squash).
 
 ### Step 3: Squash to Single Commit
 
-**MANDATORY:** All PRs must have exactly ONE commit.
+**Squash strategy depends on branch type:**
 
-**Three-Branch Workflow:** Squash against `origin/dev` (the integration branch).
+| Branch Type | Squash Strategy |
+| -- | -- |
+| **Single-issue branch** | All commits squashed to ONE commit |
+| **Work branch** | One commit per implementation item (N commits is correct) |
+
+#### Single-Issue Branch (Default)
+
+Squash ALL implementation commits into ONE clean commit:
 
 ```bash
 git reset --soft origin/dev
 git commit -m "<descriptive message>" \
-    --trailer "Co-authored-by: <AI-Name> (<model-id>) <ai-email>" \
+    --trailer "Co-authored-by: <AgentName> (<ModelId>) <ai-email>" \
     --trailer "Co-authored-by: <Human-Name> <human-email>"
 ```
+
+#### Work Branch
+
+A work branch already has one squash-merged commit per implementation item from `assemble-work`. These commits are correct — do NOT squash them further.
+
+**Detect work branch:** If the branch was created by `assemble-work` (branch name typically starts with `work/` or the work state file exists at `.opencode/tmp/work-*.md`), it is a work branch with correctly-structured commits.
+
+**For work branches, skip squash.** The commit history from `assemble-work` is the intended final state.
+
+**Verify work branch commits:**
+
+```bash
+# Check if work state file exists
+ls .opencode/tmp/work-*.md 2>/dev/null
+
+# If exists, this is a work branch — skip squash
+# If not exists, treat as single-issue branch — squash to one commit
+```
+
+### Step 3.5: Rebase on Current Dev (MANDATORY)
+
+After squashing and before pushing, re-verify the branch is on top of current `dev`:
+
+```bash
+git fetch origin
+git rebase origin/dev
+```
+
+**Why this matters:**
+
+- Another agent may have merged a PR into `dev` between review and PR creation
+- The squash commit must be based on the current `dev` tip, not a stale one
+- Prevents the PR from having unexpected merge conflicts or stale base
+
+**If conflicts occur during rebase:**
+
+1. HALT and report conflicts to the developer
+2. List the conflicting files
+3. Request resolution — the developer must decide how to proceed
+4. After resolution, re-run squash if needed, then retry push
+
+**This step is MANDATORY.** Even if the review-prep rebase just ran, `dev` may have been updated since.
+
+**For worktree-based branches:** The rebase runs inside the worktree directory. The `origin/dev` reference is shared across all worktrees, so `git fetch origin` and `git rebase origin/dev` work correctly from any worktree.
+
+### Worktree Mode (MANDATORY — NO EXCEPTIONS)
+
+All feature branches operate in worktrees. There is no alternative — worktree is the only method.
+
+If `worktree.path` is not set or empty: **FATAL ERROR → FLAG DEV → HALT.** Do not proceed without a valid worktree path.
+
+1. All `bash` tool calls MUST use `workdir="{{worktree.path}}"`
+2. All `read`/`edit`/`write`/`glob`/`grep` tool calls MUST prefix `filePath`/`path` with `{{worktree.path}}/` — these tools have NO `workdir` parameter and resolve relative paths against the main repo
+3. Before any push/squash/rebase operation, verify:
+   ```bash
+   git branch --show-current
+   # MUST match BRANCH_NAME
+   ```
+4. `git rev-parse --show-toplevel` MUST return the worktree path
+5. NEVER operate in the main working directory during implementation
+6. `origin/dev` may have moved since worktree creation (due to parallel PR merges) — always rebase on current `origin/dev`
+7. If conflicts arise from `dev` movement, invoke `conflict-resolution` skill
 
 ### Step 4: Push to Remote
 
@@ -529,21 +715,29 @@ sub_issues = github_issue_read(method="get_sub_issues", issue_number=<parent>)
 autoclose_issues = [<parent>] + [sub["number"] for sub in sub_issues]
 ```
 
-**For single-task specs:**
+**For all specs (unified dispatch path):**
 
-No sub-issues needed. Include only parent issue.
+Include parent issue. Sub-issues are included when they exist under the plan.
 
-**⚠️ CRITICAL: Sub-issues are closed by the platform, NOT by the agent.**
+**Scope-dependent PR strategy:**
 
-- The "Fixes #N" annotation in PR body triggers automatic closure
-- Agent does NOT manually close sub-issues after implementation
-- Agent does NOT close sub-issues after PR creation
+| `pr_strategy` | PR Behavior |
+|----------------|------------|
+| `stacked` | Single PR for all issues in work set |
+| `individual` | Standard PR per branch |
+| `none` | No PR creation — halt_at boundary is before PR stage |
+
+**⚠️ CRITICAL: Sub-issues are closed by the cleanup task via API, NOT by autoclose.**
+
+- GitHub autoclose is inert for PRs merging into `dev`
+- The `Fixes #N` annotation in PR body is an informational label for human readers
+- The cleanup task (`git-workflow --task cleanup`) closes all issues via API after PR merge verification
+- Agent does NOT close sub-issues after implementation or after PR creation
 - Agent verifies closure AFTER PR merge via GitHub API
-- Only in edge case (platform fails) does agent manually close
 
 ### Step 6: Create PR (Platform-Agnostic)
 
-**Detect platform from session init (`GIT_PLATFORM`) and use appropriate tool:**
+**Detect platform from session init (`github.platform`) and use appropriate tool:**
 
 **Three-Branch Workflow Target:**
 
@@ -551,12 +745,12 @@ No sub-issues needed. Include only parent issue.
 - Releases PR from `dev` to `main` (human-triggered, not by AI)
 - Hotfixes PR to both `dev` and `main` (paired issues)
 
-#### GitHub (GIT_PLATFORM=github)
+#### GitHub (github.platform=github)
 
 ```python
 github_create_pull_request(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
+    owner=<github.owner>,
+    repo=<github.repo>,
     title="[SPEC] <description>",
     body="""**Summary:**
 
@@ -574,35 +768,15 @@ Fixes #<child2>
 )
 ```
 
-#### GitBucket (GIT_PLATFORM=gitbucket)
+#### GitBucket (github.platform=gitbucket)
 
-```python
-from skills.gitbucket_api.tools import GitBucketAPI
-
-api = GitBucketAPI()
-pr = api.create_pull_request(
-    owner=GIT_OWNER,
-    repo=GIT_REPO,
-    title="[SPEC] <description>",
-    body="""**Summary:**
-
-<1-2 sentences describing the impact and stakeholder value>
-
-**Outcome:** <What changed for stakeholders>
-
-Fixes #<parent>
-Fixes #<child1>
-Fixes #<child2>
-...
-""",
-    head=branch_name,
-    base="dev"
-)
+```bash
+./.opencode/tools/gitbucket-api create-pr <github.owner> <github.repo> "[SPEC] <description>" <branch-name> dev --body "<PR body>"
 ```
 
 **PR Body Requirements:**
 
-- Must include `Fixes #<issue-number>` for autoclose
+- Must include `Fixes #<issue-number>` for issue tracking (informational label — autoclose is inert for `dev`-branch merges)
 - Include ALL sub-issues for multi-task specs
 - **MUST use executive summary format** (see Critical Violation: Wrong PR Body Format in `000-critical-rules.md`)
 - `Summary:` section — 1-2 sentences describing stakeholder value and business impact (NOT implementation details)
@@ -657,7 +831,7 @@ Fixes #505
 
 **Outcome:** <What changed for stakeholders>
 
-**PR URL:** ${BASE_URL}${GIT_OWNER}/${GIT_REPO}/pull/<number>
+**PR URL:** <html_url from github_create_pull_request API response — NEVER construct from template>
 
 Wait for human to merge.
 ```
@@ -671,16 +845,16 @@ Wait for human to merge.
 ### What If PR Creation Fails?
 
 | Failure Reason | Response |
-|----------------|----------|
+| -- | -- |
 | No commits between branches | Report: "Branch has no commits to main. Changes may already be merged. Verify and HALT." |
 | Branch conflicts | Report: "Branch conflicts with main. Rebase and push, then create PR." |
 | GitHub API error | Report error details and HALT |
 
 ### Post-PR Creation Checklist
 
-- \[ \] Exec summary posted in chat
-- \[ \] PR URL posted in chat
-- \[ \] HALT — waiting for human merge
+- [ ] Exec summary posted in chat
+- [ ] PR URL posted in chat
+- [ ] HALT — waiting for human merge
 
 **🚫 NEVER:** Skip reporting PR URL, merge PR, or proceed without developer confirmation.
 
@@ -694,18 +868,18 @@ After implementation completes and BEFORE PR creation authorization:
    git push -u origin <branch-name>
    ```
 
-1. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
+2. **Agent reports compare URL in CHAT ONLY** (NEVER to GitHub Issues):
 
    - URLs go in chat dialog ONLY
    - GitHub Issues receive completion comment WITHOUT URL
 
-1. **Developer reviews changes** via GitHub diff viewer
+3. **Developer reviews changes** via GitHub diff viewer
 
-1. **Developer decides** whether to create PR or request changes
+4. **Developer decides** whether to create PR or request changes
 
-1. **If satisfied, developer says** "create a PR"
+5. **If satisfied, developer says** "create a PR"
 
-1. **Agent creates PR** (squash, push, create PR, HALT)
+6. **Agent creates PR** (squash, push, create PR, HALT)
 
 **Why This Matters:**
 
@@ -720,12 +894,12 @@ After implementation completes and BEFORE PR creation authorization:
 - Pass CI checks
 - **Human review required** — Copilot review is supplemental, not sufficient for merge
 
-## Automatic Skill Invocation
+## Skill Execution (Mandatory)
 
 **When a skill is invoked, EXECUTE it, not just read it.**
 
 | Wrong Behavior | Correct Behavior |
-|----------------|------------------|
+| -- | -- |
 | Load skill content | Load skill content |
 | Read the content | READ AND EXECUTE each step |
 | Halt without action | Follow procedural steps |
@@ -755,17 +929,57 @@ User says "pr merged" → Agent invokes /skill git-workflow → Agent EXECUTES c
 ## Enforcement Mechanisms
 
 | Layer | Mechanism | Scope | Bypassable? |
-|-------|-----------|-------|-------------|
-| **Local** | `.githooks/pre-commit` | Blocks commit to main/master/dev | No |
-| **Local** | `.githooks/post-commit` | Warns after commit to main/master/dev | N/A (post) |
+| -- | -- | -- | -- |
+| **Local** | `.opencode/hooks/pre-commit` | Blocks commit to main/master/dev | No |
+| **Local** | `.opencode/hooks/post-commit` | Warns after commit to main/master/dev | N/A (post) |
 | **GitBucket** | Branch protection rules | Requires PR for dev/main | No |
 
 **There is NO emergency bypass.** If you need to make an urgent fix:
 
-1. Create a feature branch from `dev`: `git checkout dev && git pull origin dev && git checkout -b hotfix/urgent-fix`
-1. Make your changes and commit
-1. Push and create PR with `hotfix` label (targeting `dev`)
-1. Request expedited review
+1. Create a hotfix worktree: `git worktree add .worktrees/hotfix-urgent-fix -b hotfix/urgent-fix dev`
+2. Make your changes and commit
+3. Push and create PR with `hotfix` label (targeting `dev`)
+4. Request expedited review
+
+## Live Verification (MANDATORY)
+
+**🚫 CRITICAL: Each verification point requires a tool call for evidence. Assertions without tool-call artifacts are VERIFICATION-GAP findings. Creating a PR without verified state is a CRITICAL GUIDELINE VIOLATION.**
+
+### All Changes Committed Verification
+
+| Check | Tool Call | Expected Result | On Failure |
+| -- | -- | -- | -- |
+| Working tree clean | `git status --porcelain` | Empty output | VERIFICATION-GAP → commit or stash first |
+| Staged changes match intent | `git diff --staged` | Shows expected staged changes only | CONFLICTING → re-stage correctly |
+| No unstaged changes | `git diff` | Empty diff | VERIFICATION-GAP → stage remaining changes |
+| Commits ahead of dev | `git log origin/dev..HEAD --oneline` | Expected commit(s) listed | MISSING-ELEMENT → squash may have failed |
+| Branch tracking | `git branch -vv` | `[origin/<branch>]` present | MISSING-ELEMENT → push with `-u` |
+| Worktree path correct | `git rev-parse --show-toplevel` | Worktree path (not main repo) | STRUCTURE-VIOLATION → HALT |
+
+### Verification Procedure
+
+**Between Step 3 (Squash) and Step 4 (Push), run these verifications:**
+
+```
+1. git status --porcelain → EVIDENCE: "(empty)" for clean tree
+2. git diff --staged → EVIDENCE: shows only intended squash commit diff
+3. git diff → EVIDENCE: "(empty)" for no unstaged changes
+4. git log origin/dev..HEAD --oneline → EVIDENCE: single commit for single-issue branch
+5. git branch -vv → EVIDENCE: tracking branch shown
+6. git rev-parse --show-toplevel → EVIDENCE: worktree path
+```
+
+### Finding Classification
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Uncommitted files | VERIFICATION-GAP | conditional | Commit before squash/push |
+| Staged diff shows wrong changes | CONFLICTING | flag-for-review | Verify squash targets correct files |
+| Unstaged changes remaining | VERIFICATION-GAP | auto-fix | `git add -A` and re-commit |
+| No commits ahead of dev | MISSING-ELEMENT | flag-for-review | Branch may be empty diff — investigate |
+| Wrong toplevel path | STRUCTURE-VIOLATION | auto-fix | HALT — not in worktree, wrong context |
+
+**These verifications are MANDATORY. Skipping them before PR creation is a CRITICAL GUIDELINE VIOLATION.**
 
 ## Recovery from Accidental Protected Branch Commit
 
@@ -777,7 +991,7 @@ git branch feature/recovery HEAD
 
 # Reset protected branch to match remote
 git checkout dev  # or main/master
-git reset --hard origin/dev  # or origin/main/origin.master
+git reset --hard origin/dev
 
 # Switch to recovery branch
 git checkout feature/recovery
@@ -789,8 +1003,9 @@ git push origin feature/recovery
 ## Common Issues
 
 | Issue | Resolution |
-|-------|------------|
-| Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
+| -- | -- |
+| Multiple commits (single-issue branch) | Run `git reset --soft origin/dev` and re-commit |
+| Multiple commits (work branch) | Expected — N commits = N implementation items. Do NOT re-squash. |
 | PR body missing Fixes | Verify sub-issues, add all to body |
 | Branch conflicts | Rebase on dev: `git rebase origin/dev` |
 | Wrong base branch | Close PR, create new one with `base="dev"` |
@@ -800,27 +1015,30 @@ git push origin feature/recovery
 Every squash commit MUST include:
 
 1. AI Author trailer
-1. Human Collaborator trailer
+2. Human Collaborator trailer
 
 **AI Trailer Format:**
 
 - Use dynamic model detection at runtime
-- Format: `Co-authored-by: <AI-Name> (<model-id>) <noreply@example.com>`
-- Example: `Co-authored-by: OpenCode (glm-5) <noreply@opencode.ai>`
+- Format: `Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>`
+- Example: `Co-authored-by: <AgentName> (<ModelId>) <noreply@example.com>`
 
 **Human Trailer:**
 
 - Use session values from the session-enforcement plugin
-- `DEV_NAME`: Human's name
-- `DEV_EMAIL`: Human's email
+- `<dev.name>`: Human's name
+- `<dev.email>`: Human's email
 - Format: `Co-authored-by: <Human-Name> <human-email>`
 
 ## Sub-Issue Autoclose
 
+**Note:** GitHub autoclose is inert for PRs merging into `dev`. The cleanup task (`git-workflow --task cleanup`) handles all issue closure via API. PR body keywords (`Fixes #N`) are informational labels for human readers.
+
 | Spec Type | PR Body Format |
-|-----------|---------------|
+| -- | -- |
 | Single-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` |
 | Multi-task | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\nFixes #<parent>` AND `Fixes #<child>` for each sub-issue |
+| Work | `**Summary:** <impact>\n\n**Outcome:** <stakeholder value>\n\n## Work Items\n\n#<issue1>\n#<issue2>\n\nFixes #<parent1>\nFixes #<child1>\nFixes #<parent2>` |
 
 **Example Multi-Task PR Body:**
 
@@ -835,10 +1053,30 @@ Fixes #469
 Fixes #470
 ```
 
+**Example Work PR Body:**
+
+```markdown
+**Summary:**
+
+Unified five approved issues into a single work execution, eliminating forked execution paths.
+
+**Outcome:** All approvals now follow one consistent workflow: sub-issue expansion → assemble-work → work branch → single PR.
+
+## Work Items
+
+#660 — Add pre-implementation analysis task
+#662 — Fix work branch squash verification
+#621 — Collapse executing-plans into divide-and-conquer
+
+Fixes #660
+Fixes #662
+Fixes #621
+```
+
 ## Common Issues
 
 | Issue | Resolution |
-|-------|------------|
+| -- | -- |
 | Multiple commits in PR | Run `git reset --soft origin/dev` and re-commit |
 | PR body missing Fixes | Verify sub-issues, add all to body |
 | Branch conflicts | Rebase on dev: `git rebase origin/dev` |
@@ -847,5 +1085,5 @@ Fixes #470
 ## After PR Creation
 
 1. Report PR URL
-1. HALT — wait for human merge
-1. Do NOT merge (human-only operation)
+2. HALT — wait for human merge
+3. Do NOT merge (human-only operation)

@@ -3,16 +3,22 @@
 """
 Identity Service for managing GitHub user identity and database synchronization.
 """
-import streamlit as st
-import requests
+
 from datetime import datetime
-from typing import Optional, Dict, Any, List
-from src.database import get_session, User, Source
+from typing import Any
+
+import requests
+import streamlit as st
 from sqlalchemy.sql import func
-from src.services.audit_service import AuditService
+
+from src.database.connection import get_session
+from src.database.models.core import Source
+from src.database.models.identity import User
 from src.logging_config import get_logger
+from src.services.audit_service import AuditService
 
 logger = get_logger("snea.identity")
+
 
 class IdentityService:
     """
@@ -34,10 +40,7 @@ class IdentityService:
         Returns True if successful and authorized, False otherwise.
         """
         logger.debug("Fetching GitHub user info")
-        headers = {
-            "Authorization": f"token {access_token}",
-            "Accept": "application/vnd.github.v3+json"
-        }
+        headers = {"Authorization": f"token {access_token}", "Accept": "application/vnd.github.v3+json"}
         base_url = st.secrets["github_oauth"]["user_info_url"]
 
         try:
@@ -46,8 +49,8 @@ class IdentityService:
             user_response.raise_for_status()
             user_info = user_response.json()
             st.session_state["user_info"] = user_info
-            
-            logger.info("Fetched GitHub user info for: %s", user_info.get('login'))
+
+            logger.info("Fetched GitHub user info for: %s", user_info.get("login"))
 
             # Fetch organizations
             orgs_response = requests.get(f"{base_url}/orgs", headers=headers, timeout=10)
@@ -64,23 +67,24 @@ class IdentityService:
             emails_response = requests.get(f"{base_url}/emails", headers=headers, timeout=10)
             emails_response.raise_for_status()
             emails = emails_response.json()
-            
+
             primary_email = None
             for email_record in emails:
                 if email_record.get("primary") and email_record.get("verified"):
                     primary_email = email_record.get("email")
                     break
-            
+
             # Fallback to the email in user_info if no primary/verified found
             if not primary_email:
                 primary_email = user_info.get("email")
 
             # Verify authorization against the permissions table
             from src.services.security_manager import SecurityManager
+
             user_role = SecurityManager.get_user_role(user_teams)
-            
+
             if not user_role:
-                logger.debug("User not authorized. Teams: %s", [t.get('slug') or t.get('name') for t in user_teams])
+                logger.debug("User not authorized. Teams: %s", [t.get("slug") or t.get("name") for t in user_teams])
                 st.session_state["is_unauthorized"] = True
                 return False
 
@@ -88,17 +92,19 @@ class IdentityService:
             st.session_state["user_role"] = user_role
 
             # Debug: log identity details
-            logger.debug("User email: %s, username: %s, orgs: %s, teams: %s",
-                         primary_email,
-                         user_info.get('login'),
-                         [o.get('login') for o in st.session_state.get('user_orgs', [])],
-                         [t.get('slug') for t in user_teams])
+            logger.debug(
+                "User email: %s, username: %s, orgs: %s, teams: %s",
+                primary_email,
+                user_info.get("login"),
+                [o.get("login") for o in st.session_state.get("user_orgs", [])],
+                [t.get("slug") for t in user_teams],
+            )
 
             # If authorized, sync user to database
             if primary_email:
                 st.session_state["user_email"] = primary_email
                 IdentityService.sync_user_to_db(user_info, primary_email)
-                
+
                 # Log the login activity
                 logger.debug("User logged in: %s", primary_email)
                 AuditService.log_activity(primary_email, "login", "User logged in via GitHub OAuth")
@@ -112,7 +118,7 @@ class IdentityService:
             return False
 
     @staticmethod
-    def sync_user_to_db(user_info: Dict[str, Any], email: str) -> None:
+    def sync_user_to_db(user_info: dict[str, Any], email: str) -> None:
         """
         Update or create the user record in the database.
         """
@@ -127,7 +133,7 @@ class IdentityService:
         try:
             # Try to find user by github_id (primary lookup as per issue)
             user = session.query(User).filter_by(github_id=github_id).first()
-            
+
             if user:
                 # Update existing user by GitHub ID
                 user.email = email
@@ -136,13 +142,17 @@ class IdentityService:
                 user.last_login = func.now()
             else:
                 # Check if email is already used by another account.
-                # If the email matches but the GitHub ID is different, we assume the email is 
+                # If the email matches but the GitHub ID is different, we assume the email is
                 # authoritative (e.g., the user created a new GitHub account but kept their email).
                 # We update the existing record to match the new GitHub identity.
                 existing_email_user = session.query(User).filter_by(email=email).first()
                 if existing_email_user:
-                    logger.info("Email collision detected for %s. Updating GitHub ID from %s to %s.", 
-                                email, existing_email_user.github_id, github_id)
+                    logger.info(
+                        "Email collision detected for %s. Updating GitHub ID from %s to %s.",
+                        email,
+                        existing_email_user.github_id,
+                        github_id,
+                    )
                     existing_email_user.github_id = github_id
                     existing_email_user.username = username
                     existing_email_user.full_name = full_name
@@ -150,14 +160,10 @@ class IdentityService:
                 else:
                     # Create new user if neither ID nor Email exists
                     user = User(
-                        email=email,
-                        username=username,
-                        github_id=github_id,
-                        full_name=full_name,
-                        last_login=func.now()
+                        email=email, username=username, github_id=github_id, full_name=full_name, last_login=func.now()
                     )
                     session.add(user)
-            
+
             session.commit()
 
             # Ensure Source record exists for the user
@@ -172,27 +178,24 @@ class IdentityService:
             session.close()
 
     @staticmethod
-    def get_user_teams_and_orgs() -> Dict[str, List[str]]:
+    def get_user_teams_and_orgs() -> dict[str, list[str]]:
         """
         Return structured data of user's teams and organizations.
         """
         orgs = [org.get("login") for org in st.session_state.get("user_orgs", [])]
         teams = [team.get("slug") for team in st.session_state.get("user_teams", [])]
-        return {
-            "organizations": orgs,
-            "teams": teams
-        }
+        return {"organizations": orgs, "teams": teams}
 
     @staticmethod
     @st.cache_data
-    def get_github_username(email: str) -> Optional[str]:
+    def get_github_username(email: str) -> str | None:
         """
         Fetch the GitHub username for a given email address.
         Cached to minimize database hits.
         """
         if not email:
             return None
-        
+
         session = get_session()
         try:
             user = session.query(User).filter_by(email=email).first()
@@ -215,12 +218,14 @@ class IdentityService:
         logger.debug("Identity already synchronized, skipping fetch")
         return True
 
+
 class SourceService:
     """
     Internal service for managing Source record synchronization.
     """
+
     @staticmethod
-    def ensure_user_source(session, username: str, full_name: Optional[str], email: str) -> None:
+    def ensure_user_source(session, username: str, full_name: str | None, email: str) -> None:
         """
         Create or update a Source record for the user if it doesn't already exist.
         Follows standard email citation and description formats.
@@ -228,7 +233,7 @@ class SourceService:
         try:
             # Check if source with user's name already exists
             source = session.query(Source).filter_by(name=username).first()
-            
+
             # Format display name: "Full Name" or "username"
             display_name = full_name if full_name else username
             description = f'"{display_name}" <{email}>'
@@ -239,15 +244,12 @@ class SourceService:
                 year = datetime.now().year
                 short_name = f"{username} ({year})"
                 new_source = Source(
-                    name=username,
-                    short_name=short_name,
-                    description=description,
-                    citation_format=citation_format
+                    name=username, short_name=short_name, description=description, citation_format=citation_format
                 )
                 session.add(new_source)
             # Automatic source addition should not change the source record or update it after it is created.
             # No else block here.
-                    
+
         except Exception as e:
             logger.error("Failed to ensure user Source record for %s: %s", username, e)
             # We don't want to fail the login if Source creation fails, but we log it.

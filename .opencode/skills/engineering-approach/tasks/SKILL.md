@@ -51,7 +51,7 @@ Execute implementation after design is approved, following established design de
 **Outcome:** <What changed>
 
 ---
-🤖 ✅ Completed by <AgentName> (<ModelID>)
+🤖 <AgentName> (<ModelId>) completed
 ```
 
 ### Step 5: HALT
@@ -70,5 +70,27 @@ Execute implementation after design is approved, following established design de
 
 ## Context Required
 
-- Session values: GIT_OWNER, GIT_REPO, DEV_NAME, DEV_EMAIL
+- Session values: <github.owner>, <github.repo>, <dev.name>, <dev.email>
 - Related tasks: `verify-understanding`, `verify-design`
+
+## Live Verification: Engineering Claims (MANDATORY)
+
+**Each engineering checkpoint MUST produce a tool-call artifact. Assertions without artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Claim | Verification Action | Tool Call | Problem Class |
+|-------|-------------------|-----------|---------------|
+| "Understanding verified" | Confirm code reading happened | `srclight_get_symbol` or `read` tool records | VERIFICATION-GAP |
+| "Design approved" | Confirm approval exists from developer | `github_issue_read(method=get_comments)` → check for auth | CONFLICTING |
+| "Implementation within scope" | Verify changes match spec file list | `git diff dev --name-only` → compare with spec | CONFLICTING |
+| "Tests pass" | Run actual test suite | `uv run pytest test/` → check exit code | VERIFICATION-GAP |
+
+**Evidence artifact:** Tool call results for each checkpoint.
+
+### Finding Classification
+
+| Finding | Problem Class | Classification | Action |
+|--------|---------------|----------------|--------|
+| Code not read during understanding | VERIFICATION-GAP | conditional | Read now before proceeding |
+| No approval found | CONFLICTING | flag-for-review | HALT — needs authorization |
+| Changes outside spec scope | CONFLICTING | flag-for-review | Report scope deviation |
+| Test failures | VERIFICATION-GAP | flag-for-review | Fix before claiming complete |

@@ -22,9 +22,10 @@ Plan Fidelity Auditor generates a clean-room plan from the spec's problem statem
 
 | Task | Purpose | Words |
 |------|---------|-------|
-| `audit` | Full audit workflow (default) | ~600 |
-| `compare` | Compare clean-room plan against existing plan | ~500 |
-| `report` | Report findings (renamed from auto-fix) | ~300 |
+| `audit` | Full audit workflow (default) | ≈600 |
+| `compare` | Compare clean-room plan against existing plan | ≈500 |
+| `report` | Report findings (renamed from auto-fix) | ≈300 |
+| `sub-issue-fidelity` | Verify sub-issue alignment with Plan phases | ≈350 |
 
 ## Invocation
 
@@ -116,10 +117,80 @@ Only substantive differences after semantic matching are reported.
 | Flag-only for substantive changes | Recommends brainstorming for significant gaps |
 | Mandatory audit chain entry | Subtask within orchestrator |
 
+## Cross-Reference Verification (MANDATORY)
+
+**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+
+| Reference | Verification | Finding Class |
+| -- | -- | -- |
+| `spec-auditor` in Cross-References (orchestrated by) | File exists at `.opencode/skills/spec-auditor/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `writing-plans` in Cross-References section | File exists at `.opencode/skills/writing-plans/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `brainstorming` in Cross-References section | File exists at `.opencode/skills/brainstorming/SKILL.md` | MISSING-TRACEABILITY if missing |
+| `programming-principles` in Cross-References section | File exists at `.opencode/skills/programming-principles/SKILL.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `audit` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/audit.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `compare` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/compare.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `report` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/report.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sub-issue-fidelity` | File exists at `.opencode/skills/plan-fidelity-auditor/tasks/sub-issue-fidelity.md` | MISSING-TRACEABILITY if missing |
+| `spec-auditor` orchestration behavior | Matches actual SKILL.md: `fidelity` subtask delegates to this skill | CONFLICTING if mismatched |
+| `writing-plans` clean-room invocation | Matches actual SKILL.md: `clean-room` task exists for generating plans | CONFLICTING if mismatched |
+| `brainstorming` recommendation behavior | Matches actual SKILL.md: exploration skill for deeper analysis | CONFLICTING if mismatched |
+| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
+| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
+
+**Verification Procedure:**
+
+Before invoking any cross-referenced skill:
+1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
+2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
+3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
+| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
+| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
+| Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
+| Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
+
+**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency and code reference existence. When this skill's clean-room comparison references code or files that may not exist, ground-truth verification ensures the references are valid. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+
+## Live Verification: Clean-Room Against Code (MANDATORY)
+
+**🚫 CRITICAL: When this skill generates a clean-room plan and compares it against the existing plan, it MUST verify both against actual codebase state. Clean-room claims without code verification are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
+
+| Clean-Room Claim | Verification Action | Tool Call | Problem Class |
+|-----------------|-------------------|-----------|---------------|
+| "Missing file reference" | Verify the file does NOT exist in the codebase (confirming it's actually missing) | `glob(pattern="**/filepath")` → confirm absence | VERIFICATION-GAP |
+| "Extra phase not needed" | Verify claimed functionality is already implemented | `srclight_get_symbol(name="symbol")` or `srclight_search_symbols(query="feature")` | CONFLICTING |
+| "Different approach" | Verify the existing approach actually works as claimed | `srclight_get_callers(symbol_name="symbol")` → trace actual usage | VERIFICATION-GAP |
+| Clean-room input isolation verified | Confirm clean-room input file excludes existing plan details | `read(filePath="./tmp/clean-room-input-N.md")` → check for plan leakage | CONFLICTING |
+
+**Evidence format:**
+
+```
+Check: [what was verified]
+Tool: [tool call and parameters]
+Result: [actual state found]
+Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
+Action: [auto-fix|conditional|flag-for-review]
+```
+
+**Classification on failure:**
+
+| Failure | Problem Class | Classification | Action |
+| -- | -- | -- | -- |
+| "Missing" file actually exists | CONFLICTING | flag-for-review | Finding is incorrect; remove from report |
+| "Extra" phase covers unimplemented feature | VERIFICATION-GAP | conditional | Finding may be valid; verify before applying |
+| Clean-room input contains plan details | CONFLICTING | auto-fix | Regenerate clean-room input with proper isolation |
+| Approach comparison based on stale code | VERIFICATION-GAP | conditional | Re-verify against current codebase |
+
 ## Cross-References
 
-- Orchestrated by: `spec-auditor` (via `fidelity` subtask)
+- Orchestrated by: `spec-auditor` (via `fidelity` subtask, including `ground-truth` adversarial verification)
 - Related tasks: `compare` (comparison logic), `report` (finding reporting)
-- Related skills: `writing-plans` (clean-room generation), `brainstorming` (recommended for gaps)
+- Related skills: `writing-plans` (clean-room generation), `brainstorming` (recommended for gaps), `programming-principles` (design principle alignment for clean-room comparison context)
+- Related guidelines: `065-verification-honesty.md` (metadata verification extension)
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)

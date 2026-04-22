@@ -33,9 +33,17 @@ Subtask: traceability
 Finding: MISSING-TRACEABILITY - [orphan requirement/orphan feature description]
 Location: [section of spec]
 Context: [what requirement is unaddressed OR what feature is unjustified]
-Recommendation: [add implementation steps OR add requirement justification]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| MISSING-TRACEABILITY | auto-fix | Add trace links between requirements and implementation steps |
+| VERIFICATION-GAP | flag-for-review | Success criteria require domain expertise |
 
 ## When to Run
 
@@ -48,4 +56,10 @@ Severity: [HIGH|MEDIUM|LOW]
 - Simple bug fix specs with one requirement and one step
 - Specs with obvious 1:1 requirement-to-step mapping
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+## Cross-Reference
+
+Creation-time traceability is enforced by the `spec-creation` skill's `traceability` task. This subtask verifies traceability as a second pass — checking that the creation-time traceability was done correctly and that nothing was lost between spec creation and audit.
+
+**Finding pattern:** `MISSING-TRACEABILITY` — Spec lacks creation-time traceability. Was `spec-creation --task traceability` used?
+
+Co-authored with AI: <AgentName> (<ModelId>)

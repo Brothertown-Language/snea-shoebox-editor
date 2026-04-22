@@ -123,12 +123,12 @@ issue_pr_workflow:
     note: "Starts step-by-step implementation with evidence collection"
     
   - trigger: "Executing plan with independent tasks via subagents"
-    skill: "subagent-driven-development"
+    skill: "divide-and-conquer"
     purpose: "Dispatch fresh subagents per task with two-stage review"
     note: "Alternative to executing-plans for plans with independent tasks"
 
   - trigger: "Implementing approved spec with subagent dispatch"
-    skill: "subagent-driven-development"
+    skill: "divide-and-conquer"
     purpose: "Dispatch implementer → spec review → code quality review per task"
     note: "Integrates with approval-gate, git-workflow, verification-before-completion"
     
@@ -188,15 +188,15 @@ issue_pr_workflow:
     task: "checklist"
     purpose: "Run completion checklist before PR"
     
-  # Git workflow tasks (called by implementation-workflow orchestration)
-  - trigger: "Implementation-workflow calls pre-work"
+  # Git workflow tasks (called by divide-and-conquer orchestration)
+  - trigger: "Divide-and-conquer calls pre-work"
     skill: "git-workflow"
     task: "pre-work"
     purpose: "Pure git ops: stash, create branch (NO implementation logic)"
     automatic: false
     note: "Called by orchestration layer, not by dispatch table directly"
     
-  - trigger: "Implementation-workflow calls review-prep"
+  - trigger: "Divide-and-conquer calls review-prep"
     skill: "git-workflow"
     task: "review-prep"
     purpose: "Pure git ops: push branch, generate URL (NO implementation logic)"
@@ -395,10 +395,10 @@ sub_task_invocation:
   - examples:
       - skill: "git-workflow"
         task: "pre-work"
-        description: "Load only pre-work task (~80 lines)"
+        description: "Load only pre-work task (≈80 lines)"
       - skill: "git-workflow"
         task: "pr-creation"
-        description: "Load only PR creation task (~80 lines)"
+        description: "Load only PR creation task (≈80 lines)"
   - rationale: "Reduces context window pollution by loading only relevant workflow phases"
   - usage: "/skill <skill-name> --task <task-name> for sub-task invocation"
   - overview: "/skill <skill-name> (no --task) for skill overview only"
@@ -410,11 +410,8 @@ integration_points:
     
   - skill: "git-workflow"
     guidelines:
-      - "110-git-branch-first.md"
-      - "111-git-commit-workflow.md"
-      - "113-git-pr-workflow.md"
-      - "114-git-branch-cleanup.md"
-      - "124-github-archive-workflow.md"
+      - "000-critical-rules.md"
+      - "115-branch-naming.md"
     note: "Git operations, branch management, PR creation"
 
   - skill: "systematic-debugging"

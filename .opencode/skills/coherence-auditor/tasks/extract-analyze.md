@@ -17,13 +17,12 @@ Calculate metrics and rank extraction candidates identified during scan phase.
 
 ## Procedure
 
-### Step 1: Calculate Token Counts
+### Step 1: Calculate Word Counts
 
 For each candidate:
-- Count lines (excluding headers/blank lines)
-- Estimate tokens: ≈4 tokens per line
-- Code blocks: ≈1.5 tokens per code token
-- Tables: ≈4 tokens per cell
+- Count words via `wc -w` (excluding headers/blank lines)
+- Code blocks: count words via `wc -w`
+- Tables: count words via `wc -w`
 
 ### Step 2: Determine Duplication Factor
 
@@ -44,7 +43,7 @@ For each candidate:
 | Duplication factor ≥3 | 3× | HIGH |
 | Duplication factor =2 | 2× | MEDIUM |
 | Complexity = high | 2× | Priority +1 |
-| Token count ≥500 | 2× | Priority +1 |
+| Word count ≥400 | 2× | Priority +1 |
 | Single file, simple | 1× | LOW |
 
 ## Context Required

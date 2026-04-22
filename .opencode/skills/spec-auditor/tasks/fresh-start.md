@@ -2,7 +2,15 @@
 
 ## Purpose
 
-Check that a spec is self-contained and understandable by an agent with no memory context. No "see above", no vague references, no assumptions about prior conversations.
+Check that a document is self-contained and understandable by an agent with no memory context. No "see above", no vague references, no assumptions about prior conversations.
+
+**Note for non-spec document types:** Self-containment checks focus on the document type's specific requirements:
+- **Spec:** Full self-containment — all context inline, no external references without summaries
+- **Plan:** Milestones and deliverables must be self-contained; cross-references to specs must include summaries
+- **Process Flow:** Each step's inputs and outputs must be explicitly stated; no assumed knowledge of tool locations or credentials
+- **Runbook/SOP:** Prerequisites, tools, and credentials must be listed; no assumed environment knowledge
+- **Checklist:** Items must be self-explanatory; no ambiguous shorthand
+- **Reference Doc:** Definitions and context must be included; cross-references must have summaries
 
 ## Checks
 
@@ -30,9 +38,17 @@ Subtask: fresh-start
 Finding: [FRESH-START-VIOLATION|CONTEXT-OVERFLOW] - [summary]
 Location: [section of spec]
 Context: [why this matters]
-Recommendation: [what to do]
+Classification: [auto-fix|conditional|flag-for-review]
+Fix Action: [what was done OR "flagged for review — [reason]"]
 Severity: [HIGH|MEDIUM|LOW]
 ```
+
+## Auto-Fix Classification
+
+| Problem Class | Classification | Fix Action |
+|---------------|---------------|------------|
+| FRESH-START-VIOLATION | auto-fix | Inline context, replace "see above"/"as discussed" with actual content, add summaries to cross-references |
+| CONTEXT-OVERFLOW | conditional | Reduce section length after verifying all requirements are preserved |
 
 ## Standards Reference
 
@@ -41,4 +57,4 @@ Per guidelines `045-open-questions.md` and `140-planning-spec-creation.md`:
 - File references must use stable anchors
 - Cross-references must include summaries
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)

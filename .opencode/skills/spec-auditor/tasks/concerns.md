@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Analyze spec phase structure for concern separation quality — deployment independence, risk profile, and blast radius. All findings are reported, NOT auto-applied.
+Analyze spec phase structure for concern separation quality — deployment independence, risk profile, and blast radius. All findings are reported for agent review, NOT auto-applied.
 
 **Delegated from:** concern-separation-auditor (v1). Now a subtask within spec-auditor.
 
@@ -44,17 +44,22 @@ Subtask: concerns
 Finding: [BOILERPLATE-TITLE|CONCERN_MIXING|DEPENDENCY_REVERSAL|HIGH_RISK_GROUPING] - [summary]
 Location: [phase/step where issue found]
 Context: [why concern separation matters for this spec]
-Recommendation: [suggested phase structure or name change]
+Classification: flag-for-review
+Fix Action: flagged for review — [reason]
 Severity: [HIGH|MEDIUM|LOW]
 ```
 
-## Why Report-Only
+## Why Flag-for-Review (Not Auto-Fix)
 
-Previous versions auto-fixed phase names and split phases. This version reports findings and lets the agent decide:
+Concern-splitting and phase-renaming require context judgment that the auditor lacks:
 
-- A BOILERPLATE-TITLE rename might be wrong for the specific spec
-- A concern split might break an intentionally grouped phase
-- The agent has the full context; this subtask doesn't
+- A BOILERPLATE-TITLE rename might be wrong for the specific spec. The spec author may have chosen a simple name intentionally for a simple change.
+- A concern split might break an intentionally grouped phase. Some phases group related concerns that are deployed together.
+- The agent has full context about the spec's complexity, domain, and deployment requirements. The auditor doesn't.
+
+All findings are reported for agent review. The agent decides whether to apply changes based on their understanding of the spec's domain.
+
+This aligns with the v2 design philosophy from `concern-separation-auditor/SKILL.md`: findings are presented, not imposed.
 
 ## When to Run
 
@@ -67,4 +72,4 @@ Previous versions auto-fixed phase names and split phases. This version reports 
 - Single-task specs (no phases to analyze)
 - Simple bug fixes with one phase
 
-Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+Co-authored with AI: <AgentName> (<ModelId>)

@@ -1,14 +1,20 @@
 # Copyright (c) 2026 Brothertown Language
 # 🚨 SUPREME DIRECTIVE: NO EDITS WITHOUT EXPLICIT APPROVAL ("Go", "Proceed", "Approved") 🚨
 def upload_mdf():
-    import streamlit as st
     import datetime as _dt
-    from src.database import get_session
+
+    import streamlit as st
+
+    from src.database.connection import get_session
     from src.database.models.core import Source
-    from src.services.upload_service import UploadService
-    from src.services.identity_service import IdentityService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error, render_back_to_main_button
+    from src.frontend.ui_utils import (
+        apply_standard_layout_css,
+        handle_ui_error,
+        hide_sidebar_nav,
+    )
     from src.logging_config import get_logger
+    from src.services.identity_service import IdentityService
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.upload_mdf")
 
@@ -46,13 +52,13 @@ def upload_mdf():
             help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
             disabled=staging_in_progress,
         )
-        
+
         # Persistence: If a file is uploaded, store it. If not, check if we have one in state.
         if uploaded_file is not None:
             st.session_state["pending_upload_content"] = uploaded_file.getvalue().decode("utf-8")
             st.session_state["pending_upload_name"] = uploaded_file.name
             st.session_state["pending_upload_file_id"] = uploaded_file.file_id
-        
+
         # Use state if available
         active_content = st.session_state.get("pending_upload_content")
         active_name = st.session_state.get("pending_upload_name")
@@ -70,7 +76,7 @@ def upload_mdf():
 
         SELECT_SOURCE_LABEL = "Select a source..."
         CREATE_NEW_LABEL = "+ Add new source…"
-        
+
         # Build options: placeholder first, then create new, then sources
         final_options = [SELECT_SOURCE_LABEL, CREATE_NEW_LABEL] + source_options
 
@@ -79,18 +85,18 @@ def upload_mdf():
             current_selection = SELECT_SOURCE_LABEL
         else:
             current_selection = st.session_state["upload_active_source_name"]
-        
+
         try:
             default_index = final_options.index(current_selection)
         except ValueError:
             default_index = 0
 
         selected_source = st.selectbox(
-            "Target source collection", 
-            final_options, 
+            "Target source collection",
+            final_options,
             index=default_index,
             key="upload_active_source_name",
-            disabled=(not active_content) or staging_in_progress
+            disabled=(not active_content) or staging_in_progress,
         )
 
         # Clear focus flag and success state if we are NOT on the create new source label
@@ -106,7 +112,9 @@ def upload_mdf():
                 st.toast("Add New Source Selected")
                 # Inject focus script for the name input using components.html for better JS execution
                 import streamlit.components.v1 as components
-                components.html("""
+
+                components.html(
+                    """
                     <script>
                     (function() {
                         const TARGET_PLACEHOLDER = "Book/Document — Author/Linguist";
@@ -160,27 +168,27 @@ def upload_mdf():
                         }
                     })();
                     </script>
-                """, height=0)
+                """,
+                    height=0,
+                )
                 st.session_state["source_focus_done"] = True
             st.markdown("#### Create a new source")
-            
+
             # Persistent success indicator
             success_name = st.session_state.get("source_creation_success_name")
             if success_name:
                 st.success(f"Source '{success_name}' created successfully. Please select it from the dropdown above.")
-            
+
             is_disabled = bool(success_name) or not active_content or staging_in_progress
-            
+
             new_name = st.text_input(
                 "Source name",
                 placeholder="Book/Document — Author/Linguist",
                 key="new_source_name_input",
-                disabled=is_disabled
+                disabled=is_disabled,
             )
             new_description = st.text_input(
-                "Description (optional)",
-                key="new_source_description_input",
-                disabled=is_disabled
+                "Description (optional)", key="new_source_description_input", disabled=is_disabled
             )
             if st.button("Create Source", disabled=is_disabled):
                 if not new_name or not new_name.strip():
@@ -216,6 +224,7 @@ def upload_mdf():
             st.session_state.pop("review_batch_id", None)
             st.session_state.pop("upload_active_source_name", None)
             from src.services.navigation_service import NavigationService
+
             st.switch_page(NavigationService.PAGE_HOME)
 
     # ── Main panel: upload content ────────────────────────────────
@@ -260,14 +269,11 @@ def upload_mdf():
                     try:
                         mdf_blob = UploadService.get_pending_batch_mdf(batch_id)
                         now = b["uploaded_at"] or _dt.datetime.now()
-                        
+
                         github_username = IdentityService.get_github_username(st.session_state.get("user_email"))
-                        
+
                         fname = UploadService.generate_mdf_filename(
-                            "pending", 
-                            b['source_name'], 
-                            now,
-                            github_username=github_username
+                            "pending", b["source_name"], now, github_username=github_username
                         )
 
                         st.download_button(
@@ -276,7 +282,7 @@ def upload_mdf():
                             file_name=fname,
                             mime="text/plain",
                             key=f"download_{batch_id}",
-                            disabled=staging_in_progress
+                            disabled=staging_in_progress,
                         )
                     except Exception as e:
                         handle_ui_error(e, "Failed to prepare download.", logger_name="snea.upload_mdf")
@@ -305,11 +311,13 @@ def upload_mdf():
             # Build summary table
             rows = []
             for e in entries:
-                rows.append({
-                    "lx": e.get("lx", ""),
-                    "ps": e.get("ps", ""),
-                    "ge": e.get("ge", ""),
-                })
+                rows.append(
+                    {
+                        "lx": e.get("lx", ""),
+                        "ps": e.get("ps", ""),
+                        "ge": e.get("ge", ""),
+                    }
+                )
             st.dataframe(rows, width="stretch", height=300)
 
             # Store parsed data in session state for later phases
@@ -320,7 +328,9 @@ def upload_mdf():
             # C-6: Stage & Match button
             if selected_source_id is None:
                 st.warning("Select a source collection before staging.")
-                st.button("Stage & Match", type="primary", disabled=True, help="You must select a source collection first.")
+                st.button(
+                    "Stage & Match", type="primary", disabled=True, help="You must select a source collection first."
+                )
             else:
                 user_email = st.session_state.get("user_email", "")
                 # Disable after use until a new file is uploaded
@@ -367,7 +377,11 @@ def upload_mdf():
                             st.session_state.pop("staging_in_progress", None)
                             st.session_state.pop("_staging_progress_value", None)
                             status.update(label="Processing failed.", state="error")
-                            handle_ui_error(e, "Staging and matching failed. Please verify the MDF format.", logger_name="snea.upload_mdf")
+                            handle_ui_error(
+                                e,
+                                "Staging and matching failed. Please verify the MDF format.",
+                                logger_name="snea.upload_mdf",
+                            )
 
         except ValueError as e:
             st.error(str(e))
@@ -384,8 +398,11 @@ def _render_review_view():
     exclusively for record comparison content.
     """
     import streamlit as st
-    from src.services.upload_service import UploadService
-    from src.frontend.ui_utils import hide_sidebar_nav, render_mdf_block, apply_standard_layout_css, handle_ui_error, render_back_to_main_button
+
+    from src.frontend.ui_utils import (
+        apply_standard_layout_css,
+        hide_sidebar_nav,
+    )
     from src.logging_config import get_logger
 
     logger = get_logger("snea.upload_mdf.review")
@@ -405,7 +422,6 @@ def _render_review_view():
 
     # ── Sidebar: header ───────────────────────────────────────────
     with st.sidebar:
-
         # Step 5: Cancel button — only enabled control during bulk
         if review_bulk_in_progress:
             if st.button("Cancel", icon="✖️", key="review_bulk_cancel"):
@@ -415,9 +431,12 @@ def _render_review_view():
                 st.rerun()
 
     # ── Main panel: record comparisons only ───────────────────────
-    _render_review_table(batch_id, session_deps={
-        'user_email': user_email,
-    })
+    _render_review_table(
+        batch_id,
+        session_deps={
+            "user_email": user_email,
+        },
+    )
 
     # ── Sidebar bottom: re-match & back ─────────
     with st.sidebar:
@@ -439,18 +458,20 @@ def _render_review_view():
 
 def _render_review_table(batch_id, session_deps):
     """Render the D-1 review table for a given batch_id."""
-    import streamlit as st
     import uuid as _uuid
-    from src.database import get_session
+
+    import streamlit as st
+
+    from src.database.connection import get_session
+    from src.database.models.core import Record, Source
     from src.database.models.workflow import MatchupQueue
-    from src.database.models.core import Record, Language, Source
-    from src.services.upload_service import UploadService
-    from src.services.preference_service import PreferenceService
-    from src.frontend.ui_utils import render_mdf_block, handle_ui_error, compute_mdf_line_diffs
+    from src.frontend.ui_utils import compute_mdf_line_diffs, handle_ui_error, render_mdf_block
     from src.logging_config import get_logger
+    from src.services.preference_service import PreferenceService
+    from src.services.upload_service import UploadService
 
     logger = get_logger("snea.upload_mdf.review")
-    user_email = session_deps['user_email']
+    user_email = session_deps["user_email"]
     review_bulk_in_progress = st.session_state.get("review_bulk_in_progress", False)
 
     # ── Filtering & Query ───────────────────────────────────────────
@@ -467,17 +488,23 @@ def _render_review_table(batch_id, session_deps):
 
     # ── Sidebar Controls ───────────────────────────────────────────
     with st.sidebar:
-        
         # Locked Conflict Global Warning
         with get_session() as session:
-            locked_conflict_count = session.query(MatchupQueue).filter_by(batch_id=batch_id, status='locked_conflict').count()
+            locked_conflict_count = (
+                session.query(MatchupQueue).filter_by(batch_id=batch_id, status="locked_conflict").count()
+            )
             if locked_conflict_count > 0:
                 st.error(f"⚠️ {locked_conflict_count} locked conflicts detected!")
-                if st.button("Discard All Locked Conflicts", use_container_width=True, help="Remove all entries that conflict with locked records", disabled=review_bulk_in_progress):
+                if st.button(
+                    "Discard All Locked Conflicts",
+                    use_container_width=True,
+                    help="Remove all entries that conflict with locked records",
+                    disabled=review_bulk_in_progress,
+                ):
                     discarded = UploadService.discard_locked_conflicts(batch_id)
                     st.success(f"Discarded {discarded} entries.")
                     st.rerun()
-                
+
                 fragment = UploadService.download_locked_conflicts(batch_id)
                 if fragment:
                     st.download_button(
@@ -487,7 +514,7 @@ def _render_review_table(batch_id, session_deps):
                         mime="text/plain",
                         use_container_width=True,
                         help="Download conflicting records as an MDF fragment for manual review",
-                        disabled=review_bulk_in_progress
+                        disabled=review_bulk_in_progress,
                     )
                 st.divider()
 
@@ -495,12 +522,23 @@ def _render_review_table(batch_id, session_deps):
         page_size_options = [1, 5, 10, 25, 50]
         if "review_page_size" not in st.session_state:
             saved_pref = PreferenceService.get_preference(
-                user_email, "upload_review", "page_size", str(page_size_options[1]) # Default 5
+                user_email,
+                "upload_review",
+                "page_size",
+                str(page_size_options[1]),  # Default 5
             )
-            st.session_state["review_page_size"] = int(saved_pref) if saved_pref and saved_pref.isdigit() else page_size_options[1]
+            st.session_state["review_page_size"] = (
+                int(saved_pref) if saved_pref and saved_pref.isdigit() else page_size_options[1]
+            )
 
         page_size = st.session_state.get("review_page_size", page_size_options[1])
-        new_page_size = st.selectbox("Rows per page", page_size_options, index=page_size_options.index(page_size), key="review_page_size_widget", disabled=review_bulk_in_progress)
+        new_page_size = st.selectbox(
+            "Rows per page",
+            page_size_options,
+            index=page_size_options.index(page_size),
+            key="review_page_size_widget",
+            disabled=review_bulk_in_progress,
+        )
         if new_page_size != page_size:
             st.session_state["review_page_size"] = new_page_size
             PreferenceService.set_preference(user_email, "upload_review", "page_size", str(new_page_size))
@@ -515,14 +553,11 @@ def _render_review_table(batch_id, session_deps):
             default_ix = 0
 
         selected_filter = st.selectbox(
-            "Filter by Status",
-            options=filter_labels,
-            index=default_ix,
-            key="review_filter_status_widget"
+            "Filter by Status", options=filter_labels, index=default_ix, key="review_filter_status_widget"
         )
         if selected_filter != st.session_state.get("review_filter_status"):
             st.session_state["review_filter_status"] = selected_filter
-            st.session_state["review_current_page"] = 1 # Reset on filter change
+            st.session_state["review_current_page"] = 1  # Reset on filter change
             st.rerun()
 
     # ── Database Query (Server-Side Filter & Pagination) ──────────────
@@ -534,19 +569,19 @@ def _render_review_table(batch_id, session_deps):
         # Apply SQL-side filtering
         f_status, f_match_type = filter_options[selected_filter]
         if f_status:
-            if f_status == 'matched':
+            if f_status == "matched":
                 # Rows explicitly marked 'matched' OR pending rows that have a suggestion
                 query = query.filter(
-                    (MatchupQueue.status == 'matched') |
-                    ((MatchupQueue.status == 'pending') & (MatchupQueue.suggested_record_id.isnot(None)))
+                    (MatchupQueue.status == "matched")
+                    | ((MatchupQueue.status == "pending") & (MatchupQueue.suggested_record_id.isnot(None)))
                 )
                 if f_match_type:
                     query = query.filter(MatchupQueue.match_type == f_match_type)
-            elif f_status == 'create_new':
+            elif f_status == "create_new":
                 # Rows explicitly marked 'create_new' OR pending rows that have NO suggestion
                 query = query.filter(
-                    (MatchupQueue.status == 'create_new') |
-                    ((MatchupQueue.status == 'pending') & (MatchupQueue.suggested_record_id.is_(None)))
+                    (MatchupQueue.status == "create_new")
+                    | ((MatchupQueue.status == "pending") & (MatchupQueue.suggested_record_id.is_(None)))
                 )
             else:
                 # Other explicit statuses (create_homonym, discard, ignored)
@@ -565,7 +600,7 @@ def _render_review_table(batch_id, session_deps):
         curr_page = st.session_state.get("review_current_page", 1)
         if curr_page > num_pages and num_pages > 0:
             curr_page = num_pages
-        
+
         offset = (curr_page - 1) * page_size
         rows = query.order_by(MatchupQueue.id).offset(offset).limit(page_size).all()
 
@@ -577,14 +612,10 @@ def _render_review_table(batch_id, session_deps):
         # Determine source context for bulk buttons (from first row of BATCH, not page)
         first_row = session.query(MatchupQueue).filter_by(batch_id=batch_id).first()
         source_id = first_row.source_id if first_row else None
-        
+
         existing_record_count = 0
         if source_id:
-            existing_record_count = (
-                session.query(Record)
-                .filter_by(source_id=source_id, is_deleted=False)
-                .count()
-            )
+            existing_record_count = session.query(Record).filter_by(source_id=source_id, is_deleted=False).count()
         is_new_source = existing_record_count == 0
 
         # Pre-fetch suggested records for comparison view
@@ -618,11 +649,15 @@ def _render_review_table(batch_id, session_deps):
         st.markdown(f"Page **{current_page}** of **{total_pages}** ({total_rows} entries)")
         nav_col1, nav_col2 = st.columns(2)
         with nav_col1:
-            if st.button("Previous", icon="◀️", key="page_prev", disabled=(current_page <= 1 or review_bulk_in_progress)):
+            if st.button(
+                "Previous", icon="◀️", key="page_prev", disabled=(current_page <= 1 or review_bulk_in_progress)
+            ):
                 st.session_state["review_current_page"] = current_page - 1
                 st.rerun()
         with nav_col2:
-            if st.button("Next", icon="▶️", key="page_next", disabled=(current_page >= total_pages or review_bulk_in_progress)):
+            if st.button(
+                "Next", icon="▶️", key="page_next", disabled=(current_page >= total_pages or review_bulk_in_progress)
+            ):
                 st.session_state["review_current_page"] = current_page + 1
                 st.rerun()
 
@@ -661,7 +696,6 @@ def _render_review_table(batch_id, session_deps):
             st.session_state["review_bulk_action"] = "discard_marked"
             st.rerun()
 
-
     # Step 2 & 6: Progress bar up top + execute bulk action on second render
     if review_bulk_in_progress:
         bulk_label = st.session_state.get("review_bulk_label", "Processing…")
@@ -676,6 +710,7 @@ def _render_review_table(batch_id, session_deps):
 
         try:
             import uuid as _bulk_uuid_top
+
             # Single session_id per bulk invocation — all records share it for rollback
             _bulk_session_id = str(_bulk_uuid_top.uuid4())
             if bulk_action == "approve_new":
@@ -700,7 +735,10 @@ def _render_review_table(batch_id, session_deps):
                     )
                     if count:
                         status.update(label=f"Applied {count} matched entries!", state="complete", expanded=False)
-                        st.session_state["bulk_flash"] = ("success", f"{count} matched entr{'y' if count == 1 else 'ies'} applied.")
+                        st.session_state["bulk_flash"] = (
+                            "success",
+                            f"{count} matched entr{'y' if count == 1 else 'ies'} applied.",
+                        )
                     else:
                         status.update(label="No matched entries found.", state="complete", expanded=False)
                         st.session_state["bulk_flash"] = ("info", "No matched entries to apply.")
@@ -715,7 +753,10 @@ def _render_review_table(batch_id, session_deps):
                     )
                     if count:
                         status.update(label=f"Approved {count} new records!", state="complete", expanded=False)
-                        st.session_state["bulk_flash"] = ("success", f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.")
+                        st.session_state["bulk_flash"] = (
+                            "success",
+                            f"{count} non-matching entr{'y' if count == 1 else 'ies'} approved as new records.",
+                        )
                     else:
                         status.update(label="No non-matching entries found.", state="complete", expanded=False)
                         st.session_state["bulk_flash"] = ("info", "No non-matching entries to approve.")
@@ -728,15 +769,20 @@ def _render_review_table(batch_id, session_deps):
                     )
                     if count:
                         status.update(label=f"Discarded {count} entries!", state="complete", expanded=False)
-                        st.session_state["bulk_flash"] = ("success", f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.")
+                        st.session_state["bulk_flash"] = (
+                            "success",
+                            f"Discarded {count} entr{'y' if count == 1 else 'ies'} marked for discard.",
+                        )
                     else:
                         status.update(label="No entries marked for discard.", state="complete", expanded=False)
                         st.session_state["bulk_flash"] = ("info", "No entries marked for discard.")
             elif bulk_action == "rematch":
                 with st.status(bulk_label, expanded=True) as status:
                     match_results = UploadService.rematch_batch(batch_id, progress_callback=update_progress)
-                    matched_count = sum(1 for m in match_results if m.get('suggested_record_id') is not None)
-                    status.update(label=f"Re-matched. {matched_count} match(es) found.", state="complete", expanded=False)
+                    matched_count = sum(1 for m in match_results if m.get("suggested_record_id") is not None)
+                    status.update(
+                        label=f"Re-matched. {matched_count} match(es) found.", state="complete", expanded=False
+                    )
                     st.session_state["bulk_flash"] = ("success", f"Re-matched batch. {matched_count} match(es) found.")
         except Exception as e:
             handle_ui_error(e, "Bulk action failed.", logger_name="snea.upload_mdf.review")
@@ -745,6 +791,7 @@ def _render_review_table(batch_id, session_deps):
             st.session_state.pop("review_bulk_label", None)
             st.session_state.pop("review_bulk_action", None)
         import time as _time
+
         _time.sleep(0.5)
         st.rerun()
         return
@@ -765,28 +812,28 @@ def _render_review_table(batch_id, session_deps):
 
         # Parse record_id from mdf_data for conflict check
         uploaded_record_id = None
-        for line in row.mdf_data.split('\n'):
+        for line in row.mdf_data.split("\n"):
             stripped = line.lstrip()
-            if stripped.startswith('\\nt Record:'):
-                val = stripped[len('\\nt Record:'):].strip()
+            if stripped.startswith("\\nt Record:"):
+                val = stripped[len("\\nt Record:") :].strip()
                 if val.isdigit():
                     uploaded_record_id = int(val)
 
         # Determine default status
-        if row.status not in ('pending',):
+        if row.status not in ("pending",):
             current_status = row.status
         elif record_id_conflict:
-            current_status = 'create_new'
-        elif has_suggestion and match_type == 'identical':
-            current_status = 'discard'
-        elif has_suggestion and match_type == 'exact':
-            current_status = 'matched'
-        elif has_suggestion and match_type == 'base_form':
-            current_status = 'matched'
-        elif has_suggestion and match_type == 'ge_match':
-            current_status = 'matched'
+            current_status = "create_new"
+        elif has_suggestion and match_type == "identical":
+            current_status = "discard"
+        elif has_suggestion and match_type == "exact":
+            current_status = "matched"
+        elif has_suggestion and match_type == "base_form":
+            current_status = "matched"
+        elif has_suggestion and match_type == "ge_match":
+            current_status = "matched"
         else:
-            current_status = 'create_new'
+            current_status = "create_new"
 
         # Build display
         suggested_rec = suggested_records.get(row.suggested_record_id)
@@ -795,11 +842,11 @@ def _render_review_table(batch_id, session_deps):
             suggested_display = f"{suggested_rec.lx} — {suggested_rec.ge or ''}"
 
         badge = ""
-        if match_type == 'exact':
+        if match_type == "exact":
             badge = "🟢 exact"
-        elif match_type == 'base_form':
+        elif match_type == "base_form":
             badge = "🟡 base_form"
-        elif match_type == 'ge_match':
+        elif match_type == "ge_match":
             badge = "🔵 ge_match"
 
         # Entry header
@@ -824,7 +871,7 @@ def _render_review_table(batch_id, session_deps):
                 status_options = list(status_map.keys())
                 # Internal status to display name
                 rev_status_map = {v: k for k, v in status_map.items()}
-                
+
                 display_status = rev_status_map.get(current_status, "Create New Record")
                 default_idx = status_options.index(display_status)
 
@@ -848,16 +895,16 @@ def _render_review_table(batch_id, session_deps):
                 # Apply status change if different from DB
                 if selected_status != row.status:
                     try:
-                        if selected_status == 'matched' and has_suggestion:
+                        if selected_status == "matched" and has_suggestion:
                             UploadService.confirm_match(row.id)
-                        elif selected_status == 'create_new':
+                        elif selected_status == "create_new":
                             # Set status directly
-                            _set_queue_status(row.id, 'create_new')
-                        elif selected_status == 'create_homonym':
+                            _set_queue_status(row.id, "create_new")
+                        elif selected_status == "create_homonym":
                             UploadService.mark_as_homonym(row.id)
-                        elif selected_status == 'discard':
+                        elif selected_status == "discard":
                             UploadService.mark_as_discard(row.id)
-                        elif selected_status == 'ignored':
+                        elif selected_status == "ignored":
                             UploadService.ignore_entry(row.id)
                     except Exception as e:
                         logger.error("Status change failed: %s", e)
@@ -865,17 +912,19 @@ def _render_review_table(batch_id, session_deps):
             with hdr_col4:
                 # D-1c: Per-record Apply Now button
                 # Disable Apply Now for locked conflicts
-                is_locked_conflict = (row.status == 'locked_conflict')
-                actionable = selected_status in ('matched', 'create_new', 'create_homonym', 'discard') and not is_locked_conflict
-                
+                is_locked_conflict = row.status == "locked_conflict"
+                actionable = (
+                    selected_status in ("matched", "create_new", "create_homonym", "discard") and not is_locked_conflict
+                )
+
                 if is_locked_conflict:
                     st.error("🔒 Locked")
-                
+
                 if st.button(
                     "Apply Now",
                     key=f"apply_{row.id}",
                     disabled=not actionable or review_bulk_in_progress,
-                    help="Record is locked and cannot be overwritten." if is_locked_conflict else None
+                    help="Record is locked and cannot be overwritten." if is_locked_conflict else None,
                 ):
                     try:
                         session_id = str(_uuid.uuid4())
@@ -886,8 +935,8 @@ def _render_review_table(batch_id, session_deps):
                             override_status=selected_status,
                         )
                         # Populate search entries (skip for discards)
-                        if result.get('record_id'):
-                            UploadService.populate_search_entries([result['record_id']])
+                        if result.get("record_id"):
+                            UploadService.populate_search_entries([result["record_id"]])
                             st.success(f"✅ Applied: {result['lx']} → record #{result['record_id']}")
                         else:
                             st.success(f"✅ Discarded: {result['lx']}")
@@ -918,14 +967,9 @@ def _render_review_table(batch_id, session_deps):
                     disabled=review_bulk_in_progress,
                 )
                 if search_query:
-                    candidates = UploadService.search_records_for_override(
-                        source_id, search_query
-                    )
+                    candidates = UploadService.search_records_for_override(source_id, search_query)
                     if candidates:
-                        options = [
-                            f"#{c['id']} — {c['lx']} (hm {c['hm']}) — {c['ge']}"
-                            for c in candidates
-                        ]
+                        options = [f"#{c['id']} — {c['lx']} (hm {c['hm']}) — {c['ge']}" for c in candidates]
                         chosen = st.selectbox(
                             "Select record",
                             options,
@@ -935,7 +979,9 @@ def _render_review_table(batch_id, session_deps):
                         )
                         chosen_idx = options.index(chosen)
                         chosen_record_id = candidates[chosen_idx]["id"]
-                        if st.button("Confirm Override", key=f"match_confirm_{row.id}", disabled=review_bulk_in_progress):
+                        if st.button(
+                            "Confirm Override", key=f"match_confirm_{row.id}", disabled=review_bulk_in_progress
+                        ):
                             _override_ok = False
                             try:
                                 UploadService.confirm_match(row.id, chosen_record_id)
@@ -969,9 +1015,7 @@ def _render_review_table(batch_id, session_deps):
             existing_diags = None
             new_diags = None
             if suggested_rec:
-                existing_diags, new_diags = compute_mdf_line_diffs(
-                    suggested_rec.mdf_data, row.mdf_data
-                )
+                existing_diags, new_diags = compute_mdf_line_diffs(suggested_rec.mdf_data, row.mdf_data)
             col_left, col_right = st.columns([1, 1])
             with col_left:
                 if suggested_rec:
@@ -988,11 +1032,22 @@ def _render_review_table(batch_id, session_deps):
                 if row == page_rows[-1] and total_pages > 1:
                     nav_c1, nav_c2, nav_c3 = st.columns([2, 3, 2])
                     with nav_c1:
-                        if st.button("Previous", icon="◀️", key="main_page_prev", disabled=(current_page <= 1 or review_bulk_in_progress)):
+                        if st.button(
+                            "Previous",
+                            icon="◀️",
+                            key="main_page_prev",
+                            disabled=(current_page <= 1 or review_bulk_in_progress),
+                        ):
                             st.session_state["review_current_page"] = current_page - 1
                             st.rerun()
                     with nav_c3:
-                        if st.button("Next", icon="▶️", key="main_page_next", disabled=(current_page >= total_pages or review_bulk_in_progress), use_container_width=True):
+                        if st.button(
+                            "Next",
+                            icon="▶️",
+                            key="main_page_next",
+                            disabled=(current_page >= total_pages or review_bulk_in_progress),
+                            use_container_width=True,
+                        ):
                             st.session_state["review_current_page"] = current_page + 1
                             st.rerun()
 
@@ -1026,7 +1081,9 @@ def _render_review_table(batch_id, session_deps):
                     st.session_state["review_bulk_action"] = "approve_matched"
                     st.rerun()
             with _pb_c2:
-                if st.button("Approve Page Non-Matches as New", key="page_bulk_approve_nonmatch", use_container_width=True):
+                if st.button(
+                    "Approve Page Non-Matches as New", key="page_bulk_approve_nonmatch", use_container_width=True
+                ):
                     st.session_state["review_bulk_page_ids"] = page_queue_ids
                     st.session_state["review_bulk_in_progress"] = True
                     st.session_state["review_bulk_label"] = "Approving page non-matches as new records…"
@@ -1043,8 +1100,9 @@ def _render_review_table(batch_id, session_deps):
 
 def _set_queue_status(queue_id, status):
     """Directly set a matchup_queue row's status."""
-    from src.database import get_session
+    from src.database.connection import get_session
     from src.database.models.workflow import MatchupQueue
+
     session = get_session()
     try:
         row = session.get(MatchupQueue, queue_id)
