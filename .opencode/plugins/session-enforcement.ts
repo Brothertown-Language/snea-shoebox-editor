@@ -531,10 +531,10 @@ Critical rules:
 function buildEnforcementContent(skillDescriptions: Array<{ name: string; description: string }>): string {
   // Process skills first, implementation skills second (adapted from superpowers priority)
   const processSkills = skillDescriptions.filter(s =>
-    ["approval-gate", "brainstorming", "writing-plans", "executing-plans",
+    ["approval-gate", "brainstorming", "spec-creation", "writing-plans", "executing-plans",
      "verification-before-completion", "finishing-a-development-branch",
      "git-workflow", "using-git-worktrees", "systematic-debugging", "spec-auditor",
-     "github-issue-creation", "github-sub-issues"].includes(s.name)
+     "issue-operations"].includes(s.name)
   );
   const implSkills = skillDescriptions.filter(s => !processSkills.includes(s));
 
@@ -559,7 +559,7 @@ This is not negotiable. This is not optional. You cannot rationalize your way ou
 
 When multiple skills could apply, use this order:
 
-1. **Process skills first** (approval-gate, brainstorming, writing-plans, systematic-debugging) — these determine HOW to approach the task
+1. **Process skills first** (approval-gate, brainstorming, spec-creation, issue-operations, writing-plans, systematic-debugging) — these determine HOW to approach the task
 2. **Implementation skills second** — these guide execution
 
 ## Red Flags — STOP and Invoke the Skill

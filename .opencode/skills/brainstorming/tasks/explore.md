@@ -251,6 +251,11 @@ You use these dimensions internally to decide what to ask about. The user never 
 - Include targeted improvements only where they serve the current goal
 - Don't propose unrelated refactoring
 
+⚠️ HARD GATE: Design approval is NOT spec completion.
+The design you presented is raw input TO spec-creation.
+You MUST invoke spec-creation to structure it into a formal spec.
+Do NOT output the design as the final spec in chat.
+
 ## Step 7: Transition to spec-creation
 
 **The terminal state is invoking spec-creation.** Do NOT write the spec in brainstorming — that is the responsibility of the `spec-creation` skill.

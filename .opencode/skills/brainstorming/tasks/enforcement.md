@@ -18,7 +18,8 @@ Enforcement rules and messages for the brainstorming skill. Ensures brainstormin
    | Exploration invoked, no turns | Skill loaded but no interactive Q&A turns recorded | HALT — require at least one Q&A exchange |
    | Exploration invoked, batch-dump detected | Agent produced findings without developer interaction | HALT — require developer confirmation of each item |
    | Exploration invoked, partial protocol | Agent asked one question then ignored the answer | HALT — require per-item developer confirmation before proceeding |
-   | Exploration invoked, protocol followed | Interactive Q&A with developer confirmation for key items | PROCEED to spec creation |
+    | Exploration invoked, protocol followed | Interactive Q&A with developer confirmation for key items | PROCEED to spec creation |
+    | Terminal dispatch to spec-creation occurred (not just issue-operations)? | Verify spec-creation was invoked after exploration | Chat + tool call evidence | SOFT-PASS |
 
 3. **What does NOT bypass exploration:**
 
