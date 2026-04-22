@@ -127,7 +127,6 @@ def login():
         from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
         from src.services.identity_service import IdentityService
         from src.services.navigation_service import NavigationService
-        from src.frontend.constants import GH_AUTH_TOKEN_COOKIE
 
         if IdentityService.is_identity_synchronized():
             st.session_state.logged_in = True

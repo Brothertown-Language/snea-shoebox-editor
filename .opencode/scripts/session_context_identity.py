@@ -200,7 +200,7 @@ def probe_credentials_tier3(platform: str, root_dir: str, tier1_status: str) -> 
 
 def build_identity_section(owner: str, repo: str, platform: str, credential_status: str) -> str:
     lines = [
-        "## Repository Identity",
+        "## Repository Hosting Identity",
         f"- github.owner={owner}",
         f"- github.repo={repo}",
         f"- github.platform={platform}",
@@ -208,6 +208,11 @@ def build_identity_section(owner: str, repo: str, platform: str, credential_stat
     cred_key = f"{platform.upper()}_CREDENTIALS" if platform != "unknown" else "CREDENTIALS"
     lines.append(f"- {cred_key}={credential_status}")
     lines.append("- Use these exact values for ALL GitHub MCP and GitBucket API calls")
+
+    lines.append("")
+    lines.append("## Target API Credentials")
+    lines.append("- These are credentials for TARGET APIs the plugin operates on, NOT the repository hosting platform")
+    lines.append("- Do NOT infer the hosting platform from these values")
 
     if credential_status == "missing":
         lines.append(f"- WARNING: No {platform} credentials found in .env, secrets.toml, or environment variables")

@@ -602,20 +602,83 @@ Invoke relevant skills BEFORE any response or action. Even a 1% chance means inv
 </EXTREMELY_IMPORTANT>`;
 }
 
-function buildIdentityEchoDirective(): string {
+function extractValue(sessionOutput: string | null, key: string): string | null {
+  if (!sessionOutput) return null;
+  const escapedKey = key.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const match = sessionOutput.match(new RegExp(`${escapedKey}=\\s*(\\S+)`));
+  return match ? match[1] : null;
+}
+
+function buildIdentityEchoDirective(platform: string, owner: string, repo: string): string {
   return `<IDENTITY_ECHO>
-Before doing anything else, you MUST echo your platform identity as your very first output. Read the values from the system prompt dotted pairs (github.platform, github.owner, github.repo) and output them in this exact format:
+Before doing anything else, you MUST echo your platform identity as your very first output. The CORRECT values are:
 
-Platform: <platform>, Org: <owner>, Repo: <repo>
+Platform: ${platform}, Org: ${owner}, Repo: ${repo}
+
+You MUST output EXACTLY these values in this format:
+Platform: ${platform}, Org: ${owner}, Repo: ${repo}
 🤖 <AgentName> (<ModelId>) <status-icon> <status>
 
-Example: Platform: <platform>, Org: <owner>, Repo: <repo>
-🤖 <AgentName> (<ModelId>) <status-icon> <status>
-
-The directive does NOT contain actual values — you MUST read github.platform, github.owner, and github.repo from the system prompt dotted pairs above. This ensures you have read and acknowledged the correct owner/repo before making any API calls.
+⚠️ FATAL: If your echo does not match Platform: ${platform}, Org: ${owner}, Repo: ${repo} character-for-character, you MUST HALT immediately and report the mismatch. Do NOT proceed with any operations with incorrect identity. Do NOT infer identity from repository names, file paths, or environment variables. Use ONLY the values provided in the system prompt identity section.
 
 After the identity echo, acknowledge any trigger warnings from the SESSION_TRIGGERS block above.
 </IDENTITY_ECHO>`;
+}
+
+/**
+ * Secret patterns for redaction.
+ * These regexes match secret values in various formats while preserving key names.
+ */
+const SECRET_PATTERNS: Array<{ pattern: RegExp; type: string }> = [
+  { pattern: /\b(TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL|API_KEY|PRIVATE_KEY|ACCESS_TOKEN)\s*[=:]\s*["']?([^\s"']+?)["']?(?=\s|$|[^\w])/gi, type: "assignment" },
+  { pattern: /:\/\/([^:]+):([^@]+)@/g, type: "url_password" },
+  { pattern: /\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}/g, type: "github_token" },
+  { pattern: /\bglpat-[A-Za-z0-9\-]{20,}/g, type: "gitlab_token" },
+];
+
+/**
+ * Redact secrets from text, replacing values with [REDACTED:TYPE] markers.
+ * Key names are preserved — only secret values are replaced.
+ *
+ * Co-authored with AI: OpenCode (ollama-cloud/glm-5)
+ */
+function redactSecrets(text: string): string {
+  let result = text;
+
+  // URL-embedded passwords: user:password@ → user:[REDACTED:PASSWORD]@
+  result = result.replace(/:\/\/([^:]+):([^@]+)@/g, (_match, user: string, _password: string) => {
+    return `://${user}:[REDACTED:PASSWORD]@`;
+  });
+
+  // GitHub tokens
+  result = result.replace(/\b(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9]{20,}/g, "[REDACTED:TOKEN]");
+
+  // GitLab tokens
+  result = result.replace(/\bglpat-[A-Za-z0-9\-]{20,}/g, "[REDACTED:TOKEN]");
+
+  // Assignment patterns: KEY=value, KEY="value", KEY='value'
+  // Matches keys that end with or are exactly one of the secret keywords
+  // e.g., GITBUCKET_TOKEN=value, MY_SECRET=value, PASSWORD=abc, API_KEY="xyz"
+  result = result.replace(
+    /((?:\w*(?:TOKEN|KEY|SECRET|PASSWORD|CREDENTIAL|API_KEY|PRIVATE_KEY|ACCESS_TOKEN))\s*[=:]\s*)(["']?)([^\s"'#]+?)\2/gi,
+    (_match, prefix: string, quote: string, _value: string) => {
+      const keyMatch = prefix.match(/(\w+)\s*[=:]/);
+      const keyName = keyMatch ? keyMatch[1].toUpperCase() : "";
+      let typeLabel: string;
+      if (keyName === "PASSWORD" || keyName === "CREDENTIAL") {
+        typeLabel = keyName;
+      } else if (keyName.endsWith("PASSWORD")) {
+        typeLabel = "PASSWORD";
+      } else if (keyName.endsWith("CREDENTIAL")) {
+        typeLabel = "CREDENTIAL";
+      } else {
+        typeLabel = "TOKEN";
+      }
+      return `${prefix}${quote}[REDACTED:${typeLabel}]${quote}`;
+    }
+  );
+
+  return result;
 }
 
 export default async function sessionEnforcementPlugin(input: PluginInput): Promise<Hooks> {
@@ -693,7 +756,10 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
 
         // --- Identity-echo directive + trigger warnings injection into FIRST user message ---
         const triggersOutput = await runSessionContextTriggers(input.$);
-        const identityBlock = buildIdentityEchoDirective();
+        const knownPlatform = extractValue(cachedIdentityOutput, "github.platform");
+        const knownOwner = extractValue(cachedIdentityOutput, "github.owner");
+        const knownRepo = extractValue(cachedIdentityOutput, "github.repo");
+        const identityBlock = buildIdentityEchoDirective(knownPlatform || "<platform>", knownOwner || "<owner>", knownRepo || "<repo>");
         const triggerBlock = triggersOutput ? `<SESSION_TRIGGERS>\n${triggersOutput}\n</SESSION_TRIGGERS>` : "";
 
         const echoParts: string[] = [];
@@ -717,6 +783,56 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
               const directive = buildIssuePipelineDirective(match[1]);
               lastUser.parts.push({ type: "text", text: directive });
               break; // Only inject pipeline directive once per message
+            }
+          }
+        }
+      }
+
+      // --- Secret redaction on ALL assistant messages ---
+      const assistantMessages = output.messages.filter(m => m.info?.role === "assistant");
+      for (const msg of assistantMessages) {
+        if (!msg.parts?.length) continue;
+        for (let i = 0; i < msg.parts.length; i++) {
+          const part = msg.parts[i];
+          if (part.type === "text" && part.text) {
+            const redacted = redactSecrets(part.text);
+            if (redacted !== part.text) {
+              msg.parts[i] = { ...part, type: "text", text: redacted };
+            }
+          }
+        }
+      }
+
+      // --- Identity echo validation on assistant messages ---
+      if (knownPlatform && knownOwner && knownRepo) {
+        const assistantMessages = output.messages.filter(m => m.info?.role === "assistant");
+        if (assistantMessages.length > 0) {
+          const firstAssistant = assistantMessages[0];
+          const assistantText = firstAssistant.parts
+            ?.filter(p => p.type === "text" && p.text)
+            .map(p => p.text)
+            .join(" ") || "";
+
+          const echoMatch = assistantText.match(/Platform:\s*(\S+),\s*Org:\s*(\S+),\s*Repo:\s*(\S+)/);
+
+          if (!echoMatch) {
+            const injectTarget = lastUser;
+            if (injectTarget?.parts?.length) {
+              injectTarget.parts.push({
+                type: "text",
+                text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Your first message did not contain a valid identity echo. You MUST echo your platform identity before proceeding with ANY operations.\n\nExpected: Platform: ${knownPlatform}, Org: ${knownOwner}, Repo: ${knownRepo}\n\nHALT all operations. Echo the correct identity values above before continuing.\n</IDENTITY_VALIDATION_FAILURE>`
+              });
+            }
+          } else {
+            const [, echoPlatform, echoOwner, echoRepo] = echoMatch;
+            if (echoPlatform !== knownPlatform || echoOwner !== knownOwner || echoRepo !== knownRepo) {
+              const injectTarget = lastUser;
+              if (injectTarget?.parts?.length) {
+                injectTarget.parts.push({
+                  type: "text",
+                  text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Identity echo mismatch detected!\n\nYour echo: Platform: ${echoPlatform}, Org: ${echoOwner}, Repo: ${echoRepo}\nExpected: Platform: ${knownPlatform}, Org: ${knownOwner}, Repo: ${knownRepo}\n\nHALT all operations. These values do NOT match. Use ONLY the expected values above. Do NOT infer identity from repository names, file paths, or environment variables.\n</IDENTITY_VALIDATION_FAILURE>`
+                });
+              }
             }
           }
         }

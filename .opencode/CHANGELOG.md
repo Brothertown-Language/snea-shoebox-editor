@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 
 ## [0.2.0] - Unreleased
 
+### Added
+
+- **Identity echo validation gate** (#1151, #1153) - Programmatic validation gate in session-enforcement.ts that compares assistant's identity echo against injected values and injects IDENTITY_VALIDATION_FAILURE on mismatch with HALT instruction. Inline expected values in IDENTITY_ECHO directive with FATAL language.
+- **Secret redaction pipeline** (#1152, #1154) - redactSecrets() function in session-enforcement.ts scanning all assistant output for TOKEN=, KEY=, SECRET=, PASSWORD= patterns with [REDACTED:TYPE] replacement. Pre-submission secret scan for GitHub API calls. File-read blocklist with value redaction for .env, .env.*, *.pem, *.key, secrets.toml, credentials.json.
+- **Target API credentials separation** (#1151) - session_context_identity.py now separates "Repository Hosting Identity" from "Target API Credentials" with clear section headers to prevent AI agent confusion between hosting platform and target API.
+- **Secret exfiltration critical violation** (#1152, #1154) - Added "Secret Exfiltration in Agent Output" critical violation section to 000-critical-rules.md prohibiting inclusion of .env contents, token values, or credentials in any output channel.
+- **Identity echo validation enforcement tests** (#1153) - Added identity-echo-validation, secret-exfiltration-violation, and read-secrets-in-output scenarios to test-enforcement.sh with guideline content verification checks.
+
 ### Changed
 
 - **Secret detection semaphore docs** (#840, #919) - Add `.opencode/docs/secret-detection.md` documenting the detect-secrets semaphore mechanism, configuration options, and opt-in workflow.

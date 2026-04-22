@@ -8,6 +8,8 @@ The AI agent must determine its identity from the system prompt on EVERY session
 2. **Report identity** in byline format: `🤖 <AgentName> (<ModelId>) <status-icon> <status>`
 3. **Examples**: `🤖 OpenCode (ollama-cloud/glm-5) ✅ completed`, `🤖 OpenCode (ollama-cloud/glm-5) 🔄 working`
 
+**Programmatic validation**: The `session-enforcement.ts` plugin injects expected identity values into the `IDENTITY_ECHO` directive and validates the agent's first response against them. On mismatch, an `IDENTITY_VALIDATION_FAILURE` block is injected into the next user message, halting all operations. See `000-critical-rules.md` §Inferring GitHub Owner.
+
 **WHY**: Different agents/loaders provide different context. System prompt tells you what you are.
 
 ---

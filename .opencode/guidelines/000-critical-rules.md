@@ -304,6 +304,8 @@ For URLs to resources that **haven't been created yet** (Compare URL before push
 - 🚫 FORBIDDEN: Inferring owner from file paths, `$USER`, `git config user.name`, cached values; making GitHub MCP calls without session init values
 - ✅ REQUIRED: Use `github.owner` and `github.repo` from session init for EVERY GitHub MCP call
 
+**Programmatic enforcement**: The `session-enforcement.ts` plugin validates the agent's identity echo against injected expected values. If the agent's first response does not contain a matching identity echo, an `IDENTITY_VALIDATION_FAILURE` block is injected into the next user message, forcing the agent to HALT. This gate prevents operations with incorrect owner/repo values.
+
 ## Critical Violation: Missing AI Co-Authored Attribution
 
 **⚠️ Failing to include AI co-authored attribution is a CRITICAL GUIDELINE VIOLATION.** Applies to original AI-authored content, NOT copy-pasted content.
@@ -956,6 +958,21 @@ Verifying live state against a specification requires exact match. Any deviation
 - ✅ REQUIRED: `semantic` comparison mode is ONLY for code behavior where multiple implementations achieve the same spec intent, and requires explicit per-field justification
 
 **AUTHORITY:** `065-verification-honesty.md` → "Verification Comparison Semantics" section, `verification-before-completion` skill → "Comparison Modes" section
+
+## Critical Violation: Secret Exfiltration in Agent Output
+
+**⚠️ Including .env file contents, token values, API keys, passwords, or credentials in ANY output is a CRITICAL GUIDELINE VIOLATION.**
+
+- 🚫 FORBIDDEN: Including `.env` file contents, token values, API keys, passwords, or credentials in agent output — including issue comments, PR descriptions, commit messages, chat responses, and tool call parameters
+- 🚫 FORBIDDEN: Pasting secret values verbatim into any external service (GitHub, email, documentation)
+- 🚫 FORBIDDEN: Bypassing the secret redaction pipeline by quoting raw secrets from file reads
+- ✅ REQUIRED: Redact ALL secret values to `[REDACTED]` or `[REDACTED:TYPE]` before including content in any output
+- ✅ REQUIRED: The redaction pipeline (session-enforcement.ts output transform + pre-submission scan + file read blocklist) catches most cases, but agents must also reason about what they include — the pipeline is defense in depth, not a substitute for judgment
+- ✅ REQUIRED: When referencing configuration for root cause analysis, redact ALL secret values before including the content
+
+**Applicable to:** Issue comments, PR descriptions, commit messages, chat responses, tool call parameters, and any other output channel.
+
+**Authority:** `src/security/pre_submission_scan.py`, `src/security/file_read_blocklist.py`, `session-enforcement.ts` → `redactSecrets()`
 
 ## Sub-Agent Extraction Pattern
 
