@@ -1,0 +1,138 @@
+metadata:
+  spec_version: "1.0.0"
+  created_by: ""
+  created_at: ""
+  target_framework:
+
+layout:
+  regions:
+    - id: header
+      type: banner
+      label: "Page Header"
+      position:
+        row: 1
+        col: 1
+        span: full
+      size:
+        width: 100%
+        height: auto
+    - id: sidebar
+      type: nav
+      label: "Primary Navigation"
+      position:
+        row: 2
+        col: 1
+        span: 1
+      size:
+        width: 240px
+        height: 100%
+    - id: content
+      type: main
+      label: "Main Content"
+      position:
+        row: 2
+        col: 2
+        span: 1
+      size:
+        width: flexible
+        height: 100%
+    - id: footer
+      type: contentinfo
+      label: "Page Footer"
+      position:
+        row: 3
+        col: 1
+        span: full
+      size:
+        width: 100%
+        height: auto
+  containers:
+    - id: page_layout
+      type: grid
+      label: "Page Grid Layout"
+      regions:
+        - header
+        - sidebar
+        - content
+        - footer
+  responsive_rules:
+    - breakpoint: 768px
+      behavior: stack_vertically
+      affected_regions:
+        - sidebar
+        - content
+        - footer
+
+components:
+  - id: nav_menu
+    type: navigation_list
+    label: "Navigation Menu"
+    state: default
+    actions:
+      - name: navigate
+        trigger: click
+        target: route_change
+    validation: []
+  - id: content_area
+    type: content_container
+    label: "Content Display"
+    state: default
+    actions: []
+    validation: []
+
+navigation:
+  routes:
+    - id: home
+      path: /
+      label: "Home"
+    - id: items
+      path: /items
+      label: "Items"
+    - id: settings
+      path: /settings
+      label: "Settings"
+  transitions:
+    - from: home
+      to: items
+      trigger: nav_click
+      animation: fade
+    - from: items
+      to: home
+      trigger: nav_click
+      animation: fade
+  guards:
+    - route: settings
+      condition: "user_authenticated"
+      redirect: home
+
+data_flow:
+  sources:
+    - id: data_source_primary
+      type: api
+      label: "Primary Data Source"
+  consumers:
+    - id: content_area
+      source: data_source_primary
+      transform: none
+  transforms:
+    - id: format_display
+      type: formatter
+      input: raw_data
+      output: display_data
+
+accessibility:
+  aria_labels:
+    - target: nav_menu
+      label: "Main Navigation"
+    - target: content_area
+      label: "Main Content Area"
+  keyboard_nav:
+    - target: nav_menu
+      pattern: "arrow_keys"
+    - target: content_area
+      pattern: "tab_index"
+  screen_reader:
+    - target: nav_menu
+      announcement: "Navigation menu with {count} items"
+    - target: content_area
+      announcement: "Main content area"

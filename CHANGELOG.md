@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/1119-ui-sub-agent-skills
+
+- **Self-Identifying UI Sub-Agent Skills** (#1119, #1120, #1121, #1122, #1123) - Added two self-identifying UI sub-agent skills (ui-design with kimi-k2.6:cloud, ui-engineer with glm-5.1:cloud) with three-tier trigger self-identification, 12 task files, 6 PEP 723 scripts (including Playwright-based render/screenshot), 4 templates (SVG wireframe, HTML mockup, YAML interaction spec schema, Streamlit app), and divide-and-conquer enhancement for UI sub-agent routing with model context propagation.
+
 ### spec/1115-reference-verification-mandate
 
 - **References Verification Mandate** (#1115, references #1113) - Added `REFERENCES_VERIFICATION_MANDATE` injection block to session-enforcement plugin, closing the "I already know this" rationalization loophole. Names specific bypass patterns as FORBIDDEN, imposes a self-audit gate requiring tool-call artifacts before claims, and is unconditional with no scope, exemption, size, or qualification bypasses.
