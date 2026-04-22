@@ -77,6 +77,11 @@ SCENARIOS["semantic-intent-writing-plans"]="Does .opencode/skills/writing-plans/
 SCENARIOS["why-specific-value-tdd"]="Does .opencode/skills/writing-plans/tasks/create.md include guidance for why-specific-value in TDD step descriptions?"
 SCENARIOS["verification-mechanics-brainstorming"]="Does .opencode/skills/brainstorming/tasks/explore.md include verification-mechanics prompting?"
 SCENARIOS["sc-precision-audit"]="Does .opencode/skills/spec-auditor/SKILL.md include an SC Precision Audit baseline subtask?"
+SCENARIOS["url-sourcing-rule1-pr"]="Does .opencode/skills/git-workflow/tasks/pr-creation.md instruct to use html_url from github_create_pull_request API response and NEVER construct the PR URL from template?"
+SCENARIOS["url-sourcing-rule1-review-prep"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain URL Sourcing Rules that require extracting html_url from github_create_pull_request API response for post-creation PR URLs?"
+SCENARIOS["url-sourcing-rule2-character-match"]="Does .opencode/skills/git-workflow/tasks/review-prep.md require character-match verification for pre-creation Compare URLs constructed from session-init values?"
+SCENARIOS["url-sourcing-guideline-rules"]="Does .opencode/guidelines/000-critical-rules.md contain URL Sourcing Rule 1 requiring html_url extraction from API response for post-creation URLs and URL Sourcing Rule 2 requiring character-match verification for pre-creation URLs?"
+SCENARIOS["url-sourcing-issue-operations"]="Does .opencode/skills/issue-operations/tasks/completion.md instruct to use html_url from github_issue_write API response instead of constructing issue URLs from template?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -126,6 +131,11 @@ EXPECTED_SKILLS["semantic-intent-writing-plans"]=""
 EXPECTED_SKILLS["why-specific-value-tdd"]=""
 EXPECTED_SKILLS["verification-mechanics-brainstorming"]=""
 EXPECTED_SKILLS["sc-precision-audit"]=""
+EXPECTED_SKILLS["url-sourcing-rule1-pr"]=""
+EXPECTED_SKILLS["url-sourcing-rule1-review-prep"]=""
+EXPECTED_SKILLS["url-sourcing-rule2-character-match"]=""
+EXPECTED_SKILLS["url-sourcing-guideline-rules"]=""
+EXPECTED_SKILLS["url-sourcing-issue-operations"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -138,7 +148,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"

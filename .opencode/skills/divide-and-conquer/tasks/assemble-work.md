@@ -238,12 +238,12 @@ Implemented <N> issues via branch-per-issue work orchestration.
 - #B: <summary> ✅
 - #C: <summary> ⚠️ (partial — see details)
 
-Compare URL: https://github.com/<owner>/<repo>/compare/dev...<work-branch>
+Compare URL: <<Character-match verified URL from session-init values per URL Sourcing Rules>>
 
-**If a PR has been created for this work set, use "PR URL" label with the `pull/<N>` format instead of "Compare URL":**
+**If a PR has been created for this work set, use "PR URL" label with the `html_url` from `github_create_pull_request` API response:**
 
 ```
-PR URL: https://github.com/<owner>/<repo>/pull/<PR-number>
+PR URL: <html_url from github_create_pull_request API response>
 ```
 
 **NEVER use the wrong label for the wrong URL format.** Label-format mismatch (e.g., "Compare URL" with `pull/N` URL, or "PR URL" with `compare/dev...` URL) is a critical violation.

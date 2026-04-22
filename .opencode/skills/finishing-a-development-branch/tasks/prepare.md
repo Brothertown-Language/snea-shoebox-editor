@@ -97,12 +97,10 @@ git branch -vv
 
 ### Step 5: Generate Compare URL
 
-```
-https://<GitBucketHost>/gitbucket/<owner>/<repo>/compare/<base>...<branch>
-```
-
-- URL must be accessible
-- Diff must show expected changes
+1. Read `<github.owner>`, `<github.repo>`, `<gitbucket.html_url>` from session init
+2. Construct the Compare URL using those exact values
+3. **Character-match verification:** Confirm the constructed URL contains the exact `<github.owner>` and `<github.repo>` strings from session init (character-for-character match)
+4. If any mismatch: HALT and report
 
 ## Enforcement Matrix
 

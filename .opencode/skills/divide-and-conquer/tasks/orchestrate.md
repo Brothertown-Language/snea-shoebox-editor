@@ -203,8 +203,8 @@ implementation_complete: true
 
 ```yaml
 status: success
-compare_url: https://github.com/owner/repo/compare/dev...branch
-exec_summary: |
+  compare_url: <<Compare URL from review-prep — character-match verified per URL Sourcing Rules>>
+  exec_summary: |
   **Summary:**
 
   Integrated workflow skills into the enforcement plugin.
@@ -230,7 +230,7 @@ Integrated workflow skills from Superpowers repository.
 
 Created 4 core skills for brainstorming, planning, execution, and verification.
 
-Compare URL: https://github.com/owner/repo/compare/dev...branch
+Compare URL: <<Character-match verified URL from session-init values>>
 
 🤖 <AgentName> (<ModelId>) completed
 ```

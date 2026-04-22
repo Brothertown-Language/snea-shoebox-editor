@@ -438,21 +438,19 @@ worktree.path = ""  (cleared — agent no longer references worktree)
 
 **⚠️ CRITICAL: URLs must be constructed from session init values ONLY. Never hardcode domains.**
 
-Using session values (<github.owner>, <github.repo>, github.platform, <gitbucket.html_url>):
+### URL Sourcing Rules (MANDATORY — per `000-critical-rules.md` §URL Sourcing)
 
-**For GitBucket (github.platform=gitbucket):**
+**Pre-Creation URLs (Compare URL before PR exists):** Construct from session-init values with mandatory character-match verification:
 
-```
-<gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch-name>
-```
+1. Read `<github.owner>`, `<github.repo>`, `<gitbucket.html_url>` from session init
+2. Construct the URL using those exact values
+3. **Character-match verification:** Confirm the constructed URL contains the exact `<github.owner>` and `<github.repo>` strings from session init (character-for-character match, no typos, no cached values)
+4. If any mismatch: HALT and report
 
-Where `<gitbucket.html_url>` comes from session init (read from `.env`).
+**Post-Creation URLs (PR URL after PR created):** Extract from API response `html_url` field — NEVER construct from template:
 
-**For GitHub (github.platform=github):**
-
-```
-https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>
-```
+- PR URL: Extract from `github_create_pull_request` response `html_url` field
+- Template construction is FORBIDDEN for post-creation URLs
 
 **If <gitbucket.html_url> is empty (not in .env):**
 
@@ -473,12 +471,18 @@ Report to chat (exec summary + URL + AI byline):
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: <gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch-name>
+Compare URL: <Constructed from session-init values per URL Sourcing Rules above — character-match verified>
 
 🤖 <AgentName> (<ModelId>) completed
 ```
 
-(GitBucket example — for GitHub use `https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>`)
+**After a PR has been created**, use the `html_url` from the `github_create_pull_request` API response — NEVER construct the PR URL from template:
+
+```
+PR URL: <html_url from github_create_pull_request API response>
+
+🤖 <AgentName> (<ModelId>) completed
+```
 
 **URL Label Context:**
 
@@ -490,7 +494,7 @@ Compare URL: <gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<bra
 After a PR has been created, the chat output MUST use **"PR URL"** with the `pull/<N>` format — never "Compare URL". Before PR creation, the chat output MUST use **"Compare URL"** with the `compare/dev...` format — never "PR URL". The label and URL format MUST always match the current context:
 
 - **Before PR creation:** "Compare URL" label with `compare/dev...<branch-name>` format
-- **After PR creation:** "PR URL" label with `pull/<PR-number>` format
+- **After PR creation:** "PR URL" label with the `html_url` from `github_create_pull_request` API response — this URL comes from the API response, NOT from template construction
 
 **NEVER use the wrong label for the wrong URL format.** A label-format mismatch (e.g., "Compare URL" with a `pull/N` URL or "PR URL" with a `compare/dev...` URL) is a critical violation.
 
@@ -606,7 +610,7 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 | Executive summary present | Review chat output | First element is `**Summary:**` block | MISSING-ELEMENT → add before proceeding |
 | Outcome present | Review chat output | `**Outcome:**` line follows summary | MISSING-ELEMENT → add before proceeding |
 | URL label context-appropriate | Review chat output | Pre-PR: "Compare URL" with `compare/dev...`; Post-PR: "PR URL" with `pull/N`; label-format mismatch = critical violation | STRUCTURE-VIOLATION → fix label and format to match context |
-| URL present | Review chat output | URL starts with `https://github.com/` or `<gitbucket.html_url>` | MISSING-ELEMENT → generate URL before proceeding |
+| URL present | Review chat output | URL is present and sourced per URL Sourcing Rules (API `html_url` for post-creation, character-match verified construction for pre-creation) | MISSING-ELEMENT → generate URL before proceeding |
 | AI byline present | Review chat output | Ends with `🤖 <AgentName> (<ModelId>)` line | MISSING-ELEMENT → add before proceeding |
 | No URL before summary | Review chat output | URL appears AFTER summary, not before | STRUCTURE-VIOLATION → reorder output |
 | No byline before URL | Review chat output | Byline appears AFTER URL, not before | STRUCTURE-VIOLATION → reorder output |
@@ -622,15 +626,15 @@ After generating the compare URL (Step 3) and before HALT (Step 5), verify ALL e
 
 **Outcome:** <What changed for stakeholders>
 
-Compare URL: https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>
+Compare URL: <Constructed from session-init values — character-match verified per URL Sourcing Rules>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```
 
-**After a PR has been created**, replace "Compare URL" with "PR URL" and use the `pull/N` format:
+**After a PR has been created**, use `html_url` from `github_create_pull_request` API response:
 
 ```
-PR URL: https://github.com/<github.owner>/<github.repo>/pull/<PR-number>
+PR URL: <html_url from github_create_pull_request API response>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```
@@ -711,7 +715,7 @@ Any halt point where the agent reports completion MUST produce this format. Skip
 - ✅ All file changes are committed (`git status` shows clean)
 - ✅ Branch is pushed to remote (`git branch -vv` shows upstream)
 - ✅ Temp files are cleaned (no `./tmp/temp_*.py` or `./tmp/*.json`)
-- ✅ Compare URL generated correctly (using session init base URL + `compare/dev...branch`)
+- ✅ Compare URL generated correctly (character-match verified from session-init values per URL Sourcing Rules)
 - ✅ Chat output format correct (summary BEFORE URL)
 - ✅ Issue comment posted (NO URL in issue comment) → Report to chat only (no issue comment per substantive-only policy)
 - ✅ All verification comparisons use exact-match semantics (per `065-verification-honesty.md` → "Verification Comparison Semantics")
@@ -842,7 +846,7 @@ Updated git-workflow skill to push feature branches after implementation and pro
 
 **Ready for Review:**
 
-<gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch-name>
+<Constructed from session-init values — character-match verified per URL Sourcing Rules>
 
 ---
 🤖 <AgentName> (<ModelId>) completed
