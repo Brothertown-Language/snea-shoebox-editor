@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### spec/1115-reference-verification-mandate
+
+- **References Verification Mandate** (#1115, references #1113) - Added `REFERENCES_VERIFICATION_MANDATE` injection block to session-enforcement plugin, closing the "I already know this" rationalization loophole. Names specific bypass patterns as FORBIDDEN, imposes a self-audit gate requiring tool-call artifacts before claims, and is unconditional with no scope, exemption, size, or qualification bypasses.
+
 ### config/1112-american-english-mandate
 
 - **Southeastern United States English Language Preference** (#1112) - Added language preference block to session-enforcement.ts system prompt injection. All agent communications now default to formal/business/professional Southeastern United States English, balancing Southern politeness conventions with professional clarity.
@@ -115,6 +119,8 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 - **Byline Format Standardization** (#614) - Standardized AI byline format across 23 skill files to consistent `AgentName (ModelID)` pattern.
 
 ### Fixed
+
+- **PEP 723 Script Execute Permissions** (#1116) - Set execute permission (`chmod +x`) on four PEP 723 session scripts that were missing the executable bit: `session_context_identity.py`, `session_context_triggers.py`, and two GitBucket API test scripts (`test_pr_idempotency.py`, `verify_api.py`). Without execute permission, `#!/usr/bin/env -S uv run --script` shebangs were ignored and script invocation failed.
 
 - **Identity Placeholder Cleanup** (#662) - Replaced hardcoded org/user/identity values with typed placeholders across 15+ skill and guideline files.
 - **Brainstorming Terminal State** (#630) - Added spec-creation path to brainstorming skill terminal state so brainstorming flows into spec creation.
