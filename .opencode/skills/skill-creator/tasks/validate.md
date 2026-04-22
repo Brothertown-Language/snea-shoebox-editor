@@ -14,6 +14,8 @@ The second tier is full review, which layers agent-driven semantic analysis on t
 
 The agent begins by running `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py` and collecting the output. This identifies which skills fail mechanical REQ-1/2/3 checks and how. The script output is parsed to build a working list of mechanically-failing skills that need content-level attention in Phase 2. Skills that pass mechanical checks still proceed to Phases 3 through 5 for cross-skill and within-skill semantic analysis.
 
+When using `--json` for programmatic consumption, the JSON array contains objects with fields: `skill_name`, `file_path`, `violation_type`, `rule_id`, `message`, `detail`, `line_approx`.
+
 ## Phase 2: Content and Intent Analysis for Failing Skills
 
 For each skill that failed mechanical validation, the agent reads the full SKILL.md content and understands the skill's purpose, operations, and triggering conditions before writing any corrections. This is not a search-and-replace exercise — each fix must reflect what the skill actually does.

@@ -463,6 +463,17 @@ if [ -f "$SKILL_CARD_SCRIPT" ]; then
         echo "  $line"
         echo "  $line" >> "$RESULTS_FILE"
     done
+    # Verify --fix exits with code 2 (removed mode)
+    FIX_OUTPUT=$(uv run "$SKILL_CARD_SCRIPT" --fix 2>&1) || FIX_RC=$? || FIX_RC=0
+    if [ "${FIX_RC:-0}" -eq 2 ]; then
+        echo "  Skill Card --fix Exit Code: PASS (exit 2)"
+        echo "- **Skill Card --fix Exit Code:** PASS (exit 2)" >> "$RESULTS_FILE"
+    else
+        echo "  Skill Card --fix Exit Code: FAIL (expected 2, got ${FIX_RC:-0})"
+        echo "- **Skill Card --fix Exit Code:** FAIL (expected 2, got ${FIX_RC:-0})" >> "$RESULTS_FILE"
+        SKILL_CARD_PASS=false
+        OVERALL_PASS=false
+    fi
 else
     echo "  Skill Card Validation: SKIP (script not found)"
     echo "- **Skill Card Validation:** SKIP (script not found)" >> "$RESULTS_FILE"
