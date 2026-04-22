@@ -32,6 +32,7 @@ sub_task:
   description: "<what to implement>"
   scope: "<files, modules, functions>"
   boundaries: "<what is OUT of scope>"
+model_context: "<ollama-cloud-model-tag>"
 env_vars:
   worktree.path: "<worktree path>"
   branch: "<branch name>"
@@ -46,6 +47,8 @@ env_vars:
 - `branch` matches the feature branch for this sub-task
 - `depth` is less than `max_depth`
 
+**Model context:** The `model_context` field specifies the Ollama Cloud model for UI sub-agents (e.g., `kimi-k2.6:cloud` for `ui-design`, `glm-5.1:cloud` for `ui-engineer`). Use an empty string for non-UI tasks (default model).
+
 ### Step 2: Spawn Sub-agent
 
 ```python
@@ -56,6 +59,8 @@ Use divide-and-conquer skill with context:
 
 worktree.path: <value>
 If worktree.path is set, all file operations and git commands MUST use it as the base directory.
+
+Model context: <value from model_context field, or "default" if empty>
 
 Sub-task: <description from dispatch context>
 Scope: <scope>

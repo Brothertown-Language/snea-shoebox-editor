@@ -129,12 +129,13 @@ sub_task:
   description: "<what this sub-agent must implement>"
   scope: "<files, modules, functions>"
   boundaries: "<what is OUT of scope>"
+model_context: "<ollama-cloud-model-tag>"
 env_vars:
   worktree.path: "<worktree path>"
   branch: "<branch name>"
   github.owner: "<from-session>"
   github.repo: "<from-session>"
-tdd_phase: "RED|GREEN|REFACTOR|COMMIT"
+  tdd_phase: "RED|GREEN|REFACTOR|COMMIT"
 current_item: "<item name from top-down decomposition>"
 top_down_items: "<list of all items with dependencies>"
   dev.name: "<from-session>"
@@ -291,6 +292,44 @@ This validation gate runs BEFORE the Sub-Agent Completion Checkpoint. The sequen
 4. If both pass: accept result, proceed
 
 If the Result Validation gate triggers FALLBACK and inline succeeds, the Completion Checkpoint is skipped (inline execution produces its own result). If inline fails, the Double-Failure Protocol runs instead.
+
+## UI Sub-Agent Routing
+
+The divide-and-conquer orchestrator delegates UI-related tasks to specialized sub-agent skills based on task characteristics and trigger criteria.
+
+### Trigger Criteria Mapping
+
+| Task Characteristic | Target Skill | Model Context |
+|---|---|---|
+| Wireframe, mockup, visual layout, interaction design | `ui-design` | `kimi-k2.6:cloud` |
+| UI implementation, frontend code, framework component | `ui-engineer` | `glm-5.1:cloud` |
+| Screenshot capture, design review | `ui-design` | `kimi-k2.6:cloud` |
+| Design artifact validation | `ui-design` (review task) | `kimi-k2.6:cloud` |
+| Implementation validation against interaction-spec | `ui-engineer` (validate-impl task) | `glm-5.1:cloud` |
+
+### Three-Tier Trigger Model
+
+1. **Intelligence**: Main agent infers UI delegation from context analysis (spec mentions UI terms, layout descriptions, visual elements, interaction design)
+2. **Keyword-enhanced**: `[UI]` label on issues, `requires-ui: true` in spec frontmatter, `ui-design`/`ui-engineer` in task tags
+3. **Direct instruction**: User explicitly says "use ui-design" or "use ui-engineer" or invokes `/skill ui-design --task wireframe`
+
+### Model Context Assignment
+
+When dispatching to UI sub-agents, the orchestrator sets `model_context` in the Dispatch Context Contract:
+
+- `ui-design` tasks → `model_context: "kimi-k2.6:cloud"`
+- `ui-engineer` tasks → `model_context: "glm-5.1:cloud"`
+- Non-UI tasks → `model_context: ""` (default)
+
+### Parallel Dispatch
+
+UI and non-UI work CAN run concurrently when:
+- No shared file dependencies between UI and non-UI tasks
+- No data flow dependency (UI artifacts needed by non-UI tasks are already produced)
+
+UI sub-agents MUST NOT run concurrently when:
+- Non-UI tasks depend on UI artifacts not yet produced
+- The ui-design and ui-engineer sub-agents have a sequential dependency (ui-engineer consumes ui-design output)
 
 ## Worktree Mode
 
