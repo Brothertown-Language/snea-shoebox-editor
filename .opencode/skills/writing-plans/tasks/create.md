@@ -111,6 +111,8 @@ This prevents the plan from reducing semantic intent back into a checklist. Plan
 
 **TDD step guidance:** Each TDD step that references a spec SC MUST explain why the test checks for the specific exact value, not just what it checks. This is the semantic intent translated into the TDD context.
 
+**RED verification checkpoint (Step 2) requirement:** The RED verification checkpoint is a mandatory gate that MUST appear in every TDD step block. It is not optional and cannot be absorbed into Step 1 or Step 3. Plans without an explicit Step 2 checkpoint will fail validation per `091-incremental-build.md` and will be rejected at plan validation. The checkpoint must specify the tool-call evidence required (e.g., `uv run pytest test/test_file.py::test_name -x` with expected assertion failure output).
+
 4. **Plan phase structure by judgment:**
 
    - Determine which phases the plan needs
@@ -119,7 +121,19 @@ This prevents the plan from reducing semantic intent back into a checklist. Plan
 
 5. **Define tasks within each phase:**
 
-   - Each task uses the TDD step structure
+   Each task uses the TDD step structure with a mandatory RED verification checkpoint:
+
+   ```
+   Task N: [Component Name]
+     Step 1: Write the failing test
+     Step 2: Run test, verify RED ← CHECKPOINT: must produce tool-call evidence of failure
+     Step 3: Write minimal implementation
+     Step 4: Run test, verify GREEN
+     Step 5: Commit
+   ```
+
+   **Step 2 (RED verification checkpoint) is MANDATORY** — plans that omit it will fail validation. The checkpoint requires explicit tool-call evidence that the test fails before implementation begins (e.g., test runner output showing assertion failure, exit code, error message). This is the gate between writing a test and implementing the feature: without RED evidence, there is no proof the test actually tests anything.
+
    - Each step is one action (2-5 minutes)
    - Exact code, exact commands, exact file paths
 

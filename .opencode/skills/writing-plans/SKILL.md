@@ -84,7 +84,7 @@ When combined, the spec issue body has this structure:
 ### Phase 1: [Concern Name]
 #### Task 1: [Component Name]
 - Step 1: Write the failing test
-- Step 2: Run test to verify it fails
+- Step 2: Run test, verify RED ← CHECKPOINT: must produce tool-call evidence of failure
 - Step 3: Write minimal implementation
 - Step 4: Run test to verify it passes
 - Step 5: Commit
@@ -126,13 +126,23 @@ Plans use **phases** (for sub-issue tracking) with **TDD step granularity** with
 Phase 1: [Concern Name]
   Task 1: [Component Name]
     Step 1: Write the failing test
-    Step 2: Run test to verify it fails
+    Step 2: Run test, verify RED ← CHECKPOINT
     Step 3: Write minimal implementation
-    Step 4: Run test to verify it passes
+    Step 4: Run test, verify GREEN
     Step 5: Commit
 ```
 
 Phase-level sections are prose (agent decides content). Task-level steps are TDD-granular with exact code and commands.
+
+### RED Verification Checkpoint (MANDATORY)
+
+The TDD step structure includes an explicit **Step 2: Run test, verify RED ← CHECKPOINT** between writing the test (Step 1) and implementing the feature (Step 3). This checkpoint is MANDATORY:
+
+- **Step 2 must produce tool-call evidence of test failure** — the plan must specify the command to run and the expected failure output (e.g., `uv run pytest test/test_file.py::test_name -x` with assertion failure messages)
+- **Plans that omit Step 2 will fail validation** — the RED verification checkpoint cannot be combined with Step 1 or skipped
+- **Every TDD step block must include Step 2** — no exceptions, no abbreviations that merge Step 1 and Step 2
+
+This requirement enforces the TDD discipline from `091-incremental-build.md`: tests must be proven to fail before implementation begins. Without RED evidence, there is no proof the test actually tests anything.
 
 ### Per-Item Bottom-Up Design (Per `091-incremental-build.md`)
 
@@ -140,7 +150,7 @@ Within each task, the plan MUST specify bottom-up design elements as required by
 
 1. **Classes/modules** — What code components will be created or modified
 2. **Interfaces** — Function signatures, API contracts, data formats
-3. **Test contracts** — What the enforcement test or verification will check before implementation
+3. **Test contracts** — What the enforcement test or verification will check before implementation, including RED verification evidence (the tool call and expected failure output that proves the test fails before implementation)
 
 This bottom-up design per item is part of the TDD cycle: RED (write test) → GREEN (implement) → REFACTOR (clean up) → COMMIT. Each item in the plan MUST follow this cycle.
 
