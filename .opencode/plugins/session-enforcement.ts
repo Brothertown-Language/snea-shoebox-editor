@@ -87,6 +87,28 @@ function buildDiagnosticBlock(diagnostics: PluginDiagnostic[]): string {
     return line;
   }).join("\n");
 
+  const hasErrors = diagnostics.some(d => d.level.toUpperCase() === "ERROR");
+
+  if (hasErrors) {
+    const actions = diagnostics
+      .filter(d => d.level.toUpperCase() === "ERROR")
+      .map(d => `- Investigate and resolve the ${d.source} ERROR before proceeding`)
+      .join("\n");
+
+    return `<PLUGIN_DIAGNOSTICS>
+⚠️ The following plugin diagnostics were collected during session startup:
+
+${entries}
+
+🚫 MUST NOT proceed — ERROR-level diagnostics detected. HALT immediately and resolve these errors.
+
+**MANDATORY ACTIONS:**
+${actions}
+
+Do NOT continue with any operations until ALL ERROR-level diagnostics are resolved.
+</PLUGIN_DIAGNOSTICS>`;
+  }
+
   return `<PLUGIN_DIAGNOSTICS>
 ⚠️ The following plugin diagnostics were collected during session startup:
 
@@ -175,15 +197,20 @@ async function runSessionInit($: PluginInput["$"], projectDir: string): Promise<
     const stdout = result.text();
     const stderr = result.stderr.toString();
 
+    const bunNotFound = result.exitCode !== 0 && /bun: command not found/i.test(stderr);
+
     if (!stdout || stdout.trim().length === 0) {
-      console.error("[session-enforcement] Script returned empty output");
+      const errorMsg = bunNotFound
+        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
+        : "Script returned empty output";
+      console.error(`[session-enforcement] session-init: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session-init",
         level: "error",
-        message: "Script returned empty output",
+        message: errorMsg,
         exitCode: result.exitCode,
       });
-      if (stderr.trim()) {
+      if (stderr.trim() && !bunNotFound) {
         writeDiagnostic(projectDir, {
           source: "session-init",
           level: "error",
@@ -195,11 +222,14 @@ async function runSessionInit($: PluginInput["$"], projectDir: string): Promise<
     }
 
     if (result.exitCode !== 0) {
-      console.error(`[session-enforcement] Script exited with code ${result.exitCode}: ${stderr}`);
+      const errorMsg = bunNotFound
+        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
+        : (stderr.trim() || "Script exited with non-zero code");
+      console.error(`[session-enforcement] session-init exited with code ${result.exitCode}: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session-init",
         level: "error",
-        message: stderr.trim() || "Script exited with non-zero code",
+        message: errorMsg,
         exitCode: result.exitCode,
       });
       return "";
@@ -238,22 +268,37 @@ async function runSessionContextIdentity($: PluginInput["$"], projectDir: string
   }
 
   try {
-    const result = await $.nowrap()`./.opencode/scripts/session_context_identity.py`;
+    const result = await $.nothrow()`./.opencode/scripts/session_context_identity.py`;
     const stdout = result.text();
     const stderr = result.stderr.toString();
 
-    if (result.exitCode !== 0) {
-      console.error(`[session-enforcement] session_context_identity.py exited with code ${result.exitCode}: ${stderr}`);
+    if (!stdout || stdout.trim().length === 0) {
+      const bunNotFound = result.exitCode !== 0 && /bun: command not found/i.test(stderr);
+      const errorMsg = bunNotFound
+        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
+        : (stderr.trim() || "Script returned empty output");
+      console.error(`[session-enforcement] session_context_identity.py: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session_context_identity.py",
         level: "error",
-        message: stderr.trim() || "Script exited with non-zero code",
+        message: errorMsg,
         exitCode: result.exitCode,
       });
       return "";
     }
 
-    if (!stdout || stdout.trim().length === 0) {
+    if (result.exitCode !== 0) {
+      const bunNotFound = /bun: command not found/i.test(stderr);
+      const errorMsg = bunNotFound
+        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
+        : (stderr.trim() || "Script exited with non-zero code");
+      console.error(`[session-enforcement] session_context_identity.py exited with code ${result.exitCode}: ${errorMsg}`);
+      writeDiagnostic(projectDir, {
+        source: "session_context_identity.py",
+        level: "error",
+        message: errorMsg,
+        exitCode: result.exitCode,
+      });
       return "";
     }
 
@@ -294,12 +339,17 @@ async function runSessionContextTriggers($: PluginInput["$"], projectDir: string
     const stdout = result.text();
     const stderr = result.stderr.toString();
 
+    const bunNotFound = result.exitCode !== 0 && /bun: command not found/i.test(stderr);
+
     if (result.exitCode !== 0) {
-      console.error(`[session-enforcement] session_context_triggers.py exited with code ${result.exitCode}: ${stderr}`);
+      const errorMsg = bunNotFound
+        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
+        : (stderr.trim() || "Script exited with non-zero code");
+      console.error(`[session-enforcement] session_context_triggers.py exited with code ${result.exitCode}: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session_context_triggers.py",
         level: "error",
-        message: stderr.trim() || "Script exited with non-zero code",
+        message: errorMsg,
         exitCode: result.exitCode,
       });
       return "";
@@ -970,7 +1020,21 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       }
 
       // --- Identity echo validation on assistant messages ---
-      if (knownPlatform && knownOwner && knownRepo) {
+      if (!knownPlatform || !knownOwner || !knownRepo) {
+        const missing = [
+          !knownPlatform ? "github.platform" : null,
+          !knownOwner ? "github.owner" : null,
+          !knownRepo ? "github.repo" : null,
+        ].filter(Boolean).join(", ");
+
+        const injectTarget = lastUser;
+        if (injectTarget?.parts?.length) {
+          injectTarget.parts.push({
+            type: "text",
+            text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Session identity values are MISSING. HALT all operations immediately.\n\nMissing values: ${missing}\n\nIdentity validation cannot proceed without these values. Do NOT infer identity from repository names, file paths, or environment variables. Resolve the missing identity values before continuing any operations.\n</IDENTITY_VALIDATION_FAILURE>`
+          });
+        }
+      } else {
         const assistantMessages = output.messages.filter(m => m.info?.role === "assistant");
         if (assistantMessages.length > 0) {
           const firstAssistant = assistantMessages[0];
