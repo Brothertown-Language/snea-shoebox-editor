@@ -831,7 +831,7 @@ Fixes #505
 
 **Outcome:** <What changed for stakeholders>
 
-**PR URL:** <gitbucket.html_url><github.owner>/<github.repo>/pull/<number>
+**PR URL:** <html_url from github_create_pull_request API response — NEVER construct from template>
 
 Wait for human to merge.
 ```

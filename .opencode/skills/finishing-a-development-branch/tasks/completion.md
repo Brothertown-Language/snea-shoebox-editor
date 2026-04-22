@@ -46,7 +46,7 @@ Generate executive summary in chat:
 
 **Outcome:** <What stakeholders get — branch is ready/not ready for PR>
 
-Compare URL: <gitbucket.html_url><github.owner>/<github.repo>/compare/dev...<branch>
+Compare URL: <<Character-match verified URL from session-init values per URL Sourcing Rules>>
 ```
 
 URL is ALWAYS last per `000-critical-rules.md`.

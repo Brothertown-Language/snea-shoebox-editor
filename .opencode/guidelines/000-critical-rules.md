@@ -269,7 +269,30 @@ Feature branches target `dev`. Compare URLs: `compare/dev...<branch-name>`. Only
 
 ## Critical Violation: Fabricating URLs — ZERO TOLERANCE
 
-**⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.** All URLs must be constructed from session-enforcement plugin output. No exceptions.
+**⚠️ Generating URLs from memory, guesswork, or hardcoded patterns is a CRITICAL GUIDELINE VIOLATION.** All URLs must be sourced per the two mandatory URL sourcing rules below. No exceptions.
+
+- 🚫 FORBIDDEN: Hard-coding domains; using "known correct" URLs from previous sessions; guessing from git remotes; caching URL bases across sessions; constructing post-creation URLs from template variables
+- ✅ REQUIRED: Follow URL Sourcing Rule 1 and Rule 2 below
+
+### URL Sourcing Rule 1: Post-Creation URLs — Extract from API Response (NEVER construct)
+
+For URLs to resources that have been **created by an API call** (PR URL, Issue URL), the agent MUST extract the `html_url` field from the API response — never construct from template variables.
+
+- **PR URL:** Extract from `github_create_pull_request` response `html_url` field
+- **Issue URL:** Extract from `github_issue_write` response `html_url` field
+- **Template construction is FORBIDDEN** for post-creation URLs
+- The API response is the single source of truth for post-creation URLs
+
+### URL Sourcing Rule 2: Pre-Creation URLs — Construct from Verified Session-Init Values
+
+For URLs to resources that **haven't been created yet** (Compare URL before push), the agent MUST construct from session-init values with a mandatory character-match verification step:
+
+1. Read `<github.owner>`, `<github.repo>`, `<gitbucket.html_url>` from session init
+2. Construct the URL using those exact values
+3. **Character-match verification:** Confirm the constructed URL contains the exact `<github.owner>` and `<github.repo>` strings from session init (character-for-character match, no typos, no cached values)
+4. If any mismatch: HALT and report
+
+### Original Fabricating URLs Rule (superseded by Rule 1 and Rule 2 above)
 
 - 🚫 FORBIDDEN: Hard-coding domains; using "known correct" URLs from previous sessions; guessing from git remotes; caching URL bases across sessions
 - ✅ REQUIRED: Extract `<gitbucket.html_url>` from session init; construct all URLs from that value; HALT if session init missing

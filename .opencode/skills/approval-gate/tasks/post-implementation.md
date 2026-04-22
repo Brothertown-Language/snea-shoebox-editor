@@ -71,11 +71,12 @@ This pushes the branch WITHOUT creating a PR.
 
 ### Step 3: Generate Compare URL
 
-Using session values (<github.owner>, <github.repo>):
+**Pre-Creation URL — Construct from verified session-init values:**
 
-```
-https://github.com/<github.owner>/<github.repo>/compare/dev...<branch-name>
-```
+1. Read `<github.owner>`, `<github.repo>`, `<gitbucket.html_url>` from session init
+2. Construct the Compare URL using those exact values
+3. **Character-match verification:** Confirm the constructed URL contains the exact `<github.owner>` and `<github.repo>` strings from session init (character-for-character match, no typos, no cached values)
+4. If any mismatch: HALT and report
 
 ### Step 4: Report Completion
 
@@ -87,7 +88,15 @@ Report to chat (exec summary + URL):
 
 **Outcome:** <What changed for stakeholders>
 
-https://github.com/<owner>/<repo>/compare/dev...<branch-name>
+Compare URL: <Character-match verified URL from session-init values>
+
+🤖 <AgentName> (<ModelId>) <status>
+```
+
+**If a PR was created during this workflow**, use the `html_url` from the `github_create_pull_request` API response instead of a constructed Compare URL:
+
+```
+PR URL: <html_url from github_create_pull_request API response>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```
