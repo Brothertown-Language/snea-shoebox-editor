@@ -609,8 +609,8 @@ Before doing anything else, you MUST echo your platform identity as your very fi
 Platform: <platform>, Org: <owner>, Repo: <repo>
 🤖 <AgentName> (<ModelId>) <status-icon> <status>
 
-Example: Platform: github, Org: Brothertown-Language, Repo: snea-shoebox-editor
-🤖 OpenCode (ollama-cloud/glm-5) ✅ ready
+Example: Platform: <platform>, Org: <owner>, Repo: <repo>
+🤖 <AgentName> (<ModelId>) <status-icon> <status>
 
 The directive does NOT contain actual values — you MUST read github.platform, github.owner, and github.repo from the system prompt dotted pairs above. This ensures you have read and acknowledged the correct owner/repo before making any API calls.
 
