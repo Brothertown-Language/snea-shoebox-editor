@@ -48,11 +48,13 @@ FILE_OPS_PATTERN = re.compile(
 
 
 class Violation(NamedTuple):
-    req: str
+    violation_type: str
     skill_name: str
-    field: str
+    rule_id: str
     message: str
     detail: str = ""
+    file_path: str = ""
+    line_approx: int | None = None
 
 
 def discover_skill_cards(root: Path) -> list[Path]:
@@ -66,13 +68,13 @@ def parse_frontmatter(content: str) -> tuple[dict[str, str], str, str]:
     if not match:
         return {}, "", content
     fm_text = match.group(1)
-    body = content[match.end():]
+    body = content[match.end() :]
     fields: dict[str, str] = {}
     for line in fm_text.split("\n"):
         colon = line.find(":")
         if colon > 0:
             key = line[:colon].strip()
-            val = line[colon + 1:].strip()
+            val = line[colon + 1 :].strip()
             fields[key] = val
     return fields, fm_text, body
 
@@ -80,43 +82,60 @@ def parse_frontmatter(content: str) -> tuple[dict[str, str], str, str]:
 def skill_name_from_path(p: Path) -> str:
     parts = p.parts
     idx = parts.index("skills")
-    return "/".join(parts[idx + 1:-1])
+    return "/".join(parts[idx + 1 : -1])
 
 
-def validate_req1(name: str, fields: dict[str, str], fm_text: str) -> list[Violation]:
+def validate_req1(name: str, fields: dict[str, str], fm_text: str, file_path: str) -> list[Violation]:
     violations: list[Violation] = []
     if "name" not in fields:
-        violations.append(Violation("REQ-1", name, "name", "Missing 'name' field"))
+        violations.append(Violation("REQ-1", name, "name", "Missing 'name' field", file_path=file_path))
     else:
         val = fields["name"]
         if not re.match(r"^[a-z0-9-]+$", val):
-            violations.append(Violation("REQ-1", name, "name", f"Name '{val}' not hyphen-case", val))
+            violations.append(
+                Violation("REQ-1", name, "name", f"Name '{val}' not hyphen-case", val, file_path=file_path)
+            )
         elif val.startswith("-") or val.endswith("-") or "--" in val:
-            violations.append(Violation("REQ-1", name, "name", f"Name '{val}' has bad hyphens", val))
+            violations.append(
+                Violation("REQ-1", name, "name", f"Name '{val}' has bad hyphens", val, file_path=file_path)
+            )
     if "description" not in fields:
-        violations.append(Violation("REQ-1", name, "description", "Missing 'description' field"))
+        violations.append(Violation("REQ-1", name, "description", "Missing 'description' field", file_path=file_path))
     else:
         desc = fields["description"]
         if not desc.startswith("Use when"):
             violations.append(
-                Violation("REQ-1", name, "description", "Description doesn't start with 'Use when'", desc[:60])
+                Violation(
+                    "REQ-1",
+                    name,
+                    "description",
+                    "Description doesn't start with 'Use when'",
+                    desc[:60],
+                    file_path=file_path,
+                )
             )
         if "<" in desc or ">" in desc:
             violations.append(
-                Violation("REQ-1", name, "description", "Description contains angle brackets", desc[:60])
+                Violation(
+                    "REQ-1", name, "description", "Description contains angle brackets", desc[:60], file_path=file_path
+                )
             )
     if "type" not in fields:
-        violations.append(Violation("REQ-1", name, "type", "Missing 'type' field"))
+        violations.append(Violation("REQ-1", name, "type", "Missing 'type' field", file_path=file_path))
     elif fields["type"] not in VALID_TYPES:
-        violations.append(Violation("REQ-1", name, "type", f"Invalid type '{fields['type']}'", fields["type"]))
+        violations.append(
+            Violation("REQ-1", name, "type", f"Invalid type '{fields['type']}'", fields["type"], file_path=file_path)
+        )
     if "license" not in fields:
-        violations.append(Violation("REQ-1", name, "license", "Missing 'license' field"))
+        violations.append(Violation("REQ-1", name, "license", "Missing 'license' field", file_path=file_path))
     if "compatibility" not in fields:
-        violations.append(Violation("REQ-1", name, "compatibility", "Missing 'compatibility' field"))
+        violations.append(
+            Violation("REQ-1", name, "compatibility", "Missing 'compatibility' field", file_path=file_path)
+        )
     return violations
 
 
-def validate_req2(name: str, content: str) -> list[Violation]:
+def validate_req2(name: str, content: str, file_path: str) -> list[Violation]:
     violations: list[Violation] = []
     content_no_code = CODE_BLOCK_RE.sub("", content)
     lines_no_code = content_no_code.split("\n")
@@ -132,23 +151,30 @@ def validate_req2(name: str, content: str) -> list[Violation]:
             for m in pattern.finditer(line):
                 violations.append(
                     Violation(
-                        "REQ-2", name, "placeholder",
+                        "REQ-2",
+                        name,
+                        "placeholder",
                         f"Hardcoded {label}: '{m.group()}' — use {placeholder}",
                         f"line~{i + 1}",
+                        file_path,
+                        i + 1,
                     )
                 )
     return violations
 
 
-def validate_req3(name: str, body: str) -> list[Violation]:
+def validate_req3(name: str, body: str, file_path: str) -> list[Violation]:
     violations: list[Violation] = []
     if WORKTREE_MODE_HEADING_RE.search(body):
         return violations
     if FILE_OPS_PATTERN.search(body):
         violations.append(
             Violation(
-                "REQ-3", name, "worktree-mode",
+                "REQ-3",
+                name,
+                "worktree-mode",
                 "Missing 'Worktree Mode' section (skill contains bash/git/file operations)",
+                file_path=file_path,
             )
         )
     return violations
@@ -156,34 +182,31 @@ def validate_req3(name: str, body: str) -> list[Violation]:
 
 def validate_card(card_path: Path, root: Path) -> list[Violation]:
     name = skill_name_from_path(card_path.relative_to(root))
+    rel_path = str(card_path.relative_to(root))
     content = card_path.read_text(encoding="utf-8")
     fields, fm_text, body = parse_frontmatter(content)
     violations: list[Violation] = []
     if not content.startswith("---"):
-        violations.append(Violation("REQ-1", name, "frontmatter", "No YAML frontmatter found"))
+        violations.append(Violation("REQ-1", name, "frontmatter", "No YAML frontmatter found", file_path=rel_path))
         return violations
     if not fields:
-        violations.append(Violation("REQ-1", name, "frontmatter", "Invalid frontmatter format"))
+        violations.append(Violation("REQ-1", name, "frontmatter", "Invalid frontmatter format", file_path=rel_path))
         return violations
-    violations.extend(validate_req1(name, fields, fm_text))
-    violations.extend(validate_req2(name, content))
-    violations.extend(validate_req3(name, body))
+    violations.extend(validate_req1(name, fields, fm_text, rel_path))
+    violations.extend(validate_req2(name, content, rel_path))
+    violations.extend(validate_req3(name, body, rel_path))
     return violations
-
-
-def extract_line(detail: str) -> int | None:
-    match = re.search(r"line~(\d+)", detail)
-    return int(match.group(1)) if match else None
 
 
 def violation_to_dict(v: Violation) -> dict:
     return {
-        "skill": v.skill_name,
-        "req": v.req,
-        "field": v.field,
+        "skill_name": v.skill_name,
+        "file_path": v.file_path,
+        "violation_type": v.violation_type,
+        "rule_id": v.rule_id,
         "message": v.message,
         "detail": v.detail,
-        "line": extract_line(v.detail),
+        "line_approx": v.line_approx,
     }
 
 
@@ -194,7 +217,7 @@ def main() -> int:
             "Use the skill-creator validate task for semantic review and correction.\n"
             "Invoke: /skill skill-creator --task validate"
         )
-        return 1
+        return 2
     json_mode = "--json" in sys.argv
     root = Path.cwd()
     cards = discover_skill_cards(root)
@@ -221,7 +244,7 @@ def main() -> int:
         if violations:
             print(f"FAIL  {name}")
             for v in violations:
-                print(f"  [{v.req}] {v.field}: {v.message}")
+                print(f"  [{v.violation_type}] {v.rule_id}: {v.message}")
                 if v.detail:
                     print(f"         detail: {v.detail}")
         else:

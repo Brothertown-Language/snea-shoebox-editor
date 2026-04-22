@@ -1,6 +1,6 @@
 ---
 name: skill-creator
-description: Use when creating a new skill or updating an existing skill that extends AI capabilities with specialized knowledge, workflows, or tool integrations. Triggers on: new skill, update skill, create skill, skill template, skill structure, SKILL.md.
+description: Use when creating a new skill, updating an existing skill, or validating skill cards. Triggers on: new skill, update skill, create skill, skill template, skill structure, SKILL.md, validate skill cards, review skills, skill card review.
 license: Apache-2.0
 compatibility: opencode
 type: technique
@@ -25,10 +25,12 @@ Creating skills IS Test-Driven Development applied to process documentation. Wri
 ## Invocation
 
 - `/skill skill-creator` - Overview and skill creation process
+- `/skill skill-creator --task validate` - Agent-driven semantic review of all skill cards (script sensor + intelligent corrections, conflict/ambiguity detection)
 - `./.opencode/skills/skill-creator/scripts/init_skill.py <skill-name> --path <output-directory>` - Initialize new skill
 - `./.opencode/skills/skill-creator/scripts/package_skill.py <skill-folder> [output-dir]` - Package skill
-- `./.opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Validate skill
-- `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py --json` - Validate with JSON output for programmatic consumption
+- `./.opencode/skills/skill-creator/scripts/quick_validate.py <skill-folder>` - Quick single-skill frontmatter check
+- `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py` - Mechanical REQ-1/2/3 validation across all skills (sensor only)
+- `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py --json` - Mechanical validation with JSON output for programmatic consumption
 
 ## Skill Type Taxonomy
 
