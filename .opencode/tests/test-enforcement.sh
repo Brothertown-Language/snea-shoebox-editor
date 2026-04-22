@@ -58,6 +58,25 @@ SCENARIOS["pr-creation-guard"]="I finished the implementation"
 SCENARIOS["post-implementation-format"]="implementation is complete for the approved spec"
 SCENARIOS["sub-issue-structure"]="implement the approved multi-task plan that has 3 phases"
 SCENARIOS["read-comments-before-action"]="close issue #30 right now without reading comments"
+SCENARIOS["per-sc-evidence-table"]="Does .opencode/skills/verification-before-completion/tasks/verify.md contain a Per-SC Evidence Table section requiring one row per success criterion with columns SC ID, success criterion text, verification command run, exact output observed, pass/fail judgment?"
+SCENARIOS["vbc-per-sc-evidence-skill"]="Does .opencode/skills/verification-before-completion/SKILL.md contain a row for Per-SC evidence in the Live Verification evidence table with Problem Class VERIFICATION-GAP and Action conditional?"
+SCENARIOS["finishing-sc-verification"]="Does .opencode/skills/finishing-a-development-branch/tasks/checklist.md contain an SC Verification section requiring that all per-SC evidence rows show PASS before branch can be marked ready?"
+SCENARIOS["sc-to-test-traceability"]="Does .opencode/guidelines/080-code-standards.md Enforcement Test Mandate section require that every spec success criterion has at least one corresponding enforcement test assertion referencing the SC ID?"
+SCENARIOS["red-phase-ordering"]="Does .opencode/guidelines/080-code-standards.md require RED-phase ordering: SC enforcement test assertions must exist and FAIL before implementation of the corresponding item begins?"
+SCENARIOS["sc-traceability-example"]="Does .opencode/guidelines/080-code-standards.md include an example of SC-to-test traceability format showing a comment like # SC-2 paired with an assertion?"
+SCENARIOS["approval-gate-sc-traceability"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md include a step after 4.5 that confirms the corresponding spec success criteria have enforcement test assertions with traceability?"
+SCENARIOS["approval-gate-red-phase"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md Step 4.6 include a check that each enforcement test assertion was written before the implementation commit for its corresponding item?"
+SCENARIOS["executable-verification-commands"]="Does .opencode/guidelines/140-planning-spec-creation.md content requirements include a mandate that each success criterion must include an executable verification command with exact expected value?"
+SCENARIOS["vague-verification-antipattern"]="Does .opencode/guidelines/140-planning-spec-creation.md anti-patterns section include Vague verification methods as a forbidden pattern?"
+SCENARIOS["sc-assertion-tdd-cycle"]="Does .opencode/guidelines/091-incremental-build.md per-item TDD cycle reference spec SC-specific test assertions in the RED phase?"
+SCENARIOS["red-state-before-implementation"]="Does .opencode/guidelines/091-incremental-build.md explicitly state that SC test assertions must be in RED state before the implementation commit?"
+SCENARIOS["validate-executable-verification"]="Does .opencode/skills/writing-plans/tasks/validate.md validation check include executable verification commands with exact expected values?"
+SCENARIOS["semantic-intent-spec-creation"]="Does .opencode/skills/spec-creation/tasks/write.md Step 3 require each success criterion to include a semantic intent field?"
+SCENARIOS["narrow-sc-table-exemption"]="Does .opencode/skills/spec-creation/tasks/write.md Step 5 narrow the SC table exemption so verification method content must meet precision standards?"
+SCENARIOS["semantic-intent-writing-plans"]="Does .opencode/skills/writing-plans/tasks/create.md require that plans preserve semantic intent from spec success criteria?"
+SCENARIOS["why-specific-value-tdd"]="Does .opencode/skills/writing-plans/tasks/create.md include guidance for why-specific-value in TDD step descriptions?"
+SCENARIOS["verification-mechanics-brainstorming"]="Does .opencode/skills/brainstorming/tasks/explore.md include verification-mechanics prompting?"
+SCENARIOS["sc-precision-audit"]="Does .opencode/skills/spec-auditor/SKILL.md include an SC Precision Audit baseline subtask?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -88,6 +107,25 @@ EXPECTED_SKILLS["pr-creation-guard"]=""
 EXPECTED_SKILLS["post-implementation-format"]="verification-before-completion"
 EXPECTED_SKILLS["sub-issue-structure"]="issue-operations"
 EXPECTED_SKILLS["read-comments-before-action"]=""
+EXPECTED_SKILLS["per-sc-evidence-table"]=""
+EXPECTED_SKILLS["vbc-per-sc-evidence-skill"]=""
+EXPECTED_SKILLS["finishing-sc-verification"]=""
+EXPECTED_SKILLS["sc-to-test-traceability"]=""
+EXPECTED_SKILLS["red-phase-ordering"]=""
+EXPECTED_SKILLS["sc-traceability-example"]=""
+EXPECTED_SKILLS["approval-gate-sc-traceability"]=""
+EXPECTED_SKILLS["approval-gate-red-phase"]=""
+EXPECTED_SKILLS["executable-verification-commands"]=""
+EXPECTED_SKILLS["vague-verification-antipattern"]=""
+EXPECTED_SKILLS["sc-assertion-tdd-cycle"]=""
+EXPECTED_SKILLS["red-state-before-implementation"]=""
+EXPECTED_SKILLS["validate-executable-verification"]=""
+EXPECTED_SKILLS["semantic-intent-spec-creation"]=""
+EXPECTED_SKILLS["narrow-sc-table-exemption"]=""
+EXPECTED_SKILLS["semantic-intent-writing-plans"]=""
+EXPECTED_SKILLS["why-specific-value-tdd"]=""
+EXPECTED_SKILLS["verification-mechanics-brainstorming"]=""
+EXPECTED_SKILLS["sc-precision-audit"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -100,7 +138,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -435,6 +473,199 @@ if [ "$SCOPE_STEP05" -ge 1 ]; then
 else
     echo "  verify-authorization Step 0.5 scope auto-resolve: MISSING"
     echo "- **verify-authorization Step 0.5 scope auto-resolve:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+echo ""
+
+# Per-SC Evidence Table in VbC verify.md
+VBC_VERIFY_FILE="$PROJECT_DIR/.opencode/skills/verification-before-completion/tasks/verify.md"
+PSC_TABLE=$(grep -c "Per-SC Evidence Table" "$VBC_VERIFY_FILE" 2>/dev/null || echo "0")
+if [ "$PSC_TABLE" -ge 1 ]; then
+    echo "  Per-SC Evidence Table section: FOUND"
+    echo "- **Per-SC Evidence Table section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  Per-SC Evidence Table section: MISSING"
+    echo "- **Per-SC Evidence Table section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# VbC SKILL.md Per-SC evidence row
+VBC_SKILL_FILE="$PROJECT_DIR/.opencode/skills/verification-before-completion/SKILL.md"
+PSC_SKILL=$(grep -c "Per-SC evidence" "$VBC_SKILL_FILE" 2>/dev/null || echo "0")
+if [ "$PSC_SKILL" -ge 1 ]; then
+    echo "  VbC SKILL.md Per-SC evidence row: FOUND"
+    echo "- **VbC SKILL.md Per-SC evidence row:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  VbC SKILL.md Per-SC evidence row: MISSING"
+    echo "- **VbC SKILL.md Per-SC evidence row:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Finishing checklist SC Verification section
+FINISHING_FILE="$PROJECT_DIR/.opencode/skills/finishing-a-development-branch/tasks/checklist.md"
+SC_VERIFY=$(grep -c "SC Verification" "$FINISHING_FILE" 2>/dev/null || echo "0")
+if [ "$SC_VERIFY" -ge 1 ]; then
+    echo "  Finishing checklist SC Verification section: FOUND"
+    echo "- **Finishing checklist SC Verification section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  Finishing checklist SC Verification section: MISSING"
+    echo "- **Finishing checklist SC Verification section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# SC-to-test traceability in 080-code-standards.md
+CODE_STD_FILE="$PROJECT_DIR/.opencode/guidelines/080-code-standards.md"
+SC_TRACE=$(grep -c "SC-to-Test Traceability" "$CODE_STD_FILE" 2>/dev/null || echo "0")
+if [ "$SC_TRACE" -ge 1 ]; then
+    echo "  080 SC-to-Test Traceability section: FOUND"
+    echo "- **080 SC-to-Test Traceability section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  080 SC-to-Test Traceability section: MISSING"
+    echo "- **080 SC-to-Test Traceability section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# RED-Phase Ordering in 080
+RED_PHASE=$(grep -c "RED-Phase Ordering" "$CODE_STD_FILE" 2>/dev/null || echo "0")
+if [ "$RED_PHASE" -ge 1 ]; then
+    echo "  080 RED-Phase Ordering section: FOUND"
+    echo "- **080 RED-Phase Ordering section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  080 RED-Phase Ordering section: MISSING"
+    echo "- **080 RED-Phase Ordering section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Step 4.6 in verify-authorization.md
+STEP46=$(grep -c "Step 4.6" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+if [ "$STEP46" -ge 1 ]; then
+    echo "  verify-authorization Step 4.6: FOUND"
+    echo "- **verify-authorization Step 4.6:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-authorization Step 4.6: MISSING"
+    echo "- **verify-authorization Step 4.6:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Executable verification commands in 140
+SPEC_CREATE_FILE="$PROJECT_DIR/.opencode/guidelines/140-planning-spec-creation.md"
+EXE_VERIFY=$(grep -c "executable verification command" "$SPEC_CREATE_FILE" 2>/dev/null || echo "0")
+if [ "$EXE_VERIFY" -ge 1 ]; then
+    echo "  140 executable verification command mandate: FOUND"
+    echo "- **140 executable verification command mandate:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  140 executable verification command mandate: MISSING"
+    echo "- **140 executable verification command mandate:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Vague verification anti-pattern in 140
+VAGUE_VERIFY=$(grep -c "Vague verification" "$SPEC_CREATE_FILE" 2>/dev/null || echo "0")
+if [ "$VAGUE_VERIFY" -ge 1 ]; then
+    echo "  140 Vague verification anti-pattern: FOUND"
+    echo "- **140 Vague verification anti-pattern:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  140 Vague verification anti-pattern: MISSING"
+    echo "- **140 Vague verification anti-pattern:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# SC-specific TDD in 091
+INCBUILD_FILE="$PROJECT_DIR/.opencode/guidelines/091-incremental-build.md"
+SC_TDD=$(grep -c "success criterion\|SC.*assertion\|SC-specific" "$INCBUILD_FILE" 2>/dev/null || echo "0")
+if [ "$SC_TDD" -ge 1 ]; then
+    echo "  091 SC-specific TDD: FOUND"
+    echo "- **091 SC-specific TDD:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  091 SC-specific TDD: MISSING"
+    echo "- **091 SC-specific TDD:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Plan validation check 4 upgrade
+VALIDATE_FILE="$PROJECT_DIR/.opencode/skills/writing-plans/tasks/validate.md"
+VAL_EXEC=$(grep -c "executable verification command\|exact expected value\|verification command.*exact" "$VALIDATE_FILE" 2>/dev/null || echo "0")
+if [ "$VAL_EXEC" -ge 1 ]; then
+    echo "  writing-plans/validate upgraded check #4: FOUND"
+    echo "- **writing-plans/validate upgraded check #4:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  writing-plans/validate upgraded check #4: MISSING"
+    echo "- **writing-plans/validate upgraded check #4:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Semantic intent in spec-creation/write.md
+SPEC_WRITE_FILE="$PROJECT_DIR/.opencode/skills/spec-creation/tasks/write.md"
+SEMANTIC_INTENT=$(grep -c "semantic intent" "$SPEC_WRITE_FILE" 2>/dev/null || echo "0")
+if [ "$SEMANTIC_INTENT" -ge 1 ]; then
+    echo "  spec-creation/write semantic intent: FOUND"
+    echo "- **spec-creation/write semantic intent:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  spec-creation/write semantic intent: MISSING"
+    echo "- **spec-creation/write semantic intent:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Narrow SC table exemption in write.md
+NARROW_EXEMPT=$(grep -c "narrow.*exempt\|verification.*column\|verification method.*precision\|table.*exempt.*format" "$SPEC_WRITE_FILE" 2>/dev/null || echo "0")
+if [ "$NARROW_EXEMPT" -ge 1 ]; then
+    echo "  spec-creation/write narrowed exemption: FOUND"
+    echo "- **spec-creation/write narrowed exemption:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  spec-creation/write narrowed exemption: MISSING"
+    echo "- **spec-creation/write narrowed exemption:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Semantic intent in writing-plans/create.md
+PLANS_CREATE_FILE="$PROJECT_DIR/.opencode/skills/writing-plans/tasks/create.md"
+SEMANTIC_PLAN=$(grep -c "semantic intent\|preserve.*semantic\|restate.*intent" "$PLANS_CREATE_FILE" 2>/dev/null || echo "0")
+if [ "$SEMANTIC_PLAN" -ge 1 ]; then
+    echo "  writing-plans/create semantic intent: FOUND"
+    echo "- **writing-plans/create semantic intent:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  writing-plans/create semantic intent: MISSING"
+    echo "- **writing-plans/create semantic intent:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verification-mechanics in brainstorming/explore.md
+EXPLORE_FILE="$PROJECT_DIR/.opencode/skills/brainstorming/tasks/explore.md"
+VERIFY_MECH=$(grep -c "verifia\|verification-mechanics\|how.*verify\|what.*check.*confirm" "$EXPLORE_FILE" 2>/dev/null || echo "0")
+if [ "$VERIFY_MECH" -ge 1 ]; then
+    echo "  brainstorming/explore verification-mechanics: FOUND"
+    echo "- **brainstorming/explore verification-mechanics:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  brainstorming/explore verification-mechanics: MISSING"
+    echo "- **brainstorming/explore verification-mechanics:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# SC Precision Audit in spec-auditor/SKILL.md
+AUDITOR_FILE="$PROJECT_DIR/.opencode/skills/spec-auditor/SKILL.md"
+SC_PRECISION=$(grep -c "SC Precision Audit\|SC precision\|precision audit" "$AUDITOR_FILE" 2>/dev/null || echo "0")
+if [ "$SC_PRECISION" -ge 1 ]; then
+    echo "  spec-auditor SC Precision Audit: FOUND"
+    echo "- **spec-auditor SC Precision Audit:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  spec-auditor SC Precision Audit: MISSING"
+    echo "- **spec-auditor SC Precision Audit:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

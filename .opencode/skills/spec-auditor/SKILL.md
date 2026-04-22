@@ -44,6 +44,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 | `decomposition` | Flag specs meeting 2+ of 5 criteria for splitting into independent specs | ≈350 |
 | `cross-spec-overlap` | Detect overlap between spec and other open specs/plans via file, symbol, and concern comparison | ≈350 |
 | `cross-spec-overlap` | Detect overlap between spec and other open specs/plans | ≈350 |
+| `sc-precision` | SC Precision Audit — verify executable verification commands, semantic intent, no vague methods | ≈350 |
 | `completion` | Ensure mandatory terminal-state dispatch occurred; remediate if not; report status | ≈200 |
 
 ## Invocation
@@ -62,6 +63,7 @@ You are a Content-Aware Audit Orchestrator. Your focus is determining document t
 - `/skill spec-auditor --issue N --task prose-structure` — Anti-prose drift checks only
 - `/skill spec-auditor --issue N --task decomposition` — Decomposition heuristic check only
 - `/skill spec-auditor --issue N --task cross-spec-overlap` — Cross-spec overlap detection only
+- `/skill spec-auditor --issue N --task sc-precision` — SC precision checks only
 - `/skill spec-auditor --task completion` — Invoke when workflow halts at any point
 - `/skill spec-auditor --file path --type plan` — Audit with manual type override
 - `/skill spec-auditor --url URL --type runbook` — Audit with manual type override
@@ -116,7 +118,7 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
     | Document Type | Baseline Subtasks | Conditional Subtasks |
     |---------------|-------------------|---------------------|
- | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition`, `cross-spec-overlap` |
+ | Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles`, `sc-precision` | `content-quality`, `traceability`, `operational`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition`, `cross-spec-overlap` |
        | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | `content-quality`, `concerns`, `sub-issue-fidelity`, `concern-coverage`, `prose-structure`, `decomposition`, `cross-spec-overlap` |
     | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism` |
     | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | `operational-flow`, `determinism`, `error-recovery` |
@@ -147,7 +149,7 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 | Document Type | Baseline Subtasks | Why These |
 |---------------|-------------------|-----------|
-| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, and principle-compliant |
+| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles`, `sc-precision` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, principle-compliant, and have precise SCs with executable verification commands and semantic intent |
 | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | Plans need self-containment, structure, metadata verification, and principle compliance; `fidelity` applies only to specs |
 | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Flows need self-containment, adapted structure checks, metadata verification, and principle compliance |
 | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Runbooks need self-containment, adapted structure checks, metadata verification, and principle compliance |
@@ -187,6 +189,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | ERROR-RECOVERY-GAP | Add prerequisites, scope, escalation, and version stub sections | Standard boilerplate for runbooks; developer fills in |
 | SRP_VIOLATION (phase rename) | Rename phase/step to describe the single specific responsibility | Specific responsibility names are always better than generic ones |
 | ANTI-PROSE-DRIFT | Rewrite rigid structure as flowing prose | Prose is always more readable than mechanical enumeration where narrative is expected; conversion is mechanical |
+| MISSING-SEMANTIC-INTENT | Add semantic intent where the intent is unambiguous from context (e.g., exit code categories, field name semantics) | Semantic intent for criteria where the distinction is clear from the criterion text is safe to add; ambiguous distinctions are flagged |
 | PLAN-BLEED | Replace code/DDL with requirements table; note moved content for plan | Spec boundary is always correct; HOW belongs in the plan, not the spec |
 | GROUND-TRUTH-MISMATCH (STATUS) | Update STATUS marker to reflect actual content maturity (prose or numeric format, matching the document's convention) | STATUS is metadata, not content; correcting it removes false tracking |
 | GROUND-TRUTH-MISMATCH (auth superseded) | Add re-approval note to document body | Revision revokes approval is a mandatory rule; noting it is mechanical |
@@ -204,6 +207,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | DECOMPOSITION-CANDIDATE | Verify decomposition preserves all requirements and dependencies | Splitting a spec requires domain judgment about priorities and coupling |
 | GROUND-TRUTH-MISMATCH (stale label) | Verify auth scope covers current document before removing label | Removing label without confirming auth scope could misrepresent approval state |
 | GROUND-TRUTH-MISMATCH (already-implemented) | Verify ALL success criteria are satisfied in the codebase with independent evidence for each criterion; partial implementation does NOT qualify | Closing an issue requires confirming every criterion is met; missing evidence downgrades to flag-for-review |
+| VAGUE-VERIFICATION | Exact expected value is inferable from criterion text but not explicitly stated | Rewriting with executable command requires confirming the inferred exact value is correct |
 
 **Flag-for-review findings:**
 
@@ -233,6 +237,7 @@ This is a v3 core principle. Previous versions (v2) were report-only — finding
 | CONCERN_BOUNDARY_CROSSED | Cross-boundary tasks may reflect legitimate dependencies |
 | CROSS-SPEC-OVERLAP | Shared files/symbols with different core concerns require developer judgment about resolution |
 | CROSS-SPEC-OVERLAP (CONFLICT-RISK) | Same files modified with conflicting intent require developer judgment |
+| VAGUE-VERIFICATION-AMBIGUOUS | The semantic distinction between the specified value and a similar value is unclear and requires developer judgment | Agent cannot determine the correct exact expected value without domain context |
 
 **Reporting format (v3 — includes Classification and Fix Action):**
 ```
@@ -274,6 +279,7 @@ spec-auditor (orchestrator)
 └── prose-structure.md      — Anti-prose drift detection (NEW)
 └── decomposition.md       — Decomposition heuristic: flag specs that should be split (NEW)
 └── cross-spec-overlap.md  — Cross-spec overlap detection: compare file/symbol/concern boundaries (NEW)
+└── sc-precision.md     — SC Precision Audit: verify executable verification commands, semantic intent, no vague methods (NEW)
 ```
 
 Each subtask is loaded via `--task` and produces findings in the report format above.
@@ -326,6 +332,9 @@ Existing classes remain, plus additions noted with `(NEW)`:
 | **CROSS-SPEC-OVERLAP** | Overlap detected between this spec and one or more other open specs/plans (PARTIAL-OVERLAP or CONFLICT-RISK) (from cross-spec-overlap) |
 | **FULL-SUPERSESSION** | Another open spec entirely covers this spec's scope; propose superseding (from cross-spec-overlap) |
 | **ANTI-PROSE-DRIFT** | Rigid enumeration, tabular mapping, or fixed checklist where flowing prose is expected (from prose-structure) |
+| **VAGUE-VERIFICATION** | Success criterion uses vague verification method ("check exit code" without specifying expected code) (NEW) |
+| **MISSING-SEMANTIC-INTENT** | Success criterion lacks semantic intent field explaining why the exact value matters (NEW) |
+| **VAGUE-VERIFICATION-AMBIGUOUS** | The semantic distinction between the specified value and a similar value is unclear and requires developer judgment (NEW) |
 
 ## Audit Findings Handling
 
@@ -483,6 +492,7 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 | `prose-structure` | ≈250 |
 | `decomposition` | ≈350 |
 | `cross-spec-overlap` | ≈350 |
+| `sc-precision` | ≈350 |
 | `fresh-start` | ≈400 |
 | `completion` | ≈200 |
 
@@ -557,6 +567,7 @@ This skill is a **heavy skill** — quality audits with all subtasks consume sig
 | Task table entry `prose-structure` | File exists at `.opencode/skills/spec-auditor/tasks/prose-structure.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `decomposition` | File exists at `.opencode/skills/spec-auditor/tasks/decomposition.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `cross-spec-overlap` | File exists at `.opencode/skills/spec-auditor/tasks/cross-spec-overlap.md` | MISSING-TRACEABILITY if missing |
+| Task table entry `sc-precision` | File exists at `.opencode/skills/spec-auditor/tasks/sc-precision.md` | MISSING-TRACEABILITY if missing |
 | Task table entry `completion` | File exists at `.opencode/skills/spec-auditor/tasks/completion.md` | MISSING-TRACEABILITY if missing |
 | Described behavior of `issue-review` | Matches actual SKILL.md: `audit` task delegates to spec-auditor | CONFLICTING if mismatched |
 | Described behavior of `writing-plans` | Matches actual SKILL.md: `clean-room` task generates plans | CONFLICTING if mismatched |

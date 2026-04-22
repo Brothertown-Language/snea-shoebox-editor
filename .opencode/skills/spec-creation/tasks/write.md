@@ -38,6 +38,7 @@ Skip areas that don't apply to simple specs; add areas that do. The spec should 
 ### Step 2: Eliminate Ambiguity (Principle #4)
 
 Review every requirement statement:
+
 - Replace vague terms with measurable, testable statements
 - Replace "should" with "MUST", "SHALL", or "MAY"
 - Replace "fast" with specific thresholds
@@ -47,10 +48,12 @@ Review every requirement statement:
 ### Step 3: Define Acceptance Criteria (Principle #6)
 
 For each feature/requirement:
+
 - Binary pass/fail criteria (NOT subjective)
 - Edge case coverage
 - Negative test cases (what must NOT happen)
 - Integration test expectations
+- **Semantic intent field** — Each success criterion MUST include a brief prose annotation explaining WHY the exact criterion value matters and what semantic distinction it represents. This prevents substituting functionally similar values. Example: "Exit code 2 specifically signals removal of a feature, distinct from exit code 1 which signals a validation failure — these are different error categories for different consumer behaviors." Without semantic intent, an SC is a checklist — it verifies that something happened, but not that the right thing happened for the right reason.
 
 ### Step 4: Structure the Deliverable (Principle #10)
 
@@ -69,7 +72,7 @@ Review the assembled spec for plan-level content that belongs in the implementat
 **Replacement rules:**
 
 | Plan-Level Content (remove) | Spec-Level Replacement |
-|------------------------------|------------------------|
+| -- | -- |
 | Function/class definitions with code | Function names + responsibilities table |
 | SQL DDL statements (`CREATE TABLE...`) | Table names + constraints table |
 | Implementation algorithms with step-by-step logic | Input/output contract (what goes in, what comes out) |
@@ -89,14 +92,16 @@ After writing the spec, review with fresh eyes:
 
 Fix any issues inline. No need to re-review — just fix and move on.
 
-**Prose-structure check:** After checking for placeholders, consistency, scope, and ambiguity, verify that the spec body is prose-first. Rigid numbered procedures where flowing prose would serve better, tabular mappings that should be prose descriptions, and fixed checklists that have replaced narrative should be flagged and rewritten. Success criteria checklists and affected file tables are exempt from this check as they are naturally structured content. The spec should read as a coherent narrative document, not as a mechanical checklist.
+**Prose-structure check:** After checking for placeholders, consistency, scope, and ambiguity, verify that the spec body is prose-first. Rigid numbered procedures where flowing prose would serve better, tabular mappings that should be prose descriptions, and fixed checklists that have replaced narrative should be flagged and rewritten. Success criteria table FORMAT and affected file tables are exempt from this check as they are naturally structured content. However, the VERIFICATION METHOD CONTENT within SC table columns must meet the same precision standards as prose — a verification method that says "check exit code" is no more acceptable inside a table cell than it would be in a paragraph.
+
+**SC Verification Column Precision Sub-Check:** Scan the Verification column of every SC table for vague verification methods (describes what to check without specifying exact expected value). Flag each vague entry as a STRUCTURE-VIOLATION requiring rewrite with an executable verification command per `140-planning-spec-creation.md` Executable Verification Commands mandate. The spec should read as a coherent narrative document, not as a mechanical checklist.
 
 ### Step 5.5: Evidence Artifact Verification (MANDATORY)
 
 **🚫 CRITICAL: Each self-review checkpoint MUST produce a tool-call artifact demonstrating the verification was performed. Assertions without tool-call evidence are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
 
 | Checkpoint | Verification Action | Tool Call | Problem Class |
-|------------|-------------------|-----------|---------------|
+| -- | -- | -- | -- |
 | No placeholders remain | Verify spec body contains no "TBD", "TODO", "FIXME", or incomplete section markers | `github_issue_read(method=get, issue_number=N)` → search body for `/TBD\|TODO\|FIXME/` | STRUCTURE-VIOLATION |
 | Internal consistency | Cross-reference requirement IDs between sections; verify no contradictions | `github_issue_read(method=get)` → parse section anchors vs referenced IDs | CONFLICTING |
 | Scope check evidence | Verify scope is appropriate for single plan or flagged for decomposition | `github_issue_read(method=get)` → count affected files, check for phase markers | VERIFICATION-GAP |
@@ -148,6 +153,7 @@ Invoke `issue-operations` skill to persist the spec as a GitHub Issue:
 ```
 
 **🚫 NEVER:**
+
 - Dump full spec content to chat as the "review" step
 - Claim spec is "written" without a GitHub Issue URL
 - Ask the user to review the spec in chat
@@ -163,6 +169,7 @@ The user reviews the spec ON THE GITHUB ISSUE, not in chat.
 ### Step 8: Transition
 
 After user approval of the spec on the GitHub Issue:
+
 - Invoke `spec-auditor` for quality audit
 - Then proceed to `approval-gate` for authorization
 - Then `writing-plans` for implementation planning

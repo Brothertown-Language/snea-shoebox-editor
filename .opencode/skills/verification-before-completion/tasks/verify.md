@@ -49,7 +49,7 @@ Verify all success criteria have evidence before allowing completion claims.
 ### Valid Evidence
 
 | Type | Description | Storage |
-|------|-------------|---------|
+| -- | -- | -- |
 | Test output | `pytest` pass/fail | Issue comment |
 | Lint output | `ruff check` clean | Issue comment |
 | Type check | `pyright` clean | Issue comment |
@@ -62,7 +62,7 @@ Verify all success criteria have evidence before allowing completion claims.
 ### Invalid Evidence
 
 | Type | Why Invalid |
-|------|-------------|
+| -- | -- |
 | "Trust me" | No verification |
 | "It should work" | Assumption, not proof |
 | "I checked" | No artifact |
@@ -121,7 +121,7 @@ When verifying live values against specifications, use this row-by-row compariso
 ### Prohibited Patterns
 
 | Pattern | Why Prohibited |
-|---------|---------------|
+| -- | -- |
 | "Functionally equivalent" | Agent judgment substituting for spec compliance |
 | "Minor difference" | "Close enough" is never a valid verification outcome |
 | "Works the same" | Functional analysis is for design, not verification |
@@ -130,13 +130,50 @@ When verifying live values against specifications, use this row-by-row compariso
 ### Enforcement Matrix
 
 | Verification Type | Comparison Mode | Default | Override? |
-|------------------|----------------|---------|-----------|
+| -- | -- | -- | -- |
 | DNS records | Exact | Exact | Never |
 | Configuration values | Exact | Exact | Never |
 | API responses | Exact | Exact | Never |
 | Infrastructure state | Exact | Exact | Never |
 | Code behavior | Semantic (with justification) | Exact | Per-field justification required |
 | File existence | Exact | Exact | Never |
+
+## Per-SC Evidence Table (MANDATORY)
+
+**🚫 CRITICAL: Before marking ANY task or phase complete, the agent MUST produce a per-SC evidence table with one row per success criterion from the corresponding spec. This table is the completion gate — no row may be skipped, and no row may show PASS without exact-match evidence.**
+
+### Table Format
+
+| SC ID | Success Criterion Text | Verification Command Run | Exact Output Observed | Pass/Fail |
+| -- | -- | -- | -- | -- |
+| SC-1 | \[criterion text\] | `command --flag` | \[exact output\] | PASS/FAIL/MISSING EVIDENCE |
+
+### Mandatory Outcomes Per Row
+
+| Outcome | Meaning | When Applied |
+| -- | -- | -- |
+| **PASS** | Exact match between observed output and literal SC text | Observed output character-for-character matches the SC's specified value |
+| **FAIL** | Mismatch between observed output and literal SC text | Observed output differs from the SC's specified value in any way |
+| **MISSING EVIDENCE** | No verification command was run for this SC | Agent skipped verification for this criterion |
+
+### 🚫 FORBIDDEN Outcomes (Zero Tolerance)
+
+| Pattern | Why FORBIDDEN |
+| -- | -- |
+| "functionally equivalent" | Agent judgment substituting for spec compliance |
+| "close enough" | "Close enough" is never a valid verification outcome |
+| "semantically similar" | Semantic analysis is for design, not verification |
+| "works the same way" | Behavioral proximity is not spec compliance |
+| PASS with caveat or footnote | A PASS with an asterisk is a FAIL |
+
+**Any row using a FORBIDDEN outcome is automatically reclassified as FAIL. The agent cannot override this reclassification.**
+
+### Enforcement
+
+- All rows MUST show PASS before completion is allowed
+- Any FAIL or MISSING EVIDENCE row blocks completion
+- Agent MUST re-run the verification command for any FAIL row
+- Agent MUST provide a verification command for any MISSING EVIDENCE row
 
 ## Post-Verification Chain
 
@@ -155,11 +192,13 @@ If verification fails, HALT — do NOT proceed to the chain.
 ### What Skills MUST Check
 
 1. Before marking complete:
+
    - Are ALL success criteria defined?
    - Do ALL criteria have evidence?
    - Is evidence verifiable?
 
 2. Enforcement matrix:
+
    - All criteria verified → ALLOW completion claim
    - Some criteria unverified → HALT, require evidence
    - No criteria defined → HALT, require success criteria
@@ -206,7 +245,7 @@ Please replace placeholder with actual evidence.
 **Each completion claim MUST be verified against live state — not assumed from checklist assertions. This extends `065-verification-honesty.md` to completion verification.**
 
 | Claim | Verification Action | Tool Call | Problem Class |
-|-------|-------------------|-----------|---------------|
+| -- | -- | -- | -- |
 | "Success criterion met" | Verify criterion against actual code/test output | `read` or `srclight_get_symbol` or test execution | VERIFICATION-GAP |
 | "Test passing" | Run the actual test command | `uv run pytest test/test_file.py` | VERIFICATION-GAP |
 | "Files modified as specified" | Verify file changes match spec | `git diff dev --name-only` → compare with spec | CONFLICTING |
@@ -219,7 +258,7 @@ Please replace placeholder with actual evidence.
 ### Finding Classification
 
 | Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | Criterion claimed met without evidence | VERIFICATION-GAP | conditional | Re-verify with actual tool call |
 | Test not actually passing | CONFLICTING | flag-for-review | HALT — fix test before claiming completion |
 | Files differ from spec | CONFLICTING | flag-for-review | Report — scope may have deviated |

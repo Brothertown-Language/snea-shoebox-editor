@@ -10,6 +10,7 @@ AI agents MUST follow the **Spec-Driven Development** (Gated Workflow) approach 
 4. **Implement Phase**: **Execute** tasks and **verify** results.
 
 **Two-Gate Model:**
+
 - **Gate 1 — Spec Approval → Plan Creation**: Spec approval authorizes creating the plan issue. The spec references the plan via body text (linked reference, e.g., `Related Plan: #NNN`), NOT via GitHub sub-issue link.
 - **Gate 2 — Plan Approval → Implementation**: Plan approval authorizes implementation. Authorization cascades from the plan to all its sub-issues.
 
@@ -83,7 +84,7 @@ ______________________________________________________________________
 ### Platform Routing
 
 | `github.platform` | Platform Sub-Skill |
-|----------------|-------------------|
+| -- | -- |
 | `github` | `issue-operations/platforms/github-mcp/` |
 | `gitbucket` | `issue-operations/platforms/gitbucket-api/` |
 | (unset) | `issue-operations/platforms/github-mcp/` (default) |
@@ -109,7 +110,7 @@ ______________________________________________________________________
 ### Content Coverage Questions
 
 | Question | Why It Matters |
-|----------|---------------|
+| -- | -- |
 | Does the spec clearly state the problem it solves and why? | Without this, the reader doesn't know what they're solving or whether the solution addresses the right thing |
 | Does the spec provide enough context for someone with no prior knowledge? | Agents lack memory context; the spec must be self-contained |
 | Does the spec identify what constraints and assumptions apply? | Constraints shape the solution space; assumptions may be wrong and need verification |
@@ -131,6 +132,25 @@ ______________________________________________________________________
 - No risk assessment
 - Skipping design phase
 - Proceeding without approval
+
+### Executable Verification Commands in Success Criteria (MANDATORY)
+
+Each success criterion MUST include an **executable verification command** — a shell command or test assertion that can be pasted into a terminal and produces a deterministic pass/fail result. The verification method column in SC tables must contain executable commands with exact expected values, not descriptive text.
+
+**Format:** `command --flags args` → must output exactly `expected_value`
+
+**Example:** `uv run .opencode/skills/skill-creator/scripts/validate_skill_cards.py --fix; echo $?` → must output exactly `2`
+
+### Anti-Pattern: Vague Verification Methods (FORBIDDEN)
+
+Vague verification methods are FORBIDDEN in success criteria. A verification method is vague when it describes what to check but not what the exact expected value is.
+
+| Vague (FORBIDDEN) | Exact (REQUIRED) |
+| -- | -- |
+| "check exit code" | "exit code must be 2" |
+| "validate JSON schema" | "JSON output must contain fields X, Y, Z" |
+| "verify file exists" | "`test -f path/to/file && echo exists` must output `exists`" |
+| "check output format" | "\`command |
 
 ### Simple vs Complex Specs
 
@@ -189,10 +209,10 @@ A different AI agent (or the same agent after a context reset) may pick up this 
 Before submitting any spec, verify these self-containment questions:
 
 | Question | Why It Matters |
-|----------|---------------|
+| -- | -- |
 | Does the spec describe the problem with full context, not just "as discussed"? | A fresh agent has no memory of earlier conversation |
 | Does the spec include file paths with stable anchors (not line numbers)? | Line numbers break on every edit |
-| Does the spec include code snippets for key changes (<20 lines)? | Code context prevents misunderstandings |
+| Does the spec include code snippets for key changes (\<20 lines)? | Code context prevents misunderstandings |
 | Does the spec include URLs and summaries for all related issues? | Bare links without context are useless |
 | Does the spec document decision rationale? | Without it, implementers may choose different approaches |
 

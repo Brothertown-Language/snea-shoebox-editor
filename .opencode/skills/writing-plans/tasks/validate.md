@@ -6,15 +6,15 @@ Check an existing plan for placeholders and completeness.
 
 ## Validation Checks
 
-1. **Placeholder detection** — Zero TBD/TODO tolerance
-2. **Completeness** — Plan addresses the stated problem
-3. **Actionability** — Steps are concrete, not abstract goals
-4. **Testability** — Success criteria are measurable
-5. **TDD structure** — Each task has failing test → implement → passing test steps
-6. **File structure** — All files are listed with responsibilities
-7. **Self-review evidence** — Agent has performed spec coverage, placeholder, and type consistency checks
-8. **Spec reference** — Plan body contains a spec reference (search for `Spec: #N` pattern)
-9. **Sub-issue parent** — If plan has sub-issues, they link to the plan (not the spec)
+01. **Placeholder detection** — Zero TBD/TODO tolerance
+02. **Completeness** — Plan addresses the stated problem
+03. **Actionability** — Steps are concrete, not abstract goals
+04. **Testability** — Success criteria include executable verification commands with exact expected values (not just "measurable" — each SC must specify a command that produces a deterministic pass/fail result)
+05. **TDD structure** — Each task has failing test → implement → passing test steps
+06. **File structure** — All files are listed with responsibilities
+07. **Self-review evidence** — Agent has performed spec coverage, placeholder, and type consistency checks
+08. **Spec reference** — Plan body contains a spec reference (search for `Spec: #N` pattern)
+09. **Sub-issue parent** — If plan has sub-issues, they link to the plan (not the spec)
 10. **Plan label** — Plan issue has `plan` label
 
 ## No-Placeholders Rule
@@ -42,7 +42,7 @@ Every step must contain actual content. These are **plan failures**:
 
 | Artifact | Placeholders Allowed? | Examples |
 | -- | -- | -- |
-| Spec (GitHub Issue) | YES, during iterative development | TBD, TODO, [needs investigation], [placeholder] |
+| Spec (GitHub Issue) | YES, during iterative development | TBD, TODO, \[needs investigation\], \[placeholder\] |
 | Plan (for implementation) | NO — zero tolerance | None allowed before implementation begins |
 
 ## Validation Logic
@@ -69,8 +69,8 @@ Does NOT enforce a specific section order. A plan without "Risks" is valid if ri
 **Each validation check MUST be verified via tool call, not just asserted. Assertions without tool-call artifacts are VERIFICATION-GAP findings per `065-verification-honesty.md`.**
 
 | Claim | Verification Action | Tool Call | Problem Class |
-|-------|-------------------|-----------|---------------|
-| "No placeholders present" | Search for placeholder patterns in plan body | `grep(pattern="TBD|TODO|\\[to be determined\\]|\\[placeholder\\]")` | VERIFICATION-GAP |
+| -- | -- | -- | -- |
+| "No placeholders present" | Search for placeholder patterns in plan body | \`grep(pattern="TBD | TODO |
 | "Spec reference exists in plan" | Search for `Spec: #N` pattern | `grep(pattern="Spec: #")` on plan body | MISSING-ELEMENT |
 | "Sub-issues link to plan (not spec)" | Verify sub-issue parent | `github_issue_read(method="get_sub_issues", issue_number=plan_number)` | STRUCTURE-VIOLATION |
 | "Plan has `plan` label" | Verify label on plan issue | `github_issue_read(method="get", issue_number=plan_number)` → check labels | MISSING-ELEMENT |
@@ -81,7 +81,7 @@ Does NOT enforce a specific section order. A plan without "Risks" is valid if ri
 ### Finding Classification
 
 | Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
+| -- | -- | -- | -- |
 | Placeholders found | VERIFICATION-GAP | conditional | Remove placeholders or mark plan invalid |
 | Missing spec reference | MISSING-ELEMENT | auto-fix | Add spec reference to plan body |
 | Sub-issues under wrong parent | STRUCTURE-VIOLATION | auto-fix | Re-link under plan |
