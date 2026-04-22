@@ -991,7 +991,7 @@ git branch feature/recovery HEAD
 
 # Reset protected branch to match remote
 git checkout dev  # or main/master
-git reset --hard origin/dev  # or origin/main/origin.master
+git reset --hard origin/dev
 
 # Switch to recovery branch
 git checkout feature/recovery

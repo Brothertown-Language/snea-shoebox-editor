@@ -124,7 +124,7 @@ If you accidentally create a PR with multiple commits:
 
 1. **DO NOT ask user to fix it** — Fix it yourself:
     ```bash
-    git reset --soft origin/main
+    git reset --soft origin/dev
     git commit -m "<descriptive message>" \
         --trailer "Co-authored-by: <AgentName> (<ModelId>) <ai-email>" \
         --trailer "Co-authored-by: <Human-Name> <human-email>"
