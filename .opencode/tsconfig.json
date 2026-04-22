@@ -1,0 +1,26 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ES2022",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "baseUrl": ".",
+    "paths": {
+      "@opencode-ai/plugin": ["./node_modules/@opencode-ai/plugin/dist/index"],
+      "@opencode-ai/plugin/*": ["./node_modules/@opencode-ai/plugin/dist/*"],
+      "@opencode-ai/sdk": ["./node_modules/@opencode-ai/sdk/dist/index"]
+    }
+  },
+  "include": [
+    "plugins/session-enforcement.ts",
+    "plugins/env-loader.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}
