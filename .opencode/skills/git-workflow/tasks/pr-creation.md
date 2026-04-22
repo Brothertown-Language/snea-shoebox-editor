@@ -818,7 +818,14 @@ Ensures specs are audited for plan fidelity before implementation, catching miss
 Fixes #505
 ```
 
-### Step 7: Report PR URL and HALT
+### Step 7: EXTRACT URL FROM API RESPONSE
+
+1. The PR URL MUST be copied verbatim from the `github_create_pull_request` API response's `html_url` field.
+2. Do NOT retype, reconstruct, or assemble the URL from known values (org, repo, number).
+3. Paste the URL exactly as returned. If the API response is `{ "html_url": "https://github.com/Org/Repo/pull/42" }`, the output URL is `https://github.com/Org/Repo/pull/42` — character for character.
+4. Verification checkpoint: Compare the pasted URL character-by-character against the `html_url` field in the API response before sending.
+
+### Step 7.5: Report PR URL and HALT
 
 ### ⚠️ CRITICAL: PR URL Reporting is MANDATORY
 
