@@ -14,7 +14,15 @@ This task dispatches plan execution to `divide-and-conquer --task assemble-work`
    - If no phases are complete yet: `completed_phases: "No phases completed yet. This is the first phase."`, `concern_boundaries_crossed: ""`, `verification_evidence: ""`
    - If prior phases are complete: list them by concern name using the concern boundary annotations in the plan body, note any transitions between concerns, and summarize verification outcomes from the plan STATUS markers
 4. **Check halt_at boundary** — if `halt_at == plan_created`, HALT. Do NOT dispatch to implementation. The authorization scope stops at plan creation.
-5. **Dispatch to divide-and-conquer:**
+5. **Step 5.5: RED Phase Verification Checkpoint** — Before dispatching to divide-and-conquer/assemble-work, the agent MUST verify that for each TDD-marked implementation item, a RED test artifact exists:
+
+   - **5a.** For each item in the plan that requires implementation (not documentation-only), confirm that an enforcement test scenario exists in `.opencode/tests/test-enforcement.sh` that corresponds to that item's change.
+   - **5b.** Confirm the enforcement test has been run and produced a FAILURE result (RED state) — the test must fail because the implementation change does not yet exist.
+   - **5c.** If no RED test artifact exists for a TDD-marked item, the agent MUST HALT and require the RED phase to be completed before proceeding. The enforcement test must be written first, run, and confirmed to fail before implementation begins.
+   - **5d.** Tool-call artifact REQUIRED: The agent must produce a tool-call artifact (e.g., `grep` or `bash` command output) proving that the RED test check was performed, showing the test exists and was verified to be in RED state.
+
+   This checkpoint enforces the per-item TDD cycle mandated by `091-incremental-build.md`: enforcement tests must exist and be in RED state before implementation begins. Skipping this checkpoint is a critical violation per `000-critical-rules.md`.
+6. **Dispatch to divide-and-conquer:**
 
 ```
 /skill divide-and-conquer --task assemble-work
