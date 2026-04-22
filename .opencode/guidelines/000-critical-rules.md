@@ -566,6 +566,18 @@ The approval-gate dispatch chain defines a mandatory sequence after plan approva
 - ✅ REQUIRED: Verify `worktree.path` is set before any file modification
 - ✅ REQUIRED: Use `divide-and-conquer` to dispatch sub-agents for all file modifications on multi-task plans
 
+**Artifact verification (MANDATORY):** Each step in the dispatch chain must produce evidence of completion before the next step proceeds. The agent MUST NOT proceed past a verification gate without producing a tool-call artifact confirming the prior step's output:
+
+| Dispatch Chain Step | Required Evidence Artifact |
+| -- | -- |
+| `git-workflow --task pre-work` | `worktree.path` set, feature branch exists (verified via `git rev-parse --show-toplevel` and `git branch --show-current`) |
+| `divide-and-conquer --task assemble-work` | Work state file exists (`.opencode/tmp/work-*.md`), all sub-agents returned success |
+| `verification-before-completion` | Per-SC evidence table produced, all rows show PASS |
+| `finishing-a-development-branch --task checklist` | All checklist items verified via tool-call artifacts (lint, test, format commands) |
+| `git-workflow --task review-prep` | Compare/PR URL generated in correct format (label matches context, URL format matches context, element ordering correct) |
+
+**Proceeding without these artifacts is a CRITICAL GUIDELINE VIOLATION, equivalent to skipping the step entirely.** See `approval-gate/SKILL.md` → "Enforcement checkpoint rules" for the complete dispatch chain verification gate.
+
 **See `approval-gate/SKILL.md` → "Dispatch Order" for the complete mandatory sequence. See `using-git-worktrees` skill → `create-worktree` task for worktree creation procedure.**
 
 ## Auditor Skills Enforcement
