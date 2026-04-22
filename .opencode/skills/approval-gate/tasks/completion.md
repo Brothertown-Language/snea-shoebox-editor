@@ -44,10 +44,19 @@ Generate executive summary in chat:
 
 **Outcome:** <What the result means for stakeholders>
 
-Issue URL: <gitbucket.html_url><github.owner>/<github.repo>/issues/<number>
+Issue URL: <html_url from github_issue_write or github_issue_read API response — NEVER construct from template>
 
 🤖 <AgentName> (<ModelId>) <status>
 ```
+
+**Post-Creation URL Extraction (MANDATORY — per `000-critical-rules.md` §URL Sourcing):**
+
+The Issue URL MUST be extracted from the API response `html_url` field — NEVER constructed from template variables:
+
+1. If the issue was created in this session: Extract `html_url` from the `github_issue_write` creation response
+2. If the issue was read (not created): Extract `html_url` from the `github_issue_read` response
+3. **Template construction is FORBIDDEN for post-creation URLs** — do NOT assemble from `<gitbucket.html_url>`, `<github.owner>`, `<github.repo>`, or issue number
+4. If `html_url` is not available in the API response: HALT and report
 
 URL is ALWAYS last per `000-critical-rules.md`.
 
