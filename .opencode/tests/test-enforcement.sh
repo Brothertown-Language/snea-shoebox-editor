@@ -89,6 +89,8 @@ SCENARIOS["red-phase-gate-executing-plans"]="Does .opencode/skills/executing-pla
 SCENARIOS["red-phase-gate-skillmd"]="Does .opencode/skills/executing-plans/SKILL.md document a RED phase verification checkpoint in the start task that checks for RED test artifacts before implementation dispatch?"
 SCENARIOS["red-phase-gate-writing-plans"]="Does .opencode/skills/writing-plans/tasks/create.md contain an explicit RED verification checkpoint between test writing and implementation that requires tool-call evidence of test failure?"
 SCENARIOS["red-phase-gate-writing-plans-skillmd"]="Does .opencode/skills/writing-plans/SKILL.md document that plans must include RED verification checkpoints (Step 2) between writing the test and implementing?"
+SCENARIOS["red-phase-enforcement-incremental-build"]="Does .opencode/guidelines/091-incremental-build.md contain an Enforcement Mechanism section requiring RED test verification before implementation?"
+SCENARIOS["red-phase-enforcement-critical-rules-xref"]="Does .opencode/guidelines/000-critical-rules.md reference the Enforcement Mechanism section in 091-incremental-build.md for RED phase verification?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -150,6 +152,8 @@ EXPECTED_SKILLS["red-phase-gate-executing-plans"]=""
 EXPECTED_SKILLS["red-phase-gate-skillmd"]=""
 EXPECTED_SKILLS["red-phase-gate-writing-plans"]=""
 EXPECTED_SKILLS["red-phase-gate-writing-plans-skillmd"]=""
+EXPECTED_SKILLS["red-phase-enforcement-incremental-build"]=""
+EXPECTED_SKILLS["red-phase-enforcement-critical-rules-xref"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -162,7 +166,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -801,6 +805,47 @@ if [ "$RED_GATE_WP_SKILL" -ge 1 ]; then
 else
     echo "  writing-plans SKILL.md RED verification checkpoint: MISSING"
     echo "- **writing-plans SKILL.md RED verification checkpoint:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# RED Phase Enforcement Mechanism in 091-incremental-build.md
+RED_ENF_IB=$(grep -c "Enforcement Mechanism" "$INCBUILD_FILE" 2>/dev/null || echo "0")
+if [ "$RED_ENF_IB" -ge 1 ]; then
+    echo "  091 Enforcement Mechanism section: FOUND"
+    echo "- **091 Enforcement Mechanism section:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  091 Enforcement Mechanism section: MISSING"
+    echo "- **091 Enforcement Mechanism section:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# RED Phase Enforcement Mechanism content (must reference executing-plans Step 5.5 and writing-plans Step 2)
+if [ "$RED_ENF_IB" -ge 1 ]; then
+    RED_ENF_CONTENT=$(grep -c "executing-plans.*Step 5.5\|Step 5.5.*executing-plans\|dispatching.*divide-and-conquer.*RED" "$INCBUILD_FILE" 2>/dev/null || echo "0")
+    RED_ENF_WP=$(grep -c "writing-plans.*Step 2\|plan template.*RED\|RED verification step.*tool-call evidence" "$INCBUILD_FILE" 2>/dev/null || echo "0")
+    RED_ENF_GIT=$(grep -c "git log.*order\|test.*commit.*precede.*implementation.*commit" "$INCBUILD_FILE" 2>/dev/null || echo "0")
+    RED_ENF_HALT=$(grep -c "HALT.*RED\|no RED test artifact\|MUST HALT" "$INCBUILD_FILE" 2>/dev/null || echo "0")
+    if [ "$RED_ENF_CONTENT" -ge 1 ] && [ "$RED_ENF_WP" -ge 1 ] && [ "$RED_ENF_HALT" -ge 1 ]; then
+        echo "  091 Enforcement Mechanism content: FOUND"
+        echo "- **091 Enforcement Mechanism content:** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  091 Enforcement Mechanism content: MISSING (executing-plans ref=$RED_ENF_CONTENT, writing-plans ref=$RED_ENF_WP, git log=$RED_ENF_GIT, halt=$RED_ENF_HALT)"
+        echo "- **091 Enforcement Mechanism content:** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+fi
+
+# RED Phase Enforcement cross-reference in 000-critical-rules.md pointing to 091 Enforcement Mechanism
+RED_ENF_XREF=$(grep -c "Enforcement Mechanism.*091\|091.*Enforcement Mechanism" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$RED_ENF_XREF" -ge 1 ]; then
+    echo "  000-critical-rules Enforcement Mechanism xref: FOUND"
+    echo "- **000-critical-rules Enforcement Mechanism xref:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules Enforcement Mechanism xref: MISSING"
+    echo "- **000-critical-rules Enforcement Mechanism xref:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi
