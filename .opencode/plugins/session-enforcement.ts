@@ -187,60 +187,57 @@ function ensureHooksInstalled(projectDir: string): void {
   }
 }
 
-async function runSessionInit($: PluginInput["$"], projectDir: string): Promise<string> {
+async function runSessionInit(projectDir: string): Promise<string> {
   if (cachedOutput && Date.now() - cacheTimestamp < CACHE_TTL_MS) {
     return cachedOutput;
   }
 
   try {
-    const result = await $.nothrow()`./.opencode/tools/session-init`;
-    const stdout = result.text();
-    const stderr = result.stderr.toString();
+    const stdout = execSync("./.opencode/tools/session-init", {
+      cwd: projectDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
 
-    const bunNotFound = result.exitCode !== 0 && /bun: command not found/i.test(stderr);
+    cachedOutput = stdout;
+    cacheTimestamp = Date.now();
 
-    if (!stdout || stdout.trim().length === 0) {
+    return stdout;
+  } catch (err: any) {
+    const stdout = err?.stdout?.toString().trim() ?? "";
+    const stderr = err?.stderr?.toString().trim() ?? "";
+    const exitCode = err?.status ?? 1;
+
+    const bunNotFound = /bun: command not found/i.test(stderr);
+
+    if (!stdout || stdout.length === 0) {
       const errorMsg = bunNotFound
         ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
-        : "Script returned empty output";
+        : (stderr || "Script returned empty output");
       console.error(`[session-enforcement] session-init: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session-init",
         level: "error",
         message: errorMsg,
-        exitCode: result.exitCode,
+        exitCode,
       });
-      if (stderr.trim() && !bunNotFound) {
+      if (stderr && !bunNotFound) {
         writeDiagnostic(projectDir, {
           source: "session-init",
           level: "error",
-          message: stderr.trim(),
-          exitCode: result.exitCode,
+          message: stderr,
+          exitCode,
         });
       }
       return "";
     }
 
-    if (result.exitCode !== 0) {
-      const errorMsg = bunNotFound
-        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
-        : (stderr.trim() || "Script exited with non-zero code");
-      console.error(`[session-enforcement] session-init exited with code ${result.exitCode}: ${errorMsg}`);
-      writeDiagnostic(projectDir, {
-        source: "session-init",
-        level: "error",
-        message: errorMsg,
-        exitCode: result.exitCode,
-      });
-      return "";
-    }
-
-    if (stderr.trim()) {
+    if (stderr) {
       writeDiagnostic(projectDir, {
         source: "session-init",
         level: "warning",
-        message: stderr.trim(),
-        exitCode: result.exitCode,
+        message: stderr,
+        exitCode,
       });
     }
 
@@ -248,66 +245,55 @@ async function runSessionInit($: PluginInput["$"], projectDir: string): Promise<
     cacheTimestamp = Date.now();
 
     return stdout;
-  } catch (err) {
-    console.error("[session-enforcement] Failed to run session-init:", err);
-    writeDiagnostic(projectDir, {
-      source: "session-init",
-      level: "error",
-      message: `Failed to run session-init: ${err}`,
-    });
-    return "";
   }
 }
 
 let cachedIdentityOutput: string | null = null;
 let identityCacheTimestamp = 0;
 
-async function runSessionContextIdentity($: PluginInput["$"], projectDir: string): Promise<string> {
+async function runSessionContextIdentity(projectDir: string): Promise<string> {
   if (cachedIdentityOutput && Date.now() - identityCacheTimestamp < CACHE_TTL_MS) {
     return cachedIdentityOutput;
   }
 
   try {
-    const result = await $.nothrow()`./.opencode/scripts/session_context_identity.py`;
-    const stdout = result.text();
-    const stderr = result.stderr.toString();
+    const stdout = execSync("./.opencode/scripts/session_context_identity.py", {
+      cwd: projectDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
 
-    if (!stdout || stdout.trim().length === 0) {
-      const bunNotFound = result.exitCode !== 0 && /bun: command not found/i.test(stderr);
+    cachedIdentityOutput = stdout;
+    identityCacheTimestamp = Date.now();
+
+    return stdout;
+  } catch (err: any) {
+    const stdout = err?.stdout?.toString().trim() ?? "";
+    const stderr = err?.stderr?.toString().trim() ?? "";
+    const exitCode = err?.status ?? 1;
+
+    const bunNotFound = /bun: command not found/i.test(stderr);
+
+    if (!stdout || stdout.length === 0) {
       const errorMsg = bunNotFound
         ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
-        : (stderr.trim() || "Script returned empty output");
+        : (stderr || "Script returned empty output");
       console.error(`[session-enforcement] session_context_identity.py: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session_context_identity.py",
         level: "error",
         message: errorMsg,
-        exitCode: result.exitCode,
+        exitCode,
       });
       return "";
     }
 
-    if (result.exitCode !== 0) {
-      const bunNotFound = /bun: command not found/i.test(stderr);
-      const errorMsg = bunNotFound
-        ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
-        : (stderr.trim() || "Script exited with non-zero code");
-      console.error(`[session-enforcement] session_context_identity.py exited with code ${result.exitCode}: ${errorMsg}`);
-      writeDiagnostic(projectDir, {
-        source: "session_context_identity.py",
-        level: "error",
-        message: errorMsg,
-        exitCode: result.exitCode,
-      });
-      return "";
-    }
-
-    if (stderr.trim()) {
+    if (stderr) {
       writeDiagnostic(projectDir, {
         source: "session_context_identity.py",
         level: "warning",
-        message: stderr.trim(),
-        exitCode: result.exitCode,
+        message: stderr,
+        exitCode,
       });
     }
 
@@ -315,64 +301,67 @@ async function runSessionContextIdentity($: PluginInput["$"], projectDir: string
     identityCacheTimestamp = Date.now();
 
     return stdout;
-  } catch (err) {
-    console.error("[session-enforcement] Failed to run session_context_identity.py:", err);
-    writeDiagnostic(projectDir, {
-      source: "session_context_identity.py",
-      level: "error",
-      message: `Failed to run session_context_identity.py: ${err}`,
-    });
-    return "";
   }
 }
 
 let cachedTriggersOutput: string | null = null;
 let triggersCacheTimestamp = 0;
 
-async function runSessionContextTriggers($: PluginInput["$"], projectDir: string): Promise<string> {
+async function runSessionContextTriggers(projectDir: string): Promise<string> {
   if (cachedTriggersOutput && Date.now() - triggersCacheTimestamp < CACHE_TTL_MS) {
     return cachedTriggersOutput;
   }
 
   try {
-    const result = await $.nothrow()`./.opencode/scripts/session_context_triggers.py`;
-    const stdout = result.text();
-    const stderr = result.stderr.toString();
+    const stdout = execSync("./.opencode/scripts/session_context_triggers.py", {
+      cwd: projectDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
 
-    const bunNotFound = result.exitCode !== 0 && /bun: command not found/i.test(stderr);
+    cachedTriggersOutput = stdout;
+    triggersCacheTimestamp = Date.now();
 
-    if (result.exitCode !== 0) {
+    return stdout;
+  } catch (err: any) {
+    const stdout = err?.stdout?.toString().trim() ?? "";
+    const stderr = err?.stderr?.toString().trim() ?? "";
+    const exitCode = err?.status ?? 1;
+
+    const bunNotFound = /bun: command not found/i.test(stderr);
+
+    if (exitCode !== 0) {
       const errorMsg = bunNotFound
         ? "bun runtime not found — session context unavailable. Install bun or check .opencode/tools/ensure-node for a private Node.js runtime."
-        : (stderr.trim() || "Script exited with non-zero code");
-      console.error(`[session-enforcement] session_context_triggers.py exited with code ${result.exitCode}: ${errorMsg}`);
+        : (stderr || "Script exited with non-zero code");
+      console.error(`[session-enforcement] session_context_triggers.py exited with code ${exitCode}: ${errorMsg}`);
       writeDiagnostic(projectDir, {
         source: "session_context_triggers.py",
         level: "error",
         message: errorMsg,
-        exitCode: result.exitCode,
+        exitCode,
       });
       return "";
     }
 
-    if (!stdout || stdout.trim().length === 0) {
-      if (stderr.trim()) {
+    if (!stdout || stdout.length === 0) {
+      if (stderr) {
         writeDiagnostic(projectDir, {
           source: "session_context_triggers.py",
           level: "warning",
-          message: stderr.trim(),
-          exitCode: result.exitCode,
+          message: stderr,
+          exitCode,
         });
       }
       return "";
     }
 
-    if (stderr.trim()) {
+    if (stderr) {
       writeDiagnostic(projectDir, {
         source: "session_context_triggers.py",
         level: "warning",
-        message: stderr.trim(),
-        exitCode: result.exitCode,
+        message: stderr,
+        exitCode,
       });
     }
 
@@ -380,14 +369,6 @@ async function runSessionContextTriggers($: PluginInput["$"], projectDir: string
     triggersCacheTimestamp = Date.now();
 
     return stdout;
-  } catch (err) {
-    console.error("[session-enforcement] Failed to run session_context_triggers.py:", err);
-    writeDiagnostic(projectDir, {
-      source: "session_context_triggers.py",
-      level: "error",
-      message: `Failed to run session_context_triggers.py: ${err}`,
-    });
-    return "";
   }
 }
 
@@ -903,7 +884,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
   return {
     // Inject session context into system prompt (from session-init + PluginInput augmentations)
     "experimental.chat.system.transform": async (_input, output) => {
-      const scriptOutput = await runSessionInit(input.$, projectDir);
+      const scriptOutput = await runSessionInit(projectDir);
       if (scriptOutput) {
         output.system.push(scriptOutput);
       }
@@ -936,7 +917,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       }
 
       // Inject identity section from session_context_identity.py
-      const identityOutput = await runSessionContextIdentity(input.$, projectDir);
+      const identityOutput = await runSessionContextIdentity(projectDir);
       if (identityOutput) {
         output.system.push(identityOutput);
       }
@@ -964,7 +945,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         }
 
         // --- Identity-echo directive + trigger warnings injection into FIRST user message ---
-        const triggersOutput = await runSessionContextTriggers(input.$, projectDir);
+        const triggersOutput = await runSessionContextTriggers(projectDir);
         const knownPlatform = extractValue(cachedIdentityOutput, "github.platform");
         const knownOwner = extractValue(cachedIdentityOutput, "github.owner");
         const knownRepo = extractValue(cachedIdentityOutput, "github.repo");
