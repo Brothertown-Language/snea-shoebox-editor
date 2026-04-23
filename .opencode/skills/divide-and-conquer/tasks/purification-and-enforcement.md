@@ -129,4 +129,6 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Auth context lost | STRUCTURE-VIOLATION | conditional | Re-read from approval-gate |
 | Uncommitted changes | VERIFICATION-GAP | conditional | Commit before proceeding |
 | No verification evidence | MISSING-ELEMENT | conditional | Run verification before review-prep |
-| Checklist not completed | VERIFICATION-GAP | conditional | Run checklist before review-prep |
+| Checklist not completed | VERIFICATION-GAP | conditional | Run checklist before review-prep |## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Work state verification: see `enforcement/work-state-verification.md`

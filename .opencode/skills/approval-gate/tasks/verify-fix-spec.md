@@ -172,4 +172,7 @@ For each fix spec sub-issue:
 | Fix spec labels stale | STRUCTURE-VIOLATION | auto-fix | Note stale label, recommend removal |
 | STATUS mismatch (conservative) | STRUCTURE-VIOLATION | auto-fix | Update STATUS to match content |
 | STATUS mismatch (overstated) | CONFLICTING | flag-for-review | Developer must judge intent |
-| Premature closure | VERIFICATION-GAP | flag-for-review | Report — no merged PR found |
+| Premature closure | VERIFICATION-GAP | flag-for-review | Report — no merged PR found |## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

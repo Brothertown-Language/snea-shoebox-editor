@@ -1,8 +1,6 @@
 import json
-import os
 import sys
 from pathlib import Path
-from unittest.mock import MagicMock, patch
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / ".opencode" / "scripts"))
 
@@ -90,9 +88,7 @@ class TestCollectDiagnostics:
     def test_reads_and_clears_file(self, tmp_path):
         diag_file = tmp_path / DIAGNOSTICS_FILE
         diag_file.parent.mkdir(parents=True, exist_ok=True)
-        diag_file.write_text(
-            json.dumps({"source": "a", "level": "error", "message": "m1"}) + "\n"
-        )
+        diag_file.write_text(json.dumps({"source": "a", "level": "error", "message": "m1"}) + "\n")
         diags = _collect_diagnostics(str(tmp_path))
         assert len(diags) == 1
         assert diags[0]["source"] == "a"
@@ -347,7 +343,9 @@ def _write_diagnostic(project_dir, source, level, message, exit_code=None):
 
 def _write_diagnostic_for_env_warning(project_dir):
     _write_diagnostic(
-        project_dir, "env-loader", "warning",
+        project_dir,
+        "env-loader",
+        "warning",
         ".env file is NOT in .gitignore — secrets may be committed to version control",
     )
 

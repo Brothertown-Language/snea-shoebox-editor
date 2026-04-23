@@ -170,4 +170,8 @@ session_vars:
   dev.name: <from-session>
   dev.email: <from-session>
   worktree.path: <from-session>
-```
+```## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

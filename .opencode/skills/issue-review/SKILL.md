@@ -40,6 +40,8 @@ You are an Issue Review Orchestrator. Your focus is gathering all issue context,
 
 ## Operating Protocol
 
+**Pre-implementation file changes are ephemeral.** Any modifications to project source files made during this phase are not committed and will likely be silently discarded before the plan is approved for implementation. Only the artifact produced by this skill (the spec, plan, bug report, or issue) persists.
+
 1. **Mandatory issue parameter:** This skill MUST be invoked with `--issue N` where N is the GitHub Issue number to review.
 
 2. **Automatic workflow:** When invoked without `--task`, the full workflow runs:

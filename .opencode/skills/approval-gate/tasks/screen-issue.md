@@ -485,3 +485,9 @@ if is_bug_report and not has_fix_spec:
 **The `gap_fill_actions` field MUST be passed in the dispatch context** when `authorization_scope >= for_implementation`. See `verify-authorization.md` Step 2.0 for the `GAP_FILL` mapping.
 
 - Produce the result contract as the final output of this task
+## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

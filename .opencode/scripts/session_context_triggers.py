@@ -365,6 +365,28 @@ def build_orphaned_worktrees_warning(wt_list: list[str]) -> str:
     return "\n".join(lines)
 
 
+def build_dev_branch_with_changes_warning(changed_files: list[str]) -> str:
+    lines = [
+        "## Dev Branch with Changes",
+    ]
+    diff_summary = get_diff_summary()
+    if diff_summary:
+        file_count = diff_summary["file_count"]
+        lines.append(f"- {file_count} file(s) changed on `dev` branch without worktree or pair-mode prefix")
+        lines.append(f"- Lines: +{diff_summary['insertions']} / -{diff_summary['deletions']}")
+        if diff_summary["key_files"]:
+            lines.append("- Key files:")
+            for kf in diff_summary["key_files"][:5]:
+                lines.append(f"  - `{kf}`")
+    else:
+        lines.append(f"- {len(changed_files)} file(s) changed on `dev` branch without worktree or pair-mode prefix")
+    lines.append(
+        "- Action: use a worktree (`git-workflow --task pre-work`) or switch to pair-mode branch (`pair-` prefix)"
+    )
+    lines.append("- CRITICAL: Edits on `dev` without worktree or pair-mode are a guideline violation")
+    return "\n".join(lines)
+
+
 def main() -> int:
     remote_url = get_remote_url()
     if not remote_url:
@@ -385,7 +407,11 @@ def main() -> int:
     if on_main:
         sections.append(build_main_branch_warning(has_changes, changed_files))
     elif on_protected and has_changes:
-        sections.append(build_protected_branch_warning(changed_files))
+        is_pair, _ = is_pair_mode_branch()
+        if is_pair:
+            sections.append(build_protected_branch_warning(changed_files))
+        else:
+            sections.append(build_dev_branch_with_changes_warning(changed_files))
 
     is_pair, pair_branch = is_pair_mode_branch()
     if is_pair and pair_branch:

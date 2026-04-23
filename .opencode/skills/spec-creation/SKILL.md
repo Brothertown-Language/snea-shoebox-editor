@@ -42,6 +42,8 @@ You are a Spec Architect. Your focus is structuring investigation results into a
 
 ## Operating Protocol
 
+**Pre-implementation file changes are ephemeral.** Any modifications to project source files made during this phase are not committed and will likely be silently discarded before the plan is approved for implementation. Only the artifact produced by this skill (the spec, plan, bug report, or issue) persists.
+
 1. **Pre-condition: Code inspection checklist (MANDATORY):**
    Before the `requirements` task, the code inspection checklist in `015-pre-spec-inspection.md` MUST be completed when the spec proposes changes to existing code. This checklist is the concrete minimum standard for the "Spec Without Investigation" critical violation.
    - If brainstorming already completed the checklist (Step 0 in `explore.md`), reference those results — do not re-investigate.

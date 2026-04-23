@@ -120,6 +120,8 @@ Each platform sub-skill decides internally whether to query MCP or read static m
 
 ## Operating Protocol
 
+**Pre-implementation file changes are ephemeral.** Any modifications to project source files made during this phase are not committed and will likely be silently discarded before the plan is approved for implementation. Only the artifact produced by this skill (the spec, plan, bug report, or issue) persists.
+
 1. **Mandatory invocation (no decision point):** The agent MUST invoke this skill when:
    - Agent is about to create an issue
    - Agent is about to post a comment to an issue/PR

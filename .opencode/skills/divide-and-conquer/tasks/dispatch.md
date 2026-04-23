@@ -169,3 +169,7 @@ Sub-agent reports bug as finding (read-only), HALTs implementation for its sub-t
 | "Sub-agent stayed in worktree" | Verify sub-agent didn't modify main repo | `git -C <main-repo> status --porcelain` | CONFLICTING |
 
 **Evidence artifact:** Result contract presence and main repo cleanliness check.
+## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Result validation: see `enforcement/result-validation.md`
+-  Overflow signal: see `enforcement/overflow-signal.md`

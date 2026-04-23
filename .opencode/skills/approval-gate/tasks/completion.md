@@ -138,4 +138,6 @@ If completion claims "blocked" but:
 | Authorization comment missing from issue | MISSING-ELEMENT | auto-fix | Post the comment immediately |
 | Label state inconsistent with auth result | STRUCTURE-VIOLATION | auto-fix | Correct label state |
 | Completion outcome contradicts evidence | CONFLICTING | flag-for-review | Report mismatch, developer must judge |
-| Format elements missing or misordered | STRUCTURE-VIOLATION | auto-fix | Fix before sending output |
+| Format elements missing or misordered | STRUCTURE-VIOLATION | auto-fix | Fix before sending output |## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`

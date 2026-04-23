@@ -245,4 +245,7 @@ parent_check = github_issue_read(method="get_sub_issues", issue_number=sub_issue
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-codebase`
-- Label state machine: `141-planning-status-tracking.md §10` (label transitions when creating sub-issues under plan)
+- Label state machine: `141-planning-status-tracking.md §10` (label transitions when creating sub-issues under plan)## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

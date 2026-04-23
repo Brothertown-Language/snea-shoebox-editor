@@ -1043,3 +1043,9 @@ For plan issues (detected in Step 5):
 - Dispatch context for plan approval: pass `plan_issue=#N` and `spec_issue=#M` (extracted from plan body)
 - Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval`, add `in-progress` on approval)
 - Adversarial verification model: `spec-auditor --task ground-truth` (finding classification and evidence artifacts)
+## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

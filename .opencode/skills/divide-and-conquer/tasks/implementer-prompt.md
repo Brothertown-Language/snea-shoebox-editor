@@ -145,4 +145,5 @@ Task tool (general-purpose):
     - Include co-author trailer: Co-authored-by: <AgentName> (<ModelId>)
     - Run lint and typecheck before committing
     - Run tests to verify your changes work
-```
+```## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`

@@ -303,4 +303,8 @@ If success criteria reference specific code structure:
 - Preceded by: `verify-authorization`, `verify-codebase`, `verify-blockers`
 - Supersedes: None (new task)
 - Related: `post-implementation` (used when implementation IS needed)
-- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on autoclose)
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on autoclose)## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
