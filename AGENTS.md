@@ -43,6 +43,11 @@ Guidelines are pruned to the absolute minimum. See `.opencode/guidelines/` for:
 | Markdown lint | `uvx pymarkdownlnt scan -r .opencode/guidelines/ docs/` | Markdown ONLY |
 | Markdown format | `uvx --with mdformat-frontmatter --with mdformat-tables --with mdformat-config --with mdformat-gfm mdformat --number --compact-tables --check .opencode/guidelines/ docs/` | Markdown ONLY |
 | Skill enforcement test | `bash .opencode/tests/test-enforcement.sh` | opencode-cli |
+| Skill enforcement test (filtered) | `bash .opencode/tests/test-enforcement.sh --scenario NAME [...]` | opencode-cli |
+| Skill enforcement test (by tag) | `bash .opencode/tests/test-enforcement.sh --tag TAG [...]` | opencode-cli |
+| Skill enforcement test (changed files) | `bash .opencode/tests/test-enforcement.sh --changed [--base BRANCH]` | opencode-cli |
+| Skill enforcement test (list scenarios) | `bash .opencode/tests/test-enforcement.sh --list` | opencode-cli |
+| Skill enforcement test (list tags) | `bash .opencode/tests/test-enforcement.sh --list-tags` | opencode-cli |
 | Isolated opencode-cli run | `bash .opencode/tests/with-test-home opencode-cli run '<message>'` | opencode-cli |
 | Clean test artifacts | `bash .opencode/tests/with-test-home --clean` | opencode-cli |
 
