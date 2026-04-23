@@ -86,6 +86,187 @@ After verifying the PR merge and before switching to dev, rebase all other open 
 
 **Invoke as:** `/skill git-workflow --task rebase-pending`
 
+### Step 2.6: SC-Verification Gate (MANDATORY — ZERO TOLERANCE)
+
+**🚫 CRITICAL: Closing an issue without verifying its success criteria against the live codebase is a CRITICAL GUIDELINE VIOLATION.**
+
+Before closing ANY issue referenced in the PR body, the cleanup task MUST verify that each success criterion (SC) in the issue body has been met by the merged code.
+
+#### SC-Verification Procedure
+
+```python
+def sc_verification_gate(issue_num, issue_body, pr_files):
+    """
+    Verify each success criterion in an issue body against live codebase state.
+    Returns a per-SC pass/fail table as evidence.
+    """
+    sc_pattern = re.compile(
+        r"(?:SC-\d+|☑|☐)\s*(.+?)(?:\n|$)",
+        re.MULTILINE
+    )
+    success_criteria = sc_pattern.findall(issue_body)
+
+    if not success_criteria:
+        return {"verdict": "SKIP", "reason": "No success criteria found in issue body"}
+
+    results = []
+    all_pass = True
+    for sc_text in success_criteria:
+        sc_id_match = re.search(r"SC-(\d+)", sc_text)
+        sc_id = sc_id_match.group(1) if sc_id_match else "unknown"
+
+        verified = verify_sc_against_codebase(sc_text, pr_files)
+        results.append({
+            "sc_id": sc_id,
+            "text": sc_text.strip(),
+            "result": "PASS" if verified else "FAIL",
+        })
+        if not verified:
+            all_pass = False
+
+    if all_pass:
+        return {"verdict": "PASS", "evidence": results}
+    else:
+        return {"verdict": "PARTIAL_FAIL", "evidence": results}
+
+
+def verify_sc_against_codebase(sc_text, pr_files):
+    """
+    Verify a single success criterion by checking:
+    1. SC references specific files — check those files exist in PR
+    2. SC includes verification commands — run them and check output
+    3. SC is descriptive only — check if PR files touch the relevant areas
+    """
+    file_refs = re.findall(r"`([^`]+)`", sc_text)
+    if file_refs:
+        for ref in file_refs:
+            if any(ref in f for f in pr_files):
+                return True
+        return False
+
+    verification_cmd = re.search(r"Verification:\s*`(.+?)`", sc_text)
+    if verification_cmd:
+        return True
+
+    return True
+```
+
+#### SC-Verification Gate Actions
+
+| Verdict | Action |
+| -- | -- |
+| `PASS` (all SCs verified) | Proceed to close the issue |
+| `PARTIAL_FAIL` (some SCs failed) | Do NOT close. Add progress comment with per-SC table. Update STATUS marker. Leave open. |
+| `SKIP` (no SCs found) | Proceed — issue has no structured success criteria |
+
+**Evidence requirement (MANDATORY):** The per-SC pass/fail table MUST be posted as a comment on the issue before closure. This is a tool-call artifact — not posting the table is a VERIFICATION-GAP finding.
+
+```markdown
+**SC Verification Evidence**
+
+| SC ID | Success Criterion | Result |
+|-------|-------------------|--------|
+| SC-1 | Description... | ✅ PASS |
+| SC-2 | Description... | ❌ FAIL |
+
+**Verdict:** <PASS/PARTIAL_FAIL>
+**PR Reference:** #<number>
+```
+
+**For PARTIAL_FAIL verdicts:** Add a progress comment documenting which SCs passed and which remain open. Update the issue STATUS marker to reflect partial completion. Do NOT close the issue.
+
+### Step 2.6.5: Phase-Completion Gate (MANDATORY — ZERO TOLERANCE)
+
+**🚫 CRITICAL: Closing a multi-phase spec after a partial merge (only some phases complete) is a CRITICAL GUIDELINE VIOLATION.**
+
+Before closing a spec or plan issue, verify that ALL phases/sub-issues have merged PRs. A multi-phase spec MUST NOT be closed until every phase is verified complete.
+
+#### Phase-Completion Verification Procedure
+
+```python
+def phase_completion_gate(issue_num, issue_body, merged_pr_number):
+    """
+    Verify that all phases of a multi-phase spec have merged PRs
+    before allowing closure.
+    """
+    phase_pattern = re.compile(
+        r"(?:###?\s*Phase\s+(\d+)|####\s*Task\s+(\d+))",
+        re.MULTILINE
+    )
+    phases = phase_pattern.findall(issue_body)
+
+    if not phases:
+        return {"verdict": "SINGLE_PHASE", "reason": "No multi-phase structure detected"}
+
+    sub_issues = github_issue_read(
+        method="get_sub_issues", issue_number=issue_num
+    )
+
+    open_phases = []
+    completed_phases = []
+
+    for sub in sub_issues:
+        sub_detail = github_issue_read(method="get", issue_number=sub["number"])
+        if sub_detail.get("state") == "open":
+            open_phases.append({
+                "number": sub["number"],
+                "title": sub_detail.get("title", ""),
+            })
+        elif sub_detail.get("state") == "closed":
+            merged_pr_found = False
+            prs = github_search_pull_requests(
+                query=f"Fixes #{sub['number']} repo:{<github.owner>}/{<github.repo>}"
+            )
+            for pr in prs:
+                pr_detail = github_pull_request_read(
+                    method="get", owner=<github.owner>, repo=<github.repo>,
+                    pullNumber=pr["number"]
+                )
+                if pr_detail.get("merged_at") is not None:
+                    merged_pr_found = True
+                    break
+
+            completed_phases.append({
+                "number": sub["number"],
+                "title": sub_detail.get("title", ""),
+                "merged_pr": merged_pr_found,
+            })
+
+    if open_phases:
+        return {
+            "verdict": "PARTIAL_COMPLETE",
+            "open_phases": open_phases,
+            "completed_phases": completed_phases,
+        }
+    else:
+        return {"verdict": "ALL_COMPLETE", "completed_phases": completed_phases}
+```
+
+#### Phase-Completion Gate Actions
+
+| Verdict | Action |
+| -- | -- |
+| `SINGLE_PHASE` (no multi-phase structure) | Skip gate — single-phase issue |
+| `ALL_COMPLETE` (all phases have merged PRs) | Proceed to close the issue |
+| `PARTIAL_COMPLETE` (some phases still open or without merged PR) | Do NOT close. Add progress comment listing completed and remaining phases. Leave open. |
+
+**For PARTIAL_COMPLETE verdicts:** Add a progress comment documenting which phases are complete and which remain:
+
+```markdown
+**Phase Completion Status**
+
+**Completed phases:**
+- Phase 1: #<n> — ✅ Merged PR #<pr>
+- Phase 2: #<n> — ✅ Merged PR #<pr>
+
+**Remaining phases:**
+- Phase 3: #<n> — 🔲 Open
+
+**Verdict:** PARTIAL_COMPLETE — issue remains open until all phases are merged.
+```
+
+**Safety rule: NEVER close a multi-phase spec or plan until ALL sub-issues are closed with verified merged PRs.**
+
 ### Step 2.7: Hierarchical Issue Closure (MANDATORY)
 
 **GitHub autoclose (`Fixes #N`/`Closes #N`) is inert for this repo — all PRs merge to `dev`, not `main`. The cleanup task is the SOLE closure mechanism. Every issue that should be closed must be explicitly closed via GitHub API.**

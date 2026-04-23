@@ -16,18 +16,54 @@
 set -euo pipefail
 
 PROJECT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
+
+SCENARIO_FILTER=()
+TAG_FILTER=()
+CHANGED_FILTER=false
+BASE_BRANCH="dev"
+LIST_ONLY=false
+LIST_TAGS_ONLY=false
+
+while [[ $# -gt 0 ]]; do
+    case "$1" in
+        --scenario)
+            SCENARIO_FILTER+=("$2")
+            shift 2
+            ;;
+        --tag)
+            TAG_FILTER+=("$2")
+            shift 2
+            ;;
+        --changed)
+            CHANGED_FILTER=true
+            shift
+            ;;
+        --base)
+            BASE_BRANCH="$2"
+            shift 2
+            ;;
+        --list)
+            LIST_ONLY=true
+            shift
+            ;;
+        --list-tags)
+            LIST_TAGS_ONLY=true
+            shift
+            ;;
+        *)
+            echo "Unknown option: $1" >&2
+            echo "Usage: bash .opencode/tests/test-enforcement.sh [--scenario NAME]... [--tag TAG]... [--changed] [--base BRANCH] [--list] [--list-tags]" >&2
+            exit 1
+            ;;
+    esac
+done
+
 LOGDIR="$PROJECT_DIR/.opencode/tmp/enforcement-test-$(date +%Y%m%d-%H%M%S)"
 mkdir -p "$LOGDIR"
 
 TIMEOUT=120
 MODEL="${ENFORCEMENT_TEST_MODEL:-ollama-cloud/glm-5.1}"
 WITH_TEST_HOME="$PROJECT_DIR/.opencode/tests/with-test-home"
-
-echo "=== Enforcement Integration Test ==="
-echo "Log dir: $LOGDIR"
-echo "Model: $MODEL"
-echo "Mode: isolated (with-test-home wrapper)"
-echo ""
 
 # Test scenarios: name -> "prompt message"
 declare -A SCENARIOS
@@ -104,8 +140,258 @@ SCENARIOS["gap-fill-precedence-for-pr"]="Does .opencode/skills/approval-gate/tas
 SCENARIOS["gap-fill-precedence-standard-scope"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md Gap-Fill Precedence Principle section state that standard scope without auto_create_spec means a bug report missing fix spec remains a blocking gate?"
 SCENARIOS["screen-issue-gap-fill-awareness"]="Does .opencode/skills/approval-gate/tasks/screen-issue.md contain a note that screening sub-agents must not block on missing specs when authorization_scope gap-fill actions include auto_create_spec?"
 SCENARIOS["gap-fill-precedence-before-step5c"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md place the Gap-Fill Precedence Principle before Step 5c so it is evaluated before blocking gates?"
+SCENARIOS["cleanup-sc-verification-gate"]="Does .opencode/skills/git-workflow/tasks/cleanup.md contain a Step 2.6 SC-Verification Gate that verifies success criteria before closing any issue?"
+SCENARIOS["cleanup-phase-completion-gate"]="Does .opencode/skills/git-workflow/tasks/cleanup.md contain a Step 2.6.5 Phase-Completion Gate that prevents closing multi-phase specs after partial merges?"
+SCENARIOS["scope-next-phase-resolution"]="Does .opencode/skills/approval-gate/enforcement/scope-parsing.md contain a Next Phase Resolution section with resolve_next_phase logic?"
+SCENARIOS["scope-phase-n-resolution"]="Does .opencode/skills/approval-gate/enforcement/scope-parsing.md contain an Approved for Phase N Resolution section with resolve_phase_n logic?"
 
-# Expected skill invocations per scenario (empty = no specific skill expected)
+# Tags per scenario for --tag filtering
+declare -A SCENARIO_TAGS
+SCENARIO_TAGS["bug-report"]="skill-invocation debugging"
+SCENARIO_TAGS["create-spec"]="skill-invocation brainstorming"
+SCENARIO_TAGS["simple-question"]="skill-invocation"
+SCENARIO_TAGS["implement-request"]="skill-invocation approval"
+SCENARIO_TAGS["post-merge-cleanup"]="skill-invocation git-workflow"
+SCENARIO_TAGS["symptom-patch"]="skill-invocation issue-review"
+SCENARIO_TAGS["incremental-build-guideline"]="content-verification incremental-build"
+SCENARIO_TAGS["monolithic-implementation-violation"]="content-verification incremental-build"
+SCENARIO_TAGS["item-decomposition-step"]="content-verification incremental-build"
+SCENARIO_TAGS["brainstorming-top-down"]="content-verification incremental-build"
+SCENARIO_TAGS["writing-plans-bottom-up"]="content-verification incremental-build"
+SCENARIO_TAGS["executing-plans-tdd"]="content-verification incremental-build"
+SCENARIO_TAGS["divide-conquer-tdd"]="content-verification incremental-build"
+SCENARIO_TAGS["agents-md-incremental"]="content-verification incremental-build"
+SCENARIO_TAGS["worktree-handoff-step"]="content-verification git-workflow"
+SCENARIO_TAGS["scope-auto-resolve-guideline"]="content-verification approval"
+SCENARIO_TAGS["scope-auto-resolve-step"]="content-verification approval"
+SCENARIO_TAGS["worktree-mandate"]="skill-invocation worktree"
+SCENARIO_TAGS["offer-to-edit-bypass"]="skill-invocation brainstorming"
+SCENARIO_TAGS["bug-discovery-no-auth"]="skill-invocation debugging"
+SCENARIO_TAGS["confirmation-not-auth"]="skill-invocation"
+SCENARIO_TAGS["pipeline-scoped-halt"]="skill-invocation approval"
+SCENARIO_TAGS["silent-halt-with-search"]="skill-invocation brainstorming"
+SCENARIO_TAGS["pr-creation-guard"]="skill-invocation"
+SCENARIO_TAGS["post-implementation-format"]="skill-invocation verification"
+SCENARIO_TAGS["sub-issue-structure"]="skill-invocation issue-operations"
+SCENARIO_TAGS["read-comments-before-action"]="skill-invocation"
+SCENARIO_TAGS["per-sc-evidence-table"]="content-verification verification"
+SCENARIO_TAGS["vbc-per-sc-evidence-skill"]="content-verification verification"
+SCENARIO_TAGS["finishing-sc-verification"]="content-verification verification"
+SCENARIO_TAGS["sc-to-test-traceability"]="content-verification sc-precision"
+SCENARIO_TAGS["red-phase-ordering"]="content-verification sc-precision"
+SCENARIO_TAGS["sc-traceability-example"]="content-verification sc-precision"
+SCENARIO_TAGS["approval-gate-sc-traceability"]="content-verification approval sc-precision"
+SCENARIO_TAGS["approval-gate-red-phase"]="content-verification approval sc-precision"
+SCENARIO_TAGS["executable-verification-commands"]="content-verification sc-precision"
+SCENARIO_TAGS["vague-verification-antipattern"]="content-verification sc-precision"
+SCENARIO_TAGS["sc-assertion-tdd-cycle"]="content-verification incremental-build"
+SCENARIO_TAGS["red-state-before-implementation"]="content-verification incremental-build"
+SCENARIO_TAGS["validate-executable-verification"]="content-verification writing-plans"
+SCENARIO_TAGS["semantic-intent-spec-creation"]="content-verification spec-creation"
+SCENARIO_TAGS["narrow-sc-table-exemption"]="content-verification spec-creation"
+SCENARIO_TAGS["semantic-intent-writing-plans"]="content-verification writing-plans"
+SCENARIO_TAGS["why-specific-value-tdd"]="content-verification writing-plans"
+SCENARIO_TAGS["verification-mechanics-brainstorming"]="content-verification brainstorming"
+SCENARIO_TAGS["sc-precision-audit"]="content-verification spec-auditor sc-precision"
+SCENARIO_TAGS["url-sourcing-rule1-pr"]="content-verification git-workflow url-sourcing"
+SCENARIO_TAGS["url-sourcing-rule1-review-prep"]="content-verification git-workflow url-sourcing"
+SCENARIO_TAGS["url-sourcing-rule2-character-match"]="content-verification git-workflow url-sourcing"
+SCENARIO_TAGS["url-sourcing-guideline-rules"]="content-verification url-sourcing"
+SCENARIO_TAGS["url-sourcing-issue-operations"]="content-verification issue-operations url-sourcing"
+SCENARIO_TAGS["identity-echo-validation"]="content-verification session-enforcement"
+SCENARIO_TAGS["secret-exfiltration-violation"]="content-verification session-enforcement"
+SCENARIO_TAGS["read-secrets-in-output"]="skill-invocation session-enforcement"
+SCENARIO_TAGS["red-phase-gate-executing-plans"]="content-verification incremental-build"
+SCENARIO_TAGS["red-phase-gate-skillmd"]="content-verification incremental-build"
+SCENARIO_TAGS["red-phase-gate-writing-plans"]="content-verification writing-plans"
+SCENARIO_TAGS["red-phase-gate-writing-plans-skillmd"]="content-verification writing-plans"
+SCENARIO_TAGS["red-phase-enforcement-incremental-build"]="content-verification incremental-build"
+SCENARIO_TAGS["red-phase-enforcement-critical-rules-xref"]="content-verification incremental-build"
+SCENARIO_TAGS["dispatch-chain-enforcement-gate"]="content-verification approval"
+SCENARIO_TAGS["dispatch-artifact-requirements"]="content-verification approval"
+SCENARIO_TAGS["review-prep-format-self-check"]="content-verification git-workflow"
+SCENARIO_TAGS["checklist-chat-output-format"]="content-verification verification"
+SCENARIO_TAGS["dispatch-checkpoint-live-verification"]="content-verification approval"
+SCENARIO_TAGS["spec-creation-red-gate"]="content-verification spec-creation"
+SCENARIO_TAGS["analyze-and-spec-red-gate"]="content-verification issue-review"
+SCENARIO_TAGS["ui-engineer-red-gate"]="content-verification ui-engineer"
+SCENARIO_TAGS["gap-fill-precedence-principle"]="content-verification approval"
+SCENARIO_TAGS["gap-fill-precedence-for-pr"]="content-verification approval"
+SCENARIO_TAGS["gap-fill-precedence-standard-scope"]="content-verification approval"
+SCENARIO_TAGS["screen-issue-gap-fill-awareness"]="content-verification approval"
+SCENARIO_TAGS["gap-fill-precedence-before-step5c"]="content-verification approval"
+SCENARIO_TAGS["cleanup-sc-verification-gate"]="content-verification git-workflow"
+SCENARIO_TAGS["cleanup-phase-completion-gate"]="content-verification git-workflow"
+SCENARIO_TAGS["scope-next-phase-resolution"]="content-verification approval"
+SCENARIO_TAGS["scope-phase-n-resolution"]="content-verification approval"
+SCENARIO_TAGS["enforcement-module-adversarial"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-scope-parsing"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-auto-dispatch"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-closed-issue"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-sub-issue"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-completion"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-result-validation"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-overflow"]="content-verification enforcement-module"
+SCENARIO_TAGS["enforcement-module-work-state"]="content-verification enforcement-module"
+SCENARIO_TAGS["task-file-enforcement-refs"]="content-verification approval"
+SCENARIO_TAGS["dev-edit-guard-plugin"]="content-verification session-enforcement"
+SCENARIO_TAGS["dev-edit-guard-trigger"]="content-verification session-enforcement"
+SCENARIO_TAGS["dev-edit-guard-pair-mode"]="content-verification session-enforcement"
+
+# File-to-scenario mapping for --changed filtering
+# Maps glob patterns to scenario names
+declare -A FILE_SCENARIO_MAP
+FILE_SCENARIO_MAP[".opencode/guidelines/091-incremental-build.md"]="incremental-build-guideline monolithic-implementation-violation item-decomposition-step sc-assertion-tdd-cycle red-state-before-implementation red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref"
+FILE_SCENARIO_MAP[".opencode/guidelines/000-critical-rules.md"]="scope-auto-resolve-guideline monolithic-implementation-violation identity-echo-validation secret-exfiltration-violation url-sourcing-guideline-rules dispatch-artifact-requirements red-phase-enforcement-critical-rules-xref"
+FILE_SCENARIO_MAP[".opencode/guidelines/020-go-prohibitions.md"]="scope-auto-resolve-guideline pipeline-scoped-halt"
+FILE_SCENARIO_MAP[".opencode/skills/approval-gate/"]="item-decomposition-step scope-auto-resolve-step approval-gate-sc-traceability approval-gate-red-phase dispatch-chain-enforcement-gate dispatch-artifact-requirements dispatch-checkpoint-live-verification gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c task-file-enforcement-refs scope-next-phase-resolution scope-phase-n-resolution enforcement-module-adversarial enforcement-module-scope-parsing enforcement-module-auto-dispatch enforcement-module-closed-issue enforcement-module-sub-issue"
+FILE_SCENARIO_MAP[".opencode/skills/brainstorming/"]="brainstorming-top-down verification-mechanics-brainstorming"
+FILE_SCENARIO_MAP[".opencode/skills/writing-plans/"]="writing-plans-bottom-up validate-executable-verification semantic-intent-writing-plans why-specific-value-tdd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd"
+FILE_SCENARIO_MAP[".opencode/skills/executing-plans/"]="executing-plans-tdd red-phase-gate-executing-plans red-phase-gate-skillmd"
+FILE_SCENARIO_MAP[".opencode/skills/divide-and-conquer/"]="divide-conquer-tdd enforcement-module-completion enforcement-module-result-validation enforcement-module-overflow enforcement-module-work-state"
+FILE_SCENARIO_MAP[".opencode/skills/git-workflow/"]="worktree-handoff-step cleanup-sc-verification-gate cleanup-phase-completion-gate review-prep-format-self-check url-sourcing-rule1-review-prep url-sourcing-rule1-pr url-sourcing-rule2-character-match"
+FILE_SCENARIO_MAP[".opencode/skills/verification-before-completion/"]="per-sc-evidence-table vbc-per-sc-evidence-skill"
+FILE_SCENARIO_MAP[".opencode/skills/finishing-a-development-branch/"]="finishing-sc-verification checklist-chat-output-format"
+FILE_SCENARIO_MAP[".opencode/guidelines/080-code-standards.md"]="sc-to-test-traceability red-phase-ordering sc-traceability-example"
+FILE_SCENARIO_MAP[".opencode/guidelines/140-planning-spec-creation.md"]="executable-verification-commands vague-verification-antipattern"
+FILE_SCENARIO_MAP[".opencode/skills/spec-creation/"]="semantic-intent-spec-creation narrow-sc-table-exemption spec-creation-red-gate"
+FILE_SCENARIO_MAP[".opencode/skills/spec-auditor/"]="sc-precision-audit"
+FILE_SCENARIO_MAP[".opencode/skills/issue-operations/"]="sub-issue-structure url-sourcing-issue-operations"
+FILE_SCENARIO_MAP[".opencode/skills/issue-review/"]="analyze-and-spec-red-gate"
+FILE_SCENARIO_MAP[".opencode/skills/ui-engineer/"]="ui-engineer-red-gate"
+FILE_SCENARIO_MAP[".opencode/skills/session-enforcement.ts"]="identity-echo-validation secret-exfiltration-violation read-secrets-in-output dev-edit-guard-plugin dev-edit-guard-pair-mode"
+FILE_SCENARIO_MAP[".opencode/plugins/session-enforcement.ts"]="identity-echo-validation secret-exfiltration-violation dev-edit-guard-plugin dev-edit-guard-pair-mode"
+FILE_SCENARIO_MAP[".opencode/scripts/session_context_identity.py"]="identity-echo-validation"
+FILE_SCENARIO_MAP[".opencode/scripts/session_context_triggers.py"]="dev-edit-guard-trigger"
+FILE_SCENARIO_MAP["AGENTS.md"]="agents-md-incremental"
+
+# --list: print scenario names and exit
+if [ "$LIST_ONLY" = true ]; then
+    for name in $(echo "${!SCENARIOS[@]}" | tr ' ' '\n' | sort); do
+        echo "$name"
+    done
+    exit 0
+fi
+
+# --list-tags: print tag names and exit
+if [ "$LIST_TAGS_ONLY" = true ]; then
+    declare -A ALL_TAGS
+    for name in "${!SCENARIO_TAGS[@]}"; do
+        for tag in ${SCENARIO_TAGS[$name]}; do
+            ALL_TAGS[$tag]=1
+        done
+    done
+    for tag in $(echo "${!ALL_TAGS[@]}" | tr ' ' '\n' | sort); do
+        echo "$tag"
+    done
+    exit 0
+fi
+
+# Build filtered scenario list
+SCENARIO_NAMES=($(echo "${!SCENARIOS[@]}" | tr ' ' '\n' | sort))
+FILTERED_SCENARIOS=()
+
+if [ ${#SCENARIO_FILTER[@]} -gt 0 ] || [ ${#TAG_FILTER[@]} -gt 0 ] || [ "$CHANGED_FILTER" = true ]; then
+    for name in "${SCENARIO_NAMES[@]}"; do
+        INCLUDE=false
+        if [ ${#SCENARIO_FILTER[@]} -gt 0 ]; then
+            for filter_name in "${SCENARIO_FILTER[@]}"; do
+                if [ "$name" = "$filter_name" ]; then
+                    INCLUDE=true
+                    break
+                fi
+            done
+        fi
+        if [ ${#TAG_FILTER[@]} -gt 0 ]; then
+            TAGS_FOR="${SCENARIO_TAGS[$name]:-}"
+            for filter_tag in "${TAG_FILTER[@]}"; do
+                for tag in $TAGS_FOR; do
+                    if [ "$tag" = "$filter_tag" ]; then
+                        INCLUDE=true
+                        break 2
+                    fi
+                done
+            done
+        fi
+        if [ "$CHANGED_FILTER" = true ]; then
+            for file_glob in "${!FILE_SCENARIO_MAP[@]}"; do
+                CHANGED=$(git diff --name-only "$BASE_BRANCH" -- "$file_glob" 2>/dev/null || true)
+                if [ -n "$CHANGED" ]; then
+                    for scenario_name in ${FILE_SCENARIO_MAP[$file_glob]}; do
+                        if [ "$name" = "$scenario_name" ]; then
+                            INCLUDE=true
+                            break 2
+                        fi
+                    done
+                fi
+            done
+        fi
+        if [ "$INCLUDE" = true ]; then
+            FILTERED_SCENARIOS+=("$name")
+        fi
+    done
+
+    if [ ${#FILTERED_SCENARIOS[@]} -eq 0 ]; then
+        if [ ${#SCENARIO_FILTER[@]} -gt 0 ]; then
+            echo "ERROR: Unknown scenario: ${SCENARIO_FILTER[*]}" >&2
+            echo "Run with --list to see available scenarios." >&2
+            exit 1
+        fi
+        if [ ${#TAG_FILTER[@]} -gt 0 ]; then
+            echo "ERROR: Unknown tag: ${TAG_FILTER[*]}" >&2
+            echo "Run with --list-tags to see available tags." >&2
+            exit 1
+        fi
+        echo "No scenarios matched --changed filter (no relevant files changed against $BASE_BRANCH)." >&2
+        exit 0
+    fi
+
+    SCENARIO_NAMES=("${FILTERED_SCENARIOS[@]}")
+fi
+
+# Validate --scenario names
+for filter_name in "${SCENARIO_FILTER[@]}"; do
+    FOUND=false
+    for name in "${!SCENARIOS[@]}"; do
+        if [ "$name" = "$filter_name" ]; then
+            FOUND=true
+            break
+        fi
+    done
+    if [ "$FOUND" = false ]; then
+        echo "ERROR: Unknown scenario '$filter_name'" >&2
+        echo "Run with --list to see available scenarios." >&2
+        exit 1
+    fi
+done
+
+# Validate --tag names
+for filter_tag in "${TAG_FILTER[@]}"; do
+    FOUND=false
+    for name in "${!SCENARIO_TAGS[@]}"; do
+        for tag in ${SCENARIO_TAGS[$name]}; do
+            if [ "$tag" = "$filter_tag" ]; then
+                FOUND=true
+                break 2
+            fi
+        done
+    done
+    if [ "$FOUND" = false ]; then
+        echo "ERROR: Unknown tag '$filter_tag'" >&2
+        echo "Run with --list-tags to see available tags." >&2
+        exit 1
+    fi
+done
+
+TOTAL_SCENARIOS=${#SCENARIOS[@]}
+RUN_COUNT=${#SCENARIO_NAMES[@]}
+
+echo "=== Enforcement Integration Test ==="
+echo "Log dir: $LOGDIR"
+echo "Model: $MODEL"
+echo "Mode: isolated (with-test-home wrapper)"
+echo "Scenarios: $RUN_COUNT / $TOTAL_SCENARIOS"
+echo ""
 declare -A EXPECTED_SKILLS
 EXPECTED_SKILLS["bug-report"]="systematic-debugging"
 EXPECTED_SKILLS["create-spec"]="brainstorming"
@@ -180,6 +466,23 @@ EXPECTED_SKILLS["gap-fill-precedence-for-pr"]=""
 EXPECTED_SKILLS["gap-fill-precedence-standard-scope"]=""
 EXPECTED_SKILLS["screen-issue-gap-fill-awareness"]=""
 EXPECTED_SKILLS["gap-fill-precedence-before-step5c"]=""
+EXPECTED_SKILLS["cleanup-sc-verification-gate"]=""
+EXPECTED_SKILLS["cleanup-phase-completion-gate"]=""
+EXPECTED_SKILLS["scope-next-phase-resolution"]=""
+EXPECTED_SKILLS["scope-phase-n-resolution"]=""
+EXPECTED_SKILLS["enforcement-module-adversarial"]=""
+EXPECTED_SKILLS["enforcement-module-scope-parsing"]=""
+EXPECTED_SKILLS["enforcement-module-auto-dispatch"]=""
+EXPECTED_SKILLS["enforcement-module-closed-issue"]=""
+EXPECTED_SKILLS["enforcement-module-sub-issue"]=""
+EXPECTED_SKILLS["enforcement-module-completion"]=""
+EXPECTED_SKILLS["enforcement-module-result-validation"]=""
+EXPECTED_SKILLS["enforcement-module-overflow"]=""
+EXPECTED_SKILLS["enforcement-module-work-state"]=""
+EXPECTED_SKILLS["task-file-enforcement-refs"]=""
+EXPECTED_SKILLS["dev-edit-guard-plugin"]=""
+EXPECTED_SKILLS["dev-edit-guard-trigger"]=""
+EXPECTED_SKILLS["dev-edit-guard-pair-mode"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -188,11 +491,12 @@ echo "" >> "$RESULTS_FILE"
 echo "Date: $(date -Iseconds)" >> "$RESULTS_FILE"
 echo "Model: $MODEL" >> "$RESULTS_FILE"
 echo "Mode: isolated (with-test-home)" >> "$RESULTS_FILE"
+echo "Scenarios run: $RUN_COUNT / $TOTAL_SCENARIOS" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref dispatch-chain-enforcement-gate dispatch-artifact-requirements review-prep-format-self-check checklist-chat-output-format dispatch-checkpoint-live-verification spec-creation-red-gate analyze-and-spec-red-gate ui-engineer-red-gate gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c; do
+for scenario_name in "${SCENARIO_NAMES[@]}"; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -279,9 +583,13 @@ done
 echo "## Summary" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
 echo "- **Overall:** $([ "$OVERALL_PASS" = true ] && echo 'PASS' || echo 'FAIL')" >> "$RESULTS_FILE"
+echo "- **Scenarios run:** $RUN_COUNT / $TOTAL_SCENARIOS" >> "$RESULTS_FILE"
 echo "- **Plugin infrastructure loaded:** Verified per-scenario from run logs" >> "$RESULTS_FILE"
 echo "- **Skill invocation by model:** Depends on model behavior (non-deterministic)" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
+
+echo ""
+echo "=== Scenarios Run: $RUN_COUNT / $TOTAL_SCENARIOS ==="
 
 echo "## Key Plugin Events (from bug-report scenario)" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
@@ -1047,6 +1355,56 @@ fi
 SKILL_CARD_SCRIPT="$PROJECT_DIR/.opencode/skills/skill-creator/scripts/validate_skill_cards.py"
 SKILL_CARD_PASS=true
 
+# Cleanup SC-Verification Gate in cleanup.md
+CLEANUP_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/cleanup.md"
+SC_GATE=$(grep -c "SC-Verification Gate\|sc_verification_gate\|Verify each success criterion" "$CLEANUP_FILE" 2>/dev/null || echo "0")
+if [ "$SC_GATE" -ge 1 ]; then
+    echo "  cleanup SC-Verification Gate: FOUND"
+    echo "- **cleanup SC-Verification Gate:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  cleanup SC-Verification Gate: MISSING"
+    echo "- **cleanup SC-Verification Gate:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Cleanup Phase-Completion Gate in cleanup.md
+PHASE_GATE=$(grep -c "Phase-Completion Gate\|phase_completion_gate\|closing a multi-phase spec after a partial merge" "$CLEANUP_FILE" 2>/dev/null || echo "0")
+if [ "$PHASE_GATE" -ge 1 ]; then
+    echo "  cleanup Phase-Completion Gate: FOUND"
+    echo "- **cleanup Phase-Completion Gate:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  cleanup Phase-Completion Gate: MISSING"
+    echo "- **cleanup Phase-Completion Gate:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Next Phase Resolution in scope-parsing.md
+SCOPE_PARSING_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/enforcement/scope-parsing.md"
+NEXT_PHASE=$(grep -c "resolve_next_phase\|Next Phase Resolution\|for_next_phase" "$SCOPE_PARSING_FILE" 2>/dev/null || echo "0")
+if [ "$NEXT_PHASE" -ge 1 ]; then
+    echo "  scope-parsing Next Phase Resolution: FOUND"
+    echo "- **scope-parsing Next Phase Resolution:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  scope-parsing Next Phase Resolution: MISSING"
+    echo "- **scope-parsing Next Phase Resolution:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Phase N Resolution in scope-parsing.md
+PHASE_N=$(grep -c "resolve_phase_n\|Approved for Phase N Resolution\|for_phase_N" "$SCOPE_PARSING_FILE" 2>/dev/null || echo "0")
+if [ "$PHASE_N" -ge 1 ]; then
+    echo "  scope-parsing Phase N Resolution: FOUND"
+    echo "- **scope-parsing Phase N Resolution:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  scope-parsing Phase N Resolution: MISSING"
+    echo "- **scope-parsing Phase N Resolution:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
 if [ -f "$SKILL_CARD_SCRIPT" ]; then
     SKILL_CARD_OUTPUT=$(uv run "$SKILL_CARD_SCRIPT" 2>&1) || SKILL_CARD_RC=$? || SKILL_CARD_RC=0
     if [ "${SKILL_CARD_RC:-0}" -eq 0 ]; then
@@ -1088,19 +1446,3 @@ if [ "$OVERALL_PASS" = true ]; then
 else
     echo "OVERALL: FAIL"
 fi
-# Enforcement module extraction tests (Phase 1 #1197)
-SCENARIOS["enforcement-module-adversarial"]="Does .opencode/skills/approval-gate/enforcement/adversarial-verification.md contain sections for Evidence Artifact Format and Finding Classification?"
-SCENARIOS["enforcement-module-scope-parsing"]="Does .opencode/skills/approval-gate/enforcement/scope-parsing.md contain a verb-prefix parsing table?"
-SCENARIOS["enforcement-module-auto-dispatch"]="Does .opencode/skills/approval-gate/enforcement/auto-dispatch-table.md contain Scope-Dependent Routing?"
-SCENARIOS["enforcement-module-closed-issue"]="Does .opencode/skills/approval-gate/enforcement/closed-issue-verification.md contain State Reason Classification?"
-SCENARIOS["enforcement-module-sub-issue"]="Does .opencode/skills/approval-gate/enforcement/sub-issue-graph-traversal.md contain Phase-Count Cross-Reference?"
-SCENARIOS["enforcement-module-completion"]="Does .opencode/skills/divide-and-conquer/enforcement/completion-checkpoint.md contain Sub-Agent Completion Detection?"
-SCENARIOS["enforcement-module-result-validation"]="Does .opencode/skills/divide-and-conquer/enforcement/result-validation.md contain Empty/Malformed/Overflow handling?"
-SCENARIOS["enforcement-module-overflow"]="Does .opencode/skills/divide-and-conquer/enforcement/overflow-signal.md contain an OVERFLOW contract format?"
-SCENARIOS["enforcement-module-work-state"]="Does .opencode/skills/divide-and-conquer/enforcement/work-state-verification.md contain a Live State Verification Table?"
-SCENARIOS["task-file-enforcement-refs"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a section titled Enforcement References referencing enforcement modules?"
-
-# Dev edit guard tests (#1186)
-SCENARIOS["dev-edit-guard-plugin"]="Does .opencode/plugins/session-enforcement.ts contain a PROTECTED_BRANCH_EDIT_WARNING block injection for per-turn file change detection on protected branches?"
-SCENARIOS["dev-edit-guard-trigger"]="Does .opencode/scripts/session_context_triggers.py contain a build_dev_branch_with_changes_warning function?"
-SCENARIOS["dev-edit-guard-pair-mode"]="Does .opencode/plugins/session-enforcement.ts check isPairModeBranch before injecting the PROTECTED_BRANCH_EDIT_WARNING?"

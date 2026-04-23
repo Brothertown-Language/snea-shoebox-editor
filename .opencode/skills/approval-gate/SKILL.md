@@ -22,6 +22,13 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 |------|---------|-------|
 | `verify-qa-mode` | Detect spec-less implementation requests, switch to Q/A mode | ≈800 |
 | `verify-authorization` | Check explicit auth and needs-approval label; delegates branch creation to `git-workflow --task pre-work` | ≈400 |
+| `verify-authorization/scope-auto-resolve` | Step 0.5: Scope auto-resolve from authorization phrase | ≈200 |
+| `verify-authorization/item-decomposition-check` | Step 4.5: Verify item decomposition in plan | ≈250 |
+| `verify-authorization/sc-traceability-check` | Step 4.6: SC-to-test traceability and RED-phase ordering | ≈350 |
+| `verify-authorization/sub-issue-verification` | Step 5: Verify sub-issue structure (authoritative gate) | ≈600 |
+| `verify-authorization/spec-to-plan-cascade` | Step 5b: Spec-to-plan approval cascade | ≈400 |
+| `verify-authorization/gap-fill-cascade` | Step 5b.5 + 5c: Gap-fill precedence and cascade execution | ≈500 |
+| `verify-authorization/auto-dispatch` | Step 6: Scope-aware auto-dispatch + output lineage | ≈500 |
 | `verify-sub-issues` | Verify sub-issue structure for multi-task specs | ≈480 |
 | `verify-codebase` | Re-evaluate codebase state, detect staleness | ≈400 |
 | `verify-already-implemented` | Check if all success criteria are already met; autoclose if so | ≈400 |
@@ -271,7 +278,14 @@ When `halt_at < pr_created`, no PR is created — the agent halts before reachin
 
 | Task | Words |
 |------|-------|
-| `verify-authorization` | 3,319 |
+| `verify-authorization` | ≈400 |
+| `verify-authorization/scope-auto-resolve` | ≈200 |
+| `verify-authorization/item-decomposition-check` | ≈250 |
+| `verify-authorization/sc-traceability-check` | ≈350 |
+| `verify-authorization/sub-issue-verification` | ≈600 |
+| `verify-authorization/spec-to-plan-cascade` | ≈400 |
+| `verify-authorization/gap-fill-cascade` | ≈500 |
+| `verify-authorization/auto-dispatch` | ≈500 |
 | `verify-qa-mode` | 2,188 |
 | `verify-already-implemented` | 1,902 |
 | `verify-closed-issue` | 1,763 |
