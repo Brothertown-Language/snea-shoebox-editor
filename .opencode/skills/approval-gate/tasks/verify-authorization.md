@@ -265,12 +265,16 @@ if not has_tdd_steps:
 
 ### Step 4.6: Verify SC-to-Test Traceability and RED-Phase Ordering
 
-**Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions and that RED-phase ordering was followed.**
+**Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions and that RED-phase ordering was followed.** This gate applies at TWO checkpoints:
+
+1. **Spec creation RED gate** — When the spec was created (via `spec-creation` or `analyze-and-spec`), enforcement test assertions for each SC MUST have been written and verified in RED state BEFORE the spec was approved. This is enforced by the Step 0.5 RED gate in `spec-creation/tasks/write.md` and Step 4.1 in `issue-review/tasks/analyze-and-spec.md`.
+2. **Implementation RED gate** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began).
 
 **Verification checks:**
 
-1. **SC-to-test traceability exists** — For each success criterion in the corresponding spec, at least one enforcement test assertion references the SC ID (per `080-code-standards.md` SC-to-Test Traceability requirement)
-2. **RED-phase ordering confirmed** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began)
+1. **Spec-creation RED gate was followed** — The spec's success criteria had enforcement test assertions written and verified in RED state before the spec was approved (not just before implementation). Evidence: `test-enforcement.sh` contains assertions referencing SC IDs from the spec, and those assertions were verified in RED state during spec creation.
+2. **SC-to-test traceability exists** — For each success criterion in the corresponding spec, at least one enforcement test assertion references the SC ID (per `080-code-standards.md` SC-to-Test Traceability requirement)
+3. **RED-phase ordering confirmed** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began)
 
 **Procedure:**
 
@@ -281,6 +285,18 @@ spec_body = spec_issue["body"]
 
 # Parse success criteria from spec
 success_criteria = parse_success_criteria(spec_body)
+
+# 0. Verify spec-creation RED gate was followed
+# Check that enforcement test assertions for each SC were written before spec approval
+for sc in success_criteria:
+    # Spec-creation RED gate: test assertions must exist and have been verified RED
+    # during spec creation (Step 0.5 of spec-creation/tasks/write.md)
+    has_spec_red_evidence = check_spec_creation_red_gate_evidence(sc["id"])
+    if not has_spec_red_evidence:
+        # VERIFICATION-GAP: No evidence that SC test assertions were verified RED during spec creation
+        finding = f"SC {sc['id']}: no evidence that enforcement test assertions were verified in RED state during spec creation"
+        action = "BLOCK; require spec-creation RED gate to be completed"
+        severity = "VERIFICATION-GAP"
 
 # For each SC, verify:
 for sc in success_criteria:
@@ -305,7 +321,7 @@ for sc in success_criteria:
 
 **Exemption:** Existing SCs that were implemented before this mandate took effect are flagged but not blocked. RED-phase ordering is prospective (per `140-planning-spec-creation.md` constraints).
 
-**Cross-reference:** See `080-code-standards.md` "SC-to-Test Traceability" and "RED-Phase Ordering" sections for the mandate. See `091-incremental-build.md` for the per-item TDD cycle extended to SCs.
+**Cross-reference:** See `080-code-standards.md` "SC-to-Test Traceability" and "RED-Phase Ordering" sections for the mandate. See `091-incremental-build.md` for the per-item TDD cycle extended to SCs. See `spec-creation/tasks/write.md` Step 0.5 and `issue-review/tasks/analyze-and-spec.md` Step 4.1 for the content-creation RED gates that ensure enforcement test assertions exist before spec approval.
 
 ### Step 5: Verify Sub-Issue Structure (for Plan Approval)
 
