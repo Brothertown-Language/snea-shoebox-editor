@@ -99,6 +99,11 @@ SCENARIOS["dispatch-checkpoint-live-verification"]="Does .opencode/skills/approv
 SCENARIOS["spec-creation-red-gate"]="Does .opencode/skills/spec-creation/tasks/write.md contain a Step 0.5 RED Gate requiring enforcement test assertions verified in RED state before spec assembly?"
 SCENARIOS["analyze-and-spec-red-gate"]="Does .opencode/skills/issue-review/tasks/analyze-and-spec.md contain a Step 4.1 RED Gate requiring enforcement test assertions verified in RED state before fix spec sub-issue creation?"
 SCENARIOS["ui-engineer-red-gate"]="Does .opencode/skills/ui-engineer/tasks/implement.md contain a Step 0.5 RED Gate requiring enforcement test assertions verified in RED state before UI implementation?"
+SCENARIOS["gap-fill-precedence-principle"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a Gap-Fill Precedence Principle section stating that when authorization_scope gap-fill actions cover a missing artifact requirement it is a gap-fill trigger not a blocking gate?"
+SCENARIOS["gap-fill-precedence-for-pr"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md Gap-Fill Precedence Principle section explicitly state that for_pr scope with auto_create_spec means a bug report missing fix spec is a gap-fill trigger not a blocking gate?"
+SCENARIOS["gap-fill-precedence-standard-scope"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md Gap-Fill Precedence Principle section state that standard scope without auto_create_spec means a bug report missing fix spec remains a blocking gate?"
+SCENARIOS["screen-issue-gap-fill-awareness"]="Does .opencode/skills/approval-gate/tasks/screen-issue.md contain a note that screening sub-agents must not block on missing specs when authorization_scope gap-fill actions include auto_create_spec?"
+SCENARIOS["gap-fill-precedence-before-step5c"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md place the Gap-Fill Precedence Principle before Step 5c so it is evaluated before blocking gates?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -170,6 +175,11 @@ EXPECTED_SKILLS["dispatch-checkpoint-live-verification"]=""
 EXPECTED_SKILLS["spec-creation-red-gate"]=""
 EXPECTED_SKILLS["analyze-and-spec-red-gate"]=""
 EXPECTED_SKILLS["ui-engineer-red-gate"]=""
+EXPECTED_SKILLS["gap-fill-precedence-principle"]=""
+EXPECTED_SKILLS["gap-fill-precedence-for-pr"]=""
+EXPECTED_SKILLS["gap-fill-precedence-standard-scope"]=""
+EXPECTED_SKILLS["screen-issue-gap-fill-awareness"]=""
+EXPECTED_SKILLS["gap-fill-precedence-before-step5c"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -182,7 +192,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref dispatch-chain-enforcement-gate dispatch-artifact-requirements review-prep-format-self-check checklist-chat-output-format dispatch-checkpoint-live-verification spec-creation-red-gate analyze-and-spec-red-gate ui-engineer-red-gate; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref dispatch-chain-enforcement-gate dispatch-artifact-requirements review-prep-format-self-check checklist-chat-output-format dispatch-checkpoint-live-verification spec-creation-red-gate analyze-and-spec-red-gate ui-engineer-red-gate gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -970,6 +980,69 @@ fi
 echo ""
 echo "" >> "$RESULTS_FILE"
 echo "" >> "$RESULTS_FILE"
+
+# Gap-Fill Precedence Principle in verify-authorization.md
+VERIFY_AUTH_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/tasks/verify-authorization.md"
+GAP_FILL_PRECEDENCE=$(grep -c "Gap-Fill Precedence Principle\|gap-fill trigger.*not a blocking gate\|gap-fill actions cover.*missing artifact" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+if [ "$GAP_FILL_PRECEDENCE" -ge 1 ]; then
+    echo "  verify-authorization Gap-Fill Precedence Principle: FOUND"
+    echo "- **verify-authorization Gap-Fill Precedence Principle:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-authorization Gap-Fill Precedence Principle: MISSING"
+    echo "- **verify-authorization Gap-Fill Precedence Principle:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Gap-Fill Precedence Principle explicit for_pr reference
+GAP_FILL_FORPR=$(grep -c "for_pr.*auto_create_spec\|bug report.*fix spec.*gap-fill\|missing fix spec.*gap-fill trigger" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+if [ "$GAP_FILL_FORPR" -ge 1 ]; then
+    echo "  verify-authorization gap-fill for_pr bug report: FOUND"
+    echo "- **verify-authorization gap-fill for_pr bug report:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-authorization gap-fill for_pr bug report: MISSING"
+    echo "- **verify-authorization gap-fill for_pr bug report:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Gap-Fill Precedence Principle standard scope preserves blocking
+GAP_FILL_STANDARD=$(grep -c "standard.*blocking\|scope.*without.*auto_create_spec.*blocking\|gap-fill.*does not cover.*blocking" "$VERIFY_AUTH_FILE" 2>/dev/null || echo "0")
+if [ "$GAP_FILL_STANDARD" -ge 1 ]; then
+    echo "  verify-authorization gap-fill standard scope blocking: FOUND"
+    echo "- **verify-authorization gap-fill standard scope blocking:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-authorization gap-fill standard scope blocking: MISSING"
+    echo "- **verify-authorization gap-fill standard scope blocking:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# screen-issue gap-fill awareness
+SCREEN_GAP_FILL=$(grep -c "gap-fill\|auto_create_spec\|authorization_scope.*gap-fill" "$PROJECT_DIR/.opencode/skills/approval-gate/tasks/screen-issue.md" 2>/dev/null || echo "0")
+if [ "$SCREEN_GAP_FILL" -ge 1 ]; then
+    echo "  screen-issue gap-fill awareness: FOUND"
+    echo "- **screen-issue gap-fill awareness:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  screen-issue gap-fill awareness: MISSING"
+    echo "- **screen-issue gap-fill awareness:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Gap-Fill Precedence Principle placed before Step 5c
+GAP_FILL_BEFORE_5C=$(grep -n "Gap-Fill Precedence\|Step 5c" "$VERIFY_AUTH_FILE" 2>/dev/null | head -5)
+GAP_FILL_LINE=$(echo "$GAP_FILL_BEFORE_5C" | grep "Gap-Fill Precedence" | head -1 | grep -oP '^\d+' || echo "0")
+STEP5C_LINE=$(echo "$GAP_FILL_BEFORE_5C" | grep "Step 5c" | head -1 | grep -oP '^\d+' || echo "0")
+if [ "$GAP_FILL_LINE" -gt 0 ] && [ "$STEP5C_LINE" -gt 0 ] && [ "$GAP_FILL_LINE" -lt "$STEP5C_LINE" ]; then
+    echo "  verify-authorization Gap-Fill Precedence before Step 5c: FOUND"
+    echo "- **verify-authorization Gap-Fill Precedence before Step 5c:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-authorization Gap-Fill Precedence before Step 5c: MISSING"
+    echo "- **verify-authorization Gap-Fill Precedence before Step 5c:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
 
 SKILL_CARD_SCRIPT="$PROJECT_DIR/.opencode/skills/skill-creator/scripts/validate_skill_cards.py"
 SKILL_CARD_PASS=true

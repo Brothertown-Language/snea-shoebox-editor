@@ -734,6 +734,56 @@ elif not plan_issues:
 
 **Evidence artifact:** `github_search_issues` response showing plan issues referencing the spec, and `github_issue_write` response confirming label removal and comment posting.
 
+### Step 5b.5: Gap-Fill Precedence Principle
+
+**Before evaluating any blocking gate in Steps 5 through 5c, the agent MUST apply this precedence principle:**
+
+> When `authorization_scope`'s gap-fill actions cover a missing artifact requirement, that requirement is a gap-fill trigger, not a blocking gate. Hard gates only apply to artifacts outside the scope's gap-fill coverage.
+
+**Application to Bug Reports:**
+
+The critical rule "Bug Reports Without Fix Spec" requires a fix-spec sub-issue before implementation. When `authorization_scope >= for_implementation` (which includes `for_implementation`, `for_code_review`, and `for_pr`), the gap-fill actions include `auto_create_spec`. This means:
+
+- **Missing fix-spec for a bug report + `for_pr` authorization** → Gap-fill trigger: proceed to Step 5c, which dispatches `brainstorming --task explore` to create the fix-spec. NOT a blocking gate.
+- **Missing fix-spec for a bug report + `for_implementation` authorization** → Gap-fill trigger: same as above. NOT a blocking gate.
+- **Missing fix-spec for a bug report + `for_code_review` authorization** → Gap-fill trigger: same as above. NOT a blocking gate.
+- **Missing fix-spec for a bug report + `for_plan` authorization** → Gap-fill trigger: `for_plan` includes `auto_create_spec`. NOT a blocking gate.
+- **Missing fix-spec for a bug report + `for_spec` authorization** → Gap-fill trigger: `for_spec` targets spec creation. NOT a blocking gate.
+- **Missing fix-spec for a bug report + `standard` authorization** → Blocking gate: `standard` scope has NO gap-fill actions, so the fix-spec must already exist. HALT and report missing fix-spec. Standard scope without auto_create_spec means missing spec artifacts remain blocking gates, not gap-fill triggers.
+
+**Procedure:**
+
+```python
+# At the start of Step 5, before evaluating any blocking gate:
+scope = verification_result["authorization_scope"]
+gap_fill_actions = GAP_FILL.get(scope, [])
+
+# For ANY blocking gate that checks for a missing artifact:
+# If the missing artifact would be created by a gap-fill action,
+# the gate is OVERRIDDEN — proceed to Step 5c gap-fill cascade.
+
+# Example: Bug report without fix-spec
+missing_fix_spec = is_bug_report and not has_fix_spec_sub_issue
+if missing_fix_spec:
+    if "auto_create_spec" in gap_fill_actions:
+        # Gap-fill covers this — NOT a blocking gate
+        # Proceed to Step 5c to create the spec
+        pass
+    else:
+        # No gap-fill coverage — this IS a blocking gate
+        # HALT and report missing fix-spec
+        findings.append({
+            "finding": "Bug report requires fix-spec but scope has no auto_create_spec",
+            "problem_class": "MISSING-ELEMENT",
+            "classification": "flag-for-review",
+            "action": "block"
+        })
+```
+
+**This principle applies universally**, not just to bug reports. Any blocking gate that checks for a missing artifact MUST be evaluated against the gap-fill actions for the current scope. If the gap-fill covers the artifact, the gate is bypassed.
+
+**Evidence artifact:** The agent's verification report MUST note when a blocking gate was overridden by the Gap-Fill Precedence Principle, citing the specific gate, the missing artifact, and the covering gap-fill action.
+
 ### Step 5c: Scope-Aware Gap-Fill Cascade
 
 **When `authorization_scope` from Step 2.0 is >= `for_plan`, missing intermediate artifacts are gap-filled automatically.** This eliminates the "catch-22" where pipeline authorization says "go to PR" but the plan doesn't exist yet — the scope horizon authorizes its creation.

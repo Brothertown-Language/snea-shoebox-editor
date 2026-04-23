@@ -385,6 +385,8 @@ concerns:
 ```yaml
 issue_number: <N>
 work_peers: [<list of other issue numbers in work set>]
+authorization_scope:   # From verify-authorization Step 2.0
+gap_fill_actions: []  # Derived from authorization_scope
 session_vars:
   github.owner: <from-session>
   github.repo: <from-session>
@@ -457,5 +459,29 @@ Screening sub-agents produce result contracts that feed into `pre-implementation
 1. **Screening results are data, not decisions.** The result contract is consumed by `pre-implementation-analysis` which auto-dispatches to `assemble-work`. No human review of screening results is required unless `requires_developer: true`.
 2. **Individual screen-issue sub-agents MUST NOT halt the orchestrator.** They return result contracts and terminate. The orchestrator processes all contracts before any action.
 3. **The orchestrator assembles results and proceeds.** Presentation of assembled results is informational — not a gate, not a decision point, not a halt point. See `pre-implementation-analysis.md` §"Post-Analysis Dispatch (MANDATORY)" for enforcement.
+
+### Gap-Fill Override for Screening Sub-Agents
+
+**When `authorization_scope` is passed via dispatch context and its gap-fill actions include `auto_create_spec`, screening sub-agents MUST NOT block on missing spec artifacts (including the fix-spec requirement for bug reports).** The missing spec is a gap-fill trigger handled by `verify-authorization` Step 5c, not a screening blocking condition.
+
+Screening sub-agents classify issues (include/exclude/reduce-scope). They do NOT enforce artifact requirements that are covered by the authorization scope's gap-fill cascade. A bug report without a fix-spec is classified normally (e.g., "included") — the fix-spec creation is deferred to the gap-fill cascade.
+
+**Procedure:**
+
+```python
+# When evaluating a bug report during screening:
+if is_bug_report and not has_fix_spec:
+    if "auto_create_spec" in dispatch_context.get("gap_fill_actions", []):
+        # Do NOT flag as blocking — gap-fill handles this
+        # Classify normally (include/reduce-scope/etc.)
+        pass
+    else:
+        # No gap-fill coverage — flag in result contract
+        result_contract["concerns"].append(
+            "Bug report lacks fix-spec; scope has no auto_create_spec gap-fill"
+        )
+```
+
+**The `gap_fill_actions` field MUST be passed in the dispatch context** when `authorization_scope >= for_implementation`. See `verify-authorization.md` Step 2.0 for the `GAP_FILL` mapping.
 
 - Produce the result contract as the final output of this task
