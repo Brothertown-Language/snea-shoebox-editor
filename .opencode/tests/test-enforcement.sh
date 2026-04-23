@@ -96,6 +96,9 @@ SCENARIOS["dispatch-artifact-requirements"]="Does .opencode/guidelines/000-criti
 SCENARIOS["review-prep-format-self-check"]="Does .opencode/skills/git-workflow/tasks/review-prep.md contain a Format verification section that requires checking URL label context, URL format context, and element ordering before sending chat output?"
 SCENARIOS["checklist-chat-output-format"]="Does .opencode/skills/finishing-a-development-branch/tasks/checklist.md contain a Chat Output Format section that requires verifying executive summary, outcome, URL label, URL presence, AI byline, and correct ordering?"
 SCENARIOS["dispatch-checkpoint-live-verification"]="Does .opencode/skills/approval-gate/SKILL.md contain an evidence requirement that mandates tool-call artifact evidence for each dispatch chain verification gate?"
+SCENARIOS["spec-creation-red-gate"]="Does .opencode/skills/spec-creation/tasks/write.md contain a Step 0.5 RED Gate requiring enforcement test assertions verified in RED state before spec assembly?"
+SCENARIOS["analyze-and-spec-red-gate"]="Does .opencode/skills/issue-review/tasks/analyze-and-spec.md contain a Step 4.1 RED Gate requiring enforcement test assertions verified in RED state before fix spec sub-issue creation?"
+SCENARIOS["ui-engineer-red-gate"]="Does .opencode/skills/ui-engineer/tasks/implement.md contain a Step 0.5 RED Gate requiring enforcement test assertions verified in RED state before UI implementation?"
 
 # Expected skill invocations per scenario (empty = no specific skill expected)
 declare -A EXPECTED_SKILLS
@@ -164,6 +167,9 @@ EXPECTED_SKILLS["dispatch-artifact-requirements"]=""
 EXPECTED_SKILLS["review-prep-format-self-check"]=""
 EXPECTED_SKILLS["checklist-chat-output-format"]=""
 EXPECTED_SKILLS["dispatch-checkpoint-live-verification"]=""
+EXPECTED_SKILLS["spec-creation-red-gate"]=""
+EXPECTED_SKILLS["analyze-and-spec-red-gate"]=""
+EXPECTED_SKILLS["ui-engineer-red-gate"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -176,7 +182,7 @@ echo "" >> "$RESULTS_FILE"
 
 OVERALL_PASS=true
 
-for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref dispatch-chain-enforcement-gate dispatch-artifact-requirements review-prep-format-self-check checklist-chat-output-format dispatch-checkpoint-live-verification; do
+for scenario_name in bug-report create-spec simple-question implement-request post-merge-cleanup symptom-patch incremental-build-guideline monolithic-implementation-violation item-decomposition-step brainstorming-top-down writing-plans-bottom-up executing-plans-tdd divide-conquer-tdd agents-md-incremental worktree-handoff-step scope-auto-resolve-guideline scope-auto-resolve-step worktree-mandate offer-to-edit-bypass bug-discovery-no-auth confirmation-not-auth pipeline-scoped-halt silent-halt-with-search pr-creation-guard post-implementation-format sub-issue-structure read-comments-before-action per-sc-evidence-table vbc-per-sc-evidence-skill finishing-sc-verification sc-to-test-traceability red-phase-ordering sc-traceability-example approval-gate-sc-traceability approval-gate-red-phase executable-verification-commands vague-verification-antipattern sc-assertion-tdd-cycle red-state-before-implementation validate-executable-verification semantic-intent-spec-creation narrow-sc-table-exemption semantic-intent-writing-plans why-specific-value-tdd verification-mechanics-brainstorming sc-precision-audit url-sourcing-rule1-pr url-sourcing-rule1-review-prep url-sourcing-rule2-character-match url-sourcing-guideline-rules url-sourcing-issue-operations identity-echo-validation secret-exfiltration-violation read-secrets-in-output red-phase-gate-executing-plans red-phase-gate-skillmd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref dispatch-chain-enforcement-gate dispatch-artifact-requirements review-prep-format-self-check checklist-chat-output-format dispatch-checkpoint-live-verification spec-creation-red-gate analyze-and-spec-red-gate ui-engineer-red-gate; do
     MESSAGE="${SCENARIOS[$scenario_name]}"
     EXPECTED="${EXPECTED_SKILLS[$scenario_name]}"
     SCENARIO_LOG="$LOGDIR/${scenario_name}.log"
@@ -919,6 +925,44 @@ if [ "$AG_EVIDENCE" -ge 1 ]; then
 else
     echo "  dispatch chain evidence requirement: MISSING"
     echo "- **dispatch chain evidence requirement:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# spec-creation RED Gate in write.md
+SPEC_WRITE_RED=$(grep -c "Step 0.5.*RED Gate\|RED Gate.*Enforcement Test\|enforcement test assertions.*RED state.*before spec" "$SPEC_WRITE_FILE" 2>/dev/null || echo "0")
+if [ "$SPEC_WRITE_RED" -ge 1 ]; then
+    echo "  spec-creation/write RED Gate: FOUND"
+    echo "- **spec-creation/write RED Gate:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  spec-creation/write RED Gate: MISSING"
+    echo "- **spec-creation/write RED Gate:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# analyze-and-spec RED Gate in analyze-and-spec.md
+ANALYZE_SPEC_FILE="$PROJECT_DIR/.opencode/skills/issue-review/tasks/analyze-and-spec.md"
+ANALYZE_SPEC_RED=$(grep -c "Step 4.1.*RED Gate\|RED Gate.*Fix Spec.*Enforcement Test\|enforcement test assertions.*RED state.*before.*fix spec" "$ANALYZE_SPEC_FILE" 2>/dev/null || echo "0")
+if [ "$ANALYZE_SPEC_RED" -ge 1 ]; then
+    echo "  analyze-and-spec RED Gate: FOUND"
+    echo "- **analyze-and-spec RED Gate:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  analyze-and-spec RED Gate: MISSING"
+    echo "- **analyze-and-spec RED Gate:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# ui-engineer RED Gate in implement.md
+UI_IMPL_FILE="$PROJECT_DIR/.opencode/skills/ui-engineer/tasks/implement.md"
+UI_ENGINEER_RED=$(grep -c "Step 0.5.*RED Gate\|RED Gate.*UI.*Enforcement Test\|enforcement test assertions.*RED state.*before.*UI\|test-ui.*mandatory prerequisite\|test-ui.*MANDATORY prerequisite" "$UI_IMPL_FILE" 2>/dev/null || echo "0")
+if [ "$UI_ENGINEER_RED" -ge 1 ]; then
+    echo "  ui-engineer/implement RED Gate: FOUND"
+    echo "- **ui-engineer/implement RED Gate:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  ui-engineer/implement RED Gate: MISSING"
+    echo "- **ui-engineer/implement RED Gate:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

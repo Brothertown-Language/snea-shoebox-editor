@@ -80,6 +80,8 @@ These anti-patterns are also documented as the "Monolithic Implementation" criti
 
 The RED phase is enforced at multiple checkpoints to prevent GREEN-without-RED violations. Each enforcement point requires tool-call evidence that the test was verified to fail before implementation proceeds.
 
+**Checkpoint 0 — Spec Creation RED Gate:** Before a spec is approved, enforcement test assertions for each spec success criterion MUST exist and be in RED state (failing) in `test-enforcement.sh`. This is enforced by `spec-creation/tasks/write.md` Step 0.5 and `issue-review/tasks/analyze-and-spec.md` Step 4.1. The approval gate verifies this at Step 4.6 — enforcement test assertions for spec SCs must have been written before the spec was approved, not just before implementation.
+
 **Checkpoint 1 — executing-plans/tasks/start.md Step 5.5:** Before dispatching to divide-and-conquer, the agent MUST verify that RED test artifacts exist for each item. If no RED test artifact exists, the agent MUST HALT and require the RED phase to be completed.
 
 **Checkpoint 2 — writing-plans/tasks/create.md Step 2:** Plans MUST include a RED verification step that produces tool-call evidence of test failure. The plan template requires a step between writing the test and implementing the change where the agent runs the test and captures the failure output as evidence.

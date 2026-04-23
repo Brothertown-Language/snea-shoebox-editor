@@ -75,6 +75,37 @@ Create a fix spec using the `issue-operations` skill. The fix spec must include:
    - **Affected Files**: Files that need modification
    - **Risk Assessment**: Potential regression areas
 
+#### Step 4.1: RED Gate — Fix Spec Enforcement Test Assertions (MANDATORY)
+
+**🚫 CRITICAL: This sub-step MUST execute BEFORE the fix spec sub-issue is created in Step 6. Skipping this step is a CRITICAL GUIDELINE VIOLATION.**
+
+Before creating the fix spec sub-issue, enforcement test assertions MUST be written for each success criterion in the fix spec.
+
+**Procedure:**
+
+1. **Write enforcement test assertions** — For each success criterion in the fix spec, write an enforcement test assertion in `test-enforcement.sh` that verifies the SC's requirement. Use the format: `# SC-N: <brief description>` as a comment above the assertion, followed by a grep/check that will FAIL before the fix is implemented and PASS after
+2. **Verify RED state** — Run the newly written assertions and confirm they are in RED state (failing). The assertions MUST fail because the fix spec content they verify does not exist yet
+3. **Produce tool-call evidence** — Record the RED state verification output as a tool-call artifact
+4. **Include test assertion references in fix spec body** — Add a `Test Assertions` section to the fix spec body listing the SC IDs and their corresponding enforcement test scenario names in `test-enforcement.sh`
+
+**Evidence artifact format:**
+
+```
+RED Gate: analyze-and-spec fix spec enforcement test assertions
+Assertions written: [count]
+RED state verified: [true/false]
+Test output: [pasted failure output]
+SC-to-test mapping: [
+  SC-1 -> <test scenario name>,
+  SC-2 -> <test scenario name>,
+  ...
+]
+```
+
+**If RED state is NOT confirmed:** HALT. Do NOT create the fix spec sub-issue. The enforcement test assertions MUST exist and fail before the fix spec is persisted.
+
+**Cross-reference:** See `091-incremental-build.md` → Per-Item TDD Cycle → RED phase, and `080-code-standards.md` → SC-to-Test Traceability and RED-Phase Ordering.
+
 **Root Cause Anti-Patterns (FORBIDDEN):**
 
 | Anti-Pattern | Root Cause Fix (REQUIRED) | Symptom-Only Patch (FORBIDDEN) |
