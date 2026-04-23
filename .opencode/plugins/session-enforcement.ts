@@ -798,7 +798,32 @@ function extractValue(sessionOutput: string | null, key: string): string | null 
   return match ? match[1] : null;
 }
 
-function buildIdentityEchoDirective(platform: string, owner: string, repo: string): string {
+function detectAgentBinary(): { name: string; version: string } {
+  const argv0 = process.argv[0] || "";
+  const argv1 = process.argv[1] || "";
+
+  for (const arg of [argv1, argv0]) {
+    if (arg.includes("opencode-cli")) {
+      return { name: "OpenCode CLI", version: "" };
+    }
+    if (arg.includes("opencode") || arg.includes("OpenCode")) {
+      return { name: "OpenCode", version: "" };
+    }
+  }
+
+  const envBinary = process.env.OPENCODE_BINARY || "";
+  const envVersion = process.env.OPENCODE_VERSION || "";
+
+  if (envBinary) {
+    return { name: envBinary, version: envVersion || "" };
+  }
+
+  return { name: "unknown (version detection failed)", version: "" };
+}
+
+function buildIdentityEchoDirective(platform: string, owner: string, repo: string, agentName?: string, modelId?: string): string {
+  const agentLine = `🤖 ${agentName || "<AgentName>"} (${modelId || "<ModelId>"}) <status-icon> <status>`;
+
   return `<IDENTITY_ECHO>
 Before doing anything else, you MUST echo your platform identity as your very first output. The CORRECT values are:
 
@@ -806,7 +831,7 @@ Platform: ${platform}, Org: ${owner}, Repo: ${repo}
 
 You MUST output EXACTLY these values in this format:
 Platform: ${platform}, Org: ${owner}, Repo: ${repo}
-🤖 <AgentName> (<ModelId>) <status-icon> <status>
+${agentLine}
 
 ⚠️ FATAL: If your echo does not match Platform: ${platform}, Org: ${owner}, Repo: ${repo} character-for-character, you MUST HALT immediately and report the mismatch. Do NOT proceed with any operations with incorrect identity. Do NOT infer identity from repository names, file paths, or environment variables. Use ONLY the values provided in the system prompt identity section.
 
@@ -921,12 +946,29 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       if (identityOutput) {
         output.system.push(identityOutput);
       }
+
+      // Inject agent binary name and version for LLM identity echo
+      const agentBinary = detectAgentBinary();
+      const agentBlock = [`AgentName: ${agentBinary.name}`];
+      if (agentBinary.version) {
+        agentBlock.push(`ModelId: ${agentBinary.version}`);
+      }
+      output.system.push(agentBlock.join("\n"));
     },
 
     // Inject enforcement content into first user message (adapted from obra/superpowers)
       // AND detect bare #N issue references in last user message
       // AND inject identity-echo directive + trigger warnings into first user message
       // AND inject plugin diagnostics block into first user message
+      //
+      // FIRST-TURN GUARD: IDENTITY_ECHO, SESSION_TRIGGERS, EXTREMELY_IMPORTANT,
+      // PLUGIN_DIAGNOSTICS, and IDENTITY_VALIDATION_FAILURE are injected ONLY on
+      // the first turn (when userMessages.length === 1). This prevents context
+      // window bloat from accumulated re-injected blocks on subsequent turns.
+      //
+      // Per-turn behaviors (unchanged):
+      // - Bare issue pipeline detection on lastUser
+      // - Secret redaction on all assistant messages
       "experimental.chat.messages.transform": async (_input, output) => {
         if (!output.messages || !output.messages.length) return;
 
@@ -934,43 +976,105 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         if (!userMessages.length) return;
 
         const firstUser = userMessages[0];
+        const isFirstTurn = userMessages.length === 1;
 
-        // --- Enforcement injection into FIRST user message ---
-        const enforcementContent = buildEnforcementContent(skillDescriptions);
-        if (enforcementContent && firstUser.parts?.length) {
-          if (!firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) {
-            const ref = firstUser.parts[0];
-            firstUser.parts.unshift({ ...ref, type: "text", text: enforcementContent });
+        // --- First-turn-only: Enforcement injection into FIRST user message ---
+        if (isFirstTurn) {
+          const enforcementContent = buildEnforcementContent(skillDescriptions);
+          if (enforcementContent && firstUser.parts?.length) {
+            if (!firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) {
+              const ref = firstUser.parts[0];
+              firstUser.parts.unshift({ ...ref, type: "text", text: enforcementContent });
+            }
+          }
+
+          // --- First-turn-only: Identity-echo directive + trigger warnings ---
+          const triggersOutput = await runSessionContextTriggers(projectDir);
+          const knownPlatform = extractValue(cachedIdentityOutput, "github.platform");
+          const knownOwner = extractValue(cachedIdentityOutput, "github.owner");
+          const knownRepo = extractValue(cachedIdentityOutput, "github.repo");
+
+          // Detect agent binary for identity echo
+          const agentBinary = detectAgentBinary();
+
+          const identityBlock = buildIdentityEchoDirective(
+            knownPlatform || "<platform>",
+            knownOwner || "<owner>",
+            knownRepo || "<repo>",
+            agentBinary.name,
+            agentBinary.version || undefined,
+          );
+          const triggerBlock = triggersOutput ? `<SESSION_TRIGGERS>\n${triggersOutput}\n</SESSION_TRIGGERS>` : "";
+
+          const echoParts: string[] = [];
+          if (identityBlock) {
+            echoParts.push(identityBlock);
+          }
+          if (triggerBlock) {
+            echoParts.push(triggerBlock);
+          }
+          if (echoParts.length > 0 && firstUser.parts?.length) {
+            firstUser.parts.unshift({ type: "text", text: echoParts.join("\n\n") });
+          }
+
+          // --- First-turn-only: Plugin diagnostics injection ---
+          const diagnostics = collectDiagnostics(projectDir);
+          const diagnosticBlock = buildDiagnosticBlock(diagnostics);
+          if (diagnosticBlock && firstUser.parts?.length) {
+            firstUser.parts.push({ type: "text", text: diagnosticBlock });
+          }
+
+          // --- First-turn-only: Identity echo validation ---
+          if (!knownPlatform || !knownOwner || !knownRepo) {
+            const missing = [
+              !knownPlatform ? "github.platform" : null,
+              !knownOwner ? "github.owner" : null,
+              !knownRepo ? "github.repo" : null,
+            ].filter(Boolean).join(", ");
+
+            const lastUser = userMessages[userMessages.length - 1];
+            if (lastUser?.parts?.length) {
+              lastUser.parts.push({
+                type: "text",
+                text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Session identity values are MISSING. HALT all operations immediately.\n\nMissing values: ${missing}\n\nIdentity validation cannot proceed without these values. Do NOT infer identity from repository names, file paths, or environment variables. Resolve the missing identity values before continuing any operations.\n</IDENTITY_VALIDATION_FAILURE>`
+              });
+            }
+          } else {
+            const assistantMessages = output.messages.filter(m => m.info?.role === "assistant");
+            if (assistantMessages.length > 0) {
+              const firstAssistant = assistantMessages[0];
+              const assistantText = firstAssistant.parts
+                ?.filter(p => p.type === "text" && p.text)
+                .map(p => p.text)
+                .join(" ") || "";
+
+              const echoMatch = assistantText.match(/Platform:\s*(\S+),\s*Org:\s*(\S+),\s*Repo:\s*(\S+)/);
+
+              const lastUser = userMessages[userMessages.length - 1];
+
+              if (!echoMatch) {
+                if (lastUser?.parts?.length) {
+                  lastUser.parts.push({
+                    type: "text",
+                    text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Your first message did not contain a valid identity echo. You MUST echo your platform identity before proceeding with ANY operations.\n\nExpected: Platform: ${knownPlatform}, Org: ${knownOwner}, Repo: ${knownRepo}\n\nHALT all operations. Echo the correct identity values above before continuing.\n</IDENTITY_VALIDATION_FAILURE>`
+                  });
+                }
+              } else {
+                const [, echoPlatform, echoOwner, echoRepo] = echoMatch;
+                if (echoPlatform !== knownPlatform || echoOwner !== knownOwner || echoRepo !== knownRepo) {
+                  if (lastUser?.parts?.length) {
+                    lastUser.parts.push({
+                      type: "text",
+                      text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Identity echo mismatch detected!\n\nYour echo: Platform: ${echoPlatform}, Org: ${echoOwner}, Repo: ${echoRepo}\nExpected: Platform: ${knownPlatform}, Org: ${knownOwner}, Repo: ${knownRepo}\n\nHALT all operations. These values do NOT match. Use ONLY the expected values above. Do NOT infer identity from repository names, file paths, or environment variables.\n</IDENTITY_VALIDATION_FAILURE>`
+                    });
+                  }
+                }
+              }
+            }
           }
         }
 
-        // --- Identity-echo directive + trigger warnings injection into FIRST user message ---
-        const triggersOutput = await runSessionContextTriggers(projectDir);
-        const knownPlatform = extractValue(cachedIdentityOutput, "github.platform");
-        const knownOwner = extractValue(cachedIdentityOutput, "github.owner");
-        const knownRepo = extractValue(cachedIdentityOutput, "github.repo");
-        const identityBlock = buildIdentityEchoDirective(knownPlatform || "<platform>", knownOwner || "<owner>", knownRepo || "<repo>");
-        const triggerBlock = triggersOutput ? `<SESSION_TRIGGERS>\n${triggersOutput}\n</SESSION_TRIGGERS>` : "";
-
-        const echoParts: string[] = [];
-        if (identityBlock) {
-          echoParts.push(identityBlock);
-        }
-        if (triggerBlock) {
-          echoParts.push(triggerBlock);
-        }
-        if (echoParts.length > 0 && firstUser.parts?.length) {
-          firstUser.parts.unshift({ type: "text", text: echoParts.join("\n\n") });
-        }
-
-        // --- Plugin diagnostics injection into FIRST user message ---
-        const diagnostics = collectDiagnostics(projectDir);
-        const diagnosticBlock = buildDiagnosticBlock(diagnostics);
-        if (diagnosticBlock && firstUser.parts?.length) {
-          firstUser.parts.push({ type: "text", text: diagnosticBlock });
-        }
-
-      // --- Bare issue pipeline detection on LAST user message ---
+      // --- Per-turn: Bare issue pipeline detection on LAST user message ---
       const lastUser = userMessages[userMessages.length - 1];
       if (lastUser?.parts?.length) {
         for (const part of lastUser.parts) {
@@ -985,7 +1089,7 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         }
       }
 
-      // --- Secret redaction on ALL assistant messages ---
+      // --- Per-turn: Secret redaction on ALL assistant messages ---
       const assistantMessages = output.messages.filter(m => m.info?.role === "assistant");
       for (const msg of assistantMessages) {
         if (!msg.parts?.length) continue;
@@ -995,55 +1099,6 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
             const redacted = redactSecrets(part.text);
             if (redacted !== part.text) {
               msg.parts[i] = { ...part, type: "text", text: redacted };
-            }
-          }
-        }
-      }
-
-      // --- Identity echo validation on assistant messages ---
-      if (!knownPlatform || !knownOwner || !knownRepo) {
-        const missing = [
-          !knownPlatform ? "github.platform" : null,
-          !knownOwner ? "github.owner" : null,
-          !knownRepo ? "github.repo" : null,
-        ].filter(Boolean).join(", ");
-
-        const injectTarget = lastUser;
-        if (injectTarget?.parts?.length) {
-          injectTarget.parts.push({
-            type: "text",
-            text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Session identity values are MISSING. HALT all operations immediately.\n\nMissing values: ${missing}\n\nIdentity validation cannot proceed without these values. Do NOT infer identity from repository names, file paths, or environment variables. Resolve the missing identity values before continuing any operations.\n</IDENTITY_VALIDATION_FAILURE>`
-          });
-        }
-      } else {
-        const assistantMessages = output.messages.filter(m => m.info?.role === "assistant");
-        if (assistantMessages.length > 0) {
-          const firstAssistant = assistantMessages[0];
-          const assistantText = firstAssistant.parts
-            ?.filter(p => p.type === "text" && p.text)
-            .map(p => p.text)
-            .join(" ") || "";
-
-          const echoMatch = assistantText.match(/Platform:\s*(\S+),\s*Org:\s*(\S+),\s*Repo:\s*(\S+)/);
-
-          if (!echoMatch) {
-            const injectTarget = lastUser;
-            if (injectTarget?.parts?.length) {
-              injectTarget.parts.push({
-                type: "text",
-                text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Your first message did not contain a valid identity echo. You MUST echo your platform identity before proceeding with ANY operations.\n\nExpected: Platform: ${knownPlatform}, Org: ${knownOwner}, Repo: ${knownRepo}\n\nHALT all operations. Echo the correct identity values above before continuing.\n</IDENTITY_VALIDATION_FAILURE>`
-              });
-            }
-          } else {
-            const [, echoPlatform, echoOwner, echoRepo] = echoMatch;
-            if (echoPlatform !== knownPlatform || echoOwner !== knownOwner || echoRepo !== knownRepo) {
-              const injectTarget = lastUser;
-              if (injectTarget?.parts?.length) {
-                injectTarget.parts.push({
-                  type: "text",
-                  text: `<IDENTITY_VALIDATION_FAILURE>\n⚠️ FATAL: Identity echo mismatch detected!\n\nYour echo: Platform: ${echoPlatform}, Org: ${echoOwner}, Repo: ${echoRepo}\nExpected: Platform: ${knownPlatform}, Org: ${knownOwner}, Repo: ${knownRepo}\n\nHALT all operations. These values do NOT match. Use ONLY the expected values above. Do NOT infer identity from repository names, file paths, or environment variables.\n</IDENTITY_VALIDATION_FAILURE>`
-                });
-              }
             }
           }
         }
