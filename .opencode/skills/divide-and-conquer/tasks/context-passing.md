@@ -135,3 +135,6 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | worktree.path invalid | STRUCTURE-VIOLATION | auto-fix | HALT — cannot safely dispatch |
 | Stale session vars | VERIFICATION-GAP | conditional | Refresh from session init |
 | Prior results contradicted | VERIFICATION-GAP | conditional | Re-verify prior sub-agent output |
+## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Work state verification: see `enforcement/work-state-verification.md`

@@ -224,4 +224,6 @@ Before sending chat message in Step 4:
 
 - Developers need visibility before PR creation
 - Prevents premature PR creation
-- Clear separation between "done implementing" and "create PR"
+- Clear separation between "done implementing" and "create PR"## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`

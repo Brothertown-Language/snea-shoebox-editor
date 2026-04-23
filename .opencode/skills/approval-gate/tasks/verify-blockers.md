@@ -136,4 +136,6 @@ has_auth = any comment from developer (MEMBER/OWNER/COLLABORATOR) saying "approv
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-open-questions`
-- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on explicit auth, add `needs-revision` on revision required)
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on explicit auth, add `needs-revision` on revision required)## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`

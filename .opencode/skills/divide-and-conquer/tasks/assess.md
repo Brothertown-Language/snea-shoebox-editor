@@ -98,4 +98,7 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
 | Overflow risk unverified | VERIFICATION-GAP | conditional | Check actual context size |
-| Assessment contradicted by file scope | CONFLICTING | conditional | Re-assess with actual file list |
+| Assessment contradicted by file scope | CONFLICTING | conditional | Re-assess with actual file list |## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Result validation: see `enforcement/result-validation.md`
+-  Overflow signal: see `enforcement/overflow-signal.md`

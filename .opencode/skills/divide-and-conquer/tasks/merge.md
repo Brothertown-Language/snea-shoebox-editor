@@ -100,3 +100,7 @@ If any sub-agent returned `verification_passed: false`, HALT. Do NOT proceed. Re
 | "All sub-agent changes included" | Verify diff matches expected | `git diff dev --name-only` | VERIFICATION-GAP |
 
 **Evidence artifact:** Git log and status output confirming merge state.
+## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Result validation: see `enforcement/result-validation.md`
+-  Overflow signal: see `enforcement/overflow-signal.md`

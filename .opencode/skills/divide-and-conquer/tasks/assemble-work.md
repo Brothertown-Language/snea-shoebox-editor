@@ -405,4 +405,6 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Sub-agent result missing | VERIFICATION-GAP | conditional | Wait for or re-dispatch sub-agent |
 | Merge not in work branch | VERIFICATION-GAP | conditional | Re-merge feature branch |
 | Decision log not persisted | MISSING-ELEMENT | auto-fix | Post decision log comment now |
-| Auth context missing from work state | STRUCTURE-VIOLATION | conditional | Re-read auth from approval-gate |
+| Auth context missing from work state | STRUCTURE-VIOLATION | conditional | Re-read auth from approval-gate |## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Work state verification: see `enforcement/work-state-verification.md`

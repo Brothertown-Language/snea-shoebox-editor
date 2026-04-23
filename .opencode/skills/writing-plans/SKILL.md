@@ -239,6 +239,8 @@ The spec itself is the stable reference. Whether the plan is combined or separat
 
 ## Operating Protocol
 
+**Pre-implementation file changes are ephemeral.** Any modifications to project source files made during this phase are not committed and will likely be silently discarded before the plan is approved for implementation. Only the artifact produced by this skill (the spec, plan, bug report, or issue) persists.
+
 1. Read approved spec from GitHub Issue
 1.5. Check for existing plans referencing the same spec — if found, surface overlap and require developer acknowledgment (see `tasks/create.md` Step 1.6 for the full duplicate plan check procedure)
 2. **Decision gate:** Evaluate combined vs separate plan using `single_task_determination` and `single_task` inputs — see `tasks/create.md` Step 1.5

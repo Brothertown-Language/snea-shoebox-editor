@@ -736,3 +736,9 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - The analysis output IS the decision artifact — presenting it as a question OR as a halt-point both violate these rules
 - `screen-issue.md` — exhaustive `requires_developer: true` conditions (5 items + default failsafe)
 - `approval-gate/SKILL.md` §"Dispatch Order" — "MUST auto-dispatch" after analysis completes
+## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

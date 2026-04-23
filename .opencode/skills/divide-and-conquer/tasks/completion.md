@@ -75,4 +75,5 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Unpushed commits | VERIFICATION-GAP | auto-fix | Push immediately |
 | Verification not invoked | MISSING-ELEMENT | conditional | Invoke verification-now |
 | Working tree dirty | VERIFICATION-GAP | conditional | Commit remaining changes |
-| No compare URL | MISSING-ELEMENT | auto-fix | Generate URL now |
+| No compare URL | MISSING-ELEMENT | auto-fix | Generate URL now |## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`

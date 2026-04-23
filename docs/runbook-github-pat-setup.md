@@ -53,7 +53,7 @@ If you see `403 Forbidden` errors on repos you can access in the browser, you li
 
 ## Step 2: Store the Token Securely
 
-### Option A: Shell Profile (Recommended)
+### Shell Profile
 
 Add to `~/.bashrc` (or `~/.zshrc` for zsh users):
 
@@ -69,47 +69,6 @@ source ~/.bashrc  # or: source ~/.zshrc
 ```
 
 **Pros**: Available to all tools (git, gh CLI, opencode), survives restarts, easy to rotate.
-
-### Option B: Dedicated Dotfile (More Isolated)
-
-Create `~/.config/github-token`:
-
-```bash
-mkdir -p ~/.config
-echo 'GITHUB_TOKEN=ghp_your_token_here' > ~/.config/github-token
-chmod 600 ~/.config/github-token
-```
-
-Then source it in `~/.bashrc` (or `~/.zshrc`):
-
-```bash
-[ -f ~/.config/github-token ] && source ~/.config/github-token
-```
-
-**Pros**: Token not interleaved with other shell config, easy to rotate without editing `.bashrc`.
-
-### Option C: macOS Keychain / Linux Secret Service
-
-For maximum security on macOS:
-
-```bash
-security add-generic-password -a "$USER" -s "github-mcp-token" -w "ghp_your_token_here"
-```
-
-Retrieve in shell profile:
-
-```bash
-export GITHUB_TOKEN=$(security find-generic-password -a "$USER" -s "github-mcp-token" -w)
-```
-
-On Linux with `libsecret`:
-
-```bash
-secret-tool store --label="GitHub MCP Token" github mcp-token
-export GITHUB_TOKEN=$(secret-tool lookup github mcp-token)
-```
-
-**Pros**: Token encrypted at rest, never in plaintext on disk.
 
 ### What NOT to Do
 
@@ -188,42 +147,8 @@ Tokens expire. Set a calendar reminder for your chosen expiration date.
 1. Create a new token at https://github.com/settings/tokens (follow Steps 1-2 above)
 2. Update the stored token:
    - **Shell profile**: Edit `~/.bashrc` or `~/.zshrc` → change `GITHUB_TOKEN=...` → `source ~/.bashrc`
-   - **Dotfile**: Edit `~/.config/github-token` → `source ~/.config/github-token`
-   - **Keychain**: `security add-generic-password -a "$USER" -s "github-mcp-token" -w "ghp_NEW_TOKEN" -U` (macOS)
 3. Delete the old token at https://github.com/settings/tokens (classic)
 4. Verify with `curl -sI -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/user | grep x-oauth-scopes`
-
-### Quick Rotation Script (macOS Keychain)
-
-```bash
-#!/bin/bash
-# rotate-github-token.sh
-set -euo pipefail
-
-echo "Creating new GitHub PAT at: https://github.com/settings/tokens/new"
-echo "Required scopes: repo, workflow, admin:repo_hook, read:org, read:user, user:email, project, gist, write:discussion, write:packages, manage_runners:org"
-echo ""
-read -rsp "Paste new token: " NEW_TOKEN
-echo ""
-
-# Store in macOS Keychain (overwrite if exists)
-security add-generic-password -a "$USER" -s "github-mcp-token" -w "$NEW_TOKEN" -U
-
-# Update current shell
-export GITHUB_TOKEN="$NEW_TOKEN"
-
-# Verify
-HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/user)
-if [ "$HTTP_CODE" = "200" ]; then
-    echo "✓ Token verified successfully"
-else
-    echo "✗ Token verification failed (HTTP $HTTP_CODE)"
-    exit 1
-fi
-
-echo ""
-echo "Now delete the old token at: https://github.com/settings/tokens"
-```
 
 ---
 
@@ -250,7 +175,7 @@ Scopes:        repo, workflow, admin:repo_hook, read:org,
                read:user, user:email, project, gist,
                write:discussion, write:packages,
                manage_runners:org
-Store as:      export GITHUB_TOKEN="ghp_..." in ~/.bashrc or ~/.zshrc
+Store as:      export GITHUB_TOKEN="ghp_..." in ~/.bashrc
 Config:        ~/.config/opencode/opencode.jsonc → "Authorization": "Bearer {env:GITHUB_TOKEN}"
 Verify:        curl -sI -H "Authorization: Bearer $GITHUB_TOKEN" https://api.github.com/user | grep x-oauth-scopes
 Rotate:        90-day calendar reminder → new token → update env var → delete old token

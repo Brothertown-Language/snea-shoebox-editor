@@ -895,6 +895,91 @@ function redactSecrets(text: string): string {
   return result;
 }
 
+/**
+ * Build a protected branch edit warning block for when files are edited
+ * on dev/main without a worktree or pair- branch prefix.
+ * 
+ * This is the per-turn runtime guard — it fires AFTER each assistant turn
+ * when git diff detects file changes on a protected branch. This is distinct
+ * from the session-start trigger in session_context_triggers.py which only
+ * checks once at session start.
+ */
+function buildProtectedBranchEditWarning(changedFiles: string[], branch: string): string {
+  const fileList = changedFiles.slice(0, 10).map(f => `  - \`${f}\``).join("\n");
+  const moreFiles = changedFiles.length > 10 ? `\n  - ... and ${changedFiles.length - 10} more` : "";
+  
+  return `<PROTECTED_BRANCH_EDIT_WARNING>
+⚠️ CRITICAL: Files were edited on branch \`${branch}\` without a worktree or pair-mode prefix.
+
+This is a CRITICAL GUIDELINE VIOLATION. Edits on \`dev\` or \`main\` outside a worktree risk:
+- Corrupting the shared development branch
+- Losing changes when switching branches
+- Conflicting with other developers' work
+
+${changedFiles.length} file(s) changed:
+${fileList}${moreFiles}
+
+**MANDATORY RECOVERY:**
+1. STOP all further edits immediately
+2. Stash or revert the unintended changes: \`git stash\` or \`git checkout -- .\`
+3. Create a proper feature branch in a worktree: invoke \`git-workflow --task pre-work\`
+4. Only resume implementation in the worktree
+
+The only exception: if the branch starts with \`pair-\` (pair-mode collaboration), 
+edits on the development branch are expected and this warning should not fire.
+</PROTECTED_BRANCH_EDIT_WARNING>`;
+}
+
+/**
+ * Detect uncommitted file changes on the current branch via git diff.
+ * Returns empty array if no changes or if git is unavailable.
+ */
+function detectUncommittedFileChanges(projectDir: string): string[] {
+  try {
+    const result = execSync("git diff --name-only", {
+      cwd: projectDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim();
+    if (!result) return [];
+    return result.split("\n").filter(line => line.trim().length > 0);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Get the current git branch name.
+ * Returns null if git is unavailable.
+ */
+function getCurrentBranch(projectDir: string): string | null {
+  try {
+    return execSync("git branch --show-current", {
+      cwd: projectDir,
+      encoding: "utf8",
+      stdio: ["pipe", "pipe", "pipe"],
+    }).trim() || null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Check if the current branch is a protected branch (main/master/dev)
+ * that should not have direct edits.
+ */
+function isProtectedBranch(branch: string): boolean {
+  return branch === "main" || branch === "master" || branch === "dev";
+}
+
+/**
+ * Check if the current branch is a pair-mode branch (starts with "pair-").
+ * Pair-mode branches allow direct edits on the development directory.
+ */
+function isPairModeBranch(branch: string): boolean {
+  return branch.startsWith("pair-");
+}
+
 export default async function sessionEnforcementPlugin(input: PluginInput): Promise<Hooks> {
   // Determine skills directory and project directory
   const projectDir = input?.directory || process.cwd();
@@ -1099,6 +1184,26 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
             const redacted = redactSecrets(part.text);
             if (redacted !== part.text) {
               msg.parts[i] = { ...part, type: "text", text: redacted };
+            }
+          }
+        }
+      }
+
+      // --- Per-turn: Protected branch edit guard ---
+      // After each assistant turn, check if files were edited on dev/main
+      // without a worktree or pair- branch prefix. If so, inject warning.
+      const currentBranch = getCurrentBranch(projectDir);
+      if (currentBranch && isProtectedBranch(currentBranch)) {
+        const worktreeDir = input?.worktree || "";
+        const inWorktree = worktreeDir && worktreeDir !== projectDir;
+        
+        if (!inWorktree && !isPairModeBranch(currentBranch)) {
+          const changedFiles = detectUncommittedFileChanges(projectDir);
+          if (changedFiles.length > 0) {
+            const warning = buildProtectedBranchEditWarning(changedFiles, currentBranch);
+            const lastAssistant = assistantMessages[assistantMessages.length - 1];
+            if (lastAssistant?.parts?.length) {
+              lastAssistant.parts.push({ type: "text", text: warning });
             }
           }
         }

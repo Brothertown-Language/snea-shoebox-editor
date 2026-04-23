@@ -124,4 +124,7 @@ If spec claims "no changes since spec written":
 
 - Related tasks: `verify-authorization`, `verify-blockers`
 - `065-verification-honesty.md`: Verification claims must be backed by tool call evidence
-- `spec-auditor --task ground-truth`: Adversarial verification model for metadata claims
+- `spec-auditor --task ground-truth`: Adversarial verification model for metadata claims## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`

@@ -332,4 +332,6 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | Step claimed but no artifact | VERIFICATION-GAP | conditional | Re-execute step |
 | worktree.path missing from dispatch | STRUCTURE-VIOLATION | auto-fix | Re-dispatch with correct context |
 | Work state stale | VERIFICATION-GAP | auto-fix | Re-read and verify |
-| Mandatory step skipped | MISSING-ELEMENT | conditional | Execute skipped step now |
+| Mandatory step skipped | MISSING-ELEMENT | conditional | Execute skipped step now |## Enforcement References
+-  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+-  Work state verification: see `enforcement/work-state-verification.md`

@@ -1088,3 +1088,19 @@ if [ "$OVERALL_PASS" = true ]; then
 else
     echo "OVERALL: FAIL"
 fi
+# Enforcement module extraction tests (Phase 1 #1197)
+SCENARIOS["enforcement-module-adversarial"]="Does .opencode/skills/approval-gate/enforcement/adversarial-verification.md contain sections for Evidence Artifact Format and Finding Classification?"
+SCENARIOS["enforcement-module-scope-parsing"]="Does .opencode/skills/approval-gate/enforcement/scope-parsing.md contain a verb-prefix parsing table?"
+SCENARIOS["enforcement-module-auto-dispatch"]="Does .opencode/skills/approval-gate/enforcement/auto-dispatch-table.md contain Scope-Dependent Routing?"
+SCENARIOS["enforcement-module-closed-issue"]="Does .opencode/skills/approval-gate/enforcement/closed-issue-verification.md contain State Reason Classification?"
+SCENARIOS["enforcement-module-sub-issue"]="Does .opencode/skills/approval-gate/enforcement/sub-issue-graph-traversal.md contain Phase-Count Cross-Reference?"
+SCENARIOS["enforcement-module-completion"]="Does .opencode/skills/divide-and-conquer/enforcement/completion-checkpoint.md contain Sub-Agent Completion Detection?"
+SCENARIOS["enforcement-module-result-validation"]="Does .opencode/skills/divide-and-conquer/enforcement/result-validation.md contain Empty/Malformed/Overflow handling?"
+SCENARIOS["enforcement-module-overflow"]="Does .opencode/skills/divide-and-conquer/enforcement/overflow-signal.md contain an OVERFLOW contract format?"
+SCENARIOS["enforcement-module-work-state"]="Does .opencode/skills/divide-and-conquer/enforcement/work-state-verification.md contain a Live State Verification Table?"
+SCENARIOS["task-file-enforcement-refs"]="Does .opencode/skills/approval-gate/tasks/verify-authorization.md contain a section titled Enforcement References referencing enforcement modules?"
+
+# Dev edit guard tests (#1186)
+SCENARIOS["dev-edit-guard-plugin"]="Does .opencode/plugins/session-enforcement.ts contain a PROTECTED_BRANCH_EDIT_WARNING block injection for per-turn file change detection on protected branches?"
+SCENARIOS["dev-edit-guard-trigger"]="Does .opencode/scripts/session_context_triggers.py contain a build_dev_branch_with_changes_warning function?"
+SCENARIOS["dev-edit-guard-pair-mode"]="Does .opencode/plugins/session-enforcement.ts check isPairModeBranch before injecting the PROTECTED_BRANCH_EDIT_WARNING?"

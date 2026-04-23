@@ -328,4 +328,9 @@ This task now performs transitive graph traversal (Step 8). Callers should handl
 - `approval-gate/tasks/verify-authorization.md` Step 5.4: Closed-issue verification gate
 - `approval-gate/tasks/verify-already-implemented.md`: Pre-autoclose sub-issue verification
 - `git-workflow/tasks/cleanup.md`: Pre-closure sub-issue verification gate
-- `010-approval-gate.md §Assuming Closed Issues Are Verified`: Graph traversal prevents this violation
+- `010-approval-gate.md §Assuming Closed Issues Are Verified`: Graph traversal prevents this violation## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+-  Scope parsing: see `enforcement/scope-parsing.md`
+-  Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+-  Closed-issue verification: see `enforcement/closed-issue-verification.md`
+-  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

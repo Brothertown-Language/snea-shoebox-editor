@@ -98,4 +98,5 @@ comments = github_issue_read(method="get_comments", issue_number=N)
 
 - Related tasks: `verify-authorization`, `verify-codebase`
 - `065-verification-honesty.md`: Verification claims must be backed by tool call evidence
-- `spec-auditor --task ground-truth`: Adversarial verification model
+- `spec-auditor --task ground-truth`: Adversarial verification model## Enforcement References
+-  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
