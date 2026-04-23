@@ -47,16 +47,9 @@ When the `protected_branch_with_changes` or `on_main_branch` trigger fires, the 
 
 ## Stash Analysis Protocol
 
-When the `stale_stash` trigger fires, the agent MUST:
+The `stale_stash` trigger payload includes embedded triage instructions when stashes exist. The agent MUST follow the embedded directive — auto-resolve OBSOLETE and RESUMABLE stashes, only escalate AMBIGUOUS stashes to the developer.
 
-1. Run `git stash show -p stash@{N}` for each stale stash to analyze contents
-2. Classify each stash as one of:
-   - **Resumable**: Contains meaningful, unmerged work with an issue reference → suggest resuming with `git stash pop` and entering pair mode for that issue
-   - **Obsolete**: Contains changes already merged or no longer relevant → suggest dropping with `git stash drop stash@{N}`
-   - **Ambiguous**: Cannot determine relevance → offer to create an issue for tracking
-3. Extract issue references from stash messages (e.g., "WIP: #931 ..." → issue #931)
-4. Present brief analysis, not raw stash list
-5. Example: "Stash `stash@{0}` contains work for #931 (spec-auditor ground-truth changes) that hasn't been merged. Want to resume this work?"
+When no stale stashes exist, no triage instructions are injected and no stash action is needed.
 
 ## Pair Mode Suggestion Protocol
 

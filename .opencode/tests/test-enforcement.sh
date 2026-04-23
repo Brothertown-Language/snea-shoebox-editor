@@ -144,6 +144,14 @@ SCENARIOS["cleanup-sc-verification-gate"]="Does .opencode/skills/git-workflow/ta
 SCENARIOS["cleanup-phase-completion-gate"]="Does .opencode/skills/git-workflow/tasks/cleanup.md contain a Step 2.6.5 Phase-Completion Gate that prevents closing multi-phase specs after partial merges?"
 SCENARIOS["scope-next-phase-resolution"]="Does .opencode/skills/approval-gate/enforcement/scope-parsing.md contain a Next Phase Resolution section with resolve_next_phase logic?"
 SCENARIOS["scope-phase-n-resolution"]="Does .opencode/skills/approval-gate/enforcement/scope-parsing.md contain an Approved for Phase N Resolution section with resolve_phase_n logic?"
+SCENARIOS["stash-triage-directive"]="Does .opencode/scripts/session_context_triggers.py build_stale_stash_warning() output contain STALE STASH TRIAGE REQUIRED with auto-resolve instructions for OBSOLETE and RESUMABLE classifications?"
+SCENARIOS["stash-trigger-guideline-reference"]="Does .opencode/guidelines/117-session-trigger-behavior.md Stash Analysis Protocol section reference embedded triage instructions in the trigger payload?"
+SCENARIOS["release-pr-routing"]="Does .opencode/skills/git-workflow/SKILL.md frontmatter description contain the trigger phrase 'release PR'?"
+SCENARIOS["release-promotion-trigger"]="Does .opencode/skills/git-workflow/SKILL.md frontmatter description contain the trigger phrase 'promote to main'?"
+SCENARIOS["pr-creation-exclusion"]="Does .opencode/skills/pr-creation-workflow/SKILL.md frontmatter description contain an exclusion clause stating that release PRs are handled by git-workflow release-promotion?"
+SCENARIOS["git-workflow-routing-section"]="Does .opencode/skills/git-workflow/SKILL.md body contain a Routing section that distinguishes Feature PR from Release PR?"
+SCENARIOS["verify-closed-issue-step7"]="Does .opencode/skills/approval-gate/tasks/verify-closed-issue.md contain a Step 7 with MANDATORY ZERO TOLERANCE language and SC verification downgrade paths for PARTIALLY_IMPLEMENTED and NOT_IMPLEMENTED_DESPITE_CLOSURE?"
+SCENARIOS["closed-issue-enforcement-sc"]="Does .opencode/skills/approval-gate/enforcement/closed-issue-verification.md contain a Success Criteria Verification section with ZERO TOLERANCE enforcement and the downgrade path table?"
 
 # Tags per scenario for --tag filtering
 declare -A SCENARIO_TAGS
@@ -224,6 +232,14 @@ SCENARIO_TAGS["cleanup-sc-verification-gate"]="content-verification git-workflow
 SCENARIO_TAGS["cleanup-phase-completion-gate"]="content-verification git-workflow"
 SCENARIO_TAGS["scope-next-phase-resolution"]="content-verification approval"
 SCENARIO_TAGS["scope-phase-n-resolution"]="content-verification approval"
+SCENARIO_TAGS["stash-triage-directive"]="content-verification session-enforcement"
+SCENARIO_TAGS["stash-trigger-guideline-reference"]="content-verification session-enforcement"
+SCENARIO_TAGS["release-pr-routing"]="content-verification git-workflow"
+SCENARIO_TAGS["release-promotion-trigger"]="content-verification git-workflow"
+SCENARIO_TAGS["pr-creation-exclusion"]="content-verification pr-creation-workflow"
+SCENARIO_TAGS["git-workflow-routing-section"]="content-verification git-workflow"
+SCENARIO_TAGS["verify-closed-issue-step7"]="content-verification approval"
+SCENARIO_TAGS["closed-issue-enforcement-sc"]="content-verification enforcement-module"
 SCENARIO_TAGS["enforcement-module-adversarial"]="content-verification enforcement-module"
 SCENARIO_TAGS["enforcement-module-scope-parsing"]="content-verification enforcement-module"
 SCENARIO_TAGS["enforcement-module-auto-dispatch"]="content-verification enforcement-module"
@@ -244,12 +260,12 @@ declare -A FILE_SCENARIO_MAP
 FILE_SCENARIO_MAP[".opencode/guidelines/091-incremental-build.md"]="incremental-build-guideline monolithic-implementation-violation item-decomposition-step sc-assertion-tdd-cycle red-state-before-implementation red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref"
 FILE_SCENARIO_MAP[".opencode/guidelines/000-critical-rules.md"]="scope-auto-resolve-guideline monolithic-implementation-violation identity-echo-validation secret-exfiltration-violation url-sourcing-guideline-rules dispatch-artifact-requirements red-phase-enforcement-critical-rules-xref"
 FILE_SCENARIO_MAP[".opencode/guidelines/020-go-prohibitions.md"]="scope-auto-resolve-guideline pipeline-scoped-halt"
-FILE_SCENARIO_MAP[".opencode/skills/approval-gate/"]="item-decomposition-step scope-auto-resolve-step approval-gate-sc-traceability approval-gate-red-phase dispatch-chain-enforcement-gate dispatch-artifact-requirements dispatch-checkpoint-live-verification gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c task-file-enforcement-refs scope-next-phase-resolution scope-phase-n-resolution enforcement-module-adversarial enforcement-module-scope-parsing enforcement-module-auto-dispatch enforcement-module-closed-issue enforcement-module-sub-issue"
+FILE_SCENARIO_MAP[".opencode/skills/approval-gate/"]="item-decomposition-step scope-auto-resolve-step approval-gate-sc-traceability approval-gate-red-phase dispatch-chain-enforcement-gate dispatch-artifact-requirements dispatch-checkpoint-live-verification gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c task-file-enforcement-refs scope-next-phase-resolution scope-phase-n-resolution enforcement-module-adversarial enforcement-module-scope-parsing enforcement-module-auto-dispatch enforcement-module-closed-issue enforcement-module-sub-issue verify-closed-issue-step7 closed-issue-enforcement-sc"
 FILE_SCENARIO_MAP[".opencode/skills/brainstorming/"]="brainstorming-top-down verification-mechanics-brainstorming"
 FILE_SCENARIO_MAP[".opencode/skills/writing-plans/"]="writing-plans-bottom-up validate-executable-verification semantic-intent-writing-plans why-specific-value-tdd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd"
 FILE_SCENARIO_MAP[".opencode/skills/executing-plans/"]="executing-plans-tdd red-phase-gate-executing-plans red-phase-gate-skillmd"
 FILE_SCENARIO_MAP[".opencode/skills/divide-and-conquer/"]="divide-conquer-tdd enforcement-module-completion enforcement-module-result-validation enforcement-module-overflow enforcement-module-work-state"
-FILE_SCENARIO_MAP[".opencode/skills/git-workflow/"]="worktree-handoff-step cleanup-sc-verification-gate cleanup-phase-completion-gate review-prep-format-self-check url-sourcing-rule1-review-prep url-sourcing-rule1-pr url-sourcing-rule2-character-match"
+FILE_SCENARIO_MAP[".opencode/skills/git-workflow/"]="worktree-handoff-step cleanup-sc-verification-gate cleanup-phase-completion-gate review-prep-format-self-check url-sourcing-rule1-review-prep url-sourcing-rule1-pr url-sourcing-rule2-character-match release-pr-routing release-promotion-trigger git-workflow-routing-section"
 FILE_SCENARIO_MAP[".opencode/skills/verification-before-completion/"]="per-sc-evidence-table vbc-per-sc-evidence-skill"
 FILE_SCENARIO_MAP[".opencode/skills/finishing-a-development-branch/"]="finishing-sc-verification checklist-chat-output-format"
 FILE_SCENARIO_MAP[".opencode/guidelines/080-code-standards.md"]="sc-to-test-traceability red-phase-ordering sc-traceability-example"
@@ -257,12 +273,14 @@ FILE_SCENARIO_MAP[".opencode/guidelines/140-planning-spec-creation.md"]="executa
 FILE_SCENARIO_MAP[".opencode/skills/spec-creation/"]="semantic-intent-spec-creation narrow-sc-table-exemption spec-creation-red-gate"
 FILE_SCENARIO_MAP[".opencode/skills/spec-auditor/"]="sc-precision-audit"
 FILE_SCENARIO_MAP[".opencode/skills/issue-operations/"]="sub-issue-structure url-sourcing-issue-operations"
+FILE_SCENARIO_MAP[".opencode/skills/pr-creation-workflow/"]="pr-creation-exclusion"
 FILE_SCENARIO_MAP[".opencode/skills/issue-review/"]="analyze-and-spec-red-gate"
 FILE_SCENARIO_MAP[".opencode/skills/ui-engineer/"]="ui-engineer-red-gate"
 FILE_SCENARIO_MAP[".opencode/skills/session-enforcement.ts"]="identity-echo-validation secret-exfiltration-violation read-secrets-in-output dev-edit-guard-plugin dev-edit-guard-pair-mode"
 FILE_SCENARIO_MAP[".opencode/plugins/session-enforcement.ts"]="identity-echo-validation secret-exfiltration-violation dev-edit-guard-plugin dev-edit-guard-pair-mode"
 FILE_SCENARIO_MAP[".opencode/scripts/session_context_identity.py"]="identity-echo-validation"
-FILE_SCENARIO_MAP[".opencode/scripts/session_context_triggers.py"]="dev-edit-guard-trigger"
+FILE_SCENARIO_MAP[".opencode/scripts/session_context_triggers.py"]="dev-edit-guard-trigger stash-triage-directive"
+FILE_SCENARIO_MAP[".opencode/guidelines/117-session-trigger-behavior.md"]="stash-trigger-guideline-reference"
 FILE_SCENARIO_MAP["AGENTS.md"]="agents-md-incremental"
 
 # --list: print scenario names and exit
@@ -470,6 +488,8 @@ EXPECTED_SKILLS["cleanup-sc-verification-gate"]=""
 EXPECTED_SKILLS["cleanup-phase-completion-gate"]=""
 EXPECTED_SKILLS["scope-next-phase-resolution"]=""
 EXPECTED_SKILLS["scope-phase-n-resolution"]=""
+EXPECTED_SKILLS["stash-triage-directive"]=""
+EXPECTED_SKILLS["stash-trigger-guideline-reference"]=""
 EXPECTED_SKILLS["enforcement-module-adversarial"]=""
 EXPECTED_SKILLS["enforcement-module-scope-parsing"]=""
 EXPECTED_SKILLS["enforcement-module-auto-dispatch"]=""
@@ -483,6 +503,12 @@ EXPECTED_SKILLS["task-file-enforcement-refs"]=""
 EXPECTED_SKILLS["dev-edit-guard-plugin"]=""
 EXPECTED_SKILLS["dev-edit-guard-trigger"]=""
 EXPECTED_SKILLS["dev-edit-guard-pair-mode"]=""
+EXPECTED_SKILLS["release-pr-routing"]="git-workflow"
+EXPECTED_SKILLS["release-promotion-trigger"]="git-workflow"
+EXPECTED_SKILLS["pr-creation-exclusion"]=""
+EXPECTED_SKILLS["git-workflow-routing-section"]=""
+EXPECTED_SKILLS["verify-closed-issue-step7"]=""
+EXPECTED_SKILLS["closed-issue-enforcement-sc"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -1401,6 +1427,114 @@ if [ "$PHASE_N" -ge 1 ]; then
 else
     echo "  scope-parsing Phase N Resolution: MISSING"
     echo "- **scope-parsing Phase N Resolution:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Stash triage directive in session_context_triggers.py
+TRIGGERS_FILE="$PROJECT_DIR/.opencode/scripts/session_context_triggers.py"
+if [ -f "$TRIGGERS_FILE" ]; then
+    TRIAGE_DIRECTIVE=$(grep -c "STALE STASH TRIAGE REQUIRED" "$TRIGGERS_FILE" 2>/dev/null || echo "0")
+    if [ "$TRIAGE_DIRECTIVE" -ge 1 ]; then
+        echo "  stash-triage-directive (STALE STASH TRIAGE REQUIRED): FOUND"
+        echo "- **stash-triage-directive (STALE STASH TRIAGE REQUIRED):** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  stash-triage-directive (STALE STASH TRIAGE REQUIRED): MISSING"
+        echo "- **stash-triage-directive (STALE STASH TRIAGE REQUIRED):** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    OBSOLETE_CLASSIFY=$(grep -c "OBSOLETE.*issue closed\|OBSOLETE.*changes already merged\|OBSOLETE.*lockfile bumps" "$TRIGGERS_FILE" 2>/dev/null || echo "0")
+    if [ "$OBSOLETE_CLASSIFY" -ge 1 ]; then
+        echo "  stash-triage-directive (OBSOLETE classification): FOUND"
+        echo "- **stash-triage-directive (OBSOLETE classification):** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  stash-triage-directive (OBSOLETE classification): MISSING"
+        echo "- **stash-triage-directive (OBSOLETE classification):** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    RESUMABLE_CLASSIFY=$(grep -c "RESUMABLE.*open issue\|RESUMABLE.*meaningful unmerged\|RESUMABLE.*pair-mode" "$TRIGGERS_FILE" 2>/dev/null || echo "0")
+    if [ "$RESUMABLE_CLASSIFY" -ge 1 ]; then
+        echo "  stash-triage-directive (RESUMABLE classification): FOUND"
+        echo "- **stash-triage-directive (RESUMABLE classification):** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  stash-triage-directive (RESUMABLE classification): MISSING"
+        echo "- **stash-triage-directive (RESUMABLE classification):** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    AUTO_DROP=$(grep -c "git stash drop" "$TRIGGERS_FILE" 2>/dev/null || echo "0")
+    if [ "$AUTO_DROP" -ge 1 ]; then
+        echo "  stash-triage-directive (auto-drop obsolete): FOUND"
+        echo "- **stash-triage-directive (auto-drop obsolete):** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  stash-triage-directive (auto-drop obsolete): MISSING"
+        echo "- **stash-triage-directive (auto-drop obsolete):** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  session_context_triggers.py: MISSING"
+    echo "- **session_context_triggers.py:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Stash trigger guideline reference in 117-session-trigger-behavior.md
+TRIGGER_BEHAVIOR_FILE="$PROJECT_DIR/.opencode/guidelines/117-session-trigger-behavior.md"
+if [ -f "$TRIGGER_BEHAVIOR_FILE" ]; then
+    GUIDELINE_REF=$(grep -c "embedded triage instructions\|embedded directive" "$TRIGGER_BEHAVIOR_FILE" 2>/dev/null || echo "0")
+    if [ "$GUIDELINE_REF" -ge 1 ]; then
+        echo "  stash-trigger-guideline-reference (embedded triage reference): FOUND"
+        echo "- **stash-trigger-guideline-reference (embedded triage reference):** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  stash-trigger-guideline-reference (embedded triage reference): MISSING"
+        echo "- **stash-trigger-guideline-reference (embedded triage reference):** MISSING" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+    NO_PASSIVE=$(grep -c "Stash analysis available" "$TRIGGER_BEHAVIOR_FILE" 2>/dev/null || echo "0")
+    if [ "$NO_PASSIVE" -eq 0 ]; then
+        echo "  stash-trigger-guideline-reference (no passive suggest language): FOUND"
+        echo "- **stash-trigger-guideline-reference (no passive suggest language):** FOUND" >> "$RESULTS_FILE"
+    else
+        echo "  stash-trigger-guideline-reference (no passive suggest language): MISSING (still contains passive language)"
+        echo "- **stash-trigger-guideline-reference (no passive suggest language):** MISSING (still contains passive language)" >> "$RESULTS_FILE"
+        GUIDELINE_PASS=false
+        OVERALL_PASS=false
+    fi
+else
+    echo "  117-session-trigger-behavior.md: MISSING"
+    echo "- **117-session-trigger-behavior.md:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify verify-closed-issue Step 7 SC verification
+VERIFY_CLOSED_ISSUE_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/tasks/verify-closed-issue.md"
+STEP7_MANDATORY=$(grep -c "Step 7.*MANDATORY\|Step 7.*ZERO TOLERANCE" "$VERIFY_CLOSED_ISSUE_FILE" 2>/dev/null || echo "0")
+STEP7_DOWNGRADE=$(grep -c "PARTIALLY_IMPLEMENTED\|NOT_IMPLEMENTED_DESPITE_CLOSURE" "$VERIFY_CLOSED_ISSUE_FILE" 2>/dev/null || echo "0")
+if [ "$STEP7_MANDATORY" -ge 1 ] && [ "$STEP7_DOWNGRADE" -ge 1 ]; then
+    echo "  verify-closed-issue Step 7 SC verification: FOUND"
+    echo "- **verify-closed-issue Step 7 SC verification:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  verify-closed-issue Step 7 SC verification: MISSING (mandatory=$STEP7_MANDATORY, downgrade=$STEP7_DOWNGRADE)"
+    echo "- **verify-closed-issue Step 7 SC verification:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Verify closed-issue-verification enforcement module covers SC verification
+CLOSED_ISSUE_ENFORCEMENT_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/enforcement/closed-issue-verification.md"
+CIV_SC_VERIFY=$(grep -c "Success Criteria Verification\|SC Verification Is MANDATORY\|ZERO TOLERANCE" "$CLOSED_ISSUE_ENFORCEMENT_FILE" 2>/dev/null || echo "0")
+CIV_DOWNGRADE=$(grep -c "PARTIALLY_IMPLEMENTED\|NOT_IMPLEMENTED_DESPITE_CLOSURE" "$CLOSED_ISSUE_ENFORCEMENT_FILE" 2>/dev/null || echo "0")
+if [ "$CIV_SC_VERIFY" -ge 1 ] && [ "$CIV_DOWNGRADE" -ge 1 ]; then
+    echo "  closed-issue-verification enforcement SC verification: FOUND"
+    echo "- **closed-issue-verification enforcement SC verification:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  closed-issue-verification enforcement SC verification: MISSING (sc_verify=$CIV_SC_VERIFY, downgrade=$CIV_DOWNGRADE)"
+    echo "- **closed-issue-verification enforcement SC verification:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

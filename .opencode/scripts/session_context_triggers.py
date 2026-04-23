@@ -313,7 +313,7 @@ def build_uncommitted_work_warning(changed_files: list[str]) -> str:
 
 def build_stale_stash_warning(stashes: list[str]) -> str:
     lines = [
-        "## Stale Stash Found",
+        "## Stale Stash — Auto-Triage Required",
     ]
     stash_analyses = get_stash_analysis()
     for analysis in stash_analyses[:3]:
@@ -327,7 +327,26 @@ def build_stale_stash_warning(stashes: list[str]) -> str:
                 lines.append(f"  {fs_line}")
     if len(stashes) > 3:
         lines.append(f"- ... and {len(stashes) - 3} more")
-    lines.append("- Stash analysis available: review contents to recommend resume/drop/issue")
+    triage_directive = (
+        "STALE STASH TRIAGE REQUIRED (do not skip):\n"
+        "For each stash below, you MUST analyze and act autonomously:\n"
+        "1. Run `git stash show -p <stash_ref>` to inspect contents\n"
+        '2. Run `git log --oneline --grep="<issue_ref>" | head -5` to check if work was already merged\n'
+        "3. If issue ref exists: check issue status with "
+        "`github_issue_read` — closed issues mean the work is done or superseded\n"
+        "4. Classify and ACT:\n"
+        "   - OBSOLETE (issue closed OR changes already merged OR only lockfile bumps):\n"
+        "     → Auto-execute: `git stash drop <stash_ref>` immediately\n"
+        '     → Report: "Dropped <stash_ref> (<reason>)"\n'
+        "   - RESUMABLE (open issue + meaningful unmerged work):\n"
+        "     → Auto-execute: `git stash pop <stash_ref>` and create a pair-mode branch\n"
+        '     → Report: "Resumed <stash_ref> on pair-<branch> branch"\n'
+        "   - AMBIGUOUS (no issue ref, cannot determine relevance):\n"
+        "     → Preserve: do NOT drop the stash\n"
+        '     → Report: "Stash <stash_ref> unclear — contains <summary>. Need dev decision."\n'
+        "5. Only escalate to dev for AMBIGUOUS stashes. OBSOLETE and RESUMABLE are auto-resolved."
+    )
+    lines.append(triage_directive)
     return "\n".join(lines)
 
 

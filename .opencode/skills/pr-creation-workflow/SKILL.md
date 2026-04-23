@@ -1,6 +1,6 @@
 ---
 name: pr-creation-workflow
-description: Use when asking about when to create a PR or whether PR creation is authorized. Triggers on: create PR, make PR, pull request, PR timing, when to PR, PR authorized.
+description: Use when asking about when to create a PR or whether PR creation is authorized. Triggers on: create PR, make PR, pull request, PR timing, when to PR, PR authorized. This skill covers feature branch PRs targeting dev only. Release PRs (dev → main promotion) are handled by git-workflow --task release-promotion. Do NOT invoke this skill for release promotion requests.
 type: technique
 license: MIT
 compatibility: opencode
@@ -11,6 +11,15 @@ compatibility: opencode
 ## Overview
 
 PR creation is a DISTINCT phase requiring EXPLICIT instruction — it is NOT automatic after implementation. "Approved" and "go" authorize implementation ONLY, not PR creation. The developer MUST explicitly say "create a PR" or equivalent.
+
+## Exclusions
+
+This skill covers **feature branch PRs targeting `dev`** only. Release PRs (dev → main promotion) are handled by `git-workflow --task release-promotion`. The routing decision boundary:
+
+- Feature PR (feature/* → dev) → `pr-creation-workflow` skill
+- Release PR (dev → main) → `git-workflow --task release-promotion`
+
+Do NOT invoke this skill for release promotion requests.
 
 ## Tasks
 
