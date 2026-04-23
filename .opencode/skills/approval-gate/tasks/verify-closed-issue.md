@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Verify that a closed issue was legitimately closed — checking that a merged PR exists and that no premature closure occurred. Verification is transitive: it traverses sub-issues, cross-references, and linked issues recursively to ensure the entire reachable graph is in a consistent state. This task enforces the rule that "closed" does NOT mean "verified" without evidence.
+Verify that a closed issue was legitimately closed — checking that a merged PR exists, that success criteria are actually met in the live codebase, and that no premature closure occurred. Verification is transitive: it traverses sub-issues, cross-references, and linked issues recursively to ensure the entire reachable graph is in a consistent state. This task enforces the rule that "closed" does NOT mean "verified" without evidence — and that a merged PR does NOT mean "implementation complete" without success criteria verification.
 
 ## Pre-Conditions
 
@@ -15,8 +15,10 @@ Verify that a closed issue was legitimately closed — checking that a merged PR
 
 ## Exit Criteria
 
-- Closed state is verified as legitimate (merged PR exists) OR
-- Closed state is flagged as a VERIFICATION-GAP (no merged PR evidence) with clear reason
+- Closed state is verified as legitimate (merged PR exists AND all success criteria pass) OR
+- Closed state is flagged as a VERIFICATION-GAP (no merged PR evidence) with clear reason OR
+- Partial implementation detected (some SCs fail) — downgrade to PARTIALLY_IMPLEMENTED OR
+- No implementation despite closure (all SCs fail) — downgrade to NOT_IMPLEMENTED_DESPITE_CLOSURE
 
 ## Procedure
 
@@ -73,7 +75,9 @@ for pr in prs:
 
 if merged_pr_found:
     REPORT: f"Issue #{N} closed as completed with merged PR evidence: {', '.join(f'#{p['number']}' for p in merged_prs)}"
-    EXIT with result: VERIFIED_CLOSED
+    # Do NOT exit here — proceed to Step 6 (sub-issues) then Step 7 (SC verification)
+    # Merged PR is a prerequisite, NOT proof of complete implementation
+    current_result = VERIFIED_CLOSED  # Provisional — may be downgraded by Step 7
 else:
     # No merged PR found — suspicious closure
     REPORT: f"Issue #{N} closed as completed but NO merged PR found via 'Fixes #{N}' search"
@@ -166,21 +170,71 @@ if sub_issues:
             NOTE sub_issue["number"] as "intentionally skipped"
 ```
 
-### Step 7: Cross-Reference with Success Criteria
+### Step 7: Success Criteria Verification (MANDATORY — ZERO TOLERANCE)
 
-For legitimately closed issues (VERIFIED_CLOSED), optionally verify that the success criteria in the spec were actually met:
+**🚫 CRITICAL: Step 7 is MANDATORY and BLOCKING. Skipping this step is a CRITICAL GUIDELINE VIOLATION.** A merged PR proves code was merged, NOT that success criteria are met. This step enforces the rule from `000-critical-rules.md` §"Assuming Closed Issues Are Verified".
+
+For legitimately closed issues (VERIFIED_CLOSED from Step 3), verify that EACH success criterion from the issue body is actually met in the live codebase:
 
 ```python
-# This step is informational — it does NOT block closure
-# It provides additional confidence that the closed state is accurate
-
 body = issue.get("body", "")
-# Extract success criteria from spec body (if present)
-# Compare against changes in the merged PR
-# Report any discrepancies as informational findings
+sc_list = extract_success_criteria(body)  # Parse "- [ ]" or "- [x]" checklist items under "Success Criteria" heading
+
+if not sc_list:
+    # No success criteria found in issue body
+    # Cannot verify SCs — result depends on merged PR evidence
+    REPORT: f"Issue #{N}: No success criteria found in issue body. Cannot verify implementation completeness."
+    REPORT: f"Result remains: {current_result} (merged PR evidence only, no SC verification possible)"
+    # Do NOT downgrade — proceed with PR-only evidence
+    # But flag that SC verification was not performed
+    NOTE: "SC_VERIFICATION_NOT_PERFORMED: no_sc_found"
+    PROCEED to Step 8
+
+sc_results = []
+for sc in sc_list:
+    # Verify each SC against the live codebase
+    # Use read, grep, srclight_get_symbol, or test execution
+    # Each SC MUST produce a tool-call artifact as evidence
+    evidence = verify_sc_against_codebase(sc, merged_prs)
+    sc_results.append({
+        "criterion": sc,
+        "passed": evidence.passed,
+        "evidence_tool": evidence.tool_name,
+        "evidence_detail": evidence.detail
+    })
+
+# Produce per-SC pass/fail table
+REPORT: f"Success Criteria Verification for Issue #{N}:"
+for result in sc_results:
+    status = "PASS" if result["passed"] else "FAIL"
+    REPORT: f"  [{status}] {result['criterion']}: {result['evidence_detail']} (evidence: {result['evidence_tool']})"
+
+all_passed = all(r["passed"] for r in sc_results)
+some_passed = any(r["passed"] for r in sc_results)
+
+if all_passed:
+    REPORT: f"All {len(sc_results)} success criteria PASS. Issue #{N} is verified complete."
+    # Keep VERIFIED_CLOSED result
+elif some_passed:
+    REPORT: f"Partial implementation: {sum(1 for r in sc_results if r['passed'])}/{len(sc_results)} SCs pass."
+    DOWNGRADE result to: PARTIALLY_IMPLEMENTED
+else:
+    REPORT: f"No success criteria pass. Issue #{N} appears closed but no SCs are met."
+    DOWNGRADE result to: NOT_IMPLEMENTED_DESPITE_CLOSURE
 ```
 
-**This step is optional and does NOT block the verification result.** It provides additional evidence for downstream callers.
+**Evidence requirement (ZERO TOLERANCE):** Each success criterion MUST produce a tool-call artifact (`read`, `grep`, `srclight_get_symbol`, `github_pull_request_read`, or test execution output) as evidence. Stating "I checked" without a tool call is a CRITICAL GUIDELINE VIOLATION per `065-verification-honesty.md`.
+
+**Downgrade rules:**
+
+| SC Verification Result | Original Result | Downgraded Result |
+|------------------------|-----------------|-------------------|
+| All SCs pass | VERIFIED_CLOSED | VERIFIED_CLOSED (no change) |
+| Some SCs pass | VERIFIED_CLOSED | PARTIALLY_IMPLEMENTED |
+| No SCs pass | VERIFIED_CLOSED | NOT_IMPLEMENTED_DESPITE_CLOSURE |
+| No SCs found | VERIFIED_CLOSED | VERIFIED_CLOSED (note: SC_VERIFICATION_NOT_PERFORMED) |
+
+**🚫 It is a CRITICAL VIOLATION to report a downgraded result as VERIFIED_CLOSED.** If any SC fails, the result MUST be downgraded. The default comparison mode is `exact` — each criterion must pass character-for-character. Use `semantic` comparison only for code behavior where multiple implementations achieve the same spec intent, and justify each semantic comparison explicitly.
 
 ### Step 8: Transitive Graph Traversal (MANDATORY)
 
@@ -279,8 +333,10 @@ Overall: CONSISTENT / HAS_FLAGS
 | Result | Meaning | Action for Callers |
 |--------|---------|-------------------|
 | `NOT_CLOSED` | Issue is still open | Not applicable — caller should treat as open issue |
-| `VERIFIED_CLOSED` | Closed with merged PR evidence | Safe to treat as legitimately closed |
+| `VERIFIED_CLOSED` | Closed with merged PR evidence AND all success criteria pass | Safe to treat as legitimately closed |
 | `VERIFICATION_GAP` | Closed without merged PR evidence | Do NOT trust closed state — flag for review |
+| `PARTIALLY_IMPLEMENTED` | Closed + merged PR exists, but some success criteria fail verification | Include remaining work in authorization scope; do NOT autoclose |
+| `NOT_IMPLEMENTED_DESPITE_CLOSURE` | Closed + merged PR exists, but NO success criteria pass verification | Reopen via reconcile-issue-graph — premature closure |
 | `NOT_PLANNED_CLOSURE` | Closed as "not_planned" | Work was intentionally skipped — may need reopening |
 | `DUPLICATE_OF` | Closed as duplicate of another issue | Verify target issue covers the scope |
 | `BLOCKED_BY_SUB_ISSUE` | Parent cannot close because a sub-issue has a verification gap | Resolve sub-issue verification first |
@@ -292,15 +348,19 @@ Overall: CONSISTENT / HAS_FLAGS
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
-| Closed + merged PR | VERIFIED | auto-proceed | Trust closed state |
+| Closed + merged PR + all SCs pass | VERIFIED | auto-proceed | Trust closed state |
+| Closed + merged PR + some SCs fail | VERIFICATION-GAP | conditional | Downgrade to PARTIALLY_IMPLEMENTED; include remaining work |
+| Closed + merged PR + no SCs pass | VERIFICATION-GAP | reopen | Downgrade to NOT_IMPLEMENTED_DESPITE_CLOSURE; reopen via reconcile-issue-graph |
+| Closed + merged PR + no SCs found in body | VERIFIED | auto-proceed | Trust PR evidence; note SC_VERIFICATION_NOT_PERFORMED |
 | Closed "completed" + no merged PR | VERIFICATION-GAP | reopen | Reopen via reconcile-issue-graph — premature closure |
 | Closed "not_planned" | VERIFIED | no-action | Work intentionally skipped — do not change |
 | Closed "duplicate" + target verified | VERIFIED | no-action | Duplicate properly resolved |
 | Closed "duplicate" + target not found | MISSING-TRACEABILITY | flag-for-review | Cannot verify duplicate chain |
 | Closed + no reason recorded | VERIFICATION-GAP | flag-for-review | Investigate closure reason — uncertain |
 | Parent closed + sub-issue verification gap | VERIFICATION-GAP | flag-for-review | Resolve sub-issue first — uncertain |
-| Open + merged PR exists | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
-| Open + code in repo verified | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
+| Open + merged PR exists + all SCs pass | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
+| Open + merged PR exists + some SCs fail | VERIFICATION-GAP | conditional | Include remaining work; do NOT auto-close |
+| Open + code in repo verified + all SCs pass | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
 
 ## Integration Points
 
@@ -312,6 +372,7 @@ This task is invoked by:
 4. **`cleanup` pre-closure gate** — Before closing parent issues in post-merge workflow
 5. **`verify-fix-spec`** — Before skipping closed bug reports
 6. **`reconcile-issue-graph`** — Acts on findings from graph traversal (auto-close, reopen, flag uncertain)
+7. **`screen-issue` Gate 2** — Before classifying issues as "already-implemented" in screening
 
 This task now performs transitive graph traversal (Step 8). Callers should handle `GRAPH_HAS_FLAGS` and `GRAPH_CONSISTENT` result types in addition to the single-issue result types.
 
@@ -323,10 +384,12 @@ This task now performs transitive graph traversal (Step 8). Callers should handl
 
 ## Cross-References
 
-- `000-critical-rules.md`: Closed issues skip sub-issue and cross-reference verification — critical violation
+- `000-critical-rules.md`: Assuming closed issues are verified without checking success criteria — critical violation
+- `000-critical-rules.md`: Closed issues skip SC verification at agent's peril — mandatory verification
 - `065-verification-honesty.md`: Verification claims must be backed by tool call evidence
 - `approval-gate/tasks/verify-authorization.md` Step 5.4: Closed-issue verification gate
 - `approval-gate/tasks/verify-already-implemented.md`: Pre-autoclose sub-issue verification
+- `approval-gate/tasks/screen-issue.md` Gate 2: SC verification gate for already-implemented classification
 - `git-workflow/tasks/cleanup.md`: Pre-closure sub-issue verification gate
 - `010-approval-gate.md §Assuming Closed Issues Are Verified`: Graph traversal prevents this violation## Enforcement References
 -  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
