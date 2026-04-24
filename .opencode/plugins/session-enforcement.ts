@@ -121,6 +121,17 @@ Review these diagnostics. For errors, investigate the source script. For warning
 let cachedOutput: string | null = null;
 let cacheTimestamp = 0;
 
+/**
+ * Process-scoped set of session IDs that are sub-agent sessions
+ * (sessions with a parentID). Populated in system.transform by
+ * querying client.session.get() for parentID. Used in messages.transform
+ * to gate first-turn-only injections for sub-agent sessions.
+ *
+ * REQ-5: No disk persistence — the set is rebuilt from live API queries
+ * on each process restart, never written to disk.
+ */
+const subAgentSessions = new Set<string>();
+
 function resolveGitDir(projectDir: string): string | null {
   try {
     const result = execSync("git rev-parse --git-dir", {
@@ -1011,7 +1022,29 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
 
   return {
     // Inject session context into system prompt (from session-init + PluginInput augmentations)
-    "experimental.chat.system.transform": async (_input, output) => {
+    "experimental.chat.system.transform": async (sysInput, output) => {
+      // --- Sub-agent session detection (REQ-1/REQ-5) ---
+      // Query client.session.get() for parentID; if present, this session
+      // is a sub-agent. Register in process-scoped Set for later use in
+      // messages.transform. Graceful degradation: on failure, assume
+      // primary session (REQ-4).
+      const sessionID = sysInput?.sessionID;
+      if (sessionID) {
+        try {
+          const sessionResult = await input.client.session.get({
+            path: { id: sessionID },
+          });
+          if (sessionResult.data?.parentID) {
+            subAgentSessions.add(sessionID);
+          } else {
+            subAgentSessions.delete(sessionID);
+          }
+        } catch {
+          // REQ-4: Graceful degradation — assume primary session on API failure
+          subAgentSessions.delete(sessionID);
+        }
+      }
+
       const scriptOutput = await runSessionInit(projectDir);
       if (scriptOutput) {
         output.system.push(scriptOutput);
