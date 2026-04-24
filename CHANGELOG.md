@@ -12,6 +12,15 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### feature/1197-phase4
+
+- **Chain-of-Responsibility Orchestrator** (#1197 Phase 4) — Implemented work state I/O for chain-of-responsibility pattern with fast/medium/full dispatch paths. Added work state schema extension with per-task result sections, auto-dispatch table module, and behavioral enforcement test for dispatch path routing. Updated approval-gate SKILL.md with dispatch table mapping atomic task outputs to next-task inputs.
+
+### spec-fix/1151-1152-identity-secret-fix
+
+- **Identity Echo Validation Gate** (#1151, #1153) - Added programmatic identity echo validation in session-enforcement.ts that compares agent's echoed identity values against injected values and injects IDENTITY_VALIDATION_FAILURE on mismatch. Updated buildIdentityEchoDirective() to include inline expected values with FATAL HALT-on-mismatch language. Separated "Repository Hosting Identity" from "Target API Credentials" in session_context_identity.py output.
+- **Secret Exfiltration Guard Rails** (#1152, #1154) - Added defense-in-depth secret protection: redactSecrets() function in session-enforcement.ts for output pipeline redaction, src/security/pre_submission_scan.py for GitHub API pre-submission scanning, src/security/file_read_blocklist.py for file-read value redaction (not denial) with blocklist patterns for .env/.pem/.key/secrets.toml/credentials.json. Added "Secret Exfiltration in Agent Output" critical violation to 000-critical-rules.md.
+
 ### spec/1119-ui-sub-agent-skills
 
 - **Self-Identifying UI Sub-Agent Skills** (#1119, #1120, #1121, #1122, #1123) - Added two self-identifying UI sub-agent skills (ui-design with kimi-k2.6:cloud, ui-engineer with glm-5.1:cloud) with three-tier trigger self-identification, 12 task files, 6 PEP 723 scripts (including Playwright-based render/screenshot), 4 templates (SVG wireframe, HTML mockup, YAML interaction spec schema, Streamlit app), and divide-and-conquer enhancement for UI sub-agent routing with model context propagation.
