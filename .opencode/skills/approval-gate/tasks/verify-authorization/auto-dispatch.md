@@ -95,6 +95,20 @@ When cascade does NOT apply (conditions not met):
 
 **Evidence artifact:** `github_issue_read(method=get_comments)` showing lineage evidence in #P, and `github_issue_write` / `github_add_issue_comment` responses confirming cascade actions on #C.
 
+## Context Budget Check Before Dispatch (MANDATORY for implementation scopes)
+
+**When `authorization_scope` is `for_implementation`, `for_code_review`, or `for_pr`:**
+
+Before dispatching to `divide-and-conquer --task assemble-work`, verify that sufficient context budget remains to complete at least one implementation item:
+
+1. Estimate remaining context: if the agent has consumed >75% of its context window on process steps (verification, screening, worktree setup), the remaining budget may be insufficient for implementation
+2. If context budget is critically low (<25% remaining): report budget exhaustion explicitly in chat output before halting — do NOT silently halt after process overhead
+3. Budget exhaustion does NOT exempt the agent from the implementation-first gate — it is a REPORTING requirement, not a bypass
+
+**Evidence artifact:** If halted due to budget exhaustion, the halt message MUST include: "Context budget exhausted during process steps. Deliverables produced: 0 file modifications. Process steps completed: [list]."
+
+This check prevents the pattern documented in bugs #1232 and #1233 where the agent completes all process overhead but halts before implementation with no deliverables.
+
 ## Work State I/O
 
 - **Reads from:** `## gap-fill-cascade`, `## scope-auto-resolve`

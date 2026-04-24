@@ -117,6 +117,40 @@ The per-item TDD cycle's RED phase MUST include SC-specific test assertions, not
 
 SC test assertions MUST be in RED state (exist and fail) before the item's implementation commit. If an SC test assertion is written after implementation (GREEN-without-RED), the test never verified that the SC was actually unmet before implementation — it only verified that the implementation makes the test pass, which is circular.
 
+## Phase-Scoped Test Assertions
+
+Each implementation phase MUST test ONLY what it changes. Over-verifying — asserting success criteria from other phases, re-checking already-verified deliverables, or testing spec-level outcomes in a phase-scoped test — is a critical violation.
+
+### Mandate
+
+| Rule | Rationale |
+| -- | -- |
+| Test assertions in Phase N MUST only verify deliverables produced by Phase N | Prevents false confidence from over-verification; each test targets its phase |
+| Success criteria (SCs) that belong to Phase M MUST NOT be asserted in Phase N's test (where M ≠ N) | Cross-phase SC assertions are over-scoped; they test the wrong dependency |
+| An SC's scope alignment is validated during spec creation — over-scoped SCs are flagged and re-scoped at that point | Catches the problem at the source, not during implementation |
+
+### Why This Matters
+
+Over-verification creates two failure modes:
+
+1. **False confidence:** A Phase 2 test that checks Phase 1 deliverables passes because Phase 1 already delivered them — but the test never verified Phase 2's own output. The test is a tautology for Phase 2.
+2. **Coupled failures:** A Phase 2 test that breaks when Phase 1 changes (even though Phase 2's deliverable is unaffected) signals that the test's scope is wrong — it asserts too much.
+
+### Enforcement
+
+- **Spec creation time:** The `spec-creation` skill's `write` task validates that each SC is scoped to exactly one phase. Over-scoped SCs (spanning multiple phases) are flagged and must be split before the spec is approved.
+- **Implementation time:** Each phase's enforcement test assertions MUST reference only that phase's deliverables. Assertions referencing other phases' deliverables are removed or split into the correct phase's test.
+- **Verification time:** The `verification-before-completion` skill checks that per-phase evidence tables contain only phase-relevant SC assertions.
+
+### Anti-Patterns
+
+| Anti-Pattern | Correct Scope |
+| -- | -- |
+| Phase 1 test asserts Phase 2 SC ("verify the API is documented") | Phase 1 test asserts Phase 1 SC only ("verify the API endpoint exists") |
+| Phase 2 test re-verifies Phase 1 deliverable ("verify the endpoint still exists") | Phase 2 test trusts Phase 1 verification and asserts only Phase 2 SC ("verify the endpoint has correct docs") |
+| Single test verifies all SCs across all phases | Split into N phase-scoped tests, each verifying its phase's SCs only |
+| Shell check reads skill card content to guess AI behavior | Behavioral test sends prompt and verifies agent response pattern |
+
 ## Cross-References
 
 - `000-critical-rules.md` → "Monolithic Implementation" critical violation section (authoritative enforcement)

@@ -22,14 +22,14 @@ You are a Git Workflow Enforcer. Your sole focus is ensuring all git operations 
 | -- | -- | -- |
 | `pre-work` | Verify authorization, create worktree | ≈420 |
 | `implementation` | Handle WIP commits during implementation | ≈400 |
-| `review-prep` | Push branch, generate compare URL for review | ≈560 |
-| `pr-creation` | Squash, push, create PR via GitHub MCP | ≈640 |
-| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | ≈550 |
-| `cleanup` | Delete merged branches, clean stale refs | ≈800 |
+| `review-prep` | Push branch, generate compare URL for review (2 subtasks) | ≈390 |
+| `pr-creation` | Squash, push, create PR via GitHub MCP (3 subtasks) | ≈385 |
+| `rebase-pending` | Rebase other open PRs after merge, classify conflicts | 1,666 |
+| `cleanup` | Verify merge, close issues, delete branches (3 subtasks) | ≈950 |
 | `completion` | Ensure mandatory completion steps run regardless of workflow outcome | ≈200 |
 | `release-promotion` | Automate dev → main promotion and tagging (submodule and non-submodule repos) | ≈500 |
 | `check-pr` | List all PRs (open + merged); if merged found, activate cleanup | ≈50 |
-| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion operations; fallback to commit message | ≈600 |
+| `provenance` | Create provenance issues/PRs in submodule repos after push/promotion (3 subtasks) | ≈460 |
 | `pair-pre-work` | Detect pair mode, WIP-commit switch instead of worktree | ≈400 |
 | `pair-commit` | Commit with [pair-mode] co-author trailers, issue association | ≈350 |
 | `pair-pr-creation` | Squash + PR with [pair-mode] trailers targeting dev | ≈300 |
@@ -119,10 +119,21 @@ cleanup: Verify merge via API → Close issues (MANDATORY — Skipping is a CRIT
 
 | Task | Words |
 |------|-------|
-| `cleanup` | 6,457 |
-| `pr-creation` | 5,312 |
-| `review-prep` | 4,241 |
-| `provenance` | 3,664 |
+| `cleanup` (routing) | ≈950 |
+| → `cleanup/verify-merge` | ≈760 |
+| → `cleanup/issue-closure` | ≈710 |
+| → `cleanup/branch-cleanup` | ≈680 |
+| `pr-creation` (routing) | ≈385 |
+| → `pr-creation/enforcement-gate` | ≈475 |
+| → `pr-creation/squash-push` | ≈490 |
+| → `pr-creation/create-pr` | ≈615 |
+| `review-prep` (routing) | ≈390 |
+| → `review-prep/push-and-cleanup` | ≈555 |
+| → `review-prep/report-url` | ≈625 |
+| `provenance` (routing) | ≈460 |
+| → `provenance/platform-detection` | ≈415 |
+| → `provenance/dev-push-provenance` | ≈540 |
+| → `provenance/promotion-provenance` | ≈610 |
 | `pre-work` | 1,898 |
 | `release-promotion` | 1,811 |
 | `rebase-pending` | 1,666 |
