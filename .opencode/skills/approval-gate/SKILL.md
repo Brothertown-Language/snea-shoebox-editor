@@ -304,145 +304,22 @@ When `halt_at < pr_created`, no PR is created — the agent halts before reachin
 
 ### Result Contracts (Sub-Agent Tasks)
 
-#### screen-issue
+Result contracts define the structured YAML output each sub-agent task must return. Full schemas are in the `enforcement/` directory when applicable; key fields are listed below for orchestration reference.
 
-```yaml
-status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW
-task: screen-issue
-issue_number: <N>
-classification: included | excluded | scope-reduced
-category: <already-implemented|superseded|moot|partially-implemented|meta-non-code|null>
-exclude_reason: <reason|null>
-reduce_reason: <reason|null>
-reduced_scope: {completed_phases: [], remaining_phases: []}
-flat_items: [{issue: <N>, title: <str>, phase: <str>}]
-gate_evidence: {gate1_called: bool, gate1_sub_issues_verified: bool, gate1_closure_legitimacy: bool, gate2_criteria_extracted: bool, gate2_criteria_verified: bool, final_classification: <str>}
-requires_developer: bool
-developer_reason: <reason|null>
-file_references: [<path>]
-symbol_references: [<name>]
-concerns: [<str>]
-```
+#### Key Result Contract Fields
 
-#### verify-authorization
-
-```yaml
-status: DONE | BLOCKED
-task: verify-authorization
-issue_number: <N>
-authorization_result: authorized | unauthorized | needs_approval
-cascade_applied: bool
-sub_issues_verified: bool
-gates_passed: [gate_name]
-blocking_reason: <reason|null>
-cascade_type: plan_cascade | output_lineage_cascade | none
-cascade_parent: <issue_number | null>
-authorization_scope: standard | for_spec | for_plan | for_implementation | for_code_review | for_pr | pr_only | review_only
-scope_source: parsed | default
-halt_at: <pipeline_stage>
-pr_strategy: stacked | individual | none
-gap_fill_actions: [<action_list>]
-```
-
-#### verify-qa-mode
-
-```yaml
-status: DONE
-task: verify-qa-mode
-mode: qa_mode | implementation_mode
-spec_found: bool
-spec_candidates: [<issue_number>]
-routing: <next_task|null>
-```
-
-#### verify-already-implemented
-
-```yaml
-status: DONE
-task: verify-already-implemented
-issue_number: <N>
-classification: already_implemented | partially_implemented | not_implemented
-evidence_summary: <str>
-auto_close_performed: bool
-```
-
-#### verify-closed-issue
-
-```yaml
-status: DONE
-task: verify-closed-issue
-issue_number: <N>
-legitimate: bool
-state_reason: <str>
-merged_pr_evidence: <url|null>
-action: none | reopen | flag
-```
-
-#### verify-sub-issues
-
-```yaml
-status: DONE
-task: verify-sub-issues
-parent_issue: <N>
-sub_issues_count: <int>
-all_verified: bool
-missing_sub_issues: [<phase>]
-auto_created: bool
-```
-
-#### post-implementation
-
-```yaml
-status: DONE
-task: post-implementation
-branch_pushed: bool
-compare_url: <url>
-issues_reported: [<N>]
-```
-
-#### pre-implementation-analysis
-
-```yaml
-status: DONE | BLOCKED
-task: pre-implementation-analysis
-screening_results_count: <int>
-included: [<issue_number>]
-excluded: [{issue: <N>, reason: <str>}]
-scope_reduced: [{issue: <N>, remaining_phases: []}]
-dependency_graph: {serial: [<N>], parallel_groups: [[<N>]]}
-execution_plan_presented: bool
-requires_developer: bool
-developer_reason: <str|null>
-work_state_file: <path>
-authorization_scope: <scope_value>
-halt_at: <pipeline_stage>
-pr_strategy: stacked | individual | none
-per_issue_gap_fill: [{issue: <N>, gap_fill: [<action>]}]
-```
-
-#### verify-fix-spec
-
-```yaml
-status: DONE
-task: verify-fix-spec
-bug_report: <N>
-fix_spec_exists: bool
-fix_spec_issue: <N|null>
-action: none | create_fix_spec
-```
-
-#### reconcile-issue-graph
-
-```yaml
-status: DONE | DONE_WITH_UNCERTAIN
-task: reconcile-issue-graph
-root_issue: <N>
-auto_closed: [<N>]
-reopened: [<N>]
-no_action: [<N>]
-requires_dev_action: [{issue: <N>, current: <state>, needed: <state>, reason: <str>}]
-nodes_visited: <N>
-```
+| Task | Status Values | Key Fields |
+|------|--------------|------------|
+| `screen-issue` | DONE, DONE_WITH_CONCERNS, BLOCKED, OVERFLOW | classification, category, flat_items, gate_evidence, requires_developer |
+| `verify-authorization` | DONE, BLOCKED | authorization_result, cascade_applied, sub_issues_verified, authorization_scope, halt_at, pr_strategy, gap_fill_actions |
+| `verify-qa-mode` | DONE | mode, spec_found, spec_candidates, routing |
+| `verify-already-implemented` | DONE | issue_number, classification, evidence_summary, auto_close_performed |
+| `verify-closed-issue` | DONE | issue_number, legitimate, state_reason, merged_pr_evidence, action |
+| `verify-sub-issues` | DONE | parent_issue, sub_issues_count, all_verified, missing_sub_issues, auto_created |
+| `post-implementation` | DONE | branch_pushed, compare_url, issues_reported |
+| `pre-implementation-analysis` | DONE, BLOCKED | included, excluded, scope_reduced, dependency_graph, requires_developer, work_state_file, authorization_scope, halt_at, pr_strategy |
+| `verify-fix-spec` | DONE | bug_report, fix_spec_exists, fix_spec_issue, action |
+| `reconcile-issue-graph` | DONE, DONE_WITH_UNCERTAIN | root_issue, auto_closed, reopened, no_action, requires_dev_action, nodes_visited |
 
 ### Dispatch Context Schema (All Sub-Agent Tasks)
 
@@ -462,44 +339,11 @@ session_vars:
 
 ## Adversarial Verification Requirements
 
-Every task in this skill that reads a metadata claim (label, comment, STATUS marker, sub-issue state, authorization history) MUST verify that claim against actual state before trusting it for workflow decisions. This extends the `065-verification-honesty.md` principle from code verification to metadata verification.
+Every task that reads a metadata claim (label, comment, STATUS marker, sub-issue state, authorization history) MUST verify that claim against actual GitHub state before trusting it for workflow decisions. This extends `065-verification-honesty.md` from code verification to metadata verification.
 
-### Verification Table
+**Evidence format and finding classification:** See `enforcement/adversarial-verification.md` for the complete evidence format, three-tier finding classification (auto-fix, conditional, flag-for-review), and problem class taxonomy. Every verification check MUST produce an evidence artifact via tool call — assertions without tool call evidence are verification honesty violations.
 
-| Metadata Claim | Verification Action | Tool Call | Problem Class |
-|----------------|-------------------|-----------|---------------|
-| `needs-approval` label present | Check issue comments for explicit authorization ("approved"/"go") from a developer | `github_issue_read(method=get_comments)` | MISSING-ELEMENT |
-| `needs-approval` label absent | Verify no pending authorization is needed (issue state is actually authorized) | `github_issue_read(method=get_labels)` | STRUCTURE-VIOLATION |
-| Authorization comment exists | Verify author is a developer (not bot/agent); verify scope matches current issue; verify comment is not superseded by revision | `github_issue_read(method=get_comments)` → filter by author association | CONFLICTING |
-| STATUS marker value | Compare STATUS against actual content maturity per ground-truth classification | `github_issue_read(method=get)` → parse body content | STRUCTURE-VIOLATION |
-| Authorization currency | Verify spec has not been revised after most recent authorization comment | `github_issue_read(method=get_comments)` → compare revision timestamps | STRUCTURE-VIOLATION |
-| Sub-issue state (open/closed) | Verify sub-issue state via GitHub API, not from cached or claimed state | `github_issue_read(method=get, issue_number=N)` → check `state` field | VERIFICATION-GAP |
-| Fix spec existence | Verify fix spec sub-issue exists and has correct labels/STATUS for its maturity | `github_issue_read(method=get_sub_issues)` → verify each child | MISSING-TRACEABILITY |
-| Work screening dispatch | Verify `screen-issue` sub-agents were dispatched for EVERY approved issue — no count threshold | Check for `task(subagent_type="general")` dispatch calls per issue | STRUCTURE-VIOLATION |
-
-### Evidence Artifacts
-
-Every adversarial verification check MUST produce an evidence artifact — a tool call result that demonstrates the verification was performed. Assertions without tool call evidence are verification honesty violations per `065-verification-honesty.md`.
-
-**Evidence format:**
-
-```
-Check: [what was verified]
-Tool: [tool call and parameters]
-Result: [actual state found]
-Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
-Action: [auto-fix|conditional|flag-for-review]
-```
-
-### Finding Classification
-
-Findings from adversarial verification follow the same three-tier model as `spec-auditor` ground-truth:
-
-| Classification | When | Action |
-|----------------|------|--------|
-| auto-fix | Safe, mechanical corrections (stale label, mismatched STATUS) | Apply fix, note in evidence |
-| conditional | Requires scope/safety check before applying (authorization claim vs actual) | Verify scope, then apply if safe |
-| flag-for-review | Requires domain judgment (conflicting authorization, ambiguous state) | Report in findings, do not apply |
+Key verification checks: `needs-approval` label status, authorization comment author/scope/currency, STATUS marker maturity, sub-issue open/closed state, fix spec existence, and screen-issue dispatch completeness.
 
 ## Cross-References
 
