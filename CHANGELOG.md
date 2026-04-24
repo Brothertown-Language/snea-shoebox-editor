@@ -12,6 +12,10 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 
 ## [0.2.0] - Unreleased
 
+### feature/1197-phase4
+
+- **Chain-of-Responsibility Orchestrator** (#1197 Phase 4) — Implemented work state I/O for chain-of-responsibility pattern with fast/medium/full dispatch paths. Added work state schema extension with per-task result sections, auto-dispatch table module, and behavioral enforcement test for dispatch path routing. Updated approval-gate SKILL.md with dispatch table mapping atomic task outputs to next-task inputs.
+
 ### spec-fix/1151-1152-identity-secret-fix
 
 - **Identity Echo Validation Gate** (#1151, #1153) - Added programmatic identity echo validation in session-enforcement.ts that compares agent's echoed identity values against injected values and injects IDENTITY_VALIDATION_FAILURE on mismatch. Updated buildIdentityEchoDirective() to include inline expected values with FATAL HALT-on-mismatch language. Separated "Repository Hosting Identity" from "Target API Credentials" in session_context_identity.py output.

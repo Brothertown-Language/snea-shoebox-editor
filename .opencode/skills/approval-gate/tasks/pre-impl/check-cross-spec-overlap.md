@@ -54,3 +54,10 @@ Check for overlap between approved issues and open specs/plans OUTSIDE the curre
 
 - Evidence format + finding classification: see `enforcement/adversarial-verification.md`
 - Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+
+## Work State I/O
+
+- **Reads from:** `## build-dependency-graph`
+- **Writes to:** `## check-cross-spec-overlap`
+
+After completing this task, write results to the work state file under section `## check-cross-spec-overlap` using the YAML format defined in `enforcement/work-state-schema.md`.

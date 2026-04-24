@@ -121,3 +121,10 @@ After traversal completes, invoke `reconcile-issue-graph` to act on findings. Se
 | Sub-issue needs-approval stale (parent authorized) | STRUCTURE-VIOLATION | auto-fix | Remove label |
 | Sub-issue body lacks phase context | MISSING-ELEMENT | conditional | Report, fall back to plan body |
 | Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve |
+
+## Work State I/O
+
+- **Reads from:** `## scope-auto-resolve`, `## item-decomposition-check`
+- **Writes to:** `## sub-issue-verification`
+
+After completing this task, write results to the work state file under section `## sub-issue-verification` using the YAML format defined in `enforcement/work-state-schema.md`.

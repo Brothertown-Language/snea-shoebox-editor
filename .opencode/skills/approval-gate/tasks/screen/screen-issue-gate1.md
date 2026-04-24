@@ -203,3 +203,10 @@ For each sub-issue of the candidate "already implemented" issue:
 - Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
 - Closed-issue verification: see `enforcement/closed-issue-verification.md`
 - Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+
+## Work State I/O
+
+- **Reads from:** None (first gate in screen chain)
+- **Writes to:** `## screen-gate1-<issue_number>`
+
+After completing this task, write results to the work state file under section `## screen-gate1-<issue_number>` (replacing `<issue_number>` with the actual issue number) using the YAML format defined in `enforcement/work-state-schema.md`.

@@ -21,6 +21,8 @@ gate1 → gate2
 
 Gate 1 classifies the issue and executes sub-issue enumeration. If the issue is an "already-implemented" candidate, Gate 1 MUST pass before gate2 runs. Gate 2 verifies success criteria, completes the evidence audit, and produces the final result contract.
 
+**Chain-of-responsibility note:** Each gate task uses the work state file for inter-task I/O. Gate tasks read inputs from predecessor sections and write results to their own section per `enforcement/work-state-schema.md`.
+
 ## Entry Criteria
 
 - Single issue number to screen (passed via dispatch context)

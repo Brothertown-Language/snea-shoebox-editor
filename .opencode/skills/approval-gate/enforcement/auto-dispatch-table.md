@@ -38,3 +38,15 @@ After plan approval, the dispatch order is:
 5. `git-workflow --task review-prep` — push, compare URL
 
 Each step produces an evidence artifact before proceeding to the next.
+
+## Path Routing
+
+Three chain-of-responsibility paths route through verify-authorization sub-tasks. Path selection is determined by issue count, scope, and sub-issue presence.
+
+| Path | Criteria | Skips |
+|------|----------|-------|
+| fast-path | 1 issue, `standard` scope, 0 sub-issues, explicit auth | needs-approval-label check, item-decomposition, sc-traceability, sub-issue-verification, spec-to-plan-cascade, gap-fill-cascade, screen-issue, pre-implementation-analysis |
+| medium-path | 1 issue + sub-issues OR plan with phases | screen-issue (single issue), pre-implementation-analysis (no dependency graph needed) |
+| full-path | Multi-issue authorization set | None — all steps executed |
+
+**Tier 1 mandates (worktree, branch protection) are never skipped regardless of path.** Work state file is the durable context bridge between hops across all paths.

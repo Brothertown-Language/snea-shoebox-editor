@@ -97,3 +97,10 @@ elif not plan_issues:
 | Plan already approved (no `needs-approval` label) | No action needed — plan is already approved |
 
 **Evidence artifact:** `github_search_issues` response showing plan issues referencing the spec, and `github_issue_write` response confirming label removal and comment posting.
+
+## Work State I/O
+
+- **Reads from:** `## sub-issue-verification`
+- **Writes to:** `## spec-to-plan-cascade`
+
+After completing this task, write results to the work state file under section `## spec-to-plan-cascade` using the YAML format defined in `enforcement/work-state-schema.md`.
