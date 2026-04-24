@@ -44,12 +44,31 @@ Bottom-up design is performed during plan creation (`writing-plans --task create
 
 Each implementation item MUST follow:
 
+### Standard Variant (Code Items)
+
+For code items (changes to `src/`, `test/`, Python files, notebook cells):
+
 | Phase | Action | Guideline Change |
 | -- | -- | -- |
 | **RED** | Add enforcement test scenario that verifies the change (expect failure — change doesn't exist yet). For each spec SC that applies to this item, the enforcement test assertion for that SC MUST be in RED state (exists and fails) before the item's implementation commit. | Test scenario committed alongside the `.md` change it tests; SC-specific test assertions with `# SC-N:` comments |
 | **GREEN** | Make the `.md` file change that makes the test pass | The actual guideline, skill, or AGENTS.md modification |
 | **REFACTOR** | Clean up cross-references, verify consistency with other files | Ensure no broken references between files |
 | **COMMIT** | Both the test addition and the `.md` change committed together as one working slice | Commit message references the item number |
+
+### Behavioral Variant (Rule/Guideline Items)
+
+For rule/guideline items (changes to `.opencode/guidelines/*.md`, `.opencode/skills/*/SKILL.md`, `.opencode/skills/*/tasks/*.md`, critical violation text, agent behavior rules):
+
+| Phase | Action | Verification |
+| -- | -- | -- |
+| **Behavioral RED** | Write a behavioral enforcement test that sends the agent a prompt and verifies the agent does NOT follow the new rule yet. Use assertion helpers from `.opencode/tests/behaviors/helpers.sh` (`assert_tool_calls_made`, `assert_forbidden_pattern_absent`, `assert_required_pattern_present`, `assert_skill_invoked`). The test MUST FAIL because the rule change hasn't been made. | Behavioral test run output shows assertion failure (agent does not follow the new rule) |
+| **Behavioral GREEN** | Make the guideline/rule change and re-run the behavioral test. The test MUST PASS because the agent now follows the rule. Optionally add a content-verification test as a supplementary sanity check. | Behavioral test run output shows assertion success (agent follows the new rule) |
+| **REFACTOR** | Clean up cross-references, verify consistency with other files | Content-verification also passes; no broken references |
+| **COMMIT** | Both the behavioral test and the rule change committed together | Commit message references the item number |
+
+**Content-verification tests are SECONDARY for rule items.** A content-verification test (grep for text presence) confirms the rule was written down but does NOT prove the agent follows it. Bug #1217 demonstrated this: the agent had correct rule text (passed content-verification) but did not follow the rule in practice (would have failed behavioral verification). Behavioral tests are PRIMARY for rule changes.
+
+**The item type determines the TDD variant:** When creating or reviewing a plan, identify each item as a code item or rule item. Code items use the standard variant. Rule items use the behavioral variant. Mixed items (both code and rule changes) use the behavioral variant for the rule changes and standard variant for the code changes — both test types must be present.
 
 **Enforcement test runner:**
 

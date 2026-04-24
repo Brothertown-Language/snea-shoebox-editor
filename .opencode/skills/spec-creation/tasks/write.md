@@ -53,7 +53,9 @@ Timestamp: [ISO 8601]
 
 **Exemption:** Simple specs with only 1-2 success criteria that are purely administrative (label changes, status updates) may use a simplified assertion. The RED gate still applies, but the assertion may be a single check for the spec file's existence rather than per-SC assertions.
 
-**Cross-reference:** See `091-incremental-build.md` → Per-Item TDD Cycle → RED phase, and `080-code-standards.md` → SC-to-Test Traceability and RED-Phase Ordering.
+**Cross-reference:** See `091-incremental-build.md` → Per-Item TDD Cycle → RED phase, `080-code-standards.md` → SC-to-Test Traceability and RED-Phase Ordering, and `080-code-standards.md` → Behavioral Enforcement Tests (PRIMARY) for the behavioral RED/GREEN gate.
+
+**Behavioral RED/GREEN gate for rule-changing specs:** When the spec changes a rule that governs agent behavior (guideline, skill enforcement, critical violation), the enforcement test assertions in Step 0.5 MUST include behavioral assertions — not just content-verification grep patterns. A behavioral assertion describes the agent's expected behavior (what tool calls it makes, what it declines, what it outputs) rather than just checking for text presence. If a spec SC changes agent behavior and the Step 0.5 test assertions only contain content-verification (grep) checks, the RED gate is incomplete — the agent could pass content-verification while still violating the behavioral rule in practice (see Bug #1217).
 
 ### Step 1: Assemble Spec
 
@@ -85,6 +87,7 @@ For each feature/requirement:
 - Edge case coverage
 - Negative test cases (what must NOT happen)
 - Integration test expectations
+- **Behavioral test assertions for rule-changing SCs** — Success criteria that change agent behavior (guideline rules, skill enforcement, critical violations) MUST include a behavioral test assertion describing the RED state (agent behavior without the rule) and GREEN state (agent behavior with the rule), not just a content-verification grep command. Content-verification commands are SECONDARY for rule-changing SCs; behavioral assertions are PRIMARY. See `080-code-standards.md` → Behavioral Enforcement Tests (PRIMARY).
 - **Semantic intent field** — Each success criterion MUST include a brief prose annotation explaining WHY the exact criterion value matters and what semantic distinction it represents. This prevents substituting functionally similar values. Example: "Exit code 2 specifically signals removal of a feature, distinct from exit code 1 which signals a validation failure — these are different error categories for different consumer behaviors." Without semantic intent, an SC is a checklist — it verifies that something happened, but not that the right thing happened for the right reason.
 
 ### Step 4: Structure the Deliverable (Principle #10)

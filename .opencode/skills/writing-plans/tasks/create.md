@@ -113,6 +113,13 @@ This prevents the plan from reducing semantic intent back into a checklist. Plan
 
 **RED verification checkpoint (Step 2) requirement:** The RED verification checkpoint is a mandatory gate that MUST appear in every TDD step block. It is not optional and cannot be absorbed into Step 1 or Step 3. Plans without an explicit Step 2 checkpoint will fail validation per `091-incremental-build.md` and will be rejected at plan validation. The checkpoint must specify the tool-call evidence required (e.g., `uv run pytest test/test_file.py::test_name -x` with expected assertion failure output).
 
+**Behavioral RED/GREEN for rule-changing items:** When a plan item changes a rule that governs agent behavior (guideline text, skill enforcement, critical violation), the TDD cycle for that item MUST use the behavioral TDD variant — not just content-verification. The behavioral variant requires:
+
+1. **Behavioral RED phase:** Write a behavioral enforcement test that sends the agent a prompt and verifies the agent does NOT follow the new rule yet (test FAILS because the rule change hasn't been made). Use assertion helpers from `.opencode/tests/behaviors/helpers.sh` (e.g., `assert_tool_calls_made`, `assert_forbidden_pattern_absent`, `assert_required_pattern_present`).
+2. **Behavioral GREEN phase:** Make the guideline/rule change and re-run the behavioral test. Test PASSES because the agent now follows the rule.
+
+For code items (non-rule changes), the standard TDD variant applies (write unit test → implement → verify test passes). See `091-incremental-build.md` → Per-Item TDD Cycle → Behavioral Variant for Rule Items.
+
 4. **Plan phase structure by judgment:**
 
    - Determine which phases the plan needs

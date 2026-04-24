@@ -349,6 +349,38 @@ Writing behavioral tests AFTER implementation means the test was never RED — i
 
 If SC-to-test traceability is missing any behavioral test for any SC, or if behavioral test assertions were written after implementation (GREEN-without-RED), implementation MUST NOT proceed until the behavioral tests are added and shown to fail first.
 
+## Behavioral RED/GREEN as Primary Enforcement Gate
+
+Content-verification tests (grep for text presence) are SECONDARY. Behavioral tests (verify agent behavior changes) are PRIMARY. This hierarchy is enforced at every workflow step where rule changes are made or approved.
+
+### The Behavioral RED/GREEN Gate
+
+The TDD RED/GREEN cycle for rule changes MUST use behavioral enforcement tests, not just content-verification tests:
+
+1. **RED phase**: Write a behavioral enforcement test that sends the agent a prompt and verifies the agent does NOT follow the new rule yet. The test MUST FAIL at this point because the rule change hasn't been made. Use assertion helpers from `.opencode/tests/behaviors/helpers.sh` (`assert_tool_calls_made`, `assert_forbidden_pattern_absent`, `assert_required_pattern_present`, `assert_skill_invoked`).
+2. **GREEN phase**: Make the guideline/rule change and re-run the behavioral test. The test MUST PASS because the agent now follows the rule.
+3. **No exceptions**: This gate applies to ALL rule changes — guideline files, skill files, task files, critical violation sections, system prompt blocks.
+
+### 🚫 PROHIBITED (for behavioral rule changes)
+
+- Content-verification tests (grep patterns) as the ONLY enforcement for a behavioral rule change
+- Marking a rule change as "tested" when only text presence was verified — the agent having correct rule text does NOT prove it follows the rule
+- Writing behavioral tests AFTER implementation (GREEN-without-RED) — the test must be RED first, then GREEN
+- Bypassing the behavioral gate because a content-verification test already exists for the same rule
+- Claiming a rule is "enforced" based solely on content-verification without behavioral evidence
+
+### ✅ REQUIRED (for behavioral rule changes)
+
+- Every critical violation change MUST have at least one behavioral test verifying the agent follows the new rule
+- Behavioral tests are PRIMARY — they prove the agent's behavior actually changed
+- Content-verification tests are SECONDARY — they confirm rule text exists but do NOT prove agent compliance
+- Add the behavioral test FIRST (RED), then make the change (GREEN) — behavioral TDD for rules
+- The behavioral RED/GREEN gate is enforced at every workflow step: spec creation, plan creation, plan execution, and approval gate
+
+### Root Case
+
+Bug #1217 demonstrated that the agent had all the correct guideline text about verification but still answered a general knowledge question with zero tool-call verification. Content-verification alone was insufficient — the agent behavior did not match the rule text. This is why behavioral tests are PRIMARY: they verify that the agent actually behaves differently, not just that the rule text exists.
+
 ## Cross-Reference Standards
 
 **Cross-references in specs, issues, and documentation MUST use stable anchors, NOT line numbers.**
