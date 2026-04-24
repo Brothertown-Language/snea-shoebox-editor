@@ -87,14 +87,7 @@ comments = github_issue_read(method="get_comments", issue_number=N)
 
 ### Task-Specific Findings
 
-Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Question resolved in comments but spec says open | STRUCTURE-VIOLATION | auto-fix | Note resolution, recommend spec update |
-| Question is non-blocking preference | VERIFICATION-GAP | auto-fix | Reclassify as non-blocking, proceed |
-| New questions in comments not in spec | MISSING-ELEMENT | conditional | Add to open questions if blocking |
-| Genuinely unresolved blocking question | — | — | Properly identified, HALT for answer |
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## Context Required
 

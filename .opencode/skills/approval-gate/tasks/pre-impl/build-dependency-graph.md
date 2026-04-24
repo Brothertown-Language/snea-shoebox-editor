@@ -232,12 +232,7 @@ For each file path or symbol from screening `file_references`/`symbol_references
 
 ### Finding Classification
 
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| File overlap claimed but no actual dependency | VERIFICATION-GAP | flag-for-review | Re-classify as independent unless other evidence |
-| Dependency exists but not mentioned in specs | MISSING-ELEMENT | conditional | Add to dependency graph, adjust execution order |
-| Independence claimed but transitive dependency exists | CONFLICTING | conditional | Downgrade to conflict-risk or must-precede |
-| Code reference to non-existent file/symbol | VERIFICATION-GAP | flag-for-review | Developer must confirm: planned or typo |
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## Enforcement References
 

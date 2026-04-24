@@ -122,16 +122,7 @@ PR URL: <html_url from github_create_pull_request API response>
 | No branch pushed (no-changes path) | ❌ No | Omit URL element entirely; byline follows outcome directly |
 | PR already created | ✅ Yes | Use PR URL label with `pull/<N>` format instead of "Compare URL" |
 
-**Classification on failure:**
-
-| Failure | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| Missing summary | MISSING-ELEMENT | auto-fix | Add summary before sending |
-| Missing outcome | MISSING-ELEMENT | auto-fix | Add outcome before sending |
-| Missing URL when required | MISSING-ELEMENT | auto-fix | Generate URL before sending |
-| URL included when not applicable | STRUCTURE-VIOLATION | auto-fix | Remove URL, reorder to summary → outcome → byline |
-| Missing byline | MISSING-ELEMENT | auto-fix | Add byline before sending |
-| Wrong ordering | STRUCTURE-VIOLATION | auto-fix | Reorder to summary → outcome → [URL] → byline |
+**Finding Classification:** See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 **Auto-fix on failure:** If any element is missing or misordered, fix the output before sending. Missing elements are auto-fixed before output is sent — NOT reported after the fact.
 

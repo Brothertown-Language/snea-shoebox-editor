@@ -355,16 +355,7 @@ git_status = git status
 
 ### Task-Specific Findings
 
-Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must create or reference correct issue |
-| Issue body empty/placeholder | MISSING-ELEMENT | flag-for-review | Spec content must be created before implementation |
-| STATUS maturity mismatch | STRUCTURE-VIOLATION | auto-fix | Note mismatch, recommend STATUS update |
-| Authorization from bot/agent | CONFLICTING | flag-for-review | Reject as authorization, require human approval |
-| Authorization superseded by revision | STRUCTURE-VIOLATION | flag-for-review | Require re-authorization |
-| Unauthorized prior work detected | VERIFICATION-GAP | flag-for-review | Report — may need to `git checkout` to clean state |
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## Edge Cases
 

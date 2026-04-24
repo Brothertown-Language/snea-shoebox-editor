@@ -495,6 +495,7 @@ When authorization scope includes implementation (`for_implementation`, `for_cod
 - ✅ REQUIRED: Plans include item enumeration, dependency ordering, and acceptance criteria per item
 - ✅ REQUIRED: Approval gate Step 4.5 verifies item decomposition exists before implementation proceeds
 - ✅ REQUIRED: Phase-scoped test assertions — each phase tests only its own deliverables; see "Phase-Scoped Test Assertions" in `091-incremental-build.md`
+- ✅ REQUIRED: Atomic task files MUST NOT exceed ≤3,000 words (`wc -w`); task files exceeding this limit MUST be split into smaller single-concern tasks. See `091-incremental-build.md` → "Complexity Metric: Word Count" for the complete rationale and size limits
 
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 

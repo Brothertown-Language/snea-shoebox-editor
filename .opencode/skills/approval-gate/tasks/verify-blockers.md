@@ -124,16 +124,7 @@ has_auth = any comment from developer (MEMBER/OWNER/COLLABORATOR) saying "approv
 
 ### Task-Specific Findings
 
-Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Blocker issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve stale reference |
-| Blocker claimed open but actually closed | VERIFICATION-GAP | auto-fix | Remove blocker, proceed |
-| Blocker claimed closed but actually open | CONFLICTING | flag-for-review | Developer must confirm blocker status |
-| Superseding issue scope narrower than claimed | CONFLICTING | flag-for-review | Developer must judge supersession |
-| Dependency symbol/file does not exist | VERIFICATION-GAP | flag-for-review | Developer must confirm: planned or typo |
-| needs-approval label stale | STRUCTURE-VIOLATION | auto-fix | Remove label (explicit auth overrides) |
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## Context Required
 
