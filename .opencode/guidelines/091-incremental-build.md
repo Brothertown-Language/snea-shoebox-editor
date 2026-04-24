@@ -157,6 +157,33 @@ Phase N tests trusting Phase M verification (M < N) is REQUIRED, not optional. T
 
 **Anti-pattern:** Re-verifying a prior phase's deliverable in a later phase's test is over-verification, not honest verification, and is a STRUCTURE-VIOLATION.
 
+## Complexity Metric: Word Count
+
+Word count (`wc -w`) is the canonical complexity metric for all skill task files, SKILL.md files, and guideline files. Line counts are not used because line length varies by formatting conventions and does not correlate with semantic density.
+
+**Authority:** `skill-creator/SKILL.md` lines 100-103 establish word count as the universal unit for skill size measurement, with explicit reasoning on why words (not lines or tokens) are the correct metric.
+
+### Artifact Size Limits
+
+| Artifact Type | Max Words | Measurement |
+| -- | -- | -- |
+| Atomic task file | ≤3,000 | `wc -w` |
+| Routing-tier SKILL.md | ≤4,000 | `wc -w` |
+| Condensed-tier SKILL.md | ≤2,000 | `wc -w` |
+| Guideline file | Per content needs | `wc -w` |
+
+When a task file exceeds 3,000 words on first draft, it MUST be split into smaller atomic tasks, each with a single concern and entry/exit criteria. This is a hard constraint, not a guideline.
+
+### Why Word Count
+
+- **Words, not lines:** Line length varies by formatting conventions. A 40-line table and a 40-line prose paragraph carry wildly different cognitive loads. Word counts measure semantic density.
+- **Words, not tokens:** Token counts vary by tokenizer, model, and encoding. Word counts are stable, reproducible, and model-agnostic.
+- **Measurement method:** `wc -w` is the canonical tool. All enforcement test assertions for artifact size MUST use `wc -w`, never `wc -l`.
+
+### Cross-Reference to #1197
+
+This section was added per `#1197` Phase 7 to mandate word-count complexity metrics across the skill deck and guideline files, replacing any prior line-count references.
+
 ## Cross-References
 
 - `000-critical-rules.md` → "Monolithic Implementation" critical violation section (authoritative enforcement)
@@ -166,5 +193,6 @@ Phase N tests trusting Phase M verification (M < N) is REQUIRED, not optional. T
 - `writing-plans/SKILL.md` → Per-item bottom-up design sections (design generation)
 - `executing-plans/SKILL.md` → Per-item TDD cycle reference (execution enforcement)
 - `divide-and-conquer/SKILL.md` → TDD phase in dispatch context (dispatch enforcement)
+- `skill-creator/SKILL.md` → Word count convention (lines 100-103; authoritative source for word-count metric)
 
 **Co-authored with AI: OpenCode (ollama-cloud/glm-5.1)**

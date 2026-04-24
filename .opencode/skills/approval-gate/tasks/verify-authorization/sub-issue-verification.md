@@ -54,15 +54,7 @@ for sub_issue in sub_issues:
 
 For multi-task plans, verify that the number of sub-issues matches the number of phases in the plan body. A mismatch indicates incomplete sub-issue linkage. See `enforcement/sub-issue-graph-traversal.md` for the phase-count cross-reference algorithm.
 
-**Finding Classification:**
-
-| Finding | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| Plan has N > 1 phases, sub-issues < N | STRUCTURE-VIOLATION | auto-fix | Block implementation; offer `issue-operations --task link-sub-issue` to create missing linkages |
-| Plan has N > 1 phases, sub-issues >= N | VERIFIED | auto-proceed | Phase count matches; continue verification |
-| Plan has 0 or 1 phases | VERIFIED | auto-proceed | Single-task plan; count check skipped |
-
-**Evidence artifact:** `count_plan_phases()` result and `github_issue_read(method=get_sub_issues)` count MUST be recorded in the verification report.
+**Finding Classification:** See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ### 5.3 Adversarial Verification of Sub-Issue State
 
@@ -83,16 +75,7 @@ For each sub-issue:
 
 Before skipping a closed issue in any workflow gate, verify it was closed for the right reason. See `enforcement/closed-issue-verification.md` for the complete closed-issue verification procedure.
 
-**Finding Classification for Closed-Issue Verification:**
-
-| Finding | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| Closed + merged PR + criteria met | VERIFIED | auto-proceed | Skip to autoclose workflow |
-| Closed + merged PR + criteria NOT met | CONFLICTING | flag-for-review | Investigation needed |
-| Closed as "completed" + no merged PR | VERIFICATION-GAP | flag-for-review | Manual closure without implementation evidence |
-| Closed as "not_planned" | VERIFICATION-GAP | flag-for-review | Intentionally deferred — may need reopening |
-| Closed as "duplicate" | MISSING-TRACEABILITY | conditional | Verify duplicate target exists and covers scope |
-| Closed state unclear (no reason) | VERIFICATION-GAP | flag-for-review | Do NOT skip — verify implementation manually |
+**Finding Classification for Closed-Issue Verification:** See `enforcement/adversarial-verification.md` for the three-tier classification model and evidence artifact format.
 
 ### 5.5 Transitive Issue Graph Verification (MANDATORY on Authorization and Re-Approval)
 
@@ -113,14 +96,7 @@ After traversal completes, invoke `reconcile-issue-graph` to act on findings. Se
 
 ### Finding Classification for Sub-Issue Verification
 
-| Finding | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| No sub-issues on multi-task plan | MISSING-ELEMENT | auto-create | Auto-create under plan, proceed |
-| Sub-issue linked under spec (not plan) | STRUCTURE-VIOLATION | auto-fix | Re-link under correct parent |
-| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Report — may be premature closure |
-| Sub-issue needs-approval stale (parent authorized) | STRUCTURE-VIOLATION | auto-fix | Remove label |
-| Sub-issue body lacks phase context | MISSING-ELEMENT | conditional | Report, fall back to plan body |
-| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve |
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## Work State I/O
 

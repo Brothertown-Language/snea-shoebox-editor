@@ -84,214 +84,57 @@ Enforces context window safety by mandating pre-flight assessment before non-tri
 
 ## Overflow Signal Contract
 
-When a sub-agent determines it cannot fit the assigned work within its context window, it MUST return:
-
-```yaml
-status: OVERFLOW
-completed_work:
-  description: "<what was accomplished before overflow>"
-  files_changed: ["<path>"]
-  summary: "<result of completed portion>"
-remaining_work:
-  description: "<what still needs doing>"
-  scope: "<files, functions, modules affected>"
-  spec_references: ["<spec section IDs>"]
-suggested_splits:
-  - description: "<sub-task 1>"
-    scope: "<files/modules>"
-  - description: "<sub-task 2>"
-    scope: "<files/modules>"
-depth: <current depth>
-```
+When a sub-agent cannot fit the assigned work, it MUST return `status: OVERFLOW` with `completed_work`, `remaining_work`, and `suggested_splits`. See `overflow-signal` task for the full schema.
 
 ## Dispatch Context Contract
 
-When the orchestrator dispatches a sub-agent, it MUST pass:
+When the orchestrator dispatches a sub-agent, it MUST pass: `issue`, `branch`, `spec`, `plan_issue`, `authorization`, `authorization_scope`, `halt_at`, `pr_strategy`, `depth`, `max_depth`, `prior_context`, `decision_log_reference`, `phase_progress` (prose-driven: completed phases by concern, boundaries crossed, verification evidence), `sub_task` (description, scope, boundaries), `model_context`, `env_vars` (worktree.path, branch, github.owner, github.repo), `tdd_phase`, `current_item`, `top_down_items`, `dev.name`, `dev.email`. See `context-passing` task for the full schema.
 
-```yaml
-issue: <number>
-branch: "spec/<short-name>"
-spec: "<full spec body or relevant section>"
-plan_issue: <number or empty>
-authorization: "User approved #<N> on <date>"
-authorization_scope: <scope_value>
-halt_at: <pipeline_stage>
-pr_strategy: stacked | individual | none
-depth: <current decomposition depth, starting at 0>
-max_depth: <DIVIDE_AND_CONQUER_MAX_DEPTH or 3>
-prior_context: "<AI-composed intent and context from prior sub-agents>"
-decision_log_reference: "<URL or reference to the Decision Log on the Plan issue, or 'see Decision Log on Plan #N' — the sub-agent can retrieve full decision history from this reference>"
-phase_progress:
-  completed_phases: "<prose listing of completed phases by concern name, not just number>"
-  concern_boundaries_crossed: "<prose description of architectural concern transitions encountered>"
-  verification_evidence: "<prose summary of what was verified and the outcomes>"
-sub_task:
-  description: "<what this sub-agent must implement>"
-  scope: "<files, modules, functions>"
-  boundaries: "<what is OUT of scope>"
-model_context: "<ollama-cloud-model-tag>"
-env_vars:
-  worktree.path: "<worktree path>"
-  branch: "<branch name>"
-  github.owner: "<from-session>"
-  github.repo: "<from-session>"
-  tdd_phase: "RED|GREEN|REFACTOR|COMMIT"
-current_item: "<item name from top-down decomposition>"
-top_down_items: "<list of all items with dependencies>"
-  dev.name: "<from-session>"
-  dev.email: "<from-session>"
-```
-
-**Phase progress is prose-driven.** The `phase_progress` section communicates what information must travel between phases — completed phases should be named by the concern they address, concern boundaries should describe the architectural transition point, and verification evidence should summarize what was confirmed and the outcome. The agent composing the context decides how to encode this; the requirement is the information, not the format.
-
-**Invariants:** `worktree.path` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` is composed by the orchestrator from prior sub-agent results and the Plan STATUS marker — it accumulates across the work set as each issue completes.
+**Invariants:** `worktree.path` is MANDATORY — no exceptions. If empty: FATAL ERROR → HALT. `plan_issue` is set when dispatched from plan approval flow. `phase_progress` accumulates across the work set from prior sub-agent results.
 
 ## Sub-Agent Completion Checkpoint
 
-After every sub-agent dispatch, the orchestrating agent MUST perform a completion checkpoint before accepting work. This ensures abnormal terminations (context overflow, timeout, crash, incomplete execution) are detected and recovered rather than silently accepted.
+After every sub-agent dispatch, perform a completion checkpoint before accepting work. See `completion-checkpoint` task for the full protocol.
 
-**Detection:**
+**Detection summary:**
 
-| Sub-agent Signal | Meaning | Action |
-| -- | -- | -- |
-| Returns `status: DONE` | Normal completion | Proceed to next sub-task |
-| Returns `status: DONE_WITH_CONCERNS` | Completed with caveats | Review concerns, proceed if correctness/scope OK |
-| Returns `status: OVERFLOW` | Context overflow | Re-dispatch with reduced scope per `overflow-signal` task |
-| Returns `status: BLOCKED` | Blocked by external issue | HALT and report blocker |
-| Returns **no result** (timeout, crash, empty) | **ABNORMAL TERMINATION** | Trigger assessment protocol |
-
-**Assessment Protocol (for ABNORMAL TERMINATION):**
-
-1. Check `git status` in the worktree:
-   - If working tree is **CLEAN** (no changes) → sub-agent didn't start → Re-dispatch full scope
-   - If working tree has **UNCOMMITTED changes** → sub-agent started but didn't commit → continue to step 2
-
-2. If uncommitted changes exist:
-   a. Read changed files via `git diff` and `git diff --cached`
-   b. Compare against the dispatch spec (what was the sub-agent asked to do?)
-   c. Assess completion level:
-
-| Condition | Git State | Assessment | Recovery Action |
-| -- | -- | -- | -- |
-| No result, clean tree | No changes | Didn't start | Re-dispatch full scope |
-| No result, uncommitted, complete | All deliverables in diff | Started, completed, didn't commit | UNDO + re-dispatch (default) OR Manual commit + push (narrow exception, see Recovery Mode) |
-| No result, uncommitted, partial | Some deliverables in diff | Started, incomplete | `git checkout .` + re-dispatch reduced scope |
-| No result, uncommitted, wrong | Changes don't match spec | Started, went wrong | `git checkout .` + re-dispatch full scope |
-| OVERFLOW result | Changes up to overflow point | Context overflow | Re-dispatch remaining scope |
-
-**The AI agent makes the recovery decision autonomously** based on the assessment protocol. This is an agent intelligence concern per the "Pushing Agent Intelligence Decisions to the User" critical violation in `000-critical-rules.md`. The user should NOT be asked to decide whether to complete manually or undo + re-dispatch.
-
-**Reporting:** All abnormal terminations MUST be reported to chat with this format:
-
-```
-⚠️ SUB-AGENT ABNORMAL TERMINATION DETECTED
-
-Sub-agent for #<issue> terminated abnormally.
-Assessment: <Didn't start | Complete but uncommitted | Partial work | Wrong work>
-Recovery action: <Re-dispatch full scope | Manual commit+push | Undo + re-dispatch reduced | Undo + re-dispatch full>
-Files affected: <list>
-
-Proceeding with recovery...
-```
+| Signal | Action |
+| -- | -- |
+| `status: DONE` | Proceed |
+| `status: DONE_WITH_CONCERNS` | Review concerns, proceed if OK |
+| `status: OVERFLOW` | Re-dispatch reduced scope |
+| `status: BLOCKED` | HALT and report |
+| **No result** (timeout/crash/empty) | **ABNORMAL TERMINATION** → assessment protocol |
 
 ## Sub-agent Result Contract
 
-Every sub-agent MUST return a structured result:
+Every sub-agent MUST return: `status` (DONE | DONE_WITH_CONCERNS | OVERFLOW | BLOCKED), `files_changed`, `summary`, `concerns` (if DONE_WITH_CONCERNS), `decision_log_entry` (prose, no prescribed format), `plan_issue`, `phase_progress` (completed_phases, concern_boundaries_crossed, verification_evidence, verification_passed), `compare_url`, `exec_summary`.
 
-```yaml
-status: DONE | DONE_WITH_CONCERNS | OVERFLOW | BLOCKED
-files_changed: ["<path>"]
-summary: "<what was implemented and key decisions>"
-concerns: "<only if DONE_WITH_CONCERNS>"
-decision_log_entry: "<prose summary of design decisions made during this phase — no prescribed format, the agent decides structure>"
-plan_issue: <number or empty>
-phase_progress:
-  completed_phases: "<prose listing of phases completed, named by concern>"
-  concern_boundaries_crossed: "<prose description of architectural concern transitions>"
-  verification_evidence: "<prose summary of what was verified and outcomes>"
-verification_passed: true | false
-compare_url: "<compare URL from review-prep, or empty string>"
-exec_summary: "<1-2 sentence executive summary for chat output, or empty string>"
-```
-
-**Phase progress in results** enables the orchestrator to compose `phase_progress` for subsequent sub-agents. The completed phases, concern boundaries crossed, and verification evidence from prior sub-agent results feed directly into the next dispatch context's `phase_progress` field.
-
-**Decision Log persistence.** The `decision_log_entry` field captures design decisions made during a phase. After each sub-agent returns, the orchestrator appends this entry as a dedicated GitHub Issue comment on the Plan issue — this is the Decision Log. It persists across session restarts because it lives on the GitHub Issue, not in transient agent context. The Decision Log uses comments (not Plan body edits) for lightweight, append-only durability. The `decision_log_entry` is prose-driven — no prescribed format, the agent decides the structure that best communicates what was decided and why.
+**Decision Log persistence:** After each sub-agent returns, the orchestrator appends `decision_log_entry` as a GitHub Issue comment on the Plan issue (append-only, persists across sessions).
 
 ## Orchestrator Recovery Mode
 
-When the orchestrating agent detects abnormal termination via the Sub-Agent Completion Checkpoint, it enters Recovery Mode. The orchestrator autonomously decides the recovery strategy based on the assessment protocol — this is an agent intelligence concern per the "Pushing Agent Intelligence Decisions to the User" critical violation in `000-critical-rules.md`.
+**Option A: Undo and Re-dispatch (DEFAULT)** — `git checkout .` and re-dispatch with appropriate scope. Use for all cases except the narrow exception.
 
-**Recovery Option A: Undo and Re-dispatch (DEFAULT)**
+**Option B: Complete Manually (NARROW EXCEPTION)** — Only when ALL conditions are met: ≤50 lines diff, single file, fully correct against spec, last sub-agent in work set. Action: commit+push, run verification. Context window risk makes this strongly discouraged.
 
-- **When:** Changes are partial, wrong, corrupted, the sub-agent didn't start, OR no narrow exception applies
-- **Action:** `git checkout .` to discard changes, then re-dispatch with appropriate scope
-- **Scope determination:**
-  - Clean tree (didn't start) → re-dispatch full scope
-  - Partial deliverables → re-dispatch reduced scope (only remaining deliverables)
-  - Wrong/corrupted changes → re-dispatch full scope
-  - Complete but uncommitted (no narrow exception) → re-dispatch full scope
+**The orchestrator MUST NOT ask the user to choose recovery options.** This is an agent intelligence concern per `000-critical-rules.md`. All abnormal terminations MUST be reported to chat.
 
-**Recovery Option B: Complete Manually (NARROW EXCEPTION — Strongly Discouraged)**
+## Result Validation (MANDATORY)
 
-- **When ALL conditions are met simultaneously:**
-  1. Uncommitted changes represent ≤50 lines of diff
-  2. Changes touch a single file only
-  3. Changes are fully correct and complete against the dispatch spec
-  4. No remaining sub-agent dispatches in the work set (this is the last sub-agent)
-- **Action:** Commit and push the changes, then run verification (`verification-before-completion --task verify`)
-- **⚠️ Context window risk:** Manual completion consumes orchestrator context window. Even a "small" manual completion (reading diffs, composing commits) can push an already-loaded context toward overflow. This risk is WHY manual completion is strongly discouraged — the orchestrator's context window is a scarce resource that must be preserved for orchestration duties. Re-dispatching to a fresh sub-agent is context-free for the orchestrator.
-- **If ANY condition is NOT met → use Option A (Undo and Re-dispatch)**
-
-**The orchestrator MUST NOT ask the user to decide between recovery options.** The assessment protocol provides sufficient information for the AI agent to choose autonomously. Asking "Should I complete manually or re-dispatch?" would violate the "Pushing Agent Intelligence Decisions to the User" critical violation.
-
-**Logging requirement:** All abnormal terminations MUST be reported to chat with the format specified in the Sub-Agent Completion Checkpoint section. Silent acceptance of abnormal termination state is a critical violation.
-
-**Cross-reference:** See `000-critical-rules.md` → "Pushing Agent Intelligence Decisions to the User" for the rule that structural decisions (including recovery strategy) are agent intelligence concerns, not user decisions.
-
-## Sub-Agent Result Validation (MANDATORY)
-
-After every `task(subagent_type="general")` dispatch, the agent MUST validate the result before acting on it. This gate prevents silent agent termination when a sub-agent returns an empty or malformed result.
-
-### Validation Rules
+After every sub-agent dispatch, validate the result before acting on it. See `result-validation` task for the full procedure.
 
 | Condition | Action |
 |-----------|--------|
-| Result is empty string or whitespace-only | FALLBACK: perform task inline; report warning in chat |
-| Result is non-empty but not valid result contract | TRY: parse available content; FALLBACK if unparseable |
-| Result is valid result contract with `status: DONE` | PROCEED to next step (existing behavior) |
-| Result is valid result contract with `status: DONE_WITH_CONCERNS` | Review concerns, proceed if scope OK (existing behavior) |
-| Result is valid result contract with `status: BLOCKED` | HALT with status message (existing behavior) |
-| Result is valid result contract with `status: OVERFLOW` | Re-dispatch with reduced scope per `overflow-signal` task (existing behavior) |
-| Result contains error/exception trace | FALLBACK: perform task inline; report error in chat |
+| Empty/whitespace result | FALLBACK: perform inline; report warning |
+| Non-YAML but parseable | TRY parse; FALLBACK if unparseable |
+| Valid `status: DONE` | PROCEED |
+| Valid `status: DONE_WITH_CONCERNS` | Review, proceed if scope OK |
+| Valid `status: BLOCKED` | HALT |
+| Valid `status: OVERFLOW` | Re-dispatch reduced scope |
+| Error/exception trace | FALLBACK: perform inline; report error |
 
-### FALLBACK Procedure
-
-When a sub-agent result triggers the FALLBACK action:
-
-1. Report warning in chat: `⚠️ Sub-agent for <task_name> returned empty/invalid result, performing inline`
-2. Perform the task inline using direct tool calls (the orchestrator executes the sub-agent's intended work itself)
-3. Continue the dispatch chain from the inline result — do not re-dispatch the same sub-agent
-
-### Double-Failure Protocol
-
-If the inline fallback also fails:
-
-1. Report in chat: `❌ Sub-agent and inline fallback both failed for <task_name>. Unable to continue.`
-2. Invoke `--task completion` on the current skill (idempotent, safe)
-3. HALT with status message + byline (per chat output format rules)
-4. NEVER produce zero output before halting
-
-### Integration with Completion Checkpoint
-
-This validation gate runs BEFORE the Sub-Agent Completion Checkpoint. The sequence is:
-
-1. Dispatch sub-agent via `task()`
-2. **Result Validation (this gate)** — check for empty/malformed result
-3. Completion Checkpoint — check for abnormal termination (existing)
-4. If both pass: accept result, proceed
-
-If the Result Validation gate triggers FALLBACK and inline succeeds, the Completion Checkpoint is skipped (inline execution produces its own result). If inline fails, the Double-Failure Protocol runs instead.
+**FALLBACK:** Report warning, perform task inline. **Double-failure:** Report both failures, invoke `--task completion`, HALT with status + byline. This gate runs BEFORE the Completion Checkpoint.
 
 ## UI Sub-Agent Routing
 
@@ -364,138 +207,54 @@ If `worktree.path` is NOT set, operate normally from the project root.
 
 ### Result Contracts (Sub-Agent Tasks)
 
-#### assemble-work
+See individual task files for full schemas. Key result contract:
 
-```yaml
-status: DONE | DONE_WITH_CONCERNS | BLOCKED | OVERFLOW
-task: assemble-work
-issues_dispatched: [<N>]
-issues_completed: [<N>]
-issues_failed: [<N>]
-work_branch: <branch_name>
-work_state_file: <path>
-results: [{issue: <N>, status: <str>, summary: <str>}]
-```
+**assemble-work**: Returns `status`, `issues_dispatched`, `issues_completed`, `issues_failed`, `work_branch`, `work_state_file`, `results` array.
 
-### Dispatch Context Schema
-
-```yaml
-work_state_file: <path>
-authorization_scope: <scope_value>
-halt_at: <pipeline_stage>
-pr_strategy: stacked | individual | none
-session_vars:
-  github.owner: <from-session>
-  github.repo: <from-session>
-  dev.name: <from-session>
-  dev.email: <from-session>
-  worktree.path: <from-session>
-```
+**Dispatch Context Schema**: `work_state_file`, `authorization_scope`, `halt_at`, `pr_strategy`, `session_vars` (github.owner, github.repo, dev.name, dev.email, worktree.path). See `assemble-work` task for full schema.
 
 ## Sub-Agent Spawning
 
-This skill is a **heavy skill** — its orchestration logic can run in isolation. When the main agent needs divide-and-conquer execution, spawn a sub-agent via the `task` tool:
-
 1. Main agent loads this dispatch document (≈650 words)
-2. Main agent spawns sub-agent: `task(subagent_type="general", prompt="Use divide-and-conquer skill with context: issue=#N, branch=<name>, <session-context>")`
-3. Sub-agent loads: this SKILL.md + relevant task files + required guidelines
+2. Spawns sub-agent: `task(subagent_type="general", prompt="Use divide-and-conquer skill with context: issue=#N, branch=<name>, <session-context>")`
+3. Sub-agent loads: this SKILL.md + task files + required guidelines
 4. Sub-agent executes: assess → decompose → dispatch → merge → completion
-5. Sub-agent returns structured result per Sub-agent Result Contract
+5. Returns structured result per Result Contract
 6. Main agent receives result — no orchestration detail in main context
 
-**Sub-agent context parameters:** Pass `<worktree.path>`, `branch`, `<github.owner>`, `<github.repo>`, `<dev.name>`, `<dev.email>` from session init.
+Pass `<worktree.path>`, `branch`, `<github.owner>`, `<github.repo>`, `<dev.name>`, `<dev.email>` from session init.
 
 ## Live Verification: Work State (MANDATORY)
 
-**🚫 CRITICAL: When this skill reads work state (prior results, authorization, branch status), it MUST verify against live GitHub/git state. Trusting work state file claims without verification is a VERIFICATION-GAP finding per `065-verification-honesty.md`.**
+**CRITICAL: When reading work state, verify against live GitHub/git state. Trusting claims without verification is a VERIFICATION-GAP per `065-verification-honesty.md`.**
 
 | Work State Claim | Verification Action | Tool Call | Problem Class |
 |------------------|-------------------|-----------|---------------|
-| "Prior issue completed" in work state file | Verify prior issue PR was actually merged | `github_pull_request_read(method=get)` → check `merged` field | CONFLICTING |
-| "Authorization cascades" | Verify authorization comment exists on parent issue | `github_issue_read(method=get_comments, issue_number=N)` → find auth comment | VERIFICATION-GAP |
-| "Work branch is current" | Verify branch tip matches expected state | `bash` to run `git log -1 --oneline <branch>` | VERIFICATION-GAP |
-| "Sub-issue phase complete" | Verify sub-issue state is actually closed (if applicable) | `github_issue_read(method=get, issue_number=N)` → check `state` | CONFLICTING |
-| "Prior results reference" | Verify referenced files/issues still exist | `glob(pattern="**/file")` or `github_issue_read(method=get, issue_number=N)` | MISSING-TRACEABILITY |
+| "Prior issue completed" | Verify PR was merged | `github_pull_request_read(method=get)` → `merged` | CONFLICTING |
+| "Authorization cascades" | Verify auth comment on parent | `github_issue_read(method=get_comments)` | VERIFICATION-GAP |
+| "Work branch is current" | Verify branch tip | `git log -1 --oneline <branch>` | VERIFICATION-GAP |
+| "Sub-issue phase complete" | Verify sub-issue is closed | `github_issue_read(method=get)` → `state` | CONFLICTING |
+| "Prior results reference" | Verify files/issues exist | `glob` or `github_issue_read` | MISSING-TRACEABILITY |
 
-**Evidence format:**
-
-```
-Check: [what was verified]
-Tool: [tool call and parameters]
-Result: [actual state found]
-Classification: [STRUCTURE-VIOLATION|MISSING-ELEMENT|CONFLICTING|VERIFICATION-GAP|MISSING-TRACEABILITY]
-Action: [auto-fix|conditional|flag-for-review]
-```
-
-**Classification on failure:**
-
-| Failure | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| Prior PR not merged | CONFLICTING | flag-for-review | HALT — dependent branch may need to be stacked differently |
-| Authorization missing | VERIFICATION-GAP | conditional | Re-verify authorization before dispatching |
-| Branch out of date | VERIFICATION-GAP | auto-fix | Rebase or merge as needed |
-| Sub-issue state contradicts claim | CONFLICTING | auto-fix | Update work state to reflect actual state |
-| Referenced file/issue missing | MISSING-TRACEABILITY | conditional | Search alternates before proceeding |
+**On failure:** CONFLICTING → flag-for-review; VERIFICATION-GAP → conditional; auto-fix where safe (rebase, update state). See full classification table in task files.
 
 ## Cross-Reference Verification (MANDATORY)
 
-**🚫 CRITICAL: Each cross-reference must be verified against actual skill content. Assertions without verification are VERIFICATION-GAP findings.**
+**CRITICAL: Each cross-reference must be verified against actual skill content.** Before invoking any cross-referenced skill: `ls .opencode/skills/<name>/SKILL.md` for existence, `grep` for task references, compare behavior with content. Missing references → MISSING-TRACEABILITY; mismatched behavior → CONFLICTING.
 
-| Reference | Verification | Finding Class |
-| -- | -- | -- |
-| `divide-and-conquer` two-stage review tasks | Files exist in `.opencode/skills/divide-and-conquer/tasks/` | MISSING-TRACEABILITY if missing |
-| `git-workflow` in Cross-References | File exists at `.opencode/skills/git-workflow/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `approval-gate` in Cross-References | File exists at `.opencode/skills/approval-gate/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `verification-before-completion` in Cross-References | File exists at `.opencode/skills/verification-before-completion/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `finishing-a-development-branch` in Cross-References | File exists at `.opencode/skills/finishing-a-development-branch/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `using-git-worktrees` in Cross-References | File exists at `.opencode/skills/using-git-worktrees/SKILL.md` | MISSING-TRACEABILITY if missing |
-| `spec-auditor` ground-truth subtask | File exists at `.opencode/skills/spec-auditor/tasks/ground-truth.md` | MISSING-TRACEABILITY if missing |
-| `065-verification-honesty.md` metadata extension | Guideline contains "Metadata Verification Extension" section | CONFLICTING if missing |
-| Task table entry `assemble-work` | File exists at `.opencode/skills/divide-and-conquer/tasks/assemble-work.md` (renamed from `assemble-batch.md`) | MISSING-TRACEABILITY if missing |
-| Task table entry `assess` | File exists at `.opencode/skills/divide-and-conquer/tasks/assess.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `completion` | File exists at `.opencode/skills/divide-and-conquer/tasks/completion.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `implementer-prompt` | File exists at `.opencode/skills/divide-and-conquer/tasks/implementer-prompt.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `spec-reviewer-prompt` | File exists at `.opencode/skills/divide-and-conquer/tasks/spec-reviewer-prompt.md` | MISSING-TRACEABILITY if missing |
-| Task table entry `code-quality-reviewer-prompt` | File exists at `.opencode/skills/divide-and-conquer/tasks/code-quality-reviewer-prompt.md` | MISSING-TRACEABILITY if missing |
-| `implementation-workflow` in Adapted From | Skill directory exists or was renamed to this skill | MISSING-TRACEABILITY if missing |
-
-**Verification Procedure:**
-
-Before invoking any cross-referenced skill:
-1. `ls .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: file exists or MISSING-TRACEABILITY
-2. `grep -c "<task-name>" .opencode/skills/<skill-name>/SKILL.md` → EVIDENCE: task referenced or MISSING-TRACEABILITY
-3. Compare described behavior with actual content → EVIDENCE: match or CONFLICTING
-
-**Classification on failure:**
-
-| Failure | Problem Class | Classification | Action |
-| -- | -- | -- | -- |
-| Referenced skill file missing | MISSING-TRACEABILITY | flag-for-review | Cannot verify cross-reference |
-| Referenced task file missing | MISSING-TRACEABILITY | flag-for-review | Task may have been renamed |
-| Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
-| Ground-truth subtask missing | MISSING-TRACEABILITY | flag-for-review | spec-auditor may not have Phase 1 changes |
-
-**Adversarial cross-reference:** The `spec-auditor --task ground-truth` subtask (Phase 1 of spec #827) performs adversarial verification of metadata claims including authorization currency and sub-issue state. When this skill encounters work state claims that smell wrong (e.g., "authorization cascades" but no auth comment found, "sub-issue closed" but no merged PR), invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension" for the extended principle.
+**Adversarial cross-reference:** When work state claims seem wrong, invoke `spec-auditor --task ground-truth` to verify. See `065-verification-honesty.md` → "Metadata Verification Extension".
 
 ## Two-Stage Review Pipeline
 
-The divide-and-conquer skill supports an optional two-stage review pipeline for sub-agent output quality:
+Optional quality gate for sub-agent output: (1) **Spec reviewer** (`spec-reviewer-prompt`): validates implementation against spec success criteria. (2) **Code quality reviewer** (`code-quality-reviewer-prompt`): validates code quality, testing, conventions. (3) **Implementer prompt** (`implementer-prompt`): provides dispatch context template for review workflows.
 
-1. **Spec reviewer stage** (`spec-reviewer-prompt`): Reviews sub-agent implementation against the spec's success criteria before accepting results. Invoked by the orchestrator after a sub-agent returns its result.
-
-2. **Code quality reviewer stage** (`code-quality-reviewer-prompt`): Reviews sub-agent implementation for code quality, testing coverage, and adherence to project conventions. Invoked after the spec review stage passes.
-
-3. **Implementer prompt** (`implementer-prompt`): Provides the sub-agent dispatch context template for two-stage review workflows.
-
-**When to use two-stage review:** Invoke when the spec has complex success criteria that benefit from independent verification, or when the orchestrator wants an additional quality gate beyond the sub-agent's self-verification. Single-issue work sets with straightforward success criteria may skip two-stage review.
-
-**Invocation:** Add `--task two-stage-review` to the divide-and-conquer skill call. The orchestrator includes the review stages in the sub-agent dispatch context.
+Use when spec has complex success criteria benefiting from independent verification. Single-issue work sets with straightforward criteria may skip. Invoke: `--task two-stage-review`.
 
 ## Cross-References
 
-- Related skills: `git-workflow` (git ops), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation), `spec-auditor` (ground-truth adversarial verification)
-- Related guidelines: `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md` (metadata verification extension)
+- `git-workflow` (git ops), `approval-gate` (authorization), `verification-before-completion` (evidence), `finishing-a-development-branch` (branch readiness), `using-git-worktrees` (worktree creation), `spec-auditor` (ground-truth adversarial verification)
+- `010-approval-gate.md`, `000-critical-rules.md`, `065-verification-honesty.md` (metadata verification extension)
 - Authorization classification: See `010-approval-gate.md` §Action Authorization Classification
-- Adapted from: `implementation-workflow` (work-orchestrate, context-passing, purification-and-enforcement, completion)
+- Adapted from: `implementation-workflow`
 
 Co-authored with AI: <AgentName> (<ModelId>)

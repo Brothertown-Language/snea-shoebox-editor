@@ -207,10 +207,7 @@ For each sub-issue verified as legitimately closed:
 
 ### Pre-Autoclose Verification Finding Classification
 
-- Finding classification and actions: see `enforcement/adversarial-verification.md`
-- Closed-issue state verification procedure: see `enforcement/closed-issue-verification.md`
-
-**Only proceed to Step 4 (autoclose) when ALL sub-issues are verified as legitimately closed via merged PR.**
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## What This Is NOT
 

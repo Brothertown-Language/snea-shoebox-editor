@@ -235,16 +235,7 @@ parent_check = github_issue_read(method="get_sub_issues", issue_number=sub_issue
 
 ### Task-Specific Findings
 
-Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve deleted sub-issue |
-| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Report — may be premature closure |
-| Sub-issue needs-approval stale | STRUCTURE-VIOLATION | auto-fix | Remove label (auth cascades from plan) |
-| STATUS maturity mismatch | STRUCTURE-VIOLATION | auto-fix | Update STATUS to match content |
-| Sub-issue linked under spec (not plan) | STRUCTURE-VIOLATION | auto-fix | Re-link under correct parent |
-| Title reassigned to different work | CONFLICTING | flag-for-review | Developer must verify scope |
+See `enforcement/adversarial-verification.md` for the three-tier classification model (auto-fix, conditional, flag-for-review) and evidence artifact format.
 
 ## Context Required
 

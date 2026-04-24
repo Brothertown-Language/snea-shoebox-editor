@@ -292,16 +292,6 @@ for adj_issue in adjacent:
 
 Classification tiers and actions (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
 
-| Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
-| Open sub-issue on closed parent where PR covers deliverables | VERIFICATION-GAP | auto-close | Auto-close sub-issue with comment referencing PR via reconcile-issue-graph |
-| Open sub-issue on closed parent where PR does NOT cover deliverables | VERIFICATION-GAP | flag-for-review | Sub-issue work remains — report for dev action |
-| Cross-reference to open issue when parent is closed | CONFLICTING | flag-for-review | Chain incomplete — uncertain, requires dev judgment |
-| Closed issue without merged PR | VERIFICATION-GAP | reopen | Reopen via reconcile-issue-graph — premature closure |
-| Closed + state_reason not_planned | VERIFIED | no-action | Intentionally skipped |
-| Depth limit reached | VERIFICATION-GAP | flag-for-review | Graph too deep — investigate manually |
-| Cross-reference 404 | MISSING-TRACEABILITY | flag-for-review | Referenced issue does not exist |
-
 #### 8.4 Report
 
 After traversal, produce a graph verification report:
@@ -338,22 +328,6 @@ Overall: CONSISTENT / HAS_FLAGS
 ## Finding Classification
 
 Classification tiers (auto-fix, conditional, flag-for-review) and evidence format: see `enforcement/adversarial-verification.md`
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Closed + merged PR + all SCs pass | VERIFIED | auto-proceed | Trust closed state |
-| Closed + merged PR + some SCs fail | VERIFICATION-GAP | conditional | Downgrade to PARTIALLY_IMPLEMENTED; include remaining work |
-| Closed + merged PR + no SCs pass | VERIFICATION-GAP | reopen | Downgrade to NOT_IMPLEMENTED_DESPITE_CLOSURE; reopen via reconcile-issue-graph |
-| Closed + merged PR + no SCs found in body | VERIFIED | auto-proceed | Trust PR evidence; note SC_VERIFICATION_NOT_PERFORMED |
-| Closed "completed" + no merged PR | VERIFICATION-GAP | reopen | Reopen via reconcile-issue-graph — premature closure |
-| Closed "not_planned" | VERIFIED | no-action | Work intentionally skipped — do not change |
-| Closed "duplicate" + target verified | VERIFIED | no-action | Duplicate properly resolved |
-| Closed "duplicate" + target not found | MISSING-TRACEABILITY | flag-for-review | Cannot verify duplicate chain |
-| Closed + no reason recorded | VERIFICATION-GAP | flag-for-review | Investigate closure reason — uncertain |
-| Parent closed + sub-issue verification gap | VERIFICATION-GAP | flag-for-review | Resolve sub-issue first — uncertain |
-| Open + merged PR exists + all SCs pass | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
-| Open + merged PR exists + some SCs fail | VERIFICATION-GAP | conditional | Include remaining work; do NOT auto-close |
-| Open + code in repo verified + all SCs pass | VERIFIED | auto-close | Auto-close as completed via reconcile-issue-graph |
 
 ## Integration Points
 
