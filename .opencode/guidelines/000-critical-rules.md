@@ -352,24 +352,30 @@ When the agent identifies a problem and the fix is clear, the ONLY permitted nex
 
 **Why this matters:** The offer-to-edit pattern is a rationalization bypass. The agent reasons: "I'm not *doing* the edit, I'm just *offering* — so I'm not violating the rule." But the offer normalizes direct edits and creates social pressure to authorize without a spec. The spec-first workflow exists precisely to prevent this.
 
-## Critical Violation: Enforcement Test Updates — Guideline and Skill Changes Without Test Scenarios
+## Critical Violation: Enforcement Test Updates — Guideline and Skill Changes Without BEHAVIORAL Enforcement Tests
 
-**⚠️ Modifying guideline files or skill files without adding or updating corresponding enforcement test scenarios is a CRITICAL GUIDELINE VIOLATION.**
+**⚠️ Modifying guideline files or skill files without adding or updating corresponding BEHAVIORAL enforcement tests is a CRITICAL GUIDELINE VIOLATION.**
 
 Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills/*/SKILL.md`, `.opencode/skills/*/tasks/*.md`) are enforcement-critical documents. A guideline without a test is a suggestion, not a rule. A skill without a test is documentation, not enforcement.
 
-- 🚫 FORBIDDEN: Adding a critical violation section without an enforcement test that checks for it
-- 🚫 FORBIDDEN: Adding a verification step to a skill without an enforcement test that validates it
-- 🚫 FORBIDDEN: Creating a new guideline without an enforcement test that confirms its key sections exist
-- 🚫 FORBIDDEN: Modifying a guideline or skill without updating the corresponding enforcement test
+**Behavioral tests answer "Does the agent actually behave differently?" Content-verification tests answer "Does the rule text exist in the file?" Both are needed, but behavioral is the PRIMARY enforcement gate.** The #1217 root case demonstrates this: the agent had all the correct guideline text but still answered without verification. Content-verification alone is insufficient.
+
+- 🚫 FORBIDDEN: Adding a critical violation section without a BEHAVIORAL enforcement test that verifies the agent's actual response
+- 🚫 FORBIDDEN: Adding a verification step to a skill without a BEHAVIORAL enforcement test that validates the agent follows it
+- 🚫 FORBIDDEN: Creating a new guideline without a BEHAVIORAL enforcement test that sends a prompt and verifies the agent's behavior
+- 🚫 FORBIDDEN: Modifying a guideline or skill without updating the corresponding BEHAVIORAL enforcement test
+- 🚫 FORBIDDEN: Content-verification tests (checking rule text exists) as the ONLY enforcement for a behavioral rule change
+- 🚫 FORBIDDEN: Marking a rule change as "tested" when only the text presence was verified
 - 🚫 FORBIDDEN: Running `opencode-cli run` directly without the `with-test-home` wrapper
-- ✅ REQUIRED: Every guideline/skill change comes with an enforcement test scenario
-- ✅ REQUIRED: Add the test scenario FIRST (RED), then make the change (GREEN) — TDD for rules
-- ✅ REQUIRED: Run `bash .opencode/tests/test-enforcement.sh` to verify
+- ✅ REQUIRED: Every guideline/skill change comes with a BEHAVIORAL enforcement test that verifies the agent's actual response, not just the rule text
+- ✅ REQUIRED: Add the BEHAVIORAL test FIRST (RED), then make the change (GREEN) — behavioral TDD for rules
+- ✅ REQUIRED: Content-verification tests as a supplementary sanity check, not a replacement for behavioral tests
+- ✅ REQUIRED: Every critical violation change MUST have at least one behavioral test that verifies the agent follows the new rule
+- ✅ REQUIRED: Run `bash .opencode/tests/behaviors/run-all.sh` for behavioral tests and `bash .opencode/tests/test-enforcement.sh` for content-verification tests
 - ✅ REQUIRED: Use `bash .opencode/tests/with-test-home opencode-cli run '<message>'` for all opencode-cli testing
 - ✅ REQUIRED: Clean up test homes after testing: `bash .opencode/tests/with-test-home --clean-all`
 
-**See `080-code-standards.md` → "Enforcement Test Mandate" for the complete per-change TDD pattern. See `.opencode/tests/README.md` for the enforcement test template and usage guide.**
+**See `080-code-standards.md` → "Enforcement Test Mandate" for the complete per-change TDD pattern including behavioral PRIMARY and content-verification SECONDARY. See `.opencode/tests/README.md` for the enforcement test template and usage guide. See `.opencode/tests/behaviors/` for behavioral test infrastructure.**
 
 ## Critical Violation: Hardcoded Identity Values in Skills and Guidelines
 
