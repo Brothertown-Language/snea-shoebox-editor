@@ -113,6 +113,8 @@ github_sub_issue_write(
 
 Auto-creating sub-issues for an approved multi-task plan does NOT require separate authorization. The plan's authorization covers this setup step.
 
+**⚠️ Body-Preservation Safeguard:** This task only creates new issues (`method="create"`) and does not modify existing issue bodies. If any task in this skill were to use `github_issue_write(method=update, body=...)`, it MUST verify that the new body preserves all original content (len(new_body) >= 0.8 * len(original_body)). See `000-critical-rules.md` → "Critical Violation: Issue Body Erasure" for the project-wide rule.
+
 ### Step 5: Post Comment
 
 "Created N sub-issues for phase tracking."

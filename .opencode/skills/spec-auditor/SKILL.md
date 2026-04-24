@@ -457,6 +457,25 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 
 **Skipping the orchestrator is a CRITICAL GUIDELINE VIOLATION.**
 
+## Body-Preservation Safeguard (CRITICAL)
+
+**⚠️ CRITICAL: Before any `github_issue_write(method=update, body=...)` call in this skill, the agent MUST verify that the new body preserves the original issue content. Issue bodies MUST NEVER be replaced with a shorter summary, status update, or abbreviated version.**
+
+### Verification Procedure
+
+Before applying any auto-fix that updates an issue body via `github_issue_write(method=update, body=...)`:
+
+1. Read the current issue body via `github_issue_read(method=get)`
+2. Compare the length of the new body against the original body
+3. If `len(new_body) < 0.8 * len(original_body)`: HALT and report an erasure risk — the new body is less than 80% of the original length, suggesting content was lost
+4. Only proceed if the new body is at least 80% of the original body length
+
+### Rationale
+
+Bug #1215 documented a case where post-merge cleanup replaced an entire issue body with a short status summary, erasing all spec content. The 80% threshold catches accidental erasure while allowing legitimate edits (adding STATUS headers, fixing typos, inlining cross-references).
+
+**This safeguard applies to ALL body-modification workflows, not just spec-auditor.** See `000-critical-rules.md` → "Critical Violation: Issue Body Erasure" for the project-wide rule.
+
 ## Scope Boundaries
 
 - Read-only analysis of GitHub Issues, local files, or URLs, plus auto-fix of safe findings
@@ -591,9 +610,26 @@ Before invoking any cross-referenced skill:
 | Described behavior mismatches | CONFLICTING | flag-for-review | Cross-reference may be stale |
 | Invocation mismatch | CONFLICTING | flag-for-review | Skill may have been updated |
 
+## Modality-Aware Ground-Truth Verification (Optional)
+
+The `ground-truth` subtask now supports optional multimodal routing for verifying claims that involve non-text content. When a spec or plan includes claims about images, audio, or other non-text modalities, the ground-truth subtask can route those claims through `multimodal-dispatch` to use appropriate models.
+
+**Activation:** Multimodal routing is invoked automatically when the ground-truth subtask detects claims involving non-text content (e.g., "the diagram shows X", "the screenshot demonstrates Y"). For text-only claims, the existing ground-truth verification is used unchanged — no dispatcher involvement.
+
+**How it works:** When the ground-truth subtask detects a non-text claim:
+
+1. The subtask invokes `multimodal-dispatch --task dispatch` with the claim and the relevant content
+2. The dispatcher resolves the appropriate model (vision for image claims, etc.)
+3. The model's output is used as evidence for or against the claim
+4. The ground-truth finding includes the `model_used` and `modality` fields from the `DispatchResult`
+
+**Fallback behavior:** When `multimodal-dispatch` is unavailable or a modality has no model, the subtask falls back to text-only verification and classifies the finding as `flag-for-review` with a note about the unavailable modality. This ensures existing text-only auditing works unchanged.
+
+**Classification:** Ground-truth findings from multimodal routing follow the same three-tier classification as other findings: `auto-fix` (safe, mechanical), `conditional` (requires safety check), `flag-for-review` (requires developer review).
+
 ## Cross-References
 
-- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles), `verification-enforcement` (pre-generation verification gate that prevents the problems spec-auditor would find)
+- Related skills: `brainstorming` (exploration), `spec-creation` (creation-time discipline for traceability and operational requirements), `writing-plans` (clean-room generation for fidelity subtask), `issue-review` (delegates to spec-auditor via audit task), `programming-principles` (authoritative principle definitions for principles subtask — this subtask checks compliance, that skill defines the principles), `verification-enforcement` (pre-generation verification gate that prevents the problems spec-auditor would find), `multimodal-dispatch` (optional routing for modality-aware ground-truth verification), `verification` (standalone verification skill for ground-truth claim verification)
 - Related guidelines: `000-critical-rules.md` (auditor enforcement), `140-planning-spec-creation.md`
 - Label state machine: `141-planning-status-tracking.md §10` (add `needs-revision` when audit requires changes; replace with `needs-approval` on re-submission)
 - Delegated from: `plan-fidelity-auditor` (now `fidelity` and `sub-issue-fidelity` subtasks), `concern-separation-auditor` (now `concerns` and `concern-coverage` subtasks)

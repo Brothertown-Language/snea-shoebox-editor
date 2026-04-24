@@ -174,6 +174,8 @@ change:
 
 **Do NOT close issues before postmortem for P1/P2 incidents.** See `git-workflow --task cleanup` for post-merge closure workflow.
 
+**⚠️ Body-Preservation Safeguard:** When updating timeline entries in Step 3, the update workflow reads the current issue body, adds the new timeline entry, and updates via `github_issue_write(method=update, body=...)`. This MUST verify that the new body preserves all original content. The new body should be LONGER than the original (adding a timeline entry), not shorter. If `len(new_body) < 0.8 * len(original_body)`, HALT — this indicates content erasure. NEVER replace an issue body with a status summary. See `000-critical-rules.md` → "Critical Violation: Issue Body Erasure" for the project-wide rule.
+
 ## HALT Conditions
 
 | Condition | Action |

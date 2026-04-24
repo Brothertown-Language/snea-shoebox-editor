@@ -121,6 +121,17 @@ Review these diagnostics. For errors, investigate the source script. For warning
 let cachedOutput: string | null = null;
 let cacheTimestamp = 0;
 
+/**
+ * Process-scoped set of session IDs that are sub-agent sessions
+ * (sessions with a parentID). Populated in system.transform by
+ * querying client.session.get() for parentID. Used in messages.transform
+ * to gate first-turn-only injections for sub-agent sessions.
+ *
+ * REQ-5: No disk persistence — the set is rebuilt from live API queries
+ * on each process restart, never written to disk.
+ */
+const subAgentSessions = new Set<string>();
+
 function resolveGitDir(projectDir: string): string | null {
   try {
     const result = execSync("git rev-parse --git-dir", {
@@ -1011,7 +1022,29 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
 
   return {
     // Inject session context into system prompt (from session-init + PluginInput augmentations)
-    "experimental.chat.system.transform": async (_input, output) => {
+    "experimental.chat.system.transform": async (sysInput, output) => {
+      // --- Sub-agent session detection (REQ-1/REQ-5) ---
+      // Query client.session.get() for parentID; if present, this session
+      // is a sub-agent. Register in process-scoped Set for later use in
+      // messages.transform. Graceful degradation: on failure, assume
+      // primary session (REQ-4).
+      const sessionID = sysInput?.sessionID;
+      if (sessionID) {
+        try {
+          const sessionResult = await input.client.session.get({
+            path: { id: sessionID },
+          });
+          if (sessionResult.data?.parentID) {
+            subAgentSessions.add(sessionID);
+          } else {
+            subAgentSessions.delete(sessionID);
+          }
+        } catch {
+          // REQ-4: Graceful degradation — assume primary session on API failure
+          subAgentSessions.delete(sessionID);
+        }
+      }
+
       const scriptOutput = await runSessionInit(projectDir);
       if (scriptOutput) {
         output.system.push(scriptOutput);
@@ -1066,12 +1099,14 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
       //
       // FIRST-TURN GUARD: IDENTITY_ECHO, SESSION_TRIGGERS, EXTREMELY_IMPORTANT,
       // PLUGIN_DIAGNOSTICS, and IDENTITY_VALIDATION_FAILURE are injected ONLY on
-      // the first turn (when userMessages.length === 1). This prevents context
-      // window bloat from accumulated re-injected blocks on subsequent turns.
+      // the first turn of PRIMARY sessions (isFirstTurn && !isSubAgent). Sub-agent
+      // sessions inherit context from their parent, so these blocks are redundant
+      // and waste context window space (REQ-1/REQ-2).
       //
-      // Per-turn behaviors (unchanged):
+      // Per-turn behaviors (unchanged, unconditional per REQ-3/REQ-6):
       // - Bare issue pipeline detection on lastUser
       // - Secret redaction on all assistant messages
+      // - Protected branch edit warning
       "experimental.chat.messages.transform": async (_input, output) => {
         if (!output.messages || !output.messages.length) return;
 
@@ -1081,8 +1116,23 @@ export default async function sessionEnforcementPlugin(input: PluginInput): Prom
         const firstUser = userMessages[0];
         const isFirstTurn = userMessages.length === 1;
 
-        // --- First-turn-only: Enforcement injection into FIRST user message ---
-        if (isFirstTurn) {
+        // --- Sub-agent detection (REQ-1) ---
+        // Determine if this session has a parentID (is a sub-agent session).
+        // Extract sessionID from the first user message's info to look up
+        // in the subAgentSessions Set populated by system.transform.
+        // REQ-5: No disk persistence — subAgentSessions is process-scoped only.
+        // REQ-4: Graceful degradation — if sessionID is unavailable, assume
+        // primary session (isSubAgent = false) so full injections are applied.
+        const sessionID = firstUser?.info?.sessionID;
+        const isSubAgent = sessionID ? subAgentSessions.has(sessionID) : false;
+
+        // --- First-turn-only PRIMARY sessions: Skip all first-turn injections
+        //     for sub-agent sessions (isFirstTurn && !isSubAgent required) ---
+        // REQ-2: Sub-agent sessions inherit parent context, making these blocks
+        //         redundant. Gating them saves significant context window space.
+        const shouldInjectFirstTurn = isFirstTurn && !isSubAgent;
+
+        if (shouldInjectFirstTurn) {
           const enforcementContent = buildEnforcementContent(skillDescriptions);
           if (enforcementContent && firstUser.parts?.length) {
             if (!firstUser.parts.some(p => p.type === "text" && p.text?.includes("EXTREMELY_IMPORTANT"))) {
