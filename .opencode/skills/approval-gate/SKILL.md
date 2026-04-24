@@ -37,8 +37,16 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 | `verify-fix-spec` | For bug reports, verify fix spec sub-issue exists before closure | ≈250 |
 | `search-prompt-fail` | Search GitHub Issues for existing spec/plan candidates before Q/A halt; present candidates or report failure | ≈300 |
 | `verify-closed-issue` | Verify that a closed issue was legitimately closed via merged PR; enforce "closed ≠ verified" rule | ≈350 |
-| `screen-issue` | Per-issue screening for pre-implementation analysis (Gate 1 + Gate 2 + screening categories); dispatched as parallel sub-agents | ≈3,000 |
-| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-work | ≈500 |
+| `screen-issue` | Per-issue screening for pre-implementation analysis (routing document for gate1 + gate2); dispatched as parallel sub-agents | ≈250 |
+| `screen-issue/gate1` | Gate 1: Read issue, screening categories, sub-issue enumeration | ≈1,900 |
+| `screen-issue/gate2` | Gate 2: Success criteria verification, cross-reference traversal, evidence audit, result contract | ≈2,500 |
+| `pre-implementation-analysis` | Cross-issue merge of screening results, dependency graph, execution plan for assemble-work (routing document) | ≈425 |
+| `pre-impl/collect-screening-results` | Steps -1, 0, 0.1, 0.15, 0.5: mandatory dispatch, collect results, autonomous classification, gate evidence audit | ≈1,200 |
+| `pre-impl/reconcile-status` | Step 0.7: reconcile issue status inconsistencies via reconcile-issue-graph | ≈600 |
+| `pre-impl/build-dependency-graph` | Steps 1, 2, 3, 4: flat item list, cross-issue analysis, classify issues, dependency graph | ≈1,600 |
+| `pre-impl/check-cross-spec-overlap` | Cross-spec overlap check against open specs/plans outside batch | ≈500 |
+| `pre-impl/write-work-state` | Steps 5, 7, 8, 9: execution strategy, dev base hash, dispatch context, work state file | ≈720 |
+| `pre-impl/yield-to-assemble-work` | Steps 6, 10: present execution plan, execute immediately to assemble-work | ≈920 |
 | `verify-schema-api-knowledge` | Verify that the agent has performed live verification before making schema/API/code claims; gate before proceeding | ≈350 |
 | `reconcile-issue-graph` | Act on graph traversal findings: auto-close verified-complete, reopen verified-incomplete, flag uncertain | ≈600 |
 | `post-implementation` | Push branch, generate compare URL, HALT | ≈480 |
@@ -59,6 +67,14 @@ You are an Authorization Gatekeeper. Your focus is ensuring all code changes fol
 - `/skill approval-gate --task reconcile-issue-graph` - Act on graph traversal findings
 - `/skill approval-gate --task pre-implementation-analysis` - Analyze interdependencies and expand sub-issues for all approved issues, then yield to assemble-work
 - `/skill approval-gate --task screen-issue` - Per-issue screening (dispatched as sub-agent from pre-implementation-analysis)
+- `/skill approval-gate --task screen-issue/gate1` - Gate 1: Read issue, screening categories, sub-issue enumeration
+- `/skill approval-gate --task screen-issue/gate2` - Gate 2: Success criteria verification, cross-reference, result contract
+- `/skill approval-gate --task pre-impl/collect-screening-results` - Collect screening results and assemble gate evidence audit
+- `/skill approval-gate --task pre-impl/reconcile-status` - Reconcile issue status inconsistencies
+- `/skill approval-gate --task pre-impl/build-dependency-graph` - Build dependency graph from cross-issue analysis
+- `/skill approval-gate --task pre-impl/check-cross-spec-overlap` - Check overlap with open specs/plans outside batch
+- `/skill approval-gate --task pre-impl/write-work-state` - Determine execution strategy and write work state file
+- `/skill approval-gate --task pre-impl/yield-to-assemble-work` - Present execution plan and yield to assemble-work
 - `/skill approval-gate --task post-implementation` - After implementation done
 - `/skill approval-gate --task completion` - Invoke when workflow halts at any point
 - `/skill approval-gate` - Overview only
@@ -195,20 +211,12 @@ This check is invoked:
 
 ## Authorization Scope Rules
 
-| Rule | Scope |
-|------|-------|
-| **Issue-bound** | Authorization applies ONLY to the specific issue |
-| **Session-bound** | New session = new authorization required |
-| **Single-use** | Authorization for current phase/task only |
-| **Plan-bound** | Changes to plan invalidate authorization |
-| **External input invalidates** | Bug reports, PR feedback require re-authorization |
-| **Revision ≠ implementation** | Spec updates don't authorize code changes |
-| **Reference ≠ cascade** | Issue mentions in body/comments do NOT cascade |
-| **Confirmation ≠ authorization** | Confirming an observation does NOT authorize implementation |
-| **Discussion conclusion ≠ authorization** | Verbal agreement, consensus, or opinion expressed in discussion does NOT constitute explicit authorization — see `020-go-prohibitions.md` §1 |
-| **Work carry-forward** | Authorization carries forward within a work set via persisted work state file; no re-authorization needed between issues |
-| **Pipeline authorization (scope-horizon)** | Authorization phrases specify a scope horizon — the pipeline stage where work stops. Everything below is gap-filled and auto-approved. Everything above is unauthorized. See Authorization Scope Model below. |
-| **Hard HALT at scope boundary** | Agent MUST NOT proceed past `halt_at` pipeline stage without re-authorization. Scope boundary is a hard wall, not a soft suggestion. |
+See `010-approval-gate.md` §Authorization Scope Rules for the complete table. Key rules:
+
+- **Issue-bound**: Authorization applies ONLY to the specific issue
+- **Hard HALT at scope boundary**: Agent MUST NOT proceed past `halt_at` without re-authorization
+- **Reference ≠ cascade**: Issue mentions do NOT cascade authorization
+- **Pipeline authorization**: Scope horizon determines pipeline stage where work stops
 
 ## Authorization Scope Model
 
@@ -291,8 +299,16 @@ When `halt_at < pr_created`, no PR is created — the agent halts before reachin
 | `verify-closed-issue` | 1,763 |
 | `verify-sub-issues` | 1,449 |
 | `post-implementation` | 1,183 |
-| `screen-issue` | 3,037 |
-| `pre-implementation-analysis` | ≈3,100 |
+| `screen-issue` | ≈250 |
+| `screen-issue/gate1` | ≈1,900 |
+| `screen-issue/gate2` | ≈2,500 |
+| `pre-implementation-analysis` | ≈425 |
+| `pre-impl/collect-screening-results` | ≈1,200 |
+| `pre-impl/reconcile-status` | ≈600 |
+| `pre-impl/build-dependency-graph` | ≈1,600 |
+| `pre-impl/check-cross-spec-overlap` | ≈500 |
+| `pre-impl/write-work-state` | ≈720 |
+| `pre-impl/yield-to-assemble-work` | ≈920 |
 | `verify-fix-spec` | 1,017 |
 | `verify-blockers` | 722 |
 | `verify-codebase` | 726 |
