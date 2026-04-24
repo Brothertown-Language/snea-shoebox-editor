@@ -207,13 +207,8 @@ For each sub-issue verified as legitimately closed:
 
 ### Pre-Autoclose Verification Finding Classification
 
-| Finding | Problem Class | Classification | Action |
-|---------|---------------|----------------|--------|
-| All sub-issues closed via merged PR | VERIFIED | auto-proceed | Proceed to autoclose |
-| Sub-issue closed as "not_planned" | VERIFICATION-GAP | flag-for-review | Do NOT autoclose parent — work was intentionally skipped |
-| Sub-issue closed without merged PR | VERIFICATION-GAP | flag-for-review | Do NOT autoclose — may be premature closure |
-| Sub-issue still open | MISSING-ELEMENT | conditional | Do NOT autoclose — open sub-issues mean parent is not complete |
-| Sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve missing sub-issue |
+- Finding classification and actions: see `enforcement/adversarial-verification.md`
+- Closed-issue state verification procedure: see `enforcement/closed-issue-verification.md`
 
 **Only proceed to Step 4 (autoclose) when ALL sub-issues are verified as legitimately closed via merged PR.**
 
@@ -241,70 +236,22 @@ Autoclose bypasses the PR workflow because no branch, commits, or PR are needed 
 
 **Before claiming a spec is "already implemented," verify against actual codebase and git state — not claimed state, not cached results, not visual inspection.**
 
-### Verify Success Criteria Against Live Code
+### Verification Checklist
 
-```
-For each success criterion:
-  - Use actual tool calls: read, grep, srclight_search_symbols, srclight_get_signature
-  - Read the relevant file(s) directly — do NOT rely on memory of previous reads
-  - If criterion references specific file paths → verify files exist with glob
-  - If criterion references specific functions/classes → verify with srclight_get_signature
-  - If criterion references specific content → verify with grep or read
-  - Record: tool used, file path, line reference, summary of evidence
-```
+- **Success criteria vs live code:** Use actual tool calls (read, grep, srclight_search_symbols, srclight_get_signature) for each criterion. Verify file paths with `glob`, symbols with `srclight_get_signature`, content with `grep` or `read`.
+- **Implementation source:** Check git log for commits referencing the issue number. Verify PR merge via `github_pull_request_read(method=get)` confirming `merged == true`. Do NOT trust cached results.
+- **Stale claims:** Use `srclight_recent_changes` to verify referenced files haven't changed since implementation. If changed → VERIFICATION-GAP (re-verify all criteria).
 
-**Evidence artifact:** Tool call results (read, grep, srclight) for each criterion — NOT just "PASS/FAIL" assertions.
+## Enforcement References
 
-### Verify Implementation Source
-
-```
-When claiming implementation exists:
-  - Check git log for commits referencing the issue number
-  git log --oneline --grep="#N" origin/dev
-  
-  - If commits found → verify they are merged to dev:
-    git branch --contains <commit-sha> | grep dev
-  
-  - If PR references found → verify PR merge via GitHub API:
-    github_pull_request_read(method=get, pullNumber=M)
-    → confirm merged == true AND state == "closed"
-  
-  - Do NOT trust "looks implemented" from file reads alone
-  - Do NOT trust cached PR merge status from previous sessions
-```
-
-**Evidence artifact:** Git log output and/or `github_pull_request_read` response confirming merge status.
-
-### Verify No Stale Implementation Claims
-
-```
-If success criteria reference specific code structure:
-  - Verify that code structure is CURRENT, not from a previous version
-  - If a file was modified after the "already implemented" check → re-verify
-  - Use srclight_recent_changes to check if relevant files changed recently
-  - If files changed since implementation → VERIFICATION-GAP (re-verify all criteria)
-```
-
-**Evidence artifact:** Recent changes output showing file modification dates relative to implementation.
-
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Criterion cannot be verified | VERIFICATION-GAP | flag-for-review | Developer must confirm manually |
-| Implementation exists but not merged | VERIFICATION-GAP | flag-for-review | Cannot autoclose — PR must merge first |
-| Implementation claim from stale session | STRUCTURE-VIOLATION | conditional | Re-verify all criteria with fresh tool calls |
-| Code changed since implementation | VERIFICATION-GAP | flag-for-review | Re-verify affected criteria |
-| PR claimed merged but API says open | CONFLICTING | flag-for-review | Do NOT autoclose — verify merge manually |
-| File/symbol referenced in criterion does not exist | MISSING-TRACEABILITY | flag-for-review | Criterion may be inapplicable or spec may be stale |
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Scope parsing: see `enforcement/scope-parsing.md`
+- Closed-issue verification: see `enforcement/closed-issue-verification.md`
+- Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
 
 ## Context Required
 
 - Preceded by: `verify-authorization`, `verify-codebase`, `verify-blockers`
 - Supersedes: None (new task)
 - Related: `post-implementation` (used when implementation IS needed)
-- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on autoclose)## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Scope parsing: see `enforcement/scope-parsing.md`
--  Closed-issue verification: see `enforcement/closed-issue-verification.md`
--  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on autoclose)

@@ -395,16 +395,9 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | "Decision log persisted" | Verify comment on Plan issue | `github_issue_read(method=get_comments)` → search for decision log | MISSING-ELEMENT |
 | "Authorization carries forward" | Verify work state contains auth context | Read work state file for auth section | STRUCTURE-VIOLATION |
 
-**Evidence artifact:** Tool call results confirming work state accuracy.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
 
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Work state file missing | MISSING-ELEMENT | auto-fix | Create or locate work state file |
-| Sub-agent result missing | VERIFICATION-GAP | conditional | Wait for or re-dispatch sub-agent |
-| Merge not in work branch | VERIFICATION-GAP | conditional | Re-merge feature branch |
-| Decision log not persisted | MISSING-ELEMENT | auto-fix | Post decision log comment now |
-| Auth context missing from work state | STRUCTURE-VIOLATION | conditional | Re-read auth from approval-gate |## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Work state verification: see `enforcement/work-state-verification.md`
+## Enforcement References
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation and finding classification: see `enforcement/result-validation.md`
+- Work state verification: see `enforcement/work-state-verification.md`

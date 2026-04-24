@@ -120,8 +120,9 @@ Valid scenario — the entire sub-task exceeded capacity. The full sub-task beco
 | "Context overflow detected" | Verify actual context size | Check token/file count | VERIFICATION-GAP |
 | "Decomposition needed" | Verify task scope exceeds single-agent capacity | `srclight_get_dependents(symbol_name="target", transitive=true)` | VERIFICATION-GAP |
 
-**Evidence artifact:** Context size measurement and dependency analysis.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
+
 ## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Result validation: see `enforcement/result-validation.md`
--  Overflow signal: see `enforcement/overflow-signal.md`
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation: see `enforcement/result-validation.md`
+- Overflow signal: see `enforcement/overflow-signal.md`

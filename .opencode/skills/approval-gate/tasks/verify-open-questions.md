@@ -43,7 +43,7 @@ If ANY open questions remain unresolved:
 
 ## Adversarial Verification: Question Resolution State
 
-**Before trusting that open questions are unresolved, verify against ALL comments on the issue.** A question listed as "open" in the spec body may have been answered in a subsequent comment — without the spec body being updated.
+Adversarial verification model (evidence format, classification tiers, tier actions): see `enforcement/adversarial-verification.md`
 
 ### Verify Open Questions Against All Comments
 
@@ -85,7 +85,9 @@ comments = github_issue_read(method="get_comments", issue_number=N)
 
 **Evidence artifact:** Comment scan results showing any unlisted questions.
 
-### Finding Classification
+### Task-Specific Findings
+
+Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
@@ -98,5 +100,8 @@ comments = github_issue_read(method="get_comments", issue_number=N)
 
 - Related tasks: `verify-authorization`, `verify-codebase`
 - `065-verification-honesty.md`: Verification claims must be backed by tool call evidence
-- `spec-auditor --task ground-truth`: Adversarial verification model## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- `spec-auditor --task ground-truth`: Adversarial verification model
+
+## Enforcement References
+
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`

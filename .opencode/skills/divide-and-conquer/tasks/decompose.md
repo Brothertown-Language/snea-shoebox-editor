@@ -109,8 +109,9 @@ If decomposition depth exceeds `DIVIDE_AND_CONQUER_MAX_DEPTH` (default 3):
 | "File scope per task verified" | Verify file references exist | `glob(pattern="**/filepath")` | MISSING-TRACEABILITY |
 | "Dependency order correct" | Verify must-precede claims | `srclight_get_callers(symbol_name="target")` | VERIFICATION-GAP |
 
-**Evidence artifact:** Tool call results confirming decomposition accuracy.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
+
 ## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Result validation: see `enforcement/result-validation.md`
--  Overflow signal: see `enforcement/overflow-signal.md`
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation: see `enforcement/result-validation.md`
+- Overflow signal: see `enforcement/overflow-signal.md`

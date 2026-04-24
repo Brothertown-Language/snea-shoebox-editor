@@ -306,7 +306,7 @@ What would you like me to do?
 
 ## Adversarial Verification: Spec-Less Detection
 
-**Before trusting the three-gate checks (GitHub Issue, authorization, feature branch), verify each gate against actual state — not assumptions or cached values.**
+Adversarial verification model (evidence format, classification tiers, tier actions): see `enforcement/adversarial-verification.md`
 
 ### Verify Issue Exists and Contains Actual Spec Content
 
@@ -353,7 +353,9 @@ git_status = git status
 
 **Evidence artifact:** `git branch --show-current` and `git status` output.
 
-### Finding Classification
+### Task-Specific Findings
+
+Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
@@ -425,6 +427,9 @@ What would you like me to do?
 - Related guideline: `010-approval-gate.md`
 - Related task: `verify-authorization.md`
 - Related skill: `git-workflow` (pre-work task)
-- Label state machine: `141-planning-status-tracking.md §10` (label transitions for authorization gates)## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Scope parsing: see `enforcement/scope-parsing.md`
+- Label state machine: `141-planning-status-tracking.md §10` (label transitions for authorization gates)
+
+## Enforcement References
+
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Scope parsing: see `enforcement/scope-parsing.md`

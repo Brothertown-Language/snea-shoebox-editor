@@ -323,15 +323,9 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | "Work state current" | Verify work state file reflects latest state | `glob(pattern="./tmp/work-*.md")` | VERIFICATION-GAP |
 | "No skipped steps" | Verify all mandatory steps were invoked | Check for tool-call artifacts per step | MISSING-ELEMENT |
 
-**Evidence artifact:** Tool call results and context inspection confirming orchestration accuracy.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
 
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Step claimed but no artifact | VERIFICATION-GAP | conditional | Re-execute step |
-| worktree.path missing from dispatch | STRUCTURE-VIOLATION | auto-fix | Re-dispatch with correct context |
-| Work state stale | VERIFICATION-GAP | auto-fix | Re-read and verify |
-| Mandatory step skipped | MISSING-ELEMENT | conditional | Execute skipped step now |## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Work state verification: see `enforcement/work-state-verification.md`
+## Enforcement References
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation and finding classification: see `enforcement/result-validation.md`
+- Work state verification: see `enforcement/work-state-verification.md`

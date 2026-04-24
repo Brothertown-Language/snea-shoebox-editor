@@ -183,7 +183,7 @@ Auto-creating sub-issues for an approved multi-task plan does NOT require separa
 
 ## Adversarial Verification: Sub-Issue State
 
-**Before trusting any sub-issue claim (existence, state, labels, STATUS), verify against actual GitHub API state.** Do NOT rely on cached sub-issue lists, previously-read state, or claimed closures.
+Adversarial verification model (evidence format, classification tiers, tier actions): see `enforcement/adversarial-verification.md`
 
 ### Verify Sub-Issue Existence and State
 
@@ -233,7 +233,9 @@ parent_check = github_issue_read(method="get_sub_issues", issue_number=sub_issue
 
 **Evidence artifact:** Sub-issue list from plan showing correct parent-child relationships.
 
-### Finding Classification
+### Task-Specific Findings
+
+Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
@@ -247,7 +249,10 @@ parent_check = github_issue_read(method="get_sub_issues", issue_number=sub_issue
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-codebase`
-- Label state machine: `141-planning-status-tracking.md §10` (label transitions when creating sub-issues under plan)## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Scope parsing: see `enforcement/scope-parsing.md`
--  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+- Label state machine: `141-planning-status-tracking.md §10` (label transitions when creating sub-issues under plan)
+
+## Enforcement References
+
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Scope parsing: see `enforcement/scope-parsing.md`
+- Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

@@ -99,8 +99,9 @@ If any sub-agent returned `verification_passed: false`, HALT. Do NOT proceed. Re
 | "No conflicts remaining" | Verify clean merge | `git status --porcelain` → check for conflict markers | CONFLICTING |
 | "All sub-agent changes included" | Verify diff matches expected | `git diff dev --name-only` | VERIFICATION-GAP |
 
-**Evidence artifact:** Git log and status output confirming merge state.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
+
 ## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Result validation: see `enforcement/result-validation.md`
--  Overflow signal: see `enforcement/overflow-signal.md`
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation: see `enforcement/result-validation.md`
+- Overflow signal: see `enforcement/overflow-signal.md`

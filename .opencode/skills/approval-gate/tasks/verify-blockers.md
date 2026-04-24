@@ -58,7 +58,7 @@ For each dependency listed in spec:
 
 ## Adversarial Verification: Blocker State
 
-**Before trusting any blocker claim (issue exists, issue is open, issue is blocking), verify against actual GitHub API state.** Do NOT rely on cached issue state, comment claims, or assumed blocker relationships.
+Adversarial verification model (evidence format, classification tiers, tier actions): see `enforcement/adversarial-verification.md`
 
 ### Verify Blocker Issues Exist and Are Actually Blocking
 
@@ -122,7 +122,9 @@ has_auth = any comment from developer (MEMBER/OWNER/COLLABORATOR) saying "approv
 
 **Evidence artifact:** Label list and comment search results showing actual auth state.
 
-### Finding Classification
+### Task-Specific Findings
+
+Classification tiers (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
@@ -136,6 +138,9 @@ has_auth = any comment from developer (MEMBER/OWNER/COLLABORATOR) saying "approv
 ## Context Required
 
 - Related tasks: `verify-authorization`, `verify-open-questions`
-- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on explicit auth, add `needs-revision` on revision required)## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Scope parsing: see `enforcement/scope-parsing.md`
+- Label state machine: `141-planning-status-tracking.md §10` (remove `needs-approval` on explicit auth, add `needs-revision` on revision required)
+
+## Enforcement References
+
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Scope parsing: see `enforcement/scope-parsing.md`

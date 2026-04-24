@@ -126,15 +126,9 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | "Session vars current" | Verify vars match session init | Check against session values | VERIFICATION-GAP |
 | "Prior results accurate" | Verify result contracts from prior sub-agents | Read work state file | VERIFICATION-GAP |
 
-**Evidence artifact:** Path verification and session var check results.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
 
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| worktree.path invalid | STRUCTURE-VIOLATION | auto-fix | HALT — cannot safely dispatch |
-| Stale session vars | VERIFICATION-GAP | conditional | Refresh from session init |
-| Prior results contradicted | VERIFICATION-GAP | conditional | Re-verify prior sub-agent output |
 ## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Work state verification: see `enforcement/work-state-verification.md`
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation and finding classification: see `enforcement/result-validation.md`
+- Work state verification: see `enforcement/work-state-verification.md`
