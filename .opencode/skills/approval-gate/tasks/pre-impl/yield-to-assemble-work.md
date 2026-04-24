@@ -138,3 +138,10 @@ When any of these triggers fire, HALT and present the conflict to the developer 
 
 - Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
 - Scope parsing: see `enforcement/scope-parsing.md`
+
+## Work State I/O
+
+- **Reads from:** `## write-work-state`
+- **Writes to:** `## yield-to-assemble-work`
+
+After completing this task, write results to the work state file under section `## yield-to-assemble-work` using the YAML format defined in `enforcement/work-state-schema.md`.

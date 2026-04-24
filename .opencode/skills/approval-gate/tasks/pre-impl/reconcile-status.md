@@ -66,3 +66,10 @@ After the Gate Evidence Audit Table is assembled, identify all issues with statu
 - Closed-issue verification: see `enforcement/closed-issue-verification.md`
 - Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
 - Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+
+## Work State I/O
+
+- **Reads from:** `## collect-screening-results`
+- **Writes to:** `## reconcile-status`
+
+After completing this task, write results to the work state file under section `## reconcile-status` using the YAML format defined in `enforcement/work-state-schema.md`.

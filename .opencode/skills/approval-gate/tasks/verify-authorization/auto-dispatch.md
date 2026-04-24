@@ -94,3 +94,10 @@ When cascade does NOT apply (conditions not met):
 - This is a genuine authorization gap where the developer's intent is ambiguous
 
 **Evidence artifact:** `github_issue_read(method=get_comments)` showing lineage evidence in #P, and `github_issue_write` / `github_add_issue_comment` responses confirming cascade actions on #C.
+
+## Work State I/O
+
+- **Reads from:** `## gap-fill-cascade`, `## scope-auto-resolve`
+- **Writes to:** `## auto-dispatch`
+
+After completing this task, write results to the work state file under section `## auto-dispatch` using the YAML format defined in `enforcement/work-state-schema.md`.

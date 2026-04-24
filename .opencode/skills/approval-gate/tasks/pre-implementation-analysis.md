@@ -33,6 +33,8 @@ collect-screening-results → reconcile-status → build-dependency-graph
 | `pre-impl/write-work-state` | Execution strategy, dev base hash, dispatch context, work state file persistence | Steps 5, 7, 8, 9 |
 | `pre-impl/yield-to-assemble-work` | Present execution plan, verify no-questions checkpoint, dispatch to assemble-work | Steps 6, 10 |
 
+**Chain-of-responsibility note:** Each atomic task uses the work state file for inter-task I/O. Tasks read inputs from predecessor sections and write results to their own section per `enforcement/work-state-schema.md`.
+
 ## Red Flags
 
 - Never skip dependency analysis when multiple issues are approved together

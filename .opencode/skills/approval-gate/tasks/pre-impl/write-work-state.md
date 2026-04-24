@@ -159,3 +159,10 @@ mkdir -p .opencode/tmp
 - Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
 - Closed-issue verification: see `enforcement/closed-issue-verification.md`
 - Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+
+## Work State I/O
+
+- **Reads from:** `## build-dependency-graph`, `## check-cross-spec-overlap`
+- **Writes to:** `## write-work-state`
+
+After completing this task, write results to the work state file under section `## write-work-state` using the YAML format defined in `enforcement/work-state-schema.md`.

@@ -246,3 +246,10 @@ For each file path or symbol from screening `file_references`/`symbol_references
 - Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
 - Closed-issue verification: see `enforcement/closed-issue-verification.md`
 - Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+
+## Work State I/O
+
+- **Reads from:** `## collect-screening-results`, `## reconcile-status`
+- **Writes to:** `## build-dependency-graph`
+
+After completing this task, write results to the work state file under section `## build-dependency-graph` using the YAML format defined in `enforcement/work-state-schema.md`.

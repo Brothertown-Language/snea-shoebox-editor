@@ -34,6 +34,14 @@ This task delegates to atomic sub-tasks. Each sub-task reads inputs from the wor
 | 5b.5+5c | `verify-authorization/gap-fill-cascade` | Gap-fill precedence and cascade execution |
 | 6 | `verify-authorization/auto-dispatch` | Scope-aware auto-dispatch + output lineage |
 
+**Chain-of-responsibility:** Sub-tasks use work state file for I/O per `enforcement/work-state-schema.md`. Path selection per SKILL.md §Chain-of-Responsibility Paths:
+
+| Condition | Path |
+|-----------|------|
+| 1 issue + `standard` scope + 0 sub-issues + explicit auth | fast-path (skip 2, 4.5, 4.6, 5, 5b, 5b.5+5c) |
+| 1 issue + sub-issues OR plan with phases | medium-path (0.5, 1, 4.5, 4.6, 5, then 6) |
+| Multi-issue authorization set | full-path (all steps) |
+
 ## Sub-Agent Result Guard
 
 When `verify-authorization` is dispatched as a sub-agent and returns empty or whitespace-only:

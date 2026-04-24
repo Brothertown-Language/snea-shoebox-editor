@@ -54,3 +54,10 @@ Single-task plans (0 or 1 phases) are exempt from the item decomposition check. 
 ## Cross-Reference
 
 See `091-incremental-build.md` for the complete discipline rules, scope classification, and per-item TDD cycle. See `091-incremental-build.md` → "Enforcement Mechanism" section for RED phase verification requirements. See `080-code-standards.md` → "Behavioral Enforcement Tests (PRIMARY)" for the behavioral RED/GREEN gate mandate.
+
+## Work State I/O
+
+- **Reads from:** `## scope-auto-resolve`
+- **Writes to:** `## item-decomposition-check`
+
+After completing this task, write results to the work state file under section `## item-decomposition-check` using the YAML format defined in `enforcement/work-state-schema.md`.

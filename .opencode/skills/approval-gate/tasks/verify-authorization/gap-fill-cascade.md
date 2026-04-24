@@ -98,3 +98,10 @@ The critical rule "Bug Reports Without Fix Spec" requires a fix-spec sub-issue b
 - **Missing fix-spec for a bug report + `standard` authorization** → Blocking gate: `standard` scope has NO gap-fill actions, so the fix-spec must already exist. HALT and report missing fix-spec.
 
 **Evidence artifact:** The agent's verification report MUST note when a blocking gate was overridden by the Gap-Fill Precedence Principle, citing the specific gate, the missing artifact, and the covering gap-fill action.
+
+## Work State I/O
+
+- **Reads from:** `## spec-to-plan-cascade`, `## scope-auto-resolve`
+- **Writes to:** `## gap-fill-cascade`
+
+After completing this task, write results to the work state file under section `## gap-fill-cascade` using the YAML format defined in `enforcement/work-state-schema.md`.

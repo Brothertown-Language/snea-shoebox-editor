@@ -114,25 +114,9 @@ Plan approved
   → sub-issue verification (Step 5 of verify-authorization, if multi-phase)
   → pre-implementation-analysis (expand sub-issues, classify, build flat item list)
   → divide-and-conquer/assemble-work (dispatch sub-agents, squash-merge into work branch)
-  ── VERIFICATION GATE ──────────────────────────────────────────────────
-  → Confirm assemble-work completed: work state file exists, all sub-agents returned
-  → If skipped: INVOKE assemble-work before proceeding (MANDATORY, no bypass)
-  ──────────────────────────────────────────────────────────────────────
-  → verification-before-completion
-  ── VERIFICATION GATE ──────────────────────────────────────────────────
-  → Confirm VbC completed: success criteria verification results exist
-  → If skipped: INVOKE verification-before-completion before proceeding (MANDATORY, no bypass)
-  ──────────────────────────────────────────────────────────────────────
-  → finishing-a-development-branch --task checklist
-  ── VERIFICATION GATE ──────────────────────────────────────────────────
-  → Confirm checklist completed: all checklist items verified via tool calls
-  → If skipped: INVOKE checklist before proceeding (MANDATORY, no bypass)
-  ──────────────────────────────────────────────────────────────────────
-  → git-workflow --task review-prep
-  ── VERIFICATION GATE ──────────────────────────────────────────────────
-  → Confirm review-prep completed: compare URL generated and reported in correct format
-   → If skipped: INVOKE review-prep before proceeding (MANDATORY, no bypass)
-   ──────────────────────────────────────────────────────────────────────
+   → verification-before-completion (VERIFY: SC results exist)
+   → finishing-a-development-branch --task checklist (VERIFY: all items checked)
+   → git-workflow --task review-prep (VERIFY: compare URL generated)
 
 Clearly simple work (Tier 2 waiver)
   → git-workflow --task pre-work (MANDATORY: worktree creation)
@@ -178,6 +162,16 @@ Before proceeding to the next step in the dispatch chain, the agent MUST confirm
 **Circular dispatch prevention:** Spec approval dispatches to `writing-plans`, which creates a plan. Plan approval dispatches to `executing-plans`. The plan requires its own approval before `executing-plans` can run.
 
 **⚠️ AUTO-DISPATCH ENFORCEMENT:** After `pre-implementation-analysis` completes with `requires_developer: false`, the agent MUST proceed to the next step in the dispatch chain without halting. "Yield" means "produce output and continue," NOT "present output and wait." The only valid halt after analysis is when a screening sub-agent returned `requires_developer: true` per the exhaustive conditions in `screen-issue.md`.
+
+## Chain-of-Responsibility Paths
+
+| Path | Criteria | Chain |
+|------|----------|-------|
+| fast-path | 1 issue, standard scope, 0 sub-issues, explicit auth | scope-auto-resolve → verify-explicit-authorization → route-to-next-skill |
+| medium-path | 1 issue + sub-issues OR plan with phases | scope-auto-resolve → verify-explicit-authorization → item-decomposition → sc-traceability → sub-issue-structure → route-to-next-skill |
+| full-path | Multi-issue auth set | scope-auto-resolve → verify-explicit-authorization → item-decomposition → sc-traceability → sub-issue-structure → spec-to-plan-cascade → gap-fill-cascade → screen-issue → pre-impl/* → auto-dispatch |
+
+Tier 1 mandates never skipped. Work state file bridges hops. See `enforcement/auto-dispatch-table.md` §Path Routing.
 
 ## Authorization Requirements
 

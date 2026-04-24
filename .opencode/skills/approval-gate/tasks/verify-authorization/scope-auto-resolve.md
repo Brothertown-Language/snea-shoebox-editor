@@ -32,3 +32,10 @@ Record the parsed result as an evidence artifact — no human input is solicited
 ## Evidence Artifact
 
 The parsed authorization text, matched regex pattern (or default fallback), and resulting `(authorization_scope, scope_source, halt_at, pr_strategy, gap_fill_actions)` tuple MUST be recorded in the verification report without soliciting human input.
+
+## Work State I/O
+
+- **Reads from:** None (first task in chain)
+- **Writes to:** `## scope-auto-resolve`
+
+After completing this task, write results to the work state file under section `## scope-auto-resolve` using the YAML format defined in `enforcement/work-state-schema.md`.
