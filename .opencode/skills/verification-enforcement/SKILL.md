@@ -104,6 +104,28 @@ When verifying a claim that something was completed or is in a specific state, t
 | "Configuration corrected" | Correct config values documented in spec | Live query of config endpoint returns correct values |
 | "Email sent to stakeholders" | Draft email in correspondence log | Sent-mail folder or delivery receipt confirms transmission |
 
+## Modality-Aware Verification (Optional)
+
+The `verify` task now supports optional modality-aware verification via the `multimodal-dispatch` skill. When the content being verified includes non-text modalities (images, audio, etc.), the verification sub-agents can route through the dispatcher to use appropriate models.
+
+**Activation:** Modality-aware verification is invoked automatically when the content payload includes non-text content (image paths, audio paths, etc.). For text-only content, the existing verification flow is used unchanged — no dispatcher involvement.
+
+**How it works:** When the `verify` task detects that content includes non-text modalities:
+
+1. The sub-agent for that content section invokes `multimodal-dispatch --task dispatch` instead of direct tool calls for modality-specific claims
+2. The dispatcher resolves the appropriate model (vision for images, etc.)
+3. The sub-agent uses the dispatched model's output as evidence for claims involving that modality
+4. The evidence artifact includes the `model_used` and `modality` fields from the `DispatchResult`
+
+**Fallback behavior:** When `multimodal-dispatch` is unavailable or a modality has no model, the sub-agent falls back to text-only verification and marks the affected claims as `⚠️ UNVERIFIED` with a gap description (e.g., "(unverified: vision — no model available)"). This ensures that the existing text-only verification flow continues to work unchanged when the dispatcher is not available.
+
+**Integration with existing flow:** The modality-aware path is transparent to the existing verification-enforcement flow. The `verify` task still dispatches sub-agents and collects evidence artifacts. The sub-agents simply have an additional routing option for claims that require non-text modalities. The `revisit` task works identically — it scans for `⚠️ UNVERIFIED` markers regardless of whether the dispatcher was involved.
+
+**Cross-references:**
+- `multimodal-dispatch` — Routes verification sub-agents to appropriate models based on content modality
+- `verification` — Standalone verification skill with PASS/FAIL/UNVERIFIED per claim; verification-enforcement can delegate modality-specific claims to it
+- `research` — Standalone research skill for discovering information via multiple modalities
+
 ## Cross-References
 
 - `approval-gate` — Authorization gates that precede implementation; verification-enforcement applies to content generation, not to code implementation
@@ -112,6 +134,9 @@ When verifying a claim that something was completed or is in a specific state, t
 - `divide-and-conquer` — Orchestrators use `verification-enforcement --task enforce` to validate sub-agent output
 - `correspondence` — Content-type propagation domain applies to reply-generation workflows; correspondence skill's Content-Type Propagation rule is verified through this domain
 - `065-verification-honesty.md` — Reactive honesty during conversation; verification-enforcement supersedes for content generation workflows
+- `multimodal-dispatch` — Optional routing for modality-aware verification claims
+- `verification` — Standalone verification skill with per-claim PASS/FAIL/UNVERIFIED status
+- `research` — Standalone research skill with source attribution and gap reporting
 
 ## Completion Guarantee
 
