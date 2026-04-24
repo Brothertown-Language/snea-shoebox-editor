@@ -155,6 +155,12 @@ SCENARIOS["closed-issue-enforcement-sc"]="Does .opencode/skills/approval-gate/en
 SCENARIOS["sub-agent-session-detection"]="Does .opencode/plugins/session-enforcement.ts contain a module-level subAgentSessions Set that tracks sub-agent session IDs, and does the system.transform hook query client.session.get for parentID to populate this set?"
 SCENARIOS["sub-agent-injection-gating"]="Does .opencode/plugins/session-enforcement.ts messages.transform hook gate EXTREMELY_IMPORTANT, IDENTITY_ECHO, SESSION_TRIGGERS, and PLUGIN_DIAGNOSTICS with a condition like isFirstTurn && !isSubAgent?"
 SCENARIOS["sub-agent-operational-guards-unconditional"]="Does .opencode/plugins/session-enforcement.ts keep secret redaction, protected branch edit warning, and bare issue pipeline detection unconditional in messages.transform regardless of sub-agent status?"
+SCENARIOS["phase3-pre-impl-atomic-tasks"]="Does .opencode/skills/approval-gate/tasks/pre-impl/ contain collect-screening-results.md, reconcile-status.md, build-dependency-graph.md, check-cross-spec-overlap.md, write-work-state.md, and yield-to-assemble-work.md?"
+SCENARIOS["phase3-pre-impl-word-limits"]="Are all atomic task files in .opencode/skills/approval-gate/tasks/pre-impl/ at most 3000 words each?"
+SCENARIOS["phase3-screen-gate-tasks"]="Does .opencode/skills/approval-gate/tasks/screen/ contain screen-issue-gate1.md and screen-issue-gate2.md?"
+SCENARIOS["phase3-screen-word-limits"]="Are both screen-issue-gate1.md and screen-issue-gate2.md in .opencode/skills/approval-gate/tasks/screen/ at most 3000 words each?"
+SCENARIOS["phase3-pre-impl-analysis-routing"]="Does .opencode/skills/approval-gate/tasks/pre-implementation-analysis.md delegate to atomic tasks in tasks/pre-impl/ instead of containing full procedure content?"
+SCENARIOS["phase3-screen-issue-routing"]="Does .opencode/skills/approval-gate/tasks/screen-issue.md delegate to atomic tasks in tasks/screen/ instead of containing full procedure content?"
 
 # Tags per scenario for --tag filtering
 declare -A SCENARIO_TAGS
@@ -259,6 +265,12 @@ SCENARIO_TAGS["dev-edit-guard-pair-mode"]="content-verification session-enforcem
 SCENARIO_TAGS["sub-agent-session-detection"]="content-verification session-enforcement"
 SCENARIO_TAGS["sub-agent-injection-gating"]="content-verification session-enforcement"
 SCENARIO_TAGS["sub-agent-operational-guards-unconditional"]="content-verification session-enforcement"
+SCENARIO_TAGS["phase3-pre-impl-atomic-tasks"]="content-verification phase3-decomposition"
+SCENARIO_TAGS["phase3-pre-impl-word-limits"]="content-verification phase3-decomposition"
+SCENARIO_TAGS["phase3-screen-gate-tasks"]="content-verification phase3-decomposition"
+SCENARIO_TAGS["phase3-screen-word-limits"]="content-verification phase3-decomposition"
+SCENARIO_TAGS["phase3-pre-impl-analysis-routing"]="content-verification phase3-decomposition"
+SCENARIO_TAGS["phase3-screen-issue-routing"]="content-verification phase3-decomposition"
 SCENARIO_TAGS["spec-auditor-body-preservation"]="content-verification body-preservation"
 SCENARIO_TAGS["cleanup-body-modification-warning"]="content-verification body-preservation"
 SCENARIO_TAGS["close-body-preservation"]="content-verification body-preservation"
@@ -526,6 +538,12 @@ EXPECTED_SKILLS["cleanup-body-modification-warning"]=""
 EXPECTED_SKILLS["close-body-preservation"]=""
 EXPECTED_SKILLS["all-body-modification-safeguards"]=""
 EXPECTED_SKILLS["critical-rules-body-erasure"]=""
+EXPECTED_SKILLS["phase3-pre-impl-atomic-tasks"]=""
+EXPECTED_SKILLS["phase3-pre-impl-word-limits"]=""
+EXPECTED_SKILLS["phase3-screen-gate-tasks"]=""
+EXPECTED_SKILLS["phase3-screen-word-limits"]=""
+EXPECTED_SKILLS["phase3-pre-impl-analysis-routing"]=""
+EXPECTED_SKILLS["phase3-screen-issue-routing"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
