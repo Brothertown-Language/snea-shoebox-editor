@@ -195,17 +195,28 @@ Authorization applies to:
 - Current phase/task only
 - This session only (no carryover)
 
-### Step 4.5: Verify Item Decomposition
+### Step 4.5: Verify Item Decomposition and Behavioral Test Coverage
 
-Before implementation proceeds, verify that the plan includes item-level decomposition.
+Before implementation proceeds, verify that the plan includes item-level decomposition AND that items which change agent behavior (rule/guideline changes) have behavioral enforcement test coverage.
 
 → **Full procedure:** See `tasks/verify-authorization/item-decomposition-check.md`
 
-### Step 4.6: Verify SC-to-Test Traceability and RED-Phase Ordering
+In addition to the decomposition checks in the sub-task file, this step verifies:
 
-Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions and that RED-phase ordering was followed.
+- **For each plan item that changes a rule governing agent behavior** (guideline text, skill enforcement, critical violation, agent behavior rule): The item's TDD cycle MUST include a behavioral enforcement test in the RED phase, not just a content-verification test. A plan item for a rule change that only specifies a content-verification grep test in its TDD cycle is INCOMPLETE — it must also specify a behavioral test that verifies the agent actually follows the changed rule.
+- **Behavioral test coverage check:** For each rule-changing item in the plan, confirm that the TDD step block includes a behavioral RED phase (write behavioral test expecting agent NOT to follow rule) and a behavioral GREEN phase (make rule change, verify agent NOW follows rule). Items missing behavioral TDD for rule changes are flagged as STRUCTURE-VIOLATION.
+
+### Step 4.6: Verify SC-to-Test Traceability, Behavioral Test Assertions, and RED-Phase Ordering
+
+Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions (BOTH content-verification AND behavioral where applicable) and that RED-phase ordering was followed.
 
 → **Full procedure:** See `tasks/verify-authorization/sc-traceability-check.md`
+
+In addition to the content-verification checks in the sub-task file, this step verifies:
+
+- **For each SC that changes agent behavior** (rule-changing, enforcement, behavioral SCs): The spec's success criteria MUST include at least one behavioral assertion describing the RED state (agent behavior without the rule) and GREEN state (agent behavior with the rule). SCs that only have content-verification grep commands are INCOMPLETE for behavioral rule changes.
+- **Behavioral test assertions distinguish content from behavior:** A content-verification assertion checks that text exists in a file (e.g., `grep -c 'pattern' file.md`). A behavioral assertion checks that the agent actually follows the rule (e.g., `assert_tool_calls_made` to verify the agent makes verification calls, or `assert_forbidden_pattern_absent` to verify the agent does not bypass a gate). For rule-changing SCs, behavioral assertions are PRIMARY — content-verification is secondary.
+- **Behavioral RED state confirmation:** For each rule-changing SC, confirm that a behavioral enforcement test exists in `.opencode/tests/behaviors/` that was verified in RED state (test sends a prompt and confirms the agent does NOT follow the new rule yet). If only content-verification (grep) tests exist for a behavioral SC, flag as MISSING-TRACEABILITY.
 
 ### Step 5: Verify Sub-Issue Structure (for Plan Approval)
 

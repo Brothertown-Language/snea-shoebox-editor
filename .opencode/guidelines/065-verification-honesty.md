@@ -67,7 +67,6 @@ When the agent performs verification, it MUST show evidence:
 | "I checked earlier that X is Y" | Memory recall | ❌ Must re-verify |
 | "The file contains Z (from my earlier read)" | Memory recall | ❌ Must re-read |
 | "X is Y — verified by `git status` just now" | Verified | ✅ |
-| "I recall X is Y (unverified)" | Honest memory tag | ✅ Only if tagged unverified |
 | "Running `git status` confirms X is Y" | Verified | ✅ |
 
 ## No Exceptions
@@ -102,6 +101,51 @@ This guideline retains governance of reactive honesty during conversation and ad
 
 Both this guideline and the verification-enforcement skill share the same core principle: no claim should be presented as verified without a tool call or live source as evidence. The skill extends this principle with a structured dispatch-and-collect workflow appropriate for multi-section content generation, while this guideline covers the same principle in its simpler, conversational form.
 
+## Research-First Mandate
+
+**🚫 CRITICAL VIOLATION: Presenting unverified claims as facts without first attempting exhaustive research using available tools.**
+
+Before making any factual claim — about code, APIs, configuration, general knowledge, or any other domain — the agent MUST attempt exhaustive research using all available tools. The research-first mandate applies regardless of claim type.
+
+### Research-First Procedure
+
+1. **Before making a factual claim**, assess whether available tools can verify it
+2. **If tools CAN verify**: use them, present the verified claim with evidence
+3. **If tools CANNOT verify** (no live source exists): apply suggest-after-research fallback (see below)
+4. **If research is inconclusive** (sources conflict, no definitive answer): apply suggest-after-research fallback (see below)
+
+### The Agent MUST NOT
+
+- Skip research because "training data is sufficient"
+- Present unverified claims as facts without disclaimers or research
+- Claim "no tool can verify this" without actually attempting research
+
+## Suggest-After-Research Fallback
+
+When research fails (no live source can verify a claim) or is inconclusive (sources conflict, no definitive answer), the agent MAY offer the training-data answer as a suggestion contingent on user acceptance, with the following constraints:
+
+### General Knowledge Claims
+
+- The agent MAY offer: "I couldn't verify this through live sources. My training data suggests X, but I can't confirm it. Would you like me to proceed with this answer?"
+- This offer is a **SUGGESTION, not a stated fact**. The agent must never present it as verified information.
+- User acceptance of the suggestion does NOT make the claim verified — it remains unverified training data.
+
+### Code/API Claims
+
+- The agent MUST NOT offer training-data suggestions for code/API claims at all. If verification tools cannot confirm a code signature, API endpoint, configuration field, or function behavior, the agent MUST decline to state the claim.
+- No suggest-after-research fallback for code or API claims. Period.
+- The agent MUST say: "I cannot verify this code/API claim through available tools. Please check the official documentation or source code directly."
+
+## Standing Preference: Training-Data Suggestions
+
+**Hardcoded mandate — not configurable by user preference:**
+
+1. **General knowledge claims:** When research tools fail or are inconclusive, the agent MAY offer training-data suggestions per the suggest-after-research protocol above. The user's acceptance is required before proceeding.
+
+2. **Code/API claims:** Training-data suggestions are NEVER acceptable for code or API claims. If the agent cannot verify a code signature, API endpoint, configuration field, function parameter, or library method through live sources, the agent MUST decline to state the claim — no suggestion, no fallback, no disclaimer.
+
+This standing preference prevents agents from offering unverified code claims as "suggestions" and ensures that the research-first mandate has teeth for codebase-adjacent claims.
+
 ## 🚫 FORBIDDEN
 
 - Reporting values from memory without re-running the verification
@@ -115,7 +159,7 @@ Both this guideline and the verification-enforcement skill share the same core p
 - Always use a tool or command when instructed to check, verify, confirm, look up, or ensure
 - Show the tool call and relevant output as evidence
 - Re-verify before significant actions even if previously checked
-- Tag unverified recollections explicitly as "(unverified)"
+- Attempt exhaustive research before making any factual claim; if research fails, follow suggest-after-research fallback
 - Treat verification as mandatory work, not optional confirmation
 
 ## Metadata Verification Extension
@@ -195,8 +239,6 @@ When an agent is about to make a structural claim — about config schemas, API 
 
 ✅ **CORRECT:** "The `ShoeboxEditor.open()` method returns `Shoebox | None` — verified via `srclight_get_signature('ShoeboxEditor.open')`" (with tool call visible)
 
-✅ **CORRECT:** "The `timeout` field defaults to 30 seconds (unverified)" — tagged when verification is not yet available
-
 ### When Proactive Verification Applies
 
 | Situation | Proactive Verification Required? |
@@ -207,16 +249,6 @@ When an agent is about to make a structural claim — about config schemas, API 
 | Implementing code that calls an API | ✅ Yes — verify signature before calling |
 | Creating a config file | ✅ Yes — verify schema compliance |
 | Describing existing code behavior | ✅ Yes — verify via read or srclight |
-| General explanation or reasoning about approach | ❌ No — but tag unverified assertions |
-| Brainstorming alternatives | ❌ No — but tag assertions as speculative |
-
-### Unverified Assertion Tagging
-
-When proactive verification is not immediately feasible (e.g., external service unavailable, schema not yet published), the agent MUST tag unverified assertions:
-
-- Format: `(unverified)` after the assertion
-- Example: "The API accepts `page_size` as a query parameter (unverified)"
-- Limitations: No more than 3 unverified assertions per spec section before verification becomes mandatory
 
 ### Relationship to Other Sections
 

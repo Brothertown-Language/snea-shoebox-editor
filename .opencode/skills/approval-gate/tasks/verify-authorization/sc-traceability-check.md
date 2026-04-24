@@ -1,8 +1,8 @@
-# Task: verify-authorization — Step 4.6: Verify SC-to-Test Traceability and RED-Phase Ordering
+# Task: verify-authorization — Step 4.6: Verify SC-to-Test Traceability, Behavioral Test Assertions, and RED-Phase Ordering
 
 ## Purpose
 
-Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions and that RED-phase ordering was followed. This gate applies at TWO checkpoints:
+Before implementation proceeds, verify that the corresponding spec's success criteria have enforcement test assertions (BOTH content-verification AND behavioral where applicable) and that RED-phase ordering was followed. This gate applies at TWO checkpoints:
 
 1. **Spec-creation RED gate** — When the spec was created (via `spec-creation` or `analyze-and-spec`), enforcement test assertions for each SC MUST have been written and verified in RED state BEFORE the spec was approved. This is enforced by the Step 0.5 RED gate in `spec-creation/tasks/write.md` and Step 4.1 in `issue-review/tasks/analyze-and-spec.md`.
 2. **Implementation RED gate** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began).
@@ -11,7 +11,8 @@ Before implementation proceeds, verify that the corresponding spec's success cri
 
 1. **Spec-creation RED gate was followed** — The spec's success criteria had enforcement test assertions written and verified in RED state before the spec was approved (not just before implementation). Evidence: `test-enforcement.sh` contains assertions referencing SC IDs from the spec, and those assertions were verified in RED state during spec creation.
 2. **SC-to-test traceability exists** — For each success criterion in the corresponding spec, at least one enforcement test assertion references the SC ID (per `080-code-standards.md` SC-to-Test Traceability requirement)
-3. **RED-phase ordering confirmed** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began)
+3. **Behavioral test assertions for rule-changing SCs** — For each SC that changes agent behavior (guideline rules, skill enforcement, critical violations), at least one BEHAVIORAL enforcement test assertion must exist that verifies the agent's actual behavior, not just content presence in a file. Behavioral assertions use helpers from `.opencode/tests/behaviors/helpers.sh` (`assert_tool_calls_made`, `assert_forbidden_pattern_absent`, `assert_required_pattern_present`, `assert_skill_invoked`). A content-verification test (grep pattern) alone does NOT satisfy this requirement for rule-changing SCs — see `080-code-standards.md` → Behavioral Enforcement Tests (PRIMARY).
+4. **RED-phase ordering confirmed** — Each enforcement test assertion was written BEFORE the implementation commit for its corresponding item (the test was in RED state — exists and fails — before implementation began)
 
 ## Procedure
 
@@ -44,7 +45,16 @@ for sc in success_criteria:
         action = "BLOCK implementation; require test assertion with SC ID comment"
         severity = "MISSING-TRACEABILITY"
 
-    # 2. RED-phase ordering: test was written before implementation commit
+    # 2. Behavioral test assertion for rule-changing SCs
+    if is_rule_changing_sc(sc):
+        has_behavioral_test = check_behavioral_test_references_sc(sc["id"])
+        if not has_behavioral_test:
+            # MISSING-TRACEABILITY: Rule-changing SC has only content-verification test
+            finding = f"SC {sc['id']} changes agent behavior but has no behavioral enforcement test — content-verification alone is insufficient for behavioral rule changes"
+            action = "BLOCK implementation; require behavioral test assertion using helpers.sh"
+            severity = "MISSING-TRACEABILITY"
+
+    # 3. RED-phase ordering: test was written before implementation commit
     if has_test:
         test_commit = find_earliest_commit_for_test(sc["id"])
         impl_commit = find_earliest_commit_for_implementation(sc["id"])
@@ -61,4 +71,4 @@ Existing SCs that were implemented before this mandate took effect are flagged b
 
 ## Cross-Reference
 
-See `080-code-standards.md` "SC-to-Test Traceability" and "RED-Phase Ordering" sections for the mandate. See `091-incremental-build.md` for the per-item TDD cycle extended to SCs. See `spec-creation/tasks/write.md` Step 0.5 and `issue-review/tasks/analyze-and-spec.md` Step 4.1 for the content-creation RED gates that ensure enforcement test assertions exist before spec approval.
+See `080-code-standards.md` "SC-to-Test Traceability" and "RED-Phase Ordering" sections for the mandate. See `080-code-standards.md` "Behavioral Enforcement Tests (PRIMARY)" for the behavioral test requirement. See `091-incremental-build.md` for the per-item TDD cycle extended to SCs. See `spec-creation/tasks/write.md` Step 0.5 and `issue-review/tasks/analyze-and-spec.md` Step 4.1 for the content-creation RED gates that ensure enforcement test assertions exist before spec approval.

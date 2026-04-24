@@ -463,7 +463,7 @@ function buildTrainingStalenessBlock(): string {
 2. **Verify code signatures** using srclight_get_signature before claiming behavior
 3. **Read actual source files** before asserting code behavior
 4. **Confirm configuration** against live schemas before asserting compliance
-5. **Tag unverified assertions** as "(unverified)" if you cannot verify them
+5. **Attempt exhaustive research** using available tools before making factual claims; if research fails, follow suggest-after-research fallback — NEVER present training-data claims as verified facts
 
 **DO NOT TRUST:**
 
@@ -478,6 +478,13 @@ function buildTrainingStalenessBlock(): string {
 - Providing an technical answer
 - Making claims about code behavior
 - Suggesting solutions
+
+**RESEARCH-FIRST RULE:**
+- General knowledge questions still require research attempts — search the web, search documentation, search the codebase
+- If research tools cannot verify a claim, do NOT present it as fact with a disclaimer
+- For general knowledge: offer training-data answer as suggestion contingent on user acceptance
+- For code/API claims: DECLINE to state — no suggestion, no fallback, no disclaimer
+- There is NO exemption for "general explanation" or "brainstorming" — research before claiming
 
 This is a CRITICAL rule. Violations result in incorrect guidance and broken implementations.
 </TRAINING_STALENESS_CRITICAL>`;
@@ -507,6 +514,17 @@ Before making ANY claim about a file, schema, configuration, or referenced artif
 - A \`bash\` command output confirming system state
 
 **No tool-call artifact = the claim is FORBIDDEN.** You cannot state "the config has X field" without the read call that confirmed it. You cannot state "the function takes Y parameters" without the signature lookup that verified it. You cannot state "the file exists" without the glob or read that confirmed it.
+
+**RESEARCH-FIRST REQUIREMENT:**
+Before making ANY factual claim, the agent MUST attempt exhaustive research using available tools. This includes:
+- Web search for general knowledge claims
+- Code search (srclight, grep, glob) for codebase claims
+- Documentation lookup for API/library claims
+- File read for configuration claims
+
+If research fails, follow the suggest-after-research fallback:
+- For general knowledge: Offer the training-data answer as an explicit suggestion contingent on user acceptance
+- For code/API claims: DECLINE to state the claim — no suggestion, no fallback, no disclaimer
 
 **SINGLE EXCHANGE WINDOW:** The ONLY exception is a tool call from the immediately preceding exchange (last assistant turn in the same conversation). Any earlier reference requires re-verification.
 

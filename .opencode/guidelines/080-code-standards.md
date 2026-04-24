@@ -265,19 +265,44 @@ AI co-authored attribution:
 
 Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills/*/SKILL.md`, `.opencode/skills/*/tasks/*.md`) are enforcement-critical documents that control AI agent behavior. Changes to these files MUST be accompanied by corresponding enforcement test updates.
 
+### Behavioral Enforcement Tests (PRIMARY)
+
+Behavioral enforcement tests verify that the agent actually behaves differently after a rule change. They send a prompt to the agent and verify the response actions (tool calls, decline patterns, explicit questions), not just whether rule text exists in a file.
+
+**Principle:** Behavioral tests answer "Does the agent actually behave differently?" Content-verification tests answer "Does the rule text exist in the file?" Both are needed, but behavioral is the PRIMARY enforcement gate.
+
+**Root case:** Bug #1217 demonstrated that the agent had all the correct guideline text about verification but still answered a general knowledge question with zero tool-call verification. Content-verification alone was insufficient — the agent behavior did not match the rule text.
+
+Every critical violation change MUST have at least one behavioral test that verifies the agent follows the new rule. Behavioral tests use the assertion helpers in `.opencode/tests/behaviors/helpers.sh`:
+
+- `assert_tool_calls_made` — verify the agent made at least N tool calls of a specified type
+- `assert_forbidden_pattern_absent` — verify the agent's response does NOT contain a specified pattern (e.g., `(unverified)` tags)
+- `assert_required_pattern_present` — verify the agent's response DOES contain a specified pattern (e.g., decline-to-answer language)
+- `assert_skill_invoked` — verify a specific skill was invoked
+- `assert_no_skill_invoked` — verify a specific skill was NOT invoked when it shouldn't be
+
+### Content-Verification Tests (SECONDARY)
+
+Content-verification tests verify that rule text exists in the correct files. They are a supplementary sanity check — they confirm the rule was written down but do NOT prove the agent follows it.
+
+Content-verification tests are valuable as a fast check that files haven't regressed, but they MUST NOT be the only enforcement gate for a behavioral rule change. A rule change with only a content-verification test is NOT verified — it only proves the text was written, not that the agent follows it (see #1217).
+
 ### 🚫 PROHIBITED
 
-- Adding a critical violation section without an enforcement test that checks for it
-- Adding a verification step to a skill without an enforcement test that validates it
-- Creating a new guideline without an enforcement test that confirms its key sections exist
-- Modifying a guideline or skill without updating the corresponding enforcement test
+- Adding a critical violation section without a BEHAVIORAL enforcement test that verifies the agent's actual response
+- Adding a verification step to a skill without a BEHAVIORAL enforcement test that validates the agent follows it
+- Creating a new guideline without a BEHAVIORAL enforcement test that sends a prompt and verifies the agent's behavior
+- Modifying a guideline or skill without updating the corresponding BEHAVIORAL enforcement test
+- Content-verification tests (checking rule text exists) as the ONLY enforcement for a behavioral rule change
 - Running `opencode-cli run` directly without the `with-test-home` wrapper
 
 ### ✅ REQUIRED
 
-- Every guideline/skill change comes with an enforcement test scenario
-- Add the test scenario FIRST (RED), then make the change (GREEN) — TDD for rules
-- Run the enforcement suite: `bash .opencode/tests/test-enforcement.sh`
+- Every guideline/skill change comes with a BEHAVIORAL enforcement test that verifies agent behavior
+- Content-verification tests as a supplementary sanity check, NOT the primary enforcement gate
+- Add the BEHAVIORAL test FIRST (RED), then make the change (GREEN) — behavioral TDD for rules
+- Run `bash .opencode/tests/behaviors/run-all.sh` for behavioral tests
+- Run `bash .opencode/tests/test-enforcement.sh` for content-verification tests
 - Use `bash .opencode/tests/with-test-home opencode-cli run '<message>'` for all opencode-cli testing — never run bare `opencode-cli run`
 - Clean up test homes after testing: `bash .opencode/tests/with-test-home --clean-all`
 
@@ -285,40 +310,76 @@ Guideline files (`.opencode/guidelines/*.md`) and skill files (`.opencode/skills
 
 | TDD Phase | Action |
 | -- | -- |
-| **RED** | Add enforcement test scenario to `test-enforcement.sh` that checks for the change (expect failure — change doesn't exist yet) |
-| **GREEN** | Make the guideline/skill change that makes the test pass |
-| **REFACTOR** | Clean up test scenario, add cross-reference checks |
-| **COMMIT** | Both the test addition and the guideline change committed together |
+| **RED** | Write a BEHAVIORAL test that sends a prompt and expects the agent to follow the new rule (test fails because agent doesn't follow it yet); optionally add a content-verification test |
+| **GREEN** | Make the guideline/skill change that causes the agent to follow the rule |
+| **REFACTOR** | Verify content-verification also passes; clean up test scenarios; confirm behavioral test passes reliably |
+| **COMMIT** | Both the behavioral test, content-verification test (if any), and the guideline/skill change committed together |
 
 ### Why This Matters
 
-Enforcement tests are the verification layer that proves agent guidelines are actually enforceable. A guideline without a test is a suggestion, not a rule. A skill without a test is documentation, not enforcement. The `with-test-home` wrapper prevents SQLite session conflicts between the desktop app and CLI tests.
+Enforcement tests are the verification layer that proves agent guidelines are actually enforceable. A guideline without a behavioral test is a suggestion, not a rule. A skill without a behavioral test is documentation, not enforcement. Bug #1217 proved that content-verification alone is insufficient — the agent had correct rule text but did not follow the rule in practice.
 
-**See `090-incremental-build.md` for the incremental implementation discipline that governs HOW these changes are delivered.** **See `.opencode/tests/README.md` for the enforcement test template and usage guide.**
+The `with-test-home` wrapper prevents SQLite session conflicts between the desktop app and CLI tests.
 
-### SC-to-Test Traceability (MANDATORY)
+**See `090-incremental-build.md` for the incremental implementation discipline that governs HOW these changes are delivered.** **See `.opencode/tests/README.md` for the enforcement test template and usage guide. See `.opencode/tests/behaviors/` for behavioral test infrastructure, helpers, and template.**
 
-Every spec success criterion MUST have at least one corresponding enforcement test assertion that references the SC ID. The assertion must include a comment linking it to the specific SC:
+### SC-to-Test Traceability (MANDATORY) — Behavioral PRIMARY
 
-```
-# SC-2: --fix exits with code 2
-assert exit_code == 2
+Every spec success criterion MUST have at least one corresponding BEHAVIORAL enforcement test assertion that references the SC ID. The assertion must include a comment linking it to the specific SC:
+
+```bash
+# SC-2: agent declines to answer without verification
+assert_forbidden_pattern_absent "(unverified)" "unverified escape hatch" || OVERALL_RESULT=1
 ```
 
 The SC ID comment convention is now a REQUIREMENT, not a convention. Every enforcement test that verifies a spec success criterion MUST include a `# SC-N:` comment prefix identifying which SC it covers.
 
-### RED-Phase Ordering (MANDATORY)
+Content-verification tests (checking rule text existence) are SECONDARY — they supplement behavioral tests but MUST NOT be the only enforcement for behavioral rule changes.
 
-The enforcement test assertion for each SC MUST exist and FAIL before implementation of that SC begins. This is the TDD RED-GREEN cycle applied to spec success criteria:
+### RED-Phase Ordering (BEHAVIORAL PRIMARY) — MANDATORY
 
-1. **RED**: Write the enforcement test assertion that verifies the SC (the test fails because the change doesn't exist yet)
-2. **GREEN**: Implement the change that makes the test pass
-3. **REFACTOR**: Clean up, verify cross-references
-4. **COMMIT**: Both the test and the change committed together
+The BEHAVIORAL enforcement test for each SC MUST exist and FAIL before implementation of that SC begins. This is the behavioral TDD cycle:
 
-Writing tests AFTER implementation means the test was never RED — it never caught the gap between the spec and the implementation. The #1128 root cause was exactly this: the agent implemented first and verified second, but no gate checked whether the verification tests existed before implementation began.
+1. **RED**: Write the BEHAVIORAL enforcement test that verifies the SC (send a prompt, assert the agent follows the rule — test fails because the change doesn't exist yet)
+2. **GREEN**: Implement the change that makes the agent follow the rule
+3. **REFACTOR**: Verify content-verification also passes; clean up test scenarios
+4. **COMMIT**: Both the behavioral test and the change committed together
 
-If SC-to-test traceability is missing for any SC, or if test assertions were written after implementation (GREEN-without-RED), implementation MUST NOT proceed until the tests are added and shown to fail first.
+Writing behavioral tests AFTER implementation means the test was never RED — it never caught the gap between the rule and the agent's behavior. The #1217 root cause was exactly this: the agent had correct rule text (passed content-verification) but did not follow the rule in practice (would have failed behavioral verification).
+
+If SC-to-test traceability is missing any behavioral test for any SC, or if behavioral test assertions were written after implementation (GREEN-without-RED), implementation MUST NOT proceed until the behavioral tests are added and shown to fail first.
+
+## Behavioral RED/GREEN as Primary Enforcement Gate
+
+Content-verification tests (grep for text presence) are SECONDARY. Behavioral tests (verify agent behavior changes) are PRIMARY. This hierarchy is enforced at every workflow step where rule changes are made or approved.
+
+### The Behavioral RED/GREEN Gate
+
+The TDD RED/GREEN cycle for rule changes MUST use behavioral enforcement tests, not just content-verification tests:
+
+1. **RED phase**: Write a behavioral enforcement test that sends the agent a prompt and verifies the agent does NOT follow the new rule yet. The test MUST FAIL at this point because the rule change hasn't been made. Use assertion helpers from `.opencode/tests/behaviors/helpers.sh` (`assert_tool_calls_made`, `assert_forbidden_pattern_absent`, `assert_required_pattern_present`, `assert_skill_invoked`).
+2. **GREEN phase**: Make the guideline/rule change and re-run the behavioral test. The test MUST PASS because the agent now follows the rule.
+3. **No exceptions**: This gate applies to ALL rule changes — guideline files, skill files, task files, critical violation sections, system prompt blocks.
+
+### 🚫 PROHIBITED (for behavioral rule changes)
+
+- Content-verification tests (grep patterns) as the ONLY enforcement for a behavioral rule change
+- Marking a rule change as "tested" when only text presence was verified — the agent having correct rule text does NOT prove it follows the rule
+- Writing behavioral tests AFTER implementation (GREEN-without-RED) — the test must be RED first, then GREEN
+- Bypassing the behavioral gate because a content-verification test already exists for the same rule
+- Claiming a rule is "enforced" based solely on content-verification without behavioral evidence
+
+### ✅ REQUIRED (for behavioral rule changes)
+
+- Every critical violation change MUST have at least one behavioral test verifying the agent follows the new rule
+- Behavioral tests are PRIMARY — they prove the agent's behavior actually changed
+- Content-verification tests are SECONDARY — they confirm rule text exists but do NOT prove agent compliance
+- Add the behavioral test FIRST (RED), then make the change (GREEN) — behavioral TDD for rules
+- The behavioral RED/GREEN gate is enforced at every workflow step: spec creation, plan creation, plan execution, and approval gate
+
+### Root Case
+
+Bug #1217 demonstrated that the agent had all the correct guideline text about verification but still answered a general knowledge question with zero tool-call verification. Content-verification alone was insufficient — the agent behavior did not match the rule text. This is why behavioral tests are PRIMARY: they verify that the agent actually behaves differently, not just that the rule text exists.
 
 ## Cross-Reference Standards
 
