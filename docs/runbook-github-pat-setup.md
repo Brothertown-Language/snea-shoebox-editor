@@ -83,7 +83,7 @@ source ~/.bashrc  # or: source ~/.zshrc
 
 ## Step 3: Configure OpenCode
 
-The project-level config is at `./opencode.jsonc` (checked into the repo). It already references environment variables for local plugins — the GitHub MCP section should go in your **user-level** config.
+The project-level config is at `.opencode/opencode.jsonc` (checked into the repo). It already references environment variables for local plugins — the GitHub MCP section should go in your **user-level** config.
 
 ### User-Level Config: `~/.config/opencode/opencode.jsonc`
 
@@ -111,8 +111,8 @@ Create or edit:
 
 OpenCode merges configs in this order (later overrides earlier):
 
-1. `./opencode.jsonc` (project-level, checked in)
-2. `~/.config/opencode/opencode.jsonc` (user-level, local)
+1. `.opencode/opencode.jsonc` (project-level, checked in)
+2.     `$HOME/.opencode/opencode.jsonc` (user-level)
 
 The project config already defines `the-notebook-mcp` and `srclight`. The user config only needs the `github` MCP entry — OpenCode merges them.
 

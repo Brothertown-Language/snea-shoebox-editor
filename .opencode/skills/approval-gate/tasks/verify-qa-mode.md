@@ -414,7 +414,7 @@ What would you like me to do?
 
 ## Cross-References
 
-- Related guideline: `AGENTS.md` "Q/A Mode" section
+- Related guideline: `.opencode/AGENTS.md` "Q/A Mode" section
 - Related guideline: `010-approval-gate.md`
 - Related task: `verify-authorization.md`
 - Related skill: `git-workflow` (pre-work task)

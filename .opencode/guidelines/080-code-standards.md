@@ -77,7 +77,7 @@ The following project-specific code structure rules are enforced in this reposit
 
 ## Linting & Static Analysis
 
-- Run appropriate dev tools (linters, type checkers) listed in AGENTS.md "Build / Lint / Test Commands" on all modified Python files before submitting.
+- Run appropriate dev tools (linters, type checkers) listed in `.opencode/AGENTS.md` "Build / Lint / Test Commands" on all modified Python files before submitting.
 
 ## Tool Selection by File Type
 

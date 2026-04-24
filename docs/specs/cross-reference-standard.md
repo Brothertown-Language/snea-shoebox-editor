@@ -8,7 +8,7 @@
 
 ## Purpose
 
-This document defines the standard format for cross-references in `.opencode/guidelines/`, `.opencode/skills/`, and `AGENTS.md` files. Following these standards ensures references remain stable across file edits, renames, and reorganizations.
+This document defines the standard format for cross-references in `.opencode/guidelines/`, `.opencode/skills/`, and `.opencode/AGENTS.md` files. Following these standards ensures references remain stable across file edits, renames, and reorganizations.
 
 ---
 
@@ -84,22 +84,22 @@ See `080-code-standards.md` → "Code Standards for Notebooks" section.
 ### Correct Format
 
 ```markdown
-See `AGENTS.md` → "Section Name" section.
-See the "Rule Name" rule in `AGENTS.md`.
+See `.opencode/AGENTS.md` → "Section Name" section.
+See the "Rule Name" rule in `.opencode/AGENTS.md`.
 ```
 
 ### Examples
 
 ```markdown
-See `AGENTS.md` → "Critical Rules" section.
-See the "Never Prompt in Comments" rule in `AGENTS.md`.
-See `AGENTS.md` → "MCP Capability Testing (Universal)" section.
+See `.opencode/AGENTS.md` → "Critical Rules" section.
+See the "Never Prompt in Comments" rule in `.opencode/AGENTS.md`.
+See `.opencode/AGENTS.md` → "MCP Capability Testing (Universal)" section.
 ```
 
 ### Forbidden Patterns
 
 ```markdown
-❌ See `AGENTS.md` § 125 (section numbers change)
+❌ See `.opencode/AGENTS.md` § 125 (section numbers change)
 ❌ See section 3.2 (numbered sections break on renumbering)
 ❌ See below (relative position is unreliable)
 ```
@@ -120,7 +120,7 @@ See `filename.md` → "Section Name" section.
 ### Examples
 
 ```markdown
-See AGENTS.md section "Session Init (Automatic)".
+See `.opencode/AGENTS.md` section "Session Init (Automatic)".
 See the "Missing Progress Comments" section in `000-critical-rules.md`.
 ```
 
@@ -141,7 +141,7 @@ See the "Missing Progress Comments" section in `000-critical-rules.md`.
 |---------------|----------------|-----------|
 | Skill | `skill-name` skill | `.opencode/skills/name/SKILL.md` |
 | Guideline | `filename.md` | `guidelines/filename.md`, `file.md:42` |
-| AGENTS.md | `AGENTS.md` → "Section" | `AGENTS.md` § 125 |
+| AGENTS.md | `.opencode/AGENTS.md` → "Section" | `.opencode/AGENTS.md` § 125 |
 | Section | `"Section Name" section` | `section 3.2`, `below`, `line 42` |
 
 ---
@@ -201,12 +201,12 @@ Guidelines in the "Mandatory Elements" section of `140-planning-spec-creation.md
 
 **Before:**
 ```markdown
-violates `AGENTS.md` § 125
+violates `.opencode/AGENTS.md` § 125
 ```
 
 **After:**
 ```markdown
-violates the "Never Prompt in Comments" rule in `AGENTS.md`
+violates the "Never Prompt in Comments" rule in `.opencode/AGENTS.md`
 ```
 
 ---
@@ -231,7 +231,7 @@ When adding or modifying cross-references, verify:
 |------|----------|
 | Guideline files | `.opencode/guidelines/*.md` |
 | Skill files | `.opencode/skills/*/SKILL.md` |
-| Main entry | `AGENTS.md` |
+| Main entry | `.opencode/AGENTS.md` |
 
 ---
 

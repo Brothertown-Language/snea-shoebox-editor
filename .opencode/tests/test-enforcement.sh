@@ -832,7 +832,7 @@ else
 fi
 
 # Verify AGENTS.md lists incremental-build
-AGENTS_FILE="$PROJECT_DIR/AGENTS.md"
+AGENTS_FILE="$PROJECT_DIR/.opencode/AGENTS.md"
 if [ -f "$AGENTS_FILE" ]; then
     IBL_AGENTS=$(grep -c "incremental-build" "$AGENTS_FILE" 2>/dev/null || echo "0")
     if [ "$IBL_AGENTS" -ge 1 ]; then

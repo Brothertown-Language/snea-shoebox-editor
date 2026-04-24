@@ -6,14 +6,14 @@
 # descriptions from frontmatter at startup and injects them into the
 # first user message.
 #
-# See AGENTS.md "Skill Self-Discovery" section for details.
+# See .opencode/AGENTS.md "Skill Self-Discovery" section for details.
 # Source attribution: Self-discovery pattern adapted from obra/superpowers
 # https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md
 #
 # ============================================================
 # HISTORICAL CONTENT BELOW — DO NOT USE FOR ACTIVATION
 # ============================================================
-# Original: Skill Dispatch Table - Externalized from AGENTS.md
+# Original: Skill Dispatch Table - Externalized from .opencode/AGENTS.md
 # Version: 2.0
 # Last Updated: 2026-04-07
 

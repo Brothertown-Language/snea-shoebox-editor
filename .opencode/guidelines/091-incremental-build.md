@@ -51,7 +51,7 @@ For code items (changes to `src/`, `test/`, Python files, notebook cells):
 | Phase | Action | Guideline Change |
 | -- | -- | -- |
 | **RED** | Add enforcement test scenario that verifies the change (expect failure — change doesn't exist yet). For each spec SC that applies to this item, the enforcement test assertion for that SC MUST be in RED state (exists and fails) before the item's implementation commit. | Test scenario committed alongside the `.md` change it tests; SC-specific test assertions with `# SC-N:` comments |
-| **GREEN** | Make the `.md` file change that makes the test pass | The actual guideline, skill, or AGENTS.md modification |
+| **GREEN** | Make the `.md` file change that makes the test pass | The actual guideline, skill, or .opencode/AGENTS.md modification |
 | **REFACTOR** | Clean up cross-references, verify consistency with other files | Ensure no broken references between files |
 | **COMMIT** | Both the test addition and the `.md` change committed together as one working slice | Commit message references the item number |
 

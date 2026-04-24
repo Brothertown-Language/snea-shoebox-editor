@@ -1,6 +1,6 @@
 # CRITICAL RULES — Zero Tolerance Violations
 
-**See AGENTS.md for the authoritative list of critical rules.**
+**See .opencode/AGENTS.md for the authoritative list of critical rules.**
 **See `.opencode/guidelines/` for detailed rules.**
 
 This file provides critical rules that must never be violated. Sections with full detail in dedicated guidelines are referenced here with one-line pointers — the referenced guideline contains the complete rule, enforcement matrix, and examples.
@@ -1079,6 +1079,18 @@ Verifying live state against a specification requires exact match. Any deviation
 **This safeguard applies to ALL body-modification workflows** including spec-auditor auto-fixes, post-merge cleanup, sub-issue creation, and any other `github_issue_write(method=update, body=...)` call site. See individual skill task files for workflow-specific body-preservation safeguards.
 
 **Authority:** Bug #1215; spec-auditor SKILL.md → Body-Preservation Safeguard section; cleanup.md → Archive Workflow body-preservation warning; close.md → Step 3 body-preservation safeguard
+
+## Critical Violation: Posting AI-Authored Content Without Byline Verification
+
+**⚠️ Calling `github_issue_write`, `github_add_issue_comment`, `github_create_pull_request`, or `github_update_pull_request` with AI-authored body content without verifying byline presence is a CRITICAL GUIDELINE VIOLATION.**
+
+The byline enforcement is positional — it lives inside `issue-operations` task files rather than being a universal pre-flight check on the API call itself. Direct API calls bypass these checks entirely.
+
+- 🚫 FORBIDDEN: Calling `github_issue_write`, `github_add_issue_comment`, `github_create_pull_request`, or `github_update_pull_request` with AI-authored body content without verifying byline presence
+- 🚫 FORBIDDEN: Using `gitbucket-api create-issue` or `gitbucket-api create-pr` with AI-authored body content without verifying byline presence
+- ✅ REQUIRED: Before ANY API call that posts AI-authored content (issue body, issue comment, PR body, PR comment), verify the body contains `🤖 Co-authored with AI: <AgentName> (<ModelId>)` or the non-emoji format `Co-authored with AI: <AgentName> (<ModelId>)`. If missing, append before the API call.
+
+**Authority:** Bug #1259; `issue-operations` skill → `creation` task Step 3 / `comment` task Step 3.5; `git-workflow` skill → `pr-creation/create-pr` task; `verification-before-completion` skill → `completion` task; `080-code-standards.md` → "Posted Content Requiring Attribution"
 
 ## Sub-Agent Extraction Pattern
 

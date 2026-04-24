@@ -87,7 +87,30 @@ Ensures specs are audited for plan fidelity before implementation, catching miss
 **Outcome:** Developers will catch spec quality issues before code changes begin.
 
 Fixes #505
+
+
+### Step 6.5: Verify Byline in PR Body (MANDATORY)
+
+**Before calling the PR creation API, verify the PR body contains an AI co-authored byline.**
+
+All AI-authored PR bodies MUST contain one of the following byline patterns:
+
+| Format | Pattern |
+|--------|---------|
+| Emoji format | `🤖 Co-authored with AI: \u003cAgentName\u003e (\u003cModelId\u003e)` |
+| Non-emoji format | `Co-authored with AI: \u003cAgentName\u003e (\u003cModelId\u003e)` |
+
+**Verification:**
+1. Scan the assembled PR `body` string for `Co-authored with AI:` before the API call
+2. If missing: append a byline footer to the body:
+
 ```
+🤖 Co-authored with AI: \u003cAgentName\u003e (\u003cModelId\u003e)
+```
+
+3. If present: proceed to the API call
+
+**Per `000-critical-rules.md` §Critical Violation: Posting AI-Authored Content Without Byline Verification.**
 
 ### Step 7: EXTRACT URL FROM API RESPONSE
 
