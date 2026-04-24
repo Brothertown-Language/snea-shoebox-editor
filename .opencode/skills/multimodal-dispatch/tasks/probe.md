@@ -20,10 +20,32 @@ Check if a cached capability snapshot exists and is within TTL (default: 300 sec
 
 Cache location: `./tmp/capability-snapshot.json`
 
+**Cache TTL enforcement (REQ-3):**
+
+The TTL is enforced strictly. The cache check compares the snapshot's `timestamp` field against the current time:
+
+```
+current_time - snapshot.timestamp > ttl_seconds → STALE (refresh required)
+current_time - snapshot.timestamp ≤ ttl_seconds → FRESH (return cached)
+```
+
+Default TTL is 300 seconds (5 minutes). This can be overridden via the `MULTIMODAL_DISPATCH_TTL` environment variable.
+
 Cache invalidation conditions:
 - TTL exceeded (default 300s from `timestamp`)
 - `--refresh` flag specified
 - Model pull/remove event detected (checked in Step 2)
+- Explicit `invalidate_cache()` call
+
+**invalidate_cache() implementation:**
+
+When a model pull or remove event is detected (e.g., `ollama pull`, `ollama rm`), or when the caller explicitly requests cache invalidation:
+
+```bash
+rm -f ./tmp/capability-snapshot.json
+```
+
+This forces the next `probe` call to rebuild from scratch. The cache file is the single source of truth — deleting it is sufficient for invalidation. No partial or selective invalidation is needed because the entire snapshot is rebuilt on each probe.
 
 ### Step 2: Probe Ollama API
 
@@ -46,18 +68,29 @@ Extract capability information from each model's detail response:
 - **Capabilities**: Infer from model family (e.g., reasoning, coding, agentic, thinking)
 - **Input types**: Determine from modality (text models accept `["text"]`, vision models accept `["text", "image"]`)
 
-### Step 3: Apply Cloud-First Ordering
+### Step 3: Apply Cloud-First Ordering (REQ-4, REQ-8)
 
-Sort models within each modality tier:
-1. Cloud models first (`ollama-cloud` source)
-2. Local models second (`ollama-local` source)
-3. Within each tier, prefer newer/larger models
+Sort models within each modality tier using the following ordering rules:
 
-Set `preferred: true` on the highest-ranked model in each modality. This is the model that `resolve` will select by default for that modality.
+**Cloud-first (REQ-8):** For modalities where cloud models exist (text, vision), cloud models are ALWAYS preferred over local models. Local models within the same modality are used only when no cloud model is available, or as explicit fallback when cloud is unreachable.
 
-For modalities where only local models exist (e.g., embedding, TTS, image generation), the local model is `preferred: true`.
+**Newer/larger preference (REQ-4):** Within the same source tier (cloud or local), prefer newer and larger models. Sort by:
+1. Source tier: `ollama-cloud` before `ollama-local`
+2. Parameter count: larger models first (when determinable)
+3. Recency: newer model versions first
 
-For modalities where no Ollama model exists (e.g., audio/ASR, music, viseme), do NOT fabricate entries. These modalities produce `(unverified)` results in dispatch, per REQ-5.
+**Preferred flag assignment:** Set `preferred: true` on the highest-ranked model in each modality. This is exactly one model per modality.
+
+| Modality | Primary (Cloud) | Secondary (Local) | Fallback |
+|----------|-----------------|--------------------|----------|
+| Text | Cloud text model (preferred) | Local text model | `(unverified)` only |
+| Vision | Cloud vision model (preferred) | Local vision model | `(unverified)` only |
+| Embedding | — | Local embedding model (preferred) | `(unverified)` only |
+| Audio | — | — | `(unverified: ASR deferred)` |
+| Image generation | — | Local image-gen model (preferred) | `(unverified)` only |
+| TTS | — | Local TTS model (preferred) | `(unverified)` only |
+
+For modalities where no Ollama model exists (audio/ASR, music generation, viseme alignment — PEP 723 deferred per REQ-9), do NOT fabricate entries. These produce `(unverified)` results in dispatch per REQ-5.
 
 ### Step 4: Build CapabilitySnapshot
 
@@ -95,6 +128,12 @@ rm -f ./tmp/capability-snapshot.json
 ```
 
 The next `probe` call will rebuild from scratch.
+
+**Event-driven invalidation:** When the agent observes an `ollama pull` or `ollama rm` command being run (in any context), it MUST call `invalidate_cache()` before the next dispatch. This ensures the capability snapshot reflects the current model state.
+
+**TTL-based invalidation:** Even without explicit events, TTL ensures stale snapshots are never served. A snapshot older than 300 seconds is treated as missing and rebuilt on the next `probe` call.
+
+**No partial invalidation:** The snapshot is an atomic unit. There is no facility for invalidating a single model entry — the entire snapshot is rebuilt.
 
 ## Error Handling
 
