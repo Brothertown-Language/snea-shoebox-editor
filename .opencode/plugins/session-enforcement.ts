@@ -743,11 +743,13 @@ Critical rules:
  * Adapted from obra/superpowers skill enforcement pattern:
  * https://github.com/obra/superpowers/blob/main/.opencode/plugins/superpowers.js
  *
- * Key principle: "If you think there is even a 1% chance a skill might apply,
- * you ABSOLUTELY MUST invoke the skill." — from obra/superpowers using-superpowers
+ * Key principle: removed per spec #1249/#1248.
+ * Skill dispatch now follows the deterministic chain-of-responsibility
+ * table in approval-gate/SKILL.md. Invoke ONLY the skill(s) mapped
+ * to the current pipeline stage. Do NOT load skills speculatively.
  */
 function buildEnforcementContent(skillDescriptions: Array<{ name: string; description: string }>): string {
-  // Process skills first, implementation skills second (adapted from superpowers priority)
+  // Process skills first, implementation skills second
   const processSkills = skillDescriptions.filter(s =>
     ["approval-gate", "brainstorming", "spec-creation", "writing-plans", "executing-plans",
      "verification-before-completion", "finishing-a-development-branch",
@@ -762,12 +764,10 @@ function buildEnforcementContent(skillDescriptions: Array<{ name: string; descri
     .map(s => `- **${s.name}**: ${s.description}`)
     .join("\n");
 
-  // Red-flags rationalization table adapted from obra/superpowers writing-skills SKILL.md
-  // https://github.com/obra/superpowers/blob/main/skills/writing-skills/SKILL.md
   return `<EXTREMELY_IMPORTANT>
 You have access to mandatory workflow skills. Skill invocation is NOT optional when a skill applies.
 
-**The 1% Rule:** If you think there is even a 1% chance a skill might apply to what you are doing, you ABSOLUTELY MUST invoke the skill.
+**Deterministic Dispatch:** Skill dispatch follows the chain-of-responsibility table in approval-gate/SKILL.md. Invoke ONLY the skill(s) deterministically mapped to the current pipeline stage. Do NOT load skills speculatively. Never invoke a skill "just in case."
 
 IF A SKILL APPLIES TO YOUR TASK, YOU DO NOT HAVE A CHOICE. YOU MUST USE IT.
 
@@ -816,7 +816,7 @@ ${skillLines}
 
 Use the OpenCode skill tool: \`/skill <skill-name>\` or \`/skill <skill-name> --task <task-name>\`
 
-Invoke relevant skills BEFORE any response or action. Even a 1% chance means invoke it to check.
+Invoke relevant skills BEFORE any response or action, per the deterministic dispatch table.
 </EXTREMELY_IMPORTANT>`;
 }
 

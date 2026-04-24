@@ -84,6 +84,18 @@ The staleness rule is NOT about time estimation. It is about **action significan
 5. Revising a spec
 6. Creating sub-issues
 
+### De Minimis Bound
+
+If the resource was read in the same session and no state-change trigger has occurred, re-reading comments before a subsequent action on the SAME resource is OPTIONAL, not mandatory. The staleness rule applies to resources NOT read in the current session, or where a state-change trigger has occurred.
+
+**Examples:**
+| Action | Resource last read | State-change trigger? | Re-read required? |
+| -- | -- | -- | -- |
+| Check authorization | 2 exchanges ago | No | No — session-verified |
+| Create PR | Comments read 1 exchange ago | No | No — still within session |
+| Revise spec | User just posted new comment | Yes | Yes — state changed |
+| Close issue | Session started 10 min ago, no prior read | N/A | Yes — staleness rule applies |
+
 ## Single Exchange Window
 
 If comments were read in the **immediately preceding exchange** (the last assistant turn in the same conversation), the agent MAY reference those results without re-reading. Any earlier reference requires re-checking for new comments.

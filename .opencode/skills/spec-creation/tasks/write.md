@@ -23,39 +23,15 @@ Assemble the final spec with acceptance criteria, ambiguity elimination, and del
 
 Before assembling the spec, invoke `verification-enforcement --task verify`. This gate dispatches section-based sub-agents to collect evidence artifacts for the factual claims the spec will make — file references, API signatures, configuration fields, code behavior, and environment details. Evidence artifacts collected here ensure that the spec's claims are grounded in live sources. Claims that cannot be verified at this stage are marked with `⚠️ UNVERIFIED` for resolution in the post-generation revisit pass.
 
-### Step 0.5: RED Gate — Enforcement Test Assertions (MANDATORY)
+### Step 0.5: Behavioral Test Mandate in Success Criteria (MANDATORY)
 
-**🚫 CRITICAL: This step MUST execute BEFORE spec assembly. Skipping this step is a CRITICAL GUIDELINE VIOLATION.**
+**Behavioral enforcement tests are NOT written during spec creation.** They are written during implementation, per the post-approval spec mandate. However, the spec MUST include a Success Criterion mandating behavioral test creation before implementation.
 
-Before assembling the spec, enforcement test assertions MUST be written for each success criterion that the spec will define. This ensures the TDD RED phase is satisfied before the spec is even created — the test assertions exist and are in RED state (failing) before the spec content they verify exists.
+**For rule-changing specs** (guidelines, skills, critical violations): Include a success criterion that mandates "Before any implementation, write behavioral enforcement tests in `.opencode/tests/behaviors/` that verify the new rule; confirm RED state (test fails before change). If the tests are missing from the working tree when implementation begins, they must be re-created before any source changes."
 
-**Procedure:**
-
-1. **Enumerate anticipated success criteria** — Based on the requirements extraction and analysis from prerequisite tasks, list the expected success criteria the spec will define
-2. **Write enforcement test assertions** — For each anticipated SC, write an enforcement test assertion in `test-enforcement.sh` that verifies the SC's requirement. Use the format: `# SC-N: <brief description>` as a comment above the assertion, followed by a grep/check that will FAIL before the spec exists and PASS after the spec is created
-3. **Verify RED state** — Run the newly written assertions and confirm they are in RED state (failing). The assertions MUST fail because the spec content they verify does not exist yet
-4. **Produce tool-call evidence** — Record the RED state verification output as a tool-call artifact. The evidence MUST show:
-   - The test assertions written (with SC ID comments)
-   - The test run output showing failure (RED state)
-   - The timestamp of when the RED verification was performed
-
-**Evidence artifact format:**
-
-```
-RED Gate: spec-creation enforcement test assertions
-Assertions written: [count]
-RED state verified: [true/false]
-Test output: [pasted failure output]
-Timestamp: [ISO 8601]
-```
-
-**If RED state is NOT confirmed:** HALT. Do NOT proceed to spec assembly. The enforcement test assertions MUST exist and fail before the spec is created. This is a CRITICAL VIOLATION of the per-item TDD cycle per `091-incremental-build.md`.
-
-**Exemption:** Simple specs with only 1-2 success criteria that are purely administrative (label changes, status updates) may use a simplified assertion. The RED gate still applies, but the assertion may be a single check for the spec file's existence rather than per-SC assertions.
+**For code-changing specs**: Include a success criterion that mandates "Before any implementation, write unit or integration tests that verify the changed behavior; confirm RED state (test fails before change). If the tests are missing from the working tree when implementation begins, they must be re-created before any source changes."
 
 **Cross-reference:** See `091-incremental-build.md` → Per-Item TDD Cycle → RED phase, `080-code-standards.md` → SC-to-Test Traceability and RED-Phase Ordering, and `080-code-standards.md` → Behavioral Enforcement Tests (PRIMARY) for the behavioral RED/GREEN gate.
-
-**Behavioral RED/GREEN gate for rule-changing specs:** When the spec changes a rule that governs agent behavior (guideline, skill enforcement, critical violation), the enforcement test assertions in Step 0.5 MUST include behavioral assertions — not just content-verification grep patterns. A behavioral assertion describes the agent's expected behavior (what tool calls it makes, what it declines, what it outputs) rather than just checking for text presence. If a spec SC changes agent behavior and the Step 0.5 test assertions only contain content-verification (grep) checks, the RED gate is incomplete — the agent could pass content-verification while still violating the behavioral rule in practice (see Bug #1217).
 
 ### Step 1: Assemble Spec
 

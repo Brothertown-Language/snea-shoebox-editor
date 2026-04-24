@@ -42,6 +42,14 @@ Compare clean-room plan against existing spec at three levels:
 | Step-level | Missing steps, extra steps, step ordering | Clean-room covers edge case not in original |
 | Content-level | Different approaches, wrong assumptions | Clean-room uses different strategy |
 
+### Step 3.5: TDD Step Structure Check
+
+During clean-room comparison, verify that the clean-room plan includes TDD step structure (RED checkpoint with missing-test handling) if the spec's problem statement implies code/rule changes.
+
+| Finding | Classification | Action |
+| -- | -- | -- |
+| MISSING-TDD-CHECKPOINT | conditional | Flag for review if TDD structure is absent |
+
 ### Step 4: Semantic Matching
 
 Before reporting differences, attempt semantic matching:

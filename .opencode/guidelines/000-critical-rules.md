@@ -893,6 +893,39 @@ When the `todowrite` tool is used during a session, the agent MUST maintain the 
 
 **See `060-tool-usage.md` §7 for the complete todowrite lifecycle rules (CREATE/UPDATE/CLEAR).** **AUTHORITY: `060-tool-usage.md` §7** (this line is a reference only)
 
+## Critical Violation: Session-Verified State Trust — Re-Reading Without State-Change Trigger
+
+**⚠️ Re-reading a resource in the same session without a state-change trigger is a CRITICAL GUIDELINE VIOLATION.**
+
+After a resource (issue, PR, file, comment set) is read and its state confirmed in this session, that state is TRUSTED until a state-change trigger occurs.
+
+| Rule | Text |
+| -- | -- |
+| Define | After a resource is read and its state confirmed in this session, that state is TRUSTED until a state-change trigger occurs |
+| Re-read forbidden | Re-reading the same resource in the same session without a state-change trigger is a CRITICAL GUIDELINE VIOLATION |
+| Counter allowed | A running tally of reads per resource is maintained; reading the same resource 3+ times triggers mandatory self-correction |
+| Context preserved | Trusting session-verified state DOES NOT violate `065-verification-honesty.md` — that rule governs claims ABOUT state, not the state's own persistence within a session |
+
+**State-change triggers (exhaustive list):**
+1. User explicitly says something changed
+2. API response indicates change (e.g., issue reopened)
+3. 5+ minutes elapsed with other agents active
+4. Session boundary
+5. The resource was modified by the agent itself since last read
+
+## Critical Violation: Verification Deduplication
+
+**⚠️ Re-verifying a resource that was already verified by a prior skill in the same session is a CRITICAL GUIDELINE VIOLATION.**
+
+If a verification gate from one skill has already produced evidence for a resource in this session, a subsequent skill requiring verification of the SAME resource may skip re-verification and cite the prior skill's evidence artifact.
+
+| Skill | Evidence artifact | Reusable by |
+| -- | -- | -- |
+| `verification-enforcement --task verify` | Section evidence table | `spec-auditor`, `spec-creation`, `correspondence` |
+| `approval-gate --task verify-authorization` | Authorization status, scope, halt_at | `git-workflow`, `divide-and-conquer`, `executing-plans` |
+| `git-workflow --task pre-work` | Branch state, worktree.path | `divide-and-conquer`, `finishing-a-development-branch` |
+| `verification-before-completion --task verify` | Per-SC evidence table | No skip — this is the final gate |
+
 ## Critical Violation: Pushing Agent Intelligence Decisions to the User
 
 **⚠️ Asking the user to make structural classification decisions that the agent should resolve autonomously is a CRITICAL GUIDELINE VIOLATION.**

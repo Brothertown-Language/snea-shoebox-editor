@@ -18,6 +18,7 @@ Check architectural reasoning, ambiguity, conflicts, and scope creep in a spec.
 | Superseded closure | SUPERSEDED-CLOSURE-VIOLATION | Does closing language claim future action without execution? |
 | Plan bleed | PLAN-BLEED | Does the spec contain implementation details (code, DDL, algorithms) that belong in the plan? |
 | Plan bleed (ambiguous) | PLAN-BLEED-AMBIGUOUS | Could content be either a requirement or implementation detail? Requires domain judgment |
+| TDD discipline | TDD-DISCIPLINE-GAP | Does the spec mandate behavioral enforcement tests before implementation, including a recovery clause for missing tests? Do plan phases have RED checkpoints that handle the missing-test scenario? |
 
 ## Procedure
 
@@ -81,5 +82,6 @@ Severity: [HIGH|MEDIUM|LOW]
 | ARCHITECTURAL-REASONING-GAP | flag-for-review | Requires understanding design tradeoffs |
 | PLAN-BLEED | auto-fix | Replace code/DDL/algorithms with requirements tables; note moved content for plan |
 | PLAN-BLEED-AMBIGUOUS | flag-for-review | Content could be requirement or implementation detail; requires domain judgment |
+| TDD-DISCIPLINE-GAP | conditional | Missing behavioral test mandate or RED checkpoint |
 
 Co-authored with AI: <AgentName> (<ModelId>)
