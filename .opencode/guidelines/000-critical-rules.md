@@ -462,6 +462,22 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 
 **See `issue-operations` skill → `link-sub-issue` task for complete workflow including auto-create workflow and database ID requirement. Sub-issue verification is consolidated into `approval-gate --task verify-authorization` Step 5 as the single readiness check.**
 
+## Critical Violation: Implementation-First Gate — Halting Before Producing Deliverables
+
+**⚠️ Halting at any checkpoint in the dispatch chain without at least one file modification (for implementation scopes) or at least one artifact (for non-implementation scopes) is a CRITICAL GUIDELINE VIOLATION.**
+
+When authorization scope includes implementation (`for_implementation`, `for_code_review`, `for_pr`), the agent MUST produce at least one file modification before reaching any halt-point output. Process steps (screening, planning, worktree setup) are prerequisites, not deliverables.
+
+- 🚫 FORBIDDEN: Producing a completion report with zero file modifications for an implementation scope
+- 🚫 FORBIDDEN: Generating a compare URL before confirming `git push` succeeded (#1231)
+- 🚫 FORBIDDEN: Halting after process overhead (screening, worktree setup) without starting implementation (#1232)
+- 🚫 FORBIDDEN: Producing zero deliverables — no implementation, no commits, no push, no PR — for a `for_pr` scope (#1233)
+- ✅ REQUIRED: Verify at least one file was modified (`git diff --stat`) before producing halt-point output for implementation scopes
+- ✅ REQUIRED: Verify `git push` succeeded before generating any compare URL
+- ✅ REQUIRED: If context budget is insufficient to reach implementation, report the budget exhaustion explicitly in the halt message rather than silently halting after process steps
+
+**AUTHORITY: Bug #1231, #1232, #1233 — root cause is the same: agent spends all context on process steps and halts before producing deliverables. The implementation-first gate ensures the agent produces at least one tangible modification before it is allowed to report completion.**
+
 ## Critical Violation: Monolithic Implementation — Skipping Item Decomposition
 
 **⚠️ Implementing multiple items in a single branch/commit without decomposition, or skipping the top-down → bottom-up → per-item TDD cycle, is a CRITICAL GUIDELINE VIOLATION.**
@@ -473,10 +489,12 @@ Chat output order (mandatory): 1) Executive summary, 2) URL (if exists), 3) AI b
 - 🚫 FORBIDDEN: Skipping item enumeration and dependency ordering in plans
 - 🚫 FORBIDDEN: Batching items that should be separate into one implementation pass
 - 🚫 FORBIDDEN: Merging changes where the enforcement test for those changes doesn't pass
+- 🚫 FORBIDDEN: Over-verifying — test assertions in Phase N that verify deliverables from Phase M (M ≠ N); see "Phase-Scoped Test Assertions" in `091-incremental-build.md`
 - ✅ REQUIRED: Follow top-down decomposition → bottom-up design → per-item TDD cycle for ALL scopes
 - ✅ REQUIRED: Each item has its own enforcement test (RED phase comes before GREEN phase)
 - ✅ REQUIRED: Plans include item enumeration, dependency ordering, and acceptance criteria per item
 - ✅ REQUIRED: Approval gate Step 4.5 verifies item decomposition exists before implementation proceeds
+- ✅ REQUIRED: Phase-scoped test assertions — each phase tests only its own deliverables; see "Phase-Scoped Test Assertions" in `091-incremental-build.md`
 
 ## Critical Violation: Stopping After Single Phase in Multi-Task Plan
 

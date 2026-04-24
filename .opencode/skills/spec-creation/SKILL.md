@@ -123,13 +123,20 @@ You are a Spec Architect. Your focus is structuring investigation results into a
    - Has exploration (brainstorming) output been referenced?
    - Are acceptance criteria defined?
 
-3. **After `write` task:**
+3. **After `write` task — SC scope alignment validation (MANDATORY):**
+   - For multi-phase specs: verify each SC is scoped to exactly one phase deliverable
+   - Over-scoped SCs (spanning multiple phases or referencing deliverables outside their phase) MUST be flagged and re-scoped before the spec is approved
+   - Single-phase specs: verify each SC targets a single deliverable (no compound SCs spanning multiple concerns)
+   - Record SC-to-phase mapping in the spec body for traceability
+   - This validation step prevents over-verification at implementation time — per the "Phase-Scoped Test Assertions" mandate in `091-incremental-build.md`
+
+4. **After `write` task (issue creation):**
    - GitHub Issue created with `[SPEC]` prefix and `needs-approval` label?
    - Chat output is exec summary + URL + byline ONLY? (no full spec dump)
    - Spec self-review completed? (placeholder scan, consistency check, ambiguity check)
    - User directed to review on the GitHub Issue (not in chat)?
 
-4. **What does NOT bypass spec-creation:**
+5. **What does NOT bypass spec-creation:**
    - "skip spec-creation" → NOT allowed (even simple specs need `requirements` + `write`)
    - "brainstorming already wrote the spec" → Brainstorming no longer writes specs; this skill does
    - "just show me the spec in chat" → NOT allowed; spec MUST be persisted as GitHub Issue
