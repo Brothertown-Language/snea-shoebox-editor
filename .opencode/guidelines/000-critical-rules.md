@@ -105,7 +105,7 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 - ✅ REQUIRED: Fetch and verify config schemas before asserting compliance
 - ✅ REQUIRED: Verify API signatures via `srclight_get_signature` or official documentation before using them
 - ✅ REQUIRED: Verify code implementation details via `srclight_get_symbol`, `read`, or `srclight_get_signature` before claiming behavior
-- ✅ REQUIRED: Tag any assertion that could not be verified as `(unverified)`
+- ✅ REQUIRED: Attempt exhaustive research before claiming; if verification tools cannot confirm code/API claims, decline to state the claim
 
 ## Critical Violation: Verification Dishonesty — Reporting Memory as Verified
 
@@ -114,7 +114,7 @@ When a main agent is operating in a worktree and dispatches a sub-agent, the sub
 **See `065-verification-honesty.md` for the complete rule, evidence requirements, single exchange window exception, and relationship to other guidelines.** **AUTHORITY: `065-verification-honesty.md`** (this line is a reference only)
 
 - 🚫 FORBIDDEN: Reporting from memory without re-verification; claiming "I checked earlier" without current tool call; training knowledge as fact; omitting tool call evidence
-- ✅ REQUIRED: Use a tool/command for every verification; show evidence; tag unverified recollections as "(unverified)"
+- ✅ REQUIRED: Use a tool/command for every verification; show evidence; attempt exhaustive research using available tools; if research fails, follow suggest-after-research fallback (general knowledge: offer as suggestion contingent on user acceptance; code/API claims: decline to state)
 
 ## Critical Violation: Skipping verification-enforcement During Content Generation
 
