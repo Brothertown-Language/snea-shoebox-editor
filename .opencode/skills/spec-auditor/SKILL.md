@@ -149,7 +149,7 @@ One of `--issue`, `--file`, or `--url` is mandatory (except for overview mode). 
 
 | Document Type | Baseline Subtasks | Why These |
 |---------------|-------------------|-----------|
-| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles`, `sc-precision` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, principle-compliant, and have precise SCs with executable verification commands and semantic intent |
+| Spec | `fresh-start`, `structure`, `fidelity`, `ground-truth`, `principles`, `sc-precision` | Every spec must be self-contained, properly structured, faithful to its problem, metadata-verified, principle-compliant, have precise SCs with executable verification commands and semantic intent, and mandate TDD discipline (behavioral enforcement tests before implementation) |
 | Plan | `fresh-start`, `structure`, `ground-truth`, `principles` | Plans need self-containment, structure, metadata verification, and principle compliance; `fidelity` applies only to specs |
 | Process Flow | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Flows need self-containment, adapted structure checks, metadata verification, and principle compliance |
 | Runbook/SOP | `fresh-start`, `structure` (adapted), `ground-truth`, `principles` | Runbooks need self-containment, adapted structure checks, metadata verification, and principle compliance |

@@ -26,6 +26,13 @@ This task dispatches plan execution to `divide-and-conquer --task assemble-work`
    - **5e.** Tool-call artifact REQUIRED: The agent must produce a tool-call artifact (e.g., `grep` or `bash` command output) proving that the RED test check was performed, showing the test exists and was verified to be in RED state.
 
    This checkpoint enforces the per-item TDD cycle mandated by `091-incremental-build.md`. For rule items, it enforces the behavioral TDD variant — behavioral tests must exist and be in RED state before implementation begins. Content-verification tests are secondary for rule changes. Skipping this checkpoint is a critical violation per `000-critical-rules.md`.
+
+#### Step 5.5a — Verify Behavioral Enforcement Test Files Exist (Missing-Test Recovery)
+
+**5.5a.** Before dispatching, verify behavioral enforcement test files exist for each TDD-marked item. If absent, create them from the spec's Success Criteria test mandate. If present, run them and confirm they fail (RED). If they pass, HALT.
+
+This makes the implementation phase resilient to branch switching, worktree recreation, and developer context-switching.
+
 6. **Dispatch to divide-and-conquer:**
 
 ```

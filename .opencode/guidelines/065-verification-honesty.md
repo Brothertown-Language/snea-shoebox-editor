@@ -78,13 +78,11 @@ When the agent performs verification, it MUST show evidence:
 
 ## Single Exchange Window
 
-The ONLY exception: if a tool was called in the **immediately preceding exchange** (the last assistant turn in the same conversation), the agent MAY reference that result without re-calling. Any earlier reference requires re-verification.
+The ONLY exception: if a resource was read and its state confirmed within the current session, and no state-change trigger has occurred, the agent MAY reference that state without re-reading. Any earlier reference requires re-verification.
 
-This means:
+State-change triggers: user explicitly says something changed, API response indicates change, 5+ minutes elapsed with other agents active, session boundary, resource modified by the agent itself.
 
-- If the agent just ran `git status` in the previous turn → MAY reference the result
-- If the agent ran `git status` two turns ago → MUST re-run before reporting status
-- If the agent ran `git status` in a previous session → MUST re-run (always)
+This is consistent with the Session-Verified State Trust rule in `000-critical-rules.md`.
 
 ## Relationship to Other Guidelines
 

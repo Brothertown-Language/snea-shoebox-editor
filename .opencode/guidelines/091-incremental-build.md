@@ -151,6 +151,12 @@ Over-verification creates two failure modes:
 | Single test verifies all SCs across all phases | Split into N phase-scoped tests, each verifying its phase's SCs only |
 | Shell check reads skill card content to guess AI behavior | Behavioral test sends prompt and verifies agent response pattern |
 
+### Trust Prior Phase Verification
+
+Phase N tests trusting Phase M verification (M < N) is REQUIRED, not optional. This trust is consistent with `000-critical-rules.md` Session-Verified State Trust.
+
+**Anti-pattern:** Re-verifying a prior phase's deliverable in a later phase's test is over-verification, not honest verification, and is a STRUCTURE-VIOLATION.
+
 ## Cross-References
 
 - `000-critical-rules.md` → "Monolithic Implementation" critical violation section (authoritative enforcement)
