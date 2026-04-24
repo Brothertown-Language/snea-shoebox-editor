@@ -152,6 +152,11 @@ SCENARIOS["pr-creation-exclusion"]="Does .opencode/skills/pr-creation-workflow/S
 SCENARIOS["git-workflow-routing-section"]="Does .opencode/skills/git-workflow/SKILL.md body contain a Routing section that distinguishes Feature PR from Release PR?"
 SCENARIOS["verify-closed-issue-step7"]="Does .opencode/skills/approval-gate/tasks/verify-closed-issue.md contain a Step 7 with MANDATORY ZERO TOLERANCE language and SC verification downgrade paths for PARTIALLY_IMPLEMENTED and NOT_IMPLEMENTED_DESPITE_CLOSURE?"
 SCENARIOS["closed-issue-enforcement-sc"]="Does .opencode/skills/approval-gate/enforcement/closed-issue-verification.md contain a Success Criteria Verification section with ZERO TOLERANCE enforcement and the downgrade path table?"
+SCENARIOS["spec-auditor-body-preservation"]="Does .opencode/skills/spec-auditor/SKILL.md contain a body-preservation safeguard requiring that any github_issue_write(method=update, body=...) must verify the new body length is at least 80% of the original body length before applying the update?"
+SCENARIOS["cleanup-body-modification-warning"]="Does .opencode/skills/git-workflow/tasks/cleanup.md contain a CRITICAL warning about body erasure that covers ALL body modifications (not just closing) and states NEVER replace an issue body with a status summary?"
+SCENARIOS["close-body-preservation"]="Does .opencode/skills/issue-operations/tasks/close.md contain a body-preservation safeguard requiring that if method=update with body= is used, the body must preserve all original content?"
+SCENARIOS["all-body-modification-safeguards"]="Do all skill task files that call github_issue_write(method=update, body=...) contain body-preservation safeguards documented either inline or via cross-reference?"
+SCENARIOS["critical-rules-body-erasure"]="Does .opencode/guidelines/000-critical-rules.md contain a critical violation section about Issue Body Erasure requiring body-preservation verification before any github_issue_write(method=update, body=...) call?"
 
 # Tags per scenario for --tag filtering
 declare -A SCENARIO_TAGS
@@ -253,26 +258,32 @@ SCENARIO_TAGS["task-file-enforcement-refs"]="content-verification approval"
 SCENARIO_TAGS["dev-edit-guard-plugin"]="content-verification session-enforcement"
 SCENARIO_TAGS["dev-edit-guard-trigger"]="content-verification session-enforcement"
 SCENARIO_TAGS["dev-edit-guard-pair-mode"]="content-verification session-enforcement"
+SCENARIO_TAGS["spec-auditor-body-preservation"]="content-verification body-preservation"
+SCENARIO_TAGS["cleanup-body-modification-warning"]="content-verification body-preservation"
+SCENARIO_TAGS["close-body-preservation"]="content-verification body-preservation"
+SCENARIO_TAGS["all-body-modification-safeguards"]="content-verification body-preservation"
+SCENARIO_TAGS["critical-rules-body-erasure"]="content-verification body-preservation"
 
 # File-to-scenario mapping for --changed filtering
 # Maps glob patterns to scenario names
 declare -A FILE_SCENARIO_MAP
 FILE_SCENARIO_MAP[".opencode/guidelines/091-incremental-build.md"]="incremental-build-guideline monolithic-implementation-violation item-decomposition-step sc-assertion-tdd-cycle red-state-before-implementation red-phase-enforcement-incremental-build red-phase-enforcement-critical-rules-xref"
-FILE_SCENARIO_MAP[".opencode/guidelines/000-critical-rules.md"]="scope-auto-resolve-guideline monolithic-implementation-violation identity-echo-validation secret-exfiltration-violation url-sourcing-guideline-rules dispatch-artifact-requirements red-phase-enforcement-critical-rules-xref"
+FILE_SCENARIO_MAP[".opencode/guidelines/000-critical-rules.md"]="scope-auto-resolve-guideline monolithic-implementation-violation identity-echo-validation secret-exfiltration-violation url-sourcing-guideline-rules dispatch-artifact-requirements red-phase-enforcement-critical-rules-xref critical-rules-body-erasure"
 FILE_SCENARIO_MAP[".opencode/guidelines/020-go-prohibitions.md"]="scope-auto-resolve-guideline pipeline-scoped-halt"
-FILE_SCENARIO_MAP[".opencode/skills/approval-gate/"]="item-decomposition-step scope-auto-resolve-step approval-gate-sc-traceability approval-gate-red-phase dispatch-chain-enforcement-gate dispatch-artifact-requirements dispatch-checkpoint-live-verification gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c task-file-enforcement-refs scope-next-phase-resolution scope-phase-n-resolution enforcement-module-adversarial enforcement-module-scope-parsing enforcement-module-auto-dispatch enforcement-module-closed-issue enforcement-module-sub-issue verify-closed-issue-step7 closed-issue-enforcement-sc"
+FILE_SCENARIO_MAP[".opencode/skills/approval-gate/"]="item-decomposition-step scope-auto-resolve-step approval-gate-sc-traceability approval-gate-red-phase dispatch-chain-enforcement-gate dispatch-artifact-requirements dispatch-checkpoint-live-verification gap-fill-precedence-principle gap-fill-precedence-for-pr gap-fill-precedence-standard-scope screen-issue-gap-fill-awareness gap-fill-precedence-before-step5c task-file-enforcement-refs scope-next-phase-resolution scope-phase-n-resolution enforcement-module-adversarial enforcement-module-scope-parsing enforcement-module-auto-dispatch enforcement-module-closed-issue enforcement-module-sub-issue verify-closed-issue-step7 closed-issue-enforcement-sc all-body-modification-safeguards"
 FILE_SCENARIO_MAP[".opencode/skills/brainstorming/"]="brainstorming-top-down verification-mechanics-brainstorming"
 FILE_SCENARIO_MAP[".opencode/skills/writing-plans/"]="writing-plans-bottom-up validate-executable-verification semantic-intent-writing-plans why-specific-value-tdd red-phase-gate-writing-plans red-phase-gate-writing-plans-skillmd"
 FILE_SCENARIO_MAP[".opencode/skills/executing-plans/"]="executing-plans-tdd red-phase-gate-executing-plans red-phase-gate-skillmd"
 FILE_SCENARIO_MAP[".opencode/skills/divide-and-conquer/"]="divide-conquer-tdd enforcement-module-completion enforcement-module-result-validation enforcement-module-overflow enforcement-module-work-state"
-FILE_SCENARIO_MAP[".opencode/skills/git-workflow/"]="worktree-handoff-step cleanup-sc-verification-gate cleanup-phase-completion-gate review-prep-format-self-check url-sourcing-rule1-review-prep url-sourcing-rule1-pr url-sourcing-rule2-character-match release-pr-routing release-promotion-trigger git-workflow-routing-section"
+FILE_SCENARIO_MAP[".opencode/skills/git-workflow/"]="worktree-handoff-step cleanup-sc-verification-gate cleanup-phase-completion-gate review-prep-format-self-check url-sourcing-rule1-review-prep url-sourcing-rule1-pr url-sourcing-rule2-character-match release-pr-routing release-promotion-trigger git-workflow-routing-section cleanup-body-modification-warning"
 FILE_SCENARIO_MAP[".opencode/skills/verification-before-completion/"]="per-sc-evidence-table vbc-per-sc-evidence-skill"
 FILE_SCENARIO_MAP[".opencode/skills/finishing-a-development-branch/"]="finishing-sc-verification checklist-chat-output-format"
 FILE_SCENARIO_MAP[".opencode/guidelines/080-code-standards.md"]="sc-to-test-traceability red-phase-ordering sc-traceability-example"
 FILE_SCENARIO_MAP[".opencode/guidelines/140-planning-spec-creation.md"]="executable-verification-commands vague-verification-antipattern"
 FILE_SCENARIO_MAP[".opencode/skills/spec-creation/"]="semantic-intent-spec-creation narrow-sc-table-exemption spec-creation-red-gate"
-FILE_SCENARIO_MAP[".opencode/skills/spec-auditor/"]="sc-precision-audit"
-FILE_SCENARIO_MAP[".opencode/skills/issue-operations/"]="sub-issue-structure url-sourcing-issue-operations"
+FILE_SCENARIO_MAP[".opencode/skills/spec-auditor/"]="sc-precision-audit spec-auditor-body-preservation"
+FILE_SCENARIO_MAP[".opencode/skills/sre-runbook/"]="all-body-modification-safeguards"
+FILE_SCENARIO_MAP[".opencode/skills/issue-operations/"]="sub-issue-structure url-sourcing-issue-operations close-body-preservation"
 FILE_SCENARIO_MAP[".opencode/skills/pr-creation-workflow/"]="pr-creation-exclusion"
 FILE_SCENARIO_MAP[".opencode/skills/issue-review/"]="analyze-and-spec-red-gate"
 FILE_SCENARIO_MAP[".opencode/skills/ui-engineer/"]="ui-engineer-red-gate"
@@ -509,6 +520,11 @@ EXPECTED_SKILLS["pr-creation-exclusion"]=""
 EXPECTED_SKILLS["git-workflow-routing-section"]=""
 EXPECTED_SKILLS["verify-closed-issue-step7"]=""
 EXPECTED_SKILLS["closed-issue-enforcement-sc"]=""
+EXPECTED_SKILLS["spec-auditor-body-preservation"]=""
+EXPECTED_SKILLS["cleanup-body-modification-warning"]=""
+EXPECTED_SKILLS["close-body-preservation"]=""
+EXPECTED_SKILLS["all-body-modification-safeguards"]=""
+EXPECTED_SKILLS["critical-rules-body-erasure"]=""
 
 RESULTS_FILE="$LOGDIR/results.md"
 
@@ -1535,6 +1551,93 @@ if [ "$CIV_SC_VERIFY" -ge 1 ] && [ "$CIV_DOWNGRADE" -ge 1 ]; then
 else
     echo "  closed-issue-verification enforcement SC verification: MISSING (sc_verify=$CIV_SC_VERIFY, downgrade=$CIV_DOWNGRADE)"
     echo "- **closed-issue-verification enforcement SC verification:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Body-preservation safeguard in spec-auditor SKILL.md
+AUDITOR_FILE="$PROJECT_DIR/.opencode/skills/spec-auditor/SKILL.md"
+BODY_PRESERVATION_AUDITOR=$(grep -c "body.length.*80%\|body.length >= 0.8\|new body length.*80%.*original\|preserve.*original\|80% of original body\|0.8 \* len\|erasure risk" "$AUDITOR_FILE" 2>/dev/null || echo "0")
+if [ "$BODY_PRESERVATION_AUDITOR" -ge 1 ]; then
+    echo "  spec-auditor body-preservation safeguard: FOUND"
+    echo "- **spec-auditor body-preservation safeguard:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  spec-auditor body-preservation safeguard: MISSING"
+    echo "- **spec-auditor body-preservation safeguard:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Body-modification warning in cleanup.md (ALL body modifications, not just closing)
+CLEANUP_FILE="$PROJECT_DIR/.opencode/skills/git-workflow/tasks/cleanup.md"
+CLEANUP_BODY_WARN=$(grep -c "NEVER replace.*body.*status summary\|body erasure\|body.erasure\|body-preservation\|preserve.*original\|content erasure\|80%.*length" "$CLEANUP_FILE" 2>/dev/null || echo "0")
+if [ "$CLEANUP_BODY_WARN" -ge 1 ]; then
+    echo "  cleanup.md body-modification warning: FOUND"
+    echo "- **cleanup.md body-modification warning:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  cleanup.md body-modification warning: MISSING"
+    echo "- **cleanup.md body-modification warning:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Body-preservation safeguard in close.md
+CLOSE_FILE="$PROJECT_DIR/.opencode/skills/issue-operations/tasks/close.md"
+CLOSE_BODY_PRESERVE=$(grep -c "body.*preserve.*original\|preserve.*original content\|body-preservation\|NEVER replace.*body" "$CLOSE_FILE" 2>/dev/null || echo "0")
+if [ "$CLOSE_BODY_PRESERVE" -ge 1 ]; then
+    echo "  close.md body-preservation safeguard: FOUND"
+    echo "- **close.md body-preservation safeguard:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  close.md body-preservation safeguard: MISSING"
+    echo "- **close.md body-preservation safeguard:** MISSING" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# All body-modification call sites have body-preservation safeguards
+# Check: verify-sub-issues, spec-to-plan-cascade, sre-runbook/track
+VERIFY_SUB_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/tasks/verify-sub-issues.md"
+CASCADE_FILE="$PROJECT_DIR/.opencode/skills/approval-gate/tasks/verify-authorization/spec-to-plan-cascade.md"
+TRACK_FILE="$PROJECT_DIR/.opencode/skills/sre-runbook/tasks/track.md"
+
+VERIFY_SUB_BODY=$(grep -c "body.*preserve\|preserve.*original\|body-preservation\|NEVER replace.*body" "$VERIFY_SUB_FILE" 2>/dev/null || echo "0")
+CASCADE_BODY=$(grep -c "body.*preserve\|preserve.*original\|body-preservation\|NEVER replace.*body" "$CASCADE_FILE" 2>/dev/null || echo "0")
+TRACK_BODY=$(grep -c "body.*preserve\|preserve.*original\|body-preservation\|NEVER replace.*body" "$TRACK_FILE" 2>/dev/null || echo "0")
+
+ALL_SITES_PASS=true
+SITES_MISSING=""
+if [ "$VERIFY_SUB_BODY" -lt 1 ]; then
+    ALL_SITES_PASS=false
+    SITES_MISSING="$SITES_MISSING verify-sub-issues"
+fi
+if [ "$CASCADE_BODY" -lt 1 ]; then
+    ALL_SITES_PASS=false
+    SITES_MISSING="$SITES_MISSING spec-to-plan-cascade"
+fi
+if [ "$TRACK_BODY" -lt 1 ]; then
+    ALL_SITES_PASS=false
+    SITES_MISSING="$SITES_MISSING sre-runbook/track"
+fi
+
+if [ "$ALL_SITES_PASS" = true ]; then
+    echo "  all body-modification call sites have safeguards: FOUND"
+    echo "- **all body-modification call sites have safeguards:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  all body-modification call sites have safeguards: MISSING ($SITES_MISSING)"
+    echo "- **all body-modification call sites have safeguards:** MISSING ($SITES_MISSING)" >> "$RESULTS_FILE"
+    GUIDELINE_PASS=false
+    OVERALL_PASS=false
+fi
+
+# Body erasure critical violation in 000-critical-rules.md
+CRITICAL_RULES_FILE="$PROJECT_DIR/.opencode/guidelines/000-critical-rules.md"
+BODY_ERASURE_CV=$(grep -c "body.erasure\|Issue Body Erasure\|body-preservation\|body preservation\|NEVER replace.*issue body\|verify.*new body.*80%" "$CRITICAL_RULES_FILE" 2>/dev/null || echo "0")
+if [ "$BODY_ERASURE_CV" -ge 1 ]; then
+    echo "  000-critical-rules.md body erasure violation: FOUND"
+    echo "- **000-critical-rules.md body erasure violation:** FOUND" >> "$RESULTS_FILE"
+else
+    echo "  000-critical-rules.md body erasure violation: MISSING"
+    echo "- **000-critical-rules.md body erasure violation:** MISSING" >> "$RESULTS_FILE"
     GUIDELINE_PASS=false
     OVERALL_PASS=false
 fi

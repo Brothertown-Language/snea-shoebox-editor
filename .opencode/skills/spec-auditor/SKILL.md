@@ -457,6 +457,25 @@ When auditing a plan, runbook, process flow, checklist, or reference document, u
 
 **Skipping the orchestrator is a CRITICAL GUIDELINE VIOLATION.**
 
+## Body-Preservation Safeguard (CRITICAL)
+
+**⚠️ CRITICAL: Before any `github_issue_write(method=update, body=...)` call in this skill, the agent MUST verify that the new body preserves the original issue content. Issue bodies MUST NEVER be replaced with a shorter summary, status update, or abbreviated version.**
+
+### Verification Procedure
+
+Before applying any auto-fix that updates an issue body via `github_issue_write(method=update, body=...)`:
+
+1. Read the current issue body via `github_issue_read(method=get)`
+2. Compare the length of the new body against the original body
+3. If `len(new_body) < 0.8 * len(original_body)`: HALT and report an erasure risk — the new body is less than 80% of the original length, suggesting content was lost
+4. Only proceed if the new body is at least 80% of the original body length
+
+### Rationale
+
+Bug #1215 documented a case where post-merge cleanup replaced an entire issue body with a short status summary, erasing all spec content. The 80% threshold catches accidental erasure while allowing legitimate edits (adding STATUS headers, fixing typos, inlining cross-references).
+
+**This safeguard applies to ALL body-modification workflows, not just spec-auditor.** See `000-critical-rules.md` → "Critical Violation: Issue Body Erasure" for the project-wide rule.
+
 ## Scope Boundaries
 
 - Read-only analysis of GitHub Issues, local files, or URLs, plus auto-fix of safe findings

@@ -1013,6 +1013,21 @@ Verifying live state against a specification requires exact match. Any deviation
 
 **Authority:** `src/security/pre_submission_scan.py`, `src/security/file_read_blocklist.py`, `session-enforcement.ts` → `redactSecrets()`
 
+## Critical Violation: Issue Body Erasure — Replacing Issue Body with Shorter Content
+
+**⚠️ Replacing an issue body with a shorter summary, status update, or abbreviated version is a CRITICAL GUIDELINE VIOLATION.** Bug #1215 documented a case where post-merge cleanup replaced an entire issue body with a short closing summary, erasing all spec/plan content.
+
+- 🚫 FORBIDDEN: Replacing an issue body with a status summary, closing statement, or abbreviated content
+- 🚫 FORBIDDEN: Using `github_issue_write(method=update, body=...)` where `len(new_body) < 0.8 * len(original_body)` — this indicates content erasure
+- 🚫 FORBIDDEN: Overwriting issue bodies during cleanup, closing, or auto-fix workflows without verifying content preservation
+- ✅ REQUIRED: Before any `github_issue_write(method=update, body=...)` call, read the current body via `github_issue_read(method=get)` and verify `len(new_body) >= 0.8 * len(original_body)` — if not, HALT and report the erasure risk
+- ✅ REQUIRED: Status updates and closing comments MUST be added as separate comments (`github_add_issue_comment`), NOT written into the issue body
+- ✅ REQUIRED: The only safe body modifications are: adding STATUS headers, fixing typos, inlining cross-references, and adding boilerplate elements — all of which ADD content or make minor mechanical changes without removing substantial original content
+
+**This safeguard applies to ALL body-modification workflows** including spec-auditor auto-fixes, post-merge cleanup, sub-issue creation, and any other `github_issue_write(method=update, body=...)` call site. See individual skill task files for workflow-specific body-preservation safeguards.
+
+**Authority:** Bug #1215; spec-auditor SKILL.md → Body-Preservation Safeguard section; cleanup.md → Archive Workflow body-preservation warning; close.md → Step 3 body-preservation safeguard
+
 ## Sub-Agent Extraction Pattern
 
 All skill task dispatches follow a sub-agent-first paradigm. The main agent is a pure orchestrator that never loads task files directly — it dispatches every task via `task(subagent_type="general")` and receives compact result contracts. Each SKILL.md contains a "Sub-Agent Tasks" section with word-count context, result contract schemas, and dispatch context schemas. The main agent loads only SKILL.md files and reads compact result contracts (≈100-500 words), never loading task files directly.

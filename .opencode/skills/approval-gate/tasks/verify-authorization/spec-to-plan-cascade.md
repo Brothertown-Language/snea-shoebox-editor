@@ -84,6 +84,8 @@ elif not plan_issues:
 - The spec has been revised — existing revocation rules apply; cascade approval is revoked per Step 6 "Spec Revision Revocation Detection"
 - The plan does not faithfully implement the spec — `plan-fidelity-auditor` catches this during implementation review
 
+**⚠️ Body-Preservation Safeguard:** This task only updates labels (no `body=` parameter in `github_issue_write` calls). Status updates use `github_add_issue_comment`. If any future modification were to use `github_issue_write(method=update, body=...)`, it MUST verify that the new body preserves all original content (len(new_body) >= 0.8 * len(original_body)). See `000-critical-rules.md` → "Critical Violation: Issue Body Erasure" for the project-wide rule.
+
 ## 5b.4 Edge Cases
 
 | Edge Case | Handling |

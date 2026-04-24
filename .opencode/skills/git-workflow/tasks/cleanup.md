@@ -930,6 +930,17 @@ Archive a spec **immediately** after the final phase is approved and the PR is m
 
 ⚠️ **CRITICAL:** NEVER edit the issue body when closing. Adding `STATUS: completed` or `COMPLETED: YYYY-MM-DD` to the body destroys history. Use comments instead.
 
+**⚠️ CRITICAL: Issue Body Erasure Prevention — Body-Preservation Safeguard**
+
+This prohibition extends beyond closing to ALL body modifications in this workflow:
+
+- **NEVER replace an issue body with a status summary.** A short status update does NOT substitute for the full spec/plan body.
+- **NEVER overwrite an issue body with abbreviated content.** If `github_issue_write(method=update, body=...)` is called, verify that `len(new_body) >= 0.8 * len(original_body)`. If the new body is less than 80% of the original length, HALT — this indicates content erasure.
+- **Status updates MUST be added as comments**, not written into the body.
+- **The only safe body modifications** are: adding STATUS headers, fixing typos, inlining cross-references, and adding boilerplate elements — all of which ADD content or make minor mechanical changes without removing substantial original content.
+
+**Bug #1215 root cause:** Post-merge cleanup replaced an entire issue body with a short closing summary, erasing all spec content. This safeguard prevents recurrence.
+
 ## Issue Closure Timing
 
 **Issues are closed ONLY AFTER the PR is merged — NEVER before.**

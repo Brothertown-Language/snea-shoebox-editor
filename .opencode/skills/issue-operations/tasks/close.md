@@ -32,6 +32,8 @@ Invoke `verify-merge` task to confirm PR is actually merged before closing any i
 
 ### Step 3: Close Issue (Platform Routing)
 
+**⚠️ Body-Preservation Safeguard (CRITICAL):** If `github_issue_write(method=update, body=...)` is used to close an issue, the body parameter MUST preserve all original content. NEVER replace an issue body with a shortened status summary or closing comment. The 80% length threshold applies: if `len(new_body) < 0.8 * len(original_body)`, HALT — this indicates content erasure. Status updates and closing comments MUST be added as separate comments, not written into the body.
+
 **GitHub platform:**
 ```python
 github_issue_write(
