@@ -193,7 +193,7 @@ ______________________________________________________________________
 
 **Core idea:** Don't build features or abstractions until needed.
 
-**Enforcement:** Not enforced as a standalone rule. Related: `050-scope-autonomy.md` "No scope expansion" and AGENTS.md "Scope Creep — NEVER Do Things Outside the Spec."
+**Enforcement:** Not enforced as a standalone rule. Related: `050-scope-autonomy.md` "No scope expansion" and `.opencode/AGENTS.md` "Scope Creep — NEVER Do Things Outside the Spec."
 
 **Apply strongly when:**
 
@@ -391,7 +391,7 @@ ______________________________________________________________________
 
 **Core idea:** Keep PRs small. Keep commits atomic. Make rollback trivial.
 
-**Enforcement:** Not enforced as a standalone rule. Related: git workflow (small commits, squash), AGENTS.md scope creep prohibition.
+**Enforcement:** Not enforced as a standalone rule. Related: git workflow (small commits, squash), `.opencode/AGENTS.md` scope creep prohibition.
 
 **Apply strongly when:**
 

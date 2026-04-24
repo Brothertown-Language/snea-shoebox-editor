@@ -47,7 +47,7 @@ check_python_version_pinned() {
 
 check_no_old_references() {
     local matches
-    matches=$(grep -rn "uv run python .opencode" .opencode/guidelines/ AGENTS.md .opencode/skills/ 2>/dev/null | grep -v "Do NOT use" || true)
+        matches=$(grep -rn "uv run python .opencode" .opencode/guidelines/ .opencode/AGENTS.md .opencode/skills/ 2>/dev/null | grep -v "Do NOT use" || true)
     if [ -n "$matches" ]; then
         echo "FAIL: Old 'uv run python .opencode' references found:"
         echo "$matches"

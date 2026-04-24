@@ -10,7 +10,7 @@ Tool usage compliance rules for operating inside git worktrees.
 | Relative path from project root | `uv run --directory .worktrees/$BRANCH_NAME pytest` | YES |
 | `cd .worktrees/$BRANCH_NAME && ...` | `cd .worktrees/xyz && uv sync` | NO — zero tolerance |
 
-Per AGENTS.md and `060-tool-usage.md`, `cd` commands are a zero-tolerance violation.
+Per .opencode/AGENTS.md and `060-tool-usage.md`, `cd` commands are a zero-tolerance violation.
 
 ## File Operation Tools (filePath parameter) — CRITICAL
 
