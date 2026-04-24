@@ -120,15 +120,9 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | "Verification passed" | Verify evidence artifacts exist | `glob(pattern="./tmp/verification-*")` | MISSING-ELEMENT |
 | "Checklist completed" | Verify branch readiness | `git status --porcelain` and test execution | VERIFICATION-GAP |
 
-**Evidence artifact:** Git state and file existence checks confirming enforcement accuracy.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
 
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Auth context lost | STRUCTURE-VIOLATION | conditional | Re-read from approval-gate |
-| Uncommitted changes | VERIFICATION-GAP | conditional | Commit before proceeding |
-| No verification evidence | MISSING-ELEMENT | conditional | Run verification before review-prep |
-| Checklist not completed | VERIFICATION-GAP | conditional | Run checklist before review-prep |## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Work state verification: see `enforcement/work-state-verification.md`
+## Enforcement References
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation and finding classification: see `enforcement/result-validation.md`
+- Work state verification: see `enforcement/work-state-verification.md`

@@ -223,18 +223,7 @@ else:
     DOWNGRADE result to: NOT_IMPLEMENTED_DESPITE_CLOSURE
 ```
 
-**Evidence requirement (ZERO TOLERANCE):** Each success criterion MUST produce a tool-call artifact (`read`, `grep`, `srclight_get_symbol`, `github_pull_request_read`, or test execution output) as evidence. Stating "I checked" without a tool call is a CRITICAL GUIDELINE VIOLATION per `065-verification-honesty.md`.
-
-**Downgrade rules:**
-
-| SC Verification Result | Original Result | Downgraded Result |
-|------------------------|-----------------|-------------------|
-| All SCs pass | VERIFIED_CLOSED | VERIFIED_CLOSED (no change) |
-| Some SCs pass | VERIFIED_CLOSED | PARTIALLY_IMPLEMENTED |
-| No SCs pass | VERIFIED_CLOSED | NOT_IMPLEMENTED_DESPITE_CLOSURE |
-| No SCs found | VERIFIED_CLOSED | VERIFIED_CLOSED (note: SC_VERIFICATION_NOT_PERFORMED) |
-
-**🚫 It is a CRITICAL VIOLATION to report a downgraded result as VERIFIED_CLOSED.** If any SC fails, the result MUST be downgraded. The default comparison mode is `exact` — each criterion must pass character-for-character. Use `semantic` comparison only for code behavior where multiple implementations achieve the same spec intent, and justify each semantic comparison explicitly.
+Evidence requirements and downgrade rules: see `enforcement/closed-issue-verification.md` §Success Criteria Verification and §Downgrade Path
 
 ### Step 8: Transitive Graph Traversal (MANDATORY)
 
@@ -301,6 +290,8 @@ for adj_issue in adjacent:
 
 #### 8.3 Graph Verification Findings
 
+Classification tiers and actions (auto-fix, conditional, flag-for-review): see `enforcement/adversarial-verification.md`
+
 | Finding | Problem Class | Classification | Action |
 |---------|---------------|----------------|--------|
 | Open sub-issue on closed parent where PR covers deliverables | VERIFICATION-GAP | auto-close | Auto-close sub-issue with comment referencing PR via reconcile-issue-graph |
@@ -345,6 +336,8 @@ Overall: CONSISTENT / HAS_FLAGS
 | `ACTION_TAKEN` | Reconciliation took action on one or more findings (auto-closed or reopened tickets) | Process reconcile result for updated ticket states |
 
 ## Finding Classification
+
+Classification tiers (auto-fix, conditional, flag-for-review) and evidence format: see `enforcement/adversarial-verification.md`
 
 | Finding | Problem Class | Classification | Action |
 |--------|---------------|----------------|--------|
@@ -391,9 +384,12 @@ This task now performs transitive graph traversal (Step 8). Callers should handl
 - `approval-gate/tasks/verify-already-implemented.md`: Pre-autoclose sub-issue verification
 - `approval-gate/tasks/screen-issue.md` Gate 2: SC verification gate for already-implemented classification
 - `git-workflow/tasks/cleanup.md`: Pre-closure sub-issue verification gate
-- `010-approval-gate.md §Assuming Closed Issues Are Verified`: Graph traversal prevents this violation## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Scope parsing: see `enforcement/scope-parsing.md`
--  Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
--  Closed-issue verification: see `enforcement/closed-issue-verification.md`
--  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+- `010-approval-gate.md §Assuming Closed Issues Are Verified`: Graph traversal prevents this violation
+
+## Enforcement References
+
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Scope parsing: see `enforcement/scope-parsing.md`
+- Auto-dispatch routing: see `enforcement/auto-dispatch-table.md`
+- Closed-issue verification: see `enforcement/closed-issue-verification.md`
+- Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

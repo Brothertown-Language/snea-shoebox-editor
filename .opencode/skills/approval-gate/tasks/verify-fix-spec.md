@@ -66,45 +66,9 @@ Examine sub-issues for:
 
 ### Closed Bug Report Verification
 
-**🚫 CRITICAL: A closed bug report does NOT mean the fix is already resolved.** Before skipping verification for a closed bug report, verify that the closure is legitimate:
+**🚫 CRITICAL: A closed bug report does NOT mean the fix is already resolved.** Before skipping verification for a closed bug report, verify that the closure is legitimate per the closed-issue verification module.
 
-```
-if bug_report.state == "closed":
-    # Do NOT assume closed = resolved. Verify closure reason.
-
-    # Step 1: Check closure reason
-    state_reason = bug_report.get("state_reason", "")
-
-    if state_reason == "not_planned":
-        # Bug was intentionally not fixed — may still need a fix spec
-        # Do NOT skip; the bug may need to be reopened or a new fix spec created
-        REPORT: "Bug closed as not_planned — fix spec still needed if bug is valid"
-        PROCEED to Step 2 (fix spec verification)
-
-    elif state_reason == "completed":
-        # Verify a merged PR exists that fixes this bug
-        prs = github_search_pull_requests(query=f"Fixes #{bug_issue_number} repo:{<github.owner>}/{<github.repo>}")
-        merged_pr_found = False
-        for pr in prs:
-            pr_detail = github_pull_request_read(method="get", owner=<github.owner>, repo=<github.repo>, pullNumber=pr["number"])
-            if pr_detail.get("merged_at") is not None:
-                merged_pr_found = True
-                break
-
-        if merged_pr_found:
-            # Bug was closed via merged PR — legitimate closure
-            # Still check for fix spec sub-issue (it may exist from before the fix)
-            PROCEED to Step 2 (fix spec verification)
-        else:
-            # Closed as "completed" but no merged PR — suspicious closure
-            REPORT: "Bug closed as completed but no merged PR found — verification gap"
-            PROCEED to Step 2 (fix spec may still be needed)
-
-    else:
-        # State reason unclear
-        REPORT: "Bug closed without clear reason — verification gap"
-        PROCEED to Step 2 (fix spec verification)
-```
+- See `enforcement/closed-issue-verification.md` for the complete closed-state verification procedure, state_reason classification, and merged PR evidence requirements
 
 ## Cross-References
 
@@ -117,62 +81,14 @@ if bug_report.state == "closed":
 
 **Before trusting any fix spec claim, verify it against actual GitHub state.** Do NOT rely on cached sub-issue lists, assumed labels, or claimed STATUS values.
 
-### Verify Fix Spec Exists (Not Just Claimed)
+### Verification Checklist
 
-```
-sub_issues = github_issue_read(method="get_sub_issues", issue_number=N)
+- **Fix spec existence:** Verify each sub-issue exists via `github_issue_read(method=get)` — not just claimed to exist. 404 → MISSING-TRACEABILITY (flag-for-review).
+- **Label and STATUS maturity:** Verify labels and STATUS markers match content maturity. Stale labels → STRUCTURE-VIOLATION (auto-fix). Overstated STATUS → CONFLICTING (flag-for-review).
+- **Premature closure:** Verify closed sub-issues have merged PR evidence. No merged PR → VERIFICATION-GAP (flag-for-review).
 
-For each sub-issue returned:
-  - Verify it actually exists by reading it:
-    child = github_issue_read(method="get", issue_number=sub_issue_number)
-  - Verify it is a fix spec (not a related but non-fix issue):
-    - Title starts with "[SPEC] Fix:" OR
-    - Has "spec" label OR
-    - Body contains fix spec content
-  - If sub_issue_number returns 404 → MISSING-TRACEABILITY (flag-for-review)
-```
+## Enforcement References
 
-**Evidence artifact:** `github_issue_read(method=get_sub_issues)` and `github_issue_read(method=get)` for each sub-issue.
-
-### Verify Fix Spec Labels and STATUS Match Maturity
-
-```
-For each verified fix spec sub-issue:
-  labels = github_issue_read(method=get_labels, issue_number=sub_issue_number)
-  body = github_issue_read(method=get, issue_number=sub_issue_number)
-  
-  - If has "needs-approval" label but content is DETAILED or COMPLETE → STRUCTURE-VIOLATION
-    (auto-fix: note label is stale, recommend removal after auth)
-  - If STATUS says BRAINSTORM/DRAFT but content is DETAILED/COMPLETE → STRUCTURE-VIOLATION
-    (auto-fix: update STATUS marker per ground-truth maturity classification)
-  - If STATUS says COMPLETE but content is BRAINSTORM/DRAFT → CONFLICTING
-    (flag-for-review: may indicate tracking intent, developer must judge)
-```
-
-**Evidence artifact:** Label list and body content for each fix spec sub-issue.
-
-### Verify Fix Spec Is Not Closed Prematurely
-
-```
-For each fix spec sub-issue:
-  child = github_issue_read(method=get, issue_number=sub_issue_number)
-  
-  - If child state is "closed" → verify a merged PR exists
-  - Search for PRs referencing the sub-issue number
-  - If closed with no merged PR → VERIFICATION-GAP (flag-for-review: premature closure)
-```
-
-**Evidence artifact:** Issue state response and PR search results.
-
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Fix spec sub-issue 404 | MISSING-TRACEABILITY | flag-for-review | Developer must resolve missing issue |
-| Fix spec labels stale | STRUCTURE-VIOLATION | auto-fix | Note stale label, recommend removal |
-| STATUS mismatch (conservative) | STRUCTURE-VIOLATION | auto-fix | Update STATUS to match content |
-| STATUS mismatch (overstated) | CONFLICTING | flag-for-review | Developer must judge intent |
-| Premature closure | VERIFICATION-GAP | flag-for-review | Report — no merged PR found |## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Closed-issue verification: see `enforcement/closed-issue-verification.md`
--  Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Closed-issue verification procedure: see `enforcement/closed-issue-verification.md`
+- Sub-issue graph traversal: see `enforcement/sub-issue-graph-traversal.md`

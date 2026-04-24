@@ -66,14 +66,9 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | "Checklist completed" | Verify branch readiness | `git status --porcelain` → check clean | VERIFICATION-GAP |
 | "Compare URL generated" | Verify URL exists in context | Check chat output for URL | MISSING-ELEMENT |
 
-**Evidence artifact:** Git command output confirming each claim.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
 
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Unpushed commits | VERIFICATION-GAP | auto-fix | Push immediately |
-| Verification not invoked | MISSING-ELEMENT | conditional | Invoke verification-now |
-| Working tree dirty | VERIFICATION-GAP | conditional | Commit remaining changes |
-| No compare URL | MISSING-ELEMENT | auto-fix | Generate URL now |## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+## Enforcement References
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation and finding classification: see `enforcement/result-validation.md`
+- Work state verification: see `enforcement/work-state-verification.md`

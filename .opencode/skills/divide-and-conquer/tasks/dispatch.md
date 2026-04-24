@@ -168,8 +168,9 @@ Sub-agent reports bug as finding (read-only), HALTs implementation for its sub-t
 | "worktree.path passed" | Verify worktree path in dispatch context | Check dispatch prompt for worktree.path | STRUCTURE-VIOLATION |
 | "Sub-agent stayed in worktree" | Verify sub-agent didn't modify main repo | `git -C <main-repo> status --porcelain` | CONFLICTING |
 
-**Evidence artifact:** Result contract presence and main repo cleanliness check.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
+
 ## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Result validation: see `enforcement/result-validation.md`
--  Overflow signal: see `enforcement/overflow-signal.md`
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation: see `enforcement/result-validation.md`
+- Overflow signal: see `enforcement/overflow-signal.md`

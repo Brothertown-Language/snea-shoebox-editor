@@ -95,49 +95,13 @@ URL is ALWAYS last per `000-critical-rules.md`.
 
 **Before claiming completion, verify that all completion claims are backed by evidence — not asserted without verification.**
 
-### Verify Authorization Result Comment Was Actually Posted
+### Verification Checklist
 
-```
-comments = github_issue_read(method="get_comments", issue_number=N)
+- **Authorization result comment posted:** Search issue comments via `github_issue_read(method=get_comments)` for the authorization result (byline pattern). If missing → MISSING-ELEMENT (auto-fix: post now).
+- **Label state matches authorization:** Check labels via `github_issue_read(method=get_labels)`. If `needs-approval` present AND authorization granted → STRUCTURE-VIOLATION (auto-fix: remove label). If `needs-approval` absent AND no authorization found → VERIFICATION-GAP (flag-for-review).
+- **Status report matches workflow outcome:** If completion claims "approved" but no authorization comment found → CONFLICTING (flag-for-review). If claims "blocked" but blocker issue is closed → VERIFICATION-GAP (flag-for-review).
 
-Search comments for authorization result (byline pattern):
-  - If comment found with authorization result → VERIFIED
-  - If comment NOT found → MISSING-ELEMENT (auto-fix: post the comment now)
-```
+## Enforcement References
 
-**Evidence artifact:** `github_issue_read(method=get_comments)` response showing whether the authorization result comment exists.
-
-### Verify Label State Matches Actual Authorization State
-
-```
-labels = github_issue_read(method="get_labels", issue_number=N)
-
-- If needs-approval label present AND authorization was granted → STRUCTURE-VIOLATION (auto-fix: remove label)
-- If needs-approval label absent AND no authorization was found → VERIFICATION-GAP (flag-for-review: label may have been removed prematurely)
-```
-
-**Evidence artifact:** Label list from GitHub MCP showing current label state.
-
-### Verify Status Report Matches Actual Workflow Outcome
-
-```
-If completion claims "approved" but:
-  - No authorization comment found → CONFLICTING (flag-for-review)
-  - Authorization comment from bot/agent → CONFLICTING (flag-for-review)
-  
-If completion claims "blocked" but:
-  - Blocker issue is actually closed → VERIFICATION-GAP (flag-for-review: blocker may be resolved)
-```
-
-**Evidence artifact:** Comment search results and label state confirming the claimed outcome.
-
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Authorization comment missing from issue | MISSING-ELEMENT | auto-fix | Post the comment immediately |
-| Label state inconsistent with auth result | STRUCTURE-VIOLATION | auto-fix | Correct label state |
-| Completion outcome contradicts evidence | CONFLICTING | flag-for-review | Report mismatch, developer must judge |
-| Format elements missing or misordered | STRUCTURE-VIOLATION | auto-fix | Fix before sending output |## Enforcement References
--  Evidence format + finding classification: see `enforcement/adversarial-verification.md`
--  Scope parsing: see `enforcement/scope-parsing.md`
+- Evidence format + finding classification: see `enforcement/adversarial-verification.md`
+- Scope parsing: see `enforcement/scope-parsing.md`

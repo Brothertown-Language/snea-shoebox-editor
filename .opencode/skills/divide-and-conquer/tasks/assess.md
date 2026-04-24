@@ -91,14 +91,9 @@ Co-authored with AI: <AgentName> (<ModelId>)
 | "Single sub-agent sufficient" | Verify file scope is limited to cohesive set | `git diff dev --name-only` → count files | CONFLICTING |
 | "Multi-sub-agent needed" | Verify task touches multiple independent areas | `srclight_get_dependents(symbol_name="target", transitive=true)` | VERIFICATION-GAP |
 
-**Evidence artifact:** Tool call results confirming assessment accuracy.
+**Evidence artifacts:** See enforcement/work-state-verification.md §Evidence Artifacts
 
-### Finding Classification
-
-| Finding | Problem Class | Classification | Action |
-|--------|---------------|----------------|--------|
-| Overflow risk unverified | VERIFICATION-GAP | conditional | Check actual context size |
-| Assessment contradicted by file scope | CONFLICTING | conditional | Re-assess with actual file list |## Enforcement References
--  Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
--  Result validation: see `enforcement/result-validation.md`
--  Overflow signal: see `enforcement/overflow-signal.md`
+## Enforcement References
+- Completion checkpoint protocol: see `enforcement/completion-checkpoint.md`
+- Result validation and finding classification: see `enforcement/result-validation.md`
+- Overflow signal: see `enforcement/overflow-signal.md`
