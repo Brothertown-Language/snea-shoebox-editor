@@ -338,11 +338,13 @@ class TestMatchAndCommitOperations(unittest.TestCase):
     def setUp(self):
         from src.database.models.core import Language, Record, Source
         from src.database.models.identity import User
-        from src.database.models.search import SearchEntry
+        from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
         from src.database.models.workflow import EditHistory, MatchupQueue
 
         self.session = self.Session()
         # Clean all test data
+        self.session.query(HeadwordSearchEntry).delete()
+        self.session.query(GlossSearchEntry).delete()
         self.session.query(SearchEntry).delete()
         self.session.query(EditHistory).delete()
         self.session.query(MatchupQueue).delete()
@@ -1040,7 +1042,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         rec = self._add_record("esh", "\\lx esh\n\\va ēsh\n\\se eshkw\n\\cf nane\n\\ve fire\n\\ps n\n\\ge fire")
         with self._patch_session():
             count = UploadService.populate_search_entries([rec.id])
-        self.assertEqual(count, 5)  # lx + va + se + cf + ve
+        self.assertEqual(count, 8)  # 5 SearchEntry + 2 HeadwordSearchEntry + 1 GlossSearchEntry
         from src.database.models.search import SearchEntry
 
         entries = self.session.query(SearchEntry).filter_by(record_id=rec.id).all()
@@ -1055,7 +1057,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         self.session.commit()
         with self._patch_session():
             count = UploadService.populate_search_entries([rec.id])
-        self.assertEqual(count, 1)
+        self.assertEqual(count, 3)  # 1 SearchEntry + 1 HeadwordSearchEntry + 1 GlossSearchEntry
         entries = self.session.query(SearchEntry).filter_by(record_id=rec.id).all()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].term, "esh")

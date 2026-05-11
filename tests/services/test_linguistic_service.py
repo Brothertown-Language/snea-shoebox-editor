@@ -286,7 +286,7 @@ class TestLinguisticService(unittest.TestCase):
             record_id = LinguisticService.create_record(**fields)
 
         self.assertIsNotNone(record_id)
-        self.session.expire_all()
+        self.session.expunge_all()
         db_record = self.session.query(Record).filter_by(id=record_id).first()
         self.assertEqual(db_record.lx, "test")
 
@@ -301,7 +301,7 @@ class TestLinguisticService(unittest.TestCase):
             )
 
         self.assertTrue(success)
-        self.session.expire_all()
+        self.session.expunge_all()
         db_record = self.session.query(Record).filter_by(id=record.id).first()
         self.assertEqual(db_record.lx, "new")
         self.assertEqual(db_record.status, "approved")
@@ -354,7 +354,7 @@ class TestLinguisticService(unittest.TestCase):
             success = LinguisticService.soft_delete_record(record.id, "editor@example.com")
 
         self.assertTrue(success)
-        self.session.expire_all()
+        self.session.expunge_all()
         db_record = self.session.query(Record).filter_by(id=record.id).first()
         self.assertTrue(db_record.is_deleted)
 
@@ -363,7 +363,7 @@ class TestLinguisticService(unittest.TestCase):
             success = LinguisticService.update_source(self.source_id, name="New Name")
 
         self.assertTrue(success)
-        self.session.expire_all()
+        self.session.expunge_all()
         db_source = self.session.query(Source).filter_by(id=self.source_id).first()
         self.assertEqual(db_source.name, "New Name")
 
@@ -381,8 +381,9 @@ class TestLinguisticService(unittest.TestCase):
             count = LinguisticService.reassign_records(self.source_id, source_b_id)
 
         self.assertEqual(count, 1)
-        self.session.expire_all()
-        db_record = self.session.query(Record).filter_by(id=r1.id).first()
+        r1_id = r1.id
+        self.session.expunge_all()
+        db_record = self.session.query(Record).filter_by(id=r1_id).first()
         self.assertEqual(db_record.source_id, source_b_id)
 
     def test_delete_source(self):
@@ -395,7 +396,7 @@ class TestLinguisticService(unittest.TestCase):
         with self._patch_session():
             success = LinguisticService.delete_source(source_c_id)
         self.assertTrue(success)
-        self.session.expire_all()
+        self.session.expunge_all()
         self.assertIsNone(self.session.query(Source).filter_by(id=source_c_id).first())
 
         # Cannot delete source with records
@@ -406,7 +407,7 @@ class TestLinguisticService(unittest.TestCase):
         with self._patch_session():
             success = LinguisticService.delete_source(self.source_id)
         self.assertFalse(success)
-        self.session.expire_all()
+        self.session.expunge_all()
         self.assertIsNotNone(self.session.query(Source).filter_by(id=self.source_id).first())
 
     def _patch_stats_session(self):
@@ -476,7 +477,7 @@ class TestLinguisticService(unittest.TestCase):
             result = LinguisticService.hard_delete_record(record.id)
 
         self.assertTrue(result)
-        self.session.expire_all()
+        self.session.expunge_all()
         self.assertIsNone(self.session.query(Record).filter_by(id=record.id).first())
         self.assertEqual(self.session.query(SearchEntry).filter_by(record_id=record.id).count(), 0)
         self.assertEqual(self.session.query(HeadwordSearchEntry).filter_by(record_id=record.id).count(), 0)
@@ -510,7 +511,7 @@ class TestLinguisticService(unittest.TestCase):
             result = LinguisticService.hard_delete_record(record.id)
 
         self.assertTrue(result)
-        self.session.expire_all()
+        self.session.expunge_all()
         self.assertIsNone(self.session.query(Record).filter_by(id=record.id).first())
         self.assertEqual(self.session.query(EditHistory).filter_by(record_id=record.id).count(), 0)
 
@@ -539,7 +540,7 @@ class TestLinguisticService(unittest.TestCase):
             result = LinguisticService.hard_delete_record(record.id)
 
         self.assertTrue(result)
-        self.session.expire_all()
+        self.session.expunge_all()
         self.assertIsNone(self.session.query(Record).filter_by(id=record.id).first())
         self.assertEqual(self.session.query(HeadwordSearchEntry).filter_by(record_id=record.id).count(), 0)
         self.assertEqual(self.session.query(GlossSearchEntry).filter_by(record_id=record.id).count(), 0)
@@ -559,18 +560,21 @@ class TestLinguisticService(unittest.TestCase):
             lx="word",
             mdf_data="\\lx word",
             suggested_record_id=record2.id,
+            user_email="editor@example.com",
+            source_id=self.source_id,
             batch_id="test-batch",
             status="pending",
         )
         self.session.add(queue_entry)
         self.session.commit()
+        queue_id = queue_entry.id
 
         with self._patch_session():
             result = LinguisticService.hard_delete_record(record2.id)
 
         self.assertTrue(result)
-        self.session.expire_all()
+        self.session.expunge_all()
         self.assertIsNone(self.session.query(Record).filter_by(id=record2.id).first())
-        updated_queue = self.session.query(MatchupQueue).filter_by(id=queue_entry.id).first()
+        updated_queue = self.session.query(MatchupQueue).filter_by(id=queue_id).first()
         self.assertIsNotNone(updated_queue)
         self.assertIsNone(updated_queue.suggested_record_id)

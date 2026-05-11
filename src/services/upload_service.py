@@ -1804,13 +1804,6 @@ class UploadService:
                     norm = LinguisticService.generate_sort_lx(term)
                     session.add(GlossSearchEntry(record_id=rid, term=term, normalized_term=norm))
                     total += 1
-                # Insert va, se, cf, ve lists
-                for field in ("va", "se", "cf", "ve"):
-                    for val in entry.get(field, []):
-                        if val:
-                            norm = LinguisticService.generate_sort_lx(val)
-                            session.add(SearchEntry(record_id=rid, term=val, normalized_term=norm, entry_type=field))
-                            total += 1
 
             if not _provided_session:
                 session.commit()

@@ -904,6 +904,10 @@ class LinguisticService:
 
         with get_session() as session:
             try:
+                # 0. Check if record exists
+                if not session.get(Record, record_id):
+                    return False
+
                 # 1. Delete history first
                 session.query(EditHistory).filter(EditHistory.record_id == record_id).delete()
 
