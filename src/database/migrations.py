@@ -114,6 +114,11 @@ class MigrationManager:
             "_migrate_add_headword_entry_type_index_and_check",
             "Add entry_type index and CHECK constraint to headword_search_entries",
         ),
+        (
+            20260511000001,
+            "_migrate_dedup_search_entries",
+            "Deduplicate search_entries: keep one row per (record_id, term, entry_type), add unique index",
+        ),
     ]
 
     def __init__(self, engine):
@@ -893,6 +898,23 @@ class MigrationManager:
             conn.execute(
                 text(
                     "CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_record_id ON gloss_search_entries (record_id);"
+                )
+            )
+            conn.commit()
+
+    def _migrate_dedup_search_entries(self):
+        """Migration 20260511000001: Deduplicate search_entries and add unique index."""
+        with self._engine.connect() as conn:
+            conn.execute(
+                text(
+                    "DELETE FROM search_entries WHERE id NOT IN "
+                    "(SELECT MIN(id) FROM search_entries GROUP BY record_id, term, entry_type);"
+                )
+            )
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_search_entries_record_term_type "
+                    "ON search_entries (record_id, term, entry_type);"
                 )
             )
             conn.commit()
