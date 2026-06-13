@@ -1,0 +1,42 @@
+auditor: auditor-qwen3.5
+model_family: qwen
+issue: 400
+audit_phase: spec_creation
+overall: PASS
+criteria:
+  - id: SC-1
+    verdict: PASS
+    finding: "Problem statement is clearly defined with user need from Issue #14, motivation explained (users need focused searches for primary entries only), and current search mode limitations documented. The MDF Structure Context section provides concrete examples of primary vs nested entries."
+  - id: SC-2
+    verdict: PASS
+    finding: "All 26 success criteria are measurable and testable. Each criterion has a verification method (behavioral test execution, structural inspection, semantic inspection) and deterministic expected outcomes (exact record counts, table existence, constraint enforcement). The Metadata Table explicitly declares evidence types per the DDL hierarchy."
+  - id: SC-3
+    verdict: PASS
+    finding: "Five phases are well-structured with clear boundaries: Phase 1 (Schema), Phase 2 (Indexing), Phase 3 (Migration), Phase 4 (Search), Phase 5 (UI + Integration). Each phase has interdependencies documented, TDD cycle summaries, and risk/blast radius assessments."
+  - id: SC-4
+    verdict: PASS
+    finding: "Steps reference real codebase artifacts: src/database/models/search.py (HeadwordSearchEntry, GlossSearchEntry models), src/database/models/core.py (Record relationships), src/services/upload_service.py (populate_search_entries), src/services/linguistic_service.py (search_records), src/frontend/pages/records.py (UI). Verified these files exist and contain the referenced symbols."
+  - id: SC-5
+    verdict: PASS
+    finding: "Dependencies section documents phase dependencies with hard dependency rationale. External dependencies limited to existing project stack (SQLAlchemy, Alembic, Streamlit, pytest). No external API or service dependencies introduced."
+  - id: SC-6
+    verdict: PASS
+    finding: "Concerns properly separated: schema (Phase 1), indexing logic (Phase 2), migration (Phase 3), search dispatch (Phase 4), UI (Phase 5). The two-table architecture (HeadwordSearchEntry, GlossSearchEntry) isolates new functionality without modifying existing SearchEntry table — preventing scope creep into Lexeme mode."
+  - id: SC-7
+    verdict: PASS
+    finding: "Edge Cases section covers 14 edge cases comprehensively: multiple va/ge at headword level, ge before lx, missing fields, empty search, special characters, nested entries, Unicode, and the xv marker boundary. Each edge case has explicit handling documented."
+  - id: SC-8
+    verdict: PASS
+    finding: "Risk Traceability section documents 7 risks (RISK-1 through RISK-7) with likelihood, impact, mitigations, and verifying SCs. Migration corruption risk mitigated by separate tables. State tracking bugs mitigated by unit tests. Strategy-dispatch pattern prevents SRP violation."
+  - id: SC-9
+    verdict: PASS
+    finding: "TDD Phases Overview section documents RED→GREEN→REFACTOR→COMMIT discipline for all 5 phases. Each phase has explicit test-first requirement (structural tests + behavioral VbC for Phase 1, indexing tests for Phase 2, etc.). The spec enforces behavioral TDD per 080-code-standards.md."
+  - id: SC-10
+    verdict: PASS
+    finding: "Spec is well-structured with consistent formatting. Verified: no STATUS markers present (forward-looking mandate respected), no bare #N references (all are full URLs to GitHub issues/PRs), Decision Ledger present (DEC-1 through DEC-5), Risk Traceability present, Interfaces section present (Database Models, Search Dispatch, Upload Indexing, UI State), Regression Invariants present (5 invariants), Revision Policy present. Plan/spec boundary respected — no implementation details beyond architectural decisions."
+cross_validation_notes: "Verified against live codebase: SearchEntry, HeadwordSearchEntry, and GlossSearchEntry classes exist in src/database/models/search.py with expected columns. Record model in src/database/models/core.py has headword_entries and gloss_entries relationships. No STATUS markers found in spec. All issue/PR references are full URLs. Spec follows forward-looking mandate (no status tracking dashboards, no plan-level detail in spec body)."
+evidence_artifacts:
+  - "src/database/models/search.py — SearchEntry, HeadwordSearchEntry, GlossSearchEntry classes verified"
+  - "src/database/models/core.py — Record.headword_entries, Record.gloss_entries relationships verified"
+  - "spec.md — No STATUS markers (grep confirmed)"
+  - "spec.md — All references are full URLs (no bare #N patterns found)"

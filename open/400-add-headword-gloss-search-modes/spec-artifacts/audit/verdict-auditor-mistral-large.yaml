@@ -1,0 +1,101 @@
+---
+audit_phase: spec_creation
+auditor_type: adversarial-audit
+family: mistral
+issue_number: 400
+generated_at: "2026-06-08T12:00:00Z"
+orchestrator_model: "ollama/mistral-large-3:675b-cloud"
+summary:
+  total_criteria: 10
+  pass: 10
+  fail: 0
+  blocked: 0
+  limited_evidence: 0
+per_criterion:
+  - criterion_id: "SC-1"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Problem statement and MDF Structure Context sections"
+    explanation: "The problem statement clearly articulates user need, motivation, and context. It references the original user request (#14) and provides a detailed MDF structure example to distinguish primary vs. nested entries."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-2"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Success Criteria section, Metadata Table"
+    explanation: "Success criteria are highly measurable and deterministic, with explicit evidence types and verification methods. Each criterion references a single-record test fixture for deterministic validation."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-3"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: TDD Phases Overview, Dependencies section"
+    explanation: "Phases are well-structured with clear boundaries, interdependencies, and risk assessments. Each phase includes a TDD cycle summary and is bound to specific pipeline steps."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-4"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Files Affected, Interfaces section"
+    explanation: "Steps are specific, actionable, and reference real codebase artifacts (e.g., `populate_search_entries()` in `src/services/upload_service.py`). The spec avoids vague instructions and ties every step to a concrete file or interface."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-5"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Dependencies section"
+    explanation: "Dependencies are correctly identified and scoped. The spec explicitly lists hard dependencies between phases and states that there are no external dependencies beyond the existing project stack."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-6"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Architecture Decision, Decision Ledger"
+    explanation: "Concerns are properly separated. The spec isolates Headword and Gloss search modes into dedicated tables and uses a strategy-dispatch pattern to enforce separation of concerns in the search logic."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-7"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Edge Cases section"
+    explanation: "Edge cases are comprehensively covered. The spec addresses scenarios like multiple `\\va` or `\\ge` at the headword level, missing fields, empty search terms, special characters, and Unicode."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-8"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: Risk Traceability section"
+    explanation: "Risk assessment is present and includes mitigations. The Risk Traceability section lists 7 risks with likelihood, impact, and mitigation strategies, each tied to verifying success criteria."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-9"
+    discovered: false
+    status: PASS
+    evidence: "Spec.md: TDD Phases Overview"
+    explanation: "The spec follows RED→GREEN→REFACTOR→COMMIT discipline. Each phase includes a TDD cycle summary with explicit RED (test first), GREEN (implement), REFACTOR, and COMMIT steps."
+    remediation: none
+    next_step: proceed
+  - criterion_id: "SC-10"
+    discovered: false
+    status: PASS
+    explanation: "The spec is well-structured with consistent formatting. It respects the plan/spec boundary by avoiding status markers and tracking dashboards. The spec is forward-looking, with all bare #N references replaced by full URLs."
+    evidence: "Spec.md: Decision Ledger, Interfaces, Regression Invariants, and Revision Policy sections"
+    remediation: none
+    next_step: proceed
+clean_room:
+  verified: true
+  violations_detected: []
+methodology_independence:
+  phases_followed:
+    - "A1: Input validation"
+    - "A2: Floor-not-ceiling criteria loading"
+    - "A3-A6: Evidence collection"
+    - "A7: Criterion discovery"
+    - "B1-B8: Per-criterion evaluation"
+    - "C1: Write verdict artifact to disk"
+    - "C2-C3: Return frugal contract"
+  criteria_loaded_floor: true
+  criteria_discovered: 0
+  criteria_evaluated: 10
+  discovery_pass_ran: true
+  semantic_depth_applied: true
