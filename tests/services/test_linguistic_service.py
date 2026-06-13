@@ -578,3 +578,209 @@ class TestLinguisticService(unittest.TestCase):
         updated_queue = self.session.query(MatchupQueue).filter_by(id=queue_id).first()
         self.assertIsNotNone(updated_queue)
         self.assertIsNone(updated_queue.suggested_record_id)
+
+    def test_search_records_headword_finds_primary_lx(self):
+        """SC-1: Headword search finds primary lx — 'wampuw' returns exactly 1 record."""
+        r1 = Record(
+            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add_all([hse_lx, hse_va, gse])
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="wampuw", search_mode="Headword")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.records[0]["lx"], "wampuw")
+        self.assertEqual(result.total_count, 1)
+
+    def test_search_records_headword_finds_primary_va(self):
+        """SC-2: Headword search finds primary va — 'wampu' returns exactly 1 record."""
+        r1 = Record(
+            lx="wampuw",
+            ge="round object",
+            source_id=self.source_id,
+            mdf_data="\\lx wampuw\n\\va wampu\n\\ge round object",
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add_all([hse_lx, hse_va, gse])
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="wampu", search_mode="Headword")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.records[0]["lx"], "wampuw")
+        self.assertEqual(result.total_count, 1)
+
+    def test_search_records_headword_excludes_nested_va(self):
+        """SC-3: Headword excludes nested va — 'wampu-' returns 0 records."""
+        r1 = Record(
+            lx="other",
+            ge="something",
+            source_id=self.source_id,
+            mdf_data="\\lx other\n\\va wampu-\n\\ge something",
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        hse = HeadwordSearchEntry(record_id=r1.id, term="other", normalized_term="other", entry_type="lx")
+        self.session.add(hse)
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="wampu-", search_mode="Headword")
+        self.assertEqual(len(result.records), 0)
+        self.assertEqual(result.total_count, 0)
+
+    def test_search_records_gloss_finds_primary_ge(self):
+        """SC-4: Gloss search finds primary ge — 'round object' returns exactly 1 record."""
+        r1 = Record(
+            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add(gse)
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="round object", search_mode="Gloss")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.records[0]["lx"], "wampuw")
+        self.assertEqual(result.total_count, 1)
+
+    def test_search_records_gloss_excludes_nested_ge(self):
+        """SC-5: Gloss excludes nested ge — 'ball' returns 0 records."""
+        r1 = Record(
+            lx="other",
+            ge="something",
+            source_id=self.source_id,
+            mdf_data="\\lx other\n\\ge something\n\\ge ball",
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        gse = GlossSearchEntry(record_id=r1.id, term="something", normalized_term="something")
+        self.session.add(gse)
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="ball", search_mode="Gloss")
+        self.assertEqual(len(result.records), 0)
+        self.assertEqual(result.total_count, 0)
+
+    def test_search_records_gloss_excludes_headword(self):
+        """SC-6: Gloss excludes headword — 'wampuw' returns 0 records."""
+        r1 = Record(
+            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        hse = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add_all([hse, gse])
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="wampuw", search_mode="Gloss")
+        self.assertEqual(len(result.records), 0)
+        self.assertEqual(result.total_count, 0)
+
+    def test_search_records_lexeme_mode_unchanged(self):
+        """SC-7: Lexeme mode UNCHANGED — all variants returned, no entry_type filter."""
+        r1 = Record(
+            lx="run", ge="to move fast", source_id=self.source_id, mdf_data="\\lx run\n\\va ran"
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        se1 = SearchEntry(record_id=r1.id, term="run", normalized_term="run", entry_type="lx")
+        se2 = SearchEntry(record_id=r1.id, term="ran", normalized_term="ran", entry_type="va")
+        self.session.add_all([se1, se2])
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="ran", search_mode="Lexeme")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.records[0]["lx"], "run")
+        self.assertEqual(result.total_count, 1)
+
+    def test_search_records_fts_mode_unchanged(self):
+        """SC-8: FTS mode UNCHANGED — no changes to FTS logic."""
+        r1 = Record(lx="dog", ge="canine", source_id=self.source_id, mdf_data="\\lx dog\n\\nt some note")
+        self.session.add(r1)
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="canine", search_mode="FTS")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.total_count, 1)
+
+    def test_search_records_performance(self):
+        """SC-14: Search performance < 500ms for all modes."""
+        import time
+
+        r1 = Record(
+            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        se = SearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        self.session.add_all([hse_lx, hse_va, gse, se])
+        self.session.commit()
+
+        with self._patch_session():
+            for mode in ["Lexeme", "FTS", "Headword", "Gloss"]:
+                start = time.perf_counter()
+                result = LinguisticService.search_records(search_term="wampuw", search_mode=mode)
+                elapsed = (time.perf_counter() - start) * 1000
+                self.assertLess(elapsed, 500, f"{mode} mode took {elapsed:.0f}ms")
+
+    def test_search_records_empty_input(self):
+        """SC-24: Empty search input returns all records without error/crash."""
+        r1 = Record(
+            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
+        )
+        self.session.add(r1)
+        self.session.commit()
+
+        with self._patch_session():
+            for mode in ["Lexeme", "FTS", "Headword", "Gloss"]:
+                result = LinguisticService.search_records(search_term="", search_mode=mode)
+                self.assertIsNotNone(result)
+                self.assertIsInstance(result.records, list)
+
+    def test_search_records_special_characters(self):
+        """SC-25: Special characters no crash or SQL injection."""
+        r1 = Record(lx="safe", ge="test", source_id=self.source_id, mdf_data="\\lx safe")
+        self.session.add(r1)
+        self.session.commit()
+
+        payloads = [
+            "'; DROP TABLE records; --",
+            "1; SELECT * FROM users",
+            "<script>alert('xss')</script>",
+            "\\' OR '1'='1",
+        ]
+        with self._patch_session():
+            for mode in ["Lexeme", "FTS", "Headword", "Gloss"]:
+                for payload in payloads:
+                    result = LinguisticService.search_records(search_term=payload, search_mode=mode)
+                    self.assertIsNotNone(result)
+                    self.assertIsInstance(result.records, list)
