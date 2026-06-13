@@ -59,7 +59,11 @@ def _search_headword(query, search_term: str):
     norm_search = LinguisticService.generate_sort_lx(search_term)
     if search_term.strip() and not norm_search:
         return query.filter(Record.id == -1)
-    return query.join(Record.headword_entries).filter(HeadwordSearchEntry.normalized_term.ilike(f"%{norm_search}%")).distinct()
+    return (
+        query.join(Record.headword_entries)
+        .filter(HeadwordSearchEntry.normalized_term.ilike(f"%{norm_search}%"))
+        .distinct()
+    )
 
 
 def _search_gloss(query, search_term: str):
@@ -67,7 +71,9 @@ def _search_gloss(query, search_term: str):
     norm_search = LinguisticService.generate_sort_lx(search_term)
     if search_term.strip() and not norm_search:
         return query.filter(Record.id == -1)
-    return query.join(Record.gloss_entries).filter(GlossSearchEntry.normalized_term.ilike(f"%{norm_search}%")).distinct()
+    return (
+        query.join(Record.gloss_entries).filter(GlossSearchEntry.normalized_term.ilike(f"%{norm_search}%")).distinct()
+    )
 
 
 _search_strategies: dict[str, callable] = {

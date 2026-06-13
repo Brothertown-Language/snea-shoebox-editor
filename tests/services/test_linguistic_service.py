@@ -748,7 +748,7 @@ class TestLinguisticService(unittest.TestCase):
         with self._patch_session():
             for mode in ["Lexeme", "FTS", "Headword", "Gloss"]:
                 start = time.perf_counter()
-                result = LinguisticService.search_records(search_term="wampuw", search_mode=mode)
+                LinguisticService.search_records(search_term="wampuw", search_mode=mode)
                 elapsed = (time.perf_counter() - start) * 1000
                 self.assertLess(elapsed, 500, f"{mode} mode took {elapsed:.0f}ms")
 
