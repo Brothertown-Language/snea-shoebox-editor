@@ -1,5 +1,0 @@
-[submodule "opencode-config"]
-	path = .opencode
-	url = https://github.com/michael-conrad/.opencode.git
-	branch = dev
-	update = rebase
