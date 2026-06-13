@@ -101,3 +101,6 @@ docker.app/
 /opencode-guidelines-export.zip
 .srclight/
 
+/.issues/
+/.tools/
+/.opencode/
