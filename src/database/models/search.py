@@ -1,9 +1,27 @@
 # Copyright (c) 2026 Brothertown Language
 # <!-- CRITICAL: NO EDITS WITHOUT APPROVED PLAN (Wait for "Go", "Proceed", or "Approved") -->
 from sqlalchemy import Column, ForeignKey, Integer, String
+from sqlalchemy.dialects.postgresql import TSVECTOR
 from sqlalchemy.orm import relationship
 
 from ..base import Base
+
+
+class FTSEntry(Base):
+    """
+    Full-text search entries for FTS mode.
+    Populated by application code using generate_sort_lx() normalization
+    and to_tsvector('simple', ...) to avoid English stemming on Algonquian text.
+    """
+
+    __tablename__ = "fts_entries"
+    __table_args__ = {"extend_existing": True}
+
+    id = Column(Integer, primary_key=True)
+    record_id = Column(Integer, ForeignKey("records.id", ondelete="CASCADE"), nullable=False, index=True)
+    fts_vector = Column(TSVECTOR, nullable=False)
+
+    record = relationship("Record", back_populates="fts_entry")
 
 
 class SearchEntry(Base):

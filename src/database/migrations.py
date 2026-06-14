@@ -119,6 +119,11 @@ class MigrationManager:
             "_migrate_dedup_search_entries",
             "Deduplicate search_entries: keep one row per (record_id, term, entry_type), add unique index",
         ),
+        (
+            20260613120000,
+            "_migrate_replace_fts_vector",
+            "Replace records.fts_vector with fts_entries table using 'simple' config",
+        ),
     ]
 
     def __init__(self, engine):
@@ -917,4 +922,67 @@ class MigrationManager:
                     "ON search_entries (record_id, term, entry_type);"
                 )
             )
+            conn.commit()
+
+    def _migrate_replace_fts_vector(self):
+        """Migration 20260613120000: Replace records.fts_vector with fts_entries table."""
+        from src.services.linguistic_service import LinguisticService
+
+        from .models.core import Record
+
+        with self._engine.connect() as conn:
+            # 1. Create fts_entries table
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS fts_entries (
+                    id SERIAL PRIMARY KEY,
+                    record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE CASCADE,
+                    fts_vector TSVECTOR NOT NULL
+                );
+            """)
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_fts_entries_record_id ON fts_entries (record_id);"
+                )
+            )
+            conn.commit()
+
+        # 2. Populate fts_entries from all records using generate_sort_lx() + to_tsvector('simple')
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            records = session.query(Record).filter(Record.is_deleted == False).all()
+            logger.info(f"Populating fts_entries for {len(records)} records...")
+            for record in records:
+                norm_text = LinguisticService.generate_sort_lx(record.mdf_data)
+                if norm_text:
+                    session.execute(
+                        text(
+                            "INSERT INTO fts_entries (record_id, fts_vector) "
+                            "VALUES (:rid, to_tsvector('simple', :norm))"
+                        ),
+                        {"rid": record.id, "norm": norm_text},
+                    )
+            session.commit()
+            logger.info("fts_entries population complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to populate fts_entries: {e}")
+            raise
+        finally:
+            session.close()
+
+        with self._engine.connect() as conn:
+            # 3. Create GIN index on fts_entries.fts_vector
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_fts_entries_vector "
+                    "ON fts_entries USING gin (fts_vector);"
+                )
+            )
+            # 4. Drop old GIN index on records.fts_vector
+            conn.execute(text("DROP INDEX IF EXISTS idx_records_fts;"))
+            # 5. Drop old generated column
+            conn.execute(text("ALTER TABLE records DROP COLUMN IF EXISTS fts_vector;"))
             conn.commit()

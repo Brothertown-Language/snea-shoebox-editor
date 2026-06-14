@@ -2,34 +2,14 @@
 """
 sync_prod_to_local.py — Production-to-local database sync script.
 
-Purpose
--------
-Copies all data from the production PostgreSQL database (Aiven) into the local
-development database (pgserver), replacing local data entirely. Intended for
-developer onboarding and local debugging against real production data.
+Creates an exact schema+data replica of the production PostgreSQL database (Aiven)
+in the local development database (pgserver), replacing all local data.
 
-Currently-synced tables (maintenance reference snapshot as of 2026-03-09, 13 tables)
--------------------------------------------------------------------------------------
-  edit_history, iso_639_3, languages, matchup_queue, permissions,
-  record_languages, records, schema_version, search_entries, sources,
-  user_activity_log, user_preferences, users
-
-Coverage mechanism
-------------------
-Table discovery uses ``Base.metadata.sorted_tables``, which performs a
-topological sort of all SQLAlchemy ORM-registered tables, respecting foreign-key
-dependencies. Tables are registered automatically when their model classes are
-imported — see the ``import src.database.models`` statement below.
-
-Maintenance contract
---------------------
-- **New ORM table**: add the model class under ``src/database/models/``; it will
-  be imported via ``src.database.models`` and covered automatically — no changes
-  to this script are required.
-- **Raw-SQL table** (created outside the ORM / Base.metadata): it will NOT be
-  discovered automatically. You MUST add explicit sync logic for it here.
-- **Removed table**: verify ``reset_all_sequences()`` still behaves correctly if
-  the table had an integer PK named ``id``.
+Strategy
+--------
+Introspects production's actual schema via pg_catalog and replicates it faithfully —
+including generated columns, all indexes — then copies production data while
+skipping generated columns in INSERT statements.
 """
 
 import os
@@ -37,17 +17,16 @@ import sys
 import traceback
 from datetime import datetime
 from pathlib import Path
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from tqdm import tqdm
 
-# Python 3.11+ has tomllib in the standard library
 if sys.version_info >= (3, 11):
     import tomllib
 else:
     import tomli as tomllib
 
-# Ensure project root is in path for imports
+from sqlalchemy import create_engine, text, inspect
+from sqlalchemy.orm import sessionmaker
+from tqdm import tqdm
+
 project_root = Path(__file__).parent.parent
 sys.path.append(str(project_root))
 
@@ -55,16 +34,11 @@ LOG_FILE = project_root / "tmp" / "sync_prod_to_local.log"
 
 
 def log_message(msg, to_console=True, pbar=None):
-    """Log a message with a timestamp to the log file and optionally to the console."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     formatted_msg = f"[{timestamp}] {msg}"
-
-    # Ensure tmp directory exists
     LOG_FILE.parent.mkdir(parents=True, exist_ok=True)
-
     with open(LOG_FILE, "a", encoding="utf-8") as f:
         f.write(formatted_msg + "\n")
-
     if to_console:
         if pbar:
             tqdm.write(msg)
@@ -72,208 +46,293 @@ def log_message(msg, to_console=True, pbar=None):
             print(msg)
 
 
-from src.database.base import Base
-
-# Critical: this import triggers all ORM model class definitions, which registers
-# every table with Base.metadata. Without it, sorted_tables would be empty and
-# no data would be synced.
-import src.database.models
-
-
 def _ensure_pgserver() -> str:
-    """Start pgserver for local dev and return the TCP connection URI.
-
-    Delegates to _start_pgserver_core() in src.database.connection — the
-    single authoritative implementation shared with the Streamlit app.
-    Always returns a TCP URI (postgresql://postgres:@localhost:5432/postgres)
-    for non-OpenCode contexts, which is what this script requires.
-    """
     try:
         from src.database.connection import _get_local_db_path, _start_pgserver_core
-
         db_path = _get_local_db_path()
         log_message(f"Starting pgserver (db_path={db_path})...")
         uri = _start_pgserver_core(db_path)
         log_message(f"pgserver started: {uri.split('@')[-1]}")
         return uri
-    except ImportError:
-        log_message("pgserver not installed — skipping auto-start.")
-        return "postgresql://postgres:@localhost:5432/postgres"
     except Exception as e:
-        log_message(f"Warning: pgserver auto-start failed: {e}")
+        log_message(f"Warning: pgserver start failed: {e}")
         return "postgresql://postgres:@localhost:5432/postgres"
 
 
 def load_secrets():
-    """Load database URLs from Streamlit secrets files if environment variables are not set."""
     prod_url = os.getenv("DATABASE_URL")
     local_url = os.getenv("LOCAL_DATABASE_URL")
-
-    # Path to secrets files
-    local_secrets_path = project_root / ".streamlit" / "secrets.toml"
-    prod_secrets_path = project_root / ".streamlit" / "secrets.toml.production"
-
-    # 1. Try to load Production URL from secrets.toml.production
-    if not prod_url and prod_secrets_path.exists():
-        try:
-            with open(prod_secrets_path, "rb") as f:
-                config = tomllib.load(f)
-                prod_url = config.get("connections", {}).get("postgresql", {}).get("url")
-        except Exception as e:
-            log_message(f"Warning: Failed to read production secrets: {e}")
-
-    # 2. Try to load Local URL from secrets.toml
-    if not local_url and local_secrets_path.exists():
-        try:
-            with open(local_secrets_path, "rb") as f:
-                config = tomllib.load(f)
-                local_url = config.get("connections", {}).get("postgresql", {}).get("url")
-        except Exception as e:
-            log_message(f"Warning: Failed to read local secrets: {e}")
-
-    # Default fallback for local if still not found
+    ls_path = project_root / ".streamlit" / "secrets.toml"
+    ps_path = project_root / ".streamlit" / "secrets.toml.production"
+    if not prod_url and ps_path.exists():
+        with open(ps_path, "rb") as f:
+            prod_url = tomllib.load(f).get("connections", {}).get("postgresql", {}).get("url")
+    if not local_url and ls_path.exists():
+        with open(ls_path, "rb") as f:
+            local_url = tomllib.load(f).get("connections", {}).get("postgresql", {}).get("url")
     if not local_url:
         local_url = "postgresql://postgres:@localhost:5432/postgres"
-
     return prod_url, local_url
 
 
+def get_table_metadata(conn, table_name: str) -> dict:
+    """Return column names, generated column names, and CREATE TABLE DDL."""
+    # Get non-generated column names for INSERT
+    regular_cols = []
+    generated_cols = []
+    all_cols = []
+    type_map = {}
+
+    rows = conn.execute(text(f"""
+        SELECT
+            a.attname,
+            t.typname,
+            a.attgenerated
+        FROM pg_attribute a
+        JOIN pg_type t ON t.oid = a.atttypid
+        WHERE a.attrelid = quote_ident('{table_name}')::regclass
+          AND a.attnum > 0
+          AND NOT a.attisdropped
+        ORDER BY a.attnum
+    """)).fetchall()
+
+    for name, typname, generated in rows:
+        all_cols.append(name)
+        type_map[name] = typname
+        if generated == 's':
+            generated_cols.append(name)
+        else:
+            regular_cols.append(name)
+
+    # Build CREATE TABLE DDL
+    ddl_parts = []
+    for name in all_cols:
+        info = conn.execute(text(f"""
+            SELECT
+                CASE
+                    WHEN t.typname = 'vector' THEN 'vector'
+                    WHEN t.typname = 'tsvector' THEN 'tsvector'
+                    WHEN t.typname = 'bool' THEN 'boolean'
+                    WHEN t.typname = 'int4' THEN 'integer'
+                    WHEN t.typname = 'int8' THEN 'bigint'
+                    WHEN t.typname = 'float8' THEN 'double precision'
+                    WHEN t.typname = 'numeric' THEN 'numeric'
+                    WHEN t.typname = 'varchar' THEN 'character varying'
+                    WHEN t.typname = 'text' THEN 'text'
+                    WHEN t.typname = 'timestamptz' THEN 'timestamp with time zone'
+                    ELSE t.typname
+                END AS dtype,
+                a.atttypmod,
+                a.attnotnull,
+                a.attgenerated
+            FROM pg_attribute a
+            JOIN pg_type t ON t.oid = a.atttypid
+            WHERE a.attrelid = quote_ident('{table_name}')::regclass
+              AND a.attname = '{name}'
+              AND a.attnum > 0
+        """)).first()
+        if not info:
+            continue
+        dtype, typmod, notnull, generated = info
+
+        if generated == 's':
+            expr = conn.execute(text(f"""
+                SELECT pg_get_expr(d.adbin, d.adrelid)::text
+                FROM pg_attrdef d
+                JOIN pg_class c ON c.oid = d.adrelid
+                WHERE c.relname = '{table_name}'
+                  AND d.adnum = (SELECT a.attnum FROM pg_attribute a
+                                 WHERE a.attrelid = c.oid AND a.attname = '{name}')
+            """)).scalar()
+            ddl_parts.append(f"  {name} {dtype} GENERATED ALWAYS AS ({expr}) STORED")
+        else:
+            line = f"  {name} {dtype}"
+            if dtype == 'character varying' and typmod and typmod > -1:
+                line = f"  {name} character varying({typmod - 4})"
+            if notnull:
+                line += " NOT NULL"
+            if info_default := conn.execute(text(f"""
+                SELECT pg_get_expr(d.adbin, d.adrelid)::text
+                FROM pg_attrdef d
+                JOIN pg_class c ON c.oid = d.adrelid
+                WHERE c.relname = '{table_name}'
+                  AND d.adnum = (SELECT a.attnum FROM pg_attribute a
+                                 WHERE a.attrelid = c.oid AND a.attname = '{name}')
+            """)).scalar():
+                if "nextval" not in info_default:
+                    line += f" DEFAULT {info_default}"
+            ddl_parts.append(line)
+
+    # Add constraints (primary key, foreign keys, unique, check)
+    constraints = conn.execute(text(f"""
+        SELECT pg_get_constraintdef(oid) AS condef
+        FROM pg_constraint
+        WHERE conrelid = quote_ident('{table_name}')::regclass
+          AND contype IN ('p', 'f', 'u', 'c')
+        ORDER BY CASE contype
+            WHEN 'p' THEN 1
+            WHEN 'u' THEN 2
+            WHEN 'f' THEN 3
+            WHEN 'c' THEN 4
+        END
+    """)).fetchall()
+    for (condef,) in constraints:
+        ddl_parts.append(f"  {condef}")
+
+    ddl = f"CREATE TABLE IF NOT EXISTS {table_name} (\n" + ",\n".join(ddl_parts) + "\n);"
+
+    return {
+        "regular_cols": regular_cols,
+        "generated_cols": generated_cols,
+        "all_cols": all_cols,
+        "ddl": ddl,
+    }
+
+
 def sync_data():
-    """
-    Orchestrate a full production-to-local data sync.
-
-    Steps
-    -----
-    1. Load connection secrets (env vars → secrets files → fallback).
-    2. Ensure the local pgserver instance is running.
-    3. Create any missing local schema objects via ``Base.metadata.create_all``.
-    4. Delete all local rows in **reverse** FK-dependency order (children before
-       parents) to avoid foreign-key constraint violations.
-    5. Insert all production rows in **forward** FK-dependency order (parents
-       before children).
-    6. Reset all integer-PK sequences so subsequent local INSERTs do not collide
-       with the copied row IDs.
-
-    Maintenance contract
-    --------------------
-    Table coverage is ORM-driven (``Base.metadata.sorted_tables``). New ORM
-    tables are covered automatically. Raw-SQL tables outside the ORM must be
-    handled explicitly — see module docstring.
-    """
-    # Start fresh log for each run
     if LOG_FILE.exists():
         LOG_FILE.unlink()
     log_message("Starting Production to Local Sync...")
 
     prod_url, local_url = load_secrets()
-
     if not prod_url:
-        log_message("Error: Production DATABASE_URL not found in environment or .streamlit/secrets.toml.production")
+        log_message("Error: Production DATABASE_URL not found")
         sys.exit(1)
 
     local_url = _ensure_pgserver()
-
     log_message(f"Connecting to Production: {prod_url.split('@')[-1]}")
-    # Scrub local path if it's a socket-based URI for display
     log_message(f"Connecting to Local: {local_url.split('@')[-1]}")
 
     prod_engine = create_engine(prod_url)
     local_engine = create_engine(local_url)
 
-    # 1. Ensure extensions and schema exist locally
     with local_engine.connect() as conn:
-        log_message("Ensuring pgvector extension...")
         conn.execute(text("CREATE EXTENSION IF NOT EXISTS vector;"))
         conn.commit()
 
-    log_message("Initializing local schema...")
-    Base.metadata.create_all(local_engine)
+    # Introspect production schema
+    log_message("Introspecting production schema...")
+    table_meta = {}
+    sorted_tables = []
+    with prod_engine.connect() as pc:
+        prod_tables = [
+            r[0] for r in pc.execute(
+                text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public' ORDER BY tablename")
+            ).fetchall()
+        ]
+        log_message(f"  Found {len(prod_tables)} tables")
 
-    # 2. Determine Table Order (to respect Foreign Keys)
-    # sorted_tables performs a topological sort over all ORM-registered tables
-    # using their declared ForeignKey relationships. This guarantees parents come
-    # before children on insert and children come before parents on delete.
-    # ORM registration depends on the `import src.database.models` above.
-    tables = Base.metadata.sorted_tables
+        # Cache metadata and FK dependencies for all tables
+        fk_deps = {}
+        for tname in prod_tables:
+            table_meta[tname] = get_table_metadata(pc, tname)
+            refs = pc.execute(text(f"""
+                SELECT DISTINCT c.confrelid::regclass::text AS ref_table
+                FROM pg_constraint c
+                WHERE c.conrelid = quote_ident('{tname}')::regclass
+                  AND c.contype = 'f'
+            """)).fetchall()
+            fk_deps[tname] = {r[0].strip('"') for r in refs}
 
-    prod_session_factory = sessionmaker(bind=prod_engine)
-    local_session_factory = sessionmaker(bind=local_engine)
+        # Topological sort: tables that are referenced first
+        remaining = set(prod_tables)
+        while remaining:
+            batch = {t for t in remaining if not (fk_deps.get(t, set()) & remaining)}
+            if not batch:
+                batch = remaining.copy()
+            sorted_tables.extend(sorted(batch))
+            remaining -= batch
 
-    try:
-        with prod_session_factory() as prod_session, local_session_factory() as local_session:
-            log_message("Starting data sync...")
+        # Drop all local tables (reverse order)
+        with local_engine.connect() as lc:
+            for tname in reversed(sorted_tables):
+                lc.execute(text(f"DROP TABLE IF EXISTS {tname} CASCADE"))
+            lc.commit()
 
-            # 2. Clear local data in reverse dependency order to respect FKs.
-            # Reversing the topological sort deletes children before parents,
-            # preventing FK constraint violations during DELETE.
-            log_message("Clearing local data (reverse order)...")
-            for table in reversed(tables):
-                log_message(f"Deleting table: {table.name}", to_console=False)
-                local_session.execute(table.delete())
-            local_session.commit()
+        # Recreate tables in dependency order
+        for tname in sorted_tables:
+            with local_engine.connect() as lc:
+                lc.execute(text(table_meta[tname]["ddl"]))
+                lc.commit()
+        log_message(f"  Created {len(sorted_tables)} tables in dependency order")
 
-            # 3. Iterate in forward dependency order for insertion.
-            # Parents are inserted before children, satisfying FK constraints.
-            pbar = tqdm(tables, desc="Syncing tables")
-            for table in pbar:
-                pbar.set_postfix(table=table.name)
-                log_message(f"Syncing table: {table.name}", to_console=False)
+        # Add indexes (exclude PKs and unique constraints already baked into CREATE TABLE)
+        for tname in prod_tables:
+            indexes = pc.execute(text(f"""
+                SELECT i.relname AS idx_name, pg_get_indexdef(idx.indexrelid) AS idx_def
+                FROM pg_index idx
+                JOIN pg_class i ON i.oid = idx.indexrelid
+                JOIN pg_class c ON c.oid = idx.indrelid
+                WHERE c.relname = '{tname}'
+                  AND i.relname NOT LIKE '%_pkey'
+                  AND NOT idx.indisunique
+            """)).fetchall()
+            with local_engine.connect() as lc:
+                for (idx_name, idx_def) in indexes:
+                    lc.execute(text(idx_def))
+                    lc.commit()
+        log_message("  Indexes created")
 
-                # Fetch all from production
-                results = prod_session.execute(table.select()).fetchall()
-                if results:
-                    # Convert results to dicts for insertion
-                    data = [dict(row._mapping) for row in results]
-                    local_session.execute(table.insert(), data)
-                    log_message(f"Synced {table.name}: {len(data)} rows", pbar=pbar)
-                else:
-                    log_message(f"Synced {table.name}: Empty (skipped)", pbar=pbar)
+    # Copy data
+    log_message("Copying production data...")
+    SessionLocal = sessionmaker(bind=local_engine)
+    SessionProd = sessionmaker(bind=prod_engine)
 
-                local_session.commit()
+    with SessionProd() as ps, SessionLocal() as ls:
+        for tname in reversed(sorted_tables):
+            ls.execute(text(f"DELETE FROM {tname}"))
+        ls.commit()
 
-        log_message("\nSync completed successfully.")
-        reset_all_sequences(local_engine)
-    except Exception:
-        error_trace = traceback.format_exc()
-        log_message(f"CRITICAL ERROR during sync:\n{error_trace}")
-        sys.exit(1)
-
-
-def reset_all_sequences(local_engine) -> None:
-    """
-    Reset all integer-PK sequences to match the current MAX(id) in each table.
-
-    This must be called after any bulk data copy (e.g., prod→local sync) that inserts
-    rows with explicit id values, because PostgreSQL sequences are not automatically
-    advanced by such inserts. Without this reset, the next INSERT will attempt to use
-    a sequence value that already exists, causing a UniqueViolation.
-
-    Implementation: iterates Base.metadata.sorted_tables at runtime and resets only
-    tables that have an integer 'id' column with an associated sequence. No table names
-    are hardcoded — new ORM tables are covered automatically.
-
-    Maintenance note: if a table is removed from the ORM, or its primary key column is
-    renamed away from 'id', verify this function still behaves correctly. If a table
-    exists outside Base.metadata (e.g., created via raw SQL), it will NOT be covered
-    and must be added explicitly.
-    """
-    from sqlalchemy import Integer, inspect as sa_inspect
-
-    log_message("Resetting sequences for all integer-PK tables...")
-    with local_engine.connect() as conn:
-        for table in Base.metadata.sorted_tables:
-            id_col = table.c.get("id")
-            if id_col is None:
+        for tname in sorted_tables:
+            meta = table_meta[tname]
+            if not meta["regular_cols"]:
+                log_message(f"  Skipped: {tname} (all generated)")
                 continue
-            if not isinstance(id_col.type, Integer):
-                continue
-            seq = conn.execute(text("SELECT pg_get_serial_sequence(:tbl, 'id')"), {"tbl": table.name}).scalar()
-            if not seq:
-                continue
-            conn.execute(text(f"SELECT setval('{seq}', COALESCE((SELECT MAX(id) FROM {table.name}), 1))"))
-            log_message(f"  Reset sequence for {table.name} ({seq})", to_console=False)
-        conn.commit()
-    log_message("Sequence reset complete.")
+
+            cols_str = ", ".join(meta["regular_cols"])
+            placeholders = ", ".join([f":{c}" for c in meta["regular_cols"]])
+            rows = ps.execute(text(f"SELECT {cols_str} FROM {tname}")).fetchall()
+            if rows:
+                data = [dict(r._mapping) for r in rows]
+                for bstart in range(0, len(data), 1000):
+                    batch = data[bstart:bstart + 1000]
+                    ls.execute(
+                        text(f"INSERT INTO {tname} ({cols_str}) VALUES ({placeholders})"),
+                        batch,
+                    )
+                ls.commit()
+            log_message(f"  Copied: {tname} ({len(rows)} rows)")
+
+    # Reset sequences
+    log_message("Resetting sequences...")
+    with local_engine.connect() as lc:
+        for tname in sorted_tables:
+            seq = lc.execute(text(
+                "SELECT pg_get_serial_sequence(:t, 'id')"
+            ), {"t": tname}).scalar()
+            if seq:
+                max_id = lc.execute(text(f"SELECT COALESCE(MAX(id), 1) FROM {tname}")).scalar()
+                lc.execute(text(f"SELECT setval('{seq}', {max_id})"))
+        lc.commit()
+
+    # Verify
+    log_message("\n=== VERIFICATION ===")
+    ins = inspect(local_engine)
+    for t in ['records', 'schema_version', 'fts_entries']:
+        if ins.has_table(t):
+            with SessionLocal() as s:
+                cnt = s.execute(text(f"SELECT count(*) FROM {t}")).scalar()
+                log_message(f"  {t}: {cnt} rows")
+                if t == 'records':
+                    cols = [c['name'] for c in ins.get_columns(t)]
+                    log_message(f"    fts_vector present: {'fts_vector' in cols}")
+
+    from src.database.models.meta import SchemaVersion
+    with SessionLocal() as s:
+        v = s.query(SchemaVersion.version).order_by(SchemaVersion.version.desc()).first()
+        log_message(f"  Schema version: {v[0] if v else 0}")
+
+    log_message("\nSync completed successfully.")
 
 
 if __name__ == "__main__":
