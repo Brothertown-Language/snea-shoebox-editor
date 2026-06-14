@@ -656,15 +656,20 @@ class MigrationManager:
         """Migration 2026030207140: Reprocess all records to synchronize languages, search entries, and metadata."""
         from src.services.upload_service import UploadService
 
-        # We call the service method which manages its own session.
-        # This is safe because migrations run sequentially.
+        # Use the migration's own engine session, not get_session() (which connects to production)
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
         try:
             logger.info("Starting global record reprocessing migration...")
-            results = UploadService.reprocess_all_records()
+            results = UploadService.reprocess_all_records(session=session)
+            session.commit()
             logger.info(f"Migration reprocessed {results.get('reprocessed', 0)}/{results.get('total', 0)} records.")
         except Exception as e:
+            session.rollback()
             logger.error(f"Migration 2026030207140 failed: {e}")
             raise
+        finally:
+            session.close()
 
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""

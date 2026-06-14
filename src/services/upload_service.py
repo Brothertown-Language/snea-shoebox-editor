@@ -1833,16 +1833,20 @@ class UploadService:
                 session.close()
 
     @staticmethod
-    def reprocess_all_records(progress_callback: Callable | None = None) -> dict:
+    def reprocess_all_records(progress_callback: Callable | None = None, session=None) -> dict:
         """Reprocess languages and search entries for all non-deleted records.
 
         This updates:
         - Record metadata fields (lx, hm, ps, ge, source_page, sort_lx)
         - record_languages association table
         - search_entries table
+
+        If session is provided, uses that session; otherwise creates one via get_session().
         """
         _logger = get_logger("snea.reprocess")
-        session = get_session()
+        _provided_session = session is not None
+        if not _provided_session:
+            session = get_session()
         try:
             records = session.query(Record).filter_by(is_deleted=False).all()
             total = len(records)
