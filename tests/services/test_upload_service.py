@@ -1042,7 +1042,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         rec = self._add_record("esh", "\\lx esh\n\\va ēsh\n\\se eshkw\n\\cf nane\n\\ve fire\n\\ps n\n\\ge fire")
         with self._patch_session():
             count = UploadService.populate_search_entries([rec.id])
-        self.assertEqual(count, 8)  # 5 SearchEntry + 2 HeadwordSearchEntry + 1 GlossSearchEntry
+        self.assertEqual(count, 9)  # 5 SearchEntry + 2 HeadwordSearchEntry + 1 GlossSearchEntry + 1 FTSEntry
         from src.database.models.search import SearchEntry
 
         entries = self.session.query(SearchEntry).filter_by(record_id=rec.id).all()
@@ -1057,7 +1057,7 @@ class TestMatchAndCommitOperations(unittest.TestCase):
         self.session.commit()
         with self._patch_session():
             count = UploadService.populate_search_entries([rec.id])
-        self.assertEqual(count, 3)  # 1 SearchEntry + 1 HeadwordSearchEntry + 1 GlossSearchEntry
+        self.assertEqual(count, 4)  # 1 SearchEntry + 1 HeadwordSearchEntry + 1 GlossSearchEntry + 1 FTSEntry
         entries = self.session.query(SearchEntry).filter_by(record_id=rec.id).all()
         self.assertEqual(len(entries), 1)
         self.assertEqual(entries[0].term, "esh")

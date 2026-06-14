@@ -37,21 +37,19 @@ def _search_lexeme(query, search_term: str):
 
 
 def _search_fts(query, search_term: str):
-    """FTS mode: full-text search on fts_vector + mdf_data ILIKE fallback."""
-    from sqlalchemy import or_, text
+    """FTS mode: full-text search on normalized fts_entries."""
+    from sqlalchemy import text
 
     if search_term.startswith("#") and search_term[1:].isdigit():
         return query.filter(Record.id == int(search_term[1:]))
-    words = [clean for w in search_term.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
+    norm_search = LinguisticService.generate_sort_lx(search_term)
+    words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
     if words:
         fts_query = " & ".join([f"{w}:*" for w in words])
-        return query.filter(
-            or_(
-                text("records.fts_vector @@ to_tsquery('english', :fts_term)"),
-                Record.mdf_data.ilike(f"%{search_term}%"),
-            )
+        return query.join(Record.fts_entry).filter(
+            text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)")
         ).params(fts_term=fts_query)
-    return query.filter(Record.mdf_data.ilike(f"%{search_term}%"))
+    return query.filter(Record.id == -1)
 
 
 def _search_headword(query, search_term: str):
@@ -530,27 +528,20 @@ class LinguisticService:
                                 .distinct()
                             )
                     else:
-                        from sqlalchemy import or_, text
+                        from sqlalchemy import text
 
                         if search_term.startswith("#") and search_term[1:].isdigit():
                             query = query.filter(Record.id == int(search_term[1:]))
                         else:
-                            # FTS support for multiple words + prefix matching for partials
-                            # We join words with ' & ' and add ':*' for prefix matching
-                            # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
-                            words = [
-                                clean for w in search_term.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())
-                            ]
+                            norm_search = LinguisticService.generate_sort_lx(search_term)
+                            words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
                             if words:
                                 fts_query = " & ".join([f"{w}:*" for w in words])
-                                query = query.filter(
-                                    or_(
-                                        text("records.fts_vector @@ to_tsquery('english', :fts_term)"),
-                                        Record.mdf_data.ilike(f"%{search_term}%"),
-                                    )
+                                query = query.join(Record.fts_entry).filter(
+                                    text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)")
                                 ).params(fts_term=fts_query)
                             else:
-                                query = query.filter(Record.mdf_data.ilike(f"%{search_term}%"))
+                                query = query.filter(Record.id == -1)
 
             # Efficient Sorting: source_id, sort_lx (NFD/No-Punct), hm, ps, ge
             query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
@@ -619,25 +610,20 @@ class LinguisticService:
                                         .distinct()
                                     )
                             else:
-                                from sqlalchemy import or_, text
+                                from sqlalchemy import text
 
                                 if search_term.startswith("#") and search_term[1:].isdigit():
                                     query = query.filter(Record.id == int(search_term[1:]))
                                 else:
-                                    # FTS support for multiple words + prefix matching for partials
-                                    # We join words with ' & ' and add ':*' for prefix matching
-                                    # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
-                                    words = [w.strip() for w in search_term.split() if w.strip()]
+                                    norm_search = LinguisticService.generate_sort_lx(search_term)
+                                    words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
                                     if words:
                                         fts_query = " & ".join([f"{w}:*" for w in words])
-                                        query = query.filter(
-                                            or_(
-                                                text("records.fts_vector @@ to_tsquery('english', :fts_term)"),
-                                                Record.mdf_data.ilike(f"%{search_term}%"),
-                                            )
+                                        query = query.join(Record.fts_entry).filter(
+                                            text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)")
                                         ).params(fts_term=fts_query)
                                     else:
-                                        query = query.filter(Record.mdf_data.ilike(f"%{search_term}%"))
+                                        query = query.filter(Record.id == -1)
 
                     query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
 

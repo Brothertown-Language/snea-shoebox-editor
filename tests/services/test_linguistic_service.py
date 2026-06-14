@@ -178,20 +178,28 @@ class TestLinguisticService(unittest.TestCase):
             self.assertEqual(result.total_count, 1)
 
     def test_search_records_fts(self):
+        from sqlalchemy import func
+        from src.database.models.search import FTSEntry
+
         r1 = Record(lx="dog", ge="canine", source_id=self.source_id, mdf_data="\\lx dog\n\\nt some note")
         self.session.add(r1)
         self.session.commit()
 
-        with self._patch_session():
-            # Search in gloss
-            result = LinguisticService.search_records(search_term="canine", search_mode="FTS")
-            self.assertEqual(len(result.records), 1)
-            self.assertEqual(result.total_count, 1)
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.commit()
 
+        with self._patch_session():
+            # Search in mdf_data (FTS indexes mdf_data only, not ge)
+            result = LinguisticService.search_records(search_term="dog", search_mode="FTS")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.total_count, 1)
+
+        with self._patch_session():
             # Search in mdf_data
             result = LinguisticService.search_records(search_term="some note", search_mode="FTS")
-            self.assertEqual(len(result.records), 1)
-            self.assertEqual(result.total_count, 1)
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.total_count, 1)
 
     def test_search_records_pagination(self):
         records = [Record(lx=f"word{i}", source_id=self.source_id, mdf_data=f"\\lx word{i}") for i in range(10)]
@@ -719,12 +727,19 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_fts_mode_unchanged(self):
         """SC-8: FTS mode UNCHANGED — no changes to FTS logic."""
+        from sqlalchemy import func
+        from src.database.models.search import FTSEntry
+
         r1 = Record(lx="dog", ge="canine", source_id=self.source_id, mdf_data="\\lx dog\n\\nt some note")
         self.session.add(r1)
         self.session.commit()
 
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.commit()
+
         with self._patch_session():
-            result = LinguisticService.search_records(search_term="canine", search_mode="FTS")
+            result = LinguisticService.search_records(search_term="dog", search_mode="FTS")
         self.assertEqual(len(result.records), 1)
         self.assertEqual(result.total_count, 1)
 
@@ -766,6 +781,35 @@ class TestLinguisticService(unittest.TestCase):
                 self.assertIsNotNone(result)
                 self.assertIsInstance(result.records, list)
 
+    def test_phase1_docs_exist(self):
+        """Phase 1: Verify docs/lessons-learned/ files and AGENTS.md research catalog exist."""
+        import os
+
+        # 1-6: docs/lessons-learned/ files
+        docs_dir = "docs/lessons-learned"
+        self.assertTrue(os.path.isdir(docs_dir), f"{docs_dir} directory does not exist")
+
+        expected_docs = [
+            "index.md",
+            "2026-06-13-postgres-fts-algonquian.md",
+            "2026-06-13-regex-linguistic-characters.md",
+            "2026-06-13-infinity-symbol-normalization.md",
+            "2026-06-13-simple-vs-english-tsconfig.md",
+        ]
+        for doc in expected_docs:
+            path = os.path.join(docs_dir, doc)
+            self.assertTrue(os.path.isfile(path), f"{path} does not exist")
+
+        # 7: AGENTS.md exists
+        self.assertTrue(os.path.isfile("AGENTS.md"), "AGENTS.md does not exist in repo root")
+
+        # 8: AGENTS.md contains a research catalog table with links to all 5 docs
+        with open("AGENTS.md", encoding="utf-8") as f:
+            agents_content = f.read()
+
+        for doc in expected_docs:
+            self.assertIn(doc, agents_content, f"AGENTS.md missing link to {doc}")
+
     def test_search_records_special_characters(self):
         """SC-25: Special characters no crash or SQL injection."""
         r1 = Record(lx="safe", ge="test", source_id=self.source_id, mdf_data="\\lx safe")
@@ -787,3 +831,115 @@ class TestLinguisticService(unittest.TestCase):
                     result = LinguisticService.search_records(search_term=payload, search_mode=mode)
                     self.assertIsNotNone(result)
                     self.assertIsInstance(result.records, list)
+
+    def test_ftsentry_model_schema(self):
+        """Phase 2: Verify FTSEntry model exists with correct schema."""
+        from sqlalchemy.inspection import inspect
+        from src.database.models.search import FTSEntry
+        from src.database.models.core import Record
+
+        self.assertEqual(FTSEntry.__tablename__, "fts_entries")
+
+        columns = {c.name: c for c in inspect(FTSEntry).columns}
+        self.assertIn("id", columns)
+        self.assertTrue(columns["id"].primary_key)
+        self.assertIn("record_id", columns)
+        self.assertTrue(columns["record_id"].foreign_keys)
+        self.assertIn("fts_vector", columns)
+
+        self.assertTrue(hasattr(FTSEntry, "record"))
+        self.assertTrue(hasattr(Record, "fts_entry"))
+
+    def test_phase3_migration_exists(self):
+        """Phase 3: Verify _migrate_replace_fts_vector exists in migrations."""
+        from src.database.migrations import MigrationManager
+
+        # Check registry entry exists
+        registry_versions = [v for v, m, d in MigrationManager._MIGRATIONS]
+        self.assertIn(20260613120000, registry_versions, "Migration version 20260613120000 not found in registry")
+
+        # Check method exists
+        self.assertTrue(
+            hasattr(MigrationManager, "_migrate_replace_fts_vector"),
+            "Method _migrate_replace_fts_vector not found",
+        )
+
+    def test_phase4_populate_fts_entries(self):
+        """Phase 4: Verify populate_search_entries() creates FTSEntry rows."""
+        from src.database.models.search import FTSEntry
+
+        r1 = Record(lx="test", ge="test", source_id=self.source_id, mdf_data="\\lx test")
+        self.session.add(r1)
+        self.session.commit()
+
+        from src.services.upload_service import UploadService
+
+        UploadService.populate_search_entries([r1.id], session=self.session)
+
+        fts_entry = self.session.query(FTSEntry).filter_by(record_id=r1.id).first()
+        self.assertIsNotNone(fts_entry, "FTSEntry should exist after populate_search_entries")
+        self.assertIsNotNone(fts_entry.fts_vector, "fts_vector should not be None")
+
+    def test_search_records_fts_normalized(self):
+        """SC-8: FTS with normalized text — diacritics in mdf_data, search normalized form."""
+        from sqlalchemy import func
+        from src.database.models.search import FTSEntry
+
+        r1 = Record(lx="akitusu-", ge="test", source_id=self.source_id,
+                    mdf_data="\\lx akitusu-\n\\ge test")
+        self.session.add(r1)
+        self.session.commit()
+
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="akitusu", search_mode="FTS")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.records[0]["lx"], "akitusu-")
+
+    def test_search_records_fts_infinity_symbol(self):
+        """SC-8: FTS with infinity symbol in mdf_data, search via pooy prefix."""
+        from sqlalchemy import func
+        from src.database.models.search import FTSEntry
+
+        r1 = Record(lx="pooy∞", ge="test", source_id=self.source_id,
+                    mdf_data="\\lx pooy∞\\ge test")
+        self.session.add(r1)
+        self.session.commit()
+
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.commit()
+
+        with self._patch_session():
+            result = LinguisticService.search_records(search_term="pooy", search_mode="FTS")
+        self.assertEqual(len(result.records), 1)
+        self.assertEqual(result.records[0]["lx"], "pooy∞")
+
+    def test_search_records_fts_no_iliike_fallback(self):
+        """SC-7: FTS mode has no ILIKE fallback — term with leading digits stripped by generate_sort_lx returns no results."""
+        from src.database.models.search import FTSEntry
+
+        # generate_sort_lx strips leading digits. A term like "99problems" in mdf_data
+        # normalizes to "99problems" (digits are only stripped from the start of the
+        # entire string, not from each word). But a search for "99problems" normalizes
+        # to "99problems" which matches via tsquery prefix match.
+        # Instead, use a term that to_tsvector('simple') does NOT index as a lexeme:
+        # punctuation-only strings like "!!!" are not word tokens.
+        r1 = Record(lx="secret", ge="hidden", source_id=self.source_id,
+                    mdf_data="\\lx secret\n\\nt some text !!!")
+        self.session.add(r1)
+        self.session.commit()
+
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        from sqlalchemy import func
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.commit()
+
+        with self._patch_session():
+            # "!!!" is not a tsvector token, so FTS returns no results.
+            # The old code had an ILIKE fallback that would match "!!!" in raw mdf_data.
+            result = LinguisticService.search_records(search_term="!!!", search_mode="FTS")
+        self.assertEqual(len(result.records), 0, "Punctuation-only term should not match via FTS without ILIKE fallback")
