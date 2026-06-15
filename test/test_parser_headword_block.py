@@ -2,7 +2,6 @@
 
 Co-authored with AI: OpenCode (ollama-cloud/deepseek-v4-flash)
 """
-import pytest
 
 from src.mdf.parser import parse_mdf
 
@@ -57,4 +56,28 @@ class TestExistingVaBehavior:
         assert record["va"] == ["wampu-", "wampum"], (
             "Existing 'va' list must contain ALL \\va values (headword + nested). "
             "This should PASS even before the change."
+        )
+
+
+class TestMultipleHeadwordVa:
+    """Edge case: multiple \\va values in headword block before any structural branching tag."""
+
+    def test_multiple_headword_va_captured(self):
+        """SC-P1-1: Multiple headword \\va values all captured in primary_va."""
+        mdf_data = """\\lx wampum
+\\va wampu-
+\\va wamp-
+\\ps N
+\\ge ball
+\\se
+\\va wampum
+\\ge sphere
+\\nt Record: 1"""
+        records = parse_mdf(mdf_data)
+        record = records[0]
+        assert record["primary_va"] == ["wampu-", "wamp-"], (
+            "All headword-block \\va values must be captured, not just the first."
+        )
+        assert record["va"] == ["wampu-", "wamp-", "wampum"], (
+            "Existing va list must still contain all values."
         )
