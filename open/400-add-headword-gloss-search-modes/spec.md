@@ -177,67 +177,75 @@ st.session_state.search_mode: str  # Default: "Headword"
 >
 > **Sample data convention:** All search result assertions in SC-1 through SC-6 refer to the single MDF example record shown in §MDF Structure Context (the `\lx wampuw` record). Deterministic assertions use exact record counts (0 or 1) from this single-record test fixture.
 
+**🚫 ALL-OR-NOTHING GATE:** ALL success criteria MUST pass for implementation to be considered complete. Any SKIPPED SC is treated as FAIL. Any FAILED SC triggers autonomous remediation by the producing agent. Gate holds position until remediation is verified.
+
+**Cross-Cutting SCs:** SC-3, SC-5, SC-13, SC-23 — span multiple phases. Verified once in the earliest bound phase, applies to all subsequent phases.
+
+After this spec is approved, invoke `writing-plans` to create `.issues/400/plan.md` before implementation begins.
+
 ### Core Table
 
-| SC | Criterion | Verification Method | Remediation |
-|----|-----------|-------------------|-------------|
-| SC-1 | Headword search finds primary lx — "wampuw" returns exactly 1 record | Behavioral test execution | Fix HeadwordSearchEntry join target |
-| SC-2 | Headword search finds primary va — "wampu" returns exactly 1 record | Behavioral test execution | Fix HeadwordSearchEntry va indexing |
-| SC-3 | Headword excludes nested va — "wampu-" returns 0 records | Behavioral test execution | Fix in_headword_block state tracking |
-| SC-4 | Gloss search finds primary ge — "round object" returns exactly 1 record | Behavioral test execution | Fix GlossSearchEntry join target |
-| SC-5 | Gloss excludes nested ge — "ball" returns 0 records | Behavioral test execution | Fix in_headword_block state tracking |
-| SC-6 | Gloss excludes headword — "wampuw" returns 0 records | Behavioral test execution | Fix GlossSearchEntry query scope |
-| SC-7 | Lexeme mode UNCHANGED — all variants returned, no entry_type filter | Behavioral test + code inspection | Restore original SearchEntry join |
-| SC-8 | FTS mode UNCHANGED — no changes to FTS logic | Behavioral test + code inspection | Restore original FTS branch |
-| SC-9 | headword_search_entries table exists with columns and indexes | Structural inspection (table existence) | Create migration |
-| SC-10 | gloss_search_entries table exists with columns and indexes | Structural inspection (table existence) | Create migration |
-| SC-11 | Headword default search mode — session state initializes to "Headword" | Semantic inspection (frontend test setup) | Fix session state default |
-| SC-12 | UI vertical radio groupings — Focused/Broad separators | Semantic inspection (Streamlit component presence) | Fix UI rendering |
-| SC-13 | Migration rollback safe — DROP new tables without data loss | Behavioral test (round-trip) | Fix migration script |
-| SC-14 | Search performance < 500ms for all modes | Behavioral test (profiling) | Add indexes, optimize queries |
-| SC-15 | Record.headword_entries relationship traversal | Behavioral test (ORM) | Fix back_populates |
-| SC-16 | Record.gloss_entries relationship traversal | Behavioral test (ORM) | Fix back_populates |
-| SC-17 | FK RESTRICT blocks record deletion (IntegrityError) | Behavioral test (DB constraint) | Fix FK policy |
-| SC-18 | Headword entry_type CHECK constraint | Behavioral test (DB constraint) | Fix CHECK constraint |
-| SC-19 | Headword requires entry_type (NOT NULL) | Behavioral test (DB constraint) | Fix NOT NULL |
-| SC-20 | Gloss rejects entry_type (no column) | Behavioral test (schema divergence) | Fix GlossSearchEntry model |
-| SC-21 | Multiple headword entries per record | Behavioral test (ORM collection) | Fix relationship cardinality |
-| SC-22 | Multiple gloss entries per record | Behavioral test (ORM collection) | Fix relationship cardinality |
-| SC-23 | Gloss indexes only first ge at headword level | Behavioral test execution | Fix first-ge-only logic |
-| SC-24 | Empty search input returns all records without error/crash | Behavioral test execution | Fix empty input handler |
-| SC-25 | Special characters no crash or SQL injection | Behavioral test execution | Fix sanitization/escaping |
-| SC-26 | Records missing \lx excluded from headword results | Behavioral test execution | Fix null-lx filter |
+| SC | Criterion | Verification Method | Remediation | Verification Gate | Re-Entry Step | Test File |
+|----|-----------|-------------------|-------------|-------------------|---------------|-----------|
+| SC-1 | Headword search finds primary lx — "wampuw" returns exactly 1 record | `uv run pytest tests/services/test_linguistic_service.py::test_headword_search_primary_lx` | Fix HeadwordSearchEntry join target | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-2 | Headword search finds primary va — "wampu" returns exactly 1 record | `uv run pytest tests/services/test_linguistic_service.py::test_headword_search_primary_va` | Fix HeadwordSearchEntry va indexing | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-3 | Headword excludes nested va — "wampu-" returns 0 records | `uv run pytest tests/services/test_upload_service.py::test_headword_excludes_nested_va` | Fix in_headword_block state tracking | red-green | Phase 2 RED | `tests/services/test_upload_service.py` |
+| SC-4 | Gloss search finds primary ge — "round object" returns exactly 1 record | `uv run pytest tests/services/test_linguistic_service.py::test_gloss_search_primary_ge` | Fix GlossSearchEntry join target | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-5 | Gloss excludes nested ge — "ball" returns 0 records | `uv run pytest tests/services/test_upload_service.py::test_gloss_excludes_nested_ge` | Fix in_headword_block state tracking | red-green | Phase 2 RED | `tests/services/test_upload_service.py` |
+| SC-6 | Gloss excludes headword — "wampuw" returns 0 records | `uv run pytest tests/services/test_linguistic_service.py::test_gloss_excludes_headword` | Fix GlossSearchEntry query scope | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-7 | Lexeme mode UNCHANGED — all variants returned, no entry_type filter | `uv run pytest tests/services/test_linguistic_service.py::test_lexeme_mode_unchanged` | Restore original SearchEntry join | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-8 | FTS mode UNCHANGED — no changes to FTS logic | `uv run pytest tests/services/test_linguistic_service.py::test_fts_mode_unchanged` | Restore original FTS branch | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-9 | headword_search_entries table MUST exist with columns and indexes | `uv run pytest tests/database/test_migration_manager.py::test_headword_search_entry_table_exists` | Create migration | pre-commit | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-10 | gloss_search_entries table MUST exist with columns and indexes | `uv run pytest tests/database/test_migration_manager.py::test_gloss_search_entry_table_exists` | Create migration | pre-commit | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-11 | Headword default search mode — session state initializes to "Headword" | `uv run pytest tests/frontend/test_records_ui.py::test_headword_default_mode` | Fix session state default | red-green | Phase 5 RED | `tests/frontend/test_records_ui.py` |
+| SC-12 | UI vertical radio groupings — Focused/Broad separators | `uv run pytest tests/frontend/test_records_ui.py::test_vertical_radio_groupings` | Fix UI rendering | red-green | Phase 5 RED | `tests/frontend/test_records_ui.py` |
+| SC-13 | Migration rollback safe — DROP new tables without data loss | `uv run pytest tests/database/test_migration_manager.py::test_migration_rollback` | Fix migration script | pre-commit | Phase 3 RED | `tests/database/test_migration_manager.py` |
+| SC-14 | Search performance < 500ms for all modes | `uv run pytest tests/services/test_linguistic_service.py::test_search_performance` | Add indexes, optimize queries | ci | Phase 4 REFACTOR | `tests/services/test_linguistic_service.py` |
+| SC-15 | Record.headword_entries relationship traversal | `uv run pytest tests/database/test_migration_manager.py::test_headword_relationship` | Fix back_populates | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-16 | Record.gloss_entries relationship traversal | `uv run pytest tests/database/test_migration_manager.py::test_gloss_relationship` | Fix back_populates | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-17 | FK RESTRICT blocks record deletion (IntegrityError) | `uv run pytest tests/database/test_migration_manager.py::test_fk_restrict` | Fix FK policy | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-18 | Headword entry_type CHECK constraint | `uv run pytest tests/database/test_migration_manager.py::test_entry_type_check_constraint` | Fix CHECK constraint | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-19 | Headword requires entry_type (NOT NULL) | `uv run pytest tests/database/test_migration_manager.py::test_entry_type_not_null` | Fix NOT NULL | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-20 | Gloss rejects entry_type (no column) | `uv run pytest tests/database/test_migration_manager.py::test_gloss_no_entry_type` | Fix GlossSearchEntry model | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-21 | Multiple headword entries per record | `uv run pytest tests/database/test_migration_manager.py::test_multiple_headword_entries` | Fix relationship cardinality | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-22 | Multiple gloss entries per record | `uv run pytest tests/database/test_migration_manager.py::test_multiple_gloss_entries` | Fix relationship cardinality | red-green | Phase 1 RED | `tests/database/test_migration_manager.py` |
+| SC-23 | Gloss indexes only first ge at headword level | `uv run pytest tests/services/test_upload_service.py::test_first_ge_only` | Fix first-ge-only logic | red-green | Phase 2 RED | `tests/services/test_upload_service.py` |
+| SC-24 | Empty search input returns all records without error/crash | `uv run pytest tests/services/test_linguistic_service.py::test_empty_search_input` | Fix empty input handler | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-25 | Special characters no crash or SQL injection | `uv run pytest tests/services/test_linguistic_service.py::test_special_characters` | Fix sanitization/escaping | red-green | Phase 4 RED | `tests/services/test_linguistic_service.py` |
+| SC-26 | Records missing \lx excluded from headword results | `uv run pytest tests/services/test_upload_service.py::test_missing_lx_excluded` | Fix null-lx filter | red-green | Phase 2 RED | `tests/services/test_upload_service.py` |
+| SC-27 | Before any implementation, write unit or integration tests that verify the changed behavior; confirm RED state (test fails before change) | `uv run pytest --collect-only tests/` — verify test files exist for each phase before GREEN | If tests missing from working tree, re-create before any source changes | red-green | Phase 2/3/4/5 pre-RED | All test files per phase |
 
 ### Metadata Table
 
-| SC | Evidence Type | Phase Binding | Pipeline Step | Semantic Intent |
-|----|--------------|---------------|---------------|-----------------|
-| SC-1 | `behavioral` | Phase 4 | Query routing | Verifies query routing correctness — grep doesn't capture routing |
-| SC-2 | `behavioral` | Phase 4 | Query routing | Primary va is a distinct code path from primary lx |
-| SC-3 | `behavioral` | Phase 2/4 | State tracking | Essential negative test for in_headword_block exclusion |
-| SC-4 | `behavioral` | Phase 4 | Query routing | Gloss mode uses GlossSearchEntry — different join target |
-| SC-5 | `behavioral` | Phase 2/4 | State tracking | Cross-ref ge exclusion validates state tracking |
-| SC-6 | `behavioral` | Phase 4 | Query routing | Ensures gloss mode doesn't accidentally match lx field |
-| SC-7 | `behavioral` | Phase 4 | Search dispatch | Lexeme joins SearchEntry with NO filters |
-| SC-8 | `behavioral` | Phase 4 | Search dispatch | FTS is a separate code path — no changes allowed |
-| SC-9 | `structural` | Phase 1 | Schema | Table existence at audit time, not runtime |
-| SC-10 | `structural` | Phase 1 | Schema | Same as SC-9 for gloss table |
-| SC-11 | `semantic` | Phase 5 | UI | Session state initialization — verified by test setup |
-| SC-12 | `semantic` | Phase 5 | UI | UI rendering — verified by Streamlit component presence |
-| SC-13 | `behavioral` | Phase 1/3 | Migration | Rollback safety — restoring state without data loss |
-| SC-14 | `behavioral` | Phase 4 | Performance | < 500ms ensures user-facing responsiveness |
-| SC-15 | `behavioral` | Phase 1 | ORM | Relationship traversal — back_populates bidirectional |
-| SC-16 | `behavioral` | Phase 1 | ORM | Same as SC-15 for gloss relationship |
-| SC-17 | `behavioral` | Phase 1 | Schema | FK RESTRICT blocks cascade — DB-level enforcement |
-| SC-18 | `behavioral` | Phase 1 | Schema | CHECK constraint at DB level — IntegrityError on invalid entry_type |
-| SC-19 | `behavioral` | Phase 1 | Schema | NOT NULL — entry_type truly mandatory |
-| SC-20 | `behavioral` | Phase 1 | Schema | Structural divergence — gloss has no entry_type column |
-| SC-21 | `behavioral` | Phase 1 | ORM | One-to-many collection semantics |
-| SC-22 | `behavioral` | Phase 1 | ORM | Same as SC-21 for gloss |
-| SC-23 | `behavioral` | Phase 2 | Indexing | Spec requirement — multiple ge, only first indexed |
-| SC-24 | `behavioral` | Phase 4 | Search | Empty input must not crash |
-| SC-25 | `behavioral` | Phase 4 | Search | Sanitization — no injection or crash |
-| SC-26 | `behavioral` | Phase 2 | Indexing | Records without lx excluded from headword results |
+| SC | Evidence Type | Phase Binding | Pipeline Step | Semantic Intent | Artifact Path |
+|----|--------------|---------------|---------------|-----------------|---------------|
+| SC-1 | `behavioral` | Phase 4 | Query routing | Verifies query routing correctness — grep doesn't capture routing | `./tmp/400/behavioral/` |
+| SC-2 | `behavioral` | Phase 4 | Query routing | Primary va is a distinct code path from primary lx | `./tmp/400/behavioral/` |
+| SC-3 | `behavioral` | Phase 2/4 | State tracking | Essential negative test for in_headword_block exclusion | `./tmp/400/behavioral/` |
+| SC-4 | `behavioral` | Phase 4 | Query routing | Gloss mode uses GlossSearchEntry — different join target | `./tmp/400/behavioral/` |
+| SC-5 | `behavioral` | Phase 2/4 | State tracking | Cross-ref ge exclusion validates state tracking | `./tmp/400/behavioral/` |
+| SC-6 | `behavioral` | Phase 4 | Query routing | Ensures gloss mode doesn't accidentally match lx field | `./tmp/400/behavioral/` |
+| SC-7 | `behavioral` | Phase 4 | Search dispatch | Lexeme joins SearchEntry with NO filters | `./tmp/400/behavioral/` |
+| SC-8 | `behavioral` | Phase 4 | Search dispatch | FTS is a separate code path — no changes allowed | `./tmp/400/behavioral/` |
+| SC-9 | `structural` | Phase 1 | Schema | Table existence at audit time, not runtime | `./tmp/400/structural/` |
+| SC-10 | `structural` | Phase 1 | Schema | Same as SC-9 for gloss table | `./tmp/400/structural/` |
+| SC-11 | `semantic` | Phase 5 | UI | Session state initialization — verified by test setup | `./tmp/400/semantic/` |
+| SC-12 | `semantic` | Phase 5 | UI | UI rendering — verified by Streamlit component presence | `./tmp/400/semantic/` |
+| SC-13 | `behavioral` | Phase 1/3 | Migration | Rollback safety — restoring state without data loss | `./tmp/400/behavioral/` |
+| SC-14 | `behavioral` | Phase 4 | Performance | < 500ms ensures user-facing responsiveness | `./tmp/400/behavioral/` |
+| SC-15 | `behavioral` | Phase 1 | ORM | Relationship traversal — back_populates bidirectional | `./tmp/400/behavioral/` |
+| SC-16 | `behavioral` | Phase 1 | ORM | Same as SC-15 for gloss relationship | `./tmp/400/behavioral/` |
+| SC-17 | `behavioral` | Phase 1 | Schema | FK RESTRICT blocks cascade — DB-level enforcement | `./tmp/400/behavioral/` |
+| SC-18 | `behavioral` | Phase 1 | Schema | CHECK constraint at DB level — IntegrityError on invalid entry_type | `./tmp/400/behavioral/` |
+| SC-19 | `behavioral` | Phase 1 | Schema | NOT NULL — entry_type truly mandatory | `./tmp/400/behavioral/` |
+| SC-20 | `behavioral` | Phase 1 | Schema | Structural divergence — gloss has no entry_type column | `./tmp/400/behavioral/` |
+| SC-21 | `behavioral` | Phase 1 | ORM | One-to-many collection semantics | `./tmp/400/behavioral/` |
+| SC-22 | `behavioral` | Phase 1 | ORM | Same as SC-21 for gloss | `./tmp/400/behavioral/` |
+| SC-23 | `behavioral` | Phase 2 | Indexing | Spec requirement — multiple ge, only first indexed | `./tmp/400/behavioral/` |
+| SC-24 | `behavioral` | Phase 4 | Search | Empty input must not crash | `./tmp/400/behavioral/` |
+| SC-25 | `behavioral` | Phase 4 | Search | Sanitization — no injection or crash | `./tmp/400/behavioral/` |
+| SC-26 | `behavioral` | Phase 2 | Indexing | Records without lx excluded from headword results | `./tmp/400/behavioral/` |
+| SC-27 | `behavioral` | All phases | Pre-implementation | TDD RED phase — tests must exist and fail before GREEN | `./tmp/400/behavioral/` |
 
 ---
 
@@ -272,6 +280,16 @@ st.session_state.search_mode: str  # Default: "Headword"
 | Nested `\ge` in subentries | Excluded via state tracking (`in_headword_block = False`) |
 | Nested `\va` in subentries | Excluded from HeadwordSearchEntry (not indexed) |
 | `\xv` marker | Exits headword block (structural boundary, same as `\va` in parser) |
+
+---
+
+## Explicit Non-Goals
+
+- **Integration with external search APIs** — No Elasticsearch, Meilisearch, or other external search backends. All search is SQL-based via SQLAlchemy.
+- **Fuzzy/typo-tolerant search** — No Levenshtein, trigram, or phonetic matching. Exact normalized-term matching only.
+- **Search result ranking** — No relevance scoring or result ordering beyond default SQL ordering.
+- **Multi-language gloss support** — Only English glosses (`\ge`). No support for additional gloss languages.
+- **Search history or saved searches** — No persistence of search queries or recent searches.
 
 ---
 
@@ -405,19 +423,19 @@ Behaviors that MUST NOT change:
 
 ## Documentation Sources
 
-| Source | Type | Relevance |
-|--------|------|-----------|
-| [Shoebox/MDF standard (SIL)](https://software.sil.org/shoebox/) | External specification | MDF marker format (\lx, \ge, \va, \se, \cf, \xv) and nesting semantics for headword/subentry structures |
-| [Standard Format (aka MDF) Reference](https://www.sil.org/resources/archives/700) | External specification | Complete marker reference for `\lx` headword blocks, `\va` variants, `\ge` glosses, `\se` subentries, `\cf` cross-references |
-| [Issue #14](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/14) | Internal requirement | Original user request for headword/gloss search modes |
-| [Issue #23](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/23) | Internal spec | Previous single-table approach (superseded) |
-| [Issue #698](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/698) | Internal spec | Phase 1 schema gap findings (closed) |
-| [Issue #671](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/671) | Internal issue | entry_type model docstring update |
-| [Issue #1126](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1126) | Internal task | Phase 5 implementation sub-issue |
-| [PR #403](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/403) | Internal code | Phase 1 implementation |
-| [PR #760](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/760) | Internal code | Fix #698 — FK cascade, entry_type index/constraint |
-| [PR #764](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/764) | Internal code | Mock path updates and hard-delete unit tests |
-| [PR #1286](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/1286) | Internal code | SearchEntry dedup + unique index |
+| Source Category | What Was Consulted | Purpose |
+|----------------|-------------------|---------|
+| External specification | [Shoebox/MDF standard (SIL)](https://software.sil.org/shoebox/) | MDF marker format (\lx, \ge, \va, \se, \cf, \xv) and nesting semantics for headword/subentry structures |
+| External specification | [Standard Format (aka MDF) Reference](https://www.sil.org/resources/archives/700) | Complete marker reference for `\lx` headword blocks, `\va` variants, `\ge` glosses, `\se` subentries, `\cf` cross-references |
+| Internal requirement | [Issue #14](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/14) | Original user request for headword/gloss search modes |
+| Internal spec | [Issue #23](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/23) | Previous single-table approach (superseded) |
+| Internal spec | [Issue #698](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/698) | Phase 1 schema gap findings (closed) |
+| Internal issue | [Issue #671](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/671) | entry_type model docstring update |
+| Internal task | [Issue #1126](https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1126) | Phase 5 implementation sub-issue |
+| Internal code | [PR #403](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/403) | Phase 1 implementation |
+| Internal code | [PR #760](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/760) | Fix #698 — FK cascade, entry_type index/constraint |
+| Internal code | [PR #764](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/764) | Mock path updates and hard-delete unit tests |
+| Internal code | [PR #1286](https://github.com/Brothertown-Language/snea-shoebox-editor/pull/1286) | SearchEntry dedup + unique index |
 
 ---
 
@@ -435,6 +453,10 @@ Behaviors that MUST NOT change:
 
 ---
 
-> **Approval Tracking:** Approvals are tracked via GitHub Issue comments (e.g., `AI: ✅ Approved: Phase 1`), NOT in the issue body. Issue body edits destroy history.
+## AI Agent Instructions
+
+This issue is an executive summary for human stakeholders. The authoritative spec and plan artifacts are at `.issues/400/`. After creation, `local-issues sync 400` MUST be run and the result committed to create the local `.issues/400/` entry. The implementation plan will be created in `.issues/400/plan.md` after approval. AI agents MUST read the local spec/plan files for implementation and MUST NOT base implementation on this summary.
+
+---
 
 🤖 📝 Updated by OpenCode (ollama-cloud/deepseek-v4-flash)
