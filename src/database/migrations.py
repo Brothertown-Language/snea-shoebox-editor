@@ -124,6 +124,11 @@ class MigrationManager:
             "_migrate_replace_fts_vector",
             "Replace records.fts_vector with fts_entries table using 'simple' config",
         ),
+        (
+            20260615125509,
+            "_migrate_backfill_search_entries",
+            "Backfill HeadwordSearchEntry and GlossSearchEntry for existing records",
+        ),
     ]
 
     def __init__(self, engine):
@@ -671,6 +676,28 @@ class MigrationManager:
         finally:
             session.close()
 
+    def _migrate_backfill_search_entries(self):
+        """Migration 20260615125509: Backfill HeadwordSearchEntry and GlossSearchEntry for existing records."""
+        from src.services.upload_service import UploadService
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            from .models.core import Record
+
+            records = session.query(Record).filter(Record.is_deleted.isnot(True)).all()
+            all_ids = [r.id for r in records]
+            logger.info(f"Backfilling search entries for {len(all_ids)} records...")
+            UploadService.populate_search_entries(record_ids=all_ids, session=session)
+            session.commit()
+            logger.info("Backfill complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to backfill search entries: {e}")
+            raise
+        finally:
+            session.close()
+
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""
         from .models.core import Record, Source
@@ -946,11 +973,7 @@ class MigrationManager:
                 );
             """)
             )
-            conn.execute(
-                text(
-                    "CREATE INDEX IF NOT EXISTS idx_fts_entries_record_id ON fts_entries (record_id);"
-                )
-            )
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_fts_entries_record_id ON fts_entries (record_id);"))
             conn.commit()
 
         # 2. Populate fts_entries from all records using generate_sort_lx() + to_tsvector('simple')
@@ -981,10 +1004,7 @@ class MigrationManager:
         with self._engine.connect() as conn:
             # 3. Create GIN index on fts_entries.fts_vector
             conn.execute(
-                text(
-                    "CREATE INDEX IF NOT EXISTS idx_fts_entries_vector "
-                    "ON fts_entries USING gin (fts_vector);"
-                )
+                text("CREATE INDEX IF NOT EXISTS idx_fts_entries_vector ON fts_entries USING gin (fts_vector);")
             )
             # 4. Drop old GIN index on records.fts_vector
             conn.execute(text("DROP INDEX IF EXISTS idx_records_fts;"))
