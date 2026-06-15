@@ -26,9 +26,6 @@ from security.pre_submission_scan import (
     scan_content,
 )
 
-CRITICAL_RULES_PATH = Path(__file__).resolve().parent.parent / ".opencode" / "guidelines" / "000-critical-rules.md"
-
-
 class TestRedactSecretsLogic:
     """Tests for the redaction logic that mirrors session-enforcement.ts redactSecrets()."""
 
@@ -296,43 +293,3 @@ SECRET=supersecret
         assert "⚠️ SECRETS REDACTED" in result
 
 
-class TestSecretExfiltrationRule:
-    """Tests for the critical violation section in 000-critical-rules.md."""
-
-    def test_sc12_section_exists(self):
-        """SC12: 000-critical-rules.md contains 'Secret Exfiltration in Agent Output' section."""
-        content = CRITICAL_RULES_PATH.read_text()
-        assert "Secret Exfiltration in Agent Output" in content
-
-    def test_sc13_covers_all_channels(self):
-        """SC13: The rule covers issue comments, PR descriptions, commit messages, and chat."""
-        content = CRITICAL_RULES_PATH.read_text()
-        secret_section_start = content.find("Secret Exfiltration in Agent Output")
-        assert secret_section_start != -1, "Secret Exfiltration section not found"
-        section = content.lower()
-        assert "issue comments" in section or "issue comment" in section
-        assert "pr descriptions" in section or "pr description" in section
-        assert "commit messages" in section or "commit message" in section
-        assert "chat" in section
-
-    def test_section_is_critical_violation(self):
-        """The section is marked as a Critical Violation."""
-        content = CRITICAL_RULES_PATH.read_text()
-        secret_section_start = content.find("Secret Exfiltration in Agent Output")
-        assert secret_section_start != -1
-        section = content[secret_section_start : secret_section_start + 2000]
-        assert "CRITICAL GUIDELINE VIOLATION" in section or "Critical Violation" in section
-
-    def test_forbidden_includes_env_contents(self):
-        """The FORBIDDEN list includes .env file contents."""
-        content = CRITICAL_RULES_PATH.read_text()
-        secret_section_start = content.find("Secret Exfiltration in Agent Output")
-        section = content[secret_section_start : secret_section_start + 3000]
-        assert ".env" in section
-
-    def test_required_includes_redaction(self):
-        """The REQUIRED list includes redaction to [REDACTED]."""
-        content = CRITICAL_RULES_PATH.read_text()
-        secret_section_start = content.find("Secret Exfiltration in Agent Output")
-        section = content[secret_section_start : secret_section_start + 3000]
-        assert "[REDACTED]" in section

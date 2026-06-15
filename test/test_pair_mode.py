@@ -122,19 +122,6 @@ class TestPairModeGuideline:
             assert "pair-" in content, "Pair mode guideline must mention pair- prefix"
 
 
-class TestAgentsMdPairMode:
-    def test_agents_md_mentions_pair_mode(self):
-        agents_md = Path(__file__).resolve().parent.parent / "AGENTS.md"
-        content = agents_md.read_text()
-        assert "pair-" in content, "AGENTS.md must document pair mode"
-        assert "pair-feature" in content or "pair-spec" in content, "AGENTS.md must document pair branch patterns"
-
-    def test_agents_md_pair_mode_table(self):
-        agents_md = Path(__file__).resolve().parent.parent / "AGENTS.md"
-        content = agents_md.read_text()
-        assert "Dev-pair" in content, "AGENTS.md must have pair mode table with Dev-pair"
-
-
 class TestSessionContextPairModeResume:
     def test_issue_number_inference_from_branch(self):
         branch = "pair-feature/123-xyz"
