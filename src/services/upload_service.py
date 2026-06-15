@@ -1757,6 +1757,7 @@ class UploadService:
             total = 0
             # Check once whether fts_entries table exists (migration guard)
             from sqlalchemy import inspect as sa_inspect
+
             _fts_table_exists = sa_inspect(session.get_bind()).has_table("fts_entries")
 
             for rid in record_ids:
@@ -1774,7 +1775,10 @@ class UploadService:
                 # Re-parse MDF to extract searchable fields
                 from src.mdf.parser import parse_mdf as _parse
 
-                parsed = _parse(record.mdf_data)
+                try:
+                    parsed = _parse(record.mdf_data)
+                except ValueError:
+                    continue
                 if not parsed:
                     continue
                 entry = parsed[0]
@@ -1801,7 +1805,7 @@ class UploadService:
                     norm = LinguisticService.generate_sort_lx(term)
                     session.add(HeadwordSearchEntry(record_id=rid, entry_type="lx", term=term, normalized_term=norm))
                     total += 1
-                for val in entry.get("va", []):
+                for val in entry.get("primary_va", []):
                     if val:
                         norm = LinguisticService.generate_sort_lx(val)
                         session.add(HeadwordSearchEntry(record_id=rid, entry_type="va", term=val, normalized_term=norm))

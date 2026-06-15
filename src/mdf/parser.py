@@ -52,6 +52,7 @@ def _process_block_into_record(lines_buffer):
         "record_id": None,
         "lg": [],
         "va": [],
+        "primary_va": [],
         "se": [],
         "cf": [],
         "ve": [],
@@ -63,10 +64,13 @@ def _process_block_into_record(lines_buffer):
         if (
             _extract_tag(line, "se") is not None
             or _extract_tag(line, "sn") is not None
-            or _extract_tag(line, "va") is not None
             or _extract_tag(line, "xv") is not None
         ):
             in_headword = False
+
+        val = _extract_tag(line, "va")
+        if val is not None and in_headword:
+            record["primary_va"].append(val)
 
         val = _extract_tag(line, "lx")
         if val is not None and not record["lx"]:
