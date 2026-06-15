@@ -179,6 +179,7 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_fts(self):
         from sqlalchemy import func
+
         from src.database.models.search import FTSEntry
 
         r1 = Record(lx="dog", ge="canine", source_id=self.source_id, mdf_data="\\lx dog\n\\nt some note")
@@ -186,7 +187,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.commit()
 
         norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
-        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
         self.session.commit()
 
         with self._patch_session():
@@ -589,9 +590,7 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_headword_finds_primary_lx(self):
         """SC-1: Headword search finds primary lx — 'wampuw' returns exactly 1 record."""
-        r1 = Record(
-            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
-        )
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
         self.session.add(r1)
         self.session.commit()
 
@@ -652,9 +651,7 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_gloss_finds_primary_ge(self):
         """SC-4: Gloss search finds primary ge — 'round object' returns exactly 1 record."""
-        r1 = Record(
-            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
-        )
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
         self.session.add(r1)
         self.session.commit()
 
@@ -690,9 +687,7 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_gloss_excludes_headword(self):
         """SC-6: Gloss excludes headword — 'wampuw' returns 0 records."""
-        r1 = Record(
-            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
-        )
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
         self.session.add(r1)
         self.session.commit()
 
@@ -708,9 +703,7 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_lexeme_mode_unchanged(self):
         """SC-7: Lexeme mode UNCHANGED — all variants returned, no entry_type filter."""
-        r1 = Record(
-            lx="run", ge="to move fast", source_id=self.source_id, mdf_data="\\lx run\n\\va ran"
-        )
+        r1 = Record(lx="run", ge="to move fast", source_id=self.source_id, mdf_data="\\lx run\n\\va ran")
         self.session.add(r1)
         self.session.commit()
 
@@ -728,6 +721,7 @@ class TestLinguisticService(unittest.TestCase):
     def test_search_records_fts_mode_unchanged(self):
         """SC-8: FTS mode UNCHANGED — no changes to FTS logic."""
         from sqlalchemy import func
+
         from src.database.models.search import FTSEntry
 
         r1 = Record(lx="dog", ge="canine", source_id=self.source_id, mdf_data="\\lx dog\n\\nt some note")
@@ -735,7 +729,7 @@ class TestLinguisticService(unittest.TestCase):
         self.session.commit()
 
         norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
-        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
         self.session.commit()
 
         with self._patch_session():
@@ -747,9 +741,7 @@ class TestLinguisticService(unittest.TestCase):
         """SC-14: Search performance < 500ms for all modes."""
         import time
 
-        r1 = Record(
-            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
-        )
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
         self.session.add(r1)
         self.session.commit()
 
@@ -769,9 +761,7 @@ class TestLinguisticService(unittest.TestCase):
 
     def test_search_records_empty_input(self):
         """SC-24: Empty search input returns all records without error/crash."""
-        r1 = Record(
-            lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object"
-        )
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
         self.session.add(r1)
         self.session.commit()
 
@@ -810,6 +800,72 @@ class TestLinguisticService(unittest.TestCase):
         for doc in expected_docs:
             self.assertIn(doc, agents_content, f"AGENTS.md missing link to {doc}")
 
+    def test_export_headword_mode(self):
+        """SC-28: get_all_records_for_export() Headword mode returns correct results."""
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add_all([hse_lx, hse_va, gse])
+        self.session.commit()
+
+        with self._patch_session():
+            records = LinguisticService.get_all_records_for_export(search_term="wampuw", search_mode="Headword")
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["lx"], "wampuw")
+
+    def test_export_gloss_mode(self):
+        """SC-29: get_all_records_for_export() Gloss mode returns correct results."""
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add(gse)
+        self.session.commit()
+
+        with self._patch_session():
+            records = LinguisticService.get_all_records_for_export(search_term="round object", search_mode="Gloss")
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["lx"], "wampuw")
+
+    def test_export_lexeme_mode_unchanged(self):
+        """SC-32: get_all_records_for_export() Lexeme mode UNCHANGED — regression guard."""
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        se = SearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        self.session.add(se)
+        self.session.commit()
+
+        with self._patch_session():
+            records = LinguisticService.get_all_records_for_export(search_term="wampuw", search_mode="Lexeme")
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["lx"], "wampuw")
+
+    def test_export_fts_mode_unchanged(self):
+        """SC-34: get_all_records_for_export() FTS mode UNCHANGED — regression guard."""
+        from sqlalchemy import func
+
+        from src.database.models.search import FTSEntry
+
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
+        self.session.commit()
+
+        with self._patch_session():
+            records = LinguisticService.get_all_records_for_export(search_term="wampuw", search_mode="FTS")
+        self.assertEqual(len(records), 1)
+        self.assertEqual(records[0]["lx"], "wampuw")
+
     def test_search_records_special_characters(self):
         """SC-25: Special characters no crash or SQL injection."""
         r1 = Record(lx="safe", ge="test", source_id=self.source_id, mdf_data="\\lx safe")
@@ -835,8 +891,9 @@ class TestLinguisticService(unittest.TestCase):
     def test_ftsentry_model_schema(self):
         """Phase 2: Verify FTSEntry model exists with correct schema."""
         from sqlalchemy.inspection import inspect
-        from src.database.models.search import FTSEntry
+
         from src.database.models.core import Record
+        from src.database.models.search import FTSEntry
 
         self.assertEqual(FTSEntry.__tablename__, "fts_entries")
 
@@ -883,15 +940,15 @@ class TestLinguisticService(unittest.TestCase):
     def test_search_records_fts_normalized(self):
         """SC-8: FTS with normalized text — diacritics in mdf_data, search normalized form."""
         from sqlalchemy import func
+
         from src.database.models.search import FTSEntry
 
-        r1 = Record(lx="akitusu-", ge="test", source_id=self.source_id,
-                    mdf_data="\\lx akitusu-\n\\ge test")
+        r1 = Record(lx="akitusu-", ge="test", source_id=self.source_id, mdf_data="\\lx akitusu-\n\\ge test")
         self.session.add(r1)
         self.session.commit()
 
         norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
-        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
         self.session.commit()
 
         with self._patch_session():
@@ -902,15 +959,15 @@ class TestLinguisticService(unittest.TestCase):
     def test_search_records_fts_infinity_symbol(self):
         """SC-8: FTS with infinity symbol in mdf_data, search via pooy prefix."""
         from sqlalchemy import func
+
         from src.database.models.search import FTSEntry
 
-        r1 = Record(lx="pooy∞", ge="test", source_id=self.source_id,
-                    mdf_data="\\lx pooy∞\\ge test")
+        r1 = Record(lx="pooy∞", ge="test", source_id=self.source_id, mdf_data="\\lx pooy∞\\ge test")
         self.session.add(r1)
         self.session.commit()
 
         norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
-        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
         self.session.commit()
 
         with self._patch_session():
@@ -928,18 +985,20 @@ class TestLinguisticService(unittest.TestCase):
         # to "99problems" which matches via tsquery prefix match.
         # Instead, use a term that to_tsvector('simple') does NOT index as a lexeme:
         # punctuation-only strings like "!!!" are not word tokens.
-        r1 = Record(lx="secret", ge="hidden", source_id=self.source_id,
-                    mdf_data="\\lx secret\n\\nt some text !!!")
+        r1 = Record(lx="secret", ge="hidden", source_id=self.source_id, mdf_data="\\lx secret\n\\nt some text !!!")
         self.session.add(r1)
         self.session.commit()
 
         norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
         from sqlalchemy import func
-        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector('simple', norm_mdf)))
+
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
         self.session.commit()
 
         with self._patch_session():
             # "!!!" is not a tsvector token, so FTS returns no results.
             # The old code had an ILIKE fallback that would match "!!!" in raw mdf_data.
             result = LinguisticService.search_records(search_term="!!!", search_mode="FTS")
-        self.assertEqual(len(result.records), 0, "Punctuation-only term should not match via FTS without ILIKE fallback")
+        self.assertEqual(
+            len(result.records), 0, "Punctuation-only term should not match via FTS without ILIKE fallback"
+        )
