@@ -1,7 +1,23 @@
 # Spec: Records View: Left Panel Filter UX Improvements
 
-STATUS: 1.2
+STATUS: 1.3
 CREATED: 2026-04-05
+REVISED: 2026-06-13 — Added Executive Summary, Decision Ledger, Risk Traceability, Out of Scope, and stable anchors per modern spec standards
+
+## Executive Summary
+
+**Intent:** Improve clarity and usability of the left-panel filter controls in the Records view by relabeling ambiguous dropdowns, disabling inapplicable filters based on search mode, and investigating language role filter behavior.
+
+**Problem:** Users are confused about whether filters apply to their current search mode. Ambiguous labels ("All") don't convey what is being filtered. FTS mode has filters that don't apply but remain enabled.
+
+**Approach Chosen:** Relabel dropdown defaults to clarify scope ("All Sources", "All Languages"), disable language filters when search mode is FTS with visual indication, and investigate language role behavior.
+
+**Key Design Decisions:** Filter values preserved in session state across mode switches; disabled filters grayed out with tooltip explanation; no changes to existing Lexeme mode filter behavior.
+
+**Alternatives Considered:**
+- Removing inapplicable filters entirely: Rejected — filter values would be lost on mode switch
+- Keeping filters enabled but no-op: Rejected — confusing to users who apply filters that don't take effect
+- Separate filter UI per mode: Rejected — too complex; session state preservation handles it
 
 ---
 
@@ -68,6 +84,27 @@ Improve the user experience of the left panel filter controls in the Records vie
 
 ---
 
+## Decision Ledger
+
+| DEC-ID | Decision | Rationale | Requirement Key | Affected SCs |
+|--------|----------|-----------|-----------------|--------------|
+| DEC-1 | Relabel "All" to "All Sources" / "All Languages" | Removes ambiguity about what "All" refers to | MUST | SC-1, SC-2 |
+| DEC-2 | Disable Language + Language Role filters when FTS selected | FTS mode searches all fields — language filters don't apply; disabling prevents confusion | MUST | SC-4 |
+| DEC-3 | Preserve disabled filter values in session state | Re-enabling mode restores previous filter state without data loss | MUST | SC-10 |
+| DEC-4 | Grayed-out disabled state with tooltip | Clear visual indication prevents user confusion about why filters are inactive | SHOULD | SC-6 |
+| DEC-5 | Headword/Gloss modes have language filters ENABLED | These modes search primary entries with language attribution — filters should apply | MUST | SC-7 |
+
+## Risk Traceability
+
+| RISK-ID | Risk | Likelihood | Impact | Mitigation | Verifying SC |
+|---------|------|------------|--------|------------|--------------|
+| RISK-1 | Breaking existing Lexeme mode filter behavior | Low | Medium | Regression tests for Lexeme mode with all filter combinations | SC-5 |
+| RISK-2 | Session state corruption on mode switch | Low | Low | Explicit session state preservation logic; unit tests for round-trip | SC-10 |
+| RISK-3 | Dependency on #400 delays implementation | High | High | Phase 1 (label updates) is independent; separate into implementable chunks | SC-1, SC-2 |
+| RISK-4 | Language role investigation inconclusive | Low | Medium | Document findings; proceed with label updates and FTS disabling | SC-3 |
+
+---
+
 ## Constraints
 
 | Constraint Type | Details |
@@ -83,10 +120,10 @@ Improve the user experience of the left panel filter controls in the Records vie
 
 | File | Anchor | Description |
 |------|--------|-------------|
-| `src/frontend/pages/records.py` | `"Select Source"` selectbox (line ~177) | Sources dropdown with "All" option |
-| `src/frontend/pages/records.py` | `"Select Language"` selectbox (line ~183) | Languages dropdown with "All" option |
-| `src/frontend/pages/records.py` | `"Language Role"` radio (line ~189) | Language role filter radio buttons |
-| `src/frontend/pages/records.py` | Sidebar filter section | Filter disable logic based on search mode |
+| `src/frontend/pages/records.py` | `"Select Source"` selectbox (sources selectbox) | Sources dropdown with "All" option |
+| `src/frontend/pages/records.py` | `"Select Language"` selectbox (languages selectbox) | Languages dropdown with "All" option |
+| `src/frontend/pages/records.py` | `"Language Role"` radio (language role radio) | Language role filter radio buttons |
+| `src/frontend/pages/records.py` | Sidebar filter section (sidebar filter section) | Filter disable logic based on search mode |
 | `src/services/linguistic_service.py` | `search_records()` method | Backend search logic with language filters |
 | `tests/ui/mocks/records.py` | Mock filter controls | Test mock for UI filters |
 
@@ -115,6 +152,17 @@ Improve the user experience of the left panel filter controls in the Records vie
 2. **User has language filter selected then switches to FTS**: Selected filter should be visually disabled but not cleared
 3. **URL query parameters**: If search mode is passed via URL, filters should respect the mode on load
 4. **New search modes from #400**: Headword and Gloss modes should have language filters enabled
+
+---
+
+## Out of Scope
+
+| Concern | Rationale |
+|---------|-----------|
+| Adding new filter types | Only existing filters (Source, Language, Language Role) are relabeled or behavior-modified |
+| Search mode filter for Lexeme | Lexeme mode already works correctly with all filters — no changes needed |
+| Backend search logic changes | Filter disable logic is UI-only; search query construction remains unchanged |
+| UX changes beyond filter controls | Only sidebar filter section is in scope; record results layout, pagination, etc. unchanged |
 
 ---
 

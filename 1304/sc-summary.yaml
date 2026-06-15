@@ -1,0 +1,59 @@
+# SC Summary for #1304 — Phase 2: Backend Indexing Logic
+spec_issue: 1304
+parent_spec: 400
+created: 2026-06-15
+
+scs:
+  - id: SC-P1-1
+    criterion: "Parser record includes `primary_va` field with only headword-block \\va values"
+    evidence_type: behavioral
+    phase: 1
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1304/artifacts/sc-p1-1-evidence.yaml
+
+  - id: SC-P1-2
+    criterion: "Parser `va` list unchanged — still contains ALL \\va values (headword + nested)"
+    evidence_type: behavioral
+    phase: 1
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1304/artifacts/sc-p1-2-evidence.yaml
+
+  - id: SC-3
+    criterion: "Headword excludes nested va — 'wampu-' returns 0 records"
+    evidence_type: behavioral
+    phase: 2
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1304/artifacts/sc-3-evidence.yaml
+
+  - id: SC-5
+    criterion: "Gloss excludes nested ge — 'ball' returns 0 records"
+    evidence_type: behavioral
+    phase: 2
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1304/artifacts/sc-5-evidence.yaml
+
+  - id: SC-23
+    criterion: "Gloss indexes only first ge at headword level"
+    evidence_type: behavioral
+    phase: 2
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1304/artifacts/sc-23-evidence.yaml
+
+  - id: SC-26
+    criterion: "Records missing \\lx excluded from headword results"
+    evidence_type: behavioral
+    phase: 2
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1304/artifacts/sc-26-evidence.yaml

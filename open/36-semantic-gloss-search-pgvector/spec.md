@@ -1,6 +1,7 @@
-STATUS: 1.3 (REVISED - NEEDS APPROVAL)
+STATUS: 1.4 (REVISED - NEEDS APPROVAL)
 CREATED: 2026-03-29
 REVISED: 2026-06-13 — Added Documentation Sources table per modern spec standards (previous revision: 2026-05-22)
+REVISED: 2026-06-13 — Added Decision Ledger, Risk Traceability, Out of Scope, and Constraints sections per modern spec standards
 
 ---
 
@@ -42,6 +43,31 @@ Implement vector-based semantic search using:
 | Query | Same SQL | Same SQL |
 
 **Key point:** Both environments support pgvector identically. No fallback required.
+
+## Decision Ledger
+
+| DEC-ID | Decision | Rationale | Requirement Key | Affected SCs |
+|--------|----------|-----------|-----------------|--------------|
+| DEC-1 | Use `vector(384)` with all-MiniLM-L6-v2 model | Small footprint (~22MB), adequate for gloss-level semantic search, works identically on local pgserver and production PostgreSQL | MUST | SC-1, SC-2, SC-3 |
+| DEC-2 | Store embeddings on SearchEntry table rather than separate embedding table | Granular per-field semantic matching; same table as exact-match search simplifies query routing | MUST | SC-6, SC-9 |
+| DEC-3 | Cosine similarity via pgvector `<=>` operator | Standard similarity metric for sentence embeddings; matches all-MiniLM-L6-v2 training objective | MUST | SC-4, SC-5 |
+| DEC-4 | Embedding model committed to `models/` directory | Offline-first operation; no external API dependency at inference time | MUST | SC-7 |
+| DEC-5 | sentence-transformers for server-side embedding generation | Well-integrated with all-MiniLM-L6-v2; handles batching, Unicode, and truncation natively | MUST | SC-8 |
+| DEC-6 | Semantic search limited to direct gloss fields only | Excludes definitions (`\de`), usage notes (`\ue`), and national language fields — these are not glosses | MUST | SC-1, SC-2, SC-3 |
+| DEC-7 | Default similarity threshold 0.7 | Conservative default balances recall vs precision; user-adjustable via UI slider | SHOULD | SC-5 |
+
+---
+
+## Risk Traceability
+
+| RISK-ID | Risk | Likelihood | Impact | Mitigation | Verifying SC |
+|---------|------|------------|--------|------------|--------------|
+| RISK-1 | Model not found at startup | Low | High | Startup fails with clear error message; model committed to repo | SC-7 |
+| RISK-2 | pgvector extension unavailable on target environment | Low | High | Migration checks extension availability; informative error on missing extension | SC-10, SC-11 |
+| RISK-3 | Embedding quality too low for useful results | Medium | Medium | Similarity threshold tunable via UI slider; default 0.7 conservatively low | SC-1, SC-4, SC-5 |
+| RISK-4 | Long gloss text exceeds model token limit (512) | Medium | Low | Truncate to 512 tokens with warning log | SC-8 |
+| RISK-5 | Performance regression on bulk backfill | Medium | Medium | Batch embedding with progress tracking; page-size batching for DB writes | SC-8 |
+| RISK-6 | Empty database semantic search crashes | Low | High | Empty query returns empty results, not error | SC-12, SC-13 |
 
 ---
 
@@ -101,6 +127,18 @@ Only fields that are **direct glosses for terms or sentences** are indexed:
 |---------|---------|---------|
 | `sentence-transformers` | ^2.2 | Embedding generation |
 | `pgvector` | ^0.2 | PostgreSQL vector operations |
+
+---
+
+## Constraints
+
+| Constraint | Detail |
+|------------|--------|
+| Offline-first operation | Embedding model must be committed to repo; no external API at inference time |
+| Cross-environment parity | Solution must work identically on local pgserver (PostgreSQL 16.2) and production (PostgreSQL 17) |
+| Model size limit | Model must be small enough to commit to git repository (~22MB target) |
+| Backward compatibility | Existing exact-match search modes must remain unaffected |
+| No external API dependency | Embedding generation must not require network access at runtime |
 
 ---
 
@@ -398,6 +436,18 @@ async def search_semantic_all(
 | sentence-transformers (all-MiniLM-L6-v2) | Embedding model for semantic search | ^2.2 | https://www.sbert.net/ |
 | Spec #23 — Original Search Requirements | Headword/gloss exact-match search, SearchEntry table schema | 2026-03-29 | https://github.com/Brothertown-Language/snea-shoebox-editor/issues/23 |
 | Extant Linguistic Service | Existing FTS/exact-match search for pattern reference | Current | `src/services/linguistic_service.py` |
+
+---
+
+## Out of Scope
+
+| Concern | Rationale |
+|---------|-----------|
+| Multilingual embedding models | Only English glosses are indexed; cross-language semantic search is not required |
+| Real-time embedding updates | Embeddings generated on upload/migration only; no streaming or incremental update pipeline |
+| Cross-lingual search (Algonquian → English semantic) | Semantic search is English-gloss-to-English-query only; headword semantic search is not required |
+| GPU acceleration for embeddings | CPU-based inference is sufficient (~20-50ms per embedding); no GPU dependency |
+| Alternative similarity metrics (dot product, Euclidean) | Cosine similarity is the standard for sentence-transformers; alternative metrics add complexity without demonstrated need |
 
 ---
 

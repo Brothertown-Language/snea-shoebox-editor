@@ -1,13 +1,50 @@
-STATUS: 1.2 (REVISED - NEEDS APPROVAL)
+STATUS: 1.3 (REVISED - NEEDS APPROVAL)
 CREATED: 2026-03-29
 REVISED: 2026-04-23 — Added per-phase TDD RED/GREEN cycle structure; every SC mapped to test function with # SC-N markers; reversed step order (tests before implementation) per incremental-build discipline
 REVISED: 2026-05-22 — SC evidence type column added; SC-11/SC-12/SC-13 appended; Phase 4 TDD clarification; per-phase TDD cycle tables standardized
+REVISED: 2026-06-13 — Added Decision Ledger, Risk Traceability, Out of Scope, Constraints, expanded Executive Summary; removed non-spec sections per modern spec standards
 
 ---
 
 ## Executive Summary
 
-Add persistent exception logging to a SQL table for offline analysis. Exceptions will be captured with full stack traces, relevant local variables, request context, and timestamps. This enables post-mortem debugging of production issues without relying on ephemeral log files.
+**Intent:** Add persistent exception logging to a SQL table for offline analysis, enabling post-mortem debugging of production issues without relying on ephemeral log files.
+
+**Problem:** Current exception handling logs to stderr (Streamlit logs) which disappear after rotation, cannot be queried for patterns, lack structured context, and are inaccessible in production (Streamlit Cloud).
+
+**Approach Chosen:** Dedicated ExceptionLog model with sanitized local variable capture, stack trace logging, and request context storage. Logged via `log_exception()` service function, integrated into existing `handle_ui_error()` handler.
+
+**Key Design Decisions:** Separate audit model file, secret redaction in local variables, DB-failure resilience (never suppress original exception), configurable truncation limits.
+
+**Alternatives Considered:**
+- Structured file logging (JSON logs): Rejected — files also rotate; no query capability
+- External logging service (Sentry/DataDog): Rejected — adds external dependency; offline-first requirement
+- Extra stderr verbosity: Rejected — does not address persistence or queryability
+
+---
+
+## Decision Ledger
+
+| DEC-ID | Decision | Rationale | Requirement Key | Affected SCs |
+|--------|----------|-----------|-----------------|--------------|
+| DEC-1 | Dedicated ExceptionLog model in new `audit.py` file | Separate concern from core/meta models; follows existing pattern of one model file per domain | MUST | SC-1, SC-2 |
+| DEC-2 | Log exceptions to a SQL table instead of only stderr | Enables querying, aggregation, and retention beyond log rotation | MUST | SC-6, SC-9 |
+| DEC-3 | Sanitize local variables before storage (redact secrets) | Prevents sensitive data (passwords, tokens, secrets) from persisting in DB | MUST | SC-4, SC-5 |
+| DEC-4 | DB write failure must not suppress original exception | Exception logging is secondary — the original exception must always propagate | MUST | SC-11 |
+| DEC-5 | Truncate large values (locals, stack traces) | Prevents unbounded storage growth; configurable MAX_VAR_LENGTH and MAX_STACK_LENGTH | MUST | SC-10, SC-12 |
+| DEC-6 | Concurrent-safe DB writes via session-level isolation | Multiple simultaneous exceptions must not cause data loss or interleaving | SHOULD | SC-13 |
+
+---
+
+## Risk Traceability
+
+| RISK-ID | Risk | Likelihood | Impact | Mitigation | Verifying SC |
+|---------|------|------------|--------|------------|--------------|
+| RISK-1 | Sensitive data leaked into exception logs | Medium | High | _filter_locals() redacts secrets; sanitization has depth limit for circular refs | SC-5 |
+| RISK-2 | Exception logging DB write fails | Low | Medium | Catch and log to stderr; original exception never suppressed | SC-11 |
+| RISK-3 | Exception log table grows unbounded | Medium | Low | Truncation limits row size; admin UI (Phase 4) can include retention policy | SC-10, SC-12 |
+| RISK-4 | Circular reference in locals causes infinite loop | Low | High | Depth-limited sanitization (max 3 levels) catches circular refs | SC-7 |
+| RISK-5 | Concurrent exception handling loses data | Low | Medium | Session-level locking or queued writes ensure atomicity | SC-13 |
 
 ---
 
@@ -61,57 +98,11 @@ Current exception handling logs to stderr (Streamlit logs) which:
 
 ---
 
-## Commands
-
-```bash
-# Run tests
-uv run pytest tests/services/test_exception_service.py -v
-
-# Run lint and format
-uvx ruff check --fix src/ test/
-uvx ruff format src/ test/
-
-# Type check
-uvx pyright src/
-
-# Run migrations
-uv run python -c "from src.database.migrations import MigrationManager; ..."
-```
-
----
-
-## Testing
-
-- **Framework**: pytest
-- **Test locations**: `tests/services/test_exception_service.py`, `tests/frontend/test_ui_utils_errors.py`
-- **Run tests**: `uv run pytest tests/services/test_exception_service.py -v`
-- **Coverage focus**: `_sanitize_value()` edge cases, `_filter_locals()` sensitive var filtering, database write integration
-
----
-
 ## Project Structure
 
 - **Source code**: `src/database/models/` (models), `src/services/` (business logic), `src/frontend/` (UI)
 - **Tests**: `tests/services/` (service tests), `tests/frontend/` (UI tests)
 - **Migrations**: `src/database/migrations.py` (versioned schema changes)
-
----
-
-## Code Style
-
-- **Naming**: Snake_case for functions/variables, PascalCase for classes
-- **Functions**: Single responsibility, max 40 lines
-- **Imports**: Absolute imports from `src.` root
-- **Type hints**: Required for all function signatures
-- **Docstrings**: Triple-quoted with Args/Returns sections
-
----
-
-## Git Workflow
-
-- **Branch naming**: `spec/exception-logging-51` (spec/ prefix with issue number)
-- **Commit format**: `feat: add exception logging` or `fix: handle migration errors`
-- **PR requirements**: Squash merge to main, references `Fixes #51`
 
 ---
 
@@ -144,6 +135,30 @@ uv run python -c "from src.database.migrations import MigrationManager; ..."
 | SC-11 | `test_db_failure_does_not_suppress_original_exception` # SC-11 | When DB write fails during `log_exception()`, the original exception is still raised/loged, not suppressed | `behavioral` |
 | SC-12 | `test_large_stack_trace_truncated` # SC-12 | Stack traces exceeding configurable MAX_STACK_LENGTH are truncated with a truncation marker appended | `behavioral` |
 | SC-13 | `test_concurrent_logging_no_data_loss` # SC-13 | Multiple concurrent `log_exception()` calls from different threads/requests produce no data loss or interleaving | `behavioral` |
+
+---
+
+## Out of Scope
+
+| Concern | Rationale |
+|---------|-----------|
+| Alerting or notification on new exceptions | This spec covers storage and querying only; alert integration (Slack, email) would be a separate feature |
+| Automatic log retention/deletion policy | Phase 4 admin UI may include retention controls; Phase 1-3 store all exceptions indefinitely |
+| Non-Python exception capture | Covers only Python exceptions within the Streamlit application; infrastructure-level errors handled separately |
+| Performance monitoring integration | Exception logging is passive storage, not active monitoring or APM |
+
+---
+
+## Constraints
+
+| Constraint | Detail |
+|------------|--------|
+| No suppression of original exceptions | Exception logging must never swallow or suppress the triggering exception |
+| Sensitive data redaction | Local variables matching secret patterns (password, token, secret, key) must be sanitized before storage |
+| Storage bounding | Local variables truncated to MAX_VAR_LENGTH (1000 chars); stack traces to MAX_STACK_LENGTH |
+| Circular reference safety | Sanitization must handle circular/self-referential objects without infinite loops |
+| Concurrent safety | Multiple simultaneous exception writes must not interleave or lose data |
+| Existing error handler compatibility | `handle_ui_error()` signature and behavior preserved; logging added as side effect |
 
 ---
 

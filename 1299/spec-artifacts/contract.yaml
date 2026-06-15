@@ -1,0 +1,13 @@
+domain: fts-entries-workflow
+fluents:
+  - branch-created
+  - phase-started
+  - phase-completed
+  - checkpoint-tagged
+  - z3-verified
+  - all-tests-pass
+  - audit-passed
+  - commit-made
+  - push-done
+  - tags-pushed
+  - pr-created
