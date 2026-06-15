@@ -1757,6 +1757,7 @@ class UploadService:
             total = 0
             # Check once whether fts_entries table exists (migration guard)
             from sqlalchemy import inspect as sa_inspect
+
             _fts_table_exists = sa_inspect(session.get_bind()).has_table("fts_entries")
 
             for rid in record_ids:

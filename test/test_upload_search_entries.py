@@ -19,6 +19,7 @@ class TestUploadSearchEntriesRED(unittest.TestCase):
             cls.test_db_path = Path("tmp/test_upload_search_entries_red_db")
             if cls.test_db_path.exists():
                 import shutil
+
                 shutil.rmtree(cls.test_db_path)
             cls.test_db_path.mkdir(parents=True, exist_ok=True)
 
@@ -33,7 +34,7 @@ class TestUploadSearchEntriesRED(unittest.TestCase):
             Base.metadata.create_all(cls.engine)
             cls.Session = sessionmaker(bind=cls.engine)
         except ImportError:
-            raise unittest.SkipTest("pgserver not available")
+            raise unittest.SkipTest("pgserver not available") from None
 
     @classmethod
     def tearDownClass(cls):
@@ -41,6 +42,7 @@ class TestUploadSearchEntriesRED(unittest.TestCase):
             cls.pg_server.cleanup()
         if hasattr(cls, "test_db_path") and cls.test_db_path.exists():
             import shutil
+
             shutil.rmtree(cls.test_db_path)
 
     def setUp(self):
@@ -81,10 +83,14 @@ class TestUploadSearchEntriesRED(unittest.TestCase):
         from src.database.models.search import HeadwordSearchEntry
 
         rec = self._add_and_populate(
-            r"\lx wampuw" "\n"
-            r"\va wampu-" "\n"
-            r"\ge round object" "\n"
-            r"\se wampuw-" "\n"
+            r"\lx wampuw"
+            "\n"
+            r"\va wampu-"
+            "\n"
+            r"\ge round object"
+            "\n"
+            r"\se wampuw-"
+            "\n"
             r"  \va wampum"
         )
         entries = self.session.query(HeadwordSearchEntry).filter_by(record_id=rec.id).all()
@@ -98,9 +104,12 @@ class TestUploadSearchEntriesRED(unittest.TestCase):
         from src.database.models.search import GlossSearchEntry
 
         rec = self._add_and_populate(
-            r"\lx wampuw" "\n"
-            r"\ge ball" "\n"
-            r"\se wampuw-" "\n"
+            r"\lx wampuw"
+            "\n"
+            r"\ge ball"
+            "\n"
+            r"\se wampuw-"
+            "\n"
             r"  \ge sphere"
         )
         entries = self.session.query(GlossSearchEntry).filter_by(record_id=rec.id).all()
@@ -128,19 +137,21 @@ class TestUploadSearchEntriesRED(unittest.TestCase):
         from src.database.models.search import SearchEntry
 
         rec = self._add_and_populate(
-            r"\lx wampuw" "\n"
-            r"\va wampu-" "\n"
-            r"\ge round" "\n"
-            r"\se wampuw-" "\n"
-            r"\cf wampuch" "\n"
+            r"\lx wampuw"
+            "\n"
+            r"\va wampu-"
+            "\n"
+            r"\ge round"
+            "\n"
+            r"\se wampuw-"
+            "\n"
+            r"\cf wampuch"
+            "\n"
             r"\ve fire"
         )
         entries = self.session.query(SearchEntry).filter_by(record_id=rec.id).all()
         types = sorted([e.entry_type for e in entries])
-        self.assertEqual(
-            types, ["cf", "lx", "se", "va", "ve"],
-            "SearchEntry must contain ALL entry types (unchanged)"
-        )
+        self.assertEqual(types, ["cf", "lx", "se", "va", "ve"], "SearchEntry must contain ALL entry types (unchanged)")
 
 
 if __name__ == "__main__":
