@@ -56,7 +56,7 @@ def records():
     if "search_query" not in st.session_state:
         st.session_state.search_query = ""
     if "search_mode" not in st.session_state:
-        st.session_state.search_mode = "Lexeme"
+        st.session_state.search_mode = "Headword"
     if "selected_source_id" not in st.session_state:
         st.session_state.selected_source_id = "All"
     if "global_edit_mode" not in st.session_state:
@@ -181,7 +181,7 @@ def records():
             </style>
         """)
 
-        header_text = f"Search ({total_count} records)" if search_term else ""
+        header_text = f"Search: {st.session_state.search_mode} ({total_count} records)" if search_term else ""
         if st.session_state.view_selection_only:
             header_text = f"Selection Contents ({total_count} records)"
         if header_text:
@@ -195,27 +195,27 @@ def records():
             on_change=on_search_change,
         )
 
-        # Lexeme/FTS + Search/Clear Buttons on one line
-        c_mode, c_s, c_c = st.columns([0.7, 0.15, 0.15])
-        with c_mode:
-            st.radio(
-                "Search Mode",
-                ["Lexeme", "FTS"],
-                index=["Lexeme", "FTS"].index(st.session_state.search_mode),
-                horizontal=True,
-                key="search_mode_radio",
-                label_visibility="collapsed",
-                on_change=on_mode_change,
-            )
-        with c_s:
-            if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
-                on_search_change()
-                st.rerun()
-        with c_c:
-            if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
-                st.session_state.search_query = ""
-                st.session_state.current_page = 1
-                st.rerun()
+        # Search Mode: Vertical Radio with Focused/Broad Grouping
+        st.markdown("**── Focused ──**")
+        st.radio(
+            "Search Mode",
+            ["Headword", "Gloss", "Lexeme", "FTS"],
+            index=["Headword", "Gloss", "Lexeme", "FTS"].index(st.session_state.search_mode),
+            key="search_mode_radio",
+            label_visibility="collapsed",
+            on_change=on_mode_change,
+        )
+        st.markdown("**── Broad ──**")
+        st.markdown(
+            "HW: \\lx+\\va (primary) | Gloss: \\ge (primary) | LX: all markers | FTS: all fields",
+        )
+        if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
+            on_search_change()
+            st.rerun()
+        if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
+            st.session_state.search_query = ""
+            st.session_state.current_page = 1
+            st.rerun()
 
         sources = LinguisticService.get_sources_with_counts()
         source_options = ["All"] + [s["name"] for s in sources]
