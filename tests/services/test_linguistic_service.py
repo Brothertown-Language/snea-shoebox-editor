@@ -866,6 +866,102 @@ class TestLinguisticService(unittest.TestCase):
         self.assertEqual(len(records), 1)
         self.assertEqual(records[0]["lx"], "wampuw")
 
+    def test_stream_headword_mode(self):
+        """SC-30: stream_records_to_temp_file() Headword mode returns correct results."""
+        import os
+
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        hse_lx = HeadwordSearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        hse_va = HeadwordSearchEntry(record_id=r1.id, term="wampu", normalized_term="wampu", entry_type="va")
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add_all([hse_lx, hse_va, gse])
+        self.session.commit()
+
+        with self._patch_session():
+            temp_path = LinguisticService.stream_records_to_temp_file(search_term="wampuw", search_mode="Headword")
+            try:
+                self.assertTrue(os.path.exists(temp_path))
+                with open(temp_path, encoding="utf-8") as f:
+                    content = f.read()
+                self.assertIn("\\lx wampuw", content)
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+    def test_stream_gloss_mode(self):
+        """SC-31: stream_records_to_temp_file() Gloss mode returns correct results."""
+        import os
+
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        gse = GlossSearchEntry(record_id=r1.id, term="round object", normalized_term="round object")
+        self.session.add(gse)
+        self.session.commit()
+
+        with self._patch_session():
+            temp_path = LinguisticService.stream_records_to_temp_file(search_term="round object", search_mode="Gloss")
+            try:
+                self.assertTrue(os.path.exists(temp_path))
+                with open(temp_path, encoding="utf-8") as f:
+                    content = f.read()
+                self.assertIn("\\lx wampuw", content)
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+    def test_stream_lexeme_mode_unchanged(self):
+        """SC-33: stream_records_to_temp_file() Lexeme mode UNCHANGED — regression guard."""
+        import os
+
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        se = SearchEntry(record_id=r1.id, term="wampuw", normalized_term="wampuw", entry_type="lx")
+        self.session.add(se)
+        self.session.commit()
+
+        with self._patch_session():
+            temp_path = LinguisticService.stream_records_to_temp_file(search_term="wampuw", search_mode="Lexeme")
+            try:
+                self.assertTrue(os.path.exists(temp_path))
+                with open(temp_path, encoding="utf-8") as f:
+                    content = f.read()
+                self.assertIn("\\lx wampuw", content)
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
+    def test_stream_fts_mode_unchanged(self):
+        """SC-35: stream_records_to_temp_file() FTS mode UNCHANGED — regression guard."""
+        import os
+        from sqlalchemy import func
+        from src.database.models.search import FTSEntry
+
+        r1 = Record(lx="wampuw", ge="round object", source_id=self.source_id, mdf_data="\\lx wampuw\n\\ge round object")
+        self.session.add(r1)
+        self.session.commit()
+
+        norm_mdf = LinguisticService.generate_sort_lx(r1.mdf_data)
+        self.session.add(FTSEntry(record_id=r1.id, fts_vector=func.to_tsvector("simple", norm_mdf)))
+        self.session.commit()
+
+        with self._patch_session():
+            temp_path = LinguisticService.stream_records_to_temp_file(search_term="wampuw", search_mode="FTS")
+            try:
+                self.assertTrue(os.path.exists(temp_path))
+                with open(temp_path, encoding="utf-8") as f:
+                    content = f.read()
+                self.assertIn("\\lx wampuw", content)
+            finally:
+                if os.path.exists(temp_path):
+                    os.remove(temp_path)
+
     def test_search_records_special_characters(self):
         """SC-25: Special characters no crash or SQL injection."""
         r1 = Record(lx="safe", ge="test", source_id=self.source_id, mdf_data="\\lx safe")
