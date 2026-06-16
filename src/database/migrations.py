@@ -115,6 +115,11 @@ class MigrationManager:
             "Add entry_type index and CHECK constraint to headword_search_entries",
         ),
         (
+            20260415000000,
+            "_migrate_ensure_sequences",
+            "Create sequences for tables missing autoincrement to match ORM expectations",
+        ),
+        (
             20260511000001,
             "_migrate_dedup_search_entries",
             "Deduplicate search_entries: keep one row per (record_id, term, entry_type), add unique index",
@@ -912,6 +917,41 @@ class MigrationManager:
                     "ALTER TABLE headword_search_entries ADD CONSTRAINT chk_headword_entry_type CHECK (entry_type IN ('lx', 'va'));"
                 )
             )
+            conn.commit()
+
+    def _migrate_ensure_sequences(self):
+        """Migration 20260415000000: Create sequences for tables missing autoincrement.
+
+        Production DDL uses plain integer NOT NULL for id columns on most tables
+        (no SERIAL, no IDENTITY, no DEFAULT nextval). The ORM models declare
+        autoincrement=True. This migration creates sequences for all tables that
+        have an integer id column but no associated sequence, and sets the column
+        default to nextval().
+        """
+        with self._engine.connect() as conn:
+            tables = [
+                r[0]
+                for r in conn.execute(
+                    text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")
+                ).fetchall()
+            ]
+            for tname in tables:
+                seq = conn.execute(text("SELECT pg_get_serial_sequence(:t, 'id')"), {"t": tname}).scalar()
+                if seq:
+                    continue
+                has_int_id = conn.execute(
+                    text(
+                        "SELECT EXISTS (SELECT 1 FROM information_schema.columns "
+                        "WHERE table_name = :t AND column_name = 'id' AND data_type = 'integer')"
+                    ),
+                    {"t": tname},
+                ).scalar()
+                if has_int_id:
+                    seq_name = f"{tname}_id_seq"
+                    conn.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))
+                    max_id = conn.execute(text(f"SELECT COALESCE(MAX(id), 0) FROM {tname}")).scalar()
+                    conn.execute(text(f"ALTER SEQUENCE {seq_name} RESTART WITH {max_id + 1}"))
+                    conn.execute(text(f"ALTER TABLE {tname} ALTER COLUMN id SET DEFAULT nextval('{seq_name}')"))
             conn.commit()
 
     def _migrate_create_gloss_search_entries(self):

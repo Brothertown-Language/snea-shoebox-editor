@@ -2,14 +2,25 @@
 """
 sync_prod_to_local.py — Production-to-local database sync script.
 
-Creates an exact schema+data replica of the production PostgreSQL database (Aiven)
-in the local development database (pgserver), replacing all local data.
+MANDATE: FAITHFUL EXACT COPY ONLY
+==================================
+This script MUST produce an EXACT schema+data replica of the production
+PostgreSQL database. NO "fixing", "adjustments", "optimizations", or any
+other modifications to the production schema or data are permitted.
+
+The production database is the single source of truth. The local copy
+must match it byte-for-byte in schema and row-for-row in data. Any
+deviation makes migration testing unreliable.
+
+If the local database needs schema changes that production does not
+have (e.g., sequences for ORM autoincrement), those changes MUST be
+handled by the migration system (MigrationManager), NOT by this script.
 
 Strategy
 --------
-Introspects production's actual schema via pg_catalog and replicates it faithfully —
-including generated columns, all indexes — then copies production data while
-skipping generated columns in INSERT statements.
+Introspects production's actual schema via pg_catalog and replicates it
+faithfully — including generated columns, all indexes — then copies
+production data while skipping generated columns in INSERT statements.
 """
 
 import os
