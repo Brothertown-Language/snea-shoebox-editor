@@ -1020,6 +1020,9 @@ class MigrationManager:
         Session = sessionmaker(bind=self._engine)
         session = Session()
         try:
+            # Truncate first to ensure idempotency — migration may be re-run
+            # against a database that already has fts_entries (e.g. after sync).
+            session.execute(text("TRUNCATE fts_entries"))
             records = session.query(Record).filter(Record.is_deleted == False).all()
             logger.info(f"Populating fts_entries for {len(records)} records...")
             for record in records:
