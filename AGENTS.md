@@ -1,5 +1,15 @@
 # AGENTS.md — Repository Guidelines for Coding Agents
 
+## Regression Test Protocol
+
+Before every regression test cycle, the local database MUST be re-synced from production:
+
+```bash
+bash scripts/sync_prod_to_local.sh
+```
+
+This ensures the test runs against a fresh exact replica of production data. The sync script MUST be the one from the feature branch under test, not from `dev` or `main`. Running against stale or branch-mismatched data produces invalid test results.
+
 ## Research Catalog
 
 Before making changes to search infrastructure, text normalization, FTS configuration, or regex processing linguistic data, consult `docs/lessons-learned/` for relevant research findings and design decisions.
