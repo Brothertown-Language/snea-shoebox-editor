@@ -46,9 +46,11 @@ def _search_fts(query, search_term: str):
     words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
     if words:
         fts_query = " & ".join([f"{w}:*" for w in words])
-        return query.join(Record.fts_entry).filter(
-            text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)")
-        ).params(fts_term=fts_query)
+        return (
+            query.join(Record.fts_entry)
+            .filter(text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)"))
+            .params(fts_term=fts_query)
+        )
     return query.filter(Record.id == -1)
 
 
@@ -511,37 +513,10 @@ class LinguisticService:
                     query = query.filter(Record.source_id == source_id)
 
                 if search_term:
-                    if search_mode == "Lexeme":
-                        # Normalize search term for punctuation, case, diacritics, and quotes
-                        norm_search = LinguisticService.generate_sort_lx(search_term)
-
-                        # If search term exists but normalizes to nothing (e.g. "10"),
-                        # we should return no results instead of matching everything.
-                        if search_term.strip() and not norm_search:
-                            query = query.filter(Record.id == -1)
-                        else:
-                            # We need to join SearchEntry but we want to keep the column projection
-                            # Infix matching for better discovery (contains)
-                            query = (
-                                query.join(Record.search_entries)
-                                .filter(SearchEntry.normalized_term.ilike(f"%{norm_search}%"))
-                                .distinct()
-                            )
-                    else:
-                        from sqlalchemy import text
-
-                        if search_term.startswith("#") and search_term[1:].isdigit():
-                            query = query.filter(Record.id == int(search_term[1:]))
-                        else:
-                            norm_search = LinguisticService.generate_sort_lx(search_term)
-                            words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
-                            if words:
-                                fts_query = " & ".join([f"{w}:*" for w in words])
-                                query = query.join(Record.fts_entry).filter(
-                                    text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)")
-                                ).params(fts_term=fts_query)
-                            else:
-                                query = query.filter(Record.id == -1)
+                    strategy = _search_strategies.get(search_mode)
+                    if strategy is None:
+                        raise ValueError(f"Unknown search mode: {search_mode}")
+                    query = strategy(query, search_term)
 
             # Efficient Sorting: source_id, sort_lx (NFD/No-Punct), hm, ps, ge
             query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
@@ -594,36 +569,10 @@ class LinguisticService:
                             query = query.filter(Record.source_id == source_id)
 
                         if search_term:
-                            if search_mode == "Lexeme":
-                                # Normalize search term for punctuation, case, diacritics, and quotes
-                                norm_search = LinguisticService.generate_sort_lx(search_term)
-
-                                # If search term exists but normalizes to nothing (e.g. "10"),
-                                # we should return no results instead of matching everything.
-                                if search_term.strip() and not norm_search:
-                                    query = query.filter(Record.id == -1)
-                                else:
-                                    # Infix matching for better discovery (contains)
-                                    query = (
-                                        query.join(Record.search_entries)
-                                        .filter(SearchEntry.normalized_term.ilike(f"%{norm_search}%"))
-                                        .distinct()
-                                    )
-                            else:
-                                from sqlalchemy import text
-
-                                if search_term.startswith("#") and search_term[1:].isdigit():
-                                    query = query.filter(Record.id == int(search_term[1:]))
-                                else:
-                                    norm_search = LinguisticService.generate_sort_lx(search_term)
-                                    words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
-                                    if words:
-                                        fts_query = " & ".join([f"{w}:*" for w in words])
-                                        query = query.join(Record.fts_entry).filter(
-                                            text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)")
-                                        ).params(fts_term=fts_query)
-                                    else:
-                                        query = query.filter(Record.id == -1)
+                            strategy = _search_strategies.get(search_mode)
+                            if strategy is None:
+                                raise ValueError(f"Unknown search mode: {search_mode}")
+                            query = strategy(query, search_term)
 
                     query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
 
