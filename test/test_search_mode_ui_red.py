@@ -4,9 +4,8 @@ Items 1-5 from plan at .issues/1126/plan.md.
 All tests MUST FAIL against current code (RED phase).
 """
 import unittest
-from unittest.mock import MagicMock, patch
-from streamlit.testing.v1 import AppTest
 
+from streamlit.testing.v1 import AppTest
 
 RECORDS_SCRIPT = """
 import streamlit as st
