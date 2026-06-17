@@ -398,6 +398,11 @@ class LinguisticService:
         Supports 'Lexeme' mode (via search_entries), 'FTS' mode,
         'Headword' mode (via headword_search_entries), and 'Gloss' mode (via gloss_search_entries).
         If record_ids is provided, other filters are ignored except for is_deleted.
+
+        NOTE: language_id and language_role filters are applied BEFORE the search strategy
+        dispatch. This means language filters DO apply to FTS queries at the backend level.
+        The frontend disables language filters in FTS mode as a UX decision — FTS searches
+        all fields, making language filtering redundant for most use cases.
         """
         with get_session() as session:
             # We explicitly join with Language to get the primary language name for sorting.
@@ -429,6 +434,8 @@ class LinguisticService:
                         .join(Language, rl_alias.language_id == Language.id)
                         .filter(Language.id == language_id)
                     )
+                    # NOTE: language_role is only applied when language_id is also set.
+                    # If language_id is None (no language filter), language_role has no effect.
                     if language_role == "primary":
                         query = query.filter(rl_alias.is_primary == True)
                     elif language_role == "secondary":

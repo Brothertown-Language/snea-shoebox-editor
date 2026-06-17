@@ -38,6 +38,12 @@ def records():
     # st.sidebar.info(f"DEBUG: Role={user_role}")
 
     # --- 1. Load Initial State from Preferences ---
+    # Check for clear-search request (must run before widget creation)
+    if st.session_state.pop("_clear_search", False):
+        st.session_state.search_query = ""
+        st.session_state.current_page = 1
+        st.session_state._search_input_key = st.session_state.get("_search_input_key", 0) + 1
+
     # Load persistence preferences
     if user_email:
         if "page_size" not in st.session_state:
@@ -58,13 +64,13 @@ def records():
     if "search_mode" not in st.session_state:
         st.session_state.search_mode = "Headword"
     if "selected_source_id" not in st.session_state:
-        st.session_state.selected_source_id = "All"
+        st.session_state.selected_source_id = "All Sources"
     if "global_edit_mode" not in st.session_state:
         st.session_state.global_edit_mode = False
     if "is_locked_filter" not in st.session_state:
         st.session_state.is_locked_filter = "All"
     if "selected_language_id" not in st.session_state:
-        st.session_state.selected_language_id = "All"
+        st.session_state.selected_language_id = "All Languages"
     if "language_role_filter" not in st.session_state:
         st.session_state.language_role_filter = "Any"
     if "pending_edits" not in st.session_state:
@@ -106,14 +112,14 @@ def records():
         sources = LinguisticService.get_sources_with_counts()
         source_id_map = {s["name"]: s["id"] for s in sources}
         selected_name = st.session_state.source_select
-        st.session_state.selected_source_id = source_id_map.get(selected_name, "All")
+        st.session_state.selected_source_id = source_id_map.get(selected_name, "All Sources")
         st.session_state.current_page = 1
 
     def on_language_change():
         languages = LinguisticService.get_languages()
         lang_id_map = {l["name"]: l["id"] for l in languages}
         selected_name = st.session_state.language_select
-        st.session_state.selected_language_id = lang_id_map.get(selected_name, "All")
+        st.session_state.selected_language_id = lang_id_map.get(selected_name, "All Languages")
         st.session_state.current_page = 1
 
     def on_language_role_change():
@@ -122,7 +128,7 @@ def records():
 
     # --- 2. Calculate Search Results (Pre-calculate for Header Count) ---
     source_filter_id = (
-        None if st.session_state.selected_source_id == "All" else int(st.session_state.selected_source_id)
+        None if st.session_state.selected_source_id == "All Sources" else int(st.session_state.selected_source_id)
     )
     search_term = st.session_state.search_query if st.session_state.search_query else None
 
@@ -142,7 +148,7 @@ def records():
         is_locked_bool = False
 
     language_filter_id = (
-        None if st.session_state.selected_language_id == "All" else int(st.session_state.selected_language_id)
+        None if st.session_state.selected_language_id == "All Languages" else int(st.session_state.selected_language_id)
     )
     language_role_map = {"Any": None, "Primary": "primary", "Secondary": "secondary"}
     language_role_val = language_role_map.get(st.session_state.language_role_filter)
@@ -187,12 +193,12 @@ def records():
         if header_text:
             st.markdown(f"**{header_text}**")
 
+        search_input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
         search_query = st.text_input(
             "Enter text...",
             value=st.session_state.search_query,
-            key="search_query_input",
+            key=search_input_key,
             label_visibility="collapsed",
-            on_change=on_search_change,
         )
 
         # Search Mode: Vertical Radio with Dynamic Caption
@@ -211,20 +217,24 @@ def records():
             on_change=on_mode_change,
         )
         st.caption(SEARCH_MODE_CAPTIONS.get(st.session_state.search_mode, ""))
-        if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
-            on_search_change()
+        is_fts_mode = st.session_state.search_mode == "FTS"
+        search_col1, search_col2 = st.columns(2)
+        if search_col1.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
+            input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
+            st.session_state.search_query = st.session_state.get(input_key, "")
+            st.session_state.current_page = 1
             st.rerun()
-        if st.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
-            st.session_state.search_query = ""
+        if search_col2.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
+            st.session_state._clear_search = True
             st.session_state.current_page = 1
             st.rerun()
 
         sources = LinguisticService.get_sources_with_counts()
-        source_options = ["All"] + [s["name"] for s in sources]
+        source_options = ["All Sources"] + [s["name"] for s in sources]
         source_name_map = {str(s["id"]): s["name"] for s in sources}
-        source_name_map["All"] = "All"
+        source_name_map["All Sources"] = "All Sources"
 
-        current_source_name = source_name_map.get(str(st.session_state.selected_source_id), "All")
+        current_source_name = source_name_map.get(str(st.session_state.selected_source_id), "All Sources")
         st.selectbox(
             "Select Source",
             source_options,
@@ -236,9 +246,9 @@ def records():
 
         # Language Filter
         languages = LinguisticService.get_languages()
-        lang_options = ["All"] + [l["name"] for l in languages]
+        lang_options = ["All Languages"] + [l["name"] for l in languages]
         lang_name_map = {str(l["id"]): l["name"] for l in languages}
-        current_lang_name = lang_name_map.get(str(st.session_state.selected_language_id), "All")
+        current_lang_name = lang_name_map.get(str(st.session_state.selected_language_id), "All Languages")
         st.selectbox(
             "Select Language",
             lang_options,
@@ -246,6 +256,8 @@ def records():
             key="language_select",
             label_visibility="collapsed",
             on_change=on_language_change,
+            disabled=is_fts_mode,
+            help="Language filters are not available in Full-Text Search mode." if is_fts_mode else None,
         )
         role_options = ["Any", "Primary", "Secondary"]
         st.radio(
@@ -256,6 +268,8 @@ def records():
             horizontal=True,
             label_visibility="collapsed",
             on_change=on_language_role_change,
+            disabled=is_fts_mode,
+            help="Language Role filters are not available in Full-Text Search mode." if is_fts_mode else None,
         )
 
         # Is Locked Filter
