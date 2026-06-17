@@ -195,8 +195,13 @@ def records():
             on_change=on_search_change,
         )
 
-        # Search Mode: Vertical Radio with Focused/Broad Grouping
-        st.markdown("**── Focused ──**")
+        # Search Mode: Vertical Radio with Dynamic Caption
+        SEARCH_MODE_CAPTIONS = {
+            "Headword": "Algonquian headwords and variants (\\lx, \\va)",
+            "Gloss": "Primary English glosses (\\ge)",
+            "Lexeme": "All Algonquian terms",
+            "FTS": "Every field",
+        }
         st.radio(
             "Search Mode",
             ["Headword", "Gloss", "Lexeme", "FTS"],
@@ -205,10 +210,7 @@ def records():
             label_visibility="collapsed",
             on_change=on_mode_change,
         )
-        st.markdown("**── Broad ──**")
-        st.markdown(
-            "HW: \\lx+\\va (primary) | Gloss: \\ge (primary) | LX: all markers | FTS: all fields",
-        )
+        st.caption(SEARCH_MODE_CAPTIONS.get(st.session_state.search_mode, ""))
         if st.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
             on_search_change()
             st.rerun()
