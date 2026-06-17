@@ -21,3 +21,18 @@ Before making changes to search infrastructure, text normalization, FTS configur
 | `docs/lessons-learned/2026-06-13-regex-linguistic-characters.md` | ASCII-based regex destroys linguistic data |
 | `docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md` | ∞ is a valid letter, maps to oozzz |
 | `docs/lessons-learned/2026-06-13-simple-vs-english-tsconfig.md` | Live PG verification evidence |
+
+## Release PR Version Bump Protocol
+
+When creating a release PR that includes a version bump, the agent MUST discover all version-bearing locations through live project analysis — never use a static list.
+
+**Mandatory discovery procedure:**
+
+1. Search the project for version patterns: `grep` for `__version__`, `version =`, `"version":`, `version=` across all file types
+2. Inspect each match to confirm it is a project version (not a dependency version, not a subproject with independent versioning)
+3. Bump every confirmed project version location
+4. Verify no stale version references remain after the bump
+
+**Prohibited:** Maintaining a hardcoded list of version locations in AGENTS.md or any other file. Drift between the static list and the actual project structure produces silent version mismatches. Every release PR must re-discover.
+
+**Rationale:** Files get renamed, moved, added, or removed between releases. A static list from a previous release is stale by definition on the next release. Live discovery is the only reliable mechanism. |
