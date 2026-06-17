@@ -40,9 +40,9 @@ def records():
     # --- 1. Load Initial State from Preferences ---
     # Check for clear-search request (must run before widget creation)
     if st.session_state.pop("_clear_search", False):
-        for _key in ["search_query_input", "search_query"]:
-            if _key in st.session_state:
-                del st.session_state[_key]
+        st.session_state.search_query = ""
+        st.session_state.current_page = 1
+        st.session_state._search_input_key = st.session_state.get("_search_input_key", 0) + 1
 
     # Load persistence preferences
     if user_email:
@@ -193,12 +193,12 @@ def records():
         if header_text:
             st.markdown(f"**{header_text}**")
 
+        search_input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
         search_query = st.text_input(
             "Enter text...",
             value=st.session_state.search_query,
-            key="search_query_input",
+            key=search_input_key,
             label_visibility="collapsed",
-            on_change=on_search_change,
         )
 
         # Search Mode: Vertical Radio with Dynamic Caption
@@ -220,7 +220,9 @@ def records():
         is_fts_mode = st.session_state.search_mode == "FTS"
         search_col1, search_col2 = st.columns(2)
         if search_col1.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
-            on_search_change()
+            input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
+            st.session_state.search_query = st.session_state.get(input_key, "")
+            st.session_state.current_page = 1
             st.rerun()
         if search_col2.button("", icon="❌", key="search_clear", help="Clear Search", use_container_width=True):
             st.session_state._clear_search = True
