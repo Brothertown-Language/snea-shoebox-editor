@@ -17,7 +17,6 @@ def records():
         render_back_to_main_button,
         render_mdf_block,
     )
-    from src.logging_config import get_logger
     from src.mdf.parser import format_mdf_record
     from src.mdf.validator import MDFValidator
     from src.services.identity_service import IdentityService
@@ -26,7 +25,6 @@ def records():
     from src.services.preference_service import PreferenceService
     from src.services.upload_service import UploadService
 
-    logger = get_logger("snea.pages.records")
     # Hide the main navigation menu — this view owns the sidebar entirely
     hide_sidebar_nav()
     apply_standard_layout_css()
@@ -48,7 +46,7 @@ def records():
     if user_email:
         if "page_size" not in st.session_state:
             saved_size = PreferenceService.get_preference(user_email, "records", "page_size", "25")
-            st.session_state.page_size = int(saved_size)
+            st.session_state.page_size = int(saved_size) if saved_size is not None else 25
 
         if "structural_highlighting" not in st.session_state:
             saved_hl = PreferenceService.get_preference(user_email, "records", "structural_highlighting", "True")
@@ -88,17 +86,20 @@ def records():
         st.session_state.selection = []
         if user_email:
             selection_json = PreferenceService.get_preference(user_email, "global", "selection_contents", "[]")
-            try:
-                selection_ids = json.loads(selection_json)
-                if selection_ids:
-                    loaded_records = []
-                    for rid in selection_ids:
-                        rec = LinguisticService.get_record(rid)
-                        if rec:
-                            loaded_records.append(rec)
-                    st.session_state.selection = loaded_records
-            except Exception as e:
-                handle_ui_error(e, f"Failed to load selection for {user_email}", logger_name="snea.pages.records")
+            if selection_json is None:
+                selection_ids = []
+            else:
+                try:
+                    selection_ids = json.loads(selection_json)
+                    if selection_ids:
+                        loaded_records = []
+                        for rid in selection_ids:
+                            rec = LinguisticService.get_record(rid)
+                            if rec:
+                                loaded_records.append(rec)
+                        st.session_state.selection = loaded_records
+                except Exception as e:
+                    handle_ui_error(e, f"Failed to load selection for {user_email}", logger_name="snea.pages.records")
 
     def on_search_change():
         st.session_state.search_query = st.session_state.search_query_input
@@ -117,7 +118,7 @@ def records():
 
     def on_language_change():
         languages = LinguisticService.get_languages()
-        lang_id_map = {l["name"]: l["id"] for l in languages}
+        lang_id_map = {lang["name"]: lang["id"] for lang in languages}
         selected_name = st.session_state.language_select
         st.session_state.selected_language_id = lang_id_map.get(selected_name, "All Languages")
         st.session_state.current_page = 1
@@ -194,7 +195,7 @@ def records():
             st.markdown(f"**{header_text}**")
 
         search_input_key = f"search_query_input_{st.session_state.get('_search_input_key', 0)}"
-        search_query = st.text_input(
+        st.text_input(
             "Enter text...",
             value=st.session_state.search_query,
             key=search_input_key,
@@ -246,8 +247,8 @@ def records():
 
         # Language Filter
         languages = LinguisticService.get_languages()
-        lang_options = ["All Languages"] + [l["name"] for l in languages]
-        lang_name_map = {str(l["id"]): l["name"] for l in languages}
+        lang_options = ["All Languages"] + [lang["name"] for lang in languages]
+        lang_name_map = {str(lang["id"]): lang["name"] for lang in languages}
         current_lang_name = lang_name_map.get(str(st.session_state.selected_language_id), "All Languages")
         st.selectbox(
             "Select Language",
@@ -304,11 +305,14 @@ def records():
             st.rerun()
 
         st.markdown(
-            f"<p style='text-align: center; margin-bottom: 0;'>Page {st.session_state.current_page} of {total_pages}</p>",
+            f"<p style='text-align: center; margin-bottom: 0;'>"
+            f"Page {st.session_state.current_page} of {total_pages}</p>",
             unsafe_allow_html=True,
         )
         st.markdown(
-            f"<p style='text-align: center; font-size: 0.8em; color: gray;'>Showing {offset + 1}-{min(offset + len(records_batch), total_count)} of {total_count}</p>",
+            f"<p style='text-align: center; font-size: 0.8em; color: gray;'>"
+            f"Showing {offset + 1}-{min(offset + len(records_batch), total_count)}"
+            f" of {total_count}</p>",
             unsafe_allow_html=True,
         )
 
@@ -407,7 +411,7 @@ def records():
             mdf_bundle = LinguisticService.bundle_records_to_mdf(st.session_state.selection)
 
             # Determine source name for filename
-            sources = set(r.get("source_name") for r in st.session_state.selection if r.get("source_name"))
+            sources = {r.get("source_name") for r in st.session_state.selection if r.get("source_name")}
             source_name = list(sources)[0] if len(sources) == 1 else "mixed"
 
             github_username = IdentityService.get_github_username(st.session_state.get("user_email"))
@@ -453,7 +457,7 @@ def records():
             record_ids=export_record_ids,
         )
 
-        distinct_sources = sorted(list(set(r["source_name"] for r in all_matching_records if r.get("source_name"))))
+        distinct_sources = sorted({r["source_name"] for r in all_matching_records if r.get("source_name")})
 
         if all_matching_records:
             github_username = IdentityService.get_github_username(user_email)
@@ -486,7 +490,10 @@ def records():
                     file_name=zip_filename,
                     mime="application/zip",
                     use_container_width=True,
-                    help=f"Download {len(all_matching_records)} records from {len(distinct_sources)} sources as a ZIP of MDF files",
+                    help=(
+                        f"Download {len(all_matching_records)} records"
+                        f" from {len(distinct_sources)} sources as a ZIP of MDF files"
+                    ),
                 )
             else:
                 # Single source: Direct MDF download via streaming to temp file
@@ -585,9 +592,11 @@ def records():
                                 if is_locked:
                                     st.error(f"Failed to save Record #{record_id}: Record is locked.")
                                 else:
-                                    st.error(
-                                        f"Failed to save Record #{record_id}. It may have been modified by another user."
+                                    msg = (
+                                        f"Failed to save Record #{record_id}."
+                                        " It may have been modified by another user."
                                     )
+                                    st.error(msg)
                         except Exception as e:
                             handle_ui_error(e, "Error saving record", logger_name="snea.pages.records")
 
