@@ -217,6 +217,7 @@ def records():
             on_change=on_mode_change,
         )
         st.caption(SEARCH_MODE_CAPTIONS.get(st.session_state.search_mode, ""))
+        is_fts_mode = st.session_state.search_mode == "FTS"
         search_col1, search_col2 = st.columns(2)
         if search_col1.button("", icon="🔍", key="search_trigger", help="Execute Search", use_container_width=True):
             on_search_change()
@@ -253,6 +254,8 @@ def records():
             key="language_select",
             label_visibility="collapsed",
             on_change=on_language_change,
+            disabled=is_fts_mode,
+            help="Language filters are not available in Full-Text Search mode." if is_fts_mode else None,
         )
         role_options = ["Any", "Primary", "Secondary"]
         st.radio(
@@ -263,6 +266,8 @@ def records():
             horizontal=True,
             label_visibility="collapsed",
             on_change=on_language_role_change,
+            disabled=is_fts_mode,
+            help="Language Role filters are not available in Full-Text Search mode." if is_fts_mode else None,
         )
 
         # Is Locked Filter
