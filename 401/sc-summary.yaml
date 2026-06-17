@@ -1,0 +1,26 @@
+sc_coverage:
+  total: 12
+  single_task: false
+  spec_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/401
+  evidence_types:
+    - behavioral
+    - semantic
+  phases:
+    - id: Phase_1_Filter_Label_Updates
+      sc_ids: [SC-1, SC-2, SC-3]
+      evidence_types: [semantic, behavioral]
+    - id: Phase_2_FTS_Filter_Disabling
+      sc_ids: [SC-4, SC-5, SC-6]
+      evidence_types: [behavioral, semantic]
+    - id: Phase_3_Search_Control_Layout
+      sc_ids: [SC-8, SC-9, SC-10, SC-11, SC-12]
+      evidence_types: [behavioral, semantic]
+    - id: Phase_4_New_Search_Mode_Filter_Behavior
+      sc_ids: [SC-7]
+      evidence_types: [behavioral]
+    - id: Phase_5_Behavior_Investigation
+      sc_ids: []
+      evidence_types: [behavioral]
+  cross_cutting:
+    sc_ids: []
+    verified_in_phase: null

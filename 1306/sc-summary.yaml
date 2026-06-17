@@ -1,0 +1,14 @@
+# SC Summary for #1306 — Phase 3: Migration for Existing Data
+spec_issue: 1306
+parent_spec: 400
+created: 2026-06-15
+
+scs:
+  - id: SC-13
+    criterion: "Migration rollback safe — DROP new tables without data loss"
+    evidence_type: behavioral
+    phase: 3
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1306/artifacts/sc-13-evidence.yaml

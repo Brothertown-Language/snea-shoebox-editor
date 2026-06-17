@@ -1,0 +1,90 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/401
+verification_consistency:
+  sc_entries:
+    - id: SC-1
+      evidence_type: semantic
+      verification_gate: red-green
+      pipeline_step_binding: Phase_1
+      re_entry_step: Phase_1
+      phase_binding: Phase_1
+      artifact_path: .issues/401/
+    - id: SC-2
+      evidence_type: semantic
+      verification_gate: red-green
+      pipeline_step_binding: Phase_1
+      re_entry_step: Phase_1
+      phase_binding: Phase_1
+      artifact_path: .issues/401/
+    - id: SC-3
+      evidence_type: behavioral
+      verification_gate: red-green
+      pipeline_step_binding: Phase_1
+      re_entry_step: Phase_1
+      phase_binding: Phase_1
+      artifact_path: .issues/401/
+    - id: SC-4
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      pipeline_step_binding: Phase_2
+      re_entry_step: Phase_2
+      phase_binding: Phase_2
+      artifact_path: .issues/401/
+    - id: SC-5
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      pipeline_step_binding: Phase_2
+      re_entry_step: Phase_2
+      phase_binding: Phase_2
+      artifact_path: .issues/401/
+    - id: SC-6
+      evidence_type: semantic
+      verification_gate: pre-commit
+      pipeline_step_binding: Phase_2
+      re_entry_step: Phase_2
+      phase_binding: Phase_2
+      artifact_path: .issues/401/
+    - id: SC-7
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      pipeline_step_binding: Phase_4
+      re_entry_step: Phase_4
+      phase_binding: Phase_4
+      artifact_path: .issues/401/
+    - id: SC-8
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      pipeline_step_binding: Phase_3
+      re_entry_step: Phase_3
+      phase_binding: Phase_3
+      artifact_path: .issues/401/
+    - id: SC-9
+      evidence_type: behavioral
+      verification_gate: ci
+      pipeline_step_binding: Phase_3
+      re_entry_step: Phase_3
+      phase_binding: Phase_3
+      artifact_path: .issues/401/
+    - id: SC-10
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      pipeline_step_binding: Phase_3
+      re_entry_step: Phase_3
+      phase_binding: Phase_3
+      artifact_path: .issues/401/
+    - id: SC-11
+      evidence_type: semantic
+      verification_gate: red-green
+      pipeline_step_binding: Phase_3
+      re_entry_step: Phase_3
+      phase_binding: Phase_3
+      artifact_path: .issues/401/
+    - id: SC-12
+      evidence_type: behavioral
+      verification_gate: red-green
+      pipeline_step_binding: Phase_3
+      re_entry_step: Phase_3
+      phase_binding: Phase_3
+      artifact_path: .issues/401/
+  constraints:
+    - 'for_every_sc: evidence_type_is_consistent_with_verification_gate'
+    - 'for_every_sc: pipeline_step_binding_is_valid_for_phase'

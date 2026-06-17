@@ -1,0 +1,77 @@
+# SC Summary for #1305 — Phase 4: Backend Search Logic
+spec_issue: 1305
+parent_spec: 400
+created: 2026-06-15
+
+scs:
+  - id: SC-28
+    criterion: "get_all_records_for_export() Headword mode returns correct results"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-28-evidence.yaml
+
+  - id: SC-29
+    criterion: "get_all_records_for_export() Gloss mode returns correct results"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-29-evidence.yaml
+
+  - id: SC-30
+    criterion: "stream_records_to_temp_file() Headword mode returns correct results"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-30-evidence.yaml
+
+  - id: SC-31
+    criterion: "stream_records_to_temp_file() Gloss mode returns correct results"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-31-evidence.yaml
+
+  - id: SC-32
+    criterion: "get_all_records_for_export() Lexeme mode UNCHANGED"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-32-evidence.yaml
+
+  - id: SC-33
+    criterion: "stream_records_to_temp_file() Lexeme mode UNCHANGED"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-33-evidence.yaml
+
+  - id: SC-34
+    criterion: "get_all_records_for_export() FTS mode UNCHANGED"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-34-evidence.yaml
+
+  - id: SC-35
+    criterion: "stream_records_to_temp_file() FTS mode UNCHANGED"
+    evidence_type: behavioral
+    phase: 4
+    pipeline_step: green-phase
+    reentry_step: green-phase
+    verification_gate: pre-commit
+    artifact_path: ./tmp/1305/artifacts/sc-35-evidence.yaml

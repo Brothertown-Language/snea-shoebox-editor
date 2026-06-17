@@ -1,0 +1,74 @@
+# SC-ID Traceability Summary for #1126
+# Generated: 2026-06-16
+# Spec: Phase 5 — Search Mode UI: Vertical Radio with Grouping
+
+sc_coverage_total: 11
+decomposition_classification: single_phase
+phase_count: 1
+
+scs:
+  - id: SC-1
+    criterion: New session/search defaults to Headword
+    evidence_type: behavioral
+    plan_item: Item 1 — Default mode change + session state initialization
+    plan_item_index: 1
+
+  - id: SC-2
+    criterion: Vertical radio shows 4 options with grouping separators
+    evidence_type: behavioral
+    plan_item: Item 2 — Vertical radio with 4 options + Focused/Broad grouping
+    plan_item_index: 2
+
+  - id: SC-3
+    criterion: Selecting Headword triggers HeadwordSearchEntry search
+    evidence_type: behavioral
+    plan_item: Item 2 — Vertical radio with 4 options + Focused/Broad grouping
+    plan_item_index: 2
+
+  - id: SC-4
+    criterion: Selecting Gloss triggers GlossSearchEntry search
+    evidence_type: behavioral
+    plan_item: Item 2 — Vertical radio with 4 options + Focused/Broad grouping
+    plan_item_index: 2
+
+  - id: SC-5
+    criterion: Selecting Lexeme preserves existing SearchEntry join behavior
+    evidence_type: behavioral
+    plan_item: Item 2 — Vertical radio with 4 options + Focused/Broad grouping
+    plan_item_index: 2
+
+  - id: SC-6
+    criterion: Search results header shows mode name and count when search_term is truthy
+    evidence_type: behavioral
+    plan_item: Item 3 — Search header shows mode name + count
+    plan_item_index: 3
+
+  - id: SC-7
+    criterion: Help text visible below radio grouping
+    evidence_type: string
+    plan_item: Item 4 — Help text below radio
+    plan_item_index: 4
+
+  - id: SC-8
+    criterion: Focused/Broad separators render correctly
+    evidence_type: behavioral
+    plan_item: Item 2 — Vertical radio with 4 options + Focused/Broad grouping
+    plan_item_index: 2
+
+  - id: SC-9
+    criterion: Search/clear buttons full width below radio, not 0.15 columns
+    evidence_type: behavioral
+    plan_item: Item 5 — Search/clear buttons reflow to full width below radio
+    plan_item_index: 5
+
+  - id: SC-10
+    criterion: Search mode persists across pagination
+    evidence_type: behavioral
+    plan_item: Item 2 — Vertical radio with 4 options + Focused/Broad grouping
+    plan_item_index: 2
+
+  - id: SC-11
+    criterion: All existing search and export tests continue to pass
+    evidence_type: behavioral
+    plan_item: Regression — All items
+    plan_item_index: 0
