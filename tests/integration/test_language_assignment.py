@@ -8,6 +8,7 @@ from sqlalchemy.orm import sessionmaker
 from src.database.base import Base
 from src.database.models.core import Language, Record, RecordLanguage, Source
 from src.database.models.identity import User
+from src.database.models.iso639 import ISO639_3
 from src.database.models.workflow import MatchupQueue
 from src.services.upload_service import UploadService
 

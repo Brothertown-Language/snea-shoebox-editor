@@ -9,7 +9,7 @@ import re
 import tempfile
 import unicodedata
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, Literal
 
 from sqlalchemy import func
 
@@ -23,6 +23,65 @@ from src.logging_config import get_logger
 logger = get_logger("snea.linguistic_service")
 
 _TSQUERY_UNSAFE = re.compile(r"[|&!()]+")
+
+# Search mode literal type
+SearchMode = Literal["Lexeme", "FTS", "Headword", "Gloss"]
+
+
+def _search_lexeme(query, search_term: str):
+    """Lexeme mode: join SearchEntry, match on normalized_term."""
+    norm_search = LinguisticService.generate_sort_lx(search_term)
+    if search_term.strip() and not norm_search:
+        return query.filter(Record.id == -1)
+    return query.join(Record.search_entries).filter(SearchEntry.normalized_term.ilike(f"%{norm_search}%")).distinct()
+
+
+def _search_fts(query, search_term: str):
+    """FTS mode: full-text search on normalized fts_entries."""
+    from sqlalchemy import text
+
+    if search_term.startswith("#") and search_term[1:].isdigit():
+        return query.filter(Record.id == int(search_term[1:]))
+    norm_search = LinguisticService.generate_sort_lx(search_term)
+    words = [clean for w in norm_search.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())]
+    if words:
+        fts_query = " & ".join([f"{w}:*" for w in words])
+        return (
+            query.join(Record.fts_entry)
+            .filter(text("fts_entries.fts_vector @@ to_tsquery('simple', :fts_term)"))
+            .params(fts_term=fts_query)
+        )
+    return query.filter(Record.id == -1)
+
+
+def _search_headword(query, search_term: str):
+    """Headword mode: join HeadwordSearchEntry, match on normalized_term."""
+    norm_search = LinguisticService.generate_sort_lx(search_term)
+    if search_term.strip() and not norm_search:
+        return query.filter(Record.id == -1)
+    return (
+        query.join(Record.headword_entries)
+        .filter(HeadwordSearchEntry.normalized_term.ilike(f"%{norm_search}%"))
+        .distinct()
+    )
+
+
+def _search_gloss(query, search_term: str):
+    """Gloss mode: join GlossSearchEntry, match on normalized_term."""
+    norm_search = LinguisticService.generate_sort_lx(search_term)
+    if search_term.strip() and not norm_search:
+        return query.filter(Record.id == -1)
+    return (
+        query.join(Record.gloss_entries).filter(GlossSearchEntry.normalized_term.ilike(f"%{norm_search}%")).distinct()
+    )
+
+
+_search_strategies: dict[str, callable] = {
+    "Lexeme": _search_lexeme,
+    "FTS": _search_fts,
+    "Headword": _search_headword,
+    "Gloss": _search_gloss,
+}
 
 
 @dataclass
@@ -329,15 +388,21 @@ class LinguisticService:
         status: str | None = None,
         is_locked: bool | None = None,
         search_term: str | None = None,
-        search_mode: str = "Lexeme",
+        search_mode: SearchMode = "Lexeme",
         record_ids: list[int] | None = None,
         limit: int = 50,
         offset: int = 0,
     ) -> RecordSearchResult:
         """
         Search records with optional filters.
-        Supports 'Lexeme' mode (via search_entries) and 'FTS' mode.
+        Supports 'Lexeme' mode (via search_entries), 'FTS' mode,
+        'Headword' mode (via headword_search_entries), and 'Gloss' mode (via gloss_search_entries).
         If record_ids is provided, other filters are ignored except for is_deleted.
+
+        NOTE: language_id and language_role filters are applied BEFORE the search strategy
+        dispatch. This means language filters DO apply to FTS queries at the backend level.
+        The frontend disables language filters in FTS mode as a UX decision — FTS searches
+        all fields, making language filtering redundant for most use cases.
         """
         with get_session() as session:
             # We explicitly join with Language to get the primary language name for sorting.
@@ -369,6 +434,8 @@ class LinguisticService:
                         .join(Language, rl_alias.language_id == Language.id)
                         .filter(Language.id == language_id)
                     )
+                    # NOTE: language_role is only applied when language_id is also set.
+                    # If language_id is None (no language filter), language_role has no effect.
                     if language_role == "primary":
                         query = query.filter(rl_alias.is_primary == True)
                     elif language_role == "secondary":
@@ -381,53 +448,10 @@ class LinguisticService:
                     query = query.filter(Record.is_locked == is_locked)
 
                 if search_term:
-                    if search_mode == "Lexeme":
-                        # Normalize search term for punctuation, case, diacritics, and quotes
-                        norm_search = LinguisticService.generate_sort_lx(search_term)
-
-                        # If search term exists but normalizes to nothing (e.g. "10"),
-                        # we should return no results instead of matching everything.
-                        if search_term.strip() and not norm_search:
-                            # We can't easily return empty results here without modifying the whole query flow,
-                            # but we can force a filter that matches nothing.
-                            query = query.filter(Record.id == -1)
-                        else:
-                            # Join with search_entries to find matches in lx, va, se, etc.
-                            # Infix matching for better discovery (contains)
-                            query = (
-                                query.join(Record.search_entries)
-                                .filter(SearchEntry.normalized_term.ilike(f"%{norm_search}%"))
-                                .distinct()
-                            )
-                    else:
-                        # Native Full-Text Search (Roadmap Phase 6b)
-                        # Supported by the pgserver envelope.
-                        # Uses fts_vector column and GIN index via Migration 8
-                        from sqlalchemy import text
-
-                        # Support for specific record ID search via #<id>
-                        if search_term.startswith("#") and search_term[1:].isdigit():
-                            query = query.filter(Record.id == int(search_term[1:]))
-                        else:
-                            # FTS support for multiple words + prefix matching for partials
-                            # We join words with ' & ' and add ':*' for prefix matching
-                            # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
-                            from sqlalchemy import or_
-
-                            words = [
-                                clean for w in search_term.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())
-                            ]
-                            if words:
-                                fts_query = " & ".join([f"{w}:*" for w in words])
-                                query = query.filter(
-                                    or_(
-                                        text("records.fts_vector @@ to_tsquery('english', :fts_term)"),
-                                        Record.mdf_data.ilike(f"%{search_term}%"),
-                                    )
-                                ).params(fts_term=fts_query)
-                            else:
-                                # Handle cases like empty or just punctuation search
-                                query = query.filter(Record.mdf_data.ilike(f"%{search_term}%"))
+                    strategy = _search_strategies.get(search_mode)
+                    if strategy is None:
+                        raise ValueError(f"Unknown search mode: {search_mode}")
+                    query = strategy(query, search_term)
 
             # Efficient Sorting: sort_lx (NFD/No-Punct), hm, ps, primary_lang, ge
             query = query.order_by(Record.sort_lx, Record.hm, Record.ps, primary_lang.c.lang_name, Record.ge)
@@ -496,44 +520,10 @@ class LinguisticService:
                     query = query.filter(Record.source_id == source_id)
 
                 if search_term:
-                    if search_mode == "Lexeme":
-                        # Normalize search term for punctuation, case, diacritics, and quotes
-                        norm_search = LinguisticService.generate_sort_lx(search_term)
-
-                        # If search term exists but normalizes to nothing (e.g. "10"),
-                        # we should return no results instead of matching everything.
-                        if search_term.strip() and not norm_search:
-                            query = query.filter(Record.id == -1)
-                        else:
-                            # We need to join SearchEntry but we want to keep the column projection
-                            # Infix matching for better discovery (contains)
-                            query = (
-                                query.join(Record.search_entries)
-                                .filter(SearchEntry.normalized_term.ilike(f"%{norm_search}%"))
-                                .distinct()
-                            )
-                    else:
-                        from sqlalchemy import or_, text
-
-                        if search_term.startswith("#") and search_term[1:].isdigit():
-                            query = query.filter(Record.id == int(search_term[1:]))
-                        else:
-                            # FTS support for multiple words + prefix matching for partials
-                            # We join words with ' & ' and add ':*' for prefix matching
-                            # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
-                            words = [
-                                clean for w in search_term.split() if (clean := _TSQUERY_UNSAFE.sub("", w).strip())
-                            ]
-                            if words:
-                                fts_query = " & ".join([f"{w}:*" for w in words])
-                                query = query.filter(
-                                    or_(
-                                        text("records.fts_vector @@ to_tsquery('english', :fts_term)"),
-                                        Record.mdf_data.ilike(f"%{search_term}%"),
-                                    )
-                                ).params(fts_term=fts_query)
-                            else:
-                                query = query.filter(Record.mdf_data.ilike(f"%{search_term}%"))
+                    strategy = _search_strategies.get(search_mode)
+                    if strategy is None:
+                        raise ValueError(f"Unknown search mode: {search_mode}")
+                    query = strategy(query, search_term)
 
             # Efficient Sorting: source_id, sort_lx (NFD/No-Punct), hm, ps, ge
             query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
@@ -586,41 +576,10 @@ class LinguisticService:
                             query = query.filter(Record.source_id == source_id)
 
                         if search_term:
-                            if search_mode == "Lexeme":
-                                # Normalize search term for punctuation, case, diacritics, and quotes
-                                norm_search = LinguisticService.generate_sort_lx(search_term)
-
-                                # If search term exists but normalizes to nothing (e.g. "10"),
-                                # we should return no results instead of matching everything.
-                                if search_term.strip() and not norm_search:
-                                    query = query.filter(Record.id == -1)
-                                else:
-                                    # Infix matching for better discovery (contains)
-                                    query = (
-                                        query.join(Record.search_entries)
-                                        .filter(SearchEntry.normalized_term.ilike(f"%{norm_search}%"))
-                                        .distinct()
-                                    )
-                            else:
-                                from sqlalchemy import or_, text
-
-                                if search_term.startswith("#") and search_term[1:].isdigit():
-                                    query = query.filter(Record.id == int(search_term[1:]))
-                                else:
-                                    # FTS support for multiple words + prefix matching for partials
-                                    # We join words with ' & ' and add ':*' for prefix matching
-                                    # We also use ILIKE on mdf_data to support infix search (consistency with Lexeme)
-                                    words = [w.strip() for w in search_term.split() if w.strip()]
-                                    if words:
-                                        fts_query = " & ".join([f"{w}:*" for w in words])
-                                        query = query.filter(
-                                            or_(
-                                                text("records.fts_vector @@ to_tsquery('english', :fts_term)"),
-                                                Record.mdf_data.ilike(f"%{search_term}%"),
-                                            )
-                                        ).params(fts_term=fts_query)
-                                    else:
-                                        query = query.filter(Record.mdf_data.ilike(f"%{search_term}%"))
+                            strategy = _search_strategies.get(search_mode)
+                            if strategy is None:
+                                raise ValueError(f"Unknown search mode: {search_mode}")
+                            query = strategy(query, search_term)
 
                     query = query.order_by(Record.source_id, Record.sort_lx, Record.hm)
 
@@ -904,6 +863,10 @@ class LinguisticService:
 
         with get_session() as session:
             try:
+                # 0. Check if record exists
+                if not session.get(Record, record_id):
+                    return False
+
                 # 1. Delete history first
                 session.query(EditHistory).filter(EditHistory.record_id == record_id).delete()
 

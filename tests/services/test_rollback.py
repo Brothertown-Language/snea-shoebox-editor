@@ -6,7 +6,7 @@ from datetime import UTC
 from src.database.connection import get_session, init_db
 from src.database.models.core import Language, Record, Source
 from src.database.models.identity import User
-from src.database.models.search import SearchEntry
+from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
 from src.database.models.workflow import EditHistory
 from src.services.upload_service import UploadService
 
@@ -42,6 +42,8 @@ class TestRollbackService(unittest.TestCase):
 
     def setUp(self):
         # Clear existing records and history to isolate tests
+        self.session.query(HeadwordSearchEntry).delete()
+        self.session.query(GlossSearchEntry).delete()
         self.session.query(SearchEntry).delete()
         self.session.query(EditHistory).delete()
         self.session.query(Record).delete()

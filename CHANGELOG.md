@@ -10,6 +10,13 @@ and this project adheres to
 For AI agent infrastructure changes (`.opencode/` directory), see
 [`.opencode/CHANGELOG.md`](.opencode/CHANGELOG.md).
 
+### feature/1299-fts-entries
+
+- **FTSEntry Model & FTS Queries Rewrite** (#1299) — Introduced dedicated `FTSEntry` model and `fts_entries` table with `simple` text search configuration, replacing the old `fts_vector` column approach. All three FTS queries (`_search_fts`, infix fallback, ILIKE fallback) now use `fts_entries` with the `simple` configuration, fixing corrupted search results caused by the `english` tsconfig stripping Algonquian linguistic characters. Added migration `v20260613120000` to create the table, populate from existing data, and drop the obsolete `fts_vector` column. Documented the research findings in `docs/lessons-learned/`.
+- **Populate Search Entries on Upload** (#1299) — Updated `populate_search_entries()` to write `FTSEntry` rows on every record upload and reprocess, with autoflush-safe delete-before-insert ordering to prevent primary key collisions.
+- **sync_prod_to_local Rewrite** (#1299) — Rewrote the production-to-local sync script to use `pg_catalog` introspection for true schema replication, ensuring the local database schema matches production exactly.
+- **3 New Tests + 2 Fixed FTS Tests** (#1299) — Added tests for FTS normalization, infinity symbol handling (`∞` maps to `oozzz`), and no-ILIKE-fallback path. Fixed two existing FTS tests to search `mdf_data` content (not `ge`) and to use punctuation-only terms that `tsvector` does not index, plus 15+ fixup commits resolving autoflush PK collisions, indentation issues, and deduplication edge cases.
+
 ## [0.2.0] - Unreleased
 
 ### feature/1197-phase4

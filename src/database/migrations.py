@@ -114,6 +114,26 @@ class MigrationManager:
             "_migrate_add_headword_entry_type_index_and_check",
             "Add entry_type index and CHECK constraint to headword_search_entries",
         ),
+        (
+            20260415000000,
+            "_migrate_ensure_sequences",
+            "Create sequences for tables missing autoincrement to match ORM expectations",
+        ),
+        (
+            20260511000001,
+            "_migrate_dedup_search_entries",
+            "Deduplicate search_entries: keep one row per (record_id, term, entry_type), add unique index",
+        ),
+        (
+            20260613120000,
+            "_migrate_replace_fts_vector",
+            "Replace records.fts_vector with fts_entries table using 'simple' config",
+        ),
+        (
+            20260615125509,
+            "_migrate_backfill_search_entries",
+            "Backfill HeadwordSearchEntry and GlossSearchEntry for existing records",
+        ),
     ]
 
     def __init__(self, engine):
@@ -646,15 +666,42 @@ class MigrationManager:
         """Migration 2026030207140: Reprocess all records to synchronize languages, search entries, and metadata."""
         from src.services.upload_service import UploadService
 
-        # We call the service method which manages its own session.
-        # This is safe because migrations run sequentially.
+        # Use the migration's own engine session, not get_session() (which connects to production)
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
         try:
             logger.info("Starting global record reprocessing migration...")
-            results = UploadService.reprocess_all_records()
+            results = UploadService.reprocess_all_records(session=session)
+            session.commit()
             logger.info(f"Migration reprocessed {results.get('reprocessed', 0)}/{results.get('total', 0)} records.")
         except Exception as e:
+            session.rollback()
             logger.error(f"Migration 2026030207140 failed: {e}")
             raise
+        finally:
+            session.close()
+
+    def _migrate_backfill_search_entries(self):
+        """Migration 20260615125509: Backfill HeadwordSearchEntry and GlossSearchEntry for existing records."""
+        from src.services.upload_service import UploadService
+
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            from .models.core import Record
+
+            records = session.query(Record).filter(Record.is_deleted.isnot(True)).all()
+            all_ids = [r.id for r in records]
+            logger.info(f"Backfilling search entries for {len(all_ids)} records...")
+            UploadService.populate_search_entries(record_ids=all_ids, session=session)
+            session.commit()
+            logger.info("Backfill complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to backfill search entries: {e}")
+            raise
+        finally:
+            session.close()
 
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""
@@ -872,6 +919,41 @@ class MigrationManager:
             )
             conn.commit()
 
+    def _migrate_ensure_sequences(self):
+        """Migration 20260415000000: Create sequences for tables missing autoincrement.
+
+        Production DDL uses plain integer NOT NULL for id columns on most tables
+        (no SERIAL, no IDENTITY, no DEFAULT nextval). The ORM models declare
+        autoincrement=True. This migration creates sequences for all tables that
+        have an integer id column but no associated sequence, and sets the column
+        default to nextval().
+        """
+        with self._engine.connect() as conn:
+            tables = [
+                r[0]
+                for r in conn.execute(
+                    text("SELECT tablename FROM pg_catalog.pg_tables WHERE schemaname='public'")
+                ).fetchall()
+            ]
+            for tname in tables:
+                seq = conn.execute(text("SELECT pg_get_serial_sequence(:t, 'id')"), {"t": tname}).scalar()
+                if seq:
+                    continue
+                has_int_id = conn.execute(
+                    text(
+                        "SELECT EXISTS (SELECT 1 FROM information_schema.columns "
+                        "WHERE table_name = :t AND column_name = 'id' AND data_type = 'integer')"
+                    ),
+                    {"t": tname},
+                ).scalar()
+                if has_int_id:
+                    seq_name = f"{tname}_id_seq"
+                    conn.execute(text(f"CREATE SEQUENCE IF NOT EXISTS {seq_name}"))
+                    max_id = conn.execute(text(f"SELECT COALESCE(MAX(id), 0) FROM {tname}")).scalar()
+                    conn.execute(text(f"ALTER SEQUENCE {seq_name} RESTART WITH {max_id + 1}"))
+                    conn.execute(text(f"ALTER TABLE {tname} ALTER COLUMN id SET DEFAULT nextval('{seq_name}')"))
+            conn.commit()
+
     def _migrate_create_gloss_search_entries(self):
         """Migration 20260405140918: Create gloss_search_entries table for PRIMARY ge."""
         with self._engine.connect() as conn:
@@ -895,4 +977,80 @@ class MigrationManager:
                     "CREATE INDEX IF NOT EXISTS idx_gloss_search_entries_record_id ON gloss_search_entries (record_id);"
                 )
             )
+            conn.commit()
+
+    def _migrate_dedup_search_entries(self):
+        """Migration 20260511000001: Deduplicate search_entries and add unique index."""
+        with self._engine.connect() as conn:
+            conn.execute(
+                text(
+                    "DELETE FROM search_entries WHERE id NOT IN "
+                    "(SELECT MIN(id) FROM search_entries GROUP BY record_id, term, entry_type);"
+                )
+            )
+            conn.execute(
+                text(
+                    "CREATE UNIQUE INDEX IF NOT EXISTS uq_search_entries_record_term_type "
+                    "ON search_entries (record_id, term, entry_type);"
+                )
+            )
+            conn.commit()
+
+    def _migrate_replace_fts_vector(self):
+        """Migration 20260613120000: Replace records.fts_vector with fts_entries table."""
+        from src.services.linguistic_service import LinguisticService
+
+        from .models.core import Record
+
+        with self._engine.connect() as conn:
+            # 1. Create fts_entries table
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS fts_entries (
+                    id SERIAL PRIMARY KEY,
+                    record_id INTEGER NOT NULL REFERENCES records(id) ON DELETE CASCADE,
+                    fts_vector TSVECTOR NOT NULL
+                );
+            """)
+            )
+            conn.execute(text("CREATE INDEX IF NOT EXISTS idx_fts_entries_record_id ON fts_entries (record_id);"))
+            conn.commit()
+
+        # 2. Populate fts_entries from all records using generate_sort_lx() + to_tsvector('simple')
+        Session = sessionmaker(bind=self._engine)
+        session = Session()
+        try:
+            # Truncate first to ensure idempotency — migration may be re-run
+            # against a database that already has fts_entries (e.g. after sync).
+            session.execute(text("TRUNCATE fts_entries"))
+            records = session.query(Record).filter(Record.is_deleted == False).all()
+            logger.info(f"Populating fts_entries for {len(records)} records...")
+            for record in records:
+                norm_text = LinguisticService.generate_sort_lx(record.mdf_data)
+                if norm_text:
+                    session.execute(
+                        text(
+                            "INSERT INTO fts_entries (record_id, fts_vector) "
+                            "VALUES (:rid, to_tsvector('simple', :norm))"
+                        ),
+                        {"rid": record.id, "norm": norm_text},
+                    )
+            session.commit()
+            logger.info("fts_entries population complete.")
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Failed to populate fts_entries: {e}")
+            raise
+        finally:
+            session.close()
+
+        with self._engine.connect() as conn:
+            # 3. Create GIN index on fts_entries.fts_vector
+            conn.execute(
+                text("CREATE INDEX IF NOT EXISTS idx_fts_entries_vector ON fts_entries USING gin (fts_vector);")
+            )
+            # 4. Drop old GIN index on records.fts_vector
+            conn.execute(text("DROP INDEX IF EXISTS idx_records_fts;"))
+            # 5. Drop old generated column
+            conn.execute(text("ALTER TABLE records DROP COLUMN IF EXISTS fts_vector;"))
             conn.commit()

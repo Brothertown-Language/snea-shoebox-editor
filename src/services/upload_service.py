@@ -11,11 +11,11 @@ import uuid
 from collections import defaultdict
 from collections.abc import Callable
 
-from sqlalchemy import func
+from sqlalchemy import func, text
 
 from src.database.connection import get_session
 from src.database.models.core import Record, Source
-from src.database.models.search import GlossSearchEntry, HeadwordSearchEntry, SearchEntry
+from src.database.models.search import FTSEntry, GlossSearchEntry, HeadwordSearchEntry, SearchEntry
 from src.database.models.workflow import EditHistory, MatchupQueue
 from src.logging_config import get_logger
 from src.mdf.parser import format_mdf_record, normalize_nt_record, parse_mdf
@@ -1209,8 +1209,8 @@ class UploadService:
         from src.database.models.core import Language, RecordLanguage
         from src.database.models.iso639 import ISO639_3
 
-        # 1. Clear existing
-        session.query(RecordLanguage).filter_by(record_id=record.id).delete()
+        # 1. Clear existing (use raw SQL to avoid autoflush ordering issues with ORM delete)
+        session.execute(text("DELETE FROM record_languages WHERE record_id = :rid"), {"rid": record.id})
 
         # 2. Add new from MDF if present
         if lg_entries:
@@ -1755,6 +1755,11 @@ class UploadService:
             session = get_session()
         try:
             total = 0
+            # Check once whether fts_entries table exists (migration guard)
+            from sqlalchemy import inspect as sa_inspect
+
+            _fts_table_exists = sa_inspect(session.get_bind()).has_table("fts_entries")
+
             for rid in record_ids:
                 record = session.get(Record, rid)
                 if not record:
@@ -1763,11 +1768,17 @@ class UploadService:
                 session.query(SearchEntry).filter_by(record_id=rid).delete()
                 session.query(HeadwordSearchEntry).filter_by(record_id=rid).delete()
                 session.query(GlossSearchEntry).filter_by(record_id=rid).delete()
+                if _fts_table_exists:
+                    session.query(FTSEntry).filter_by(record_id=rid).delete()
+                session.flush()
 
                 # Re-parse MDF to extract searchable fields
                 from src.mdf.parser import parse_mdf as _parse
 
-                parsed = _parse(record.mdf_data)
+                try:
+                    parsed = _parse(record.mdf_data)
+                except ValueError:
+                    continue
                 if not parsed:
                     continue
                 entry = parsed[0]
@@ -1778,10 +1789,12 @@ class UploadService:
                     norm = LinguisticService.generate_sort_lx(term)
                     session.add(SearchEntry(record_id=rid, term=term, normalized_term=norm, entry_type="lx"))
                     total += 1
-                # Insert va, se, cf, ve lists
+                # Insert va, se, cf, ve lists (deduplicate per record)
+                seen = set()
                 for field in ("va", "se", "cf", "ve"):
                     for val in entry.get(field, []):
-                        if val:
+                        if val and (val, field) not in seen:
+                            seen.add((val, field))
                             norm = LinguisticService.generate_sort_lx(val)
                             session.add(SearchEntry(record_id=rid, term=val, normalized_term=norm, entry_type=field))
                             total += 1
@@ -1792,7 +1805,7 @@ class UploadService:
                     norm = LinguisticService.generate_sort_lx(term)
                     session.add(HeadwordSearchEntry(record_id=rid, entry_type="lx", term=term, normalized_term=norm))
                     total += 1
-                for val in entry.get("va", []):
+                for val in entry.get("primary_va", []):
                     if val:
                         norm = LinguisticService.generate_sort_lx(val)
                         session.add(HeadwordSearchEntry(record_id=rid, entry_type="va", term=val, normalized_term=norm))
@@ -1804,13 +1817,13 @@ class UploadService:
                     norm = LinguisticService.generate_sort_lx(term)
                     session.add(GlossSearchEntry(record_id=rid, term=term, normalized_term=norm))
                     total += 1
-                # Insert va, se, cf, ve lists
-                for field in ("va", "se", "cf", "ve"):
-                    for val in entry.get(field, []):
-                        if val:
-                            norm = LinguisticService.generate_sort_lx(val)
-                            session.add(SearchEntry(record_id=rid, term=val, normalized_term=norm, entry_type=field))
-                            total += 1
+
+                # Populate fts_entries for FTS mode (guard: table may not exist yet)
+                if _fts_table_exists:
+                    norm_mdf = LinguisticService.generate_sort_lx(record.mdf_data)
+                    if norm_mdf:
+                        session.add(FTSEntry(record_id=rid, fts_vector=func.to_tsvector("simple", norm_mdf)))
+                        total += 1
 
             if not _provided_session:
                 session.commit()
@@ -1824,16 +1837,20 @@ class UploadService:
                 session.close()
 
     @staticmethod
-    def reprocess_all_records(progress_callback: Callable | None = None) -> dict:
+    def reprocess_all_records(progress_callback: Callable | None = None, session=None) -> dict:
         """Reprocess languages and search entries for all non-deleted records.
 
         This updates:
         - Record metadata fields (lx, hm, ps, ge, source_page, sort_lx)
         - record_languages association table
         - search_entries table
+
+        If session is provided, uses that session; otherwise creates one via get_session().
         """
         _logger = get_logger("snea.reprocess")
-        session = get_session()
+        _provided_session = session is not None
+        if not _provided_session:
+            session = get_session()
         try:
             records = session.query(Record).filter_by(is_deleted=False).all()
             total = len(records)
@@ -1865,6 +1882,9 @@ class UploadService:
                 # 4. Update Search Entries
                 # We pass the existing session to avoid nested transaction issues
                 UploadService.populate_search_entries([record.id], session=session)
+
+                # Commit per-record to prevent autoflush PK collisions on next iteration
+                session.commit()
 
                 reprocessed += 1
                 if progress_callback and (i + 1) % 10 == 0:
@@ -2417,6 +2437,7 @@ class UploadService:
                 session.query(SearchEntry).filter_by(record_id=rid).delete()
                 session.query(HeadwordSearchEntry).filter_by(record_id=rid).delete()
                 session.query(GlossSearchEntry).filter_by(record_id=rid).delete()
+                session.query(FTSEntry).filter_by(record_id=rid).delete()
                 session.query(EditHistory).filter_by(record_id=rid).delete()
                 session.delete(record)
                 deleted += 1
