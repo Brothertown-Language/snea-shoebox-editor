@@ -429,6 +429,8 @@ class LinguisticService:
                         .join(Language, rl_alias.language_id == Language.id)
                         .filter(Language.id == language_id)
                     )
+                    # NOTE: language_role is only applied when language_id is also set.
+                    # If language_id is None (no language filter), language_role has no effect.
                     if language_role == "primary":
                         query = query.filter(rl_alias.is_primary == True)
                     elif language_role == "secondary":
