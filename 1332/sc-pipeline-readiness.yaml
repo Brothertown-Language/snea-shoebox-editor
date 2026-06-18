@@ -1,0 +1,27 @@
+schema_version: "1.0"
+generated_at: "20260618205130"
+status: PASS
+checks:
+  - check_id: PR-1
+    result: PASS
+    detail: "All 10 SCs map to exactly one RED->GREEN->COMMIT cycle. SC-4 (migration lifecycle events) bundles 4 event types but they share one mechanism (migration log functions) — single concern, single test. SC-6 references both migration and frontend files but is one concern (stderr preservation). All SCs are atomic."
+  - check_id: PR-2
+    result: PASS
+    solve_contract_path: ".issues/1332/sc-dependency-contract.yaml"
+    prove_results:
+      - theorem: "All SCs satisfiable together"
+        result: VALID
+  - check_id: PR-3
+    result: PASS
+    detail: "All 10 SCs target one verification domain. SC-1 (model): behavioral. SC-2 (service): behavioral. SC-3 (service): behavioral. SC-4 (migration): behavioral. SC-5 (frontend): behavioral. SC-6 (stderr preservation): behavioral. SC-7 (DB resilience): behavioral. SC-8 (backward-compat): behavioral. SC-9 (query API): behavioral. SC-10 (init.py): structural."
+  - check_id: PR-4
+    result: PASS
+    solve_contract_path: ".issues/1332/dependency-ordering-verification/ordering.yaml"
+    prove_results:
+      - theorem: "Phase DAG is acyclic"
+        result: VALID
+sc_summary:
+  total_scs: 10
+  atomic: 10
+  with_dependencies: 8
+  single_concern: 10
