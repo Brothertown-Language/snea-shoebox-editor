@@ -129,7 +129,7 @@ class TestUploadMdfFileUploader(unittest.TestCase):
         upload_mdf()
 
         kwargs = mock_uploader.call_args
-        self.assertEqual(kwargs[1]["type"], ["txt", "mdf"])
+        self.assertNotIn("type", kwargs[1])
 
 
 class TestUploadMdfParseSummary(unittest.TestCase):
