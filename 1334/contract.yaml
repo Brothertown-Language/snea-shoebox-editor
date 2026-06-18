@@ -1,0 +1,36 @@
+# Z3 Workflow Contract — #1334 MDF uploader restriction removal
+# Variables, preconditions, invariants, and postconditions for the
+# RED → GREEN → REFACTOR pipeline.
+#
+# Use: .opencode/tools/solve check --state-path .issues/1334/state.yaml \
+#                                  --contract-path .issues/1334/contract.yaml
+
+variables:
+  red_pass:
+    type: bool
+    description: "RED phase test written and verified failing on current code"
+  green_pass:
+    type: bool
+    description: "GREEN phase source edit complete (type= param removed, help text updated)"
+  refactor_pass:
+    type: bool
+    description: "REFACTOR phase lint/typecheck/grep verification passed"
+  type_param_removed:
+    type: bool
+    description: "The `type` keyword argument is no longer present in the st.file_uploader call"
+  has_restrictive_filter:
+    type: bool
+    description: "The st.file_uploader call still carries a restrictive filter (type=...)"
+
+# Dependency ordering: phases must execute in sequence
+preconditions:
+  - "z3.Implies(green_pass, red_pass)"
+  - "z3.Implies(refactor_pass, green_pass)"
+
+# Invariant: removing type= guarantees no restrictive filter remains
+invariants:
+  - "z3.Implies(type_param_removed, z3.Not(has_restrictive_filter))"
+
+# Goal: all three phases reach PASS state
+postconditions:
+  - "z3.And(red_pass, green_pass, refactor_pass)"

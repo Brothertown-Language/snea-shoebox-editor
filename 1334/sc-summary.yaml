@@ -1,0 +1,25 @@
+# SC Summary for #1334
+spec_issue: 1334
+plan_issue: 1334
+created: 2026-06-18
+scs:
+  - id: SC-1
+    description: "st.file_uploader has no type parameter restricting extensions"
+    evidence_type: string
+    pipeline_gate: structural-checks
+    verification: "grep for type= in upload_mdf.py — must be absent"
+  - id: SC-2
+    description: "A file with .db extension containing valid MDF content can be uploaded without error"
+    evidence_type: behavioral
+    pipeline_gate: green-vbc
+    verification: "Upload .db file with valid MDF content → parser accepts it"
+  - id: SC-3
+    description: "A non-MDF file (e.g., .png) is rejected by the MDF parser with a clear error, not by the file uploader"
+    evidence_type: behavioral
+    pipeline_gate: green-vbc
+    verification: "Upload non-MDF file → parser raises ValueError, not Streamlit rejection"
+  - id: SC-4
+    description: "Existing .txt and .mdf uploads continue to work"
+    evidence_type: behavioral
+    pipeline_gate: regression-check
+    verification: "Existing unit tests pass (test suite covers .txt/.mdf upload paths)"

@@ -1,0 +1,69 @@
+domain: mdf-uploader-restriction-removal
+types:
+  - name: source-file
+  - name: parameter
+  - name: text-content
+  - name: help-variant
+
+objects:
+  - name: upload_mdf_py
+    type: source-file
+  - name: type_param
+    type: parameter
+  - name: restrictive_help
+    type: help-variant
+  - name: open_help
+    type: help-variant
+
+fluents:
+  - name: has-param
+    params:
+      - name: file
+        type: source-file
+      - name: param
+        type: parameter
+  - name: param-is-restrictive
+    params:
+      - name: param
+        type: parameter
+  - name: help-is
+    params:
+      - name: file
+        type: source-file
+      - name: variant
+        type: help-variant
+
+actions:
+  - name: remove-type-param
+    params:
+      - name: file
+        type: source-file
+      - name: param
+        type: parameter
+    preconditions:
+      - has-param(file, param)
+    effects:
+      - not has-param(file, param)
+
+  - name: update-help
+    params:
+      - name: file
+        type: source-file
+      - name: old_variant
+        type: help-variant
+      - name: new_variant
+        type: help-variant
+    preconditions:
+      - help-is(file, old_variant)
+    effects:
+      - help-is(file, new_variant)
+      - not help-is(file, old_variant)
+
+init:
+  - has-param(upload_mdf_py, type_param)
+  - param-is-restrictive(type_param)
+  - help-is(upload_mdf_py, restrictive_help)
+
+goals:
+  - not has-param(upload_mdf_py, type_param)
+  - help-is(upload_mdf_py, open_help)
