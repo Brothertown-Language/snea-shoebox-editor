@@ -48,8 +48,8 @@ def upload_mdf():
         # C-3: File uploader
         uploaded_file = st.file_uploader(
             "Upload MDF File",
-            type=["txt", "mdf"],
-            help="Select a .txt or .mdf file containing MDF-formatted dictionary entries.",
+            help="Select an MDF file (.txt, .mdf, .db, or other extension) "
+                 "containing MDF-formatted dictionary entries.",
             disabled=staging_in_progress,
         )
 
