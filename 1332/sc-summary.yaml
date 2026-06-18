@@ -1,0 +1,53 @@
+schema_version: "1.0"
+generated_at: "20260618210800"
+sc_coverage:
+  total: 10
+  evidence_types:
+    behavioral: 9
+    structural: 1
+  phases:
+    - phase: 1
+      title: "Model + Migration"
+      sc_ids: ["SC-1", "SC-10"]
+    - phase: 2
+      title: "EventLogService"
+      sc_ids: ["SC-2", "SC-3", "SC-7", "SC-9"]
+    - phase: 3
+      title: "Integration Hooks"
+      sc_ids: ["SC-4", "SC-5", "SC-6", "SC-8"]
+phase_dependencies:
+  - phase: 2
+    depends_on: [1]
+  - phase: 3
+    depends_on: [2]
+sc_detail:
+  - id: SC-1
+    evidence_type: behavioral
+    description: "system_event_log table exists with all common fields after migration"
+  - id: SC-2
+    evidence_type: behavioral
+    description: "EventLogService.log_event() writes a record to system_event_log"
+  - id: SC-3
+    evidence_type: behavioral
+    description: "EventLogService.log_exception() extracts exception data and writes exception event"
+  - id: SC-4
+    evidence_type: behavioral
+    description: "Migration lifecycle events written to system_event_log"
+  - id: SC-5
+    evidence_type: behavioral
+    description: "handle_ui_error() calls log_exception() and event appears in system_event_log"
+  - id: SC-6
+    evidence_type: behavioral
+    description: "Existing stderr logging is preserved (DB logging is additive)"
+  - id: SC-7
+    evidence_type: behavioral
+    description: "DB write failure during log_event() does not suppress original event"
+  - id: SC-8
+    evidence_type: behavioral
+    description: "handle_ui_error() signature remains backward-compatible"
+  - id: SC-9
+    evidence_type: behavioral
+    description: "EventLogService.get_events() returns events ordered by created_at desc with filters"
+  - id: SC-10
+    evidence_type: structural
+    description: "src/database/models/__init__.py remains docstring-only — no re-exports added"
