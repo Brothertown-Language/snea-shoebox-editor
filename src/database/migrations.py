@@ -22,6 +22,15 @@ def log_migration_start(version: int, description: str) -> None:
     logger.info("=" * 60)
     logger.info("MIGRATION START: v%s - %s", version, description)
     logger.info("=" * 60)
+    from src.services.event_log_service import EventLogService
+
+    EventLogService.log_event(
+        event_type="migration_start",
+        severity="info",
+        message=f"Migration started: v{version} - {description}",
+        source="snea.migrations",
+        details={"version": version, "description": description},
+    )
 
 
 def log_migration_skip(version: int, description: str, reason: str) -> None:
@@ -30,6 +39,15 @@ def log_migration_skip(version: int, description: str, reason: str) -> None:
     logger.info("MIGRATION SKIP: v%s - %s", version, description)
     logger.info("  Reason: %s", reason)
     logger.info("-" * 60)
+    from src.services.event_log_service import EventLogService
+
+    EventLogService.log_event(
+        event_type="migration_skip",
+        severity="info",
+        message=f"Migration skipped: v{version} - {description}",
+        source="snea.migrations",
+        details={"version": version, "description": description, "reason": reason},
+    )
 
 
 def log_migration_complete(version: int, description: str, duration_seconds: float | None = None) -> None:
@@ -45,6 +63,18 @@ def log_migration_complete(version: int, description: str, duration_seconds: flo
     else:
         logger.info("MIGRATION COMPLETE: v%s - %s", version, description)
     logger.info("=" * 60)
+    from src.services.event_log_service import EventLogService
+
+    details = {"version": version, "description": description}
+    if duration_seconds is not None:
+        details["duration_seconds"] = duration_seconds
+    EventLogService.log_event(
+        event_type="migration_complete",
+        severity="info",
+        message=f"Migration completed: v{version} - {description}",
+        source="snea.migrations",
+        details=details,
+    )
 
 
 def log_migration_error(version: int, description: str, error: Exception) -> None:
@@ -53,6 +83,20 @@ def log_migration_error(version: int, description: str, error: Exception) -> Non
     logger.error("MIGRATION FAILED: v%s - %s", version, description)
     logger.error("  Error: %s: %s", type(error).__name__, str(error))
     logger.error("=" * 60)
+    from src.services.event_log_service import EventLogService
+
+    EventLogService.log_event(
+        event_type="migration_error",
+        severity="error",
+        message=f"Migration failed: v{version} - {description}",
+        source="snea.migrations",
+        details={
+            "version": version,
+            "description": description,
+            "error_type": type(error).__name__,
+            "error_message": str(error),
+        },
+    )
 
 
 class MigrationManager:
@@ -133,6 +177,11 @@ class MigrationManager:
             20260615125509,
             "_migrate_backfill_search_entries",
             "Backfill HeadwordSearchEntry and GlossSearchEntry for existing records",
+        ),
+        (
+            2026061876990,
+            "_migrate_create_system_event_log",
+            "Create system_event_log table for persistent system event tracking",
         ),
     ]
 
@@ -702,6 +751,34 @@ class MigrationManager:
             raise
         finally:
             session.close()
+
+    def _migrate_create_system_event_log(self):
+        """Migration 2026061876990: Create system_event_log table."""
+        with self._engine.connect() as conn:
+            conn.execute(
+                text("""
+                CREATE TABLE IF NOT EXISTS system_event_log (
+                    id SERIAL PRIMARY KEY,
+                    event_type VARCHAR NOT NULL,
+                    severity VARCHAR NOT NULL,
+                    message VARCHAR NOT NULL,
+                    source VARCHAR NOT NULL,
+                    details JSONB NOT NULL DEFAULT '{}',
+                    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+                );
+            """)
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_system_event_log_event_type ON system_event_log (event_type);"
+                )
+            )
+            conn.execute(
+                text(
+                    "CREATE INDEX IF NOT EXISTS idx_system_event_log_created_at ON system_event_log (created_at);"
+                )
+            )
+            conn.commit()
 
     def _seed_default_sources(self):
         """Seed default sources if table is empty or missing specific entries."""

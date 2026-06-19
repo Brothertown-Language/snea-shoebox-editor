@@ -16,6 +16,7 @@ dependencies = [
     "streamlit-cookies-controller>=0.0.4",
     "tqdm>=4.67.1",
     "rapidfuzz>=3.14.5",
+    "pgserver>=0.1.4",
 ]
 
 

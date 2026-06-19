@@ -26,10 +26,12 @@ def handle_ui_error(e: Exception, user_message: str = "An unexpected error occur
     """
     from src.database.connection import is_production
     from src.logging_config import get_logger
+    from src.services.event_log_service import EventLogService
 
     # 1. Server-side logging (Full trace)
     log = get_logger(logger_name or "ui_error_handler")
     log.error(f"{user_message} Detail: {str(e)}", exc_info=True)
+    EventLogService.log_exception(e)
 
     # 2. UI Display (Sanitized)
     st.error(user_message)

@@ -1289,6 +1289,7 @@ name = "snea-shoebox-editor"
 version = "0.3.1"
 source = { virtual = "." }
 dependencies = [
+    { name = "pgserver" },
     { name = "pgvector" },
     { name = "psutil" },
     { name = "psycopg2-binary" },
@@ -1319,6 +1320,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
+    { name = "pgserver", specifier = ">=0.1.4" },
     { name = "pgserver", marker = "extra == 'local'", specifier = ">=0.1.4" },
     { name = "pgvector", specifier = ">=0.3.6" },
     { name = "psutil", specifier = ">=7.2.2" },
