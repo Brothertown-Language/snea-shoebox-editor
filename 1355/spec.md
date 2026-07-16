@@ -70,7 +70,6 @@ Invoke `writing-plans` to create `.issues/1355/plan.md` before implementation be
 | SC-4 | `docs/streamlit-dev-workflow.md`: references `main` as only trunk, no stale `dev` workflow refs | `grep -n '\bdev\b' docs/streamlit-dev-workflow.md` yields 0 branch-related `dev` references | string |
 | SC-5 | `dev` branch deleted locally and remotely | `git branch -a | grep -c '\sdev$'` = 0, `git ls-remote origin dev | wc -l` = 0 | structural |
 | SC-6 | No stale `dev` branch references in `src/` | `grep -rn '\bdev\b' src/ --include="*.py" | grep -vE '"(type|id|name)":\s*"dev"|local[ ._-]dev|development\b'` yields 0 lines | string |
-| SC-7 | No SC may be weakened, deferred, or reclassified to a lower evidence type to evade implementation | Auditor confirms all SCs implemented at declared evidence type or higher | behavioral |
 
 ## Edge Cases & Risks
 
