@@ -32,9 +32,9 @@ Tests MUST NOT be lobotomized. Removing or weakening a behavioral test assertion
 
 ### In Scope
 
-1. **AGENTS.md** — Remove dev-specific workflow instructions (the sync script instruction referencing `dev`, the "Feature PRs merging to `dev`" exception). Add note that `.opencode/` directory is off-limits and not managed by the main repo.
+1. **AGENTS.md** — Remove ALL dev branch references: line 11 (`not from dev or main`), line 52 (`Feature PRs merging to dev`). Add note that `.opencode/` directory is off-limits and not managed by the main repo.
 2. **docs/git-workflow-migration-guide.md** — Update to reflect trunk-based workflow (all branches target `main`, no `dev` stage).
-3. **docs/streamlit-dev-workflow.md** — Update or archive as appropriate.
+3. **docs/streamlit-dev-workflow.md** — Update content to reference `main` as the only trunk, remove stale `dev` workflow references.
 4. **Delete `dev` branch** — Locally and remotely after migration is complete, ensuring `main` is fast-forwarded to include all 139 commits from `dev`.
 
 ### Out of Scope
@@ -42,7 +42,7 @@ Tests MUST NOT be lobotomized. Removing or weakening a behavioral test assertion
 - `.opencode/` directory — off-limits, must not be modified
 - Feature branch workflow changes — already handled by opencode skills
 - Release process changes — already handled by opencode skills
-- Changes to application source code (`src/`) — no stale `dev` branch references found in application code (verified by `grep`); all `dev` references in `src/database/connection.py` refer to "local development", not the `dev` git branch
+- Changes to application source code (`src/`) — SC-6 is a verification-only check; no changes to `src/` files
 
 ## Key Considerations
 
@@ -62,15 +62,15 @@ Invoke `writing-plans` to create `.issues/1355/plan.md` before implementation be
 
 ## Success Criteria
 
-| ID | Criterion | Verification Method | Remediation | Pipeline Step Binding | Artifact Path | Requirement Traceability | Phase Binding | Verification Gate | Integration Mode | Affinity Group | Re-Entry Step | Test File | Phase Mapping |
-|----|-----------|-------------------|-------------|----------------------|--------------|-------------------------|--------------|-----------------|----------------|--------------|-------------|-----------|--------------|
-| SC-1 | AGENTS.md updated: dev-specific workflow instructions removed | `grep -n 'dev' AGENTS.md` — confirm no references to `dev` as merge target or workflow branch (except `.opencode/` off-limits note) | If stale refs remain, edit AGENTS.md and re-verify | spec-creation | `.issues/1355/spec.md` | Root cause: AGENTS.md defines dev-centric workflow | Phase 1 | string | sequential | — | — | — | Phase 1 |
-| SC-2 | AGENTS.md updated: `.opencode/` off-limits note added | `grep -c '.opencode/' AGENTS.md` — confirm `.opencode/ off-limits` note is present | Add note if missing | spec-creation | `.issues/1355/spec.md` | Root cause: AGENTS.md needs boundary declaration | Phase 1 | string | sequential | — | — | — | Phase 1 |
-| SC-3 | docs/git-workflow-migration-guide.md updated to trunk-based model | `grep -c 'trunk-based\|main' docs/git-workflow-migration-guide.md` — confirm content references `main` as the single trunk, no stale `dev` workflow references | Rewrite doc to trunk-based model | spec-creation | `.issues/1355/spec.md` | Root cause: docs reflect dev-centric workflow | Phase 2 | string | sequential | — | — | — | Phase 2 |
-| SC-4 | docs/streamlit-dev-workflow.md updated or deleted | File either does not exist OR its content references `main` as the only trunk | If file exists with stale dev refs, update or delete | spec-creation | `.issues/1355/spec.md` | Root cause: docs reflect dev-centric workflow | Phase 2 | string | sequential | — | — | — | Phase 2 |
-| SC-5 | `dev` branch deleted locally and remotely after migration | `git branch -a | grep -c '\sdev$'` — confirm no local `dev` branch; `git ls-remote origin dev | wc -l` — confirm no remote `dev` branch | If branch still exists, force-delete | post-implementation | `.issues/1355/spec.md` | Root cause: dev branch is the physical artifact of the accumulation model | Phase 3 | structural | sequential | — | — | — | Phase 3 |
-| SC-6 | All application files still reference `main` as the only trunk (no stale dev references) | `grep -rn "'dev'" src/ --include="*.py"` — no stale `dev` branch references in application code (existing false positives for "local dev" documented) | If stale refs found, update to remove dev branch association | post-implementation verification | `.issues/1355/spec.md` | Root cause: stale dev references in code | Phase 3 | string | sequential | — | — | — | Phase 3 |
-| SC-7 | No SC may be weakened, deferred, or reclassified to a lower evidence type to evade implementation | Auditor confirms all SCs implemented at declared evidence type or higher | HALT, report blocker | post-implementation | `.issues/1355/spec.md` | Anti-lobotomization gate | All | behavioral | — | — | — | — | All |
+| ID | Criterion | Verification Method | Evidence Type |
+|----|-----------|-------------------|---------------|
+| SC-1 | AGENTS.md: no `dev` branch references remain (lines 11 and 52 removed, no new ones added) | `grep -n '\bdev\b' AGENTS.md` — only `.opencode/` off-limits note and non-branch uses remain | string |
+| SC-2 | AGENTS.md: `.opencode/` declared off-limits | `grep -c 'off-limits' AGENTS.md` >= 1 | string |
+| SC-3 | `docs/git-workflow-migration-guide.md`: describes `main` as single trunk, no `dev` integration stage | `grep -n '\bdev\b' docs/git-workflow-migration-guide.md` yields 0 branch-related `dev` references | string |
+| SC-4 | `docs/streamlit-dev-workflow.md`: references `main` as only trunk, no stale `dev` workflow refs | `grep -n '\bdev\b' docs/streamlit-dev-workflow.md` yields 0 branch-related `dev` references | string |
+| SC-5 | `dev` branch deleted locally and remotely | `git branch -a | grep -c '\sdev$'` = 0, `git ls-remote origin dev | wc -l` = 0 | structural |
+| SC-6 | No stale `dev` branch references in `src/` | `grep -rn '\bdev\b' src/ --include="*.py" | grep -vE '"(type|id|name)":\s*"dev"|local\.dev|development\b'` yields 0 lines | string |
+| SC-7 | No SC may be weakened, deferred, or reclassified to a lower evidence type to evade implementation | Auditor confirms all SCs implemented at declared evidence type or higher | behavioral |
 
 ## Edge Cases & Risks
 
