@@ -32,11 +32,15 @@ body: '## Problem
 
   - No changes to release process (already handled by opencode skills)
 
+  - No changes to `src/` files — SC-6 is a verification-only check confirming no stale
+  `dev` references already exist
+
 
   ## Scope
 
 
-  - AGENTS.md: remove dev-specific workflow instructions, add `.opencode/` off-limits
+  - AGENTS.md: remove ALL `dev` branch references (including line 11 `not from dev
+  or main` and line 52 `Feature PRs merging to dev`), add `.opencode/` off-limits
   note
 
   - `docs/git-workflow-migration-guide.md`: update to trunk-based model
@@ -74,28 +78,28 @@ body: '## Problem
 
   |----|-----------|-------------------|---------------|
 
-  | SC-1 | AGENTS.md: no references to `dev` as a git workflow merge target or release
-  branch | `grep -n ''\bdev\b'' AGENTS.md` — only `.opencode/` off-limits note and
-  non-branch uses remain | string |
+  | SC-1 | AGENTS.md: no `dev` branch references remain (lines 11 and 52 removed,
+  no new ones added) | `grep -n ''\bdev\b'' AGENTS.md` — only `.opencode/` off-limits
+  note and non-branch uses remain | string |
 
   | SC-2 | AGENTS.md: `.opencode/` declared off-limits | `grep -c ''off-limits'' AGENTS.md`
-  ≥ 1 | string |
+  >= 1 | string |
 
   | SC-3 | `docs/git-workflow-migration-guide.md`: describes `main` as single trunk,
   no `dev` integration stage | `grep -n ''\bdev\b'' docs/git-workflow-migration-guide.md`
   yields 0 branch-related `dev` references | string |
 
-  | SC-4 | `docs/streamlit-dev-workflow.md`: content references `main` as only trunk,
-  no stale `dev` workflow refs | `grep -n ''\bdev\b'' docs/streamlit-dev-workflow.md`
-  yields 0 branch-related `dev` references | string |
+  | SC-4 | `docs/streamlit-dev-workflow.md`: references `main` as only trunk, no stale
+  `dev` workflow refs | `grep -n ''\bdev\b'' docs/streamlit-dev-workflow.md` yields
+  0 branch-related `dev` references | string |
 
   | SC-5 | `dev` branch deleted locally and remotely | `git branch -a | grep -c ''\sdev$''`
   = 0, `git ls-remote origin dev | wc -l` = 0 | structural |
 
-  | SC-6 | No stale `dev` branch references in application code | `grep -rn ''\bdev\b''
-  src/ --include="*.py" | grep -v ''local.dev\|development\b''` yields 0 lines | string
+  | SC-6 | No stale `dev` branch references in `src/` | `grep -rn ''\bdev\b'' src/
+  --include="*.py" | grep -v ''local.dev|development\b''` yields 0 lines | string
   |
 
   '
 created_at: '2026-07-16T04:00:56+00:00'
-updated_at: '2026-07-16T04:04:51+00:00'
+updated_at: '2026-07-16T04:09:34+00:00'
