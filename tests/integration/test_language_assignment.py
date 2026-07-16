@@ -8,7 +8,6 @@ from sqlalchemy.orm import sessionmaker
 from src.database.base import Base
 from src.database.models.core import Language, Record, RecordLanguage, Source
 from src.database.models.identity import User
-from src.database.models.iso639 import ISO639_3
 from src.database.models.workflow import MatchupQueue
 from src.services.upload_service import UploadService
 
@@ -66,8 +65,8 @@ class TestLanguageAssignment(unittest.TestCase):
                     )
                     _sess.commit()
             _sess.close()
-        except ImportError:
-            raise unittest.SkipTest("pgserver not installed")
+        except ImportError as err:
+            raise unittest.SkipTest("pgserver not installed") from err
 
     @classmethod
     def tearDownClass(cls):
@@ -84,7 +83,9 @@ class TestLanguageAssignment(unittest.TestCase):
         with self.engine.connect() as conn:
             conn.execute(
                 text(
-                    "TRUNCATE user_activity_log, record_languages, edit_history, search_entries, records, languages, matchup_queue, users, sources RESTART IDENTITY CASCADE;"
+                    "TRUNCATE user_activity_log, record_languages, edit_history, "
+                    "search_entries, records, languages, matchup_queue, users, sources "
+                    "RESTART IDENTITY CASCADE;"
                 )
             )
             conn.commit()
@@ -161,7 +162,7 @@ class TestLanguageAssignment(unittest.TestCase):
         self.assertEqual(lang2.code, "eng")
 
     def test_scenario_3_subentry_so_only(self):
-        r"""3) headwords does not have \so, subentries have \so = record does not have a primary language and has secondary languages"""
+        r"""3) headwords without \so, subentries with \so = no primary, secondary languages only"""
         mdf_data = "\\lx test3\n\\ge test gloss\n\\se subentry\n\\so Mohegan-Pequot [xpq]\n\\ge subgloss"
         record = self._commit_mdf("test3", mdf_data)
 
@@ -179,6 +180,70 @@ class TestLanguageAssignment(unittest.TestCase):
 
         record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
         self.assertEqual(len(record_langs), 0)
+
+
+# ── RED-phase tests for ISO 639-3 language identification (issue #1339) ──
+
+    def test_mohican_mjy_creates_correct_language(self):
+        r"""SC-1 (MUST FAIL currently): Mohican [mjy] creates Language(code=mjy, name="Mahican").
+
+        Currently fails because "Mohican != Mahican" hits the ref_name != lg_name guard.
+        After fix, JaroWinkler("Mohican", "Mahican") >= 0.75 passes and the Language is created.
+        """
+        mdf_data = "\\lx mohican_test\n\\so Mohican [mjy]\n\\ge test gloss"
+        record = self._commit_mdf("mohican_test", mdf_data)
+
+        record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
+        self.assertEqual(len(record_langs), 1)
+
+        lang = self.session.get(Language, record_langs[0].language_id)
+        self.assertEqual(lang.code, "mjy")
+        self.assertEqual(lang.name, "Mahican")
+
+    def test_english_eng_still_works(self):
+        r"""SC-2 (MUST PASS currently): English [eng] still creates RecordLanguage.
+
+        Regression guard — "English == English" passes the guard today and must
+        continue to work after the fix.
+        """
+        mdf_data = "\\lx english_test\n\\so English [eng]\n\\ge test gloss"
+        record = self._commit_mdf("english_test", mdf_data)
+
+        record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
+        self.assertEqual(len(record_langs), 1)
+
+        lang = self.session.get(Language, record_langs[0].language_id)
+        self.assertEqual(lang.code, "eng")
+
+    def test_unknown_zzz_skipped(self):
+        r"""SC-3 (MUST PASS currently): Unknown [zzz] is skipped — code not in ISO 639-3.
+
+        Regression guard — unknown codes must never produce Language rows.
+        """
+        mdf_data = "\\lx unknown_test\n\\so Unknown [zzz]\n\\ge test gloss"
+        record = self._commit_mdf("unknown_test", mdf_data)
+
+        record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
+        self.assertEqual(len(record_langs), 0)
+
+        lang = self.session.query(Language).filter_by(code="zzz").first()
+        self.assertIsNone(lang)
+
+    def test_french_mjy_skipped(self):
+        r"""SC-4 (MUST PASS currently AND after fix): French [mjy] is skipped.
+
+        Currently passes because "French != Mahican" hits the ref_name != lg_name guard.
+        After fix, JaroWinkler("French", "Mahican") < 0.75 blocks it instead.
+        This is a regression guard — it must pass before AND after.
+        """
+        mdf_data = "\\lx french_mjy_test\n\\so French [mjy]\n\\ge test gloss"
+        record = self._commit_mdf("french_mjy_test", mdf_data)
+
+        record_langs = self.session.query(RecordLanguage).filter_by(record_id=record.id).all()
+        self.assertEqual(len(record_langs), 0)
+
+        lang = self.session.query(Language).filter_by(code="mjy").first()
+        self.assertIsNone(lang)
 
 
 if __name__ == "__main__":

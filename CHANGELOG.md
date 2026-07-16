@@ -17,6 +17,72 @@ For AI agent infrastructure changes (`.opencode/` directory), see
 - **sync_prod_to_local Rewrite** (#1299) — Rewrote the production-to-local sync script to use `pg_catalog` introspection for true schema replication, ensuring the local database schema matches production exactly.
 - **3 New Tests + 2 Fixed FTS Tests** (#1299) — Added tests for FTS normalization, infinity symbol handling (`∞` maps to `oozzz`), and no-ILIKE-fallback path. Fixed two existing FTS tests to search `mdf_data` content (not `ge`) and to use punctuation-only terms that `tsvector` does not index, plus 15+ fixup commits resolving autoflush PK collisions, indentation issues, and deduplication edge cases.
 
+### feature/1339-iso-639-3-language-identification
+
+- **ISO 639-3 Language Identification** (#1339) — Replaced previous free-text language lookup with ISO 639-3 three-letter code-based identification. Added JaroWinkler plausibility check for ambiguous language assignments. Language identification is now deterministic and standards-based.
+
+### feature/1334-remove-extension-filter
+
+- **Remove Undocumented MDF Uploader Extension Filter** (#1334) — Removed `type=["txt", "mdf"]` from `st.file_uploader` in `upload_mdf.py` so any file extension is accepted. Updated help text to document common MDF extensions without implying server-side restriction. Updated existing test assertion to verify the type parameter is absent.
+
+### feature/1330-release-pr-no-closing-keywords
+
+- **Release PR Body No Auto-Closing Keywords** (#1330) — Release PR bodies must not use auto-closing keywords (`Closes`, `Fixes`, `Resolves`) for stakeholder issues. Feature PRs merging to `dev` may still use `Closes #N` for internal spec/plan issues. Documented in `AGENTS.md` under Release PR Body section.
+
+### feature/1327-release-pr-version-bump-protocol
+
+- **Release PR Version Bump Protocol** (#1327) — Added mandatory live-discovery version bump protocol to `AGENTS.md`. Every release PR must re-discover all version-bearing locations via grep for `__version__`, `version =`, `"version":`, `version=` across all file types. Prohibits static/hardcoded lists.
+
+### feature/1324-1323-records-lint-pyright
+
+- **Ruff Lint + Pyright Type Fixes in records.py** (#1323, #1324) — Fixed 12 ruff lint errors (unused logger/search_query, ambiguous `l` vars, long lines, set comprehension, `list()` in `sorted()`) and 3 pyright type errors (`str|None` → `int()`, `str|None` → `json.loads`, unused logger import removal).
+
+### feature/401-filter-ux
+
+- **Records View Filter UX Improvements** (#401) — Series of UX improvements to the records view left panel: clear search now immediately empties the input field via dynamic widget key; FTS mode disables language selectbox and role radio with explanatory tooltips; search controls handle Unicode characters without crashing; filter state persists across headword/gloss/lexeme mode switches; empty search returns all records without error.
+
+### feature/1321-search-caption
+
+- **Dynamic Search Mode Caption** (#1321) — Replaced static `── Focused ──` / `── Broad ──` group labels and dense help-text block with a single dynamic caption below the search-mode radio group. Caption updates to explain the currently selected mode in plain language.
+
+### feature/1126-search-mode-ui
+
+- **Search Mode UI — Vertical Radio with Grouping** (#1126 Phase 5) — Replaced horizontal toggle with vertical radio button group organized into two logical groups (Lexeme/FTS and Headword/Gloss). Headword set as default mode. Added mode name header, help text per mode, and improved button reflow layout.
+
+### feature/1305-search-dispatch-strategy
+
+- **Backend Strategy-Dispatch for Headword/Gloss Modes** (#1305 Phase 4) — Refactored `get_all_records_for_export()` and `stream_records_to_temp_file()` to use `_search_strategies` dictionary dispatch, matching the pattern already used by `search_records()`. All four strategy functions (`_search_lexeme`, `_search_fts`, `_search_headword`, `_search_gloss`) are now consistently dispatched across all query paths.
+
+### feature/1316-ensure-sequences
+
+- **Sequences Migration + Integration Test Setup** (#1316, #1313, #1319) — Created migration `20260415000000` that generates sequences for all 14 tables with integer id columns but no associated sequence, setting the column default to `nextval()`. Added `conftest.py` for integration tests that runs migrations before any test connects. Fixed ISO import ordering in `test_language_assignment.py`. Made FTS migration idempotent by adding `TRUNCATE fts_entries` before the insert loop.
+
+### feature/1310-purge-cross-repo-contaminations
+
+- **Purge Cross-Repo Contaminations** (#1310) — Deleted files that integrated with the `.opencode/` submodule from the main application repo: `src/security/` (3 files, agent infrastructure), and 8 test files that referenced `.opencode/` paths, guidelines, scripts, or hooks. The `.opencode/` repo is independent — the main repo must not test it.
+
+### feature/1306-backfill-migration
+
+- **Backfill Migration for Headword/Gloss Search Entries** (#1306 Phase 3) — Added `_migrate_backfill_search_entries()` method to `MigrationManager` with migration version `20260615125509`. Populates `HeadwordSearchEntry` and `GlossSearchEntry` tables for existing records. Test file with 4 tests covering initial empty state, population, rollback safety, and registry presence. Removed cross-repo tests (`pair_mode`, `secret_redaction`) that asserted against `.opencode/` submodule.
+
+### feature/1304-headword-gloss-indexing
+
+- **Backend Indexing for Headword/Gloss Search** (#1304 Phase 2, Phase 1) — Added `primary_va` field to MDF parser capturing headword-block `\va` values. HeadwordSearchEntry uses `primary_va` (not full `va` list) for headword results. GlossSearchEntry indexes only the first `\ge` at headword level. Records missing `\lx` are gracefully excluded from headword results. Added 4 tests covering SC-3, SC-5, SC-23, SC-26, and SearchEntry regression guard.
+
+### feature/1300-autoflush-pk-collision-fix
+
+- **Autoflush PK Collision Fix** (#1300) — Fixed primary key collision in `reprocess_all_records()` and migration session routing. `populate_search_entries()` uses `session.flush()` after ORM deletes; `_update_record_languages()` uses raw SQL DELETE for immediate execution; `reprocess_all_records()` uses per-record commit with optional session parameter.
+
+### Changed
+
+- **AGENTS.md Regression Test Protocol** — Added mandatory `bash scripts/sync_prod_to_local.sh` before every regression test cycle, to re-sync local database from production. The sync script must be from the feature branch under test, not from `dev` or `main`.
+
+- **Version Bump to 0.3.1** — Bumped project version to 0.3.1.
+
+- **uv.lock Sync to 0.3.1** — Synced `uv.lock` to match version 0.3.1 dependency resolution.
+
+- **Dev Sync with Main** — Synced `dev` branch with `main` following the v0.3.1 release.
+
 ## [0.2.0] - Unreleased
 
 ### feature/1197-phase4

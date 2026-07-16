@@ -35,4 +35,18 @@ When creating a release PR that includes a version bump, the agent MUST discover
 
 **Prohibited:** Maintaining a hardcoded list of version locations in AGENTS.md or any other file. Drift between the static list and the actual project structure produces silent version mismatches. Every release PR must re-discover.
 
-**Rationale:** Files get renamed, moved, added, or removed between releases. A static list from a previous release is stale by definition on the next release. Live discovery is the only reliable mechanism. |
+**Rationale:** Files get renamed, moved, added, or removed between releases. A static list from a previous release is stale by definition on the next release. Live discovery is the only reliable mechanism.
+
+## Release PR Body — No Auto-Closing Keywords for Stakeholder Issues
+
+Release PR bodies MUST NOT include auto-closing keywords (`Closes`, `Fixes`, `Resolves`) that reference stakeholder-facing issues. Feature requests from stakeholders must be closed manually after the stakeholder has had an opportunity to verify the release and confirm the work meets their needs.
+
+**Correct:** Describe the feature in release notes without auto-closing syntax.
+
+```
+Closes #N
+```
+
+Instead, close the stakeholder issue manually after deployment and stakeholder verification.
+
+**Exception:** Feature PRs merging to `dev` may use `Closes #N` for internal spec/plan issues where no stakeholder verification is needed. |
