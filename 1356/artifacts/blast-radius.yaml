@@ -1,27 +1,38 @@
-affected_files:
-  - docs/git-workflow-migration-guide.md
-  - docs/streamlit-dev-workflow.md
-  - AGENTS.md
-  - docs/security/credential-leakage-remediation.md
-impact_zones:
-  - zone: documentation
-    files:
-      - docs/git-workflow-migration-guide.md
-      - docs/streamlit-dev-workflow.md
-    severity: DELETE
-    description: Two entire documentation files are removed from the repository
-  - zone: agent_guidelines
-    files:
-      - AGENTS.md
-    severity: EDIT
-    description: Remove one line referencing 'merging to `dev`'
-  - zone: security_docs
-    files:
-      - docs/security/credential-leakage-remediation.md
-    severity: EDIT
-    description: Replace 'dev' branch reference with consistent branch target
-  - zone: verification
-    files:
-      - docs/*
-    severity: SWEEP
-    description: Grep sweep to confirm no remaining stale 'dev' references
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T00:00:00Z
+blast_radius:
+  phases:
+    - phase: "1 — Delete retired workflow docs"
+      affected_components:
+        - component: docs/git-workflow-migration-guide.md
+          impact: direct
+          description: Entire file deleted — documents feature→dev→main workflow that no longer exists
+          ripple_effects:
+            - No downstream consumers after deletion (no cross-references)
+        - component: docs/streamlit-dev-workflow.md
+          impact: direct
+          description: Entire file deleted — documents running from dev branch which is retired
+          ripple_effects:
+            - No downstream consumers after deletion (no cross-references)
+      risk_level: low
+    - phase: "2 — Update doc references from dev to main"
+      affected_components:
+        - component: AGENTS.md
+          impact: direct
+          description: Remove line 52 — exception for PRs merging to dev
+          ripple_effects:
+            - Future PRs will correctly note that dev-exception rule no longer exists
+        - component: docs/security/credential-leakage-remediation.md
+          impact: direct
+          description: Update line 84 — git push target from origin dev to origin main
+          ripple_effects:
+            - Remediation instructions now target correct branch
+      risk_level: low
+    - phase: "3 — Verification sweep"
+      affected_components:
+        - component: docs/
+          impact: indirect
+          description: Grep sweep for remaining dev branch workflow references
+          ripple_effects:
+            - Catches any missed references from phases 1-2
+      risk_level: low

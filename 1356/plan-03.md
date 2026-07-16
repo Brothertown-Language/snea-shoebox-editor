@@ -1,55 +1,90 @@
-# Phase 3: Verification sweep
+# Phase 03 — Verification Sweep
 
-## SC-to-Step Traceability
+**Concern:** Verify zero `dev` branch workflow references remain across the documentation directory after the deletions and edits in phases 1-2.
 
-| SC ID | Criterion | Phase | Step(s) |
-|-------|-----------|-------|---------|
-| SC-5 | No `dev` branch workflow references in `docs/` | 3 | 3.1, 3.2 |
-| SC-6 | No SC weakened or deferred | 3 | 3.2 (cross-cutting audit) |
+**Files:** `docs/` directory (read-only grep sweep)
 
-## Steps
+**SCs:** SC-5 (no remaining `\`dev\`` branch workflow references)
 
-### Step 3.1 — Grep sweep `docs/` for stale `dev` references
+**Dependencies:** Phases 1-2 complete (files deleted and references updated)
 
-- **Pattern**: `(scripts from \`dev\`|branch.*dev|origin dev|to \`dev\`|base.*\bdev\b|merging to \`dev\`)`
-- **Command**: `grep -rnE '(scripts from \`dev\`|branch.*\bdev\b|origin dev|to \`dev\`|base.*\bdev\b|merging to \`dev\`)' docs/`
-- **Pre-condition**: Files from Phase 1 are deleted, edits from Phase 2 applied
-- **Expected**: 0 matches (SC-5)
-- **Evidence type**: string
+**Entry criteria:** Phases 1-2 committed, working tree clean
 
-### Step 3.2 — Anti-lobotomization audit (SC-6)
+**Exit criteria:**
+- `grep -rn '\`dev\`' docs/` returns only false positives or empty
+- Results documented
 
-- **Review**: Read all three phases' diffs. Confirm no behavioral test assertion was removed, weakened, or reclassified.
-- **Check**: No SC's evidence type was downgraded. No behavioral assertion was replaced with grep/string.
-- **Evidence type**: behavioral
-- **Gate**: `behavioral-test-evaluation` clean-room dispatch after artifact generation
+**Evidence type:** Structural (grep sweep)
 
-## Safety/Rollback
+**Safety/Rollback:**
+- Destructive operations: None — read-only verification
+- Data loss risk: None
 
-- **Destructive operations**: None (read-only grep sweep)
-- **Rollback plan**: N/A — verification is read-only
-- **Data loss risk**: None
+---
 
-## Feasibility Verification
+### Step-by-Step
 
-| Step | Reference | Verified? | Evidence |
-|------|-----------|-----------|----------|
-| 3.1 | `docs/` directory | ✅ | `ls docs/` confirmed exists |
-| 3.2 | SC-6 spec text | ✅ | Read from spec.md |
+- [ ] 17. (**sub-agent**) Pre-sweep baseline — confirm phases 1-2 changes are in place
+  - Command: `test ! -f docs/git-workflow-migration-guide.md && test ! -f docs/streamlit-dev-workflow.md && grep -c 'origin dev' docs/security/credential-leakage-remediation.md | grep -q 0`
+  - Expected: all pass (files deleted, refs updated)
+  - SC: SC-5 (precondition)
 
-## Evidence/Provenance
+- [ ] 18. (**sub-agent**) Run verification sweep — grep for backtick-gated `dev` references
+  - Command: `grep -rn '\`dev\`' docs/ || echo "No matches found"`
+  - Expected: either no matches, or only false positives (generic prose, not workflow references)
+  - SC: SC-5
 
-| Claim | Evidence Source | Verified? |
-|-------|----------------|----------|
-| `docs/` directory exists | `ls docs/` | ✅ |
-| SC-6 is cross-cutting anti-lobotomization | `sc-summary.yaml` | ✅ |
+- [ ] 19. (**sub-agent**) Review grep results — classify each match as workflow reference or generic prose
+  - Command: Inspect each match context
+  - Expected: all matches are generic prose ("development", "dev machine", "dev environment") — zero workflow references
+  - SC: SC-5
 
-## Exit Criteria (post-implementation gate)
+- [ ] 20. (**sub-agent**) Verify SC-5 PASS
+  - Command: Confirm that `grep -rn '\`dev\`' docs/` produced no workflow references
+  - Expected: PASS
+  - SC: SC-5
 
-- `grep -rnE '(scripts from \`dev\`|branch.*\bdev\b|origin dev|to \`dev\`|base.*\bdev\b|merging to \`dev\`)' docs/` → 0 matches (SC-5: string)
-- Clean-room `behavioral-test-evaluation` dispatch returns PASS for SC-6 (behavioral)
-- ALL 6 SCs verified as PASS before the implementation is claimed complete
-- Post-sweep: commit with message `phase-3: verify no stale dev references remain`
-- Full verification-before-completion gate pass
-- Finishing-a-development-branch checklist
-- PR creation
+- [ ] 21. (**sub-agent**) Document sweep results
+  - Command: Write sweep results to `.issues/1356/verification-sweep-results.md`
+  - Expected: file created with match count and classification
+  - SC: SC-5
+
+- [ ] 22. (**sub-agent**) Commit sweep results
+  - Command: `git add .issues/1356/verification-sweep-results.md && git commit -m "Phase 3: verification sweep results"`
+  - Expected: commit succeeds
+  - SC: SC-5
+
+---
+
+### Phase Completion
+
+- [ ] SC-5 PASS with structural evidence (grep sweep)
+- [ ] Sweep results documented
+- [ ] Commit made
+- [ ] Ready for VbC (verification-before-completion) and finishing checks
+
+---
+
+### Common SC-6 — SC Integrity
+
+**Applies to all phases**
+
+- [ ] 23. (**sub-agent**) Verify no SC was weakened or reclassified to evade implementation
+  - Command: Audit each SC PASS against its declared evidence type
+  - Expected: All SCs achieved PASS with their declared evidence type — no behavioral→structural downgrades
+  - SC: SC-6
+
+- [ ] 24. (**sub-agent**) Verify behavioral SCs use test execution, not structural/grep substitution
+  - Command: Inspect verification evidence for each behavioral SC
+  - Expected: No EVIDENCE_TYPE_MISMATCH findings
+  - SC: SC-6
+
+- [ ] 25. (**sub-agent**) Reclassify any SC with mismatched evidence type and re-verify
+  - Command: Apply substrate classification gate — if change affects behavior, evidence type MUST be behavioral
+  - Expected: All SCs correctly classified and verified
+  - SC: SC-6
+
+- [ ] 26. (**sub-agent**) Document SC-6 verification
+  - Command: Append SC-6 findings to verification results
+  - Expected: SC-6 PASS documented
+  - SC: SC-6

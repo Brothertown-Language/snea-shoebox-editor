@@ -1,25 +1,30 @@
-initial_state:
-  docs_git_workflow_migration_guide_exists: true
-  docs_streamlit_dev_workflow_exists: true
-  agents_md_dev_reference_line_52: present
-  credential_doc_dev_reference_line_84: present
-  docs_sweep_dev_matches: '≥4'
-
-transitions:
-  - action: rm docs/git-workflow-migration-guide.md
-    post: docs_git_workflow_migration_guide_exists: false
-  - action: rm docs/streamlit-dev-workflow.md
-    post: docs_streamlit_dev_workflow_exists: false
-  - action: edit AGENTS.md line 52
-    post: agents_md_dev_reference_line_52: absent
-  - action: edit credential doc line 84
-    post: credential_doc_dev_reference_line_84: absent
-  - action: grep sweep docs/
-    post: docs_sweep_dev_matches: 0
-
-final_state:
-  docs_git_workflow_migration_guide_exists: false
-  docs_streamlit_dev_workflow_exists: false
-  agents_md_dev_reference_line_52: absent
-  credential_doc_dev_reference_line_84: absent
-  docs_sweep_dev_matches: 0
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T00:00:00Z
+state_analysis:
+  phases:
+    - phase: "1 — Delete retired workflow docs"
+      pre_state:
+        - docs/git-workflow-migration-guide.md exists on disk
+        - docs/streamlit-dev-workflow.md exists on disk
+      post_state:
+        - docs/git-workflow-migration-guide.md removed from working tree
+        - docs/streamlit-dev-workflow.md removed from working tree
+      state_transitions:
+        - file_exists → file_deleted (git rm)
+    - phase: "2 — Update doc references from dev to main"
+      pre_state:
+        - AGENTS.md contains dev exception line 52
+        - docs/security/credential-leakage-remediation.md line 84 references origin dev
+      post_state:
+        - AGENTS.md has dev exception line removed
+        - docs/security/credential-leakage-remediation.md line 84 references origin main
+      state_transitions:
+        - line_present → line_removed (edit)
+        - dev_ref_present → main_ref_present (edit)
+    - phase: "3 — Verification sweep"
+      pre_state:
+        - Possible remaining \`dev\` workflow references in docs/
+      post_state:
+        - Zero \`dev\` branch workflow references in docs/
+      state_transitions:
+        - reference_present_or_absent → reference_absent (verification only — no state change)

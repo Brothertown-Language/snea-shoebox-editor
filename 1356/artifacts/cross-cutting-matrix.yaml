@@ -1,18 +1,18 @@
-cross_cutting_scs:
-  - sc_id: SC-6
-    concern: Test integrity / anti-lobotomization
-    affects:
-      - C1
-      - C2
-      - C3
-    description: No behavioral test assertion may be removed or weakened as a side effect of any phase
-dependency_chains:
-  - from_phase: Phase 1 (delete docs)
-    to_phase: Phase 2 (edit guidelines)
-    reason: Editing AGENTS.md and credential doc after docs deleted ensures clean state for inline references
-  - from_phase: Phase 1 (delete docs)
-    to_phase: Phase 3 (sweep)
-    reason: Sweep must run after both Phase 1 and Phase 2 to catch all stale references
-  - from_phase: Phase 2 (edit guidelines)
-    to_phase: Phase 3 (sweep)
-    reason: Sweep must capture edits from Phase 2
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T00:00:00Z
+cross_cutting_matrix:
+  concerns:
+    - concern: SC-6 — SC integrity (no weakening/reclassification)
+      affects_phases:
+        - "1 — Delete retired workflow docs"
+        - "2 — Update doc references from dev to main"
+        - "3 — Verification sweep"
+      description: SC-6 applies to all phases — SCs must not be weakened or reclassified to evade implementation
+      coordination_required: false
+    - concern: Git branch discipline
+      affects_phases:
+        - "1 — Delete retired workflow docs"
+        - "2 — Update doc references from dev to main"
+        - "3 — Verification sweep"
+      description: All phases operate on same feature branch — sequential commit discipline required
+      coordination_required: false

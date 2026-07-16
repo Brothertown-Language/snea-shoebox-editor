@@ -1,62 +1,79 @@
-# Phase 1: Delete stale documentation
+# Phase 01 — Delete Retired Workflow Docs
 
-## SC-to-Step Traceability
+**Concern:** Remove two documentation files describing the retired `feature→dev→main` workflow that no longer exists after PR #1354 merged `dev` into `main`.
 
-| SC ID | Criterion | Phase | Step(s) |
-|-------|-----------|-------|---------|
-| SC-1 | `docs/git-workflow-migration-guide.md` is deleted | 1 | 1.1, 1.3 |
-| SC-2 | `docs/streamlit-dev-workflow.md` is deleted | 1 | 1.2, 1.3 |
-| SC-6 | No SC weakened or deferred | 1 | 1.3 (cross-cutting audit) |
+**Files:**
+- `docs/git-workflow-migration-guide.md` — DELETE
+- `docs/streamlit-dev-workflow.md` — DELETE
 
-## Steps
+**SCs:** SC-1 (`docs/git-workflow-migration-guide.md` deleted), SC-2 (`docs/streamlit-dev-workflow.md` deleted)
 
-### Step 1.1 — Delete `docs/git-workflow-migration-guide.md`
+**Dependencies:** None
 
-- **Command**: `git rm docs/git-workflow-migration-guide.md`
-- **Pre-condition**: File exists (confirmed by `ls`)
-- **Post-condition**: File deleted
-- **Mapping**: SC-1
-- **Safety/Rollback**: `git checkout HEAD -- docs/git-workflow-migration-guide.md` (restore from git)
+**Entry criteria:** Feature branch exists, spec approved, plan created
 
-### Step 1.2 — Delete `docs/streamlit-dev-workflow.md`
+**Exit criteria:**
+- Both files removed from working tree (`git status` confirms)
+- SC-1 PASS: `test ! -f docs/git-workflow-migration-guide.md`
+- SC-2 PASS: `test ! -f docs/streamlit-dev-workflow.md`
+- Commit made with descriptive message
 
-- **Command**: `git rm docs/streamlit-dev-workflow.md`
-- **Pre-condition**: File exists (confirmed by `ls`)
-- **Post-condition**: File deleted
-- **Mapping**: SC-2
-- **Safety/Rollback**: `git checkout HEAD -- docs/streamlit-dev-workflow.md` (restore from git)
+**Evidence type:** Structural (`test ! -f`)
 
-### Step 1.3 — Verify deletions (structural check) + SC-6 audit
+**Safety/Rollback:**
+- Destructive operations: `git rm` on two files
+- Rollback plan: `git checkout HEAD~1 -- docs/git-workflow-migration-guide.md docs/streamlit-dev-workflow.md`
+- Data loss risk: Low — files exist in git history, restorable via checkout
 
-- **Verify SC-1**: `test ! -f docs/git-workflow-migration-guide.md` → expected: exit 0 (file absent)
-- **Verify SC-2**: `test ! -f docs/streamlit-dev-workflow.md` → expected: exit 0 (file absent)
-- **SC-6 cross-cutting**: Confirm no behavioral test assertions were removed or weakened in this phase. Review test files for any changes to `grep`, `assert`, or behavioral assertions.
-- **Evidence type**: structural (SC-1, SC-2), behavioral (SC-6)
-- **Gate**: pre-commit verification
+---
 
-## Safety/Rollback
+### Step-by-Step
 
-- **Destructive operations**: File deletion (git-tracked, reversible)
-- **Rollback plan**: `git checkout HEAD -- docs/git-workflow-migration-guide.md docs/streamlit-dev-workflow.md`
-- **Data loss risk**: None — files are in git history
+- [ ] 1. (**sub-agent**) Pre-RED baseline — verify both files exist on disk
+  - Command: `test -f docs/git-workflow-migration-guide.md && test -f docs/streamlit-dev-workflow.md`
+  - Expected: both return 0
+  - SC: SC-1, SC-2
 
-## Feasibility Verification
+- [ ] 2. (**sub-agent**) RED — create assertion for SC-1: verify file is deleted
+  - Command: `test ! -f docs/git-workflow-migration-guide.md`
+  - Expected: FAIL (file still exists — RED)
+  - SC: SC-1
 
-| Step | Reference | Verified? | Evidence |
-|------|-----------|-----------|----------|
-| 1.1 | `docs/git-workflow-migration-guide.md` | ✅ | `ls` confirmed file exists |
-| 1.2 | `docs/streamlit-dev-workflow.md` | ✅ | `ls` confirmed file exists |
+- [ ] 3. (**sub-agent**) GREEN — execute `git rm docs/git-workflow-migration-guide.md`
+  - Command: `git rm docs/git-workflow-migration-guide.md`
+  - Expected: file removed from working tree
+  - SC: SC-1
 
-## Evidence/Provenance
+- [ ] 4. (**sub-agent**) Verify GREEN for SC-1
+  - Command: `test ! -f docs/git-workflow-migration-guide.md`
+  - Expected: PASS (0 exit code)
+  - SC: SC-1
 
-| Claim | Evidence Source | Verified? |
-|-------|----------------|----------|
-| `docs/git-workflow-migration-guide.md` exists | `ls docs/git-workflow-migration-guide.md` | ✅ |
-| `docs/streamlit-dev-workflow.md` exists | `ls docs/streamlit-dev-workflow.md` | ✅ |
+- [ ] 5. (**sub-agent**) RED — create assertion for SC-2: verify file is deleted
+  - Command: `test ! -f docs/streamlit-dev-workflow.md`
+  - Expected: FAIL (file still exists — RED)
+  - SC: SC-2
 
-## Exit Criteria
+- [ ] 6. (**sub-agent**) GREEN — execute `git rm docs/streamlit-dev-workflow.md`
+  - Command: `git rm docs/streamlit-dev-workflow.md`
+  - Expected: file removed from working tree
+  - SC: SC-2
 
-- `test ! -f docs/git-workflow-migration-guide.md` → exit 0 (SC-1: structural)
-- `test ! -f docs/streamlit-dev-workflow.md` → exit 0 (SC-2: structural)
-- No behavioral test assertions weakened in Phase 1 changes (SC-6: behavioral — clean-room `behavioral-test-evaluation` dispatch required)
-- Phase committed to branch with message: `phase-1: delete stale dev-branch docs`
+- [ ] 7. (**sub-agent**) Verify GREEN for SC-2
+  - Command: `test ! -f docs/streamlit-dev-workflow.md`
+  - Expected: PASS (0 exit code)
+  - SC: SC-2
+
+- [ ] 8. (**sub-agent**) Commit phase
+  - Command: `git add . && git commit -m "Phase 1: delete retired dev workflow docs"`
+  - Expected: commit succeeds
+  - SC: SC-1, SC-2
+
+---
+
+### Phase Completion
+
+- [ ] Both SC-1 and SC-2 PASS with structural evidence (`test ! -f`)
+- [ ] Commit made with descriptive message
+- [ ] `git status` confirms clean working tree for this phase
+- [ ] Transition to Phase 2

@@ -1,59 +1,78 @@
-# Phase 2: Edit remaining references
+# Phase 02 — Update dev→main References
 
-## SC-to-Step Traceability
+**Concern:** Update remaining documentation references from `dev` to `main` as the target branch after the `dev` branch retirement.
 
-| SC ID | Criterion | Phase | Step(s) |
-|-------|-----------|-------|---------|
-| SC-3 | `AGENTS.md` line 52 — remove `dev` exception | 2 | 2.1, 2.3 |
-| SC-4 | Credential doc line 84 — point to `main` | 2 | 2.2, 2.3 |
+**Files:**
+- `AGENTS.md` — REMOVE line 52 (exception for PRs merging to `dev`)
+- `docs/security/credential-leakage-remediation.md` — UPDATE line 84 (`origin dev` → `origin main`)
 
-## Steps
+**SCs:** SC-3 (AGENTS.md line 52 removed), SC-4 (credential doc references `origin main`)
 
-### Step 2.1 — Edit `AGENTS.md`: remove `merging to \`dev\`` exception
+**Dependencies:** Phase 1 complete (retired doc files already deleted)
 
-- **Target**: Line 52: `merging to \`dev\`` — remove this line
-- **Command**: `sed -i '/merging to `dev`/d' AGENTS.md` (or edit tool)
-- **Pre-condition**: `grep -n 'merging to `dev`' AGENTS.md` returns line 52
-- **Post-condition**: `grep -c 'merging to \`dev\`' AGENTS.md || echo 0` → returns 0
-- **Mapping**: SC-3
+**Entry criteria:** Phase 1 committed, working tree clean
 
-### Step 2.2 — Edit `docs/security/credential-leakage-remediation.md`: replace `origin dev`
+**Exit criteria:**
+- `grep -c 'merging to \`dev\`' AGENTS.md` returns 0
+- `grep -c 'origin dev' docs/security/credential-leakage-remediation.md` returns 0
+- Commit made with descriptive message
 
-- **Target**: Line 84: replace `'origin dev'` with trunk branch reference
-- **Command**: Use edit tool to change the line
-- **Pre-condition**: `grep -n 'origin dev' docs/security/credential-leakage-remediation.md` returns line 84
-- **Post-condition**: `grep -c 'origin dev' docs/security/credential-leakage-remediation.md || echo 0` → returns 0
-- **Mapping**: SC-4
+**Evidence type:** String (`grep` pattern match)
 
-### Step 2.3 — Verify edits (string checks) + commit
+**Safety/Rollback:**
+- Destructive operations: None (line-level edits, reversible via `git checkout`)
+- Rollback plan: `git checkout HEAD~1 -- AGENTS.md docs/security/credential-leakage-remediation.md`
+- Data loss risk: None
 
-- **Verify SC-3**: `grep -c 'merging to \`dev\`' AGENTS.md || echo 0` → expected: 0
-- **Verify SC-4**: `grep -c 'origin dev' docs/security/credential-leakage-remediation.md || echo 0` → expected: 0
-- **Evidence type**: string (SC-3, SC-4)
-- **Gate**: pre-commit verification
+---
 
-## Safety/Rollback
+### Step-by-Step
 
-- **Destructive operations**: Line edits (reversible via git)
-- **Rollback plan**: `git checkout HEAD -- AGENTS.md docs/security/credential-leakage-remediation.md`
-- **Data loss risk**: None — files are in git history
+- [ ] 9. (**sub-agent**) Pre-RED baseline — verify both target lines exist
+  - Command: `grep -n 'merging to \`dev\`' AGENTS.md && grep -n 'origin dev' docs/security/credential-leakage-remediation.md`
+  - Expected: line 52 in AGENTS.md, line 84 in credential doc
+  - SC: SC-3, SC-4
 
-## Feasibility Verification
+- [ ] 10. (**sub-agent**) RED — verify SC-3 assertion fails
+  - Command: `grep -c 'merging to \`dev\`' AGENTS.md`
+  - Expected: returns > 0 (RED — line still present)
+  - SC: SC-3
 
-| Step | Reference | Verified? | Evidence |
-|------|-----------|-----------|----------|
-| 2.1 | `AGENTS.md` line 52 | ✅ | `grep -n 'merging' AGENTS.md` returned line 52 |
-| 2.2 | `docs/security/credential-leakage-remediation.md` line 84 | ✅ | `grep -n 'origin dev' docs/security/credential-leakage-remediation.md` returned line 84 |
+- [ ] 11. (**sub-agent**) GREEN — remove line 52 from AGENTS.md
+  - Command: Edit AGENTS.md to delete line 52 (the `dev` exception line)
+  - Expected: line removed
+  - SC: SC-3
 
-## Evidence/Provenance
+- [ ] 12. (**sub-agent**) Verify GREEN for SC-3
+  - Command: `grep -c 'merging to \`dev\`' AGENTS.md`
+  - Expected: returns 0 (PASS)
+  - SC: SC-3
 
-| Claim | Evidence Source | Verified? |
-|-------|----------------|----------|
-| `AGENTS.md` line 52 contains `merging to \`dev\`` | `grep -n 'merging' AGENTS.md` | ✅ |
-| Credential doc line 84 contains `origin dev` | `grep -n 'origin dev' docs/security/credential-leakage-remediation.md` | ✅ |
+- [ ] 13. (**sub-agent**) RED — verify SC-4 assertion fails
+  - Command: `grep -c 'origin dev' docs/security/credential-leakage-remediation.md`
+  - Expected: returns > 0 (RED — old reference still present)
+  - SC: SC-4
 
-## Exit Criteria
+- [ ] 14. (**sub-agent**) GREEN — update line 84 in credential doc
+  - Command: Edit line 84 of `docs/security/credential-leakage-remediation.md` to replace `origin dev` with `origin main`
+  - Expected: line updated
+  - SC: SC-4
 
-- `grep -c 'merging to \`dev\`' AGENTS.md || echo 0` → 0 (SC-3: string)
-- `grep -c 'origin dev' docs/security/credential-leakage-remediation.md || echo 0` → 0 (SC-4: string)
-- Phase committed with message: `phase-2: remove inline dev-branch references`
+- [ ] 15. (**sub-agent**) Verify GREEN for SC-4
+  - Command: `grep -c 'origin dev' docs/security/credential-leakage-remediation.md`
+  - Expected: returns 0 (PASS)
+  - SC: SC-4
+
+- [ ] 16. (**sub-agent**) Commit phase
+  - Command: `git add -A && git commit -m "Phase 2: update dev->main references in docs"`
+  - Expected: commit succeeds
+  - SC: SC-3, SC-4
+
+---
+
+### Phase Completion
+
+- [ ] Both SC-3 and SC-4 PASS with string evidence (`grep` pattern match)
+- [ ] Commit made with descriptive message
+- [ ] `git status` confirms clean working tree for this phase
+- [ ] Transition to Phase 3

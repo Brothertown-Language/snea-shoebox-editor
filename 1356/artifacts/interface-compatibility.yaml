@@ -1,2 +1,14 @@
-interfaces: []
-notes: No interfaces, APIs, or function signatures are affected by this documentation-only cleanup. All changes are to .md files (docs and agent guidelines).
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T00:00:00Z
+interface_compatibility:
+  interfaces:
+    - name: AGENTS.md → AGENTS.md (after edit)
+      status: modified
+      compatibility: backward_compatible
+      consumers:
+        - AI agents reading AGENTS.md
+    - name: docs/security/credential-leakage-remediation.md
+      status: modified
+      compatibility: backward_compatible
+      consumers:
+        - Developers following credential remediation instructions

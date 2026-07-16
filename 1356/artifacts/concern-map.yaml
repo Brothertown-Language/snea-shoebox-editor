@@ -1,23 +1,25 @@
-concerns:
-  - id: C1
-    name: Documentation cleanup
-    description: Remove stale documentation files that refer to the old 'dev' branch workflow
-    scs:
-      - SC-1
-      - SC-2
-  - id: C2
-    name: Guideline correction
-    description: Fix AGENTS.md and credential-leakage-remediation.md to remove specific 'dev' branch references
-    scs:
-      - SC-3
-      - SC-4
-  - id: C3
-    name: Completeness verification
-    description: Sweep entire docs/ directory to ensure no stale 'dev' references remain
-    scs:
-      - SC-5
-  - id: C4
-    name: Test integrity
-    description: Ensure no test assertions were weakened or removed to work around changes
-    scs:
-      - SC-6
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T00:00:00Z
+concern_map:
+  phases:
+    - phase: "1 — Delete retired workflow docs"
+      primary_concern: Remove documentation describing a workflow that no longer exists
+      boundaries:
+        - Only files: docs/git-workflow-migration-guide.md, docs/streamlit-dev-workflow.md
+        - Not modifying any other files
+        - NOT deleting git branches — only doc files
+      separation_rationale: File deletion is a scoped destructive operation — isolating to one phase prevents accidental additional deletions
+    - phase: "2 — Update doc references from dev to main"
+      primary_concern: Update remaining doc references from dev to main target branch
+      boundaries:
+        - Only files: AGENTS.md (line removal), docs/security/credential-leakage-remediation.md (line update)
+        - Not modifying any other files
+        - Line-level edits only — no structural changes
+      separation_rationale: Editing existing files is a different concern than deleting files — separate phases prevent confusion between deletion and edit operations
+    - phase: "3 — Verification sweep"
+      primary_concern: Verify zero dev branch workflow references remain in docs
+      boundaries:
+        - Grep sweep across all docs/ files
+        - Only dev as backtick-gated workflow reference (\`dev\`)
+        - Not modifying any files — read-only verification
+      separation_rationale: Verification is a separate concern from implementation — isolating to its own phase ensures detection is not conflated with changes

@@ -1,21 +1,25 @@
-paths:
-  - file: docs/git-workflow-migration-guide.md
-    action: delete
-    reason: Entire document references obsolete 'dev' branch workflow; must be removed
-  - file: docs/streamlit-dev-workflow.md
-    action: delete
-    reason: Entire document describes dev-branch workflow that no longer exists
-  - file: AGENTS.md
-    action: edit
-    target_line: 52
-    change: Remove the line 'merging to \`dev\`' from the "Release PR Body" section
-    verification: grep -c 'merging to `dev`' returns 0
-  - file: docs/security/credential-leakage-remediation.md
-    action: edit
-    target_line: 84
-    change: Replace "'origin dev'" with appropriate trunk branch reference
-    verification: grep -c 'origin dev' returns 0
-  - file: docs/*
-    action: sweep
-    pattern: '(?i)origin dev|branch.*dev|to `dev`'
-    verification: grep sweep returns 0 matches
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T00:00:00Z
+code_path_inventory:
+  phases:
+    - phase: "1 — Delete retired workflow docs"
+      files:
+        - path: docs/git-workflow-migration-guide.md
+          reason: File deletion — documents retired feature→dev→main workflow
+          changes: Entire file removed from working tree via git rm
+        - path: docs/streamlit-dev-workflow.md
+          reason: File deletion — documents running from retired dev branch
+          changes: Entire file removed from working tree via git rm
+    - phase: "2 — Update doc references from dev to main"
+      files:
+        - path: AGENTS.md
+          reason: Line 52 — remove exception for PRs merging to dev
+          changes: Remove line 52
+        - path: docs/security/credential-leakage-remediation.md
+          reason: Line 84 — update origin dev to origin main
+          changes: Replace 'origin dev' with 'origin main' on line 84
+    - phase: "3 — Verification sweep"
+      files:
+        - path: docs/
+          reason: Grep sweep for remaining \`dev\` branch references
+          changes: Read-only verification — no file changes
