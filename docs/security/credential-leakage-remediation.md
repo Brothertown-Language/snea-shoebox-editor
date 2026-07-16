@@ -81,7 +81,7 @@ git filter-repo --invert-paths --path <secret-file>
 git filter-repo --replace-text <(echo 'SECRET_STRING==>REDACTED')
 
 # Force push the cleaned history
-git push --force-with-lease origin dev
+git push --force-with-lease origin main
 ```
 
 #### After Purging
