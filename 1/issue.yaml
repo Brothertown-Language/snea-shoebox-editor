@@ -1,10 +1,12 @@
 title: '[SPEC-FIX] writing-plans must use plan-creation-pipeline with Z3 solve instead
   of bare inspection'
-status: open
+status: closed
 labels:
 - SPEC-FIX
 - skill-skill
 - priority-high
 body: ''
 created_at: '2026-07-16T05:53:13+00:00'
-updated_at: '2026-07-16T05:53:13+00:00'
+updated_at: '2026-07-16T05:54:11+00:00'
+closed_at: '2026-07-16T05:54:11+00:00'
+close_reason: not_planned
