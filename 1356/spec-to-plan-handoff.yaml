@@ -1,0 +1,17 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+generated_at: 2026-07-16T06:00:00Z
+sc_coverage_total: 6
+decomposition_classification: multi-phase
+phase_count: 3
+status: complete
+artifacts:
+  - path: .issues/1356/spec.md
+    required: true
+  - path: .issues/1356/sc-summary.yaml
+    required: true
+  - path: .issues/1356/verification-consistency-contract.yaml
+    required: true
+  - path: .issues/1356/revision-re-entry-contract.yaml
+    required: true
+  - path: .issues/1356/spec-to-plan-handoff.yaml
+    required: true

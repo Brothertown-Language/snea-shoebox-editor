@@ -1,0 +1,51 @@
+sc_coverage:
+  total: 6
+  single_task: false
+  spec_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+  evidence_types:
+    - string
+    - structural
+  phases:
+    - id: phase-1-delete-docs
+      sc_ids: [SC-1, SC-2]
+      evidence_types: [structural]
+    - id: phase-2-update-lines
+      sc_ids: [SC-3, SC-4]
+      evidence_types: [string]
+    - id: phase-3-verification
+      sc_ids: [SC-5]
+      evidence_types: [string]
+  cross_cutting:
+    sc_ids: [SC-6]
+    verified_in_phase: phase-1-delete-docs
+  scs:
+    - id: SC-1
+      description: "docs/git-workflow-migration-guide.md is deleted"
+      evidence_type: structural
+      verification_gate: pre-commit
+      plan_phase: phase-1-delete-docs
+    - id: SC-2
+      description: "docs/streamlit-dev-workflow.md is deleted"
+      evidence_type: structural
+      verification_gate: pre-commit
+      plan_phase: phase-1-delete-docs
+    - id: SC-3
+      description: "AGENTS.md line 52 (dev exception) is removed"
+      evidence_type: string
+      verification_gate: pre-commit
+      plan_phase: phase-2-update-lines
+    - id: SC-4
+      description: "credential-leakage-remediation.md line 84 references origin main"
+      evidence_type: string
+      verification_gate: pre-commit
+      plan_phase: phase-2-update-lines
+    - id: SC-5
+      description: "No remaining `dev` branch workflow references in docs/"
+      evidence_type: string
+      verification_gate: post-implementation
+      plan_phase: phase-3-verification
+    - id: SC-6
+      description: "No SC may be weakened, deferred, or reclassified"
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      plan_phase: common

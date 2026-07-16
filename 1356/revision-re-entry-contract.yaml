@@ -1,0 +1,14 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+revision_re_entry:
+  revision_scopes:
+    - scope: full
+      cascade_artifacts:
+        - plan.md
+        - sc-summary.yaml
+        - verification-consistency-contract.yaml
+      requires_re_approval: true
+      valid_re_entry_steps:
+        - step: spec-creation
+      constraints:
+        - "on_partial_revision: cascade_is_limited_to_affected_scs"
+        - "on_full_revision: all_artifacts_must_be_regenerated"

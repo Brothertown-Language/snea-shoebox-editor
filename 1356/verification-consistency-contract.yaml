@@ -1,0 +1,48 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1356
+verification_consistency:
+  sc_entries:
+    - id: SC-1
+      evidence_type: structural
+      verification_gate: pre-commit
+      pipeline_step_binding: red-green
+      re_entry_step: null
+      phase_binding: phase-1-delete-docs
+      artifact_path: .issues/1356/
+    - id: SC-2
+      evidence_type: structural
+      verification_gate: pre-commit
+      pipeline_step_binding: red-green
+      re_entry_step: null
+      phase_binding: phase-1-delete-docs
+      artifact_path: .issues/1356/
+    - id: SC-3
+      evidence_type: string
+      verification_gate: pre-commit
+      pipeline_step_binding: red-green
+      re_entry_step: null
+      phase_binding: phase-2-update-lines
+      artifact_path: .issues/1356/
+    - id: SC-4
+      evidence_type: string
+      verification_gate: pre-commit
+      pipeline_step_binding: red-green
+      re_entry_step: null
+      phase_binding: phase-2-update-lines
+      artifact_path: .issues/1356/
+    - id: SC-5
+      evidence_type: string
+      verification_gate: post-implementation
+      pipeline_step_binding: vbc
+      re_entry_step: null
+      phase_binding: phase-3-verification
+      artifact_path: .issues/1356/
+    - id: SC-6
+      evidence_type: behavioral
+      verification_gate: pre-commit
+      pipeline_step_binding: red-green
+      re_entry_step: null
+      phase_binding: common
+      artifact_path: .issues/1356/
+  constraints:
+    - "for_every_sc: evidence_type_is_consistent_with_verification_gate"
+    - "for_every_sc: pipeline_step_binding_is_valid_for_phase"
