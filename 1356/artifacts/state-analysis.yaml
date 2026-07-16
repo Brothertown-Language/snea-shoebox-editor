@@ -1,0 +1,25 @@
+initial_state:
+  docs_git_workflow_migration_guide_exists: true
+  docs_streamlit_dev_workflow_exists: true
+  agents_md_dev_reference_line_52: present
+  credential_doc_dev_reference_line_84: present
+  docs_sweep_dev_matches: '≥4'
+
+transitions:
+  - action: rm docs/git-workflow-migration-guide.md
+    post: docs_git_workflow_migration_guide_exists: false
+  - action: rm docs/streamlit-dev-workflow.md
+    post: docs_streamlit_dev_workflow_exists: false
+  - action: edit AGENTS.md line 52
+    post: agents_md_dev_reference_line_52: absent
+  - action: edit credential doc line 84
+    post: credential_doc_dev_reference_line_84: absent
+  - action: grep sweep docs/
+    post: docs_sweep_dev_matches: 0
+
+final_state:
+  docs_git_workflow_migration_guide_exists: false
+  docs_streamlit_dev_workflow_exists: false
+  agents_md_dev_reference_line_52: absent
+  credential_doc_dev_reference_line_84: absent
+  docs_sweep_dev_matches: 0

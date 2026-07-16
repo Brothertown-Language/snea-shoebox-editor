@@ -1,0 +1,23 @@
+concerns:
+  - id: C1
+    name: Documentation cleanup
+    description: Remove stale documentation files that refer to the old 'dev' branch workflow
+    scs:
+      - SC-1
+      - SC-2
+  - id: C2
+    name: Guideline correction
+    description: Fix AGENTS.md and credential-leakage-remediation.md to remove specific 'dev' branch references
+    scs:
+      - SC-3
+      - SC-4
+  - id: C3
+    name: Completeness verification
+    description: Sweep entire docs/ directory to ensure no stale 'dev' references remain
+    scs:
+      - SC-5
+  - id: C4
+    name: Test integrity
+    description: Ensure no test assertions were weakened or removed to work around changes
+    scs:
+      - SC-6

@@ -1,0 +1,21 @@
+paths:
+  - file: docs/git-workflow-migration-guide.md
+    action: delete
+    reason: Entire document references obsolete 'dev' branch workflow; must be removed
+  - file: docs/streamlit-dev-workflow.md
+    action: delete
+    reason: Entire document describes dev-branch workflow that no longer exists
+  - file: AGENTS.md
+    action: edit
+    target_line: 52
+    change: Remove the line 'merging to \`dev\`' from the "Release PR Body" section
+    verification: grep -c 'merging to `dev`' returns 0
+  - file: docs/security/credential-leakage-remediation.md
+    action: edit
+    target_line: 84
+    change: Replace "'origin dev'" with appropriate trunk branch reference
+    verification: grep -c 'origin dev' returns 0
+  - file: docs/*
+    action: sweep
+    pattern: '(?i)origin dev|branch.*dev|to `dev`'
+    verification: grep sweep returns 0 matches

@@ -1,0 +1,27 @@
+affected_files:
+  - docs/git-workflow-migration-guide.md
+  - docs/streamlit-dev-workflow.md
+  - AGENTS.md
+  - docs/security/credential-leakage-remediation.md
+impact_zones:
+  - zone: documentation
+    files:
+      - docs/git-workflow-migration-guide.md
+      - docs/streamlit-dev-workflow.md
+    severity: DELETE
+    description: Two entire documentation files are removed from the repository
+  - zone: agent_guidelines
+    files:
+      - AGENTS.md
+    severity: EDIT
+    description: Remove one line referencing 'merging to `dev`'
+  - zone: security_docs
+    files:
+      - docs/security/credential-leakage-remediation.md
+    severity: EDIT
+    description: Replace 'dev' branch reference with consistent branch target
+  - zone: verification
+    files:
+      - docs/*
+    severity: SWEEP
+    description: Grep sweep to confirm no remaining stale 'dev' references

@@ -1,0 +1,18 @@
+cross_cutting_scs:
+  - sc_id: SC-6
+    concern: Test integrity / anti-lobotomization
+    affects:
+      - C1
+      - C2
+      - C3
+    description: No behavioral test assertion may be removed or weakened as a side effect of any phase
+dependency_chains:
+  - from_phase: Phase 1 (delete docs)
+    to_phase: Phase 2 (edit guidelines)
+    reason: Editing AGENTS.md and credential doc after docs deleted ensures clean state for inline references
+  - from_phase: Phase 1 (delete docs)
+    to_phase: Phase 3 (sweep)
+    reason: Sweep must run after both Phase 1 and Phase 2 to catch all stale references
+  - from_phase: Phase 2 (edit guidelines)
+    to_phase: Phase 3 (sweep)
+    reason: Sweep must capture edits from Phase 2
