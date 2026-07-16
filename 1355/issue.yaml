@@ -2,6 +2,100 @@ title: '[SPEC] Migrate to trunk-based development — retire dev branch'
 status: open
 labels:
 - needs-approval
-body: ''
+body: '## Problem
+
+
+  The current workflow uses `dev` as an accumulation branch: feature branches → `dev`,
+  then `dev` → `main` via release PRs. This is not trunk-based development. `dev`
+  is 139 commits ahead of `main`, creating a gap between what''s deployed and what''s
+  in development. All work should target `main` directly.
+
+
+  ## Goals
+
+
+  - AGENTS.md no longer references `dev` as a workflow target
+
+  - `dev` branch deleted locally and remotely
+
+  - All documentation reflects trunk-based workflow targeting `main`
+
+  - `.opencode/` directory is explicitly off-limits in AGENTS.md
+
+
+  ## Non-Goals
+
+
+  - No changes to `.opencode/` directory
+
+  - No changes to feature branch workflow (already handled by opencode skills)
+
+  - No changes to release process (already handled by opencode skills)
+
+
+  ## Scope
+
+
+  - AGENTS.md: remove dev-specific workflow instructions, add `.opencode/` off-limits
+  note
+
+  - `docs/git-workflow-migration-guide.md`: update to trunk-based model
+
+  - `docs/streamlit-dev-workflow.md`: update content to reference `main` as the only
+  trunk
+
+  - Delete `dev` branch locally and remotely after migration
+
+
+  ## Approach
+
+
+  Update all documentation references from `dev`-centric workflow to trunk-based (`main`-only)
+  workflow. Fast-forward `main` to match `dev` (which is 139 commits ahead), then
+  delete the `dev` branch. The `.opencode/` submodule directory is declared off-limits
+  to the main repo.
+
+
+  ## Impact
+
+
+  - **Risk**: `dev` is 139 commits ahead of `main` — fast-forward merge required before
+  deletion
+
+  - **Risk**: Stale references to `dev` may exist in CI/CD or other configuration
+
+  - **Dependency**: Must verify no open PRs targeting `dev` before branch deletion
+
+
+  ## Success Criteria
+
+
+  | ID | Criterion | Verification Method | Evidence Type |
+
+  |----|-----------|-------------------|---------------|
+
+  | SC-1 | AGENTS.md: no references to `dev` as a git workflow merge target or release
+  branch | `grep -n ''\bdev\b'' AGENTS.md` — only `.opencode/` off-limits note and
+  non-branch uses remain | string |
+
+  | SC-2 | AGENTS.md: `.opencode/` declared off-limits | `grep -c ''off-limits'' AGENTS.md`
+  ≥ 1 | string |
+
+  | SC-3 | `docs/git-workflow-migration-guide.md`: describes `main` as single trunk,
+  no `dev` integration stage | `grep -n ''\bdev\b'' docs/git-workflow-migration-guide.md`
+  yields 0 branch-related `dev` references | string |
+
+  | SC-4 | `docs/streamlit-dev-workflow.md`: content references `main` as only trunk,
+  no stale `dev` workflow refs | `grep -n ''\bdev\b'' docs/streamlit-dev-workflow.md`
+  yields 0 branch-related `dev` references | string |
+
+  | SC-5 | `dev` branch deleted locally and remotely | `git branch -a | grep -c ''\sdev$''`
+  = 0, `git ls-remote origin dev | wc -l` = 0 | structural |
+
+  | SC-6 | No stale `dev` branch references in application code | `grep -rn ''\bdev\b''
+  src/ --include="*.py" | grep -v ''local.dev\|development\b''` yields 0 lines | string
+  |
+
+  '
 created_at: '2026-07-16T04:00:56+00:00'
-updated_at: '2026-07-16T04:00:56+00:00'
+updated_at: '2026-07-16T04:04:51+00:00'
