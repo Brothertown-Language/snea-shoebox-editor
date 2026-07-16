@@ -48,5 +48,3 @@ Closes #N
 ```
 
 Instead, close the stakeholder issue manually after deployment and stakeholder verification.
-
-**Exception:** Feature PRs merging to `dev` may use `Closes #N` for internal spec/plan issues where no stakeholder verification is needed. |
