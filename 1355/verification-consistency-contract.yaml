@@ -1,0 +1,55 @@
+spec: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1355
+verification_consistency:
+  sc_entries:
+    - id: SC-1
+      evidence_type: string
+      verification_gate: string
+      pipeline_step_binding: spec-creation
+      re_entry_step: null
+      phase_binding: Phase 1
+      artifact_path: .issues/1355/spec.md
+    - id: SC-2
+      evidence_type: string
+      verification_gate: string
+      pipeline_step_binding: spec-creation
+      re_entry_step: null
+      phase_binding: Phase 1
+      artifact_path: .issues/1355/spec.md
+    - id: SC-3
+      evidence_type: string
+      verification_gate: string
+      pipeline_step_binding: spec-creation
+      re_entry_step: null
+      phase_binding: Phase 2
+      artifact_path: .issues/1355/spec.md
+    - id: SC-4
+      evidence_type: string
+      verification_gate: string
+      pipeline_step_binding: spec-creation
+      re_entry_step: null
+      phase_binding: Phase 2
+      artifact_path: .issues/1355/spec.md
+    - id: SC-5
+      evidence_type: structural
+      verification_gate: structural
+      pipeline_step_binding: post-implementation
+      re_entry_step: null
+      phase_binding: Phase 3
+      artifact_path: .issues/1355/spec.md
+    - id: SC-6
+      evidence_type: string
+      verification_gate: string
+      pipeline_step_binding: post-implementation-verification
+      re_entry_step: null
+      phase_binding: Phase 3
+      artifact_path: .issues/1355/spec.md
+    - id: SC-7
+      evidence_type: behavioral
+      verification_gate: behavioral
+      pipeline_step_binding: post-implementation
+      re_entry_step: null
+      phase_binding: All
+      artifact_path: .issues/1355/spec.md
+  constraints:
+    - 'for_every_sc: evidence_type_is_consistent_with_verification_gate'
+    - 'for_every_sc: pipeline_step_binding_is_valid_for_phase'

@@ -1,0 +1,57 @@
+sc_coverage:
+  total: 7
+  single_task: false
+  spec_url: https://github.com/Brothertown-Language/snea-shoebox-editor/issues/1355
+  evidence_types:
+    - behavioral
+    - string
+    - structural
+  phases:
+    - id: Phase 1
+      sc_ids: [SC-1, SC-2]
+      evidence_types: [string]
+    - id: Phase 2
+      sc_ids: [SC-3, SC-4]
+      evidence_types: [string]
+    - id: Phase 3
+      sc_ids: [SC-5, SC-6]
+      evidence_types: [structural, string]
+  cross_cutting:
+    sc_ids: [SC-7]
+    verified_in_phase: Phase 1
+  scs:
+    - id: SC-1
+      description: AGENTS.md dev-specific workflow instructions removed
+      evidence_type: string
+      verification_gate: string
+      plan_phase: Phase 1
+    - id: SC-2
+      description: AGENTS.md .opencode/ off-limits note added
+      evidence_type: string
+      verification_gate: string
+      plan_phase: Phase 1
+    - id: SC-3
+      description: docs/git-workflow-migration-guide.md updated to trunk-based
+      evidence_type: string
+      verification_gate: string
+      plan_phase: Phase 2
+    - id: SC-4
+      description: docs/streamlit-dev-workflow.md updated or deleted
+      evidence_type: string
+      verification_gate: string
+      plan_phase: Phase 2
+    - id: SC-5
+      description: dev branch deleted locally and remotely
+      evidence_type: structural
+      verification_gate: structural
+      plan_phase: Phase 3
+    - id: SC-6
+      description: No stale dev branch references in application code
+      evidence_type: string
+      verification_gate: string
+      plan_phase: Phase 3
+    - id: SC-7
+      description: No SC weakened or reclassified to evade implementation
+      evidence_type: behavioral
+      verification_gate: behavioral
+      plan_phase: All
