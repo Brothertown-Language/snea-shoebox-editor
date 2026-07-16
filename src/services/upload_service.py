@@ -11,6 +11,7 @@ import uuid
 from collections import defaultdict
 from collections.abc import Callable
 
+from rapidfuzz.distance import JaroWinkler
 from sqlalchemy import func, text
 
 from src.database.connection import get_session
@@ -1223,15 +1224,21 @@ class UploadService:
                     continue
 
                 iso_entry = session.query(ISO639_3).filter_by(id=lg_code).first()
-                if not iso_entry or iso_entry.ref_name != lg_name:
-                    # Both code and ref name must match ISO 639-3 exactly
+                if not iso_entry:
+                    # Code must exist in ISO 639-3 reference table
+                    continue
+
+                # Jaro-Winkler plausibility check: name should resemble the canonical ref_name.
+                # Catches wrong-code entries like French [mjy] (JW=0.437) while passing
+                # legitimate variants like Mohican→Mahican (JW=0.914).
+                if JaroWinkler.normalized_similarity(lg_name, iso_entry.ref_name) < 0.75:
                     continue
 
                 # Find by code first (canonical)
                 lang = session.query(Language).filter_by(code=lg_code).first()
 
                 if not lang:
-                    lang = Language(name=lg_name, code=lg_code)
+                    lang = Language(name=iso_entry.ref_name, code=lg_code)
                     session.add(lang)
                     session.flush()
 
