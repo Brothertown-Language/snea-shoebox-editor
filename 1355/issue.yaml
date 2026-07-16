@@ -97,9 +97,9 @@ body: '## Problem
   = 0, `git ls-remote origin dev | wc -l` = 0 | structural |
 
   | SC-6 | No stale `dev` branch references in `src/` | `grep -rn ''\bdev\b'' src/
-  --include="*.py" | grep -v ''local.dev|development\b''` yields 0 lines | string
-  |
+  --include="*.py" | grep -vE ''"(type|id|name)":\s*"dev"|local\.dev|development\b''`
+  yields 0 lines | string |
 
   '
 created_at: '2026-07-16T04:00:56+00:00'
-updated_at: '2026-07-16T04:09:34+00:00'
+updated_at: '2026-07-16T04:12:15+00:00'
