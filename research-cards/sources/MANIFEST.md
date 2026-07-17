@@ -28,6 +28,20 @@ Purpose: Preserve primary and secondary sources for Algonquian linguist review
 Total files: 10
 Total size: ~18.5 MB
 
+## Sources Identified for Future Mirroring
+
+The following sources have been identified in Issue #1359 research and should be mirrored when accessed:
+
+| Source | URL | Priority | Notes |
+|--------|-----|----------|-------|
+| Josiah Cotton — Vocabulary (1829 Pickering ed.) | archive.org/details/vocabularyofmass00cott | High | Public domain, full text available |
+| A Modern Mohegan Dictionary (Fielding & Costa 2006) | archive.org/download/mohegan-dictionary/MoheganDictionary.pdf | High | Public domain, 81.9 MB PDF |
+| The Narragansett Dawn (1935–1936) | queer.archive.work/library/download/narragansettdawn/narragansett_dawn.pdf | Medium | Full PDF available |
+| O'Brien — Grammatical Studies (2009) | files.eric.ed.gov/fulltext/ED490469.pdf | Medium | Free ERIC PDF |
+| O'Brien — Guide to Historical Spellings (2005) | eric.ed.gov/?id=ED506061 | Medium | Free ERIC PDF |
+| Experience Mayhew — Indian Converts (1727) | archive.org/details/indianconvertsor00mayh | Medium | Public domain |
+| Ezra Stiles — Pequot Vocabulary (Wiktionary) | en.wiktionary.org/wiki/Appendix:A_vocabulary_of_the_Pequot_Indians | Low | Already transcribed online |
+
 ## Key URLs Not Mirrored (unavailable or paywalled)
 - JSTOR articles (paywalled per terms of service)
 - Scribd documents (login wall)
@@ -35,3 +49,6 @@ Total size: ~18.5 MB
 - Native-languages.org (stable resource, not at risk)
 - Google Books previews (partial access only)
 - HathiTrust (institution-wall)
+- WLRP full dictionary (not publicly downloadable)
+- John Cotton Jr. manuscript (MHS — digital viewer available but full vocabulary not yet published)
+- DOBES Narragansett Dictionary (handle URL, access requirements uncertain)

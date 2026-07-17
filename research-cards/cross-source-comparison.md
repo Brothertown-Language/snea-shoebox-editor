@@ -114,16 +114,44 @@ Shared lexical items across Wood (1634) × Winslow (1624) × Sheperd (1647) × E
 
 ## Summary: Orthographic Convention Shifts
 
-| Feature | Winslow (1624) | Wood (1634) | Sheperd (1647) | Eliot (1666) |
-|---------|---------------|-------------|----------------|--------------|
-| **Vowel length** | None marked | None marked | None marked | Accent marks: á, à, ă |
-| **/a/ vs /i/ in unstressed** | Sachim | Sachem | Sachem | Sótchĭm |
-| **/a/ vs /o/ in stressed** | Powah | — | Pawwaw | Pómŏu |
-| **/au/ diphthong** | — | aunum (dog) | — | ánŏm |
-| **Initial /pn-/** | pniese | pinese | — | — |
-| **Consonant clusters** | Ad-hoc English | Ad-hoc English | Ad-hoc English | Systematic Latin-based |
-| **Final vowel marking** | Unmarked | Unmarked | Unmarked | Unmarked short vowels (ŏ) |
-| **Dialect base** | Pokanoket | Massachusett | Massachusett | Massachusett (Natick) |
+| Feature | Winslow (1624) | Wood (1634) | Sheperd (1647) | Eliot (1666) | J. Cotton Jr. (1666–78) | J. Cotton (1707–08) | Mayhew (1727) |
+|---------|---------------|-------------|----------------|--------------|------------------------|---------------------|---------------|
+| **Vowel length** | None marked | None marked | None marked | Accent marks: á, à, ă | Partial (Eliot-influenced) | Eliot system | Eliot system |
+| **/a/ vs /i/ in unstressed** | Sachim | Sachem | Sachem | Sótchĭm | Variable | Eliot system | Eliot system |
+| **/a/ vs /o/ in stressed** | Powah | — | Pawwaw | Pómŏu | — | Eliot system | Eliot system |
+| **/au/ diphthong** | — | aunum (dog) | — | ánŏm | — | — | — |
+| **Initial /pn-/** | pniese | pinese | — | — | — | — | — |
+| **Consonant clusters** | Ad-hoc English | Ad-hoc English | Ad-hoc English | Systematic Latin-based | Ad-hoc + Eliot | Eliot system | Eliot system |
+| **Final vowel marking** | Unmarked | Unmarked | Unmarked | Unmarked short vowels (ŏ) | Unmarked | Eliot system | Eliot system |
+| **Dialect base** | Pokanoket | Massachusett | Massachusett | Massachusett (Natick) | MV Wampanoag | Massachusett (Plymouth) | MV Wampanoag |
+| **Speaker fluency** | Non-speaker | Non-speaker | Non-speaker | Fluent (translator) | Learner | Non-speaker | Fluent speaker |
+
+## Extended Time-Depth Table (All Sources)
+
+| Year | Source | Dialect | Est. Entries | Orthographic System | Status |
+|------|--------|---------|-------------|---------------------|--------|
+| 1624 | Winslow | Pokanoket | ~24 | English ad-hoc | #1366 |
+| 1634 | Wood | Massachusett | ~339 | English ad-hoc | #1367 |
+| 1643 | Williams | Narragansett | ~2,134 | English systematic | #1362 |
+| 1647 | Sheperd | Massachusett | ~11 | English ad-hoc | #1365 |
+| 1640s–50s | T. Mayhew Jr. | MV Wampanoag | None surviving | — | New (no vocab survives) |
+| 1663 | Eliot Bible | Massachusett (Natick) | Full Bible | Standardized Eliot | #1363 |
+| 1666 | Eliot Grammar | Massachusett (Natick) | Grammar | Standardized Eliot | #1365 |
+| 1666–78 | J. Cotton Jr. | MV Wampanoag | Lexicon (size TBD) | Ad-hoc + Eliot-influenced | New (this research) |
+| 1690 | J. Noyes | Pequot | Unknown | English ad-hoc | New (manuscript status uncertain) |
+| c. 1700 | F. Brinley | Narragansett | Limited (place names) | English ad-hoc | New |
+| 1707–08 | J. Cotton | Massachusett (Plymouth) | ~60 leaves | Eliot system | New (this research) |
+| 1727 | E. Mayhew | MV Wampanoag | Scattered + Psalter | Eliot system (fluent speaker) | New (this research) |
+| 1762 | E. Stiles | Pequot (Groton) | ~159 | English ad-hoc | New (this research) |
+| 1787 | J. Edwards | Mahican | ~1,200+ | Systematic English | #1369 |
+| 18th c. | Gen. Treat | Mohegan-Pequot | Unknown | English ad-hoc | New (poorly documented) |
+| 1879 | A. Gatschet | Narragansett | Unknown | BAE phonetic | New (this research) |
+| 1900 | F. Fielding | Mohegan-Pequot | ~1,200+ | English ad-hoc | #1364 |
+| 1904 | Prince-Speck | Mohegan-Pequot | ~446 | German-influenced | #1368 |
+| 1935–36 | Narragansett Dawn | Narragansett | 14 lessons | Simplified Williams | New (this research) |
+| 1993–pres. | WLRP Dictionary | Wôpanâak | 10,000–13,000+ | Modern phonemic | New (this research) |
+| 2000–2009 | O'Brien | Narragansett | Pedagogical | Pedagogical system | New (this research) |
+| 2006 | Fielding & Costa | Mohegan-Pequot | Full dictionary | Costa phonemic | New (this research) |
 
 ## Key Conclusion
 
@@ -133,3 +161,5 @@ Three pre-Eliot scribal traditions (Winslow, Wood, Sheperd) used different ad-ho
 - Lack of a standardized target orthography (which Eliot provided in 1666)
 
 Winslow and Sheperd share more features with each other than either does with Wood. Eliot's 1666 grammar represents a conscious standardization that resolved the pre-existing scribal variation, at the cost of obscuring the earlier dialectal diversity.
+
+The post-Eliot sources (J. Cotton Jr., J. Cotton, E. Mayhew) show increasing adoption of Eliot's orthographic system, with J. Cotton Jr. representing a transitional phase and J. Cotton/E. Mayhew fully adopting the Eliot system. The modern reconstructions (WLRP, Costa, O'Brien) provide phonemic baselines that enable more accurate interpretation of the colonial orthographies.
