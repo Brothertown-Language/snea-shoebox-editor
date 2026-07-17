@@ -13,9 +13,10 @@ set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="$SCRIPT_DIR/build"
+OUTPUT_DIR="$SCRIPT_DIR/outputs"
 MASTER="$SCRIPT_DIR/master.tex"
 
-mkdir -p "$BUILD_DIR"
+mkdir -p "$BUILD_DIR" "$OUTPUT_DIR"
 
 XELATEX="xelatex -interaction=nonstopmode -output-directory=$BUILD_DIR"
 
@@ -38,7 +39,13 @@ else
 fi
 
 echo ""
-echo "PDF:  $BUILD_DIR/master.pdf"
+echo "PDF:  $OUTPUT_DIR/master.pdf"
+echo "ePub: $OUTPUT_DIR/master.epub"
+
+# Copy tracked outputs to paper/outputs/ for GitHub distribution
+OUTPUT_DIR="$SCRIPT_DIR/outputs"
+mkdir -p "$OUTPUT_DIR"
+cp "$BUILD_DIR/master.pdf" "$OUTPUT_DIR/master.pdf"
 
 # ---- ePub (parallel output via pandoc) ----
 if command -v pandoc &>/dev/null; then
@@ -97,6 +104,8 @@ if command -v pandoc &>/dev/null; then
         --metadata lang="en" \
         --split-level=2 \
         --toc 2>/dev/null || echo "ePub build failed"
+
+    cp "$BUILD_DIR/master.epub" "$OUTPUT_DIR/master.epub"
 
     rm -rf "$EPUB_TMP"
 else
