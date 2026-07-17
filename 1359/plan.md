@@ -56,7 +56,7 @@
 
 ### Step-by-step
 
-- [ ] 1. (**clean-room**) **Coherence gate.** Dispatch `spec-creation --task coherence-gate` to verify the spec is internally consistent against the codebase before implementation begins. **→ SC-1, SC-2, SC-3, SC-4**
+- [ ] 1. (**inline**) **Coherence gate.** Verify the spec is internally consistent against the codebase: confirm all referenced files (`scripts/sync_prod_to_local.py`, `src/database/connection.py`, `AGENTS.md`, `docs/lessons-learned/2026-06-14-pg-catalog-schema-replication.md`) exist on disk and that the lesson filename date matches today. **→ SC-1, SC-2, SC-3, SC-4**
 
 - [ ] 2. (**inline**) **Pre-RED baseline.** Run `git status` and `git diff --stat` to confirm clean working tree on the feature branch. Log state.
 
