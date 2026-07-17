@@ -1,0 +1,13 @@
+# Research data files - preserve binary integrity
+research-cards/data/**/*.pdf binary
+research-cards/data/**/*.csv text diff=csv
+research-cards/data/**/*.tsv text
+research-cards/data/**/*.txt text
+research-cards/data/**/*.html text
+research-cards/data/**/*.xml text
+
+# Research cards - markdown
+research-cards/*.md text
+
+# Spec files
+[0-9][0-9][0-9][0-9]/*.md text

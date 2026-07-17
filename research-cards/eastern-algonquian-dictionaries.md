@@ -68,7 +68,9 @@ Eastern Algonquian (true genetic subgroup within Algonquian)
 
 - **Language:** Lenape (Munsee/Unami) [del]
 - **Type:** PDF scan of 19th-century dictionary
+- **Size:** 8.5 MB
 - **Access:** https://archive.org (IA800108)
+- **Local copy:** `tmp/papers/reference/eastern-algonquian/brinton-lenape-english-dictionary.pdf`
 - **Orthography:** Moravian missionary orthography (Zeisberger tradition)
 - **Notes:** Based on Zeisberger, Heckewelder, and other Moravian sources. Important for historical phonology comparison.
 
@@ -76,8 +78,19 @@ Eastern Algonquian (true genetic subgroup within Algonquian)
 
 - **Language:** Lenape [del]
 - **Type:** PDF
+- **Size:** 285 KB
 - **Access:** http://www.gilwell.com/lenape/lenape.pdf
+- **Local copy:** `tmp/papers/reference/eastern-algonquian/lenape-english-dictionary-gilwell.pdf`
 - **Notes:** Concise practical dictionary.
+
+### Western Abenaki Dictionary (Day 1994)
+
+- **Language:** Western Abenaki [abe]
+- **Type:** Book (Mercury Series), 2 volumes
+- **Size:** 135 KB (orthography sample)
+- **Access:** https://archive.org/details/rosettaproject_abe_ortho-1
+- **Local copy:** `tmp/papers/reference/eastern-algonquian/day-1994-western-abenaki-dictionary.pdf`
+- **Notes:** Documents the language as spoken in the last half of the 20th century. Speakers from Odanak, Quebec.
 
 ## Relevance to SNEA
 

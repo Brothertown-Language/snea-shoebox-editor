@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html data-ng-app="dictionaryApp" lang="en"
+  data-ng-init="baseURL='https://protoalgonquian.atlas-ling.ca/'; locale='eng'; currentUser = {};">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />  <title>
+    Proto-Algonquian Online Dictionary  </title>
+  <link href="/img/logo.png" type="image/png" rel="icon"/><link href="/img/logo.png" type="image/png" rel="shortcut icon"/><link rel="stylesheet" type="text/css" href="/css/bootstrap-reboot.min.css"/><link rel="stylesheet" type="text/css" href="/css/bootstrap-grid.min.css"/><link rel="stylesheet" type="text/css" href="/css/bootstrap.min.css"/><link rel="stylesheet" type="text/css" href="/css/glyphicon.css"/>
+	<script type="text/javascript" src="/js/jquery.min.js"></script>
+	<script type="text/javascript" src="/js/bootstrap.min.js"></script>
+  <style type="text/css">
+  #content a {
+    color: #630A44;
+  }
+
+  .header {
+    padding: .5em 1em
+  }
+
+  .ps {
+    font-size: 95%;
+    color: #777;
+    font-style: oblique;
+  }
+
+  .dl {
+    font-size: 95%;
+    color: #999;
+    font-variant: small-caps
+  }
+
+  .definition {
+    /*font-family: "Eras Medium ITC", "Euphemia";*/
+    font-size: 13pt;
+  }
+
+  .fr {
+    color: #c545a0
+  }
+
+  ul.list-group>li.active .text-primary {
+    color: white;
+  }
+
+  ul.list-group>li.active .ps {
+    color: #ccc;
+  }
+
+  #help-div li {
+    margin-bottom: 10px;
+  }
+
+  .clickable {
+    cursor: pointer;
+  }
+
+  .alg {
+    font-size: 1.1em;
+    /*font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;*/
+    font-weight: bold;
+  }
+
+  h4.text-primary {
+    font-variant: small-caps;
+  }
+
+  p.translation {
+    margin-left: 10px;
+    margin-bottom: .1em;
+    text-indent: -5px;
+  }
+
+  .en {
+    color: #3c763d
+  }
+
+  .media-object.img-thumbnail {
+    max-width: 150px
+  }
+
+  .list-group-item.active,
+  .list-group-item:focus,
+  .list-group-item:hover {
+    border-right: .3rem solid #630A44;
+    border-color: #630A44 !important;
+    background-color: transparent !important;
+    color: inherit;
+  }
+
+  .btn-primary,
+  .bg-primary,
+  .btn-outline-primary:hover,
+  .btn-outline-primary.active,
+  .page-item.active .page-link {
+    background-color: #630A44 !important;
+    color: white !important;
+  }
+
+  .btn-primary:hover,
+  .btn-outline-primary:hover,
+  .bg-primary .badge {
+    background-color: #B2127A !important;
+
+  }
+
+  .btn-primary,
+  .btn-outline-primary,
+  .border-primary,
+  #content a {
+
+    border-color: #630A44 !important;
+
+  }
+
+  .btn-outline-primary,
+  .text-primary,
+  .btn-link,
+  .nav-link,
+  .page-link {
+
+    color: #630A44 !important;
+
+  }
+
+  .btn-link:hover,
+  .nav-link:hover,
+  .page-link,
+  a:hover {
+
+    color: #B2127A;
+
+  }
+
+  /* Small devices (tablets, 768px and up) */
+  @media (min-width: 768px) {
+    .media-object.img-thumbnail {
+      max-width: 200px
+    }
+  }
+
+  /* Medium devices (desktops, 992px and up) */
+  @media (min-width: 992px) {
+    .media-object.img-thumbnail {
+      max-width: 250px
+    }
+  }
+
+  /* Large devices (large desktops, 1200px and up) */
+  @media (min-width: 1200px) {
+    .media-object.img-thumbnail {
+      max-width: 300px
+    }
+  }
+
+  .example .img-thumbnail {
+    width: auto !important;
+    max-height: 100px !important;
+  }
+
+  .tooltip-inner {
+    max-width: 500px;
+  }
+
+  #content {
+    min-height: -moz-calc(100vh - 350px);
+    min-height: -webkit-calc(100vh - 350px);
+    min-height: calc(100vh - 250px);
+
+  }
+
+  mark {
+    padding: .2em 0;
+  }
+  </style>
+</head>
+
+<body>
+  <img src="/img/eclipse.gif" id="loading" style="position:fixed; top:45%; left:45%" alt=""/>  <div id="topNavBar" class="container-fluid bg-primary"
+    style="min-height: 120px; border-bottom: .3rem solid #B2127A; padding-bottom: 0">
+    <span style="position:absolute; right:0; top:0; z-index:100"> <span class="btn btn-sm btn-default"
+        onclick="location.href= 'http://protoalgonquian.atlas-ling.ca/admin/entries';"><span
+          class="glyphicon glyphicon-user"></span> </span></span>
+
+    <div class="row">
+      <div class="col-10 col-md-6  ">
+        <a
+          href="/"><img src="/img/header.png" style="margin-left:3em" class="img-responsive" alt=""/></a>
+
+        <!--span style="font-size:5rem; font-weight: 200; display:block; padding-bottom: 0; margin-bottom: 0; ">Atikamekw</span>
+            <span-- style="font-size:2.5rem; top:-3rem; display:block; padding-left:10rem; padding-top:0; margin-top:0;"> dictionary</span-->
+        <a style="border-radius: 0;border-top-right-radius: .5em; position:absolute; bottom: 0; left:0;"
+          class="btn btn-lg bg-primary " target="site" href="https://resources.atlas-ling.ca"><span
+            class="glyphicon glyphicon-home"></span> </a>
+
+
+      </div>
+      <div class="col-md-6 d-none d-md-inline-block" style="text-align: right; overflow:hidden">
+
+        <img src="https://www.atlas-ling.ca/img/atlas-logo.png" style="width: auto; height: 100px">
+        <!--class="hidden-sm">
+            <!--img src="https://www.atlas-ling.ca/img/atlas-logo.png" style="width: auto; height: 80px" class="visible-sm"-->
+
+      </div>
+
+    </div>
+  </div>
+
+
+  <div id="content" class="container-fluid">
+
+    
+    
+	<script type="text/javascript" src="/js/angular.min.js"></script>
+	<script type="text/javascript" src="/js/angular-route.min.js"></script>
+	<script type="text/javascript" src="/js/angular-sanitize.min.js"></script>
+	<script type="text/javascript" src="/js/angular-resource.min.js"></script>
+	<script type="text/javascript" src="/js/ui-bootstrap-tpls-2.5.0.min.js"></script>
+
+<header id="header" ng-controller="SearchController">
+  <div class="row justify-content-md-center">
+
+
+    <div class="col-12  col-lg-10" style=" border: 1px solid #ccc; padding-top: 1em; border-width: 0 1px; ">
+      <div class="input-group" style="left: 1%;">
+        <!---->
+        <input type="text" class="form-control " placeholder="Type something you want to look up.."
+          data-ng-change="doSearch(true,$event)" data-ng-model="search.text" ng-required="true"
+          onkeypress="if(event.charCode==13){ angular.element($('#header')).scope().$root.doSearch(false);}" /><!-- -->
+
+        <img src="/img/ui-anim.gif" id="search-anim" style="margin-left:-18px; z-index:10000; " onload="$(this).hide();" alt=""/>
+
+        <span class="input-group-btn">
+          <button class="btn btn-primary" ng-disabled="((search.text==undefined)||(search.type==undefined))"
+            data-ng-click="doSearch(false)"><span class="glyphicon glyphicon-search"></span></button>
+
+
+        </span>
+
+      </div>
+
+    </div>
+
+
+  </div>
+  <div class="row form-inline  justify-content-md-center">
+    <div class="col-12 col-lg-10  "
+      style="border-left: 1px solid #ccc; padding-bottom: 1em;border-right: 1px solid #ccc;/**/">
+      <div class="btn-group" data-toggle="buttons" style="margin-left: 1%;" id="searchType">
+
+        <label class="btn btn-outline-primary" data-ng-click="selectSearchType()" data-ng-model="search.type"
+          uib-btn-radio="'en'"
+          data-ng-change="doSearch(true)">English to Proto-Algonquian</label>
+        <label class="btn btn-outline-primary" data-ng-click="selectSearchType()" data-ng-model="search.type"
+          uib-btn-radio="'alg'"
+          data-ng-change="doSearch(true)">(Proto-)Algonquian to English</label>
+        <label class="btn btn-outline-primary" data-ng-click="selectSearchType()" data-ng-model="search.type"
+          uib-btn-radio="'ad'">Advanced Options</label>
+
+
+      </div>
+
+      <div data-ng-show="search.type=='ad'" style="display: inline-block">
+        <select data-ng-model="search.language" class="form-control">
+          <option value="en">English</option>
+          <option value="alg">(Proto-)Algonquian</option>
+          <option value="rt">roots</option>
+        </select>
+        <select data-ng-model="search.field" class="form-control d-none">
+          <!-- not relevant -->
+          <option value="key" data-ng-if="search.language == 'alg'">word</option>
+          <option value="def" data-ng-if="search.language == 'en' || search.language == 'all'">
+            definition</option>
+          <!--option value="all">all</option-->
+        </select>
+        <select data-ng-model="search.where" class="form-control">
+          <option value="begin">beginning with</option>
+          <option value="contain">containing</option>
+          <option value="end">ending with</option>
+          <option value="whole">whole word</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+
+</header>
+<div class="row form-inline">
+
+</div>
+<div id="inner-content" class="row  justify-content-lg-center">
+  <div class="col-12 col-lg-10" style=" border: 0px solid #ccc; border-width: 0 1px 0 1px; min-height: 500px">
+
+    <div id="tabs" role="tabpanel">
+      <!-- Nav tabs -->
+      <ul class="nav nav-tabs" role="tablist">
+
+        <li class="result nav-item" role="presentation"><a class="nav-link" href="#!/results/#results" id="results-tab"
+            aria-control="results" data-toggle="tab"><span class="glyphicon glyphicon-th-list"></span>
+            Results</a></li>
+
+        <li class="credits nav-item" role="presentation"><a class="nav-link" href="#!/credits/#credits" id="credits-tab"
+            aria-control="credits" data-toggle="tab"><span class="glyphicon glyphicon-info-sign"></span>
+            Credits</a></li>
+        <li class="help nav-item" role="presentation"><a class="nav-link " href="#!/help/#help" id="help-div-tab"
+            aria-control="help-div" data-toggle="tab"><span class="glyphicon glyphicon-question-sign"></span>
+            Help<sup style="color:#C43C35;">*</sup></a></li>
+
+        <li class="browse nav-item" role="presentation"><a class="nav-link" href="#!/browse/#browse" id="browse-tab"
+            aria-control="browse" data-toggle="tab"> Browse</a> </li>
+      </ul>
+      <!-- tab panes -->
+      <div class="tab-content">
+
+
+
+        <script type="text/javascript">
+        <!--//[
+        angular.module('dictionaryApp', ['ngRoute', 'ui.bootstrap', 'dictionaryApp.controllers',
+            'dictionaryApp.services', 'dictionaryApp.filters', 'dictionaryApp.directives'
+          ])
+          .config(function($sceDelegateProvider) {
+
+            $sceDelegateProvider.resourceUrlWhitelist(['self', 'https://*.atlas-ling.ca/**',
+              'https://*.protoalgonquian.atlas-ling.ca/**'
+            ]);
+
+          })
+          .config(['$routeProvider',
+            function($routeProvider) {
+              $routeProvider
+                .when('/results', {
+                  templateUrl: 'results.html',
+                  controller: 'SearchController',
+                  controllerAs: 'searchCtl'
+                })
+
+                .when('/entry/:uuid', {
+                  templateUrl: 'entry.html',
+                  controller: 'EntryDetailController',
+                  controllerAs: 'entryCtl'
+                })
+                .when('/browse', {
+                  templateUrl: 'browse.html',
+                  controller: 'BrowseController',
+                  controllerAs: 'browseCtl'
+                })
+                .when('/help', {
+                  templateUrl: 'https://resources.atlas-ling.ca/links/proto-algonquian-dictionary-help/?notheme=y',
+                  controller: 'HelpController',
+                  controllerAs: 'hlpCtl'
+                })
+
+                .when('/credits', {
+                  templateUrl: 'https://resources.atlas-ling.ca/links/proto-algonquian-dictionary-credits/?notheme=y',
+                  controller: 'CreditsController',
+                  controllerAs: 'crdCtl'
+                })
+
+                .otherwise({
+                  redirectTo: '/help'
+                });
+
+
+            }
+          ])
+
+
+        ;
+        /*
+         The services
+         */
+        angular.module('dictionaryApp.services', ['ngResource'])
+
+          .factory('Data', ['$resource', '$rootScope',
+            function($resource, $rootScope) {
+
+              return $resource(
+                'https://protoalgonquian.atlas-ling.ca/:controller/:action/:searchText/:searchField/:searchWhere/:page/:sort/:direction/:model/:uuid.json', {}, {
+                  list: {
+                    method: 'GET',
+                    params: {
+                      action: 'getlist'
+                    },
+                    isArray: false
+                  },
+                  search: {
+                    method: 'POST',
+                    params: {
+                      action: 'search'
+                    },
+                    isArray: false,
+                    transformResponse: function(json, headerGetter) {
+                      try {
+                        var fromJson = angular.fromJson(json);
+                        fromJson.json = json;
+                        return fromJson;
+                      } catch (err) {
+                        console.log(err, headerGetter, json);
+                      }
+                      return false;
+
+                    }
+                  },
+                  filter: {
+                    method: 'POST',
+                    params: {
+                      action: 'filter'
+                    },
+                    isArray: false
+                  }
+
+
+                });
+            }
+          ])
+          .factory('LocalStore', ['$window',
+            function($window) {
+
+              if (typeof(Storage) !== "undefined") {
+                return window.localStorage;
+              }
+              console.log("warning local storage not available");
+              return false;
+            }
+          ]);
+
+        function playAudio(elem) {
+          var audio = $('audio:first', elem);
+          console.log(audio);
+          if (audio) {
+            if (audio.length) audio[0].play();
+            else audio.play();
+          }
+        }
+        $(document).on('ready', function() {
+          $('.btn-group > .btn').on('click', function() {
+            $("> .btn", $(this).parent()).removeClass('active');
+            $(this).addClass('active');
+          })
+        })
+
+        //]
+        -->
+        </script>
+        <div class="col-12" class="tab-pane fade active " data-ng-view>
+          <div class="container-fluid">
+
+          </div>
+        </div>
+
+
+      </div>
+    </div>
+  </div>
+</div>
+<script type="text/javascript">
+    angular.module('dictionaryApp.controllers',[])
+        .controller('SearchController',['$scope','$rootScope','Data','$timeout','$location','$filter',function($scope,$rootScope,Data,$timeout,$location,$filter){
+            var errorCallback = function (response) {
+                angular.element('#loading').hide();
+                angular.element('#search-anim').hide();
+                searchIsOver();
+                console.log(response);
+            };
+            var timer = false;
+            /*if($rootScope.search==undefined)
+            $rootScope.search = {language:"rt", where:"contain"};*/
+            $rootScope.searchResults = {};
+            $rootScope.isSearchActive=false;
+            function init(){
+                angular.element("#tabs ul li > a").removeClass('active');
+                angular.element("#tabs ul li.result > a ").addClass('active');
+
+                resetSearchResults();
+                $scope.splitScreen = false;
+                if($rootScope.search==undefined) $rootScope.search ={ language:'en', field:'key', where:'begin'};
+
+
+                angular.element("#loading").hide();
+
+
+                $scope.initialized= true;
+            }
+            function resetSearchResults (){
+                $rootScope.searchResults = {
+
+                    entries:[],
+
+                };
+                $scope.selectedResults = {};
+
+            }
+            function searchIsOver(){
+                $timeout(function () {
+                    angular.element('#loading').hide();
+                    angular.element("#search-anim").hide();
+
+                    $rootScope.isSearchActive=false;
+                });
+            }
+            function getSearchResultData(params,field){
+                if(field==undefined)field=params.controller;
+                console.log('getSearchResultData',params);
+                Data.get(params,function successCallback(data) {
+                    field = data.varname;
+                    if( $rootScope.searchResults[field]==undefined || $rootScope.searchResults[field].length==0)$rootScope.searchResults[field]=data;
+                    else {
+                        $rootScope.searchResults[field][field]= $rootScope.searchResults[field][field].concat(data[data.varname]);
+                    }
+                    //console.log(field, params,data,$rootScope.searchResults[field]);
+                    searchIsOver();
+                    //console.log(field, $rootScope.searchResults[field]);
+                }, errorCallback);
+            }
+            function postSearchResultData(params,field){
+                var postData = {};
+                var model =params.controller[0].toUpperCase()+params.controller.substr(1).replace(/ies$/,'y').replace(/s$/,'');
+                postData[model]= $rootScope.search;
+                console.log('postSearchResultData',params);
+                Data.search(params,postData,function successCallback(data) {
+                    field= data.varname;
+                    if( $rootScope.searchResults[field]==undefined || $rootScope.searchResults[field].length==0)$rootScope.searchResults[field]=data;
+                    else {
+                        $rootScope.searchResults[field][field]= $rootScope.searchResults[field][field].concat(data[data.varname]);
+                    }
+                    console.log(field,postData,data,$rootScope.searchResults[field]);
+                   searchIsOver();
+                }, errorCallback);
+            }
+            if($scope.initialized == undefined) init();
+            try{
+                var offset=angular.element("#mainList").offset();
+
+                //setup split screen
+                if(offset!=undefined && screen.width>990){
+                    angular.element("#mainList").css('height',(screen.availHeight-(offset.top+30))+"px");
+                    angular.element("#tabs").css('min-height',(screen.availHeight-250)+"px");
+                    $scope.splitScreen = true;
+                    angular.element("#mainList").css('overflow-y','scroll');
+                }
+            }catch(err){console.log("screen height set failed",err);}
+            $scope.selectSearchType = function(){//this is a hack until i figure out why the ui-bootstrap is not working for search type
+                $timeout(function(){
+                    angular.element("#searchType > label").removeClass("active");
+                    angular.element("#searchType > label:eq("+($rootScope.search.type=="ad"?2:($rootScope.search.type=="alg"?1:0))+")").addClass("active");
+                });
+
+            };
+            $rootScope.doSearch = function(wait,event){
+                $rootScope.isSearchActive=true;
+
+                angular.element("#search-anim").show();
+                /* handle waiting for more typing */
+                if(event )
+                    if(event.charCode==13 ){
+                        wait = false;
+                    }else{
+                        return;
+                    }
+                //console.log("doSearch",wait,event,$scope.search,$rootScope.search);
+                if(wait==false && $rootScope.search.type==undefined)$rootScope.search.type="en";
+                if(wait && $scope.lastSearch!=undefined && angular.equals($scope.lastSearch,$rootScope.search)) return;
+
+                if(wait || $rootScope.search.type==undefined){
+                    //
+                    if(timer)$timeout.cancel(timer);
+                    timer = $timeout(function(){
+                        $scope.doSearch(false);
+                    },2500);
+                    return;
+                }
+                if(timer)$timeout.cancel(timer);
+
+                if($rootScope.search.text==undefined){
+                    angular.element("#search-anim").hide();
+                    return;
+                }
+
+                if($location.path().match("result")==null && $rootScope.search.text!=undefined && $rootScope.search.text.length>0)$location.path('/results');
+                $scope.lastSearch=angular.copy($rootScope.search);
+                /* select results tab */
+                try{
+                    $timeout(function(){
+                        angular.element("#tabs ul li > a").removeClass('active');
+                        angular.element("#tabs ul li.result > a ").addClass('active');
+                    },0);
+                }catch(err){ console.log("error",err);}
+                angular.element("#loading").show();
+
+                //clear all current results
+                resetSearchResults();
+                console.log($rootScope.search);
+                $scope.currentEntry = $scope.currentEntryID = false;
+                $scope.selectSearchType();
+                if($rootScope.search.type.match("alg")!=null){
+                    var params = {controller:'entries',action:'search',searchText:$rootScope.search.text};
+                    getSearchResultData(params);
+                }else if($rootScope.search.type.match("en")!=null){
+                    console.log("keyword search");
+                    var params = {controller:'keywords',action:'search',searchText:$rootScope.search.text};
+                    params.controller = 'entries';
+                    params.searchField = 'def';
+                    getSearchResultData(params);
+
+                }else{
+                    //$rootScope.search.search = $rootScope.search.text;
+                    console.log("advanced search");
+                    var params = {controller:'entries',action:'search'};
+
+                    if($rootScope.search.language=="alg" || $rootScope.search.language=="all" || $rootScope.search.language=="rt"){
+                        if($rootScope.search.field=='key' || $rootScope.search.field == 'all'){
+                            postSearchResultData(params)
+                        }
+
+                    }
+                    if($rootScope.search.language=="en" || $rootScope.search.language=="all"){
+
+                        if($rootScope.search.field=='def' ||$rootScope.search.field=='key' || $rootScope.search.field == 'all'){
+                            params.controller = 'entries';
+                            $rootScope.search.field ='def';
+                            postSearchResultData(params);
+                        }
+
+
+                    }
+                }
+
+            };
+
+            $rootScope.toggleSearchResultDetail = function(field,index){
+                var className = $rootScope.searchResults[field].classname;
+                //console.log('toggleSearchResultDetail',field,index,className,$rootScope.searchResults[field]);
+                $scope.selectedResults[field]=$rootScope.searchResults[field][field][index][className].uuid;
+                if($rootScope.searchResults[field][field][index].data==undefined){
+                    var params = {controller:field,uuid:$scope.selectedResults[field], action:'view'};
+                    if($rootScope.searchResults[field][field][index]['Parent'+className].uuid) params.uuid =$rootScope.searchResults[field][field][index]['Parent'+className].uuid;
+                    angular.element("#loading").show();
+                    Data.get(params,function succesCallBack(data) {
+                        $rootScope.searchResults[field][field][index].data = data[data.varname];
+                        $rootScope.searchResults[field][field][index].visible=true;
+                        if(field=='entries'){
+                            $scope.currentEntry = data.entry;
+                            $scope.currentEntryID = $scope.currentEntry.Entry.uuid;
+                        }
+                        angular.element("#loading").hide();
+                    }, errorCallback())
+                }else{
+                    $rootScope.searchResults[field][field][index].visible=!$rootScope.searchResults[field][field][index].visible;
+                    if(field=='entries'){
+                        console.log($rootScope.searchResults[field][field][index]);
+                        $scope.currentEntry = $rootScope.searchResults[field][field][index].data;
+                        $scope.currentEntryID = $scope.currentEntry.Entry.uuid;
+                    }
+                }
+
+            };
+
+            $rootScope.toggleSearchResultEntryDetail = function(field,index,eIndex){
+
+                if($rootScope.searchResults[field][field][index].data.Entry[eIndex].data==undefined){
+                    var params = {controller:'entries',uuid:$rootScope.searchResults[field][field][index].data.Entry[eIndex].uuid, action:'view'};
+                    if($rootScope.searchResults[field][field][index].data.Entry[eIndex].parent_id)params.uuid=$rootScope.searchResults[field][field][index].data.Entry[eIndex].parent_id;
+                    angular.element("#loading").show();
+                    Data.get(params,function succesCallBack(data) {
+                        $rootScope.searchResults[field][field][index].data.Entry[eIndex].data = data[data.varname];
+                        $rootScope.searchResults[field][field][index].data.Entry[eIndex].visible=true;
+                        $scope.currentEntry = data.entry;
+                        $scope.currentEntryID = $scope.currentEntry.Entry.uuid;
+                        angular.element("#loading").hide();
+                    }, errorCallback())
+                }else{
+                    $rootScope.searchResults[field][field][index].data.Entry[eIndex].visible=!$rootScope.searchResults[field][field][index].data.Entry[eIndex].visible;
+                    $scope.currentEntry = $rootScope.searchResults[field][field][index].data.Entry[eIndex].data.entry;
+                    $scope.currentEntryID = $scope.currentEntry.Entry.uuid;
+                }
+
+            };
+
+            /*DELETE*/
+
+
+
+
+
+
+            $scope.$on('$destroy',function(event){
+                if(timer)$timeout.cancel(timer);
+            });
+            init();
+            $scope.loadingImg = angular.element('#loading').attr('src');
+    }])
+        .controller('EntryDetailController',['$rootScope','$scope','$routeParams','Data',function($rootScope,$scope,$routeParams,Data){
+            $scope.words = {};
+            var uuid = $routeParams.uuid;
+            //console.log(uuid,$routeParams);
+
+            Data.get({controller:'entries', action:'view',uuid:uuid},function(data){
+                $scope.data = data.entry;
+            });
+
+
+
+
+        }])
+        .controller('HelpController',['$scope', function($rootScope){
+                angular.element("#loading").hide();
+                angular.element("#tabs ul li > a").removeClass('active');
+                angular.element("#tabs ul li.help > a").addClass('active');
+                /*if($rootScope.search==undefined) $rootScope.search ={ language:'en', field:'key', where:'begin'};
+                $scope.doSearch = function(auto){
+                    $location.path('/results');
+                }*/
+            }]
+
+        ).controller('CreditsController',['$scope', function($rootScope){
+            angular.element("#loading").hide();
+            angular.element("#tabs ul li > a").removeClass('active');
+            angular.element("#tabs ul li.credits > a").addClass('active');
+            if($rootScope.search==undefined) $rootScope.search ={ language:'en', field:'key', where:'begin'};
+            /*$scope.doSearch = function(auto){
+                $location.path('/results');
+            };*/
+        }]
+
+    )   .controller('BrowseController',['$rootScope','$scope','Data',function($rootScope,$scope,Data){
+            $rootScope.browse = {
+                keywords:   [],
+                entries:    [],
+                themes:     [],
+                morphemes:  [],
+                ps:  [],
+                dialects:  [],
+                currentPage: {Entry:1, Ps:1, Dialect:1},
+                currentTile: {Entry:false, Ps:false, Dialect:false}
+            };
+        var errorCallback = function (response) {
+            angular.element('#loading').hide();
+            console.log(response);
+        };
+
+        angular.element("#tabs ul li >a ").removeClass('active');
+            angular.element("#tabs ul li.browse > a").addClass('active');
+            $scope.pageChanged = function (model, controller) {
+                angular.element("#loading").show();
+                if(controller==undefined) controller =model.replace(/y$/,'ies').replace(/([^as])$/,'$1s').toLocaleLowerCase();
+                var params ={controller:controller, action:'index',page:'page:'+$rootScope.browse.currentPage[model]};
+                if($rootScope.browse.currentTile[model])params.uuid=$rootScope.browse.currentTile[model];
+                Data.get(params,function successCallBack(data){
+                    $rootScope.browse[controller] = data;
+                    angular.element("#loading").hide();
+                }, errorCallback);
+            };
+            $rootScope.toggleBrowseDetail = function(field,index){
+                //console.log('toggleBrowseDetail',field,index,$rootScope.browse[field]);
+                var model = $rootScope.browse[field].classname;
+                //console.log('toggleBrowseDetail',field,index,model,$rootScope.browse[field]);
+
+                if($rootScope.browse[field][field][index].data==undefined){
+                    var params = {controller:field,uuid:$rootScope.browse[field][field][index][model].uuid, action:'view'};
+                    angular.element("#loading").show();
+                    Data.get(params,function succesCallBack(data) {
+                        $rootScope.browse[field][field][index].data = data[data.varname];
+                        $rootScope.browse[field][field][index].visible=true;
+
+                        angular.element("#loading").hide();
+                    }, errorCallback())
+                }else{
+                    $rootScope.browse[field][field][index].visible=!$rootScope.browse[field][field][index].visible;
+
+                }
+
+            };
+
+            $rootScope.toggleBrowseEntryDetail = function(field,index,eIndex){
+
+                if($rootScope.browse[field][field][index].data.Entry[eIndex].data==undefined){
+                    var params = {controller:'entries',uuid:$rootScope.browse[field][field][index].data.Entry[eIndex].uuid, action:'view'};
+                    angular.element("#loading").show();
+                    if($rootScope.browse[field][field][index].data.Entry[eIndex].ParentEntry.uuid) params.uuid =$rootScope.browse[field][field][index].data.Entry[eIndex].ParentEntry.uuid;
+                    Data.get(params,function succesCallBack(data) {
+                        $rootScope.browse[field][field][index].data.Entry[eIndex].data = data[data.varname];
+                        $rootScope.browse[field][field][index].data.Entry[eIndex].visible=true;
+
+                        angular.element("#loading").hide();
+                    }, errorCallback())
+                }else{
+                    $rootScope.browse[field][field][index].data.Entry[eIndex].visible=!$rootScope.browse[field][field][index].data.Entry[eIndex].visible;
+
+                }
+
+            };
+            $scope.pageChanged('Entry');
+
+            $scope.pageChanged('Ps');
+            $scope.pageChanged('Dialect');
+    }]);
+</script>
+<script type="text/javascript">
+    /**
+     * Created by Del on 19/02/16.
+     */
+    angular.module('dictionaryApp.filters',[])
+
+        .filter('trustedResource',[ '$sce', function($sce){
+            return function(val){
+                if(val)
+                    return $sce.trustAsResourceUrl(val);
+                return val;
+            }
+        }
+        ])
+        .filter('html',[ '$sce', function($sce){
+            return function(val){
+                if(angular.isString(val))
+                    return $sce.trustAsHtml(val.replace(/\\r\\n/g,"<br/>"));
+                return $sce.trustAsHtml("");
+
+            }
+        }
+        ])
+
+        .filter('intval',[  function(){
+            return function(val){
+                if(val)
+                    return parseInt(val,10);
+                return 0;
+            }
+        }
+        ])
+        .filter('toJSON',[function(){
+            return function(val){
+
+                console.log(angular.fromJson(val));
+                return angular.fromJson(val);
+            }
+        }])
+        .filter('in_array',[function(){
+            return function(data, key){
+
+                if(data)
+                    return data.indexOf(key)>-1;
+                return false;
+            }
+        }])
+        .filter('keys',[function(){
+            return function(data){
+
+                if(data)
+                    return Object.keys(data);
+                return array();
+            }
+        }])
+        .filter('sortArray', function(){
+            return function(inputArray){
+                console.log(inputArray);
+                return inputArray? inputArray.sort():inputArray;
+            }
+        })
+        .filter('isString',[function(){
+            return function(data){
+                return angular.isString(data);
+            }
+        }])
+        .filter('isArray',[function(){
+            return function(data){
+                return angular.isArray(data);
+            }
+        }])
+        .filter('isObject',[function(){
+            return function(data){
+                return angular.isObject(data);
+            }
+        }])
+        .filter('display1N',[function(){
+            return function(data,model,displayFields){
+
+                if(angular.isObject(data) &&model && displayFields && angular.isObject(data)){
+                    model=model.replace('Parent','').replace('Child','');
+                    try{
+
+
+                        var key = displayFields[model];
+                        //console.log(model,key,meta);
+                        if(key ){
+                            key=key.replace(model+".","");
+
+                        }
+                        if(key && data[key]!=undefined){
+                            key=key.replace(model+".","");
+                            return data[key];
+                        }else{
+                            key = model.toLowerCase();
+                            if(data[key]) return data[key];
+                            key = model.toLowerCase();
+                            if(data['name_fr']) return data['name_fr'];
+                        }
+                    }catch(err){
+                        console.log("display1N error",data,model,meta,err);
+                    }
+
+                }
+
+
+
+                return "";
+            }
+        }])
+
+        .filter('displayMN',[function(){
+            return function(data,model,displayFields){
+                //console.log("displayMN",data,model,meta);
+                if(angular.isArray(data) && data.length>0&& model && displayFields){
+                    try{
+                        var key = displayFields[model];
+                        var value = "";
+                        if(key){
+                            key=key.replace(model+".","");
+
+                        }
+                        if(key==undefined || data[0][key]==undefined){
+
+                            key = model.toLowerCase();
+                            if(data[0][key]==undefined){
+                                key = key.replace("parent","").replace("child","");
+                                if(data[0][key]==undefined){
+                                    key ='name_fr';
+                                    if(data[0][key]==undefined) key=false;
+                                }
+                            }
+
+                        }
+                        //console.log(data,model,key);
+                        if(key)
+                            for(var i in data)
+                                value+=(value.length?", ":"")+data[i][key];
+                        return value;
+                    }catch (err){
+                        console.log("displayMN error",data,model,displayFields,err);
+                    }
+                }
+
+                return "";
+            }
+        }])
+
+        .filter('id_in_data',[function(){
+            return function(data, val){
+                if(val==undefined) return false;
+                if(data){
+                    for(var r in data){
+                        if(data[r].id==val)return true;
+                    }
+                }
+
+                return false;
+            }
+        }])
+        .filter('value_of_path',[function(){
+            return function(data, key){
+                // console.log(data,key);
+                if(data!=undefined && key!=undefined){
+                    var paths = key.split(".");
+                    //console.log(data,paths);
+                    var value = data;
+                    for(var p in paths){
+                        value =value[paths[p]];
+                        if(value==undefined) return null;
+                    }
+                    return value;
+                }
+
+                return null;
+            }
+        }])
+        .filter('abbreviate',[function(){
+            return function(val){
+                if(val){
+                    if(val.match(" ")==null) return val[0];
+                    var abbr = "";
+                    var split = val.split(" ");
+                    //console.log(split);
+                    for(var i in split)abbr+=split[i][0];
+                    return abbr;
+                }
+                return val;
+            }
+        }])
+        .filter('highlight_search_text',['$sce',function($sce){
+            return function(val,searchText){
+                try{
+                    if(val && val.length && searchText && searchText.length){
+                        var searchHighlight= "<mark>$1</mark>";//"<span style='text-decoration: underline; font-weight:bold; background-color: #ffc'>"+searchText+"</span>";
+                        var re = new RegExp("("+searchText+")","i");
+                        return val.replace(re, searchHighlight);//$sce.trustAsHtml(val.replace(searchText, searchHighlight));
+                    }
+                    else if(val && val.length) return val; $sce.trustAsHtml(val);
+                }catch(err){
+                    //console.log('highlight_search_text',val);
+                }
+              //  console.log('highlight_search_text error',val,searchText);
+                return val;
+            }
+        }])
+        .filter('jsonToTable',['$sce',function($sce){
+            return function(val){
+
+                try{
+
+                    if(val  ){
+                        var json = angular.isObject(val)?val:angular.fromJson(val);
+                        var returnText = "";
+                        var table='<table class=" "> ';
+                        for(var k in json){
+                            if(json[k] && json[k].length && json[k].indexOf("--")==-1  )//returnText+=k+': '+json[k]+"\r\n";
+                                table+=' <tr><th>'+ k[0].toUpperCase()+ k.substr(1).replace('_',' ')+': </th> <td style="padding-left: 1em;" class="text-left">'+json[k]+'</td></tr>';
+                        }
+                        return table+'</table>';//returnText;//$sce.trustAsHtml();//val.replace(searchText, searchHighlight));
+                    }
+
+                }catch(err){
+                    console.log('toTable',val, err);
+                }
+                //console.log('toTable error',val,angular.isObject(val) );
+                return val;
+            }
+        }])
+
+    ;
+</script><script type="text/javascript">
+        /*
+     directive
+     */
+    angular.module('dictionaryApp.directives',[]) .directive('infiniteScroll',[
+        function(){
+            function infiniteScroll(scope){
+                $(window).on('DOMContentLoaded load resize scroll', function(event){
+
+                    $(".infinite-scroll-loader").each(function(index,elm){
+
+                        var rect = elm.getBoundingClientRect();
+                        //console.log(rect); //return;
+                        if(
+                            // scope.paging.Term.pageCount &&
+                        !scope.isLoading && //check that we are not waiting for the a page to load
+                        rect.top >= 0 &&
+                        // rect.left >= 0 &&
+                        //rect.bottom > 0 &&
+                        //rect.right > 0 &&
+                        rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) //&& /*or $(window).height() */
+                        //rect.right <= (window.innerWidth || document.documentElement.clientWidth) /*or $(window).width() */
+                        )
+                            scope.nextPage();
+                    });
+                });
+            }
+
+            return {
+                //restrict : 'A',
+                link: infiniteScroll
+            };
+        }
+    ])
+        .directive('entrySummary',function(){
+            return{
+                scope:{
+                    entry:'=',
+                    search:"="
+                },
+                template:
+                '<span data-ng-class="{\'caret-right\':(!entry.visible), caret: entry.visible  }"></span>'+
+                ' <strong title="{{entry.Entry.public_note_en}}" class="alg"> <span ng-bind-html="entry.entry  | highlight_search_text:search.text | html"></span><span ng-bind-html="entry.Entry.entry | highlight_search_text:search.text | html"></span></strong>' +
+                 ' <abbr title="{{entry.Ps.public_note_en}}" data-ng-bind="entry.Ps.ps"></abbr>'+
+                ' <span class=" float-right" ><span  class="dialect text-info" title="{{entry.Dialect.public_note_en}}" data-ng-bind="entry.Dialect.name_en"></span><span data-ng-repeat="m in entry.hasMedia" media-icon data-m="m"></span></span>' +
+
+                '<span class="ml-2 text-secondary d-block" > <span ng-bind-html="entry.definition_en | highlight_search_text:search.text | html"></span><span ng-bind-html="entry.Entry.definition_en  | highlight_search_text:search.text | html"></span></span>'
+
+
+            }
+        })
+
+
+        .directive('resultEntrySummary',function(){
+            return{
+                scope:{
+                    entry:'=',
+                    search:"=",
+                    currentEntryID:"=",
+                    splitScreen:"=",
+                },
+                template:
+                '<span data-ng-class="{\'caret-right\':(!entry.visible), caret:((currentEntryID==entry.uuid && currentEntryID!=null) ||(!splitScreen && entry.visible))}"></span>'+
+                ' <strong title="{{entry.Entry.public_note_en}}" class="alg"> {{entry.entry }}{{entry.Entry.entry}}</strong>' +
+                ' <abbr title="{{entry.Ps.public_note_en}}" data-ng-bind="entry.Ps.ps"></abbr>'+
+                ' <span class=" float-right" ><small class="dialect text-info" data-ng-bind="entry.Dialect.name_en" title="{{entry.Dialect.public_note_en}}"></small><span data-ng-repeat="m in entry.hasMedia" media-icon data-m="m"></span></span>' +
+
+                '<span class="ml-2 text-secondary d-block"> <span ng-bind-html="entry.definition_en | highlight_search_text:search.text  | html"></span><span ng-bind-html="entry.Entry.definition_en | html"></span></span>'
+
+
+            }
+        })
+
+        .directive('entryDetailView', ['Data',function(Data){
+            return {
+                scope:{
+                    baseUrl:'=',
+                    data:       "="
+
+                },
+                controller: ['$scope', function($scope){
+                       //$scope.$watch('data',function() {console.log('entry detail view',$scope.data);});
+                    var errorCallback = function (response) {
+                        angular.element('#loading').hide();
+                        console.log(response);
+                    };
+
+                }],
+                templateUrl: "entry.html"
+            }
+
+        }])
+    ;
+
+</script>
+<script type="text/ng-template" id="paginator-bootstrap4.html">
+    <ul class="pagination">
+        <li role="menuitem" ng-if="::boundaryLinks" ng-class="{disabled: noPrevious()||ngDisabled}" class="pagination-first page-item"><a class="page-link" href ng-click="selectPage(1, $event)" ng-disabled="noPrevious()||ngDisabled" uib-tabindex-toggle>{{::getText('first')}}</a></li>
+        <li role="menuitem" ng-if="::directionLinks" ng-class="{disabled: noPrevious()||ngDisabled}" class="pagination-prev page-item"><a class="page-link" href ng-click="selectPage(page - 1, $event)" ng-disabled="noPrevious()||ngDisabled" uib-tabindex-toggle>{{::getText('previous')}}</a></li>
+        <li role="menuitem" ng-repeat="page in pages track by $index" ng-class="{active: page.active,disabled: ngDisabled&&!page.active}" class="pagination-page page-item"><a class="page-link" href ng-click="selectPage(page.number, $event)" ng-disabled="ngDisabled&&!page.active" uib-tabindex-toggle>{{page.text}}</a></li>
+        <li role="menuitem" ng-if="::directionLinks" ng-class="{disabled: noNext()||ngDisabled}" class="pagination-next page-item"><a class="page-link" href ng-click="selectPage(page + 1, $event)" ng-disabled="noNext()||ngDisabled" uib-tabindex-toggle>{{::getText('next')}}</a></li>
+        <li role="menuitem" ng-if="::boundaryLinks" ng-class="{disabled: noNext()||ngDisabled}" class="pagination-last page-item"><a class="page-link" href ng-click="selectPage(totalPages, $event)" ng-disabled="noNext()||ngDisabled" uib-tabindex-toggle>{{::getText('last')}}</a></li>
+    </ul>
+</script>
+<script type="text/ng-template" id="accordion-group-bootstrap4.html">
+    <div class="card w-100">
+        <div role="tab" id="{{::headingId}}" aria-selected="{{isOpen}}" class="card-header" ng-keypress="toggleOpen($event)">
+            <h4 class="card-title">
+                <a role="button" data-toggle="collapse" href aria-expanded="{{isOpen}}" aria-controls="{{::panelId}}" tabindex="0" class="accordion-toggle" ng-click="toggleOpen()" uib-accordion-transclude="heading" ng-disabled="isDisabled" uib-tabindex-toggle><span uib-accordion-header ng-class="{'text-muted': isDisabled}">{{heading}}</span></a>
+            </h4>
+        </div>
+        <div id="{{::panelId}}" aria-labelledby="{{::headingId}}" aria-hidden="{{!isOpen}}" role="tabpanel" class="card-body collapse ng-class:{show:isOpen}" uib-collapse="!isOpen">
+            <div class="panel-body" ng-transclude></div>
+        </div>
+    </div>
+</script><script type="text/ng-template" id="results.html">
+    <div class="row">
+    <div class="col-12 col-md-4" role="main" style="" id="mainList">
+        <!-- alert box -->
+        <div class="alert alert-warning"  ng-hide="((search.text==undefined) || (search.text.length<1) || (searchResults.entries.entries.length > 0) || (searchResults.keywords.keywords.length > 0)  || (searchResults.themes.themes.length > 0)  || (searchResults.morphemes.morphemes.length > 1) )">
+            <span  ng-show="isSearchActive">searching for</span> <span style="font-weight: bold;" data-ng-bind="search.text"></span> <span  ng-hide="isSearchActive">not found</span>
+        </div>
+        <!-- entries -->
+        <h4 class="bg-primary clickable alert" onclick="$('#entries_list').toggleClass('show');" data-toggle="collapse" role="button" data-target="entries_list" data-ng-show="searchResults.entries.length>0">Entries <span class="badge float-right">{{searchResults.entries.length}}</span></h4>
+        <div class="collapse show" id="entries_list">
+            <ul class="list-group " ng-if="searchResults.entries.entries">
+                 <li data-ng-repeat="e in searchResults.entries.results[(search.text | lowercase)]" data-ng-init="entry = searchResults.entries.entries[e]"
+                     class="list-group-item  ng-class:{'active':( currentEntryID==entry.Entry.uuid || currentEntryID==entry.ParentEntry.uuid)}">
+                    <p data-ng-click="toggleSearchResultDetail('entries',e)" class="clickable">
+                        <span entry-summary="" data-entry="entry" data-search="search"></span>
+
+                    </p>
+                    <div class="d-block d-md-none d-lg-none d-xl-none">
+                        <div
+                            ng-show="entry.visible" entry-detail-view
+                            data-interface-language="lang"  data-data="entry.data" data-base-url="baseURL"
+                            style="margin-left: 3rem"></div>
+                    </div>
+
+
+                </li>
+                <li data-ng-repeat="(e,entry) in searchResults.entries.entries " class="list-group-item  ng-class:{'active':( currentEntryID==entry.Entry.uuid || currentEntryID==entry.ParentEntry.uuid)}" data-ng-click="getWord($index)" data-ng-if="(((entry.Entry.entry | lowercase ) != (search.text | lowercase) ) && ((entry.Entry.definition_en | lowercase ) != (search.text | lowercase) ))">
+                    <p data-ng-click="toggleSearchResultDetail('entries',e)" class="clickable">
+                        <span entry-summary="" data-entry="entry" data-search="search" ></span>
+
+
+                    </p>
+                    <div class="d-block d-md-none d-lg-none d-xl-none ">
+                        <div
+                            ng-show="entry.visible" entry-detail-view
+                            data-interface-language="lang"  data-data="entry.data" data-base-url="baseURL"
+                            style="margin-left: 3rem"></div>
+                    </div>
+
+
+                </li>
+            </ul>
+        </div>
+
+
+
+    </div>
+    <div class="d-none d-md-inline-block col-md-8" style="padding: 1em;" role="complementary">
+        <p style="color:#999; font-size: 2em; padding: 2em; text-align: center" ng-show="(currentEntry==undefined || currentEntry==false)" >Please <span ng-if="search.text.length<1">perform a search and </span> select an entry</p>
+        <div entry-detail-view  data-data="currentEntry"  class="affix-top" data-base-url="baseURL"></div>
+
+    </div>
+</div>
+</script>
+
+
+<script type="text/ng-template" id="entry.html">
+    <div class="row Entry">
+
+    <div class="card w-100 border-primary" ng-show="(data!=undefined && data!=false)" style="margin-left: 1em">
+        <div class="card-header text-white bg-primary border-primary ">
+            <span style="font-variant: small-caps; font-size: 1.5em;" class="float-right">
+
+
+                <a ng-if="data.Ps.url_en" ng-href="{{data.Ps.url_en}}" target="ps" style=" margin-left: 1em; color:white;" title="{{data.Ps.public_note_en}}" data-ng-click="$window.open(data.Ps.url_en)" data-ng-bind="data.Ps.ps"></a>
+                <abbr ng-if="(data.Ps.url_en==undefined || data.Ps.url_en.length<1)" style=" margin-left: 1em; " title="{{data.Ps.public_note_en}}" data-ng-click="$window.open(data.Ps.url_en)" data-ng-bind="data.Ps.ps"></abbr>
+
+                <abbr class="dialect" style="margin-right: 1em; " title="{{data.Dialect.public_note_en}}" data-ng-if="data.Dialect.name_en" data-ng-bind="data.Dialect.name_en"></abbr>
+
+
+                </span>
+            <h1 class="display-4" >
+                <span class="" title="{{data.Entry.public_note_en}}" data-ng-bind="data.Entry.entry"></span>
+
+            </h1>
+
+
+
+
+
+        </div>
+        <div class="card-body">
+
+
+
+                    <p class="card-text en definition" data-ng-bind-html="data.Entry.definition_en | html"></p>
+                    <p class="card-text en definition" data-ng-if="data.Entry.definition_literal_en" style=" margin-top: -.2em">lit. &ldquo;<span data-ng-bind-html="data.Entry.definition_literal_en | html"></span>&rdquo;</p>
+                    <p class="card-text en definition" data-ng-if="data.Entry.idiomatic_meaning_en" style=" margin-top: -.2em">idiome. <span data-ng-bind-html="data.Entry.idiomatic_meaning_en | html"></span></p>
+                    <p class="card-text text-info definition" data-ng-if="data.Entry.pronunciation" style=" margin-top: -.2em"><span class="text-muted" style="font-variant-caps: small-caps">  pronunciation:</span> <span data-ng-bind-html="data.Entry.pronunciation | html"></span></p>
+
+
+                    <!--p class="fr definition" data-ng-bind-html="data.Entry.definition_fr | html"></p>
+                    <p class="fr definition" data-ng-if="data.Entry.definition_literal_fr" style=" margin-top: -.2em">lit. &ldquo;<span data-ng-bind-html="data.Entry.definition_literal_fr | html"></span>&rdquo;</p>
+                    <p class="fr definition" data-ng-if="data.Entry.idiomatic_meaning_fr" style=" margin-top: -.2em">idiome. <span data-ng-bind-html="data.Entry.idiomatic_meaning_fr | html"></span></p>
+                    <p class="text-info definition" data-ng-if="data.Entry.scientific_notes" style=" margin-top: -.2em"><span style="font-style: italic" data-ng-bind-html="data.Entry.scientific_notes | html"></span></p-->
+
+            <p class="card-text "  ng-if="data.Entry.root">
+
+                <span  class="dialect text-info mr-2"  >Root</span>
+                <strong  ng-bind-html="data.Entry.root   | html"></strong>
+
+
+
+
+
+
+                <em class="ml-4 text-secondary"> <span ng-bind-html="child.definition_en | html"></span>
+                        </em>
+
+
+            </p><p class="card-text "  ng-repeat="child in data.ChildEntry | orderBy:'Dialect.name_en'">
+
+                <span  class="dialect text-info mr-2"  ng-bind="child.Dialect.name_en" title="{{child.Dialect.public_note_en}}"></span>
+                <strong  title="{{child.public_note_en}}" ng-bind-html="child.entry   | html"></strong>
+                <abbr title="{{child.Ps.public_note_en}}" data-ng-bind="child.Ps.ps"></abbr>
+
+
+
+
+
+                <em class="ml-4 text-secondary"> <span ng-bind-html="child.definition_en | html"></span>
+                        </em>
+
+
+            </p>
+
+
+
+
+
+
+			<a class="pull-right float-right" ng-href="#!/entry/{{data.Entry.uuid}}"><span class="glyphicon glyphicon-share"></span> </a>
+
+
+
+        </div>
+    </div>
+</div>
+
+</script>
+    <script type="text/ng-template" id="list-template.html">
+        <div class="panel panel-primary">
+            <div class="panel-heading">
+                <h4 class="panel-title"  ng-click="toggleOpen()">
+                    <a  ng-click="toggleOpen()" href tabindex="0" class="accordion-toggle" uib-accordion-transclude="heading">
+                        <span data-ng-class="{'text-muted': isDisabled}">{{heading}}</span>{{count}}
+                        <span class="badge float-right" ng-bind="count"></span>
+                    </a>
+                </h4>
+            </div>
+            <div class="panel-collapse collapse" uib-collapse="!isOpen">
+                <div class="panel-body" style="text-align: right" ng-transclude></div>
+            </div>
+        </div>
+</script>
+<script type="text/ng-template" id="browse.html">
+    <uib-accordion   close-others="oneAtATime">
+    <div uib-accordion-group heading="Entries" count="browse.entries.count" template-url="accordion-group-bootstrap4.html">
+        <nav>
+            <ul class="pagination" style="margin-bottom: .3em">
+
+                <li class="page-item ng-class:{active:(!browse.currentTile.Entry)}" ><span class="btn page-link" data-ng-click="browse.currentTile.Entry=false; browse.currentPage.Entry=1; pageChanged('Entry')">All</span></li>
+                <li data-ng-repeat="t in browse.entries.tiles" data-ng-if="t" class="page-item ng-class:{active:(t==browse.currentTile.Entry)}" data-ng-click="browse.currentTile.Entry=t; browse.currentPage.Entry=1;pageChanged('Entry')"><span class="btn page-link"  data-ng-bind="t"></span></li>
+
+            </ul>
+        </nav>
+        <ul uib-pagination template-url="paginator-bootstrap4.html" previous-text="Previous" next-text="Next" ng-if="browse.entries.paging.Entry.pageCount > 1" total-items="browse.entries.paging.Entry.count" items-per-page="browse.entries.paging.Entry.limit" ng-model="browse.currentPage.Entry" ng-change="pageChanged('Entry')" max-size="10" boundary-link-numbers="true"></ul>
+        <ul class="list-group ">
+
+            <li data-ng-repeat="entry in browse.entries.entries" class="list-group-item " >
+                <p data-ng-click="toggleBrowseDetail('entries',$index)" class="clickable">
+                    <span result-entry-summary="" data-current-entry-i-d="currentEntryID" data-split-screen="splitScreen"  data-entry="entry"></span>
+
+
+                </p>
+
+                <div
+                    ng-show="entry.visible" entry-detail-view
+                    data-interface-language="lang"  data-data="entry.data" data-base-url="baseURL"
+                    style="margin-left: 3rem"></div>
+
+
+
+            </li>
+        </ul>
+    </div>
+
+    <div uib-accordion-group heading="Parts of Speech"  count="browse.ps.count" is-open="false" template-url="accordion-group-bootstrap4.html">
+        <!--nav>
+            <ul class="pagination" style="margin-bottom: .3em">
+
+                <li class="page-item ng-class:{active:(!browse.currentTile.Ps)}" ><span class="btn page-link" data-ng-click="browse.currentTile.Ps=false; browse.currentPage.Ps=1; pageChanged('Ps')">All</span></li>
+                <li data-ng-repeat="t in browse.ps.tiles" data-ng-if="t" class="page-item ng-class:{active:(t==browse.currentTile.Ps)}" data-ng-click="browse.currentTile.Ps=t; browse.currentPage.Ps=1;pageChanged('Ps')"><span class="btn page-link"  data-ng-bind="t"></span></li>
+
+            </ul>
+        </nav>
+        <ul uib-pagination template-url="paginator-bootstrap4.html" previous-text="Previous" next-text="Next" ng-if="browse.ps.paging.Ps.pageCount > 1" total-items="browse.ps.paging.Ps.count"  items-per-page="browse.ps.paging.Ps.limit" ng-model="browse.currentPage.Ps" ng-change="pageChanged('Ps')" max-size="10" boundary-link-numbers="true"></ul-->
+        <ul class="list-group ">
+
+            <li data-ng-repeat="(p,ps) in browse.ps.ps" class="list-group-item ">
+                <p data-ng-click="toggleBrowseDetail('ps',p)" class="clickable" title="{{ps.Ps.public_note_en}}">
+                    <span data-ng-class="{'caret-right':(!ps.visible), caret:ps.visible}"></span>
+                    <strong data-ng-bind-html="ps.Ps.ps |html" > </strong>
+                    <span class="badge bg-primary float-right" data-ng-bind="ps.Ps.entry_count" data-ng-if="((ps.Ps.entry_count | intval )>1)"></span>
+
+
+                    <small> <span style="color:#999;  margin-left:  2.5em;  display: block;" data-ng-bind-html=" ps.Ps.public_note_en |html"></span></small>
+
+                </p>
+
+                <ul class="list-group" style="margin-bottom: 0;" data-ng-show="ps.visible">
+                    <li  data-ng-repeat="entry in ps.data.Entry"  class="list-group-item">
+                        <p class="clickable" data-ng-click="toggleBrowseEntryDetail('ps',p,$index)" >
+                            <span result-entry-summary="" data-current-entry-i-d="currentEntryID" data-split-screen="splitScreen"  data-entry="entry"></span>
+
+                        </p>
+                        <div
+                            ng-show="entry.visible" entry-detail-view
+                            data-interface-language="lang"  data-data="entry.data" data-base-url="baseURL"
+                            style="margin-left: 3rem"></div>
+
+
+
+
+
+
+                    </li>
+                </ul>
+
+
+
+            </li>
+        </ul>
+    </div>
+    <div uib-accordion-group heading="Dialect"  count="browse.ps.count" is-open="false" template-url="accordion-group-bootstrap4.html">
+        <!--nav>
+            <ul class="pagination" style="margin-bottom: .3em">
+
+                <li class="page-item ng-class:{active:(!browse.currentTile.Ps)}" ><span class="btn page-link" data-ng-click="browse.currentTile.Ps=false; browse.currentPage.Ps=1; pageChanged('Ps')">All</span></li>
+                <li data-ng-repeat="t in browse.ps.tiles" data-ng-if="t" class="page-item ng-class:{active:(t==browse.currentTile.Ps)}" data-ng-click="browse.currentTile.Ps=t; browse.currentPage.Ps=1;pageChanged('Ps')"><span class="btn page-link"  data-ng-bind="t"></span></li>
+
+            </ul>
+        </nav>
+        <ul uib-pagination template-url="paginator-bootstrap4.html" previous-text="Previous" next-text="Next" ng-if="browse.ps.paging.Ps.pageCount > 1" total-items="browse.ps.paging.Ps.count"  items-per-page="browse.ps.paging.Ps.limit" ng-model="browse.currentPage.Ps" ng-change="pageChanged('Ps')" max-size="10" boundary-link-numbers="true"></ul-->
+        <ul class="list-group ">
+
+            <li data-ng-repeat="(d,dialect) in browse.dialects.dialects" class="list-group-item ">
+                <p data-ng-click="toggleBrowseDetail('dialects',d)" class="clickable" title="{{dialect.Dialect.public_note_en}}">
+                    <span data-ng-class="{'caret-right':(!dialect.visible), caret:dialect.visible}"></span>
+                    <strong data-ng-bind-html="dialect.Dialect.name_en |html" > </strong>
+                    <span class="badge bg-primary float-right" data-ng-bind="dialect.Dialect.entry_count" data-ng-if="((dialect.Dialect.entry_count | intval )>1)"></span>
+
+
+                    <small> <span style="color:#999;  margin-left:  2.5em;  display: block;" data-ng-bind-html=" dialect.Dialect.public_note_en |html"></span></small>
+
+                </p>
+
+                <ul class="list-group" style="margin-bottom: 0;" data-ng-show="dialect.visible">
+                    <li  data-ng-repeat="entry in dialect.data.Entry"  class="list-group-item">
+                        <p class="clickable" data-ng-click="toggleBrowseEntryDetail('dialects',d,$index)" >
+                            <span result-entry-summary="" data-current-entry-i-d="currentEntryID" data-split-screen="splitScreen"  data-entry="entry"></span>
+
+                        </p>
+                        <div
+                            ng-show="entry.visible" entry-detail-view
+                            data-interface-language="lang"  data-data="entry.data" data-base-url="baseURL"
+                            style="margin-left: 3rem"></div>
+
+
+
+
+
+
+                    </li>
+                </ul>
+
+
+
+            </li>
+        </ul>
+    </div>
+
+
+</uib-accordion>
+
+</script>   </div>
+  <div id="footer">
+    <div id="footer" class="row bg-primary" style="padding: 1em">
+      <div class="col-3">&copy; 2026 protoalgonquian.atlas-ling.ca</div>
+      <div class="col-5"><small>Interface 4.2018.01.22; Data:2017.10</small></div>
+      <div class="col-4">Developed by <a class="btn btn-info"
+          href="https://resources.atlas-ling.ca"><img src="/img/logo.png" alt=""/>          Algonquian Dictionaries Project</a> </div>
+
+
+    </div>
+    <a href="http://www.cakephp.org/" target="_blank" id="cake-powered"><img src="/img/cake.power.gif" alt="Proto-Algonquian Online Dictionary" border="0"/></a>
+  </div>
+
+
+  <!-- Piwik -->
+  <script type="text/javascript">
+  var _paq = _paq || [];
+  _paq.push(['trackPageView']);
+  _paq.push(['enableLinkTracking']);
+  (function() {
+    var u = "//webstats.atlas-ling.ca/";
+    _paq.push(['setTrackerUrl', u + 'piwik.php']);
+    _paq.push(['setSiteId', 19]);
+    var d = document,
+      g = d.createElement('script'),
+      s = d.getElementsByTagName('script')[0];
+    g.type = 'text/javascript';
+    g.async = true;
+    g.defer = true;
+    g.src = u + 'piwik.js';
+    s.parentNode.insertBefore(g, s);
+  })();
+  </script>
+  <noscript>
+    <p><img src="//webstats.atlas-ling.ca/piwik.php?idsite=19" style="border:0;" alt="" /></p>
+  </noscript>
+  <!-- End Piwik Code -->
+</body>
+
+</html>

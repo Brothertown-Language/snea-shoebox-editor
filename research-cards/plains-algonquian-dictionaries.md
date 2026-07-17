@@ -32,16 +32,18 @@ Plains Algonquian (areal grouping, highly divergent from PA)
 ### English-Cheyenne Dictionary (Petter 1915)
 - **Language:** Cheyenne [chy]
 - **Type:** PDF (scanned, with handwritten annotations)
-- **Size:** 1,126 pp
-- **Access:** https://archive.org + https://cheyennelanguage.org
+- **Size:** 81 MB, 1,126 pp
+- **Access:** https://cheyennelanguage.org
+- **Local copy:** `tmp/papers/reference/plains-algonquian/petter-1915-english-cheyenne-dictionary.pdf`
 - **Orthography:** Petter's Cheyenne orthography
 - **Notes:** Massive dictionary by Mennonite missionary. The cheyennelanguage.org site also has grammar, Bible, and reading materials.
 
 ### Dictionary of the Arapaho Language
 - **Language:** Arapaho [arp]
 - **Type:** PDF (multiple editions)
-- **Size:** 243 pp (4th ed., 2012)
-- **Access:** https://www.colorado.edu/project/arapaho + https://verbs.colorado.edu/arapaho
+- **Size:** 1.3 MB, 243 pp (4th ed., 2012)
+- **Access:** https://www.colorado.edu/project/arapaho
+- **Local copy:** `tmp/papers/reference/plains-algonquian/salzmann-cowell-2012-arapaho-dictionary.pdf`
 - **Orthography:** Practical Arapaho orthography
 - **Notes:** 1st ed. Salzmann 1983, 4th ed. Cowell et al. 2012. Also has online lexical dictionary with example sentences.
 

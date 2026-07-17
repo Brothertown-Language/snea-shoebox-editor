@@ -55,7 +55,9 @@ Central Algonquian (areal grouping, not genetic)
 #### A Dictionary of the Cree Language (Watkins 1865/1938)
 - **Language:** Cree [crk]
 - **Type:** PDF
+- **Size:** 21 MB
 - **Access:** https://www.creeliteracy.org
+- **Local copy:** `tmp/papers/reference/central-algonquian/watkins-1865-dictionary-cree-language.pdf`
 - **Notes:** Historical dictionary, useful for diachronic comparison.
 
 ### Ojibwe-Potawatomi Group
@@ -79,7 +81,9 @@ Central Algonquian (areal grouping, not genetic)
 #### A Dictionary of the Ojibway Language (Baraga 1853/1992)
 - **Language:** Ojibwe [oji]
 - **Type:** Book/PDF
-- **Access:** https://archive.org
+- **Size:** 42 MB
+- **Access:** https://archive.org/details/dictionaryofojib0000bara
+- **Local copy:** `tmp/papers/reference/central-algonquian/baraga-1853-dictionary-ojibway-language.pdf`
 - **Notes:** Historical dictionary by Bishop Frederic Baraga. Important for diachronic comparison.
 
 #### Potawatomi Language Dictionary
@@ -94,7 +98,9 @@ Central Algonquian (areal grouping, not genetic)
 #### A Concise Dictionary of the Sauk Language
 - **Language:** Sauk [sac]
 - **Type:** PDF
+- **Size:** 583 KB
 - **Access:** https://www.sacandfoxnation-nsn.gov
+- **Local copy:** `tmp/papers/reference/central-algonquian/sauk-concise-dictionary.pdf`
 - **Orthography:** Sac & Fox Nation authorized phonetic system (1995)
 - **Notes:** Based on fieldwork 1990s–2000s. Sauk is closely related to Meskwaki (Fox) and Kickapoo.
 
@@ -119,8 +125,9 @@ Central Algonquian (areal grouping, not genetic)
 #### The Menomini Language (Bloomfield 1962)
 - **Language:** Menominee [mez]
 - **Type:** Book/PDF
-- **Size:** 515 pp
-- **Access:** https://archive.org
+- **Size:** 21 MB, 515 pp
+- **Access:** https://archive.org/details/menominilanguage0000bloo
+- **Local copy:** `tmp/papers/reference/central-algonquian/bloomfield-1962-menomini-language.pdf`
 - **Notes:** Bloomfield's definitive grammatical description with lexicon. Menominee is one of the most conservative Algonquian languages phonologically.
 
 #### English-Shawnee Dictionary (Mason Emerson)
