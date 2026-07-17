@@ -1,0 +1,557 @@
+% Wampanoag (Winslow 1624) — Source Workflow
+% Issue #1366
+% Status: Research complete, implementation pending
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+
+\section{Wampanoag: Winslow 1624}
+\label{sec:1366}
+
+\subsection{Source Description}
+
+\textbf{Recorder:} Edward Winslow (1595--1655), Mayflower passenger, Plymouth
+Colony governor for three terms (1633--1634, 1636--1637, 1644--1645), and the
+colony's primary negotiator and diplomat with the Native peoples of New England.
+
+\textbf{Source:} \emph{Good Newes from New England} (1624), printed in London by
+I.D.\ for William Bladen and John Bellamie. The earliest published source of
+Wampanoag vocabulary in the SNEA corpus.
+
+\textbf{Language:} Wampanoag, Pokanoket dialect [wam].
+
+\textbf{Corpus:} 24 records (the smallest in the SNEA collection).
+
+\textbf{Orthography:} English-hearer perception with zero regularization.
+Winslow was unusually honest about his linguistic limitations, describing the
+Massachusett language as ``very copious, large, and difficult. As yet we cannot
+attain to any great measure thereof.'' This acknowledgment distinguishes
+Winslow from many other colonial recorders who pretended to greater competence.
+His transcriptions are therefore likely more reliable as raw phonetic
+impressions --- he was not normalizing or regularizing what he heard.
+
+\subsection{Recorder Biography}
+
+Edward Winslow was among the 41 Mayflower passengers who signed the Mayflower
+Compact in November 1620. Key events relevant to his linguistic data:
+
+\begin{itemize}
+  \item \textbf{March 1621:} First contact with Samoset (Abenaki sachem speaking
+    English) and Massasoit.
+  \item \textbf{March--July 1621:} Tisquantum (Squanto) serves as interpreter,
+    teaching the Pilgrims Wampanoag vocabulary.
+  \item \textbf{March 1623:} Winslow cures Massasoit of a life-threatening
+    illness --- the encounter that produced his most extensive Wampanoag
+    dialogue.
+  \item \textbf{August 1623:} Hobbamock warns Plymouth of Massasoit's alleged
+    conspiracy with the Massachusett; Standish's Wessagussett raid follows.
+  \item \textbf{1624:} \emph{Good News from New England} published in London.
+\end{itemize}
+
+After returning to England in 1646, Winslow served as Oliver Cromwell's chief
+agent in foreign missions. He died of yellow fever in 1655 en route to a
+diplomatic mission in Spanish Hispaniola.
+
+\subsection{Linguistic Intermediaries}
+
+Winslow did not learn Wampanoag directly --- he worked through interpreters.
+The identity and linguistic background of these intermediaries is crucial for
+understanding potential biases in his transcriptions.
+
+\subsubsection{Tisquantum (Squanto, c.~1585--1622)}
+
+Tisquantum was a Patuxet Wampanoag with an extraordinary linguistic history:
+
+\begin{itemize}
+  \item \textbf{1614:} Kidnaped by Captain Thomas Hunt, along with 20+ other
+    Patuxet men.
+  \item \textbf{1614--1618:} Sold as a slave in Málaga, Spain; escaped with the
+    help of Spanish friars.
+  \item \textbf{1618--1619:} Lived in London with John Slany, a merchant of the
+    Newfoundland Company; learned English.
+  \item \textbf{1619:} Returned to Patuxet (modern Plymouth) --- only to find
+    his entire village depopulated by the 1616--1619 epidemic.
+  \item \textbf{1621:} Approached Plymouth Colony in March; served as
+    interpreter and guide.
+  \item \textbf{1622:} Died of ``Indian fever'' at Monomoit (Chatham, Cape Cod)
+    while accompanying Winslow on a diplomatic mission.
+\end{itemize}
+
+Linguistic implications of Tisquantum's mediation:
+\begin{itemize}
+  \item His English was learned in London, not from the Pilgrims --- it was
+    16th-century English, not colonial dialect.
+  \item His Wampanoag was Patuxet, a sub-dialect of Wampanoag closely related
+    to Pokanoket but not identical.
+  \item His time in Spain and England (8+ years) may have affected his native
+    language production (attrition).
+\end{itemize}
+
+\subsubsection{Hobbamock (Hobomok, d.~1642)}
+
+Hobbamock was a Pokanoket \emph{pniese} --- a military champion and elite
+warrior --- who served as Massasoit's trusted advisor and was assigned to live
+among the English:
+
+\begin{itemize}
+  \item \textbf{March 1621:} Assigned by Massasoit to reside at Plymouth Colony
+    as a liaison.
+  \item \textbf{March 1623:} Revealed Massasoit's alleged conspiracy with the
+    Massachusett, leading to Standish's raid.
+  \item \textbf{Accompanied Winslow} on the mission to cure Massasoit --- his
+    lament ``Neen womasu sagimus'' (``My loving sachem'') upon hearing of
+    Massasoit's apparent death is one of Winslow's most famous transcriptions.
+  \item \textbf{Died of European disease} in 1642.
+\end{itemize}
+
+Linguistic significance: Hobbamock likely spoke Pokanoket dialect natively.
+He was not a language teacher but may have provided a more natural sample of
+Wampanoag speech than Tisquantum. His English was likely limited --- Winslow
+probably communicated with him through a mixture of Wampanoag and signs.
+
+\subsection{Complete Vocabulary}
+
+According to Salvucci (InteractiveALR Vol.\ 27) and confirmed by primary source
+reading, Winslow's text contains 22 distinct words and phrases in Wampanoag:
+
+\begin{table}[htbp]
+\centering
+\caption{Winslow's Wampanoag Lexicon}
+\label{tab:1366-lexicon}
+\begin{tabular}{lll}
+\hline
+Word/Phrase & English & Notes \\
+\hline
+Keen Winsnow? & ``Art thou Winslow?'' & Massasoit's greeting; l$\rightarrow$n \\
+Ahhe & ``Yes'' & Winslow's reply \\
+Matta neen wonckanet namen Winsnow & ``O Winslow, I shall never see thee again!'' & Deathbed lament \\
+Winsnow & ``Winslow'' & /l/ $\rightarrow$ /n/; no /l/ in Wampanoag \\
+Neen womasu sagimus & ``My loving sachem'' & Hobbamock's lament \\
+Sachimo comaco & ``The sachem's house'' & Sachem + house at Pokanoket \\
+Witeo & ``An ordinary house'' & Contrasts with comaco \\
+Squasachim & ``The sachem's wife'' & Squa (woman) + sachim (chief) \\
+Maskiet & ``Physic/Medicine'' & Healing context \\
+Kiehtan & (The supreme God) & Explains Wampanoag theology \\
+Chise & ``An old man'' & Winslow's etymology for Kiehtan \\
+Kiehchise & ``A very old man'' & Comparative: chise $\rightarrow$ kiehchise \\
+Hinnaim namen, hinnaim michen, matta cuts & ``By and by see, eat, but not speak'' & Complex sentence \\
+Quatchet & ``Walk abroad'' & Imperative? \\
+Sachim & ``King/Chief'' & General title \\
+Pniese (also pinse, pinese) & ``Chief champion / man of valor'' & Military elite class \\
+Powah & ``Shaman / healer'' & Calls upon the devil \\
+Squaw & ``Woman'' & Occurring in compounds \\
+Massasoit & ``Great Chief'' & Proper name / title \\
+Canonickus & Massasoit's older brother & Proper name with -us? \\
+Wamsutta & Massasoit's son & Proper name \\
+Namasquemit & ``Powah'' or dreaming healer & One reference only \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Syntactic Complexity}
+
+Despite the small corpus, Winslow records several sentences showing Wampanoag
+syntax:
+
+\begin{description}
+  \item[Keen Winsnow?] Copular question: \emph{Keen} = 2sg pronoun ``thur'',
+    predicate nominal.
+  \item[Matta neen wonckanet namen Winsnow] Negative declarative: \emph{Matta}
+    (neg) + \emph{neen} (1sg) + \emph{wonckanet} (again/future) + \emph{namen}
+    (see) + vocative.
+  \item[Hinnaim namen, hinnaim michen, matta cuts] Serial verb construction:
+    three coordinate clauses with \emph{hinnaim} (by-and-by) + \emph{matta}
+    (neg).
+  \item[Neen womasu sagimus] Possessive + noun: \emph{neen} (I/my) +
+    \emph{womasu} (loving?) + \emph{sagimus} (sachem + 1sg possessive).
+\end{description}
+
+\subsection{Orthography System}
+
+Winslow wrote in Early Modern English orthography (pre-1625), before English
+spelling standardization. Understanding what Winslow's spellings meant for
+English is essential before mapping to Wampanoag phonemes.
+
+\subsubsection{Vowel Grapheme-to-Phoneme Mapping}
+
+\begin{table}[htbp]
+\centering
+\caption{Winslow Vowel Mapping}
+\label{tab:1366-vowels}
+\begin{tabular}{llll}
+\hline
+Grapheme & IPA & Example & Confidence \\
+\hline
+a (short) & /a/ $\sim$ /ə/ & matta & High \\
+a (long) & /aː/ & ahhe (first a) & Moderate \\
+e (short) & /ɛ/ & chise (final e) & Moderate \\
+e (final) & /ə/ & ahhe, witeo, maskiet & High \\
+i & /ɪ/ $\sim$ /i/ & kiehchise, chise & Moderate \\
+o & /ɔ/ $\sim$ /ə/ & hobbamock, commaco & Moderate \\
+u & /ʌ/ $\sim$ /ə/ & cuts & Low \\
+ie & /iː/ & kiehtan, kiehchise & High \\
+oo & /uː/ & askooke & High \\
+ah & /ah/ & ahhe & Moderate \\
+ee & /iː/ & keen (thou) & High \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Consonant Grapheme-to-Phoneme Mapping}
+
+\begin{table}[htbp]
+\centering
+\caption{Winslow Consonant Mapping}
+\label{tab:1366-consonants}
+\begin{tabular}{llll}
+\hline
+Grapheme & IPA & Example & Confidence \\
+\hline
+h & /h/ & ahhe, hobbamock, kiehtan & High \\
+k & /k/ & kiehtan, askooke, keen & High \\
+c (before a/o) & /k/ & commaco, cuts, comaco & High \\
+ch & /tʃ/ & chise, kiehchise & High \\
+sh & /ʃ/ & Only in proper names & Low \\
+m & /m/ & commaco, matta, namen & High \\
+n & /n/ & neen, namen, Winsnow & High \\
+s & /s/ & sachim, squaw, sagimus & High \\
+t & /t/ & matta, kiehtan, quatchet & High \\
+w & /w/ & winsnow, witeo & High \\
+p & /p/ & pniese (initial pn-!) & Moderate \\
+b & /b/ & hobbamock (medial) & Moderate \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Preaspiration /h/ in Winslow}
+
+Winslow writes /h/ more consistently than any other early Wampanoag source
+except Edwards (1787 Mahican). This is one of the most valuable aspects of his
+small corpus.
+
+\begin{table}[htbp]
+\centering
+\caption{Cross-Source Comparison for /h/}
+\label{tab:1366-h}
+\begin{tabular}{llll}
+\hline
+Source & hobbamock initial h & kiehtan medial ht & Overall /h/ Reliability \\
+\hline
+Winslow (1624) & YES & YES & Highest among early sources \\
+Wood (1634) & NO (abamocho) & N/A & Unreliable for /h/ \\
+Williams (1643) & Mixed (ábammocho) & N/A & Unreliable \\
+Eliot (1663) & Different root & Likely kehtan & Partial \\
+Edwards (1787) & N/A (Mahican) & YES & Most reliable overall \\
+\hline
+\end{tabular}
+\end{table}
+
+Interpretation: Winslow's relatively good /h/ transcription may reflect:
+\begin{itemize}
+  \item His intermediaries (Tisquantum, Hobbamock) had clearer /h/ articulation
+  \item The Pokanoket dialect had more salient /h/ than Natick
+  \item Winslow was a more careful listener --- his ``ignorance'' of the
+    language made him more phonetically accurate (less normalization bias)
+\end{itemize}
+
+\subsection{Pidginization Analysis (Goddard 1977)}
+
+Goddard's landmark analysis of early contact Algonquian data identified
+Winslow's vocabulary as showing clear evidence of pidginization --- the English
+and Wampanoag were communicating via a simplified contact variety, not the full
+grammatical language.
+
+\subsubsection{Key Evidence}
+
+In the sentence \emph{Matta neen wonckanet namen Winsnow}:
+
+\begin{enumerate}
+  \item \textbf{\emph{namen} (transitive inanimate ``see it'')} is used instead
+    of the grammatically correct transitive animate form (expected \emph{nunaw}
+    ``I see him''). The verb agrees with the object for gender --- \emph{namen}
+    treats ``Winslow'' as if he were an inanimate object.
+  \item \textbf{Pro-drop is lost:} Full independent pronouns (\emph{neen} ``I'',
+    \emph{keen} ``thou'') are used where verbal inflection alone would carry
+    person in the full language. This is a universal pidgin feature ---
+    morphology simplifies, syntax becomes analytic.
+  \item \textbf{No verbal inflection:} The expected inflected verb
+    (\emph{n-nam-en} = 1sg-see-TA) is replaced with what appears to be the
+    citation form or a nominalized form.
+\end{enumerate}
+
+\subsubsection{The Massachusett Pidgin Hypothesis}
+
+Goddard hypothesized that a Massachusett Pidgin (similar in function to Delaware
+Pidgin or Mobilian Jargon) existed before English colonization, used for
+inter-tribal trade. If so, what Winslow recorded may not have been ``pure''
+Wampanoag at all, but rather a trade pidgin. This would explain:
+
+\begin{itemize}
+  \item The consistency of certain simplifications (pidgin features shared
+    across sources)
+  \item The spread of certain forms (e.g., \emph{matta} for negation appears in
+    all colonial sources)
+  \item The divergence between ``missionary'' Massachusett (Eliot 1663) and
+    ``contact'' Massachusett (Winslow, Wood)
+\end{itemize}
+
+\subsection{Cross-Source Cognate Table}
+
+\begin{table}[htbp]
+\centering
+\caption{Confirmed Cognates Across Sources}
+\label{tab:1366-cognates}
+\begin{tabular}{lllll}
+\hline
+Gloss & Winslow (1624) & Wood (1634) & Trumbull/Eliot & Williams (1643) \\
+\hline
+`no' & matta & matta & matta & matta \\
+`woman' & squa(achim) & squaw & squa & squa \\
+`devil' & hobbamock & abamocho & achm∞wonk & ábammocho \\
+`yes' & ahhe & --- & --- & --- \\
+`house' & witeo & wetu/weetu & wetu & --- \\
+`snake' & askooke & askook & askkuhnk & askug \\
+`king' & sachim & sachim & sachim & --- \\
+`old man' & chise & --- & --- & --- \\
+`speak' & cuts & --- & cuts & ketes \\
+`walk' & quatchet & --- & --- & --- \\
+`medicine' & maskiet & --- & maskiht & --- \\
+`shaman' & powah & powaw & --- & powwáw \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsection{Dialect Affiliation: Pokanoket Wampanoag}
+
+Winslow's data was collected primarily at Plymouth (Patuxet) and Pokanoket
+(modern Bristol, RI --- Massasoit's capital). The Wampanoag Confederacy in 1620
+consisted of several bands: Pokanoket (Massasoit's people, primary), Patuxet
+(Plymouth, Tisquantum's people, depopulated by 1620), Nauset (Cape Cod),
+Monomoit (Chatham), Manomet (Sandwich/Bourne), and Mashpee (Cape Cod).
+
+The key dialectal division within Massachusett/Wampanoag:
+
+\begin{table}[htbp]
+\centering
+\caption{Pokanoket vs.\ Natick Features}
+\label{tab:1366-dialect}
+\begin{tabular}{llll}
+\hline
+Feature & Pokanoket (Winslow/Wood) & Natick (Eliot/Trumbull) & Notes \\
+\hline
+`house' & witeo (Winslow) & wetu (Eliot) & Real lexical difference? \\
+`devil' & hobbamock (Winslow) & achm∞wonk (Eliot) & Different roots entirely \\
+`man of valor' & pniese (Winslow) & Not attested & Nativized English? \\
+Initial /h/ & Written (Winslow) & Often omitted (Eliot) & Possibly orthographic \\
+/l/ substitution & n only (Winslow) & n only (Eliot) & Consistent across dialects \\
+\hline
+\end{tabular}
+\end{table}
+
+Per Salvucci's assessment: ``Winslow's data has not been systematically
+analyzed for dialect affiliation.'' The Pokanoket sub-corpus is so small (22
+items) that confident dialect assignment is impossible without external
+evidence.
+
+\subsection{Problems Encountered}
+
+\begin{itemize}
+  \item \textbf{Tiny corpus:} 24 records is insufficient for any statistical
+    approach. Every entry must be treated as a unique case. Winslow is a
+    corroborative source only.
+  \item \textbf{Pidginization:} Goddard (1977) identifies ``a good deal of
+    pidginization'' in Winslow's data. This affects whether the data can be
+    used for phonological reconstruction at all. If the English were learning a
+    pidgin variety, word order may not reflect full Wampanoag syntax, verb forms
+    may be bare stems, and vocabulary may be mixed from multiple Algonquian
+    languages.
+  \item \textbf{Intermediary filter:} Tisquantum (Squanto) and Hobbamock served
+    as interpreters --- their own linguistic backgrounds may have affected the
+    transcriptions. Tisquantum's English was learned in London, not from the
+    Pilgrims, and his Wampanoag was Patuxet, a sub-dialect closely related to
+    but not identical with Pokanoket.
+  \item \textbf{Dialect uncertainty:} Pokanoket vs.\ Natick differences are
+    unresolved. The distinction may represent real dialect differences, register
+    differences (pidgin vs.\ full language), chronological differences (1620s
+    vs.\ 1660s), or orthographic convergence.
+  \item \textbf{Proper name contamination:} Some entries include English names
+    (Winsnow = Winslow), which follow English orthography and must be excluded
+    from phonemic analysis.
+  \item \textbf{Multi-word entries:} Several entries are entire sentences
+    requiring syntactic segmentation before lexical analysis.
+  \item \textbf{Uncertain dialect:} Pokanoket dialect vs.\ Patuxet (via
+    Tisquantum) vs.\ generic pidgin. Not resolvable from Winslow's data alone.
+\end{itemize}
+
+\subsection{Research Approach}
+
+Five-step corroboration pipeline using Trumbull and Wood as primary sources.
+Winslow data is treated as corroborative, not primary. Each entry is verified
+against expected Eliot/Trumbull forms.
+
+\subsubsection{Step 1: Corroboration-Only}
+
+Treat Winslow as corroborative evidence for rules derived from larger sources.
+For each Winslow entry, find the cognate in larger Wampanoag sources (Trumbull
+4,491 records, Wood 339 records). Use the cross-source consensus for the
+phonemic mapping. Flag Winslow-only words for manual review.
+
+\subsubsection{Step 2: Key Cognate Mappings}
+
+\begin{table}[htbp]
+\centering
+\caption{Key Cognate Mappings}
+\label{tab:1366-key-cognates}
+\begin{tabular}{llll}
+\hline
+Winslow & Wood & Trumbull/Eliot (expected) & PA Source \\
+\hline
+hobbamock (devil) & abamocho & Different root & See §11 --- two different roots? \\
+matta (no) & matta & matta & PA *mati- \\
+kiehtan (God) & --- & kehtan & PA *ki·ht-? \\
+sachim (chief) & sachim & sachim & PA *sa·kima·wa \\
+squa (woman) & squaw & squa & PA *e·θkwe·wa \\
+askooke (snake) & askook & askkuhnk & PA *aθkw-? \\
+\hline
+\end{tabular}
+\end{table}
+
+\subsubsection{Step 3: h-Transcription as Secondary Evidence}
+
+Winslow's relatively consistent /h/ transcriptions provide secondary evidence
+for where preaspiration occurs:
+\begin{itemize}
+  \item When Winslow writes \emph{h} and other sources also confirm it
+    $\rightarrow$ well-attested
+  \item When Winslow writes \emph{h} and other sources omit it $\rightarrow$
+    possible but needs external confirmation
+  \item When Winslow omits \emph{h} and Edwards (Mahican) writes it
+    $\rightarrow$ probable preaspiration unrecorded
+\end{itemize}
+
+\subsubsection{Step 4: Segment k- Prefix}
+
+The 2nd person prefix \emph{k-} is seen in \emph{keen} (thou, 2sg pronoun) and
+should be segmented before conversion. Note that \emph{k-} with vowel-initial
+stems would produce different surface forms than \emph{k-} with consonant-initial
+stems.
+
+\subsubsection{Step 5: Verify Against Trumbull}
+
+For each converted Winslow entry, verify against the expected form in the
+Eliot/Trumbull orthography. Flag mismatches for manual review --- especially:
+\begin{itemize}
+  \item Where Winslow writes /h/ and Trumbull does not (possible preaspiration
+    evidence)
+  \item Where Winslow and Trumbull use different lexical roots (possible dialect
+    divergence)
+  \item Where Winslow's form contradicts known PA correspondences
+\end{itemize}
+
+\subsection{Conversion Workflow}
+\texttt{[Pending implementation --- see Issue \#1366]}
+
+The conversion pipeline will be implemented as a Python module in
+\texttt{src/commons/parsing/}. The module will:
+
+\begin{itemize}
+  \item Treat Winslow as corroborative only --- no regex-based conversion
+  \item For each Winslow entry, find the cognate in larger Wampanoag sources
+  \item Use cross-source consensus for phonemic mapping
+  \item Flag Winslow-only words for manual review
+  \item Segment \emph{k-} prefix before conversion
+  \item Verify each converted entry against expected Eliot/Trumbull forms
+\end{itemize}
+
+\subsection{Linguist Feedback Template}
+
+\texttt{[Template --- content pending review]}
+
+The following questions are open for linguist review:
+
+\begin{enumerate}
+  \item \textbf{Pidgin or genuine dialect?} Are the simplifications in Winslow's
+    data (e.g., \emph{namen} for ``see'' used as transitive animate) evidence
+    of a pre-existing Massachusett Pidgin (Goddard 1977) or simply a learner's
+    imperfect recording? This affects whether Winslow's data can be used for
+    phonological reconstruction at all.
+  \item \textbf{\emph{witeo} vs.\ \emph{wetu}:} Is the \emph{witeo} (Winslow) /
+    \emph{wetu} (Eliot) split evidence of Pokanoket vs.\ Natick dialect
+    difference, or are both from PA *wi·kiwa·mi with different English
+    ear-perceptions? Williams records Narragansett \emph{wetu} (agreeing with
+    Eliot), suggesting \emph{witeo} may be uniquely Pokanoket.
+  \item \textbf{\emph{hobbamock} volcanism:} Is \emph{hobbamock} a genuine
+    Wampanoag lexical item or a portmanteau of Wampanoag + English
+    ``hobgoblin''? The initial \emph{h} and the \emph{-ock} suffix appear in
+    both the proper name and the common noun ``devil'', suggesting folk
+    etymology contamination is possible.
+  \item \textbf{Phonological reliability of pidgin data:} If pidgin phonology
+    approximates the substrate, then Winslow's transcriptions are phonologically
+    useful. If the pidgin introduced phonological simplifications (cluster
+    reduction, final devoicing, vowel merger), then even the phonology is
+    unreliable.
+  \item \textbf{\emph{pniese} etymology:} Is this the same root as PA
+    *-epye·wa (``to be powerful, to be a man'')? The initial cluster /pn-/ is
+    unusual for Massachusett and may reflect a specific morphotactic condition
+    or epenthesis.
+\end{enumerate}
+
+\subsection{Related Work: Colonial Recorder Perception Problem}
+
+The core challenge of this research card --- English-speaking recorders
+misperceiving and mis-transcribing Algonquian phonemes --- is a known
+phenomenon documented across Eastern North America. Two researchers' work is
+directly relevant:
+
+\textbf{Dr.\ Keith Cunningham} (Linguist, Nanticoke Indian Tribe). His doctoral
+dissertation \emph{A Phonological Analysis of Nanticoke With Practical
+Applications for Language Revitalization} (Georgetown University) analyzes three
+18th-century Nanticoke word lists (Heckewelder 1785) using the same methodology:
+historical phonology from colonial recorders, with the same challenges of
+multilingual informants and orthographic complexity. His 2024 Algonquian
+Conference presentation \emph{A Revised Phonological Analysis of the Heckewelder
+Vocabulary of Nanticoke} directly parallels the Winslow analysis --- both
+involve tiny corpora (Winslow 24 records, Heckewelder \textasciitilde200)
+recorded by English speakers with no linguistic training, both require PA
+comparative calibration, and both must account for intermediary effects
+(Tisquantum/Hobbamock for Winslow, multilingual informants for Heckewelder).
+Cunningham's work demonstrates that the colonial recorder perception problem
+extends beyond SNEA into the broader Eastern Algonquian family.
+
+\textbf{Dr.\ Craig Kopris} (Independent scholar). His paper \emph{Les sons
+wyandots perçus par des oreilles étrangères} (Wyandot sounds perceived by
+foreign ears, \emph{Recherches amérindiennes au Québec}, 2014) is the exact
+framing of the Winslow problem: how European recorders systematically
+misperceived and mis-transcribed indigenous phonemes. His \emph{Wyandot
+Phonology: Recovering the Sound System of an Extinct Language} applies the same
+recovery methodology to an unrelated language family (Iroquoian), demonstrating
+that the foreign-ear perception problem is universal across colonial
+documentation of North American languages.
+
+The Winslow corpus (24 records, the smallest in the SNEA collection) represents
+the most extreme case of the tiny-corpus problem. The methodological question
+--- whether such a small dataset can yield reliable phonological data --- is
+directly addressed by both Cunningham's work on small Nanticoke word lists and
+Kopris's work on recovering phonology from limited documentary sources.
+
+\subsection{Key References}
+
+\begin{itemize}
+  \item Aubin, George F. 1975. \emph{A Proto-Algonquian Dictionary}. Ottawa:
+    National Museums of Canada.
+  \item Goddard, Ives. 1977. ``Massachusett Pidgin.'' \emph{Language} 53(1):
+    147--184.
+  \item Goddard, Ives \& Bragdon, Kathleen. 1988. \emph{Native Writings in
+    Massachusett}. Transactions of the American Philosophical Society, Vol.\ 78.
+  \item O'Brien, Frank Waobu. \emph{Guide to Historical Spellings}. --- Master
+    tables for spelling-to-phoneme mapping across SNEA languages.
+  \item Salvucci, Claudio. \emph{InteractiveALR Vol.\ 27: Massachusetts}.
+    Evolution Publishing.
+  \item Trumbull, J. Hammond. 1903. \emph{Natick Dictionary}. Washington, D.C.:
+    Bureau of American Ethnology.
+  \item Williams, Roger. 1643. \emph{A Key into the Language of America}.
+    London: Gregory Dexter.
+  \item Winslow, Edward. 1624. \emph{Good Newes from New England}. London: I.D.
+    for William Bladen and John Bellamie.
+  \item Winslow, Edward. 2014. \emph{Good News from New England}. Ed.\ Kelly
+    Wisecup. University of Massachusetts Press. ISBN 9781625340832.
+\end{itemize}

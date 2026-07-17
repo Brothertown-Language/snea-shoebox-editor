@@ -1,0 +1,208 @@
+% Cross-Source Calibration Methodology — Thematic Synthesis
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+
+\section{Cross-Source Calibration Methodology}
+\label{sec:calibration}
+
+One of the key findings of this project is that data from one source can
+resolve ambiguity in another. This cross-source calibration is the most
+powerful tool in the conversion toolkit. Because each recorder had different
+strengths and weaknesses --- Edwards was reliable for /h/ but not for vowel
+quality, Williams was reliable for stress but not for preaspiration, Eliot
+was systematic but English-filtered --- the sources complement each other.
+By calibrating across sources, we can recover phonological information that
+no single source provides.
+
+\subsection{The Calibration Pipeline}
+
+The calibration pipeline proceeds from most reliable to least reliable, with
+each source used to calibrate the next. The ordering is determined by the
+recorder's linguistic training, fluency, and orthographic system:
+
+\begin{enumerate}
+  \item \textbf{Fielding (2013)} --- Modern phonemic orthography with 1:1
+    phoneme-to-grapheme correspondence. The most phonologically reliable
+    source, but limited to Mohegan-Pequot and representing the modern
+    revived language.
+
+  \item \textbf{Trumbull/Eliot (1903/1666)} --- Systematic missionary
+    orthography with the largest corpus (4,491 records). Eliot's grammar
+    provides explicit phonological descriptions, and the large corpus enables
+    statistical approaches.
+
+  \item \textbf{Edwards (1787)} --- Fluent L2 speaker with the most reliable
+    /h/ detection. Small corpus (144 records) but high per-record
+    reliability.
+
+  \item \textbf{Prince-Speck (1904)} --- Trained linguist with explicit /hC/
+    cluster notation. Medium corpus (446 records) but two-stage recording
+    chain introduces compounding errors.
+
+  \item \textbf{Williams (1643)} --- Linguistically gifted amateur with
+    unique stress diacritics. Large corpus (2,134 records) but high vowel
+    ambiguity and no /h/ detection.
+
+  \item \textbf{Wood/Winslow (1634/1624)} --- Raw English perception with no
+    linguistic training. Small corpora (339 and 24 records) but valuable as
+    the earliest attestations.
+\end{enumerate}
+
+\subsection{Cross-Source Disambiguation: Specific Examples}
+
+\subsubsection{Massachusett Disambiguates Narragansett Vowels}
+
+Williams' vowel ambiguity in Narragansett is partially resolved by comparing
+against Eliot's Massachusett cognates, which have a more systematic
+orthography. For example, Williams' \textit{a} can represent /ə/, /ɔː/, or
+/aː/. When the Massachusett cognate shows \textit{â} (Eliot's long a marker),
+the Narragansett vowel is likely /aː/. When the Massachusett cognate shows
+\textit{u} (Eliot's schwa marker), the Narragansett vowel is likely /ə/.
+
+The cognate pair for 'dog' illustrates this: Williams writes \textit{ayim},
+Eliot writes \textit{arum}. The PA reconstruction *aɬemwa confirms the
+vowel quality and shows the /ɬ/ $\rightarrow$ /j/ (Narragansett) vs.\ /ɬ/
+$\rightarrow$ /r/ (Massachusett) reflex difference. The cross-source
+comparison resolves both the vowel quality (first vowel /a/) and the
+consonant reflex.
+
+\subsubsection{Edwards Disambiguates Preaspiration}
+
+Edwards' consistent /h/ marking in Mahican provides a model for predicting
+preaspiration in Williams and Wood, where it is unwritten. When Edwards
+writes \textit{hkeesque} 'eye' with initial /hk/, and the PA reconstruction
+shows */h/ in a corresponding position, we can infer that the cognate
+Narragansett form (which Williams writes without /h/) also had preaspiration.
+This inference is strengthened when the morphotactic position matches: a stop
+in the coda of a stressed syllable is a candidate for preaspiration.
+
+\subsubsection{Prince-Speck Confirms Fielding}
+
+Where Prince-Speck (1904) and Fielding (2013) agree on a Mohegan-Pequot
+form, the confidence is high. For example, both record \textit{wetu} for
+'house', showing remarkable lexical stability across 110 years. Where they
+disagree, the circularity risk must be assessed: Fielding's dictionary is
+partially reconstructive, and some entries may derive from Prince-Speck
+itself. Using Fielding to ``verify'' Prince-Speck for such entries would be
+circular. The conversion workflow must track which Fielding entries derive
+from Prince-Speck (self-source) vs.\ from independent sources.
+
+\subsubsection{Wood and Winslow Corroborate Each Other}
+
+Wood (339 records) and Winslow (24 records) are the two earliest Wampanoag
+sources, separated by only 10 years. Where they agree on a form, the
+reading is likely correct. For example, both record \textit{matta} for 'no',
+and both record \textit{sachim} for 'chief'. Where they disagree --- as with
+Wood's \textit{abamocho} vs.\ Winslow's \textit{hobbamock} for 'devil' ---
+the disagreement may reflect real dialect differences (Wood records
+Massachusetts Bay, Winslow records Pokanoket) or different lexical roots
+entirely.
+
+\subsection{The Cognate Set Approach}
+
+The most powerful calibration tool is the cognate set: a word with the same
+meaning attested in multiple SNEA languages, with PA reconstruction as the
+anchor. Table~\ref{tab:cognate-set} shows a representative cognate set for
+basic vocabulary items.
+
+\begin{table}[h]
+\centering
+\caption{Cross-source cognate set for basic vocabulary}
+\label{tab:cognate-set}
+\small
+\begin{tabular}{llllll}
+\toprule
+\textbf{Gloss} & \textbf{Williams} & \textbf{Eliot} & \textbf{Edwards} & \textbf{Fielding} & \textbf{PA} \\
+ & \textbf{(NRG)} & \textbf{(WMP)} & \textbf{(MAH)} & \textbf{(MPQ)} & \\
+\midrule
+'house' & wétu & wetu & --- & wetu & *wiːkiwaːmi \\
+'water' & nipp & nippe & --- & nip & *nepyi \\
+'dog' & ayim & arum & --- & ayum & *aɬemwa \\
+'man' & weenawash & wénawaš & --- & --- & --- \\
+'fire' & apeisuwau & apeisuwâ & --- & --- & --- \\
+'I' & neen & neen & neen & neen & *niːra \\
+'two' & nees & nees & neesoh & nees & *niːšwi \\
+'no' & matta & matta & --- & matta & *mati- \\
+'woman' & squa & squa & --- & squa & *eːθkweːwa \\
+'five' & --- & pàpàna & nannah & --- & *nyaːlanwi \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The cognate set reveals several patterns:
+
+\begin{enumerate}
+  \item \textbf{Lexical stability:} Basic vocabulary items like 'house',
+    'water', 'I', and 'two' are nearly identical across all SNEA languages
+    and across 260+ years (Williams 1643 to Fielding 2013). This confirms
+    the reliability of the core vocabulary for cross-source calibration.
+
+  \item \textbf{Regular sound correspondences:} The PA *r reflex distinguishes
+    N-dialects (Massachusett \textit{neen} from *niːra) from Y-dialects
+    (Mohegan \textit{neen} with /n/ from a different PA source). The PA *ɬ
+    reflex distinguishes Narragansett /j/ (\textit{ayim}) from Massachusett
+    /r/ (\textit{arum}).
+
+  \item \textbf{Cross-source vowel confirmation:} The vowel in 'house' is
+    consistently \textit{e} across Williams, Eliot, and Fielding, confirming
+    the /i/ quality (from PA *iː). The vowel in 'water' is consistently
+    \textit{i} across all sources, confirming the /ɪ/ quality (from PA *e).
+
+  \item \textbf{Edwards' Mahican as an outlier:} Edwards' \textit{neesoh}
+    'two' shows the Mahican final vowel (\textit{-oh}) that is absent in the
+    other SNEA languages, reflecting Mahican's transitional status between
+    SNEA and Delaware.
+\end{enumerate}
+
+\subsection{How PA Reconstructions Anchor Vowel Quality}
+
+Proto-Algonquian reconstructions (Bloomfield 1925, 1946; Aubin 1975;
+Pentland 1979) provide the comparative evidence needed to choose among
+ambiguous vowel mappings. The logic is:
+
+\begin{enumerate}
+  \item For a given colonial spelling, identify the set of possible phonemic
+    interpretations (from the grapheme-to-phoneme mapping table).
+
+  \item Find the PA reconstruction for the cognate set.
+
+  \item Apply the known sound correspondences (PA $\rightarrow$ daughter
+    language) to predict the expected reflex.
+
+  \item Select the phonemic interpretation that matches the expected reflex.
+\end{enumerate}
+
+For example, Williams' \textit{wétu} 'house' has \textit{e} in the first
+syllable. The possible phonemic interpretations of Williams' \textit{e} are
+/iː/, /ɛ/, /ə/, or ∅. The PA reconstruction is *wiːkiwaːmi. The known
+correspondence is PA *iː $\rightarrow$ Narragansett /iː/. Therefore, the
+\textit{e} in \textit{wétu} represents /iː/, not /ɛ/ or /ə/. This is
+confirmed by the consistent \textit{ee} spelling in Eliot's Massachusett
+cognate \textit{wetu} (where \textit{ee} = /iː/).
+
+This logic applies to every ambiguous vowel in the corpus. The PA
+reconstruction is the anchor that resolves the ambiguity.
+
+\subsection{Calibration Confidence Levels}
+
+Each converted form is assigned a confidence level based on the strength of
+the calibration evidence:
+
+\begin{itemize}
+  \item \textbf{[high]} --- Confirmed by cognate in a more reliable source or
+    by PA reconstruction. No contradictory evidence.
+
+  \item \textbf{[med]} --- Default rule applies, no contradicting cognate,
+    but no confirming cognate either.
+
+  \item \textbf{[low]} --- Guess; no cognate available, default rule may not
+    apply.
+
+  \item \textbf{[FLAG]} --- Contradictory evidence; manual review needed.
+\end{itemize}
+
+The calibration pipeline produces a confidence-tagged output that allows
+downstream users to assess the reliability of each converted form. This
+transparency is essential for both scholarly analysis and revitalization
+applications, where the confidence level determines how the form can be
+used.

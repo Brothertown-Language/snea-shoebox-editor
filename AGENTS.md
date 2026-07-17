@@ -49,3 +49,25 @@ Closes #N
 ```
 
 Instead, close the stakeholder issue manually after deployment and stakeholder verification.
+
+## LaTeX Build Standard — Modern UTF-8 XeLaTeX
+
+All ".tex" files in this repository MUST use modern UTF-8 XeLaTeX
+(`xelatex`), not legacy 8-bit LaTeX (`pdflatex`). This is non-negotiable
+because the linguistic data requires:
+
+- Unicode IPA characters (ə, ʃ, tʃ, ŋ, ã, č, etc.)
+- Unicode diacritics and combining characters
+- Direct Unicode input without \-escape sequences
+- fontspec for OpenType font selection
+
+Every .tex file MUST begin with:
+
+```
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+```
+
+The build script (`paper/build.sh`) uses `latexmk -pdf` which auto-detects
+xelatex from the % !TEX program directive. Do NOT use `pdflatex` for any
+.tex file in this project.
