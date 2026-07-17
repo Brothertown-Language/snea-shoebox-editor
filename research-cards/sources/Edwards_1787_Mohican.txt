@@ -1,0 +1,576 @@
+\lx amisque
+\ge a beaver
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx anneh
+\ge to
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx annuweeweh nemannauwoo
+\ge he is a man of superior excellence or courage
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx annuweeweh wnissoo
+\ge he is more beautiful
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ghusooh
+\ge eight
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx hkeesque
+\ge eye
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx hpoon
+\ge winter
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx john uduhwhunuw peteran
+\ge john he loves him peter
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kahnuh nemannnauwoo
+\ge he is a man of extraordinary excellence or courage
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kahnuh wnissoo
+\ge he is very beautiful
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kameetseh
+\ge thou eatest
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx keah
+\ge thou or thee
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx keauwuh
+\ge ye
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx keesogh
+\ge the sun
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kmattannissauteuh
+\ge you are a coward
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kmeetseh
+\ge thou eatest
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx knisk
+\ge thy hand
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kogh
+\ge thy father
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kpeesquausooeh
+\ge you are a girl
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kpehtuhquisseh
+\ge thou art tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kpehtuhquissehmuh
+\ge ye are tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kpumseh
+\ge thou walkest
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kpumsehmuh
+\ge ye walk
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx kthuwhunin
+\ge I love thee 
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ktuhwhunoohmuh
+\ge I love you (in the plural)
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ktumhecan
+\ge thy hatchet
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ktumhecanoowuh
+\ge your hatchet
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mannito
+\ge a spirit, a spectre, or any thing frightful
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx matansautee
+\ge a coward
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mattipeh
+\ge sit down
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx meenuh
+\ge give it him
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx meetseh
+\ge eat thou
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx meetsoo
+\ge he eateth
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx metooque
+\ge wood
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mkissin
+\ge shoe
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mquoh
+\ge a bear
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mtandou
+\ge devil
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mtannit
+\ge ten
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mtissoo
+\ge he is homely
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mtissoo
+\ge an impostor (he is an impostor or bad man)
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx mtit
+\ge good for nought
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx naughees
+\ge my granchild
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nauneeweh
+\ge nine
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nauwoh
+\ge four
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nbey
+\ge water
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nboo
+\ge dead (he is dead)
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ndinnehnuh
+\ge I run to a place
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ndinnoghoh
+\ge I walk to a place
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ndiotuwauch wupkoh
+\ge I shall fight to-morrow
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ndoghpeh
+\ge I ride
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nduhwhuntammin
+\ge I love it
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nduhwhununk
+\ge I love them
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nduhwhunuw
+\ge I love him or her
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ndumhecan
+\ge my hatchet
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ndumhecannuh
+\ge our hatchet
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx neah
+\ge I
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx neaunuh
+\ge we
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx neesoh
+\ge two
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nemannauk
+\ge men
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nemannauw
+\ge man, a man
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nemannauwoo
+\ge he is a man
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nemeetseh
+\ge I eat
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nemoghhome
+\ge my grandfather
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nepoo
+\ge dead (he is dead)
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx netohcon
+\ge an elder brother
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ngheesum
+\ge a younger brother, a younger sister
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ngwittoh
+\ge one
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ngwittus
+\ge six
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nip
+\ge to die (I die)
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nmase
+\ge an elder sister
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nmees
+\ge elder sister
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nmeetseh
+\ge I eat
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nmeetsehnuh
+\ge we eat
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nnisk
+\ge my hand
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nochehnuh
+\ge I run from a place
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nogh
+\ge my father
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx noghhoh
+\ge three
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx noghnuh
+\ge our father
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nohhum
+\ge my grandmother
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx notoghoh
+\ge I walk from a place
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx npehtuhquisseh
+\ge I am tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx npehtuhquissehnuh
+\ge we are tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx npumseh
+\ge I walk
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx npumsehnuh
+\ge we walk
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nsase
+\ge my uncle by my mother's side
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nsconmoo
+\ge he is malicious
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nsconmowukon
+\ge malice
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nsees
+\ge my uncle
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nuchehque
+\ge my uncle by the father's side
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx nunon
+\ge five
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ocheh
+\ge from
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx oieet
+\ge the man who lives or dwells in a place
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx oioteet
+\ge the man who fights
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumse-an
+\ge thou walking
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumseauk
+\ge we walking
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumseauque
+\ge ye walking
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumse-cheek
+\ge they walking
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumseecheek
+\ge they who walk
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumseet
+\ge he walking, the man who walks
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx paumse-uh
+\ge I walking
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pautoh
+\ge fetch
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx peesquausoo
+\ge a girl
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pehtuhquessoouk
+\ge they are tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pehtuhquisseecheek
+\ge the tall men
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pehtuhquisseet
+\ge the man who is tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pehtuhquissoo
+\ge he is tall
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx penumpausoo
+\ge a boy
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx penumpausoouk
+\ge boys
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx peyuhtommauwukon
+\ge religion
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pootouwah
+\ge dress the kettle (make a fire)
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pumisseh
+\ge go, walk thou
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pumissoo
+\ge he goes, he walks
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx pumissoouk
+\ge they walk
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx sekeenundowukon
+\ge hatred
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx sepoo
+\ge river
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx stauw
+\ge fire
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx tehah
+\ge where
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx tmohhecan
+\ge a hatchet or ax
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx towohque
+\ge ear
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx tuneh
+\ge how
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx tupouwus
+\ge seven
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx uhwhundowukon
+\ge love
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx ukeesquan
+\ge his eyes
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx unisk
+\ge his hand
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx utoh
+\ge his heart
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx utumhecan
+\ge his hatchet
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx utumhecannoowuh
+\ge their hatchet
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx uwoh
+\ge he (that man), this man, or this thing
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx waughecheh
+\ge her husband
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx waunseet
+\ge the man who is beautiful
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx weekumuhm
+\ge house
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx weensis
+\ge his head
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx weeween
+\ge marry
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx weghaukun
+\ge hair
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wepeeton
+\ge his teeth
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnechun
+\ge his child
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnechunan
+\ge his child
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wneeweh
+\ge I thank you
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnissoo
+\ge he is beautiful
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnoghquetookoke ndinnetoghpeh
+\ge I ride to stockbridge
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnoghquetookoke nochetoghpeh
+\ge I ride from stockbridge
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnukuwoh ndiotuwoh
+\ge yesterday I fight
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wnukuwoh ndiotuwohpoh
+\ge yesterday I fought
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
+\lx wupkauch ndiotuwoh
+\ge to-morrow I fight
+\so Mahican [mjy]; Edwards 1787; JE — Observations on the Language of the Muhhekaneew Indians (1787)
+
