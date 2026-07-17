@@ -334,9 +334,6 @@ def sync_data():
             with SessionLocal() as s:
                 cnt = s.execute(text(f"SELECT count(*) FROM {t}")).scalar()
                 log_message(f"  {t}: {cnt} rows")
-                if t == 'records':
-                    cols = [c['name'] for c in ins.get_columns(t)]
-                    log_message(f"    fts_vector present: {'fts_vector' in cols}")
 
     from src.database.models.meta import SchemaVersion
     with SessionLocal() as s:
