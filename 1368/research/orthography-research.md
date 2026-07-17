@@ -467,7 +467,21 @@ During investigation of the live database:
 
 ---
 
-## 14. References
+---
+
+## 14. Related Work: Colonial Recorder Perception Problem
+
+The core challenge of this research card — English-speaking recorders misperceiving and mis-transcribing Algonquian phonemes — is a known phenomenon documented across Eastern North America. Two researchers' work is directly relevant:
+
+**Dr. Keith Cunningham** (Linguist, Nanticoke Indian Tribe). His doctoral dissertation *A Phonological Analysis of Nanticoke With Practical Applications for Language Revitalization* (Georgetown University) analyzes three 18th-century Nanticoke word lists (Heckewelder 1785) using the same methodology: historical phonology from colonial recorders, with the same challenges of multilingual informants and orthographic complexity. His 2024 Algonquian Conference presentation *A Revised Phonological Analysis of the Heckewelder Vocabulary of Nanticoke* directly parallels the Prince-Speck analysis — both involve a two-stage recorder chain (fieldworker → desk transcriber) that introduces compounding transcription errors, and both require identifying the transcriber's native-language orthographic conventions (German for Prince, English for Heckewelder). Cunningham's work demonstrates that the colonial recorder perception problem extends beyond SNEA into the broader Eastern Algonquian family.
+
+**Dr. Craig Kopris** (Independent scholar). His paper *Les sons wyandots perçus par des oreilles étrangères* (Wyandot sounds perceived by foreign ears, *Recherches amérindiennes au Québec*, 2014) is the exact framing of the Prince-Speck problem: how European recorders systematically misperceived and mis-transcribed indigenous phonemes. His *Wyandot Phonology: Recovering the Sound System of an Extinct Language* applies the same recovery methodology to an unrelated language family (Iroquoian), demonstrating that the foreign-ear perception problem is universal across colonial documentation of North American languages. His Dictionary of Wyandot project (NEH award FN-255576-17) shows the long-term application of these methods to language revitalization.
+
+The Prince-Speck glossary (446 entries) is unique among the SNEA sources in having a documented two-stage fieldworker-transcriber chain (Speck collected, Prince transcribed) with known linguistic biases (Prince's Neogrammarian training). This makes it the most directly comparable case to the recorder-chain problems that both Cunningham and Kopris address in their respective language families.
+
+---
+
+## 15. References
 
 - Prince, J. Dyneley & Speck, Frank G. (1904). "Glossary of the Mohegan-Pequot Language." *American Anthropologist* n.s. 6(1): 18–45. [First publication]
 - Prince, J. Dyneley & Speck, Frank G. (1906). "Glossary of the Mohegan-Pequot Language." In *Boas Anniversary Volume*, pp. 18–45. New York: G. E. Stechert. [Reprint, typographically identical]

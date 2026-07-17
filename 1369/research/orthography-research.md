@@ -495,3 +495,15 @@ Zeisberger, David. 1772. *Zeisberger's Delaware Vocabulary of 1772*.
 
 Zeisberger, David. 1827. *Grammar of the Language of the Lenni Lenape or
 Delaware Indians*. Philadelphia.
+
+---
+
+## Related Work: Colonial Recorder Perception Problem
+
+The core challenge of this research card — English-speaking recorders misperceiving and mis-transcribing Algonquian phonemes — is a known phenomenon documented across Eastern North America. Two researchers' work is directly relevant:
+
+**Dr. Keith Cunningham** (Linguist, Nanticoke Indian Tribe). His doctoral dissertation *A Phonological Analysis of Nanticoke With Practical Applications for Language Revitalization* (Georgetown University) analyzes three 18th-century Nanticoke word lists (Heckewelder 1785) using the same methodology: historical phonology from colonial recorders, with the same challenges of multilingual informants and orthographic complexity. His 2024 Algonquian Conference presentation *A Revised Phonological Analysis of the Heckewelder Vocabulary of Nanticoke* directly parallels the Edwards analysis — both involve 18th-century recorders with greater linguistic awareness than their 17th-century predecessors, both document preaspiration more reliably than earlier sources, and both require PA comparative calibration. Cunningham's work demonstrates that the colonial recorder perception problem extends beyond SNEA into the broader Eastern Algonquian family.
+
+**Dr. Craig Kopris** (Independent scholar). His paper *Les sons wyandots perçus par des oreilles étrangères* (Wyandot sounds perceived by foreign ears, *Recherches amérindiennes au Québec*, 2014) is the exact framing of the Edwards problem: how European recorders systematically misperceived and mis-transcribed indigenous phonemes. His *Wyandot Phonology: Recovering the Sound System of an Extinct Language* applies the same recovery methodology to an unrelated language family (Iroquoian), demonstrating that the foreign-ear perception problem is universal across colonial documentation of North American languages. His Dictionary of Wyandot project (NEH award FN-255576-17) shows the long-term application of these methods to language revitalization.
+
+The Edwards Mahican corpus (144 records) is unique among the SNEA sources in being recorded by a fluent second-language speaker of the language (Edwards learned Mahican as a child from playmates). This makes Edwards the most phonetically reliable colonial recorder in the corpus — but the `gh` grapheme mystery and `uh` reduction patterns documented in this card show that even a fluent L2 speaker's orthography is filtered through English phonological categories, the same problem that both Cunningham and Kopris address in their respective language families.

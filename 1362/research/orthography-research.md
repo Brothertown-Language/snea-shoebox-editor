@@ -331,6 +331,18 @@ The 3 `\ph` entries alone are insufficient for ML training. Recommendation:
 
 ---
 
+---
+
+## 11. Related Work: Colonial Recorder Perception Problem
+
+The core challenge of this research card — English-speaking recorders misperceiving and mis-transcribing Algonquian phonemes — is a known phenomenon documented across Eastern North America. Two researchers' work is directly relevant:
+
+**Dr. Keith Cunningham** (Linguist, Nanticoke Indian Tribe). His doctoral dissertation *A Phonological Analysis of Nanticoke With Practical Applications for Language Revitalization* (Georgetown University) analyzes three 18th-century Nanticoke word lists (Heckewelder 1785) using the same methodology: historical phonology from colonial recorders, with the same challenges of multilingual informants and orthographic complexity. His 2024 Algonquian Conference presentation *A Revised Phonological Analysis of the Heckewelder Vocabulary of Nanticoke* directly parallels the Williams analysis — both involve English-speaking recorders working without standardized orthography, both require PA comparative calibration, and both feed into practical language revitalization. Cunningham's work demonstrates that the colonial recorder perception problem extends beyond SNEA into the broader Eastern Algonquian family (Nanticoke, Maryland Algonquian).
+
+**Dr. Craig Kopris** (Independent scholar). His paper *Les sons wyandots perçus par des oreilles étrangères* (Wyandot sounds perceived by foreign ears, *Recherches amérindiennes au Québec*, 2014) is the exact framing of the Williams problem: how European recorders systematically misperceived and mis-transcribed indigenous phonemes. His *Wyandot Phonology: Recovering the Sound System of an Extinct Language* applies the same recovery methodology to an unrelated language family (Iroquoian), demonstrating that the foreign-ear perception problem is universal across colonial documentation of North American languages. His Dictionary of Wyandot project (NEH award FN-255576-17) shows the long-term application of these methods to language revitalization.
+
+The Williams Narragansett corpus (2,134 records, only 3 with phonetic transcription) represents one of the most extreme cases of this problem — but the methodological framework for addressing it is established in the parallel work of Cunningham (Algonquian) and Kopris (Iroquoian).
+
 ## 10. Scholarly Bibliography
 
 Bloomfield, Leonard. (1925). "On the Sound-System of Central Algonquian." *Language* 1(4): 130–156.

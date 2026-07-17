@@ -444,4 +444,18 @@ Valentine, J. Randolph. (2001). *Nishnaabemwin Reference Grammar*. University of
 
 ---
 
+---
+
+## Related Work: Colonial Recorder Perception Problem
+
+The core challenge of this research card — English-speaking recorders misperceiving and mis-transcribing Algonquian phonemes — is a known phenomenon documented across Eastern North America. Two researchers' work is directly relevant:
+
+**Dr. Keith Cunningham** (Linguist, Nanticoke Indian Tribe). His doctoral dissertation *A Phonological Analysis of Nanticoke With Practical Applications for Language Revitalization* (Georgetown University) analyzes three 18th-century Nanticoke word lists (Heckewelder 1785) using the same methodology: historical phonology from colonial recorders, with the same challenges of multilingual informants and orthographic complexity. His 2024 Algonquian Conference presentation *A Revised Phonological Analysis of the Heckewelder Vocabulary of Nanticoke* demonstrates that the colonial recorder perception problem extends beyond SNEA into the broader Eastern Algonquian family. Cunningham's work on Nanticoke revitalization (co-authoring a Nanticoke textbook) parallels the practical application of the Fielding dictionary for Mohegan language reclamation.
+
+**Dr. Craig Kopris** (Independent scholar). His paper *Les sons wyandots perçus par des oreilles étrangères* (Wyandot sounds perceived by foreign ears, *Recherches amérindiennes au Québec*, 2014) is the exact framing of the Fielding/Prince-Speck problem: how European recorders systematically misperceived and mis-transcribed indigenous phonemes. His *Wyandot Phonology: Recovering the Sound System of an Extinct Language* applies the same recovery methodology to an unrelated language family (Iroquoian), demonstrating that the foreign-ear perception problem is universal across colonial documentation of North American languages. His Dictionary of Wyandot project (NEH award FN-255576-17) shows the long-term application of these methods to language revitalization.
+
+The Mohegan-Pequot corpus is unique among the SNEA sources in having a last-speaker corpus (Fidelia Fielding's diaries) alongside a modern practical orthography (Fielding 2013). This positions it as the most phonologically reliable source — but the Prince-Speck (1904) glossary, with its German-influenced transcription, reintroduces the foreign-ear perception problem that Kopris documents for Wyandot.
+
+---
+
 *Co-authored with AI: OpenCode (opencode/deepseek-v4-flash-free)*
