@@ -1,0 +1,267 @@
+% Section 1 — Conversion Overview
+% TLDR for linguist reviewers. Proto-examples for pending specs,
+% real examples for completed specs, technique comparison, status table,
+% and related work on the colonial recorder perception problem.
+
+\subsection{Conversion Examples and Methodologies}
+\label{sec:examples}
+
+This section presents concrete orthography-to-phoneme conversions across the
+eight source languages. For sources where implementation is complete, real
+conversion results are shown. For sources where only research has been
+completed, \textbf{[PROTO]} examples are given --- these represent the current
+best hypothesis grounded in the research evidence, with documented uncertainty.
+
+\subsubsection*{Narragansett (Williams 1643) --- \texttt{[PROTO]}}
+
+\begin{quote}
+\textbf{Input:} \texttt{w\'etu} (house) \\
+\textbf{Output:} /wi:tə w/ \\
+\textbf{Method:} Comparative calibration via PA *wi:kiwa:mi, Massachusett
+cognate \textit{wetu} (Eliot). The initial \textit{w\'e-} maps to /wi:/ via
+Williams' circumflex-as-length convention; final \textit{-tu} maps to /tə w/
+via PA reflex. \\
+\textbf{Uncertainty:} Vowel length in the first syllable is inferred from the
+circumflex accent, which Williams uses for primary stress --- whether this
+marks phonemic length or stress prominence is debated.
+\end{quote}
+
+\begin{quote}
+\textbf{Input:} \texttt{Aaunchem\'okaw} (Record 3834) \\
+\textbf{Output:} /ã:čimo:hka:w/ \texttt{[PROTO]} \\
+\textbf{Method:} FSM with preaspiration inference. Williams writes \textit{k}
+but the only phonetic record (\textbackslash ph field) shows /hk/. The
+preaspiration gap --- English-speaking recorders routinely fail to hear /h/
+before stops --- is the single most important finding for this source. \\
+\textbf{Uncertainty:} The nasalization of the initial vowel is inferred from
+the \textit{Aaun-} spelling, which may represent /ã:/ or /aun/.
+\end{quote}
+
+\subsubsection*{Wampanoag (Trumbull/Eliot 1903) --- \texttt{[PROTO]}}
+
+\begin{quote}
+\textbf{Input:} \texttt{matta} (no, not) \\
+\textbf{Output:} /mata/ \\
+\textbf{Method:} Direct Eliot orthography mapping. Eliot's system is the most
+regularized colonial orthography in the corpus. Confirmed via PA *mati-.
+\end{quote}
+
+\begin{quote}
+\textbf{Input:} \texttt{achmōwonk} (devil) \\
+\textbf{Output:} /čomu:wa\ng k/ \texttt{[PROTO]} \\
+\textbf{Method:} 4-stage FSM pipeline: (1) normalize ō (Eliot's oo-ligature) to /u:/, (2) map
+\textit{ach-} to /č/ via Eliot's c-before-a rule, (3) resolve the
+\textit{-wonk} suffix via PA *-a:kani, (4) comparative fallback against
+Pokanoket \textit{hobbamock} (Winslow) to check for dialect divergence. \\
+\textbf{Uncertainty:} The ō symbol (Eliot's oo-ligature,
+U+A74F) was historically misidentified as an infinity symbol. Its phonetic
+value is long /u:/, but the precise quality (tense vs.\ lax) is debated.
+\end{quote}
+
+\subsubsection*{Mohegan-Pequot (Fielding 2013) --- \texttt{[PROTO]}}
+
+\begin{quote}
+\textbf{Input:} \texttt{wetu} (house) \\
+\textbf{Output:} /wetu/ \\
+\textbf{Method:} Direct 1:1 phoneme mapping. Fielding's modern practical
+orthography is essentially phonemic. Confirmed via PA *wi:kiwa:mi and
+cognate with Narragansett \textit{w\'etu} and Massachusett \textit{wetu}.
+\end{quote}
+
+\subsubsection*{Wampanoag (Wood 1634) --- \texttt{[PROTO]}}
+
+\begin{quote}
+\textbf{Input:} \texttt{abbona} (five) \\
+\textbf{Output:} /apana/ \texttt{[PROTO]} \\
+\textbf{Method:} Normalize \textit{b} to /p/ (Wood writes \textit{b} where
+Eliot/Trumbull use \textit{p} --- direct evidence of voicing neutralization).
+Segment the initial \textit{a-} as a demonstrative prefix. \\
+\textbf{Uncertainty:} Wood's triple spelling for 'devil'
+(\textit{abbomocho}/\textit{abomocho}/\textit{abamacho}) is the strongest
+evidence in the corpus for colonial vowel instability. The medial vowel
+could be /a/, /ə/, or /o/.
+\end{quote}
+
+\subsubsection*{Mahican (Edwards 1787) --- \texttt{[PROTO]}}
+
+\begin{quote}
+\textbf{Input:} \texttt{ghusooh} (eight) \\
+\textbf{Output:} /xə sə w/ \texttt{[PROTO]} \\
+\textbf{Method:} The \textit{gh} grapheme is the most unusual across all eight
+sources. Candidates include /x/ (voiceless velar fricative), /h/, or /k/.
+PA *nešwa:šika and Wampanoag cognate \textit{shwoshuk} suggest /x/
+is most likely --- a Mahican phoneme not present in SNEA languages. \\
+\textbf{Uncertainty:} The \textit{gh} value cannot be confirmed without
+cross-linguistic cognate evidence from Munsee Delaware or other Mahican-adjacent
+languages.
+\end{quote}
+
+\subsubsection*{Mohegan-Pequot (Prince-Speck 1904) --- \texttt{[PROTO]}}
+
+\begin{quote}
+\textbf{Input:} \texttt{bahkeder} \\
+\textbf{Output:} /pahketə r/ \texttt{[PROTO]} \\
+\textbf{Method:} German orthography normalizer: \textit{b-} initial = /p/
+(German final devoicing rule applied to perception), \textit{-hk-} = /hk/
+(preaspiration preserved --- Prince-Speck is one of the few sources that
+writes preaspiration explicitly), \textit{-der} = /tə r/ (German
+\textit{d} = /t/ in final position). \\
+\textbf{Uncertainty:} The \textit{-er} suffix may represent /ə r/ or
+a reduced syllable. Loanword detection needed --- \textasciitilde20--30\% of
+the 446 entries are English loanwords.
+\end{quote}
+
+\subsection{Technique Comparison}
+\label{sec:techniques}
+
+Table~\ref{tab:techniques} compares the approaches considered across all
+sources, with expected accuracy and rationale for selection or rejection.
+
+\begin{table}[ht]
+\centering
+\caption{Technique comparison across SNEA sources}
+\label{tab:techniques}
+\small
+\begin{tabular}{lp{3cm}p{2.5cm}p{4.5cm}}
+\toprule
+\textbf{Technique} & \textbf{Sources} & \textbf{Expected Accuracy} & \textbf{Rationale} \\
+\midrule
+Regex-based conversion & None & Low &
+Rejected --- ambiguities are fundamentally context-dependent; regex cannot
+distinguish /a/ from /ə/ from /a:/ in Williams' orthography without
+comparative evidence. \\
+\midrule
+FSM with weighted transitions & Narragansett, Wampanoag, Mahican & Moderate &
+Selected --- handles context-dependent ambiguity via state transitions;
+weights encode probability from PA cognate frequency. \\
+\midrule
+1:1 phoneme mapping & Mohegan-Pequot (Fielding) & High &
+Selected --- Fielding's modern practical orthography is already phonemic;
+conversion is a direct lookup. \\
+\midrule
+ML classifier & Narragansett & Unknown &
+Selected but blocked --- only 3 records have phonetic (\textbackslash ph)
+fields; training data insufficient without hand-annotating \textasciitilde50
+entries. \\
+\midrule
+Comparative calibration & All colonial sources & High for confirmed cognates &
+Selected --- PA reconstructions and sister-language evidence (Massachusett,
+Mohegan) disambiguate vowel quality and preaspiration. \\
+\midrule
+4-stage FSM pipeline & Wampanoag (Trumbull) & Moderate--High &
+Selected --- preprocessing $\rightarrow$ phonemic conversion $\rightarrow$
+comparative fallback $\rightarrow$ statistical verification. \\
+\midrule
+Loanword detection FSM & Mohegan-Pequot (Prince-Speck) & High &
+Selected --- \textasciitilde20--30\% English loanwords must be identified
+before phonemic conversion to avoid false cognate matches. \\
+\midrule
+German orthography normalizer & Mohegan-Pequot (Prince-Speck) & High &
+Selected --- Prince's Neogrammarian training imposed German conventions
+(\textit{tsh} for /ʃ/, \textit{z} for /ts/, Dehnungs-\textit{h}). \\
+\midrule
+Morphological segmentation & Mahican (Edwards) & Moderate &
+Selected --- sentence-level entries require prefix/suffix parsing
+(\textit{k-} 2nd person, \textit{n-} 1st person) before conversion. \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Source Status and Expected KPIs}
+\label{sec:status}
+
+Table~\ref{tab:status} shows the current status of each source. Research is
+complete for all eight sources. Implementation is pending for all sources.
+Proto-KPI targets are research-grounded predictions based on the known
+ambiguity profile of each source.
+
+\begin{table}[ht]
+\centering
+\caption{Source status and proto-KPI targets}
+\label{tab:status}
+\small
+\begin{tabular}{lcccc}
+\toprule
+\textbf{Source} & \textbf{Research} & \textbf{Implementation} &
+\textbf{Expected Recall} & \textbf{Expected Accuracy} \\
+\midrule
+Narragansett (Williams 1643) & Complete & Pending & 85--90\% & 70--80\% \\
+Wampanoag (Trumbull 1903) & Complete & Pending & 90--95\% & 80--90\% \\
+Mohegan-Pequot (Fielding 2013) & Complete & Pending & 95--98\% & 90--95\% \\
+Wampanoag multi-source & Complete & Pending & 85--90\% & 75--85\% \\
+Wampanoag (Winslow 1624) & Complete & Pending & 70--80\% & 60--70\% \\
+Wampanoag (Wood 1634) & Complete & Pending & 80--85\% & 65--75\% \\
+Mohegan-Pequot (Prince-Speck 1904) & Complete & Pending & 85--90\% & 75--85\% \\
+Mahican (Edwards 1787) & Complete & Pending & 80--85\% & 70--80\% \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\noindent\textbf{Note:} Expected accuracy is lower for sources with extreme
+vowel ambiguity (Williams, Wood) or tiny corpora (Winslow). Mohegan-Pequot
+(Fielding) is expected to have the highest accuracy because its modern
+practical orthography is already phonemic. These targets will be updated as
+implementation validates or refutes the research predictions.
+
+\subsection{The Colonial Recorder Perception Problem}
+\label{sec:related-work}
+
+Every source in this study shares a fundamental challenge: English-speaking
+recorders with different linguistic backgrounds hearing Algonquian phonemes
+through their native phonological filter. This is not unique to SNEA --- it is
+a well-documented phenomenon across colonial documentation of North American
+languages.
+
+\subsubsection*{Dr.\ Keith Cunningham --- Nanticoke}
+
+Dr.\ Keith Cunningham (Linguist, Nanticoke Indian Tribe) completed his
+doctoral dissertation \emph{A Phonological Analysis of Nanticoke With
+Practical Applications for Language Revitalization} at Georgetown University
+(2024). The dissertation analyzes three 18th-century Nanticoke word lists
+(Heckewelder 1785) using the same methodology employed here: historical
+phonology from colonial recorders, with the same challenges of multilingual
+informants and orthographic complexity. His 2024 Algonquian Conference
+presentation \emph{A Revised Phonological Analysis of the Heckewelder
+Vocabulary of Nanticoke} directly parallels the analyses in this document.
+Cunningham has also co-authored a Nanticoke language textbook, bridging
+directly into practical revitalization --- the same goal as the SNEA
+orthography-to-phoneme conversion pipeline.
+
+Cunningham's work demonstrates that the colonial recorder perception problem
+extends beyond SNEA into the broader Eastern Algonquian family (Nanticoke,
+Maryland Algonquian). His methodology --- PA comparative calibration,
+recorder-bias identification, cross-source verification --- is directly
+transferable to the SNEA sources.
+
+\subsubsection*{Dr.\ Craig Kopris --- Wyandot}
+
+Dr.\ Craig Kopris (Independent scholar) has nearly three decades of experience
+in language description and endangered language revitalization, with emphasis
+on Iroquoian languages. His research note \emph{Les sons wyandots per\c{c}us
+par des oreilles \'etrang\`eres} (Wyandot Sounds through Foreign Ears,
+\emph{Recherches am\'erindiennes au Qu\'ebec}, 2014) is the exact framing of
+the core problem addressed in this document: how European recorders
+systematically misperceived and mis-transcribed indigenous phonemes. Kopris
+demonstrates that knowing the sound system of the transcriber's first language
+is the key to recovering the phonetic details of the target language.
+
+His paper \emph{Wyandot Phonology: Recovering the Sound System of an Extinct
+Language} (Proceedings of the Second Annual High Desert Linguistics Society
+Conference, 1999) applies the same recovery methodology to Wyandot, a
+Northern Iroquoian language unrelated to Algonquian. This demonstrates that
+the foreign-ear perception problem is universal across colonial documentation
+of North American languages, not limited to any single language family. His
+Dictionary of Wyandot project (NEH award FN-255576-17) shows the long-term
+application of these methods to language revitalization.
+
+\subsubsection*{Relevance to This Project}
+
+The work of Cunningham and Kopris establishes that the methodological
+framework for addressing the colonial recorder perception problem is well
+established. The SNEA orthography-to-phoneme project extends this framework
+to eight sources across four languages (Narragansett, Wampanoag, Mohegan-Pequot,
+Mahican) spanning 263 years of colonial documentation (1624--1904). The
+techniques developed here --- FSM with weighted transitions, comparative
+calibration via PA, colonial English phonology baselines, preaspiration
+detection --- contribute to an ongoing methodological conversation about
+recovering phonology from colonial sources across Eastern North America.

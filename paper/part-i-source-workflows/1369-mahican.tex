@@ -1,0 +1,537 @@
+% Mahican (Edwards 1787) — Source Workflow
+% Issue #1369
+% Status: Research complete, implementation pending
+
+\section{Mahican: Edwards 1787}
+\label{sec:1369}
+
+\subsection{Source Description}
+
+\subsubsection{Jonathan Edwards Jr.\ --- Biographical Context}
+
+Jonathan Edwards Jr.\ (May 26, 1745 -- August 1, 1801) was a
+Congregationalist minister, theologian, college president, and linguist. He
+was the son of the theologian Jonathan Edwards Sr.\ (Princeton's 3rd
+president). He graduated from Princeton University in 1765 and served as
+president of Union College in Schenectady, New York from 1799 until his death
+in office.
+
+Edwards grew up in Stockbridge, Massachusetts, a ``praying town'' where
+Mahican people were the majority population (approximately 150 Mahican
+families versus approximately 12 white families). He learned Mahican as a
+child from playmates, becoming fluent. At age 10 (1755), his father sent him
+to live in the Iroquois settlement of Onaquaga (Onohoquaga) to learn Oneida,
+giving him first-hand knowledge of both Algonquian and Iroquoian language
+families.
+
+Unlike his father, who refused to learn Mahican (calling it ``barbarous''),
+Edwards Jr.\ defended the language's complexity, demonstrated that it had
+abstract terms (love, hatred, malice, religion), and translated the Lord's
+Prayer into Mahican. He consulted a Mahican elder, ``Captain Yohum,'' for
+revisions before publication. George Washington, James Madison, and Thomas
+Jefferson all received copies of his treatise.
+
+\subsubsection{The 1788 Publication}
+
+\textbf{Full title:} \emph{Observations on the Language of the Muhhekaneew
+Indians; in which the Extent of that Language in North-America is shewn; its
+Genius Grammatically Traced; some of its Peculiarities, and some Instances
+of Analogy between that and the Hebrew are Pointed Out.}
+
+Communicated to the Connecticut Society of Arts and Sciences on October 23,
+1787. Published 1788 by Josiah Meigs, New Haven. A second edition with notes
+by John Pickering appeared in 1823 (in Massachusetts Historical Collections).
+
+The treatise includes:
+
+\begin{itemize}
+  \item A grammatical sketch of Mahican (parts of speech, person marking,
+    tense)
+  \item A comparative glossary: English--Mahican--Shawnee
+  \item A comparative glossary: English--Mahican--Chippeway/Ojibwa
+  \item Numerals 1--10 in Mahican and Mohawk
+  \item The Lord's Prayer in Mahican and in the ``language of the Six
+    Nations''
+  \item Word lists organized by semantic domain
+  \item Observations on the geographic extent of Algonquian languages
+  \item Speculative comparison with Hebrew (a common 18th-century trope)
+\end{itemize}
+
+Edwards uses the term ``Mohegan'' interchangeably with ``Muhhekaneew'' for
+the language, though he distinguishes it clearly from Mohegan-Pequot
+(Southern New England). His dialect is specifically Stockbridge Mahican.
+
+\subsubsection{Orthography System}
+
+Edwards uses an English-based ad-hoc orthography typical of 18th-century
+colonial sources. He provides a pronunciation key indicating his intended
+sound values for vowel letters.
+
+\textbf{Consonant values (relatively clear):}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Grapheme} & \textbf{Likely value} & \textbf{Evidence} \\
+\midrule
+\textit{p, t, k} & /p, t, k/ (unaspirated or lightly aspirated) & PA *p, *t, *k $>$ Mahican /p, t, k/ \\
+\textit{b, d, g} & Probably /p, t, k/ after nasals or in voiced contexts & Unclear; English-orthography convention \\
+\textit{m, n} & /m, n/ & Straightforward \\
+\textit{s} & /s/ & PA *s, *š merged to /s/ in Mahican by modern period \\
+\textit{sh} & /š/ & English convention \\
+\textit{h} & /h/ & Explicitly written; Edwards is unusually consistent here \\
+\textit{w, y} & /w, j/ & Glides \\
+\textit{ch} & /č/ & English convention \\
+\textit{gh} & \textbf{UNKNOWN} & See \S\ref{sec:1369-gh} \\
+\bottomrule
+\end{tabular}
+\caption{Edwards' consonant graphemes and likely values}
+\label{tab:1369-consonants}
+\end{table}
+
+\textbf{Vowel values (more ambiguous):}
+
+The key insight (Goddard 2008, Masthay 1991, Warne) is that Edwards uses
+\textit{e} to represent /iː/ in many cases. This is confirmed by his
+pronunciation key and by cognate comparison.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Edwards grapheme} & \textbf{Likely Mahican phoneme} & \textbf{PA source} & \textbf{Example} \\
+\midrule
+\textit{ee} & /iː/ & PA *iː & \textit{neesoh} `two' (PA *niːšwi) \\
+\textit{e} & /iː/ or /i/ & PA *i(ː) & \textit{seepoo} `river' (PA *siːpoːwi) \\
+\textit{a} & /a/ or /aː/ & PA *a, *eː $\rightarrow$ PEA *aː & \textit{nannah} `five' (PA *nyaːlanwi) \\
+\textit{o, oo} & /o/ or /u/ & PA *o(ː) & \\
+\textit{u} & /ə/ (schwa) in unstressed; possibly /o/ elsewhere & PA *e $\rightarrow$ PEA *ə & \textit{muhhekaneew} (with mə h-) \\
+\textit{au, aw} & /a/ + /w/ or /aː/ & & \\
+\textit{uh} & /ə h/ or /ə/ & & Frequent in final syllables \\
+\bottomrule
+\end{tabular}
+\caption{Edwards' vowel graphemes and likely values}
+\label{tab:1369-vowels}
+\end{table}
+
+\subsection{Phonemic Reconstruction}
+
+\subsubsection{Key Phonological Correspondences (PA $\rightarrow$ Mahican)}
+
+From Warne's analysis of the Schmick manuscript, confirmed across sources:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{PA} & \textbf{Old Mahican} & \textbf{Modern Mahican} & \textbf{Notes} \\
+\midrule
+*p & /p/ & /p/ & No change \\
+*t & /t/ & /t/ & No change \\
+*k & /k/ & /k/ & No change \\
+*č & /č/ & /č/ & No change \\
+*θ{} & /n/ & /n/ & \textbf{Merged} with *n by Old Mahican period \\
+*l & /n/ & /n/ & \textbf{Merged} with *n by Old Mahican period \\
+*n & /n/ & /n/ & \\
+*s & /s/ & /s/ & \\
+*š & /s/ & /s/ & Merged to /s/ by Modern Mahican \\
+*m & /m/ & /m/ & \\
+*h & /h/ & /h/ & \\
+*iː & /iː/ & /iː/ & \\
+*i & /i/ & /i/ & \\
+*eː & /a/ (lax low) & /a/ & \textbf{Retracted/lowered} from *eː to /a/ in PEA \\
+*e & /ə/ (schwa) & /ə/ & Reduced to schwa (pan-EA development) \\
+*aː & /aː\~ãː/ & /ãː/ & Nasalized in modern Mahican \\
+*a & /a/ & /a/ & \\
+*oː & /uː/ & /uː/ & \\
+*o & /o/ & /o/ & Marginal phoneme even in PA \\
+\bottomrule
+\end{tabular}
+\caption{PA $\rightarrow$ Mahican sound correspondences}
+\label{tab:1369-correspondences}
+\end{table}
+
+\subsubsection{The /iː/ vs.\ /eː/ Issue}
+
+Recent work (documented in \emph{ImportantMahicanVowel2.pdf} from
+munseedelaware.com, with consultation by Goddard and Masthay) has established
+that Edwards' \textit{e} frequently represents /iː/, NOT /eː/. Goddard
+confirmed (c.\ 2023 email, cited in the Mahican vowel paper) that the second
+vowel of the tribal name was absolutely not /eː/ and is properly the ``lower
+high'' version of the vowel /iː/, produced by setting the throat and tongue
+in a position to say the English word ``hit'' and then producing the sound.
+
+Evidence for this mapping:
+
+\begin{itemize}
+  \item Edwards writes \textit{Muhhekaneew}---the second vowel is /iː/
+  \item \textit{Neesoh} `two'---cf.\ PA *niːšwi, Munsee /niːšə/
+  \item \textit{Seepoo} `river'---cf.\ PA *siːpoːwi, Munsee /siːpə w/
+  \item Goddard's 2008 paper transcribes Dick's /kīsōx/ `sun' and /θ{}īpə w/
+    `river' with /iː/---even where the English spelling suggests ``e''
+  \item Goddard's 2010 phoneme inventory for Mahican lists NO /eː/ phoneme
+\end{itemize}
+
+\textbf{Impact on orthography conversion:} Edwards' \textit{e} should NOT be
+mapped to /e/ or /ɛ/ by default. The default mapping should be /i(ː)/ unless
+cognate evidence specifically indicates a different value.
+
+\subsection{The \textit{gh} Grapheme Mystery}
+\label{sec:1369-gh}
+
+Edwards uses \textit{gh} in several words where the phonological value is
+uncertain. Cross-linguistic comparison suggests multiple possible values:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+\textbf{Candidate} & \textbf{Evidence For} & \textbf{Evidence Against} \\
+\midrule
+/x/ (voiceless velar fricative) & Schmick uses German \textit{ch} for /x/ in cognate forms; PA *h before consonant sometimes appears as /x/ in daughter languages & \\
+/h/ & Simple /h/ is the default reflex of PA *h & Edwards also writes \textit{h} separately, so \textit{gh} may be a distinct phoneme \\
+/k/ (lenis/voiced allophone) & English \textit{gh} occasionally used for /k/ in colonial sources & Unlikely given that Edwards has \textit{k} for /k/ \\
+\bottomrule
+\end{tabular}
+\caption{Candidate values for the \textit{gh} grapheme}
+\label{tab:1369-gh}
+\end{table}
+
+\textbf{Recommended resolution:} Use comparative evidence. If a cognate from
+Schmick, Munsee, or Wampanoag shows /x/, the mapping is /x/. If it shows /h/,
+the mapping is /h/. If no cognate exists, flag as ambiguous.
+
+\subsection{Phonological Processes Affecting Edwards' Orthography}
+
+\subsubsection{Vowel Reduction and \textit{uh}}
+
+Edwards frequently writes \textit{u} and \textit{uh} in unstressed syllables.
+The PA *e regularly became schwa /ə/ in Proto-Eastern Algonquian. In
+Edwards' orthography, unstressed \textit{u} most likely = /ə/;
+\textit{uh} may represent /ə h/ or breathy schwa in a checked syllable.
+Munsee shows parallel reduction: PA *e $\rightarrow$ PEA *ə
+$\rightarrow$ Munsee /ə/ (raised to /i/ or /u/ before certain clusters).
+
+\subsubsection{Nasalization of *aː}
+
+PA *aː developed a nasal quality in Mahican, marked by Schmick with a tilde
+(ã). Warne considers this a ``secondary feature'' that was optional in Old
+Mahican but generalized to ALL instances of /aː/ by the Modern Mahican
+period. Edwards does NOT mark nasalization, so Edwards' \textit{a} may
+represent either oral /aː/ or nasal /ãː/ depending on cognate evidence.
+
+\subsubsection{Word-Final Vowel Deletion}
+
+PA word-final vowels were deleted in Mahican (a pan-Eastern Algonquian
+process). Edwards sometimes writes these (reflecting an older/more careful
+pronunciation) and sometimes omits them. For example, PA *-i (plural marker)
+sometimes appears as \textit{-eh} or \textit{-uh} in Edwards, sometimes
+absent.
+
+\subsubsection{Schwa Lowering Before /h, x/}
+
+Before /h/ and /x/, schwa /ə/ is lowered to /a/ in Mahican (Warne).
+This accounts for alternations where Edwards writes \textit{a} where PA
+reconstruction predicts *e. Example: \textit{ntah} `my heart' $<$ PA *-teːh-
+(with *eː $\rightarrow$ *a and schwa-lowering in certain environments).
+
+\subsubsection{Rounding Assimilation}
+
+PA *e rounds to Mahican /o/ when adjacent to *w. This explains forms like
+the word for `tree' and `beaver' where Edwards' \textit{o} corresponds to PA
+*e. (Warne's rule ordering: rounding before laxing.)
+
+\subsection{Morphological Patterns in Edwards' Data}
+
+Edwards' data reveals several regular morphological patterns that can aid
+word segmentation before orthography conversion.
+
+\subsubsection{Person Prefixes}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Person} & \textbf{Prefix} & \textbf{Edwards example} & \textbf{Gloss} \\
+\midrule
+1st sg. & n- & \textit{ncmeetseh, ncmeetfeh} & `I eat' \\
+2nd sg. & k- & \textit{kcmeetseh, ka meetjeh} & `you eat' \\
+3rd sg. & w-/∅- & \textit{pumiffoo} & `he walks' \\
+\bottomrule
+\end{tabular}
+\caption{Person prefixes in Edwards' data}
+\label{tab:1369-prefixes}
+\end{table}
+
+Edwards himself noted these correspondences and compared them to Hebrew
+prefixes, which was one of his major observations.
+
+\subsubsection{Verbal Suffixes}
+
+Edwards records frequent verbal suffixes: \textit{-uh, -eh, -seh} (likely
+aspect/mood markers), \textit{-oo} (3rd person singular independent
+indicative, e.g., \textit{pumiffoo}), and \textit{-nuh} (1st person plural,
+e.g., \textit{ncmeetfchnuh} `we eat').
+
+\subsubsection{Noun Inflection}
+
+Possessive prefixes precede nouns (e.g., \textit{noghkuh} `my father').
+Plural formation occurs via suffixation (e.g., \textit{penumpaufoo} `boy'
+$\rightarrow$ \textit{penumpaufoouk} `boys').
+
+\subsection{Comparative Sources for Orthography Interpretation}
+
+\subsubsection{The Schmick Manuscript (Primary Internal Source)}
+
+\begin{itemize}
+  \item \textbf{Author:} Johann Jacob Schmick, Moravian missionary
+  \item \textbf{Period:} c.\ 1753--1767 (before Edwards)
+  \item \textbf{Dialect:} Moravian/Western Mahican (Ohio/PA branch)
+  \item \textbf{Format:} Two volumes (322 pp.), German-based orthography
+  \item \textbf{Publication:} Masthay (ed.), \emph{Schmick's Mahican
+    Dictionary}, APS Memoir 197 (1991)
+  \item \textbf{Contains:} Mahican historical phonology by David Pentland
+\end{itemize}
+
+Schmick's manuscript uses a German-based orthography which is in some ways
+more precise than Edwards' English-based system: German \textit{ch} for /x/
+(vs.\ Edwards' ambiguous \textit{gh}), more consistent vowel representation,
+and extensive vocabulary (much larger than Edwards' 144 records). However,
+Schmick shows inconsistency with vowels---especially the reflex of PA *aː
+which he writes variously as \textit{a, aa, ã, ã, a} (Warne). The tilde
+likely indicates a secondary nasalization feature.
+
+\textbf{Key finding:} Schmick is much more consistent with consonants than
+vowels. Identical forms appear written with different vowel symbols or
+sequences (Warne, \emph{Time-Depth in Mahican Diachronic Phonology}).
+
+Pentland's historical phonology (in Masthay 1991) provides the connecting
+framework between PA reconstructions and Mahican forms. Goddard (2007--2008)
+provided important corrections to Pentland's phonology, particularly in the
+treatment of vowel length and the PA *e reflexes.
+
+\subsubsection{Zeisberger's Delaware Materials}
+
+David Zeisberger (1721--1808), Moravian missionary, produced extensive
+documentation of Munsee Delaware (a close relative of Mahican within the
+Delawaran subgroup): \emph{Zeisberger's Delaware Vocabulary of 1772} (earliest
+extensive Munsee vocabulary), \emph{Grammar of the Language of the Lenni
+Lenape or Delaware Indians} (1827), and the \emph{Diary of David Zeisberger}
+(several volumes). These are important for comparative cognate work because
+Munsee and Mahican share a common ancestor (Delawaran, per Goddard) and often
+show parallel developments.
+
+\subsubsection{Later Mahican Sources}
+
+\begin{itemize}
+  \item \textbf{Hendrick Aupaumut writings} (c.\ 1790s--1820s): Stockbridge
+    Mahican letters and documents by a fluent Mahican speaker
+  \item \textbf{Wm.\ Dick (Michelson notes)} (c.\ 1910s): Modern Mahican
+    (Wisconsin) phonetic transcriptions
+  \item \textbf{Bernice Robinson recordings} (mid-20th century): Audio
+    recordings of the last speakers
+\end{itemize}
+
+\subsection{Problems Encountered}
+
+\begin{itemize}
+  \item \textbf{The \textit{gh} grapheme mystery:} \textit{ghusooh} (eight)
+    contains \textit{gh}---the most unusual grapheme across all eight sources.
+    Candidates include /x/ (voiceless velar fricative), /h/, or /k/. Must be
+    resolved per cognate on a case-by-case basis. This is the single biggest
+    ambiguity.
+  \item \textbf{\textit{uh} reduction:} Edwards' orthography is dominated by
+    \textit{u} and \textit{uh} sequences representing reduced /ə/. May
+    represent /ə/, /ə h/, or /uh/ depending on context.
+  \item \textbf{Word-initial consonant clusters:} Highly unusual by English
+    standards (\textit{wnissoo}, \textit{hkeesque}, \textit{hpoon},
+    \textit{kmeetseh})---indicate rich Mahican morphology. Need morphological
+    analysis to determine whether initial CC sequences are prefix+root or
+    root-internal.
+  \item \textbf{Sentence-level entries:} Many entries are full sentences, not
+    lexemes---require morphological segmentation before conversion.
+  \item \textbf{Vowel quality ambiguity:} Edwards' English-based vowel letters
+    are ambiguous. The /iː/ = \textit{e} mapping (Goddard) is the most
+    important correction. \textit{a} could be /a/, /aː/, or /ãː/.
+  \item \textbf{No phonetic transcriptions:} Edwards did not use a systematic
+    phonetic alphabet. No phonetic entries exist.
+  \item \textbf{Small corpus:} Approximately 144 records limits statistical
+    approaches.
+  \item \textbf{Dialect differences:} Stockbridge Mahican (Edwards) vs.\
+    Moravian Mahican (Schmick) may have phonological differences.
+  \item \textbf{18th-century conventions:} Edwards' spellings reflect his own
+    English pronunciation as much as Mahican sounds; e.g., \textit{oo} may be
+    /uː/ or /oː/.
+\end{itemize}
+
+\subsection{Research Approach}
+
+The conversion pipeline follows this sequence:
+
+\begin{enumerate}
+  \item \textbf{Preprocessing:} Split multi-word entries into individual
+    tokens. Flag entries with \textit{gh} for comparative cognate resolution.
+    Normalize Edwards' typographic conventions (long s, etc.).
+  \item \textbf{Phoneme mapping with cognate-based ambiguity resolution:}
+    Apply the default mapping table with overrides per cognate. The
+    \textit{e} = /iː/ default (Goddard) is the most important rule.
+    \textit{gh} is resolved per cognate (Schmick /x/ or /h/).
+  \item \textbf{Morphological segmentation:} Identify and strip person
+    prefixes (n-, k-, w-). Segment verbal suffixes (-uh, -eh, -seh, -oo,
+    -nuh). Produce root forms for lexicon building.
+  \item \textbf{Cross-validation:} Compare converted forms against Schmick's
+    phonemicized forms, against Munsee cognates (Zeisberger, Goddard), and
+    against PA reconstructions (Pentland, Siebert). Flag entries where
+    converted phonemes mismatch expected reflexes.
+\end{enumerate}
+
+\subsubsection{Reference Cognate Set for Validation}
+
+The following Edwards forms have well-understood cognates and should be used
+as the validation baseline for the conversion:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+\textbf{Edwards form} & \textbf{Gloss} & \textbf{PA reconstruction} & \textbf{Expected Mahican} \\
+\midrule
+\textit{neesoh} & `two' & *niːšwi & /niːsə/ \\
+\textit{seepoo} & `river' & *siːpoːwi & /siːpə w/ \\
+\textit{keesogh} & `sun' & *kiːšoʔθ a & /kiːsox/? \\
+\textit{hpoon} & `winter' & *pepoon- & /pə puːn/? \\
+\textit{hkeesque} & `eye' & & /kiːskw/? \\
+\textit{nannah} & `five' & *nyaːlanwi & /naːnə w/? \\
+\textit{penumpaufoo} & `boy' & & \\
+\textit{pumiffoo} & `he walks' & *pemihθ eːwa & /pə mihseːwa/? \\
+\textit{ncmeetseh} & `I eat' & *miːči- & /nə miːčə/? \\
+\textit{ghusooh} & `eight' & *nešwaːšika & \\
+\textit{noghkah} & `my father' & & /nə xk-/ \\
+\textit{muhhekaneew} & `Mahican' & & /mə hiːkaniːw/ \\
+\bottomrule
+\end{tabular}
+\caption{Reference cognate set for validation}
+\label{tab:1369-cognates}
+\end{table}
+
+\subsubsection{Software Architecture}
+
+Given the ambiguities and the need for comparative-evidence-based resolution,
+the conversion system should be implemented as:
+
+\begin{itemize}
+  \item \textbf{FSM core} for the unambiguous mappings (consonants, clear
+    vowels)
+  \item \textbf{Cognate database} providing priors for ambiguous mappings
+    (\textit{gh}, \textit{e} values, vowel length)
+  \item \textbf{Resolver module} that queries the cognate database before
+    applying ambiguous rules; falls back to a default with a confidence flag
+    if no cognate found
+  \item \textbf{Output format:} phonemic transcription with confidence
+    markers: \texttt{[high]} = confirmed by cognate, \texttt{[med]} = default
+    rule no contradicting cognate, \texttt{[low]} = guess no cognate
+    available, \texttt{[FLAG]} = contradictory evidence manual review needed
+\end{itemize}
+
+\subsection{Conversion Workflow}
+\label{sec:1369-workflow}
+
+\texttt{[Pending implementation --- see Issue \#1369]}
+
+The conversion workflow will implement the research approach described above
+as a multi-stage pipeline. Each stage will be implemented as a separate
+module with its own test suite.
+
+\subsection{Linguist Feedback}
+\label{sec:1369-feedback}
+
+\texttt{[Template --- content pending review]}
+
+The following aspects require linguist review:
+
+\begin{itemize}
+  \item \textit{gh} grapheme resolution: confirmation of /x/ vs.\ /h/
+    mapping per cognate
+  \item \textit{e} = /iː/ default: verification of the Goddard finding
+    across all entries
+  \item Morphological segmentation: review of prefix/suffix identification
+  \item Cognate database: validation of reference cognate set
+  \item Confidence markers: review of \texttt{[low]} and \texttt{[FLAG]}
+    entries
+\end{itemize}
+
+\subsection{Related Work: Colonial Recorder Perception Problem}
+
+The core challenge of this research card---English-speaking recorders
+misperceiving and mis-transcribing Algonquian phonemes---is a known
+phenomenon documented across Eastern North America. Two researchers' work
+is directly relevant.
+
+\textbf{Dr.\ Keith Cunningham} (Linguist, Nanticoke Indian Tribe). His
+doctoral dissertation \emph{A Phonological Analysis of Nanticoke With
+Practical Applications for Language Revitalization} (Georgetown University)
+analyzes three 18th-century Nanticoke word lists (Heckewelder 1785) using
+the same methodology: historical phonology from colonial recorders, with the
+same challenges of multilingual informants and orthographic complexity. His
+2024 Algonquian Conference presentation \emph{A Revised Phonological
+Analysis of the Heckewelder Vocabulary of Nanticoke} directly parallels the
+Edwards analysis---both involve 18th-century recorders with greater linguistic
+awareness than their 17th-century predecessors, both document preaspiration
+more reliably than earlier sources, and both require PA comparative
+calibration. Cunningham's work demonstrates that the colonial recorder
+perception problem extends beyond SNEA into the broader Eastern Algonquian
+family.
+
+\textbf{Dr.\ Craig Kopris} (Independent scholar). His paper \emph{Les sons
+wyandots perçus par des oreilles étrangères} (Wyandot sounds perceived by
+foreign ears, \emph{Recherches amérindiennes au Québec}, 2014) is the exact
+framing of the Edwards problem: how European recorders systematically
+misperceived and mis-transcribed indigenous phonemes. His \emph{Wyandot
+Phonology: Recovering the Sound System of an Extinct Language} applies the
+same recovery methodology to an unrelated language family (Iroquoian),
+demonstrating that the foreign-ear perception problem is universal across
+colonial documentation of North American languages. His Dictionary of
+Wyandot project (NEH award FN-255576-17) shows the long-term application of
+these methods to language revitalization.
+
+The Edwards Mahican corpus (144 records) is unique among the SNEA sources in
+being recorded by a fluent second-language speaker of the language (Edwards
+learned Mahican as a child from playmates). This makes Edwards the most
+phonetically reliable colonial recorder in the corpus---but the \textit{gh}
+grapheme mystery and \textit{uh} reduction patterns documented in this card
+show that even a fluent L2 speaker's orthography is filtered through English
+phonological categories, the same problem that both Cunningham and Kopris
+address in their respective language families.
+
+\subsection{References}
+
+\begin{itemize}
+  \item Brasser, T.J.\ (1978). ``Mahican.'' In \emph{Handbook of North
+    American Indians}, Vol.\ 15, \emph{Northeast}, pp.\ 198--212. Washington:
+    Smithsonian Institution.
+  \item Edwards, Jonathan. (1788). \emph{Observations on the Language of the
+    Muhhekaneew Indians}. New Haven: Josiah Meigs. [Reprinted 1823 with notes
+    by John Pickering, in Massachusetts Historical Collections.]
+  \item Goddard, Ives. (1979). ``Munsee Delaware.'' In \emph{Handbook of
+    North American Indians}, Vol.\ 15, pp.\ 228--234.
+  \item Goddard, Ives. (1982). \emph{The Historical Phonology of Munsee.}
+    International Journal of American Linguistics 48:16--48.
+  \item Goddard, Ives. (2007--2008). Corrections to Pentland's Mahican
+    historical phonology. Papers of the Algonquian Conference.
+  \item Goddard, Ives. (2010). Handout on Mahican phoneme inventory.
+    Conference on Language Reconstruction, Ann Arbor, MI.
+  \item Masthay, Carl (ed.). (1991). \emph{Schmick's Mahican Dictionary,
+    with a Mahican Historical Phonology by David Pentland}. Memoirs of the
+    American Philosophical Society, Vol.\ 197. Philadelphia.
+  \item Pentland, David. (1991). ``A Mahican Historical Phonology.'' In
+    Masthay 1991.
+  \item Warne, Janet. n.d. ``Time-Depth in Mahican Diachronic Phonology:
+    Evidence from the Schmick Manuscript.'' McGill University.
+  \item \emph{Important Mahican Vowel Information} (PDF). 2024.
+    munseedelaware.com. Consultation with Carl Masthay and Ives Goddard.
+  \item Zeisberger, David. (1772). \emph{Zeisberger's Delaware Vocabulary of
+    1772}.
+  \item Zeisberger, David. (1827). \emph{Grammar of the Language of the
+    Lenni Lenape or Delaware Indians}. Philadelphia.
+\end{itemize}

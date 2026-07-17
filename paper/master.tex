@@ -1,0 +1,80 @@
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+\documentclass[11pt,a4paper]{article}
+
+% ---- preamble ----
+\usepackage[margin=1in]{geometry}
+\usepackage{setspace}
+\doublespacing
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Termes}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=blue,citecolor=blue,urlcolor=blue}
+\usepackage{booktabs}
+\usepackage{longtable}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{tocloft}
+% IPA via direct Unicode input (XeLaTeX native)
+\usepackage{morefloats} % extra float capacity
+
+% ---- partial build support ----
+\ifdefined\includeonlysections
+  \includeonly{\includeonlysections}
+\fi
+
+% ---- metadata ----
+\title{Orthography to Phoneme Conversion in Southern New England Algonquian:\\A Multi-Source Research Document}
+\author{Michael Conrad\\Brothertown-Language Project}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+% ============================================================
+% SECTION 1 — Conversion Overview
+% ============================================================
+\section{Conversion Overview}
+\label{sec:overview}
+
+\input{section-1-overview.tex}
+
+% ============================================================
+% PART I — Source Workflows
+% ============================================================
+\part{Source Workflows}
+
+\input{part-i-source-workflows/1362-narragansett.tex}
+\input{part-i-source-workflows/1363-wampanoag-trumbull.tex}
+\input{part-i-source-workflows/1364-mohegan-pequot-fielding.tex}
+\input{part-i-source-workflows/1365-wampanoag-multi.tex}
+\input{part-i-source-workflows/1366-wampanoag-winslow.tex}
+\input{part-i-source-workflows/1367-wampanoag-wood.tex}
+\input{part-i-source-workflows/1368-mohegan-pequot-prince-speck.tex}
+\input{part-i-source-workflows/1369-mahican.tex}
+
+% ============================================================
+% PART II — Thematic Synthesis
+% ============================================================
+\part{Thematic Synthesis}
+
+\input{part-ii-thematic-synthesis/preaspiration.tex}
+\input{part-ii-thematic-synthesis/colonial-english-phonology.tex}
+\input{part-ii-thematic-synthesis/vowel-ambiguity.tex}
+\input{part-ii-thematic-synthesis/cross-source-calibration.tex}
+\input{part-ii-thematic-synthesis/dialect-classification.tex}
+
+% ============================================================
+% PART III — External Resources and Open Questions
+% ============================================================
+\part{External Resources and Open Questions}
+
+\input{part-iii-external-resources/external-resources.tex}
+\input{part-iii-external-resources/open-questions.tex}
+\input{part-iii-external-resources/linguist-feedback.tex}
+\input{part-iii-external-resources/future-work.tex}
+
+\end{document}

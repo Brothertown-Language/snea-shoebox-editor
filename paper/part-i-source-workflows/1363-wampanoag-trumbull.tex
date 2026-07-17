@@ -1,0 +1,649 @@
+% Wampanoag (Trumbull 1903) — Source Workflow
+% Issue #1363
+% Status: Research complete, implementation pending
+
+\section{Wampanoag: Trumbull/Eliot 1903}
+\label{sec:1363}
+
+\subsection{Source Description}
+
+\textbf{Recorder:} James Hammond Trumbull (1821--1897), drawing on John Eliot's
+17th-century Massachusett writing system.
+\textbf{Source:} \emph{Natick Dictionary}, Bureau of American Ethnology
+Bulletin 25 (1903, posthumous).
+\textbf{Language:} Wampanoag (Massachusett) [wam].
+\textbf{Corpus:} 4,491 records (largest in the SNEA collection).
+\textbf{Orthography:} Eliot orthography --- the first standardized writing
+system for an Algonquian language, developed by John Eliot and Massachusett
+collaborators (Job Nesutan, John Sassamon) in the 1650s--1660s.
+
+\subsubsection{Recorder Biography: James Hammond Trumbull}
+
+James Hammond Trumbull (1821--1897) was an American philologist, historian,
+and bibliographer. He served as Connecticut State Librarian (1854--1897) and
+was a founding member of the American Philological Association. His work on
+the Algonquian languages of southern New England spanned four decades,
+beginning with his early comparative study \emph{On the Best Method of
+Studying the North American Languages} (1859).
+
+Trumbull's major Algonquianist works include:
+\begin{itemize}
+  \item \emph{The Composition of Indian Geographical Names} (1870) ---
+    Connecticut Historical Society
+  \item \emph{Indian Names of Places in Connecticut} (1881) --- systematic
+    geographic toponymy
+  \item \emph{Natick Dictionary} (published posthumously 1903) --- his
+    magnum opus
+\end{itemize}
+
+\subsubsection{The Lost Thesis Controversy}
+
+Trumbull delivered a landmark paper before the American Philological
+Association titled \emph{The Method of the Indian Languages as Exemplified by
+the Massachusett Dialect} --- based on a ``lost thesis'' he had written at
+Yale in the 1840s. The paper argued for the polysynthetic structure of
+Algonquian languages and established Trumbull's reputation as the leading
+American philologist of Native languages before the Boasian revolution.
+
+Trumbull's methodology combined:
+\begin{enumerate}
+  \item \textbf{Text-based extraction:} Exhaustively reading through all of
+    Eliot's Massachusett translations (Bible, primers, catechisms) and
+    manually extracting every lexical item onto slips
+  \item \textbf{Cross-referencing with cognates:} Comparing Massachusett
+    forms with related languages (Narragansett via Williams 1643,
+    Mohegan-Pequot via field notes, Abenaki, Micmac, etc.)
+  \item \textbf{Morphemic analysis:} Breaking down polysynthetic forms into
+    constituent morphemes --- a radical approach for its time
+  \item \textbf{Etymological comparison:} Identifying cognate sets across the
+    Eastern Algonquian languages
+\end{enumerate}
+
+\subsubsection{Posthumous Publication}
+
+Trumbull died in 1897 with the dictionary manuscript substantially complete
+but not yet in press. Edward Everett Hale (the Unitarian minister and author)
+supervised the final editing at the Bureau of American Ethnology. The preface
+acknowledges that some inconsistencies in cross-references and source
+abbreviations may reflect the incomplete final revision by Trumbull himself.
+The published dictionary includes 4,491 main entries.
+
+\subsubsection{The Eliot Orthography --- Historical Origins}
+
+John Eliot (1604--1690) arrived in Massachusetts Bay in 1631 and began
+preaching to the Massachusett people in the 1640s. His language teacher was
+\textbf{Job Nesutan}, a Massachusett man who served as Eliot's primary
+linguistic informant and translator. Eliot also worked with \textbf{John
+Sassamon} (a Massachusett convert educated at Harvard) who later became a
+crucial intermediary.
+
+Eliot's orthography was developed in the 1650s as he prepared his translation
+of the Bible. It was:
+\begin{itemize}
+  \item \textbf{Phonemically oriented} for its time --- Eliot attempted to
+    represent the sounds of Massachusett systematically, not just through
+    English ear-approximations
+  \item \textbf{English-based} --- using English letter values as the starting
+    point, then extending them
+  \item \textbf{Regularized} --- unlike Wood (1634) or Winslow (1624), Eliot
+    chose consistent spellings for the same morpheme across occurrences
+  \item \textbf{Influenced by Hebrew and Greek grammar} --- Eliot's
+    \emph{Indian Grammar Begun} (1666) explicitly draws parallels between
+    Massachusett structures and Biblical Hebrew
+\end{itemize}
+
+The \emph{Mamusse Wunneetupanatamwe Up-Biblum God} (1,180 pages) was printed
+by Samuel Green and Marmaduke Johnson in Cambridge, Massachusetts. It was the
+first complete Bible printed in the Americas in a Native language. Production
+required a specially cast type font (some characters unique to Massachusett),
+translators and typesetters literate in the orthography, and Massachusett
+readers to proofread.
+
+\subsection{Vowel Inventory}
+
+\subsubsection{Simple Vowels}
+
+The core challenge of the Eliot orthography is that 5 vowel letters must
+represent a larger Massachusett vowel inventory (likely 8--10 vowel phonemes
+including length distinctions).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lllll}
+\toprule
+Eliot & Phoneme & IPA & Example & Notes \\
+\midrule
+a & Short a / Schwa & /a/ ~ /ə/ & \textit{wadchu} (mountain) & Unstressed → [ə] \\
+a & Long a & /aː/ & \textit{mahche} (already) & Lengthened \\
+e & Long e & /iː/ & \textit{wetu} (house) & Two different underlying vowels \\
+e & Short e & /ɛ/ & \textit{penashimwog} & \\
+e & Final schwa & /ə/ & \textit{nish} (two) & Often silent but written \\
+i & Long i & /iː/ & \textit{pish} (future) & \\
+i & Short i & /ɪ/ & \textit{nippe} (water) & \\
+o & Long o & /uː/ & \textit{noh} (father) & \\
+o & Short o & /ɔ/ & \textit{nuppa} (sleep) & \\
+o & Schwa & /ə/ & \textit{onk} (and) & Unstressed reduction \\
+u & Schwa & /ə/ & \textit{ummon} (breast) & Unstressed position \\
+u & Short u & /ʌ/ & \textit{musqui} (grass) & \\
+\bottomrule
+\end{tabular}
+\caption{Simple vowel mappings in Eliot's orthography}
+\label{tab:1363-vowels}
+\end{table}
+
+\subsubsection{Vowel Digraphs}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Eliot Digraph & IPA & Example & Notes \\
+\midrule
+ee & /iː/ & \textit{neen} (I), \textit{keetompauog} (men) & Consistent --- most reliable \\
+oo & /uː/ & \textit{woskot} (firewood), \textit{sook} (pouring) & Consistent \\
+⟨ꝏ⟩ / ∞ & /uː/ or complex & See §\ref{sec:1363-infinity} & The debated symbol \\
+aa & /aː/ & \textit{waam} (long), \textit{maangu} (wolf) & \\
+ii & /iː/ & \textit{niin} (my) & Less common \\
+au & /ɔ/ & \textit{mauche} (come) & Rare \\
+ai & /aːj/ & \textit{wai} (woe) & Diphthong \\
+eu & /eːw/ & \textit{seup} (river) & Possibly /əw/ \\
+\bottomrule
+\end{tabular}
+\caption{Vowel digraphs}
+\label{tab:1363-digraphs}
+\end{table}
+
+\subsection{Consonant Inventory}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Eliot & IPA & Example & Notes \\
+\midrule
+p & /p/ ~ /b/ & \textit{peche} (tomorrow), \textit{nuppa} (sleep) & Unaspirated, lenis medial \\
+t & /t/ ~ /d/ & \textit{tummunk} (worm), \textit{wetu} (house) & Unaspirated, medially lenis \\
+k & /k/ ~ /ɡ/ & \textit{kenug} (fish), \textit{askkuhnk} (serpent) & Unaspirated \\
+c (a/o/u) & /k/ & \textit{commaco} (feast), \textit{cutsh} (speak) & Hard c --- English convention \\
+c (e/i) & /s/ & \textit{ce} (thou), \textit{nuppacoh} (chaff) & Soft c --- English convention \\
+ch & /tʃ/ & \textit{choh} (child), \textit{mache} (go) & Affricate \\
+sh & /ʃ/ & \textit{asuhsh} (fine), \textit{shuckquan} (rain) & \\
+s & /s/ & \textit{simma} (various) & Word-initial s often written ss \\
+ss & /sː/ ~ /s/ & \textit{massa} (great) & Geminate \\
+m & /m/ & \textit{matta} (no) & \\
+n & /n/ & \textit{neen} (I) & \\
+w & /w/ & \textit{wetu} (house), \textit{waantam} (wise) & \\
+y & /j/ & \textit{yeuyeu} (gradually) & \\
+q & /kʷ/ & \textit{qussuk} (stone) & Labialized k --- from PA *kw \\
+h & /h/ & \textit{ohke} (earth), \textit{kehtan} (great) & Also marks preaspiration \\
+ht & /ht/ ~ /h/ & \textit{kehtan} (great), \textit{kehte} (truly) & Preaspirated /t/ \\
+hp & /hp/ ~ /h/ & \textit{wuhpom} (honey) & Preaspirated /p/ \\
+hk & /hk/ ~ /h/ & \textit{ohke} (earth) & Preaspirated /k/ \\
+' (apostrophe) & /h/ ~ /ʔ/ & \textit{m'tah} (be tired) & Elided syllable, often = /h/ \\
+\bottomrule
+\end{tabular}
+\caption{Consonant inventory}
+\label{tab:1363-consonants}
+\end{table}
+
+\subsection{The ∞ Symbol --- Historical Typography and Phonetics}
+\label{sec:1363-infinity}
+
+\subsubsection{The Misidentification}
+
+The ∞ symbol (Unicode INFINITY, U+221E) is one of the most distinctive
+features of the database's Trumbull entries. However, this is almost
+certainly a \textbf{typographic misidentification} in the digitization
+process. The original Trumbull dictionary uses a different symbol:
+
+The actual symbol: Eliot's Bible and Trumbull's dictionary use a ligature of
+two ⟨o⟩ letters joined --- what typographers call an ``oo ligature'' ---
+Unicode ⟨ꝏ⟩ (U+A74F, LATIN SMALL LETTER OO). In the early BAE Bulletin 25
+printed type, this appeared as a figure-8-like symbol because the two o's
+were cast as a single piece of type:
+
+\begin{quote}
+Original Eliot/Trumbull: ⟨ꝏ⟩ (oo ligature)\\
+What it looks like at small sizes: ∞ (infinity-like)\\
+What DB has: ∞ (Unicode INFINITY)
+\end{quote}
+
+The digitizer apparently did not recognize the typographic convention and
+encoded it as the visually-similar infinity symbol.
+
+\subsubsection{What ⟨ꝏ⟩ Actually Represents}
+
+In Eliot's orthography, ⟨ꝏ⟩ represents \textbf{long /uː/} --- specifically,
+it is Eliot's way of writing the long u sound, contrasting with ⟨oo⟩ which
+may represent a different vowel quality or length. Eliot's own description in
+\emph{The Indian Grammar Begun} (1666):
+
+\begin{quote}
+``oo, and ꝏ, are two differing vowels, or rather the same vowel differently
+sounded; oo is short and ꝏ is long.''
+\end{quote}
+
+This suggests ⟨oo⟩ = /u/ (short) and ⟨ꝏ⟩ = /uː/ (long). However, database
+evidence showing 654 occurrences of the symbol (now encoded as ∞) suggests a
+more complex distribution. In many entries, ∞ appears where a
+preaspirated/breathy vowel sequence would be expected phonologically.
+
+\subsubsection{The ∞→oozzz Pipeline Mapping}
+
+Per the lessons-learned documentation, the mapping ∞ → oozzz was established
+empirically based on:
+\begin{enumerate}
+  \item \textbf{Distributional patterns:} ∞ appears in contexts where /u/ +
+    /h/ + /z/ would be expected from PA reconstruction
+  \item \textbf{Morphophonemic alternation:} Where cognate forms in other SNEA
+    languages show /u/ + preaspiration + sibilant sequences
+  \item \textbf{Goddard \& Bragdon (1988) transcription conventions:} Their
+    modern phonemic transcription suggests underlying forms with /uːh/
+    sequences
+\end{enumerate}
+
+The \texttt{oozzz} string is therefore a \textbf{working normalization} --- it
+captures the phonetic complexity (length + breathiness + sibilant quality)
+that the original ⟨ꝏ⟩ was designed to encode, even if the exact phonetics
+remain debated.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Pattern & Count (approx.) & Example \\
+\midrule
+∞ (bare) & ~500 & \textit{achm∞wonk} (news) \\
+∞̌ (with breve) & ~50 & \textit{∞̌ppa} (various) --- phonetically reduced \\
+∞ in compounds & ~100 & Various morpheme-internal occurrences \\
+\midrule
+Total & ~654 & 14.6\% of 4,491 records \\
+\bottomrule
+\end{tabular}
+\caption{∞ in the database corpus}
+\label{tab:1363-infinity-counts}
+\end{table}
+
+\subsection{Entry Structure --- Detailed Parsing Guide}
+
+Trumbull entries have a complex multi-part structure parsed into a single
+\texttt{lx} field. Understanding this structure is essential for FSM-based
+parsing.
+
+\subsubsection{Standard Entry Template}
+
+\begin{quote}
+\texttt{*|achm∞wonk|, vbl. n. `news'    C.}
+\end{quote}
+
+Field breakdown:
+\begin{itemize}
+  \item \texttt{*} --- Cross-reference marker
+  \item \texttt{|...|} --- Citation form delimiters (morphemic boundaries)
+  \item \texttt{,} --- Field separator
+  \item \texttt{vbl. n.} --- Grammatical label (verbal noun)
+  \item \texttt{`news'} --- Gloss in backtick quotes
+  \item \texttt{C.} --- Source abbreviation
+\end{itemize}
+
+\subsubsection{Entry Variants}
+
+Root/compound form (no gloss):
+\begin{quote}
+\texttt{|-adchaubuk|, in comp. words, root, or roots}
+\end{quote}
+
+Cross-reference entry:
+\begin{quote}
+\texttt{|asqhutt∞che| `whilst'    C. = |asq-utt∞che|.}
+\end{quote}
+
+Multiple glosses:
+\begin{quote}
+\texttt{|wame|, adj. `all, whole, every'    C.}
+\end{quote}
+
+\subsubsection{Source Abbreviations}
+
+Trumbull used a system of abbreviations to tag each entry's source:
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Abbreviation & Source & Approx. \% \\
+\midrule
+C. & Eliot's Catechism (various editions) & ~40\% \\
+B. & Eliot's Bible (1663, 1685) & ~30\% \\
+P. & Psalms translated by Eliot & ~10\% \\
+G. & Eliot's Grammar (1666) & ~5\% \\
+Pr. & Eliot's Primer(s) & ~5\% \\
+Pl. & Plymouth/colonial records & ~3\% \\
+(unmarked) & Unknown or Trumbull's own reconstruction & ~7\% \\
+\bottomrule
+\end{tabular}
+\caption{Source abbreviations in Trumbull}
+\label{tab:1363-sources}
+\end{table}
+
+\subsubsection{Grammatical Labels}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Abbreviation & Full Form & Meaning \\
+\midrule
+vbl. n. & verbal noun & Action nominalization \\
+adj. & adjective & Modifier \\
+pro. & pronoun & Personal/demonstrative pronoun \\
+adv. & adverb & Modifier of verb/adjective \\
+prep. & preposition & Relational word \\
+conj. & conjunction & Connective \\
+interj. & interjection & Exclamation \\
+n. & noun & Substantive \\
+v. & verb & Verb (unmarked for transitivity) \\
+v. a. & verb active & Transitive verb \\
+v. n. & verb neuter & Intransitive verb \\
+part. & particle & Uninflected word \\
+s. & substantive & Noun (alternative to n.) \\
+pl. & plural & Plural form \\
+comp. & compound & Compound word \\
+in comp. & in compound & Used only in compounds \\
+dim. & diminutive & Diminutive form \\
+\bottomrule
+\end{tabular}
+\caption{Grammatical label abbreviations}
+\label{tab:1363-grammar}
+\end{table}
+
+\subsection{Problems Encountered}
+
+\subsubsection{The ∞ (ꝏ) Symbol Misidentification}
+
+The symbol was historically misidentified as an infinity symbol (∞). It is
+Eliot's ⟨oo⟩ ligature (U+A74F), representing long /uː/. The digitization
+error encoding it as Unicode INFINITY (U+221E) has propagated through the
+database, requiring normalization in the conversion pipeline.
+
+\subsubsection{Preaspiration Gap}
+
+Eliot writes \textit{hk/hp/ht} only ~15\% of expected positions. Edwards
+(1787 Mahican) is the only colonial source that consistently marks
+preaspiration. For Trumbull/Eliot entries, preaspiration /h/ must be inferred
+from comparative evidence (Edwards' Mahican data, PA reconstructions,
+morphotactic position) rather than read directly from the orthography.
+
+\subsubsection{Apostrophe Ambiguity}
+
+The apostrophe may represent /h/, /ʔ/, or vowel elision --- no consistent
+rule. The apostrophe function is ambiguous without comparative evidence and
+cannot be resolved solely from within the Trumbull entry.
+
+\subsubsection{Dialect Stratification}
+
+Variation between Natick (Eliot) and Pokanoket (Winslow/Wood) may be
+orthographic, phonological, or dialectal. The \textit{achm∞wonk} vs.
+\textit{hobbamock} divergence (the ``devil problem'') suggests real dialect
+differentiation between the ``praying town'' dialect of Natick and the
+Plymouth-area Pokanoket dialect.
+
+\subsubsection{Vowel Quality}
+
+The five-letter vowel system (a, e, i, o, u) must represent 8--10 phonemes.
+Disambiguation requires distributional analysis, PA correspondence, stress
+position, and morphological position.
+
+\subsubsection{\textit{c} Ambiguity}
+
+Before back vowels (a, o, u) → /k/; before front vowels (e, i) → /s/.
+Exception: some irregular forms where \textit{c} = /k/ before e. Word-final
+\textit{c} → /k/.
+
+\subsubsection{Boundary Markers}
+
+The \texttt{|...|} pipe convention is near-universal (4,488 of 4,491 entries)
+but embedded glosses inside pipes are rare, cross-reference syntax (=) may
+span pipe boundaries, and hyphens within pipes indicate morpheme boundaries,
+not word boundaries.
+
+\subsubsection{The Devil Problem: \textit{achm∞wonk} vs. \textit{hobbamock}}
+
+One of the most revealing lexical puzzles in the corpus involves the word for
+`devil':
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Source & Word & Notes \\
+\midrule
+Winslow (1624) & \textit{hobbamock} & Initial h written; also a proper name \\
+Wood (1634) & \textit{abamocho}, \textit{abomocho} & No initial h; o-final \\
+Williams (1643) & \textit{ábammocho} & Narragansett; consistent with Wood \\
+Trumbull/Eliot & \textit{achm∞wonk} & Different root; \textit{ch} not \textit{b/p} \\
+\bottomrule
+\end{tabular}
+\caption{The devil problem across sources}
+\label{tab:1363-devil}
+\end{table}
+
+This shows that Trumbull/Eliot may be drawing from a different lexical
+stratum (the ``praying town'' dialect of Natick) than Winslow/Wood
+(Plymouth-area Pokanoket). The lexical difference is not just orthographic
+--- it may reflect real dialect divergence.
+
+\subsection{Research Approach}
+
+\subsubsection{Recommended Methodology}
+
+\textbf{DO NOT USE REGEX} --- the ∞ symbol, pipe boundaries, embedded
+glosses, and cross-reference syntax require context-sensitive parsing.
+
+\textbf{Stage 1: Preprocessing FSM.} Tokenize Trumbull entries by:
+\begin{enumerate}
+  \item Recognizing \texttt{|...|} citation boundaries and stripping pipes
+  \item Identifying ∞ and replacing with \texttt{oozzz} (first normalization)
+  \item Extracting backtick-delimited glosses
+  \item Isolating grammatical abbreviations (vbl. n., C., etc.)
+  \item Handling \texttt{*} prefix and \texttt{=} cross-reference syntax
+  \item Separating source abbreviations (C., B., etc.) for provenance tracking
+\end{enumerate}
+
+\textbf{Stage 2: Phonemic Conversion FSM.} Apply Eliot-to-phoneme mapping
+rules:
+\begin{enumerate}
+  \item Map Eliot vowel digraphs (ee, oo, aa, etc.) to phonemes
+  \item Handle \textit{c}→\textit{k}/\textit{s} disambiguation based on
+    following vowel
+  \item Infer preaspiration /h/ from written \textit{hk}, \textit{hp},
+    \textit{ht} clusters (direct evidence), morphotactic position (coda of
+    stressed syllable, before /p t k/), comparative evidence from Edwards
+    (1787) Mahican data, and PA reconstructions showing */h/ in corresponding
+    position
+  \item Resolve ∞→\texttt{oozzz} (already mapped in Stage 1)
+  \item Resolve apostrophe to /h/ or /ʔ/ based on context and comparative
+    evidence
+\end{enumerate}
+
+\textbf{Stage 3: Comparative Fallback.} For ambiguous vowel quality (the
+5-vowel→8--10-phoneme mapping problem):
+\begin{enumerate}
+  \item PA comparison: Use Aubin (1975) reconstructions as primary
+    disambiguation
+  \item Sister-language evidence: Williams (Narragansett), Edwards (Mahican),
+    Fielding/Prince-Speck (Mohegan-Pequot)
+  \item Known cognate patterns: Eliot orthography ↔ modern Wampanoag
+    revitalization (Weeden, Baird)
+  \item Goddard \& Bragdon (1988) transcriptions: Modern phonemic analyses of
+    Massachusett texts
+\end{enumerate}
+
+\textbf{Stage 4: Statistical/Distributional Analysis.} The large corpus (4,491
+entries) enables statistical approaches not viable for smaller sources:
+\begin{enumerate}
+  \item Vowel quality prediction model based on surrounding consonant
+    environment and stress position
+  \item Preaspiration probability model based on morphotactic position and PA
+    correspondence
+  \item ∞ behavior model: Distributional patterns of ∞ across phonological
+    environments
+\end{enumerate}
+
+\subsubsection{Proto-Algonquian Correspondences}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+PA & Massachusett Reflex & Eliot Grapheme & Example \\
+\midrule
+*a & /a/ & a & *aʔlapy → \textit{anupp} (bowstring) \\
+*e & /ə/ & u, a & *eːθkweːwa → \textit{squa} (woman) \\
+*i & /i/ & i, e & *iːli- → \textit{en-} (thus) \\
+*o & /ɔ/ & o, a & *oːθaːna → \textit{-adchan} \\
+*aː & /aː/ & aa, a & *aːmoːwa → \textit{amaug} (bee) \\
+*eː & /iː/ & ee & *eːhšwa → \textit{ash} (three) \\
+*iː & /iː/ & ee & *iːniwa → \textit{neen} (I) \\
+*oː & /uː/ & oo, ꝏ & *oːtaːna → \textit{adchan} \\
+*p & /p/ & p & *pexpenya → \textit{pepeng} \\
+*t & /t/ & t & *taːnya → \textit{ta} (there) \\
+*k & /k/ & k, c & *kaːkinoː → \textit{kakine} (all) \\
+*m & /m/ & m & *maškyekwi → \textit{maskiht} (medicine) \\
+*n & /n/ & n & *naːpeːwa → \textit{nap} (man) \\
+*s & /s/ & s, ss & *soːkya → \textit{sohki} (hard) \\
+*š & /ʃ/ & sh & *eːšpowaːki → \textit{ashpowau} (above) \\
+*θ & /s/ & s & *eːθkweːwa → \textit{squa} (woman) \\
+*l & /n/ & n & *laːkeːwa → \textit{noh} (father) \\
+*w & /w/ & w & *waːposwa → \textit{womp} (white) \\
+*y & /j/ & y & *ayaːpeːwa → \textit{ayim} (man?) \\
+*h & /h/ & h, (unwritten) & *aːhšoːwa → \textit{ashsh} (?) \\
+\bottomrule
+\end{tabular}
+\caption{PA to Massachusett regular correspondences}
+\label{tab:1363-pa}
+\end{table}
+
+\subsubsection{Confirmed Cognate Mappings for Pipeline Testing}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Gloss & Trumbull/Eliot (expected) & Confidence & PA Source \\
+\midrule
+`no, not' & \textit{matta} & High & PA *mati- \\
+`woman' & \textit{squa} & High & PA *eːθkweːwa \\
+`man' & \textit{nap} & High & PA *naːpeːwa \\
+`house' & \textit{wetu} & High & PA *wiːkiwaːmi \\
+`water' & \textit{nippe} & High & PA *nepyi \\
+`stone' & \textit{qussuk} & High & PA *aːsenya \\
+`fire' & \textit{nuta} (?) & Moderate & PA *eškw- \\
+`three' & \textit{ash} & High & PA *nšwaːśika \\
+`white' & \textit{womp(ish)} & High & PA *waːposwa (rabbit → white) \\
+`devil' & \textit{achm∞wonk} & Moderate & See §\ref{tab:1363-devil} \\
+`snake' & \textit{askkuhnk} (?) & Moderate & PA *ašk-? \\
+\bottomrule
+\end{tabular}
+\caption{Confirmed cognate mappings}
+\label{tab:1363-cognates}
+\end{table}
+
+\subsection{Conversion Workflow}
+\texttt{[Pending implementation --- see Issue \#1363]}
+
+\subsection{Linguist Feedback}
+\texttt{[Template --- content pending review]}
+
+\subsection{Related Work: Colonial Recorder Perception Problem}
+
+The core challenge of this research card --- English-speaking recorders
+misperceiving and mis-transcribing Algonquian phonemes --- is a known
+phenomenon documented across Eastern North America. Two researchers' work is
+directly relevant:
+
+\textbf{Dr. Keith Cunningham} (Linguist, Nanticoke Indian Tribe). His doctoral
+dissertation \emph{A Phonological Analysis of Nanticoke With Practical
+Applications for Language Revitalization} (Georgetown University) analyzes
+three 18th-century Nanticoke word lists (Heckewelder 1785) using the same
+methodology: historical phonology from colonial recorders, with the same
+challenges of multilingual informants and orthographic complexity. His 2024
+Algonquian Conference presentation \emph{A Revised Phonological Analysis of
+the Heckewelder Vocabulary of Nanticoke} directly parallels the Trumbull/Eliot
+analysis --- both involve working with standardized missionary orthographies
+(Eliot for Massachusett, Heckewelder for Nanticoke) and both require PA
+comparative calibration. Cunningham's work demonstrates that the colonial
+recorder perception problem extends beyond SNEA into the broader Eastern
+Algonquian family.
+
+\textbf{Dr. Craig Kopris} (Independent scholar). His paper \emph{Les sons
+wyandots perçus par des oreilles étrangères} (Wyandot sounds perceived by
+foreign ears, \emph{Recherches amérindiennes au Québec}, 2014) is the exact
+framing of the Trumbull/Eliot problem: how European recorders systematically
+misperceived and mis-transcribed indigenous phonemes. His \emph{Wyandot
+Phonology: Recovering the Sound System of an Extinct Language} applies the
+same recovery methodology to an unrelated language family (Iroquoian),
+demonstrating that the foreign-ear perception problem is universal across
+colonial documentation of North American languages. His Dictionary of Wyandot
+project (NEH award FN-255576-17) shows the long-term application of these
+methods to language revitalization.
+
+The Trumbull corpus (4,491 records, the largest in the SNEA collection)
+benefits from Eliot's relatively systematic orthography --- but the
+preaspiration gap and vowel ambiguity problems documented in this section are
+the same foreign-ear perception issues that Cunningham and Kopris address in
+their respective language families.
+
+\subsection{Open Questions for Linguist Review}
+
+\begin{enumerate}
+  \item \textbf{∞(ꝏ) phonetics:} Is the \texttt{oozzz} mapping phonetically
+    accurate, or should it be revised to \texttt{uu} with a diacritic for
+    preaspiration? The \texttt{zzz} component seems ad-hoc.
+  \item \textbf{Preaspiration inference rules:} Can a reliable set of
+    morphotactic rules predict when preaspiration /h/ was present but unwritten
+    in Eliot's orthography? Or does this require per-entry comparative
+    verification?
+  \item \textbf{Dialect stratification:} How much of the variation between
+    Trumbull/Eliot (Natick) and Winslow/Wood (Pokanoket) is orthographic vs.
+    phonological vs. dialectal? The \textit{achm∞wonk} vs. \textit{hobbamock}
+    divergence suggests real dialect differentiation.
+  \item \textbf{Apostrophe resolution:} Is there a predictable pattern for when
+    \texttt{'} = /h/ vs. /ʔ/ vs. simple vowel elision? Edwards (Mahican)
+    apostrophe usage may provide clues.
+  \item \textbf{Eliot's \textit{c} before \textit{e}:} Are there identifiable
+    exceptions to the \textit{c} before front vowels → /s/ rule?
+  \item \textbf{Edwards cross-over:} How much does Edwards' (1787) Mahican
+    preaspiration system overlap with Massachusett? If the systems are
+    parallel, Edwards' data can directly inform Trumbull /h/ inference.
+\end{enumerate}
+
+\subsection{Bibliography}
+
+\begin{enumerate}
+
+\item Aubin, George F. (1975). \emph{A Proto-Algonquian Dictionary.} National
+Museum of Man, Mercury Series, Canadian Ethnology Service Paper No. 39.
+Ottawa: National Museums of Canada.
+
+\item Costa, David J. (2007). ``The Dialectology of Southern New England
+Algonquian.'' In H.C. Wolfart, ed., \emph{Papers of the 38th Algonquian
+Conference}, pp. 81--127. Winnipeg: University of Manitoba.
+
+\item Eliot, John. (1663). \emph{Mamusse Wunneetupanatamwe Up-Biblum God.}
+Cambridge, Massachusetts: Samuel Green and Marmaduke Johnson.
+
+\item Eliot, John. (1666). \emph{The Indian Grammar Begun.} Cambridge,
+Massachusetts.
+
+\item Goddard, Ives, and Kathleen J. Bragdon. (1988). \emph{Native Writings
+in Massachusett.} 2 vols. Memoirs of the American Philosophical Society 185.
+Philadelphia: American Philosophical Society.
+
+\item O'Brien, Frank Waobu. \emph{Appendix: Guide to Historical Spellings
+and Sounds in New England Algonquian Languages.} Aquidneck Indian Council.
+
+\item Trumbull, James Hammond. (1903). \emph{Natick Dictionary.} Bureau of
+American Ethnology Bulletin 25. Washington: Smithsonian Institution.
+
+\end{enumerate}

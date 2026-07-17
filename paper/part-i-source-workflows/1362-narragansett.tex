@@ -1,0 +1,542 @@
+% Narragansett (Williams 1643) — Source Workflow
+% Issue #1362
+% Status: Research complete, implementation pending
+
+\section{Narragansett: Williams 1643}
+\label{sec:1362}
+
+\subsection{Source Description}
+
+\textbf{Recorder:} Roger Williams (1603--1683), founder of Rhode Island Colony.
+\textbf{Source:} \emph{A Key into the Language of America} (1643), London: Gregory Dexter.
+\textbf{Language:} Narragansett [xnt] (Southern New England Algonquian).
+\textbf{Corpus:} 2,134 records.
+\textbf{Orthography:} English-based ad-hoc spelling, seventeenth-century Early
+Modern English conventions. Williams marks stress with diacritics (á primary,
+à low/falling, â rising-falling) --- a major advantage over other colonial
+sources such as Eliot's Massachusett Bible (1663), which uses no stress
+marking.
+
+\subsubsection{Recorder Biography}
+
+Roger Williams (1603--1683) was a Puritan minister, theologian, and founder
+of the Colony of Rhode Island and Providence Plantations. A graduate of
+Pembroke College, Cambridge (B.A. 1627), Williams was a skilled linguist who
+reportedly mastered Latin, Greek, Hebrew, Dutch, French, and several
+Algonquian languages. He arrived in Massachusetts Bay in 1631 and began
+intensive work with the Narragansett people after his banishment from the
+Massachusetts Bay Colony in 1635. His \emph{A Key into the Language of
+America} (1643) was the first extended study of a Native American language
+published in English. The work takes the form of a phrase book organized by
+topic (greetings, family, hunting, etc.), with each Narragansett phrase
+accompanied by an English translation and occasional commentary.
+
+\subsubsection{Orthography System}
+
+Williams used an English-based ad-hoc spelling system with no standardized
+orthography. He applied English sound-spelling conventions (seventeenth-century
+Early Modern English) to Narragansett, an Algonquian language with a radically
+different phoneme inventory. The system was designed to be usable by English
+colonists, not by Algonquianists --- it systematically collapses phonemic
+distinctions that English lacks.
+
+\subsubsection{Stress Marking}
+
+Williams' orthography is \textbf{stress-marked}, unlike Eliot's Massachusett
+--- this is a major advantage. Eliot's Massachusett Bible (1663) uses no
+accent marks, making stress reconstruction for Massachusett far more difficult.
+Williams' accents provide critical data about Narragansett prosody.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+Mark & Meaning \\
+\midrule
+á & Primary stress (or high pitch --- debated) \\
+à & Low/falling tone (secondary stress rarely written) \\
+â & Rising-falling tone \\
+\bottomrule
+\end{tabular}
+\caption{Stress marking in Williams' orthography}
+\label{tab:1362-stress}
+\end{table}
+
+Aubin's proposed stress rule (from personal correspondence) posits that all
+long vowels are stressed and all alternate even-numbered short vowels are
+stressed. However, this rule requires correct vowel length classification,
+which has not been achieved for extinct SNEA languages. The problem is
+circular: vowel length is needed to assign stress, but stress is one of the
+cues for vowel length. Costa (2007) discusses the prosodic structure of SNEA
+languages and notes that Narragansett stress patterns appear similar to Loup A
+and Massachusett, with a preference for stress on long syllables and
+alternating rhythm on short syllables --- but the documentary record is too
+thin to confirm this definitively.
+
+\subsection{Vowel Inventory}
+
+\subsubsection{Simple Vowels}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+Williams & IPA & Narragansett Phoneme & Notes \\
+\midrule
+a & /ə/, /ɔː/, /aː/ & PA *a *eː *aː & Three-way ambiguity \\
+ah & /aː/, /ɔː/ & PA *aː & Long variants \\
+e & /iː/, /ɛ/, /ə/, ∅ & PA *iː *e *a & Four-way ambiguity; silent word-final \\
+ê & /iː/ & PA *iː & Circumflex = long i \\
+i & /ə/, /iː/, /ɪ/ & PA *a *iː *i & Often = schwa in unstressed \\
+o & /ə/, /aː/, /uː/; after w: /aː/, /ɔː/ & PA *a *aː *oː & Broad range \\
+oo, ô & /uː/ & PA *oː & Consistent long u \\
+u & /ə/, /a/; word-initially possibly /w/ & PA *a & Ambiguous schwa-ish \\
+ie & /iː/ & PA *iː & \\
+ee & /iː/ & PA *iː & Consistent \\
+ei & /iː/, /ə/ & PA *iː *a & \\
+ih & /ə/ & PA *a & \\
+oh & /ə/, /oʊ/ & PA *a & \\
+eu & /juː/ & --- & Rare, from English loan phonology \\
+ea & /iː/, /ɛə/, /aː/ & PA *iː *aː & \\
+\bottomrule
+\end{tabular}
+\caption{Simple vowel mappings in Williams' orthography}
+\label{tab:1362-vowels}
+\end{table}
+
+\subsubsection{Nasalized Vowels}
+
+A critical feature of SNEA phonology: Proto-Algonquian *aː and *oː developed
+nasalized reflexes in Narragansett before certain consonants. Williams does
+not mark nasality directly; he uses nasal coda consonant digraphs to imply it.
+
+\begin{table}[h]
+\centering
+\begin{tabular}{ll}
+\toprule
+Williams & IPA \\
+\midrule
+an, aum, aun & /ã/ (PA *aː → ą in some environments) \\
+om, on & /õ/ (PA *oː → ǫ) \\
+ook & /oːk/, /oːkʷ/ (may be nasalized in context) \\
+\bottomrule
+\end{tabular}
+\caption{Nasalized vowel patterns}
+\label{tab:1362-nasal}
+\end{table}
+
+The nasalization is phonemic: \textit{n now} (yes) vs. \textit{núnow} (no)
+--- only nasality distinguishes them, and Williams collapses this distinction
+orthographically in related forms.
+
+\subsubsection{Diphthong-Like Sequences}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Williams & IPA & Notes \\
+\midrule
+au & /ɔː/, /aʊ/ & \\
+aw & /ɔː/, /ɒ/ & \\
+ai & /aː/, /eɪ/ & \\
+aü & /aː.uː/ & Rare; hiatal /aː/ + /uː/, not a true diphthong \\
+\bottomrule
+\end{tabular}
+\caption{Diphthong-like sequences}
+\label{tab:1362-diphthongs}
+\end{table}
+
+\subsection{Consonant Inventory}
+
+SNEA languages neutralized the PA voicing distinction in stops. Williams'
+English ear interpreted this as a gradient between voiced and voiceless,
+writing both \textit{p} and \textit{b} (though \textit{b} is rare),
+\textit{t} and \textit{d}, \textit{k} and \textit{g} (nearly absent). In
+almost all cases, \textit{p}, \textit{t}, \textit{k} represent an unaspirated
+stop --- between English /b/ and /p/, /d/ and /t/, /ɡ/ and /k/.
+
+\subsubsection{Stops}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Williams & IPA & Notes \\
+\midrule
+p, pp & /b/ ~ /p/ [p] & Unaspirated lenis stop; alternates with \textit{b} \\
+t & /d/ ~ /t/ ~ /tʲ/ & Before /i/ may palatalize to /tʃ/ \\
+tt & /t/ ~ /d/ ~ /tʲ/ & Geminate, also palatalized in palatal contexts \\
+k, kk & /k/ ~ /kʷ/ ~ /x/ & Labialized before /o/ /u/; guttural before /a/ \\
+c, cc & /k/ ~ /kʷ/ & Before a/o/u = /k/; before e/i = /s/ (English soft-c) \\
+\bottomrule
+\end{tabular}
+\caption{Stop consonants}
+\label{tab:1362-stops}
+\end{table}
+
+Cowan (1973) demonstrated that PA *-k- (simple velar) and *-hk- (preaspirated
+velar) merged phonetically in Narragansett as /hk/ medially, but can sometimes
+be distinguished through the behavior of preceding vowels. PA *-k- shortens a
+preceding long vowel; PA *-hk- does not. This provides an indirect method for
+reconstructing preaspiration from vowel length patterns --- even though
+Williams never writes the /h/.
+
+\subsubsection{Affricates}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Williams & IPA & Notes \\
+\midrule
+ch & /tʃ/ & As in English ``chair'' --- may also represent /t/ palatalized \\
+tch & /tʃ/ & As in English ``itch'' \\
+ddt, dt & /d/ ~ /t/ ~ /tʲ/ & Complex ch-t sound; among the most ambiguous \\
+\bottomrule
+\end{tabular}
+\caption{Affricate consonants}
+\label{tab:1362-affricates}
+\end{table}
+
+\subsubsection{Nasals}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Williams & IPA & Notes \\
+\midrule
+m, mm & /m/ & \\
+n, nn & /n/ & Before consonant can be syllabic /n̩/ (→ /nə/ for English speakers) \\
+n (syllabic) & /n̩/ → /nə/ & Unwritten schwa before n in consonant clusters \\
+\bottomrule
+\end{tabular}
+\caption{Nasal consonants}
+\label{tab:1362-nasals}
+\end{table}
+
+\subsubsection{Fricatives}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Williams & IPA & Notes \\
+\midrule
+s, ss & /s/ & Single \textit{s} after vowel; geminate \textit{ss} also /s/ \\
+sh & /ʃ/ word-initially; /s/ before consonant & Context-dependent ambiguity \\
+z & /s/ (not /z/) & English-style voiced s for fortis /s/ \\
+sc, shk, sk, shq & /sk/ & Cluster spellings \\
+sq & /skʷ/ ~ /x/ & Labialized or guttural depending on following vowel \\
+\bottomrule
+\end{tabular}
+\caption{Fricative consonants}
+\label{tab:1362-fricatives}
+\end{table}
+
+Goddard \& Bragdon (1988) note that in Massachusett, the cognate system shows
+*/s/ leniting to /h/ in intervocallic position --- a sound change that may
+also operate in Narragansett but is invisible in Williams' orthography (since
+he never writes /h/).
+
+\subsubsection{Glides}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{lll}
+\toprule
+Williams & IPA & Notes \\
+\midrule
+w, ww & /w/ ~ /j/ before e/i & Before e/i can be /j/ (yes) \\
+q (before vowel) & /kʷ/ & As in English ``queen'' --- consistent \\
+q (before w) & /k/ ~ /kʷ/ ~ /x/ & Context-dependent; may represent guttural \\
+\bottomrule
+\end{tabular}
+\caption{Glide consonants}
+\label{tab:1362-glides}
+\end{table}
+
+\subsubsection{The Silent /h/ --- Preaspiration}
+
+\textbf{English speakers routinely fail to hear preaspirated /h/ before stops.}
+This is the single most important finding for this source. Williams almost
+never wrote /h/ where modern reconstructions put preaspiration:
+
+\begin{itemize}
+  \item In Narragansett (and other SNEA languages), /h/ commonly precedes /p/,
+    /t/, /k/ in word-medial position (e.g., /hkaː/, /hp/, /ht/)
+  \item English speakers perceive these as single stops /k/, /p/, /t/ ---
+    preaspiration is not a phonemic distinction in English
+  \item Williams wrote \textit{k} where the actual pronunciation was /hk/
+    (preaspirated k)
+  \item \textbf{Confirmed by \textbackslash ph records:} The 3 records with
+    \textbackslash ph fields show missing /h/ in Williams
+\end{itemize}
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+ID & Williams & \textbackslash ph (phonetic) & Pattern \\
+\midrule
+3834 & Aaunchemókaw & ąːčimoːhkaːw & \textit{k} → hk \\
+4286 & Anakáusichick & anoːhkaːsiːčiːk & \textit{k} → hk \\
+4285 & Anakáusu & anoːhkaːsəw & \textit{k} → hk \\
+\bottomrule
+\end{tabular}
+\caption{Evidence from the 3 \textbackslash ph entries in the database}
+\label{tab:1362-ph}
+\end{table}
+
+All three show the same pattern: Williams writes \textit{k} where the
+reconstruction has /hk/. The /h/ is invisible to English ears.
+
+\subsection{Problems Encountered}
+
+\subsubsection{Vowel Quality Ambiguity}
+
+Williams' vowels \textit{a}, \textit{e}, \textit{i}, \textit{o}, \textit{u}
+each map to 2--4 possible phonemes. The vowel \textit{a} alone can represent
+/ə/, /ɔː/, or /aː/. This extreme ambiguity means that any single Williams
+spelling is consistent with multiple phonological interpretations.
+
+\subsubsection{Nasalization Implied but Not Marked}
+
+Sequences like \textit{an}, \textit{aun}, \textit{om} may indicate nasal
+vowels /ã/, /õ/ or oral vowel + consonantal \textit{n}. Disambiguating
+requires:
+\begin{enumerate}
+  \item Checking the cognate in Massachusett (Eliot marks nasal /ô/ explicitly)
+  \item Checking PA reconstruction (do expected reflexes predict nasalization
+    in this environment?)
+  \item Checking morphological structure (is the \textit{n} part of a suffix,
+    or a nasalization marker?)
+\end{enumerate}
+
+\subsubsection{Stop Voicing Neutralized}
+
+\textit{p}, \textit{t}, \textit{k} represent unaspirated stops that English
+speakers perceived variably as voiced or voiceless. Williams writes both
+\textit{p} and \textit{b}, \textit{t} and \textit{d}, \textit{k} and
+\textit{g} in free variation.
+
+\subsubsection{English Spelling Conventions}
+
+English digraphs (\textit{ea}, \textit{oo}, \textit{ch}, \textit{sh}) follow
+English values, but inconsistently due to 17th-century English pronunciation
+being different from modern English. For example, \textit{ea} in 1643 was
+/ɛː/, not modern /iː/.
+
+\subsubsection{Silent e}
+
+Word-final \textit{e} is often silent, but not always. This affects at least
+15--20\% of entries. Comparison with Massachusett cognates (Eliot) is the
+primary disambiguation strategy.
+
+\subsubsection{Preaspiration /h/ Invisible}
+
+Only 3 of 2,134 records have phonetic (\textbackslash ph) fields. All three
+show the same pattern: Williams writes \textit{k} where the reconstruction has
+/hk/. If this pattern is representative, >50\% of Williams' stops may be
+missing a preceding /h/.
+
+\subsubsection{\textit{sh} Before Consonants}
+
+Williams writes \textit{sh} before consonants where Massachusett cognates
+suggest plain /s/: Williams \textit{shp-} corresponds to Massachusett
+\textit{sp-}. Costa (2007) notes that this palatalization before consonants is
+also attested in Loup A records, suggesting it is a genuine SNEA dialect
+feature, not a Williams idiosyncrasy.
+
+\subsubsection{The \textit{an}/\textit{aun} Ambiguity for /ã/}
+
+The most consequential ambiguity: Williams writes both \textit{an} and
+\textit{aun} for /ã/, but also writes \textit{an} for plain /an/ (oral a + n).
+Disambiguating requires comparative evidence from Massachusett (Eliot marks
+nasal /ô/ explicitly), PA reconstruction, and morphological analysis.
+
+\subsection{Research Approach}
+
+\subsubsection{Recommended Methodology}
+
+\textbf{DO NOT USE REGEX} --- the ambiguities are fundamentally
+context-dependent. Recommended approach:
+
+\begin{enumerate}
+  \item \textbf{Finite State Machine (FSM):} Encode known spelling-to-phoneme
+    rules as weighted state transitions, with fallback probabilities for
+    ambiguous mappings.
+  \item \textbf{ML classifier:} Train on the 3 \textbackslash ph seed examples
+    (plus indirect evidence from comparative Algonquian) to predict
+    preaspiration placement and vowel quality.
+  \item \textbf{Morphological analysis:} Use known Narragansett morphology
+    (prefixes, stems, suffixes from Aubin/Hagenau) to segment Williams'
+    spellings before applying conversion.
+  \item \textbf{Comparative evidence:} Use Proto-Algonquian reconstructions
+    and sister languages (Massachusett, Mohegan-Pequot) as priors for
+    ambiguous mappings.
+\end{enumerate}
+
+\subsubsection{Annotation Plan}
+
+The 3 \textbackslash ph entries alone are insufficient for ML training.
+Recommended annotation plan:
+
+\begin{enumerate}
+  \item Hand-annotate ~50 representative entries with conversions
+  \item Use the annotations as training data
+  \item Evaluate on the remaining entries with spot-check verification
+  \item Cross-validate against Massachusett cognates (Goddard \& Bragdon 1988)
+    for at least 200 entries to calibrate the Narragansett-specific isoglosses
+\end{enumerate}
+
+\subsubsection{Cross-Linguistic Cognate Evidence}
+
+Massachusett, the closest sister language to Narragansett, was documented by
+John Eliot about 20 years after Williams. Eliot used a different orthographic
+convention --- less English-phonetic, more systematic (he devised it for Bible
+translation).
+
+\begin{table}[h]
+\centering
+\begin{tabular}{llll}
+\toprule
+English & Williams Narragansett & Eliot Massachusett & PA reconstruction \\
+\midrule
+dog & ayim & arum & *aɬemwa \\
+man & weenawash & wénawaš & \\
+water & nipp & nippe & *nepyi \\
+fire & apeisuwau & apeisuwâ & \\
+house & wétu & wétu & *wiːkiwaːmi \\
+I (say) & neen & neen & *niːra \\
+\bottomrule
+\end{tabular}
+\caption{Cognate pairs for calibration}
+\label{tab:1362-cognates}
+\end{table}
+
+\subsubsection{Open Questions for Revitalization}
+
+\begin{enumerate}
+  \item \textbf{Vowel length:} Was Narragansett vowel length phonemic (as in
+    Massachusett)? Williams' orthography suggests yes (áh vs. a for long vs.
+    short /a/), but the marking is inconsistent.
+  \item \textbf{Preaspiration:} How pervasive was /h/ before stops? The 3
+    \textbackslash ph entries suggest it was common.
+  \item \textbf{Nasalization phonemicity:} Was nasalization phonemic (as in
+    Massachusett) or allophonic? Costa (2007) suggests phonemic in at least
+    some SNEA dialects.
+  \item \textbf{Final vowel status:} Did Narragansett drop word-final vowels
+    (like Mahican) or retain them (like Massachusett)? Williams' variable
+    practice suggests either retention with devoicing or transition state.
+\end{enumerate}
+
+\subsection{Conversion Workflow}
+\texttt{[Pending implementation --- see Issue \#1362]}
+
+\subsection{Linguist Feedback}
+\texttt{[Template --- content pending review]}
+
+\subsection{Related Work: Colonial Recorder Perception Problem}
+
+The core challenge of this research card --- English-speaking recorders
+misperceiving and mis-transcribing Algonquian phonemes --- is a known
+phenomenon documented across Eastern North America. Two researchers' work is
+directly relevant:
+
+\textbf{Dr. Keith Cunningham} (Linguist, Nanticoke Indian Tribe). His doctoral
+dissertation \emph{A Phonological Analysis of Nanticoke With Practical
+Applications for Language Revitalization} (Georgetown University) analyzes
+three 18th-century Nanticoke word lists (Heckewelder 1785) using the same
+methodology: historical phonology from colonial recorders, with the same
+challenges of multilingual informants and orthographic complexity. His 2024
+Algonquian Conference presentation \emph{A Revised Phonological Analysis of
+the Heckewelder Vocabulary of Nanticoke} directly parallels the Williams
+analysis --- both involve English-speaking recorders working without
+standardized orthography, both require PA comparative calibration, and both
+feed into practical language revitalization. Cunningham's work demonstrates
+that the colonial recorder perception problem extends beyond SNEA into the
+broader Eastern Algonquian family (Nanticoke, Maryland Algonquian).
+
+\textbf{Dr. Craig Kopris} (Independent scholar). His paper \emph{Les sons
+wyandots perçus par des oreilles étrangères} (Wyandot sounds perceived by
+foreign ears, \emph{Recherches amérindiennes au Québec}, 2014) is the exact
+framing of the Williams problem: how European recorders systematically
+misperceived and mis-transcribed indigenous phonemes. His \emph{Wyandot
+Phonology: Recovering the Sound System of an Extinct Language} applies the
+same recovery methodology to an unrelated language family (Iroquoian),
+demonstrating that the foreign-ear perception problem is universal across
+colonial documentation of North American languages. His Dictionary of Wyandot
+project (NEH award FN-255576-17) shows the long-term application of these
+methods to language revitalization.
+
+The Williams Narragansett corpus (2,134 records, only 3 with phonetic
+transcription) represents one of the most extreme cases of this problem ---
+but the methodological framework for addressing it is established in the
+parallel work of Cunningham (Algonquian) and Kopris (Iroquoian).
+
+\subsection{Bibliography}
+
+\begin{enumerate}
+
+\item Bloomfield, Leonard. (1925). ``On the Sound-System of Central
+Algonquian.'' \emph{Language} 1(4): 130--156.
+
+\item Bloomfield, Leonard. (1946). ``Algonquian.'' In Harry Hoijer et al.,
+\emph{Linguistic Structures of Native America}, pp. 85--129. Viking Fund
+Publications in Anthropology 6. New York: Wenner-Gren Foundation.
+
+\item Bragdon, Kathleen J. (1999). \emph{Native People of Southern New
+England, 1500--1650}. Norman: University of Oklahoma Press.
+
+\item Bragdon, Kathleen J. (2009). \emph{Native Writings in Massachusett,
+Part II: Linguistic Analysis}. Memoirs of the American Philosophical Society
+263. Philadelphia: American Philosophical Society.
+
+\item Costa, David J. (2007). ``The Dialectology of Southern New England
+Algonquian.'' In H.C. Wolfart, ed., \emph{Papers of the 38th Algonquian
+Conference}, pp. 81--127. Winnipeg: University of Manitoba.
+
+\item Cowan, William. (1973). ``The Development of PA *-k- and *-hk- in
+Narragansett.'' \emph{International Journal of American Linguistics} 39(2):
+90--93.
+
+\item Cowan, William. (1975). ``PA *-θ- and *-t- in Narragansett.''
+\emph{International Journal of American Linguistics} 41(2): 178--181.
+
+\item Goddard, Ives. (1978). ``Eastern Algonquian Languages.'' In Bruce G.
+Trigger, ed., \emph{Handbook of North American Indians, Vol. 15: Northeast},
+pp. 70--77. Washington: Smithsonian Institution.
+
+\item Goddard, Ives. (1996). ``The Description of the Native Languages of
+North America Before Boas.'' In Ives Goddard, ed., \emph{Handbook of North
+American Indians, Vol. 17: Languages}, pp. 17--42. Washington: Smithsonian
+Institution.
+
+\item Goddard, Ives, and Kathleen J. Bragdon. (1988). \emph{Native Writings
+in Massachusett.} 2 vols. Memoirs of the American Philosophical Society 185.
+Philadelphia: American Philosophical Society.
+
+\item Hagenau, Walter. (1962). \emph{A Morphological Study of Narragansett.}
+M.A. thesis, University of North Dakota.
+
+\item O'Brien, Frank Waobu. \emph{Appendix: Guide to Historical Spellings
+and Sounds in New England Algonquian Languages.} Aquidneck Indian Council.
+
+\item Pentland, David H. (1979). \emph{Algonquian Historical Phonology.}
+Ph.D. dissertation, University of Toronto.
+
+\item Siebert, Frank T., Jr. (1975). ``Resurrecting Virginia Algonquian from
+the Dead: The Reconstituted and Historical Phonology of Powhatan.'' In James
+M. Crawford, ed., \emph{Studies in Southeastern Indian Languages}, pp.
+285--453. Athens: University of Georgia Press.
+
+\item Trumbull, James Hammond. (1870). ``Notes on Forty Versions of the
+Lord's Prayer in Algonkin Languages.'' \emph{Transactions of the American
+Philological Association} (1869--1896): 1--20.
+
+\item Williams, Roger. (1643). \emph{A Key into the Language of America.}
+London: Gregory Dexter.
+
+\end{enumerate}
