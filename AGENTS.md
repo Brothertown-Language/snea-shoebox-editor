@@ -1,5 +1,45 @@
 # AGENTS.md — Repository Guidelines for Coding Agents
 
+## Linguistic Data Requirements
+
+This project handles **Southern New England Algonquian (SNEA)** linguistic data. Agents MUST understand these constraints:
+
+### Unicode & Character Handling
+- **Unicode IPA characters** (ə, ʃ, tʃ, ŋ, ã, č, etc.) are first-class data — never normalize or strip
+- **Unicode diacritics and combining characters** must be preserved exactly
+- **Direct Unicode input** — no \-escape sequences in source data
+- **fontspec** for OpenType font selection in LaTeX builds
+
+### XeLaTeX Requirement
+All `.tex` files MUST use modern UTF-8 XeLaTeX (`xelatex`), not legacy `pdflatex`. This is non-negotiable because linguistic data requires:
+- Unicode IPA characters
+- Unicode diacritics and combining characters
+- Direct Unicode input without \-escape sequences
+- fontspec for OpenType font selection
+
+Every `.tex` file MUST begin with:
+```
+% !TEX program = xelatex
+% !TEX encoding = UTF-8 Unicode
+```
+
+### Cross-Reference: Lessons Learned
+Before making changes to search infrastructure, text normalization, FTS configuration, or regex processing linguistic data, consult `docs/lessons-learned/`:
+
+| File | Topic |
+|------|-------|
+| `docs/lessons-learned/index.md` | Entry catalog with cross-references |
+| `docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md` | Why 'english' tsconfig corrupts Algonquian search |
+| `docs/lessons-learned/2026-06-13-regex-linguistic-characters.md` | ASCII-based regex destroys linguistic data |
+| `docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md` | ∞ is a valid letter, maps to oozzz |
+| `docs/lessons-learned/2026-06-13-simple-vs-english-tsconfig.md` | Live PG verification evidence |
+| `docs/lessons-learned/2026-07-16-local-postgresql-setup.md` | Local PostgreSQL instance management and query patterns |
+
+### Data Integrity — NO SYNTHETIC DATA
+**Global absolute prohibition:** NO synthetic, imaginary, fabricated, proxy, or guessed linguistic data. Only real, verifiable data from real sources. See `.opencode/guidelines/090-data-integrity.md`.
+
+---
+
 ## Regression Test Protocol
 
 Before every regression test cycle, the local database MUST be re-synced from production:
