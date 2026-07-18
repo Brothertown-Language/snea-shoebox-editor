@@ -2,6 +2,36 @@ title: 'SPEC-FIX: Add SNEA linguistic project context to AGENTS.md files'
 status: open
 labels:
 - SPEC-FIX
-body: ''
+body: "# SPEC-FIX: Add SNEA linguistic project context to AGENTS.md files\n\n## Problem\n\
+  AGENTS.md files lack critical SNEA (Southern New England Algonquian) linguistic\
+  \ project context that agents need to work correctly on this codebase.\n\n## Requirements\n\
+  \n### 1. Root AGENTS.md - Add \"Linguistic Data Requirements\" section\n- SNEA =\
+  \ Southern New England Algonquian language family\n- Unicode IPA characters (ə,\
+  \ ʃ, tʃ, ŋ, ã, č, etc.)\n- Unicode diacritics and combining characters\n- Direct\
+  \ Unicode input without \\-escape sequences\n- fontspec for OpenType font selection\n\
+  - XeLaTeX requirement justification (linguistic data requirement)\n- Cross-reference\
+  \ lessons-learned:\n  - `docs/lessons-learned/2026-06-13-infinity-symbol-normalization.md`\
+  \ — ∞ is a valid letter, maps to oozzz\n  - `docs/lessons-learned/2026-06-13-regex-linguistic-characters.md`\
+  \ — ASCII-based regex destroys linguistic data\n  - `docs/lessons-learned/2026-06-13-postgres-fts-algonquian.md`\
+  \ — Why 'english' tsconfig corrupts Algonquian search\n  - `docs/lessons-learned/2026-06-13-simple-vs-english-tsconfig.md`\
+  \ — Live PG verification evidence\n\n### 2. Root AGENTS.md - Data Integrity reminder\n\
+  - NO synthetic/fabricated linguistic data — only real, verifiable data from real\
+  \ sources\n\n### 3. .opencode/AGENTS.md - Add \"SNEA Project Context\" section\n\
+  - Tech stack: Python 3.12, Streamlit, PostgreSQL, SQLAlchemy 2.x, uv\n- MDF (Multi-Dictionary\
+  \ Form) standards for linguistic data\n- Ethics: Nation sovereignty, \"Nation\"\
+  \ not \"Tribal\", inclusive language\n- Data integrity: No synthetic/fabricated\
+  \ data\n- Reference CONTRIBUTING.md and README.md for additional context\n\n###\
+  \ 4. Both files\n- Ensure agents immediately understand this is a linguistic data\
+  \ project with specific constraints\n\n## Success Criteria\n- [ ] SC-1: Root AGENTS.md\
+  \ has Linguistic Data Requirements section with XeLaTeX justification\n- [ ] SC-2:\
+  \ Root AGENTS.md Research Catalog cross-references all 4 lessons-learned\n- [ ]\
+  \ SC-3: Root AGENTS.md includes data integrity reminder (no synthetic data)\n- [\
+  \ ] SC-4: .opencode/AGENTS.md has SNEA Project Context section\n- [ ] SC-5: .opencode/AGENTS.md\
+  \ references tech stack, MDF, ethics, sovereignty\n- [ ] SC-6: .opencode/AGENTS.md\
+  \ references CONTRIBUTING.md and README.md\n- [ ] SC-7: Both files updated atomically\
+  \ in same change\n- [ ] SC-8: No existing content removed without justification\n\
+  - [ ] SC-9: Cross-references use stable anchors (section names, not line numbers)\n\
+  \n## Affected Files\n- `AGENTS.md` (root)\n- `.opencode/AGENTS.md`\n\n## Type\n\
+  SPEC-FIX (fixes missing documentation/context)"
 created_at: '2026-07-18T02:00:19+00:00'
-updated_at: '2026-07-18T02:00:19+00:00'
+updated_at: '2026-07-18T02:00:38+00:00'
