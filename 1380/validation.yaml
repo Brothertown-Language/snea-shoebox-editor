@@ -1,0 +1,52 @@
+status: DONE
+verdicts:
+  - check_name: "completeness"
+    result: PASS
+    justification: "All required sections present: Intent/Executive Summary, Root Cause, Approach, Alternatives Considered, Key Decisions, Source, Output Structure, Success Criteria (with IDs, Criteria, Evidence Type, Verification Method), Implementation Phases, Type, Change Control"
+  - check_name: "clarity"
+    result: FAIL
+    justification: "SC-5 uses ambiguous terms 'fully preserved' and 'without data loss' — these are not deterministically testable. What constitutes data loss (whitespace changes? ordering? formatting?) is undefined. SC-3's 'bidirectionally resolved' is clear but the 299 unique targets claim is unverifiable."
+  - check_name: "consistency"
+    result: FAIL
+    justification: "Spec claims 299 unique \cf targets. Live verification of source file shows 188 unique targets from standalone \cf lines (300 lines), or 198 unique targets counting all \cf occurrences (315 total). Neither matches 299. This is a factual inconsistency between the spec and the source data."
+  - check_name: "correctness"
+    result: FAIL
+    justification: "Verified claims: 108 \key entries (PASS), 315 \cf lines (PASS), 425 \ftx examples (PASS), 133KB file size (PASS). Unverified claim: '299 unique targets' for \cf — live analysis yields 188 (standalone \cf lines) or 198 (all \cf occurrences). The 299 figure could not be reproduced from the source file."
+  - check_name: "feasibility"
+    result: PASS
+    justification: "All SCs achievable with a Python parser generating markdown files. No external dependencies beyond standard library. Token budget constraints are reasonable for the output size."
+  - check_name: "testability"
+    result: PASS
+    justification: "Every SC has a clear verification method matching its evidence type. SC-1 (ls | wc -l + frontmatter check), SC-2 (token count), SC-3 (link count + backlinks), SC-4 (sampled sub-agent read), SC-5 (round-trip diff), SC-6 (find for JSON) are all testable."
+  - check_name: "traceability"
+    result: FAIL
+    justification: "No explicit Requirements section exists. No Traceability table mapping requirements to SCs to phases. Phases reference SCs by number but there is no formal traceability matrix. Cannot verify that every requirement maps to >=1 SC or every SC maps to >=1 phase without a requirements enumeration."
+  - check_name: "atomicity"
+    result: FAIL
+    justification: "SC-5 is compound: it bundles three sub-claims (\key, \cf, AND \ftx content preservation) into one SC. A failure in any one sub-claim fails the entire SC, but the SC does not distinguish which sub-claim failed. Should be split into SC-5a (\key), SC-5b (\cf), SC-5c (\ftx) or clarified as a single diff-based check."
+  - check_name: "evidence_type_correctness"
+    result: FAIL
+    justification: "SC-1 declared as 'string' but verification method includes 'ls | wc -l yields 108' which is structural evidence (file count). The frontmatter check is string. Evidence type should be 'string + structural' or the verification method should be adjusted. SC-5 declared as 'behavioral' is correct (round-trip conversion + diff)."
+  - check_name: "scope_fidelity"
+    result: PASS
+    justification: "Spec stays within the stated problem: convert MDF 1.9a master doc to progressive-read Markdown. No scope creep beyond the source file's content. Key Decision #6 (round-trip) is appropriate scope."
+  - check_name: "clean_room_compliance"
+    result: PASS
+    justification: "Spec is a content document, not a task file. No task() or skill() calls present. No orchestrator routing instructions. Clean-room compliance is not applicable to spec content."
+  - check_name: "structural_sc_completeness"
+    result: PASS
+    justification: "All 6 SCs have ID, Criterion, Evidence Type, and Verification Method columns populated."
+  - check_name: "structural_evidence_type_validity"
+    result: PASS
+    justification: "All evidence types are from the valid set: string (SC-1, SC-2, SC-3, SC-6), semantic (SC-4), behavioral (SC-5)."
+  - check_name: "structural_traceability_completeness"
+    result: FAIL
+    justification: "No Requirements section exists, so no Traceability table can be constructed. Every SC appears in the SC table, but there is no mapping from requirements to SCs or from SCs to requirements."
+  - check_name: "structural_phase_coverage"
+    result: PASS
+    justification: "All 6 phases reference SC numbers in their descriptions. Phase 1 -> SC-2, Phase 2 -> SC-1, Phase 3 -> SC-3, Phase 4 -> SC-4, Phase 5 -> SC-5, Phase 6 -> SC-6."
+  - check_name: "structural_no_orphaned_sections"
+    result: PASS
+    justification: "All required sections are present and non-empty. No empty or missing sections."
+aggregate_verdict: FAIL
+finding_summary: "Spec validation FAILS on 6 of 11 holistic dimensions. Key issues: (1) SC-5 uses ambiguous terms 'fully preserved'/'without data loss' — clarity FAIL. (2) Spec claims 299 unique \cf targets but live source analysis yields 188-198 — consistency and correctness FAIL. (3) No Requirements section or Traceability table — traceability FAIL. (4) SC-5 is compound (bundles \key, \cf, \ftx preservation) — atomicity FAIL. (5) SC-1 evidence type mismatch (structural file count declared as string) — evidence type correctness FAIL. Remediation: fix \cf unique target count, add Requirements section with Traceability table, split SC-5 into sub-SCs, clarify 'data loss' definition, adjust SC-1 evidence type to 'string + structural'."

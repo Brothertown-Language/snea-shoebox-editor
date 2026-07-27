@@ -1,0 +1,58 @@
+# Validation results for #1379 SPEC: Convert master MDF documentation to LaTeX/PDF and HTML
+# Validated: 2026-07-26 23:48 EDT
+# Validator: OpenCode (deepseek-v4-flash)
+
+status: DONE
+
+verdicts:
+  - check_name: "completeness"
+    result: PASS
+    justification: "All required sections present: Intent/Objective, Root Cause/Background, Approach, Alternatives Considered, Key Decisions, Source Document, Requirements, Success Criteria (SCs), Implementation Phases, Affected Files, Type, Change Control. No explicit Dependencies section but dependencies are implicit in Approach/Requirements."
+
+  - check_name: "clarity"
+    result: PASS
+    justification: "All SCs are unambiguous and testable. SC-3 minor ambiguity on 'reachable' is resolved by explicit verification method (grep for anchor IDs). Verification methods are concrete and repeatable."
+
+  - check_name: "consistency"
+    result: PASS
+    justification: "No internal contradictions. Sections are cohesive. Implementation phases logically chain: parser → LaTeX renderer → HTML renderer → build script + CI/CD."
+
+  - check_name: "correctness"
+    result: FAIL
+    justification: "Spec claims '425 formatting/printing examples (\ftx/\fxv)' but source file MDFields19a_UTF8.txt contains 414 \ftx and 30 \fxv = 444 total. 425 does not match either \ftx-only (414) or combined total (444). All other factual claims verified: 108 \key (✅), 297 \cf (✅), 3353 lines (✅), 133KB file size (✅), file path docs/mdf/MDFields19a_UTF8.txt exists (✅)."
+
+  - check_name: "feasibility"
+    result: PASS
+    justification: "All SCs achievable with standard tools: Python parser (simple marker-based format), xelatex, HTML templating, GitHub Actions. No exotic dependencies or unavailable infrastructure required."
+
+  - check_name: "testability"
+    result: PASS
+    justification: "Every SC has a concrete verification method explicitly documented. SC-1: xelatex exit code + pdftotext grep. SC-2: parse HTML for hyperlink anchors. SC-3: grep PDF + grep HTML. SC-4: file existence check. SC-5: GitHub Pages URL + release asset check."
+
+  - check_name: "traceability"
+    result: FAIL
+    justification: "No explicit traceability table mapping Requirements → SCs → Phases. Traceability is implicit: SC-1/SC-3 → Phase 2 (LaTeX), SC-2/SC-3 → Phase 3 (HTML), SC-4/SC-5 → Phase 4 (build/CI). Requirements section items (output formats, conversion approach, HTML structure, PDF requirements) are not formally linked to SCs or phases. No Requirements IDs for cross-referencing."
+
+  - check_name: "atomicity"
+    result: PASS
+    justification: "Every SC is a single independently verifiable claim. SC-3 has two sub-checks (PDF grep + HTML grep) which is appropriate for a string+behavioral evidence type covering both output formats."
+
+  - check_name: "evidence_type_correctness"
+    result: PASS
+    justification: "All evidence types match their verification methods per the Evidence Type Taxonomy: SC-1 (behavioral — test execution), SC-2 (behavioral — test execution), SC-3 (string+behavioral — grep + test execution), SC-4 (behavioral — test execution), SC-5 (behavioral — test execution). No EVIDENCE_TYPE_MISMATCH."
+
+  - check_name: "scope_fidelity"
+    result: PASS
+    justification: "Spec stays within the problem statement: convert MDF master doc to PDF and HTML. Approach (single IR → dual renderers) is faithful. No scope creep into unrelated functionality."
+
+  - check_name: "cleanroom_compliance"
+    result: PASS
+    justification: "No task() or skill() calls in spec content. No orchestrator preload in this validation run. Spec contains only implementation instructions, not agent routing instructions."
+
+  - check_name: "structural_sc_completeness"
+    result: PASS
+    justification: "All 5 SCs have ID, Criterion, Evidence Type, and Verification Method columns populated. Evidence types are valid (behavioral, string+behavioral). No orphaned sections."
+
+aggregate_verdict: FAIL
+
+finding_summary: "Spec is well-structured and largely implementable but has 2 defects: (1) Correctness: source example count is 444 (414 \ftx + 30 \fxv), not 425 as claimed; (2) Traceability: no traceability table mapping Requirements to SCs to Phases. Both are minor — the example count should be corrected, and a traceability matrix added for formal completeness. The spec is otherwise sound: clear SCs, appropriate evidence types, feasible phases, good scope fidelity."
