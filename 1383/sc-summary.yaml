@@ -1,0 +1,26 @@
+sc_count: 6
+scs:
+  - id: "SC-1"
+    description: "Remove the Cunningham Nanticoke multi-volume archive (cunningham-nanticoke.{zip,z01..z09}, 10 files, 428MB) from the .issues/ worktree"
+    evidence_type: "structural"
+    plan_item: 1
+  - id: "SC-2"
+    description: "Remove the Cheyenne multi-volume archive (petter-1915-cheyenne-dictionary.{zip,z01}, 2 files, 82MB) from the .issues/ worktree"
+    evidence_type: "structural"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Remove the broken Abenaki 404 file (day-1994-western-abenaki-dictionary.pdf, 137KB) from the .issues/ worktree"
+    evidence_type: "structural"
+    plan_item: 3
+  - id: "SC-4"
+    description: "Remove the duplicate mirrored-sources/ directory (12 files, 20MB) from the .issues/ worktree while preserving the canonical sources/ directory"
+    evidence_type: "structural"
+    plan_item: 4
+  - id: "SC-5"
+    description: "Confirm the high-relevance data migrated to snea-phonetics is present there (hewson, central-algonquian, eastern-algonquian, arapaho, ojibwe CSVs)"
+    evidence_type: "structural"
+    plan_item: 5
+  - id: "SC-6"
+    description: "Confirm the three small Cunningham-Kopris PDFs (hdls-2-proceedings, kopris-sons-wyandots, kopris-wyandot-phonology) are kept and present in snea-phonetics"
+    evidence_type: "structural"
+    plan_item: 6
