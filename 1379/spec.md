@@ -1,10 +1,10 @@
 # SPEC: Convert Master MDF Documentation to LaTeX/PDF and HTML
 
 ## Intent / Executive Summary
-Convert the MDF 1.9a field reference (`docs/mdf/MDFields19a_UTF8.txt`, 133KB, 108 `\key` entries, 297 `\cf` cross-refs, 444 formatting/printing examples (`\ftx`/`\fxv`)) from Toolbox/Shoebox help format into two professionally publishable formats: a XeLaTeX-compiled PDF reference document and a multi-page browsable HTML site. Both outputs derive from a single parsed intermediate representation, ensuring consistency. The HTML output deploys to GitHub Pages; the PDF attaches to release assets.
+Convert the MDF 1.9a field reference (`docs/mdf/MDFields19a_UTF8.txt`, 133KB, 108 `\key` entries, 315 `\cf` cross-refs, 444 formatting/printing examples (`\ftx`/`\fxv`)) from Toolbox/Shoebox help format into two professionally publishable formats: a XeLaTeX-compiled PDF reference document and a multi-page browsable HTML site. Both outputs derive from a single parsed intermediate representation, ensuring consistency. The HTML output deploys to GitHub Pages; the PDF attaches to release assets.
 
 ## Root Cause
-The source file is in Toolbox/Shoebox help format — a plain-text marker-based format (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`) that is not web-renderable, not printable as a professional document, and not navigable by modern readers. No automated conversion pipeline exists. Manual conversion is infeasible at 3353 lines with 297 cross-references.
+The source file is in Toolbox/Shoebox help format — a plain-text marker-based format (`\key`, `\shd`, `\txt`, `\ftx`, `\fxv`, `\cf`, `\nt`, `\typ`) that is not web-renderable, not printable as a professional document, and not navigable by modern readers. No automated conversion pipeline exists. Manual conversion is infeasible at 3353 lines with 315 cross-references.
 
 ## Approach
 1. Write a Python converter (`scripts/convert_mdf_master.py`) that parses the Toolbox marker structure into an intermediate JSON representation
@@ -17,7 +17,7 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 ## Alternatives Considered
 | Alternative | Rejected Because |
 |---|---|
-| Manual conversion in Word/LaTeX | 3353 lines, 297 cross-refs — error-prone, unrepeatable |
+| Manual conversion in Word/LaTeX | 3353 lines, 315 cross-refs — error-prone, unrepeatable |
 | Sphinx + custom directive | Overkill for single-source conversion; adds Python build dependency |
 | Pandoc with custom writer | Pandoc's Toolbox reader does not exist; would need a custom writer anyway |
 | Single HTML page | 133KB source → ~500KB HTML; multi-page with sidebar is more navigable |
@@ -32,7 +32,7 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 `docs/mdf/MDFields19a_UTF8.txt` — Official MDF 1.9a field reference (Buseman, 2006). Contains:
 - 108 field marker definitions (`\lx`, `\ge`, `\ps`, `\se`, `\cf`, etc.)
 - Hierarchy discussions (standard vs. alternate)
-- 297 cross-references between markers (`\cf`)
+- 315 cross-references between markers (`\cf`)
 - 444 formatting/printing examples (`\ftx`/`\fxv`)
 - Character style codes, range sets, punctuation codes, printed field labels
 - Old/changed markers
@@ -77,7 +77,7 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 ### Phase 1: Parser — Toolbox-to-JSON converter
 - Implement `scripts/convert_mdf_master.py` with a parser for all 9 marker types
 - Output: `docs/mdf/build/master.json` (intermediate representation)
-- Verify: JSON contains all 108 keys, 297 cross-refs, 444 examples
+- Verify: JSON contains all 108 keys, 315 cross-refs, 444 examples
 
 ### Phase 2: LaTeX renderer
 - Implement LaTeX template rendering from the JSON intermediate representation
@@ -87,7 +87,7 @@ The source file is in Toolbox/Shoebox help format — a plain-text marker-based 
 ### Phase 3: HTML renderer
 - Implement multi-page HTML site generation from the JSON intermediate representation
 - Output: `docs/mdf/build/site/` (directory of HTML pages)
-- Verify: all 108 keys have individual pages; all 297 cross-refs are hyperlinks
+- Verify: all 108 keys have individual pages; all 315 cross-refs are hyperlinks
 
 ### Phase 4: Build script and CI/CD
 - Write `scripts/build_mdf_docs.sh` that chains parser → LaTeX → HTML, writing all outputs to `docs/mdf/build/`
@@ -129,3 +129,4 @@ SPEC (documentation conversion tooling)
 | 2026-07-26 | Added preamble sections (Intent, Root Cause, Approach, Alternatives, Key Decisions), evidence type column, verification methods, implementation phases, tightened SC wording | Spec audit returned DRAFT — 5 defects remediated | AI agent (spec-creation revise task) |
 | 2026-07-26 | Corrected example count from 425 to 444 (414 `\ftx` + 30 `\fxv`); added Requirements→SCs→Phases traceability table | Validation: correctness (wrong count) + traceability (missing table) | AI agent (spec-creation revise task) |
 | 2026-07-26 | Added SC-6 (build artifact tracking); updated all output paths from `docs/mdf/` to `docs/mdf/build/`; updated Affected Files, traceability table, and Phase 4 to reflect new paths and artifact commitment | Revision request: add SC-6 for artifact tracking, consolidate outputs under `docs/mdf/build/` | Developer (Michael Conrad) |
+| 2026-07-27 | Corrected `\cf` cross-reference count from 297 to 315 (verified by `rg '\\cf' docs/mdf/MDFields19a_UTF8.txt | wc -l`); verified `\ftx` count 425 (414 non-empty + 11 empty) is correct | Revision request: fix incorrect count | Developer (Michael Conrad) |
