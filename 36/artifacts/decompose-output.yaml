@@ -1,0 +1,55 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+derived_from: "spec Items 1-12 (one per SC, SC↔Item mapping 1:1 per sc-summary.yaml)"
+
+items:
+  - id: D1-ITEM-1
+    sc: SC-1
+    title: "Committed model artifacts with SHA-pinned integrity"
+    deliverable: "models/gte-small/onnx/model_qint8_avx512_vnni.onnx (34,118,638 B, SHA256 c9434b8d71617919a3ef61f1fafea4b15b4e02d782cc287623158713881e34cd) + models/gte-small/tokenizer.json (711,661 B, SHA256 da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0) + hash check script"
+  - id: D1-ITEM-2
+    sc: SC-2
+    title: "embedding_service encode invariants"
+    deliverable: "src/services/embedding_service.py encode(texts, batch≤64) → float32 (1,384) unit-norm via tokenize(512) → onnxruntime → attention-mask mean-pool → L2-normalize; errors contextual (fail-fast)"
+  - id: D1-ITEM-3
+    sc: SC-3
+    title: "pgvector schema additions"
+    deliverable: "src/database/models/search.py — GlossSearchEntry +3 columns (embedding vector(384), entry_type, embedding_model); NEW SemanticSearchEntry + SemanticSearchResult dataclass; additive-only"
+  - id: D1-ITEM-4
+    sc: SC-4
+    title: "DDL-only versioned migrations + pgvector extversion assert"
+    deliverable: "src/database/migrations.py — 2 appended YYYYMMDDSSSSS registry entries (CREATE TABLE + ALTER TABLE ADD COLUMN), idempotent, reversible drops documented, no data writes, no renumbering"
+  - id: D1-ITEM-5
+    sc: SC-5
+    title: "search_semantic seam per v1 contract"
+    deliverable: "src/services/semantic_search_service.py — encode query → cosine rank over both tables (pin join) → threshold (None→0.80) → full ranked list desc, record_id-asc tie-break → SemanticSearchResult; no streamlit imports"
+  - id: D1-ITEM-6
+    sc: SC-6
+    title: "Calibration anchor floors"
+    deliverable: "calibration module + per-anchor evidence artifact on freshly synced data — positives ≥ per-anchor floors (0.85-0.90 summary bound), negatives ≥0.07 below, default threshold 0.80"
+  - id: D1-ITEM-7
+    sc: SC-7
+    title: "Degraded status semantics"
+    deliverable: "service edge guards — empty_query (pre-model), no_embeddings, stale_model, ok+empty; messages name admin backfill remedy; never an exception"
+  - id: D1-ITEM-8
+    sc: SC-8
+    title: "Upload-path inline embedding"
+    deliverable: "populate_search_embeddings inline in populate_search_entries() (signature unchanged) — ge rows embedded with pin-stamped embedding_model, batch ≤512, Unicode exact"
+  - id: D1-ITEM-9
+    sc: SC-9
+    title: "Admin Embedding Backfill button"
+    deliverable: "table_maintenance.py sibling section beside render_data_reprocessing_maintenance(); backfill service method with st.progress + callback + st.status; role gate reused; model-change recompute"
+  - id: D1-ITEM-10
+    sc: SC-10
+    title: "Dependency + memory envelope"
+    deliverable: "pyproject.toml — add onnxruntime + tokenizers to runtime deps (sentence-transformers already dev-only, verified); profiler evidence artifact vs 1 GiB envelope"
+  - id: D1-ITEM-11
+    sc: SC-11
+    title: "Additive SearchMode widening + semantic dispatch entry"
+    deliverable: "src/services/linguistic_service.py — widen SearchMode Literal with 'Semantic Gloss'/'Semantic All'; dispatch entries route both to search_semantic(); existing strategies/signature/return type unchanged"
+  - id: D1-ITEM-12
+    sc: SC-12
+    title: "Load-once process-wide session singleton"
+    deliverable: "src/services/embedding_service.py load_model() — module-level singleton InferenceSession, streamlit-import-free, one-at-a-time in-flight lock; concurrency test asserts identical handle + registry count == 1"
+
+mapping_check: "SC-1..SC-12 ↔ D1-ITEM-1..D1-ITEM-12 bijection; matches spec Items 1-12 and sc-summary.yaml plan_item fields"

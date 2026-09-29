@@ -1,0 +1,52 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+sc_count: 12
+
+paths:
+  - id: P1
+    sc: SC-11
+    path: "search_records(search_mode='Semantic Gloss'|'Semantic All') → _search_strategies.get(mode) → search_semantic(mode, query, …)"
+    anchors: ["src/services/linguistic_service.py:28 (SearchMode Literal)", "src/services/linguistic_service.py:79-84 (_search_strategies)", "src/services/linguistic_service.py:384-391 (search_records signature)", ":451/:523/:579 dispatch sites"]
+    change: "EXTENDING — Literal widened; two new strategy entries map to search_semantic(); existing four entries and signature untouched (R-13)"
+  - id: P2
+    sc: SC-5
+    path: "search_semantic(mode ∈ {'gloss','all'}) → load_model() singleton session → encode(query) → cosine rank over gloss_search_entries ∪ semantic_search_entries (JOIN guard embedding_model == pin) → threshold filter (None→0.80) → SemanticSearchResult{results, status, message}"
+    anchors: ["src/services/semantic_search_service.py (new)", "src/services/embedding_service.py (new)"]
+    change: "NEW"
+  - id: P3
+    sc: SC-2, SC-12
+    path: "encode(texts, batch≤64) → tokenizer(512, truncation) → InferenceSession.Run (module-level singleton, in-flight lock) → attention-mask mean-pool → L2-normalize → float32 (1,384)"
+    anchors: ["src/services/embedding_service.py (new)", "models/gte-small/onnx/model_qint8_avx512_vnni.onnx", "models/gte-small/tokenizer.json"]
+    change: "NEW"
+  - id: P4
+    sc: SC-8
+    path: "UploadService.ingest → populate_search_entries(record_ids, session=None) → ge rows parsed → embed inline (batch ≤512) → upsert with embedding_model=pin"
+    anchors: ["src/services/upload_service.py:1758 (populate_search_entries def — stable anchor)", "test/test_upload_search_entries.py"]
+    change: "EXTENDING — internals gain inline embedding; signature unchanged (R-8); R-11 batch ≤512 + fail-fast"
+  - id: P5
+    sc: SC-9
+    path: "Table Maintenance main() role gate → render_data_reprocessing_maintenance() sibling section → Embedding Backfill button → backfill service method (st.progress + progress callback + st.status) → handle_ui_error on exception"
+    anchors: ["src/frontend/pages/table_maintenance.py:125-130 (role gate)", ":169-196 (Data Reprocessing idiom)"]
+    change: "EXTENDING — sibling section added; idiom reused (R-9)"
+  - id: P6
+    sc: SC-4, SC-3
+    path: "startup schema check → _MIGRATIONS version compare → apply pending migrations in order → _migrate_* DDL (CREATE TABLE semantic_search_entries; ALTER TABLE gloss_search_entries ADD COLUMN ×3) → pgvector extversion assertion → idempotency via SchemaVersion row"
+    anchors: ["src/database/migrations.py:60-72 (registry + YYYYMMDDSSSSS directive)", "src/database/models/search.py:63-78", "src/database/connection.py:525-537 (_ensure_extensions/pgvector enable)"]
+    change: "EXTENDING — 2 appended registry entries; no renumbering (R-4)"
+  - id: P7
+    sc: SC-7
+    path: "search_semantic edge guards: strip query → empty/whitespace → status empty_query (pre-model); no pinned rows → no_embeddings; pinned rows exist but stale-model rows only → stale_model; ranked list empty after threshold → ok + empty results; degraded messages name admin backfill remedy"
+    anchors: ["src/services/semantic_search_service.py (new)"]
+    change: "NEW — guard order per SC-7 matrix, never an exception"
+  - id: P8
+    sc: SC-10
+    path: "uv/pip dependency resolution → runtime group gains onnxruntime + tokenizers → batch-64 load+encode RSS profile measured vs 1 GiB envelope"
+    anchors: ["pyproject.toml:7-19 (dependencies)", ":28-34 (dev group; sentence-transformers at :32 stays dev-only)"]
+    change: "EXTENDING — dependency manifest only; no import-graph changes elsewhere"
+  - id: P9
+    sc: SC-6, SC-1
+    path: "calibration pytest → encode anchors (round/bed/house/peas/hunt positives + unrelated negatives) on freshly synced DB → per-anchor floors recorded → threshold 0.80 held; hash script → sha256 artifacts vs recorded pins"
+    anchors: ["models/gte-small/* (pins in spec Model pin decision)", "calibration evidence artifact"]
+    change: "NEW verification paths"
+
+disconnected_paths: []  # every enumerated path routes through the additive seam (P1/P2) or substrate (P3/P6)

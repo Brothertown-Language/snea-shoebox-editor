@@ -1,0 +1,67 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+sc_count: 12
+
+affected_files:
+  - path: "src/services/linguistic_service.py"
+    anchors: ["SearchMode Literal (:28)", "_search_strategies map (:79-84)", "search_records (:384, :391)"]
+    change: "EXTENDING — additive Literal widening ('Semantic Gloss'/'Semantic All') + new dispatch entries routed to search_semantic(); existing strategies/signature/return type unchanged (R-13)"
+    scs: ["SC-11"]
+    exists_live: true
+  - path: "src/services/embedding_service.py"
+    anchors: ["new module"]
+    change: "NEW — encode() + load_model() process-wide singleton (module-level holder, streamlit-import-free, in-flight lock) per R-2/R-14"
+    scs: ["SC-2", "SC-12"]
+    exists_live: false
+  - path: "src/services/semantic_search_service.py"
+    anchors: ["new module"]
+    change: "NEW — search_semantic(mode, query, threshold, source_id, limit) → SemanticSearchResult per R-5 seam contract"
+    scs: ["SC-5", "SC-7"]
+    exists_live: false
+  - path: "src/database/models/search.py"
+    anchors: ["GlossSearchEntry (:63-78, RESTRICT FK)"]
+    change: "EXTENDING — +3 columns (embedding vector(384), entry_type, embedding_model); NEW SemanticSearchEntry model + SemanticSearchResult dataclass"
+    scs: ["SC-3"]
+    exists_live: true
+  - path: "src/database/migrations.py"
+    anchors: ["_MIGRATIONS registry (:60-72, YYYYMMDDSSSSS directive, append-only)"]
+    change: "EXTENDING — 2 appended DDL-only entries (CREATE TABLE + ALTER TABLE ADD COLUMN) with pgvector extversion assertion"
+    scs: ["SC-4"]
+    exists_live: true
+  - path: "src/services/upload_service.py"
+    anchors: ["populate_search_entries (:1758, signature unchanged)"]
+    change: "EXTENDING — inline embedding of new primary ge rows during ingestion; signature unchanged (R-8)"
+    scs: ["SC-8"]
+    exists_live: true
+  - path: "src/frontend/pages/table_maintenance.py"
+    anchors: ["role gate (:125-130)", "render_data_reprocessing_maintenance (:169-196)"]
+    change: "EXTENDING — sibling admin Embedding Backfill button section beside Data Reprocessing, reusing role gate + st.progress/callback/st.status idiom"
+    scs: ["SC-9"]
+    exists_live: true
+  - path: "pyproject.toml"
+    anchors: ["dependencies (:7-19)", "dev group (:28-34, sentence-transformers at :32)"]
+    change: "EXTENDING — add onnxruntime + tokenizers to runtime dependencies; sentence-transformers already dev-only (verified live, no change)"
+    scs: ["SC-10"]
+    exists_live: true
+  - path: "models/gte-small/onnx/model_qint8_avx512_vnni.onnx"
+    anchors: ["committed artifact"]
+    change: "NEW — committed bytes, SHA256 c9434b8d71617919a3ef61f1fafea4b15b4e02d782cc287623158713881e34cd (34,118,638 B)"
+    scs: ["SC-1"]
+    exists_live: false
+  - path: "models/gte-small/tokenizer.json"
+    anchors: ["committed artifact"]
+    change: "NEW — committed bytes, SHA256 da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0 (711,661 B)"
+    scs: ["SC-1"]
+    exists_live: false
+  - path: "test/test_upload_search_entries.py"
+    anchors: ["existing test module"]
+    change: "EXTENDING — assert embeddings + pin + Unicode fidelity against real synced records"
+    scs: ["SC-8"]
+    exists_live: true
+
+blast_radius_notes:
+  consumer_in_spec: "UI spec #1385 consumes the search_semantic() seam; any post-merge contract change to SemanticSearchResult fields is a cross-spec break."
+  untouched_by_directive: "Lexeme/FTS/Headword/Gloss strategies, search_records signature, RecordSearchResult return type, preference_service.py, MDF parser, migration registry numbering (append-only), live gloss_search_entries RESTRICT FK policy (new table uses CASCADE — documented difference)."
+  risk: "MEDIUM — additive changes dominate (new modules/columns/table/modes); the only files with shared-surface edits are linguistic_service.py (Literal + dispatch) and upload_service.py (populate_search_entries internals), both constrained to additive/extension-only by R-13/R-8."
+
+risk_level: MEDIUM

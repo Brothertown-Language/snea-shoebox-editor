@@ -1,0 +1,101 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+sc_count: 12
+
+states:
+  - entity: "embedding model (process)"
+    states: ["not_loaded", "loaded (module-level singleton)"]
+    transitions:
+      - from: not_loaded
+        to: loaded
+        trigger: "first load_model() call — acquires in-flight lock, session constructed from committed ONNX bytes"
+        guard: "artifact present + hash-integrity assumed per SC-1; lock is one-at-a-time; registry count == 1 after N concurrent calls (SC-12)"
+        sc: "SC-12"
+    invariants:
+      - "loaded session persists for process lifetime — never evicted per-thread/per-session; streamlit-import-free module"
+      - "concurrent Run() calls on the shared session are thread-safe (verified: 8 threads, deterministic outputs)"
+
+  - entity: "migration registry (SchemaVersion)"
+    states: ["pre-migration", "table-created", "columns-added"]
+    transitions:
+      - from: pre-migration
+        to: table-created
+        trigger: "apply migration entry N+1 (CREATE TABLE semantic_search_entries) — version-gated via YYYYMMDDSSSSS append-only registry; pgvector extversion asserted first"
+        sc: "SC-4"
+      - from: table-created
+        to: columns-added
+        trigger: "apply migration entry N+2 (ALTER TABLE gloss_search_entries ADD COLUMN ×3)"
+        sc: "SC-4"
+    invariants:
+      - "apply-in-order; rerun is a no-op (idempotent via version rows); DDL-only — no data writes, no renumbering; reversible drops documented"
+
+  - entity: "search query lifecycle (search_semantic)"
+    states: ["received", "empty_query", "no_embeddings", "stale_model", "ranked", "ok_empty"]
+    transitions:
+      - from: received
+        to: empty_query
+        trigger: "query strip → empty/whitespace"
+        guard: "checked BEFORE any model invocation — never an exception"
+        sc: "SC-7"
+      - from: received
+        to: no_embeddings
+        trigger: "no embedded rows present in either table"
+        sc: "SC-7"
+      - from: received
+        to: stale_model
+        trigger: "embedded rows exist exclusively under a non-pinned embedding_model"
+        sc: "SC-7"
+      - from: received
+        to: ranked
+        trigger: "pinned rows exist + non-empty query → encode + cosine rank desc, tie-break record_id asc, threshold filter (None→0.80)"
+        sc: "SC-5, SC-7"
+      - from: ranked
+        to: ok_empty
+        trigger: "all scores below threshold"
+        sc: "SC-7"
+    invariants:
+      - "degraded states return designated status+message payloads, never exceptions; stale_model/no_embeddings messages name the admin backfill remedy"
+      - "NULL-embedding or stale-pin rows are excluded identically at query time via the embedding_model == pin join"
+
+  - entity: "search entry row (gloss_search_entries ge / semantic_search_entries)"
+    states: ["no_embedding", "embedded_current_pin", "embedded_stale_pin"]
+    transitions:
+      - from: no_embedding
+        to: embedded_current_pin
+        trigger: "upload-path inline embed (populate_search_entries) OR admin Embedding Backfill run"
+        guard: "batch ≤512; embedding_model stamped = pin; Unicode exact; fail-fast on embed error (R-11)"
+        sc: "SC-8, SC-9"
+      - from: embedded_stale_pin
+        to: embedded_current_pin
+        trigger: "admin backfill re-embed after model pin change (model-change recompute, R-9)"
+        sc: "SC-9"
+    invariants:
+      - "stale rows remain excluded at query until re-embedded (self-healing pair with SC-7 exclusion)"
+      - "new primary ge rows embed inline during ingestion; signature unchanged"
+
+  - entity: "admin backfill run"
+    states: ["idle", "running (st.progress + callback + st.status)", "complete", "failed"]
+    transitions:
+      - from: idle
+        to: running
+        trigger: "admin-role button click in Table Maintenance → Data Reprocessing"
+        guard: "non-admin role rejected by reused :125-130 gate"
+        sc: "SC-9"
+      - from: running
+        to: complete
+        trigger: "all records re-embedded; completion results surfaced"
+        sc: "SC-9"
+      - from: running
+        to: failed
+        trigger: "exception → handle_ui_error surfacing; stale rows remain excluded at query"
+        sc: "SC-9"
+
+  - entity: "dependency manifest"
+    states: ["pre-change", "post-change"]
+    transitions:
+      - from: pre-change
+        to: post-change
+        trigger: "add onnxruntime + tokenizers to runtime deps (sentence-transformers stays dev-only — verified live)"
+        sc: "SC-10"
+
+# ONNX-session state location: module-level holder inside embedding_service.py per R-14 (no @st.cache_resource — module remains streamlit-import-free). Regenerated-at-HEAD per spec W1 fix.

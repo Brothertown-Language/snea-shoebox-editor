@@ -2,7 +2,7 @@
 
 > **Full spec and artifacts: [`https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/.issues/36/`](https://github.com/Brothertown-Language/snea-shoebox-editor/tree/issues-data/.issues/36/)** — this issue is a condensed exec summary; the authoritative spec lives in the `issues-data` branch.
 >
-> **Local artifacts:** `.issues/36/` — analytical artifacts, sc-summary, plan, audit findings
+> **Local artifacts:** `.issues/36/` — analytical artifacts (regenerated at issues-data HEAD 2026-09-29; not restored from history), sc-summary, plan, audit findings
 
 ## Intent and Executive Summary
 

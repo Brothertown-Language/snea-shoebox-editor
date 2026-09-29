@@ -1,0 +1,71 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+sc_count: 12
+
+assessments:
+  - sc: "SC-1"
+    evidence_type: structural
+    testability: HIGH
+    test_method: "CI/script hash check — sha256 of committed models/gte-small/* vs recorded full pins (ONNX c9434b8d…34cd; tokenizer.json da0e799…a2b0 full 64-hex in spec)"
+    evidence_kind: "structural artifact + exit-0 hash check"
+  - sc: "SC-2"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "pytest unit — vector shape (1,384), norm == 1.0, batch-64 padding path; runtime-behavioral substrate (encode pipeline output)"
+    evidence_kind: "behavioral pytest run"
+  - sc: "SC-3"
+    evidence_type: structural
+    testability: HIGH
+    test_method: "schema introspection after migration on synced DB — 3 new columns + new table; existing columns untouched"
+    evidence_kind: "structural introspection artifact"
+  - sc: "SC-4"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "isolated migration test (#1346 flake-isolation pattern) — version rows advanced, objects created, rerun is no-op; runtime-behavioral (BEH-EV uplift, tier-1 iteration 3)"
+    evidence_kind: "behavioral migration test"
+  - sc: "SC-5"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "pytest service-layer vs freshly synced local DB — full ranked list desc cosine, record_id-asc tie-break, None→0.80 threshold, pin-join exclusion; no streamlit import"
+    evidence_kind: "behavioral pytest run (R-12 re-sync first)"
+  - sc: "SC-6"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "calibration pytest producing per-anchor evidence artifact — positives (round/bed/house/peas/hunt) ≥ per-anchor recorded floors (0.85-0.90 summary bound); negatives ≥0.07 below positive floor; per-anchor floors recorded per-anchor, not blanket"
+    evidence_kind: "behavioral pytest + per-anchor evidence artifact"
+  - sc: "SC-7"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "pytest edge-input matrix on service — empty/whitespace→empty_query (pre-model), no_embeddings, stale_model, ok+empty below-threshold; every input yields correct status, never an exception"
+    evidence_kind: "behavioral pytest run"
+  - sc: "SC-8"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "extend test_upload_search_entries.py with real synced records — assert embeddings present + embedding_model == pin + Unicode fidelity + batch ≤512"
+    evidence_kind: "behavioral test run (R-12 re-sync first)"
+  - sc: "SC-9"
+    evidence_type: behavioral
+    testability: MEDIUM
+    test_method: "Playwright click-through on synced DB — backfill button role-gated, progress reporting, completion results; isolated from #1347; rate reference 6,266 terms/72.2 s"
+    evidence_kind: "behavioral Playwright run"
+    note: "MEDIUM only due to browser-session setup overhead; assertion surface is unambiguous"
+  - sc: "SC-10"
+    evidence_type: structural
+    testability: HIGH
+    test_method: "dependency manifest check (onnxruntime+tokenizers added; sentence-transformers already dev-only, verified live at :32) + profiler evidence artifact (batch-64 load+encode RSS vs 1 GiB envelope; measured 312 MiB; R-2 worst-case references recorded)"
+    evidence_kind: "structural manifest check + profiler artifact"
+  - sc: "SC-11"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "pytest dispatch-routing test — 'Semantic Gloss'/'Semantic All' present in widened Literal and routed to search_semantic(); existing four modes' dispatch unchanged; search_records signature unchanged (BEH-EV uplift, tier-1 iteration 2)"
+    evidence_kind: "behavioral pytest run"
+  - sc: "SC-12"
+    evidence_type: behavioral
+    testability: HIGH
+    test_method: "pytest concurrency — N threads call load_model() → identical session handle, registry count == 1 (one-at-a-time in-flight lock); profiler artifact for measured worst-case resident-set vs R-14 references"
+    evidence_kind: "behavioral pytest run + profiler artifact"
+
+global_test_protocol:
+  sync_gate: "R-12 — bash scripts/sync_prod_to_local.sh (from branch under test) immediately before every SC test cycle; replication carries embeddings"
+  behavioral_substitution_prohibition: "no grep/structural substitution for behavioral SCs (critical-rules-060); structural SCs use structural evidence"
+  unicode_fidelity: "Algonquian Unicode preserved exactly across all embed/test paths (AGENTS.md linguistic data constraints)"

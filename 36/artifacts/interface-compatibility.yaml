@@ -1,0 +1,93 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+sc_count: 12
+
+boundaries:
+  - boundary: "search_semantic() seam (new public API)"
+    consumers: ["_search_strategies dispatch entries (linguistic_service.py:79-84)", "UI spec #1385 (filed, pending)"]
+    sc: "SC-5, SC-11"
+    compat_class: "NEW_ADDITIVE"
+    contract: "search_semantic(mode: 'gloss'|'all', query: str, threshold: float|None=None, source_id: int|None=None, limit: int|None=None) → SemanticSearchResult{results: list[(record_id, score)], status ∈ {ok, empty_query, no_embeddings, stale_model}, message: str}"
+    breaking_risk: "NONE for existing modes — Lexeme/FTS/Headword/Gloss strategies, search_records signature (:391), and RecordSearchResult unchanged (R-13)"
+
+  - boundary: "SearchMode Literal (linguistic_service.py:28)"
+    consumers: ["search_records callers", "UI mode radios (#1385)"]
+    sc: "SC-11"
+    compat_class: "EXTEND_ONLY"
+    contract: "Literal['Lexeme','FTS','Headword','Gloss','Semantic Gloss','Semantic All'] — additive widening, no removals"
+    breaking_risk: "NONE — additive only; existing four modes dispatch unchanged"
+
+  - boundary: "populate_search_entries (upload_service.py:1758)"
+    consumers: ["UploadService ingestion pipeline", "test_upload_search_entries.py", "admin full-reprocessing path"]
+    sc: "SC-8"
+    compat_class: "PRESERVE_SIGNATURE"
+    contract: "populate_search_entries(record_ids: list[int], session=None) → int — signature unchanged; internals gain inline ge embedding (batch ≤512, pin stamp, Unicode exact)"
+    breaking_risk: "NONE — internal extension per R-8"
+
+  - boundary: "schema: gloss_search_entries + semantic_search_entries"
+    consumers: ["SQLAlchemy models (search.py)", "migrations.py DDL", "semantic_search_service queries"]
+    sc: "SC-3, SC-4"
+    compat_class: "ADDITIVE_COLUMNS + NEW_TABLE"
+    contract: "gloss_search_entries: +embedding vector(384), +entry_type, +embedding_model (4 existing columns untouched, RESTRICT FK untouched); semantic_search_entries: id, record_id FK CASCADE, entry_type, term, embedding vector(384), embedding_model"
+    breaking_risk: "NONE — additive; CASCADE-vs-RESTRICT difference on the new table is documented (spec FK policy note), not altered on live sibling"
+
+  - boundary: "module import graph: embedding_service"
+    consumers: ["semantic_search_service", "upload_service", "table_maintenance backfill method"]
+    sc: "SC-2, SC-12"
+    compat_class: "NEW_LEAF_MODULE"
+    contract: "embedding_service imports no streamlit (verified at import time); exposes encode(texts, batch≤64) and load_model() → single process-wide InferenceSession"
+    breaking_risk: "NONE — new leaf with no streamlit dependency, safe for any import site"
+
+dependency_contract:
+  description: "Concrete dependency data derived from spec affected files and SCs (real sources, real targets, real constraints)."
+  external_packages:
+    - name: onnxruntime
+      target: "pyproject.toml [project].dependencies"
+      sc: "SC-10"
+      constraint: "runtime dependency; version pinned per live-registry verification at implementation time (guideline 070)"
+      reason: "InferenceSession for gte-small INT8 ONNX encode path (P3)"
+    - name: tokenizers
+      target: "pyproject.toml [project].dependencies"
+      sc: "SC-10"
+      constraint: "runtime dependency; pinned per live-registry verification; used for tokenize(512, truncation) with attention mask"
+      reason: "Tokenizer artifacts at models/gte-small/tokenizer.json (SC-1 pin)"
+    - name: pgvector
+      target: "pyproject.toml runtime deps (already at pgvector>=0.3.6) + connection.py pgvector extension enable"
+      sc: "SC-3, SC-4"
+      constraint: "ALREADY SATISFIED (verified live); extversion assertion required in migration (SC-4)"
+      reason: "vector(384) column type"
+  internal_modules:
+    - source: "src/services/embedding_service.py (new)"
+      target: "src/services/semantic_search_service.py (new)"
+      sc: "SC-5"
+      type_constraint: "encode(texts: list[str]) -> float32 array (N,384); load_model() -> onnxruntime.InferenceSession (singleton)"
+      reason: "query encoding + session acquisition"
+    - source: "src/services/embedding_service.py (new)"
+      target: "src/services/upload_service.py populate_search_entries (:1758)"
+      sc: "SC-8"
+      type_constraint: "encode() over 1-5 ge strings/record; embedding_model stamped with the model pin string"
+      reason: "inline row embedding during ingestion"
+    - source: "src/services/semantic_search_service.py (new)"
+      target: "src/services/linguistic_service.py _search_strategies (:79-84)"
+      sc: "SC-11"
+      type_constraint: "strategy callable satisfying the dispatch map signature; returns SemanticSearchResult"
+      reason: "backend reachability of the two new modes"
+    - source: "src/database/models/search.py (SemanticSearchEntry, new)"
+      target: "src/database/migrations.py (2 new DDL entries)"
+      sc: "SC-3, SC-4"
+      type_constraint: "CREATE TABLE + ALTER TABLE ADD COLUMN DDL must match ORM column definitions exactly (vector(384), entry_type, embedding_model)"
+      reason: "schema/model parity for introspection tests"
+    - source: "models/gte-small/* (committed bytes)"
+      target: "src/services/embedding_service.py load path"
+      sc: "SC-1, SC-2"
+      type_constraint: "bytes byte-identical to SHA256 pins (ONNX c9434b8…34cd, tokenizer da0e799…a0); load errors name the missing path"
+      reason: "offline determinism + reproducibility"
+  cross_spec:
+    consumer: "#1385 (UI spec, pending)"
+    sc: "SC-5, SC-7"
+    contract: "SemanticSearchResult field list + degraded status enum are frozen by this spec; #1385 consumes only this surface and owns all threshold/pagination/empty-state UI"
+
+interface_compat_notes:
+  - "Pre-change GlossSearchEntry verified live: id, record_id, term, normalized_term only (search.py:63-78) — spec problem statement matches live code"
+  - "SearchMode Literal verified live at :28 as 4-value Literal — widening target confirmed"
+  - "sentence-transformers>=3.0.0 verified live in dev group (:32) — no runtime group change needed for it (SC-10)"

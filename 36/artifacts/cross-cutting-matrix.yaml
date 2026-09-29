@@ -1,0 +1,38 @@
+spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
+provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+sc_count: 12
+
+matrix:
+  - sc: SC-2
+    concerns: ["model substrate", "numerical correctness", "performance"]
+    dimension: "embedding_service encode correctness spans tokenization (512 truncation), ONNX inference, pooling math, Unicode fidelity, and batch-64 latency"
+    coordination: "CG-1; encode invariants reused by SC-5/SC-6/SC-8 callers"
+  - sc: SC-5
+    concerns: ["data access", "ranking correctness", "contract design"]
+    dimension: "search_semantic spans both tables, pin-join exclusion, threshold default, tie-break, and the SemanticSearchResult dataclass that #1385 binds to"
+    coordination: "CG-3; consumes CG-1 singleton + CG-2 schema; cross-spec dependency (#1385) recorded in interface-compat dependency_contract"
+  - sc: SC-7
+    concerns: ["data exclusions", "UX degradation contract", "guard ordering"]
+    dimension: "degraded statuses span empty/whitespace, no_embeddings, stale_model, below-threshold — each couples pin semantics with the admin-backfill remedy message"
+    coordination: "CG-3; remedy wording is the contract surface #1385 renders"
+  - sc: SC-8
+    concerns: ["ingestion pipeline", "embedding correctness", "Unicode integrity"]
+    dimension: "inline embedding happens inside populate_search_entries() — couples MDF parsing flow, batch cap (R-11), pin stamping, and unchanged signature"
+    coordination: "CG-4; consumes CG-1 encode + CG-2 columns; Algonquian-context Unicode preservation rule (AGENTS.md) applies"
+  - sc: SC-9
+    concerns: ["admin UI", "long-running batch", "auth role gate"]
+    dimension: "backfill button couples st.progress/st.status idiom with backfill service method, role gate reuse, and model-change recompute (pin change → stale rows re-embedded)"
+    coordination: "CG-4; isolated from #1347 sibling section; only authorized st.* surface in this spec"
+  - sc: SC-12
+    concerns: ["process lifecycle", "concurrency", "memory envelope"]
+    dimension: "singleton couples module-level holder, in-flight lock, thread-safety of concurrent Run(), and resident-set evidence feeding SC-10's envelope"
+    coordination: "CG-1 + CG-1(evidence) — verification feeds SC-10 references"
+
+single_concern_scs:
+  - sc: SC-1  # model substrate only — artifact hash integrity
+  - sc: SC-3  # schema concern only — additive columns/table
+  - sc: SC-4  # migrations concern only — DDL registry append
+  - sc: SC-6  # calibration concern only — anchor floors on synced data
+  - sc: SC-11 # dispatch seam concern only — additive Literal widening
+
+spanning_count: 6
