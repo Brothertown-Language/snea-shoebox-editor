@@ -1,0 +1,44 @@
+issue: 1386
+generated_at: "2026-09-29"
+sc_count: 10
+scs:
+  - id: "SC-1"
+    description: "Committed e5-small substrate artifacts (INT8 ONNX + tokenizer) match SHA256-manifest pins byte-for-byte; tokenizer allowlist (IPA + diacritics + ꝏ + ∞) reads from config at run time; syllabics excluded with documented deferred trigger"
+    evidence_type: "structural"
+    plan_item: 1
+  - id: "SC-2"
+    description: "e5-small encode path returns unit-L2-norm 384-dim float32 vectors with query:/passage: prefixes, batch ≤ 64 dynamic padding, process-wide singleton session (in-flight lock, streamlit-import-free); determinism holds"
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "Term-space table (record_id FK, entry_type CHECK {term,phrase}, term, embedding vector(384), embedding_model, language_code with unknown, language_family 'Algonquian') exists additive-only; DDL-only append-only migration applies once, idempotent"
+    evidence_type: "behavioral"
+    plan_item: 3
+  - id: "SC-4"
+    description: "language_code ∈ {xnt,xpq,wam,mjy,unknown} derives deterministically from the \\so-derived language scan (never NULL, never guessed); entry_type ∈ {term,phrase} classified by deterministic rule (phrase = multi-token or \\xv source)"
+    evidence_type: "behavioral"
+    plan_item: 4
+  - id: "SC-5"
+    description: "search_terms(query, threshold=None, source_id=None, limit=None) → TermSearchResult contract exact: results list[(record_id, score, entry_type, language_code, source_id, term)], status 4-enum, message; full ranked list desc cosine, deterministic tie-break, threshold-filtered, pin join excludes unpinned/stale"
+    evidence_type: "behavioral"
+    plan_item: 5
+  - id: "SC-6"
+    description: "Calibration anchors on freshly synced real data spanning ≥3 coded languages hold their independently recorded per-anchor term/phrase floors with real-source provenance recorded; default threshold from measured floors; drift → documented re-baseline"
+    evidence_type: "behavioral"
+    plan_item: 6
+  - id: "SC-7"
+    description: "Degraded inputs produce correct status+message, never an exception: empty_query (guard-first), no_embeddings, stale_model, ok/empty below-threshold, pinned-only+ok on mixed rows; remedies name the Term-space Backfill"
+    evidence_type: "behavioral"
+    plan_item: 7
+  - id: "SC-8"
+    description: "Inline term-space population during ingestion writes rows with current-pin stamping, exact Unicode round-trip, ≤ 512-row batches, tqdm, fail-fast no-silent-skip, populate_search_entries signature unchanged"
+    evidence_type: "behavioral"
+    plan_item: 8
+  - id: "SC-9"
+    description: "Admin-role Term-space Backfill control in Table Maintenance → Data Reprocessing re-embeds all records (pin-change staleness covered) with st.progress+callback+st.status idiom, handle_ui_error failures, role-gate rejection of non-admin, re-click guard"
+    evidence_type: "behavioral"
+    plan_item: 9
+  - id: "SC-10"
+    description: "Re-train trigger detects corpus drift and allowlist config change without exception; per-run manifest records model id, allowlist snapshot, real-data corpus provenance, timestamps; backfill gated on manifest presence"
+    evidence_type: "behavioral"
+    plan_item: 10

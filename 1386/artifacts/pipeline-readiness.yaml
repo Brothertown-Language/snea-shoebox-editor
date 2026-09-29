@@ -1,0 +1,29 @@
+issue: 1386
+artifact: pipeline-readiness
+generated_at: "2026-09-29"
+
+checks:
+  atomicity:
+    verdict: PASS
+    evidence: "decompose-output.yaml: 9 items, each maps to exactly one SC basis and one RED/GREEN/verify/commit cycle; flagged ITEM-8 (population + button) for create-time split if the SC table yields separate SC-IDs — no item in the final SC table may cover two"
+  dependency_ordering:
+    verdict: PASS
+    evidence: "chain ITEM-1 → ITEM-2 → (ITEM-3 ∥ ITEM-6-provisioning) → ITEM-4 → ITEM-5 → ITEM-6 → ITEM-7 → ITEM-8 → ITEM-9; acyclic (parallel_safe_pairs disjoint surfaces)"
+  single_concern:
+    verdict: PASS
+    evidence: "each item targets one file category and one verification domain; ITEM-8's pytest vs Playwright halves noted for split at SC authoring (concern-map separation holds)"
+  phase_dependency:
+    verdict: PASS
+    evidence: "phases substrate → schema → services → ingestion+admin → post; concern-map cross_phase_contracts form a DAG with no cycles"
+  three_tier_structure:
+    verdict: PASS
+    evidence: "pre (substrate artifacts/allowlist) / per-surface (schema, services, ingestion, admin) / post (calibration, envelope, manifest) structure present per decompose-output pipeline_readiness_precheck"
+
+open_items_for_create_step:
+  - "Resolve #1385 binding discrepancy (stub says #1385 consumes search_terms; #1385 body binds only to #36's search_semantic) — amend stub or record the UI-mode extension as out-of-scope/future"
+  - "Record production ꝏ (U+A76F) distribution measurement before freezing the v1 allowlist SC (0 occurrences in natick sample; scoping decision needed)"
+  - "Decide FK policy (CASCADE vs RESTRICT) for term table following #36's documented policy note pattern"
+  - "Decide shared embedding_service vs sibling module for the e5 encode path (coordinate with #36's delivery state)"
+  - "Derive exact SC-IDs and per-anchor floor values at plan time from the spike data — stub says 'spike-proposed' anchors; actual anchor list must be real-data sourced with provenance"
+
+overall: PASS (proceed to create with open items recorded)

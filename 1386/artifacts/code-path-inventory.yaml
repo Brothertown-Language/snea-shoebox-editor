@@ -1,0 +1,51 @@
+issue: 1386
+artifact: code-path-inventory
+generated_at: "2026-09-29"
+grounding: "live reads 2026-09-29 (index stale; paths verified against working tree)"
+
+new_code_paths:
+  - path: "models/* — new SemanticTermEntry-style model"
+    files: [src/database/models/search.py, src/database/models/__init__.py]
+    notes: "extends existing one-table-per-concern family"
+  - path: "term-space embedding encode (e5-small) + load singleton"
+    files: ["src/services/embedding_service.py (if #36 creates it first — pattern from spec #36) OR new sibling module"]
+    notes: "e5 prefixes query:/passage:; process-wide session; streamlit-free"
+  - path: "search_terms seam service"
+    files: ["new src/services/term_search_service.py (or semantic_search_service.py extension per plan decision)"]
+    notes: "mirrors #36 search_semantic pattern"
+  - path: "language_code + entry_type derivation"
+    files: ["new module or service-layer helpers (parser-adjacent)"]
+    notes: "pure functions; config-driven code set"
+  - path: "term-space population (ingestion inline + backfill)"
+    files: [src/services/upload_service.py]
+    notes: "sibling method to populate_search_entries or internal extension with unchanged signature"
+  - path: "admin backfill button"
+    files: [src/frontend/pages/table_maintenance.py]
+    notes: "render_data_reprocessing_maintenance() block :165-196"
+  - path: "migrations"
+    files: [src/database/migrations.py]
+    notes: "append-only registry entries; DDL only"
+  - path: "calibration + manifest"
+    files: ["new calibration/manifest module + evidence artifacts under tmp/{issue}/ during verification"]
+
+existing_code_paths_touched:
+  - "linguistic_service.hard_delete_record — add derived-term-table delete alongside :874-876 triple (CASCADE FK may also cover; plan decides per #36 FK policy note)"
+  - "reprocess_all_records — rides existing loop if term population is wired into reprocess; verification uses existing consumers"
+
+untouched_paths (protective):
+  - "_search_strategies dispatch + four search modes (linguistic_service.py:79-84) — unchanged; SearchMode widening is #36's seam for the GLOSS space only"
+  - "parse_mdf signature and MDF format handling (parser.py)"
+  - "preference_service (all functions)"
+  - "primary record CRUD (create/update/soft-delete/restore in linguistic_service)"
+
+phases:
+  - phase: "1 substrate"
+    paths: ["models/e5-small artifacts dir", "pyproject.toml if dependency entries needed", "config allowlist key"]
+  - phase: "2 schema"
+    paths: ["src/database/models/search.py", "src/database/migrations.py"]
+  - phase: "3 services"
+    paths: ["term search service module", "embedding encode extension"]
+  - phase: "4 ingestion+admin"
+    paths: ["src/services/upload_service.py", "src/frontend/pages/table_maintenance.py"]
+  - phase: "5 post"
+    paths: ["calibration module", "manifest writer"]

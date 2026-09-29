@@ -1,0 +1,56 @@
+issue: 1386
+artifact: cross-cutting-matrix
+generated_at: "2026-09-29"
+
+matrix:
+  - concern: Unicode preservation
+    phases_hit: [substrate, services, ingestion, calibration]
+    rules:
+      - "AGENTS.md Tier 1: IPA/diacritics/ꝏ/∞ first-class data — never normalize/strip"
+      - "lesson 2026-06-13-regex-linguistic-characters: no [a-zA-Z] classes; Python \\w w/o re.ASCII safe"
+      - "lesson 2026-06-13-infinity-symbol: ∞ is a letter; oozzz mapping is SORT-key only (generate_sort_lx :152-157) — embeddings consume the RAW Unicode form, not normalized forms, unless the plan derives otherwise"
+    enforcement: "pytest Unicode-fidelity assertions on encode/storage round-trip"
+  - concern: Fail-fast / no silent skip
+    phases_hit: [services, ingestion, calibration]
+    rules:
+      - "090-data-integrity: raise with context; no proxy/default data; missing required data hard-fails"
+      - "#36 R-11 precedent: every upsert batched, failures raise"
+    enforcement: "pytest exception-matrix (edge inputs produce statuses, never silent success)"
+  - concern: Batch discipline
+    phases_hit: [ingestion, backfill]
+    rules:
+      - "≤512 rows/write batch (PG 65,535 param cap); tqdm on long loops"
+      - "inference batch ≤64 dynamic padding (e5 encode path)"
+    enforcement: "batch-size asserts in pytest; progress callback test"
+  - concern: Memory envelope
+    phases_hit: [substrate, services]
+    rules:
+      - "1 GiB Streamlit Cloud budget shared with gte-small; measured references: e5-small INT8 ~472 MB, both ~520 MB (via #36 R-2, measured 2026-09-29)"
+      - "process-wide singleton load — never per-session"
+    enforcement: "profiler evidence artifact + concurrency pytest"
+  - concern: Derived-index-only
+    phases_hit: [schema, ingestion, services]
+    rules:
+      - "no writes outside term-space table; Record mutation forbidden; out-of-scope bullet 2"
+    enforcement: "schema introspection + code review gate; sync replication carries vectors (R-12 precedent)"
+  - concern: Data integrity / no synthetic data
+    phases_hit: [substrate, calibration]
+    rules:
+      - "090 Global Absolute Prohibition: fine-tune corpus and anchors from real verifiable sources; provenance recorded (manifest fields)"
+      - "research-cards MANIFEST governs corpus provenance"
+    enforcement: "manifest records corpus provenance; anchor evidence artifact cites sources"
+  - concern: Sync/test protocol
+    phases_hit: [schema, services, ingestion]
+    rules:
+      - "AGENTS.md regression protocol: bash scripts/sync_prod_to_local.sh before every test cycle; branch-matched sync"
+      - "lessons 2026-07-16 local PG patterns"
+    enforcement: "verification scripts assert freshly-synced precondition"
+  - concern: Config-driven allowlist (no hardcoded chars)
+    phases_hit: [substrate, ingestion, services]
+    rules:
+      - "allowlist from config key; re-train trigger on change; manifest records snapshot"
+      - "explicit 'unknown' language fallback; enum-checked codes"
+    enforcement: "config read test + hardcoded-literal scan (structural check)"
+
+degradation_states: see state-analysis
+security: "no secrets in artifacts; model pins are hashes (public data)"

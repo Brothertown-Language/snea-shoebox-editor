@@ -1,0 +1,37 @@
+issue: 1386
+consulted_at: "2026-09-29"
+method: "glob .issues/research-cards/*.md + frontmatter/title grep for tokenizer/syllabics/multilingual-e5/orthography relevance"
+
+cards_consulted:
+  - file: .issues/research-cards/central-algonquian-dictionaries.md
+    relevance: orthography evidence
+    findings: "Documents Cree/SRO syllabics usage in Central Algonquian orthographies (matches spec's syllabics-deferral: syllabics exist in the family but NOT in the SNEA corpus scope)"
+    confidence: 0.85
+    incorporated: true
+    use: "Supports v1 deferral decision documented in stub scope — syllabics belong to Cree/Ojibwe-family sources, not the project's xnt/xpq/wam/mjy corpus"
+  - file: .issues/research-cards/cross-source-comparison.md
+    relevance: orthographic variant evidence
+    findings: "Direct evidence of morphological/orthographic variant space the semantic index must handle: Sachim/Sachimo/Sachem/Sagimore/Sótchĭm/Sogmŏ across 4 sources; /s/~/ʃ/ alternation noted; Eliot standardization patterns"
+    confidence: 0.9
+    incorporated: true
+    use: "Grounds the problem statement: variant spellings across sources are real corpus phenomena, exactly what embedding similarity must bridge that exact-text FTS cannot"
+  - file: .issues/research-cards/roger-williams-key-research.md
+    relevance: diacritic/phonetic repertoire of the corpus
+    findings: "Accent marks in the Key; preaspiration in Narragansett — primary source orthography uses accented forms needing the diacritic-aware allowlist"
+    confidence: 0.9
+    incorporated: true
+    use: "Tokenizer allowlist must preserve Roger Williams accent marks (à â ê ú û etc.) as first-class letters"
+  - file: .issues/research-cards/modern-mohegan-dictionary.md
+    relevance: language_code coverage (xpq)
+    findings: "Mohegan-Pequot modern reconstruction orthography (Fielding/Costa) —IPA-influenced, diacritic-heavy forms confirmed as primary data for xpq records"
+    confidence: 0.9
+    incorporated: true
+    use: "Confirms language_family 'Algonquian' constant and xpq as a coded anchor language"
+
+cards_reviewed_not_relevant:
+  - "All remaining 20 cards treat lexical SOURCE MATERIAL (vocabularies, dictionaries, comparison) — data provenance for corpus construction, not search infrastructure. None address embedding substrates, tokenizer design, or multilingual-e5 architecture. No card ≥0.7 confidence covers the semantic-search technical topic directly."
+  - "obrien-narragansett, gatschet, francis-brinley, dawn: source vocabularies (corpus inputs, orthogonal to search infra)"
+  - "wlrp-modern-wopanaak, ezra-stiles-pequot, james-noyes-pequot, winslow-good-news, mayhew: vocabularies"
+  - "generic-treat, east/central/plains/proto-algonquian dictionary surveys: comparative linguistics"
+
+gap_report: "No research card exists addressing multilingual embedding model behavior on Algonquian tokenization — the spike evidence lives in #36's handoff (tmp/issue-36 archived, NOT durable) covering gte-small but NOT e5-small behavior on this corpus. Flag for spec: e5-small fine-tune calibration must produce its own measured anchors; #36's gte-small measurements are NOT transferable."

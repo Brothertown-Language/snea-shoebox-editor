@@ -1,0 +1,68 @@
+issue: 1386
+title: "Algonquian term-space semantic search (backend/db)"
+inspected_at: "2026-09-29"
+index_freshness_note: "srclight index stale (indexed_at 2026-05-10); all grounding via live file reads per freshness check"
+brainstorm_handoff: unavailable
+
+affected_surfaces:
+  - path: src/database/models/search.py
+    role: "Pattern template — SemanticTermEntry-style wide table modeled on existing search-entry tables (FTSEntry, SearchEntry, HeadwordSearchEntry, GlossSearchEntry)"
+    evidence: "live read: all four entry tables follow id/record_id FK/term/normalized_term/entry_type shape; extend_existing table_args"
+  - path: src/database/models/core.py
+    role: "Record model — Record.embedding Vector(1536) exists (scaffolding for #36's English-gloss space, no population path found); source_id FK; lx/ge/sort_lx; version_id_col optimistic locking"
+    evidence: "live read :95 embedding = Column(Vector(1536))"
+  - path: src/database/migrations.py
+    role: "Append-only YYYYMMDDSSSSS migration registry (:65-72 directive); _ensure_extensions creates pgvector (CREATE EXTENSION IF NOT EXISTS vector); _migrate_add_embedding_column precedent for vector column DDL (v2)"
+    evidence: "live read :72-129 registry; :328-331 vector DDL precedent"
+  - path: src/services/linguistic_service.py
+    role: "Search seam precedent — SearchMode Literal :28, _search_strategies dispatch dict :79-84, four exact-text modes; generate_sort_lx() :104-170 canonical normalization (∞→oozzz at :152-157); search_records() :384-484"
+    evidence: "live read; NO semantic service exists (grep: no search_terms/search_semantic symbols)"
+  - path: src/services/upload_service.py
+    role: "populate_search_entries(record_ids, session=None) → int :1756 — rebuilds all search entry tables per record from re-parsed MDF; inline-embed insertion precedent for #36 (SC-8) and backfill precedent"
+    evidence: "live read :1756-1830"
+  - path: src/mdf/parser.py
+    role: "language_code derivation substrate — _extract_iso_langs(line_value) :29-34 extracts 'Name [xxx]' ISO patterns; \\so handler :95-100 stores source_page; second pass :130-149 collects record['lg'] with is_primary"
+    evidence: "live read; \\so values carry 'Name [code]' per mdf_tags_metadata.json:494 and seed corpus"
+  - path: src/frontend/pages/table_maintenance.py
+    role: "Admin backfill surface — main() :125-149, Data Reprocessing radio :147, render_data_reprocessing_maintenance() :165-196 with Start Full Reprocessing button + reprocess_all_records; whole page admin role gate :126-131"
+    evidence: "live read"
+  - path: pyproject.toml
+    role: "Dependencies — runtime: pgvector>=0.3.6 :13; dev: sentence-transformers>=3.0.0 :33 (both verified live); no onnxruntime/tokenizers yet (that is #36's SC-10, not this spec's)"
+    evidence: "live read :7-34"
+
+existing_patterns:
+  - "Derived-index-only table pattern: search entry tables are populated by code, never the source of truth (Record is source of truth); hard_delete_record clears SearchEntry/HeadwordSearchEntry/GlossSearchEntry before Record (linguistic_service.py:874-876)"
+  - "Pin/status degradation pattern from sibling #36: embedding_model pin per row; rows searchable only when embedding_model == pin; statuses {ok, empty_query, no_embeddings, stale_model}"
+  - "Wide-table pattern decision from #36: one-table-per-search-concern (gloss_search_entries, semantic_search_entries for glosses) — this spec's term table follows SemanticTermEntry style per stub"
+  - "Batch discipline: ≤512-row DB write batches (65,535 PG parameter cap, 090 guideline); tqdm for long-running"
+  - "Admin backfill idiom: st.progress + progress callback + st.status inside render_data_reprocessing_maintenance"
+
+language_catalog:
+  coded_languages:
+    - xnt (Narragansett)
+    - xpq (Mohegan-Pequot)
+    - wam (Wampanoag/Wôpanâak)
+    - mjy (Mahican)
+  evidence: "iso-639-3.tab :4075,:6976,:7367,:7398; migrations.py seeded sources descriptions :731,:737,:743,:751,:757"
+
+corpus_character_inventory:
+  source: "src/seed_data/natick_sample_100.txt live grep, 2026-09-29"
+  counts:
+    infinity: 511
+    latin_diacritics: "á ó é ô â ú à ñ í è ä ì ê û ε ö ü ò ï ë î ù æ ß etc."
+    ipa_observed: "Θ ⌠ ∙ √ ε"  # Θ theta, ⌠ integral (orthographic), phonetic ə/ʃ/ŋ not top-20 in sample
+  spec_scope_chars: "ꝏ (U+A76F) not observed in sample corpus — flagged as open question for spec: allowlist includes it per stub, but corpus frequency evidence needed"
+
+no_prior_semantic_implementation:
+  finding: "No semantic_search_service, no embedding_service, no search_terms — grep across src/ returned zero; Record.embedding column is unpopulated scaffolding (migration 2 added the column; no writes found)"
+  implication: "This spec's substrate dependencies ride on #36's substrate (fine-tuning pipeline, embedding service); the term-space spec is the second consumer of the same infra pattern"
+
+parallel_specs:
+  - "#36 [SPEC] Semantic Gloss Search with pgvector (db/embed) — English-gloss space; provides embedding_service, search_semantic seam, ONNX model pin, calibration procedure, admin backfill idiom, two DDL migrations"
+  - "#1385 [SPEC] Semantic search end-user interface (records page modes, threshold, scores, pagination, empty states) — frontend sibling of this spec; consumes seam"
+  - "#1386 (this): Algonquian term space — vernacular \lx/\va/\se/\cf/\ve terms + \xv phrases"
+
+open_questions:
+  - "Corpus frequency of ꝏ (U+A76F): scoping item — sample shows 0; production distribution needed before v1 allowlist commit"
+  - "Fine-tune substrate: #36 pins gte-small INT8 (measured ~128 MB resident); #1386 stub says multilingual-e5-small (measured ~472 MB INT8 per #36 R-2); envelope co-residency already measured at ~520 MB — within 1 GiB but budget is now shared"
+  - "Fine-tuning training data location: no data/ or models/ directory exists yet; meaning-adjacency training corpus provenance must satisfy the no-synthetic-data mandate (real source-of-record required)"

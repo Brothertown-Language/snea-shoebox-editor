@@ -1,0 +1,61 @@
+issue: 1386
+artifact: state-analysis
+generated_at: "2026-09-29"
+
+state_machines:
+
+  - machine: seam_status (search_terms response states)
+    states: [ok, empty_query, no_embeddings, stale_model]
+    transitions:
+      - from: entry
+        to: empty_query
+        condition: "query missing/whitespace — BEFORE model invocation (guard-first)"
+      - from: entry
+        to: no_embeddings
+        condition: "term-space table empty/nonexistent rows for scope"
+      - from: entry
+        to: stale_model
+        condition: "any rows exist but embedding_model != current pin for ALL rows in scope"
+      - from: entry
+        to: ok
+        condition: "pinned rows exist and encode succeeds"
+    invariants:
+      - "no exception escapes the seam; every path returns status+message"
+      - "ok with empty results is a VALID outcome (all below threshold)"
+      - "stale_model/no_embeddings messages name the admin backfill remedy"
+    partial_staleness_note: "plan decision: mixed pinned/stale rows → served-pinned-only (mirror #36 semantics: NULL/stale excluded at query), status ok; 'stale_model' fires when NO usable rows remain"
+
+  - machine: backfill_run (admin re-embed)
+    states: [idle, running, complete, failed]
+    transitions:
+      - "idle→running: admin click, role gate passes"
+      - "running→complete: all batches embedded (progress callback reports x/y)"
+      - "running→failed: batch failure → fail-fast, contextual error, partial-batch rollback per transaction policy"
+      - "complete→idle: results summary surfaced"
+    invariants:
+      - "running state re-click blocked (idempotency guard per run)"
+      - "tqdm/progress reporting required"
+      - "per-run inputs recorded in manifest (model, allowlist snapshot, corpus ref)"
+
+  - machine: retrain_trigger
+    states: [in_sync, change_pending, retrained]
+    transitions:
+      - "in_sync→change_pending: corpus diff (new/changed records beyond drift tolerance) OR allowlist config diff"
+      - "change_pending→retrained: training run executed; manifest written; backfill expected to follow (stale pin)"
+      - "retrained→in_sync: current pin matches manifest inputs"
+    invariants: "allowlist change NEVER skips retrain (risk: silently corrupted embeddings); manifest presence gates backfill"
+
+  - machine: row_state (per term-space row)
+    states: [unembedded, pinned, stale, stale_null]
+    transitions:
+      - "unembedded→pinned: populate/backfill writes embedding with embedding_model=pin"
+      - "pinned→stale: model pin change elsewhere; row still carries old value"
+      - "stale→pinned: re-embed pass (backfill) overwrites"
+      - "null/absent pin row: excluded identically to stale at query"
+    invariants: "language_code never NULL — 'unknown' explicit; entry_type never NULL"
+
+phase_mapping:
+  - "phase 2 schema: table + columns exist (row_state machinery)"
+  - "phase 3 services: seam_status machine live"
+  - "phase 4 ingestion: backfill_run machine live"
+  - "phase 5 post: retrain_trigger machine live"
