@@ -1,0 +1,20 @@
+# Concern Map — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## concerns
+
+| Concern | Boundary | Files | Owner items |
+|---------|----------|-------|-------------|
+| Mock-pollution containment | test harness execution environment only (sys.modules hygiene) | test_filter_ux_red.py, test_search_mode_ui_red.py | items 1, 2 |
+| Superseded-test removal | test assertions whose product feature was intentionally removed by 3f54ad3 | test_search_mode_ui_red.py (delete 2 methods) | item 1 |
+| Stale-stimulation-path rewrite | test assertion method using obsolete AppTest stimulation | test_search_mode_ui_red.py (rewrite 1 method) | item 3 |
+
+## separation_rules
+
+- Product behavior (src/**) — OUT of all concerns (C-1 freeze); assertions may reference product contracts but never modify them.
+- Victim file (test_migration_backfill_search_entries.py) — no concern touches it; its healing is a verified side-effect.
+- test/ui/** sys.modules users — explicitly out of scope (N-2); concern boundary = the 2 carrier files from the spec dispositions.
+
+## single_concern_verified
+All 3 items target one file category (test harness) + one verification domain (order-dependent pytest behavioral). Per-SC mapping is 1:1 (SC-1→item 1, SC-2→item 2, SC-3→item 3).

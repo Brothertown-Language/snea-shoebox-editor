@@ -1,0 +1,35 @@
+# Testability Assessment — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## strategy
+behavioral (primary — order-dependent pytest runs mirror the failure mechanism) + unit-level module assertions
+
+## per_phase
+
+- item_1_containment_carrier2_deletes:
+    type: behavioral
+    RED: subprocess pytest run `test_search_mode_ui_red.py test_migration_backfill_search_entries.py` (diagnosis experiment C shape) → 5 failures pre-change
+    GREEN: same run → 0 failures; deleted tests absent from collection (`pytest --collect-only -q | grep` count)
+    evidence: pytest exit codes + collection list
+- item_2_containment_carrier1:
+    type: behavioral
+    RED: `test_filter_ux_red.py test_migration_backfill_search_entries.py` run → 2 failures (experiment A shape)
+    GREEN: 8 passed (experiment B equivalence) + sys.modules probe after run shows no leak
+    evidence: pytest exit codes; optional probe script in tmp/
+- item_3_rewrite_header_test:
+    type: behavioral (AppTest) — the rewritten assertion is itself the test
+    RED: pre-rewrite test fails (stale path) — already recorded in baseline
+    GREEN: single-file run passes; full-suite alphabetical run passes
+- final_gate_all_items:
+    type: integration
+    command: full pytest suite, default order → all green (baseline contract: 49 passed + 5 fixed = all pass)
+    evidence: tests-run artifact per 091/verification-before-completion
+
+## constraints
+- No product tests modified; RED/GREEN performed on test files themselves via order-pair subprocess runs (the exact reproduction mechanism from the diagnosis artifact).
+- Cost-blind: full-suite run is mandatory regardless of runtime (020-go-prohibitions).
+- No substitution: order-pair + full-suite pytest execution IS the behavioral evidence; structural checks (grep) are supplementary only, never PASS substitutes.
+
+## risks
+- AppTest markdown scanning must tolerate empty-markdown edge (no records) — rewrite asserts "Search:" presence; header only renders when search_term truthy → seed non-empty query first (item 3 invariant covers).

@@ -1,0 +1,37 @@
+# Pre-Spec Inspection — Issue #1388
+
+**Analyzed by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash)
+**Date:** 2026-09-29
+**Issue:** Brothertown-Language/snea-shoebox-editor#1388
+**Primary design input:** brainstorm_handoff — none found (no dispatch handoff, no `handoff-pointer.yaml`) → `brainstorm_handoff: unavailable` (degraded mode, full inspection from scratch; diagnosis artifact `tmp/issue-36/artifacts/baseline-failure-diagnosis.yaml` consumed as authoritative evidence base per spec directive)
+
+## affected_files
+
+| File | Role | Verified live |
+|------|------|--------------|
+| `test/test_search_mode_ui_red.py` | 2 deletions (SC-8, SC-7 tests), 1 rewrite (SC-6 test), sys.modules leak carrier 2 (`:40-53`) | yes |
+| `test/test_filter_ux_red.py` | sys.modules leak carrier 1 (`RECORDS_TEST_SCRIPT :41-53`) | yes |
+| `src/database/migrations.py` | NO MODIFICATION — `_migrate_backfill_search_entries` lazy import at `:685-686` (call-time `from src.services.upload_service import UploadService`); vulnerable by design, harmless once pollution contained | yes |
+| `src/frontend/pages/records.py` | NO MODIFICATION — subject of assertions only (`:191` header, `:206` SEARCH_MODE_CAPTIONS, `:220` st.caption) | yes |
+
+## existing_patterns
+
+- AppTest-based records-page tests: `AppTest.from_string(RECORDS_SCRIPT, default_timeout=10)`; module-level script strings mock service modules via `sys.modules[...] = MagicMock()` mutations at import/exec time.
+- All 5 baseline failures reproduce: 3 in `test_search_mode_ui_red.py` (stale-RED), 2 in `test_migration_backfill_search_entries.py` when any leak-carrier file loads first (verified order-dependence: filter_ux→migration = FAIL, migration→filter_ux = PASS).
+- pytest runs no `test/conftest.py` (absent — verified). No existing sys.modules save/restore pattern in test tree → repair introduces containment pattern.
+
+## dependencies_and_callers
+
+- `migrations.py:686` lazy import resolved at call time → contaminated by any prior in-process `sys.modules["src.services.upload_service"]` replacement. Victim tests: `test_migration_backfill_search_entries.py::test_migration_populates_tables` (`:128` assertGreater), `::test_rollback_safety` (`:149` assertGreater).
+- Leak-carrier list (module-level, never restored): `test_filter_ux_red.py:41-53`, `test_search_mode_ui_red.py:40-53`, plus `test/ui/test_records_*.py` (5 files) — spec scope covers only the two carriers named in dispositions; ui/ files pass currently (out of scope, noted for boundary).
+- Repo state: branch `feature/36-semantic-gloss-search-pgvector`, trunk tip 08c1e93; 3 untracked docs/md artifacts (unrelated).
+
+## conventions
+
+- Developer directive baked in spec: product code SHALL NOT be modified; test-side only; success = 5 baseline failures green under full suite in default alphabetical order.
+- No re-exports/deprecated shims; deletions are clean removals (no backward-compat per 087-no-backdrop).
+
+## scope_boundary
+
+IN: `test/test_filter_ux_red.py`, `test/test_search_mode_ui_red.py`.
+OUT: `src/**` (all), `test/ui/**`, `test_migration_backfill_search_entries.py` (product faultless; victim passes once pollution contained).

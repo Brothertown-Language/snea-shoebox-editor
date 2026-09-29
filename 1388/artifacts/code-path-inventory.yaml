@@ -1,0 +1,25 @@
+# Code Path Inventory — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## paths
+
+- path_1_module_exec_time_mock_installation:
+    entry: pytest collection/import of test_search_mode_ui_red.py / test_filter_ux_red.py
+    flow: RECORDS_SCRIPT/RECORDS_TEST_SCRIPT executed inside AppTest.from_string…exec (search_mode) or module import-time exec (filter_ux) → sys.modules["src.services.*"] = MagicMock() ×6 — module-level, never restored
+    touched: test/test_search_mode_ui_red.py:40-53, test/test_filter_ux_red.py:41-53
+    change: add save/restore containment (patch.dict or explicit save + teardown restore; insert semantics only)
+- path_2_cross_test_contamination:
+    entry: in-process pytest full-suite alphabetical order — leaked MagicMock persists in sys.modules
+    flow: test_migration_backfill_search_entries._migrate_backfill_search_entries → migrations.py:686 lazy `from src.services.upload_service import UploadService` → resolves MagicMock → populate_search_entries returns no-op → counts 0 → assertGreater fails (:128, :149)
+    touched: none (healed by path 1 containment; migrations.py:685-686 read-only)
+- path_3_header_rendering_assertion:
+    entry: rewritten test seeds st.session_state.search_query="test" → at.run()
+    flow: records() records.py:191 → header_text = f"Search: {mode} ({count} records)" if search_term → st.markdown → assertion scans all at.markdown values
+    touched: test_search_mode_ui_red.py::test_header_shows_mode_name_and_count method body
+    read_only_contract: records.py:191, :206-220 (captions), :224-225 (button-trigger propagation), :41/:60 (state init) — verified live
+- path_4_deleted_paths:
+    test_grouping_separators_render (:87-94), test_help_text_below_radio (:109-117) — removed; superseded by 3f54ad3 captions path (records.py:206,220)
+
+## unchanged_paths_in_scope
+test/ui/**, test_migration_backfill_search_entries.py, src/** — no path enters these for modification.

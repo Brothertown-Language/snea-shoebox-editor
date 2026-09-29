@@ -1,0 +1,28 @@
+# Interface Compatibility — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## interfaces
+- unchanged: sys.modules pollution mechanism (external contract: pytest in-process module registry) — change alters lifecycle, not interface: sys.modules entries restored instead of leaked
+- modified (internal, test-private): test_search_mode_ui_red.py RECORDS_TEST_SCRIPT — containment wrapper added around mock installation; no public API
+- new: none
+- removed: test class methods test_grouping_separators_render, test_help_text_below_radio — leaf test methods; no importers (verified), so removal is internal-only
+
+## classify
+- backward_compatible: YES (all interfaces test-internal; production interfaces untouched)
+- breaking_changes: none
+- internal_only: the 3 interface changes above
+
+## dependency_contract
+- source: test_search_mode_ui_red.py::test_header_shows_mode_name_and_count (rewritten)
+  target: src/frontend/pages/records.py header markdown (records.py:191) + AppTest markdown collection API
+  type: artifact-schema (assertion contract)
+  constraint: assertion must consume "Search:" via any-of-all-markdown-values (ordering-independent); stimulation via direct session_state seed (not text_input.set_value — broken by 907843d propagation change)
+- source: migrations.py:686 lazy import
+  target: sys.modules (process-global registry)
+  type: artifact-schema (import resolution)
+  constraint: carriers must restore prior sys.modules entries (insert-only semantics); leaked MagicMock must never survive carrier module execution
+- source: spec dispositions (delete×2)
+  target: pytest test discovery
+  type: artifact-schema (collection surface)
+  constraint: removed methods must have zero importers/references (verified via grep)

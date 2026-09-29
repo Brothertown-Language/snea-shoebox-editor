@@ -1,0 +1,47 @@
+# Decompose Output — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## units
+
+- item:
+    id: 1
+    sc_id: SC-1
+    title: Contain sys.modules mock leak in test_search_mode_ui_red.py + delete its 2 superseded stale-RED tests
+    interface: module test/test_search_mode_ui_red.py — RECORDS_TEST_SCRIPT gains save/restore containment (unittest.mock.patch.dict or exec-time save + per-class teardown restore); test_grouping_separators_render and test_help_text_below_radio removed
+    inputs: spec dispositions 1+3 (carrier 2 side), baseline-failure-diagnosis per-failure (a)
+    outputs: file whose leak never escapes its execution and which contains only surviving-intent tests (4 remaining: SC-1/SC-2/SC-6/SC-9 originals — SC-6 pending item 3 rewrite)
+    invariants: the 3 currently-passing siblings remain green; file no longer leaks src.services.* MagicMocks after its suite run
+    failure_modes: containment wrapper breaks within-script service resolution (records() import fails) → detected by RED (file's own tests fail); deletion removes a still-intended assertion → detected by regression review of git history 3f54ad3 (intent superseded — verified)
+    verify: RED = leak probe/order-pair run (search_mode then migration) fails before change; GREEN = same run passes + own-file tests pass
+- item:
+    id: 2
+    sc_id: SC-2
+    title: Contain sys.modules mock leak in test_filter_ux_red.py
+    interface: module test/test_filter_ux_red.py — RECORDS_TEST_SCRIPT :41-53 gains identical save/restore containment
+    inputs: spec disposition 3 (carrier 1), diagnosis per-failure (b) mechanism
+    outputs: filter_ux file stops leaking src.services/upload_service MagicMocks into subsequent test modules
+    invariants: its 4 existing tests remain green
+    failure_modes: restoring pre-exec sys.modules entries deletes real modules that existed before (regression) — invariant: only entries this script itself inserted are removed/reverted (insert semantics only)
+    verify: RED = pairwise A/B run fails before change; GREEN = passes after, matches diagnosis experiment A/B contract
+- item:
+    id: 3
+    sc_id: SC-3
+    title: Rewrite test_header_shows_mode_name_and_count — seed search_query directly, assert "Search:" across all markdown values
+    interface: test_search_mode_ui_red.py::TestSearchModeUIRED::test_header_shows_mode_name_and_count — replaces set_value stimulation path with direct st.session_state seed; replaces markdown[0] indexing with any-of-all-values scan
+    inputs: disposition 2; records.py:191 header contract (verified live); 907843d propagation break (verified)
+    outputs: GREEN test: run() → session_state.search_query = "test" seeded before run → any markdown value contains "Search:"
+    invariants: passes when header renders via real product path (records.py:191); independent of markdown ordering
+    failure_modes: seeding after first run() is overwritten by widget-state init → seed BEFORE/at run start (order verified in implementation RED/GREEN); assert fires only when header omitted
+    verify: RED = test fails pre-rewrite (stale path), GREEN = passes post-rewrite; full suite alphabetical-order run all-green
+
+## dependency_dag
+
+  1 --> 3   (item 3 live-edits the same module item 1 normalized; containment precedes rewrite so module-level leak removal is stable)
+  2 (independent)
+
+Acyclic: verified (1→3 only edge; 2 standalone).
+
+## single_concern_check
+
+All 3 items: concern = test-suite-integrity; file category (test harness only); verification domain (pytest behavioral under order-dependence). SC-1 covers deletion+containment for ONE file as a single atomic testable claim (deletions are inert without containment re-verification; splitting would orphan an unverifiable intermediate).

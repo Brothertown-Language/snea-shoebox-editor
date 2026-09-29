@@ -1,0 +1,24 @@
+# State Analysis — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## state_machines
+
+- machine_1_sys_modules_lifecycle:
+    states: CLEAN → (carrier module exec) CONTAMINATED → (current code) PERSISTANT-ACROSS-MODULES | (post-fix) RESTORED
+    transitions_pre_fix: carrier exec → sys.modules["src.services.*"]=MagicMock → survives process-wide → migrations lazy import resolves MagicMock → victim tests fail
+    transitions_post_fix: carrier exec saves pre-existing entries (+inserts mocks) → within-exec records() resolves mocks → teardown/patch-dict-exit restores saved entries → CLEAN restored
+    invariants: entries that existed BEFORE carrier exec are never deleted; entries inserted BY carrier exec never outlive its scope
+    phase: item 1 (carrier 2), item 2 (carrier 1)
+- machine_2_header_test_stimulation:
+    states: STALE-PATH (set_value→run, search_query stays "", markdown[0] pagination) → SEEDED-PATH (seed search_query → run) 
+    transitions: rewrite replaces stimulation+indexing; assertion target unchanged conceptually ("Search:" present)
+    precondition: seeding must occur such that records.py:41/:60 init guard does not reset it (verified init only sets when key absent)
+    phase: item 3
+- machine_3_suite_health:
+    states: 5-FAILING-ORDER-DEPENDENT (baseline 49/5) → 0-FAILING (target)
+    transition: after all 3 items; verified under full-suite default alphabetical order
+    phase: post (all items)
+
+## removed_states
+stale-RED perma-fail states of the 2 deleted tests (superseded by 3f54ad3) — intentionally removed, no migration of test state.

@@ -1,0 +1,16 @@
+# Research Card Consultation — Issue #1388
+
+**Analyzed by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+## consultation_result
+
+- Catalog scanned: `.issues/research-cards/*.md` — 26 cards, ALL linguistic-source documentation (Algonquian dictionaries, vocabularies, source comparison tables). Zero cards address test-harness, pytest isolation, mock pollution, or Streamlit AppTest topics.
+- Keyword grep (`pytest|sys.modules|streamlit|test.harness|mock`) matched 4 linguistic cards only via incidental English words ("mock" in quoted source text etc.) — verified non-relevant by content inspection (e.g., `cross-source-comparison.md` is a lexical item table).
+- Conclusion: **no applicable research card** → `applicable_cards: []`, confidence-not-applicable.
+
+## fallback_evidence
+
+Spec's verified evidence base substitutes for card consultation:
+- `tmp/issue-36/artifacts/baseline-failure-diagnosis.yaml` (pairwise A/B/C experiments, DOM probes, git forensics: 85b9586, 3f54ad3, 907843d, 5523299) — High confidence, live-verified
+- `tmp/issue-36/artifacts/pre-regression-baseline.yaml` — 49 passed / 5 failed record
+- Re-verified anchors live this session: `test_filter_ux_red.py:41-53`, `test_search_mode_ui_red.py:40-53/87-117`, `migrations.py:667-686`, `records.py:191-220`.

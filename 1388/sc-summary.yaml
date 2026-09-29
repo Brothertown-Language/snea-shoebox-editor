@@ -1,0 +1,16 @@
+# SC Summary — Issue #1388
+# Remediate 5 pre-existing test-harness failures surfaced by #36 pre-regression baseline
+sc_count: 3
+scs:
+  - id: "SC-1"
+    description: "test_search_mode_ui_red.py's sys.modules mock installation is contained at source (save/restore, insert-only semantics), its 2 superseded stale-RED tests (test_grouping_separators_render, test_help_text_below_radio) are deleted, its 3 surviving tests pass, and the order-pair run (search_mode then migration tests) is green with no src.services.* MagicMock surviving module execution."
+    evidence_type: "behavioral"
+    plan_item: 1
+  - id: "SC-2"
+    description: "test_filter_ux_red.py's sys.modules mock installation is contained at source with the same save/restore semantics; the pairwise order run (filter_ux then migration tests, diagnosis experiment A shape) is green and a post-run sys.modules probe shows no src.services.* MagicMock leak."
+    evidence_type: "behavioral"
+    plan_item: 2
+  - id: "SC-3"
+    description: "test_header_shows_mode_name_and_count is rewritten to seed st.session_state.search_query non-empty before run() and assert the 'Search:' header across all markdown values (ordering-independent); it passes single-file and the full suite passes in default alphabetical order."
+    evidence_type: "behavioral"
+    plan_item: 3

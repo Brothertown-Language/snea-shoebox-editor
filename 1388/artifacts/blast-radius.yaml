@@ -1,0 +1,25 @@
+# Blast Radius — Issue #1388
+
+**Grounding:** R-18 bounded — spec scope sections (baked dispositions, constraint, evidence base) + live-verified anchors (pre-spec-inspection) FIRST.
+
+## grounding_coverage
+- spec_sections: baked dispositions (delete×2/rewrite×1/contain×2), product-code freeze constraint, scope check (independent of #36/#1385/#1386/#1387)
+- target_surface: pre-spec-inspection verified live this session
+- ungrounded_assumptions: none — all anchors re-verified by direct file reads
+
+## phases
+- phase_1_containment_and_deletions:
+    direct: test/test_search_mode_ui_red.py (leak block :40-53 removed/restored; 2 test methods deleted), test/test_filter_ux_red.py (leak block :41-53 contained)
+    ripple: test_migration_backfill_search_entries.py (no edit — victim flips to green pass; verified order-dependence A/B experiments in diagnosis artifact)
+- phase_2_rewrite:
+    direct: test_search_mode_ui_red.py::test_header_shows_mode_name_and_count method body only
+    ripple: none — self-contained assertion change
+
+## product_code_impact
+NONE — zero src/** changes (C-1). Behavior change of the SUITE only: 5 failures → 0.
+
+## external_dependents
+None — no test-tree imports of these modules; deletion targets are leaf test methods (verified: grep shows no cross-test references to deleted method names).
+
+## risk
+LOW — test-only, bounded to 2 files + method body.

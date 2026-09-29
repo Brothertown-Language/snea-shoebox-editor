@@ -1,0 +1,48 @@
+# Requirements Output — Issue #1388
+
+**Extracted by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+**Source:** remote issue #1388 body (stub spec.md mirrored); every requirement verified against codebase live this session.
+
+## explicit_requirements
+
+| ID | Requirement | Codebase verification |
+|----|-------------|----------------------|
+| R-1 | Delete `test_grouping_separators_render` (test_search_mode_ui_red.py:87-94) — superseded by intentional 3f54ad3 product change | VERIFIED: test asserts "Focused"/"Broad" markdown; product now renders dynamic `st.caption` (records.py:220); test is RED forever |
+| R-2 | Delete `test_help_text_below_radio` (test_search_mode_ui_red.py:109-117) — superseded | VERIFIED: asserts "HW:" in `at.markdown`; `st.caption` never surfaces in markdown collection |
+| R-3 | Rewrite `test_header_shows_mode_name_and_count` (test_search_mode_ui_red.py:97-106) — seed `st.session_state.search_query` directly, then `run()`; assert `"Search:"` against ALL markdown values (no `markdown[0]` indexing) | VERIFIED: header exists at records.py:191 (`f"Search: {mode} ({total_count} records)"`); `markdown[0]` is pagination markdown (records.py:307 area); `set_value` no longer propagates since 907843d (dynamic key + button-trigger, records.py:197/224-225) |
+| R-4 | Contain `sys.modules` mock leak at source in `test_filter_ux_red.py` (RECORDS_TEST_SCRIPT :41-53) | VERIFIED: 6 module-level `sys.modules[...] = MagicMock()` mutations, never restored |
+| R-5 | Contain `sys.modules` mock leak at source in `test_search_mode_ui_red.py` (RECORDS_TEST_SCRIPT :40-53) | VERIFIED: identical module-level mutation block |
+| R-6 | Containment via save/restore semantics — `unittest.mock.patch.dict(sys.modules, ...)` or setUp/tearDown restore of prior entries | Pattern mandated by spec constraint; no existing conftest.py to host it |
+
+## implicit_requirements
+
+| ID | Requirement | Basis |
+|----|-------------|-------|
+| I-1 | Post-repair: full suite green (49+5 → all pass) in default alphabetical order | Spec constraint "all 5 baseline failures resolve to green" |
+| I-2 | Containment must restore prior sys.modules entries (not delete current) — `insert` semantics only; do NOT delete pre-existing modules | Mock-leak mechanism: migration tests import upload_service normally when not contaminated |
+| I-3 | Rewrite must produce a GREEN test asserting real behavior (header renders when seeded) | stale-RED repair intent; verification is behavioral via AppTest |
+| I-4 | Leak-carrier scripts run app-level `records()` which needs service mocks within-Script-execution; any fixture/class-level containment must not break their own currently-passing tests | The 3 passing siblings in test_search_mode_ui_red + passing filter_ux tests must stay green |
+
+## constraint_requirements
+
+| ID | Constraint | Enforcement |
+|----|-----------|-------------|
+| C-1 | Product code SHALL NOT be modified — test-harness repair only, no defensive product change (e.g., no defensive re-import in migrations.py) | Spec "Constraint" section, developer directive |
+| C-2 | Deletions ×2, rewrite ×1, pollution containment ×2 exactly — no scope expansion | Spec "Baked dispositions" |
+
+## non_requirements
+
+| ID | Excluded | Rationale |
+|----|----------|-----------|
+| N-1 | Rewriting `test_grouping_separators_render`/`test_help_text_below_radio` to assert captions | Disposition = delete (developer chose deletion over caption rewrite even though diagnosis offered it) |
+| N-2 | Fixing `test/ui/test_records_*.py` sys.modules usage (5 files also mutate sys.modules) | Not in baseline failure set; independent; no open spec covers them; flagged for boundary only |
+| N-3 | Any change to `src/frontend/pages/records.py` or `src/database/migrations.py` | C-1 product-freeze |
+| N-4 | Any change to `test_migration_backfill_search_entries.py` | Victim is faultless; passes once carriers contained (verified order-dependence) |
+
+## sc_table (input to decomposition)
+
+| SC-ID | Requirement origin | Type | Evidence |
+|-------|-------------------|------|----------|
+| SC-1 | R-1, R-2 deletion + R-5 leak containment for the deleted-tests file | behavioral | full-suite/pytest order run green |
+| SC-2 | R-4 leak containment | behavioral | contaminated-order run green |
+| SC-3 | R-3 rewrite | behavioral | AppTest GREEN assertion + full suite green |

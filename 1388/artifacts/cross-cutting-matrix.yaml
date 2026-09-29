@@ -1,0 +1,17 @@
+# Cross-Cutting Matrix — Issue #1388
+
+**Produced by:** 🤖 OpenCode (ollama-cloud/glm-5.3-flash) — 2026-09-29
+
+| Cross-cutting concern | Item 1 (search_mode containment+deletes) | Item 2 (filter_ux containment) | Item 3 (header rewrite) | Notes |
+|---|---|---|---|---|
+| Test isolation hygiene | direct — removes carrier 2 leak | direct — removes carrier 1 leak | none | shared containment pattern must be identical in both files (consistency) |
+| Order-dependence of suite | verified side-effect | verified side-effect | none | A/B experiments in diagnosis artifact are the acceptance contract |
+| Unicode/IPA data safety | none — no linguistic data touched | none | none | AGENTS.md linguistic constraints N/A (no FTS/normalization/regex on data) |
+| Data integrity (090) | none — no production data; tests use isolated pgserver fixtures | none | none | no DB writes to prod; migration tests already fixture-isolated |
+| Lint/type gates | ruff/pyright on modified test files | same | same | advisory; report-only per 060 |
+| Backward compatibility (087) | deletion of dead tests — no shim expected | N/A | N/A | clean removal per 087 |
+| Attribution (080) | modified-file provenance/byline rules apply if headers present | same | same | preserve existing bylines |
+| Determinism | containment must not depend on dict iteration order for restore | same | none | insert-only semantics keep this trivially safe |
+
+## conflicts
+None — no concern intersects a product-code path; all concerns are test-tree-local.
