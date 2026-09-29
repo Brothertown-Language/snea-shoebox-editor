@@ -1,0 +1,18 @@
+requirements_output:
+  issue: 1382
+  date: '2026-09-29'
+  extracted_requirements:
+    R1: generate_sort_lx() maps both ∞ and ꝏ to oozzz (additive symbol_map entry; ∞ fallback preserved)
+    R2: Scan service counts and lists exactly the non-deleted records with ∞ in lx or mdf_data, with preview
+    R3: Table Maintenance sidebar exposes "∞→ꝏ Remediation" option (admin-only via existing guard)
+    R4: View displays detected count before any action; informational state when zero
+    R5: Apply All remediates every detected non-locked record with one EditHistory entry each, confirm-gated, progress indicated
+    R6: Review One-by-One shows per-record before/after preview with Apply and Skip; skip leaves record unchanged
+    R7: Normalized columns byte-identical pre/post (sort_lx, normalized_term recomputed; fts_vector rebuilt)
+    R8: FTS search results for ꝏ terms match pre-remediation ∞ results
+    R9: Seed data files contain ꝏ, not ∞
+    R10: No automatic migration at startup; no 'english' tsconfig; soft-deleted excluded; locked records rejected and counted as skipped
+  sc_traceability:
+    SC-1: R1 | SC-2: R2 | SC-3: R3 | SC-4: R4 | SC-5: R5 | SC-6: R6 | SC-7: R7 | SC-8: R8 | SC-9: R9 | SC-10: R1
+  out_of_scope:
+    - FTS query-path changes; docs/lessons-learned changes; full re-ingestion; automatic production mutation; paper files (migrated to snea-phonetics)
