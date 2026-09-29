@@ -1,11 +1,15 @@
 issue: 1386
 generated_at: "2026-09-29"
-sc_count: 10
+sc_count: 11
 scs:
   - id: "SC-1"
-    description: "Committed e5-small substrate artifacts (INT8 ONNX + tokenizer) match SHA256-manifest pins byte-for-byte; tokenizer allowlist (IPA + diacritics + ꝏ + ∞) reads from config at run time; syllabics excluded with documented deferred trigger"
+    description: "Committed e5-small substrate artifacts (INT8 ONNX + tokenizer) match SHA256-manifest pins byte-for-byte"
     evidence_type: "structural"
     plan_item: 1
+  - id: "SC-11"
+    description: "Tokenizer allowlist (IPA + diacritics + ꝏ + ∞) consumed from config at run time by the term-side tokenization path — no hardcoded character literals in tokenization code; syllabics excluded with documented deferred trigger (config change → consumption follows without code change)"
+    evidence_type: "behavioral"
+    plan_item: 11
   - id: "SC-2"
     description: "e5-small encode path returns unit-L2-norm 384-dim float32 vectors with query:/passage: prefixes, batch ≤ 64 dynamic padding, process-wide singleton session (in-flight lock, streamlit-import-free); determinism holds"
     evidence_type: "behavioral"
@@ -31,7 +35,7 @@ scs:
     evidence_type: "behavioral"
     plan_item: 7
   - id: "SC-8"
-    description: "Inline term-space population during ingestion writes rows with current-pin stamping, exact Unicode round-trip, ≤ 512-row batches, tqdm, fail-fast no-silent-skip, populate_search_entries signature unchanged"
+    description: "Inline term-space population during ingestion writes rows with current-pin stamping, exact Unicode round-trip, ≤ 512-row batches, tqdm, fail-fast no-silent-skip, populate_search_entries signature unchanged (plan decides internal extension vs sibling batched method, per the #36 signature-unchanged precedent)"
     evidence_type: "behavioral"
     plan_item: 8
   - id: "SC-9"
