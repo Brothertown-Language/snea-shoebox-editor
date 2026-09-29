@@ -1,6 +1,6 @@
 issue: 1386
 generated_at: "2026-09-29"
-sc_count: 11
+sc_count: 13
 scs:
   - id: "SC-1"
     description: "Committed e5-small substrate artifacts (INT8 ONNX + tokenizer) match SHA256-manifest pins byte-for-byte"
@@ -35,14 +35,22 @@ scs:
     evidence_type: "behavioral"
     plan_item: 7
   - id: "SC-8"
-    description: "Inline term-space population during ingestion writes rows with current-pin stamping, exact Unicode round-trip, ≤ 512-row batches, tqdm, fail-fast no-silent-skip, populate_search_entries signature unchanged (plan decides internal extension vs sibling batched method, per the #36 signature-unchanged precedent)"
+    description: "Inline term-space population during ingestion writes rows with current-pin stamping, exact Unicode round-trip, ≤ 512-row batches, tqdm, fail-fast no-silent-skip (population/derivation concern only)"
     evidence_type: "behavioral"
     plan_item: 8
   - id: "SC-9"
-    description: "Admin-role Term-space Backfill control in Table Maintenance → Data Reprocessing re-embeds all records (pin-change staleness covered) with st.progress+callback+st.status idiom, handle_ui_error failures, role-gate rejection of non-admin, re-click guard"
+    description: "Admin-role Term-space Backfill control in Table Maintenance → Data Reprocessing re-embeds all records (pin-change staleness covered) with st.progress+callback+st.status idiom, handle_ui_error failures, role-gate rejection of non-admin"
     evidence_type: "behavioral"
     plan_item: 9
   - id: "SC-10"
     description: "Re-train trigger detects corpus drift and allowlist config change without exception; per-run manifest records model id, allowlist snapshot, real-data corpus provenance, timestamps; backfill gated on manifest presence"
     evidence_type: "behavioral"
     plan_item: 10
+  - id: "SC-12"
+    description: "The signature of the existing populate_search_entries(record_ids, session=None) → int is unchanged after term-space population is wired in (plan decides internal extension vs sibling batched method, per the #36 signature-unchanged precedent)"
+    evidence_type: "behavioral"
+    plan_item: 12
+  - id: "SC-13"
+    description: "A re-click of the Term-space Backfill control while a run is in flight is blocked by the per-run idempotency/one-at-a-time guard (guard resets after run completion)"
+    evidence_type: "behavioral"
+    plan_item: 13

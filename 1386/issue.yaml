@@ -79,21 +79,22 @@ body: '# [SPEC] Algonquian term-space semantic search (backend/db)
   ## Approach
 
 
-  Provide the backend counterpart to #36''s English-gloss semantic search: a fine-tuned
-  `multilingual-e5-small` model (fine-tuned on meaning-adjacency with real corpus
-  data, phrases down-weighted, `query:`/`passage:` prefixes) sharing #36''s process-wide
-  singleton session pattern and measured memory envelope (both-models-resident ~520
-  MB, under the 1 GiB Streamlit Cloud budget); a single wide derived-index table keyed
-  on record_id with language metadata derived deterministically from the `\so`-based
-  language scan (explicit `unknown`, never guessed); an embedding-model pin so staleness
-  is an explicit, testable state rather than silent serving; a standalone `search_terms`
-  seam mirroring #36''s `search_semantic` pattern; inline population during ingestion
-  (existing `populate_search_entries` signature unchanged; plan decides internal extension
-  vs sibling batched method, per the #36 signature-unchanged precedent); calibration
-  with real-data anchors and independent term/phrase floors; and corpus+allowlist-change-driven
-  re-training with a per-run manifest for reproducibility. Tokens are unicode-exact
-  throughout (AGENTS.md Tier 1 mandate; ∞→oozzz remains a sort-key-only transform).
-  Full spec: Intent/Not-Included/SC table (SC-1..SC-11)/R-1–R-14/Items 1–11/Dependencies/Traceability/Cost
+  Fine-tuned `multilingual-e5-small` for the vernacular term space with a config-driven
+  tokenizer allowlist consumed at run time; one wide SemanticTermEntry-style derived
+  table with language metadata derived deterministically from the `\so` scan (explicit
+  `unknown`, never NULL, never guessed); the `search_terms` seam contract as a standalone
+  service module mirroring #36''s `search_semantic` pattern (no SearchMode widening);
+  spike-proposed calibration anchors spanning ≥3 coded languages with independent term/phrase
+  floors measured fresh (#36''s gte-small floors are NOT transferable); admin backfill
+  as a sibling button in Table Maintenance → Data Reprocessing; re-training on corpus
+  + allowlist change with a per-run manifest. Inline population during ingestion —
+  population/derivation concern SC-8; the existing `populate_search_entries(record_ids,
+  session=None) → int` signature stays unchanged (interface constraint SC-12, per the
+  #36 signature-unchanged precedent). Admin control behavior SC-9; the re-click-while-in-flight
+  idempotency guard is its own SC-13. SC set: SC-1..SC-13
+  (13 SCs — SC-11 config-driven allowlist consumption, SC-12 signature-unchanged interface
+  constraint, SC-13 re-click idempotency guard). Backend half of a two-spec split with
+  frontend sibling #1385. Full spec: Intent/Not-Included/SC table/R-1–R-14/Items 1–13/Dependencies/Traceability/Cost
   Frame/Edge Cases live in the `issues-data` branch (`.issues/1386/spec.md`).
 
 
@@ -109,6 +110,11 @@ body: '# [SPEC] Algonquian term-space semantic search (backend/db)
   pin per row + `stale_model`/`no_embeddings` statuses in the seam contract make staleness
   explicit, with pinned-only serving on mixed rows.
 
+  - **Risk: backfill concurrency / interface regressions go unnoticed.** Mitigation:
+  re-click while a run is in flight is blocked by an idempotency guard (SC-13), and
+  the existing `populate_search_entries` signature is asserted unchanged after term-space
+  wiring (SC-12), so gloss-space consumers cannot silently break.
+
   - **Risk: language_code derivation from the \so scan misassigns records.** Mitigation:
   `unknown` is an explicit enum value (never NULL, never guessed from morphology),
   and calibration anchors span ≥3 coded languages so floors are validated per language.
@@ -120,8 +126,9 @@ body: '# [SPEC] Algonquian term-space semantic search (backend/db)
   materials with provenance in the manifest.
 
 
-  Call to action: spec revised per validate findings (tier-1 iteration 1); re-validate,
-  then plan creation.
+  Call to action: spec revised per validate findings (tier-1 iteration 2 — duplicate
+  Item 11 block removed, compound SC-8/SC-9 split into SC-8+SC-12 and SC-9+SC-13 with
+  no verification target weakened); re-validate, then plan creation.
 
 
   🤖 OpenCode (ollama-cloud/glm-5.3-flash) revised
