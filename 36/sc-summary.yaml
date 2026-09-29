@@ -1,7 +1,7 @@
-sc_count: 10
+sc_count: 12
 scs:
   - id: "SC-1"
-    description: "Committed artifacts at models/gte-small/ (ONNX 34,118,638 B; tokenizer.json 711,661 B) match recorded SHA256 pins byte-for-byte"
+    description: "Committed artifacts at models/gte-small/ (ONNX 34,118,638 B; tokenizer.json 711,661 B, SHA256 da0e79933b9ed51798a3ae27893d3c5fa4a201126cef75586296df9b4d2c62a0) match recorded SHA256 pins byte-for-byte"
     evidence_type: "structural"
     plan_item: 1
   - id: "SC-2"
@@ -14,14 +14,14 @@ scs:
     plan_item: 3
   - id: "SC-4"
     description: "Two DDL-only migrations apply in order, version-gated idempotent, append-only YYYYMMDDSSSSS registry, pgvector extversion assert; no data writes, no renumbering"
-    evidence_type: "structural"
+    evidence_type: "behavioral"
     plan_item: 4
   - id: "SC-5"
     description: "search_semantic(mode, query, threshold=None, source_id=None, limit=None) → SemanticSearchResult v1 contract; full ranked list desc cosine, record_id-asc tie-break, None→0.80, pin-join exclusion; no streamlit imports"
     evidence_type: "behavioral"
     plan_item: 5
   - id: "SC-6"
-    description: "Calibration anchors on freshly synced real data: positives (round/bed/house/peas/hunt) ≥ 0.85-0.90 floors; negatives ≥0.07 below positives; default threshold 0.80"
+    description: "Calibration anchors on freshly synced real data: positives (round/bed/house/peas/hunt) >= 0.85-0.90 floors (per-anchor floor values recorded per-anchor in the SC-6 evidence artifact; 0.85-0.90 is the recorded summary bound); negatives >=0.07 below positives; default threshold 0.80"
     evidence_type: "behavioral"
     plan_item: 6
   - id: "SC-7"
@@ -37,6 +37,14 @@ scs:
     evidence_type: "behavioral"
     plan_item: 9
   - id: "SC-10"
-    description: "Runtime deps gain onnxruntime + tokenizers; sentence-transformers stays dev-only; batch-64 load+encode profile fits 1 GB Streamlit Cloud envelope (measured 312 MiB)"
+    description: "Runtime deps gain onnxruntime + tokenizers; sentence-transformers stays dev-only; batch-64 load+encode profile fits 1 GiB Streamlit Cloud envelope (measured 312 MiB)"
     evidence_type: "structural"
     plan_item: 10
+  - id: "SC-11"
+    description: "#1385 boundary — additive only: SearchMode Literal widens with 'Semantic Gloss'/'Semantic All' at linguistic_service.py:28 and mode dispatch entries route those modes to search_semantic(); no existing strategy, signature, or return type changes"
+    evidence_type: "behavioral"
+    plan_item: 11
+  - id: "SC-12"
+    description: "embedding_service.load_model() returns a process-wide single onnxruntime InferenceSession (module-level holder, streamlit-import-free) — never per-thread/per-session loads; N concurrent load_model() calls race-safe under the one-at-a-time in-flight lock (registry count == 1)"
+    evidence_type: "behavioral"
+    plan_item: 12
