@@ -1,0 +1,24 @@
+pipeline_readiness:
+  issue: 1382
+  date: '2026-09-29'
+  artifacts_present:
+    - pre-spec-inspection.yaml
+    - blast-radius.yaml
+    - concern-map.yaml
+    - code-path-inventory.yaml
+    - cross-cutting-matrix.yaml
+    - interface-compat.yaml
+    - state-analysis.yaml
+    - testability.yaml
+    - requirements-output.yaml
+    - decompose-output.yaml
+  spec_local: .issues/1382/spec.md
+  approval_label: approved-for-plan (issue.yaml local + remote applied)
+  phase_structure_validity:
+    phase_1: foundation (SC-9 seed data, SC-1/SC-10 normalization) — no interdependency between its two items
+    phase_2: scan service (SC-2)
+    phase_3: remediation write path (SC-5, SC-6, SC-7, SC-8)
+    phase_4: UI (SC-3, SC-4)
+    ordering: 1→2→3→4 strictly bottom-up; each phase consumes only prior-phase interfaces
+    cycle_solvability: verified by inspection — no phase requires an interface produced by a later phase; no circular edges in DAG
+  z3_note: constraint set is a trivially acyclic 4-phase chain; Z3 solving skipped as degenerate (hand-verified DAG above); flagged as deck-defect workaround measure
