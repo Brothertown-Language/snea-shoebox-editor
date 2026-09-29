@@ -1,0 +1,30 @@
+state_analysis:
+  issue: 1382
+  date: '2026-09-29'
+  record_states:
+    - state: clean (no ∞ in lx/mdf_data)
+      scan_behavior: excluded from count and list
+      remediation_behavior: no-op, returns False
+    - state: defective (has ∞ in lx or mdf_data, is_deleted=False)
+      scan_behavior: counted and listed with preview
+      remediation_behavior: prev_data snapshot → ∞→ꝏ replacement → EditHistory → sort_lx recompute → search entries rebuild
+    - state: defective + is_deleted=True
+      scan_behavior: excluded (soft-deleted)
+      remediation_behavior: excluded
+    - state: defective + locked (record.locked flag, per update_record guard)
+      remediation_behavior: reject with log warning, return False, skip in apply-all (counted in skipped)
+    - state: already remediated (ꝏ present, no ∞)
+      scan_behavior: excluded (post-condition state)
+  ui_states:
+    - state: no defective records
+      display: informational message; no action buttons
+    - state: N defective records
+      display: "N records detected" + Apply All (confirm-gated) + Review One-by-One
+    - state: review session active
+      display: current record (id, lx, before/after preview), Apply / Skip / done counter
+    - state: apply-all in progress
+      display: progress bar via progress_callback (pattern from render_data_reprocessing_maintenance)
+  state_invariants:
+    - normalized columns (sort_lx, normalized_term, fts_vector) byte-identical before/after remediation of the same record
+    - every successful remediation leaves exactly one new EditHistory row
+    - remediation never changes record status/reviewed_* fields (data-only fix, unlike update_record)
