@@ -240,5 +240,14 @@ Check your tool list for a tool named `task`.
 
 ---
 
+## lifecycle_events
+
+- timestamp: 2026-09-29T21:28:00Z
+  event: plan_created
+  plan_path: .issues/1388/plan.md
+  phase_count: 5
+
+---
+
 <!-- Pre-Flight Guard section above is canonical per plan-artifact-format §3.5 — reason code ORCHESTRATOR_ONLY_PLAN -->
 <!-- Rev 2 (2026-09-29): category-4 FAIL remediation — former Phase 1 (containment + deletions bundle) split into Phase 1 (containment SC-1) / Phase 2 (deletions SC-2); filter-ux containment → Phase 3 (SC-3), header rewrite → Phase 4 (SC-4), suite gate → Phase 5 (SC-5); 5 phases map 1:1 to the spec's 5 SCs -->
