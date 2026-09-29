@@ -1,18 +1,46 @@
 spec: ".issues/36/spec.md (issues-data HEAD, revision tier-1 iteration 3, 2026-09-29)"
-provenance: "regenerated-at-HEAD (retroactive backfill, 2026-09-29; not restored from history)"
+provenance: "verified this run by writing-plans analyze task (2026-09-29); prior summary preserved in spec header note"
 
 summary:
   sc_count: 12
   scope: "db/embed: pinned gte-small INT8 ONNX artifacts; pgvector two-table schema (gloss_search_entries +3 cols; new semantic_search_entries); two DDL-only versioned migrations; embedding_service (encode + load-once process-wide singleton) and semantic_search_service (search_semantic v1 seam); additive SearchMode widening + dispatch ('Semantic Gloss'/'Semantic All'); inline upload-path embedding in populate_search_entries(); admin Embedding Backfill button in Table Maintenance; runtime deps onnxruntime+tokenizers (sentence-transformers stays dev-only); 1 GiB memory envelope; R-12 DB re-sync gate before every test cycle"
   not_included: "#1385 end-user UI surface (threshold widgets, score badges, pagination, empty states, mode radios); Algonquian headword/term semantic search; non-gloss fields; external embedding APIs; preference_service changes; migration renumbering"
 
+approval:
+  status: "approved"
+  labels: ["approved-for-plan"]
+  source: ".issues/36/issue.yaml labels field (local canonical)"
+
 artifacts:
-  blast-radius: "backfilled (regenerated-at-HEAD 2026-09-29)"
-  concern-map: "backfilled (regenerated-at-HEAD 2026-09-29)"
-  code-path-inventory: "backfilled (regenerated-at-HEAD 2026-09-29)"
-  cross-cutting-matrix: "backfilled (regenerated-at-HEAD 2026-09-29)"
-  interface-compatibility: "backfilled (regenerated-at-HEAD 2026-09-29; includes dependency_contract)"
-  state-analysis: "backfilled (regenerated-at-HEAD 2026-09-29)"
-  testability-assessment: "backfilled (regenerated-at-HEAD 2026-09-29)"
-  decompose-output: "backfilled (regenerated-at-HEAD 2026-09-29; D1-ITEM-1..12 from spec's 12 SCs)"
-  analysis-summary: "this file"
+  required_7:
+    blast-radius: present
+    concern-map: present
+    code-path-inventory: present
+    cross-cutting-matrix: present
+    interface-compatibility: present
+    state-analysis: present
+    testability-assessment: present
+  additional:
+    decompose-output: present
+    analysis-summary: this file
+
+scope_boundaries:
+  verified: "all 8 spec-referenced files exist in codebase (verified live 2026-09-29)"
+  files:
+    - path: src/services/linguistic_service.py
+      exists: true
+    - path: src/database/models/search.py
+      exists: true
+    - path: src/database/migrations.py
+      exists: true
+    - path: src/services/upload_service.py
+      exists: true
+    - path: src/services/preference_service.py
+      exists: true
+    - path: src/database/connection.py
+      exists: true
+    - path: src/frontend/pages/table_maintenance.py
+      exists: true
+    - path: pyproject.toml
+      exists: true
+  findings: [] # no missing files

@@ -1,0 +1,135 @@
+# Dependency contract for issue #36 — Semantic Gloss Search with pgvector (db/embed)
+# Source: .issues/36/artifacts/interface-compatibility.yaml dependency_contract section
+# (extracted as-is; file contains a dependency_contract section — no auto-backfill needed)
+# Structure augmentation: phase DAG from .issues/36/artifacts/structure.yaml
+#
+# Use:
+#   ./.opencode/tools/solve model --contract-path .issues/36/dependency-contract.yaml --query <expr>
+#   ./.opencode/tools/solve check --state-path <state> --contract-path .issues/36/dependency-contract.yaml
+
+schema_version: "1.0"
+generated_at: "20260929141100"
+
+phases:
+  - id: 1
+    name: "Pinned model artifacts substrate"
+    concern: "Commit byte-pinned gte-small INT8 ONNX + tokenizer.json with SHA256 hash check"
+    depends_on: []
+    scs: ["SC-1"]
+  - id: 2
+    name: "Embedding service substrate (encode + singleton)"
+    concern: "embedding_service encode pipeline + load-once process-wide session singleton"
+    depends_on: [1]
+    scs: ["SC-2", "SC-12"]
+  - id: 3
+    name: "pgvector schema + DDL migrations + dependency manifest"
+    concern: "Additive two-table schema models, DDL-only versioned migrations, runtime deps + envelope"
+    depends_on: [2]
+    scs: ["SC-3", "SC-4", "SC-10"]
+  - id: 4
+    name: "Search semantic seam + mode dispatch"
+    concern: "search_semantic() v1 contract + additive SearchMode widening and dispatch"
+    depends_on: [1, 2, 3]
+    scs: ["SC-5", "SC-11"]
+  - id: 5
+    name: "Calibration + degraded semantics"
+    concern: "Calibration anchor floors + degraded status edge semantics"
+    depends_on: [4]
+    scs: ["SC-6", "SC-7"]
+  - id: 6
+    name: "Data plane — upload inline embedding + admin backfill UI"
+    concern: "Inline embedding in populate_search_entries() + admin Embedding Backfill button"
+    depends_on: [2, 3, 4, 5]
+    scs: ["SC-8", "SC-9"]
+
+# Dependency contract extracted verbatim from interface-compatibility.yaml
+description: "Concrete dependency data derived from spec affected files and SCs (real sources, real targets, real constraints)."
+external_packages:
+  - name: onnxruntime
+    target: "pyproject.toml [project].dependencies"
+    sc: "SC-10"
+    constraint: "runtime dependency; version pinned per live-registry verification at implementation time (guideline 070)"
+    reason: "InferenceSession for gte-small INT8 ONNX encode path (P3)"
+  - name: tokenizers
+    target: "pyproject.toml [project].dependencies"
+    sc: "SC-10"
+    constraint: "runtime dependency; pinned per live-registry verification; used for tokenize(512, truncation) with attention mask"
+    reason: "Tokenizer artifacts at models/gte-small/tokenizer.json (SC-1 pin)"
+  - name: pgvector
+    target: "pyproject.toml runtime deps (already at pgvector>=0.3.6) + connection.py pgvector extension enable"
+    sc: "SC-3, SC-4"
+    constraint: "ALREADY SATISFIED (verified live); extversion assertion required in migration (SC-4)"
+    reason: "vector(384) column type"
+
+internal_modules:
+  - source: "src/services/embedding_service.py (new)"
+    target: "src/services/semantic_search_service.py (new)"
+    sc: "SC-5"
+    type_constraint: "encode(texts: list[str]) -> float32 array (N,384); load_model() -> onnxruntime.InferenceSession (singleton)"
+    reason: "query encoding + session acquisition"
+  - source: "src/services/embedding_service.py (new)"
+    target: "src/services/upload_service.py populate_search_entries (:1758)"
+    sc: "SC-8"
+    type_constraint: "encode() over 1-5 ge strings/record; embedding_model stamped with the model pin string"
+    reason: "inline row embedding during ingestion"
+  - source: "src/services/semantic_search_service.py (new)"
+    target: "src/services/linguistic_service.py _search_strategies (:79-84)"
+    sc: "SC-11"
+    type_constraint: "strategy callable satisfying the dispatch map signature; returns SemanticSearchResult"
+    reason: "backend reachability of the two new modes"
+  - source: "src/database/models/search.py (SemanticSearchEntry, new)"
+    target: "src/database/migrations.py (2 new DDL entries)"
+    sc: "SC-3, SC-4"
+    type_constraint: "CREATE TABLE + ALTER TABLE ADD COLUMN DDL must match ORM column definitions exactly (vector(384), entry_type, embedding_model)"
+    reason: "schema/model parity for introspection tests"
+  - source: "models/gte-small/* (committed bytes)"
+    target: "src/services/embedding_service.py load path"
+    sc: "SC-1, SC-2"
+    type_constraint: "bytes byte-identical to SHA256 pins (ONNX c9434b8…34cd, tokenizer da0e799…a0); load errors name the missing path"
+    reason: "offline determinism + reproducibility"
+
+cross_spec:
+  consumer: "#1385 (UI spec, pending)"
+  sc: "SC-5, SC-7"
+  contract: "SemanticSearchResult field list + degraded status enum are frozen by this spec; #1385 consumes only this surface and owns all threshold/pagination/empty-state UI"
+
+# ---------------------------------------------------------------------------
+# Z3 phase-ordering contract (derived from dependency DAG above)
+# Variables for solve check/model operations
+variables:
+  phase_1_done:
+    type: bool
+  phase_2_done:
+    type: bool
+  phase_3_done:
+    type: bool
+  phase_4_done:
+    type: bool
+  phase_5_done:
+    type: bool
+  phase_6_done:
+    type: bool
+  all_phases_done:
+    type: bool
+
+# Dependency ordering: phase X completes only after all its depends_on phases
+preconditions:
+  - "phase_1_done"
+  - "z3.Implies(phase_2_done, phase_1_done)"
+  - "z3.Implies(phase_3_done, phase_2_done)"
+  - "z3.Implies(phase_4_done, z3.And(phase_1_done, phase_2_done, phase_3_done))"
+  - "z3.Implies(phase_5_done, phase_4_done)"
+  - "z3.Implies(phase_6_done, z3.And(phase_2_done, phase_3_done, phase_4_done, phase_5_done))"
+
+# Invariants: no backward edges — later phase cannot complete before earlier producer;
+# additive-only guarantee: no phase removes interfaces or renumbers migrations
+invariants:
+  - "all_phases_done == z3.And(phase_1_done, phase_2_done, phase_3_done, phase_4_done, phase_5_done, phase_6_done)"
+  - "z3.Not(z3.And(phase_6_done, z3.Not(phase_5_done)))"
+  - "z3.Not(z3.And(phase_5_done, z3.Not(phase_4_done)))"
+  - "z3.Not(z3.And(phase_4_done, z3.Not(phase_3_done)))"
+  - "z3.Not(z3.And(phase_3_done, z3.Not(phase_2_done)))"
+  - "z3.Not(z3.And(phase_2_done, z3.Not(phase_1_done)))"
+
+postconditions:
+  - "all_phases_done"

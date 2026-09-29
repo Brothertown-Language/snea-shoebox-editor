@@ -1,0 +1,77 @@
+problem built: semantic-gloss-search-pgvector
+  objects: 6
+  fluents: 18
+  actions: 18
+  goals:   18
+[96m[1mNOTE: To disable printing of planning engine credits, add this line to your code: `up.shortcuts.get_environment().credits_stream = None`
+[0m[96m  *** Credits ***
+[0m[96m  * In operation mode `OneshotPlanner` at line 523 of `/home/muksihs/git/snea-shoebox-editor/./.opencode/tools/plan`, [0m[96myou are using the following planning engine:
+[0m[96m  * Engine name: Tamer
+  * Developers:  FBK Tamer Development Team
+[0m[96m  * Description: [0m[96mTamer offers the capability to generate a plan for classical, numerical and temporal problems.
+  *              For those kind of problems tamer also offers the possibility of validating a submitted plan.[0m[96m
+[0m[96m
+[0m
+plan length: 18
+
+- [ ] 1. complete_sc_1()
+- [ ] 2. finish_phase_1()
+- [ ] 3. complete_sc_2()
+- [ ] 4. complete_sc_10()
+- [ ] 5. complete_sc_12()
+- [ ] 6. finish_phase_2()
+- [ ] 7. complete_sc_3()
+- [ ] 8. complete_sc_4()
+- [ ] 9. finish_phase_3()
+- [ ] 10. complete_sc_11()
+- [ ] 11. complete_sc_5()
+- [ ] 12. finish_phase_4()
+- [ ] 13. complete_sc_8()
+- [ ] 14. complete_sc_7()
+- [ ] 15. complete_sc_6()
+- [ ] 16. finish_phase_5()
+- [ ] 17. complete_sc_9()
+- [ ] 18. finish_phase_6()
+
+---
+actions:
+- name: complete_sc_1
+  parameters: []
+- name: finish_phase_1
+  parameters: []
+- name: complete_sc_2
+  parameters: []
+- name: complete_sc_10
+  parameters: []
+- name: complete_sc_12
+  parameters: []
+- name: finish_phase_2
+  parameters: []
+- name: complete_sc_3
+  parameters: []
+- name: complete_sc_4
+  parameters: []
+- name: finish_phase_3
+  parameters: []
+- name: complete_sc_11
+  parameters: []
+- name: complete_sc_5
+  parameters: []
+- name: finish_phase_4
+  parameters: []
+- name: complete_sc_8
+  parameters: []
+- name: complete_sc_7
+  parameters: []
+- name: complete_sc_6
+  parameters: []
+- name: finish_phase_5
+  parameters: []
+- name: complete_sc_9
+  parameters: []
+- name: finish_phase_6
+  parameters: []
+domain: semantic-gloss-search-pgvector
+engine: tamer
+plan_length: 18
+status: SOLVED_SATISFICING
